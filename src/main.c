@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "compiler.h"
 #include "lexer.h"
-#include "parser.h"
+#include "vm.h"
 
 #define MAX_FILE_SIZE  256 * 256
 
@@ -32,14 +33,13 @@ int main(int argc, const char * argv[])
   //printf("Cleaned tokens:\n");
   dumpTokens(buffer, tokens);
 
-  /*Node* node =*/ parse(buffer, tokens);
-
-  /*
-  if (defns) generate(buffer, defns);
-
+  Block* block = compile(buffer, tokens);
+  Fiber* fiber = newFiber();
+  Value value = interpret(fiber, block);
+  printValue(value);
+  
   // TODO(bob): Free tokens.
   // TODO(bob): Free ast.
-   */
 
   freeBuffer(buffer);
 
@@ -52,8 +52,6 @@ static void dumpTokens(Buffer* buffer, Token* token)
   {
     switch (token->type)
     {
-      case TOKEN_INDENT: printf("(in)"); break;
-      case TOKEN_OUTDENT: printf("(out)"); break;
       case TOKEN_LINE: printf("(line)"); break;
       case TOKEN_ERROR: printf("(error)"); break;
       case TOKEN_EOF: printf("(eof)"); break;
