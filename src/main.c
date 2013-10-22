@@ -29,6 +29,7 @@ int main(int argc, const char * argv[])
   Fiber* fiber = newFiber();
   Value value = interpret(fiber, block);
   printValue(value);
+  printf("\n");
   free(source);
 
   return 0;

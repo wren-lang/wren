@@ -341,13 +341,23 @@ void compilePrecedence(Compiler* compiler, int precedence)
 
 void prefixLiteral(Compiler* compiler, Token* token)
 {
-  // TODO(bob): Get actual value from token!
+  char* end;
+  long value = strtol(compiler->source + token->start, &end, 10);
+  // TODO(bob): Check errno == ERANGE here.
+  if (end == compiler->source + token->start)
+  {
+    error(compiler, "Invalid number literal.");
+    value = 0;
+  }
+
   // Define a constant for the literal.
   // TODO(bob): See if constant with same value already exists.
   Value constant = malloc(sizeof(Obj));
   constant->type = OBJ_INT;
   constant->flags = 0;
-  constant->value = 234;
+
+  // TODO(bob): Handle truncation!
+  constant->value = (int)value;
 
   compiler->block->constants[compiler->block->numConstants++] = constant;
 
