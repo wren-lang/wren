@@ -7,9 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		29AB1F281816E49C004B501E /* lexer.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AB1F1E1816E49C004B501E /* lexer.c */; };
 		29AB1F291816E49C004B501E /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AB1F201816E49C004B501E /* main.c */; };
-		29AB1F2C1816E49C004B501E /* token.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AB1F251816E49C004B501E /* token.c */; };
 		29AB1F2F1816FA66004B501E /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AB1F2E1816FA66004B501E /* vm.c */; };
 		29AB1F3218170104004B501E /* compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AB1F3018170104004B501E /* compiler.c */; };
 /* End PBXBuildFile section */
@@ -28,11 +26,7 @@
 
 /* Begin PBXFileReference section */
 		29AB1F061816E3AD004B501E /* wren */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wren; sourceTree = BUILT_PRODUCTS_DIR; };
-		29AB1F1E1816E49C004B501E /* lexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lexer.c; path = src/lexer.c; sourceTree = SOURCE_ROOT; };
-		29AB1F1F1816E49C004B501E /* lexer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lexer.h; path = src/lexer.h; sourceTree = SOURCE_ROOT; };
 		29AB1F201816E49C004B501E /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/main.c; sourceTree = SOURCE_ROOT; };
-		29AB1F251816E49C004B501E /* token.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = token.c; path = src/token.c; sourceTree = SOURCE_ROOT; };
-		29AB1F261816E49C004B501E /* token.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = token.h; path = src/token.h; sourceTree = SOURCE_ROOT; };
 		29AB1F271816E49C004B501E /* wren.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = wren.1; path = src/wren.1; sourceTree = SOURCE_ROOT; };
 		29AB1F2D1816FA5B004B501E /* vm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = vm.h; path = src/vm.h; sourceTree = SOURCE_ROOT; };
 		29AB1F2E1816FA66004B501E /* vm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vm.c; path = src/vm.c; sourceTree = SOURCE_ROOT; };
@@ -72,11 +66,7 @@
 			children = (
 				29AB1F3018170104004B501E /* compiler.c */,
 				29AB1F3118170104004B501E /* compiler.h */,
-				29AB1F1E1816E49C004B501E /* lexer.c */,
-				29AB1F1F1816E49C004B501E /* lexer.h */,
 				29AB1F201816E49C004B501E /* main.c */,
-				29AB1F251816E49C004B501E /* token.c */,
-				29AB1F261816E49C004B501E /* token.h */,
 				29AB1F2E1816FA66004B501E /* vm.c */,
 				29AB1F2D1816FA5B004B501E /* vm.h */,
 				29AB1F271816E49C004B501E /* wren.1 */,
@@ -139,8 +129,6 @@
 				29AB1F291816E49C004B501E /* main.c in Sources */,
 				29AB1F3218170104004B501E /* compiler.c in Sources */,
 				29AB1F2F1816FA66004B501E /* vm.c in Sources */,
-				29AB1F2C1816E49C004B501E /* token.c in Sources */,
-				29AB1F281816E49C004B501E /* lexer.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,11 +1,77 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
+
 #include "compiler.h"
+
+// Note: if you add new token types, make sure to update the arrays below.
+typedef enum
+{
+  TOKEN_LEFT_PAREN,
+  TOKEN_RIGHT_PAREN,
+  TOKEN_LEFT_BRACKET,
+  TOKEN_RIGHT_BRACKET,
+  TOKEN_LEFT_BRACE,
+  TOKEN_RIGHT_BRACE,
+  TOKEN_COLON,
+  TOKEN_DOT,
+  TOKEN_COMMA,
+  TOKEN_STAR,
+  TOKEN_SLASH,
+  TOKEN_PERCENT,
+  TOKEN_PLUS,
+  TOKEN_MINUS,
+  TOKEN_PIPE,
+  TOKEN_AMP,
+  TOKEN_BANG,
+  TOKEN_EQ,
+  TOKEN_LT,
+  TOKEN_GT,
+  TOKEN_LTEQ,
+  TOKEN_GTEQ,
+  TOKEN_EQEQ,
+  TOKEN_BANGEQ,
+
+  TOKEN_ELSE,
+  TOKEN_IF,
+  TOKEN_VAR,
+
+  TOKEN_NAME,
+  TOKEN_NUMBER,
+  TOKEN_STRING,
+
+  TOKEN_LINE,
+
+  TOKEN_ERROR,
+  TOKEN_EOF,
+
+  MAX_TOKEN
+} TokenType;
+
+typedef struct Token_s
+{
+  TokenType type;
+  int start;
+  int end;
+} Token;
 
 typedef struct
 {
-  Buffer* source;
-  Token* current;
+  const char* source;
+  size_t sourceLength;
+
+  // The index in source of the beginning of the currently-being-lexed token.
+  int tokenStart;
+
+  // The position of the current character being lexed.
+  int currentChar;
+
+  // The most recently lexed token.
+  Token current;
+
+  // The most recently consumed/advanced token.
+  Token previous;
 
   // The block being compiled.
   Block* block;
@@ -23,6 +89,8 @@ typedef struct
   int precedence;
 } InfixCompiler;
 
+// Parsing:
+
 /*
 static void block(Compiler* compiler);
 */
@@ -33,9 +101,24 @@ static void prefixLiteral(Compiler* compiler, Token* token);
 static void infixCall(Compiler* compiler, Token* token);
 static void infixBinaryOp(Compiler* compiler, Token* token);
 static TokenType peek(Compiler* compiler);
-static Token* match(Compiler* compiler, TokenType expected);
-static Token* consume(Compiler* compiler, TokenType expected);
-static Token* advance(Compiler* compiler);
+static int match(Compiler* compiler, TokenType expected);
+static void consume(Compiler* compiler, TokenType expected);
+static void advance(Compiler* compiler);
+
+// Lexing:
+static void readNextToken(Compiler* compiler);
+static void readName(Compiler* compiler);
+static void readNumber(Compiler* compiler);
+static void readString(Compiler* compiler);
+static void skipWhitespace(Compiler* compiler);
+static int isKeyword(Compiler* compiler, const char* keyword);
+static int isName(char c);
+static int isDigit(char c);
+static char advanceChar(Compiler* compiler);
+static char peekChar(Compiler* compiler);
+static void makeToken(Compiler* compiler, TokenType type);
+
+// Utility:
 static void error(Compiler* compiler, const char* format, ...);
 
 enum
@@ -79,14 +162,10 @@ CompileFn prefixCompilers[] = {
   NULL, // TOKEN_ELSE
   NULL, // TOKEN_IF
   NULL, // TOKEN_VAR
-  NULL, // TOKEN_EMBEDDED
   prefixLiteral, // TOKEN_NAME
   prefixLiteral, // TOKEN_NUMBER
   prefixLiteral, // TOKEN_STRING
   NULL, // TOKEN_LINE
-  NULL, // TOKEN_WHITESPACE
-  NULL, // TOKEN_INDENT
-  NULL, // TOKEN_OUTDENT
   NULL, // TOKEN_ERROR
   NULL // TOKEN_EOF
 };
@@ -120,24 +199,27 @@ InfixCompiler infixCompilers[] = {
   { NULL, PREC_NONE }, // TOKEN_ELSE
   { NULL, PREC_NONE }, // TOKEN_IF
   { NULL, PREC_NONE }, // TOKEN_VAR
-  { NULL, PREC_NONE }, // TOKEN_EMBEDDED
   { NULL, PREC_NONE }, // TOKEN_NAME
   { NULL, PREC_NONE }, // TOKEN_NUMBER
   { NULL, PREC_NONE }, // TOKEN_STRING
   { NULL, PREC_NONE }, // TOKEN_LINE
-  { NULL, PREC_NONE }, // TOKEN_WHITESPACE
-  { NULL, PREC_NONE }, // TOKEN_INDENT
-  { NULL, PREC_NONE }, // TOKEN_OUTDENT
   { NULL, PREC_NONE }, // TOKEN_ERROR
   { NULL, PREC_NONE } // TOKEN_EOF
 };
 
-Block* compile(Buffer* source, Token* tokens)
+Block* compile(const char* source, size_t sourceLength)
 {
   Compiler compiler;
   compiler.source = source;
-  compiler.current = tokens;
+  compiler.sourceLength = sourceLength;
   compiler.hasError = 0;
+
+  compiler.tokenStart = 0;
+  compiler.currentChar = 0;
+
+  // TODO(bob): Zero-init current token.
+  // Read the first token.
+  advance(&compiler);
 
   compiler.block = malloc(sizeof(Block));
   // TODO(bob): Hack! make variable sized.
@@ -161,7 +243,7 @@ Block* compile(Buffer* source, Token* tokens)
 }
 
 /*
-static void block(Compiler* compiler)
+void block(Compiler* compiler)
 {
   consume(compiler, TOKEN_INDENT);
 
@@ -184,7 +266,7 @@ static void block(Compiler* compiler)
 }
 */
 
-static void statementLike(Compiler* compiler)
+void statementLike(Compiler* compiler)
 {
   /*
   if (match(compiler, TOKEN_IF))
@@ -230,15 +312,15 @@ static void statementLike(Compiler* compiler)
   consume(compiler, TOKEN_LINE);
 }
 
-static void expression(Compiler* compiler)
+void expression(Compiler* compiler)
 {
   compilePrecedence(compiler, PREC_LOWEST);
 }
 
 void compilePrecedence(Compiler* compiler, int precedence)
 {
-  Token* token = advance(compiler);
-  CompileFn prefix = prefixCompilers[token->type];
+  advance(compiler);
+  CompileFn prefix = prefixCompilers[compiler->previous.type];
 
   if (prefix == NULL)
   {
@@ -247,17 +329,17 @@ void compilePrecedence(Compiler* compiler, int precedence)
     exit(1);
   }
 
-  prefix(compiler, token);
+  prefix(compiler, &compiler->previous);
 
-  while (precedence <= infixCompilers[compiler->current->type].precedence)
+  while (precedence <= infixCompilers[compiler->current.type].precedence)
   {
-    token = advance(compiler);
-    CompileFn infix = infixCompilers[token->type].fn;
-    infix(compiler, token);
+    advance(compiler);
+    CompileFn infix = infixCompilers[compiler->previous.type].fn;
+    infix(compiler, &compiler->previous);
   }
 }
 
-static void prefixLiteral(Compiler* compiler, Token* token)
+void prefixLiteral(Compiler* compiler, Token* token)
 {
   // TODO(bob): Get actual value from token!
   // Define a constant for the literal.
@@ -274,7 +356,7 @@ static void prefixLiteral(Compiler* compiler, Token* token)
   compiler->block->bytecode[compiler->numCodes++] = compiler->block->numConstants - 1;
 }
 
-static void infixCall(Compiler* compiler, Token* token)
+void infixCall(Compiler* compiler, Token* token)
 {
   printf("infix calls not implemented\n");
   exit(1);
@@ -304,7 +386,7 @@ static void infixCall(Compiler* compiler, Token* token)
   */
 }
 
-static void infixBinaryOp(Compiler* compiler, Token* token)
+void infixBinaryOp(Compiler* compiler, Token* token)
 {
   printf("infix binary ops not implemented\n");
   exit(1);
@@ -324,43 +406,218 @@ static void infixBinaryOp(Compiler* compiler, Token* token)
   */
 }
 
-static TokenType peek(Compiler* compiler)
+TokenType peek(Compiler* compiler)
 {
-  return compiler->current->type;
+  return compiler->current.type;
 }
 
-static Token* match(Compiler* compiler, TokenType expected)
+// TODO(bob): Make a bool type?
+int match(Compiler* compiler, TokenType expected)
 {
-  if (peek(compiler) != expected) return NULL;
+  if (peek(compiler) != expected) return 0;
 
-  return advance(compiler);
+  advance(compiler);
+  return 1;
 }
 
-static Token* consume(Compiler* compiler, TokenType expected)
+void consume(Compiler* compiler, TokenType expected)
 {
-  Token* token = advance(compiler);
-  if (token->type != expected)
+  advance(compiler);
+  if (compiler->previous.type != expected)
   {
     // TODO(bob): Better error.
-    error(compiler, "Expected %d, got %d.\n", expected, token->type);
+    error(compiler, "Expected %d, got %d.\n", expected, compiler->previous.type);
   }
-
-  return token;
 }
 
-static Token* advance(Compiler* compiler)
+void advance(Compiler* compiler)
 {
   // TODO(bob): Check for EOF.
-  Token* token = compiler->current;
-  compiler->current = compiler->current->next;
-  return unlinkToken(token);
+  compiler->previous = compiler->current;
+  readNextToken(compiler);
 }
 
-static void error(Compiler* compiler, const char* format, ...)
+void readNextToken(Compiler* compiler)
+{
+  while (peekChar(compiler) != '\0')
+  {
+    compiler->tokenStart = compiler->currentChar;
+
+    char c = advanceChar(compiler);
+    switch (c)
+    {
+      case '(': makeToken(compiler, TOKEN_LEFT_PAREN); return;
+      case ')': makeToken(compiler, TOKEN_RIGHT_PAREN); return;
+      case '[': makeToken(compiler, TOKEN_LEFT_BRACKET); return;
+      case ']': makeToken(compiler, TOKEN_RIGHT_BRACKET); return;
+      case '{': makeToken(compiler, TOKEN_LEFT_BRACE); return;
+      case '}': makeToken(compiler, TOKEN_RIGHT_BRACE); return;
+      case ':': makeToken(compiler, TOKEN_COLON); return;
+      case '.': makeToken(compiler, TOKEN_DOT); return;
+      case ',': makeToken(compiler, TOKEN_COMMA); return;
+      case '*': makeToken(compiler, TOKEN_STAR); return;
+      case '/': makeToken(compiler, TOKEN_SLASH); return;
+      case '%': makeToken(compiler, TOKEN_PERCENT); return;
+      case '+': makeToken(compiler, TOKEN_PLUS); return;
+      case '-': makeToken(compiler, TOKEN_MINUS); return;
+      case '|': makeToken(compiler, TOKEN_PIPE); return;
+      case '&': makeToken(compiler, TOKEN_AMP); return;
+      case '=':
+        if (peekChar(compiler) == '=')
+        {
+          advanceChar(compiler);
+          makeToken(compiler, TOKEN_EQEQ);
+        }
+        else
+        {
+          makeToken(compiler, TOKEN_EQ);
+        }
+        return;
+
+      case '<':
+        if (peekChar(compiler) == '=')
+        {
+          advanceChar(compiler);
+          makeToken(compiler, TOKEN_LTEQ);
+        }
+        else
+        {
+          makeToken(compiler, TOKEN_LT);
+        }
+        return;
+
+      case '>':
+        if (peekChar(compiler) == '=')
+        {
+          advanceChar(compiler);
+          makeToken(compiler, TOKEN_GTEQ);
+        }
+        else
+        {
+          makeToken(compiler, TOKEN_GT);
+        }
+        return;
+
+      case '!':
+        if (peekChar(compiler) == '=')
+        {
+          advanceChar(compiler);
+          makeToken(compiler, TOKEN_BANGEQ);
+        }
+        else
+        {
+          makeToken(compiler, TOKEN_BANG);
+        }
+        return;
+
+      case '\n': makeToken(compiler, TOKEN_LINE); return;
+
+      case ' ': skipWhitespace(compiler); break;
+      case '"': readString(compiler); return;
+
+      default:
+        if (isName(c))
+        {
+          readName(compiler);
+        }
+        else if (isDigit(c))
+        {
+          readNumber(compiler);
+        }
+        else
+        {
+          makeToken(compiler, TOKEN_ERROR);
+        }
+        return;
+    }
+  }
+
+  // If we get here, we're out of source, so just make EOF tokens.
+  compiler->tokenStart = compiler->currentChar;
+  makeToken(compiler, TOKEN_EOF);
+}
+
+void readName(Compiler* compiler)
+{
+  // TODO(bob): Handle digits and EOF.
+  while (isName(peekChar(compiler)) || isDigit(peekChar(compiler))) advanceChar(compiler);
+
+  TokenType type = TOKEN_NAME;
+
+  if (isKeyword(compiler, "else")) type = TOKEN_ELSE;
+  else if (isKeyword(compiler, "if")) type = TOKEN_IF;
+  else if (isKeyword(compiler, "var")) type = TOKEN_VAR;
+
+  makeToken(compiler, type);
+}
+
+int isKeyword(Compiler* compiler, const char* keyword)
+{
+  size_t length = compiler->currentChar - compiler->tokenStart;
+  size_t keywordLength = strlen(keyword);
+  return length == keywordLength &&
+  strncmp(compiler->source + compiler->tokenStart, keyword, length) == 0;
+}
+
+void readNumber(Compiler* compiler)
+{
+  // TODO(bob): Floating point, hex, scientific, etc.
+  while (isDigit(peekChar(compiler))) advanceChar(compiler);
+
+  makeToken(compiler, TOKEN_NUMBER);
+}
+
+void readString(Compiler* compiler)
+{
+  // TODO(bob): Escape sequences, EOL, EOF, etc.
+  while (advanceChar(compiler) != '"');
+
+  makeToken(compiler, TOKEN_STRING);
+}
+
+void skipWhitespace(Compiler* compiler)
+{
+  while (peekChar(compiler) == ' ') advanceChar(compiler);
+}
+
+int isName(char c)
+{
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+
+int isDigit(char c)
+{
+  return c >= '0' && c <= '9';
+}
+
+char advanceChar(Compiler* compiler)
+{
+  char c = peekChar(compiler);
+  compiler->currentChar++;
+  return c;
+}
+
+char peekChar(Compiler* compiler)
+{
+  return compiler->source[compiler->currentChar];
+}
+
+void makeToken(Compiler* compiler, TokenType type)
+{
+  compiler->current.type = type;
+  compiler->current.start = compiler->tokenStart;
+  compiler->current.end = compiler->currentChar;
+}
+
+void error(Compiler* compiler, const char* format, ...)
 {
   compiler->hasError = 1;
   printf("Compile error on '");
-  printToken(compiler->source, compiler->current);
+
+  for (int i = compiler->current.start; i < compiler->current.end; i++)
+  {
+    putchar(compiler->source[i]);
+  }
 
   printf("': ");
 

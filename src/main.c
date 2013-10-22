@@ -2,22 +2,19 @@
 #include <stdlib.h>
 
 #include "compiler.h"
-#include "lexer.h"
 #include "vm.h"
 
 #define MAX_FILE_SIZE  256 * 256
 
-static void dumpTokens(Buffer* buffer, Token* token);
-
-Buffer* readFile(const char* path)
+char* readFile(const char* path, size_t* length)
 {
   FILE* file = fopen(path, "r");
   // TODO(bob): Handle error.
 
-  Buffer* buffer = newBuffer(MAX_FILE_SIZE);
+  char* buffer = malloc(MAX_FILE_SIZE);
   // TODO(bob): Hacky way to read a file!
-  size_t read = fread(buffer->bytes, sizeof(char), MAX_FILE_SIZE, file);
-  buffer->bytes[read] = '\0';
+  *length = fread(buffer, sizeof(char), MAX_FILE_SIZE, file);
+  buffer[*length] = '\0';
 
   fclose(file);
   return buffer;
@@ -26,26 +23,18 @@ Buffer* readFile(const char* path)
 int main(int argc, const char * argv[])
 {
   // TODO(bob): Validate command line arguments.
-  Buffer* buffer = readFile(argv[1]);
-  Token* tokens = tokenize(buffer);
-  //printf("Raw tokens:\n");
-  //dumpTokens(buffer, tokens);
-  //printf("Cleaned tokens:\n");
-  dumpTokens(buffer, tokens);
-
-  Block* block = compile(buffer, tokens);
+  size_t length;
+  char* source = readFile(argv[1], &length);
+  Block* block = compile(source, length);
   Fiber* fiber = newFiber();
   Value value = interpret(fiber, block);
   printValue(value);
-  
-  // TODO(bob): Free tokens.
-  // TODO(bob): Free ast.
-
-  freeBuffer(buffer);
+  free(source);
 
   return 0;
 }
 
+/*
 static void dumpTokens(Buffer* buffer, Token* token)
 {
   while (token)
@@ -67,3 +56,4 @@ static void dumpTokens(Buffer* buffer, Token* token)
   }
   printf("\n");
 }
+*/
