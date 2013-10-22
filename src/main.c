@@ -50,22 +50,22 @@ static void dumpTokens(Buffer* buffer, Token* token)
 {
   while (token)
   {
-      switch (token->type)
-      {
-          case TOKEN_INDENT: printf("(in)"); break;
-          case TOKEN_OUTDENT: printf("(out)"); break;
-          case TOKEN_LINE: printf("(line)"); break;
-          case TOKEN_ERROR: printf("(error)"); break;
-          case TOKEN_EOF: printf("(eof)"); break;
-          default:
-              printf("⊏");
-              for (int i = token->start; i < token->end; i++)
-              {
-                  putchar(buffer->bytes[i]);
-              }
-              printf("⊐");
-      }
-      token = token->next;
+    switch (token->type)
+    {
+      case TOKEN_INDENT: printf("(in)"); break;
+      case TOKEN_OUTDENT: printf("(out)"); break;
+      case TOKEN_LINE: printf("(line)"); break;
+      case TOKEN_ERROR: printf("(error)"); break;
+      case TOKEN_EOF: printf("(eof)"); break;
+      default:
+        printf("⊏");
+        for (int i = token->start; i < token->end; i++)
+        {
+          putchar(buffer->bytes[i]);
+        }
+        printf("⊐");
+    }
+    token = token->next;
   }
   printf("\n");
 }
