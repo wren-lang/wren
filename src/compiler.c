@@ -33,8 +33,6 @@ typedef enum
   TOKEN_EQEQ,
   TOKEN_BANGEQ,
 
-  TOKEN_ELSE,
-  TOKEN_IF,
   TOKEN_VAR,
 
   TOKEN_NAME,
@@ -159,8 +157,6 @@ CompileFn prefixCompilers[] = {
   NULL, // TOKEN_GTEQ
   NULL, // TOKEN_EQEQ
   NULL, // TOKEN_BANGEQ
-  NULL, // TOKEN_ELSE
-  NULL, // TOKEN_IF
   NULL, // TOKEN_VAR
   prefixLiteral, // TOKEN_NAME
   prefixLiteral, // TOKEN_NUMBER
@@ -196,8 +192,6 @@ InfixCompiler infixCompilers[] = {
   { infixBinaryOp, PREC_COMPARISON }, // TOKEN_GTEQ
   { infixBinaryOp, PREC_EQUALITY }, // TOKEN_EQEQ
   { infixBinaryOp, PREC_EQUALITY }, // TOKEN_BANGEQ
-  { NULL, PREC_NONE }, // TOKEN_ELSE
-  { NULL, PREC_NONE }, // TOKEN_IF
   { NULL, PREC_NONE }, // TOKEN_VAR
   { NULL, PREC_NONE }, // TOKEN_NAME
   { NULL, PREC_NONE }, // TOKEN_NUMBER
@@ -554,9 +548,7 @@ void readName(Compiler* compiler)
 
   TokenType type = TOKEN_NAME;
 
-  if (isKeyword(compiler, "else")) type = TOKEN_ELSE;
-  else if (isKeyword(compiler, "if")) type = TOKEN_IF;
-  else if (isKeyword(compiler, "var")) type = TOKEN_VAR;
+  if (isKeyword(compiler, "var")) type = TOKEN_VAR;
 
   makeToken(compiler, type);
 }
