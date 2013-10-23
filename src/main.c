@@ -25,11 +25,12 @@ int main(int argc, const char * argv[])
   // TODO(bob): Validate command line arguments.
   size_t length;
   char* source = readFile(argv[1], &length);
-  Block* block = compile(source, length);
-  Fiber* fiber = newFiber();
-  Value value = interpret(fiber, block);
+  VM* vm = newVM();
+  Block* block = compile(vm, source, length);
+  Value value = interpret(vm, block);
   printValue(value);
   printf("\n");
+  freeVM(vm);
   free(source);
 
   return 0;

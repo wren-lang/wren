@@ -5,7 +5,6 @@
 
 #include "compiler.h"
 
-// Note: if you add new token types, make sure to update the arrays below.
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -56,6 +55,8 @@ typedef struct Token_s
 
 typedef struct
 {
+  VM* vm;
+
   const char* source;
   size_t sourceLength;
 
@@ -79,31 +80,18 @@ typedef struct
   int hasError;
 } Compiler;
 
-typedef void (*CompileFn)(Compiler*, Token*);
-
-typedef struct
-{
-  CompileFn fn;
-  int precedence;
-} InfixCompiler;
-
-// Parsing:
-
-/*
-static void block(Compiler* compiler);
-*/
-static void statementLike(Compiler* compiler);
+// Grammar:
+static void statement(Compiler* compiler);
 static void expression(Compiler* compiler);
-static void compilePrecedence(Compiler* compiler, int precedence);
-static void prefixLiteral(Compiler* compiler, Token* token);
-static void infixCall(Compiler* compiler, Token* token);
-static void infixBinaryOp(Compiler* compiler, Token* token);
+static void call(Compiler* compiler);
+static void primary(Compiler* compiler);
+static void number(Compiler* compiler, Token* token);
 static TokenType peek(Compiler* compiler);
 static int match(Compiler* compiler, TokenType expected);
 static void consume(Compiler* compiler, TokenType expected);
 static void advance(Compiler* compiler);
 
-// Lexing:
+// Tokens:
 static void readNextToken(Compiler* compiler);
 static void readName(Compiler* compiler);
 static void readNumber(Compiler* compiler);
@@ -119,91 +107,10 @@ static void makeToken(Compiler* compiler, TokenType type);
 // Utility:
 static void error(Compiler* compiler, const char* format, ...);
 
-enum
-{
-  PREC_NONE,
-  PREC_LOWEST,
-
-  PREC_EQUALITY,   // == !=
-  PREC_COMPARISON, // < > <= >=
-  PREC_BITWISE,    // | &
-  PREC_TERM,       // + -
-  PREC_FACTOR,     // * / %
-  PREC_CALL        // ()
-};
-
-CompileFn prefixCompilers[] = {
-  NULL, // TOKEN_LEFT_PAREN
-  NULL, // TOKEN_RIGHT_PAREN
-  NULL, // TOKEN_LEFT_BRACKET
-  NULL, // TOKEN_RIGHT_BRACKET
-  NULL, // TOKEN_LEFT_BRACE
-  NULL, // TOKEN_RIGHT_BRACE
-  NULL, // TOKEN_COLON
-  NULL, // TOKEN_DOT
-  NULL, // TOKEN_COMMA
-  NULL, // TOKEN_STAR
-  NULL, // TOKEN_SLASH
-  NULL, // TOKEN_PERCENT
-  NULL, // TOKEN_PLUS
-  NULL, // TOKEN_MINUS
-  NULL, // TOKEN_PIPE
-  NULL, // TOKEN_AMP
-  NULL, // TOKEN_BANG
-  NULL, // TOKEN_EQ
-  NULL, // TOKEN_LT
-  NULL, // TOKEN_GT
-  NULL, // TOKEN_LTEQ
-  NULL, // TOKEN_GTEQ
-  NULL, // TOKEN_EQEQ
-  NULL, // TOKEN_BANGEQ
-  NULL, // TOKEN_VAR
-  prefixLiteral, // TOKEN_NAME
-  prefixLiteral, // TOKEN_NUMBER
-  prefixLiteral, // TOKEN_STRING
-  NULL, // TOKEN_LINE
-  NULL, // TOKEN_ERROR
-  NULL // TOKEN_EOF
-};
-
-// The indices in this array correspond to TOKEN enum values.
-InfixCompiler infixCompilers[] = {
-  { infixCall, PREC_CALL }, // TOKEN_LEFT_PAREN
-  { NULL, PREC_NONE }, // TOKEN_RIGHT_PAREN
-  { NULL, PREC_NONE }, // TOKEN_LEFT_BRACKET
-  { NULL, PREC_NONE }, // TOKEN_RIGHT_BRACKET
-  { NULL, PREC_NONE }, // TOKEN_LEFT_BRACE
-  { NULL, PREC_NONE }, // TOKEN_RIGHT_BRACE
-  { NULL, PREC_NONE }, // TOKEN_COLON
-  { NULL, PREC_NONE }, // TOKEN_DOT
-  { NULL, PREC_NONE }, // TOKEN_COMMA
-  { infixBinaryOp, PREC_FACTOR }, // TOKEN_STAR
-  { infixBinaryOp, PREC_FACTOR }, // TOKEN_SLASH
-  { infixBinaryOp, PREC_FACTOR }, // TOKEN_PERCENT
-  { infixBinaryOp, PREC_TERM }, // TOKEN_PLUS
-  { infixBinaryOp, PREC_TERM }, // TOKEN_MINUS
-  { infixBinaryOp, PREC_BITWISE }, // TOKEN_PIPE
-  { infixBinaryOp, PREC_BITWISE }, // TOKEN_AMP
-  { NULL, PREC_NONE }, // TOKEN_BANG
-  { NULL, PREC_NONE }, // TOKEN_EQ
-  { infixBinaryOp, PREC_COMPARISON }, // TOKEN_LT
-  { infixBinaryOp, PREC_COMPARISON }, // TOKEN_GT
-  { infixBinaryOp, PREC_COMPARISON }, // TOKEN_LTEQ
-  { infixBinaryOp, PREC_COMPARISON }, // TOKEN_GTEQ
-  { infixBinaryOp, PREC_EQUALITY }, // TOKEN_EQEQ
-  { infixBinaryOp, PREC_EQUALITY }, // TOKEN_BANGEQ
-  { NULL, PREC_NONE }, // TOKEN_VAR
-  { NULL, PREC_NONE }, // TOKEN_NAME
-  { NULL, PREC_NONE }, // TOKEN_NUMBER
-  { NULL, PREC_NONE }, // TOKEN_STRING
-  { NULL, PREC_NONE }, // TOKEN_LINE
-  { NULL, PREC_NONE }, // TOKEN_ERROR
-  { NULL, PREC_NONE } // TOKEN_EOF
-};
-
-Block* compile(const char* source, size_t sourceLength)
+Block* compile(VM* vm, const char* source, size_t sourceLength)
 {
   Compiler compiler;
+  compiler.vm = vm;
   compiler.source = source;
   compiler.sourceLength = sourceLength;
   compiler.hasError = 0;
@@ -225,10 +132,10 @@ Block* compile(const char* source, size_t sourceLength)
 
   compiler.numCodes = 0;
 
-  // TODO(bob): Copied from block(). Unify.
   do
   {
-    statementLike(&compiler);
+    statement(&compiler);
+    // TODO(bob): Discard previous value.
   } while (!match(&compiler, TOKEN_EOF));
 
   compiler.block->bytecode[compiler.numCodes++] = CODE_END;
@@ -236,53 +143,9 @@ Block* compile(const char* source, size_t sourceLength)
   return compiler.hasError ? NULL : compiler.block;
 }
 
-/*
-void block(Compiler* compiler)
-{
-  consume(compiler, TOKEN_INDENT);
-
-  NodeSequence* sequence = malloc(sizeof(NodeSequence));
-  sequence->node.type = NODE_SEQUENCE;
-  sequence->nodes = NULL;
-
-  NodeList** nodes = &sequence->nodes;
-  do
-  {
-    Node* node = statementLike(compiler);
-    *nodes = malloc(sizeof(NodeList));
-    (*nodes)->node = node;
-    (*nodes)->next = NULL;
-    nodes = &(*nodes)->next;
-
-  } while (!match(compiler, TOKEN_OUTDENT));
-
-  return (Node*)sequence;
-}
-*/
-
-void statementLike(Compiler* compiler)
+void statement(Compiler* compiler)
 {
   /*
-  if (match(compiler, TOKEN_IF))
-  {
-    // Compile the condition.
-    expression(compiler);
-
-    consume(compiler, TOKEN_COLON);
-
-    // Compile the then arm.
-    block(compiler);
-
-    // Compile the else arm.
-    if (match(compiler, TOKEN_ELSE))
-    {
-      consume(compiler, TOKEN_COLON);
-      block(parser);
-    }
-
-    return;
-  }
-
   if (match(compiler, TOKEN_VAR))
   {
     Token* name = consume(compiler, TOKEN_NAME);
@@ -308,32 +171,42 @@ void statementLike(Compiler* compiler)
 
 void expression(Compiler* compiler)
 {
-  compilePrecedence(compiler, PREC_LOWEST);
+  call(compiler);
 }
 
-void compilePrecedence(Compiler* compiler, int precedence)
+// Method calls like:
+//
+// foo.bar
+// foo.bar(arg, arg)
+// foo.bar { block } other { block }
+void call(Compiler* compiler)
 {
-  advance(compiler);
-  CompileFn prefix = prefixCompilers[compiler->previous.type];
+  primary(compiler);
 
-  if (prefix == NULL)
+  if (match(compiler, TOKEN_DOT))
   {
-    // TODO(bob): Handle error better.
-    error(compiler, "No prefix parser.");
-    exit(1);
-  }
+    consume(compiler, TOKEN_NAME);
+    int symbol = getSymbol(compiler->vm,
+                           compiler->source + compiler->previous.start,
+                           compiler->previous.end - compiler->previous.start);
+    printf("symbol %d\n", symbol);
 
-  prefix(compiler, &compiler->previous);
 
-  while (precedence <= infixCompilers[compiler->current.type].precedence)
-  {
-    advance(compiler);
-    CompileFn infix = infixCompilers[compiler->previous.type].fn;
-    infix(compiler, &compiler->previous);
+    // Compile the method call.
+    compiler->block->bytecode[compiler->numCodes++] = CODE_CALL;
+    compiler->block->bytecode[compiler->numCodes++] = symbol;
   }
 }
 
-void prefixLiteral(Compiler* compiler, Token* token)
+void primary(Compiler* compiler)
+{
+  if (match(compiler, TOKEN_NUMBER))
+  {
+    number(compiler, &compiler->previous);
+  }
+}
+
+void number(Compiler* compiler, Token* token)
 {
   char* end;
   long value = strtol(compiler->source + token->start, &end, 10);
@@ -358,56 +231,6 @@ void prefixLiteral(Compiler* compiler, Token* token)
   // Compile the code to load the constant.
   compiler->block->bytecode[compiler->numCodes++] = CODE_CONSTANT;
   compiler->block->bytecode[compiler->numCodes++] = compiler->block->numConstants - 1;
-}
-
-void infixCall(Compiler* compiler, Token* token)
-{
-  printf("infix calls not implemented\n");
-  exit(1);
-  /*
-  NodeList* args = NULL;
-  if (match(compiler, TOKEN_RIGHT_PAREN) == NULL)
-  {
-    NodeList** arg = &args;
-    do
-    {
-      *arg = malloc(sizeof(NodeList));
-      (*arg)->node = expression(parser);
-      (*arg)->next = NULL;
-      arg = &(*arg)->next;
-    }
-    while (match(compiler, TOKEN_COMMA) != NULL);
-
-    consume(compiler, TOKEN_RIGHT_PAREN);
-  }
-
-  NodeCall* node = malloc(sizeof(NodeCall));
-  node->node.type = NODE_CALL;
-  node->fn = left;
-  node->args = args;
-
-  return (Node*)node;
-  */
-}
-
-void infixBinaryOp(Compiler* compiler, Token* token)
-{
-  printf("infix binary ops not implemented\n");
-  exit(1);
-  /*
-  // TODO(bob): Support right-associative infix. Needs to do precedence
-  // - 1 here to be right-assoc.
-  Node* right = parsePrecedence(parser,
-                                infixParsers[token->type].precedence);
-
-  NodeBinaryOp* node = malloc(sizeof(NodeBinaryOp));
-  node->node.type = NODE_BINARY_OP;
-  node->left = left;
-  node->op = token;
-  node->right = right;
-
-  return (Node*)node;
-  */
 }
 
 TokenType peek(Compiler* compiler)
@@ -616,7 +439,7 @@ void error(Compiler* compiler, const char* format, ...)
   compiler->hasError = 1;
   printf("Compile error on '");
 
-  for (int i = compiler->current.start; i < compiler->current.end; i++)
+  for (int i = compiler->previous.start; i < compiler->previous.end; i++)
   {
     putchar(compiler->source[i]);
   }

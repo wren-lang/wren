@@ -26,16 +26,13 @@ typedef struct sObj {
 
 typedef Obj* Value;
 
-typedef struct
-{
-  Value stack[STACK_SIZE];
-  int stackSize;
-} Fiber;
-
 typedef enum
 {
   CODE_CONSTANT,
   // Load the constant at index [arg].
+
+  CODE_CALL,
+  // Invoke the method with symbol [arg].
 
   CODE_END
   // The current block is done and should be exited.
@@ -49,8 +46,22 @@ typedef struct
   int numConstants;
 } Block;
 
-Fiber* newFiber();
-Value interpret(Fiber* fiber, Block* block);
+#define MAX_SYMBOLS 256
+
+typedef struct
+{
+  // TODO(bob): Make this dynamically sized.
+  char* symbols[MAX_SYMBOLS];
+  int numSymbols;
+
+} VM;
+
+VM* newVM();
+void freeVM(VM* vm);
+
+int getSymbol(VM* vm, const char* name, size_t length);
+
+Value interpret(VM* vm, Block* block);
 
 void printValue(Value value);
 
