@@ -76,6 +76,9 @@ typedef struct
   Block* block;
   int numCodes;
 
+  // Symbol table for declared local variables in the current block.
+  SymbolTable locals;
+
   // Non-zero if a compile error has occurred.
   int hasError;
 } Compiler;
@@ -105,6 +108,7 @@ static char peekChar(Compiler* compiler);
 static void makeToken(Compiler* compiler, TokenType type);
 
 // Utility:
+static void emit(Compiler* compiler, Code code);
 static void error(Compiler* compiler, const char* format, ...);
 
 Block* compile(VM* vm, const char* source, size_t sourceLength)
@@ -118,7 +122,14 @@ Block* compile(VM* vm, const char* source, size_t sourceLength)
   compiler.tokenStart = 0;
   compiler.currentChar = 0;
 
-  // TODO(bob): Zero-init current token.
+  initSymbolTable(&compiler.locals);
+
+  // Zero-init the current token. This will get copied to previous when
+  // advance() is called below.
+  compiler.current.type = TOKEN_EOF;
+  compiler.current.start = 0;
+  compiler.current.end = 0;
+
   // Read the first token.
   advance(&compiler);
 
@@ -132,37 +143,47 @@ Block* compile(VM* vm, const char* source, size_t sourceLength)
 
   compiler.numCodes = 0;
 
-  do
+  for (;;)
   {
     statement(&compiler);
-    // TODO(bob): Discard previous value.
-  } while (!match(&compiler, TOKEN_EOF));
 
-  compiler.block->bytecode[compiler.numCodes++] = CODE_END;
+    if (match(&compiler, TOKEN_EOF)) break;
+
+    // Discard the result of the previous expression.
+    emit(&compiler, CODE_POP);
+  }
+
+  emit(&compiler, CODE_END);
+
+  compiler.block->numLocals = compiler.locals.count;
 
   return compiler.hasError ? NULL : compiler.block;
 }
 
 void statement(Compiler* compiler)
 {
-  /*
   if (match(compiler, TOKEN_VAR))
   {
-    Token* name = consume(compiler, TOKEN_NAME);
-    Node* initializer = NULL;
-    if (match(compiler, TOKEN_EQ))
-    {
-      initializer = expression(parser);
-    }
-    if (peek(parser) != TOKEN_OUTDENT) consume(compiler, TOKEN_LINE);
+    consume(compiler, TOKEN_NAME);
+    int local = addSymbol(&compiler->locals,
+        compiler->source + compiler->previous.start,
+        compiler->previous.end - compiler->previous.start);
 
-    NodeVar* node = malloc(sizeof(NodeVar));
-    node->node.type = NODE_VAR;
-    node->name = name;
-    node->initializer = initializer;
-    return (Node*)node;
+    if (local == -1)
+    {
+      error(compiler, "Local variable is already defined.");
+    }
+
+    // TODO(bob): Allow uninitialized vars?
+    consume(compiler, TOKEN_EQ);
+
+    // Compile the initializer.
+    expression(compiler);
+
+    emit(compiler, CODE_STORE_LOCAL);
+    emit(compiler, local);
+    return;
   }
-  */
 
   // Statement expression.
   expression(compiler);
@@ -186,23 +207,38 @@ void call(Compiler* compiler)
   if (match(compiler, TOKEN_DOT))
   {
     consume(compiler, TOKEN_NAME);
-    int symbol = getSymbol(compiler->vm,
-                           compiler->source + compiler->previous.start,
-                           compiler->previous.end - compiler->previous.start);
-    printf("symbol %d\n", symbol);
-
+    int symbol = ensureSymbol(&compiler->vm->symbols,
+        compiler->source + compiler->previous.start,
+        compiler->previous.end - compiler->previous.start);
 
     // Compile the method call.
-    compiler->block->bytecode[compiler->numCodes++] = CODE_CALL;
-    compiler->block->bytecode[compiler->numCodes++] = symbol;
+    emit(compiler, CODE_CALL);
+    emit(compiler, symbol);
   }
 }
 
 void primary(Compiler* compiler)
 {
+  if (match(compiler, TOKEN_NAME))
+  {
+    int local = findSymbol(&compiler->locals,
+        compiler->source + compiler->previous.start,
+        compiler->previous.end - compiler->previous.start);
+    if (local == -1)
+    {
+      // TODO(bob): Look for globals or names in outer scopes.
+      error(compiler, "Unknown variable.");
+    }
+
+    emit(compiler, CODE_LOAD_LOCAL);
+    emit(compiler, local);
+    return;
+  }
+
   if (match(compiler, TOKEN_NUMBER))
   {
     number(compiler, &compiler->previous);
+    return;
   }
 }
 
@@ -219,18 +255,14 @@ void number(Compiler* compiler, Token* token)
 
   // Define a constant for the literal.
   // TODO(bob): See if constant with same value already exists.
-  Value constant = malloc(sizeof(Obj));
-  constant->type = OBJ_INT;
-  constant->flags = 0;
-
   // TODO(bob): Handle truncation!
-  constant->value = (int)value;
+  Value constant = makeNum((int)value);
 
   compiler->block->constants[compiler->block->numConstants++] = constant;
 
   // Compile the code to load the constant.
-  compiler->block->bytecode[compiler->numCodes++] = CODE_CONSTANT;
-  compiler->block->bytecode[compiler->numCodes++] = compiler->block->numConstants - 1;
+  emit(compiler, CODE_CONSTANT);
+  emit(compiler, compiler->block->numConstants - 1);
 }
 
 TokenType peek(Compiler* compiler)
@@ -286,7 +318,17 @@ void readNextToken(Compiler* compiler)
       case '/': makeToken(compiler, TOKEN_SLASH); return;
       case '%': makeToken(compiler, TOKEN_PERCENT); return;
       case '+': makeToken(compiler, TOKEN_PLUS); return;
-      case '-': makeToken(compiler, TOKEN_MINUS); return;
+      case '-':
+        if (isDigit(peekChar(compiler)))
+        {
+          readNumber(compiler);
+        }
+        else
+        {
+          makeToken(compiler, TOKEN_MINUS);
+        }
+        return;
+
       case '|': makeToken(compiler, TOKEN_PIPE); return;
       case '&': makeToken(compiler, TOKEN_AMP); return;
       case '=':
@@ -432,6 +474,11 @@ void makeToken(Compiler* compiler, TokenType type)
   compiler->current.type = type;
   compiler->current.start = compiler->tokenStart;
   compiler->current.end = compiler->currentChar;
+}
+
+void emit(Compiler* compiler, Code code)
+{
+  compiler->block->bytecode[compiler->numCodes++] = code;
 }
 
 void error(Compiler* compiler, const char* format, ...)
