@@ -110,8 +110,15 @@ static void consume(Compiler* compiler, TokenType expected);
 static void advance(Parser* parser);
 
 // Tokens:
+
+// Lex the next token in the source file and store it in parser.current. Omits
+// newlines that aren't meaningful.
 static void readNextToken(Parser* parser);
+
+// Lex the next token and store it in parser.current. Does not do any newline
+// filtering.
 static void readRawToken(Parser* parser);
+
 static void readName(Parser* parser);
 static void readNumber(Parser* parser);
 static void readString(Parser* parser);

@@ -27,9 +27,14 @@ int main(int argc, const char * argv[])
   char* source = readFile(argv[1], &length);
   VM* vm = newVM();
   ObjBlock* block = compile(vm, source, length);
-  Value value = interpret(vm, block);
-  printValue(value);
-  printf("\n");
+
+  if (block)
+  {
+    Value value = interpret(vm, block);
+    printValue(value);
+    printf("\n");
+  }
+
   freeVM(vm);
   free(source);
 

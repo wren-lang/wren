@@ -4,6 +4,13 @@
 
 #include "vm.h"
 
+#define PRIMITIVE(cls, prim) \
+    { \
+      int symbol = ensureSymbol(&vm->symbols, #prim, strlen(#prim)); \
+      vm->cls##Class->methods[symbol].type = METHOD_PRIMITIVE; \
+      vm->cls##Class->methods[symbol].primitive = primitive_##cls##_##prim; \
+    }
+
 typedef struct
 {
   // Index of the current (really next-to-be-executed) instruction in the
@@ -29,17 +36,26 @@ typedef struct
 static void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal);
 static void push(Fiber* fiber, Value value);
 static Value pop(Fiber* fiber);
-static Value primitiveNumAbs(Value number);
+static Value primitive_num_abs(Value block);
 
 VM* newVM()
 {
   VM* vm = malloc(sizeof(VM));
   initSymbolTable(&vm->symbols);
 
+  vm->blockClass = makeClass();
+
+  // The call method is special: neither a primitive nor a user-defined one.
+  // This is because it mucks with the fiber itself.
+  {
+    int symbol = ensureSymbol(&vm->symbols, "call", strlen("call"));
+    vm->blockClass->methods[symbol].type = METHOD_CALL;
+  }
+
+  vm->classClass = makeClass();
+
   vm->numClass = makeClass();
-  int symbol = ensureSymbol(&vm->symbols, "abs", 3);
-  vm->numClass->methods[symbol].type = METHOD_PRIMITIVE;
-  vm->numClass->methods[symbol].primitive = primitiveNumAbs;
+  PRIMITIVE(num, abs);
 
   return vm;
 }
@@ -198,7 +214,22 @@ Value interpret(VM* vm, ObjBlock* block)
         int symbol = frame->block->bytecode[frame->ip++];
 
         // TODO(bob): Support classes for other object types.
-        ObjClass* classObj = vm->numClass;
+        ObjClass* classObj;
+        switch (receiver->type)
+        {
+          case OBJ_BLOCK:
+            classObj = vm->blockClass;
+            break;
+
+          case OBJ_CLASS:
+            classObj = vm->classClass;
+            break;
+
+          case OBJ_NUM:
+            classObj = vm->numClass;
+            break;
+        }
+
         Method* method = &classObj->methods[symbol];
         switch (method->type)
         {
@@ -206,6 +237,11 @@ Value interpret(VM* vm, ObjBlock* block)
             // TODO(bob): Should return nil or suspend fiber or something.
             printf("No method.\n");
             exit(1);
+            break;
+
+          case METHOD_CALL:
+            // TODO(bob): Should pass in correct index for locals.
+            callBlock(&fiber, (ObjBlock*)receiver, fiber.stackSize);
             break;
 
           case METHOD_PRIMITIVE:
@@ -282,7 +318,7 @@ Value pop(Fiber* fiber)
   return fiber->stack[--fiber->stackSize];
 }
 
-Value primitiveNumAbs(Value number)
+Value primitive_num_abs(Value number)
 {
   double value = ((ObjNum*)number)->value;
   if (value < 0) value = -value;

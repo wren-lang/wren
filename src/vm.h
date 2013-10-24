@@ -46,6 +46,7 @@ typedef Value (*Primitive)(Value receiver);
 typedef enum
 {
   METHOD_NONE,
+  METHOD_CALL,
   METHOD_PRIMITIVE,
   METHOD_BLOCK
 } MethodType;
@@ -105,6 +106,9 @@ typedef struct
 typedef struct
 {
   SymbolTable symbols;
+
+  ObjClass* blockClass;
+  ObjClass* classClass;
   ObjClass* numClass;
 } VM;
 
