@@ -26,7 +26,7 @@ typedef struct
   int numFrames;
 } Fiber;
 
-static void callBlock(Fiber* fiber, ObjBlock* block, int locals);
+static void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal);
 static void push(Fiber* fiber, Value value);
 static Value pop(Fiber* fiber);
 static Value primitiveNumAbs(Value number);
@@ -67,7 +67,7 @@ ObjClass* makeClass()
 ObjBlock* makeBlock()
 {
   ObjBlock* block = malloc(sizeof(ObjBlock));
-  block->obj.type = OBJ_NUM;
+  block->obj.type = OBJ_BLOCK;
   block->obj.flags = 0;
   return block;
 }
@@ -153,6 +153,9 @@ Value interpret(VM* vm, ObjBlock* block)
         int constant = frame->block->bytecode[frame->ip++];
         Value value = frame->block->constants[constant];
         fiber.stack[fiber.stackSize++] = value;
+        printf("load constant ");
+        printValue(value);
+        printf(" to %d\n", fiber.stackSize - 1);
         break;
       }
 
@@ -251,11 +254,20 @@ void printValue(Value value)
   }
 }
 
-void callBlock(Fiber* fiber, ObjBlock* block, int locals)
+void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal)
 {
   fiber->frames[fiber->numFrames].block = block;
   fiber->frames[fiber->numFrames].ip = 0;
-  fiber->frames[fiber->numFrames].locals = locals;
+  fiber->frames[fiber->numFrames].locals = firstLocal;
+
+  // Make empty slots for locals.
+  // TODO(bob): Don't push slots for params since the args are already there.
+  // TODO(bob): Should we push some real nil value here?
+  for (int i = 0; i < block->numLocals; i++)
+  {
+    push(fiber, NULL);
+  }
+
   fiber->numFrames++;
 }
 
