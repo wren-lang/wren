@@ -11,7 +11,7 @@ typedef struct
   int ip;
 
   // The block being executed.
-  Block* block;
+  ObjBlock* block;
 
   // Index of the stack slot that contains the first local for this block.
   int locals;
@@ -26,7 +26,7 @@ typedef struct
   int numFrames;
 } Fiber;
 
-static void callBlock(Fiber* fiber, Block* block, int locals);
+static void callBlock(Fiber* fiber, ObjBlock* block, int locals);
 static void push(Fiber* fiber, Value value);
 static Value pop(Fiber* fiber);
 static Value primitiveNumAbs(Value number);
@@ -36,12 +36,10 @@ VM* newVM()
   VM* vm = malloc(sizeof(VM));
   initSymbolTable(&vm->symbols);
 
-  for (int i = 0; i < MAX_SYMBOLS; i++)
-  {
-    vm->numClass.methods[i] = NULL;
-  }
-
-  vm->numClass.methods[ensureSymbol(&vm->symbols, "abs", 3)] = primitiveNumAbs;
+  vm->numClass = makeClass();
+  int symbol = ensureSymbol(&vm->symbols, "abs", 3);
+  vm->numClass->methods[symbol].type = METHOD_PRIMITIVE;
+  vm->numClass->methods[symbol].primitive = primitiveNumAbs;
 
   return vm;
 }
@@ -52,14 +50,35 @@ void freeVM(VM* vm)
   free(vm);
 }
 
-Value makeNum(int number)
+ObjClass* makeClass()
 {
-  Value value = malloc(sizeof(Obj));
-  value->type = OBJ_INT;
-  value->flags = 0;
-  value->value = number;
+  ObjClass* obj = malloc(sizeof(ObjClass));
+  obj->obj.type = OBJ_CLASS;
+  obj->obj.flags = 0;
 
-  return value;
+  for (int i = 0; i < MAX_SYMBOLS; i++)
+  {
+    obj->methods[i].type = METHOD_NONE;
+  }
+
+  return obj;
+}
+
+ObjBlock* makeBlock()
+{
+  ObjBlock* block = malloc(sizeof(ObjBlock));
+  block->obj.type = OBJ_NUM;
+  block->obj.flags = 0;
+  return block;
+}
+
+ObjNum* makeNum(double number)
+{
+  ObjNum* num = malloc(sizeof(ObjNum));
+  num->obj.type = OBJ_NUM;
+  num->obj.flags = 0;
+  num->value = number;
+  return num;
 }
 
 void initSymbolTable(SymbolTable* symbols)
@@ -115,7 +134,7 @@ int findSymbol(SymbolTable* symbols, const char* name, size_t length)
   return -1;
 }
 
-Value interpret(VM* vm, Block* block)
+Value interpret(VM* vm, ObjBlock* block)
 {
   Fiber fiber;
   fiber.stackSize = 0;
@@ -137,21 +156,34 @@ Value interpret(VM* vm, Block* block)
         break;
       }
 
+      case CODE_CLASS:
+        push(&fiber, (Value)makeClass());
+        printf("push class at %d\n", fiber.stackSize - 1);
+        break;
+
       case CODE_LOAD_LOCAL:
       {
         int local = frame->block->bytecode[frame->ip++];
         push(&fiber, fiber.stack[frame->locals + local]);
+        printf("load local %d to %d\n", local, fiber.stackSize - 1);
         break;
       }
 
       case CODE_STORE_LOCAL:
       {
         int local = frame->block->bytecode[frame->ip++];
-        fiber.stack[frame->locals + local] = pop(&fiber);
+        printf("store local %d from %d\n", local, fiber.stackSize - 1);
+        fiber.stack[frame->locals + local] = fiber.stack[fiber.stackSize - 1];
         break;
       }
 
+      case CODE_DUP:
+        push(&fiber, fiber.stack[fiber.stackSize - 1]);
+        printf("dup %d\n", fiber.stackSize - 1);
+        break;
+        
       case CODE_POP:
+        printf("pop %d\n", fiber.stackSize - 1);
         pop(&fiber);
         break;
 
@@ -163,19 +195,24 @@ Value interpret(VM* vm, Block* block)
         int symbol = frame->block->bytecode[frame->ip++];
 
         // TODO(bob): Support classes for other object types.
-        Class* classObj = &vm->numClass;
+        ObjClass* classObj = vm->numClass;
+        Method* method = &classObj->methods[symbol];
+        switch (method->type)
+        {
+          case METHOD_NONE:
+            // TODO(bob): Should return nil or suspend fiber or something.
+            printf("No method.\n");
+            exit(1);
+            break;
 
-        Primitive primitive = classObj->methods[symbol];
-        if (primitive)
-        {
-          Value result = primitive(receiver);
-          push(&fiber, result);
-        }
-        else
-        {
-          // TODO(bob): Should return nil or suspend fiber or something.
-          printf("No method.\n");
-          exit(1);
+          case METHOD_PRIMITIVE:
+            push(&fiber, method->primitive(receiver));
+            break;
+
+          case METHOD_BLOCK:
+            // TODO(bob): Should pass in correct index for locals.
+            callBlock(&fiber, method->block, fiber.stackSize);
+            break;
         }
         break;
       }
@@ -200,13 +237,21 @@ void printValue(Value value)
 {
   switch (value->type)
   {
-    case OBJ_INT:
-      printf("%d", value->value);
+    case OBJ_NUM:
+      printf("%f", ((ObjNum*)value)->value);
+      break;
+
+    case OBJ_BLOCK:
+      printf("[block]");
+      break;
+
+    case OBJ_CLASS:
+      printf("[class]");
       break;
   }
 }
 
-void callBlock(Fiber* fiber, Block* block, int locals)
+void callBlock(Fiber* fiber, ObjBlock* block, int locals)
 {
   fiber->frames[fiber->numFrames].block = block;
   fiber->frames[fiber->numFrames].ip = 0;
@@ -227,8 +272,8 @@ Value pop(Fiber* fiber)
 
 Value primitiveNumAbs(Value number)
 {
-  int value = number->value;
+  double value = ((ObjNum*)number)->value;
   if (value < 0) value = -value;
 
-  return makeNum(value);
+  return (Value)makeNum(value);
 }

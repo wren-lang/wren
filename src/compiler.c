@@ -32,6 +32,8 @@ typedef enum
   TOKEN_EQEQ,
   TOKEN_BANGEQ,
 
+  TOKEN_CLASS,
+  TOKEN_META,
   TOKEN_VAR,
 
   TOKEN_NAME,
@@ -73,7 +75,7 @@ typedef struct
   Token previous;
 
   // The block being compiled.
-  Block* block;
+  ObjBlock* block;
   int numCodes;
 
   // Symbol table for declared local variables in the current block.
@@ -111,7 +113,7 @@ static void makeToken(Compiler* compiler, TokenType type);
 static void emit(Compiler* compiler, Code code);
 static void error(Compiler* compiler, const char* format, ...);
 
-Block* compile(VM* vm, const char* source, size_t sourceLength)
+ObjBlock* compile(VM* vm, const char* source, size_t sourceLength)
 {
   Compiler compiler;
   compiler.vm = vm;
@@ -133,7 +135,7 @@ Block* compile(VM* vm, const char* source, size_t sourceLength)
   // Read the first token.
   advance(&compiler);
 
-  compiler.block = malloc(sizeof(Block));
+  compiler.block = makeBlock();
   // TODO(bob): Hack! make variable sized.
   compiler.block->bytecode = malloc(sizeof(Code) * 1024);
 
@@ -146,6 +148,8 @@ Block* compile(VM* vm, const char* source, size_t sourceLength)
   for (;;)
   {
     statement(&compiler);
+
+    consume(&compiler, TOKEN_LINE);
 
     if (match(&compiler, TOKEN_EOF)) break;
 
@@ -162,6 +166,36 @@ Block* compile(VM* vm, const char* source, size_t sourceLength)
 
 void statement(Compiler* compiler)
 {
+  if (match(compiler, TOKEN_CLASS))
+  {
+    consume(compiler, TOKEN_NAME);
+
+    // TODO(bob): Copied from below. Unify.
+    int local = addSymbol(&compiler->locals,
+        compiler->source + compiler->previous.start,
+        compiler->previous.end - compiler->previous.start);
+
+    if (local == -1)
+    {
+      error(compiler, "Local variable is already defined.");
+    }
+
+    // Create the empty class.
+    emit(compiler, CODE_CLASS);
+
+    // Store it in its name.
+    emit(compiler, CODE_STORE_LOCAL);
+    emit(compiler, local);
+
+    // Compile the method definitions.
+    consume(compiler, TOKEN_LEFT_BRACE);
+
+    // TODO(bob): Definitions!
+
+    consume(compiler, TOKEN_RIGHT_BRACE);
+    return;
+  }
+
   if (match(compiler, TOKEN_VAR))
   {
     consume(compiler, TOKEN_NAME);
@@ -187,7 +221,6 @@ void statement(Compiler* compiler)
 
   // Statement expression.
   expression(compiler);
-  consume(compiler, TOKEN_LINE);
 }
 
 void expression(Compiler* compiler)
@@ -245,6 +278,7 @@ void primary(Compiler* compiler)
 void number(Compiler* compiler, Token* token)
 {
   char* end;
+  // TODO(bob): Parse actual double!
   long value = strtol(compiler->source + token->start, &end, 10);
   // TODO(bob): Check errno == ERANGE here.
   if (end == compiler->source + token->start)
@@ -255,8 +289,7 @@ void number(Compiler* compiler, Token* token)
 
   // Define a constant for the literal.
   // TODO(bob): See if constant with same value already exists.
-  // TODO(bob): Handle truncation!
-  Value constant = makeNum((int)value);
+  Value constant = (Value)makeNum((double)value);
 
   compiler->block->constants[compiler->block->numConstants++] = constant;
 
@@ -413,6 +446,8 @@ void readName(Compiler* compiler)
 
   TokenType type = TOKEN_NAME;
 
+  if (isKeyword(compiler, "class")) type = TOKEN_CLASS;
+  if (isKeyword(compiler, "meta")) type = TOKEN_META;
   if (isKeyword(compiler, "var")) type = TOKEN_VAR;
 
   makeToken(compiler, type);

@@ -26,7 +26,7 @@ int main(int argc, const char * argv[])
   size_t length;
   char* source = readFile(argv[1], &length);
   VM* vm = newVM();
-  Block* block = compile(vm, source, length);
+  ObjBlock* block = compile(vm, source, length);
   Value value = interpret(vm, block);
   printValue(value);
   printf("\n");

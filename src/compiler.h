@@ -3,6 +3,6 @@
 
 #include "vm.h"
 
-Block* compile(VM* vm, const char* source, size_t sourceLength);
+ObjBlock* compile(VM* vm, const char* source, size_t sourceLength);
 
 #endif
