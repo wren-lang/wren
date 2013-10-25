@@ -1,6 +1,7 @@
-var a = {
-  var b = 234
-  3
-  b
+class Foo {
+  bar {
+    123
+  }
 }
-a.call
+var a = Foo.new
+a.bar

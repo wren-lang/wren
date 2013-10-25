@@ -9,7 +9,8 @@
 typedef enum {
   OBJ_NUM,
   OBJ_BLOCK,
-  OBJ_CLASS
+  OBJ_CLASS,
+  OBJ_INSTANCE
 } ObjType;
 
 typedef enum
@@ -61,12 +62,20 @@ typedef struct
   };
 } Method;
 
-typedef struct
+typedef struct sObjClass
 {
   Obj obj;
+  struct sObjClass* metaclass;
   // TODO(bob): Hack. Probably don't want to use this much space.
   Method methods[MAX_SYMBOLS];
 } ObjClass;
+
+typedef struct
+{
+  Obj obj;
+  ObjClass* classObj;
+  // TODO(bob): Fields.
+} ObjInstance;
 
 typedef enum
 {
@@ -75,6 +84,10 @@ typedef enum
 
   CODE_CLASS,
   // Define a new empty class and push it.
+
+  CODE_METHOD,
+  // Add a method for symbol [arg1] with body stored in constant [arg2] to the
+  // class on the top of stack. Does not modify the stack.
 
   CODE_DUP,
   // Push a copy of the top of stack.
@@ -118,6 +131,7 @@ void freeVM(VM* vm);
 ObjClass* makeClass();
 ObjBlock* makeBlock();
 ObjNum* makeNum(double number);
+ObjInstance* makeInstance(ObjClass* classObj);
 
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);
@@ -136,6 +150,9 @@ int ensureSymbol(SymbolTable* symbols, const char* name, size_t length);
 
 // Looks up name in the symbol table. Returns its index if found or -1 if not.
 int findSymbol(SymbolTable* symbols, const char* name, size_t length);
+
+// Given an index in the symbol table, returns its name.
+const char* getSymbolName(SymbolTable* symbols, int symbol);
 
 Value interpret(VM* vm, ObjBlock* block);
 

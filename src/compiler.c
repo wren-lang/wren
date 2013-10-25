@@ -97,6 +97,7 @@ typedef struct sCompiler
 
 static ObjBlock* compileBlock(Parser* parser, Compiler* parent,
                               TokenType endToken);
+static int addConstant(Compiler* compiler, Value constant);
 
 // Grammar:
 static void statement(Compiler* compiler);
@@ -185,6 +186,12 @@ ObjBlock* compileBlock(Parser* parser, Compiler* parent, TokenType endToken)
   return parser->hasError ? NULL : compiler.block;
 }
 
+int addConstant(Compiler* compiler, Value constant)
+{
+  compiler->block->constants[compiler->block->numConstants++] = constant;
+  return compiler->block->numConstants - 1;
+}
+
 void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_CLASS))
@@ -215,13 +222,20 @@ void statement(Compiler* compiler)
     {
       // Method name.
       consume(compiler, TOKEN_NAME);
-      //int symbol = internSymbol(compiler);
+      int symbol = internSymbol(compiler);
 
       consume(compiler, TOKEN_LEFT_BRACE);
-      // TODO(bob): Parse body.
-      consume(compiler, TOKEN_RIGHT_BRACE);
-
+      ObjBlock* method = compileBlock(compiler->parser, compiler,
+                                      TOKEN_RIGHT_BRACE);
       consume(compiler, TOKEN_LINE);
+
+      // Add the block to the constant table.
+      int constant = addConstant(compiler, (Value)method);
+
+      // Compile the code to define the method it.
+      emit(compiler, CODE_METHOD);
+      emit(compiler, symbol);
+      emit(compiler, constant);
     }
 
     return;
@@ -335,14 +349,11 @@ void number(Compiler* compiler)
   }
 
   // Define a constant for the literal.
-  // TODO(bob): See if constant with same value already exists.
-  Value constant = (Value)makeNum((double)value);
-
-  compiler->block->constants[compiler->block->numConstants++] = constant;
+  int constant = addConstant(compiler, (Value)makeNum((double)value));
 
   // Compile the code to load the constant.
   emit(compiler, CODE_CONSTANT);
-  emit(compiler, compiler->block->numConstants - 1);
+  emit(compiler, constant);
 }
 
 TokenType peek(Compiler* compiler)
