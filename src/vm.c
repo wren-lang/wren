@@ -38,6 +38,7 @@ static void push(Fiber* fiber, Value value);
 static Value pop(Fiber* fiber);
 static Value primitive_metaclass_new(Value receiver);
 static Value primitive_num_abs(Value receiver);
+static Value primitive_string_count(Value receiver);
 
 VM* newVM()
 {
@@ -61,6 +62,9 @@ VM* newVM()
 
   vm->numClass = makeClass();
   PRIMITIVE(num, abs);
+
+  vm->stringClass = makeClass();
+  PRIMITIVE(string, count);
 
   return vm;
 }
@@ -448,4 +452,12 @@ Value primitive_num_abs(Value receiver)
   if (value < 0) value = -value;
 
   return (Value)makeNum(value);
+}
+
+
+Value primitive_string_count(Value receiver)
+{
+  double count = strlen(((ObjString*)receiver)->value);
+
+  return (Value)makeNum(count);
 }
