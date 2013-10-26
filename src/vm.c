@@ -36,9 +36,10 @@ typedef struct
 static void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal);
 static void push(Fiber* fiber, Value value);
 static Value pop(Fiber* fiber);
-static Value primitive_metaclass_new(Value receiver);
-static Value primitive_num_abs(Value receiver);
-static Value primitive_string_count(Value receiver);
+static Value primitive_metaclass_new(Value* args, int numArgs);
+static Value primitive_num_abs(Value* args, int numArgs);
+static Value primitive_string_contains(Value* args, int numArgs);
+static Value primitive_string_count(Value* args, int numArgs);
 
 VM* newVM()
 {
@@ -64,6 +65,7 @@ VM* newVM()
   PRIMITIVE(num, abs);
 
   vm->stringClass = makeClass();
+  PRIMITIVE(string, contains);
   PRIMITIVE(string, count);
 
   return vm;
@@ -294,11 +296,21 @@ Value interpret(VM* vm, ObjBlock* block)
         pop(&fiber);
         break;
 
-      case CODE_CALL:
+      case CODE_CALL_0:
+      case CODE_CALL_1:
+      case CODE_CALL_2:
+      case CODE_CALL_3:
+      case CODE_CALL_4:
+      case CODE_CALL_5:
+      case CODE_CALL_6:
+      case CODE_CALL_7:
+      case CODE_CALL_8:
+      case CODE_CALL_9:
+      case CODE_CALL_10:
       {
-        Value receiver = pop(&fiber);
-        // TODO(bob): Arguments.
+        int numArgs = frame->block->bytecode[frame->ip - 1] - CODE_CALL_0;
 
+        Value receiver = fiber.stack[fiber.stackSize - numArgs - 1];
         int symbol = frame->block->bytecode[frame->ip++];
 
         // TODO(bob): Support classes for other object types.
@@ -340,17 +352,21 @@ Value interpret(VM* vm, ObjBlock* block)
             break;
 
           case METHOD_CALL:
-            // TODO(bob): Should pass in correct index for locals.
-            callBlock(&fiber, (ObjBlock*)receiver, fiber.stackSize);
+            callBlock(&fiber, (ObjBlock*)receiver, fiber.stackSize - numArgs);
             break;
 
           case METHOD_PRIMITIVE:
-            push(&fiber, method->primitive(receiver));
+            // TODO(bob): Pass args to primitive.
+            fiber.stack[fiber.stackSize - numArgs - 1] =
+                method->primitive(&fiber.stack[fiber.stackSize - numArgs - 1],
+                                  numArgs);
+
+            // Discard the stack slots for the arguments.
+            fiber.stackSize = fiber.stackSize - numArgs;
             break;
 
           case METHOD_BLOCK:
-            // TODO(bob): Should pass in correct index for locals.
-            callBlock(&fiber, method->block, fiber.stackSize);
+            callBlock(&fiber, method->block, fiber.stackSize - numArgs);
             break;
         }
         break;
@@ -439,25 +455,34 @@ Value pop(Fiber* fiber)
   return fiber->stack[--fiber->stackSize];
 }
 
-Value primitive_metaclass_new(Value receiver)
+Value primitive_metaclass_new(Value* args, int numArgs)
 {
-  ObjClass* classObj = (ObjClass*)receiver;
+  ObjClass* classObj = (ObjClass*)args[0];
   // TODO(bob): Invoke initializer method.
   return (Value)makeInstance(classObj);
 }
 
-Value primitive_num_abs(Value receiver)
+Value primitive_num_abs(Value* args, int numArgs)
 {
-  double value = ((ObjNum*)receiver)->value;
+  double value = ((ObjNum*)args[0])->value;
   if (value < 0) value = -value;
 
   return (Value)makeNum(value);
 }
 
-
-Value primitive_string_count(Value receiver)
+Value primitive_string_contains(Value* args, int numArgs)
 {
-  double count = strlen(((ObjString*)receiver)->value);
+  const char* string = ((ObjString*)args[0])->value;
+  // TODO(bob): Check type of arg first!
+  const char* search = ((ObjString*)args[1])->value;
+
+  // TODO(bob): Return bool.
+  return (Value)makeNum(strstr(string, search) != NULL);
+}
+
+Value primitive_string_count(Value* args, int numArgs)
+{
+  double count = strlen(((ObjString*)args[0])->value);
 
   return (Value)makeNum(count);
 }

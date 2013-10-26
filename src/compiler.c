@@ -275,13 +275,28 @@ void call(Compiler* compiler)
 {
   primary(compiler);
 
-  if (match(compiler, TOKEN_DOT))
+  while (match(compiler, TOKEN_DOT))
   {
     consume(compiler, TOKEN_NAME);
     int symbol = internSymbol(compiler);
 
+    // Parse the argument list, if any.
+    // TODO(bob): Arg list should mangle method name.
+    int numArgs = 0;
+    if (match(compiler, TOKEN_LEFT_PAREN))
+    {
+      for (;;)
+      {
+        expression(compiler);
+        numArgs++;
+        if (!match(compiler, TOKEN_COMMA)) break;
+      }
+      consume(compiler, TOKEN_RIGHT_PAREN);
+    }
+
     // Compile the method call.
-    emit(compiler, CODE_CALL);
+    emit(compiler, CODE_CALL_0 + numArgs);
+    // TODO(bob): Handle > 10 args.
     emit(compiler, symbol);
   }
 }

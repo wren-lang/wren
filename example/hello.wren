@@ -5,4 +5,4 @@ class Foo { // line comment
 }
 var a = Foo.new
 a.bar
-"a string"
+"something".contains("meth")

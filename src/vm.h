@@ -49,7 +49,7 @@ typedef struct
   int numLocals;
 } ObjBlock;
 
-typedef Value (*Primitive)(Value receiver);
+typedef Value (*Primitive)(Value* args, int numArgs);
 
 typedef enum
 {
@@ -86,40 +86,50 @@ typedef struct
 
 typedef enum
 {
-  CODE_CONSTANT,
   // Load the constant at index [arg].
+  CODE_CONSTANT,
 
-  CODE_CLASS,
   // Define a new empty class and push it.
+  CODE_CLASS,
 
-  CODE_METHOD,
   // Add a method for symbol [arg1] with body stored in constant [arg2] to the
   // class on the top of stack. Does not modify the stack.
+  CODE_METHOD,
 
-  CODE_DUP,
   // Push a copy of the top of stack.
+  CODE_DUP,
 
-  CODE_POP,
   // Pop and discard the top of stack.
+  CODE_POP,
 
+  // Pushes the value in local slot [arg].
   CODE_LOAD_LOCAL,
-  // Pushes the value in local slot [arg]. 
 
-  CODE_STORE_LOCAL,
   // Stores the top of stack in local slot [arg]. Does not pop it.
+  CODE_STORE_LOCAL,
 
-  CODE_LOAD_GLOBAL,
   // Pushes the value in global slot [arg].
+  CODE_LOAD_GLOBAL,
 
-  CODE_STORE_GLOBAL,
   // Stores the top of stack in global slot [arg]. Does not pop it.
+  CODE_STORE_GLOBAL,
 
-  CODE_CALL,
-  // Invoke the method with symbol [arg].
+  // Invoke the method with symbol [arg]. The number indicates the number of
+  // arguments (not including the receiver).
+  CODE_CALL_0,
+  CODE_CALL_1,
+  CODE_CALL_2,
+  CODE_CALL_3,
+  CODE_CALL_4,
+  CODE_CALL_5,
+  CODE_CALL_6,
+  CODE_CALL_7,
+  CODE_CALL_8,
+  CODE_CALL_9,
+  CODE_CALL_10,
 
-  CODE_END
   // The current block is done and should be exited.
-
+  CODE_END
 } Code;
 
 typedef struct
