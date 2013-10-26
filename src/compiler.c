@@ -105,6 +105,7 @@ static void expression(Compiler* compiler);
 static void call(Compiler* compiler);
 static void primary(Compiler* compiler);
 static void number(Compiler* compiler);
+static void string(Compiler* compiler);
 static TokenType peek(Compiler* compiler);
 static int match(Compiler* compiler, TokenType expected);
 static void consume(Compiler* compiler, TokenType expected);
@@ -339,6 +340,13 @@ void primary(Compiler* compiler)
     number(compiler);
     return;
   }
+
+  // String.
+  if (match(compiler, TOKEN_STRING))
+  {
+    string(compiler);
+    return;
+  }
 }
 
 void number(Compiler* compiler)
@@ -356,6 +364,27 @@ void number(Compiler* compiler)
 
   // Define a constant for the literal.
   int constant = addConstant(compiler, (Value)makeNum((double)value));
+
+  // Compile the code to load the constant.
+  emit(compiler, CODE_CONSTANT);
+  emit(compiler, constant);
+}
+
+void string(Compiler* compiler)
+{
+  Token* token = &compiler->parser->previous;
+
+  // TODO(bob): Handle escaping.
+
+  // Copy the string to the heap.
+  // Strip the surrounding "" off.
+  size_t length = token->end - token->start - 2;
+  char* text = malloc(length + 1);
+  strncpy(text, compiler->parser->source + token->start + 1, length);
+  text[length] = '\0';
+
+  // Define a constant for the literal.
+  int constant = addConstant(compiler, (Value)makeString(text));
 
   // Compile the code to load the constant.
   emit(compiler, CODE_CONSTANT);

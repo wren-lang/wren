@@ -113,6 +113,15 @@ ObjNum* makeNum(double number)
   return num;
 }
 
+ObjString* makeString(const char* text)
+{
+  ObjString* string = malloc(sizeof(ObjString));
+  string->obj.type = OBJ_STRING;
+  string->obj.flags = 0;
+  string->value = text;
+  return string;
+}
+
 ObjInstance* makeInstance(ObjClass* classObj)
 {
   ObjInstance* instance = malloc(sizeof(ObjInstance));
@@ -304,6 +313,10 @@ Value interpret(VM* vm, ObjBlock* block)
             classObj = vm->numClass;
             break;
 
+          case OBJ_STRING:
+            classObj = vm->stringClass;
+            break;
+
           case OBJ_INSTANCE:
             classObj = ((ObjInstance*)receiver)->classObj;
             break;
@@ -374,6 +387,10 @@ void printValue(Value value)
   {
     case OBJ_NUM:
       printf("%f", ((ObjNum*)value)->value);
+      break;
+
+    case OBJ_STRING:
+      printf("%s", ((ObjString*)value)->value);
       break;
 
     case OBJ_BLOCK:

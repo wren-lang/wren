@@ -8,6 +8,7 @@
 
 typedef enum {
   OBJ_NUM,
+  OBJ_STRING,
   OBJ_BLOCK,
   OBJ_CLASS,
   OBJ_INSTANCE
@@ -32,6 +33,12 @@ typedef struct
   Obj obj;
   double value;
 } ObjNum;
+
+typedef struct
+{
+  Obj obj;
+  const char* value;
+} ObjString;
 
 typedef struct
 {
@@ -129,6 +136,7 @@ typedef struct
   ObjClass* blockClass;
   ObjClass* classClass;
   ObjClass* numClass;
+  ObjClass* stringClass;
 
   SymbolTable globalSymbols;
   // TODO(bob): Using a fixed array is gross here.
@@ -142,6 +150,9 @@ void freeVM(VM* vm);
 ObjClass* makeClass();
 ObjBlock* makeBlock();
 ObjNum* makeNum(double number);
+
+// Creates a new string object. Does not copy text.
+ObjString* makeString(const char* text);
 ObjInstance* makeInstance(ObjClass* classObj);
 
 // Initializes the symbol table.
