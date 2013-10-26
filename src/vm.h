@@ -101,6 +101,12 @@ typedef enum
   CODE_STORE_LOCAL,
   // Stores the top of stack in local slot [arg]. Does not pop it.
 
+  CODE_LOAD_GLOBAL,
+  // Pushes the value in global slot [arg].
+
+  CODE_STORE_GLOBAL,
+  // Stores the top of stack in global slot [arg]. Does not pop it.
+
   CODE_CALL,
   // Invoke the method with symbol [arg].
 
@@ -123,6 +129,11 @@ typedef struct
   ObjClass* blockClass;
   ObjClass* classClass;
   ObjClass* numClass;
+
+  SymbolTable globalSymbols;
+  // TODO(bob): Using a fixed array is gross here.
+  Value globals[MAX_SYMBOLS];
+  int numGlobals;
 } VM;
 
 VM* newVM();

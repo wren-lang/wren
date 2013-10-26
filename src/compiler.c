@@ -134,6 +134,17 @@ static void makeToken(Parser* parser, TokenType type);
 
 // Utility:
 static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent);
+
+// Parses a name token and defines a variable in the current scope with that
+// name. Returns its symbol.
+static int defineName(Compiler* compiler);
+
+// Stores a variable with the previously defined symbol in the current scope.
+static void storeVariable(Compiler* compiler, int symbol);
+
+// Adds the previous token's text to the symbol table and returns its index.
+static int internSymbol(Compiler* compiler);
+
 static void emit(Compiler* compiler, Code code);
 static void error(Compiler* compiler, const char* format, ...);
 
@@ -197,24 +208,13 @@ void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_CLASS))
   {
-    consume(compiler, TOKEN_NAME);
-
-    // TODO(bob): Copied from below. Unify.
-    int local = addSymbol(&compiler->locals,
-        compiler->parser->source + compiler->parser->previous.start,
-        compiler->parser->previous.end - compiler->parser->previous.start);
-
-    if (local == -1)
-    {
-      error(compiler, "Local variable is already defined.");
-    }
+    int symbol = defineName(compiler);
 
     // Create the empty class.
     emit(compiler, CODE_CLASS);
 
     // Store it in its name.
-    emit(compiler, CODE_STORE_LOCAL);
-    emit(compiler, local);
+    storeVariable(compiler, symbol);
 
     // Compile the method definitions.
     consume(compiler, TOKEN_LEFT_BRACE);
@@ -244,15 +244,7 @@ void statement(Compiler* compiler)
 
   if (match(compiler, TOKEN_VAR))
   {
-    consume(compiler, TOKEN_NAME);
-    int local = addSymbol(&compiler->locals,
-        compiler->parser->source + compiler->parser->previous.start,
-        compiler->parser->previous.end - compiler->parser->previous.start);
-
-    if (local == -1)
-    {
-      error(compiler, "Local variable is already defined.");
-    }
+    int symbol = defineName(compiler);
 
     // TODO(bob): Allow uninitialized vars?
     consume(compiler, TOKEN_EQ);
@@ -260,8 +252,7 @@ void statement(Compiler* compiler)
     // Compile the initializer.
     expression(compiler);
 
-    emit(compiler, CODE_STORE_LOCAL);
-    emit(compiler, local);
+    storeVariable(compiler, symbol);
     return;
   }
 
@@ -314,18 +305,32 @@ void primary(Compiler* compiler)
   // Variable name.
   if (match(compiler, TOKEN_NAME))
   {
+    // See if it's a local in this scope.
     int local = findSymbol(&compiler->locals,
         compiler->parser->source + compiler->parser->previous.start,
         compiler->parser->previous.end - compiler->parser->previous.start);
-    if (local == -1)
+    if (local != -1)
     {
-      // TODO(bob): Look for globals or names in outer scopes.
-      error(compiler, "Unknown variable.");
+      emit(compiler, CODE_LOAD_LOCAL);
+      emit(compiler, local);
+      return;
     }
 
-    emit(compiler, CODE_LOAD_LOCAL);
-    emit(compiler, local);
-    return;
+    // TODO(bob): Look up names in outer local scopes.
+
+    // See if it's a global variable.
+    int global = findSymbol(&compiler->parser->vm->globalSymbols,
+        compiler->parser->source + compiler->parser->previous.start,
+        compiler->parser->previous.end - compiler->parser->previous.start);
+    if (global != -1)
+    {
+      emit(compiler, CODE_LOAD_GLOBAL);
+      emit(compiler, global);
+      return;
+    }
+
+    // TODO(bob): Look for globals or names in outer scopes.
+    error(compiler, "Unknown variable.");
   }
 
   // Number.
@@ -667,7 +672,40 @@ void emit(Compiler* compiler, Code code)
   compiler->block->bytecode[compiler->numCodes++] = code;
 }
 
-// Adds the previous token's text to the symbol table and returns its index.
+int defineName(Compiler* compiler)
+{
+  consume(compiler, TOKEN_NAME);
+
+  SymbolTable* symbols;
+  if (compiler->parent)
+  {
+    // Nested block, so this is a local variable.
+    symbols = &compiler->locals;
+  }
+  else
+  {
+    // Top level global variable.
+    symbols = &compiler->parser->vm->globalSymbols;
+  }
+
+  int symbol = addSymbol(symbols,
+      compiler->parser->source + compiler->parser->previous.start,
+      compiler->parser->previous.end - compiler->parser->previous.start);
+
+  if (symbol == -1)
+  {
+    error(compiler, "Variable is already defined.");
+  }
+
+  return symbol;
+}
+
+void storeVariable(Compiler* compiler, int symbol)
+{
+  emit(compiler, compiler->parent ? CODE_STORE_LOCAL : CODE_STORE_GLOBAL);
+  emit(compiler, symbol);
+}
+
 int internSymbol(Compiler* compiler)
 {
   return ensureSymbol(&compiler->parser->vm->symbols,

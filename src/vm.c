@@ -44,6 +44,10 @@ VM* newVM()
   VM* vm = malloc(sizeof(VM));
   initSymbolTable(&vm->symbols);
 
+  initSymbolTable(&vm->globalSymbols);
+  vm->numGlobals = 0;
+
+  // Define the built-in classes and their methods.
   vm->blockClass = makeClass();
 
   // The call method is special: neither a primitive nor a user-defined one.
@@ -248,6 +252,22 @@ Value interpret(VM* vm, ObjBlock* block)
         int local = frame->block->bytecode[frame->ip++];
         printf("store local %d from %d\n", local, fiber.stackSize - 1);
         fiber.stack[frame->locals + local] = fiber.stack[fiber.stackSize - 1];
+        break;
+      }
+
+      case CODE_LOAD_GLOBAL:
+      {
+        int global = frame->block->bytecode[frame->ip++];
+        push(&fiber, vm->globals[global]);
+        printf("load global %d to %d\n", global, fiber.stackSize - 1);
+        break;
+      }
+
+      case CODE_STORE_GLOBAL:
+      {
+        int global = frame->block->bytecode[frame->ip++];
+        printf("store global %d from %d\n", global, fiber.stackSize - 1);
+        vm->globals[global] = fiber.stack[fiber.stackSize - 1];
         break;
       }
 
