@@ -123,6 +123,7 @@ static void readRawToken(Parser* parser);
 static void readName(Parser* parser);
 static void readNumber(Parser* parser);
 static void readString(Parser* parser);
+static void skipLineComment(Parser* parser);
 static void skipWhitespace(Parser* parser);
 static int isKeyword(Parser* parser, const char* keyword);
 static int isName(char c);
@@ -462,7 +463,15 @@ void readRawToken(Parser* parser)
       case '.': makeToken(parser, TOKEN_DOT); return;
       case ',': makeToken(parser, TOKEN_COMMA); return;
       case '*': makeToken(parser, TOKEN_STAR); return;
-      case '/': makeToken(parser, TOKEN_SLASH); return;
+      case '/':
+        if (peekChar(parser) == '/')
+        {
+          skipLineComment(parser);
+          break;
+        }
+        makeToken(parser, TOKEN_SLASH);
+        return;
+
       case '%': makeToken(parser, TOKEN_PERCENT); return;
       case '+': makeToken(parser, TOKEN_PLUS); return;
       case '-':
@@ -592,6 +601,14 @@ void readString(Parser* parser)
   while (advanceChar(parser) != '"');
 
   makeToken(parser, TOKEN_STRING);
+}
+
+void skipLineComment(Parser* parser)
+{
+  while (peekChar(parser) != '\n' && peekChar(parser) != '\0')
+  {
+    advanceChar(parser);
+  }
 }
 
 void skipWhitespace(Parser* parser)

@@ -1,4 +1,4 @@
-class Foo {
+class Foo { // line comment
   bar {
     123
   }
