@@ -2,14 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "primitives.h"
 #include "vm.h"
-
-#define PRIMITIVE(cls, name, prim) \
-    { \
-      int symbol = ensureSymbol(&vm->symbols, name, strlen(name)); \
-      vm->cls##Class->methods[symbol].type = METHOD_PRIMITIVE; \
-      vm->cls##Class->methods[symbol].primitive = primitive_##cls##_##prim; \
-    }
 
 typedef struct
 {
@@ -33,24 +27,22 @@ typedef struct
   int numFrames;
 } Fiber;
 
+static Value primitive_metaclass_new(Value* args, int numArgs);
 static void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal);
 static void push(Fiber* fiber, Value value);
 static Value pop(Fiber* fiber);
-static Value primitive_metaclass_new(Value* args, int numArgs);
-static Value primitive_num_abs(Value* args, int numArgs);
-static Value primitive_string_contains(Value* args, int numArgs);
-static Value primitive_string_count(Value* args, int numArgs);
 
 VM* newVM()
 {
   VM* vm = malloc(sizeof(VM));
   initSymbolTable(&vm->symbols);
-
   initSymbolTable(&vm->globalSymbols);
-  vm->numGlobals = 0;
 
-  // Define the built-in classes and their methods.
+  // Define the built-in classes.
   vm->blockClass = makeClass();
+  vm->classClass = makeClass();
+  vm->numClass = makeClass();
+  vm->stringClass = makeClass();
 
   // The call method is special: neither a primitive nor a user-defined one.
   // This is because it mucks with the fiber itself.
@@ -59,14 +51,7 @@ VM* newVM()
     vm->blockClass->methods[symbol].type = METHOD_CALL;
   }
 
-  vm->classClass = makeClass();
-
-  vm->numClass = makeClass();
-  PRIMITIVE(num, "abs", abs);
-
-  vm->stringClass = makeClass();
-  PRIMITIVE(string, "contains ", contains);
-  PRIMITIVE(string, "count", count);
+  registerPrimitives(vm);
 
   return vm;
 }
@@ -427,6 +412,13 @@ void printValue(Value value)
   }
 }
 
+Value primitive_metaclass_new(Value* args, int numArgs)
+{
+  ObjClass* classObj = (ObjClass*)args[0];
+  // TODO(bob): Invoke initializer method.
+  return (Value)makeInstance(classObj);
+}
+
 void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal)
 {
   fiber->frames[fiber->numFrames].block = block;
@@ -453,36 +445,4 @@ void push(Fiber* fiber, Value value)
 Value pop(Fiber* fiber)
 {
   return fiber->stack[--fiber->stackSize];
-}
-
-Value primitive_metaclass_new(Value* args, int numArgs)
-{
-  ObjClass* classObj = (ObjClass*)args[0];
-  // TODO(bob): Invoke initializer method.
-  return (Value)makeInstance(classObj);
-}
-
-Value primitive_num_abs(Value* args, int numArgs)
-{
-  double value = ((ObjNum*)args[0])->value;
-  if (value < 0) value = -value;
-
-  return (Value)makeNum(value);
-}
-
-Value primitive_string_contains(Value* args, int numArgs)
-{
-  const char* string = ((ObjString*)args[0])->value;
-  // TODO(bob): Check type of arg first!
-  const char* search = ((ObjString*)args[1])->value;
-
-  // TODO(bob): Return bool.
-  return (Value)makeNum(strstr(string, search) != NULL);
-}
-
-Value primitive_string_count(Value* args, int numArgs)
-{
-  double count = strlen(((ObjString*)args[0])->value);
-
-  return (Value)makeNum(count);
 }

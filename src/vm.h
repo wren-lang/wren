@@ -151,7 +151,6 @@ typedef struct
   SymbolTable globalSymbols;
   // TODO(bob): Using a fixed array is gross here.
   Value globals[MAX_SYMBOLS];
-  int numGlobals;
 } VM;
 
 VM* newVM();
