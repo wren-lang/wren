@@ -5,6 +5,8 @@
 
 #include "compiler.h"
 
+#define MAX_NAME 256
+
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -271,28 +273,69 @@ void expression(Compiler* compiler)
 // foo.bar
 // foo.bar(arg, arg)
 // foo.bar { block } other { block }
+// foo.bar(arg) nextPart { arg } lastBit
 void call(Compiler* compiler)
 {
   primary(compiler);
 
   while (match(compiler, TOKEN_DOT))
   {
-    consume(compiler, TOKEN_NAME);
-    int symbol = internSymbol(compiler);
-
-    // Parse the argument list, if any.
-    // TODO(bob): Arg list should mangle method name.
+    char name[MAX_NAME];
+    int length = 0;
     int numArgs = 0;
-    if (match(compiler, TOKEN_LEFT_PAREN))
+
+    consume(compiler, TOKEN_NAME);
+
+    // Build the method name. The mangled name includes all of the name parts
+    // in a mixfix call as well as spaces for every argument.
+    // So a method call like:
+    //
+    //   foo.bar(arg, arg) else { block } last
+    //
+    // Will have name: "bar  else last"
+
+    // Compile all of the name parts.
+    for (;;)
     {
-      for (;;)
+      // Add the just-consumed part name to the method name.
+      int partLength = compiler->parser->previous.end -
+                       compiler->parser->previous.start;
+      strncpy(name + length,
+              compiler->parser->source + compiler->parser->previous.start,
+              partLength);
+      length += partLength;
+      // TODO(bob): Check for length overflow.
+
+      // TODO(bob): Allow block arguments.
+      
+      // Parse the argument list, if any.
+      if (match(compiler, TOKEN_LEFT_PAREN))
       {
-        expression(compiler);
-        numArgs++;
-        if (!match(compiler, TOKEN_COMMA)) break;
+        for (;;)
+        {
+          expression(compiler);
+
+          numArgs++;
+
+          // Add a space in the name for each argument. Lets us overload by
+          // arity.
+          name[length++] = ' ';
+
+          if (!match(compiler, TOKEN_COMMA)) break;
+        }
+        consume(compiler, TOKEN_RIGHT_PAREN);
+
+        // If there isn't another part name after the argument list, stop.
+        if (!match(compiler, TOKEN_NAME)) break;
       }
-      consume(compiler, TOKEN_RIGHT_PAREN);
+      else
+      {
+        // If there isn't an argument list, we're done.
+        break;
+      }
     }
+
+    int symbol = ensureSymbol(&compiler->parser->vm->symbols, name, length);
 
     // Compile the method call.
     emit(compiler, CODE_CALL_0 + numArgs);

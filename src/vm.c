@@ -4,9 +4,9 @@
 
 #include "vm.h"
 
-#define PRIMITIVE(cls, prim) \
+#define PRIMITIVE(cls, name, prim) \
     { \
-      int symbol = ensureSymbol(&vm->symbols, #prim, strlen(#prim)); \
+      int symbol = ensureSymbol(&vm->symbols, name, strlen(name)); \
       vm->cls##Class->methods[symbol].type = METHOD_PRIMITIVE; \
       vm->cls##Class->methods[symbol].primitive = primitive_##cls##_##prim; \
     }
@@ -62,11 +62,11 @@ VM* newVM()
   vm->classClass = makeClass();
 
   vm->numClass = makeClass();
-  PRIMITIVE(num, abs);
+  PRIMITIVE(num, "abs", abs);
 
   vm->stringClass = makeClass();
-  PRIMITIVE(string, contains);
-  PRIMITIVE(string, count);
+  PRIMITIVE(string, "contains ", contains);
+  PRIMITIVE(string, "count", count);
 
   return vm;
 }
