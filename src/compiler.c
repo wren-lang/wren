@@ -97,46 +97,12 @@ typedef struct sCompiler
   SymbolTable locals;
 } Compiler;
 
+static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent);
+
 static ObjBlock* compileBlock(Parser* parser, Compiler* parent,
                               TokenType endToken);
+
 static int addConstant(Compiler* compiler, Value constant);
-
-// Grammar:
-static void statement(Compiler* compiler);
-static void expression(Compiler* compiler);
-static void call(Compiler* compiler);
-static void primary(Compiler* compiler);
-static void number(Compiler* compiler);
-static void string(Compiler* compiler);
-static TokenType peek(Compiler* compiler);
-static int match(Compiler* compiler, TokenType expected);
-static void consume(Compiler* compiler, TokenType expected);
-static void advance(Parser* parser);
-
-// Tokens:
-
-// Lex the next token in the source file and store it in parser.current. Omits
-// newlines that aren't meaningful.
-static void readNextToken(Parser* parser);
-
-// Lex the next token and store it in parser.current. Does not do any newline
-// filtering.
-static void readRawToken(Parser* parser);
-
-static void readName(Parser* parser);
-static void readNumber(Parser* parser);
-static void readString(Parser* parser);
-static void skipLineComment(Parser* parser);
-static void skipWhitespace(Parser* parser);
-static int isKeyword(Parser* parser, const char* keyword);
-static int isName(char c);
-static int isDigit(char c);
-static char advanceChar(Parser* parser);
-static char peekChar(Parser* parser);
-static void makeToken(Parser* parser, TokenType type);
-
-// Utility:
-static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent);
 
 // Parses a name token and defines a variable in the current scope with that
 // name. Returns its symbol.
@@ -148,8 +114,69 @@ static void storeVariable(Compiler* compiler, int symbol);
 // Adds the previous token's text to the symbol table and returns its index.
 static int internSymbol(Compiler* compiler);
 
+// Emits one bytecode instruction or argument.
 static void emit(Compiler* compiler, Code code);
+
+// Outputs a compile or syntax error.
 static void error(Compiler* compiler, const char* format, ...);
+
+// Parsing
+// -------
+
+static void statement(Compiler* compiler);
+static void expression(Compiler* compiler);
+static void call(Compiler* compiler);
+static void primary(Compiler* compiler);
+static void number(Compiler* compiler);
+static void string(Compiler* compiler);
+static TokenType peek(Compiler* compiler);
+static int match(Compiler* compiler, TokenType expected);
+static void consume(Compiler* compiler, TokenType expected);
+
+// Lexing
+// ------
+
+// Lex the next token in the source file and store it in parser.current. Omits
+// newlines that aren't meaningful.
+static void nextToken(Parser* parser);
+
+// Lex the next token and store it in parser.current. Does not do any newline
+// filtering.
+static void readRawToken(Parser* parser);
+
+// Finishes lexing an identifier. Handles reserved words.
+static void readName(Parser* parser);
+
+// Finishes lexing a number literal.
+static void readNumber(Parser* parser);
+
+// Finishes lexing a string literal.
+static void readString(Parser* parser);
+
+// Skips the rest of the current line.
+static void skipLineComment(Parser* parser);
+
+// Skips forward until a non-whitespace character is reached.
+static void skipWhitespace(Parser* parser);
+
+// Returns non-zero if the current token's text matches [keyword].
+static int isKeyword(Parser* parser, const char* keyword);
+
+// Returns non-zero if [c] is a valid (non-initial) identifier character.
+static int isName(char c);
+
+// Returns non-zero if [c] is a digit.
+static int isDigit(char c);
+
+// Advances the parser forward one character.
+static char nextChar(Parser* parser);
+
+// Returns the current character the parser is sitting on.
+static char peekChar(Parser* parser);
+
+// Sets the parser's current token to the given [type] and current character
+// range.
+static void makeToken(Parser* parser, TokenType type);
 
 ObjBlock* compile(VM* vm, const char* source, size_t sourceLength)
 {
@@ -172,9 +199,26 @@ ObjBlock* compile(VM* vm, const char* source, size_t sourceLength)
   parser.current.end = 0;
 
   // Read the first token.
-  advance(&parser);
+  nextToken(&parser);
 
   return compileBlock(&parser, NULL, TOKEN_EOF);
+}
+
+void initCompiler(Compiler* compiler, Parser* parser,
+                  Compiler* parent)
+{
+  compiler->parser = parser;
+  compiler->parent = parent;
+  compiler->numCodes = 0;
+  initSymbolTable(&compiler->locals);
+
+  compiler->block = makeBlock();
+  // TODO(bob): Hack! make variable sized.
+  compiler->block->bytecode = malloc(sizeof(Code) * 1024);
+
+  // TODO(bob): Hack! make variable sized.
+  compiler->block->constants = malloc(sizeof(Value) * 256);
+  compiler->block->numConstants = 0;
 }
 
 ObjBlock* compileBlock(Parser* parser, Compiler* parent, TokenType endToken)
@@ -205,6 +249,73 @@ int addConstant(Compiler* compiler, Value constant)
 {
   compiler->block->constants[compiler->block->numConstants++] = constant;
   return compiler->block->numConstants - 1;
+}
+
+int defineName(Compiler* compiler)
+{
+  consume(compiler, TOKEN_NAME);
+
+  SymbolTable* symbols;
+  if (compiler->parent)
+  {
+    // Nested block, so this is a local variable.
+    symbols = &compiler->locals;
+  }
+  else
+  {
+    // Top level global variable.
+    symbols = &compiler->parser->vm->globalSymbols;
+  }
+
+  int symbol = addSymbol(symbols,
+                         compiler->parser->source + compiler->parser->previous.start,
+                         compiler->parser->previous.end - compiler->parser->previous.start);
+
+  if (symbol == -1)
+  {
+    error(compiler, "Variable is already defined.");
+  }
+
+  return symbol;
+}
+
+void storeVariable(Compiler* compiler, int symbol)
+{
+  emit(compiler, compiler->parent ? CODE_STORE_LOCAL : CODE_STORE_GLOBAL);
+  emit(compiler, symbol);
+}
+
+int internSymbol(Compiler* compiler)
+{
+  return ensureSymbol(&compiler->parser->vm->symbols,
+      compiler->parser->source + compiler->parser->previous.start,
+      compiler->parser->previous.end - compiler->parser->previous.start);
+}
+
+void emit(Compiler* compiler, Code code)
+{
+  compiler->block->bytecode[compiler->numCodes++] = code;
+}
+
+void error(Compiler* compiler, const char* format, ...)
+{
+  compiler->parser->hasError = 1;
+  printf("Compile error on '");
+
+  for (int i = compiler->parser->previous.start;
+       i < compiler->parser->previous.end; i++)
+  {
+    putchar(compiler->parser->source[i]);
+  }
+
+  printf("': ");
+
+  va_list args;
+  va_start(args, format);
+  vprintf(format, args);
+  va_end(args);
+  
+  printf("\n");
 }
 
 void statement(Compiler* compiler)
@@ -459,13 +570,13 @@ int match(Compiler* compiler, TokenType expected)
 {
   if (peek(compiler) != expected) return 0;
 
-  advance(compiler->parser);
+  nextToken(compiler->parser);
   return 1;
 }
 
 void consume(Compiler* compiler, TokenType expected)
 {
-  advance(compiler->parser);
+  nextToken(compiler->parser);
   if (compiler->parser->previous.type != expected)
   {
     // TODO(bob): Better error.
@@ -474,15 +585,11 @@ void consume(Compiler* compiler, TokenType expected)
   }
 }
 
-void advance(Parser* parser)
+void nextToken(Parser* parser)
 {
   // TODO(bob): Check for EOF.
   parser->previous = parser->current;
-  readNextToken(parser);
-}
 
-void readNextToken(Parser* parser)
-{
   for (;;)
   {
     readRawToken(parser);
@@ -542,7 +649,7 @@ void readRawToken(Parser* parser)
   {
     parser->tokenStart = parser->currentChar;
 
-    char c = advanceChar(parser);
+    char c = nextChar(parser);
     switch (c)
     {
       case '(': makeToken(parser, TOKEN_LEFT_PAREN); return;
@@ -582,7 +689,7 @@ void readRawToken(Parser* parser)
       case '=':
         if (peekChar(parser) == '=')
         {
-          advanceChar(parser);
+          nextChar(parser);
           makeToken(parser, TOKEN_EQEQ);
         }
         else
@@ -594,7 +701,7 @@ void readRawToken(Parser* parser)
       case '<':
         if (peekChar(parser) == '=')
         {
-          advanceChar(parser);
+          nextChar(parser);
           makeToken(parser, TOKEN_LTEQ);
         }
         else
@@ -606,7 +713,7 @@ void readRawToken(Parser* parser)
       case '>':
         if (peekChar(parser) == '=')
         {
-          advanceChar(parser);
+          nextChar(parser);
           makeToken(parser, TOKEN_GTEQ);
         }
         else
@@ -618,7 +725,7 @@ void readRawToken(Parser* parser)
       case '!':
         if (peekChar(parser) == '=')
         {
-          advanceChar(parser);
+          nextChar(parser);
           makeToken(parser, TOKEN_BANGEQ);
         }
         else
@@ -659,7 +766,7 @@ void readName(Parser* parser)
   // TODO(bob): Handle EOF.
   while (isName(peekChar(parser)) || isDigit(peekChar(parser)))
   {
-    advanceChar(parser);
+    nextChar(parser);
   }
 
   TokenType type = TOKEN_NAME;
@@ -682,7 +789,7 @@ int isKeyword(Parser* parser, const char* keyword)
 void readNumber(Parser* parser)
 {
   // TODO(bob): Floating point, hex, scientific, etc.
-  while (isDigit(peekChar(parser))) advanceChar(parser);
+  while (isDigit(peekChar(parser))) nextChar(parser);
 
   makeToken(parser, TOKEN_NUMBER);
 }
@@ -690,7 +797,7 @@ void readNumber(Parser* parser)
 void readString(Parser* parser)
 {
   // TODO(bob): Escape sequences, EOL, EOF, etc.
-  while (advanceChar(parser) != '"');
+  while (nextChar(parser) != '"');
 
   makeToken(parser, TOKEN_STRING);
 }
@@ -699,13 +806,13 @@ void skipLineComment(Parser* parser)
 {
   while (peekChar(parser) != '\n' && peekChar(parser) != '\0')
   {
-    advanceChar(parser);
+    nextChar(parser);
   }
 }
 
 void skipWhitespace(Parser* parser)
 {
-  while (peekChar(parser) == ' ') advanceChar(parser);
+  while (peekChar(parser) == ' ') nextChar(parser);
 }
 
 int isName(char c)
@@ -718,7 +825,7 @@ int isDigit(char c)
   return c >= '0' && c <= '9';
 }
 
-char advanceChar(Parser* parser)
+char nextChar(Parser* parser)
 {
   char c = peekChar(parser);
   parser->currentChar++;
@@ -737,86 +844,3 @@ void makeToken(Parser* parser, TokenType type)
   parser->current.end = parser->currentChar;
 }
 
-void initCompiler(Compiler* compiler, Parser* parser,
-                         Compiler* parent)
-{
-  compiler->parser = parser;
-  compiler->parent = parent;
-  compiler->numCodes = 0;
-  initSymbolTable(&compiler->locals);
-
-  compiler->block = makeBlock();
-  // TODO(bob): Hack! make variable sized.
-  compiler->block->bytecode = malloc(sizeof(Code) * 1024);
-
-  // TODO(bob): Hack! make variable sized.
-  compiler->block->constants = malloc(sizeof(Value) * 256);
-  compiler->block->numConstants = 0;
-}
-
-void emit(Compiler* compiler, Code code)
-{
-  compiler->block->bytecode[compiler->numCodes++] = code;
-}
-
-int defineName(Compiler* compiler)
-{
-  consume(compiler, TOKEN_NAME);
-
-  SymbolTable* symbols;
-  if (compiler->parent)
-  {
-    // Nested block, so this is a local variable.
-    symbols = &compiler->locals;
-  }
-  else
-  {
-    // Top level global variable.
-    symbols = &compiler->parser->vm->globalSymbols;
-  }
-
-  int symbol = addSymbol(symbols,
-      compiler->parser->source + compiler->parser->previous.start,
-      compiler->parser->previous.end - compiler->parser->previous.start);
-
-  if (symbol == -1)
-  {
-    error(compiler, "Variable is already defined.");
-  }
-
-  return symbol;
-}
-
-void storeVariable(Compiler* compiler, int symbol)
-{
-  emit(compiler, compiler->parent ? CODE_STORE_LOCAL : CODE_STORE_GLOBAL);
-  emit(compiler, symbol);
-}
-
-int internSymbol(Compiler* compiler)
-{
-  return ensureSymbol(&compiler->parser->vm->symbols,
-      compiler->parser->source + compiler->parser->previous.start,
-      compiler->parser->previous.end - compiler->parser->previous.start);
-}
-
-void error(Compiler* compiler, const char* format, ...)
-{
-  compiler->parser->hasError = 1;
-  printf("Compile error on '");
-
-  for (int i = compiler->parser->previous.start;
-       i < compiler->parser->previous.end; i++)
-  {
-    putchar(compiler->parser->source[i]);
-  }
-
-  printf("': ");
-
-  va_list args;
-  va_start(args, format);
-  vprintf(format, args);
-  va_end(args);
-
-  printf("\n");
-}
