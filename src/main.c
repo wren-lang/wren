@@ -30,9 +30,7 @@ int main(int argc, const char * argv[])
 
   if (block)
   {
-    Value value = interpret(vm, block);
-    printValue(value);
-    printf("\n");
+    interpret(vm, block);
   }
 
   freeVM(vm);

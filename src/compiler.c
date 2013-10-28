@@ -268,8 +268,8 @@ int defineName(Compiler* compiler)
   }
 
   int symbol = addSymbol(symbols,
-                         compiler->parser->source + compiler->parser->previous.start,
-                         compiler->parser->previous.end - compiler->parser->previous.start);
+      compiler->parser->source + compiler->parser->previous.start,
+      compiler->parser->previous.end - compiler->parser->previous.start);
 
   if (symbol == -1)
   {

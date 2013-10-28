@@ -6,3 +6,4 @@ class Foo { // line comment
 var a = Foo.new
 a.bar
 "something".contains("meth")
+io.write("hey there")

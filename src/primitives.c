@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -6,14 +7,21 @@
 #define PRIMITIVE(cls, name, prim) \
     { \
       int symbol = ensureSymbol(&vm->symbols, name, strlen(name)); \
-      vm->cls##Class->methods[symbol].type = METHOD_PRIMITIVE; \
-      vm->cls##Class->methods[symbol].primitive = primitive_##cls##_##prim; \
+      cls->methods[symbol].type = METHOD_PRIMITIVE; \
+      cls->methods[symbol].primitive = primitive_##prim; \
     }
 
-#define DEF_PRIMITIVE(cls, prim) \
-    static Value primitive_##cls##_##prim(Value* args, int numArgs)
+#define DEF_PRIMITIVE(prim) \
+    static Value primitive_##prim(Value* args, int numArgs)
 
-DEF_PRIMITIVE(num, abs)
+#define GLOBAL(cls, name) \
+    { \
+      ObjInstance* obj = makeInstance(cls); \
+      int symbol = addSymbol(&vm->globalSymbols, name, strlen(name)); \
+      vm->globals[symbol] = (Value)obj; \
+    }
+
+DEF_PRIMITIVE(num_abs)
 {
   double value = ((ObjNum*)args[0])->value;
   if (value < 0) value = -value;
@@ -21,7 +29,7 @@ DEF_PRIMITIVE(num, abs)
   return (Value)makeNum(value);
 }
 
-DEF_PRIMITIVE(string, contains)
+DEF_PRIMITIVE(string_contains)
 {
   const char* string = ((ObjString*)args[0])->value;
   // TODO(bob): Check type of arg first!
@@ -31,16 +39,27 @@ DEF_PRIMITIVE(string, contains)
   return (Value)makeNum(strstr(string, search) != NULL);
 }
 
-DEF_PRIMITIVE(string, count)
+DEF_PRIMITIVE(string_count)
 {
   double count = strlen(((ObjString*)args[0])->value);
 
   return (Value)makeNum(count);
 }
 
+DEF_PRIMITIVE(io_write)
+{
+  printValue(args[1]);
+  printf("\n");
+  return args[1];
+}
+
 void registerPrimitives(VM* vm)
 {
-  PRIMITIVE(num, "abs", abs);
-  PRIMITIVE(string, "contains ", contains);
-  PRIMITIVE(string, "count", count);
+  PRIMITIVE(vm->numClass, "abs", num_abs);
+  PRIMITIVE(vm->stringClass, "contains ", string_contains);
+  PRIMITIVE(vm->stringClass, "count", string_count);
+
+  ObjClass* ioClass = makeClass();
+  PRIMITIVE(ioClass, "write ", io_write);
+  GLOBAL(ioClass, "io");
 }

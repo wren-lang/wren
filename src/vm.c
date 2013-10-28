@@ -200,9 +200,6 @@ Value interpret(VM* vm, ObjBlock* block)
         int constant = frame->block->bytecode[frame->ip++];
         Value value = frame->block->constants[constant];
         fiber.stack[fiber.stackSize++] = value;
-        printf("load constant ");
-        printValue(value);
-        printf(" to %d\n", fiber.stackSize - 1);
         break;
       }
 
@@ -213,13 +210,11 @@ Value interpret(VM* vm, ObjBlock* block)
         // Define a "new" method on the metaclass.
         // TODO(bob): Can this be inherited?
         int newSymbol = ensureSymbol(&vm->symbols, "new", strlen("new"));
-        printf("define new %d\n", newSymbol);
         classObj->metaclass->methods[newSymbol].type = METHOD_PRIMITIVE;
         classObj->metaclass->methods[newSymbol].primitive =
             primitive_metaclass_new;
 
         push(&fiber, (Value)classObj);
-        printf("push class at %d\n", fiber.stackSize - 1);
         break;
       }
 
@@ -232,10 +227,6 @@ Value interpret(VM* vm, ObjBlock* block)
         ObjBlock* body = (ObjBlock*)frame->block->constants[constant];
         classObj->methods[symbol].type = METHOD_BLOCK;
         classObj->methods[symbol].block = body;
-
-        printf("define method %d using constant %d on ", symbol, constant);
-        printValue((Value)classObj);
-        printf("\n");
         break;
       }
 
@@ -243,14 +234,12 @@ Value interpret(VM* vm, ObjBlock* block)
       {
         int local = frame->block->bytecode[frame->ip++];
         push(&fiber, fiber.stack[frame->locals + local]);
-        printf("load local %d to %d\n", local, fiber.stackSize - 1);
         break;
       }
 
       case CODE_STORE_LOCAL:
       {
         int local = frame->block->bytecode[frame->ip++];
-        printf("store local %d from %d\n", local, fiber.stackSize - 1);
         fiber.stack[frame->locals + local] = fiber.stack[fiber.stackSize - 1];
         break;
       }
@@ -259,25 +248,21 @@ Value interpret(VM* vm, ObjBlock* block)
       {
         int global = frame->block->bytecode[frame->ip++];
         push(&fiber, vm->globals[global]);
-        printf("load global %d to %d\n", global, fiber.stackSize - 1);
         break;
       }
 
       case CODE_STORE_GLOBAL:
       {
         int global = frame->block->bytecode[frame->ip++];
-        printf("store global %d from %d\n", global, fiber.stackSize - 1);
         vm->globals[global] = fiber.stack[fiber.stackSize - 1];
         break;
       }
 
       case CODE_DUP:
         push(&fiber, fiber.stack[fiber.stackSize - 1]);
-        printf("dup %d\n", fiber.stackSize - 1);
         break;
         
       case CODE_POP:
-        printf("pop %d\n", fiber.stackSize - 1);
         pop(&fiber);
         break;
 
@@ -323,10 +308,6 @@ Value interpret(VM* vm, ObjBlock* block)
             break;
         }
 
-        printf("call %d on ", symbol);
-        printValue(receiver);
-        printf("\n");
-
         Method* method = &classObj->methods[symbol];
         switch (method->type)
         {
@@ -363,19 +344,10 @@ Value interpret(VM* vm, ObjBlock* block)
         fiber.numFrames--;
 
         // If we are returning from the top-level block, just return the value.
-        if (fiber.numFrames == 0)
-        {
-          printf("done with result ");
-          printValue(result);
-          printf("\n");
-          return result;
-        }
+        if (fiber.numFrames == 0) return result;
 
         // Store the result of the block in the first slot, which is where the
         // caller expects it.
-        printf("return and store result ");
-        printValue(result);
-        printf(" in %d\n", frame->locals);
         fiber.stack[frame->locals] = result;
 
         // Discard the stack slots for the locals.
@@ -391,7 +363,7 @@ void printValue(Value value)
   switch (value->type)
   {
     case OBJ_NUM:
-      printf("%f", ((ObjNum*)value)->value);
+      printf("%g", ((ObjNum*)value)->value);
       break;
 
     case OBJ_STRING:
