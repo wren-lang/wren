@@ -28,15 +28,20 @@ int main(int argc, const char * argv[])
   VM* vm = newVM();
   ObjBlock* block = compile(vm, source, length);
 
+  int exitCode = 0;
   if (block)
   {
     interpret(vm, block);
+  }
+  else
+  {
+    exitCode = 1;
   }
 
   freeVM(vm);
   free(source);
 
-  return 0;
+  return exitCode;
 }
 
 /*

@@ -33,6 +33,8 @@ else:
   sys.exit('System not supported!')
 
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
+EXPECT_ERROR_PATTERN = re.compile(r'// expect error')
+ERROR_PATTERN = re.compile(r'\[Line (\d+)\] Error ')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
 
@@ -112,6 +114,13 @@ def run_test(path):
       if match:
           expect_output.append((match.group(1), line_num))
 
+      match = EXPECT_ERROR_PATTERN.search(line)
+      if match:
+          expect_error.append(line_num)
+          # If we expect compile errors in the test, it should return
+          # exit code 1.
+          expect_return = 1
+
       match = SKIP_PATTERN.search(line)
       if match:
         num_skipped += 1
@@ -132,10 +141,27 @@ def run_test(path):
 
   fails = []
 
+  # Validate that no unexpected errors occurred.
+  if expect_return == 1 and err != '':
+    lines = err.split('\n')
+    while len(lines) > 0:
+      line = lines.pop(0)
+      match = ERROR_PATTERN.search(line)
+      if match:
+        if float(match.group(1)) not in expect_error:
+          fails.append('Unexpected error:')
+          fails.append(line)
+      elif line != '':
+        fails.append('Unexpected output on stderr:')
+        fails.append(line)
+  else:
+    for line in expect_error:
+      fails.append('Expected error on line ' + str(line) + ' and got none.')
+
   # Validate the exit code.
-  if proc.returncode != 0:
-    fails.append('Expected return code 0 and got {0}.'.
-      format(proc.returncode))
+  if proc.returncode != expect_return:
+    fails.append('Expected return code {0} and got {1}.'
+        .format(expect_return, proc.returncode))
   else:
     # Validate the output.
     expect_index = 0
@@ -143,23 +169,22 @@ def run_test(path):
     # Remove the trailing last empty line.
     out_lines = out.split('\n')
     if out_lines[-1] == '':
-        del out_lines[-1]
+      del out_lines[-1]
 
     for line in out_lines:
-        if expect_index >= len(expect_output):
-            fails.append('Got output "{0}" when none was expected.'.
-                format(line))
-        elif expect_output[expect_index][0] != line:
-            fails.append('Expected output "{0}" on line {1} and got "{2}".'.
-                format(expect_output[expect_index][0],
-                       expect_output[expect_index][1], line))
-        expect_index += 1
+      if expect_index >= len(expect_output):
+        fails.append('Got output "{0}" when none was expected.'.format(line))
+      elif expect_output[expect_index][0] != line:
+        fails.append('Expected output "{0}" on line {1} and got "{2}".'.
+            format(expect_output[expect_index][0],
+                   expect_output[expect_index][1], line))
+      expect_index += 1
 
     while expect_index < len(expect_output):
-        fails.append('Missing expected output "{0}" on line {1}.'.
-            format(expect_output[expect_index][0],
-                   expect_output[expect_index][1]))
-        expect_index += 1
+      fails.append('Missing expected output "{0}" on line {1}.'.
+          format(expect_output[expect_index][0],
+                 expect_output[expect_index][1]))
+      expect_index += 1
 
   # Display the results.
   if len(fails) == 0:

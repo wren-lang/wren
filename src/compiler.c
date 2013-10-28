@@ -51,8 +51,15 @@ typedef enum
 typedef struct Token_s
 {
   TokenType type;
+
+  // The beginning of the token as an offset of characters in the source.
   int start;
+
+  // The offset of the character immediately following the end of the token.
   int end;
+
+  // The 1-based line where the token appears.
+  int line;
 } Token;
 
 typedef struct
@@ -67,6 +74,9 @@ typedef struct
 
   // The position of the current character being lexed.
   int currentChar;
+
+  // The 1-based line number of [currentChar].
+  int currentLine;
 
   // The most recently lexed token.
   Token current;
@@ -191,12 +201,14 @@ ObjBlock* compile(VM* vm, const char* source, size_t sourceLength)
 
   parser.tokenStart = 0;
   parser.currentChar = 0;
+  parser.currentLine = 1;
 
   // Zero-init the current token. This will get copied to previous when
   // advance() is called below.
   parser.current.type = TOKEN_EOF;
   parser.current.start = 0;
   parser.current.end = 0;
+  parser.current.line = 0;
 
   // Read the first token.
   nextToken(&parser);
@@ -300,22 +312,22 @@ void emit(Compiler* compiler, Code code)
 void error(Compiler* compiler, const char* format, ...)
 {
   compiler->parser->hasError = 1;
-  printf("Compile error on '");
+  fprintf(stderr, "[Line %d] Error on '", compiler->parser->previous.line);
 
   for (int i = compiler->parser->previous.start;
        i < compiler->parser->previous.end; i++)
   {
-    putchar(compiler->parser->source[i]);
+    putc(compiler->parser->source[i], stderr);
   }
 
-  printf("': ");
+  fprintf(stderr, "': ");
 
   va_list args;
   va_start(args, format);
-  vprintf(format, args);
+  vfprintf(stderr, format, args);
   va_end(args);
   
-  printf("\n");
+  fprintf(stderr, "\n");
 }
 
 void statement(Compiler* compiler)
@@ -499,8 +511,8 @@ void primary(Compiler* compiler)
       return;
     }
 
-    // TODO(bob): Look for globals or names in outer scopes.
-    error(compiler, "Unknown variable.");
+    // TODO(bob): Look for names in outer scopes.
+    error(compiler, "Undefined variable.");
   }
 
   // Number.
@@ -734,7 +746,10 @@ void readRawToken(Parser* parser)
         }
         return;
 
-      case '\n': makeToken(parser, TOKEN_LINE); return;
+      case '\n':
+        parser->currentLine++;
+        makeToken(parser, TOKEN_LINE);
+        return;
 
       case ' ': skipWhitespace(parser); break;
       case '"': readString(parser); return;
@@ -842,5 +857,6 @@ void makeToken(Parser* parser, TokenType type)
   parser->current.type = type;
   parser->current.start = parser->tokenStart;
   parser->current.end = parser->currentChar;
+  parser->current.line = parser->currentLine;
 }
 
