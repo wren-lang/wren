@@ -164,7 +164,7 @@ def run_test(path):
   # Display the results.
   if len(fails) == 0:
     passed += 1
-    print color.GREEN + 'PASS' + color.DEFAULT + ': ' + path
+    #print color.GREEN + 'PASS' + color.DEFAULT + ': ' + path
   else:
     failed += 1
     print_line(color.RED + 'FAIL' + color.DEFAULT + ': ' + path)

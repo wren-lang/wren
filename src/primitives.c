@@ -35,6 +35,9 @@ DEF_PRIMITIVE(string_contains)
   // TODO(bob): Check type of arg first!
   const char* search = ((ObjString*)args[1])->value;
 
+  // Corner case, the empty string contains the empty string.
+  if (strlen(string) == 0 && strlen(search) == 0) return (Value)makeNum(1);
+
   // TODO(bob): Return bool.
   return (Value)makeNum(strstr(string, search) != NULL);
 }
