@@ -62,6 +62,14 @@ void freeVM(VM* vm)
   free(vm);
 }
 
+ObjBlock* makeBlock()
+{
+  ObjBlock* block = malloc(sizeof(ObjBlock));
+  block->obj.type = OBJ_BLOCK;
+  block->obj.flags = 0;
+  return block;
+}
+
 ObjClass* makeSingleClass()
 {
   ObjClass* obj = malloc(sizeof(ObjClass));
@@ -87,12 +95,14 @@ ObjClass* makeClass()
   return classObj;
 }
 
-ObjBlock* makeBlock()
+ObjInstance* makeInstance(ObjClass* classObj)
 {
-  ObjBlock* block = malloc(sizeof(ObjBlock));
-  block->obj.type = OBJ_BLOCK;
-  block->obj.flags = 0;
-  return block;
+  ObjInstance* instance = malloc(sizeof(ObjInstance));
+  instance->obj.type = OBJ_INSTANCE;
+  instance->obj.flags = 0;
+  instance->classObj = classObj;
+
+  return instance;
 }
 
 ObjNum* makeNum(double number)
@@ -111,16 +121,6 @@ ObjString* makeString(const char* text)
   string->obj.flags = 0;
   string->value = text;
   return string;
-}
-
-ObjInstance* makeInstance(ObjClass* classObj)
-{
-  ObjInstance* instance = malloc(sizeof(ObjInstance));
-  instance->obj.type = OBJ_INSTANCE;
-  instance->obj.flags = 0;
-  instance->classObj = classObj;
-
-  return instance;
 }
 
 void initSymbolTable(SymbolTable* symbols)

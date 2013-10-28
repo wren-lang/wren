@@ -7,11 +7,11 @@
 #define MAX_SYMBOLS 256
 
 typedef enum {
-  OBJ_NUM,
-  OBJ_STRING,
   OBJ_BLOCK,
   OBJ_CLASS,
-  OBJ_INSTANCE
+  OBJ_INSTANCE,
+  OBJ_NUM,
+  OBJ_STRING
 } ObjType;
 
 typedef enum
@@ -28,17 +28,7 @@ typedef struct
 
 typedef Obj* Value;
 
-typedef struct
-{
-  Obj obj;
-  double value;
-} ObjNum;
-
-typedef struct
-{
-  Obj obj;
-  const char* value;
-} ObjString;
+typedef Value (*Primitive)(Value* args, int numArgs);
 
 typedef struct
 {
@@ -48,8 +38,6 @@ typedef struct
   int numConstants;
   int numLocals;
 } ObjBlock;
-
-typedef Value (*Primitive)(Value* args, int numArgs);
 
 typedef enum
 {
@@ -83,6 +71,18 @@ typedef struct
   ObjClass* classObj;
   // TODO(bob): Fields.
 } ObjInstance;
+
+typedef struct
+{
+  Obj obj;
+  double value;
+} ObjNum;
+
+typedef struct
+{
+  Obj obj;
+  const char* value;
+} ObjString;
 
 typedef enum
 {
@@ -156,13 +156,21 @@ typedef struct
 VM* newVM();
 void freeVM(VM* vm);
 
-ObjClass* makeClass();
+// Creates a new block object. Assumes the compiler will fill it in with
+// bytecode, constants, etc.
 ObjBlock* makeBlock();
+
+// Creates a new class object.
+ObjClass* makeClass();
+
+// Creates a new instance of the given [classObj].
+ObjInstance* makeInstance(ObjClass* classObj);
+
+// Creates a new number object.
 ObjNum* makeNum(double number);
 
 // Creates a new string object. Does not copy text.
 ObjString* makeString(const char* text);
-ObjInstance* makeInstance(ObjClass* classObj);
 
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);
