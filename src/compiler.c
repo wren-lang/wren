@@ -135,6 +135,8 @@ static void error(Compiler* compiler, const char* format, ...);
 
 static void statement(Compiler* compiler);
 static void expression(Compiler* compiler);
+static void term(Compiler* compiler);
+static void factor(Compiler* compiler);
 static void call(Compiler* compiler);
 static void primary(Compiler* compiler);
 static void number(Compiler* compiler);
@@ -388,7 +390,60 @@ void statement(Compiler* compiler)
 
 void expression(Compiler* compiler)
 {
+  term(compiler);
+}
+
+void term(Compiler* compiler)
+{
+  factor(compiler);
+
+  while (match(compiler, TOKEN_PLUS) || match(compiler, TOKEN_MINUS))
+  {
+    const char* name;
+    if (compiler->parser->previous.type == TOKEN_PLUS)
+    {
+      name = "+ ";
+    }
+    else
+    {
+      name = "- ";
+    }
+
+    // Compile the right-hand side.
+    factor(compiler);
+
+    // Call the operator method on the left-hand side.
+    int symbol = ensureSymbol(&compiler->parser->vm->symbols, name, 2);
+    emit(compiler, CODE_CALL_1);
+    emit(compiler, symbol);
+  }
+}
+
+// TODO(bob): Virtually identical to term(). Unify.
+void factor(Compiler* compiler)
+{
   call(compiler);
+
+  while (match(compiler, TOKEN_STAR) || match(compiler, TOKEN_SLASH))
+  {
+    const char* name;
+    if (compiler->parser->previous.type == TOKEN_STAR)
+    {
+      name = "* ";
+    }
+    else
+    {
+      name = "/ ";
+    }
+
+    // Compile the right-hand side.
+    call(compiler);
+
+    // Call the operator method on the left-hand side.
+    int symbol = ensureSymbol(&compiler->parser->vm->symbols, name, 2);
+    emit(compiler, CODE_CALL_1);
+    emit(compiler, symbol);
+  }
 }
 
 // Method calls like:

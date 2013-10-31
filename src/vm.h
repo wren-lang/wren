@@ -28,7 +28,9 @@ typedef struct
 
 typedef Obj* Value;
 
-typedef Value (*Primitive)(Value* args, int numArgs);
+typedef struct sVM VM;
+
+typedef Value (*Primitive)(VM* vm, Value* args, int numArgs);
 
 typedef struct
 {
@@ -127,7 +129,7 @@ typedef enum
   CODE_CALL_8,
   CODE_CALL_9,
   CODE_CALL_10,
-
+  
   // The current block is done and should be exited.
   CODE_END
 } Code;
@@ -139,7 +141,7 @@ typedef struct
   int count;
 } SymbolTable;
 
-typedef struct
+struct sVM
 {
   SymbolTable symbols;
 
@@ -148,10 +150,13 @@ typedef struct
   ObjClass* numClass;
   ObjClass* stringClass;
 
+  // The singleton value "unsupported".
+  Value unsupported;
+
   SymbolTable globalSymbols;
   // TODO(bob): Using a fixed array is gross here.
   Value globals[MAX_SYMBOLS];
-} VM;
+};
 
 VM* newVM();
 void freeVM(VM* vm);

@@ -27,9 +27,13 @@ typedef struct
   int numFrames;
 } Fiber;
 
-static Value primitive_metaclass_new(Value* args, int numArgs);
 static void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal);
+static Value primitive_metaclass_new(VM* vm, Value* args, int numArgs);
+
+// Pushes [value] onto the top of the stack.
 static void push(Fiber* fiber, Value value);
+
+// Removes and returns the top of the stack.
 static Value pop(Fiber* fiber);
 
 VM* newVM()
@@ -279,11 +283,10 @@ Value interpret(VM* vm, ObjBlock* block)
       case CODE_CALL_10:
       {
         int numArgs = frame->block->bytecode[frame->ip - 1] - CODE_CALL_0;
-
-        Value receiver = fiber.stack[fiber.stackSize - numArgs - 1];
         int symbol = frame->block->bytecode[frame->ip++];
 
-        // TODO(bob): Support classes for other object types.
+        Value receiver = fiber.stack[fiber.stackSize - numArgs - 1];
+
         ObjClass* classObj;
         switch (receiver->type)
         {
@@ -312,8 +315,11 @@ Value interpret(VM* vm, ObjBlock* block)
         switch (method->type)
         {
           case METHOD_NONE:
-            // TODO(bob): Should return nil or suspend fiber or something.
-            printf("No method.\n");
+            printf("Receiver ");
+            printValue(receiver);
+            printf(" does not implement method \"%s\".\n",
+                   vm->symbols.names[symbol]);
+            // TODO(bob): Throw an exception or halt the fiber or something.
             exit(1);
             break;
 
@@ -322,15 +328,18 @@ Value interpret(VM* vm, ObjBlock* block)
             break;
 
           case METHOD_PRIMITIVE:
-            // TODO(bob): Pass args to primitive.
-            fiber.stack[fiber.stackSize - numArgs - 1] =
-                method->primitive(&fiber.stack[fiber.stackSize - numArgs - 1],
-                                  numArgs);
-
+          {
+            Value* args = &fiber.stack[fiber.stackSize - numArgs - 1];
+            // TODO(bob): numArgs passed to primitive should probably include
+            // receiver.
+            Value result = method->primitive(vm, args, numArgs);
+            fiber.stack[fiber.stackSize - numArgs - 1] = result;
+            
             // Discard the stack slots for the arguments.
-            fiber.stackSize = fiber.stackSize - numArgs;
+            fiber.stackSize -= numArgs;
             break;
-
+          }
+            
           case METHOD_BLOCK:
             callBlock(&fiber, method->block, fiber.stackSize - numArgs);
             break;
@@ -362,14 +371,6 @@ void printValue(Value value)
   // TODO(bob): Do more useful stuff here.
   switch (value->type)
   {
-    case OBJ_NUM:
-      printf("%g", ((ObjNum*)value)->value);
-      break;
-
-    case OBJ_STRING:
-      printf("%s", ((ObjString*)value)->value);
-      break;
-
     case OBJ_BLOCK:
       printf("[block]");
       break;
@@ -381,14 +382,15 @@ void printValue(Value value)
     case OBJ_INSTANCE:
       printf("[instance]");
       break;
-  }
-}
 
-Value primitive_metaclass_new(Value* args, int numArgs)
-{
-  ObjClass* classObj = (ObjClass*)args[0];
-  // TODO(bob): Invoke initializer method.
-  return (Value)makeInstance(classObj);
+    case OBJ_NUM:
+      printf("%g", ((ObjNum*)value)->value);
+      break;
+
+    case OBJ_STRING:
+      printf("%s", ((ObjString*)value)->value);
+      break;
+  }
 }
 
 void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal)
@@ -406,6 +408,13 @@ void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal)
   }
 
   fiber->numFrames++;
+}
+
+Value primitive_metaclass_new(VM* vm, Value* args, int numArgs)
+{
+  ObjClass* classObj = (ObjClass*)args[0];
+  // TODO(bob): Invoke initializer method.
+  return (Value)makeInstance(classObj);
 }
 
 void push(Fiber* fiber, Value value)

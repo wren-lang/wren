@@ -12,7 +12,7 @@
     }
 
 #define DEF_PRIMITIVE(prim) \
-    static Value primitive_##prim(Value* args, int numArgs)
+    static Value primitive_##prim(VM* vm, Value* args, int numArgs)
 
 #define GLOBAL(cls, name) \
     { \
@@ -27,6 +27,31 @@ DEF_PRIMITIVE(num_abs)
   if (value < 0) value = -value;
 
   return (Value)makeNum(value);
+}
+
+DEF_PRIMITIVE(num_minus)
+{
+  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  return (Value)makeNum(((ObjNum*)args[0])->value - ((ObjNum*)args[1])->value);
+}
+
+DEF_PRIMITIVE(num_plus)
+{
+  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  // TODO(bob): Handle coercion to string if RHS is a string.
+  return (Value)makeNum(((ObjNum*)args[0])->value + ((ObjNum*)args[1])->value);
+}
+
+DEF_PRIMITIVE(num_multiply)
+{
+  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  return (Value)makeNum(((ObjNum*)args[0])->value * ((ObjNum*)args[1])->value);
+}
+
+DEF_PRIMITIVE(num_divide)
+{
+  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  return (Value)makeNum(((ObjNum*)args[0])->value / ((ObjNum*)args[1])->value);
 }
 
 DEF_PRIMITIVE(string_contains)
@@ -49,6 +74,24 @@ DEF_PRIMITIVE(string_count)
   return (Value)makeNum(count);
 }
 
+DEF_PRIMITIVE(string_plus)
+{
+  if (args[1]->type != OBJ_STRING) return vm->unsupported;
+  // TODO(bob): Handle coercion to string of RHS.
+
+  ObjString* left = (ObjString*)args[0];
+  ObjString* right = (ObjString*)args[1];
+
+  size_t leftLength = strlen(left->value);
+  size_t rightLength = strlen(right->value);
+
+  char* result = malloc(leftLength + rightLength);
+  strcpy(result, left->value);
+  strcpy(result + leftLength, right->value);
+  
+  return (Value)makeString(result);
+}
+
 DEF_PRIMITIVE(io_write)
 {
   printValue(args[1]);
@@ -59,10 +102,21 @@ DEF_PRIMITIVE(io_write)
 void registerPrimitives(VM* vm)
 {
   PRIMITIVE(vm->numClass, "abs", num_abs);
+  PRIMITIVE(vm->numClass, "- ", num_minus);
+  PRIMITIVE(vm->numClass, "+ ", num_plus);
+  PRIMITIVE(vm->numClass, "* ", num_multiply);
+  PRIMITIVE(vm->numClass, "/ ", num_divide);
+
   PRIMITIVE(vm->stringClass, "contains ", string_contains);
   PRIMITIVE(vm->stringClass, "count", string_count);
+  PRIMITIVE(vm->stringClass, "+ ", string_plus);
 
   ObjClass* ioClass = makeClass();
   PRIMITIVE(ioClass, "write ", io_write);
   GLOBAL(ioClass, "io");
+
+  ObjClass* unsupportedClass = makeClass();
+
+  // TODO(bob): Make this a distinct object type.
+  vm->unsupported = (Value)makeInstance(unsupportedClass);
 }
