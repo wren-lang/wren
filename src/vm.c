@@ -330,9 +330,8 @@ Value interpret(VM* vm, ObjBlock* block)
           case METHOD_PRIMITIVE:
           {
             Value* args = &fiber.stack[fiber.stackSize - numArgs - 1];
-            // TODO(bob): numArgs passed to primitive should probably include
-            // receiver.
-            Value result = method->primitive(vm, args, numArgs);
+            // +1 to include the receiver since that's in the args array.
+            Value result = method->primitive(vm, args, numArgs + 1);
             fiber.stack[fiber.stackSize - numArgs - 1] = result;
             
             // Discard the stack slots for the arguments.
