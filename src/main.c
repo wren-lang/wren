@@ -1,9 +1,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "compiler.h"
 #include "vm.h"
+
+// TODO(bob): Don't hardcode this.
+#define MAX_LINE 1024
 
 void failIf(int condition, int exitCode, const char* format, ...)
 {
@@ -39,11 +43,10 @@ char* readFile(const char* path, size_t* length)
   return buffer;
 }
 
-int main(int argc, const char * argv[])
+int runFile(const char* path)
 {
-  // TODO(bob): Validate command line arguments.
   size_t length;
-  char* source = readFile(argv[1], &length);
+  char* source = readFile(path, &length);
   VM* vm = newVM();
   ObjBlock* block = compile(vm, source, length);
 
@@ -61,4 +64,39 @@ int main(int argc, const char * argv[])
   free(source);
 
   return exitCode;
+}
+
+int runRepl()
+{
+  VM* vm = newVM();
+
+  for (;;)
+  {
+    printf("> ");
+    char line[MAX_LINE];
+    fgets(line, MAX_LINE, stdin);
+    // TODO(bob): Handle failure.
+    size_t length = strlen(line);
+    ObjBlock* block = compile(vm, line, length);
+
+    if (block != NULL)
+    {
+      Value result = interpret(vm, block);
+      printf("= ");
+      printValue(result);
+      printf("\n");
+    }
+  }
+
+  freeVM(vm);
+  return 0;
+}
+
+int main(int argc, const char* argv[])
+{
+  if (argc == 1) return runRepl();
+  if (argc == 2) return runFile(argv[1]);
+
+  fprintf(stderr, "Usage: wren [file]");
+  return 1;
 }
