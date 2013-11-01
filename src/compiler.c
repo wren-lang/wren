@@ -244,8 +244,7 @@ ObjBlock* compileBlock(Parser* parser, Compiler* parent, TokenType endToken)
   {
     statement(&compiler);
 
-    consume(&compiler, TOKEN_LINE);
-
+    if (!match(&compiler, TOKEN_LINE)) break;
     if (match(&compiler, endToken)) break;
 
     // Discard the result of the previous expression.
