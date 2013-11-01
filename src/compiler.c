@@ -583,6 +583,14 @@ void primary(Compiler* compiler)
     string(compiler);
     return;
   }
+
+  // Parentheses.
+  if (match(compiler, TOKEN_LEFT_PAREN))
+  {
+    expression(compiler);
+    consume(compiler, TOKEN_RIGHT_PAREN);
+    return;
+  }
 }
 
 void number(Compiler* compiler)
