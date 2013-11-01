@@ -1,0 +1,27 @@
+#!/usr/bin/python
+
+import glob
+import re
+
+TODO_PATTERN = re.compile(r'// TODO\(')
+
+num_files = 0
+num_lines = 0
+num_nonempty_lines = 0
+num_todos = 0
+
+for source_path in glob.iglob("src/*.[ch]"):
+  num_files += 1
+  with open(source_path, "r") as input:
+    for line in input:
+      num_lines += 1
+
+      if (line.strip() != ""):
+        num_nonempty_lines += 1
+
+      match = TODO_PATTERN.search(line)
+      if match:
+        num_todos += 1
+
+print "{0} files, {1} lines, {2} non-empty lines, {3} TODOs".format(
+    num_files, num_lines, num_nonempty_lines, num_todos)
