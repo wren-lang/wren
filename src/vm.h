@@ -6,6 +6,12 @@
 #define MAX_CALL_FRAMES 256
 #define MAX_SYMBOLS 256
 
+// Get the double value of [obj], which must be a number.
+#define AS_NUM(obj) (((ObjNum*)obj)->value)
+
+// Get the const char* value of [obj], which must be a string.
+#define AS_STRING(obj) (((ObjString*)obj)->value)
+
 typedef enum {
   OBJ_BLOCK,
   OBJ_CLASS,
