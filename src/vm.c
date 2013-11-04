@@ -42,11 +42,8 @@ VM* newVM()
   initSymbolTable(&vm->symbols);
   initSymbolTable(&vm->globalSymbols);
 
-  // Define the built-in classes.
-  vm->blockClass = makeClass();
-  vm->classClass = makeClass();
-  vm->numClass = makeClass();
-  vm->stringClass = makeClass();
+
+  registerPrimitives(vm);
 
   // The call method is special: neither a primitive nor a user-defined one.
   // This is because it mucks with the fiber itself.
@@ -55,8 +52,6 @@ VM* newVM()
     vm->blockClass->methods[symbol].type = METHOD_CALL;
   }
 
-  registerPrimitives(vm);
-
   return vm;
 }
 
@@ -64,6 +59,14 @@ void freeVM(VM* vm)
 {
   clearSymbolTable(&vm->symbols);
   free(vm);
+}
+
+Value makeBool(int value)
+{
+  Obj* obj = malloc(sizeof(Obj));
+  obj->type = value ? OBJ_TRUE : OBJ_FALSE;
+  obj->flags = 0;
+  return obj;
 }
 
 ObjBlock* makeBlock()
@@ -207,6 +210,14 @@ Value interpret(VM* vm, ObjBlock* block)
         break;
       }
 
+      case CODE_FALSE:
+        push(&fiber, makeBool(0));
+        break;
+
+      case CODE_TRUE:
+        push(&fiber, makeBool(1));
+        break;
+
       case CODE_CLASS:
       {
         ObjClass* classObj = makeClass();
@@ -298,6 +309,11 @@ Value interpret(VM* vm, ObjBlock* block)
             classObj = ((ObjClass*)receiver)->metaclass;
             break;
 
+          case OBJ_FALSE:
+          case OBJ_TRUE:
+            classObj = vm->boolClass;
+            break;
+
           case OBJ_NUM:
             classObj = vm->numClass;
             break;
@@ -374,6 +390,10 @@ void printValue(Value value)
       printf("[block]");
       break;
 
+    case OBJ_FALSE:
+      printf("false");
+      break;
+
     case OBJ_CLASS:
       printf("[class]");
       break;
@@ -388,6 +408,10 @@ void printValue(Value value)
 
     case OBJ_STRING:
       printf("%s", ((ObjString*)value)->value);
+      break;
+
+    case OBJ_TRUE:
+      printf("true");
       break;
   }
 }

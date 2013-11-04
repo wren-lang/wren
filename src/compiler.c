@@ -35,7 +35,9 @@ typedef enum
   TOKEN_BANGEQ,
 
   TOKEN_CLASS,
+  TOKEN_FALSE,
   TOKEN_META,
+  TOKEN_TRUE,
   TOKEN_VAR,
 
   TOKEN_NAME,
@@ -162,6 +164,7 @@ static void parsePrecedence(Compiler* compiler, int precedence);
 
 static void grouping(Compiler* compiler);
 static void block(Compiler* compiler);
+static void boolean(Compiler* compiler);
 static void name(Compiler* compiler);
 static void number(Compiler* compiler);
 static void string(Compiler* compiler);
@@ -238,14 +241,16 @@ ParseRule rules[] =
   { NULL, NULL, PREC_NONE, NULL }, // TOKEN_AMP
   { NULL, NULL, PREC_NONE, NULL }, // TOKEN_BANG
   { NULL, NULL, PREC_NONE, NULL }, // TOKEN_EQ
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_LT
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_GT
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_LTEQ
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_GTEQ
+  { NULL, infixOp, PREC_COMPARISON, "< " }, // TOKEN_LT
+  { NULL, infixOp, PREC_COMPARISON, "> " }, // TOKEN_GT
+  { NULL, infixOp, PREC_COMPARISON, "<= " }, // TOKEN_LTEQ
+  { NULL, infixOp, PREC_COMPARISON, ">= " }, // TOKEN_GTEQ
   { NULL, NULL, PREC_NONE, NULL }, // TOKEN_EQEQ
   { NULL, NULL, PREC_NONE, NULL }, // TOKEN_BANGEQ
   { NULL, NULL, PREC_NONE, NULL }, // TOKEN_CLASS
+  { boolean, NULL, PREC_NONE, NULL }, // TOKEN_FALSE
   { NULL, NULL, PREC_NONE, NULL }, // TOKEN_META
+  { boolean, NULL, PREC_NONE, NULL }, // TOKEN_TRUE
   { NULL, NULL, PREC_NONE, NULL }, // TOKEN_VAR
   { name, NULL, PREC_NONE, NULL }, // TOKEN_NAME
   { number, NULL, PREC_NONE, NULL }, // TOKEN_NUMBER
@@ -497,6 +502,18 @@ void block(Compiler* compiler)
   emit(compiler, compiler->block->numConstants - 1);
 }
 
+void boolean(Compiler* compiler)
+{
+  if (compiler->parser->previous.type == TOKEN_FALSE)
+  {
+    emit(compiler, CODE_FALSE);
+  }
+  else
+  {
+    emit(compiler, CODE_TRUE);
+  }
+}
+
 void name(Compiler* compiler)
 {
   // See if it's a local in this scope.
@@ -648,7 +665,8 @@ void infixOp(Compiler* compiler)
   parsePrecedence(compiler, rule->precedence + 1);
 
   // Call the operator method on the left-hand side.
-  int symbol = ensureSymbol(&compiler->parser->vm->symbols, rule->name, 2);
+  int symbol = ensureSymbol(&compiler->parser->vm->symbols,
+                            rule->name, strlen(rule->name));
   emit(compiler, CODE_CALL_1);
   emit(compiler, symbol);
 }
@@ -868,7 +886,9 @@ void readName(Parser* parser)
   TokenType type = TOKEN_NAME;
 
   if (isKeyword(parser, "class")) type = TOKEN_CLASS;
+  if (isKeyword(parser, "false")) type = TOKEN_FALSE;
   if (isKeyword(parser, "meta")) type = TOKEN_META;
+  if (isKeyword(parser, "true")) type = TOKEN_TRUE;
   if (isKeyword(parser, "var")) type = TOKEN_VAR;
 
   makeToken(parser, type);

@@ -21,6 +21,23 @@
       vm->globals[symbol] = (Value)obj; \
     }
 
+DEF_PRIMITIVE(bool_toString)
+{
+  // TODO(bob): Intern these strings or something.
+  if (AS_BOOL(args[0]))
+  {
+    char* result = malloc(5);
+    strcpy(result, "true");
+    return (Value)makeString(result);
+  }
+  else
+  {
+    char* result = malloc(6);
+    strcpy(result, "false");
+    return (Value)makeString(result);
+  }
+}
+
 DEF_PRIMITIVE(num_abs)
 {
   double value = AS_NUM(args[0]);
@@ -64,6 +81,30 @@ DEF_PRIMITIVE(num_divide)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
   return (Value)makeNum(AS_NUM(args[0]) / AS_NUM(args[1]));
+}
+
+DEF_PRIMITIVE(num_lt)
+{
+  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  return makeBool(AS_NUM(args[0]) < AS_NUM(args[1]));
+}
+
+DEF_PRIMITIVE(num_gt)
+{
+  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  return makeBool(AS_NUM(args[0]) > AS_NUM(args[1]));
+}
+
+DEF_PRIMITIVE(num_lte)
+{
+  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  return makeBool(AS_NUM(args[0]) <= AS_NUM(args[1]));
+}
+
+DEF_PRIMITIVE(num_gte)
+{
+  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  return makeBool(AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(string_contains)
@@ -117,13 +158,25 @@ DEF_PRIMITIVE(io_write)
 
 void registerPrimitives(VM* vm)
 {
+  vm->boolClass = makeClass();
+  PRIMITIVE(vm->boolClass, "toString", bool_toString);
+
+  vm->blockClass = makeClass();
+  vm->classClass = makeClass();
+
+  vm->numClass = makeClass();
   PRIMITIVE(vm->numClass, "abs", num_abs);
   PRIMITIVE(vm->numClass, "toString", num_toString)
   PRIMITIVE(vm->numClass, "- ", num_minus);
   PRIMITIVE(vm->numClass, "+ ", num_plus);
   PRIMITIVE(vm->numClass, "* ", num_multiply);
   PRIMITIVE(vm->numClass, "/ ", num_divide);
+  PRIMITIVE(vm->numClass, "< ", num_lt);
+  PRIMITIVE(vm->numClass, "> ", num_gt);
+  PRIMITIVE(vm->numClass, "<= ", num_lte);
+  PRIMITIVE(vm->numClass, ">= ", num_gte);
 
+  vm->stringClass = makeClass();
   PRIMITIVE(vm->stringClass, "contains ", string_contains);
   PRIMITIVE(vm->stringClass, "count", string_count);
   PRIMITIVE(vm->stringClass, "toString", string_toString)

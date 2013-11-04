@@ -6,6 +6,9 @@
 #define MAX_CALL_FRAMES 256
 #define MAX_SYMBOLS 256
 
+// Get the bool value of [obj] (0 or 1), which must be a boolean.
+#define AS_BOOL(obj) (((Obj*)obj)->type == OBJ_TRUE)
+
 // Get the double value of [obj], which must be a number.
 #define AS_NUM(obj) (((ObjNum*)obj)->value)
 
@@ -15,9 +18,11 @@
 typedef enum {
   OBJ_BLOCK,
   OBJ_CLASS,
+  OBJ_FALSE,
   OBJ_INSTANCE,
   OBJ_NUM,
-  OBJ_STRING
+  OBJ_STRING,
+  OBJ_TRUE
 } ObjType;
 
 typedef enum
@@ -97,6 +102,12 @@ typedef enum
   // Load the constant at index [arg].
   CODE_CONSTANT,
 
+  // Push false onto the stack.
+  CODE_FALSE,
+
+  // Push true onto the stack.
+  CODE_TRUE,
+
   // Define a new empty class and push it.
   CODE_CLASS,
 
@@ -152,11 +163,12 @@ struct sVM
   SymbolTable symbols;
 
   ObjClass* blockClass;
+  ObjClass* boolClass;
   ObjClass* classClass;
   ObjClass* numClass;
   ObjClass* stringClass;
 
-  // The singleton value "unsupported".
+  // The singleton values.
   Value unsupported;
 
   SymbolTable globalSymbols;
@@ -166,6 +178,10 @@ struct sVM
 
 VM* newVM();
 void freeVM(VM* vm);
+
+// Gets a bool object representing [value].
+// TODO(bob): Inline or macro?
+Value makeBool(int value);
 
 // Creates a new block object. Assumes the compiler will fill it in with
 // bytecode, constants, etc.
