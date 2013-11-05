@@ -32,6 +32,26 @@ DEF_PRIMITIVE(block_call)
   return NULL;
 }
 
+DEF_PRIMITIVE(bool_eqeq)
+{
+  if (args[1]->type != OBJ_FALSE && args[1]->type != OBJ_TRUE)
+  {
+    return makeBool(0);
+  }
+
+  return makeBool(AS_BOOL(args[0]) == AS_BOOL(args[1]));
+}
+
+DEF_PRIMITIVE(bool_bangeq)
+{
+  if (args[1]->type != OBJ_FALSE && args[1]->type != OBJ_TRUE)
+  {
+    return makeBool(1);
+  }
+
+  return makeBool(AS_BOOL(args[0]) != AS_BOOL(args[1]));
+}
+
 DEF_PRIMITIVE(bool_toString)
 {
   // TODO(bob): Intern these strings or something.
@@ -118,6 +138,18 @@ DEF_PRIMITIVE(num_gte)
   return makeBool(AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
+DEF_PRIMITIVE(num_eqeq)
+{
+  if (args[1]->type != OBJ_NUM) return makeBool(0);
+  return makeBool(AS_NUM(args[0]) == AS_NUM(args[1]));
+}
+
+DEF_PRIMITIVE(num_bangeq)
+{
+  if (args[1]->type != OBJ_NUM) return makeBool(1);
+  return makeBool(AS_NUM(args[0]) != AS_NUM(args[1]));
+}
+
 DEF_PRIMITIVE(string_contains)
 {
   const char* string = AS_STRING(args[0]);
@@ -160,6 +192,22 @@ DEF_PRIMITIVE(string_plus)
   return (Value)makeString(result);
 }
 
+DEF_PRIMITIVE(string_eqeq)
+{
+  if (args[1]->type != OBJ_STRING) return makeBool(0);
+  const char* a = AS_STRING(args[0]);
+  const char* b = AS_STRING(args[1]);
+  return makeBool(strcmp(a, b) == 0);
+}
+
+DEF_PRIMITIVE(string_bangeq)
+{
+  if (args[1]->type != OBJ_STRING) return makeBool(1);
+  const char* a = AS_STRING(args[0]);
+  const char* b = AS_STRING(args[1]);
+  return makeBool(strcmp(a, b) != 0);
+}
+
 DEF_PRIMITIVE(io_write)
 {
   printValue(args[1]);
@@ -174,6 +222,8 @@ void registerPrimitives(VM* vm)
 
   vm->boolClass = makeClass();
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
+  PRIMITIVE(vm->boolClass, "== ", bool_eqeq);
+  PRIMITIVE(vm->boolClass, "!= ", bool_bangeq);
 
   vm->classClass = makeClass();
 
@@ -188,12 +238,16 @@ void registerPrimitives(VM* vm)
   PRIMITIVE(vm->numClass, "> ", num_gt);
   PRIMITIVE(vm->numClass, "<= ", num_lte);
   PRIMITIVE(vm->numClass, ">= ", num_gte);
+  PRIMITIVE(vm->numClass, "== ", num_eqeq);
+  PRIMITIVE(vm->numClass, "!= ", num_bangeq);
 
   vm->stringClass = makeClass();
   PRIMITIVE(vm->stringClass, "contains ", string_contains);
   PRIMITIVE(vm->stringClass, "count", string_count);
   PRIMITIVE(vm->stringClass, "toString", string_toString)
   PRIMITIVE(vm->stringClass, "+ ", string_plus);
+  PRIMITIVE(vm->stringClass, "== ", string_eqeq);
+  PRIMITIVE(vm->stringClass, "!= ", string_bangeq);
 
   ObjClass* ioClass = makeClass();
   PRIMITIVE(ioClass, "write ", io_write);

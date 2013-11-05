@@ -220,43 +220,49 @@ static char peekChar(Parser* parser);
 // range.
 static void makeToken(Parser* parser, TokenType type);
 
+#define UNUSED { NULL, NULL, PREC_NONE, NULL }
+#define PREFIX(fn) { fn, NULL, PREC_NONE, NULL }
+#define INFIX(precedence, fn) { NULL, fn, precedence, NULL }
+#define INFIX_OPERATOR(precendence, name) \
+    { NULL, infixOp, precendence, name }
+
 ParseRule rules[] =
 {
-  { grouping, NULL, PREC_NONE, NULL }, // TOKEN_LEFT_PAREN
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_RIGHT_PAREN
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_LEFT_BRACKET
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_RIGHT_BRACKET
-  { block, NULL, PREC_NONE, NULL }, // TOKEN_LEFT_BRACE
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_RIGHT_BRACE
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_COLON
-  { NULL, call, PREC_CALL, NULL }, // TOKEN_DOT
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_COMMA
-  { NULL, infixOp, PREC_FACTOR, "* " }, // TOKEN_STAR
-  { NULL, infixOp, PREC_FACTOR, "/ " }, // TOKEN_SLASH
-  { NULL, infixOp, PREC_NONE, "% " }, // TOKEN_PERCENT
-  { NULL, infixOp, PREC_TERM, "+ " }, // TOKEN_PLUS
-  { NULL, infixOp, PREC_TERM, "- " }, // TOKEN_MINUS
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_PIPE
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_AMP
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_BANG
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_EQ
-  { NULL, infixOp, PREC_COMPARISON, "< " }, // TOKEN_LT
-  { NULL, infixOp, PREC_COMPARISON, "> " }, // TOKEN_GT
-  { NULL, infixOp, PREC_COMPARISON, "<= " }, // TOKEN_LTEQ
-  { NULL, infixOp, PREC_COMPARISON, ">= " }, // TOKEN_GTEQ
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_EQEQ
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_BANGEQ
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_CLASS
-  { boolean, NULL, PREC_NONE, NULL }, // TOKEN_FALSE
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_META
-  { boolean, NULL, PREC_NONE, NULL }, // TOKEN_TRUE
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_VAR
-  { name, NULL, PREC_NONE, NULL }, // TOKEN_NAME
-  { number, NULL, PREC_NONE, NULL }, // TOKEN_NUMBER
-  { string, NULL, PREC_NONE, NULL }, // TOKEN_STRING
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_LINE
-  { NULL, NULL, PREC_NONE, NULL }, // TOKEN_ERROR
-  { NULL, NULL, PREC_NONE, NULL }  // TOKEN_EOF
+  /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
+  /* TOKEN_RIGHT_PAREN   */ UNUSED,
+  /* TOKEN_LEFT_BRACKET  */ UNUSED,
+  /* TOKEN_RIGHT_BRACKET */ UNUSED,
+  /* TOKEN_LEFT_BRACE    */ PREFIX(block),
+  /* TOKEN_RIGHT_BRACE   */ UNUSED,
+  /* TOKEN_COLON         */ UNUSED,
+  /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
+  /* TOKEN_COMMA         */ UNUSED,
+  /* TOKEN_STAR          */ INFIX_OPERATOR(PREC_FACTOR, "* "),
+  /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/ "),
+  /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_TERM, "% "),
+  /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
+  /* TOKEN_MINUS         */ INFIX_OPERATOR(PREC_TERM, "- "),
+  /* TOKEN_PIPE          */ UNUSED,
+  /* TOKEN_AMP           */ UNUSED,
+  /* TOKEN_BANG          */ UNUSED,
+  /* TOKEN_EQ            */ UNUSED,
+  /* TOKEN_LT            */ INFIX_OPERATOR(PREC_COMPARISON, "< "),
+  /* TOKEN_GT            */ INFIX_OPERATOR(PREC_COMPARISON, "> "),
+  /* TOKEN_LTEQ          */ INFIX_OPERATOR(PREC_COMPARISON, "<= "),
+  /* TOKEN_GTEQ          */ INFIX_OPERATOR(PREC_COMPARISON, ">= "),
+  /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "== "),
+  /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!= "),
+  /* TOKEN_CLASS         */ UNUSED,
+  /* TOKEN_FALSE         */ PREFIX(boolean),
+  /* TOKEN_META          */ UNUSED,
+  /* TOKEN_TRUE          */ PREFIX(boolean),
+  /* TOKEN_VAR           */ UNUSED,
+  /* TOKEN_NAME          */ PREFIX(name),
+  /* TOKEN_NUMBER        */ PREFIX(number),
+  /* TOKEN_STRING        */ PREFIX(string),
+  /* TOKEN_LINE          */ UNUSED,
+  /* TOKEN_ERROR         */ UNUSED,
+  /* TOKEN_EOF           */ UNUSED
 };
 
 ObjBlock* compile(VM* vm, const char* source)
