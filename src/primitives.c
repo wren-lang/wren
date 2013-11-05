@@ -227,6 +227,8 @@ void registerPrimitives(VM* vm)
 
   vm->classClass = makeClass();
 
+  vm->nullClass = makeClass();
+  
   vm->numClass = makeClass();
   PRIMITIVE(vm->numClass, "abs", num_abs);
   PRIMITIVE(vm->numClass, "toString", num_toString)

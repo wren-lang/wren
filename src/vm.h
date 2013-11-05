@@ -23,6 +23,7 @@ typedef enum {
   OBJ_CLASS,
   OBJ_FALSE,
   OBJ_INSTANCE,
+  OBJ_NULL,
   OBJ_NUM,
   OBJ_STRING,
   OBJ_TRUE
@@ -105,6 +106,9 @@ typedef enum
   // Load the constant at index [arg].
   CODE_CONSTANT,
 
+  // Push null onto the stack.
+  CODE_NULL,
+
   // Push false onto the stack.
   CODE_FALSE,
 
@@ -149,7 +153,13 @@ typedef enum
   CODE_CALL_8,
   CODE_CALL_9,
   CODE_CALL_10,
-  
+
+  // Jump the instruction pointer [arg1] forward.
+  CODE_JUMP,
+
+  // Pop and if not truthy then jump the instruction pointer [arg1] forward.
+  CODE_JUMP_IF,
+
   // The current block is done and should be exited.
   CODE_END
 } Code;
@@ -168,6 +178,7 @@ struct sVM
   ObjClass* blockClass;
   ObjClass* boolClass;
   ObjClass* classClass;
+  ObjClass* nullClass;
   ObjClass* numClass;
   ObjClass* stringClass;
 
@@ -217,6 +228,9 @@ ObjClass* makeClass();
 
 // Creates a new instance of the given [classObj].
 ObjInstance* makeInstance(ObjClass* classObj);
+
+// Creates a new null object.
+Value makeNull();
 
 // Creates a new number object.
 ObjNum* makeNum(double number);

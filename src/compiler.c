@@ -35,7 +35,9 @@ typedef enum
   TOKEN_BANGEQ,
 
   TOKEN_CLASS,
+  TOKEN_ELSE,
   TOKEN_FALSE,
+  TOKEN_IF,
   TOKEN_META,
   TOKEN_TRUE,
   TOKEN_VAR,
@@ -149,7 +151,7 @@ static void storeVariable(Compiler* compiler, int symbol);
 static int internSymbol(Compiler* compiler);
 
 // Emits one bytecode instruction or argument.
-static void emit(Compiler* compiler, Code code);
+static int emit(Compiler* compiler, Code code);
 
 // Outputs a compile or syntax error.
 static void error(Compiler* compiler, const char* format, ...);
@@ -253,7 +255,9 @@ ParseRule rules[] =
   /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "== "),
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!= "),
   /* TOKEN_CLASS         */ UNUSED,
+  /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
+  /* TOKEN_IF            */ UNUSED,
   /* TOKEN_META          */ UNUSED,
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
@@ -385,9 +389,10 @@ int internSymbol(Compiler* compiler)
       compiler->parser->previous.end - compiler->parser->previous.start);
 }
 
-void emit(Compiler* compiler, Code code)
+int emit(Compiler* compiler, Code code)
 {
   compiler->block->bytecode[compiler->numCodes++] = code;
+  return compiler->numCodes - 1;
 }
 
 void error(Compiler* compiler, const char* format, ...)
@@ -469,6 +474,48 @@ void statement(Compiler* compiler)
 
 void expression(Compiler* compiler)
 {
+  if (match(compiler, TOKEN_IF))
+  {
+    // Compile the condition.
+    consume(compiler, TOKEN_LEFT_PAREN);
+    expression(compiler);
+    consume(compiler, TOKEN_RIGHT_PAREN);
+
+    // TODO(bob): Block bodies.
+    // Compile the then branch.
+    emit(compiler, CODE_JUMP_IF);
+
+    // Emit a placeholder. We'll patch it when we know what to jump to.
+    int ifJump = emit(compiler, 255);
+
+    expression(compiler);
+
+    // Jump over the else branch when the if branch is taken.
+    emit(compiler, CODE_JUMP);
+
+    // Emit a placeholder. We'll patch it when we know what to jump to.
+    int elseJump = emit(compiler, 255);
+
+    // Patch the jump.
+    compiler->block->bytecode[ifJump] = compiler->numCodes - ifJump - 1;
+
+    // Compile the else branch if there is one.
+    if (match(compiler, TOKEN_ELSE))
+    {
+      // TODO(bob): Block bodies.
+      expression(compiler);
+    }
+    else
+    {
+      // Just default to null.
+      emit(compiler, CODE_NULL);
+    }
+
+    // Patch the jump over the else.
+    compiler->block->bytecode[elseJump] = compiler->numCodes - elseJump - 1;
+    return;
+  }
+  
   return parsePrecedence(compiler, PREC_LOWEST);
 }
 
@@ -751,6 +798,8 @@ void nextToken(Parser* parser)
       case TOKEN_EQEQ:
       case TOKEN_BANGEQ:
       case TOKEN_CLASS:
+      case TOKEN_ELSE:
+      case TOKEN_IF:
       case TOKEN_META:
       case TOKEN_VAR:
         parser->skipNewlines = 1;
@@ -899,7 +948,9 @@ void readName(Parser* parser)
   TokenType type = TOKEN_NAME;
 
   if (isKeyword(parser, "class")) type = TOKEN_CLASS;
+  if (isKeyword(parser, "if")) type = TOKEN_IF;
   if (isKeyword(parser, "false")) type = TOKEN_FALSE;
+  if (isKeyword(parser, "else")) type = TOKEN_ELSE;
   if (isKeyword(parser, "meta")) type = TOKEN_META;
   if (isKeyword(parser, "true")) type = TOKEN_TRUE;
   if (isKeyword(parser, "var")) type = TOKEN_VAR;

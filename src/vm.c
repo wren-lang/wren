@@ -81,6 +81,14 @@ ObjInstance* makeInstance(ObjClass* classObj)
   return instance;
 }
 
+Value makeNull()
+{
+  Obj* obj = malloc(sizeof(Obj));
+  obj->type = OBJ_NULL;
+  obj->flags = 0;
+  return obj;
+}
+
 ObjNum* makeNum(double number)
 {
   ObjNum* num = malloc(sizeof(ObjNum));
@@ -157,6 +165,147 @@ const char* getSymbolName(SymbolTable* symbols, int symbol)
   return symbols->names[symbol];
 }
 
+// TODO(bob): For debugging. Move to separate module.
+/*
+void dumpCode(ObjBlock* block)
+{
+  unsigned char* bytecode = block->bytecode;
+  int done = 0;
+  int i = 0;
+  while (!done)
+  {
+    printf("%04d  ", i);
+    unsigned char code = bytecode[i++];
+
+    switch (code)
+    {
+      case CODE_CONSTANT:
+      {
+        int constant = bytecode[i++];
+        printf("CONSTANT %d (", constant);
+        printValue(block->constants[constant]);
+        printf(")\n");
+        printf("%04d  (constant %d)\n", i - 1, constant);
+        break;
+      }
+
+      case CODE_NULL:
+        printf("NULL\n");
+        break;
+
+      case CODE_FALSE:
+        printf("FALSE\n");
+        break;
+
+      case CODE_TRUE:
+        printf("TRUE\n");
+        break;
+
+      case CODE_CLASS:
+        printf("CLASS\n");
+        break;
+
+      case CODE_METHOD:
+      {
+        int symbol = bytecode[i++];
+        int constant = bytecode[i++];
+        printf("METHOD symbol %d constant %d\n", symbol, constant);
+        printf("%04d  (symbol %d)\n", i - 2, symbol);
+        printf("%04d  (constant %d)\n", i - 1, constant);
+        break;
+      }
+
+      case CODE_LOAD_LOCAL:
+      {
+        int local = bytecode[i++];
+        printf("LOAD_LOCAL %d\n", local);
+        printf("%04d  (local %d)\n", i - 1, local);
+        break;
+      }
+
+      case CODE_STORE_LOCAL:
+      {
+        int local = bytecode[i++];
+        printf("STORE_LOCAL %d\n", local);
+        printf("%04d  (local %d)\n", i - 1, local);
+        break;
+      }
+
+      case CODE_LOAD_GLOBAL:
+      {
+        int global = bytecode[i++];
+        printf("LOAD_GLOBAL %d\n", global);
+        printf("%04d  (global %d)\n", i - 1, global);
+        break;
+      }
+
+      case CODE_STORE_GLOBAL:
+      {
+        int global = bytecode[i++];
+        printf("STORE_GLOBAL %d\n", global);
+        printf("%04d  (global %d)\n", i - 1, global);
+        break;
+      }
+
+      case CODE_DUP:
+        printf("DUP\n");
+        break;
+
+      case CODE_POP:
+        printf("POP\n");
+        break;
+
+      case CODE_CALL_0:
+      case CODE_CALL_1:
+      case CODE_CALL_2:
+      case CODE_CALL_3:
+      case CODE_CALL_4:
+      case CODE_CALL_5:
+      case CODE_CALL_6:
+      case CODE_CALL_7:
+      case CODE_CALL_8:
+      case CODE_CALL_9:
+      case CODE_CALL_10:
+      {
+        // Add one for the implicit receiver argument.
+        int numArgs = bytecode[i - 1] - CODE_CALL_0;
+        int symbol = bytecode[i++];
+        printf("CALL_%d %d\n", numArgs, symbol);
+        printf("%04d  (symbol %d)\n", i - 1, symbol);
+        break;
+      }
+
+      case CODE_JUMP:
+      {
+        int offset = bytecode[i++];
+        printf("JUMP %d\n", offset);
+        printf("%04d  (offset %d)\n", i - 1, offset);
+        break;
+      }
+
+      case CODE_JUMP_IF:
+      {
+        int offset = bytecode[i++];
+        printf("JUMP_IF %d\n", offset);
+        printf("%04d  (offset %d)\n", i - 1, offset);
+        break;
+      }
+
+      case CODE_END:
+      {
+        printf("CODE_END\n");
+        done = 1;
+        break;
+      }
+
+      default:
+        printf("[%d]\n", bytecode[i - 1]);
+        break;
+    }
+  }
+}
+*/
+
 Value interpret(VM* vm, ObjBlock* block)
 {
   Fiber fiber;
@@ -178,6 +327,10 @@ Value interpret(VM* vm, ObjBlock* block)
         push(&fiber, value);
         break;
       }
+
+      case CODE_NULL:
+        push(&fiber, makeNull());
+        break;
 
       case CODE_FALSE:
         push(&fiber, makeBool(0));
@@ -284,6 +437,10 @@ Value interpret(VM* vm, ObjBlock* block)
             classObj = vm->boolClass;
             break;
 
+          case OBJ_NULL:
+            classObj = vm->nullClass;
+            break;
+
           case OBJ_NUM:
             classObj = vm->numClass;
             break;
@@ -329,6 +486,26 @@ Value interpret(VM* vm, ObjBlock* block)
           case METHOD_BLOCK:
             callBlock(&fiber, method->block, numArgs);
             break;
+        }
+        break;
+      }
+
+      case CODE_JUMP:
+      {
+        int offset = frame->block->bytecode[frame->ip++];
+        frame->ip += offset;
+        break;
+      }
+
+      case CODE_JUMP_IF:
+      {
+        int offset = frame->block->bytecode[frame->ip++];
+        Value condition = pop(&fiber);
+
+        // False is the only falsey value.
+        if (condition->type == OBJ_FALSE)
+        {
+          frame->ip += offset;
         }
         break;
       }
@@ -379,16 +556,20 @@ void printValue(Value value)
       printf("[block]");
       break;
 
-    case OBJ_FALSE:
-      printf("false");
-      break;
-
     case OBJ_CLASS:
       printf("[class]");
       break;
 
+    case OBJ_FALSE:
+      printf("false");
+      break;
+
     case OBJ_INSTANCE:
       printf("[instance]");
+      break;
+
+    case OBJ_NULL:
+      printf("null");
       break;
 
     case OBJ_NUM:
