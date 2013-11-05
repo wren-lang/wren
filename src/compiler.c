@@ -69,7 +69,6 @@ typedef struct
   VM* vm;
 
   const char* source;
-  size_t sourceLength;
 
   // The index in source of the beginning of the currently-being-lexed token.
   int tokenStart;
@@ -260,12 +259,11 @@ ParseRule rules[] =
   { NULL, NULL, PREC_NONE, NULL }  // TOKEN_EOF
 };
 
-ObjBlock* compile(VM* vm, const char* source, size_t sourceLength)
+ObjBlock* compile(VM* vm, const char* source)
 {
   Parser parser;
   parser.vm = vm;
   parser.source = source;
-  parser.sourceLength = sourceLength;
   parser.hasError = 0;
 
   // Ignore leading newlines.
@@ -314,7 +312,13 @@ ObjBlock* compileBlock(Parser* parser, Compiler* parent, TokenType endToken)
   {
     statement(&compiler);
 
-    if (!match(&compiler, TOKEN_LINE)) break;
+    // If there is no newline, it must be the end of the block on the same line.
+    if (!match(&compiler, TOKEN_LINE))
+    {
+      consume(&compiler, endToken);
+      break;
+    }
+
     if (match(&compiler, endToken)) break;
 
     // Discard the result of the previous expression.
@@ -471,6 +475,7 @@ void parsePrecedence(Compiler* compiler, int precedence)
   {
     // TODO(bob): Handle error better.
     error(compiler, "No prefix parser.");
+    return;
   }
 
   prefix(compiler);
@@ -704,6 +709,7 @@ void nextToken(Parser* parser)
   for (;;)
   {
     readRawToken(parser);
+
     switch (parser->current.type)
     {
       case TOKEN_LINE:
@@ -864,6 +870,7 @@ void readRawToken(Parser* parser)
         }
         else
         {
+          // TODO(bob): Handle error.
           makeToken(parser, TOKEN_ERROR);
         }
         return;

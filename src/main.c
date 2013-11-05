@@ -21,7 +21,7 @@ void failIf(int condition, int exitCode, const char* format, ...)
   exit(exitCode);
 }
 
-char* readFile(const char* path, size_t* length)
+char* readFile(const char* path)
 {
   FILE* file = fopen(path, "r");
   failIf(file == NULL, 66, "Could not open file \"%s\".\n", path);
@@ -32,12 +32,15 @@ char* readFile(const char* path, size_t* length)
   rewind(file);
 
   // Allocate a buffer for it.
-  char* buffer = malloc(fileSize);
+  char* buffer = malloc(fileSize + 1);
   failIf(buffer == NULL, 74, "Could not read file \"%s\".\n", path);
 
   // Read the entire file.
-  *length = fread(buffer, sizeof(char), fileSize, file);
-  failIf(*length < fileSize, 74, "Could not read file \"%s\".\n", path);
+  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+  failIf(bytesRead < fileSize, 74, "Could not read file \"%s\".\n", path);
+
+  // Terminate the string.
+  buffer[bytesRead] = '\0';
 
   fclose(file);
   return buffer;
@@ -45,10 +48,9 @@ char* readFile(const char* path, size_t* length)
 
 int runFile(const char* path)
 {
-  size_t length;
-  char* source = readFile(path, &length);
+  char* source = readFile(path);
   VM* vm = newVM();
-  ObjBlock* block = compile(vm, source, length);
+  ObjBlock* block = compile(vm, source);
 
   int exitCode = 0;
   if (block)
@@ -76,8 +78,7 @@ int runRepl()
     char line[MAX_LINE];
     fgets(line, MAX_LINE, stdin);
     // TODO(bob): Handle failure.
-    size_t length = strlen(line);
-    ObjBlock* block = compile(vm, line, length);
+    ObjBlock* block = compile(vm, line);
 
     if (block != NULL)
     {

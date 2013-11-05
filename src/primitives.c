@@ -12,7 +12,8 @@
     }
 
 #define DEF_PRIMITIVE(prim) \
-    static Value primitive_##prim(VM* vm, Value* args, int numArgs)
+    static Value primitive_##prim(VM* vm, Fiber* fiber, Value* args, \
+                                  int numArgs)
 
 #define GLOBAL(cls, name) \
     { \
@@ -20,6 +21,16 @@
       int symbol = addSymbol(&vm->globalSymbols, name, strlen(name)); \
       vm->globals[symbol] = (Value)obj; \
     }
+
+DEF_PRIMITIVE(block_call)
+{
+  // The call instruction leading to this primitive has one argument. So when
+  // we push the block onto the callstack, we again use one argument. That
+  // ensures that the result of evaluating the block goes into the slot that
+  // the caller of *this* primitive is expecting.
+  callBlock(fiber, AS_BLOCK(args[0]), 1);
+  return NULL;
+}
 
 DEF_PRIMITIVE(bool_toString)
 {
@@ -158,10 +169,12 @@ DEF_PRIMITIVE(io_write)
 
 void registerPrimitives(VM* vm)
 {
+  vm->blockClass = makeClass();
+  PRIMITIVE(vm->blockClass, "call", block_call);
+
   vm->boolClass = makeClass();
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
 
-  vm->blockClass = makeClass();
   vm->classClass = makeClass();
 
   vm->numClass = makeClass();

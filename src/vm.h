@@ -6,6 +6,9 @@
 #define MAX_CALL_FRAMES 256
 #define MAX_SYMBOLS 256
 
+// Get the block value of [obj] (0 or 1), which must be a block.
+#define AS_BLOCK(obj) ((ObjBlock*)obj)
+
 // Get the bool value of [obj] (0 or 1), which must be a boolean.
 #define AS_BOOL(obj) (((Obj*)obj)->type == OBJ_TRUE)
 
@@ -40,8 +43,9 @@ typedef struct
 typedef Obj* Value;
 
 typedef struct sVM VM;
+typedef struct sFiber Fiber;
 
-typedef Value (*Primitive)(VM* vm, Value* args, int numArgs);
+typedef Value (*Primitive)(VM* vm, Fiber* fiber, Value* args, int numArgs);
 
 typedef struct
 {
@@ -55,7 +59,6 @@ typedef struct
 typedef enum
 {
   METHOD_NONE,
-  METHOD_CALL,
   METHOD_PRIMITIVE,
   METHOD_BLOCK
 } MethodType;
@@ -176,6 +179,28 @@ struct sVM
   Value globals[MAX_SYMBOLS];
 };
 
+typedef struct
+{
+  // Index of the current (really next-to-be-executed) instruction in the
+  // block's bytecode.
+  int ip;
+
+  // The block being executed.
+  ObjBlock* block;
+
+  // Index of the stack slot that contains the first local for this block.
+  int locals;
+} CallFrame;
+
+struct sFiber
+{
+  Value stack[STACK_SIZE];
+  int stackSize;
+
+  CallFrame frames[MAX_CALL_FRAMES];
+  int numFrames;
+};
+
 VM* newVM();
 void freeVM(VM* vm);
 
@@ -221,6 +246,10 @@ int findSymbol(SymbolTable* symbols, const char* name, size_t length);
 const char* getSymbolName(SymbolTable* symbols, int symbol);
 
 Value interpret(VM* vm, ObjBlock* block);
+
+// Push [block] onto [fiber]'s callstack and invoke it. Expects [numArgs]
+// arguments (including the receiver) to be on the top of the stack already.
+void callBlock(Fiber* fiber, ObjBlock* block, int numArgs);
 
 void printValue(Value value);
 

@@ -5,30 +5,8 @@
 #include "primitives.h"
 #include "vm.h"
 
-typedef struct
-{
-  // Index of the current (really next-to-be-executed) instruction in the
-  // block's bytecode.
-  int ip;
-
-  // The block being executed.
-  ObjBlock* block;
-
-  // Index of the stack slot that contains the first local for this block.
-  int locals;
-} CallFrame;
-
-typedef struct
-{
-  Value stack[STACK_SIZE];
-  int stackSize;
-
-  CallFrame frames[MAX_CALL_FRAMES];
-  int numFrames;
-} Fiber;
-
-static void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal);
-static Value primitive_metaclass_new(VM* vm, Value* args, int numArgs);
+static Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args,
+                                     int numArgs);
 
 // Pushes [value] onto the top of the stack.
 static void push(Fiber* fiber, Value value);
@@ -41,16 +19,7 @@ VM* newVM()
   VM* vm = malloc(sizeof(VM));
   initSymbolTable(&vm->symbols);
   initSymbolTable(&vm->globalSymbols);
-
-
   registerPrimitives(vm);
-
-  // The call method is special: neither a primitive nor a user-defined one.
-  // This is because it mucks with the fiber itself.
-  {
-    int symbol = ensureSymbol(&vm->symbols, "call", strlen("call"));
-    vm->blockClass->methods[symbol].type = METHOD_CALL;
-  }
 
   return vm;
 }
@@ -206,7 +175,7 @@ Value interpret(VM* vm, ObjBlock* block)
       {
         int constant = frame->block->bytecode[frame->ip++];
         Value value = frame->block->constants[constant];
-        fiber.stack[fiber.stackSize++] = value;
+        push(&fiber, value);
         break;
       }
 
@@ -293,10 +262,11 @@ Value interpret(VM* vm, ObjBlock* block)
       case CODE_CALL_9:
       case CODE_CALL_10:
       {
-        int numArgs = frame->block->bytecode[frame->ip - 1] - CODE_CALL_0;
+        // Add one for the implicit receiver argument.
+        int numArgs = frame->block->bytecode[frame->ip - 1] - CODE_CALL_0 + 1;
         int symbol = frame->block->bytecode[frame->ip++];
 
-        Value receiver = fiber.stack[fiber.stackSize - numArgs - 1];
+        Value receiver = fiber.stack[fiber.stackSize - numArgs];
 
         ObjClass* classObj;
         switch (receiver->type)
@@ -339,24 +309,25 @@ Value interpret(VM* vm, ObjBlock* block)
             exit(1);
             break;
 
-          case METHOD_CALL:
-            callBlock(&fiber, (ObjBlock*)receiver, fiber.stackSize - numArgs);
-            break;
-
           case METHOD_PRIMITIVE:
           {
-            Value* args = &fiber.stack[fiber.stackSize - numArgs - 1];
-            // +1 to include the receiver since that's in the args array.
-            Value result = method->primitive(vm, args, numArgs + 1);
-            fiber.stack[fiber.stackSize - numArgs - 1] = result;
-            
-            // Discard the stack slots for the arguments.
-            fiber.stackSize -= numArgs;
+            Value* args = &fiber.stack[fiber.stackSize - numArgs];
+            Value result = method->primitive(vm, &fiber, args, numArgs);
+
+            // If the primitive pushed a call frame, it returns NULL.
+            if (result != NULL)
+            {
+              fiber.stack[fiber.stackSize - numArgs] = result;
+              
+              // Discard the stack slots for the arguments (but leave one for
+              // the result).
+              fiber.stackSize -= numArgs - 1;
+            }
             break;
           }
             
           case METHOD_BLOCK:
-            callBlock(&fiber, method->block, fiber.stackSize - numArgs);
+            callBlock(&fiber, method->block, numArgs);
             break;
         }
         break;
@@ -374,11 +345,29 @@ Value interpret(VM* vm, ObjBlock* block)
         // caller expects it.
         fiber.stack[frame->locals] = result;
 
-        // Discard the stack slots for the locals.
+        // Discard the stack slots for the locals (leaving one slot for the
+        // result).
         fiber.stackSize = frame->locals + 1;
       }
     }
   }
+}
+
+void callBlock(Fiber* fiber, ObjBlock* block, int numArgs)
+{
+  fiber->frames[fiber->numFrames].block = block;
+  fiber->frames[fiber->numFrames].ip = 0;
+  fiber->frames[fiber->numFrames].locals = fiber->stackSize - numArgs;
+
+  // Make empty slots for locals.
+  // TODO(bob): Should we do this eagerly, or have the bytecode have pushnil
+  // instructions before each time a local is stored for the first time?
+  for (int i = 0; i < block->numLocals - numArgs; i++)
+  {
+    push(fiber, NULL);
+  }
+
+  fiber->numFrames++;
 }
 
 void printValue(Value value)
@@ -416,24 +405,7 @@ void printValue(Value value)
   }
 }
 
-void callBlock(Fiber* fiber, ObjBlock* block, int firstLocal)
-{
-  fiber->frames[fiber->numFrames].block = block;
-  fiber->frames[fiber->numFrames].ip = 0;
-  fiber->frames[fiber->numFrames].locals = firstLocal;
-
-  // Make empty slots for locals.
-  // TODO(bob): Don't push slots for params since the args are already there.
-  // TODO(bob): Should we push some real nil value here?
-  for (int i = 0; i < block->numLocals; i++)
-  {
-    push(fiber, NULL);
-  }
-
-  fiber->numFrames++;
-}
-
-Value primitive_metaclass_new(VM* vm, Value* args, int numArgs)
+Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args, int numArgs)
 {
   ObjClass* classObj = (ObjClass*)args[0];
   // TODO(bob): Invoke initializer method.
