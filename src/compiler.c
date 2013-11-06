@@ -37,6 +37,7 @@ typedef enum
   TOKEN_CLASS,
   TOKEN_ELSE,
   TOKEN_FALSE,
+  TOKEN_FN,
   TOKEN_IF,
   TOKEN_META,
   TOKEN_NULL,
@@ -164,8 +165,8 @@ static void expression(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, int precedence);
 
 static void grouping(Compiler* compiler);
-static void block(Compiler* compiler);
 static void boolean(Compiler* compiler);
+static void function(Compiler* compiler);
 static void name(Compiler* compiler);
 static void null(Compiler* compiler);
 static void number(Compiler* compiler);
@@ -235,7 +236,7 @@ ParseRule rules[] =
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
   /* TOKEN_LEFT_BRACKET  */ UNUSED,
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
-  /* TOKEN_LEFT_BRACE    */ PREFIX(block),
+  /* TOKEN_LEFT_BRACE    */ UNUSED,
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
   /* TOKEN_COLON         */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
@@ -258,6 +259,7 @@ ParseRule rules[] =
   /* TOKEN_CLASS         */ UNUSED,
   /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
+  /* TOKEN_FN            */ PREFIX(function),
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_META          */ UNUSED,
   /* TOKEN_NULL          */ PREFIX(null),
@@ -549,20 +551,6 @@ void grouping(Compiler* compiler)
   consume(compiler, TOKEN_RIGHT_PAREN);
 }
 
-void block(Compiler* compiler)
-{
-  // TODO(bob): Make this just a local scope, not a block object.
-  ObjFn* fn = compileFunction(
-      compiler->parser, compiler, TOKEN_RIGHT_BRACE);
-
-  // Add the function to the constant table.
-  compiler->fn->constants[compiler->fn->numConstants++] = (Value)fn;
-
-  // Compile the code to load it.
-  emit(compiler, CODE_CONSTANT);
-  emit(compiler, compiler->fn->numConstants - 1);
-}
-
 void boolean(Compiler* compiler)
 {
   if (compiler->parser->previous.type == TOKEN_FALSE)
@@ -573,6 +561,49 @@ void boolean(Compiler* compiler)
   {
     emit(compiler, CODE_TRUE);
   }
+}
+
+void function(Compiler* compiler)
+{
+  // TODO(bob): Copied from compileFunction(). Unify?
+  Compiler fnCompiler;
+  initCompiler(&fnCompiler, compiler->parser, compiler);
+
+  if (match(&fnCompiler, TOKEN_LEFT_BRACE))
+  {
+    // Block body.
+    for (;;)
+    {
+      statement(&fnCompiler);
+
+      // If there is no newline, it must be the end of the block on the same line.
+      if (!match(&fnCompiler, TOKEN_LINE))
+      {
+        consume(&fnCompiler, TOKEN_RIGHT_BRACE);
+        break;
+      }
+
+      if (match(&fnCompiler, TOKEN_RIGHT_BRACE)) break;
+
+      // Discard the result of the previous expression.
+      emit(&fnCompiler, CODE_POP);
+    }
+  }
+  else
+  {
+    // Single expression body.
+    expression(&fnCompiler);
+  }
+
+  emit(&fnCompiler, CODE_END);
+  fnCompiler.fn->numLocals = fnCompiler.locals.count;
+
+  // Add the function to the constant table.
+  compiler->fn->constants[compiler->fn->numConstants++] = (Value)fnCompiler.fn;
+
+  // Compile the code to load it.
+  emit(compiler, CODE_CONSTANT);
+  emit(compiler, compiler->fn->numConstants - 1);
 }
 
 void name(Compiler* compiler)
@@ -685,8 +716,6 @@ void call(Compiler* compiler)
             partLength);
     length += partLength;
     // TODO(bob): Check for length overflow.
-
-    // TODO(bob): Allow block arguments.
 
     // Parse the argument list, if any.
     if (match(compiler, TOKEN_LEFT_PAREN))
@@ -956,9 +985,10 @@ void readName(Parser* parser)
   TokenType type = TOKEN_NAME;
 
   if (isKeyword(parser, "class")) type = TOKEN_CLASS;
-  if (isKeyword(parser, "if")) type = TOKEN_IF;
-  if (isKeyword(parser, "false")) type = TOKEN_FALSE;
   if (isKeyword(parser, "else")) type = TOKEN_ELSE;
+  if (isKeyword(parser, "false")) type = TOKEN_FALSE;
+  if (isKeyword(parser, "fn")) type = TOKEN_FN;
+  if (isKeyword(parser, "if")) type = TOKEN_IF;
   if (isKeyword(parser, "meta")) type = TOKEN_META;
   if (isKeyword(parser, "null")) type = TOKEN_NULL;
   if (isKeyword(parser, "true")) type = TOKEN_TRUE;

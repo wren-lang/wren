@@ -69,6 +69,18 @@ DEF_PRIMITIVE(fn_call)
   return NULL;
 }
 
+DEF_PRIMITIVE(fn_eqeq)
+{
+  if (args[1]->type != OBJ_FN) return makeBool(0);
+  return makeBool(AS_FN(args[0]) == AS_FN(args[1]));
+}
+
+DEF_PRIMITIVE(fn_bangeq)
+{
+  if (args[1]->type != OBJ_FN) return makeBool(1);
+  return makeBool(AS_FN(args[0]) != AS_FN(args[1]));
+}
+
 DEF_PRIMITIVE(num_abs)
 {
   double value = AS_NUM(args[0]);
@@ -226,6 +238,8 @@ void registerPrimitives(VM* vm)
 
   vm->fnClass = makeClass();
   PRIMITIVE(vm->fnClass, "call", fn_call);
+  PRIMITIVE(vm->fnClass, "== ", fn_eqeq);
+  PRIMITIVE(vm->fnClass, "!= ", fn_bangeq);
 
   vm->nullClass = makeClass();
   
