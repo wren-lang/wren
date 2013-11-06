@@ -39,6 +39,7 @@ typedef enum
   TOKEN_FALSE,
   TOKEN_IF,
   TOKEN_META,
+  TOKEN_NULL,
   TOKEN_TRUE,
   TOKEN_VAR,
 
@@ -167,6 +168,7 @@ static void grouping(Compiler* compiler);
 static void block(Compiler* compiler);
 static void boolean(Compiler* compiler);
 static void name(Compiler* compiler);
+static void null(Compiler* compiler);
 static void number(Compiler* compiler);
 static void string(Compiler* compiler);
 
@@ -259,6 +261,7 @@ ParseRule rules[] =
   /* TOKEN_FALSE         */ PREFIX(boolean),
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_META          */ UNUSED,
+  /* TOKEN_NULL          */ PREFIX(null),
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_NAME          */ PREFIX(name),
@@ -600,6 +603,11 @@ void name(Compiler* compiler)
 
   // TODO(bob): Look for names in outer scopes.
   error(compiler, "Undefined variable.");
+}
+
+void null(Compiler* compiler)
+{
+  emit(compiler, CODE_NULL);
 }
 
 void number(Compiler* compiler)
@@ -952,6 +960,7 @@ void readName(Parser* parser)
   if (isKeyword(parser, "false")) type = TOKEN_FALSE;
   if (isKeyword(parser, "else")) type = TOKEN_ELSE;
   if (isKeyword(parser, "meta")) type = TOKEN_META;
+  if (isKeyword(parser, "null")) type = TOKEN_NULL;
   if (isKeyword(parser, "true")) type = TOKEN_TRUE;
   if (isKeyword(parser, "var")) type = TOKEN_VAR;
 
