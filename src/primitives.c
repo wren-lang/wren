@@ -22,16 +22,6 @@
       vm->globals[symbol] = (Value)obj; \
     }
 
-DEF_PRIMITIVE(block_call)
-{
-  // The call instruction leading to this primitive has one argument. So when
-  // we push the block onto the callstack, we again use one argument. That
-  // ensures that the result of evaluating the block goes into the slot that
-  // the caller of *this* primitive is expecting.
-  callBlock(fiber, AS_BLOCK(args[0]), 1);
-  return NULL;
-}
-
 DEF_PRIMITIVE(bool_eqeq)
 {
   if (args[1]->type != OBJ_FALSE && args[1]->type != OBJ_TRUE)
@@ -67,6 +57,16 @@ DEF_PRIMITIVE(bool_toString)
     strcpy(result, "false");
     return (Value)makeString(result);
   }
+}
+
+DEF_PRIMITIVE(fn_call)
+{
+  // The call instruction leading to this primitive has one argument. So when
+  // we push the block onto the callstack, we again use one argument. That
+  // ensures that the result of evaluating the block goes into the slot that
+  // the caller of *this* primitive is expecting.
+  callFunction(fiber, AS_FN(args[0]), 1);
+  return NULL;
 }
 
 DEF_PRIMITIVE(num_abs)
@@ -217,15 +217,15 @@ DEF_PRIMITIVE(io_write)
 
 void registerPrimitives(VM* vm)
 {
-  vm->blockClass = makeClass();
-  PRIMITIVE(vm->blockClass, "call", block_call);
-
   vm->boolClass = makeClass();
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
   PRIMITIVE(vm->boolClass, "== ", bool_eqeq);
   PRIMITIVE(vm->boolClass, "!= ", bool_bangeq);
 
   vm->classClass = makeClass();
+
+  vm->fnClass = makeClass();
+  PRIMITIVE(vm->fnClass, "call", fn_call);
 
   vm->nullClass = makeClass();
   

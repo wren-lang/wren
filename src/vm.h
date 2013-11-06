@@ -6,11 +6,11 @@
 #define MAX_CALL_FRAMES 256
 #define MAX_SYMBOLS 256
 
-// Get the block value of [obj] (0 or 1), which must be a block.
-#define AS_BLOCK(obj) ((ObjBlock*)obj)
-
 // Get the bool value of [obj] (0 or 1), which must be a boolean.
 #define AS_BOOL(obj) (((Obj*)obj)->type == OBJ_TRUE)
+
+// Get the function value of [obj] (0 or 1), which must be a function.
+#define AS_FN(obj) ((ObjFn*)obj)
 
 // Get the double value of [obj], which must be a number.
 #define AS_NUM(obj) (((ObjNum*)obj)->value)
@@ -19,9 +19,9 @@
 #define AS_STRING(obj) (((ObjString*)obj)->value)
 
 typedef enum {
-  OBJ_BLOCK,
   OBJ_CLASS,
   OBJ_FALSE,
+  OBJ_FN,
   OBJ_INSTANCE,
   OBJ_NULL,
   OBJ_NUM,
@@ -55,7 +55,7 @@ typedef struct
   Value* constants;
   int numConstants;
   int numLocals;
-} ObjBlock;
+} ObjFn;
 
 typedef enum
 {
@@ -70,7 +70,7 @@ typedef struct
   union
   {
     Primitive primitive;
-    ObjBlock* block;
+    ObjFn* fn;
   };
 } Method;
 
@@ -175,9 +175,9 @@ struct sVM
 {
   SymbolTable symbols;
 
-  ObjClass* blockClass;
   ObjClass* boolClass;
   ObjClass* classClass;
+  ObjClass* fnClass;
   ObjClass* nullClass;
   ObjClass* numClass;
   ObjClass* stringClass;
@@ -196,8 +196,8 @@ typedef struct
   // block's bytecode.
   int ip;
 
-  // The block being executed.
-  ObjBlock* block;
+  // The function being executed.
+  ObjFn* fn;
 
   // Index of the stack slot that contains the first local for this block.
   int locals;
@@ -219,9 +219,9 @@ void freeVM(VM* vm);
 // TODO(bob): Inline or macro?
 Value makeBool(int value);
 
-// Creates a new block object. Assumes the compiler will fill it in with
+// Creates a new function object. Assumes the compiler will fill it in with
 // bytecode, constants, etc.
-ObjBlock* makeBlock();
+ObjFn* makeFunction();
 
 // Creates a new class object.
 ObjClass* makeClass();
@@ -259,11 +259,11 @@ int findSymbol(SymbolTable* symbols, const char* name, size_t length);
 // Given an index in the symbol table, returns its name.
 const char* getSymbolName(SymbolTable* symbols, int symbol);
 
-Value interpret(VM* vm, ObjBlock* block);
+Value interpret(VM* vm, ObjFn* fn);
 
-// Push [block] onto [fiber]'s callstack and invoke it. Expects [numArgs]
+// Push [fn] onto [fiber]'s callstack and invoke it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
-void callBlock(Fiber* fiber, ObjBlock* block, int numArgs);
+void callFunction(Fiber* fiber, ObjFn* fn, int numArgs);
 
 void printValue(Value value);
 

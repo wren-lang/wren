@@ -50,12 +50,12 @@ int runFile(const char* path)
 {
   char* source = readFile(path);
   VM* vm = newVM();
-  ObjBlock* block = compile(vm, source);
+  ObjFn* fn = compile(vm, source);
 
   int exitCode = 0;
-  if (block)
+  if (fn != NULL)
   {
-    interpret(vm, block);
+    interpret(vm, fn);
   }
   else
   {
@@ -78,11 +78,11 @@ int runRepl()
     char line[MAX_LINE];
     fgets(line, MAX_LINE, stdin);
     // TODO(bob): Handle failure.
-    ObjBlock* block = compile(vm, line);
+    ObjFn* fn = compile(vm, line);
 
-    if (block != NULL)
+    if (fn != NULL)
     {
-      Value result = interpret(vm, block);
+      Value result = interpret(vm, fn);
       printf("= ");
       printValue(result);
       printf("\n");

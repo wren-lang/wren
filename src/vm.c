@@ -38,14 +38,6 @@ Value makeBool(int value)
   return obj;
 }
 
-ObjBlock* makeBlock()
-{
-  ObjBlock* block = malloc(sizeof(ObjBlock));
-  block->obj.type = OBJ_BLOCK;
-  block->obj.flags = 0;
-  return block;
-}
-
 ObjClass* makeSingleClass()
 {
   ObjClass* obj = malloc(sizeof(ObjClass));
@@ -69,6 +61,14 @@ ObjClass* makeClass()
   classObj->metaclass = makeSingleClass();
 
   return classObj;
+}
+
+ObjFn* makeFunction()
+{
+  ObjFn* fn = malloc(sizeof(ObjFn));
+  fn->obj.type = OBJ_FN;
+  fn->obj.flags = 0;
+  return fn;
 }
 
 ObjInstance* makeInstance(ObjClass* classObj)
@@ -306,24 +306,24 @@ void dumpCode(ObjBlock* block)
 }
 */
 
-Value interpret(VM* vm, ObjBlock* block)
+Value interpret(VM* vm, ObjFn* fn)
 {
   Fiber fiber;
   fiber.stackSize = 0;
   fiber.numFrames = 0;
 
-  callBlock(&fiber, block, 0);
+  callFunction(&fiber, fn, 0);
 
   for (;;)
   {
     CallFrame* frame = &fiber.frames[fiber.numFrames - 1];
 
-    switch (frame->block->bytecode[frame->ip++])
+    switch (frame->fn->bytecode[frame->ip++])
     {
       case CODE_CONSTANT:
       {
-        int constant = frame->block->bytecode[frame->ip++];
-        Value value = frame->block->constants[constant];
+        int constant = frame->fn->bytecode[frame->ip++];
+        Value value = frame->fn->constants[constant];
         push(&fiber, value);
         break;
       }
@@ -357,40 +357,40 @@ Value interpret(VM* vm, ObjBlock* block)
 
       case CODE_METHOD:
       {
-        int symbol = frame->block->bytecode[frame->ip++];
-        int constant = frame->block->bytecode[frame->ip++];
+        int symbol = frame->fn->bytecode[frame->ip++];
+        int constant = frame->fn->bytecode[frame->ip++];
         ObjClass* classObj = (ObjClass*)fiber.stack[fiber.stackSize - 1];
 
-        ObjBlock* body = (ObjBlock*)frame->block->constants[constant];
+        ObjFn* body = AS_FN(frame->fn->constants[constant]);
         classObj->methods[symbol].type = METHOD_BLOCK;
-        classObj->methods[symbol].block = body;
+        classObj->methods[symbol].fn = body;
         break;
       }
 
       case CODE_LOAD_LOCAL:
       {
-        int local = frame->block->bytecode[frame->ip++];
+        int local = frame->fn->bytecode[frame->ip++];
         push(&fiber, fiber.stack[frame->locals + local]);
         break;
       }
 
       case CODE_STORE_LOCAL:
       {
-        int local = frame->block->bytecode[frame->ip++];
+        int local = frame->fn->bytecode[frame->ip++];
         fiber.stack[frame->locals + local] = fiber.stack[fiber.stackSize - 1];
         break;
       }
 
       case CODE_LOAD_GLOBAL:
       {
-        int global = frame->block->bytecode[frame->ip++];
+        int global = frame->fn->bytecode[frame->ip++];
         push(&fiber, vm->globals[global]);
         break;
       }
 
       case CODE_STORE_GLOBAL:
       {
-        int global = frame->block->bytecode[frame->ip++];
+        int global = frame->fn->bytecode[frame->ip++];
         vm->globals[global] = fiber.stack[fiber.stackSize - 1];
         break;
       }
@@ -416,18 +416,14 @@ Value interpret(VM* vm, ObjBlock* block)
       case CODE_CALL_10:
       {
         // Add one for the implicit receiver argument.
-        int numArgs = frame->block->bytecode[frame->ip - 1] - CODE_CALL_0 + 1;
-        int symbol = frame->block->bytecode[frame->ip++];
+        int numArgs = frame->fn->bytecode[frame->ip - 1] - CODE_CALL_0 + 1;
+        int symbol = frame->fn->bytecode[frame->ip++];
 
         Value receiver = fiber.stack[fiber.stackSize - numArgs];
 
         ObjClass* classObj;
         switch (receiver->type)
         {
-          case OBJ_BLOCK:
-            classObj = vm->blockClass;
-            break;
-
           case OBJ_CLASS:
             classObj = ((ObjClass*)receiver)->metaclass;
             break;
@@ -435,6 +431,10 @@ Value interpret(VM* vm, ObjBlock* block)
           case OBJ_FALSE:
           case OBJ_TRUE:
             classObj = vm->boolClass;
+            break;
+
+          case OBJ_FN:
+            classObj = vm->fnClass;
             break;
 
           case OBJ_NULL:
@@ -484,7 +484,7 @@ Value interpret(VM* vm, ObjBlock* block)
           }
             
           case METHOD_BLOCK:
-            callBlock(&fiber, method->block, numArgs);
+            callFunction(&fiber, method->fn, numArgs);
             break;
         }
         break;
@@ -492,14 +492,14 @@ Value interpret(VM* vm, ObjBlock* block)
 
       case CODE_JUMP:
       {
-        int offset = frame->block->bytecode[frame->ip++];
+        int offset = frame->fn->bytecode[frame->ip++];
         frame->ip += offset;
         break;
       }
 
       case CODE_JUMP_IF:
       {
-        int offset = frame->block->bytecode[frame->ip++];
+        int offset = frame->fn->bytecode[frame->ip++];
         Value condition = pop(&fiber);
 
         // False is the only falsey value.
@@ -530,20 +530,21 @@ Value interpret(VM* vm, ObjBlock* block)
   }
 }
 
-void callBlock(Fiber* fiber, ObjBlock* block, int numArgs)
+void callFunction(Fiber* fiber, ObjFn* fn, int numArgs)
 {
-  fiber->frames[fiber->numFrames].block = block;
+  fiber->frames[fiber->numFrames].fn = fn;
   fiber->frames[fiber->numFrames].ip = 0;
   fiber->frames[fiber->numFrames].locals = fiber->stackSize - numArgs;
 
   // Make empty slots for locals.
   // TODO(bob): Should we do this eagerly, or have the bytecode have pushnil
   // instructions before each time a local is stored for the first time?
-  for (int i = 0; i < block->numLocals - numArgs; i++)
+  for (int i = 0; i < fn->numLocals - numArgs; i++)
   {
     push(fiber, NULL);
   }
 
+  // TODO(bob): Check for stack overflow.
   fiber->numFrames++;
 }
 
@@ -552,16 +553,16 @@ void printValue(Value value)
   // TODO(bob): Do more useful stuff here.
   switch (value->type)
   {
-    case OBJ_BLOCK:
-      printf("[block]");
-      break;
-
     case OBJ_CLASS:
       printf("[class]");
       break;
 
     case OBJ_FALSE:
       printf("false");
+      break;
+
+    case OBJ_FN:
+      printf("[fn]");
       break;
 
     case OBJ_INSTANCE:

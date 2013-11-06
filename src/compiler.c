@@ -103,8 +103,8 @@ typedef struct sCompiler
   // top level.
   struct sCompiler* parent;
 
-  // The block being compiled.
-  ObjBlock* block;
+  // The function being compiled.
+  ObjFn* fn;
   int numCodes;
 
   // Symbol table for declared local variables in this block.
@@ -117,7 +117,6 @@ enum
 {
   PREC_NONE,
   PREC_LOWEST,
-
   PREC_EQUALITY,   // == !=
   PREC_COMPARISON, // < > <= >=
   PREC_BITWISE,    // | &
@@ -136,7 +135,7 @@ typedef struct
 
 static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent);
 
-static ObjBlock* compileBlock(Parser* parser, Compiler* parent,
+static ObjFn* compileFunction(Parser* parser, Compiler* parent,
                               TokenType endToken);
 
 static int addConstant(Compiler* compiler, Value constant);
@@ -272,7 +271,7 @@ ParseRule rules[] =
   /* TOKEN_EOF           */ UNUSED
 };
 
-ObjBlock* compile(VM* vm, const char* source)
+ObjFn* compile(VM* vm, const char* source)
 {
   Parser parser;
   parser.vm = vm;
@@ -296,7 +295,7 @@ ObjBlock* compile(VM* vm, const char* source)
   // Read the first token.
   nextToken(&parser);
 
-  return compileBlock(&parser, NULL, TOKEN_EOF);
+  return compileFunction(&parser, NULL, TOKEN_EOF);
 }
 
 void initCompiler(Compiler* compiler, Parser* parser,
@@ -307,16 +306,16 @@ void initCompiler(Compiler* compiler, Parser* parser,
   compiler->numCodes = 0;
   initSymbolTable(&compiler->locals);
 
-  compiler->block = makeBlock();
+  compiler->fn = makeFunction();
   // TODO(bob): Hack! make variable sized.
-  compiler->block->bytecode = malloc(sizeof(Code) * 1024);
+  compiler->fn->bytecode = malloc(sizeof(Code) * 1024);
 
   // TODO(bob): Hack! make variable sized.
-  compiler->block->constants = malloc(sizeof(Value) * 256);
-  compiler->block->numConstants = 0;
+  compiler->fn->constants = malloc(sizeof(Value) * 256);
+  compiler->fn->numConstants = 0;
 }
 
-ObjBlock* compileBlock(Parser* parser, Compiler* parent, TokenType endToken)
+ObjFn* compileFunction(Parser* parser, Compiler* parent, TokenType endToken)
 {
   Compiler compiler;
   initCompiler(&compiler, parser, parent);
@@ -340,15 +339,15 @@ ObjBlock* compileBlock(Parser* parser, Compiler* parent, TokenType endToken)
 
   emit(&compiler, CODE_END);
 
-  compiler.block->numLocals = compiler.locals.count;
+  compiler.fn->numLocals = compiler.locals.count;
 
-  return parser->hasError ? NULL : compiler.block;
+  return parser->hasError ? NULL : compiler.fn;
 }
 
 int addConstant(Compiler* compiler, Value constant)
 {
-  compiler->block->constants[compiler->block->numConstants++] = constant;
-  return compiler->block->numConstants - 1;
+  compiler->fn->constants[compiler->fn->numConstants++] = constant;
+  return compiler->fn->numConstants - 1;
 }
 
 int defineName(Compiler* compiler)
@@ -394,7 +393,7 @@ int internSymbol(Compiler* compiler)
 
 int emit(Compiler* compiler, Code code)
 {
-  compiler->block->bytecode[compiler->numCodes++] = code;
+  compiler->fn->bytecode[compiler->numCodes++] = code;
   return compiler->numCodes - 1;
 }
 
@@ -441,7 +440,7 @@ void statement(Compiler* compiler)
       int symbol = internSymbol(compiler);
 
       consume(compiler, TOKEN_LEFT_BRACE);
-      ObjBlock* method = compileBlock(compiler->parser, compiler,
+      ObjFn* method = compileFunction(compiler->parser, compiler,
                                       TOKEN_RIGHT_BRACE);
       consume(compiler, TOKEN_LINE);
 
@@ -500,7 +499,7 @@ void expression(Compiler* compiler)
     int elseJump = emit(compiler, 255);
 
     // Patch the jump.
-    compiler->block->bytecode[ifJump] = compiler->numCodes - ifJump - 1;
+    compiler->fn->bytecode[ifJump] = compiler->numCodes - ifJump - 1;
 
     // Compile the else branch if there is one.
     if (match(compiler, TOKEN_ELSE))
@@ -515,7 +514,7 @@ void expression(Compiler* compiler)
     }
 
     // Patch the jump over the else.
-    compiler->block->bytecode[elseJump] = compiler->numCodes - elseJump - 1;
+    compiler->fn->bytecode[elseJump] = compiler->numCodes - elseJump - 1;
     return;
   }
   
@@ -552,15 +551,16 @@ void grouping(Compiler* compiler)
 
 void block(Compiler* compiler)
 {
-  ObjBlock* block = compileBlock(
+  // TODO(bob): Make this just a local scope, not a block object.
+  ObjFn* fn = compileFunction(
       compiler->parser, compiler, TOKEN_RIGHT_BRACE);
 
-  // Add the block to the constant table.
-  compiler->block->constants[compiler->block->numConstants++] = (Value)block;
+  // Add the function to the constant table.
+  compiler->fn->constants[compiler->fn->numConstants++] = (Value)fn;
 
   // Compile the code to load it.
   emit(compiler, CODE_CONSTANT);
-  emit(compiler, compiler->block->numConstants - 1);
+  emit(compiler, compiler->fn->numConstants - 1);
 }
 
 void boolean(Compiler* compiler)
