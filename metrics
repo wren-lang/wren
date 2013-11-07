@@ -11,11 +11,13 @@ num_docs = 0
 num_code = 0
 num_empty = 0
 num_todos = 0
+num_semicolons = 0
 
 for source_path in glob.iglob("src/*.[ch]"):
   num_files += 1
   with open(source_path, "r") as input:
     for line in input:
+      num_semicolons += line.count(';')
       match = TODO_PATTERN.match(line)
       if match:
         num_todos += 1
@@ -37,3 +39,4 @@ print num_todos, "TODOs"
 print num_docs, "comment lines"
 print num_code, "code lines"
 print num_empty, "empty lines"
+print num_semicolons, "semicolons"
