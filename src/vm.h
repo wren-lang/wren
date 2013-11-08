@@ -6,6 +6,9 @@
 #define MAX_CALL_FRAMES 256
 #define MAX_SYMBOLS 256
 
+// Get the class value of [obj] (0 or 1), which must be a boolean.
+#define AS_CLASS(obj) ((ObjClass*)obj)
+
 // Get the bool value of [obj] (0 or 1), which must be a boolean.
 #define AS_BOOL(obj) (((Obj*)obj)->type == OBJ_TRUE)
 
@@ -46,7 +49,7 @@ typedef Obj* Value;
 typedef struct sVM VM;
 typedef struct sFiber Fiber;
 
-typedef Value (*Primitive)(VM* vm, Fiber* fiber, Value* args, int numArgs);
+typedef Value (*Primitive)(VM* vm, Fiber* fiber, Value* args);
 
 typedef struct
 {
@@ -160,6 +163,9 @@ typedef enum
   // Pop and if not truthy then jump the instruction pointer [arg1] forward.
   CODE_JUMP_IF,
 
+  // Pop [a] then [b] and push true if [b] is an instance of [a].
+  CODE_IS,
+  
   // The current block is done and should be exited.
   CODE_END
 } Code;
@@ -258,6 +264,9 @@ int findSymbol(SymbolTable* symbols, const char* name, size_t length);
 
 // Given an index in the symbol table, returns its name.
 const char* getSymbolName(SymbolTable* symbols, int symbol);
+
+// Returns the global variable named [name].
+Value findGlobal(VM* vm, const char* name);
 
 Value interpret(VM* vm, ObjFn* fn);
 

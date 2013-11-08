@@ -39,6 +39,7 @@ typedef enum
   TOKEN_FALSE,
   TOKEN_FN,
   TOKEN_IF,
+  TOKEN_IS,
   TOKEN_META,
   TOKEN_NULL,
   TOKEN_TRUE,
@@ -239,6 +240,7 @@ static void readName(Parser* parser)
   if (isKeyword(parser, "false")) type = TOKEN_FALSE;
   if (isKeyword(parser, "fn")) type = TOKEN_FN;
   if (isKeyword(parser, "if")) type = TOKEN_IF;
+  if (isKeyword(parser, "is")) type = TOKEN_IS;
   if (isKeyword(parser, "meta")) type = TOKEN_META;
   if (isKeyword(parser, "null")) type = TOKEN_NULL;
   if (isKeyword(parser, "true")) type = TOKEN_TRUE;
@@ -428,6 +430,7 @@ static void nextToken(Parser* parser)
       case TOKEN_CLASS:
       case TOKEN_ELSE:
       case TOKEN_IF:
+      case TOKEN_IS:
       case TOKEN_META:
       case TOKEN_VAR:
         parser->skipNewlines = 1;
@@ -538,32 +541,33 @@ static int internSymbol(Compiler* compiler)
 
 // Grammar ---------------------------------------------------------------------
 
-// Forward declarations since the grammar is recursive.
-static void expression(Compiler* compiler);
-static void statement(Compiler* compiler);
-static void parsePrecedence(Compiler* compiler, int precedence);
-static ObjFn* compileFunction(Parser* parser, Compiler* parent,
-                              TokenType endToken);
-
-typedef void (*ParseFn)(Compiler*);
-
-enum
+typedef enum
 {
   PREC_NONE,
   PREC_LOWEST,
+  PREC_IS,         // is
   PREC_EQUALITY,   // == !=
   PREC_COMPARISON, // < > <= >=
   PREC_BITWISE,    // | &
   PREC_TERM,       // + -
   PREC_FACTOR,     // * / %
-  PREC_CALL        // ()
-};
+  PREC_CALL        // . ()
+} Precedence;
+
+// Forward declarations since the grammar is recursive.
+static void expression(Compiler* compiler);
+static void statement(Compiler* compiler);
+static void parsePrecedence(Compiler* compiler, Precedence precedence);
+static ObjFn* compileFunction(Parser* parser, Compiler* parent,
+                              TokenType endToken);
+
+typedef void (*ParseFn)(Compiler*);
 
 typedef struct
 {
   ParseFn prefix;
   ParseFn infix;
-  int precedence;
+  Precedence precedence;
   const char* name;
 } ParseRule;
 
@@ -634,8 +638,8 @@ static void name(Compiler* compiler)
 {
   // See if it's a local in this scope.
   int local = findSymbol(&compiler->locals,
-                         compiler->parser->source + compiler->parser->previous.start,
-                         compiler->parser->previous.end - compiler->parser->previous.start);
+      compiler->parser->source + compiler->parser->previous.start,
+      compiler->parser->previous.end - compiler->parser->previous.start);
   if (local != -1)
   {
     emit(compiler, CODE_LOAD_LOCAL);
@@ -647,8 +651,8 @@ static void name(Compiler* compiler)
 
   // See if it's a global variable.
   int global = findSymbol(&compiler->parser->vm->globalSymbols,
-                          compiler->parser->source + compiler->parser->previous.start,
-                          compiler->parser->previous.end - compiler->parser->previous.start);
+      compiler->parser->source + compiler->parser->previous.start,
+      compiler->parser->previous.end - compiler->parser->previous.start);
   if (global != -1)
   {
     emit(compiler, CODE_LOAD_GLOBAL);
@@ -776,6 +780,14 @@ void call(Compiler* compiler)
   emit(compiler, symbol);
 }
 
+void is(Compiler* compiler)
+{
+  // Compile the right-hand side.
+  parsePrecedence(compiler, PREC_CALL);
+
+  emit(compiler, CODE_IS);
+}
+
 void infixOp(Compiler* compiler)
 {
   ParseRule* rule = &rules[compiler->parser->previous.type];
@@ -830,6 +842,7 @@ ParseRule rules[] =
   /* TOKEN_FALSE         */ PREFIX(boolean),
   /* TOKEN_FN            */ PREFIX(function),
   /* TOKEN_IF            */ UNUSED,
+  /* TOKEN_IS            */ INFIX(PREC_IS, is),
   /* TOKEN_META          */ UNUSED,
   /* TOKEN_NULL          */ PREFIX(null),
   /* TOKEN_TRUE          */ PREFIX(boolean),
@@ -843,7 +856,7 @@ ParseRule rules[] =
 };
 
 // The main entrypoint for the top-down operator precedence parser.
-void parsePrecedence(Compiler* compiler, int precedence)
+void parsePrecedence(Compiler* compiler, Precedence precedence)
 {
   nextToken(compiler->parser);
   ParseFn prefix = rules[compiler->parser->previous.type].prefix;

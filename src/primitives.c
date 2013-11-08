@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "compiler.h"
 #include "primitives.h"
 
 #define PRIMITIVE(cls, name, prim) \
@@ -12,15 +13,7 @@
     }
 
 #define DEF_PRIMITIVE(prim) \
-    static Value primitive_##prim(VM* vm, Fiber* fiber, Value* args, \
-                                  int numArgs)
-
-#define GLOBAL(cls, name) \
-    { \
-      ObjInstance* obj = makeInstance(cls); \
-      int symbol = addSymbol(&vm->globalSymbols, name, strlen(name)); \
-      vm->globals[symbol] = (Value)obj; \
-    }
+    static Value primitive_##prim(VM* vm, Fiber* fiber, Value* args)
 
 DEF_PRIMITIVE(bool_eqeq)
 {
@@ -227,23 +220,36 @@ DEF_PRIMITIVE(io_write)
   return args[1];
 }
 
-void registerPrimitives(VM* vm)
+static const char* CORE_LIB =
+"class Bool {}\n"
+"class Class {}\n"
+"class Function {}\n"
+"class Num {}\n"
+"class Null {}\n"
+"class String {}\n"
+"class IO {}\n"
+"var io = IO.new\n";
+
+void loadCore(VM* vm)
 {
-  vm->boolClass = makeClass();
+  ObjFn* core = compile(vm, CORE_LIB);
+  interpret(vm, core);
+
+  vm->boolClass = AS_CLASS(findGlobal(vm, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
   PRIMITIVE(vm->boolClass, "== ", bool_eqeq);
   PRIMITIVE(vm->boolClass, "!= ", bool_bangeq);
 
-  vm->classClass = makeClass();
+  vm->classClass = AS_CLASS(findGlobal(vm, "Class"));
 
-  vm->fnClass = makeClass();
+  vm->fnClass = AS_CLASS(findGlobal(vm, "Function"));
   PRIMITIVE(vm->fnClass, "call", fn_call);
   PRIMITIVE(vm->fnClass, "== ", fn_eqeq);
   PRIMITIVE(vm->fnClass, "!= ", fn_bangeq);
 
-  vm->nullClass = makeClass();
-  
-  vm->numClass = makeClass();
+  vm->nullClass = AS_CLASS(findGlobal(vm, "Null"));
+
+  vm->numClass = AS_CLASS(findGlobal(vm, "Num"));
   PRIMITIVE(vm->numClass, "abs", num_abs);
   PRIMITIVE(vm->numClass, "toString", num_toString)
   PRIMITIVE(vm->numClass, "- ", num_minus);
@@ -257,7 +263,7 @@ void registerPrimitives(VM* vm)
   PRIMITIVE(vm->numClass, "== ", num_eqeq);
   PRIMITIVE(vm->numClass, "!= ", num_bangeq);
 
-  vm->stringClass = makeClass();
+  vm->stringClass = AS_CLASS(findGlobal(vm, "String"));
   PRIMITIVE(vm->stringClass, "contains ", string_contains);
   PRIMITIVE(vm->stringClass, "count", string_count);
   PRIMITIVE(vm->stringClass, "toString", string_toString)
@@ -265,9 +271,8 @@ void registerPrimitives(VM* vm)
   PRIMITIVE(vm->stringClass, "== ", string_eqeq);
   PRIMITIVE(vm->stringClass, "!= ", string_bangeq);
 
-  ObjClass* ioClass = makeClass();
+  ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
   PRIMITIVE(ioClass, "write ", io_write);
-  GLOBAL(ioClass, "io");
 
   ObjClass* unsupportedClass = makeClass();
 

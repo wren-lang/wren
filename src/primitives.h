@@ -3,6 +3,6 @@
 
 #include "vm.h"
 
-void registerPrimitives(VM* vm);
+void loadCore(VM* vm);
 
 #endif
