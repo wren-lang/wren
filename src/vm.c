@@ -547,16 +547,6 @@ void callFunction(Fiber* fiber, ObjFn* fn, int numArgs)
   fiber->frames[fiber->numFrames].ip = 0;
   fiber->frames[fiber->numFrames].stackStart = fiber->stackSize - numArgs;
 
-  // Make empty slots for locals.
-  // TODO(bob): This will be wrong when block scope is working since the number
-  // of locals may be greater than the number of locals at the beginning of
-  // the function. Instead, the first time a local is stored, we should emit
-  // code to push a slot for it, and then pop it when it goes out of scope.
-  for (int i = numArgs; i < fn->numLocals; i++)
-  {
-    push(fiber, NULL);
-  }
-
   // TODO(bob): Check for stack overflow.
   fiber->numFrames++;
 }

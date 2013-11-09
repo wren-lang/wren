@@ -524,12 +524,39 @@ static int declareVariable(Compiler* compiler)
 }
 
 // Stores a variable with the previously defined symbol in the current scope.
-static void storeVariable(Compiler* compiler, int symbol)
+static void defineVariable(Compiler* compiler, int symbol)
 {
-  emit(compiler, compiler->parent ? CODE_STORE_LOCAL : CODE_STORE_GLOBAL);
-  emit(compiler, symbol);
+  // If it's a global variable, we need to explicitly store it. If it's a local
+  // variable, the value is already on the stack in the right slot.
+  if (!compiler->parent)
+  {
+    // It's a global variable, so store the value in the global slot.
+    emit(compiler, CODE_STORE_GLOBAL);
+    emit(compiler, symbol);
+  }
+  else
+  {
+    // It's a local variable. The value is already in the right slot to store
+    // the local, but later code will pop and discard that. To cancel that out
+    // duplicate it now, so that the temporary value will be discarded and
+    // leave the local still on the stack.
+    // TODO(bob): Since variables are declared in statement position, this
+    // generates a lot of code like:
+    //
+    //   var a = "value"
+    //   io.write(a)
+    //
+    //   CODE_CONSTANT "value" // put constant into local slot
+    //   CODE_DUP              // dup it so the top is a temporary
+    //   CODE_POP              // discard previous result in sequence
+    //   <code for io.write...>
+    //
+    // Would be good to either peephole optimize this or be smarted about
+    // generating code for defining local variables to not emit the DUP
+    // sometimes.
+    emit(compiler, CODE_DUP);
+  }
 }
-
 
 // Grammar ---------------------------------------------------------------------
 
@@ -1023,7 +1050,7 @@ void statement(Compiler* compiler)
     emit(compiler, CODE_CLASS);
 
     // Store it in its name.
-    storeVariable(compiler, symbol);
+    defineVariable(compiler, symbol);
 
     // Compile the method definitions.
     consume(compiler, TOKEN_LEFT_BRACE);
@@ -1047,7 +1074,7 @@ void statement(Compiler* compiler)
     // Compile the initializer.
     expression(compiler);
 
-    storeVariable(compiler, symbol);
+    defineVariable(compiler, symbol);
     return;
   }
 
