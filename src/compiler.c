@@ -493,9 +493,9 @@ static int addConstant(Compiler* compiler, Value constant)
   return compiler->fn->numConstants - 1;
 }
 
-// Parses a name token and defines a variable in the current scope with that
+// Parses a name token and declares a variable in the current scope with that
 // name. Returns its symbol.
-static int defineName(Compiler* compiler)
+static int declareVariable(Compiler* compiler)
 {
   consume(compiler, TOKEN_NAME);
 
@@ -512,8 +512,8 @@ static int defineName(Compiler* compiler)
   }
 
   int symbol = addSymbol(symbols,
-                         compiler->parser->source + compiler->parser->previous.start,
-                         compiler->parser->previous.end - compiler->parser->previous.start);
+      compiler->parser->source + compiler->parser->previous.start,
+      compiler->parser->previous.end - compiler->parser->previous.start);
 
   if (symbol == -1)
   {
@@ -528,14 +528,6 @@ static void storeVariable(Compiler* compiler, int symbol)
 {
   emit(compiler, compiler->parent ? CODE_STORE_LOCAL : CODE_STORE_GLOBAL);
   emit(compiler, symbol);
-}
-
-// Adds the previous token's text to the symbol table and returns its index.
-static int internSymbol(Compiler* compiler)
-{
-  return ensureSymbol(&compiler->parser->vm->symbols,
-      compiler->parser->source + compiler->parser->previous.start,
-      compiler->parser->previous.end - compiler->parser->previous.start);
 }
 
 
@@ -772,7 +764,7 @@ void call(Compiler* compiler)
     }
   }
 
-  int symbol = ensureSymbol(&compiler->parser->vm->symbols, name, length);
+  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
   // Compile the method call.
   emit(compiler, CODE_CALL_0 + numArgs);
@@ -796,7 +788,7 @@ void infixOp(Compiler* compiler)
   parsePrecedence(compiler, rule->precedence + 1);
 
   // Call the operator method on the left-hand side.
-  int symbol = ensureSymbol(&compiler->parser->vm->symbols,
+  int symbol = ensureSymbol(&compiler->parser->vm->methods,
                             rule->name, strlen(rule->name));
   emit(compiler, CODE_CALL_1);
   emit(compiler, symbol);
@@ -928,13 +920,104 @@ void expression(Compiler* compiler)
   return parsePrecedence(compiler, PREC_LOWEST);
 }
 
+// Compiles a method definition inside a class body.
+void method(Compiler* compiler)
+{
+  char name[MAX_NAME];
+  int length = 0;
+
+  // Method name.
+  consume(compiler, TOKEN_NAME);
+
+  // TODO(bob): Copied from compileFunction(). Unify.
+  Compiler methodCompiler;
+  initCompiler(&methodCompiler, compiler->parser, compiler);
+
+  // TODO(bob): Hackish.
+  // Define a fake local slot for the receiver so that later locals have the
+  // correct slot indices.
+  addSymbol(&methodCompiler.locals, "(this)", 6);
+
+  // Build the method name. The mangled name includes all of the name parts
+  // in a mixfix call as well as spaces for every argument.
+  // So a method like:
+  //
+  //   foo.bar(a, b) else (c) last
+  //
+  // Will have name: "bar  else last"
+  for (;;)
+  {
+    // Add the just-consumed part name to the method name.
+    int partLength = compiler->parser->previous.end -
+        compiler->parser->previous.start;
+    strncpy(name + length,
+            compiler->parser->source + compiler->parser->previous.start,
+            partLength);
+    length += partLength;
+    // TODO(bob): Check for length overflow.
+
+    // Parse the parameter list, if any.
+    if (!match(compiler, TOKEN_LEFT_PAREN)) break;
+
+    for (;;)
+    {
+      // Define a local variable in the method for the parameter.
+      declareVariable(&methodCompiler);
+
+      // Add a space in the name for each argument. Lets us overload by
+      // arity.
+      name[length++] = ' ';
+
+      if (!match(compiler, TOKEN_COMMA)) break;
+    }
+    consume(compiler, TOKEN_RIGHT_PAREN);
+
+    // If there isn't another part name after the argument list, stop.
+    if (!match(compiler, TOKEN_NAME)) break;
+  }
+
+  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
+
+  consume(compiler, TOKEN_LEFT_BRACE);
+
+  // Block body.
+  for (;;)
+  {
+    statement(&methodCompiler);
+
+    // If there is no newline, it must be the end of the block on the same line.
+    if (!match(&methodCompiler, TOKEN_LINE))
+    {
+      consume(&methodCompiler, TOKEN_RIGHT_BRACE);
+      break;
+    }
+
+    if (match(&methodCompiler, TOKEN_RIGHT_BRACE)) break;
+
+    // Discard the result of the previous expression.
+    emit(&methodCompiler, CODE_POP);
+  }
+
+  emit(&methodCompiler, CODE_END);
+  methodCompiler.fn->numLocals = methodCompiler.locals.count;
+
+  // Add the block to the constant table.
+  int constant = addConstant(compiler, (Value)methodCompiler.fn);
+
+  // Compile the code to define the method it.
+  emit(compiler, CODE_METHOD);
+  emit(compiler, symbol);
+  emit(compiler, constant);
+}
+
 // Parses a "statement": any expression including expressions like variable
 // declarations which can only appear at the top level of a block.
 void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_CLASS))
   {
-    int symbol = defineName(compiler);
+    // Create a variable to store the class in.
+    int symbol = declareVariable(compiler);
 
     // Create the empty class.
     emit(compiler, CODE_CLASS);
@@ -947,22 +1030,8 @@ void statement(Compiler* compiler)
 
     while (!match(compiler, TOKEN_RIGHT_BRACE))
     {
-      // Method name.
-      consume(compiler, TOKEN_NAME);
-      int symbol = internSymbol(compiler);
-
-      consume(compiler, TOKEN_LEFT_BRACE);
-      ObjFn* method = compileFunction(compiler->parser, compiler,
-                                      TOKEN_RIGHT_BRACE);
+      method(compiler);
       consume(compiler, TOKEN_LINE);
-
-      // Add the block to the constant table.
-      int constant = addConstant(compiler, (Value)method);
-
-      // Compile the code to define the method it.
-      emit(compiler, CODE_METHOD);
-      emit(compiler, symbol);
-      emit(compiler, constant);
     }
 
     return;
@@ -970,7 +1039,7 @@ void statement(Compiler* compiler)
 
   if (match(compiler, TOKEN_VAR))
   {
-    int symbol = defineName(compiler);
+    int symbol = declareVariable(compiler);
 
     // TODO(bob): Allow uninitialized vars?
     consume(compiler, TOKEN_EQ);

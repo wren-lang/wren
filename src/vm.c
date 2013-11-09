@@ -16,7 +16,7 @@ static Value pop(Fiber* fiber);
 VM* newVM()
 {
   VM* vm = malloc(sizeof(VM));
-  initSymbolTable(&vm->symbols);
+  initSymbolTable(&vm->methods);
   initSymbolTable(&vm->globalSymbols);
 
   loadCore(vm);
@@ -26,7 +26,8 @@ VM* newVM()
 
 void freeVM(VM* vm)
 {
-  clearSymbolTable(&vm->symbols);
+  clearSymbolTable(&vm->methods);
+  clearSymbolTable(&vm->globalSymbols);
   free(vm);
 }
 
@@ -174,9 +175,9 @@ Value findGlobal(VM* vm, const char* name)
 
 // TODO(bob): For debugging. Move to separate module.
 /*
-void dumpCode(ObjBlock* block)
+void dumpCode(VM* vm, ObjFn* fn)
 {
-  unsigned char* bytecode = block->bytecode;
+  unsigned char* bytecode = fn->bytecode;
   int done = 0;
   int i = 0;
   while (!done)
@@ -189,10 +190,10 @@ void dumpCode(ObjBlock* block)
       case CODE_CONSTANT:
       {
         int constant = bytecode[i++];
-        printf("CONSTANT %d (", constant);
-        printValue(block->constants[constant]);
-        printf(")\n");
-        printf("%04d  (constant %d)\n", i - 1, constant);
+        printf("CONSTANT ");
+        printValue(fn->constants[constant]);
+        printf("\n");
+        printf("%04d   | constant %d\n", i - 1, constant);
         break;
       }
 
@@ -216,9 +217,9 @@ void dumpCode(ObjBlock* block)
       {
         int symbol = bytecode[i++];
         int constant = bytecode[i++];
-        printf("METHOD symbol %d constant %d\n", symbol, constant);
-        printf("%04d  (symbol %d)\n", i - 2, symbol);
-        printf("%04d  (constant %d)\n", i - 1, constant);
+        printf("METHOD \"%s\"\n", getSymbolName(&vm->methods, symbol));
+        printf("%04d   | symbol %d\n", i - 2, symbol);
+        printf("%04d   | constant %d\n", i - 1, constant);
         break;
       }
 
@@ -226,7 +227,7 @@ void dumpCode(ObjBlock* block)
       {
         int local = bytecode[i++];
         printf("LOAD_LOCAL %d\n", local);
-        printf("%04d  (local %d)\n", i - 1, local);
+        printf("%04d   | local %d\n", i - 1, local);
         break;
       }
 
@@ -234,23 +235,25 @@ void dumpCode(ObjBlock* block)
       {
         int local = bytecode[i++];
         printf("STORE_LOCAL %d\n", local);
-        printf("%04d  (local %d)\n", i - 1, local);
+        printf("%04d   | local %d\n", i - 1, local);
         break;
       }
 
       case CODE_LOAD_GLOBAL:
       {
         int global = bytecode[i++];
-        printf("LOAD_GLOBAL %d\n", global);
-        printf("%04d  (global %d)\n", i - 1, global);
+        printf("LOAD_GLOBAL \"%s\"\n",
+               getSymbolName(&vm->globalSymbols, global));
+        printf("%04d   | global %d\n", i - 1, global);
         break;
       }
 
       case CODE_STORE_GLOBAL:
       {
         int global = bytecode[i++];
-        printf("STORE_GLOBAL %d\n", global);
-        printf("%04d  (global %d)\n", i - 1, global);
+        printf("STORE_GLOBAL \"%s\"\n",
+               getSymbolName(&vm->globalSymbols, global));
+        printf("%04d   | global %d\n", i - 1, global);
         break;
       }
 
@@ -277,8 +280,9 @@ void dumpCode(ObjBlock* block)
         // Add one for the implicit receiver argument.
         int numArgs = bytecode[i - 1] - CODE_CALL_0;
         int symbol = bytecode[i++];
-        printf("CALL_%d %d\n", numArgs, symbol);
-        printf("%04d  (symbol %d)\n", i - 1, symbol);
+        printf("CALL_%d \"%s\"\n", numArgs,
+               getSymbolName(&vm->methods, symbol));
+        printf("%04d   | symbol %d\n", i - 1, symbol);
         break;
       }
 
@@ -286,7 +290,7 @@ void dumpCode(ObjBlock* block)
       {
         int offset = bytecode[i++];
         printf("JUMP %d\n", offset);
-        printf("%04d  (offset %d)\n", i - 1, offset);
+        printf("%04d   | offset %d\n", i - 1, offset);
         break;
       }
 
@@ -294,7 +298,7 @@ void dumpCode(ObjBlock* block)
       {
         int offset = bytecode[i++];
         printf("JUMP_IF %d\n", offset);
-        printf("%04d  (offset %d)\n", i - 1, offset);
+        printf("%04d   | offset %d\n", i - 1, offset);
         break;
       }
 
@@ -373,7 +377,7 @@ Value interpret(VM* vm, ObjFn* fn)
 
         // Define a "new" method on the metaclass.
         // TODO(bob): Can this be inherited?
-        int newSymbol = ensureSymbol(&vm->symbols, "new", strlen("new"));
+        int newSymbol = ensureSymbol(&vm->methods, "new", strlen("new"));
         classObj->metaclass->methods[newSymbol].type = METHOD_PRIMITIVE;
         classObj->metaclass->methods[newSymbol].primitive =
             primitive_metaclass_new;
@@ -397,14 +401,14 @@ Value interpret(VM* vm, ObjFn* fn)
       case CODE_LOAD_LOCAL:
       {
         int local = frame->fn->bytecode[frame->ip++];
-        push(&fiber, fiber.stack[frame->locals + local]);
+        push(&fiber, fiber.stack[frame->stackStart + local]);
         break;
       }
 
       case CODE_STORE_LOCAL:
       {
         int local = frame->fn->bytecode[frame->ip++];
-        fiber.stack[frame->locals + local] = fiber.stack[fiber.stackSize - 1];
+        fiber.stack[frame->stackStart + local] = fiber.stack[fiber.stackSize - 1];
         break;
       }
 
@@ -456,7 +460,7 @@ Value interpret(VM* vm, ObjFn* fn)
             printf("Receiver ");
             printValue(receiver);
             printf(" does not implement method \"%s\".\n",
-                   vm->symbols.names[symbol]);
+                   vm->methods.names[symbol]);
             // TODO(bob): Throw an exception or halt the fiber or something.
             exit(1);
             break;
@@ -526,11 +530,11 @@ Value interpret(VM* vm, ObjFn* fn)
 
         // Store the result of the block in the first slot, which is where the
         // caller expects it.
-        fiber.stack[frame->locals] = result;
+        fiber.stack[frame->stackStart] = result;
 
-        // Discard the stack slots for the locals (leaving one slot for the
+        // Discard the stack slots for the call frame (leaving one slot for the
         // result).
-        fiber.stackSize = frame->locals + 1;
+        fiber.stackSize = frame->stackStart + 1;
         break;
       }
     }
@@ -541,12 +545,14 @@ void callFunction(Fiber* fiber, ObjFn* fn, int numArgs)
 {
   fiber->frames[fiber->numFrames].fn = fn;
   fiber->frames[fiber->numFrames].ip = 0;
-  fiber->frames[fiber->numFrames].locals = fiber->stackSize - numArgs;
+  fiber->frames[fiber->numFrames].stackStart = fiber->stackSize - numArgs;
 
   // Make empty slots for locals.
-  // TODO(bob): Should we do this eagerly, or have the bytecode have pushnil
-  // instructions before each time a local is stored for the first time?
-  for (int i = 0; i < fn->numLocals - numArgs; i++)
+  // TODO(bob): This will be wrong when block scope is working since the number
+  // of locals may be greater than the number of locals at the beginning of
+  // the function. Instead, the first time a local is stored, we should emit
+  // code to push a slot for it, and then pop it when it goes out of scope.
+  for (int i = numArgs; i < fn->numLocals; i++)
   {
     push(fiber, NULL);
   }

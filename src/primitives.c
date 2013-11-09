@@ -7,7 +7,7 @@
 
 #define PRIMITIVE(cls, name, prim) \
     { \
-      int symbol = ensureSymbol(&vm->symbols, name, strlen(name)); \
+      int symbol = ensureSymbol(&vm->methods, name, strlen(name)); \
       cls->methods[symbol].type = METHOD_PRIMITIVE; \
       cls->methods[symbol].primitive = primitive_##prim; \
     }

@@ -179,7 +179,7 @@ typedef struct
 
 struct sVM
 {
-  SymbolTable symbols;
+  SymbolTable methods;
 
   ObjClass* boolClass;
   ObjClass* classClass;
@@ -205,8 +205,10 @@ typedef struct
   // The function being executed.
   ObjFn* fn;
 
-  // Index of the stack slot that contains the first local for this block.
-  int locals;
+  // Index of the first stack slot used by this call frame. This will contain
+  // the receiver, followed by the function's parameters, then local variables
+  // and temporaries.
+  int stackStart;
 } CallFrame;
 
 struct sFiber
