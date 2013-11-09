@@ -57,7 +57,6 @@ typedef struct
   unsigned char* bytecode;
   Value* constants;
   int numConstants;
-  int numLocals;
 } ObjFn;
 
 typedef enum

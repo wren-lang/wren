@@ -42,6 +42,7 @@ typedef enum
   TOKEN_IS,
   TOKEN_META,
   TOKEN_NULL,
+  TOKEN_THIS,
   TOKEN_TRUE,
   TOKEN_VAR,
 
@@ -111,15 +112,20 @@ typedef struct sCompiler
 
   // Symbol table for declared local variables in this block.
   SymbolTable locals;
+
+  // Non-zero if the function being compiled is a method.
+  int isMethod;
 } Compiler;
 
 // Initializes [compiler].
 static void initCompiler(Compiler* compiler, Parser* parser,
-                         Compiler* parent)
+                         Compiler* parent, int isMethod)
 {
   compiler->parser = parser;
   compiler->parent = parent;
   compiler->numCodes = 0;
+  compiler->isMethod = isMethod;
+
   initSymbolTable(&compiler->locals);
 
   compiler->fn = makeFunction();
@@ -243,6 +249,7 @@ static void readName(Parser* parser)
   if (isKeyword(parser, "is")) type = TOKEN_IS;
   if (isKeyword(parser, "meta")) type = TOKEN_META;
   if (isKeyword(parser, "null")) type = TOKEN_NULL;
+  if (isKeyword(parser, "this")) type = TOKEN_THIS;
   if (isKeyword(parser, "true")) type = TOKEN_TRUE;
   if (isKeyword(parser, "var")) type = TOKEN_VAR;
 
@@ -614,7 +621,7 @@ static void function(Compiler* compiler)
 {
   // TODO(bob): Copied from compileFunction(). Unify?
   Compiler fnCompiler;
-  initCompiler(&fnCompiler, compiler->parser, compiler);
+  initCompiler(&fnCompiler, compiler->parser, compiler, 0);
 
   if (match(&fnCompiler, TOKEN_LEFT_BRACE))
   {
@@ -643,7 +650,6 @@ static void function(Compiler* compiler)
   }
 
   emit(&fnCompiler, CODE_END);
-  fnCompiler.fn->numLocals = fnCompiler.locals.count;
 
   // Add the function to the constant table.
   compiler->fn->constants[compiler->fn->numConstants++] = (Value)fnCompiler.fn;
@@ -728,6 +734,37 @@ static void string(Compiler* compiler)
   // Compile the code to load the constant.
   emit(compiler, CODE_CONSTANT);
   emit(compiler, constant);
+}
+
+static void this_(Compiler* compiler)
+{
+  // TODO(bob): Not exactly right. This doesn't handle *functions* at the top
+  // level.
+  // Walk up the parent chain to see if there is an enclosing method.
+  Compiler* thisCompiler = compiler;
+  int insideMethod = 0;
+  while (thisCompiler != NULL)
+  {
+    if (thisCompiler->isMethod)
+    {
+      insideMethod = 1;
+      break;
+    }
+
+    thisCompiler = thisCompiler->parent;
+  }
+
+  if (!insideMethod)
+  {
+    error(compiler, "Cannot use 'this' outside of a method.");
+    return;
+  }
+
+  // The receiver is always stored in the first local slot.
+  // TODO(bob): Will need to do something different to handle functions
+  // enclosed in methods.
+  emit(compiler, CODE_LOAD_LOCAL);
+  emit(compiler, 0);
 }
 
 // Method calls like:
@@ -864,6 +901,7 @@ ParseRule rules[] =
   /* TOKEN_IS            */ INFIX(PREC_IS, is),
   /* TOKEN_META          */ UNUSED,
   /* TOKEN_NULL          */ PREFIX(null),
+  /* TOKEN_THIS          */ PREFIX(this_),
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_NAME          */ PREFIX(name),
@@ -958,7 +996,7 @@ void method(Compiler* compiler)
 
   // TODO(bob): Copied from compileFunction(). Unify.
   Compiler methodCompiler;
-  initCompiler(&methodCompiler, compiler->parser, compiler);
+  initCompiler(&methodCompiler, compiler->parser, compiler, 1);
 
   // TODO(bob): Hackish.
   // Define a fake local slot for the receiver so that later locals have the
@@ -1026,7 +1064,6 @@ void method(Compiler* compiler)
   }
 
   emit(&methodCompiler, CODE_END);
-  methodCompiler.fn->numLocals = methodCompiler.locals.count;
 
   // Add the block to the constant table.
   int constant = addConstant(compiler, (Value)methodCompiler.fn);
@@ -1082,37 +1119,6 @@ void statement(Compiler* compiler)
   expression(compiler);
 }
 
-// Parses and compiles the current code as a separate function until [endToken]
-// is reached. Returns the created function object.
-ObjFn* compileFunction(Parser* parser, Compiler* parent, TokenType endToken)
-{
-  Compiler compiler;
-  initCompiler(&compiler, parser, parent);
-
-  for (;;)
-  {
-    statement(&compiler);
-
-    // If there is no newline, it must be the end of the block on the same line.
-    if (!match(&compiler, TOKEN_LINE))
-    {
-      consume(&compiler, endToken);
-      break;
-    }
-
-    if (match(&compiler, endToken)) break;
-
-    // Discard the result of the previous expression.
-    emit(&compiler, CODE_POP);
-  }
-
-  emit(&compiler, CODE_END);
-
-  compiler.fn->numLocals = compiler.locals.count;
-
-  return parser->hasError ? NULL : compiler.fn;
-}
-
 // Parses [source] to a "function" (a chunk of top-level code) for execution by
 // [vm].
 ObjFn* compile(VM* vm, const char* source)
@@ -1139,5 +1145,27 @@ ObjFn* compile(VM* vm, const char* source)
   // Read the first token.
   nextToken(&parser);
 
-  return compileFunction(&parser, NULL, TOKEN_EOF);
+  Compiler compiler;
+  initCompiler(&compiler, &parser, NULL, 0);
+
+  for (;;)
+  {
+    statement(&compiler);
+
+    // If there is no newline, it must be the end of the block on the same line.
+    if (!match(&compiler, TOKEN_LINE))
+    {
+      consume(&compiler, TOKEN_EOF);
+      break;
+    }
+
+    if (match(&compiler, TOKEN_EOF)) break;
+
+    // Discard the result of the previous expression.
+    emit(&compiler, CODE_POP);
+  }
+
+  emit(&compiler, CODE_END);
+
+  return parser.hasError ? NULL : compiler.fn;
 }

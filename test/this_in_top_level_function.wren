@@ -1,0 +1,3 @@
+fn {
+  this // expect error
+}
