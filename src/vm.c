@@ -7,12 +7,6 @@
 
 static Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args);
 
-// Pushes [value] onto the top of the stack.
-static void push(Fiber* fiber, Value value);
-
-// Removes and returns the top of the stack.
-static Value pop(Fiber* fiber);
-
 VM* newVM()
 {
   VM* vm = malloc(sizeof(VM));
@@ -31,19 +25,23 @@ void freeVM(VM* vm)
   free(vm);
 }
 
+void initObj(Obj* obj, ObjType type)
+{
+  obj->type = type;
+  obj->flags = 0;
+}
+
 Value makeBool(int value)
 {
   Obj* obj = malloc(sizeof(Obj));
-  obj->type = value ? OBJ_TRUE : OBJ_FALSE;
-  obj->flags = 0;
+  initObj(obj, value ? OBJ_TRUE : OBJ_FALSE);
   return obj;
 }
 
 ObjClass* makeSingleClass()
 {
   ObjClass* obj = malloc(sizeof(ObjClass));
-  obj->obj.type = OBJ_CLASS;
-  obj->obj.flags = 0;
+  initObj(&obj->obj, OBJ_CLASS);
 
   for (int i = 0; i < MAX_SYMBOLS; i++)
   {
@@ -67,16 +65,14 @@ ObjClass* makeClass()
 ObjFn* makeFunction()
 {
   ObjFn* fn = malloc(sizeof(ObjFn));
-  fn->obj.type = OBJ_FN;
-  fn->obj.flags = 0;
+  initObj(&fn->obj, OBJ_FN);
   return fn;
 }
 
 ObjInstance* makeInstance(ObjClass* classObj)
 {
   ObjInstance* instance = malloc(sizeof(ObjInstance));
-  instance->obj.type = OBJ_INSTANCE;
-  instance->obj.flags = 0;
+  initObj(&instance->obj, OBJ_INSTANCE);
   instance->classObj = classObj;
 
   return instance;
@@ -85,16 +81,14 @@ ObjInstance* makeInstance(ObjClass* classObj)
 Value makeNull()
 {
   Obj* obj = malloc(sizeof(Obj));
-  obj->type = OBJ_NULL;
-  obj->flags = 0;
+  initObj(obj, OBJ_NULL);
   return obj;
 }
 
 ObjNum* makeNum(double number)
 {
   ObjNum* num = malloc(sizeof(ObjNum));
-  num->obj.type = OBJ_NUM;
-  num->obj.flags = 0;
+  initObj(&num->obj, OBJ_NUM);
   num->value = number;
   return num;
 }
@@ -102,8 +96,7 @@ ObjNum* makeNum(double number)
 ObjString* makeString(const char* text)
 {
   ObjString* string = malloc(sizeof(ObjString));
-  string->obj.type = OBJ_STRING;
-  string->obj.flags = 0;
+  initObj(&string->obj, OBJ_STRING);
   string->value = text;
   return string;
 }
@@ -211,6 +204,10 @@ void dumpCode(VM* vm, ObjFn* fn)
 
       case CODE_CLASS:
         printf("CLASS\n");
+        break;
+
+      case CODE_METACLASS:
+        printf("METACLASS\n");
         break;
 
       case CODE_METHOD:
@@ -339,11 +336,20 @@ static ObjClass* getClass(VM* vm, Value object)
 
 Value interpret(VM* vm, ObjFn* fn)
 {
+  // TODO(bob): Allocate fiber on heap.
   Fiber fiber;
   fiber.stackSize = 0;
   fiber.numFrames = 0;
 
   callFunction(&fiber, fn, 0);
+
+  // These macros are designed to only be invoked within this function.
+
+  // TODO(bob): Check for stack overflow.
+  #define PUSH(value) (fiber.stack[fiber.stackSize++] = value)
+  #define POP()       (fiber.stack[--fiber.stackSize])
+  #define PEEK()      (fiber.stack[fiber.stackSize - 1])
+  #define READ_ARG()  (frame->fn->bytecode[frame->ip++])
 
   for (;;)
   {
@@ -352,24 +358,12 @@ Value interpret(VM* vm, ObjFn* fn)
     switch (frame->fn->bytecode[frame->ip++])
     {
       case CODE_CONSTANT:
-      {
-        int constant = frame->fn->bytecode[frame->ip++];
-        Value value = frame->fn->constants[constant];
-        push(&fiber, value);
-        break;
-      }
-
-      case CODE_NULL:
-        push(&fiber, makeNull());
+        PUSH(frame->fn->constants[READ_ARG()]);
         break;
 
-      case CODE_FALSE:
-        push(&fiber, makeBool(0));
-        break;
-
-      case CODE_TRUE:
-        push(&fiber, makeBool(1));
-        break;
+      case CODE_NULL:  PUSH(makeNull()); break;
+      case CODE_FALSE: PUSH(makeBool(0)); break;
+      case CODE_TRUE:  PUSH(makeBool(1)); break;
 
       case CODE_CLASS:
       {
@@ -382,15 +376,22 @@ Value interpret(VM* vm, ObjFn* fn)
         classObj->metaclass->methods[newSymbol].primitive =
             primitive_metaclass_new;
 
-        push(&fiber, (Value)classObj);
+        PUSH((Value)classObj);
+        break;
+      }
+
+      case CODE_METACLASS:
+      {
+        ObjClass* classObj = AS_CLASS(PEEK());
+        PUSH((Value)classObj->metaclass);
         break;
       }
 
       case CODE_METHOD:
       {
-        int symbol = frame->fn->bytecode[frame->ip++];
-        int constant = frame->fn->bytecode[frame->ip++];
-        ObjClass* classObj = (ObjClass*)fiber.stack[fiber.stackSize - 1];
+        int symbol = READ_ARG();
+        int constant = READ_ARG();
+        ObjClass* classObj = AS_CLASS(PEEK());
 
         ObjFn* body = AS_FN(frame->fn->constants[constant]);
         classObj->methods[symbol].type = METHOD_BLOCK;
@@ -400,39 +401,34 @@ Value interpret(VM* vm, ObjFn* fn)
 
       case CODE_LOAD_LOCAL:
       {
-        int local = frame->fn->bytecode[frame->ip++];
-        push(&fiber, fiber.stack[frame->stackStart + local]);
+        int local = READ_ARG();
+        PUSH(fiber.stack[frame->stackStart + local]);
         break;
       }
 
       case CODE_STORE_LOCAL:
       {
-        int local = frame->fn->bytecode[frame->ip++];
-        fiber.stack[frame->stackStart + local] = fiber.stack[fiber.stackSize - 1];
+        int local = READ_ARG();
+        fiber.stack[frame->stackStart + local] = PEEK();
         break;
       }
 
       case CODE_LOAD_GLOBAL:
       {
-        int global = frame->fn->bytecode[frame->ip++];
-        push(&fiber, vm->globals[global]);
+        int global = READ_ARG();
+        PUSH(vm->globals[global]);
         break;
       }
 
       case CODE_STORE_GLOBAL:
       {
-        int global = frame->fn->bytecode[frame->ip++];
-        vm->globals[global] = fiber.stack[fiber.stackSize - 1];
+        int global = READ_ARG();
+        vm->globals[global] = PEEK();
         break;
       }
 
-      case CODE_DUP:
-        push(&fiber, fiber.stack[fiber.stackSize - 1]);
-        break;
-        
-      case CODE_POP:
-        pop(&fiber);
-        break;
+      case CODE_DUP: PUSH(PEEK()); break;
+      case CODE_POP: POP(); break;
 
       case CODE_CALL_0:
       case CODE_CALL_1:
@@ -448,7 +444,7 @@ Value interpret(VM* vm, ObjFn* fn)
       {
         // Add one for the implicit receiver argument.
         int numArgs = frame->fn->bytecode[frame->ip - 1] - CODE_CALL_0 + 1;
-        int symbol = frame->fn->bytecode[frame->ip++];
+        int symbol = READ_ARG();
 
         Value receiver = fiber.stack[fiber.stackSize - numArgs];
 
@@ -489,17 +485,12 @@ Value interpret(VM* vm, ObjFn* fn)
         break;
       }
 
-      case CODE_JUMP:
-      {
-        int offset = frame->fn->bytecode[frame->ip++];
-        frame->ip += offset;
-        break;
-      }
+      case CODE_JUMP: frame->ip += READ_ARG(); break;
 
       case CODE_JUMP_IF:
       {
-        int offset = frame->fn->bytecode[frame->ip++];
-        Value condition = pop(&fiber);
+        int offset = READ_ARG();
+        Value condition = POP();
 
         // False is the only falsey value.
         if (condition->type == OBJ_FALSE)
@@ -511,18 +502,18 @@ Value interpret(VM* vm, ObjFn* fn)
 
       case CODE_IS:
       {
-        Value classObj = pop(&fiber);
-        Value obj = pop(&fiber);
+        Value classObj = POP();
+        Value obj = POP();
 
         // TODO(bob): What if classObj is not a class?
         ObjClass* actual = getClass(vm, obj);
-        push(&fiber, makeBool(actual == AS_CLASS(classObj)));
+        PUSH(makeBool(actual == AS_CLASS(classObj)));
         break;
       }
 
       case CODE_END:
       {
-        Value result = pop(&fiber);
+        Value result = POP();
         fiber.numFrames--;
 
         // If we are returning from the top-level block, just return the value.
@@ -595,15 +586,4 @@ Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args)
   ObjClass* classObj = (ObjClass*)args[0];
   // TODO(bob): Invoke initializer method.
   return (Value)makeInstance(classObj);
-}
-
-void push(Fiber* fiber, Value value)
-{
-  // TODO(bob): Check for stack overflow.
-  fiber->stack[fiber->stackSize++] = value;
-}
-
-Value pop(Fiber* fiber)
-{
-  return fiber->stack[--fiber->stackSize];
 }

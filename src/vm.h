@@ -120,6 +120,10 @@ typedef enum
   // Define a new empty class and push it.
   CODE_CLASS,
 
+  // Push the metaclass of the class on the top of the stack. Does not discard
+  // the class.
+  CODE_METACLASS,
+
   // Add a method for symbol [arg1] with body stored in constant [arg2] to the
   // class on the top of stack. Does not modify the stack.
   CODE_METHOD,

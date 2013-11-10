@@ -40,8 +40,8 @@ typedef enum
   TOKEN_FN,
   TOKEN_IF,
   TOKEN_IS,
-  TOKEN_META,
   TOKEN_NULL,
+  TOKEN_STATIC,
   TOKEN_THIS,
   TOKEN_TRUE,
   TOKEN_VAR,
@@ -263,8 +263,8 @@ static void readName(Parser* parser)
   if (isKeyword(parser, "fn")) type = TOKEN_FN;
   if (isKeyword(parser, "if")) type = TOKEN_IF;
   if (isKeyword(parser, "is")) type = TOKEN_IS;
-  if (isKeyword(parser, "meta")) type = TOKEN_META;
   if (isKeyword(parser, "null")) type = TOKEN_NULL;
+  if (isKeyword(parser, "static")) type = TOKEN_STATIC;
   if (isKeyword(parser, "this")) type = TOKEN_THIS;
   if (isKeyword(parser, "true")) type = TOKEN_TRUE;
   if (isKeyword(parser, "var")) type = TOKEN_VAR;
@@ -454,7 +454,7 @@ static void nextToken(Parser* parser)
       case TOKEN_ELSE:
       case TOKEN_IF:
       case TOKEN_IS:
-      case TOKEN_META:
+      case TOKEN_STATIC:
       case TOKEN_VAR:
         parser->skipNewlines = 1;
 
@@ -913,8 +913,8 @@ ParseRule rules[] =
   /* TOKEN_FN            */ PREFIX(function),
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IS            */ INFIX(PREC_IS, is),
-  /* TOKEN_META          */ UNUSED,
   /* TOKEN_NULL          */ PREFIX(null),
+  /* TOKEN_STATIC        */ UNUSED,
   /* TOKEN_THIS          */ PREFIX(this_),
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
@@ -1000,7 +1000,7 @@ void expression(Compiler* compiler)
 }
 
 // Compiles a method definition inside a class body.
-void method(Compiler* compiler)
+void method(Compiler* compiler, int isStatic)
 {
   char name[MAX_NAME];
   int length = 0;
@@ -1082,10 +1082,20 @@ void method(Compiler* compiler)
   // Add the block to the constant table.
   int constant = addConstant(compiler, (Value)methodCompiler.fn);
 
+  if (isStatic)
+  {
+    emit(compiler, CODE_METACLASS);
+  }
+
   // Compile the code to define the method it.
   emit(compiler, CODE_METHOD);
   emit(compiler, symbol);
   emit(compiler, constant);
+
+  if (isStatic)
+  {
+    emit(compiler, CODE_POP);
+  }
 }
 
 // Parses a "statement": any expression including expressions like variable
@@ -1108,7 +1118,15 @@ void statement(Compiler* compiler)
 
     while (!match(compiler, TOKEN_RIGHT_BRACE))
     {
-      method(compiler);
+      if (match(compiler, TOKEN_STATIC))
+      {
+        method(compiler, 1);
+      }
+      else
+      {
+        method(compiler, 0);
+      }
+
       consume(compiler, TOKEN_LINE);
     }
 

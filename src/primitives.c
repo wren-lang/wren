@@ -194,7 +194,7 @@ DEF_PRIMITIVE(string_plus)
   size_t leftLength = strlen(left);
   size_t rightLength = strlen(right);
 
-  char* result = malloc(leftLength + rightLength);
+  char* result = malloc(leftLength + rightLength + 1);
   strcpy(result, left);
   strcpy(result + leftLength, right);
   
