@@ -5,6 +5,7 @@ import re
 
 TODO_PATTERN = re.compile(r'\s*// TODO\(')
 DOC_PATTERN = re.compile(r'\s*//')
+EXPECT_PATTERN = re.compile(r'// expect')
 
 num_files = 0
 num_docs = 0
@@ -12,6 +13,11 @@ num_code = 0
 num_empty = 0
 num_todos = 0
 num_semicolons = 0
+num_test_files = 0
+num_test_todos = 0
+num_expects = 0
+num_test_empty = 0
+num_test = 0
 
 for source_path in glob.iglob("src/*.[ch]"):
   num_files += 1
@@ -34,9 +40,36 @@ for source_path in glob.iglob("src/*.[ch]"):
 
       num_code += 1
 
-print num_files, "files"
-print num_todos, "TODOs"
-print num_docs, "comment lines"
-print num_code, "code lines"
-print num_empty, "empty lines"
-print num_semicolons, "semicolons"
+for test_path in glob.iglob("test/*.wren"):
+  num_test_files += 1
+  with open(test_path, "r") as input:
+    for line in input:
+      if (line.strip() == ""):
+        num_test_empty += 1
+      else:
+        num_test += 1
+
+      match = TODO_PATTERN.match(line)
+      if match:
+        num_test_todos += 1
+        continue
+
+      match = EXPECT_PATTERN.search(line)
+      if match:
+        num_expects += 1
+        continue
+
+print "source:"
+print "  files          ", num_files
+print "  semicolons     ", num_semicolons
+print "  TODOs          ", num_todos
+print "  comment lines  ", num_docs
+print "  code lines     ", num_code
+print "  empty lines    ", num_empty
+print
+print "test:"
+print "  files          ", num_test_files
+print "  TODOs          ", num_test_todos
+print "  expectations   ", num_expects
+print "  non-empty lines", num_test
+print "  empty lines    ", num_test_empty
