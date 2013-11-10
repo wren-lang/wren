@@ -16,6 +16,9 @@
 #define AS_FN(obj) ((ObjFn*)obj)
 
 // Get the double value of [obj], which must be a number.
+#define AS_INSTANCE(obj) ((ObjInstance*)obj)
+
+// Get the double value of [obj], which must be a number.
 #define AS_NUM(obj) (((ObjNum*)obj)->value)
 
 // Get the const char* value of [obj], which must be a string.
@@ -168,7 +171,7 @@ typedef enum
 
   // Pop [a] then [b] and push true if [b] is an instance of [a].
   CODE_IS,
-  
+
   // The current block is done and should be exited.
   CODE_END
 } Code;

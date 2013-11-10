@@ -321,7 +321,7 @@ static ObjClass* getClass(VM* vm, Value object)
 {
   switch (object->type)
   {
-    case OBJ_CLASS: return ((ObjClass*)object)->metaclass;
+    case OBJ_CLASS: return AS_CLASS(object)->metaclass;
     case OBJ_FALSE:
     case OBJ_TRUE:
       return vm->boolClass;
@@ -330,7 +330,7 @@ static ObjClass* getClass(VM* vm, Value object)
     case OBJ_NULL: return vm->nullClass;
     case OBJ_NUM: return vm->numClass;
     case OBJ_STRING: return vm->stringClass;
-    case OBJ_INSTANCE: return ((ObjInstance*)object)->classObj;
+    case OBJ_INSTANCE: return AS_INSTANCE(object)->classObj;
   }
 }
 
@@ -470,14 +470,14 @@ Value interpret(VM* vm, ObjFn* fn)
             if (result != NULL)
             {
               fiber.stack[fiber.stackSize - numArgs] = result;
-              
+
               // Discard the stack slots for the arguments (but leave one for
               // the result).
               fiber.stackSize -= numArgs - 1;
             }
             break;
           }
-            
+
           case METHOD_BLOCK:
             callFunction(&fiber, method->fn, numArgs);
             break;
@@ -568,11 +568,11 @@ void printValue(Value value)
       break;
 
     case OBJ_NUM:
-      printf("%g", ((ObjNum*)value)->value);
+      printf("%g", AS_NUM(value));
       break;
 
     case OBJ_STRING:
-      printf("%s", ((ObjString*)value)->value);
+      printf("%s", AS_STRING(value));
       break;
 
     case OBJ_TRUE:
@@ -583,7 +583,6 @@ void printValue(Value value)
 
 Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args)
 {
-  ObjClass* classObj = (ObjClass*)args[0];
   // TODO(bob): Invoke initializer method.
-  return (Value)makeInstance(classObj);
+  return (Value)makeInstance(AS_CLASS(args[0]));
 }
