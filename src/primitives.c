@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -117,6 +118,12 @@ DEF_PRIMITIVE(num_divide)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
   return (Value)makeNum(AS_NUM(args[0]) / AS_NUM(args[1]));
+}
+
+DEF_PRIMITIVE(num_mod)
+{
+  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  return (Value)makeNum(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_lt)
@@ -256,6 +263,7 @@ void loadCore(VM* vm)
   PRIMITIVE(vm->numClass, "+ ", num_plus);
   PRIMITIVE(vm->numClass, "* ", num_multiply);
   PRIMITIVE(vm->numClass, "/ ", num_divide);
+  PRIMITIVE(vm->numClass, "% ", num_mod);
   PRIMITIVE(vm->numClass, "< ", num_lt);
   PRIMITIVE(vm->numClass, "> ", num_gt);
   PRIMITIVE(vm->numClass, "<= ", num_lte);

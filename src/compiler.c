@@ -584,8 +584,6 @@ typedef enum
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
-static ObjFn* compileFunction(Parser* parser, Compiler* parent,
-                              TokenType endToken);
 
 typedef void (*ParseFn)(Compiler*);
 
