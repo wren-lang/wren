@@ -15,3 +15,4 @@ io.write(2 >= 2)    // expect: true
 io.write(2 >= 1)    // expect: true
 
 // TODO(bob): Wrong type for RHS.
+// TODO(bob): Comparing zero and negative zero.

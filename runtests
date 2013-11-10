@@ -34,6 +34,7 @@ else:
 
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error')
+EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
 ERROR_PATTERN = re.compile(r'\[Line (\d+)\] Error ')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
@@ -104,22 +105,29 @@ def run_test(path):
   expect_return = 0
 
   print_line('Passed: ' + color.GREEN + str(passed) + color.DEFAULT +
-         ' Failed: ' + color.RED + str(failed) + color.DEFAULT +
-         ' Skipped: ' + color.YELLOW + str(num_skipped) + color.DEFAULT)
+             ' Failed: ' + color.RED + str(failed) + color.DEFAULT +
+             ' Skipped: ' + color.YELLOW + str(num_skipped) + color.DEFAULT)
 
   line_num = 1
   with open(path, 'r') as file:
     for line in file:
       match = EXPECT_PATTERN.search(line)
       if match:
-          expect_output.append((match.group(1), line_num))
+        expect_output.append((match.group(1), line_num))
 
       match = EXPECT_ERROR_PATTERN.search(line)
       if match:
-          expect_error.append(line_num)
-          # If we expect compile errors in the test, it should return
-          # exit code 1.
-          expect_return = 1
+        expect_error.append(line_num)
+        # If we expect compile errors in the test, it should return
+        # exit code 1.
+        expect_return = 1
+
+      match = EXPECT_ERROR_LINE_PATTERN.search(line)
+      if match:
+        expect_error.append(int(match.group(1)))
+        # If we expect compile errors in the test, it should return
+        # exit code 1.
+        expect_return = 1
 
       match = SKIP_PATTERN.search(line)
       if match:

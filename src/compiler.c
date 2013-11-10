@@ -179,6 +179,14 @@ static char peekChar(Parser* parser)
   return parser->source[parser->currentChar];
 }
 
+// Returns the character after the current character.
+static char peekNextChar(Parser* parser)
+{
+  // If we're at the end of the source, don't read past it.
+  if (peekChar(parser) == '\0') return '\0';
+  return parser->source[parser->currentChar + 1];
+}
+
 // Advances the parser forward one character.
 static char nextChar(Parser* parser)
 {
@@ -226,6 +234,14 @@ static void readNumber(Parser* parser)
 {
   // TODO(bob): Floating point, hex, scientific, etc.
   while (isDigit(peekChar(parser))) nextChar(parser);
+
+  // See if it has a floating point. Make sure there is a digit after the "."
+  // so we don't get confused by method calls on number literals.
+  if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
+  {
+    nextChar(parser);
+    while (isDigit(peekChar(parser))) nextChar(parser);
+  }
 
   makeToken(parser, TOKEN_NUMBER);
 }
@@ -696,8 +712,8 @@ static void number(Compiler* compiler)
 {
   Token* token = &compiler->parser->previous;
   char* end;
-  // TODO(bob): Parse actual double!
-  long value = strtol(compiler->parser->source + token->start, &end, 10);
+
+  double value = strtod(compiler->parser->source + token->start, &end);
   // TODO(bob): Check errno == ERANGE here.
   if (end == compiler->parser->source + token->start)
   {

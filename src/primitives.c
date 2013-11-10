@@ -77,10 +77,7 @@ DEF_PRIMITIVE(fn_bangeq)
 
 DEF_PRIMITIVE(num_abs)
 {
-  double value = AS_NUM(args[0]);
-  if (value < 0) value = -value;
-
-  return (Value)makeNum(value);
+  return (Value)makeNum(fabs(AS_NUM(args[0])));
 }
 
 DEF_PRIMITIVE(num_toString)
