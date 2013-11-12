@@ -20,20 +20,20 @@ DEF_PRIMITIVE(bool_eqeq)
 {
   if (args[1]->type != OBJ_FALSE && args[1]->type != OBJ_TRUE)
   {
-    return makeBool(0);
+    return newBool(vm, 0);
   }
 
-  return makeBool(AS_BOOL(args[0]) == AS_BOOL(args[1]));
+  return newBool(vm, AS_BOOL(args[0]) == AS_BOOL(args[1]));
 }
 
 DEF_PRIMITIVE(bool_bangeq)
 {
   if (args[1]->type != OBJ_FALSE && args[1]->type != OBJ_TRUE)
   {
-    return makeBool(1);
+    return newBool(vm, 1);
   }
 
-  return makeBool(AS_BOOL(args[0]) != AS_BOOL(args[1]));
+  return newBool(vm, AS_BOOL(args[0]) != AS_BOOL(args[1]));
 }
 
 DEF_PRIMITIVE(bool_toString)
@@ -41,15 +41,11 @@ DEF_PRIMITIVE(bool_toString)
   // TODO(bob): Intern these strings or something.
   if (AS_BOOL(args[0]))
   {
-    char* result = malloc(5);
-    strcpy(result, "true");
-    return (Value)makeString(result);
+    return (Value)newString(vm, "true", 4);
   }
   else
   {
-    char* result = malloc(6);
-    strcpy(result, "false");
-    return (Value)makeString(result);
+    return (Value)newString(vm, "false", 5);
   }
 }
 
@@ -65,19 +61,19 @@ DEF_PRIMITIVE(fn_call)
 
 DEF_PRIMITIVE(fn_eqeq)
 {
-  if (args[1]->type != OBJ_FN) return makeBool(0);
-  return makeBool(AS_FN(args[0]) == AS_FN(args[1]));
+  if (args[1]->type != OBJ_FN) return newBool(vm, 0);
+  return newBool(vm, AS_FN(args[0]) == AS_FN(args[1]));
 }
 
 DEF_PRIMITIVE(fn_bangeq)
 {
-  if (args[1]->type != OBJ_FN) return makeBool(1);
-  return makeBool(AS_FN(args[0]) != AS_FN(args[1]));
+  if (args[1]->type != OBJ_FN) return newBool(vm, 1);
+  return newBool(vm, AS_FN(args[0]) != AS_FN(args[1]));
 }
 
 DEF_PRIMITIVE(num_abs)
 {
-  return (Value)makeNum(fabs(AS_NUM(args[0])));
+  return (Value)newNum(vm, fabs(AS_NUM(args[0])));
 }
 
 DEF_PRIMITIVE(num_toString)
@@ -85,78 +81,74 @@ DEF_PRIMITIVE(num_toString)
   // TODO(bob): What size should this be?
   char temp[100];
   sprintf(temp, "%g", AS_NUM(args[0]));
-
-  size_t size = strlen(temp) + 1;
-  char* result = malloc(size);
-  strncpy(result, temp, size);
-  return (Value)makeString(result);
+  return (Value)newString(vm, temp, strlen(temp));
 }
 
 DEF_PRIMITIVE(num_minus)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
-  return (Value)makeNum(AS_NUM(args[0]) - AS_NUM(args[1]));
+  return (Value)newNum(vm, AS_NUM(args[0]) - AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_plus)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
   // TODO(bob): Handle coercion to string if RHS is a string.
-  return (Value)makeNum(AS_NUM(args[0]) + AS_NUM(args[1]));
+  return (Value)newNum(vm, AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_multiply)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
-  return (Value)makeNum(AS_NUM(args[0]) * AS_NUM(args[1]));
+  return (Value)newNum(vm, AS_NUM(args[0]) * AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_divide)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
-  return (Value)makeNum(AS_NUM(args[0]) / AS_NUM(args[1]));
+  return (Value)newNum(vm, AS_NUM(args[0]) / AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_mod)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
-  return (Value)makeNum(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
+  return (Value)newNum(vm, fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_lt)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
-  return makeBool(AS_NUM(args[0]) < AS_NUM(args[1]));
+  return newBool(vm, AS_NUM(args[0]) < AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_gt)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
-  return makeBool(AS_NUM(args[0]) > AS_NUM(args[1]));
+  return newBool(vm, AS_NUM(args[0]) > AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_lte)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
-  return makeBool(AS_NUM(args[0]) <= AS_NUM(args[1]));
+  return newBool(vm, AS_NUM(args[0]) <= AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_gte)
 {
   if (args[1]->type != OBJ_NUM) return vm->unsupported;
-  return makeBool(AS_NUM(args[0]) >= AS_NUM(args[1]));
+  return newBool(vm, AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_eqeq)
 {
-  if (args[1]->type != OBJ_NUM) return makeBool(0);
-  return makeBool(AS_NUM(args[0]) == AS_NUM(args[1]));
+  if (args[1]->type != OBJ_NUM) return newBool(vm, 0);
+  return newBool(vm, AS_NUM(args[0]) == AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_bangeq)
 {
-  if (args[1]->type != OBJ_NUM) return makeBool(1);
-  return makeBool(AS_NUM(args[0]) != AS_NUM(args[1]));
+  if (args[1]->type != OBJ_NUM) return newBool(vm, 1);
+  return newBool(vm, AS_NUM(args[0]) != AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(string_contains)
@@ -166,16 +158,16 @@ DEF_PRIMITIVE(string_contains)
   const char* search = AS_STRING(args[1]);
 
   // Corner case, the empty string contains the empty string.
-  if (strlen(string) == 0 && strlen(search) == 0) return (Value)makeNum(1);
+  if (strlen(string) == 0 && strlen(search) == 0) return (Value)newNum(vm, 1);
 
   // TODO(bob): Return bool.
-  return (Value)makeNum(strstr(string, search) != NULL);
+  return (Value)newNum(vm, strstr(string, search) != NULL);
 }
 
 DEF_PRIMITIVE(string_count)
 {
   double count = strlen(AS_STRING(args[0]));
-  return (Value)makeNum(count);
+  return (Value)newNum(vm, count);
 }
 
 DEF_PRIMITIVE(string_toString)
@@ -194,27 +186,28 @@ DEF_PRIMITIVE(string_plus)
   size_t leftLength = strlen(left);
   size_t rightLength = strlen(right);
 
-  char* result = malloc(leftLength + rightLength + 1);
-  strcpy(result, left);
-  strcpy(result + leftLength, right);
-  
-  return (Value)makeString(result);
+  ObjString* string = newString(vm, NULL, leftLength + rightLength);
+  strcpy(string->value, left);
+  strcpy(string->value + leftLength, right);
+  string->value[leftLength + rightLength] = '\0';
+
+  return (Value)string;
 }
 
 DEF_PRIMITIVE(string_eqeq)
 {
-  if (args[1]->type != OBJ_STRING) return makeBool(0);
+  if (args[1]->type != OBJ_STRING) return newBool(vm, 0);
   const char* a = AS_STRING(args[0]);
   const char* b = AS_STRING(args[1]);
-  return makeBool(strcmp(a, b) == 0);
+  return newBool(vm, strcmp(a, b) == 0);
 }
 
 DEF_PRIMITIVE(string_bangeq)
 {
-  if (args[1]->type != OBJ_STRING) return makeBool(1);
+  if (args[1]->type != OBJ_STRING) return newBool(vm, 1);
   const char* a = AS_STRING(args[0]);
   const char* b = AS_STRING(args[1]);
-  return makeBool(strcmp(a, b) != 0);
+  return newBool(vm, strcmp(a, b) != 0);
 }
 
 DEF_PRIMITIVE(io_write)
@@ -279,8 +272,8 @@ void loadCore(VM* vm)
   ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
   PRIMITIVE(ioClass, "write ", io_write);
 
-  ObjClass* unsupportedClass = makeClass();
+  ObjClass* unsupportedClass = newClass(vm);
 
   // TODO(bob): Make this a distinct object type.
-  vm->unsupported = (Value)makeInstance(unsupportedClass);
+  vm->unsupported = (Value)newInstance(vm, unsupportedClass);
 }

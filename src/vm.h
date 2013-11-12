@@ -5,6 +5,7 @@
 #define STACK_SIZE 1024
 #define MAX_CALL_FRAMES 256
 #define MAX_SYMBOLS 256
+#define MAX_PINNED 16
 
 // Get the class value of [obj] (0 or 1), which must be a boolean.
 #define AS_CLASS(obj) ((ObjClass*)obj)
@@ -41,10 +42,13 @@ typedef enum
   FLAG_MARKED = 0x01,
 } ObjFlags;
 
-typedef struct
+typedef struct sObj
 {
   ObjType type;
   ObjFlags flags;
+
+  // The next object in the linked list of all currently allocated objects.
+  struct sObj* next;
 } Obj;
 
 typedef Obj* Value;
@@ -103,7 +107,7 @@ typedef struct
 typedef struct
 {
   Obj obj;
-  const char* value;
+  char* value;
 } ObjString;
 
 typedef enum
@@ -200,6 +204,28 @@ struct sVM
   SymbolTable globalSymbols;
   // TODO(bob): Using a fixed array is gross here.
   Value globals[MAX_SYMBOLS];
+
+  // TODO(bob): Support more than one fiber.
+  Fiber* fiber;
+
+  // Memory management data:
+
+  // How many bytes of object data have been allocated so far.
+  size_t totalAllocated;
+
+  // The number of total allocated bytes that will trigger the next GC.
+  size_t nextGC;
+
+  // The first object in the linked list of all currently allocated objects.
+  Obj* first;
+
+  // How many pinned objects are in the stack.
+  int numPinned;
+
+  // The stack "pinned" objects. These are temporary explicit GC roots so that
+  // the collector can find them before they are reachable through a normal
+  // root.
+  Value pinned[MAX_PINNED];
 };
 
 typedef struct
@@ -231,26 +257,26 @@ void freeVM(VM* vm);
 
 // Gets a bool object representing [value].
 // TODO(bob): Inline or macro?
-Value makeBool(int value);
+Value newBool(VM* vm, int value);
 
 // Creates a new function object. Assumes the compiler will fill it in with
 // bytecode, constants, etc.
-ObjFn* makeFunction();
+ObjFn* newFunction(VM* vm);
 
 // Creates a new class object.
-ObjClass* makeClass();
+ObjClass* newClass(VM* vm);
 
 // Creates a new instance of the given [classObj].
-ObjInstance* makeInstance(ObjClass* classObj);
+ObjInstance* newInstance(VM* vm, ObjClass* classObj);
 
 // Creates a new null object.
-Value makeNull();
+Value newNull(VM* vm);
 
 // Creates a new number object.
-ObjNum* makeNum(double number);
+ObjNum* newNum(VM* vm, double number);
 
-// Creates a new string object. Does not copy text.
-ObjString* makeString(const char* text);
+// Creates a new string object and copies [text] into it.
+ObjString* newString(VM* vm, const char* text, size_t length);
 
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);
@@ -283,5 +309,11 @@ Value interpret(VM* vm, ObjFn* fn);
 void callFunction(Fiber* fiber, ObjFn* fn, int numArgs);
 
 void printValue(Value value);
+
+// Mark [value] as a GC root so that it doesn't get collected.
+void pinObj(VM* vm, Value value);
+
+// Unmark [value] as a GC root so that it doesn't get collected.
+void unpinObj(VM* vm, Value value);
 
 #endif

@@ -128,12 +128,7 @@ static void initCompiler(Compiler* compiler, Parser* parser,
 
   initSymbolTable(&compiler->locals);
 
-  compiler->fn = makeFunction();
-  // TODO(bob): Hack! make variable sized.
-  compiler->fn->bytecode = malloc(sizeof(Code) * 1024);
-
-  // TODO(bob): Hack! make variable sized.
-  compiler->fn->constants = malloc(sizeof(Value) * 256);
+  compiler->fn = newFunction(parser->vm);
   compiler->fn->numConstants = 0;
 }
 
@@ -637,6 +632,10 @@ static void function(Compiler* compiler)
   Compiler fnCompiler;
   initCompiler(&fnCompiler, compiler->parser, compiler, 0);
 
+  // Add the function to the constant table. Do this immediately so that it's
+  // reachable by the GC.
+  compiler->fn->constants[compiler->fn->numConstants++] = (Value)fnCompiler.fn;
+
   if (match(&fnCompiler, TOKEN_LEFT_BRACE))
   {
     // Block body.
@@ -664,9 +663,6 @@ static void function(Compiler* compiler)
   }
 
   emit(&fnCompiler, CODE_END);
-
-  // Add the function to the constant table.
-  compiler->fn->constants[compiler->fn->numConstants++] = (Value)fnCompiler.fn;
 
   // Compile the code to load it.
   emit(compiler, CODE_CONSTANT);
@@ -722,7 +718,8 @@ static void number(Compiler* compiler)
   }
 
   // Define a constant for the literal.
-  int constant = addConstant(compiler, (Value)makeNum((double)value));
+  int constant = addConstant(compiler,
+      (Value)newNum(compiler->parser->vm, (double)value));
 
   // Compile the code to load the constant.
   emit(compiler, CODE_CONSTANT);
@@ -735,16 +732,14 @@ static void string(Compiler* compiler)
 
   // TODO(bob): Handle escaping.
 
-  // Copy the string to the heap.
-  // Strip the surrounding "" off.
+  // Ignore the surrounding "".
   size_t length = token->end - token->start - 2;
-  char* text = malloc(length + 1);
-  strncpy(text, compiler->parser->source + token->start + 1, length);
-  text[length] = '\0';
+  const char* start = compiler->parser->source + token->start + 1;
 
   // Define a constant for the literal.
-  int constant = addConstant(compiler, (Value)makeString(text));
-  
+  int constant = addConstant(compiler,
+      (Value)newString(compiler->parser->vm, start, length));
+
   // Compile the code to load the constant.
   emit(compiler, CODE_CONSTANT);
   emit(compiler, constant);
@@ -1012,6 +1007,10 @@ void method(Compiler* compiler, int isStatic)
   Compiler methodCompiler;
   initCompiler(&methodCompiler, compiler->parser, compiler, 1);
 
+  // Add the block to the constant table. Do this eagerly so it's reachable by
+  // the GC.
+  int constant = addConstant(compiler, (Value)methodCompiler.fn);
+
   // TODO(bob): Hackish.
   // Define a fake local slot for the receiver so that later locals have the
   // correct slot indices.
@@ -1078,9 +1077,6 @@ void method(Compiler* compiler, int isStatic)
   }
 
   emit(&methodCompiler, CODE_END);
-
-  // Add the block to the constant table.
-  int constant = addConstant(compiler, (Value)methodCompiler.fn);
 
   if (isStatic)
   {
@@ -1180,6 +1176,8 @@ ObjFn* compile(VM* vm, const char* source)
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, 0);
 
+  pinObj(vm, (Value)compiler.fn);
+
   for (;;)
   {
     statement(&compiler);
@@ -1198,6 +1196,8 @@ ObjFn* compile(VM* vm, const char* source)
   }
 
   emit(&compiler, CODE_END);
+
+  unpinObj(vm, (Value)compiler.fn);
 
   return parser.hasError ? NULL : compiler.fn;
 }

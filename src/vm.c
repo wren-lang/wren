@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "common.h"
 #include "primitives.h"
 #include "vm.h"
 
@@ -9,9 +10,33 @@ static Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args);
 
 VM* newVM()
 {
+  // TODO(bob): Get rid of explicit malloc() here.
   VM* vm = malloc(sizeof(VM));
   initSymbolTable(&vm->methods);
   initSymbolTable(&vm->globalSymbols);
+
+  // TODO(bob): Get rid of explicit malloc() here.
+  vm->fiber = malloc(sizeof(Fiber));
+  vm->fiber->stackSize = 0;
+  vm->fiber->numFrames = 0;
+  vm->totalAllocated = 0;
+
+  // TODO(bob): Make this configurable.
+  vm->nextGC = 1024 * 1024;
+
+  // Clear out the global variables. This ensures they are NULL before being
+  // initialized in case we do a garbage collection before one gets initialized.
+  for (int i = 0; i < MAX_SYMBOLS; i++)
+  {
+    vm->globals[i] = NULL;
+  }
+
+  // Clear out the pinned list. We look for NULL empty slots explicitly.
+  vm->numPinned = 0;
+  for (int j = 0; j < MAX_PINNED; j++)
+  {
+    vm->pinned[j] = NULL;
+  }
 
   loadCore(vm);
 
@@ -25,23 +50,226 @@ void freeVM(VM* vm)
   free(vm);
 }
 
-void initObj(Obj* obj, ObjType type)
+void markObj(Value value)
+{
+  Obj* obj = (Obj*)value;
+
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (obj->flags & FLAG_MARKED) return;
+
+  obj->flags |= FLAG_MARKED;
+
+#ifdef TRACE_MEMORY
+  static int indent = 0;
+  indent++;
+  for (int i = 0; i < indent; i++) printf("  ");
+  printf("mark ");
+  printValue((Value)obj);
+  printf("\n");
+#endif
+
+  // Traverse the object's fields.
+  switch (obj->type)
+  {
+    case OBJ_CLASS:
+    {
+      ObjClass* classObj = AS_CLASS(obj);
+
+      // The metaclass.
+      if (classObj->metaclass != NULL) markObj((Value)classObj->metaclass);
+
+      // Method function objects.
+      for (int i = 0; i < MAX_SYMBOLS; i++)
+      {
+        if (classObj->methods[i].type == METHOD_BLOCK)
+        {
+          markObj((Value)classObj->methods[i].fn);
+        }
+      }
+      break;
+    }
+
+    case OBJ_FN:
+    {
+      // Mark the constants.
+      ObjFn* fn = AS_FN(obj);
+      for (int i = 0; i < fn->numConstants; i++)
+      {
+        markObj(fn->constants[i]);
+      }
+      break;
+    }
+
+    case OBJ_INSTANCE:
+      // TODO(bob): Mark fields when instances have them.
+      break;
+
+    case OBJ_FALSE:
+    case OBJ_NULL:
+    case OBJ_NUM:
+    case OBJ_STRING:
+    case OBJ_TRUE:
+      // Nothing to mark.
+      break;
+  }
+
+#ifdef TRACE_MEMORY
+  indent--;
+#endif
+}
+
+void freeObj(VM* vm, Obj* obj)
+{
+#ifdef TRACE_MEMORY
+  printf("free ");
+  printValue((Value)obj);
+#endif
+
+  // Free any additional heap data allocated by the object.
+  size_t size;
+
+  switch (obj->type)
+  {
+    case OBJ_FN:
+    {
+      // TODO(bob): Don't hardcode array sizes.
+      size = sizeof(ObjFn) + sizeof(Code) * 1024 + sizeof(Value) * 256;
+      ObjFn* fn = AS_FN(obj);
+      free(fn->bytecode);
+      free(fn->constants);
+      break;
+    }
+
+    case OBJ_STRING:
+      // TODO(bob): O(n) calculation here is lame!
+      size = sizeof(ObjString) + strlen(AS_STRING(obj));
+      free(AS_STRING(obj));
+      break;
+
+    case OBJ_CLASS:
+      size = sizeof(ObjClass);
+      break;
+
+    case OBJ_FALSE:
+    case OBJ_INSTANCE:
+    case OBJ_NULL:
+    case OBJ_NUM:
+    case OBJ_TRUE:
+      // Nothing to delete.
+      size = sizeof(Obj);
+      // TODO(bob): Include size of fields for OBJ_INSTANCE.
+      break;
+  }
+
+  vm->totalAllocated -= size;
+#ifdef TRACE_MEMORY
+  printf(" (%ld bytes)\n", sizeof(Obj));
+#endif
+
+  free(obj);
+}
+
+void collectGarbage(VM* vm)
+{
+  // Mark all reachable objects.
+#ifdef TRACE_MEMORY
+  printf("-- gc --\n");
+#endif
+
+  // Global variables.
+  for (int i = 0; i < vm->globalSymbols.count; i++)
+  {
+    // Check for NULL to handle globals that have been defined (at compile time)
+    // but not yet initialized.
+    if (vm->globals[i] != NULL) markObj(vm->globals[i]);
+  }
+
+  // Pinned objects.
+  for (int j = 0; j < vm->numPinned; j++)
+  {
+    if (vm->pinned[j] != NULL) markObj(vm->pinned[j]);
+  }
+
+  // Stack functions.
+  for (int k = 0; k < vm->fiber->numFrames; k++)
+  {
+    markObj((Value)vm->fiber->frames[k].fn);
+  }
+
+  // Stack variables.
+  for (int l = 0; l < vm->fiber->stackSize; l++)
+  {
+    markObj(vm->fiber->stack[l]);
+  }
+
+  // Collect any unmarked objects.
+  Obj** obj = &vm->first;
+  while (*obj != NULL)
+  {
+    if (!((*obj)->flags & FLAG_MARKED))
+    {
+      // This object wasn't reached, so remove it from the list and free it.
+      Obj* unreached = *obj;
+      *obj = unreached->next;
+      freeObj(vm, unreached);
+    }
+    else
+    {
+      // This object was reached, so unmark it (for the next GC) and move on to
+      // the next.
+      (*obj)->flags &= ~FLAG_MARKED;
+      obj = &(*obj)->next;
+    }
+  }
+}
+
+void* allocate(VM* vm, size_t size)
+{
+  vm->totalAllocated += size;
+
+#ifdef DEBUG_GC_STRESS
+  collectGarbage(vm);
+#else
+  if (vm->totalAllocated > vm->nextGC)
+  {
+#ifdef TRACE_MEMORY
+    size_t before = vm->totalAllocated;
+#endif
+    collectGarbage(vm);
+    vm->nextGC = vm->totalAllocated * 3 / 2;
+
+#ifdef TRACE_MEMORY
+    printf(
+        "GC %ld before, %ld after (%ld collected), next at %ld\n",
+        before, vm->totalAllocated, before - vm->totalAllocated, vm->nextGC);
+#endif
+  }
+#endif
+
+  // TODO(bob): Let external code provide allocator.
+  return malloc(size);
+}
+
+void initObj(VM* vm, Obj* obj, ObjType type)
 {
   obj->type = type;
   obj->flags = 0;
+  obj->next = vm->first;
+  vm->first = obj;
 }
 
-Value makeBool(int value)
+Value newBool(VM* vm, int value)
 {
-  Obj* obj = malloc(sizeof(Obj));
-  initObj(obj, value ? OBJ_TRUE : OBJ_FALSE);
+  Obj* obj = allocate(vm, sizeof(Obj));
+  initObj(vm, obj, value ? OBJ_TRUE : OBJ_FALSE);
   return obj;
 }
 
-ObjClass* makeSingleClass()
+static ObjClass* newSingleClass(VM* vm)
 {
-  ObjClass* obj = malloc(sizeof(ObjClass));
-  initObj(&obj->obj, OBJ_CLASS);
+  ObjClass* obj = allocate(vm, sizeof(ObjClass));
+  initObj(vm, &obj->obj, OBJ_CLASS);
+  obj->metaclass = NULL;
 
   for (int i = 0; i < MAX_SYMBOLS; i++)
   {
@@ -51,53 +279,80 @@ ObjClass* makeSingleClass()
   return obj;
 }
 
-ObjClass* makeClass()
+ObjClass* newClass(VM* vm)
 {
-  ObjClass* classObj = makeSingleClass();
+  ObjClass* classObj = newSingleClass(vm);
+
+  // Make sure this isn't collected when we allocate the metaclass.
+  pinObj(vm, (Value)classObj);
 
   // Make its metaclass.
   // TODO(bob): What is the metaclass's metaclass?
-  classObj->metaclass = makeSingleClass();
+  classObj->metaclass = newSingleClass(vm);
+
+  unpinObj(vm, (Value)classObj);
 
   return classObj;
 }
 
-ObjFn* makeFunction()
+ObjFn* newFunction(VM* vm)
 {
-  ObjFn* fn = malloc(sizeof(ObjFn));
-  initObj(&fn->obj, OBJ_FN);
+  // Allocate these before the function in case they trigger a GC which would
+  // free the function.
+  // TODO(bob): Hack! make variable sized.
+  unsigned char* bytecode = allocate(vm, sizeof(Code) * 1024);
+  Value* constants = allocate(vm, sizeof(Value) * 256);
+
+  ObjFn* fn = allocate(vm, sizeof(ObjFn));
+  initObj(vm, &fn->obj, OBJ_FN);
+
+  fn->bytecode = bytecode;
+  fn->constants = constants;
+
   return fn;
 }
 
-ObjInstance* makeInstance(ObjClass* classObj)
+ObjInstance* newInstance(VM* vm, ObjClass* classObj)
 {
-  ObjInstance* instance = malloc(sizeof(ObjInstance));
-  initObj(&instance->obj, OBJ_INSTANCE);
+  ObjInstance* instance = allocate(vm, sizeof(ObjInstance));
+  initObj(vm, &instance->obj, OBJ_INSTANCE);
   instance->classObj = classObj;
 
   return instance;
 }
 
-Value makeNull()
+Value newNull(VM* vm)
 {
-  Obj* obj = malloc(sizeof(Obj));
-  initObj(obj, OBJ_NULL);
+  Obj* obj = allocate(vm, sizeof(Obj));
+  initObj(vm, obj, OBJ_NULL);
   return obj;
 }
 
-ObjNum* makeNum(double number)
+ObjNum* newNum(VM* vm, double number)
 {
-  ObjNum* num = malloc(sizeof(ObjNum));
-  initObj(&num->obj, OBJ_NUM);
+  ObjNum* num = allocate(vm, sizeof(ObjNum));
+  initObj(vm, &num->obj, OBJ_NUM);
   num->value = number;
   return num;
 }
 
-ObjString* makeString(const char* text)
+ObjString* newString(VM* vm, const char* text, size_t length)
 {
-  ObjString* string = malloc(sizeof(ObjString));
-  initObj(&string->obj, OBJ_STRING);
-  string->value = text;
+  // Allocate before the string object in case this triggers a GC which would
+  // free the string object.
+  char* heapText = allocate(vm, length + 1);
+
+  ObjString* string = allocate(vm, sizeof(ObjString));
+  initObj(vm, &string->obj, OBJ_STRING);
+
+  // Copy the string (if given one).
+  if (text != NULL)
+  {
+    strncpy(heapText, text, length);
+    heapText[length] = '\0';
+  }
+
+  string->value = heapText;
   return string;
 }
 
@@ -116,6 +371,7 @@ void clearSymbolTable(SymbolTable* symbols)
 
 int addSymbolUnchecked(SymbolTable* symbols, const char* name, size_t length)
 {
+  // TODO(bob): Get rid of explicit malloc here.
   symbols->names[symbols->count] = malloc(length + 1);
   strncpy(symbols->names[symbols->count], name, length);
   symbols->names[symbols->count][length] = '\0';
@@ -166,8 +422,8 @@ Value findGlobal(VM* vm, const char* name)
   return vm->globals[symbol];
 }
 
-// TODO(bob): For debugging. Move to separate module.
 /*
+// TODO(bob): For debugging. Move to separate module.
 void dumpCode(VM* vm, ObjFn* fn)
 {
   unsigned char* bytecode = fn->bytecode;
@@ -336,24 +592,29 @@ static ObjClass* getClass(VM* vm, Value object)
 
 Value interpret(VM* vm, ObjFn* fn)
 {
-  // TODO(bob): Allocate fiber on heap.
-  Fiber fiber;
-  fiber.stackSize = 0;
-  fiber.numFrames = 0;
+  Fiber* fiber = vm->fiber;
 
-  callFunction(&fiber, fn, 0);
+  callFunction(fiber, fn, 0);
 
   // These macros are designed to only be invoked within this function.
 
   // TODO(bob): Check for stack overflow.
-  #define PUSH(value) (fiber.stack[fiber.stackSize++] = value)
-  #define POP()       (fiber.stack[--fiber.stackSize])
-  #define PEEK()      (fiber.stack[fiber.stackSize - 1])
+  #define PUSH(value) (fiber->stack[fiber->stackSize++] = value)
+  #define POP()       (fiber->stack[--fiber->stackSize])
+  #define PEEK()      (fiber->stack[fiber->stackSize - 1])
   #define READ_ARG()  (frame->fn->bytecode[frame->ip++])
+
+  Code lastOp;
 
   for (;;)
   {
-    CallFrame* frame = &fiber.frames[fiber.numFrames - 1];
+    CallFrame* frame = &fiber->frames[fiber->numFrames - 1];
+
+    if (fiber->stackSize > 0 && PEEK() == NULL)
+    {
+      lastOp = frame->ip - 1;
+      printf("%d\n", lastOp);
+    }
 
     switch (frame->fn->bytecode[frame->ip++])
     {
@@ -361,13 +622,13 @@ Value interpret(VM* vm, ObjFn* fn)
         PUSH(frame->fn->constants[READ_ARG()]);
         break;
 
-      case CODE_NULL:  PUSH(makeNull()); break;
-      case CODE_FALSE: PUSH(makeBool(0)); break;
-      case CODE_TRUE:  PUSH(makeBool(1)); break;
+      case CODE_NULL:  PUSH(newNull(vm)); break;
+      case CODE_FALSE: PUSH(newBool(vm, 0)); break;
+      case CODE_TRUE:  PUSH(newBool(vm, 1)); break;
 
       case CODE_CLASS:
       {
-        ObjClass* classObj = makeClass();
+        ObjClass* classObj = newClass(vm);
 
         // Define a "new" method on the metaclass.
         // TODO(bob): Can this be inherited?
@@ -402,14 +663,14 @@ Value interpret(VM* vm, ObjFn* fn)
       case CODE_LOAD_LOCAL:
       {
         int local = READ_ARG();
-        PUSH(fiber.stack[frame->stackStart + local]);
+        PUSH(fiber->stack[frame->stackStart + local]);
         break;
       }
 
       case CODE_STORE_LOCAL:
       {
         int local = READ_ARG();
-        fiber.stack[frame->stackStart + local] = PEEK();
+        fiber->stack[frame->stackStart + local] = PEEK();
         break;
       }
 
@@ -446,7 +707,7 @@ Value interpret(VM* vm, ObjFn* fn)
         int numArgs = frame->fn->bytecode[frame->ip - 1] - CODE_CALL_0 + 1;
         int symbol = READ_ARG();
 
-        Value receiver = fiber.stack[fiber.stackSize - numArgs];
+        Value receiver = fiber->stack[fiber->stackSize - numArgs];
 
         ObjClass* classObj = getClass(vm, receiver);
         Method* method = &classObj->methods[symbol];
@@ -463,23 +724,23 @@ Value interpret(VM* vm, ObjFn* fn)
 
           case METHOD_PRIMITIVE:
           {
-            Value* args = &fiber.stack[fiber.stackSize - numArgs];
-            Value result = method->primitive(vm, &fiber, args);
+            Value* args = &fiber->stack[fiber->stackSize - numArgs];
+            Value result = method->primitive(vm, fiber, args);
 
             // If the primitive pushed a call frame, it returns NULL.
             if (result != NULL)
             {
-              fiber.stack[fiber.stackSize - numArgs] = result;
+              fiber->stack[fiber->stackSize - numArgs] = result;
 
               // Discard the stack slots for the arguments (but leave one for
               // the result).
-              fiber.stackSize -= numArgs - 1;
+              fiber->stackSize -= numArgs - 1;
             }
             break;
           }
 
           case METHOD_BLOCK:
-            callFunction(&fiber, method->fn, numArgs);
+            callFunction(fiber, method->fn, numArgs);
             break;
         }
         break;
@@ -507,25 +768,25 @@ Value interpret(VM* vm, ObjFn* fn)
 
         // TODO(bob): What if classObj is not a class?
         ObjClass* actual = getClass(vm, obj);
-        PUSH(makeBool(actual == AS_CLASS(classObj)));
+        PUSH(newBool(vm, actual == AS_CLASS(classObj)));
         break;
       }
 
       case CODE_END:
       {
         Value result = POP();
-        fiber.numFrames--;
+        fiber->numFrames--;
 
         // If we are returning from the top-level block, just return the value.
-        if (fiber.numFrames == 0) return result;
+        if (fiber->numFrames == 0) return result;
 
         // Store the result of the block in the first slot, which is where the
         // caller expects it.
-        fiber.stack[frame->stackStart] = result;
+        fiber->stack[frame->stackStart] = result;
 
         // Discard the stack slots for the call frame (leaving one slot for the
         // result).
-        fiber.stackSize = frame->stackStart + 1;
+        fiber->stackSize = frame->stackStart + 1;
         break;
       }
     }
@@ -548,7 +809,7 @@ void printValue(Value value)
   switch (value->type)
   {
     case OBJ_CLASS:
-      printf("[class]");
+      printf("[class %p]", value);
       break;
 
     case OBJ_FALSE:
@@ -556,11 +817,11 @@ void printValue(Value value)
       break;
 
     case OBJ_FN:
-      printf("[fn]");
+      printf("[fn %p]", value);
       break;
 
     case OBJ_INSTANCE:
-      printf("[instance]");
+      printf("[instance %p]", value);
       break;
 
     case OBJ_NULL:
@@ -581,8 +842,21 @@ void printValue(Value value)
   }
 }
 
+void pinObj(VM* vm, Value value)
+{
+  ASSERT(vm->numPinned < MAX_PINNED - 1, "Too many pinned objects.");
+  vm->pinned[vm->numPinned++] = value;
+}
+
+void unpinObj(VM* vm, Value value)
+{
+  ASSERT(vm->pinned[vm->numPinned - 1] == value,
+         "Unpinning object out of stack order.");
+  vm->numPinned--;
+}
+
 Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args)
 {
   // TODO(bob): Invoke initializer method.
-  return (Value)makeInstance(AS_CLASS(args[0]));
+  return (Value)newInstance(vm, AS_CLASS(args[0]));
 }
