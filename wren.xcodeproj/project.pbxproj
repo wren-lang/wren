@@ -29,7 +29,6 @@
 		296681E2183283A500C1407C /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = common.h; path = src/common.h; sourceTree = SOURCE_ROOT; };
 		29AB1F061816E3AD004B501E /* wren */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wren; sourceTree = BUILT_PRODUCTS_DIR; };
 		29AB1F201816E49C004B501E /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/main.c; sourceTree = SOURCE_ROOT; };
-		29AB1F271816E49C004B501E /* wren.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = wren.1; path = src/wren.1; sourceTree = SOURCE_ROOT; };
 		29AB1F2D1816FA5B004B501E /* vm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = vm.h; path = src/vm.h; sourceTree = SOURCE_ROOT; };
 		29AB1F2E1816FA66004B501E /* vm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vm.c; path = src/vm.c; sourceTree = SOURCE_ROOT; };
 		29AB1F3018170104004B501E /* compiler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = compiler.c; path = src/compiler.c; sourceTree = SOURCE_ROOT; };
@@ -76,7 +75,6 @@
 				29AB1F201816E49C004B501E /* main.c */,
 				29AB1F2E1816FA66004B501E /* vm.c */,
 				29AB1F2D1816FA5B004B501E /* vm.h */,
-				29AB1F271816E49C004B501E /* wren.1 */,
 			);
 			name = src;
 			path = wren;
