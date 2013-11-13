@@ -87,6 +87,7 @@ typedef struct sObjClass
 {
   Obj obj;
   struct sObjClass* metaclass;
+  struct sObjClass* superclass;
   // TODO(bob): Hack. Probably don't want to use this much space.
   Method methods[MAX_SYMBOLS];
 } ObjClass;
@@ -126,6 +127,9 @@ typedef enum
 
   // Define a new empty class and push it.
   CODE_CLASS,
+
+  // Pop a superclass off the stack, then push a new class that extends it.
+  CODE_SUBCLASS,
 
   // Push the metaclass of the class on the top of the stack. Does not discard
   // the class.
@@ -196,6 +200,7 @@ struct sVM
   ObjClass* fnClass;
   ObjClass* nullClass;
   ObjClass* numClass;
+  ObjClass* objectClass;
   ObjClass* stringClass;
 
   // The singleton values.
@@ -264,7 +269,7 @@ Value newBool(VM* vm, int value);
 ObjFn* newFunction(VM* vm);
 
 // Creates a new class object.
-ObjClass* newClass(VM* vm);
+ObjClass* newClass(VM* vm, ObjClass* superclass);
 
 // Creates a new instance of the given [classObj].
 ObjInstance* newInstance(VM* vm, ObjClass* classObj);

@@ -265,11 +265,13 @@ Value newBool(VM* vm, int value)
   return obj;
 }
 
-static ObjClass* newSingleClass(VM* vm)
+static ObjClass* newSingleClass(VM* vm, ObjClass* metaclass,
+                                ObjClass* superclass)
 {
   ObjClass* obj = allocate(vm, sizeof(ObjClass));
   initObj(vm, &obj->obj, OBJ_CLASS);
-  obj->metaclass = NULL;
+  obj->metaclass = metaclass;
+  obj->superclass = superclass;
 
   for (int i = 0; i < MAX_SYMBOLS; i++)
   {
@@ -279,18 +281,29 @@ static ObjClass* newSingleClass(VM* vm)
   return obj;
 }
 
-ObjClass* newClass(VM* vm)
+ObjClass* newClass(VM* vm, ObjClass* superclass)
 {
-  ObjClass* classObj = newSingleClass(vm);
+  // Make the metaclass.
+  // TODO(bob): What is the metaclass's metaclass and superclass?
+  ObjClass* metaclass = newSingleClass(vm, NULL, NULL);
 
-  // Make sure this isn't collected when we allocate the metaclass.
-  pinObj(vm, (Value)classObj);
+  // Make sure it isn't collected when we allocate the metaclass.
+  pinObj(vm, (Value)metaclass);
 
-  // Make its metaclass.
-  // TODO(bob): What is the metaclass's metaclass?
-  classObj->metaclass = newSingleClass(vm);
+  ObjClass* classObj = newSingleClass(vm, metaclass, superclass);
 
-  unpinObj(vm, (Value)classObj);
+  unpinObj(vm, (Value)metaclass);
+
+  // Inherit methods from its superclass (unless it's Object, which has none).
+  // TODO(bob): If we want BETA-style inheritance, we'll need to do this after
+  // the subclass has defined its methods.
+  if (superclass != NULL)
+  {
+    for (int i = 0; i < MAX_SYMBOLS; i++)
+    {
+      classObj->methods[i] = superclass->methods[i];
+    }
+  }
 
   return classObj;
 }
@@ -461,6 +474,10 @@ void dumpCode(VM* vm, ObjFn* fn)
       case CODE_CLASS:
         printf("CLASS\n");
         break;
+ 
+      case CODE_SUBCLASS:
+        printf("SUBCLASS\n");
+        break;
 
       case CODE_METACLASS:
         printf("METACLASS\n");
@@ -608,7 +625,8 @@ Value interpret(VM* vm, ObjFn* fn)
   {
     CallFrame* frame = &fiber->frames[fiber->numFrames - 1];
 
-    switch (frame->fn->bytecode[frame->ip++])
+    Code instruction = frame->fn->bytecode[frame->ip++];
+    switch (instruction)
     {
       case CODE_CONSTANT:
         PUSH(frame->fn->constants[READ_ARG()]);
@@ -619,8 +637,23 @@ Value interpret(VM* vm, ObjFn* fn)
       case CODE_TRUE:  PUSH(newBool(vm, 1)); break;
 
       case CODE_CLASS:
+      case CODE_SUBCLASS:
       {
-        ObjClass* classObj = newClass(vm);
+        int isSubclass = instruction == CODE_SUBCLASS;
+
+        ObjClass* superclass;
+        if (isSubclass)
+        {
+          // TODO(bob): Handle the superclass not being a class object!
+          superclass = AS_CLASS(POP());
+        }
+        else
+        {
+          // Implicit Object superclass.
+          superclass = vm->objectClass;
+        }
+
+        ObjClass* classObj = newClass(vm, superclass);
 
         // Define a "new" method on the metaclass.
         // TODO(bob): Can this be inherited?
@@ -696,7 +729,7 @@ Value interpret(VM* vm, ObjFn* fn)
       case CODE_CALL_10:
       {
         // Add one for the implicit receiver argument.
-        int numArgs = frame->fn->bytecode[frame->ip - 1] - CODE_CALL_0 + 1;
+        int numArgs = instruction - CODE_CALL_0 + 1;
         int symbol = READ_ARG();
 
         Value receiver = fiber->stack[fiber->stackSize - numArgs];

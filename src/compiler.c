@@ -1201,8 +1201,17 @@ void definition(Compiler* compiler)
     // Create a variable to store the class in.
     int symbol = declareVariable(compiler);
 
-    // Create the empty class.
-    emit(compiler, CODE_CLASS);
+    // Load the superclass (if there is one).
+    if (match(compiler, TOKEN_IS))
+    {
+      parsePrecedence(compiler, 0, PREC_CALL);
+      emit(compiler, CODE_SUBCLASS);
+    }
+    else
+    {
+      // Create the empty class.
+      emit(compiler, CODE_CLASS);
+    }
 
     // Store it in its name.
     defineVariable(compiler, symbol);

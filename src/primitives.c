@@ -228,6 +228,7 @@ DEF_PRIMITIVE(io_write)
 }
 
 static const char* CORE_LIB =
+"class Object {}\n"
 "class Bool {}\n"
 "class Class {}\n"
 "class Function {}\n"
@@ -273,6 +274,8 @@ void loadCore(VM* vm)
   PRIMITIVE(vm->numClass, "== ", num_eqeq);
   PRIMITIVE(vm->numClass, "!= ", num_bangeq);
 
+  vm->objectClass = AS_CLASS(findGlobal(vm, "Object"));
+
   vm->stringClass = AS_CLASS(findGlobal(vm, "String"));
   PRIMITIVE(vm->stringClass, "contains ", string_contains);
   PRIMITIVE(vm->stringClass, "count", string_count);
@@ -284,7 +287,7 @@ void loadCore(VM* vm)
   ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
   PRIMITIVE(ioClass, "write ", io_write);
 
-  ObjClass* unsupportedClass = newClass(vm);
+  ObjClass* unsupportedClass = newClass(vm, vm->objectClass);
 
   // TODO(bob): Make this a distinct object type.
   vm->unsupported = (Value)newInstance(vm, unsupportedClass);
