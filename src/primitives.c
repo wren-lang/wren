@@ -16,6 +16,11 @@
 #define DEF_PRIMITIVE(prim) \
     static Value primitive_##prim(VM* vm, Fiber* fiber, Value* args)
 
+DEF_PRIMITIVE(bool_not)
+{
+  return newBool(vm, !AS_BOOL(args[0]));
+}
+
 DEF_PRIMITIVE(bool_eqeq)
 {
   if (args[1]->type != OBJ_FALSE && args[1]->type != OBJ_TRUE)
@@ -82,6 +87,11 @@ DEF_PRIMITIVE(num_toString)
   char temp[100];
   sprintf(temp, "%g", AS_NUM(args[0]));
   return (Value)newString(vm, temp, strlen(temp));
+}
+
+DEF_PRIMITIVE(num_negate)
+{
+  return (Value)newNum(vm, -AS_NUM(args[0]));
 }
 
 DEF_PRIMITIVE(num_minus)
@@ -234,6 +244,7 @@ void loadCore(VM* vm)
 
   vm->boolClass = AS_CLASS(findGlobal(vm, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
+  PRIMITIVE(vm->boolClass, "!", bool_not);
   PRIMITIVE(vm->boolClass, "== ", bool_eqeq);
   PRIMITIVE(vm->boolClass, "!= ", bool_bangeq);
 
@@ -249,6 +260,7 @@ void loadCore(VM* vm)
   vm->numClass = AS_CLASS(findGlobal(vm, "Num"));
   PRIMITIVE(vm->numClass, "abs", num_abs);
   PRIMITIVE(vm->numClass, "toString", num_toString)
+  PRIMITIVE(vm->numClass, "-", num_negate);
   PRIMITIVE(vm->numClass, "- ", num_minus);
   PRIMITIVE(vm->numClass, "+ ", num_plus);
   PRIMITIVE(vm->numClass, "* ", num_multiply);

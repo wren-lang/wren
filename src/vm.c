@@ -604,17 +604,9 @@ Value interpret(VM* vm, ObjFn* fn)
   #define PEEK()      (fiber->stack[fiber->stackSize - 1])
   #define READ_ARG()  (frame->fn->bytecode[frame->ip++])
 
-  Code lastOp;
-
   for (;;)
   {
     CallFrame* frame = &fiber->frames[fiber->numFrames - 1];
-
-    if (fiber->stackSize > 0 && PEEK() == NULL)
-    {
-      lastOp = frame->ip - 1;
-      printf("%d\n", lastOp);
-    }
 
     switch (frame->fn->bytecode[frame->ip++])
     {

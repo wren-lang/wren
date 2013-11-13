@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "common.h"
 #include "compiler.h"
 
 #define MAX_NAME 256
@@ -582,39 +583,63 @@ typedef enum
 {
   PREC_NONE,
   PREC_LOWEST,
+  PREC_ASSIGNMENT, // =
   PREC_IS,         // is
   PREC_EQUALITY,   // == !=
   PREC_COMPARISON, // < > <= >=
   PREC_BITWISE,    // | &
   PREC_TERM,       // + -
   PREC_FACTOR,     // * / %
+  PREC_UNARY,      // unary - ! ~
   PREC_CALL        // . ()
 } Precedence;
 
-// Forward declarations since the grammar is recursive.
-static void expression(Compiler* compiler);
-static void statement(Compiler* compiler);
-static void parsePrecedence(Compiler* compiler, Precedence precedence);
+// TODO(bob): Doc...
+typedef struct
+{
+  int isAssignment;
+} Assignment;
 
-typedef void (*ParseFn)(Compiler*);
+// Forward declarations since the grammar is recursive.
+static void expression(Compiler* compiler, int allowAssignment);
+static void statement(Compiler* compiler);
+static void definition(Compiler* compiler);
+static void parsePrecedence(Compiler* compiler, int allowAssignment,
+                            Precedence precedence);
+
+typedef void (*GrammarFn)(Compiler*, int allowAssignment);
 
 typedef struct
 {
-  ParseFn prefix;
-  ParseFn infix;
+  GrammarFn prefix;
+  GrammarFn infix;
   Precedence precedence;
   const char* name;
-} ParseRule;
+} GrammarRule;
 
-ParseRule rules[];
+GrammarRule rules[];
 
-static void grouping(Compiler* compiler)
+static void grouping(Compiler* compiler, int allowAssignment)
 {
-  expression(compiler);
+  expression(compiler, 0);
   consume(compiler, TOKEN_RIGHT_PAREN);
 }
 
-static void boolean(Compiler* compiler)
+// Unary operators like `-foo`.
+static void unaryOp(Compiler* compiler, int allowAssignment)
+{
+  GrammarRule* rule = &rules[compiler->parser->previous.type];
+
+  // Compile the argument.
+  parsePrecedence(compiler, 0, PREC_UNARY + 1);
+
+  // Call the operator method on the left-hand side.
+  int symbol = ensureSymbol(&compiler->parser->vm->methods, rule->name, 1);
+  emit(compiler, CODE_CALL_0);
+  emit(compiler, symbol);
+}
+
+static void boolean(Compiler* compiler, int allowAssignment)
 {
   if (compiler->parser->previous.type == TOKEN_FALSE)
   {
@@ -626,7 +651,7 @@ static void boolean(Compiler* compiler)
   }
 }
 
-static void function(Compiler* compiler)
+static void function(Compiler* compiler, int allowAssignment)
 {
   // TODO(bob): Copied from compileFunction(). Unify?
   Compiler fnCompiler;
@@ -636,12 +661,17 @@ static void function(Compiler* compiler)
   // reachable by the GC.
   compiler->fn->constants[compiler->fn->numConstants++] = (Value)fnCompiler.fn;
 
+  // TODO(bob): Hackish.
+  // Define a fake local slot for the receiver (the function object itself) so
+  // that later locals have the correct slot indices.
+  addSymbol(&fnCompiler.locals, "(this)", 6);
+
   if (match(&fnCompiler, TOKEN_LEFT_BRACE))
   {
     // Block body.
     for (;;)
     {
-      statement(&fnCompiler);
+      definition(&fnCompiler);
 
       // If there is no newline, it must be the end of the block on the same line.
       if (!match(&fnCompiler, TOKEN_LINE))
@@ -659,7 +689,8 @@ static void function(Compiler* compiler)
   else
   {
     // Single expression body.
-    expression(&fnCompiler);
+    // TODO(bob): Allow assignment here?
+    expression(&fnCompiler, 0);
   }
 
   emit(&fnCompiler, CODE_END);
@@ -669,12 +700,51 @@ static void function(Compiler* compiler)
   emit(compiler, compiler->fn->numConstants - 1);
 }
 
-static void name(Compiler* compiler)
+static void name(Compiler* compiler, int allowAssignment)
 {
   // See if it's a local in this scope.
   int local = findSymbol(&compiler->locals,
       compiler->parser->source + compiler->parser->previous.start,
       compiler->parser->previous.end - compiler->parser->previous.start);
+
+  // TODO(bob): Look up names in outer local scopes.
+
+  // See if it's a global variable.
+  int global = 0;
+  if (local == -1)
+  {
+    global = findSymbol(&compiler->parser->vm->globalSymbols,
+        compiler->parser->source + compiler->parser->previous.start,
+        compiler->parser->previous.end - compiler->parser->previous.start);
+  }
+
+  // TODO(bob): Look for names in outer scopes.
+  if (local == -1 && global == -1)
+  {
+    error(compiler, "Undefined variable.");
+  }
+
+  // If there's an "=" after a bare name, it's a variable assignment.
+  if (match(compiler, TOKEN_EQ))
+  {
+    if (!allowAssignment) error(compiler, "Invalid assignment.");
+
+    // Compile the right-hand side.
+    statement(compiler);
+
+    if (local != -1)
+    {
+      emit(compiler, CODE_STORE_LOCAL);
+      emit(compiler, local);
+      return;
+    }
+
+    emit(compiler, CODE_STORE_GLOBAL);
+    emit(compiler, global);
+    return;
+  }
+
+  // Otherwise, it's just a variable access.
   if (local != -1)
   {
     emit(compiler, CODE_LOAD_LOCAL);
@@ -682,29 +752,16 @@ static void name(Compiler* compiler)
     return;
   }
 
-  // TODO(bob): Look up names in outer local scopes.
-
-  // See if it's a global variable.
-  int global = findSymbol(&compiler->parser->vm->globalSymbols,
-      compiler->parser->source + compiler->parser->previous.start,
-      compiler->parser->previous.end - compiler->parser->previous.start);
-  if (global != -1)
-  {
-    emit(compiler, CODE_LOAD_GLOBAL);
-    emit(compiler, global);
-    return;
-  }
-
-  // TODO(bob): Look for names in outer scopes.
-  error(compiler, "Undefined variable.");
+  emit(compiler, CODE_LOAD_GLOBAL);
+  emit(compiler, global);
 }
 
-static void null(Compiler* compiler)
+static void null(Compiler* compiler, int allowAssignment)
 {
   emit(compiler, CODE_NULL);
 }
 
-static void number(Compiler* compiler)
+static void number(Compiler* compiler, int allowAssignment)
 {
   Token* token = &compiler->parser->previous;
   char* end;
@@ -726,7 +783,7 @@ static void number(Compiler* compiler)
   emit(compiler, constant);
 }
 
-static void string(Compiler* compiler)
+static void string(Compiler* compiler, int allowAssignment)
 {
   Token* token = &compiler->parser->previous;
 
@@ -745,7 +802,7 @@ static void string(Compiler* compiler)
   emit(compiler, constant);
 }
 
-static void this_(Compiler* compiler)
+static void this_(Compiler* compiler, int allowAssignment)
 {
   // TODO(bob): Not exactly right. This doesn't handle *functions* at the top
   // level.
@@ -782,7 +839,7 @@ static void this_(Compiler* compiler)
 // foo.bar(arg, arg)
 // foo.bar { block } other { block }
 // foo.bar(arg) nextPart { arg } lastBit
-void call(Compiler* compiler)
+void call(Compiler* compiler, int allowAssignment)
 {
   char name[MAX_NAME];
   int length = 0;
@@ -810,12 +867,14 @@ void call(Compiler* compiler)
     length += partLength;
     // TODO(bob): Check for length overflow.
 
+    // TODO(bob): Check for "=" here and set assignment and return.
+
     // Parse the argument list, if any.
     if (match(compiler, TOKEN_LEFT_PAREN))
     {
       for (;;)
       {
-        expression(compiler);
+        statement(compiler);
 
         numArgs++;
 
@@ -845,20 +904,20 @@ void call(Compiler* compiler)
   emit(compiler, symbol);
 }
 
-void is(Compiler* compiler)
+void is(Compiler* compiler, int allowAssignment)
 {
   // Compile the right-hand side.
-  parsePrecedence(compiler, PREC_CALL);
+  parsePrecedence(compiler, 0, PREC_CALL);
 
   emit(compiler, CODE_IS);
 }
 
-void infixOp(Compiler* compiler)
+void infixOp(Compiler* compiler, int allowAssignment)
 {
-  ParseRule* rule = &rules[compiler->parser->previous.type];
+  GrammarRule* rule = &rules[compiler->parser->previous.type];
 
   // Compile the right-hand side.
-  parsePrecedence(compiler, rule->precedence + 1);
+  parsePrecedence(compiler, 0, rule->precedence + 1);
 
   // Call the operator method on the left-hand side.
   int symbol = ensureSymbol(&compiler->parser->vm->methods,
@@ -871,12 +930,14 @@ void infixOp(Compiler* compiler)
 // expressions in the grammar. Expressions are parsed using a Pratt parser.
 //
 // See: http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
-#define UNUSED                            { NULL, NULL, PREC_NONE, NULL }
-#define PREFIX(fn)                        { fn, NULL, PREC_NONE, NULL }
-#define INFIX(precedence, fn)             { NULL, fn, precedence, NULL }
-#define INFIX_OPERATOR(precendence, name) { NULL, infixOp, precendence, name }
+#define UNUSED                     { NULL, NULL, PREC_NONE, NULL }
+#define PREFIX(fn)                 { fn, NULL, PREC_NONE, NULL }
+#define INFIX(prec, fn)            { NULL, fn, prec, NULL }
+#define INFIX_OPERATOR(prec, name) { NULL, infixOp, prec, name }
+#define OPERATOR(prec, name)       { unaryOp, infixOp, prec, name }
+#define PREFIX_OPERATOR(name)      { unaryOp, NULL, PREC_NONE, name }
 
-ParseRule rules[] =
+GrammarRule rules[] =
 {
   /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
@@ -891,10 +952,10 @@ ParseRule rules[] =
   /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/ "),
   /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_TERM, "% "),
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
-  /* TOKEN_MINUS         */ INFIX_OPERATOR(PREC_TERM, "- "),
+  /* TOKEN_MINUS         */ OPERATOR(PREC_TERM, "- "),
   /* TOKEN_PIPE          */ UNUSED,
   /* TOKEN_AMP           */ UNUSED,
-  /* TOKEN_BANG          */ UNUSED,
+  /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_EQ            */ UNUSED,
   /* TOKEN_LT            */ INFIX_OPERATOR(PREC_COMPARISON, "< "),
   /* TOKEN_GT            */ INFIX_OPERATOR(PREC_COMPARISON, "> "),
@@ -922,10 +983,11 @@ ParseRule rules[] =
 };
 
 // The main entrypoint for the top-down operator precedence parser.
-void parsePrecedence(Compiler* compiler, Precedence precedence)
+void parsePrecedence(Compiler* compiler, int allowAssignment,
+                     Precedence precedence)
 {
   nextToken(compiler->parser);
-  ParseFn prefix = rules[compiler->parser->previous.type].prefix;
+  GrammarFn prefix = rules[compiler->parser->previous.type].prefix;
 
   if (prefix == NULL)
   {
@@ -934,64 +996,22 @@ void parsePrecedence(Compiler* compiler, Precedence precedence)
     return;
   }
 
-  prefix(compiler);
+  prefix(compiler, allowAssignment);
 
   while (precedence <= rules[compiler->parser->current.type].precedence)
   {
     nextToken(compiler->parser);
-    ParseFn infix = rules[compiler->parser->previous.type].infix;
-    infix(compiler);
+    GrammarFn infix = rules[compiler->parser->previous.type].infix;
+    infix(compiler, allowAssignment);
   }
 }
 
 // Parses an expression (or, really, the subset of expressions that can appear
 // outside of the top level of a block). Does not include "statement-like"
 // things like variable declarations.
-void expression(Compiler* compiler)
+void expression(Compiler* compiler, int allowAssignment)
 {
-  if (match(compiler, TOKEN_IF))
-  {
-    // Compile the condition.
-    consume(compiler, TOKEN_LEFT_PAREN);
-    expression(compiler);
-    consume(compiler, TOKEN_RIGHT_PAREN);
-
-    // TODO(bob): Block bodies.
-    // Compile the then branch.
-    emit(compiler, CODE_JUMP_IF);
-
-    // Emit a placeholder. We'll patch it when we know what to jump to.
-    int ifJump = emit(compiler, 255);
-
-    expression(compiler);
-
-    // Jump over the else branch when the if branch is taken.
-    emit(compiler, CODE_JUMP);
-
-    // Emit a placeholder. We'll patch it when we know what to jump to.
-    int elseJump = emit(compiler, 255);
-
-    // Patch the jump.
-    compiler->fn->bytecode[ifJump] = compiler->numCodes - ifJump - 1;
-
-    // Compile the else branch if there is one.
-    if (match(compiler, TOKEN_ELSE))
-    {
-      // TODO(bob): Block bodies.
-      expression(compiler);
-    }
-    else
-    {
-      // Just default to null.
-      emit(compiler, CODE_NULL);
-    }
-
-    // Patch the jump over the else.
-    compiler->fn->bytecode[elseJump] = compiler->numCodes - elseJump - 1;
-    return;
-  }
-
-  return parsePrecedence(compiler, PREC_LOWEST);
+  parsePrecedence(compiler, allowAssignment, PREC_LOWEST);
 }
 
 // Compiles a method definition inside a class body.
@@ -1061,7 +1081,7 @@ void method(Compiler* compiler, int isStatic)
   // Block body.
   for (;;)
   {
-    statement(&methodCompiler);
+    definition(&methodCompiler);
 
     // If there is no newline, it must be the end of the block on the same line.
     if (!match(&methodCompiler, TOKEN_LINE))
@@ -1094,9 +1114,87 @@ void method(Compiler* compiler, int isStatic)
   }
 }
 
+// Compiles an assignment expression.
+void assignment(Compiler* compiler)
+{
+  // Assignment statement.
+  expression(compiler, 1);
+}
+
 // Parses a "statement": any expression including expressions like variable
 // declarations which can only appear at the top level of a block.
 void statement(Compiler* compiler)
+{
+  // TODO(bob): Do we want to allow "if" in expression positions?
+  if (match(compiler, TOKEN_IF))
+  {
+    // Compile the condition.
+    consume(compiler, TOKEN_LEFT_PAREN);
+    assignment(compiler);
+    consume(compiler, TOKEN_RIGHT_PAREN);
+
+    // Compile the then branch.
+    emit(compiler, CODE_JUMP_IF);
+
+    // Emit a placeholder. We'll patch it when we know what to jump to.
+    int ifJump = emit(compiler, 255);
+
+    statement(compiler);
+
+    // Jump over the else branch when the if branch is taken.
+    emit(compiler, CODE_JUMP);
+
+    // Emit a placeholder. We'll patch it when we know what to jump to.
+    int elseJump = emit(compiler, 255);
+
+    // Patch the jump.
+    compiler->fn->bytecode[ifJump] = compiler->numCodes - ifJump - 1;
+
+    // Compile the else branch if there is one.
+    if (match(compiler, TOKEN_ELSE))
+    {
+      statement(compiler);
+    }
+    else
+    {
+      // Just default to null.
+      emit(compiler, CODE_NULL);
+    }
+
+    // Patch the jump over the else.
+    compiler->fn->bytecode[elseJump] = compiler->numCodes - elseJump - 1;
+    return;
+  }
+
+  // Curly block.
+  if (match(compiler, TOKEN_LEFT_BRACE))
+  {
+    // TODO(bob): This code is duplicated in fn, method and top level parsing.
+    for (;;)
+    {
+      // TODO(bob): Create a local variable scope.
+      definition(compiler);
+
+      // If there is no newline, it must be the end of the block on the same line.
+      if (!match(compiler, TOKEN_LINE))
+      {
+        consume(compiler, TOKEN_RIGHT_BRACE);
+        break;
+      }
+
+      if (match(compiler, TOKEN_RIGHT_BRACE)) break;
+
+      // Discard the result of the previous expression.
+      emit(compiler, CODE_POP);
+    }
+    return;
+  }
+
+  assignment(compiler);
+}
+
+// Compiles a name-binding statement.
+void definition(Compiler* compiler)
 {
   if (match(compiler, TOKEN_CLASS))
   {
@@ -1125,7 +1223,7 @@ void statement(Compiler* compiler)
 
       consume(compiler, TOKEN_LINE);
     }
-
+    
     return;
   }
 
@@ -1137,14 +1235,13 @@ void statement(Compiler* compiler)
     consume(compiler, TOKEN_EQ);
 
     // Compile the initializer.
-    expression(compiler);
+    statement(compiler);
 
     defineVariable(compiler, symbol);
     return;
   }
 
-  // Statement expression.
-  expression(compiler);
+  statement(compiler);
 }
 
 // Parses [source] to a "function" (a chunk of top-level code) for execution by
@@ -1180,7 +1277,7 @@ ObjFn* compile(VM* vm, const char* source)
 
   for (;;)
   {
-    statement(&compiler);
+    definition(&compiler);
 
     // If there is no newline, it must be the end of the block on the same line.
     if (!match(&compiler, TOKEN_LINE))

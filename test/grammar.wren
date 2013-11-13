@@ -23,6 +23,9 @@ io.write(false == 2 <= 1) // expect: true
 // >= has higher precedence than ==.
 io.write(false == 1 >= 2) // expect: true
 
+// Unary - has lower precedence than ..
+io.write(-"abc".count) // expect: -3
+
 // TODO(bob): %, associativity.
 
 // Using () for grouping.

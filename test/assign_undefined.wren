@@ -1,0 +1,1 @@
+unknown = "what" // expect error
