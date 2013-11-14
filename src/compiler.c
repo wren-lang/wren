@@ -221,25 +221,19 @@ static void skipBlockComment(Parser* parser)
     // TODO(bob): Unterminated comment. Should return error.
     if (peekChar(parser) == '\0') return;
 
-    if (peekChar(parser) == '/')
+    if (peekChar(parser) == '/' && peekNextChar(parser) == '*')
     {
       nextChar(parser);
-      if (peekChar(parser) == '*')
-      {
-        nextChar(parser);
-        nesting++;
-      }
+      nextChar(parser);
+      nesting++;
       continue;
     }
 
-    if (peekChar(parser) == '*')
+    if (peekChar(parser) == '*' && peekNextChar(parser) == '/')
     {
       nextChar(parser);
-      if (peekChar(parser) == '/')
-      {
-        nextChar(parser);
-        nesting--;
-      }
+      nextChar(parser);
+      nesting--;
       continue;
     }
 
@@ -266,7 +260,7 @@ static int isKeyword(Parser* parser, const char* keyword)
 // Finishes lexing a number literal.
 static void readNumber(Parser* parser)
 {
-  // TODO(bob): Floating point, hex, scientific, etc.
+  // TODO(bob): Hex, scientific, etc.
   while (isDigit(peekChar(parser))) nextChar(parser);
 
   // See if it has a floating point. Make sure there is a digit after the "."
@@ -516,7 +510,6 @@ static TokenType peek(Compiler* compiler)
   return compiler->parser->current.type;
 }
 
-// TODO(bob): Make a bool type?
 // Consumes the current token if its type is [expected]. Returns non-zero if a
 // token was consumed.
 static int match(Compiler* compiler, TokenType expected)
@@ -528,14 +521,14 @@ static int match(Compiler* compiler, TokenType expected)
 }
 
 // Consumes the current token. Emits an error if its type is not [expected].
-static void consume(Compiler* compiler, TokenType expected)
+static void consume(Compiler* compiler, TokenType expected,
+                    const char* errorMessage)
 {
   nextToken(compiler->parser);
   if (compiler->parser->previous.type != expected)
   {
     // TODO(bob): Better error.
-    error(compiler, "Expected %d, got %d.\n", expected,
-          compiler->parser->previous.type);
+    error(compiler, errorMessage);
   }
 }
 
@@ -559,7 +552,7 @@ static int addConstant(Compiler* compiler, Value constant)
 // name. Returns its symbol.
 static int declareVariable(Compiler* compiler)
 {
-  consume(compiler, TOKEN_NAME);
+  consume(compiler, TOKEN_NAME, "Expected variable name.");
 
   SymbolTable* symbols;
   if (compiler->parent)
@@ -665,7 +658,7 @@ GrammarRule rules[];
 static void grouping(Compiler* compiler, int allowAssignment)
 {
   expression(compiler, 0);
-  consume(compiler, TOKEN_RIGHT_PAREN);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
 // Unary operators like `-foo`.
@@ -719,7 +712,8 @@ static void function(Compiler* compiler, int allowAssignment)
       // If there is no newline, it must be the end of the block on the same line.
       if (!match(&fnCompiler, TOKEN_LINE))
       {
-        consume(&fnCompiler, TOKEN_RIGHT_BRACE);
+        consume(&fnCompiler, TOKEN_RIGHT_BRACE,
+                "Expect '}' after function body.");
         break;
       }
 
@@ -888,7 +882,7 @@ void call(Compiler* compiler, int allowAssignment)
   int length = 0;
   int numArgs = 0;
 
-  consume(compiler, TOKEN_NAME);
+  consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
 
   // Build the method name. The mangled name includes all of the name parts
   // in a mixfix call as well as spaces for every argument.
@@ -927,7 +921,7 @@ void call(Compiler* compiler, int allowAssignment)
 
         if (!match(compiler, TOKEN_COMMA)) break;
       }
-      consume(compiler, TOKEN_RIGHT_PAREN);
+      consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
 
       // If there isn't another part name after the argument list, stop.
       if (!match(compiler, TOKEN_NAME)) break;
@@ -1064,7 +1058,7 @@ void method(Compiler* compiler, int isStatic)
   int length = 0;
 
   // Method name.
-  consume(compiler, TOKEN_NAME);
+  consume(compiler, TOKEN_NAME, "Expect method name.");
 
   // TODO(bob): Copied from compileFunction(). Unify.
   Compiler methodCompiler;
@@ -1111,7 +1105,7 @@ void method(Compiler* compiler, int isStatic)
 
       if (!match(compiler, TOKEN_COMMA)) break;
     }
-    consume(compiler, TOKEN_RIGHT_PAREN);
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
 
     // If there isn't another part name after the argument list, stop.
     if (!match(compiler, TOKEN_NAME)) break;
@@ -1119,7 +1113,7 @@ void method(Compiler* compiler, int isStatic)
 
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
-  consume(compiler, TOKEN_LEFT_BRACE);
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
 
   // Block body.
   for (;;)
@@ -1129,7 +1123,8 @@ void method(Compiler* compiler, int isStatic)
     // If there is no newline, it must be the end of the block on the same line.
     if (!match(&methodCompiler, TOKEN_LINE))
     {
-      consume(&methodCompiler, TOKEN_RIGHT_BRACE);
+      consume(&methodCompiler, TOKEN_RIGHT_BRACE,
+              "Expect '}' after method body.");
       break;
     }
 
@@ -1172,9 +1167,9 @@ void statement(Compiler* compiler)
   if (match(compiler, TOKEN_IF))
   {
     // Compile the condition.
-    consume(compiler, TOKEN_LEFT_PAREN);
+    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
     assignment(compiler);
-    consume(compiler, TOKEN_RIGHT_PAREN);
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
 
     // Compile the then branch.
     emit(compiler, CODE_JUMP_IF);
@@ -1221,7 +1216,7 @@ void statement(Compiler* compiler)
       // If there is no newline, it must be the end of the block on the same line.
       if (!match(compiler, TOKEN_LINE))
       {
-        consume(compiler, TOKEN_RIGHT_BRACE);
+        consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' after block body.");
         break;
       }
 
@@ -1260,7 +1255,7 @@ void definition(Compiler* compiler)
     defineVariable(compiler, symbol);
 
     // Compile the method definitions.
-    consume(compiler, TOKEN_LEFT_BRACE);
+    consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
 
     while (!match(compiler, TOKEN_RIGHT_BRACE))
     {
@@ -1273,7 +1268,8 @@ void definition(Compiler* compiler)
         method(compiler, 0);
       }
 
-      consume(compiler, TOKEN_LINE);
+      consume(compiler, TOKEN_LINE,
+              "Expect newline after definition in class.");
     }
     
     return;
@@ -1284,7 +1280,7 @@ void definition(Compiler* compiler)
     int symbol = declareVariable(compiler);
 
     // TODO(bob): Allow uninitialized vars?
-    consume(compiler, TOKEN_EQ);
+    consume(compiler, TOKEN_EQ, "Expect '=' after variable name.");
 
     // Compile the initializer.
     statement(compiler);
@@ -1334,7 +1330,7 @@ ObjFn* compile(VM* vm, const char* source)
     // If there is no newline, it must be the end of the block on the same line.
     if (!match(&compiler, TOKEN_LINE))
     {
-      consume(&compiler, TOKEN_EOF);
+      consume(&compiler, TOKEN_EOF, "Expect end of file.");
       break;
     }
 
