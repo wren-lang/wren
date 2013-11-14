@@ -1,0 +1,55 @@
+class Base {
+  foo {
+    io.write("a")
+    inner
+    io.write("b")
+  }
+}
+
+class Mid is Base {}
+
+class Derived is Mid {
+  foo {
+    io.write("c")
+  }
+}
+
+var d = Derived.new
+d.foo
+
+// find base-most method "foo" (on Base)
+// invoke it
+// when inner is hit, walk down inheritance chain to find nearest override
+// (in Derived)
+// invoke it
+
+
+for every class, store two lists:
+
+1. list of methods this class defines.
+2. mapping of method name to which method body should be invoked first for
+   that method. this will be the base-most class's definition of a given
+   method name.
+
+typedef struct
+{
+  // The method body to invoke. This will be the base-most definition of a
+  // method for a given name.
+  Method* method;
+
+  // If [method] calls `inner`, this is the class whose inner method is invoked.
+  // If *that* method in turn calls `inner`, we look up the [inner] property of
+  // this method on that class's dispatch table to chain to the next one.
+  //
+  // This is `NULL` if there is no inner method to call.
+  ClassObj* inner;
+} Dispatch;
+
+typedef struct
+{
+  Dispatch dispatchTable[MAX_SYMBOLS];
+} ClassObj;
+
+with normal overridding, can unify those. with inner(), need both.
+
+whenever a method is invoked, look it up in 2, then call that method body.
