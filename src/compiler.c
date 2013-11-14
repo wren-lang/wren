@@ -210,6 +210,44 @@ static void skipLineComment(Parser* parser)
   }
 }
 
+// Skips the rest of a block comment.
+static void skipBlockComment(Parser* parser)
+{
+  nextChar(parser); // The opening "*".
+
+  int nesting = 1;
+  while (nesting > 0)
+  {
+    // TODO(bob): Unterminated comment. Should return error.
+    if (peekChar(parser) == '\0') return;
+
+    if (peekChar(parser) == '/')
+    {
+      nextChar(parser);
+      if (peekChar(parser) == '*')
+      {
+        nextChar(parser);
+        nesting++;
+      }
+      continue;
+    }
+
+    if (peekChar(parser) == '*')
+    {
+      nextChar(parser);
+      if (peekChar(parser) == '/')
+      {
+        nextChar(parser);
+        nesting--;
+      }
+      continue;
+    }
+
+    // Regular comment character.
+    nextChar(parser);
+  }
+}
+
 // Skips forward until a non-whitespace character is reached.
 static void skipWhitespace(Parser* parser)
 {
@@ -302,6 +340,11 @@ static void readRawToken(Parser* parser)
         if (peekChar(parser) == '/')
         {
           skipLineComment(parser);
+          break;
+        }
+        else if (peekChar(parser) == '*')
+        {
+          skipBlockComment(parser);
           break;
         }
         makeToken(parser, TOKEN_SLASH);
