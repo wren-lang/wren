@@ -870,12 +870,6 @@ static void this_(Compiler* compiler, int allowAssignment)
   emit(compiler, 0);
 }
 
-// Method calls like:
-//
-// foo.bar
-// foo.bar(arg, arg)
-// foo.bar { block } other { block }
-// foo.bar(arg) nextPart { arg } lastBit
 void call(Compiler* compiler, int allowAssignment)
 {
   char name[MAX_NAME];
@@ -884,53 +878,32 @@ void call(Compiler* compiler, int allowAssignment)
 
   consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
 
-  // Build the method name. The mangled name includes all of the name parts
-  // in a mixfix call as well as spaces for every argument.
-  // So a method call like:
-  //
-  //   foo.bar(arg, arg) else { block } last
-  //
-  // Will have name: "bar  else last"
+  // Build the method name. To allow overloading by arity, we add a space to
+  // the name for each argument.
+  int partLength = compiler->parser->previous.end -
+  compiler->parser->previous.start;
+  strncpy(name + length,
+          compiler->parser->source + compiler->parser->previous.start,
+          partLength);
+  length += partLength;
+  // TODO(bob): Check for length overflow.
 
-  // Compile all of the name parts.
-  for (;;)
+  // TODO(bob): Check for "=" here and set assignment and return.
+
+  // Parse the argument list, if any.
+  if (match(compiler, TOKEN_LEFT_PAREN))
   {
-    // Add the just-consumed part name to the method name.
-    int partLength = compiler->parser->previous.end -
-    compiler->parser->previous.start;
-    strncpy(name + length,
-            compiler->parser->source + compiler->parser->previous.start,
-            partLength);
-    length += partLength;
-    // TODO(bob): Check for length overflow.
-
-    // TODO(bob): Check for "=" here and set assignment and return.
-
-    // Parse the argument list, if any.
-    if (match(compiler, TOKEN_LEFT_PAREN))
+    do
     {
-      for (;;)
-      {
-        statement(compiler);
+      statement(compiler);
 
-        numArgs++;
-
-        // Add a space in the name for each argument. Lets us overload by
-        // arity.
-        name[length++] = ' ';
-
-        if (!match(compiler, TOKEN_COMMA)) break;
-      }
-      consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
-
-      // If there isn't another part name after the argument list, stop.
-      if (!match(compiler, TOKEN_NAME)) break;
+      // Add a space in the name for each argument. Lets us overload by
+      // arity.
+      numArgs++;
+      name[length++] = ' ';
     }
-    else
-    {
-      // If there isn't an argument list, we're done.
-      break;
-    }
+    while (match(compiler, TOKEN_COMMA));
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
@@ -1073,42 +1046,29 @@ void method(Compiler* compiler, int isStatic)
   // correct slot indices.
   addSymbol(&methodCompiler.locals, "(this)", 6);
 
-  // Build the method name. The mangled name includes all of the name parts
-  // in a mixfix call as well as spaces for every argument.
-  // So a method like:
-  //
-  //   foo.bar(a, b) else (c) last
-  //
-  // Will have name: "bar  else last"
-  for (;;)
+  // Build the method name. To allow overloading by arity, we add a space to
+  // the name for each parameter.
+  int partLength = compiler->parser->previous.end -
+      compiler->parser->previous.start;
+  strncpy(name + length,
+          compiler->parser->source + compiler->parser->previous.start,
+          partLength);
+  length += partLength;
+  // TODO(bob): Check for length overflow.
+
+  // Parse the parameter list, if any.
+  if (match(compiler, TOKEN_LEFT_PAREN))
   {
-    // Add the just-consumed part name to the method name.
-    int partLength = compiler->parser->previous.end -
-        compiler->parser->previous.start;
-    strncpy(name + length,
-            compiler->parser->source + compiler->parser->previous.start,
-            partLength);
-    length += partLength;
-    // TODO(bob): Check for length overflow.
-
-    // Parse the parameter list, if any.
-    if (!match(compiler, TOKEN_LEFT_PAREN)) break;
-
-    for (;;)
+    do
     {
       // Define a local variable in the method for the parameter.
       declareVariable(&methodCompiler);
 
-      // Add a space in the name for each argument. Lets us overload by
-      // arity.
+      // Add a space in the name for the parameter.
       name[length++] = ' ';
-
-      if (!match(compiler, TOKEN_COMMA)) break;
     }
+    while (match(compiler, TOKEN_COMMA));
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
-
-    // If there isn't another part name after the argument list, stop.
-    if (!match(compiler, TOKEN_NAME)) break;
   }
 
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
