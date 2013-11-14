@@ -645,10 +645,13 @@ static void parsePrecedence(Compiler* compiler, int allowAssignment,
 
 typedef void (*GrammarFn)(Compiler*, int allowAssignment);
 
+typedef void (*SignatureFn)(Compiler* compiler, char* name, int* length);
+
 typedef struct
 {
   GrammarFn prefix;
   GrammarFn infix;
+  SignatureFn method;
   Precedence precedence;
   const char* name;
 } GrammarRule;
@@ -936,16 +939,67 @@ void infixOp(Compiler* compiler, int allowAssignment)
   emit(compiler, symbol);
 }
 
+// Compiles a method signature for a regular named method.
+void namedSignature(Compiler* compiler, char* name, int* length)
+{
+  // Parse the parameter list, if any.
+  if (match(compiler, TOKEN_LEFT_PAREN))
+  {
+    do
+    {
+      // Define a local variable in the method for the parameter.
+      declareVariable(compiler);
+
+      // Add a space in the name for the parameter.
+      name[(*length)++] = ' ';
+      // TODO(bob): Check for length overflow.
+    }
+    while (match(compiler, TOKEN_COMMA));
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+  }
+}
+
+// Compiles a method signature for an infix operator.
+void infixSignature(Compiler* compiler, char* name, int* length)
+{
+  // Add a space for the RHS parameter.
+  name[(*length)++] = ' ';
+
+  // Parse the parameter name.
+  declareVariable(compiler);
+}
+
+// Compiles a method signature for an unary operator (i.e. "!").
+void unarySignature(Compiler* compiler, char* name, int* length)
+{
+  // Do nothing. The name is already complete.
+}
+
+// Compiles a method signature for an operator that can either be unary or
+// infix (i.e. "-").
+void mixedSignature(Compiler* compiler, char* name, int* length)
+{
+  // If there is a parameter name, it's an infix operator, otherwise it's unary.
+  if (compiler->parser->current.type == TOKEN_NAME)
+  {
+    // Add a space for the RHS parameter.
+    name[(*length)++] = ' ';
+
+    // Parse the parameter name.
+    declareVariable(compiler);
+  }
+}
+
 // This table defines all of the parsing rules for the prefix and infix
 // expressions in the grammar. Expressions are parsed using a Pratt parser.
 //
 // See: http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
-#define UNUSED                     { NULL, NULL, PREC_NONE, NULL }
-#define PREFIX(fn)                 { fn, NULL, PREC_NONE, NULL }
-#define INFIX(prec, fn)            { NULL, fn, prec, NULL }
-#define INFIX_OPERATOR(prec, name) { NULL, infixOp, prec, name }
-#define OPERATOR(prec, name)       { unaryOp, infixOp, prec, name }
-#define PREFIX_OPERATOR(name)      { unaryOp, NULL, PREC_NONE, name }
+#define UNUSED                     { NULL, NULL, NULL, PREC_NONE, NULL }
+#define PREFIX(fn)                 { fn, NULL, NULL, PREC_NONE, NULL }
+#define INFIX(prec, fn)            { NULL, fn, NULL, prec, NULL }
+#define INFIX_OPERATOR(prec, name) { NULL, infixOp, infixSignature, prec, name }
+#define OPERATOR(prec, name)       { unaryOp, infixOp, mixedSignature, prec, name }
+#define PREFIX_OPERATOR(name)      { unaryOp, NULL, unarySignature, PREC_NONE, name }
 
 GrammarRule rules[] =
 {
@@ -984,7 +1038,7 @@ GrammarRule rules[] =
   /* TOKEN_THIS          */ PREFIX(this_),
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
-  /* TOKEN_NAME          */ PREFIX(name),
+  /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(number),
   /* TOKEN_STRING        */ PREFIX(string),
   /* TOKEN_LINE          */ UNUSED,
@@ -1022,94 +1076,6 @@ void parsePrecedence(Compiler* compiler, int allowAssignment,
 void expression(Compiler* compiler, int allowAssignment)
 {
   parsePrecedence(compiler, allowAssignment, PREC_LOWEST);
-}
-
-// Compiles a method definition inside a class body.
-void method(Compiler* compiler, int isStatic)
-{
-  char name[MAX_NAME];
-  int length = 0;
-
-  // Method name.
-  consume(compiler, TOKEN_NAME, "Expect method name.");
-
-  // TODO(bob): Copied from compileFunction(). Unify.
-  Compiler methodCompiler;
-  initCompiler(&methodCompiler, compiler->parser, compiler, 1);
-
-  // Add the block to the constant table. Do this eagerly so it's reachable by
-  // the GC.
-  int constant = addConstant(compiler, (Value)methodCompiler.fn);
-
-  // TODO(bob): Hackish.
-  // Define a fake local slot for the receiver so that later locals have the
-  // correct slot indices.
-  addSymbol(&methodCompiler.locals, "(this)", 6);
-
-  // Build the method name. To allow overloading by arity, we add a space to
-  // the name for each parameter.
-  int partLength = compiler->parser->previous.end -
-      compiler->parser->previous.start;
-  strncpy(name + length,
-          compiler->parser->source + compiler->parser->previous.start,
-          partLength);
-  length += partLength;
-  // TODO(bob): Check for length overflow.
-
-  // Parse the parameter list, if any.
-  if (match(compiler, TOKEN_LEFT_PAREN))
-  {
-    do
-    {
-      // Define a local variable in the method for the parameter.
-      declareVariable(&methodCompiler);
-
-      // Add a space in the name for the parameter.
-      name[length++] = ' ';
-    }
-    while (match(compiler, TOKEN_COMMA));
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
-  }
-
-  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
-
-  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
-
-  // Block body.
-  for (;;)
-  {
-    definition(&methodCompiler);
-
-    // If there is no newline, it must be the end of the block on the same line.
-    if (!match(&methodCompiler, TOKEN_LINE))
-    {
-      consume(&methodCompiler, TOKEN_RIGHT_BRACE,
-              "Expect '}' after method body.");
-      break;
-    }
-
-    if (match(&methodCompiler, TOKEN_RIGHT_BRACE)) break;
-
-    // Discard the result of the previous expression.
-    emit(&methodCompiler, CODE_POP);
-  }
-
-  emit(&methodCompiler, CODE_END);
-
-  if (isStatic)
-  {
-    emit(compiler, CODE_METACLASS);
-  }
-
-  // Compile the code to define the method it.
-  emit(compiler, CODE_METHOD);
-  emit(compiler, symbol);
-  emit(compiler, constant);
-
-  if (isStatic)
-  {
-    emit(compiler, CODE_POP);
-  }
 }
 
 // Compiles an assignment expression.
@@ -1191,6 +1157,69 @@ void statement(Compiler* compiler)
   assignment(compiler);
 }
 
+// Compiles a method definition inside a class body.
+void method(Compiler* compiler, int isStatic, SignatureFn signature)
+{
+  // TODO(bob): Copied from compileFunction(). Unify.
+  Compiler methodCompiler;
+  initCompiler(&methodCompiler, compiler->parser, compiler, 1);
+
+  // Add the block to the constant table. Do this eagerly so it's reachable by
+  // the GC.
+  int constant = addConstant(compiler, (Value)methodCompiler.fn);
+
+  // TODO(bob): Hackish.
+  // Define a fake local slot for the receiver so that later locals have the
+  // correct slot indices.
+  addSymbol(&methodCompiler.locals, "(this)", 6);
+
+  // Build the method name.
+  char name[MAX_NAME];
+  int length = compiler->parser->previous.end -
+               compiler->parser->previous.start;
+  strncpy(name, compiler->parser->source + compiler->parser->previous.start,
+          length);
+
+  // Compile the method signature.
+  signature(&methodCompiler, name, &length);
+
+  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
+
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
+
+  // Block body.
+  for (;;)
+  {
+    definition(&methodCompiler);
+
+    // If there is no newline, it must be the end of the block on the same line.
+    if (!match(&methodCompiler, TOKEN_LINE))
+    {
+      consume(&methodCompiler, TOKEN_RIGHT_BRACE, "Expect '}' after method body.");
+      break;
+    }
+
+    if (match(&methodCompiler, TOKEN_RIGHT_BRACE)) break;
+
+    // Discard the result of the previous expression.
+    emit(&methodCompiler, CODE_POP);
+  }
+
+  emit(&methodCompiler, CODE_END);
+
+  if (isStatic) emit(compiler, CODE_METACLASS);
+
+  // Compile the code to define the method it.
+  emit(compiler, CODE_METHOD);
+  emit(compiler, symbol);
+  emit(compiler, constant);
+
+  if (isStatic)
+  {
+    emit(compiler, CODE_POP);
+  }
+}
+
 // Compiles a name-binding statement.
 void definition(Compiler* compiler)
 {
@@ -1219,15 +1248,18 @@ void definition(Compiler* compiler)
 
     while (!match(compiler, TOKEN_RIGHT_BRACE))
     {
-      if (match(compiler, TOKEN_STATIC))
+      int isStatic = match(compiler, TOKEN_STATIC);
+
+      SignatureFn signature = rules[compiler->parser->current.type].method;
+      nextToken(compiler->parser);
+
+      if (signature == NULL)
       {
-        method(compiler, 1);
-      }
-      else
-      {
-        method(compiler, 0);
+        error(compiler, "Expect method definition.");
+        break;
       }
 
+      method(compiler, isStatic, signature);
       consume(compiler, TOKEN_LINE,
               "Expect newline after definition in class.");
     }
