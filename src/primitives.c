@@ -54,13 +54,62 @@ DEF_PRIMITIVE(bool_toString)
   }
 }
 
-DEF_PRIMITIVE(fn_call)
+// The call instruction leading to this primitive has one argument for the
+// receiver plus as many arguments as were passed. When we push the block onto
+// the callstack, we again use as many arguments. That ensures that the result
+// of evaluating the block goes into the slot that the caller of *this*
+// primitive is expecting.
+DEF_PRIMITIVE(fn_call0)
 {
-  // The call instruction leading to this primitive has one argument. So when
-  // we push the block onto the callstack, we again use one argument. That
-  // ensures that the result of evaluating the block goes into the slot that
-  // the caller of *this* primitive is expecting.
   callFunction(fiber, AS_FN(args[0]), 1);
+  return NULL;
+}
+
+DEF_PRIMITIVE(fn_call1)
+{
+  callFunction(fiber, AS_FN(args[0]), 2);
+  return NULL;
+}
+
+DEF_PRIMITIVE(fn_call2)
+{
+  callFunction(fiber, AS_FN(args[0]), 3);
+  return NULL;
+}
+
+DEF_PRIMITIVE(fn_call3)
+{
+  callFunction(fiber, AS_FN(args[0]), 4);
+  return NULL;
+}
+
+DEF_PRIMITIVE(fn_call4)
+{
+  callFunction(fiber, AS_FN(args[0]), 5);
+  return NULL;
+}
+
+DEF_PRIMITIVE(fn_call5)
+{
+  callFunction(fiber, AS_FN(args[0]), 6);
+  return NULL;
+}
+
+DEF_PRIMITIVE(fn_call6)
+{
+  callFunction(fiber, AS_FN(args[0]), 7);
+  return NULL;
+}
+
+DEF_PRIMITIVE(fn_call7)
+{
+  callFunction(fiber, AS_FN(args[0]), 8);
+  return NULL;
+}
+
+DEF_PRIMITIVE(fn_call8)
+{
+  callFunction(fiber, AS_FN(args[0]), 9);
   return NULL;
 }
 
@@ -252,7 +301,15 @@ void loadCore(VM* vm)
   vm->classClass = AS_CLASS(findGlobal(vm, "Class"));
 
   vm->fnClass = AS_CLASS(findGlobal(vm, "Function"));
-  PRIMITIVE(vm->fnClass, "call", fn_call);
+  PRIMITIVE(vm->fnClass, "call", fn_call0);
+  PRIMITIVE(vm->fnClass, "call ", fn_call1);
+  PRIMITIVE(vm->fnClass, "call  ", fn_call2);
+  PRIMITIVE(vm->fnClass, "call   ", fn_call3);
+  PRIMITIVE(vm->fnClass, "call    ", fn_call4);
+  PRIMITIVE(vm->fnClass, "call     ", fn_call5);
+  PRIMITIVE(vm->fnClass, "call      ", fn_call6);
+  PRIMITIVE(vm->fnClass, "call       ", fn_call7);
+  PRIMITIVE(vm->fnClass, "call        ", fn_call8);
   PRIMITIVE(vm->fnClass, "== ", fn_eqeq);
   PRIMITIVE(vm->fnClass, "!= ", fn_bangeq);
 

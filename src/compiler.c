@@ -658,6 +658,25 @@ typedef struct
 
 GrammarRule rules[];
 
+static void parameterList(Compiler* compiler, char* name, int* length)
+{
+  // Parse the parameter list, if any.
+  if (match(compiler, TOKEN_LEFT_PAREN))
+  {
+    do
+    {
+      // Define a local variable in the method for the parameter.
+      declareVariable(compiler);
+
+      // Add a space in the name for the parameter.
+      if (name != NULL) name[(*length)++] = ' ';
+      // TODO(bob): Check for length overflow.
+    }
+    while (match(compiler, TOKEN_COMMA));
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+  }
+}
+
 static void grouping(Compiler* compiler, int allowAssignment)
 {
   expression(compiler, 0);
@@ -704,6 +723,8 @@ static void function(Compiler* compiler, int allowAssignment)
   // Define a fake local slot for the receiver (the function object itself) so
   // that later locals have the correct slot indices.
   addSymbol(&fnCompiler.locals, "(this)", 6);
+
+  parameterList(&fnCompiler, NULL, NULL);
 
   if (match(&fnCompiler, TOKEN_LEFT_BRACE))
   {
@@ -939,26 +960,6 @@ void infixOp(Compiler* compiler, int allowAssignment)
   emit(compiler, symbol);
 }
 
-// Compiles a method signature for a regular named method.
-void namedSignature(Compiler* compiler, char* name, int* length)
-{
-  // Parse the parameter list, if any.
-  if (match(compiler, TOKEN_LEFT_PAREN))
-  {
-    do
-    {
-      // Define a local variable in the method for the parameter.
-      declareVariable(compiler);
-
-      // Add a space in the name for the parameter.
-      name[(*length)++] = ' ';
-      // TODO(bob): Check for length overflow.
-    }
-    while (match(compiler, TOKEN_COMMA));
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
-  }
-}
-
 // Compiles a method signature for an infix operator.
 void infixSignature(Compiler* compiler, char* name, int* length)
 {
@@ -1038,7 +1039,7 @@ GrammarRule rules[] =
   /* TOKEN_THIS          */ PREFIX(this_),
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
-  /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
+  /* TOKEN_NAME          */ { name, NULL, parameterList, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(number),
   /* TOKEN_STRING        */ PREFIX(string),
   /* TOKEN_LINE          */ UNUSED,
