@@ -119,7 +119,7 @@ DEF_PRIMITIVE(fn_bangeq)
 
 DEF_PRIMITIVE(num_abs)
 {
-  return (Value)newNum(vm, fabs(AS_NUM(args[0])));
+  return NUM_VAL(fabs(AS_NUM(args[0])));
 }
 
 DEF_PRIMITIVE(num_toString)
@@ -132,38 +132,38 @@ DEF_PRIMITIVE(num_toString)
 
 DEF_PRIMITIVE(num_negate)
 {
-  return (Value)newNum(vm, -AS_NUM(args[0]));
+  return NUM_VAL(-AS_NUM(args[0]));
 }
 
 DEF_PRIMITIVE(num_minus)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
-  return (Value)newNum(vm, AS_NUM(args[0]) - AS_NUM(args[1]));
+  return NUM_VAL(AS_NUM(args[0]) - AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_plus)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   // TODO(bob): Handle coercion to string if RHS is a string.
-  return (Value)newNum(vm, AS_NUM(args[0]) + AS_NUM(args[1]));
+  return NUM_VAL(AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_multiply)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
-  return (Value)newNum(vm, AS_NUM(args[0]) * AS_NUM(args[1]));
+  return NUM_VAL(AS_NUM(args[0]) * AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_divide)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
-  return (Value)newNum(vm, AS_NUM(args[0]) / AS_NUM(args[1]));
+  return NUM_VAL(AS_NUM(args[0]) / AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_mod)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
-  return (Value)newNum(vm, fmod(AS_NUM(args[0]), AS_NUM(args[1])));
+  return NUM_VAL(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_lt)
@@ -209,16 +209,16 @@ DEF_PRIMITIVE(string_contains)
   const char* search = AS_STRING(args[1]);
 
   // Corner case, the empty string contains the empty string.
-  if (strlen(string) == 0 && strlen(search) == 0) return (Value)newNum(vm, 1);
+  if (strlen(string) == 0 && strlen(search) == 0) return NUM_VAL(1);
 
   // TODO(bob): Return bool.
-  return (Value)newNum(vm, strstr(string, search) != NULL);
+  return NUM_VAL(strstr(string, search) != NULL);
 }
 
 DEF_PRIMITIVE(string_count)
 {
   double count = strlen(AS_STRING(args[0]));
-  return (Value)newNum(vm, count);
+  return NUM_VAL(count);
 }
 
 DEF_PRIMITIVE(string_toString)

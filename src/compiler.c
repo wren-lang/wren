@@ -836,8 +836,7 @@ static void number(Compiler* compiler, int allowAssignment)
   }
 
   // Define a constant for the literal.
-  int constant = addConstant(compiler,
-      newNum(compiler->parser->vm, (double)value));
+  int constant = addConstant(compiler, NUM_VAL(value));
 
   // Compile the code to load the constant.
   emit(compiler, CODE_CONSTANT);

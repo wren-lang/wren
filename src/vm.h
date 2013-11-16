@@ -20,7 +20,7 @@
 #define AS_INSTANCE(value) ((ObjInstance*)(value).obj)
 
 // Get the double value of [value], which must be a number.
-#define AS_NUM(v) (((ObjNum*)(v).obj)->value)
+#define AS_NUM(v) ((v).num)
 
 // Get the const char* value of [v], which must be a string.
 #define AS_STRING(v) (((ObjString*)(v).obj)->value)
@@ -33,8 +33,8 @@
 #define IS_BOOL(value) ((value).type == VAL_FALSE || (value).type == VAL_TRUE)
 
 // TODO(bob): Evaluating value here twice sucks.
-#define IS_FN(value) ((value).type == VAL_OBJ && (value).obj->type == OBJ_FN)
-#define IS_STRING(value) ((value).type == VAL_OBJ && (value).obj->type == OBJ_STRING)
+#define IS_FN(value) (IS_OBJ(value) && (value).obj->type == OBJ_FN)
+#define IS_STRING(value) (IS_OBJ(value) && (value).obj->type == OBJ_STRING)
 
 typedef enum
 {
@@ -47,7 +47,6 @@ typedef enum
 } ValueType;
 
 typedef enum {
-  OBJ_NUM,
   OBJ_CLASS,
   OBJ_FN,
   OBJ_INSTANCE,
@@ -73,6 +72,7 @@ typedef struct sObj
 typedef struct
 {
   ValueType type;
+  double num;
   Obj* obj;
 } Value;
 
@@ -121,12 +121,6 @@ typedef struct
   ObjClass* classObj;
   // TODO(bob): Fields.
 } ObjInstance;
-
-typedef struct
-{
-  Obj obj;
-  double value;
-} ObjNum;
 
 typedef struct
 {
@@ -285,13 +279,14 @@ struct sFiber
 Value objectToValue(Obj* obj);
 
 // TODO(bob): Not C89!
-#define FALSE_VAL ((Value){ VAL_FALSE, NULL })
-#define NULL_VAL ((Value){ VAL_NULL, NULL })
-#define TRUE_VAL ((Value){ VAL_TRUE, NULL })
+#define FALSE_VAL ((Value){ VAL_FALSE, 0.0, NULL })
+#define NULL_VAL ((Value){ VAL_NULL, 0.0, NULL })
+#define TRUE_VAL ((Value){ VAL_TRUE, 0.0, NULL })
 // TODO(bob): Gross.
-#define NO_VAL ((Value){ VAL_NO_VALUE, NULL })
+#define NO_VAL ((Value){ VAL_NO_VALUE, 0.0, NULL })
 
 #define BOOL_VAL(b) (b ? TRUE_VAL : FALSE_VAL)
+#define NUM_VAL(n) ((Value){ VAL_NUM, n, NULL })
 
 VM* newVM();
 void freeVM(VM* vm);
@@ -305,9 +300,6 @@ ObjClass* newClass(VM* vm, ObjClass* superclass);
 
 // Creates a new instance of the given [classObj].
 Value newInstance(VM* vm, ObjClass* classObj);
-
-// Creates a new number object.
-Value newNum(VM* vm, double number);
 
 // Creates a new string object and copies [text] into it.
 Value newString(VM* vm, const char* text, size_t length);

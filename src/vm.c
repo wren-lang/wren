@@ -105,7 +105,6 @@ static void markObj(Obj* obj)
       // TODO(bob): Mark fields when instances have them.
       break;
 
-    case OBJ_NUM:
     case OBJ_STRING:
       // Nothing to mark.
       break;
@@ -118,10 +117,7 @@ static void markObj(Obj* obj)
 
 void markValue(Value value)
 {
-  // TODO(bob): Temp-ish hack. NULL_VAL doesn't have an Obj.
-  if (value.obj == NULL) return;
-
-  //if (!IS_OBJ(value)) return;
+  if (!IS_OBJ(value)) return;
   markObj(value.obj);
 }
 
@@ -161,7 +157,6 @@ void freeObj(VM* vm, Obj* obj)
       break;
 
     case OBJ_INSTANCE:
-    case OBJ_NUM:
       // Nothing to delete.
       size = sizeof(Obj);
       // TODO(bob): Include size of fields for OBJ_INSTANCE.
@@ -338,17 +333,6 @@ Value newInstance(VM* vm, ObjClass* classObj)
   initObj(vm, &instance->obj, OBJ_INSTANCE);
   instance->classObj = classObj;
 
-  return value;
-}
-
-Value newNum(VM* vm, double number)
-{
-  Value value;
-  value.type = VAL_NUM;
-  ObjNum* num = allocate(vm, sizeof(ObjNum));
-  value.obj = (Obj*)num;
-  initObj(vm, &num->obj, OBJ_NUM);
-  num->value = number;
   return value;
 }
 
@@ -611,7 +595,6 @@ static ObjClass* getClass(VM* vm, Value value)
       {
         case OBJ_CLASS: return AS_CLASS(value)->metaclass;
         case OBJ_FN: return vm->fnClass;
-        case OBJ_NUM: return vm->numClass;
         case OBJ_STRING: return vm->stringClass;
         case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
       }
@@ -861,7 +844,6 @@ void printValue(Value value)
         case OBJ_CLASS: printf("[class %p]", value.obj); break;
         case OBJ_FN: printf("[fn %p]", value.obj); break;
         case OBJ_INSTANCE: printf("[instance %p]", value.obj); break;
-        case OBJ_NUM: printf("%g", AS_NUM(value)); break;
         case OBJ_STRING: printf("%s", AS_STRING(value)); break;
       }
   }
