@@ -30,7 +30,7 @@ VM* newVM()
   vm->totalAllocated = 0;
 
   // TODO(bob): Make this configurable.
-  vm->nextGC = 1024 * 1024;
+  vm->nextGC = 1024 * 1024 * 10;
 
   // Clear out the global variables. This ensures they are NULL before being
   // initialized in case we do a garbage collection before one gets initialized.
