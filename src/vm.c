@@ -105,11 +105,8 @@ static void markObj(Obj* obj)
       // TODO(bob): Mark fields when instances have them.
       break;
 
-    case OBJ_FALSE:
-    case OBJ_NULL:
     case OBJ_NUM:
     case OBJ_STRING:
-    case OBJ_TRUE:
       // Nothing to mark.
       break;
   }
@@ -163,11 +160,8 @@ void freeObj(VM* vm, Obj* obj)
       size = sizeof(ObjClass);
       break;
 
-    case OBJ_FALSE:
     case OBJ_INSTANCE:
-    case OBJ_NULL:
     case OBJ_NUM:
-    case OBJ_TRUE:
       // Nothing to delete.
       size = sizeof(Obj);
       // TODO(bob): Include size of fields for OBJ_INSTANCE.
@@ -274,16 +268,6 @@ void initObj(VM* vm, Obj* obj, ObjType type)
   vm->first = obj;
 }
 
-Value newBool(VM* vm, int b)
-{
-  // TODO(bob): Get rid of Obj here.
-  Value value;
-  value.type = b ? VAL_TRUE : VAL_FALSE;
-  value.obj = allocate(vm, sizeof(Obj));
-  initObj(vm, value.obj, b ? OBJ_TRUE : OBJ_FALSE);
-  return value;
-}
-
 static ObjClass* newSingleClass(VM* vm, ObjClass* metaclass,
                                 ObjClass* superclass)
 {
@@ -354,16 +338,6 @@ Value newInstance(VM* vm, ObjClass* classObj)
   initObj(vm, &instance->obj, OBJ_INSTANCE);
   instance->classObj = classObj;
 
-  return value;
-}
-
-Value newNull(VM* vm)
-{
-  // TODO(bob): Get rid of Obj here.
-  Value value;
-  value.type = VAL_NULL;
-  value.obj = allocate(vm, sizeof(Obj));
-  initObj(vm, value.obj, OBJ_NULL);
   return value;
 }
 
@@ -624,18 +598,24 @@ void dumpCode(VM* vm, ObjFn* fn)
 // Returns the class of [object].
 static ObjClass* getClass(VM* vm, Value value)
 {
-  switch (value.obj->type)
+  switch (value.type)
   {
-    case OBJ_CLASS: return AS_CLASS(value)->metaclass;
-    case OBJ_FALSE:
-    case OBJ_TRUE:
-      return vm->boolClass;
-
-    case OBJ_FN: return vm->fnClass;
-    case OBJ_NULL: return vm->nullClass;
-    case OBJ_NUM: return vm->numClass;
-    case OBJ_STRING: return vm->stringClass;
-    case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
+    case VAL_FALSE: return vm->boolClass;
+    case VAL_NULL: return vm->nullClass;
+    case VAL_NUM: return vm->numClass;
+    case VAL_TRUE: return vm->boolClass;
+    case VAL_NO_VALUE: return vm->nullClass; // TODO(bob): Hack.
+    case VAL_OBJ:
+    {
+      switch (value.obj->type)
+      {
+        case OBJ_CLASS: return AS_CLASS(value)->metaclass;
+        case OBJ_FN: return vm->fnClass;
+        case OBJ_NUM: return vm->numClass;
+        case OBJ_STRING: return vm->stringClass;
+        case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
+      }
+    }
   }
 }
 
@@ -664,9 +644,9 @@ Value interpret(VM* vm, ObjFn* fn)
         PUSH(frame->fn->constants[READ_ARG()]);
         break;
 
-      case CODE_NULL:  PUSH(newNull(vm)); break;
-      case CODE_FALSE: PUSH(newBool(vm, 0)); break;
-      case CODE_TRUE:  PUSH(newBool(vm, 1)); break;
+      case CODE_NULL:  PUSH(NULL_VAL); break;
+      case CODE_FALSE: PUSH(FALSE_VAL); break;
+      case CODE_TRUE:  PUSH(TRUE_VAL); break;
 
       case CODE_CLASS:
       case CODE_SUBCLASS:
@@ -831,7 +811,7 @@ Value interpret(VM* vm, ObjFn* fn)
 
         // TODO(bob): What if classObj is not a class?
         ObjClass* actual = getClass(vm, obj);
-        PUSH(newBool(vm, actual == AS_CLASS(classObj)));
+        PUSH(BOOL_VAL(actual == AS_CLASS(classObj)));
         break;
       }
 
@@ -868,40 +848,22 @@ void callFunction(Fiber* fiber, ObjFn* fn, int numArgs)
 
 void printValue(Value value)
 {
-  // TODO(bob): Do more useful stuff here.
-  switch (value.obj->type)
+  switch (value.type)
   {
-    case OBJ_CLASS:
-      printf("[class %p]", value.obj);
-      break;
-
-    case OBJ_FALSE:
-      printf("false");
-      break;
-
-    case OBJ_FN:
-      printf("[fn %p]", value.obj);
-      break;
-
-    case OBJ_INSTANCE:
-      printf("[instance %p]", value.obj);
-      break;
-
-    case OBJ_NULL:
-      printf("null");
-      break;
-
-    case OBJ_NUM:
-      printf("%g", AS_NUM(value));
-      break;
-
-    case OBJ_STRING:
-      printf("%s", AS_STRING(value));
-      break;
-
-    case OBJ_TRUE:
-      printf("true");
-      break;
+    case VAL_FALSE: printf("false"); break;
+    case VAL_NULL: printf("null"); break;
+    case VAL_NUM: printf("%g", AS_NUM(value)); break;
+    case VAL_TRUE: printf("true"); break;
+    case VAL_NO_VALUE: printf("novalue"); break;
+    case VAL_OBJ:
+      switch (value.obj->type)
+      {
+        case OBJ_CLASS: printf("[class %p]", value.obj); break;
+        case OBJ_FN: printf("[fn %p]", value.obj); break;
+        case OBJ_INSTANCE: printf("[instance %p]", value.obj); break;
+        case OBJ_NUM: printf("%g", AS_NUM(value)); break;
+        case OBJ_STRING: printf("%s", AS_STRING(value)); break;
+      }
   }
 }
 

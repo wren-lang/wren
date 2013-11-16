@@ -18,27 +18,19 @@
 
 DEF_PRIMITIVE(bool_not)
 {
-  return newBool(vm, !AS_BOOL(args[0]));
+  return BOOL_VAL(!AS_BOOL(args[0]));
 }
 
 DEF_PRIMITIVE(bool_eqeq)
 {
-  if (!(IS_BOOL(args[1])))
-  {
-    return newBool(vm, 0);
-  }
-
-  return newBool(vm, AS_BOOL(args[0]) == AS_BOOL(args[1]));
+  if (!(IS_BOOL(args[1]))) return FALSE_VAL;
+  return BOOL_VAL(AS_BOOL(args[0]) == AS_BOOL(args[1]));
 }
 
 DEF_PRIMITIVE(bool_bangeq)
 {
-  if (!(IS_BOOL(args[1])))
-  {
-    return newBool(vm, 1);
-  }
-
-  return newBool(vm, AS_BOOL(args[0]) != AS_BOOL(args[1]));
+  if (!(IS_BOOL(args[1]))) return TRUE_VAL;
+  return BOOL_VAL(AS_BOOL(args[0]) != AS_BOOL(args[1]));
 }
 
 DEF_PRIMITIVE(bool_toString)
@@ -115,14 +107,14 @@ DEF_PRIMITIVE(fn_call8)
 
 DEF_PRIMITIVE(fn_eqeq)
 {
-  if (!IS_FN(args[1])) return newBool(vm, 0);
-  return newBool(vm, AS_FN(args[0]) == AS_FN(args[1]));
+  if (!IS_FN(args[1])) return FALSE_VAL;
+  return BOOL_VAL(AS_FN(args[0]) == AS_FN(args[1]));
 }
 
 DEF_PRIMITIVE(fn_bangeq)
 {
-  if (!IS_FN(args[1])) return newBool(vm, 1);
-  return newBool(vm, AS_FN(args[0]) != AS_FN(args[1]));
+  if (!IS_FN(args[1])) return TRUE_VAL;
+  return BOOL_VAL(AS_FN(args[0]) != AS_FN(args[1]));
 }
 
 DEF_PRIMITIVE(num_abs)
@@ -177,37 +169,37 @@ DEF_PRIMITIVE(num_mod)
 DEF_PRIMITIVE(num_lt)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
-  return newBool(vm, AS_NUM(args[0]) < AS_NUM(args[1]));
+  return BOOL_VAL(AS_NUM(args[0]) < AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_gt)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
-  return newBool(vm, AS_NUM(args[0]) > AS_NUM(args[1]));
+  return BOOL_VAL(AS_NUM(args[0]) > AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_lte)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
-  return newBool(vm, AS_NUM(args[0]) <= AS_NUM(args[1]));
+  return BOOL_VAL(AS_NUM(args[0]) <= AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_gte)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
-  return newBool(vm, AS_NUM(args[0]) >= AS_NUM(args[1]));
+  return BOOL_VAL(AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_eqeq)
 {
-  if (!IS_NUM(args[1])) return newBool(vm, 0);
-  return newBool(vm, AS_NUM(args[0]) == AS_NUM(args[1]));
+  if (!IS_NUM(args[1])) return FALSE_VAL;
+  return BOOL_VAL(AS_NUM(args[0]) == AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_bangeq)
 {
-  if (!IS_NUM(args[1])) return newBool(vm, 1);
-  return newBool(vm, AS_NUM(args[0]) != AS_NUM(args[1]));
+  if (!IS_NUM(args[1])) return TRUE_VAL;
+  return BOOL_VAL(AS_NUM(args[0]) != AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(string_contains)
@@ -257,18 +249,18 @@ DEF_PRIMITIVE(string_plus)
 
 DEF_PRIMITIVE(string_eqeq)
 {
-  if (!IS_STRING(args[1])) return newBool(vm, 0);
+  if (!IS_STRING(args[1])) return FALSE_VAL;
   const char* a = AS_STRING(args[0]);
   const char* b = AS_STRING(args[1]);
-  return newBool(vm, strcmp(a, b) == 0);
+  return BOOL_VAL(strcmp(a, b) == 0);
 }
 
 DEF_PRIMITIVE(string_bangeq)
 {
-  if (!IS_STRING(args[1])) return newBool(vm, 1);
+  if (!IS_STRING(args[1])) return TRUE_VAL;
   const char* a = AS_STRING(args[0]);
   const char* b = AS_STRING(args[1]);
-  return newBool(vm, strcmp(a, b) != 0);
+  return BOOL_VAL(strcmp(a, b) != 0);
 }
 
 DEF_PRIMITIVE(io_write)

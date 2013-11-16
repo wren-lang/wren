@@ -11,7 +11,7 @@
 #define AS_CLASS(value) ((ObjClass*)(value).obj)
 
 // Get the bool value of [obj] (0 or 1), which must be a boolean.
-#define AS_BOOL(value) (((Obj*)(value).obj)->type == OBJ_TRUE)
+#define AS_BOOL(value) ((value).type == VAL_TRUE)
 
 // Get the function value of [obj] (0 or 1), which must be a function.
 #define AS_FN(value) ((ObjFn*)(value).obj)
@@ -47,10 +47,7 @@ typedef enum
 } ValueType;
 
 typedef enum {
-  OBJ_FALSE,
-  OBJ_NULL,
   OBJ_NUM,
-  OBJ_TRUE,
   OBJ_CLASS,
   OBJ_FN,
   OBJ_INSTANCE,
@@ -288,16 +285,16 @@ struct sFiber
 Value objectToValue(Obj* obj);
 
 // TODO(bob): Not C89!
+#define FALSE_VAL ((Value){ VAL_FALSE, NULL })
 #define NULL_VAL ((Value){ VAL_NULL, NULL })
+#define TRUE_VAL ((Value){ VAL_TRUE, NULL })
 // TODO(bob): Gross.
 #define NO_VAL ((Value){ VAL_NO_VALUE, NULL })
 
+#define BOOL_VAL(b) (b ? TRUE_VAL : FALSE_VAL)
+
 VM* newVM();
 void freeVM(VM* vm);
-
-// Gets a bool object representing [value].
-// TODO(bob): Inline or macro?
-Value newBool(VM* vm, int value);
 
 // Creates a new function object. Assumes the compiler will fill it in with
 // bytecode, constants, etc.
@@ -308,9 +305,6 @@ ObjClass* newClass(VM* vm, ObjClass* superclass);
 
 // Creates a new instance of the given [classObj].
 Value newInstance(VM* vm, ObjClass* classObj);
-
-// Creates a new null object.
-Value newNull(VM* vm);
 
 // Creates a new number object.
 Value newNum(VM* vm, double number);
