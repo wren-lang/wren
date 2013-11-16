@@ -717,7 +717,7 @@ static void function(Compiler* compiler, int allowAssignment)
 
   // Add the function to the constant table. Do this immediately so that it's
   // reachable by the GC.
-  compiler->fn->constants[compiler->fn->numConstants++] = (Value)fnCompiler.fn;
+  compiler->fn->constants[compiler->fn->numConstants++] = OBJ_VAL(fnCompiler.fn);
 
   // TODO(bob): Hackish.
   // Define a fake local slot for the receiver (the function object itself) so
@@ -837,7 +837,7 @@ static void number(Compiler* compiler, int allowAssignment)
 
   // Define a constant for the literal.
   int constant = addConstant(compiler,
-      (Value)newNum(compiler->parser->vm, (double)value));
+      newNum(compiler->parser->vm, (double)value));
 
   // Compile the code to load the constant.
   emit(compiler, CODE_CONSTANT);
@@ -1167,7 +1167,7 @@ void method(Compiler* compiler, int isStatic, SignatureFn signature)
 
   // Add the block to the constant table. Do this eagerly so it's reachable by
   // the GC.
-  int constant = addConstant(compiler, (Value)methodCompiler.fn);
+  int constant = addConstant(compiler, OBJ_VAL(methodCompiler.fn));
 
   // TODO(bob): Hackish.
   // Define a fake local slot for the receiver so that later locals have the
@@ -1314,7 +1314,7 @@ ObjFn* compile(VM* vm, const char* source)
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, 0);
 
-  pinObj(vm, (Value)compiler.fn);
+  pinObj(vm, OBJ_VAL(compiler.fn));
 
   for (;;)
   {
@@ -1335,7 +1335,7 @@ ObjFn* compile(VM* vm, const char* source)
 
   emit(&compiler, CODE_END);
 
-  unpinObj(vm, (Value)compiler.fn);
+  unpinObj(vm, OBJ_VAL(compiler.fn));
 
   return parser.hasError ? NULL : compiler.fn;
 }

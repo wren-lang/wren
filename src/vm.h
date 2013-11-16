@@ -7,33 +7,54 @@
 #define MAX_SYMBOLS 256
 #define MAX_PINNED 16
 
-// Get the class value of [obj] (0 or 1), which must be a boolean.
-#define AS_CLASS(obj) ((ObjClass*)obj)
+// Get the class value of [value] (0 or 1), which must be a boolean.
+#define AS_CLASS(value) ((ObjClass*)(value).obj)
 
 // Get the bool value of [obj] (0 or 1), which must be a boolean.
-#define AS_BOOL(obj) (((Obj*)obj)->type == OBJ_TRUE)
+#define AS_BOOL(value) (((Obj*)(value).obj)->type == OBJ_TRUE)
 
 // Get the function value of [obj] (0 or 1), which must be a function.
-#define AS_FN(obj) ((ObjFn*)obj)
+#define AS_FN(value) ((ObjFn*)(value).obj)
 
 // Get the double value of [obj], which must be a number.
-#define AS_INSTANCE(obj) ((ObjInstance*)obj)
+#define AS_INSTANCE(value) ((ObjInstance*)(value).obj)
 
-// Get the double value of [obj], which must be a number.
-#define AS_NUM(obj) (((ObjNum*)obj)->value)
+// Get the double value of [value], which must be a number.
+#define AS_NUM(v) (((ObjNum*)(v).obj)->value)
 
-// Get the const char* value of [obj], which must be a string.
-#define AS_STRING(obj) (((ObjString*)obj)->value)
+// Get the const char* value of [v], which must be a string.
+#define AS_STRING(v) (((ObjString*)(v).obj)->value)
+
+// Determines if [value] is a garbage-collected object or not.
+#define IS_OBJ(value) ((value).type == VAL_OBJ)
+
+#define IS_NULL(value) ((value).type == VAL_NULL)
+#define IS_NUM(value) ((value).type == VAL_NUM)
+#define IS_BOOL(value) ((value).type == VAL_FALSE || (value).type == VAL_TRUE)
+
+// TODO(bob): Evaluating value here twice sucks.
+#define IS_FN(value) ((value).type == VAL_OBJ && (value).obj->type == OBJ_FN)
+#define IS_STRING(value) ((value).type == VAL_OBJ && (value).obj->type == OBJ_STRING)
+
+typedef enum
+{
+  VAL_FALSE,
+  VAL_NULL,
+  VAL_NUM,
+  VAL_TRUE,
+  VAL_NO_VALUE, // TODO(bob): Hack remove.
+  VAL_OBJ
+} ValueType;
 
 typedef enum {
-  OBJ_CLASS,
   OBJ_FALSE,
-  OBJ_FN,
-  OBJ_INSTANCE,
   OBJ_NULL,
   OBJ_NUM,
-  OBJ_STRING,
-  OBJ_TRUE
+  OBJ_TRUE,
+  OBJ_CLASS,
+  OBJ_FN,
+  OBJ_INSTANCE,
+  OBJ_STRING
 } ObjType;
 
 typedef enum
@@ -51,7 +72,12 @@ typedef struct sObj
   struct sObj* next;
 } Obj;
 
-typedef Obj* Value;
+// TODO(bob): Temp.
+typedef struct
+{
+  ValueType type;
+  Obj* obj;
+} Value;
 
 typedef struct sVM VM;
 typedef struct sFiber Fiber;
@@ -257,6 +283,15 @@ struct sFiber
   int numFrames;
 };
 
+// TODO(bob): Temp.
+#define OBJ_VAL(obj) (objectToValue((Obj*)(obj)))
+Value objectToValue(Obj* obj);
+
+// TODO(bob): Not C89!
+#define NULL_VAL ((Value){ VAL_NULL, NULL })
+// TODO(bob): Gross.
+#define NO_VAL ((Value){ VAL_NO_VALUE, NULL })
+
 VM* newVM();
 void freeVM(VM* vm);
 
@@ -272,16 +307,16 @@ ObjFn* newFunction(VM* vm);
 ObjClass* newClass(VM* vm, ObjClass* superclass);
 
 // Creates a new instance of the given [classObj].
-ObjInstance* newInstance(VM* vm, ObjClass* classObj);
+Value newInstance(VM* vm, ObjClass* classObj);
 
 // Creates a new null object.
 Value newNull(VM* vm);
 
 // Creates a new number object.
-ObjNum* newNum(VM* vm, double number);
+Value newNum(VM* vm, double number);
 
 // Creates a new string object and copies [text] into it.
-ObjString* newString(VM* vm, const char* text, size_t length);
+Value newString(VM* vm, const char* text, size_t length);
 
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);

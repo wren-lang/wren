@@ -8,6 +8,14 @@
 
 static Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args);
 
+Value objectToValue(Obj* obj)
+{
+  Value value;
+  value.type = VAL_OBJ;
+  value.obj = obj;
+  return value;
+}
+
 VM* newVM()
 {
   // TODO(bob): Get rid of explicit malloc() here.
@@ -28,14 +36,7 @@ VM* newVM()
   // initialized in case we do a garbage collection before one gets initialized.
   for (int i = 0; i < MAX_SYMBOLS; i++)
   {
-    vm->globals[i] = NULL;
-  }
-
-  // Clear out the pinned list. We look for NULL empty slots explicitly.
-  vm->numPinned = 0;
-  for (int j = 0; j < MAX_PINNED; j++)
-  {
-    vm->pinned[j] = NULL;
+    vm->globals[i] = NULL_VAL;
   }
 
   loadCore(vm);
@@ -50,10 +51,10 @@ void freeVM(VM* vm)
   free(vm);
 }
 
-void markObj(Value value)
-{
-  Obj* obj = (Obj*)value;
+static void markValue(Value value);
 
+static void markObj(Obj* obj)
+{
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
   if (obj->flags & FLAG_MARKED) return;
 
@@ -73,17 +74,17 @@ void markObj(Value value)
   {
     case OBJ_CLASS:
     {
-      ObjClass* classObj = AS_CLASS(obj);
+      ObjClass* classObj = (ObjClass*)obj;
 
       // The metaclass.
-      if (classObj->metaclass != NULL) markObj((Value)classObj->metaclass);
+      if (classObj->metaclass != NULL) markObj((Obj*)classObj->metaclass);
 
       // Method function objects.
       for (int i = 0; i < MAX_SYMBOLS; i++)
       {
         if (classObj->methods[i].type == METHOD_BLOCK)
         {
-          markObj((Value)classObj->methods[i].fn);
+          markObj((Obj*)classObj->methods[i].fn);
         }
       }
       break;
@@ -92,10 +93,10 @@ void markObj(Value value)
     case OBJ_FN:
     {
       // Mark the constants.
-      ObjFn* fn = AS_FN(obj);
+      ObjFn* fn = (ObjFn*)obj;
       for (int i = 0; i < fn->numConstants; i++)
       {
-        markObj(fn->constants[i]);
+        markValue(fn->constants[i]);
       }
       break;
     }
@@ -118,6 +119,15 @@ void markObj(Value value)
 #endif
 }
 
+void markValue(Value value)
+{
+  // TODO(bob): Temp-ish hack. NULL_VAL doesn't have an Obj.
+  if (value.obj == NULL) return;
+
+  //if (!IS_OBJ(value)) return;
+  markObj(value.obj);
+}
+
 void freeObj(VM* vm, Obj* obj)
 {
 #ifdef TRACE_MEMORY
@@ -134,17 +144,20 @@ void freeObj(VM* vm, Obj* obj)
     {
       // TODO(bob): Don't hardcode array sizes.
       size = sizeof(ObjFn) + sizeof(Code) * 1024 + sizeof(Value) * 256;
-      ObjFn* fn = AS_FN(obj);
+      ObjFn* fn = (ObjFn*)obj;
       free(fn->bytecode);
       free(fn->constants);
       break;
     }
 
     case OBJ_STRING:
+    {
       // TODO(bob): O(n) calculation here is lame!
-      size = sizeof(ObjString) + strlen(AS_STRING(obj));
-      free(AS_STRING(obj));
+      ObjString* string = (ObjString*)obj;
+      size = sizeof(ObjString) + strlen(string->value);
+      free(string->value);
       break;
+    }
 
     case OBJ_CLASS:
       size = sizeof(ObjClass);
@@ -171,6 +184,9 @@ void freeObj(VM* vm, Obj* obj)
 
 void collectGarbage(VM* vm)
 {
+  // TODO(bob): Instead of casting to Obj* and calling markObj(), split out
+  // marking functions for different types.
+
   // Mark all reachable objects.
 #ifdef TRACE_MEMORY
   printf("-- gc --\n");
@@ -181,25 +197,25 @@ void collectGarbage(VM* vm)
   {
     // Check for NULL to handle globals that have been defined (at compile time)
     // but not yet initialized.
-    if (vm->globals[i] != NULL) markObj(vm->globals[i]);
+    if (!IS_NULL(vm->globals[i])) markValue(vm->globals[i]);
   }
 
   // Pinned objects.
   for (int j = 0; j < vm->numPinned; j++)
   {
-    if (vm->pinned[j] != NULL) markObj(vm->pinned[j]);
+    if (!IS_NULL(vm->pinned[j])) markValue(vm->pinned[j]);
   }
 
   // Stack functions.
   for (int k = 0; k < vm->fiber->numFrames; k++)
   {
-    markObj((Value)vm->fiber->frames[k].fn);
+    markObj((Obj*)vm->fiber->frames[k].fn);
   }
 
   // Stack variables.
   for (int l = 0; l < vm->fiber->stackSize; l++)
   {
-    markObj(vm->fiber->stack[l]);
+    markValue(vm->fiber->stack[l]);
   }
 
   // Collect any unmarked objects.
@@ -258,11 +274,14 @@ void initObj(VM* vm, Obj* obj, ObjType type)
   vm->first = obj;
 }
 
-Value newBool(VM* vm, int value)
+Value newBool(VM* vm, int b)
 {
-  Obj* obj = allocate(vm, sizeof(Obj));
-  initObj(vm, obj, value ? OBJ_TRUE : OBJ_FALSE);
-  return obj;
+  // TODO(bob): Get rid of Obj here.
+  Value value;
+  value.type = b ? VAL_TRUE : VAL_FALSE;
+  value.obj = allocate(vm, sizeof(Obj));
+  initObj(vm, value.obj, b ? OBJ_TRUE : OBJ_FALSE);
+  return value;
 }
 
 static ObjClass* newSingleClass(VM* vm, ObjClass* metaclass,
@@ -288,11 +307,12 @@ ObjClass* newClass(VM* vm, ObjClass* superclass)
   ObjClass* metaclass = newSingleClass(vm, NULL, NULL);
 
   // Make sure it isn't collected when we allocate the metaclass.
-  pinObj(vm, (Value)metaclass);
+  pinObj(vm, OBJ_VAL(metaclass));
 
   ObjClass* classObj = newSingleClass(vm, metaclass, superclass);
 
-  unpinObj(vm, (Value)metaclass);
+  // TODO(bob): Make pin list just Obj* instead of Value.
+  unpinObj(vm, OBJ_VAL(metaclass));
 
   // Inherit methods from its superclass (unless it's Object, which has none).
   // TODO(bob): If we want BETA-style inheritance, we'll need to do this after
@@ -325,31 +345,40 @@ ObjFn* newFunction(VM* vm)
   return fn;
 }
 
-ObjInstance* newInstance(VM* vm, ObjClass* classObj)
+Value newInstance(VM* vm, ObjClass* classObj)
 {
+  Value value;
+  value.type = VAL_OBJ;
   ObjInstance* instance = allocate(vm, sizeof(ObjInstance));
+  value.obj = (Obj*)instance;
   initObj(vm, &instance->obj, OBJ_INSTANCE);
   instance->classObj = classObj;
 
-  return instance;
+  return value;
 }
 
 Value newNull(VM* vm)
 {
-  Obj* obj = allocate(vm, sizeof(Obj));
-  initObj(vm, obj, OBJ_NULL);
-  return obj;
+  // TODO(bob): Get rid of Obj here.
+  Value value;
+  value.type = VAL_NULL;
+  value.obj = allocate(vm, sizeof(Obj));
+  initObj(vm, value.obj, OBJ_NULL);
+  return value;
 }
 
-ObjNum* newNum(VM* vm, double number)
+Value newNum(VM* vm, double number)
 {
+  Value value;
+  value.type = VAL_NUM;
   ObjNum* num = allocate(vm, sizeof(ObjNum));
+  value.obj = (Obj*)num;
   initObj(vm, &num->obj, OBJ_NUM);
   num->value = number;
-  return num;
+  return value;
 }
 
-ObjString* newString(VM* vm, const char* text, size_t length)
+Value newString(VM* vm, const char* text, size_t length)
 {
   // Allocate before the string object in case this triggers a GC which would
   // free the string object.
@@ -366,7 +395,10 @@ ObjString* newString(VM* vm, const char* text, size_t length)
   }
 
   string->value = heapText;
-  return string;
+  Value value;
+  value.type = VAL_OBJ;
+  value.obj = (Obj*)string;
+  return value;
 }
 
 void initSymbolTable(SymbolTable* symbols)
@@ -474,7 +506,7 @@ void dumpCode(VM* vm, ObjFn* fn)
       case CODE_CLASS:
         printf("CLASS\n");
         break;
- 
+
       case CODE_SUBCLASS:
         printf("SUBCLASS\n");
         break;
@@ -590,11 +622,11 @@ void dumpCode(VM* vm, ObjFn* fn)
 */
 
 // Returns the class of [object].
-static ObjClass* getClass(VM* vm, Value object)
+static ObjClass* getClass(VM* vm, Value value)
 {
-  switch (object->type)
+  switch (value.obj->type)
   {
-    case OBJ_CLASS: return AS_CLASS(object)->metaclass;
+    case OBJ_CLASS: return AS_CLASS(value)->metaclass;
     case OBJ_FALSE:
     case OBJ_TRUE:
       return vm->boolClass;
@@ -603,7 +635,7 @@ static ObjClass* getClass(VM* vm, Value object)
     case OBJ_NULL: return vm->nullClass;
     case OBJ_NUM: return vm->numClass;
     case OBJ_STRING: return vm->stringClass;
-    case OBJ_INSTANCE: return AS_INSTANCE(object)->classObj;
+    case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
   }
 }
 
@@ -655,6 +687,12 @@ Value interpret(VM* vm, ObjFn* fn)
 
         ObjClass* classObj = newClass(vm, superclass);
 
+        // Assume the first class being defined is Object.
+        if (vm->objectClass == NULL)
+        {
+          vm->objectClass = classObj;
+        }
+
         // Define a "new" method on the metaclass.
         // TODO(bob): Can this be inherited?
         int newSymbol = ensureSymbol(&vm->methods, "new", strlen("new"));
@@ -662,14 +700,14 @@ Value interpret(VM* vm, ObjFn* fn)
         classObj->metaclass->methods[newSymbol].primitive =
             primitive_metaclass_new;
 
-        PUSH((Value)classObj);
+        PUSH(OBJ_VAL(classObj));
         break;
       }
 
       case CODE_METACLASS:
       {
         ObjClass* classObj = AS_CLASS(PEEK());
-        PUSH((Value)classObj->metaclass);
+        PUSH(OBJ_VAL(classObj->metaclass));
         break;
       }
 
@@ -753,7 +791,7 @@ Value interpret(VM* vm, ObjFn* fn)
             Value result = method->primitive(vm, fiber, args);
 
             // If the primitive pushed a call frame, it returns NULL.
-            if (result != NULL)
+            if (result.type != VAL_NO_VALUE)
             {
               fiber->stack[fiber->stackSize - numArgs] = result;
 
@@ -779,7 +817,7 @@ Value interpret(VM* vm, ObjFn* fn)
         Value condition = POP();
 
         // False is the only falsey value.
-        if (condition->type == OBJ_FALSE)
+        if (!AS_BOOL(condition))
         {
           frame->ip += offset;
         }
@@ -831,10 +869,10 @@ void callFunction(Fiber* fiber, ObjFn* fn, int numArgs)
 void printValue(Value value)
 {
   // TODO(bob): Do more useful stuff here.
-  switch (value->type)
+  switch (value.obj->type)
   {
     case OBJ_CLASS:
-      printf("[class %p]", value);
+      printf("[class %p]", value.obj);
       break;
 
     case OBJ_FALSE:
@@ -842,11 +880,11 @@ void printValue(Value value)
       break;
 
     case OBJ_FN:
-      printf("[fn %p]", value);
+      printf("[fn %p]", value.obj);
       break;
 
     case OBJ_INSTANCE:
-      printf("[instance %p]", value);
+      printf("[instance %p]", value.obj);
       break;
 
     case OBJ_NULL:
@@ -875,7 +913,8 @@ void pinObj(VM* vm, Value value)
 
 void unpinObj(VM* vm, Value value)
 {
-  ASSERT(vm->pinned[vm->numPinned - 1] == value,
+  // TODO(bob): Do real equivalance check here.
+  ASSERT(vm->pinned[vm->numPinned - 1].type == value.type,
          "Unpinning object out of stack order.");
   vm->numPinned--;
 }
@@ -883,5 +922,5 @@ void unpinObj(VM* vm, Value value)
 Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args)
 {
   // TODO(bob): Invoke initializer method.
-  return (Value)newInstance(vm, AS_CLASS(args[0]));
+  return newInstance(vm, AS_CLASS(args[0]));
 }

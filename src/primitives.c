@@ -23,7 +23,7 @@ DEF_PRIMITIVE(bool_not)
 
 DEF_PRIMITIVE(bool_eqeq)
 {
-  if (args[1]->type != OBJ_FALSE && args[1]->type != OBJ_TRUE)
+  if (!(IS_BOOL(args[1])))
   {
     return newBool(vm, 0);
   }
@@ -33,7 +33,7 @@ DEF_PRIMITIVE(bool_eqeq)
 
 DEF_PRIMITIVE(bool_bangeq)
 {
-  if (args[1]->type != OBJ_FALSE && args[1]->type != OBJ_TRUE)
+  if (!(IS_BOOL(args[1])))
   {
     return newBool(vm, 1);
   }
@@ -62,66 +62,66 @@ DEF_PRIMITIVE(bool_toString)
 DEF_PRIMITIVE(fn_call0)
 {
   callFunction(fiber, AS_FN(args[0]), 1);
-  return NULL;
+  return NO_VAL;
 }
 
 DEF_PRIMITIVE(fn_call1)
 {
   callFunction(fiber, AS_FN(args[0]), 2);
-  return NULL;
+  return NO_VAL;
 }
 
 DEF_PRIMITIVE(fn_call2)
 {
   callFunction(fiber, AS_FN(args[0]), 3);
-  return NULL;
+  return NO_VAL;
 }
 
 DEF_PRIMITIVE(fn_call3)
 {
   callFunction(fiber, AS_FN(args[0]), 4);
-  return NULL;
+  return NO_VAL;
 }
 
 DEF_PRIMITIVE(fn_call4)
 {
   callFunction(fiber, AS_FN(args[0]), 5);
-  return NULL;
+  return NO_VAL;
 }
 
 DEF_PRIMITIVE(fn_call5)
 {
   callFunction(fiber, AS_FN(args[0]), 6);
-  return NULL;
+  return NO_VAL;
 }
 
 DEF_PRIMITIVE(fn_call6)
 {
   callFunction(fiber, AS_FN(args[0]), 7);
-  return NULL;
+  return NO_VAL;
 }
 
 DEF_PRIMITIVE(fn_call7)
 {
   callFunction(fiber, AS_FN(args[0]), 8);
-  return NULL;
+  return NO_VAL;
 }
 
 DEF_PRIMITIVE(fn_call8)
 {
   callFunction(fiber, AS_FN(args[0]), 9);
-  return NULL;
+  return NO_VAL;
 }
 
 DEF_PRIMITIVE(fn_eqeq)
 {
-  if (args[1]->type != OBJ_FN) return newBool(vm, 0);
+  if (!IS_FN(args[1])) return newBool(vm, 0);
   return newBool(vm, AS_FN(args[0]) == AS_FN(args[1]));
 }
 
 DEF_PRIMITIVE(fn_bangeq)
 {
-  if (args[1]->type != OBJ_FN) return newBool(vm, 1);
+  if (!IS_FN(args[1])) return newBool(vm, 1);
   return newBool(vm, AS_FN(args[0]) != AS_FN(args[1]));
 }
 
@@ -145,68 +145,68 @@ DEF_PRIMITIVE(num_negate)
 
 DEF_PRIMITIVE(num_minus)
 {
-  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  if (!IS_NUM(args[1])) return vm->unsupported;
   return (Value)newNum(vm, AS_NUM(args[0]) - AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_plus)
 {
-  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  if (!IS_NUM(args[1])) return vm->unsupported;
   // TODO(bob): Handle coercion to string if RHS is a string.
   return (Value)newNum(vm, AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_multiply)
 {
-  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  if (!IS_NUM(args[1])) return vm->unsupported;
   return (Value)newNum(vm, AS_NUM(args[0]) * AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_divide)
 {
-  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  if (!IS_NUM(args[1])) return vm->unsupported;
   return (Value)newNum(vm, AS_NUM(args[0]) / AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_mod)
 {
-  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  if (!IS_NUM(args[1])) return vm->unsupported;
   return (Value)newNum(vm, fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_lt)
 {
-  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  if (!IS_NUM(args[1])) return vm->unsupported;
   return newBool(vm, AS_NUM(args[0]) < AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_gt)
 {
-  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  if (!IS_NUM(args[1])) return vm->unsupported;
   return newBool(vm, AS_NUM(args[0]) > AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_lte)
 {
-  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  if (!IS_NUM(args[1])) return vm->unsupported;
   return newBool(vm, AS_NUM(args[0]) <= AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_gte)
 {
-  if (args[1]->type != OBJ_NUM) return vm->unsupported;
+  if (!IS_NUM(args[1])) return vm->unsupported;
   return newBool(vm, AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_eqeq)
 {
-  if (args[1]->type != OBJ_NUM) return newBool(vm, 0);
+  if (!IS_NUM(args[1])) return newBool(vm, 0);
   return newBool(vm, AS_NUM(args[0]) == AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_bangeq)
 {
-  if (args[1]->type != OBJ_NUM) return newBool(vm, 1);
+  if (!IS_NUM(args[1])) return newBool(vm, 1);
   return newBool(vm, AS_NUM(args[0]) != AS_NUM(args[1]));
 }
 
@@ -236,7 +236,7 @@ DEF_PRIMITIVE(string_toString)
 
 DEF_PRIMITIVE(string_plus)
 {
-  if (args[1]->type != OBJ_STRING) return vm->unsupported;
+  if (!IS_STRING(args[1])) return vm->unsupported;
   // TODO(bob): Handle coercion to string of RHS.
 
   const char* left = AS_STRING(args[0]);
@@ -245,17 +245,19 @@ DEF_PRIMITIVE(string_plus)
   size_t leftLength = strlen(left);
   size_t rightLength = strlen(right);
 
-  ObjString* string = newString(vm, NULL, leftLength + rightLength);
+  Value value = newString(vm, NULL, leftLength + rightLength);
+  // TODO(bob): Cast here is lame.
+  ObjString* string = (ObjString*)(value.obj);
   strcpy(string->value, left);
   strcpy(string->value + leftLength, right);
   string->value[leftLength + rightLength] = '\0';
 
-  return (Value)string;
+  return value;
 }
 
 DEF_PRIMITIVE(string_eqeq)
 {
-  if (args[1]->type != OBJ_STRING) return newBool(vm, 0);
+  if (!IS_STRING(args[1])) return newBool(vm, 0);
   const char* a = AS_STRING(args[0]);
   const char* b = AS_STRING(args[1]);
   return newBool(vm, strcmp(a, b) == 0);
@@ -263,7 +265,7 @@ DEF_PRIMITIVE(string_eqeq)
 
 DEF_PRIMITIVE(string_bangeq)
 {
-  if (args[1]->type != OBJ_STRING) return newBool(vm, 1);
+  if (!IS_STRING(args[1])) return newBool(vm, 1);
   const char* a = AS_STRING(args[0]);
   const char* b = AS_STRING(args[1]);
   return newBool(vm, strcmp(a, b) != 0);
@@ -330,8 +332,6 @@ void loadCore(VM* vm)
   PRIMITIVE(vm->numClass, ">= ", num_gte);
   PRIMITIVE(vm->numClass, "== ", num_eqeq);
   PRIMITIVE(vm->numClass, "!= ", num_bangeq);
-
-  vm->objectClass = AS_CLASS(findGlobal(vm, "Object"));
 
   vm->stringClass = AS_CLASS(findGlobal(vm, "String"));
   PRIMITIVE(vm->stringClass, "contains ", string_contains);
