@@ -42,7 +42,6 @@ typedef enum
   VAL_NULL,
   VAL_NUM,
   VAL_TRUE,
-  VAL_NO_VALUE, // TODO(bob): Hack remove.
   VAL_OBJ
 } ValueType;
 
@@ -283,7 +282,7 @@ Value objectToValue(Obj* obj);
 #define NULL_VAL ((Value){ VAL_NULL, 0.0, NULL })
 #define TRUE_VAL ((Value){ VAL_TRUE, 0.0, NULL })
 // TODO(bob): Gross.
-#define NO_VAL ((Value){ VAL_NO_VALUE, 0.0, NULL })
+#define NO_VAL ((Value){ VAL_OBJ, 0.0, NULL })
 
 #define BOOL_VAL(b) (b ? TRUE_VAL : FALSE_VAL)
 #define NUM_VAL(n) ((Value){ VAL_NUM, n, NULL })

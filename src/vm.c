@@ -588,7 +588,6 @@ static ObjClass* getClass(VM* vm, Value value)
     case VAL_NULL: return vm->nullClass;
     case VAL_NUM: return vm->numClass;
     case VAL_TRUE: return vm->boolClass;
-    case VAL_NO_VALUE: return vm->nullClass; // TODO(bob): Hack.
     case VAL_OBJ:
     {
       switch (value.obj->type)
@@ -753,8 +752,9 @@ Value interpret(VM* vm, ObjFn* fn)
             Value* args = &fiber->stack[fiber->stackSize - numArgs];
             Value result = method->primitive(vm, fiber, args);
 
-            // If the primitive pushed a call frame, it returns NULL.
-            if (result.type != VAL_NO_VALUE)
+            // If the primitive pushed a call frame, it returns a special
+            // fake object value pointing to NULL.
+            if (result.type != VAL_OBJ || result.obj != NULL)
             {
               fiber->stack[fiber->stackSize - numArgs] = result;
 
@@ -837,7 +837,6 @@ void printValue(Value value)
     case VAL_NULL: printf("null"); break;
     case VAL_NUM: printf("%g", AS_NUM(value)); break;
     case VAL_TRUE: printf("true"); break;
-    case VAL_NO_VALUE: printf("novalue"); break;
     case VAL_OBJ:
       switch (value.obj->type)
       {
