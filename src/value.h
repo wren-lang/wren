@@ -47,7 +47,8 @@ typedef struct
 typedef struct sVM VM;
 typedef struct sFiber Fiber;
 
-typedef Value (*Primitive)(VM* vm, Fiber* fiber, Value* args);
+typedef Value (*Primitive)(VM* vm, Value* args);
+typedef void (*FiberPrimitive)(VM* vm, Fiber* fiber, Value* args);
 
 typedef struct
 {
@@ -59,8 +60,16 @@ typedef struct
 
 typedef enum
 {
+  // No method for the given symbol.
   METHOD_NONE,
+
+  // A primitive method implemented in C that immediately returns a value.
   METHOD_PRIMITIVE,
+
+  // A built-in method that modifies the fiber directly.
+  METHOD_FIBER,
+
+  // A normal user-defined method.
   METHOD_BLOCK
 } MethodType;
 
@@ -70,6 +79,7 @@ typedef struct
   union
   {
     Primitive primitive;
+    FiberPrimitive fiberPrimitive;
     ObjFn* fn;
   };
 } Method;
@@ -143,8 +153,6 @@ typedef struct
 #define FALSE_VAL ((Value){ VAL_FALSE, 0.0, NULL })
 #define NULL_VAL ((Value){ VAL_NULL, 0.0, NULL })
 #define TRUE_VAL ((Value){ VAL_TRUE, 0.0, NULL })
-// TODO(bob): Gross.
-#define NO_VAL ((Value){ VAL_OBJ, 0.0, NULL })
 
 int valueIsFn(Value value);
 int valueIsString(Value value);

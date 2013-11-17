@@ -6,7 +6,7 @@
 #include "primitives.h"
 #include "vm.h"
 
-static Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args);
+static Value primitive_metaclass_new(VM* vm, Value* args);
 
 VM* newVM()
 {
@@ -743,21 +743,23 @@ Value interpret(VM* vm, ObjFn* fn)
           case METHOD_PRIMITIVE:
           {
             Value* args = &fiber->stack[fiber->stackSize - numArgs];
-            Value result = method->primitive(vm, fiber, args);
+            Value result = method->primitive(vm, args);
 
-            // If the primitive pushed a call frame, it returns a special
-            // fake object value pointing to NULL.
-            if (result.type != VAL_OBJ || result.obj != NULL)
-            {
-              fiber->stack[fiber->stackSize - numArgs] = result;
+            fiber->stack[fiber->stackSize - numArgs] = result;
 
-              // Discard the stack slots for the arguments (but leave one for
-              // the result).
-              fiber->stackSize -= numArgs - 1;
-            }
+            // Discard the stack slots for the arguments (but leave one for
+            // the result).
+            fiber->stackSize -= numArgs - 1;
             break;
           }
 
+          case METHOD_FIBER:
+          {
+            Value* args = &fiber->stack[fiber->stackSize - numArgs];
+            method->fiberPrimitive(vm, fiber, args);
+            break;
+          }
+            
           case METHOD_BLOCK:
             callFunction(fiber, method->fn, numArgs);
             break;
@@ -853,7 +855,7 @@ void unpinObj(VM* vm, Obj* obj)
   vm->numPinned--;
 }
 
-Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args)
+Value primitive_metaclass_new(VM* vm, Value* args)
 {
   // TODO(bob): Invoke initializer method.
   return newInstance(vm, AS_CLASS(args[0]));

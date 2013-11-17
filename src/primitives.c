@@ -14,8 +14,18 @@
       cls->methods[symbol].primitive = primitive_##prim; \
     }
 
+#define FIBER_PRIMITIVE(cls, name, prim) \
+    { \
+      int symbol = ensureSymbol(&vm->methods, name, strlen(name)); \
+      cls->methods[symbol].type = METHOD_FIBER; \
+      cls->methods[symbol].fiberPrimitive = primitive_##prim; \
+    }
+
 #define DEF_PRIMITIVE(prim) \
-    static Value primitive_##prim(VM* vm, Fiber* fiber, Value* args)
+    static Value primitive_##prim(VM* vm, Value* args)
+
+#define DEF_FIBER_PRIMITIVE(prim) \
+    static void primitive_##prim(VM* vm, Fiber* fiber, Value* args)
 
 DEF_PRIMITIVE(bool_not)
 {
@@ -52,59 +62,15 @@ DEF_PRIMITIVE(bool_toString)
 // the callstack, we again use as many arguments. That ensures that the result
 // of evaluating the block goes into the slot that the caller of *this*
 // primitive is expecting.
-DEF_PRIMITIVE(fn_call0)
-{
-  callFunction(fiber, AS_FN(args[0]), 1);
-  return NO_VAL;
-}
-
-DEF_PRIMITIVE(fn_call1)
-{
-  callFunction(fiber, AS_FN(args[0]), 2);
-  return NO_VAL;
-}
-
-DEF_PRIMITIVE(fn_call2)
-{
-  callFunction(fiber, AS_FN(args[0]), 3);
-  return NO_VAL;
-}
-
-DEF_PRIMITIVE(fn_call3)
-{
-  callFunction(fiber, AS_FN(args[0]), 4);
-  return NO_VAL;
-}
-
-DEF_PRIMITIVE(fn_call4)
-{
-  callFunction(fiber, AS_FN(args[0]), 5);
-  return NO_VAL;
-}
-
-DEF_PRIMITIVE(fn_call5)
-{
-  callFunction(fiber, AS_FN(args[0]), 6);
-  return NO_VAL;
-}
-
-DEF_PRIMITIVE(fn_call6)
-{
-  callFunction(fiber, AS_FN(args[0]), 7);
-  return NO_VAL;
-}
-
-DEF_PRIMITIVE(fn_call7)
-{
-  callFunction(fiber, AS_FN(args[0]), 8);
-  return NO_VAL;
-}
-
-DEF_PRIMITIVE(fn_call8)
-{
-  callFunction(fiber, AS_FN(args[0]), 9);
-  return NO_VAL;
-}
+DEF_FIBER_PRIMITIVE(fn_call0) { callFunction(fiber, AS_FN(args[0]), 1); }
+DEF_FIBER_PRIMITIVE(fn_call1) { callFunction(fiber, AS_FN(args[0]), 2); }
+DEF_FIBER_PRIMITIVE(fn_call2) { callFunction(fiber, AS_FN(args[0]), 3); }
+DEF_FIBER_PRIMITIVE(fn_call3) { callFunction(fiber, AS_FN(args[0]), 4); }
+DEF_FIBER_PRIMITIVE(fn_call4) { callFunction(fiber, AS_FN(args[0]), 5); }
+DEF_FIBER_PRIMITIVE(fn_call5) { callFunction(fiber, AS_FN(args[0]), 6); }
+DEF_FIBER_PRIMITIVE(fn_call6) { callFunction(fiber, AS_FN(args[0]), 7); }
+DEF_FIBER_PRIMITIVE(fn_call7) { callFunction(fiber, AS_FN(args[0]), 8); }
+DEF_FIBER_PRIMITIVE(fn_call8) { callFunction(fiber, AS_FN(args[0]), 9); }
 
 DEF_PRIMITIVE(fn_eqeq)
 {
@@ -295,15 +261,15 @@ void loadCore(VM* vm)
   vm->classClass = AS_CLASS(findGlobal(vm, "Class"));
 
   vm->fnClass = AS_CLASS(findGlobal(vm, "Function"));
-  PRIMITIVE(vm->fnClass, "call", fn_call0);
-  PRIMITIVE(vm->fnClass, "call ", fn_call1);
-  PRIMITIVE(vm->fnClass, "call  ", fn_call2);
-  PRIMITIVE(vm->fnClass, "call   ", fn_call3);
-  PRIMITIVE(vm->fnClass, "call    ", fn_call4);
-  PRIMITIVE(vm->fnClass, "call     ", fn_call5);
-  PRIMITIVE(vm->fnClass, "call      ", fn_call6);
-  PRIMITIVE(vm->fnClass, "call       ", fn_call7);
-  PRIMITIVE(vm->fnClass, "call        ", fn_call8);
+  FIBER_PRIMITIVE(vm->fnClass, "call", fn_call0);
+  FIBER_PRIMITIVE(vm->fnClass, "call ", fn_call1);
+  FIBER_PRIMITIVE(vm->fnClass, "call  ", fn_call2);
+  FIBER_PRIMITIVE(vm->fnClass, "call   ", fn_call3);
+  FIBER_PRIMITIVE(vm->fnClass, "call    ", fn_call4);
+  FIBER_PRIMITIVE(vm->fnClass, "call     ", fn_call5);
+  FIBER_PRIMITIVE(vm->fnClass, "call      ", fn_call6);
+  FIBER_PRIMITIVE(vm->fnClass, "call       ", fn_call7);
+  FIBER_PRIMITIVE(vm->fnClass, "call        ", fn_call8);
   PRIMITIVE(vm->fnClass, "== ", fn_eqeq);
   PRIMITIVE(vm->fnClass, "!= ", fn_bangeq);
 
