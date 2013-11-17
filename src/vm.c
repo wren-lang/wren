@@ -8,14 +8,6 @@
 
 static Value primitive_metaclass_new(VM* vm, Fiber* fiber, Value* args);
 
-Value objectToValue(Obj* obj)
-{
-  Value value;
-  value.type = VAL_OBJ;
-  value.obj = obj;
-  return value;
-}
-
 VM* newVM()
 {
   // TODO(bob): Get rid of explicit malloc() here.

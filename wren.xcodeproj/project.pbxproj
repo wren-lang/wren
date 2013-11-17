@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		292A45D51838566F00C34813 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 292A45D41838566F00C34813 /* value.c */; };
 		29AB1F291816E49C004B501E /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AB1F201816E49C004B501E /* main.c */; };
 		29AB1F2F1816FA66004B501E /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AB1F2E1816FA66004B501E /* vm.c */; };
 		29AB1F3218170104004B501E /* compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AB1F3018170104004B501E /* compiler.c */; };
@@ -26,6 +27,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		292A45D31838566400C34813 /* value.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = value.h; path = src/value.h; sourceTree = SOURCE_ROOT; };
+		292A45D41838566F00C34813 /* value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = value.c; path = src/value.c; sourceTree = SOURCE_ROOT; };
 		296681E2183283A500C1407C /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = common.h; path = src/common.h; sourceTree = SOURCE_ROOT; };
 		29AB1F061816E3AD004B501E /* wren */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wren; sourceTree = BUILT_PRODUCTS_DIR; };
 		29AB1F201816E49C004B501E /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/main.c; sourceTree = SOURCE_ROOT; };
@@ -75,6 +78,8 @@
 				29AB1F201816E49C004B501E /* main.c */,
 				29AB1F2E1816FA66004B501E /* vm.c */,
 				29AB1F2D1816FA5B004B501E /* vm.h */,
+				292A45D41838566F00C34813 /* value.c */,
+				292A45D31838566400C34813 /* value.h */,
 			);
 			name = src;
 			path = wren;
@@ -131,6 +136,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				292A45D51838566F00C34813 /* value.c in Sources */,
 				29AB1F291816E49C004B501E /* main.c in Sources */,
 				29FA7298181D91020089013C /* primitives.c in Sources */,
 				29AB1F3218170104004B501E /* compiler.c in Sources */,

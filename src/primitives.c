@@ -5,6 +5,7 @@
 
 #include "compiler.h"
 #include "primitives.h"
+#include "value.h"
 
 #define PRIMITIVE(cls, name, prim) \
     { \
