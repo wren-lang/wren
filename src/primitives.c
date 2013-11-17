@@ -204,9 +204,9 @@ DEF_PRIMITIVE(num_bangeq)
 
 DEF_PRIMITIVE(string_contains)
 {
-  const char* string = AS_STRING(args[0]);
+  const char* string = AS_CSTRING(args[0]);
   // TODO(bob): Check type of arg first!
-  const char* search = AS_STRING(args[1]);
+  const char* search = AS_CSTRING(args[1]);
 
   // Corner case, the empty string contains the empty string.
   if (strlen(string) == 0 && strlen(search) == 0) return NUM_VAL(1);
@@ -217,7 +217,7 @@ DEF_PRIMITIVE(string_contains)
 
 DEF_PRIMITIVE(string_count)
 {
-  double count = strlen(AS_STRING(args[0]));
+  double count = strlen(AS_CSTRING(args[0]));
   return NUM_VAL(count);
 }
 
@@ -231,15 +231,14 @@ DEF_PRIMITIVE(string_plus)
   if (!IS_STRING(args[1])) return vm->unsupported;
   // TODO(bob): Handle coercion to string of RHS.
 
-  const char* left = AS_STRING(args[0]);
-  const char* right = AS_STRING(args[1]);
+  const char* left = AS_CSTRING(args[0]);
+  const char* right = AS_CSTRING(args[1]);
 
   size_t leftLength = strlen(left);
   size_t rightLength = strlen(right);
 
   Value value = newString(vm, NULL, leftLength + rightLength);
-  // TODO(bob): Cast here is lame.
-  ObjString* string = (ObjString*)(value.obj);
+  ObjString* string = AS_STRING(value);
   strcpy(string->value, left);
   strcpy(string->value + leftLength, right);
   string->value[leftLength + rightLength] = '\0';
@@ -250,16 +249,16 @@ DEF_PRIMITIVE(string_plus)
 DEF_PRIMITIVE(string_eqeq)
 {
   if (!IS_STRING(args[1])) return FALSE_VAL;
-  const char* a = AS_STRING(args[0]);
-  const char* b = AS_STRING(args[1]);
+  const char* a = AS_CSTRING(args[0]);
+  const char* b = AS_CSTRING(args[1]);
   return BOOL_VAL(strcmp(a, b) == 0);
 }
 
 DEF_PRIMITIVE(string_bangeq)
 {
   if (!IS_STRING(args[1])) return TRUE_VAL;
-  const char* a = AS_STRING(args[0]);
-  const char* b = AS_STRING(args[1]);
+  const char* a = AS_CSTRING(args[0]);
+  const char* b = AS_CSTRING(args[1]);
   return BOOL_VAL(strcmp(a, b) != 0);
 }
 

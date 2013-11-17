@@ -10,15 +10,15 @@
 
 #ifdef DEBUG
 
-  #define ASSERT(condition, message)                  \
-    if (!(condition)) {                               \
+  #define ASSERT(condition, message)                                   \
+    if (!(condition)) {                                                \
       printf("ASSERT FAIL " __FILE__ ":%d - %s\n", __LINE__, message); \
-      abort();                                        \
+      abort();                                                         \
     }
 
 #else
 
-  #define ASSERT(condition, message)     ;
+  #define ASSERT(condition, message) ;
 
 #endif
 

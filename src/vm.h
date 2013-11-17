@@ -23,7 +23,10 @@
 #define AS_NUM(v) ((v).num)
 
 // Get the const char* value of [v], which must be a string.
-#define AS_STRING(v) (((ObjString*)(v).obj)->value)
+#define AS_CSTRING(v) (AS_STRING(v)->value)
+
+// Get the ObjString* of [v], which must be a string.
+#define AS_STRING(v) ((ObjString*)(v).obj)
 
 // Determines if [value] is a garbage-collected object or not.
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
@@ -246,7 +249,7 @@ struct sVM
   // The stack "pinned" objects. These are temporary explicit GC roots so that
   // the collector can find them before they are reachable through a normal
   // root.
-  Value pinned[MAX_PINNED];
+  Obj* pinned[MAX_PINNED];
 };
 
 typedef struct
@@ -335,10 +338,10 @@ void callFunction(Fiber* fiber, ObjFn* fn, int numArgs);
 
 void printValue(Value value);
 
-// Mark [value] as a GC root so that it doesn't get collected.
-void pinObj(VM* vm, Value value);
+// Mark [obj] as a GC root so that it doesn't get collected.
+void pinObj(VM* vm, Obj* obj);
 
-// Unmark [value] as a GC root so that it doesn't get collected.
-void unpinObj(VM* vm, Value value);
+// Unmark [obj] as a GC root so that it doesn't get collected.
+void unpinObj(VM* vm, Obj* obj);
 
 #endif

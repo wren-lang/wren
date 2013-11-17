@@ -630,12 +630,6 @@ typedef enum
   PREC_CALL        // . ()
 } Precedence;
 
-// TODO(bob): Doc...
-typedef struct
-{
-  int isAssignment;
-} Assignment;
-
 // Forward declarations since the grammar is recursive.
 static void expression(Compiler* compiler, int allowAssignment);
 static void statement(Compiler* compiler);
@@ -1263,7 +1257,7 @@ void definition(Compiler* compiler)
       consume(compiler, TOKEN_LINE,
               "Expect newline after definition in class.");
     }
-    
+
     return;
   }
 
@@ -1313,7 +1307,7 @@ ObjFn* compile(VM* vm, const char* source)
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, 0);
 
-  pinObj(vm, OBJ_VAL(compiler.fn));
+  pinObj(vm, (Obj*)compiler.fn);
 
   for (;;)
   {
@@ -1334,7 +1328,7 @@ ObjFn* compile(VM* vm, const char* source)
 
   emit(&compiler, CODE_END);
 
-  unpinObj(vm, OBJ_VAL(compiler.fn));
+  unpinObj(vm, (Obj*)compiler.fn);
 
   return parser.hasError ? NULL : compiler.fn;
 }

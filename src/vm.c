@@ -53,13 +53,53 @@ void freeVM(VM* vm)
 
 static void markValue(Value value);
 
-static void markObj(Obj* obj)
+static void markFn(ObjFn* fn)
 {
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
-  if (obj->flags & FLAG_MARKED) return;
+  if (fn->obj.flags & FLAG_MARKED) return;
+  fn->obj.flags |= FLAG_MARKED;
 
-  obj->flags |= FLAG_MARKED;
+  // Mark the constants.
+  for (int i = 0; i < fn->numConstants; i++)
+  {
+    markValue(fn->constants[i]);
+  }
+}
 
+static void markClass(ObjClass* classObj)
+{
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (classObj->obj.flags & FLAG_MARKED) return;
+  classObj->obj.flags |= FLAG_MARKED;
+
+  // The metaclass.
+  if (classObj->metaclass != NULL) markClass(classObj->metaclass);
+
+  // The superclass.
+  if (classObj->superclass != NULL) markClass(classObj->superclass);
+
+  // Method function objects.
+  for (int i = 0; i < MAX_SYMBOLS; i++)
+  {
+    if (classObj->methods[i].type == METHOD_BLOCK)
+    {
+      markFn(classObj->methods[i].fn);
+    }
+  }
+}
+
+static void markInstance(ObjInstance* instance)
+{
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (instance->obj.flags & FLAG_MARKED) return;
+  instance->obj.flags |= FLAG_MARKED;
+
+  markClass(instance->classObj);
+  // TODO(bob): Mark fields when instances have them.
+}
+
+static void markObj(Obj* obj)
+{
 #ifdef TRACE_MEMORY
   static int indent = 0;
   indent++;
@@ -72,41 +112,12 @@ static void markObj(Obj* obj)
   // Traverse the object's fields.
   switch (obj->type)
   {
-    case OBJ_CLASS:
-    {
-      ObjClass* classObj = (ObjClass*)obj;
-
-      // The metaclass.
-      if (classObj->metaclass != NULL) markObj((Obj*)classObj->metaclass);
-
-      // Method function objects.
-      for (int i = 0; i < MAX_SYMBOLS; i++)
-      {
-        if (classObj->methods[i].type == METHOD_BLOCK)
-        {
-          markObj((Obj*)classObj->methods[i].fn);
-        }
-      }
-      break;
-    }
-
-    case OBJ_FN:
-    {
-      // Mark the constants.
-      ObjFn* fn = (ObjFn*)obj;
-      for (int i = 0; i < fn->numConstants; i++)
-      {
-        markValue(fn->constants[i]);
-      }
-      break;
-    }
-
-    case OBJ_INSTANCE:
-      // TODO(bob): Mark fields when instances have them.
-      break;
-
+    case OBJ_CLASS: markClass((ObjClass*)obj); break;
+    case OBJ_FN: markFn((ObjFn*)obj); break;
+    case OBJ_INSTANCE: markInstance((ObjInstance*)obj); break;
     case OBJ_STRING:
-      // Nothing to mark.
+      // Just mark the string itself.
+      obj->flags |= FLAG_MARKED;
       break;
   }
 
@@ -173,9 +184,6 @@ void freeObj(VM* vm, Obj* obj)
 
 void collectGarbage(VM* vm)
 {
-  // TODO(bob): Instead of casting to Obj* and calling markObj(), split out
-  // marking functions for different types.
-
   // Mark all reachable objects.
 #ifdef TRACE_MEMORY
   printf("-- gc --\n");
@@ -192,13 +200,13 @@ void collectGarbage(VM* vm)
   // Pinned objects.
   for (int j = 0; j < vm->numPinned; j++)
   {
-    if (!IS_NULL(vm->pinned[j])) markValue(vm->pinned[j]);
+    markObj(vm->pinned[j]);
   }
 
   // Stack functions.
   for (int k = 0; k < vm->fiber->numFrames; k++)
   {
-    markObj((Obj*)vm->fiber->frames[k].fn);
+    markFn(vm->fiber->frames[k].fn);
   }
 
   // Stack variables.
@@ -286,12 +294,11 @@ ObjClass* newClass(VM* vm, ObjClass* superclass)
   ObjClass* metaclass = newSingleClass(vm, NULL, NULL);
 
   // Make sure it isn't collected when we allocate the metaclass.
-  pinObj(vm, OBJ_VAL(metaclass));
+  pinObj(vm, (Obj*)metaclass);
 
   ObjClass* classObj = newSingleClass(vm, metaclass, superclass);
 
-  // TODO(bob): Make pin list just Obj* instead of Value.
-  unpinObj(vm, OBJ_VAL(metaclass));
+  unpinObj(vm, (Obj*)metaclass);
 
   // Inherit methods from its superclass (unless it's Object, which has none).
   // TODO(bob): If we want BETA-style inheritance, we'll need to do this after
@@ -326,14 +333,11 @@ ObjFn* newFunction(VM* vm)
 
 Value newInstance(VM* vm, ObjClass* classObj)
 {
-  Value value;
-  value.type = VAL_OBJ;
   ObjInstance* instance = allocate(vm, sizeof(ObjInstance));
-  value.obj = (Obj*)instance;
   initObj(vm, &instance->obj, OBJ_INSTANCE);
   instance->classObj = classObj;
 
-  return value;
+  return OBJ_VAL(instance);
 }
 
 Value newString(VM* vm, const char* text, size_t length)
@@ -344,6 +348,7 @@ Value newString(VM* vm, const char* text, size_t length)
 
   ObjString* string = allocate(vm, sizeof(ObjString));
   initObj(vm, &string->obj, OBJ_STRING);
+  string->value = heapText;
 
   // Copy the string (if given one).
   if (text != NULL)
@@ -352,11 +357,7 @@ Value newString(VM* vm, const char* text, size_t length)
     heapText[length] = '\0';
   }
 
-  string->value = heapText;
-  Value value;
-  value.type = VAL_OBJ;
-  value.obj = (Obj*)string;
-  return value;
+  return OBJ_VAL(string);
 }
 
 void initSymbolTable(SymbolTable* symbols)
@@ -843,22 +844,20 @@ void printValue(Value value)
         case OBJ_CLASS: printf("[class %p]", value.obj); break;
         case OBJ_FN: printf("[fn %p]", value.obj); break;
         case OBJ_INSTANCE: printf("[instance %p]", value.obj); break;
-        case OBJ_STRING: printf("%s", AS_STRING(value)); break;
+        case OBJ_STRING: printf("%s", AS_CSTRING(value)); break;
       }
   }
 }
 
-void pinObj(VM* vm, Value value)
+void pinObj(VM* vm, Obj* obj)
 {
   ASSERT(vm->numPinned < MAX_PINNED - 1, "Too many pinned objects.");
-  vm->pinned[vm->numPinned++] = value;
+  vm->pinned[vm->numPinned++] = obj;
 }
 
-void unpinObj(VM* vm, Value value)
+void unpinObj(VM* vm, Obj* obj)
 {
-  // TODO(bob): Do real equivalance check here.
-  ASSERT(vm->pinned[vm->numPinned - 1].type == value.type,
-         "Unpinning object out of stack order.");
+  ASSERT(vm->pinned[vm->numPinned - 1] == obj, "Unpinning out of stack order.");
   vm->numPinned--;
 }
 
