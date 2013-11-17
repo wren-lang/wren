@@ -176,10 +176,9 @@ DEF_PRIMITIVE(string_contains)
   const char* search = AS_CSTRING(args[1]);
 
   // Corner case, the empty string contains the empty string.
-  if (strlen(string) == 0 && strlen(search) == 0) return NUM_VAL(1);
+  if (strlen(string) == 0 && strlen(search) == 0) return TRUE_VAL;
 
-  // TODO(bob): Return bool.
-  return NUM_VAL(strstr(string, search) != NULL);
+  return BOOL_VAL(strstr(string, search) != NULL);
 }
 
 DEF_PRIMITIVE(string_count)
