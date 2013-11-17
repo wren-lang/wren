@@ -1,0 +1,37 @@
+Value is just Obj* and all values are boxed.
+→ time ../build/Release/wren fib.wren
+9.22746e+06
+
+real  0m12.688s
+user  0m12.076s
+sys 0m0.601s
+
+---
+
+Unboxed singletons and numbers. Value is a struct of ValueType, double, Obj* obj.
+→ time ../build/Release/wren fib.wren
+9.22746e+06
+
+real  0m3.233s
+user  0m3.229s
+sys 0m0.003s
+
+---
+
+NaN tagged values.
+→ time ../build/Release/wren fib.wren
+9.22746e+06
+
+real  0m3.100s
+user  0m3.097s
+sys 0m0.002s
+
+---
+
+Hoist bytecode and IP into locals in interpret loop.
+→ time ../build/Release/wren fib.wren
+9.22746e+06
+
+real  0m2.490s
+user  0m2.487s
+sys 0m0.002s

@@ -3,10 +3,12 @@
 
 // Define this to stress test the GC. It will perform a collection before every
 // allocation.
-//#define DEBUG_GC_STRESS
+#define DEBUG_GC_STRESS
 
 // Define this to log memory operations.
 //#define TRACE_MEMORY
+
+#define NAN_TAGGING
 
 #ifdef DEBUG
 

@@ -121,7 +121,7 @@ static void markObj(Obj* obj)
 void markValue(Value value)
 {
   if (!IS_OBJ(value)) return;
-  markObj(value.obj);
+  markObj(AS_OBJ(value));
 }
 
 void freeObj(VM* vm, Obj* obj)
@@ -574,7 +574,31 @@ void dumpCode(VM* vm, ObjFn* fn)
 
 // Returns the class of [object].
 static ObjClass* getClass(VM* vm, Value value)
-{
+{  // TODO(bob): Unify these.
+#ifdef NAN_TAGGING
+  if (IS_NUM(value)) return vm->numClass;
+  if (IS_OBJ(value))
+  {
+    Obj* obj = AS_OBJ(value);
+    switch (obj->type)
+    {
+      case OBJ_CLASS: return AS_CLASS(value)->metaclass;
+      case OBJ_FN: return vm->fnClass;
+      case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
+      case OBJ_STRING: return vm->stringClass;
+    }
+  }
+
+  switch (GET_TAG(value))
+  {
+    case TAG_FALSE: return vm->boolClass;
+    case TAG_NAN: return vm->numClass;
+    case TAG_NULL: return vm->nullClass;
+    case TAG_TRUE: return vm->boolClass;
+  }
+
+  return NULL;
+#else
   switch (value.type)
   {
     case VAL_FALSE: return vm->boolClass;
@@ -592,6 +616,7 @@ static ObjClass* getClass(VM* vm, Value value)
       }
     }
   }
+#endif
 }
 
 Value interpret(VM* vm, ObjFn* fn)
@@ -606,13 +631,18 @@ Value interpret(VM* vm, ObjFn* fn)
   #define PUSH(value) (fiber->stack[fiber->stackSize++] = value)
   #define POP()       (fiber->stack[--fiber->stackSize])
   #define PEEK()      (fiber->stack[fiber->stackSize - 1])
-  #define READ_ARG()  (frame->fn->bytecode[frame->ip++])
+  #define READ_ARG()  (frame->ip++, bytecode[ip++])
+
+  // Hoist these into local variables. They are accessed frequently in the loop
+  // but change less frequently. Keeping them in locals and updating them when
+  // a call frame has been pushed or pop gives a large speed boost.
+  CallFrame* frame = &fiber->frames[fiber->numFrames - 1];
+  int ip = frame->ip;
+  unsigned char* bytecode = frame->fn->bytecode;
 
   for (;;)
   {
-    CallFrame* frame = &fiber->frames[fiber->numFrames - 1];
-
-    Code instruction = frame->fn->bytecode[frame->ip++];
+    Code instruction = bytecode[ip++];
     switch (instruction)
     {
       case CODE_CONSTANT:
@@ -755,19 +785,39 @@ Value interpret(VM* vm, ObjFn* fn)
 
           case METHOD_FIBER:
           {
+            // Store the IP back into the frame.
+            frame->ip = ip;
+
             Value* args = &fiber->stack[fiber->stackSize - numArgs];
             method->fiberPrimitive(vm, fiber, args);
+
+            // These have changed now, so update them.
+            frame = &fiber->frames[fiber->numFrames - 1];
+            ip = frame->ip;
+            bytecode = frame->fn->bytecode;
             break;
           }
             
           case METHOD_BLOCK:
+            // Store the IP back into the frame.
+            frame->ip = ip;
+
             callFunction(fiber, method->fn, numArgs);
+
+            // These have changed now, so update them.
+            frame = &fiber->frames[fiber->numFrames - 1];
+            ip = frame->ip;
+            bytecode = frame->fn->bytecode;
             break;
         }
         break;
       }
 
-      case CODE_JUMP: frame->ip += READ_ARG(); break;
+      case CODE_JUMP:{
+        int offset = READ_ARG();
+        ip+= offset;
+        break;
+      }
 
       case CODE_JUMP_IF:
       {
@@ -777,7 +827,7 @@ Value interpret(VM* vm, ObjFn* fn)
         // False is the only falsey value.
         if (!AS_BOOL(condition))
         {
-          frame->ip += offset;
+          ip += offset;
         }
         break;
       }
@@ -808,6 +858,11 @@ Value interpret(VM* vm, ObjFn* fn)
         // Discard the stack slots for the call frame (leaving one slot for the
         // result).
         fiber->stackSize = frame->stackStart + 1;
+
+        // These have changed now, so update them.
+        frame = &fiber->frames[fiber->numFrames - 1];
+        ip = frame->ip;
+        bytecode = frame->fn->bytecode;
         break;
       }
     }
@@ -826,6 +881,34 @@ void callFunction(Fiber* fiber, ObjFn* fn, int numArgs)
 
 void printValue(Value value)
 {
+  // TODO(bob): Unify these.
+#ifdef NAN_TAGGING
+  if (IS_NUM(value))
+  {
+    printf("%g", AS_NUM(value));
+  }
+  else if (IS_OBJ(value))
+  {
+    Obj* obj = AS_OBJ(value);
+    switch (obj->type)
+    {
+      case OBJ_CLASS: printf("[class %p]", obj); break;
+      case OBJ_FN: printf("[fn %p]", obj); break;
+      case OBJ_INSTANCE: printf("[instance %p]", obj); break;
+      case OBJ_STRING: printf("%s", AS_CSTRING(value)); break;
+    }
+  }
+  else
+  {
+    switch (GET_TAG(value))
+    {
+      case TAG_FALSE: printf("false"); break;
+      case TAG_NAN: printf("NaN"); break;
+      case TAG_NULL: printf("null"); break;
+      case TAG_TRUE: printf("true"); break;
+    }
+  }
+#else
   switch (value.type)
   {
     case VAL_FALSE: printf("false"); break;
@@ -841,6 +924,7 @@ void printValue(Value value)
         case OBJ_STRING: printf("%s", AS_CSTRING(value)); break;
       }
   }
+#endif
 }
 
 void pinObj(VM* vm, Obj* obj)
