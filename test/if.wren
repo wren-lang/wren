@@ -28,3 +28,11 @@ io.write(c) // expect: good
 
 // Assignment in if condition.
 if (a = true) io.write(a) // expect: true
+
+// Newline after "if".
+if
+(true) io.write("good") // expect: good
+
+// Newline after "else".
+if (false) io.write("bad") else
+io.write("good") // expect: good

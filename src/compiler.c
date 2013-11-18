@@ -46,6 +46,7 @@ typedef enum
   TOKEN_THIS,
   TOKEN_TRUE,
   TOKEN_VAR,
+  TOKEN_WHILE,
 
   TOKEN_NAME,
   TOKEN_NUMBER,
@@ -296,6 +297,7 @@ static void readName(Parser* parser)
   if (isKeyword(parser, "this")) type = TOKEN_THIS;
   if (isKeyword(parser, "true")) type = TOKEN_TRUE;
   if (isKeyword(parser, "var")) type = TOKEN_VAR;
+  if (isKeyword(parser, "while")) type = TOKEN_WHILE;
 
   makeToken(parser, type);
 }
@@ -489,6 +491,7 @@ static void nextToken(Parser* parser)
       case TOKEN_IS:
       case TOKEN_STATIC:
       case TOKEN_VAR:
+      case TOKEN_WHILE:
         parser->skipNewlines = 1;
 
         // Emit this token.
@@ -1032,6 +1035,7 @@ GrammarRule rules[] =
   /* TOKEN_THIS          */ PREFIX(this_),
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
+  /* TOKEN_WHILE         */ UNUSED,
   /* TOKEN_NAME          */ { name, NULL, parameterList, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(number),
   /* TOKEN_STRING        */ PREFIX(string),
@@ -1079,6 +1083,13 @@ void assignment(Compiler* compiler)
   expression(compiler, 1);
 }
 
+// Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
+// instruction with an offset that jumps to the current end of bytecode.
+static void patchJump(Compiler* compiler, int offset)
+{
+  compiler->fn->bytecode[offset] = compiler->numCodes - offset - 1;
+}
+
 // Parses a "statement": any expression including expressions like variable
 // declarations which can only appear at the top level of a block.
 void statement(Compiler* compiler)
@@ -1091,22 +1102,18 @@ void statement(Compiler* compiler)
     assignment(compiler);
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
 
-    // Compile the then branch.
+    // Jump to the else branch if the condition is false.
     emit(compiler, CODE_JUMP_IF);
-
-    // Emit a placeholder. We'll patch it when we know what to jump to.
     int ifJump = emit(compiler, 255);
 
+    // Compile the then branch.
     statement(compiler);
 
     // Jump over the else branch when the if branch is taken.
     emit(compiler, CODE_JUMP);
-
-    // Emit a placeholder. We'll patch it when we know what to jump to.
     int elseJump = emit(compiler, 255);
 
-    // Patch the jump.
-    compiler->fn->bytecode[ifJump] = compiler->numCodes - ifJump - 1;
+    patchJump(compiler, ifJump);
 
     // Compile the else branch if there is one.
     if (match(compiler, TOKEN_ELSE))
@@ -1120,7 +1127,36 @@ void statement(Compiler* compiler)
     }
 
     // Patch the jump over the else.
-    compiler->fn->bytecode[elseJump] = compiler->numCodes - elseJump - 1;
+    patchJump(compiler, elseJump);
+    return;
+  }
+
+  if (match(compiler, TOKEN_WHILE))
+  {
+    // Remember what instruction to loop back to.
+    int loopStart = compiler->numCodes - 1;
+
+    // Compile the condition.
+    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    assignment(compiler);
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
+
+    emit(compiler, CODE_JUMP_IF);
+    int exitJump = emit(compiler, 255);
+
+    // Compile the body.
+    statement(compiler);
+
+    // Loop back to the top.
+    emit(compiler, CODE_LOOP);
+    int loopOffset = compiler->numCodes - loopStart;
+    emit(compiler, loopOffset);
+
+    patchJump(compiler, exitJump);
+
+    // A while loop always evaluates to null.
+    // TODO(bob): Is there a more useful value it could return?
+    emit(compiler, CODE_NULL);
     return;
   }
 

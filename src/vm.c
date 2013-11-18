@@ -418,159 +418,176 @@ Value findGlobal(VM* vm, const char* name)
   return vm->globals[symbol];
 }
 
-/*
+int dumpInstruction(VM* vm, ObjFn* fn, int i)
+{
+  int start = i;
+  unsigned char* bytecode = fn->bytecode;
+  unsigned char code = bytecode[i++];
+
+  printf("%04d  ", i);
+
+  switch (code)
+  {
+    case CODE_CONSTANT:
+    {
+      int constant = bytecode[i++];
+      printf("CONSTANT ");
+      printValue(fn->constants[constant]);
+      printf("\n");
+      printf("%04d   | constant %d\n", i, constant);
+      break;
+    }
+
+    case CODE_NULL:
+      printf("NULL\n");
+      break;
+
+    case CODE_FALSE:
+      printf("FALSE\n");
+      break;
+
+    case CODE_TRUE:
+      printf("TRUE\n");
+      break;
+
+    case CODE_CLASS:
+      printf("CLASS\n");
+      break;
+
+    case CODE_SUBCLASS:
+      printf("SUBCLASS\n");
+      break;
+
+    case CODE_METACLASS:
+      printf("METACLASS\n");
+      break;
+
+    case CODE_METHOD:
+    {
+      int symbol = bytecode[i++];
+      int constant = bytecode[i++];
+      printf("METHOD \"%s\"\n", getSymbolName(&vm->methods, symbol));
+      printf("%04d   | symbol %d\n", i - 1, symbol);
+      printf("%04d   | constant %d\n", i, constant);
+      break;
+    }
+
+    case CODE_LOAD_LOCAL:
+    {
+      int local = bytecode[i++];
+      printf("LOAD_LOCAL %d\n", local);
+      printf("%04d   | local %d\n", i, local);
+      break;
+    }
+
+    case CODE_STORE_LOCAL:
+    {
+      int local = bytecode[i++];
+      printf("STORE_LOCAL %d\n", local);
+      printf("%04d   | local %d\n", i, local);
+      break;
+    }
+
+    case CODE_LOAD_GLOBAL:
+    {
+      int global = bytecode[i++];
+      printf("LOAD_GLOBAL \"%s\"\n",
+             getSymbolName(&vm->globalSymbols, global));
+      printf("%04d   | global %d\n", i, global);
+      break;
+    }
+
+    case CODE_STORE_GLOBAL:
+    {
+      int global = bytecode[i++];
+      printf("STORE_GLOBAL \"%s\"\n",
+             getSymbolName(&vm->globalSymbols, global));
+      printf("%04d   | global %d\n", i, global);
+      break;
+    }
+
+    case CODE_DUP:
+      printf("DUP\n");
+      break;
+
+    case CODE_POP:
+      printf("POP\n");
+      break;
+
+    case CODE_CALL_0:
+    case CODE_CALL_1:
+    case CODE_CALL_2:
+    case CODE_CALL_3:
+    case CODE_CALL_4:
+    case CODE_CALL_5:
+    case CODE_CALL_6:
+    case CODE_CALL_7:
+    case CODE_CALL_8:
+    case CODE_CALL_9:
+    case CODE_CALL_10:
+    {
+      // Add one for the implicit receiver argument.
+      int numArgs = bytecode[i - 1] - CODE_CALL_0;
+      int symbol = bytecode[i++];
+      printf("CALL_%d \"%s\"\n", numArgs,
+             getSymbolName(&vm->methods, symbol));
+      printf("%04d   | symbol %d\n", i, symbol);
+      break;
+    }
+
+    case CODE_JUMP:
+    {
+      int offset = bytecode[i++];
+      printf("JUMP %d\n", offset);
+      printf("%04d   | offset %d\n", i, offset);
+      break;
+    }
+
+    case CODE_LOOP:
+    {
+      int offset = bytecode[i++];
+      printf("LOOP %d\n", offset);
+      printf("%04d   | offset -%d\n", i, offset);
+      break;
+    }
+
+    case CODE_JUMP_IF:
+    {
+      int offset = bytecode[i++];
+      printf("JUMP_IF %d\n", offset);
+      printf("%04d   | offset %d\n", i, offset);
+      break;
+    }
+
+    case CODE_IS:
+      printf("CODE_IS\n");
+      break;
+
+    case CODE_END:
+      printf("CODE_END\n");
+      break;
+
+    default:
+      printf("UKNOWN! [%d]\n", bytecode[i - 1]);
+      break;
+  }
+
+  // Return how many bytes this instruction takes, or -1 if it's an END.
+  if (code == CODE_END) return -1;
+  return i - start;
+}
+
 // TODO(bob): For debugging. Move to separate module.
 void dumpCode(VM* vm, ObjFn* fn)
 {
-  unsigned char* bytecode = fn->bytecode;
-  int done = 0;
   int i = 0;
-  while (!done)
+  for (;;)
   {
-    printf("%04d  ", i);
-    unsigned char code = bytecode[i++];
-
-    switch (code)
-    {
-      case CODE_CONSTANT:
-      {
-        int constant = bytecode[i++];
-        printf("CONSTANT ");
-        printValue(fn->constants[constant]);
-        printf("\n");
-        printf("%04d   | constant %d\n", i - 1, constant);
-        break;
-      }
-
-      case CODE_NULL:
-        printf("NULL\n");
-        break;
-
-      case CODE_FALSE:
-        printf("FALSE\n");
-        break;
-
-      case CODE_TRUE:
-        printf("TRUE\n");
-        break;
-
-      case CODE_CLASS:
-        printf("CLASS\n");
-        break;
-
-      case CODE_SUBCLASS:
-        printf("SUBCLASS\n");
-        break;
-
-      case CODE_METACLASS:
-        printf("METACLASS\n");
-        break;
-
-      case CODE_METHOD:
-      {
-        int symbol = bytecode[i++];
-        int constant = bytecode[i++];
-        printf("METHOD \"%s\"\n", getSymbolName(&vm->methods, symbol));
-        printf("%04d   | symbol %d\n", i - 2, symbol);
-        printf("%04d   | constant %d\n", i - 1, constant);
-        break;
-      }
-
-      case CODE_LOAD_LOCAL:
-      {
-        int local = bytecode[i++];
-        printf("LOAD_LOCAL %d\n", local);
-        printf("%04d   | local %d\n", i - 1, local);
-        break;
-      }
-
-      case CODE_STORE_LOCAL:
-      {
-        int local = bytecode[i++];
-        printf("STORE_LOCAL %d\n", local);
-        printf("%04d   | local %d\n", i - 1, local);
-        break;
-      }
-
-      case CODE_LOAD_GLOBAL:
-      {
-        int global = bytecode[i++];
-        printf("LOAD_GLOBAL \"%s\"\n",
-               getSymbolName(&vm->globalSymbols, global));
-        printf("%04d   | global %d\n", i - 1, global);
-        break;
-      }
-
-      case CODE_STORE_GLOBAL:
-      {
-        int global = bytecode[i++];
-        printf("STORE_GLOBAL \"%s\"\n",
-               getSymbolName(&vm->globalSymbols, global));
-        printf("%04d   | global %d\n", i - 1, global);
-        break;
-      }
-
-      case CODE_DUP:
-        printf("DUP\n");
-        break;
-
-      case CODE_POP:
-        printf("POP\n");
-        break;
-
-      case CODE_CALL_0:
-      case CODE_CALL_1:
-      case CODE_CALL_2:
-      case CODE_CALL_3:
-      case CODE_CALL_4:
-      case CODE_CALL_5:
-      case CODE_CALL_6:
-      case CODE_CALL_7:
-      case CODE_CALL_8:
-      case CODE_CALL_9:
-      case CODE_CALL_10:
-      {
-        // Add one for the implicit receiver argument.
-        int numArgs = bytecode[i - 1] - CODE_CALL_0;
-        int symbol = bytecode[i++];
-        printf("CALL_%d \"%s\"\n", numArgs,
-               getSymbolName(&vm->methods, symbol));
-        printf("%04d   | symbol %d\n", i - 1, symbol);
-        break;
-      }
-
-      case CODE_JUMP:
-      {
-        int offset = bytecode[i++];
-        printf("JUMP %d\n", offset);
-        printf("%04d   | offset %d\n", i - 1, offset);
-        break;
-      }
-
-      case CODE_JUMP_IF:
-      {
-        int offset = bytecode[i++];
-        printf("JUMP_IF %d\n", offset);
-        printf("%04d   | offset %d\n", i - 1, offset);
-        break;
-      }
-
-      case CODE_IS:
-        printf("CODE_IS\n");
-        break;
-
-      case CODE_END:
-        printf("CODE_END\n");
-        done = 1;
-        break;
-
-      default:
-        printf("[%d]\n", bytecode[i - 1]);
-        break;
-    }
+    int offset = dumpInstruction(vm, fn, i);
+    if (offset == -1) break;
+    i += offset;
   }
 }
-*/
 
 // Returns the class of [object].
 static ObjClass* getClass(VM* vm, Value value)
@@ -619,14 +636,23 @@ static ObjClass* getClass(VM* vm, Value value)
 #endif
 }
 
+void dumpStack(Fiber* fiber)
+{
+  printf(":: ");
+  for (int i = 0; i < fiber->stackSize; i++)
+  {
+    printValue(fiber->stack[i]);
+    printf(" | ");
+  }
+  printf("\n");
+}
+
 Value interpret(VM* vm, ObjFn* fn)
 {
   Fiber* fiber = vm->fiber;
-
   callFunction(fiber, fn, 0);
 
   // These macros are designed to only be invoked within this function.
-
   // TODO(bob): Check for stack overflow.
   #define PUSH(value) (fiber->stack[fiber->stackSize++] = value)
   #define POP()       (fiber->stack[--fiber->stackSize])
@@ -813,9 +839,22 @@ Value interpret(VM* vm, ObjFn* fn)
         break;
       }
 
-      case CODE_JUMP:{
+      case CODE_JUMP:
+      {
         int offset = READ_ARG();
-        ip+= offset;
+        ip += offset;
+        break;
+      }
+
+      case CODE_LOOP:
+      {
+        // The loop body's result is on the top of the stack. Since we are
+        // looping and running the body again, discard it.
+        POP();
+
+        // Jump back to the top of the loop.
+        int offset = READ_ARG();
+        ip -= offset;
         break;
       }
 

@@ -1,6 +1,7 @@
 #ifndef wren_vm_h
 #define wren_vm_h
 
+#include "common.h"
 #include "value.h"
 
 // TODO(bob): Make these externally controllable.
@@ -70,6 +71,10 @@ typedef enum
 
   // Jump the instruction pointer [arg1] forward.
   CODE_JUMP,
+
+  // Jump the instruction pointer [arg1] backward. Pop and discard the top of
+  // the stack.
+  CODE_LOOP,
 
   // Pop and if not truthy then jump the instruction pointer [arg1] forward.
   CODE_JUMP_IF,
