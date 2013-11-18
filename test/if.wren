@@ -36,3 +36,11 @@ if
 // Newline after "else".
 if (false) io.write("bad") else
 io.write("good") // expect: good
+
+// Definition in then arm.
+if (true) var a = io.write("ok") // expect: ok
+if (true) class Foo {} // no error
+
+// Definition in else arm.
+if (false) null else var a = io.write("ok") // expect: ok
+if (true) null else class Foo {} // no error

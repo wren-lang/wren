@@ -178,6 +178,9 @@ Value newString(VM* vm, const char* text, size_t length);
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);
 
+// Removes any symbols added after [count] symbols were defined.
+void truncateSymbolTable(SymbolTable* symbols, int count);
+
 // Frees all dynamically allocated memory used by the symbol table, but not the
 // SymbolTable itself.
 void clearSymbolTable(SymbolTable* symbols);

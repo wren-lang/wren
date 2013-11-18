@@ -8,6 +8,13 @@
 
 #define MAX_NAME 256
 
+// TODO(bob): Are these really worth the effort?
+#define PUSH_SCOPE  \
+    Scope scope##__LINE__; \
+    pushScope(compiler, &scope##__LINE__);
+
+#define POP_SCOPE popScope(compiler)
+
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -100,6 +107,18 @@ typedef struct
   int hasError;
 } Parser;
 
+typedef struct sScope
+{
+  // The number of previously defined local variables when this scope was
+  // created. Used to know how many variables to discard when this scope is
+  // exited.
+  int previousLocals;
+
+  // The scope enclosing this one, or NULL if this is the top scope in the
+  // function.
+  struct sScope* parent;
+} Scope;
+
 typedef struct sCompiler
 {
   Parser* parser;
@@ -117,6 +136,9 @@ typedef struct sCompiler
 
   // Non-zero if the function being compiled is a method.
   int isMethod;
+
+  // The current local variable scope. Initially NULL.
+  Scope* scope;
 } Compiler;
 
 // Initializes [compiler].
@@ -132,6 +154,8 @@ static void initCompiler(Compiler* compiler, Parser* parser,
 
   compiler->fn = newFunction(parser->vm);
   compiler->fn->numConstants = 0;
+
+  compiler->scope = NULL;
 }
 
 // Outputs a compile or syntax error.
@@ -558,15 +582,16 @@ static int declareVariable(Compiler* compiler)
   consume(compiler, TOKEN_NAME, "Expected variable name.");
 
   SymbolTable* symbols;
-  if (compiler->parent)
-  {
-    // Nested block, so this is a local variable.
-    symbols = &compiler->locals;
-  }
-  else
+  // The top-level scope of the top-level compiler is global scope.
+  if (compiler->parent == NULL && compiler->scope == NULL)
   {
     // Top level global variable.
     symbols = &compiler->parser->vm->globalSymbols;
+  }
+  else
+  {
+    // Nested block, so this is a local variable.
+    symbols = &compiler->locals;
   }
 
   int symbol = addSymbol(symbols,
@@ -576,6 +601,7 @@ static int declareVariable(Compiler* compiler)
   if (symbol == -1)
   {
     error(compiler, "Variable is already defined.");
+    // TODO(bob): Need to allow shadowing for local variables.
   }
 
   return symbol;
@@ -584,9 +610,8 @@ static int declareVariable(Compiler* compiler)
 // Stores a variable with the previously defined symbol in the current scope.
 static void defineVariable(Compiler* compiler, int symbol)
 {
-  // If it's a global variable, we need to explicitly store it. If it's a local
-  // variable, the value is already on the stack in the right slot.
-  if (!compiler->parent)
+  // The top-level scope of the top-level compiler is global scope.
+  if (compiler->parent == NULL && compiler->scope == NULL)
   {
     // It's a global variable, so store the value in the global slot.
     emit(compiler, CODE_STORE_GLOBAL);
@@ -609,7 +634,7 @@ static void defineVariable(Compiler* compiler, int symbol)
     //   CODE_POP              // discard previous result in sequence
     //   <code for io.write...>
     //
-    // Would be good to either peephole optimize this or be smarted about
+    // Would be good to either peephole optimize this or be smarter about
     // generating code for defining local variables to not emit the DUP
     // sometimes.
     emit(compiler, CODE_DUP);
@@ -635,6 +660,7 @@ typedef enum
 
 // Forward declarations since the grammar is recursive.
 static void expression(Compiler* compiler, int allowAssignment);
+static void assignment(Compiler* compiler);
 static void statement(Compiler* compiler);
 static void definition(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, int allowAssignment,
@@ -676,7 +702,7 @@ static void parameterList(Compiler* compiler, char* name, int* length)
 
 static void grouping(Compiler* compiler, int allowAssignment)
 {
-  expression(compiler, 0);
+  assignment(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
@@ -1090,6 +1116,33 @@ static void patchJump(Compiler* compiler, int offset)
   compiler->fn->bytecode[offset] = compiler->numCodes - offset - 1;
 }
 
+// Starts a new local block scope.
+static void pushScope(Compiler* compiler, Scope* scope)
+{
+  scope->parent = compiler->scope;
+  scope->previousLocals = compiler->locals.count;
+  compiler->scope = scope;
+}
+
+// Closes the last pushed block scope.
+static void popScope(Compiler* compiler)
+{
+  ASSERT(compiler->scope != NULL, "Cannot pop top-level scope.");
+
+  Scope* scope = compiler->scope;
+
+  // Pop locals off the stack.
+  // TODO(bob): Could make a single instruction that pops multiple values if
+  // this is a bottleneck.
+  for (int i = scope->previousLocals; i < compiler->locals.count; i++)
+  {
+    emit(compiler, CODE_POP);
+  }
+
+  truncateSymbolTable(&compiler->locals, scope->previousLocals);
+  compiler->scope = scope->parent;
+}
+
 // Parses a "statement": any expression including expressions like variable
 // declarations which can only appear at the top level of a block.
 void statement(Compiler* compiler)
@@ -1107,7 +1160,9 @@ void statement(Compiler* compiler)
     int ifJump = emit(compiler, 255);
 
     // Compile the then branch.
-    statement(compiler);
+    PUSH_SCOPE;
+    definition(compiler);
+    POP_SCOPE;
 
     // Jump over the else branch when the if branch is taken.
     emit(compiler, CODE_JUMP);
@@ -1118,7 +1173,9 @@ void statement(Compiler* compiler)
     // Compile the else branch if there is one.
     if (match(compiler, TOKEN_ELSE))
     {
-      statement(compiler);
+      PUSH_SCOPE;
+      definition(compiler);
+      POP_SCOPE;
     }
     else
     {
@@ -1145,7 +1202,9 @@ void statement(Compiler* compiler)
     int exitJump = emit(compiler, 255);
 
     // Compile the body.
-    statement(compiler);
+    PUSH_SCOPE;
+    definition(compiler);
+    POP_SCOPE;
 
     // Loop back to the top.
     emit(compiler, CODE_LOOP);
@@ -1163,6 +1222,7 @@ void statement(Compiler* compiler)
   // Curly block.
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
+    PUSH_SCOPE;
     // TODO(bob): This code is duplicated in fn, method and top level parsing.
     for (;;)
     {
@@ -1181,6 +1241,8 @@ void statement(Compiler* compiler)
       // Discard the result of the previous expression.
       emit(compiler, CODE_POP);
     }
+
+    POP_SCOPE;
     return;
   }
 
@@ -1299,6 +1361,7 @@ void definition(Compiler* compiler)
 
   if (match(compiler, TOKEN_VAR))
   {
+    // TODO(bob): Variable should not be in scope until after initializer.
     int symbol = declareVariable(compiler);
 
     // TODO(bob): Allow uninitialized vars?

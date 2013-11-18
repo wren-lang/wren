@@ -29,3 +29,7 @@ var f = while (e < 3) {
   e = e + 1
 }
 io.write(f) // expect: null
+
+// Definition body.
+while (false) var a = "ok" // no error
+while (false) class Foo {} // no error

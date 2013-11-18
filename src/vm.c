@@ -365,6 +365,16 @@ void clearSymbolTable(SymbolTable* symbols)
   }
 }
 
+void truncateSymbolTable(SymbolTable* symbols, int count)
+{
+  ASSERT(count <= symbols->count, "Cannot truncate to larger size.");
+  for (int i = count; i < symbols->count; i++)
+  {
+    free(symbols->names[i]);
+  }
+  symbols->count = count;
+}
+
 int addSymbolUnchecked(SymbolTable* symbols, const char* name, size_t length)
 {
   // TODO(bob): Get rid of explicit malloc here.
