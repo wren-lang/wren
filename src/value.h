@@ -276,6 +276,7 @@ typedef struct
 // Determines if [value] is a garbage-collected object or not.
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
 
+#define IS_FALSE(value) ((value).type == VAL_FALSE)
 #define IS_NULL(value) ((value).type == VAL_NULL)
 #define IS_NUM(value) ((value).type == VAL_NUM)
 
