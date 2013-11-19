@@ -229,6 +229,7 @@ typedef struct
 // An object pointer is a NaN with a set sign bit.
 #define IS_OBJ(value) (((value).bits & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
 
+#define IS_FALSE(value) ((value).bits == FALSE_VAL.bits)
 #define IS_NULL(value) ((value).bits == (QNAN | TAG_NULL))
 
 // Masks out the tag bits used to identify the singleton value.

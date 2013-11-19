@@ -33,6 +33,7 @@ typedef enum
   TOKEN_MINUS,
   TOKEN_PIPE,
   TOKEN_AMP,
+  TOKEN_AMPAMP,
   TOKEN_BANG,
   TOKEN_EQ,
   TOKEN_LT,
@@ -384,7 +385,18 @@ static void readRawToken(Parser* parser)
         return;
 
       case '|': makeToken(parser, TOKEN_PIPE); return;
-      case '&': makeToken(parser, TOKEN_AMP); return;
+      case '&':
+        if (peekChar(parser) == '&')
+        {
+          nextChar(parser);
+          makeToken(parser, TOKEN_AMPAMP);
+        }
+        else
+        {
+          makeToken(parser, TOKEN_AMP);
+        }
+        return;
+
       case '=':
         if (peekChar(parser) == '=')
         {
@@ -501,6 +513,7 @@ static void nextToken(Parser* parser)
       case TOKEN_MINUS:
       case TOKEN_PIPE:
       case TOKEN_AMP:
+      case TOKEN_AMPAMP:
       case TOKEN_BANG:
       case TOKEN_EQ:
       case TOKEN_LT:
@@ -648,6 +661,7 @@ typedef enum
   PREC_NONE,
   PREC_LOWEST,
   PREC_ASSIGNMENT, // =
+  PREC_LOGIC,      // && ||
   PREC_IS,         // is
   PREC_EQUALITY,   // == !=
   PREC_COMPARISON, // < > <= >=
@@ -680,6 +694,13 @@ typedef struct
 } GrammarRule;
 
 GrammarRule rules[];
+
+// Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
+// instruction with an offset that jumps to the current end of bytecode.
+static void patchJump(Compiler* compiler, int offset)
+{
+  compiler->fn->bytecode[offset] = compiler->numCodes - offset - 1;
+}
 
 static void parameterList(Compiler* compiler, char* name, int* length)
 {
@@ -968,6 +989,17 @@ void is(Compiler* compiler, int allowAssignment)
   emit(compiler, CODE_IS);
 }
 
+void and(Compiler* compiler, int allowAssignment)
+{
+  // Skip the right argument if the left is false.
+  emit(compiler, CODE_AND);
+  int jump = emit(compiler, 255);
+
+  parsePrecedence(compiler, 0, PREC_LOGIC);
+
+  patchJump(compiler, jump);
+}
+
 void infixOp(Compiler* compiler, int allowAssignment)
 {
   GrammarRule* rule = &rules[compiler->parser->previous.type];
@@ -1042,6 +1074,7 @@ GrammarRule rules[] =
   /* TOKEN_MINUS         */ OPERATOR(PREC_TERM, "- "),
   /* TOKEN_PIPE          */ UNUSED,
   /* TOKEN_AMP           */ UNUSED,
+  /* TOKEN_AMPAMP        */ INFIX(PREC_LOGIC, and),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_EQ            */ UNUSED,
   /* TOKEN_LT            */ INFIX_OPERATOR(PREC_COMPARISON, "< "),
@@ -1107,13 +1140,6 @@ void assignment(Compiler* compiler)
 {
   // Assignment statement.
   expression(compiler, 1);
-}
-
-// Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
-// instruction with an offset that jumps to the current end of bytecode.
-static void patchJump(Compiler* compiler, int offset)
-{
-  compiler->fn->bytecode[offset] = compiler->numCodes - offset - 1;
 }
 
 // Starts a new local block scope.

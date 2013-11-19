@@ -69,15 +69,19 @@ typedef enum
   CODE_CALL_9,
   CODE_CALL_10,
 
-  // Jump the instruction pointer [arg1] forward.
+  // Jump the instruction pointer [arg] forward.
   CODE_JUMP,
 
-  // Jump the instruction pointer [arg1] backward. Pop and discard the top of
+  // Jump the instruction pointer [arg] backward. Pop and discard the top of
   // the stack.
   CODE_LOOP,
 
-  // Pop and if not truthy then jump the instruction pointer [arg1] forward.
+  // Pop and if not truthy then jump the instruction pointer [arg] forward.
   CODE_JUMP_IF,
+
+  // If the top of the stack is false, jump [arg] forward. Otherwise, pop and
+  // continue.
+  CODE_AND,
 
   // Pop [a] then [b] and push true if [b] is an instance of [a].
   CODE_IS,
