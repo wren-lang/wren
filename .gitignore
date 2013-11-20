@@ -3,3 +3,4 @@ build/
 
 # XCode user-specific stuff.
 xcuserdata/
+*.xccheckout

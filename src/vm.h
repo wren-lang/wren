@@ -83,6 +83,10 @@ typedef enum
   // continue.
   CODE_AND,
 
+  // If the top of the stack is non-false, jump [arg] forward. Otherwise, pop
+  // and continue.
+  CODE_OR,
+
   // Pop [a] then [b] and push true if [b] is an instance of [a].
   CODE_IS,
 

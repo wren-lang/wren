@@ -32,6 +32,7 @@ typedef enum
   TOKEN_PLUS,
   TOKEN_MINUS,
   TOKEN_PIPE,
+  TOKEN_PIPEPIPE,
   TOKEN_AMP,
   TOKEN_AMPAMP,
   TOKEN_BANG,
@@ -384,7 +385,18 @@ static void readRawToken(Parser* parser)
         }
         return;
 
-      case '|': makeToken(parser, TOKEN_PIPE); return;
+      case '|':
+        if (peekChar(parser) == '|')
+        {
+          nextChar(parser);
+          makeToken(parser, TOKEN_PIPEPIPE);
+        }
+        else
+        {
+          makeToken(parser, TOKEN_PIPE);
+        }
+        return;
+
       case '&':
         if (peekChar(parser) == '&')
         {
@@ -512,6 +524,7 @@ static void nextToken(Parser* parser)
       case TOKEN_PLUS:
       case TOKEN_MINUS:
       case TOKEN_PIPE:
+      case TOKEN_PIPEPIPE:
       case TOKEN_AMP:
       case TOKEN_AMPAMP:
       case TOKEN_BANG:
@@ -1000,6 +1013,17 @@ void and(Compiler* compiler, int allowAssignment)
   patchJump(compiler, jump);
 }
 
+void or(Compiler* compiler, int allowAssignment)
+{
+  // Skip the right argument if the left is true.
+  emit(compiler, CODE_OR);
+  int jump = emit(compiler, 255);
+
+  parsePrecedence(compiler, 0, PREC_LOGIC);
+
+  patchJump(compiler, jump);
+}
+
 void infixOp(Compiler* compiler, int allowAssignment)
 {
   GrammarRule* rule = &rules[compiler->parser->previous.type];
@@ -1073,6 +1097,7 @@ GrammarRule rules[] =
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
   /* TOKEN_MINUS         */ OPERATOR(PREC_TERM, "- "),
   /* TOKEN_PIPE          */ UNUSED,
+  /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGIC, or),
   /* TOKEN_AMP           */ UNUSED,
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGIC, and),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),

@@ -577,6 +577,14 @@ int dumpInstruction(VM* vm, ObjFn* fn, int i)
       break;
     }
 
+    case CODE_OR:
+    {
+      int offset = bytecode[i++];
+      printf("OR %d\n", offset);
+      printf("%04d   | offset %d\n", i, offset);
+      break;
+    }
+
     case CODE_IS:
       printf("CODE_IS\n");
       break;
@@ -896,6 +904,25 @@ Value interpret(VM* vm, ObjFn* fn)
 
         // False is the only falsey value.
         if (!IS_FALSE(condition))
+        {
+          // Discard the condition and evaluate the right hand side.
+          POP();
+        }
+        else
+        {
+          // Short-circuit the right hand side.
+          ip += offset;
+        }
+        break;
+      }
+
+      case CODE_OR:
+      {
+        int offset = READ_ARG();
+        Value condition = PEEK();
+
+        // False is the only falsey value.
+        if (IS_FALSE(condition))
         {
           // Discard the condition and evaluate the right hand side.
           POP();

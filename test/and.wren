@@ -18,3 +18,9 @@ io.write(true) && // expect: true
 // Swallow a trailing newline.
 io.write(true &&
     true) // expect: true
+
+// Only false is falsy.
+io.write(0 && true) // expect: true
+io.write(null && true) // expect: true
+io.write("" && true) // expect: true
+io.write(false && true) // expect: false

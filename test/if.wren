@@ -44,3 +44,8 @@ if (true) class Foo {} // no error
 // Definition in else arm.
 if (false) null else var a = io.write("ok") // expect: ok
 if (true) null else class Foo {} // no error
+
+// Only false is falsy.
+if (0) io.write(0) // expect: 0
+if (null) io.write(null) // expect: null
+if ("") io.write("empty") // expect: empty
