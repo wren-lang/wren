@@ -1249,7 +1249,7 @@ void statement(Compiler* compiler)
 }
 
 // Compiles a method definition inside a class body.
-void method(Compiler* compiler, int isStatic, SignatureFn signature)
+void method(Compiler* compiler, Code instruction, SignatureFn signature)
 {
   Compiler methodCompiler;
   int constant = initCompiler(&methodCompiler, compiler->parser, compiler, 1);
@@ -1268,19 +1268,24 @@ void method(Compiler* compiler, int isStatic, SignatureFn signature)
 
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
   finishBlock(&methodCompiler);
+
+  // If it's a constructor, return "this", not the result of the body.
+  if (instruction == CODE_METHOD_CTOR)
+  {
+    emit(&methodCompiler, CODE_POP);
+    // The receiver is always stored in the first local slot.
+    // TODO(bob): Will need to do something different to handle functions
+    // enclosed in methods.
+    emit(compiler, CODE_LOAD_LOCAL);
+    emit(compiler, 0);
+  }
+
   emit(&methodCompiler, CODE_END);
 
-  if (isStatic) emit(compiler, CODE_METACLASS);
-
   // Compile the code to define the method it.
-  emit(compiler, CODE_METHOD);
+  emit(compiler, instruction);
   emit(compiler, symbol);
   emit(compiler, constant);
-
-  if (isStatic)
-  {
-    emit(compiler, CODE_POP);
-  }
 }
 
 // Compiles a name-binding statement.
@@ -1311,7 +1316,17 @@ void definition(Compiler* compiler)
 
     while (!match(compiler, TOKEN_RIGHT_BRACE))
     {
-      int isStatic = match(compiler, TOKEN_STATIC);
+      Code instruction = CODE_METHOD_INSTANCE;
+      if (match(compiler, TOKEN_STATIC))
+      {
+        instruction = CODE_METHOD_STATIC;
+      }
+      else if (match(compiler, TOKEN_THIS))
+      {
+        // If the method name is prefixed with "this", it's a named constructor.
+        // TODO(bob): Allow defining unnamed constructor.
+        instruction = CODE_METHOD_CTOR;
+      }
 
       SignatureFn signature = rules[compiler->parser->current.type].method;
       nextToken(compiler->parser);
@@ -1322,7 +1337,7 @@ void definition(Compiler* compiler)
         break;
       }
 
-      method(compiler, isStatic, signature);
+      method(compiler, instruction, signature);
       consume(compiler, TOKEN_LINE,
               "Expect newline after definition in class.");
     }

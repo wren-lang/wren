@@ -85,7 +85,12 @@ typedef enum
   METHOD_FIBER,
 
   // A normal user-defined method.
-  METHOD_BLOCK
+  METHOD_BLOCK,
+
+  // A constructor. This will be defined on the metaclass. If [fn] is non-NULL,
+  // then it's a user-defined constructor and [fn] is the initialization code.
+  // Otherwise, it's a default constructor.
+  METHOD_CTOR
 } MethodType;
 
 typedef struct

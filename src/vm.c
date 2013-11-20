@@ -6,8 +6,6 @@
 #include "primitives.h"
 #include "vm.h"
 
-static Value primitive_metaclass_new(VM* vm, Value* args);
-
 VM* newVM()
 {
   // TODO(bob): Get rid of explicit malloc() here.
@@ -468,15 +466,31 @@ int dumpInstruction(VM* vm, ObjFn* fn, int i)
       printf("SUBCLASS\n");
       break;
 
-    case CODE_METACLASS:
-      printf("METACLASS\n");
-      break;
-
-    case CODE_METHOD:
+    case CODE_METHOD_INSTANCE:
     {
       int symbol = bytecode[i++];
       int constant = bytecode[i++];
-      printf("METHOD \"%s\"\n", getSymbolName(&vm->methods, symbol));
+      printf("METHOD_INSTANCE \"%s\"\n", getSymbolName(&vm->methods, symbol));
+      printf("%04d   | symbol %d\n", i - 1, symbol);
+      printf("%04d   | constant %d\n", i, constant);
+      break;
+    }
+
+    case CODE_METHOD_STATIC:
+    {
+      int symbol = bytecode[i++];
+      int constant = bytecode[i++];
+      printf("METHOD_STATIC \"%s\"\n", getSymbolName(&vm->methods, symbol));
+      printf("%04d   | symbol %d\n", i - 1, symbol);
+      printf("%04d   | constant %d\n", i, constant);
+      break;
+    }
+
+    case CODE_METHOD_CTOR:
+    {
+      int symbol = bytecode[i++];
+      int constant = bytecode[i++];
+      printf("METHOD_CTOR \"%s\"\n", getSymbolName(&vm->methods, symbol));
       printf("%04d   | symbol %d\n", i - 1, symbol);
       printf("%04d   | constant %d\n", i, constant);
       break;
@@ -692,6 +706,17 @@ Value interpret(VM* vm, ObjFn* fn)
   int ip = frame->ip;
   unsigned char* bytecode = frame->fn->bytecode;
 
+  // Use this before a CallFrame is pushed to store the local variables back
+  // into the current one.
+  #define STORE_FRAME() frame->ip = ip
+
+  // Use this after a CallFrame has been pushed or popped to refresh the local
+  // variables.
+  #define LOAD_FRAME() \
+      frame = &fiber->frames[fiber->numFrames - 1]; \
+      ip = frame->ip; \
+      bytecode = frame->fn->bytecode \
+
   for (;;)
   {
     Code instruction = bytecode[ip++];
@@ -733,29 +758,42 @@ Value interpret(VM* vm, ObjFn* fn)
         // Define a "new" method on the metaclass.
         // TODO(bob): Can this be inherited?
         int newSymbol = ensureSymbol(&vm->methods, "new", strlen("new"));
-        classObj->metaclass->methods[newSymbol].type = METHOD_PRIMITIVE;
-        classObj->metaclass->methods[newSymbol].primitive =
-            primitive_metaclass_new;
+        classObj->metaclass->methods[newSymbol].type = METHOD_CTOR;
+        classObj->metaclass->methods[newSymbol].fn = NULL;
 
         PUSH(OBJ_VAL(classObj));
         break;
       }
 
-      case CODE_METACLASS:
+      case CODE_METHOD_INSTANCE:
+      case CODE_METHOD_STATIC:
+      case CODE_METHOD_CTOR:
       {
-        ObjClass* classObj = AS_CLASS(PEEK());
-        PUSH(OBJ_VAL(classObj->metaclass));
-        break;
-      }
-
-      case CODE_METHOD:
-      {
+        int type = instruction;
         int symbol = READ_ARG();
         int constant = READ_ARG();
         ObjClass* classObj = AS_CLASS(PEEK());
 
+        switch (type)
+        {
+          case CODE_METHOD_INSTANCE:
+            classObj->methods[symbol].type = METHOD_BLOCK;
+            break;
+
+          case CODE_METHOD_STATIC:
+            // Statics are defined on the metaclass.
+            classObj = classObj->metaclass;
+            classObj->methods[symbol].type = METHOD_BLOCK;
+            break;
+
+          case CODE_METHOD_CTOR:
+            // Constructors are like statics.
+            classObj = classObj->metaclass;
+            classObj->methods[symbol].type = METHOD_CTOR;
+            break;
+        }
+
         ObjFn* body = AS_FN(frame->fn->constants[constant]);
-        classObj->methods[symbol].type = METHOD_BLOCK;
         classObj->methods[symbol].fn = body;
         break;
       }
@@ -837,30 +875,42 @@ Value interpret(VM* vm, ObjFn* fn)
 
           case METHOD_FIBER:
           {
-            // Store the IP back into the frame.
-            frame->ip = ip;
-
+            STORE_FRAME();
             Value* args = &fiber->stack[fiber->stackSize - numArgs];
             method->fiberPrimitive(vm, fiber, args);
-
-            // These have changed now, so update them.
-            frame = &fiber->frames[fiber->numFrames - 1];
-            ip = frame->ip;
-            bytecode = frame->fn->bytecode;
+            LOAD_FRAME();
             break;
           }
             
           case METHOD_BLOCK:
-            // Store the IP back into the frame.
-            frame->ip = ip;
-
+            STORE_FRAME();
             callFunction(fiber, method->fn, numArgs);
-
-            // These have changed now, so update them.
-            frame = &fiber->frames[fiber->numFrames - 1];
-            ip = frame->ip;
-            bytecode = frame->fn->bytecode;
+            LOAD_FRAME();
             break;
+
+          case METHOD_CTOR:
+          {
+            Value instance = newInstance(vm, AS_CLASS(receiver));
+
+            // Store the new instance in the receiver slot so that it can be
+            // "this" in the body of the constructor and returned by it.
+            fiber->stack[fiber->stackSize - numArgs] = instance;
+
+            if (method->fn == NULL)
+            {
+              // Default constructor, so no body to call. Just discard the
+              // stack slots for the arguments (but leave one for the instance).
+              fiber->stackSize -= numArgs - 1;
+            }
+            else
+            {
+              // Invoke the constructor body.
+              STORE_FRAME();
+              callFunction(fiber, method->fn, numArgs);
+              LOAD_FRAME();
+            }
+            break;
+          }
         }
         break;
       }
@@ -890,10 +940,7 @@ Value interpret(VM* vm, ObjFn* fn)
         Value condition = POP();
 
         // False is the only falsey value.
-        if (IS_FALSE(condition))
-        {
-          ip += offset;
-        }
+        if (IS_FALSE(condition)) ip += offset;
         break;
       }
 
@@ -961,11 +1008,7 @@ Value interpret(VM* vm, ObjFn* fn)
         // Discard the stack slots for the call frame (leaving one slot for the
         // result).
         fiber->stackSize = frame->stackStart + 1;
-
-        // These have changed now, so update them.
-        frame = &fiber->frames[fiber->numFrames - 1];
-        ip = frame->ip;
-        bytecode = frame->fn->bytecode;
+        LOAD_FRAME();
         break;
       }
     }
@@ -1040,10 +1083,4 @@ void unpinObj(VM* vm, Obj* obj)
 {
   ASSERT(vm->pinned[vm->numPinned - 1] == obj, "Unpinning out of stack order.");
   vm->numPinned--;
-}
-
-Value primitive_metaclass_new(VM* vm, Value* args)
-{
-  // TODO(bob): Invoke initializer method.
-  return newInstance(vm, AS_CLASS(args[0]));
 }

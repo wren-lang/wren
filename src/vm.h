@@ -29,13 +29,18 @@ typedef enum
   // Pop a superclass off the stack, then push a new class that extends it.
   CODE_SUBCLASS,
 
-  // Push the metaclass of the class on the top of the stack. Does not discard
-  // the class.
-  CODE_METACLASS,
-
   // Add a method for symbol [arg1] with body stored in constant [arg2] to the
   // class on the top of stack. Does not modify the stack.
-  CODE_METHOD,
+  CODE_METHOD_INSTANCE,
+
+  // Add a method for symbol [arg1] with body stored in constant [arg2] to the
+  // metaclass of the class on the top of stack. Does not modify the stack.
+  CODE_METHOD_STATIC,
+
+  // Add a constructor method for symbol [arg1] with body stored in constant
+  // [arg2] to the metaclass of the class on the top of stack. Does not modify
+  // the stack.
+  CODE_METHOD_CTOR,
 
   // Push a copy of the top of stack.
   CODE_DUP,
