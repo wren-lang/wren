@@ -143,8 +143,15 @@ typedef struct sCompiler
   Scope* scope;
 } Compiler;
 
+// Adds [constant] to the constant pool and returns its index.
+static int addConstant(Compiler* compiler, Value constant)
+{
+  compiler->fn->constants[compiler->fn->numConstants++] = constant;
+  return compiler->fn->numConstants - 1;
+}
+
 // Initializes [compiler].
-static void initCompiler(Compiler* compiler, Parser* parser,
+static int initCompiler(Compiler* compiler, Parser* parser,
                          Compiler* parent, int isMethod)
 {
   compiler->parser = parser;
@@ -158,6 +165,17 @@ static void initCompiler(Compiler* compiler, Parser* parser,
   compiler->fn->numConstants = 0;
 
   compiler->scope = NULL;
+
+  if (parent == NULL) return -1;
+
+  // TODO(bob): Hackish.
+  // Define a fake local slot for the receiver so that later locals have the
+  // correct slot indices.
+  addSymbol(&compiler->locals, "(this)", 6);
+
+  // Add the block to the constant table. Do this eagerly so it's reachable by
+  // the GC.
+  return addConstant(parent, OBJ_VAL(compiler->fn));
 }
 
 // Outputs a compile or syntax error.
@@ -559,13 +577,6 @@ static int emit(Compiler* compiler, Code code)
   return compiler->numCodes - 1;
 }
 
-// Adds [constant] to the constant pool and returns its index.
-static int addConstant(Compiler* compiler, Value constant)
-{
-  compiler->fn->constants[compiler->fn->numConstants++] = constant;
-  return compiler->fn->numConstants - 1;
-}
-
 // Parses a name token and declares a variable in the current scope with that
 // name. Returns its symbol.
 static int declareVariable(Compiler* compiler)
@@ -680,6 +691,27 @@ static void patchJump(Compiler* compiler, int offset)
   compiler->fn->bytecode[offset] = compiler->numCodes - offset - 1;
 }
 
+// Parses a block body, after the initial "{" has been consumed.
+static void finishBlock(Compiler* compiler)
+{
+  for (;;)
+  {
+    definition(compiler);
+
+    // If there is no newline, it must be the end of the block on the same line.
+    if (!match(compiler, TOKEN_LINE))
+    {
+      consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' after block body.");
+      break;
+    }
+
+    if (match(compiler, TOKEN_RIGHT_BRACE)) break;
+
+    // Discard the result of the previous expression.
+    emit(compiler, CODE_POP);
+  }
+}
+
 static void parameterList(Compiler* compiler, char* name, int* length)
 {
   // Parse the parameter list, if any.
@@ -733,41 +765,15 @@ static void boolean(Compiler* compiler, int allowAssignment)
 
 static void function(Compiler* compiler, int allowAssignment)
 {
-  // TODO(bob): Copied from compileFunction(). Unify?
   Compiler fnCompiler;
-  initCompiler(&fnCompiler, compiler->parser, compiler, 0);
-
-  // Add the function to the constant table. Do this immediately so that it's
-  // reachable by the GC.
-  compiler->fn->constants[compiler->fn->numConstants++] = OBJ_VAL(fnCompiler.fn);
-
-  // TODO(bob): Hackish.
-  // Define a fake local slot for the receiver (the function object itself) so
-  // that later locals have the correct slot indices.
-  addSymbol(&fnCompiler.locals, "(this)", 6);
+  int constant = initCompiler(&fnCompiler, compiler->parser, compiler, 0);
 
   parameterList(&fnCompiler, NULL, NULL);
 
   if (match(&fnCompiler, TOKEN_LEFT_BRACE))
   {
     // Block body.
-    for (;;)
-    {
-      definition(&fnCompiler);
-
-      // If there is no newline, it must be the end of the block on the same line.
-      if (!match(&fnCompiler, TOKEN_LINE))
-      {
-        consume(&fnCompiler, TOKEN_RIGHT_BRACE,
-                "Expect '}' after function body.");
-        break;
-      }
-
-      if (match(&fnCompiler, TOKEN_RIGHT_BRACE)) break;
-
-      // Discard the result of the previous expression.
-      emit(&fnCompiler, CODE_POP);
-    }
+    finishBlock(&fnCompiler);
   }
   else
   {
@@ -780,7 +786,7 @@ static void function(Compiler* compiler, int allowAssignment)
 
   // Compile the code to load it.
   emit(compiler, CODE_CONSTANT);
-  emit(compiler, compiler->fn->numConstants - 1);
+  emit(compiler, constant);
 }
 
 static void name(Compiler* compiler, int allowAssignment)
@@ -801,7 +807,6 @@ static void name(Compiler* compiler, int allowAssignment)
         compiler->parser->previous.end - compiler->parser->previous.start);
   }
 
-  // TODO(bob): Look for names in outer scopes.
   if (local == -1 && global == -1)
   {
     error(compiler, "Undefined variable.");
@@ -886,8 +891,6 @@ static void string(Compiler* compiler, int allowAssignment)
 
 static void this_(Compiler* compiler, int allowAssignment)
 {
-  // TODO(bob): Not exactly right. This doesn't handle *functions* at the top
-  // level.
   // Walk up the parent chain to see if there is an enclosing method.
   Compiler* thisCompiler = compiler;
   int insideMethod = 0;
@@ -1163,7 +1166,6 @@ static void popScope(Compiler* compiler)
 // declarations which can only appear at the top level of a block.
 void statement(Compiler* compiler)
 {
-  // TODO(bob): Do we want to allow "if" in expression positions?
   if (match(compiler, TOKEN_IF))
   {
     // Compile the condition.
@@ -1230,7 +1232,6 @@ void statement(Compiler* compiler)
     patchJump(compiler, exitJump);
 
     // A while loop always evaluates to null.
-    // TODO(bob): Is there a more useful value it could return?
     emit(compiler, CODE_NULL);
     return;
   }
@@ -1239,25 +1240,7 @@ void statement(Compiler* compiler)
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
     PUSH_SCOPE;
-    // TODO(bob): This code is duplicated in fn, method and top level parsing.
-    for (;;)
-    {
-      // TODO(bob): Create a local variable scope.
-      definition(compiler);
-
-      // If there is no newline, it must be the end of the block on the same line.
-      if (!match(compiler, TOKEN_LINE))
-      {
-        consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' after block body.");
-        break;
-      }
-
-      if (match(compiler, TOKEN_RIGHT_BRACE)) break;
-
-      // Discard the result of the previous expression.
-      emit(compiler, CODE_POP);
-    }
-
+    finishBlock(compiler);
     POP_SCOPE;
     return;
   }
@@ -1268,18 +1251,8 @@ void statement(Compiler* compiler)
 // Compiles a method definition inside a class body.
 void method(Compiler* compiler, int isStatic, SignatureFn signature)
 {
-  // TODO(bob): Copied from compileFunction(). Unify.
   Compiler methodCompiler;
-  initCompiler(&methodCompiler, compiler->parser, compiler, 1);
-
-  // Add the block to the constant table. Do this eagerly so it's reachable by
-  // the GC.
-  int constant = addConstant(compiler, OBJ_VAL(methodCompiler.fn));
-
-  // TODO(bob): Hackish.
-  // Define a fake local slot for the receiver so that later locals have the
-  // correct slot indices.
-  addSymbol(&methodCompiler.locals, "(this)", 6);
+  int constant = initCompiler(&methodCompiler, compiler->parser, compiler, 1);
 
   // Build the method name.
   char name[MAX_NAME];
@@ -1294,25 +1267,7 @@ void method(Compiler* compiler, int isStatic, SignatureFn signature)
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
-
-  // Block body.
-  for (;;)
-  {
-    definition(&methodCompiler);
-
-    // If there is no newline, it must be the end of the block on the same line.
-    if (!match(&methodCompiler, TOKEN_LINE))
-    {
-      consume(&methodCompiler, TOKEN_RIGHT_BRACE, "Expect '}' after method body.");
-      break;
-    }
-
-    if (match(&methodCompiler, TOKEN_RIGHT_BRACE)) break;
-
-    // Discard the result of the previous expression.
-    emit(&methodCompiler, CODE_POP);
-  }
-
+  finishBlock(&methodCompiler);
   emit(&methodCompiler, CODE_END);
 
   if (isStatic) emit(compiler, CODE_METACLASS);
