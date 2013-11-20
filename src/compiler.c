@@ -228,6 +228,20 @@ static void makeToken(Parser* parser, TokenType type)
   parser->current.line = parser->currentLine;
 }
 
+// If the current character is [c], then consumes it and makes a token of type
+// [two]. Otherwise makes a token of type [one].
+static void twoCharToken(Parser* parser, char c, TokenType two, TokenType one)
+{
+  if (peekChar(parser) == c)
+  {
+    nextChar(parser);
+    makeToken(parser, two);
+    return;
+  }
+
+  makeToken(parser, one);
+}
+
 // Skips the rest of the current line.
 static void skipLineComment(Parser* parser)
 {
@@ -269,19 +283,13 @@ static void skipBlockComment(Parser* parser)
   }
 }
 
-// Skips forward until a non-whitespace character is reached.
-static void skipWhitespace(Parser* parser)
-{
-  while (peekChar(parser) == ' ') nextChar(parser);
-}
-
 // Returns non-zero if the current token's text matches [keyword].
 static int isKeyword(Parser* parser, const char* keyword)
 {
   size_t length = parser->currentChar - parser->tokenStart;
   size_t keywordLength = strlen(keyword);
   return length == keywordLength &&
-  strncmp(parser->source + parser->tokenStart, keyword, length) == 0;
+      strncmp(parser->source + parser->tokenStart, keyword, length) == 0;
 }
 
 // Finishes lexing a number literal.
@@ -304,7 +312,6 @@ static void readNumber(Parser* parser)
 // Finishes lexing an identifier. Handles reserved words.
 static void readName(Parser* parser)
 {
-  // TODO(bob): Handle EOF.
   while (isName(peekChar(parser)) || isDigit(peekChar(parser)))
   {
     nextChar(parser);
@@ -364,11 +371,13 @@ static void readRawToken(Parser* parser)
           skipLineComment(parser);
           break;
         }
-        else if (peekChar(parser) == '*')
+
+        if (peekChar(parser) == '*')
         {
           skipBlockComment(parser);
           break;
         }
+
         makeToken(parser, TOKEN_SLASH);
         return;
 
@@ -386,75 +395,27 @@ static void readRawToken(Parser* parser)
         return;
 
       case '|':
-        if (peekChar(parser) == '|')
-        {
-          nextChar(parser);
-          makeToken(parser, TOKEN_PIPEPIPE);
-        }
-        else
-        {
-          makeToken(parser, TOKEN_PIPE);
-        }
+        twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE);
         return;
 
       case '&':
-        if (peekChar(parser) == '&')
-        {
-          nextChar(parser);
-          makeToken(parser, TOKEN_AMPAMP);
-        }
-        else
-        {
-          makeToken(parser, TOKEN_AMP);
-        }
+        twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP);
         return;
 
       case '=':
-        if (peekChar(parser) == '=')
-        {
-          nextChar(parser);
-          makeToken(parser, TOKEN_EQEQ);
-        }
-        else
-        {
-          makeToken(parser, TOKEN_EQ);
-        }
+        twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ);
         return;
 
       case '<':
-        if (peekChar(parser) == '=')
-        {
-          nextChar(parser);
-          makeToken(parser, TOKEN_LTEQ);
-        }
-        else
-        {
-          makeToken(parser, TOKEN_LT);
-        }
+        twoCharToken(parser, '=', TOKEN_LTEQ, TOKEN_LT);
         return;
 
       case '>':
-        if (peekChar(parser) == '=')
-        {
-          nextChar(parser);
-          makeToken(parser, TOKEN_GTEQ);
-        }
-        else
-        {
-          makeToken(parser, TOKEN_GT);
-        }
+        twoCharToken(parser, '=', TOKEN_GTEQ, TOKEN_GT);
         return;
 
       case '!':
-        if (peekChar(parser) == '=')
-        {
-          nextChar(parser);
-          makeToken(parser, TOKEN_BANGEQ);
-        }
-        else
-        {
-          makeToken(parser, TOKEN_BANG);
-        }
+        twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG);
         return;
 
       case '\n':
@@ -462,7 +423,11 @@ static void readRawToken(Parser* parser)
         makeToken(parser, TOKEN_LINE);
         return;
 
-      case ' ': skipWhitespace(parser); break;
+      case ' ':
+        // Skip forward until we run out of whitespace.
+        while (peekChar(parser) == ' ') nextChar(parser);
+        break;
+
       case '"': readString(parser); return;
 
       default:
