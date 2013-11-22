@@ -23,6 +23,12 @@ LANGUAGES = [
   ("ruby",   "ruby",                  ".rb")
 ]
 
+# How many times to run a given benchmark. Should be an odd number to get the
+# right median.
+NUM_TRIALS = 7
+
+results = []
+
 def calc_stats(nums):
   """Calculates the mean, median, and std deviation of a list of numbers."""
   mean = sum(nums) / len(nums)
@@ -47,7 +53,7 @@ def run_benchmark(benchmark, language):
   print "{0} - {1:10s}".format(benchmark[0], language[0]),
 
   times = []
-  for i in range(0, 7):
+  for i in range(0, NUM_TRIALS):
     times.append(run_benchmark_once(benchmark, language))
     sys.stdout.write(".")
 
@@ -60,6 +66,26 @@ def run_benchmark(benchmark, language):
   print " mean: {0:.4f} median: {1:.4f} std_dev: {2:.4f}".format(
       stats[0], stats[1], stats[2])
 
+  results.append([benchmark[0] + " - " + language[0], times])
+
+def graph_results():
+  print
+
+  # Scale everything by the highest time.
+  highest = 0
+  for result in results:
+    time = max(result[1])
+    if time > highest: highest = time
+
+  print "{0:15s} 0.0 {1:76.4f}".format("", highest)
+  for result in results:
+    line = ["-"] * 80
+    for time in result[1]:
+      line[int(time / highest * 79)] = "O"
+    print "{0:15s} {1}".format(result[0], "".join(line))
+
 for benchmark in BENCHMARKS:
   for language in LANGUAGES:
     run_benchmark(benchmark, language)
+
+graph_results()
