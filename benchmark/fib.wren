@@ -6,4 +6,10 @@ var fib = fn(n) {
   }
 }
 
-io.write(fib.call(35))
+var start = OS.clock
+var i = 0
+while (i < 5) {
+  io.write(fib.call(30))
+  i = i + 1
+}
+io.write("elapsed: " + (OS.clock - start).toString)

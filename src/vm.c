@@ -1031,7 +1031,7 @@ void printValue(Value value)
 #ifdef NAN_TAGGING
   if (IS_NUM(value))
   {
-    printf("%g", AS_NUM(value));
+    printf("%.14g", AS_NUM(value));
   }
   else if (IS_OBJ(value))
   {
@@ -1059,7 +1059,7 @@ void printValue(Value value)
   {
     case VAL_FALSE: printf("false"); break;
     case VAL_NULL: printf("null"); break;
-    case VAL_NUM: printf("%g", AS_NUM(value)); break;
+    case VAL_NUM: printf("%.14g", AS_NUM(value)); break;
     case VAL_TRUE: printf("true"); break;
     case VAL_OBJ:
       switch (value.obj->type)

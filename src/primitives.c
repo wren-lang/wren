@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "compiler.h"
 #include "primitives.h"
@@ -93,7 +94,7 @@ DEF_PRIMITIVE(num_toString)
 {
   // TODO(bob): What size should this be?
   char temp[100];
-  sprintf(temp, "%g", AS_NUM(args[0]));
+  sprintf(temp, "%.14g", AS_NUM(args[0]));
   return (Value)newString(vm, temp, strlen(temp));
 }
 
@@ -235,6 +236,12 @@ DEF_PRIMITIVE(io_write)
   return args[1];
 }
 
+DEF_PRIMITIVE(os_clock)
+{
+  double time = (double)clock() / CLOCKS_PER_SEC;
+  return NUM_VAL(time);
+}
+
 static const char* CORE_LIB =
 "class Object {}\n"
 "class Bool {}\n"
@@ -244,7 +251,8 @@ static const char* CORE_LIB =
 "class Null {}\n"
 "class String {}\n"
 "class IO {}\n"
-"var io = IO.new\n";
+"var io = IO.new\n"
+"class OS {}\n";
 
 void loadCore(VM* vm)
 {
@@ -300,6 +308,9 @@ void loadCore(VM* vm)
 
   ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
   PRIMITIVE(ioClass, "write ", io_write);
+
+  ObjClass* osClass = AS_CLASS(findGlobal(vm, "OS"));
+  PRIMITIVE(osClass->metaclass, "clock", os_clock);
 
   ObjClass* unsupportedClass = newClass(vm, vm->objectClass);
 

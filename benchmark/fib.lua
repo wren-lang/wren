@@ -3,4 +3,9 @@ function fib(n)
   return fib(n - 2) + fib(n - 1)
 end
 
-io.write(fib(35) .. "\n")
+local start = os.clock()
+for i = 1, 5 do
+  io.write(fib(30) .. "\n")
+end
+local elapsed = os.clock() - start
+io.write(string.format("elapsed: %.8f\n", elapsed))

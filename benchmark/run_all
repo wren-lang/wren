@@ -1,0 +1,65 @@
+#!/usr/bin/python
+
+import math
+import re
+import subprocess
+import sys
+
+FIB_OUTPUT_PATTERN = re.compile(r"""832040
+832040
+832040
+832040
+832040
+elapsed: (\d+\.\d+)""", re.MULTILINE)
+
+BENCHMARKS = [
+  ("fib", FIB_OUTPUT_PATTERN)
+]
+
+LANGUAGES = [
+  ("wren",   "../build/Release/wren", ".wren"),
+  ("lua",    "lua",                   ".lua"),
+  ("python", "python",                ".py"),
+  ("ruby",   "ruby",                  ".rb")
+]
+
+def calc_stats(nums):
+  """Calculates the mean, median, and std deviation of a list of numbers."""
+  mean = sum(nums) / len(nums)
+  nums.sort()
+  median = nums[(len(nums) - 1) / 2]
+  diffs = ((n - mean) * (n - mean) for n in nums)
+  std_dev = math.sqrt(sum(diffs) / len(nums))
+  return [mean, median, std_dev]
+
+
+def run_benchmark_once(benchmark, language):
+  args = [language[1], benchmark[0] + language[2]]
+  out = subprocess.check_output(args, universal_newlines=True)
+  match = benchmark[1].match(out)
+  if match:
+    return float(match.group(1))
+  else:
+    return None
+
+
+def run_benchmark(benchmark, language):
+  print "{0} - {1:10s}".format(benchmark[0], language[0]),
+
+  times = []
+  for i in range(0, 7):
+    times.append(run_benchmark_once(benchmark, language))
+    sys.stdout.write(".")
+
+  if None in times:
+    print "error"
+    return
+
+  times.sort()
+  stats = calc_stats(times)
+  print " mean: {0:.4f} median: {1:.4f} std_dev: {2:.4f}".format(
+      stats[0], stats[1], stats[2])
+
+for benchmark in BENCHMARKS:
+  for language in LANGUAGES:
+    run_benchmark(benchmark, language)
