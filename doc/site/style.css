@@ -1,0 +1,152 @@
+body, code, h1, h2, h3, p, pre, tt {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: #333;
+}
+
+h1 {
+  font: 36px "Sanchez", helvetica, arial, sans-serif;
+  margin: 30px 0 0 0;
+}
+
+h2 {
+  font: normal 24px "Sanchez", helvetica, arial, sans-serif;
+  margin: 24px 0 0 0;
+}
+
+h3 {
+  font: normal 18px "Sanchez", helvetica, arial, sans-serif;
+  margin: 24px 0 0 0;
+}
+
+h1, h2, h3 {
+  color: hsl(195, 90%, 50%);
+}
+
+a {
+  color: hsl(195, 80%, 40%);
+  text-decoration: none;
+}
+
+a:hover {
+  color: hsl(195, 70%, 40%);
+}
+
+p, li {
+  font: 17px/26px "Source Sans Pro", georgia, serif;
+  margin: 10px 0;
+}
+
+p + p {
+  margin-top: 20px;
+}
+
+code, pre, tt {
+  color: hsl(195, 20%, 40%);
+  font: 14px "Source Code Pro", Menlo, Monaco, Consolas, monospace;
+  background: hsl(195, 20%, 95%);
+  border-bottom: solid 2px hsl(195, 30%, 91%);
+}
+
+code, pre {
+  border-radius: 3px;
+}
+
+code {
+  padding: 1px 3px;
+  white-space: nowrap;
+}
+
+pre {
+  margin: 12px 0;
+  line-height: 20px;
+  padding: 11px;
+}
+
+.header {
+  background: hsl(195, 50%, 20%);
+  width: 100%;
+  height: 100px;
+  border-bottom: solid 2px hsl(330, 100%, 50%);
+  box-shadow: 0 10px 30px -10px hsl(195, 55%, 10%) inset;
+}
+
+.column {
+  position: relative;
+  margin: 0 auto;
+  width: 640px;
+}
+
+.header h1 {
+  float: left;
+  font: 36px "Sanchez", helvetica, arial, sans-serif;
+  color: #fff;
+  padding-top: 25px;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.header h1 a {
+  color: #fff;
+  transition: color 0.2s;
+}
+
+.header a:hover {
+  color: hsl(330, 100%, 50%);
+  transition: color 0.2s;
+}
+
+.header h1 small {
+  font: 16px "Source Code Pro", helvetica, arial, sans-serif;
+  font-weight: 300;
+  color: hsl(195, 50%, 50%);
+  letter-spacing: 0;
+}
+
+.header ul {
+  float: right;
+  margin: 0;
+  padding: 44px 0 0 0;
+}
+
+.header li {
+  display: inline;
+  font: 17px "Source Sans Pro", helvetica, arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin: 0;
+  padding: 0 0 0 15px;
+}
+
+.header li a {
+  color: hsl(195, 40%, 80%);
+  transition: color 0.2s;
+}
+
+.footer {
+  color: #888;
+  font: italic 14px "Source Sans Pro", georgia, serif;
+  text-align: center;
+  margin: 30px 0 40px 0;
+}
+
+/* syntax highlighting */
+
+.codehilite pre span.c1 { color: hsl(195, 10%, 60%);    } /* line comment */
+.codehilite pre span.cm { color: hsl(195, 10%, 60%);    } /* block comment */
+.codehilite pre span.vg { color: #5d3a85; } /* global variable */
+.codehilite pre span.vi { color: #784bab; } /* instance variable */
+.codehilite pre span.k  { color: hsl(195, 80%, 40%); } /* keyword message */
+.codehilite pre span.p  { color: #777;    } /* punctuation ()[]{} */
+.codehilite pre span.s  { color: hsl(40, 90%, 45%); } /* string */
+.codehilite pre span.se { color: hsl(30, 90%, 45%); } /* string escape */
+.codehilite pre span.nb { color: #30a138; } /* built-in name: self undefined */
+.codehilite pre span.o  { color: hsl(195, 100%, 35%); } /* operator */
+.codehilite pre span.kd { color: hsl(195, 100%, 45%); } /* keyword decl */
+.codehilite pre span.nv { color: #24a36a; } /* argument name */
+.codehilite pre span.ow { color: #30a186; } /* user-defined operator */
+.codehilite pre span.mi { } /* number */
+.codehilite pre span.n  { }  /* name */
