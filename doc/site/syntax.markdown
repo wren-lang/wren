@@ -51,7 +51,7 @@ Variables can be declared using `var`:
 
 ## Method calls
 
-Wren is a deeply object-oriented language, so most code consists of method calls. They look pretty familiar:
+Wren is object-oriented, so most code consists of method calls. They look like this:
 
     :::wren
     io.write("hello")
