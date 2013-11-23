@@ -312,7 +312,7 @@ void loadCore(VM* vm)
   ObjClass* osClass = AS_CLASS(findGlobal(vm, "OS"));
   PRIMITIVE(osClass->metaclass, "clock", os_clock);
 
-  ObjClass* unsupportedClass = newClass(vm, vm->objectClass);
+  ObjClass* unsupportedClass = newClass(vm, vm->objectClass, 0);
 
   // TODO(bob): Make this a distinct object type.
   vm->unsupported = (Value)newInstance(vm, unsupportedClass);

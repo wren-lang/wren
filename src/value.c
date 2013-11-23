@@ -1,10 +1,13 @@
 #include "value.h"
 
-#include <stdio.h> // TODO(bob): Testing.
-
 int valueIsFn(Value value)
 {
   return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_FN;
+}
+
+int valueIsInstance(Value value)
+{
+  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_INSTANCE;
 }
 
 int valueIsString(Value value)

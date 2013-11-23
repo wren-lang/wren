@@ -85,7 +85,12 @@ static void markInstance(ObjInstance* instance)
   instance->obj.flags |= FLAG_MARKED;
 
   markClass(instance->classObj);
-  // TODO(bob): Mark fields when instances have them.
+
+  // Mark the fields.
+  for (int i = 0; i < instance->classObj->numFields; i++)
+  {
+    markValue(instance->fields[i]);
+  }
 }
 
 static void markObj(Obj* obj)
@@ -95,7 +100,7 @@ static void markObj(Obj* obj)
   indent++;
   for (int i = 0; i < indent; i++) printf("  ");
   printf("mark ");
-  printValue((Value)obj);
+  printValue(OBJ_VAL(obj));
   printf("\n");
 #endif
 
@@ -126,7 +131,7 @@ void freeObj(VM* vm, Obj* obj)
 {
 #ifdef TRACE_MEMORY
   printf("free ");
-  printValue((Value)obj);
+  printValue(OBJ_VAL(obj));
 #endif
 
   // Free any additional heap data allocated by the object.
@@ -262,12 +267,13 @@ void initObj(VM* vm, Obj* obj, ObjType type)
 }
 
 static ObjClass* newSingleClass(VM* vm, ObjClass* metaclass,
-                                ObjClass* superclass)
+                                ObjClass* superclass, int numFields)
 {
   ObjClass* obj = allocate(vm, sizeof(ObjClass));
   initObj(vm, &obj->obj, OBJ_CLASS);
   obj->metaclass = metaclass;
   obj->superclass = superclass;
+  obj->numFields = numFields;
 
   for (int i = 0; i < MAX_SYMBOLS; i++)
   {
@@ -277,16 +283,18 @@ static ObjClass* newSingleClass(VM* vm, ObjClass* metaclass,
   return obj;
 }
 
-ObjClass* newClass(VM* vm, ObjClass* superclass)
+ObjClass* newClass(VM* vm, ObjClass* superclass, int numFields)
 {
   // Make the metaclass.
   // TODO(bob): What is the metaclass's metaclass and superclass?
-  ObjClass* metaclass = newSingleClass(vm, NULL, NULL);
+  // TODO(bob): Handle static fields.
+  ObjClass* metaclass = newSingleClass(vm, NULL, NULL, 0);
 
   // Make sure it isn't collected when we allocate the metaclass.
   pinObj(vm, (Obj*)metaclass);
 
-  ObjClass* classObj = newSingleClass(vm, metaclass, superclass);
+  ObjClass* classObj = newSingleClass(vm, metaclass, superclass, numFields);
+  classObj->numFields = numFields;
 
   unpinObj(vm, (Obj*)metaclass);
 
@@ -323,10 +331,17 @@ ObjFn* newFunction(VM* vm)
 
 Value newInstance(VM* vm, ObjClass* classObj)
 {
-  ObjInstance* instance = allocate(vm, sizeof(ObjInstance));
+  ObjInstance* instance = allocate(vm,
+      sizeof(ObjInstance) + classObj->numFields * sizeof(Value));
   initObj(vm, &instance->obj, OBJ_INSTANCE);
   instance->classObj = classObj;
 
+  // Initialize fields to null.
+  for (int i = 0; i < classObj->numFields; i++)
+  {
+    instance->fields[i] = NULL_VAL;
+  }
+  
   return OBJ_VAL(instance);
 }
 
@@ -527,6 +542,22 @@ int dumpInstruction(VM* vm, ObjFn* fn, int i)
       printf("STORE_GLOBAL \"%s\"\n",
              getSymbolName(&vm->globalSymbols, global));
       printf("%04d   | global %d\n", i, global);
+      break;
+    }
+
+    case CODE_LOAD_FIELD:
+    {
+      int field = bytecode[i++];
+      printf("LOAD_FIELD %d\n", field);
+      printf("%04d   | field %d\n", i, field);
+      break;
+    }
+
+    case CODE_STORE_FIELD:
+    {
+      int field = bytecode[i++];
+      printf("STORE_FIELD %d\n", field);
+      printf("%04d   | field %d\n", i, field);
       break;
     }
 
@@ -734,6 +765,7 @@ Value interpret(VM* vm, ObjFn* fn)
       case CODE_SUBCLASS:
       {
         int isSubclass = instruction == CODE_SUBCLASS;
+        int numFields = READ_ARG();
 
         ObjClass* superclass;
         if (isSubclass)
@@ -747,7 +779,7 @@ Value interpret(VM* vm, ObjFn* fn)
           superclass = vm->objectClass;
         }
 
-        ObjClass* classObj = newClass(vm, superclass);
+        ObjClass* classObj = newClass(vm, superclass, numFields);
 
         // Assume the first class being defined is Object.
         if (vm->objectClass == NULL)
@@ -826,6 +858,32 @@ Value interpret(VM* vm, ObjFn* fn)
         break;
       }
 
+      case CODE_LOAD_FIELD:
+      {
+        int field = READ_ARG();
+        // TODO(bob): We'll have to do something better here to handle functions
+        // inside methods.
+        Value receiver = fiber->stack[frame->stackStart];
+        ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
+        ObjInstance* instance = AS_INSTANCE(receiver);
+        ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+        PUSH(instance->fields[field]);
+        break;
+      }
+
+      case CODE_STORE_FIELD:
+      {
+        int field = READ_ARG();
+        // TODO(bob): We'll have to do something better here to handle functions
+        // inside methods.
+        Value receiver = fiber->stack[frame->stackStart];
+        ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
+        ObjInstance* instance = AS_INSTANCE(receiver);
+        ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+        instance->fields[field] = PEEK();
+        break;
+      }
+
       case CODE_DUP: PUSH(PEEK()); break;
       case CODE_POP: POP(); break;
 
@@ -846,7 +904,6 @@ Value interpret(VM* vm, ObjFn* fn)
         int symbol = READ_ARG();
 
         Value receiver = fiber->stack[fiber->stackSize - numArgs];
-
         ObjClass* classObj = getClass(vm, receiver);
         Method* method = &classObj->methods[symbol];
         switch (method->type)

@@ -60,6 +60,12 @@ typedef enum
   // Stores the top of stack in global slot [arg]. Does not pop it.
   CODE_STORE_GLOBAL,
 
+  // Pushes the value of the field in slot [arg] for the current receiver.
+  CODE_LOAD_FIELD,
+
+  // Stores the top of stack in field slot [arg] in the current receiver.
+  CODE_STORE_FIELD,
+
   // Invoke the method with symbol [arg]. The number indicates the number of
   // arguments (not including the receiver).
   CODE_CALL_0,
@@ -180,7 +186,7 @@ void freeVM(VM* vm);
 ObjFn* newFunction(VM* vm);
 
 // Creates a new class object.
-ObjClass* newClass(VM* vm, ObjClass* superclass);
+ObjClass* newClass(VM* vm, ObjClass* superclass, int numFields);
 
 // Creates a new instance of the given [classObj].
 Value newInstance(VM* vm, ObjClass* classObj);

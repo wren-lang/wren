@@ -109,6 +109,7 @@ typedef struct sObjClass
   Obj obj;
   struct sObjClass* metaclass;
   struct sObjClass* superclass;
+  int numFields;
   // TODO(bob): Hack. Probably don't want to use this much space.
   Method methods[MAX_SYMBOLS];
 } ObjClass;
@@ -117,7 +118,7 @@ typedef struct
 {
   Obj obj;
   ObjClass* classObj;
-  // TODO(bob): Fields.
+  Value fields[];
 } ObjInstance;
 
 typedef struct
@@ -153,6 +154,9 @@ typedef struct
 
 // Returns non-zero if [value] is a function object.
 #define IS_FN(value) (valueIsFn(value))
+
+// Returns non-zero if [value] is an instance.
+#define IS_INSTANCE(value) (valueIsInstance(value))
 
 // Returns non-zero if [value] is a string object.
 #define IS_STRING(value) (valueIsString(value))
@@ -300,6 +304,7 @@ typedef struct
 
 int valueIsBool(Value value);
 int valueIsFn(Value value);
+int valueIsInstance(Value value);
 int valueIsString(Value value);
 Value objectToValue(Obj* obj);
 

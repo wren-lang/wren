@@ -57,6 +57,7 @@ typedef enum
   TOKEN_VAR,
   TOKEN_WHILE,
 
+  TOKEN_FIELD,
   TOKEN_NAME,
   TOKEN_NUMBER,
   TOKEN_STRING,
@@ -136,6 +137,10 @@ typedef struct sCompiler
   // Symbol table for declared local variables in this block.
   SymbolTable locals;
 
+  // Symbol table for the fields of the nearest enclosing class, or NULL if not
+  // currently inside a class.
+  SymbolTable* fields;
+
   // Non-zero if the function being compiled is a method.
   int isMethod;
 
@@ -160,6 +165,9 @@ static int initCompiler(Compiler* compiler, Parser* parser,
   compiler->isMethod = isMethod;
 
   initSymbolTable(&compiler->locals);
+
+  // Propagate the enclosing class downwards.
+  compiler->fields = parent != NULL ? parent->fields :  NULL;
 
   compiler->fn = newFunction(parser->vm);
   compiler->fn->numConstants = 0;
@@ -328,14 +336,12 @@ static void readNumber(Parser* parser)
 }
 
 // Finishes lexing an identifier. Handles reserved words.
-static void readName(Parser* parser)
+static void readName(Parser* parser, TokenType type)
 {
   while (isName(peekChar(parser)) || isDigit(peekChar(parser)))
   {
     nextChar(parser);
   }
-
-  TokenType type = TOKEN_NAME;
 
   if (isKeyword(parser, "class")) type = TOKEN_CLASS;
   if (isKeyword(parser, "else")) type = TOKEN_ELSE;
@@ -447,11 +453,12 @@ static void readRawToken(Parser* parser)
         break;
 
       case '"': readString(parser); return;
+      case '_': readName(parser, TOKEN_FIELD); return;
 
       default:
         if (isName(c))
         {
-          readName(parser);
+          readName(parser, TOKEN_NAME);
         }
         else if (isDigit(c))
         {
@@ -789,6 +796,32 @@ static void function(Compiler* compiler, int allowAssignment)
   emit(compiler, constant);
 }
 
+static void field(Compiler* compiler, int allowAssignment)
+{
+  // TODO(bob): Check for null fields.
+
+  // Look up the field, or implicitly define it.
+  int field = ensureSymbol(compiler->fields,
+       compiler->parser->source + compiler->parser->previous.start,
+       compiler->parser->previous.end - compiler->parser->previous.start);
+
+  // If there's an "=" after a field name, it's an assignment.
+  if (match(compiler, TOKEN_EQ))
+  {
+    if (!allowAssignment) error(compiler, "Invalid assignment.");
+
+    // Compile the right-hand side.
+    statement(compiler);
+
+    emit(compiler, CODE_STORE_FIELD);
+    emit(compiler, field);
+    return;
+  }
+
+  emit(compiler, CODE_LOAD_FIELD);
+  emit(compiler, field);
+}
+
 static void name(Compiler* compiler, int allowAssignment)
 {
   // See if it's a local in this scope.
@@ -1088,6 +1121,7 @@ GrammarRule rules[] =
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_WHILE         */ UNUSED,
+  /* TOKEN_FIELD         */ PREFIX(field),
   /* TOKEN_NAME          */ { name, NULL, parameterList, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(number),
   /* TOKEN_STRING        */ PREFIX(string),
@@ -1308,11 +1342,28 @@ void definition(Compiler* compiler)
       emit(compiler, CODE_CLASS);
     }
 
+    // Store a placeholder for the number of fields argument. We don't know
+    // the value until we've compiled all the methods to see which fields are
+    // used.
+    int numFieldsInstruction = emit(compiler, 255);
+
     // Store it in its name.
     defineVariable(compiler, symbol);
 
     // Compile the method definitions.
     consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
+
+    // Set up a symbol table for the class's fields.
+    SymbolTable* previousFields = compiler->fields;
+    SymbolTable fields;
+    initSymbolTable(&fields);
+    compiler->fields = &fields;
+
+    // TODO(bob): Need to handle inherited fields. Ideally, a subclass's fields
+    // would be statically compiled to slot indexes right after the superclass
+    // ones, but we don't know the superclass statically. Instead, will
+    // probably have to determine the field offset at class creation time in
+    // the VM and then adjust by that every time a field is accessed/modified.
 
     while (!match(compiler, TOKEN_RIGHT_BRACE))
     {
@@ -1320,6 +1371,9 @@ void definition(Compiler* compiler)
       if (match(compiler, TOKEN_STATIC))
       {
         instruction = CODE_METHOD_STATIC;
+        // TODO(bob): Need to handle fields inside static methods correctly.
+        // Currently, they're compiled as instance fields, which will be wrong
+        // wrong wrong given that the receiver is actually the class obj.
       }
       else if (match(compiler, TOKEN_THIS))
       {
@@ -1342,6 +1396,10 @@ void definition(Compiler* compiler)
               "Expect newline after definition in class.");
     }
 
+    // Update the class with the number of fields.
+    compiler->fn->bytecode[numFieldsInstruction] = fields.count;
+
+    compiler->fields = previousFields;
     return;
   }
 
