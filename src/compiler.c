@@ -915,7 +915,7 @@ static void string(Compiler* compiler, int allowAssignment)
 
   // Define a constant for the literal.
   int constant = addConstant(compiler,
-      (Value)newString(compiler->parser->vm, start, length));
+      newString(compiler->parser->vm, start, length));
 
   // Compile the code to load the constant.
   emit(compiler, CODE_CONSTANT);

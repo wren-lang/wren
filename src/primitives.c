@@ -50,11 +50,11 @@ DEF_PRIMITIVE(bool_toString)
   // TODO(bob): Intern these strings or something.
   if (AS_BOOL(args[0]))
   {
-    return (Value)newString(vm, "true", 4);
+    return newString(vm, "true", 4);
   }
   else
   {
-    return (Value)newString(vm, "false", 5);
+    return newString(vm, "false", 5);
   }
 }
 

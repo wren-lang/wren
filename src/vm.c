@@ -341,7 +341,7 @@ Value newInstance(VM* vm, ObjClass* classObj)
   {
     instance->fields[i] = NULL_VAL;
   }
-  
+
   return OBJ_VAL(instance);
 }
 
@@ -938,7 +938,7 @@ Value interpret(VM* vm, ObjFn* fn)
             LOAD_FRAME();
             break;
           }
-            
+
           case METHOD_BLOCK:
             STORE_FRAME();
             callFunction(fiber, method->fn, numArgs);
