@@ -85,6 +85,12 @@ DEF_PRIMITIVE(fn_bangeq)
   return BOOL_VAL(AS_FN(args[0]) != AS_FN(args[1]));
 }
 
+DEF_PRIMITIVE(list_count)
+{
+  ObjList* list = AS_LIST(args[0]);
+  return NUM_VAL(list->count);
+}
+
 DEF_PRIMITIVE(num_abs)
 {
   return NUM_VAL(fabs(AS_NUM(args[0])));
@@ -277,6 +283,7 @@ static const char* CORE_LIB =
 "class Bool {}\n"
 "class Class {}\n"
 "class Function {}\n"
+"class List {}\n"
 "class Num {}\n"
 "class Null {}\n"
 "class String {}\n"
@@ -309,6 +316,9 @@ void loadCore(VM* vm)
   FIBER_PRIMITIVE(vm->fnClass, "call        ", fn_call8);
   PRIMITIVE(vm->fnClass, "== ", fn_eqeq);
   PRIMITIVE(vm->fnClass, "!= ", fn_bangeq);
+
+  vm->listClass = AS_CLASS(findGlobal(vm, "List"));
+  PRIMITIVE(vm->listClass, "count", list_count);
 
   vm->nullClass = AS_CLASS(findGlobal(vm, "Null"));
 

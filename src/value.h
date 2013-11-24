@@ -22,6 +22,7 @@ typedef enum {
   OBJ_CLASS,
   OBJ_FN,
   OBJ_INSTANCE,
+  OBJ_LIST,
   OBJ_STRING
 } ObjType;
 
@@ -124,6 +125,14 @@ typedef struct
 typedef struct
 {
   Obj obj;
+  int count;
+  // Pointer to a contiguous array of [length] elements.
+  Value* elements;
+} ObjList;
+
+typedef struct
+{
+  Obj obj;
   char* value;
 } ObjString;
 
@@ -136,6 +145,9 @@ typedef struct
 
 // Value -> ObjInstance*.
 #define AS_INSTANCE(value) ((ObjInstance*)AS_OBJ(value))
+
+// Value -> ObjList*.
+#define AS_LIST(value) ((ObjList*)AS_OBJ(value))
 
 // Value -> double.
 #define AS_NUM(v) ((v).num)

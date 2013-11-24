@@ -24,3 +24,4 @@ bar.method(1, 2, 3, 4) // expect: bar
 // TODO(bob): Private fields.
 // TODO(bob): Super (or inner) calls.
 // TODO(bob): Grammar for what expressions can follow "is".
+// TODO(bob): Prevent extending built-in types.

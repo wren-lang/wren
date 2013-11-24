@@ -93,6 +93,15 @@ static void markInstance(ObjInstance* instance)
   }
 }
 
+static void markList(ObjList* list)
+{
+  Value* elements = list->elements;
+  for (int i = 0; i < list->count; i++)
+  {
+    markValue(elements[i]);
+  }
+}
+
 static void markObj(Obj* obj)
 {
 #ifdef TRACE_MEMORY
@@ -110,6 +119,7 @@ static void markObj(Obj* obj)
     case OBJ_CLASS: markClass((ObjClass*)obj); break;
     case OBJ_FN: markFn((ObjFn*)obj); break;
     case OBJ_INSTANCE: markInstance((ObjInstance*)obj); break;
+    case OBJ_LIST: markList((ObjList*)obj); break;
     case OBJ_STRING:
       // Just mark the string itself.
       obj->flags |= FLAG_MARKED;
@@ -139,6 +149,10 @@ void freeObj(VM* vm, Obj* obj)
 
   switch (obj->type)
   {
+    case OBJ_CLASS:
+      size = sizeof(ObjClass);
+      break;
+
     case OBJ_FN:
     {
       // TODO(bob): Don't hardcode array sizes.
@@ -146,6 +160,25 @@ void freeObj(VM* vm, Obj* obj)
       ObjFn* fn = (ObjFn*)obj;
       free(fn->bytecode);
       free(fn->constants);
+      break;
+    }
+
+    case OBJ_INSTANCE:
+    {
+      size = sizeof(ObjInstance);
+
+      // Include the size of the field array.
+      ObjInstance* instance = (ObjInstance*)obj;
+      size += sizeof(Value) * instance->classObj->numFields;
+      break;
+    }
+
+    case OBJ_LIST:
+    {
+      size = sizeof(ObjList);
+      ObjList* list = (ObjList*)obj;
+      size += sizeof(Value) * list->count;
+      free(list->elements);
       break;
     }
 
@@ -157,16 +190,6 @@ void freeObj(VM* vm, Obj* obj)
       free(string->value);
       break;
     }
-
-    case OBJ_CLASS:
-      size = sizeof(ObjClass);
-      break;
-
-    case OBJ_INSTANCE:
-      // Nothing to delete.
-      size = sizeof(Obj);
-      // TODO(bob): Include size of fields for OBJ_INSTANCE.
-      break;
   }
 
   vm->totalAllocated -= size;
@@ -233,6 +256,8 @@ void collectGarbage(VM* vm)
 
 void* allocate(VM* vm, size_t size)
 {
+  ASSERT(size > 0, "Should not allocate 0 bytes.");
+
   vm->totalAllocated += size;
 
 #ifdef DEBUG_GC_STRESS
@@ -343,6 +368,23 @@ Value newInstance(VM* vm, ObjClass* classObj)
   }
 
   return OBJ_VAL(instance);
+}
+
+ObjList* newList(VM* vm, int numElements)
+{
+  // Allocate this before the list object in case it triggers a GC which would
+  // free the list.
+  Value* elements = NULL;
+  if (numElements > 0)
+  {
+    elements = allocate(vm, sizeof(Value) * numElements);
+  }
+
+  ObjList* list = allocate(vm, sizeof(ObjList));
+  initObj(vm, &list->obj, OBJ_LIST);
+  list->count = numElements;
+  list->elements = elements;
+  return list;
 }
 
 Value newString(VM* vm, const char* text, size_t length)
@@ -474,12 +516,20 @@ int dumpInstruction(VM* vm, ObjFn* fn, int i)
       break;
 
     case CODE_CLASS:
+    {
+      int numFields = bytecode[i++];
       printf("CLASS\n");
+      printf("%04d   | num fields %d\n", i, numFields);
       break;
+    }
 
     case CODE_SUBCLASS:
+    {
+      int numFields = bytecode[i++];
       printf("SUBCLASS\n");
+      printf("%04d   | num fields %d\n", i, numFields);
       break;
+    }
 
     case CODE_METHOD_INSTANCE:
     {
@@ -508,6 +558,14 @@ int dumpInstruction(VM* vm, ObjFn* fn, int i)
       printf("METHOD_CTOR \"%s\"\n", getSymbolName(&vm->methods, symbol));
       printf("%04d   | symbol %d\n", i - 1, symbol);
       printf("%04d   | constant %d\n", i, constant);
+      break;
+    }
+
+    case CODE_LIST:
+    {
+      int count = bytecode[i++];
+      printf("LIST\n");
+      printf("%04d   | count %d\n", i, count);
       break;
     }
 
@@ -673,6 +731,7 @@ static ObjClass* getClass(VM* vm, Value value)
       case OBJ_CLASS: return AS_CLASS(value)->metaclass;
       case OBJ_FN: return vm->fnClass;
       case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
+      case OBJ_LIST: return vm->listClass;
       case OBJ_STRING: return vm->stringClass;
     }
   }
@@ -699,6 +758,7 @@ static ObjClass* getClass(VM* vm, Value value)
       {
         case OBJ_CLASS: return AS_CLASS(value)->metaclass;
         case OBJ_FN: return vm->fnClass;
+        case OBJ_LIST: return vm->listClass;
         case OBJ_STRING: return vm->stringClass;
         case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
       }
@@ -794,6 +854,22 @@ Value interpret(VM* vm, ObjFn* fn)
         classObj->metaclass->methods[newSymbol].fn = NULL;
 
         PUSH(OBJ_VAL(classObj));
+        break;
+      }
+
+      case CODE_LIST:
+      {
+        int numElements = READ_ARG();
+        ObjList* list = newList(vm, numElements);
+        for (int i = 0; i < numElements; i++)
+        {
+          list->elements[i] = fiber->stack[fiber->stackSize - numElements + i];
+        }
+
+        // Discard the elements.
+        fiber->stackSize -= numElements;
+
+        PUSH(OBJ_VAL(list));
         break;
       }
 
@@ -1098,6 +1174,7 @@ void printValue(Value value)
       case OBJ_CLASS: printf("[class %p]", obj); break;
       case OBJ_FN: printf("[fn %p]", obj); break;
       case OBJ_INSTANCE: printf("[instance %p]", obj); break;
+      case OBJ_LIST: printf("[list %p]", obj); break;
       case OBJ_STRING: printf("%s", AS_CSTRING(value)); break;
     }
   }
@@ -1124,6 +1201,7 @@ void printValue(Value value)
         case OBJ_CLASS: printf("[class %p]", value.obj); break;
         case OBJ_FN: printf("[fn %p]", value.obj); break;
         case OBJ_INSTANCE: printf("[instance %p]", value.obj); break;
+        case OBJ_LIST: printf("[list %p]", value.obj); break;
         case OBJ_STRING: printf("%s", AS_CSTRING(value)); break;
       }
   }

@@ -42,11 +42,10 @@ typedef enum
   // the stack.
   CODE_METHOD_CTOR,
 
-  // Push a copy of the top of stack.
-  CODE_DUP,
-
-  // Pop and discard the top of stack.
-  CODE_POP,
+  // Create a new list with [arg] elements. The top [arg] values on the stack
+  // are the elements in forward order. Removes the elements and then pushes
+  // the new list.
+  CODE_LIST,
 
   // Pushes the value in local slot [arg].
   CODE_LOAD_LOCAL,
@@ -65,6 +64,12 @@ typedef enum
 
   // Stores the top of stack in field slot [arg] in the current receiver.
   CODE_STORE_FIELD,
+
+  // Push a copy of the top of stack.
+  CODE_DUP,
+
+  // Pop and discard the top of stack.
+  CODE_POP,
 
   // Invoke the method with symbol [arg]. The number indicates the number of
   // arguments (not including the receiver).
@@ -119,6 +124,7 @@ struct sVM
   ObjClass* boolClass;
   ObjClass* classClass;
   ObjClass* fnClass;
+  ObjClass* listClass;
   ObjClass* nullClass;
   ObjClass* numClass;
   ObjClass* objectClass;
@@ -190,6 +196,10 @@ ObjClass* newClass(VM* vm, ObjClass* superclass, int numFields);
 
 // Creates a new instance of the given [classObj].
 Value newInstance(VM* vm, ObjClass* classObj);
+
+// Creates a new list with [numElements] elements (which are left
+// uninitialized.)
+ObjList* newList(VM* vm, int numElements);
 
 // Creates a new string object and copies [text] into it.
 Value newString(VM* vm, const char* text, size_t length);

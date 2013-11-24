@@ -783,6 +783,27 @@ static void grouping(Compiler* compiler, int allowAssignment)
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
+static void list(Compiler* compiler, int allowAssignment)
+{
+  // Compile the list elements.
+  int numElements = 0;
+  if (peek(compiler) != TOKEN_RIGHT_BRACKET)
+  {
+    do
+    {
+      numElements++;
+      assignment(compiler);
+    } while (match(compiler, TOKEN_COMMA));
+  }
+
+  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after list elements.");
+
+  // Create the list.
+  emit(compiler, CODE_LIST);
+  // TODO(bob): Handle lists >255 elements.
+  emit(compiler, numElements);
+}
+
 // Unary operators like `-foo`.
 static void unaryOp(Compiler* compiler, int allowAssignment)
 {
@@ -1145,14 +1166,13 @@ void mixedSignature(Compiler* compiler, char* name, int* length)
 #define PREFIX(fn)                 { fn, NULL, NULL, PREC_NONE, NULL }
 #define INFIX(prec, fn)            { NULL, fn, NULL, prec, NULL }
 #define INFIX_OPERATOR(prec, name) { NULL, infixOp, infixSignature, prec, name }
-#define OPERATOR(prec, name)       { unaryOp, infixOp, mixedSignature, prec, name }
 #define PREFIX_OPERATOR(name)      { unaryOp, NULL, unarySignature, PREC_NONE, name }
 
 GrammarRule rules[] =
 {
   /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
-  /* TOKEN_LEFT_BRACKET  */ INFIX(PREC_CALL, subscript),
+  /* TOKEN_LEFT_BRACKET  */ { list, subscript, NULL, PREC_CALL, NULL },
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
   /* TOKEN_LEFT_BRACE    */ UNUSED,
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
@@ -1163,7 +1183,7 @@ GrammarRule rules[] =
   /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/ "),
   /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_TERM, "% "),
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
-  /* TOKEN_MINUS         */ OPERATOR(PREC_TERM, "- "),
+  /* TOKEN_MINUS         */ { unaryOp, infixOp, mixedSignature, PREC_TERM, "- " },
   /* TOKEN_PIPE          */ UNUSED,
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGIC, or),
   /* TOKEN_AMP           */ UNUSED,
