@@ -15,6 +15,9 @@
 
 #define POP_SCOPE popScope(compiler)
 
+// TODO(bob): Get rid of this and use a growable buffer.
+#define MAX_STRING (1024)
+
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -108,6 +111,13 @@ typedef struct
 
   // Non-zero if a syntax or compile error has occurred.
   int hasError;
+
+  // TODO(bob): Dynamically allocate this.
+  // A buffer for the unescaped text of the current token if it's a string
+  // literal. Unlike the raw token, this will have escape sequences translated
+  // to their literal equivalent.
+  char currentString[MAX_STRING];
+  int currentStringLength;
 } Parser;
 
 typedef struct sScope
@@ -359,11 +369,40 @@ static void readName(Parser* parser, TokenType type)
   makeToken(parser, type);
 }
 
+// Adds [c] to the current string literal being tokenized.
+static void addStringChar(Parser* parser, char c)
+{
+  parser->currentString[parser->currentStringLength++] = c;
+}
+
 // Finishes lexing a string literal.
 static void readString(Parser* parser)
 {
-  // TODO(bob): Escape sequences, EOL, EOF, etc.
-  while (nextChar(parser) != '"');
+  parser->currentStringLength = 0;
+  for (;;)
+  {
+    char c = nextChar(parser);
+    if (c == '"') break;
+
+    if (c == '\\')
+    {
+      switch (nextChar(parser))
+      {
+        case '"':  addStringChar(parser, '"'); break;
+        case '\\': addStringChar(parser, '\\'); break;
+        case 'n':  addStringChar(parser, '\n'); break;
+        default:
+          // TODO(bob): Emit error token.
+          break;
+      }
+
+      // TODO(bob): Other escapes (/t, /r, etc.), Unicode escape sequences.
+    }
+    else
+    {
+      addStringChar(parser, c);
+    }
+  }
 
   makeToken(parser, TOKEN_STRING);
 }
@@ -905,17 +944,9 @@ static void number(Compiler* compiler, int allowAssignment)
 
 static void string(Compiler* compiler, int allowAssignment)
 {
-  Token* token = &compiler->parser->previous;
-
-  // TODO(bob): Handle escaping.
-
-  // Ignore the surrounding "".
-  size_t length = token->end - token->start - 2;
-  const char* start = compiler->parser->source + token->start + 1;
-
   // Define a constant for the literal.
-  int constant = addConstant(compiler,
-      newString(compiler->parser->vm, start, length));
+  int constant = addConstant(compiler, newString(compiler->parser->vm,
+      compiler->parser->currentString, compiler->parser->currentStringLength));
 
   // Compile the code to load the constant.
   emit(compiler, CODE_CONSTANT);

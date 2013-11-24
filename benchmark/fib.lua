@@ -7,5 +7,4 @@ local start = os.clock()
 for i = 1, 5 do
   io.write(fib(30) .. "\n")
 end
-local elapsed = os.clock() - start
-io.write(string.format("elapsed: %.8f\n", elapsed))
+io.write(string.format("elapsed: %.8f\n", os.clock() - start))
