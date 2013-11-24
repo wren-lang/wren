@@ -704,7 +704,7 @@ typedef enum
   PREC_TERM,       // + -
   PREC_FACTOR,     // * / %
   PREC_UNARY,      // unary - ! ~
-  PREC_CALL        // . ()
+  PREC_CALL        // . () []
 } Precedence;
 
 // Forward declarations since the grammar is recursive.
@@ -982,6 +982,42 @@ static void this_(Compiler* compiler, int allowAssignment)
   emit(compiler, 0);
 }
 
+// Subscript or "array indexing" operator like `foo[bar]`.
+static void subscript(Compiler* compiler, int allowAssignment)
+{
+  char name[MAX_NAME];
+  int length = 1;
+  int numArgs = 0;
+
+  // Build the method name. To allow overloading by arity, we add a space to
+  // the name for each argument.
+  name[0] = '[';
+  // TODO(bob): Check for length overflow.
+
+  // Parse the argument list.
+  do
+  {
+    statement(compiler);
+
+    // Add a space in the name for each argument. Lets us overload by
+    // arity.
+    numArgs++;
+    name[length++] = ' ';
+  }
+  while (match(compiler, TOKEN_COMMA));
+  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
+
+  name[length++] = ']';
+  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
+
+  // TODO(bob): Check for "=" here and handle subscript setters.
+
+  // Compile the method call.
+  emit(compiler, CODE_CALL_0 + numArgs);
+  // TODO(bob): Handle > 10 args.
+  emit(compiler, symbol);
+}
+
 void call(Compiler* compiler, int allowAssignment)
 {
   char name[MAX_NAME];
@@ -1116,7 +1152,7 @@ GrammarRule rules[] =
 {
   /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
-  /* TOKEN_LEFT_BRACKET  */ UNUSED,
+  /* TOKEN_LEFT_BRACKET  */ INFIX(PREC_CALL, subscript),
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
   /* TOKEN_LEFT_BRACE    */ UNUSED,
   /* TOKEN_RIGHT_BRACE   */ UNUSED,

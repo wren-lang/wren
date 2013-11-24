@@ -229,6 +229,36 @@ DEF_PRIMITIVE(string_bangeq)
   return BOOL_VAL(strcmp(a, b) != 0);
 }
 
+DEF_PRIMITIVE(string_subscript)
+{
+  // TODO(bob): Instead of returning null here, all of these failure cases
+  // should signal an error explicitly somehow.
+  if (!IS_NUM(args[1])) return NULL_VAL;
+
+  double indexNum = AS_NUM(args[1]);
+  int index = (int)indexNum;
+  // Make sure the index is an integer.
+  if (indexNum != index) return NULL_VAL;
+
+  ObjString* string = AS_STRING(args[0]);
+
+  // Negative indices count from the end.
+  // TODO(bob): Strings should cache their length.
+  int length = (int)strlen(string->value);
+  if (index < 0) index = length + index;
+
+  // Check bounds.
+  if (index < 0 || index >= length) return NULL_VAL;
+
+  // The result is a one-character string.
+  // TODO(bob): Handle UTF-8.
+  Value value = newString(vm, NULL, 2);
+  ObjString* result = AS_STRING(value);
+  result->value[0] = AS_CSTRING(args[0])[index];
+  result->value[1] = '\0';
+  return value;
+}
+
 DEF_PRIMITIVE(io_write)
 {
   printValue(args[1]);
@@ -305,6 +335,7 @@ void loadCore(VM* vm)
   PRIMITIVE(vm->stringClass, "+ ", string_plus);
   PRIMITIVE(vm->stringClass, "== ", string_eqeq);
   PRIMITIVE(vm->stringClass, "!= ", string_bangeq);
+  PRIMITIVE(vm->stringClass, "[ ]", string_subscript);
 
   ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
   PRIMITIVE(ioClass, "write ", io_write);
