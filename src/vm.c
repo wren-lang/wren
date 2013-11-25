@@ -41,6 +41,70 @@ void freeVM(VM* vm)
   free(vm);
 }
 
+static void collectGarbage(VM* vm);
+
+// A generic allocation that handles all memory changes, like so:
+//
+// - To allocate new memory, [memory] is NULL and [oldSize] is zero.
+//
+// - To attempt to grow an existing allocation, [memory] is the memory,
+//   [oldSize] is its previous size, and [newSize] is the desired size.
+//   It returns [memory] if it was able to grow it in place, or a new pointer
+//   if it had to move it.
+//
+// - To shrink memory, [memory], [oldSize], and [newSize] are the same as above
+//   but it will always return [memory]. If [newSize] is zero, the memory will
+//   be freed and `NULL` will be returned.
+//
+// - To free memory, [newSize] will be zero.
+void* reallocate(VM* vm, void* memory, size_t oldSize, size_t newSize)
+{
+  ASSERT(memory == NULL || oldSize > 0, "Cannot take unsized previous memory.");
+
+  vm->totalAllocated += newSize - oldSize;
+
+#ifdef DEBUG_GC_STRESS
+  if (newSize > oldSize)
+  {
+    collectGarbage(vm);
+  }
+#else
+  if (vm->totalAllocated > vm->nextGC)
+  {
+#ifdef TRACE_MEMORY
+    size_t before = vm->totalAllocated;
+#endif
+    collectGarbage(vm);
+    vm->nextGC = vm->totalAllocated * 3 / 2;
+
+#ifdef TRACE_MEMORY
+    printf("GC %ld before, %ld after (%ld collected), next at %ld\n",
+           before, vm->totalAllocated, before - vm->totalAllocated, vm->nextGC);
+#endif
+  }
+#endif
+
+  if (newSize == 0)
+  {
+    ASSERT(memory != NULL, "Must have pointer to free.");
+    free(memory);
+    return NULL;
+  }
+
+  // TODO(bob): Let external code provide allocator.
+  return realloc(memory, newSize);
+}
+
+static void* allocate(VM* vm, size_t size)
+{
+  return reallocate(vm, NULL, 0, size);
+}
+
+static void* deallocate(VM* vm, void* memory, size_t oldSize)
+{
+  return reallocate(vm, memory, oldSize, 0);
+}
+
 static void markValue(Value value);
 
 static void markFn(ObjFn* fn)
@@ -156,10 +220,10 @@ void freeObj(VM* vm, Obj* obj)
     case OBJ_FN:
     {
       // TODO(bob): Don't hardcode array sizes.
-      size = sizeof(ObjFn) + sizeof(Code) * 1024 + sizeof(Value) * 256;
+      size = sizeof(ObjFn);
       ObjFn* fn = (ObjFn*)obj;
-      free(fn->bytecode);
-      free(fn->constants);
+      deallocate(vm, fn->bytecode, sizeof(Code) * 1024);
+      deallocate(vm, fn->constants, sizeof(Value) * 256);
       break;
     }
 
@@ -177,27 +241,24 @@ void freeObj(VM* vm, Obj* obj)
     {
       size = sizeof(ObjList);
       ObjList* list = (ObjList*)obj;
-      size += sizeof(Value) * list->count;
-      free(list->elements);
+      if (list->elements != NULL)
+      {
+        deallocate(vm, list->elements, sizeof(Value) * list->count);
+      }
       break;
     }
 
     case OBJ_STRING:
     {
-      // TODO(bob): O(n) calculation here is lame!
+      size = sizeof(ObjString);
       ObjString* string = (ObjString*)obj;
-      size = sizeof(ObjString) + strlen(string->value);
-      free(string->value);
+      // TODO(bob): O(n) calculation here is lame!
+      deallocate(vm, string->value, strlen(string->value));
       break;
     }
   }
 
-  vm->totalAllocated -= size;
-#ifdef TRACE_MEMORY
-  printf(" (%ld bytes)\n", sizeof(Obj));
-#endif
-
-  free(obj);
+  deallocate(vm, obj, size);
 }
 
 void collectGarbage(VM* vm)
@@ -252,35 +313,6 @@ void collectGarbage(VM* vm)
       obj = &(*obj)->next;
     }
   }
-}
-
-void* allocate(VM* vm, size_t size)
-{
-  ASSERT(size > 0, "Should not allocate 0 bytes.");
-
-  vm->totalAllocated += size;
-
-#ifdef DEBUG_GC_STRESS
-  collectGarbage(vm);
-#else
-  if (vm->totalAllocated > vm->nextGC)
-  {
-#ifdef TRACE_MEMORY
-    size_t before = vm->totalAllocated;
-#endif
-    collectGarbage(vm);
-    vm->nextGC = vm->totalAllocated * 3 / 2;
-
-#ifdef TRACE_MEMORY
-    printf(
-        "GC %ld before, %ld after (%ld collected), next at %ld\n",
-        before, vm->totalAllocated, before - vm->totalAllocated, vm->nextGC);
-#endif
-  }
-#endif
-
-  // TODO(bob): Let external code provide allocator.
-  return malloc(size);
 }
 
 void initObj(VM* vm, Obj* obj, ObjType type)
