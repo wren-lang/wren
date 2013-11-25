@@ -808,342 +808,392 @@ Value interpret(VM* vm, ObjFn* fn)
       ip = frame->ip; \
       bytecode = frame->fn->bytecode \
 
-  for (;;)
+  #ifdef COMPUTED_GOTOS
+
+  static void* dispatchTable[] = {
+    &&code_CONSTANT,
+    &&code_NULL,
+    &&code_FALSE,
+    &&code_TRUE,
+    &&code_CLASS,
+    &&code_SUBCLASS,
+    &&code_METHOD_INSTANCE,
+    &&code_METHOD_STATIC,
+    &&code_METHOD_CTOR,
+    &&code_LIST,
+    &&code_LOAD_LOCAL,
+    &&code_STORE_LOCAL,
+    &&code_LOAD_GLOBAL,
+    &&code_STORE_GLOBAL,
+    &&code_LOAD_FIELD,
+    &&code_STORE_FIELD,
+    &&code_DUP,
+    &&code_POP,
+    &&code_CALL_0,
+    &&code_CALL_1,
+    &&code_CALL_2,
+    &&code_CALL_3,
+    &&code_CALL_4,
+    &&code_CALL_5,
+    &&code_CALL_6,
+    &&code_CALL_7,
+    &&code_CALL_8,
+    &&code_CALL_9,
+    &&code_CALL_10,
+    &&code_JUMP,
+    &&code_LOOP,
+    &&code_JUMP_IF,
+    &&code_AND,
+    &&code_OR,
+    &&code_IS,
+    &&code_END
+  };
+
+  #define INTERPRET_LOOP    DISPATCH();
+  #define CASE_CODE(name)   code_##name
+  #define DISPATCH()        goto *dispatchTable[instruction = bytecode[ip++]]
+
+  #else
+
+  #define INTERPRET_LOOP    for (;;) switch (instruction = bytecode[ip++])
+  #define CASE_CODE(name)   case CODE_##name
+  #define DISPATCH()        break
+
+  #endif
+
+  Code instruction;
+  INTERPRET_LOOP
   {
-    Code instruction = bytecode[ip++];
-    switch (instruction)
+    CASE_CODE(CONSTANT):
+      PUSH(frame->fn->constants[READ_ARG()]);
+      DISPATCH();
+
+    CASE_CODE(NULL):  PUSH(NULL_VAL); DISPATCH();
+    CASE_CODE(FALSE): PUSH(FALSE_VAL); DISPATCH();
+    CASE_CODE(TRUE):  PUSH(TRUE_VAL); DISPATCH();
+
+    CASE_CODE(CLASS):
+    CASE_CODE(SUBCLASS):
     {
-      case CODE_CONSTANT:
-        PUSH(frame->fn->constants[READ_ARG()]);
-        break;
+      int isSubclass = instruction == CODE_SUBCLASS;
+      int numFields = READ_ARG();
 
-      case CODE_NULL:  PUSH(NULL_VAL); break;
-      case CODE_FALSE: PUSH(FALSE_VAL); break;
-      case CODE_TRUE:  PUSH(TRUE_VAL); break;
-
-      case CODE_CLASS:
-      case CODE_SUBCLASS:
+      ObjClass* superclass;
+      if (isSubclass)
       {
-        int isSubclass = instruction == CODE_SUBCLASS;
-        int numFields = READ_ARG();
+        // TODO(bob): Handle the superclass not being a class object!
+        superclass = AS_CLASS(POP());
+      }
+      else
+      {
+        // Implicit Object superclass.
+        superclass = vm->objectClass;
+      }
 
-        ObjClass* superclass;
-        if (isSubclass)
+      ObjClass* classObj = newClass(vm, superclass, numFields);
+
+      // Assume the first class being defined is Object.
+      if (vm->objectClass == NULL)
+      {
+        vm->objectClass = classObj;
+      }
+
+      // Define a "new" method on the metaclass.
+      // TODO(bob): Can this be inherited?
+      int newSymbol = ensureSymbol(&vm->methods, "new", strlen("new"));
+      classObj->metaclass->methods[newSymbol].type = METHOD_CTOR;
+      classObj->metaclass->methods[newSymbol].fn = NULL;
+
+      PUSH(OBJ_VAL(classObj));
+      DISPATCH();
+    }
+
+    CASE_CODE(LIST):
+    {
+      int numElements = READ_ARG();
+      ObjList* list = newList(vm, numElements);
+      for (int i = 0; i < numElements; i++)
+      {
+        list->elements[i] = fiber->stack[fiber->stackSize - numElements + i];
+      }
+
+      // Discard the elements.
+      fiber->stackSize -= numElements;
+
+      PUSH(OBJ_VAL(list));
+      DISPATCH();
+    }
+
+    CASE_CODE(METHOD_INSTANCE):
+    CASE_CODE(METHOD_STATIC):
+    CASE_CODE(METHOD_CTOR):
+    {
+      int type = instruction;
+      int symbol = READ_ARG();
+      int constant = READ_ARG();
+      ObjClass* classObj = AS_CLASS(PEEK());
+
+      switch (type)
+      {
+        case CODE_METHOD_INSTANCE:
+          classObj->methods[symbol].type = METHOD_BLOCK;
+          break;
+
+        case CODE_METHOD_STATIC:
+          // Statics are defined on the metaclass.
+          classObj = classObj->metaclass;
+          classObj->methods[symbol].type = METHOD_BLOCK;
+          break;
+
+        case CODE_METHOD_CTOR:
+          // Constructors are like statics.
+          classObj = classObj->metaclass;
+          classObj->methods[symbol].type = METHOD_CTOR;
+          break;
+      }
+
+      ObjFn* body = AS_FN(frame->fn->constants[constant]);
+      classObj->methods[symbol].fn = body;
+      DISPATCH();
+    }
+
+    CASE_CODE(LOAD_LOCAL):
+    {
+      int local = READ_ARG();
+      PUSH(fiber->stack[frame->stackStart + local]);
+      DISPATCH();
+    }
+
+    CASE_CODE(STORE_LOCAL):
+    {
+      int local = READ_ARG();
+      fiber->stack[frame->stackStart + local] = PEEK();
+      DISPATCH();
+    }
+
+    CASE_CODE(LOAD_GLOBAL):
+    {
+      int global = READ_ARG();
+      PUSH(vm->globals[global]);
+      DISPATCH();
+    }
+
+    CASE_CODE(STORE_GLOBAL):
+    {
+      int global = READ_ARG();
+      vm->globals[global] = PEEK();
+      DISPATCH();
+    }
+
+    CASE_CODE(LOAD_FIELD):
+    {
+      int field = READ_ARG();
+      // TODO(bob): We'll have to do something better here to handle functions
+      // inside methods.
+      Value receiver = fiber->stack[frame->stackStart];
+      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
+      ObjInstance* instance = AS_INSTANCE(receiver);
+      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+      PUSH(instance->fields[field]);
+      DISPATCH();
+    }
+
+    CASE_CODE(STORE_FIELD):
+    {
+      int field = READ_ARG();
+      // TODO(bob): We'll have to do something better here to handle functions
+      // inside methods.
+      Value receiver = fiber->stack[frame->stackStart];
+      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
+      ObjInstance* instance = AS_INSTANCE(receiver);
+      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+      instance->fields[field] = PEEK();
+      DISPATCH();
+    }
+
+    CASE_CODE(DUP): PUSH(PEEK()); DISPATCH();
+    CASE_CODE(POP): POP(); DISPATCH();
+
+    CASE_CODE(CALL_0):
+    CASE_CODE(CALL_1):
+    CASE_CODE(CALL_2):
+    CASE_CODE(CALL_3):
+    CASE_CODE(CALL_4):
+    CASE_CODE(CALL_5):
+    CASE_CODE(CALL_6):
+    CASE_CODE(CALL_7):
+    CASE_CODE(CALL_8):
+    CASE_CODE(CALL_9):
+    CASE_CODE(CALL_10):
+    {
+      // Add one for the implicit receiver argument.
+      int numArgs = instruction - CODE_CALL_0 + 1;
+      int symbol = READ_ARG();
+
+      Value receiver = fiber->stack[fiber->stackSize - numArgs];
+      ObjClass* classObj = getClass(vm, receiver);
+      Method* method = &classObj->methods[symbol];
+      switch (method->type)
+      {
+        case METHOD_NONE:
+          printf("Receiver ");
+          printValue(receiver);
+          printf(" does not implement method \"%s\".\n",
+                 vm->methods.names[symbol]);
+          // TODO(bob): Throw an exception or halt the fiber or something.
+          exit(1);
+          break;
+
+        case METHOD_PRIMITIVE:
         {
-          // TODO(bob): Handle the superclass not being a class object!
-          superclass = AS_CLASS(POP());
+          Value* args = &fiber->stack[fiber->stackSize - numArgs];
+          Value result = method->primitive(vm, args);
+
+          fiber->stack[fiber->stackSize - numArgs] = result;
+
+          // Discard the stack slots for the arguments (but leave one for
+          // the result).
+          fiber->stackSize -= numArgs - 1;
+          break;
         }
-        else
+
+        case METHOD_FIBER:
         {
-          // Implicit Object superclass.
-          superclass = vm->objectClass;
+          STORE_FRAME();
+          Value* args = &fiber->stack[fiber->stackSize - numArgs];
+          method->fiberPrimitive(vm, fiber, args);
+          LOAD_FRAME();
+          break;
         }
 
-        ObjClass* classObj = newClass(vm, superclass, numFields);
+        case METHOD_BLOCK:
+          STORE_FRAME();
+          callFunction(fiber, method->fn, numArgs);
+          LOAD_FRAME();
+          break;
 
-        // Assume the first class being defined is Object.
-        if (vm->objectClass == NULL)
+        case METHOD_CTOR:
         {
-          vm->objectClass = classObj;
-        }
+          Value instance = newInstance(vm, AS_CLASS(receiver));
 
-        // Define a "new" method on the metaclass.
-        // TODO(bob): Can this be inherited?
-        int newSymbol = ensureSymbol(&vm->methods, "new", strlen("new"));
-        classObj->metaclass->methods[newSymbol].type = METHOD_CTOR;
-        classObj->metaclass->methods[newSymbol].fn = NULL;
+          // Store the new instance in the receiver slot so that it can be
+          // "this" in the body of the constructor and returned by it.
+          fiber->stack[fiber->stackSize - numArgs] = instance;
 
-        PUSH(OBJ_VAL(classObj));
-        break;
-      }
-
-      case CODE_LIST:
-      {
-        int numElements = READ_ARG();
-        ObjList* list = newList(vm, numElements);
-        for (int i = 0; i < numElements; i++)
-        {
-          list->elements[i] = fiber->stack[fiber->stackSize - numElements + i];
-        }
-
-        // Discard the elements.
-        fiber->stackSize -= numElements;
-
-        PUSH(OBJ_VAL(list));
-        break;
-      }
-
-      case CODE_METHOD_INSTANCE:
-      case CODE_METHOD_STATIC:
-      case CODE_METHOD_CTOR:
-      {
-        int type = instruction;
-        int symbol = READ_ARG();
-        int constant = READ_ARG();
-        ObjClass* classObj = AS_CLASS(PEEK());
-
-        switch (type)
-        {
-          case CODE_METHOD_INSTANCE:
-            classObj->methods[symbol].type = METHOD_BLOCK;
-            break;
-
-          case CODE_METHOD_STATIC:
-            // Statics are defined on the metaclass.
-            classObj = classObj->metaclass;
-            classObj->methods[symbol].type = METHOD_BLOCK;
-            break;
-
-          case CODE_METHOD_CTOR:
-            // Constructors are like statics.
-            classObj = classObj->metaclass;
-            classObj->methods[symbol].type = METHOD_CTOR;
-            break;
-        }
-
-        ObjFn* body = AS_FN(frame->fn->constants[constant]);
-        classObj->methods[symbol].fn = body;
-        break;
-      }
-
-      case CODE_LOAD_LOCAL:
-      {
-        int local = READ_ARG();
-        PUSH(fiber->stack[frame->stackStart + local]);
-        break;
-      }
-
-      case CODE_STORE_LOCAL:
-      {
-        int local = READ_ARG();
-        fiber->stack[frame->stackStart + local] = PEEK();
-        break;
-      }
-
-      case CODE_LOAD_GLOBAL:
-      {
-        int global = READ_ARG();
-        PUSH(vm->globals[global]);
-        break;
-      }
-
-      case CODE_STORE_GLOBAL:
-      {
-        int global = READ_ARG();
-        vm->globals[global] = PEEK();
-        break;
-      }
-
-      case CODE_LOAD_FIELD:
-      {
-        int field = READ_ARG();
-        // TODO(bob): We'll have to do something better here to handle functions
-        // inside methods.
-        Value receiver = fiber->stack[frame->stackStart];
-        ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
-        ObjInstance* instance = AS_INSTANCE(receiver);
-        ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
-        PUSH(instance->fields[field]);
-        break;
-      }
-
-      case CODE_STORE_FIELD:
-      {
-        int field = READ_ARG();
-        // TODO(bob): We'll have to do something better here to handle functions
-        // inside methods.
-        Value receiver = fiber->stack[frame->stackStart];
-        ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
-        ObjInstance* instance = AS_INSTANCE(receiver);
-        ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
-        instance->fields[field] = PEEK();
-        break;
-      }
-
-      case CODE_DUP: PUSH(PEEK()); break;
-      case CODE_POP: POP(); break;
-
-      case CODE_CALL_0:
-      case CODE_CALL_1:
-      case CODE_CALL_2:
-      case CODE_CALL_3:
-      case CODE_CALL_4:
-      case CODE_CALL_5:
-      case CODE_CALL_6:
-      case CODE_CALL_7:
-      case CODE_CALL_8:
-      case CODE_CALL_9:
-      case CODE_CALL_10:
-      {
-        // Add one for the implicit receiver argument.
-        int numArgs = instruction - CODE_CALL_0 + 1;
-        int symbol = READ_ARG();
-
-        Value receiver = fiber->stack[fiber->stackSize - numArgs];
-        ObjClass* classObj = getClass(vm, receiver);
-        Method* method = &classObj->methods[symbol];
-        switch (method->type)
-        {
-          case METHOD_NONE:
-            printf("Receiver ");
-            printValue(receiver);
-            printf(" does not implement method \"%s\".\n",
-                   vm->methods.names[symbol]);
-            // TODO(bob): Throw an exception or halt the fiber or something.
-            exit(1);
-            break;
-
-          case METHOD_PRIMITIVE:
+          if (method->fn == NULL)
           {
-            Value* args = &fiber->stack[fiber->stackSize - numArgs];
-            Value result = method->primitive(vm, args);
-
-            fiber->stack[fiber->stackSize - numArgs] = result;
-
-            // Discard the stack slots for the arguments (but leave one for
-            // the result).
+            // Default constructor, so no body to call. Just discard the
+            // stack slots for the arguments (but leave one for the instance).
             fiber->stackSize -= numArgs - 1;
-            break;
           }
-
-          case METHOD_FIBER:
+          else
           {
-            STORE_FRAME();
-            Value* args = &fiber->stack[fiber->stackSize - numArgs];
-            method->fiberPrimitive(vm, fiber, args);
-            LOAD_FRAME();
-            break;
-          }
-
-          case METHOD_BLOCK:
+            // Invoke the constructor body.
             STORE_FRAME();
             callFunction(fiber, method->fn, numArgs);
             LOAD_FRAME();
-            break;
-
-          case METHOD_CTOR:
-          {
-            Value instance = newInstance(vm, AS_CLASS(receiver));
-
-            // Store the new instance in the receiver slot so that it can be
-            // "this" in the body of the constructor and returned by it.
-            fiber->stack[fiber->stackSize - numArgs] = instance;
-
-            if (method->fn == NULL)
-            {
-              // Default constructor, so no body to call. Just discard the
-              // stack slots for the arguments (but leave one for the instance).
-              fiber->stackSize -= numArgs - 1;
-            }
-            else
-            {
-              // Invoke the constructor body.
-              STORE_FRAME();
-              callFunction(fiber, method->fn, numArgs);
-              LOAD_FRAME();
-            }
-            break;
           }
+          break;
         }
-        break;
       }
+      DISPATCH();
+    }
 
-      case CODE_JUMP:
-      {
-        int offset = READ_ARG();
-        ip += offset;
-        break;
-      }
+    CASE_CODE(JUMP):
+    {
+      int offset = READ_ARG();
+      ip += offset;
+      DISPATCH();
+    }
 
-      case CODE_LOOP:
+    CASE_CODE(LOOP):
+    {
+      // The loop body's result is on the top of the stack. Since we are
+      // looping and running the body again, discard it.
+      POP();
+
+      // Jump back to the top of the loop.
+      int offset = READ_ARG();
+      ip -= offset;
+      DISPATCH();
+    }
+
+    CASE_CODE(JUMP_IF):
+    {
+      int offset = READ_ARG();
+      Value condition = POP();
+
+      // False is the only falsey value.
+      if (IS_FALSE(condition)) ip += offset;
+      DISPATCH();
+    }
+
+    CASE_CODE(AND):
+    {
+      int offset = READ_ARG();
+      Value condition = PEEK();
+
+      // False is the only falsey value.
+      if (!IS_FALSE(condition))
       {
-        // The loop body's result is on the top of the stack. Since we are
-        // looping and running the body again, discard it.
+        // Discard the condition and evaluate the right hand side.
         POP();
-
-        // Jump back to the top of the loop.
-        int offset = READ_ARG();
-        ip -= offset;
-        break;
       }
-
-      case CODE_JUMP_IF:
+      else
       {
-        int offset = READ_ARG();
-        Value condition = POP();
-
-        // False is the only falsey value.
-        if (IS_FALSE(condition)) ip += offset;
-        break;
+        // Short-circuit the right hand side.
+        ip += offset;
       }
+      DISPATCH();
+    }
 
-      case CODE_AND:
+    CASE_CODE(OR):
+    {
+      int offset = READ_ARG();
+      Value condition = PEEK();
+
+      // False is the only falsey value.
+      if (IS_FALSE(condition))
       {
-        int offset = READ_ARG();
-        Value condition = PEEK();
-
-        // False is the only falsey value.
-        if (!IS_FALSE(condition))
-        {
-          // Discard the condition and evaluate the right hand side.
-          POP();
-        }
-        else
-        {
-          // Short-circuit the right hand side.
-          ip += offset;
-        }
-        break;
+        // Discard the condition and evaluate the right hand side.
+        POP();
       }
-
-      case CODE_OR:
+      else
       {
-        int offset = READ_ARG();
-        Value condition = PEEK();
-
-        // False is the only falsey value.
-        if (IS_FALSE(condition))
-        {
-          // Discard the condition and evaluate the right hand side.
-          POP();
-        }
-        else
-        {
-          // Short-circuit the right hand side.
-          ip += offset;
-        }
-        break;
+        // Short-circuit the right hand side.
+        ip += offset;
       }
+      DISPATCH();
+    }
 
-      case CODE_IS:
-      {
-        Value classObj = POP();
-        Value obj = POP();
+    CASE_CODE(IS):
+    {
+      Value classObj = POP();
+      Value obj = POP();
 
-        // TODO(bob): What if classObj is not a class?
-        ObjClass* actual = getClass(vm, obj);
-        PUSH(BOOL_VAL(actual == AS_CLASS(classObj)));
-        break;
-      }
+      // TODO(bob): What if classObj is not a class?
+      ObjClass* actual = getClass(vm, obj);
+      PUSH(BOOL_VAL(actual == AS_CLASS(classObj)));
+      DISPATCH();
+    }
 
-      case CODE_END:
-      {
-        Value result = POP();
-        fiber->numFrames--;
+    CASE_CODE(END):
+    {
+      Value result = POP();
+      fiber->numFrames--;
 
-        // If we are returning from the top-level block, just return the value.
-        if (fiber->numFrames == 0) return result;
+      // If we are returning from the top-level block, just return the value.
+      if (fiber->numFrames == 0) return result;
 
-        // Store the result of the block in the first slot, which is where the
-        // caller expects it.
-        fiber->stack[frame->stackStart] = result;
+      // Store the result of the block in the first slot, which is where the
+      // caller expects it.
+      fiber->stack[frame->stackStart] = result;
 
-        // Discard the stack slots for the call frame (leaving one slot for the
-        // result).
-        fiber->stackSize = frame->stackStart + 1;
-        LOAD_FRAME();
-        break;
-      }
+      // Discard the stack slots for the call frame (leaving one slot for the
+      // result).
+      fiber->stackSize = frame->stackStart + 1;
+      LOAD_FRAME();
+      DISPATCH();
     }
   }
 }
