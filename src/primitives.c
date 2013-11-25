@@ -91,6 +91,28 @@ DEF_PRIMITIVE(list_count)
   return NUM_VAL(list->count);
 }
 
+DEF_PRIMITIVE(list_subscript)
+{
+  // TODO(bob): Instead of returning null here, all of these failure cases
+  // should signal an error explicitly somehow.
+  if (!IS_NUM(args[1])) return NULL_VAL;
+
+  double indexNum = AS_NUM(args[1]);
+  int index = (int)indexNum;
+  // Make sure the index is an integer.
+  if (indexNum != index) return NULL_VAL;
+
+  ObjList* list = AS_LIST(args[0]);
+
+  // Negative indices count from the end.
+  if (index < 0) index = list->count + index;
+
+  // Check bounds.
+  if (index < 0 || index >= list->count) return NULL_VAL;
+
+  return list->elements[index];
+}
+
 DEF_PRIMITIVE(num_abs)
 {
   return NUM_VAL(fabs(AS_NUM(args[0])));
@@ -319,6 +341,7 @@ void loadCore(VM* vm)
 
   vm->listClass = AS_CLASS(findGlobal(vm, "List"));
   PRIMITIVE(vm->listClass, "count", list_count);
+  PRIMITIVE(vm->listClass, "[ ]", list_subscript);
 
   vm->nullClass = AS_CLASS(findGlobal(vm, "Null"));
 
