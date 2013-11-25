@@ -117,7 +117,7 @@ typedef struct
   int count;
 } SymbolTable;
 
-struct sVM
+struct WrenVM
 {
   SymbolTable methods;
 
@@ -184,25 +184,24 @@ struct sFiber
   int numFrames;
 };
 
-VM* newVM();
-void freeVM(VM* vm);
+// TODO(bob): Make these static or prefix their names.
 
 // Creates a new function object. Assumes the compiler will fill it in with
 // bytecode, constants, etc.
-ObjFn* newFunction(VM* vm);
+ObjFn* newFunction(WrenVM* vm);
 
 // Creates a new class object.
-ObjClass* newClass(VM* vm, ObjClass* superclass, int numFields);
+ObjClass* newClass(WrenVM* vm, ObjClass* superclass, int numFields);
 
 // Creates a new instance of the given [classObj].
-Value newInstance(VM* vm, ObjClass* classObj);
+Value newInstance(WrenVM* vm, ObjClass* classObj);
 
 // Creates a new list with [numElements] elements (which are left
 // uninitialized.)
-ObjList* newList(VM* vm, int numElements);
+ObjList* newList(WrenVM* vm, int numElements);
 
 // Creates a new string object and copies [text] into it.
-Value newString(VM* vm, const char* text, size_t length);
+Value newString(WrenVM* vm, const char* text, size_t length);
 
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);
@@ -229,9 +228,9 @@ int findSymbol(SymbolTable* symbols, const char* name, size_t length);
 const char* getSymbolName(SymbolTable* symbols, int symbol);
 
 // Returns the global variable named [name].
-Value findGlobal(VM* vm, const char* name);
+Value findGlobal(WrenVM* vm, const char* name);
 
-Value interpret(VM* vm, ObjFn* fn);
+Value interpret(WrenVM* vm, ObjFn* fn);
 
 // Push [fn] onto [fiber]'s callstack and invoke it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
@@ -240,9 +239,9 @@ void callFunction(Fiber* fiber, ObjFn* fn, int numArgs);
 void printValue(Value value);
 
 // Mark [obj] as a GC root so that it doesn't get collected.
-void pinObj(VM* vm, Obj* obj);
+void pinObj(WrenVM* vm, Obj* obj);
 
 // Unmark [obj] as a GC root so that it doesn't get collected.
-void unpinObj(VM* vm, Obj* obj);
+void unpinObj(WrenVM* vm, Obj* obj);
 
 #endif

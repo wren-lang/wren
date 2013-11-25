@@ -3,13 +3,15 @@
 #include <string.h>
 
 #include "common.h"
+#include "compiler.h"
 #include "primitives.h"
 #include "vm.h"
+#include "wren.h"
 
-VM* newVM()
+WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
 {
   // TODO(bob): Get rid of explicit malloc() here.
-  VM* vm = malloc(sizeof(VM));
+  WrenVM* vm = reallocateFn(NULL, 0, sizeof(WrenVM));
   initSymbolTable(&vm->methods);
   initSymbolTable(&vm->globalSymbols);
 
@@ -29,19 +31,29 @@ VM* newVM()
     vm->globals[i] = NULL_VAL;
   }
 
-  loadCore(vm);
+  wrenLoadCore(vm);
 
   return vm;
 }
 
-void freeVM(VM* vm)
+void wrenFreeVM(WrenVM* vm)
 {
   clearSymbolTable(&vm->methods);
   clearSymbolTable(&vm->globalSymbols);
   free(vm);
 }
 
-static void collectGarbage(VM* vm);
+int wrenInterpret(WrenVM* vm, const char* source)
+{
+  ObjFn* fn = wrenCompile(vm, source);
+  if (fn == NULL) return 1;
+
+  // TODO(bob): Return error code on runtime errors.
+  interpret(vm, fn);
+  return 0;
+}
+
+static void collectGarbage(WrenVM* vm);
 
 // A generic allocation that handles all memory changes, like so:
 //
@@ -57,7 +69,8 @@ static void collectGarbage(VM* vm);
 //   be freed and `NULL` will be returned.
 //
 // - To free memory, [newSize] will be zero.
-void* reallocate(VM* vm, void* memory, size_t oldSize, size_t newSize)
+static void* reallocate(WrenVM* vm, void* memory,
+                        size_t oldSize, size_t newSize)
 {
   ASSERT(memory == NULL || oldSize > 0, "Cannot take unsized previous memory.");
 
@@ -95,12 +108,12 @@ void* reallocate(VM* vm, void* memory, size_t oldSize, size_t newSize)
   return realloc(memory, newSize);
 }
 
-static void* allocate(VM* vm, size_t size)
+static void* allocate(WrenVM* vm, size_t size)
 {
   return reallocate(vm, NULL, 0, size);
 }
 
-static void* deallocate(VM* vm, void* memory, size_t oldSize)
+static void* deallocate(WrenVM* vm, void* memory, size_t oldSize)
 {
   return reallocate(vm, memory, oldSize, 0);
 }
@@ -201,7 +214,7 @@ void markValue(Value value)
   markObj(AS_OBJ(value));
 }
 
-void freeObj(VM* vm, Obj* obj)
+static void freeObj(WrenVM* vm, Obj* obj)
 {
 #ifdef TRACE_MEMORY
   printf("free ");
@@ -261,7 +274,7 @@ void freeObj(VM* vm, Obj* obj)
   deallocate(vm, obj, size);
 }
 
-void collectGarbage(VM* vm)
+static void collectGarbage(WrenVM* vm)
 {
   // Mark all reachable objects.
 #ifdef TRACE_MEMORY
@@ -315,7 +328,7 @@ void collectGarbage(VM* vm)
   }
 }
 
-void initObj(VM* vm, Obj* obj, ObjType type)
+static void initObj(WrenVM* vm, Obj* obj, ObjType type)
 {
   obj->type = type;
   obj->flags = 0;
@@ -323,7 +336,7 @@ void initObj(VM* vm, Obj* obj, ObjType type)
   vm->first = obj;
 }
 
-static ObjClass* newSingleClass(VM* vm, ObjClass* metaclass,
+static ObjClass* newSingleClass(WrenVM* vm, ObjClass* metaclass,
                                 ObjClass* superclass, int numFields)
 {
   ObjClass* obj = allocate(vm, sizeof(ObjClass));
@@ -340,7 +353,7 @@ static ObjClass* newSingleClass(VM* vm, ObjClass* metaclass,
   return obj;
 }
 
-ObjClass* newClass(VM* vm, ObjClass* superclass, int numFields)
+ObjClass* newClass(WrenVM* vm, ObjClass* superclass, int numFields)
 {
   // Make the metaclass.
   // TODO(bob): What is the metaclass's metaclass and superclass?
@@ -369,7 +382,7 @@ ObjClass* newClass(VM* vm, ObjClass* superclass, int numFields)
   return classObj;
 }
 
-ObjFn* newFunction(VM* vm)
+ObjFn* newFunction(WrenVM* vm)
 {
   // Allocate these before the function in case they trigger a GC which would
   // free the function.
@@ -386,7 +399,7 @@ ObjFn* newFunction(VM* vm)
   return fn;
 }
 
-Value newInstance(VM* vm, ObjClass* classObj)
+Value newInstance(WrenVM* vm, ObjClass* classObj)
 {
   ObjInstance* instance = allocate(vm,
       sizeof(ObjInstance) + classObj->numFields * sizeof(Value));
@@ -402,7 +415,7 @@ Value newInstance(VM* vm, ObjClass* classObj)
   return OBJ_VAL(instance);
 }
 
-ObjList* newList(VM* vm, int numElements)
+ObjList* newList(WrenVM* vm, int numElements)
 {
   // Allocate this before the list object in case it triggers a GC which would
   // free the list.
@@ -419,7 +432,7 @@ ObjList* newList(VM* vm, int numElements)
   return list;
 }
 
-Value newString(VM* vm, const char* text, size_t length)
+Value newString(WrenVM* vm, const char* text, size_t length)
 {
   // Allocate before the string object in case this triggers a GC which would
   // free the string object.
@@ -508,14 +521,14 @@ const char* getSymbolName(SymbolTable* symbols, int symbol)
   return symbols->names[symbol];
 }
 
-Value findGlobal(VM* vm, const char* name)
+Value findGlobal(WrenVM* vm, const char* name)
 {
   int symbol = findSymbol(&vm->globalSymbols, name, strlen(name));
   // TODO(bob): Handle failure.
   return vm->globals[symbol];
 }
 
-int dumpInstruction(VM* vm, ObjFn* fn, int i)
+int dumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 {
   int start = i;
   unsigned char* bytecode = fn->bytecode;
@@ -739,7 +752,7 @@ int dumpInstruction(VM* vm, ObjFn* fn, int i)
 }
 
 // TODO(bob): For debugging. Move to separate module.
-void dumpCode(VM* vm, ObjFn* fn)
+void dumpCode(WrenVM* vm, ObjFn* fn)
 {
   int i = 0;
   for (;;)
@@ -751,7 +764,7 @@ void dumpCode(VM* vm, ObjFn* fn)
 }
 
 // Returns the class of [object].
-static ObjClass* getClass(VM* vm, Value value)
+static ObjClass* getClass(WrenVM* vm, Value value)
 {  // TODO(bob): Unify these.
 #ifdef NAN_TAGGING
   if (IS_NUM(value)) return vm->numClass;
@@ -810,7 +823,7 @@ void dumpStack(Fiber* fiber)
   printf("\n");
 }
 
-Value interpret(VM* vm, ObjFn* fn)
+Value interpret(WrenVM* vm, ObjFn* fn)
 {
   Fiber* fiber = vm->fiber;
   callFunction(fiber, fn, 0);
@@ -1290,13 +1303,13 @@ void printValue(Value value)
 #endif
 }
 
-void pinObj(VM* vm, Obj* obj)
+void pinObj(WrenVM* vm, Obj* obj)
 {
   ASSERT(vm->numPinned < MAX_PINNED - 1, "Too many pinned objects.");
   vm->pinned[vm->numPinned++] = obj;
 }
 
-void unpinObj(VM* vm, Obj* obj)
+void unpinObj(WrenVM* vm, Obj* obj)
 {
   ASSERT(vm->pinned[vm->numPinned - 1] == obj, "Unpinning out of stack order.");
   vm->numPinned--;

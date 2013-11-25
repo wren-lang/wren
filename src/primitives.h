@@ -3,6 +3,6 @@
 
 #include "vm.h"
 
-void loadCore(VM* vm);
+void wrenLoadCore(WrenVM* vm);
 
 #endif

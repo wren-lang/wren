@@ -3,13 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "compiler.h"
-#include "vm.h"
+#include "wren.h"
+
+// This is the source file for the standalone command line interpreter. It is
+// not needed if you are embedding Wren in an application.
 
 // TODO(bob): Don't hardcode this.
 #define MAX_LINE 1024
 
-void failIf(int condition, int exitCode, const char* format, ...)
+static void failIf(int condition, int exitCode, const char* format, ...)
 {
   if (!condition) return;
 
@@ -21,7 +23,7 @@ void failIf(int condition, int exitCode, const char* format, ...)
   exit(exitCode);
 }
 
-char* readFile(const char* path)
+static char* readFile(const char* path)
 {
   FILE* file = fopen(path, "r");
   failIf(file == NULL, 66, "Could not open file \"%s\".\n", path);
@@ -46,38 +48,38 @@ char* readFile(const char* path)
   return buffer;
 }
 
-int runFile(const char* path)
+static void* reallocate(void* memory, size_t oldSize, size_t newSize)
 {
-  char* source = readFile(path);
-  VM* vm = newVM();
-  ObjFn* fn = compile(vm, source);
-
-  int exitCode = 0;
-  if (fn != NULL)
-  {
-    interpret(vm, fn);
-  }
-  else
-  {
-    exitCode = 1;
-  }
-
-  freeVM(vm);
-  free(source);
-
-  return exitCode;
+  return realloc(memory, newSize);
 }
 
-int runRepl()
+static int runFile(const char* path)
 {
-  VM* vm = newVM();
+  char* source = readFile(path);
+  WrenVM* vm = wrenNewVM(reallocate);
+
+  int result = wrenInterpret(vm, source);
+
+  wrenFreeVM(vm);
+  free(source);
+
+  return result;
+}
+
+static int runRepl()
+{
+  WrenVM* vm = wrenNewVM(reallocate);
 
   for (;;)
   {
     printf("> ");
     char line[MAX_LINE];
     fgets(line, MAX_LINE, stdin);
+
     // TODO(bob): Handle failure.
+    wrenInterpret(vm, line);
+    // TODO(bob): Figure out how this should work with wren API.
+    /*
     ObjFn* fn = compile(vm, line);
 
     if (fn != NULL)
@@ -87,9 +89,10 @@ int runRepl()
       printValue(result);
       printf("\n");
     }
+    */
   }
 
-  freeVM(vm);
+  wrenFreeVM(vm);
   return 0;
 }
 

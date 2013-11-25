@@ -3,6 +3,6 @@
 
 #include "vm.h"
 
-ObjFn* compile(VM* vm, const char* source);
+ObjFn* wrenCompile(WrenVM* vm, const char* source);
 
 #endif

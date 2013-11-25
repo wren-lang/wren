@@ -30,6 +30,7 @@
 		292A45D31838566400C34813 /* value.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = value.h; path = src/value.h; sourceTree = SOURCE_ROOT; };
 		292A45D41838566F00C34813 /* value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = value.c; path = src/value.c; sourceTree = SOURCE_ROOT; };
 		296681E2183283A500C1407C /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = common.h; path = src/common.h; sourceTree = SOURCE_ROOT; };
+		2969FFC71843A16C0007B143 /* wren.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = wren.h; path = include/wren.h; sourceTree = "<group>"; };
 		29AB1F061816E3AD004B501E /* wren */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wren; sourceTree = BUILT_PRODUCTS_DIR; };
 		29AB1F201816E49C004B501E /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/main.c; sourceTree = SOURCE_ROOT; };
 		29AB1F2D1816FA5B004B501E /* vm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = vm.h; path = src/vm.h; sourceTree = SOURCE_ROOT; };
@@ -51,9 +52,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2969FFC61843A1430007B143 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				2969FFC71843A16C0007B143 /* wren.h */,
+			);
+			name = include;
+			sourceTree = "<group>";
+		};
 		29AB1EFD1816E3AD004B501E = {
 			isa = PBXGroup;
 			children = (
+				2969FFC61843A1430007B143 /* include */,
 				29AB1F081816E3AD004B501E /* src */,
 				29AB1F071816E3AD004B501E /* Products */,
 			);

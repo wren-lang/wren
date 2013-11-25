@@ -23,10 +23,10 @@
     }
 
 #define DEF_PRIMITIVE(prim) \
-    static Value primitive_##prim(VM* vm, Value* args)
+    static Value primitive_##prim(WrenVM* vm, Value* args)
 
 #define DEF_FIBER_PRIMITIVE(prim) \
-    static void primitive_##prim(VM* vm, Fiber* fiber, Value* args)
+    static void primitive_##prim(WrenVM* vm, Fiber* fiber, Value* args)
 
 DEF_PRIMITIVE(bool_not)
 {
@@ -313,9 +313,9 @@ static const char* CORE_LIB =
 "var io = IO.new\n"
 "class OS {}\n";
 
-void loadCore(VM* vm)
+void wrenLoadCore(WrenVM* vm)
 {
-  ObjFn* core = compile(vm, CORE_LIB);
+  ObjFn* core = wrenCompile(vm, CORE_LIB);
   interpret(vm, core);
 
   vm->boolClass = AS_CLASS(findGlobal(vm, "Bool"));

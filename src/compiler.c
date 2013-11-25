@@ -87,7 +87,7 @@ typedef struct Token_s
 
 typedef struct
 {
-  VM* vm;
+  WrenVM* vm;
 
   const char* source;
 
@@ -1510,7 +1510,7 @@ void definition(Compiler* compiler)
 
 // Parses [source] to a "function" (a chunk of top-level code) for execution by
 // [vm].
-ObjFn* compile(VM* vm, const char* source)
+ObjFn* wrenCompile(WrenVM* vm, const char* source)
 {
   Parser parser;
   parser.vm = vm;

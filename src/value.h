@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "common.h"
+#include "wren.h"
 
 // TODO(bob): This should be in VM. (Or, really, we shouldn't hardcode this at
 // all and have growable symbol tables.)
@@ -60,11 +61,10 @@ typedef struct
 
 #endif
 
-typedef struct sVM VM;
 typedef struct sFiber Fiber;
 
-typedef Value (*Primitive)(VM* vm, Value* args);
-typedef void (*FiberPrimitive)(VM* vm, Fiber* fiber, Value* args);
+typedef Value (*Primitive)(WrenVM* vm, Value* args);
+typedef void (*FiberPrimitive)(WrenVM* vm, Fiber* fiber, Value* args);
 
 typedef struct
 {
@@ -175,7 +175,6 @@ typedef struct
 
 
 #ifdef NAN_TAGGING
-
 
 // An IEEE 754 double-precision float is a 64-bit value with bits laid out like:
 //
