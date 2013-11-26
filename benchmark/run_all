@@ -20,7 +20,8 @@ LANGUAGES = [
   ("wren",   "../build/Release/wren", ".wren"),
   ("lua",    "lua",                   ".lua"),
   ("python", "python",                ".py"),
-  ("ruby",   "ruby",                  ".rb")
+  ("ruby",   "ruby",                  ".rb"),
+  ("js",     "node",                  ".js")
 ]
 
 # How many times to run a given benchmark. Should be an odd number to get the
