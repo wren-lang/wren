@@ -345,9 +345,20 @@ static ObjClass* newSingleClass(WrenVM* vm, ObjClass* metaclass,
   obj->superclass = superclass;
   obj->numFields = numFields;
 
-  for (int i = 0; i < MAX_SYMBOLS; i++)
+  // Inherit methods from its superclass (unless it's Object, which has none).
+  if (superclass != NULL)
   {
-    obj->methods[i].type = METHOD_NONE;
+    for (int i = 0; i < MAX_SYMBOLS; i++)
+    {
+      obj->methods[i] = superclass->methods[i];
+    }
+  }
+  else
+  {
+    for (int i = 0; i < MAX_SYMBOLS; i++)
+    {
+      obj->methods[i].type = METHOD_NONE;
+    }
   }
 
   return obj;
@@ -356,9 +367,9 @@ static ObjClass* newSingleClass(WrenVM* vm, ObjClass* metaclass,
 ObjClass* newClass(WrenVM* vm, ObjClass* superclass, int numFields)
 {
   // Make the metaclass.
-  // TODO(bob): What is the metaclass's metaclass and superclass?
+  // TODO(bob): What is the metaclass's metaclass?
   // TODO(bob): Handle static fields.
-  ObjClass* metaclass = newSingleClass(vm, NULL, NULL, 0);
+  ObjClass* metaclass = newSingleClass(vm, NULL, vm->classClass, 0);
 
   // Make sure it isn't collected when we allocate the metaclass.
   pinObj(vm, (Obj*)metaclass);
@@ -367,17 +378,6 @@ ObjClass* newClass(WrenVM* vm, ObjClass* superclass, int numFields)
   classObj->numFields = numFields;
 
   unpinObj(vm, (Obj*)metaclass);
-
-  // Inherit methods from its superclass (unless it's Object, which has none).
-  // TODO(bob): If we want BETA-style inheritance, we'll need to do this after
-  // the subclass has defined its methods.
-  if (superclass != NULL)
-  {
-    for (int i = 0; i < MAX_SYMBOLS; i++)
-    {
-      classObj->methods[i] = superclass->methods[i];
-    }
-  }
 
   return classObj;
 }
@@ -763,55 +763,6 @@ void dumpCode(WrenVM* vm, ObjFn* fn)
   }
 }
 
-// Returns the class of [object].
-static ObjClass* getClass(WrenVM* vm, Value value)
-{  // TODO(bob): Unify these.
-#ifdef NAN_TAGGING
-  if (IS_NUM(value)) return vm->numClass;
-  if (IS_OBJ(value))
-  {
-    Obj* obj = AS_OBJ(value);
-    switch (obj->type)
-    {
-      case OBJ_CLASS: return AS_CLASS(value)->metaclass;
-      case OBJ_FN: return vm->fnClass;
-      case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
-      case OBJ_LIST: return vm->listClass;
-      case OBJ_STRING: return vm->stringClass;
-    }
-  }
-
-  switch (GET_TAG(value))
-  {
-    case TAG_FALSE: return vm->boolClass;
-    case TAG_NAN: return vm->numClass;
-    case TAG_NULL: return vm->nullClass;
-    case TAG_TRUE: return vm->boolClass;
-  }
-
-  return NULL;
-#else
-  switch (value.type)
-  {
-    case VAL_FALSE: return vm->boolClass;
-    case VAL_NULL: return vm->nullClass;
-    case VAL_NUM: return vm->numClass;
-    case VAL_TRUE: return vm->boolClass;
-    case VAL_OBJ:
-    {
-      switch (value.obj->type)
-      {
-        case OBJ_CLASS: return AS_CLASS(value)->metaclass;
-        case OBJ_FN: return vm->fnClass;
-        case OBJ_LIST: return vm->listClass;
-        case OBJ_STRING: return vm->stringClass;
-        case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
-      }
-    }
-  }
-#endif
-}
-
 void dumpStack(Fiber* fiber)
 {
   printf(":: ");
@@ -1076,7 +1027,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
       int symbol = READ_ARG();
 
       Value receiver = fiber->stack[fiber->stackSize - numArgs];
-      ObjClass* classObj = getClass(vm, receiver);
+      ObjClass* classObj = wrenGetClass(vm, receiver);
       Method* method = &classObj->methods[symbol];
       switch (method->type)
       {
@@ -1213,12 +1164,24 @@ Value interpret(WrenVM* vm, ObjFn* fn)
 
     CASE_CODE(IS):
     {
-      Value classObj = POP();
+      // TODO(bob): What if classObj is not a class?
+      ObjClass* expected = AS_CLASS(POP());
       Value obj = POP();
 
-      // TODO(bob): What if classObj is not a class?
-      ObjClass* actual = getClass(vm, obj);
-      PUSH(BOOL_VAL(actual == AS_CLASS(classObj)));
+      ObjClass* actual = wrenGetClass(vm, obj);
+      int isInstance = 0;
+
+      // Walk the superclass chain looking for the class.
+      while (actual != NULL)
+      {
+        if (actual == expected)
+        {
+          isInstance = 1;
+          break;
+        }
+        actual = actual->superclass;
+      }
+      PUSH(BOOL_VAL(isInstance));
       DISPATCH();
     }
 

@@ -4,7 +4,6 @@
 #include <string.h>
 #include <time.h>
 
-#include "compiler.h"
 #include "primitives.h"
 #include "value.h"
 
@@ -31,18 +30,6 @@
 DEF_PRIMITIVE(bool_not)
 {
   return BOOL_VAL(!AS_BOOL(args[0]));
-}
-
-DEF_PRIMITIVE(bool_eqeq)
-{
-  if (!(IS_BOOL(args[1]))) return FALSE_VAL;
-  return BOOL_VAL(AS_BOOL(args[0]) == AS_BOOL(args[1]));
-}
-
-DEF_PRIMITIVE(bool_bangeq)
-{
-  if (!(IS_BOOL(args[1]))) return TRUE_VAL;
-  return BOOL_VAL(AS_BOOL(args[0]) != AS_BOOL(args[1]));
 }
 
 DEF_PRIMITIVE(bool_toString)
@@ -72,18 +59,6 @@ DEF_FIBER_PRIMITIVE(fn_call5) { callFunction(fiber, AS_FN(args[0]), 6); }
 DEF_FIBER_PRIMITIVE(fn_call6) { callFunction(fiber, AS_FN(args[0]), 7); }
 DEF_FIBER_PRIMITIVE(fn_call7) { callFunction(fiber, AS_FN(args[0]), 8); }
 DEF_FIBER_PRIMITIVE(fn_call8) { callFunction(fiber, AS_FN(args[0]), 9); }
-
-DEF_PRIMITIVE(fn_eqeq)
-{
-  if (!IS_FN(args[1])) return FALSE_VAL;
-  return BOOL_VAL(AS_FN(args[0]) == AS_FN(args[1]));
-}
-
-DEF_PRIMITIVE(fn_bangeq)
-{
-  if (!IS_FN(args[1])) return TRUE_VAL;
-  return BOOL_VAL(AS_FN(args[0]) != AS_FN(args[1]));
-}
 
 DEF_PRIMITIVE(list_count)
 {
@@ -198,6 +173,21 @@ DEF_PRIMITIVE(num_bangeq)
   return BOOL_VAL(AS_NUM(args[0]) != AS_NUM(args[1]));
 }
 
+DEF_PRIMITIVE(object_eqeq)
+{
+  return BOOL_VAL(valuesEqual(args[0], args[1]));
+}
+
+DEF_PRIMITIVE(object_bangeq)
+{
+  return BOOL_VAL(!valuesEqual(args[0], args[1]));
+}
+
+DEF_PRIMITIVE(object_type)
+{
+  return OBJ_VAL(wrenGetClass(vm, args[0]));
+}
+
 DEF_PRIMITIVE(string_contains)
 {
   const char* string = AS_CSTRING(args[0]);
@@ -300,33 +290,29 @@ DEF_PRIMITIVE(os_clock)
   return NUM_VAL(time);
 }
 
-static const char* CORE_LIB =
-"class Object {}\n"
-"class Bool {}\n"
-"class Class {}\n"
-"class Function {}\n"
-"class List {}\n"
-"class Num {}\n"
-"class Null {}\n"
-"class String {}\n"
-"class IO {}\n"
-"var io = IO.new\n"
-"class OS {}\n";
+static ObjClass* defineClass(WrenVM* vm, const char* name, ObjClass* superclass)
+{
+  ObjClass* classObj = newClass(vm, superclass, 0);
+  int symbol = addSymbol(&vm->globalSymbols, name, strlen(name));
+  vm->globals[symbol] = OBJ_VAL(classObj);
+  return classObj;
+}
 
 void wrenLoadCore(WrenVM* vm)
 {
-  ObjFn* core = wrenCompile(vm, CORE_LIB);
-  interpret(vm, core);
+  vm->objectClass = defineClass(vm, "Object", NULL);
+  PRIMITIVE(vm->objectClass, "== ", object_eqeq);
+  PRIMITIVE(vm->objectClass, "!= ", object_bangeq);
+  PRIMITIVE(vm->objectClass, "type", object_type);
 
-  vm->boolClass = AS_CLASS(findGlobal(vm, "Bool"));
+  // The "Class" class is the superclass of all metaclasses.
+  vm->classClass = defineClass(vm, "Class", vm->objectClass);
+
+  vm->boolClass = defineClass(vm, "Bool", vm->objectClass);
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
   PRIMITIVE(vm->boolClass, "!", bool_not);
-  PRIMITIVE(vm->boolClass, "== ", bool_eqeq);
-  PRIMITIVE(vm->boolClass, "!= ", bool_bangeq);
 
-  vm->classClass = AS_CLASS(findGlobal(vm, "Class"));
-
-  vm->fnClass = AS_CLASS(findGlobal(vm, "Function"));
+  vm->fnClass = defineClass(vm, "Function", vm->objectClass);
   FIBER_PRIMITIVE(vm->fnClass, "call", fn_call0);
   FIBER_PRIMITIVE(vm->fnClass, "call ", fn_call1);
   FIBER_PRIMITIVE(vm->fnClass, "call  ", fn_call2);
@@ -336,16 +322,14 @@ void wrenLoadCore(WrenVM* vm)
   FIBER_PRIMITIVE(vm->fnClass, "call      ", fn_call6);
   FIBER_PRIMITIVE(vm->fnClass, "call       ", fn_call7);
   FIBER_PRIMITIVE(vm->fnClass, "call        ", fn_call8);
-  PRIMITIVE(vm->fnClass, "== ", fn_eqeq);
-  PRIMITIVE(vm->fnClass, "!= ", fn_bangeq);
 
-  vm->listClass = AS_CLASS(findGlobal(vm, "List"));
+  vm->listClass = defineClass(vm, "List", vm->objectClass);
   PRIMITIVE(vm->listClass, "count", list_count);
   PRIMITIVE(vm->listClass, "[ ]", list_subscript);
 
-  vm->nullClass = AS_CLASS(findGlobal(vm, "Null"));
+  vm->nullClass = defineClass(vm, "Null", vm->objectClass);
 
-  vm->numClass = AS_CLASS(findGlobal(vm, "Num"));
+  vm->numClass = defineClass(vm, "Num", vm->objectClass);
   PRIMITIVE(vm->numClass, "abs", num_abs);
   PRIMITIVE(vm->numClass, "toString", num_toString)
   PRIMITIVE(vm->numClass, "-", num_negate);
@@ -358,10 +342,12 @@ void wrenLoadCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "> ", num_gt);
   PRIMITIVE(vm->numClass, "<= ", num_lte);
   PRIMITIVE(vm->numClass, ">= ", num_gte);
+  // TODO(bob): The only reason there are here is so that 0 != -0. Is that what
+  // we want?
   PRIMITIVE(vm->numClass, "== ", num_eqeq);
   PRIMITIVE(vm->numClass, "!= ", num_bangeq);
 
-  vm->stringClass = AS_CLASS(findGlobal(vm, "String"));
+  vm->stringClass = defineClass(vm, "String", vm->objectClass);
   PRIMITIVE(vm->stringClass, "contains ", string_contains);
   PRIMITIVE(vm->stringClass, "count", string_count);
   PRIMITIVE(vm->stringClass, "toString", string_toString)
@@ -370,14 +356,18 @@ void wrenLoadCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "!= ", string_bangeq);
   PRIMITIVE(vm->stringClass, "[ ]", string_subscript);
 
-  ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
+  ObjClass* ioClass = defineClass(vm, "IO", vm->objectClass);
   PRIMITIVE(ioClass, "write ", io_write);
 
-  ObjClass* osClass = AS_CLASS(findGlobal(vm, "OS"));
+  // TODO(bob): Making this an instance is lame. The only reason we're doing it
+  // is because "IO.write()" looks ugly. Maybe just get used to that?
+  Value ioObject = newInstance(vm, ioClass);
+  vm->globals[addSymbol(&vm->globalSymbols, "io", 2)] = ioObject;
+
+  ObjClass* osClass = defineClass(vm, "OS", vm->objectClass);
   PRIMITIVE(osClass->metaclass, "clock", os_clock);
 
-  ObjClass* unsupportedClass = newClass(vm, vm->objectClass, 0);
-
   // TODO(bob): Make this a distinct object type.
+  ObjClass* unsupportedClass = newClass(vm, vm->objectClass, 0);
   vm->unsupported = (Value)newInstance(vm, unsupportedClass);
 }

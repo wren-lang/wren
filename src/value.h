@@ -313,6 +313,13 @@ typedef struct
 
 #endif
 
+// Returns non-zero if [a] and [b] are strictly equal using built-in equality
+// semantics. This is identity for object values, and value equality for others.
+int valuesEqual(Value a, Value b);
+
+// Returns the class of [value].
+ObjClass* wrenGetClass(WrenVM* vm, Value value);
+
 int valueIsBool(Value value);
 int valueIsFn(Value value);
 int valueIsInstance(Value value);
