@@ -69,8 +69,7 @@ static void collectGarbage(WrenVM* vm);
 //   be freed and `NULL` will be returned.
 //
 // - To free memory, [newSize] will be zero.
-static void* reallocate(WrenVM* vm, void* memory,
-                        size_t oldSize, size_t newSize)
+void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 {
   ASSERT(memory == NULL || oldSize > 0, "Cannot take unsized previous memory.");
 
@@ -110,12 +109,12 @@ static void* reallocate(WrenVM* vm, void* memory,
 
 static void* allocate(WrenVM* vm, size_t size)
 {
-  return reallocate(vm, NULL, 0, size);
+  return wrenReallocate(vm, NULL, 0, size);
 }
 
 static void* deallocate(WrenVM* vm, void* memory, size_t oldSize)
 {
-  return reallocate(vm, memory, oldSize, 0);
+  return wrenReallocate(vm, memory, oldSize, 0);
 }
 
 static void markValue(Value value);
@@ -186,7 +185,7 @@ static void markObj(Obj* obj)
   indent++;
   for (int i = 0; i < indent; i++) printf("  ");
   printf("mark ");
-  printValue(OBJ_VAL(obj));
+  wrenPrintValue(OBJ_VAL(obj));
   printf("\n");
 #endif
 
@@ -218,7 +217,7 @@ static void freeObj(WrenVM* vm, Obj* obj)
 {
 #ifdef TRACE_MEMORY
   printf("free ");
-  printValue(OBJ_VAL(obj));
+  wrenPrintValue(OBJ_VAL(obj));
 #endif
 
   // Free any additional heap data allocated by the object.
@@ -427,6 +426,7 @@ ObjList* newList(WrenVM* vm, int numElements)
 
   ObjList* list = allocate(vm, sizeof(ObjList));
   initObj(vm, &list->obj, OBJ_LIST);
+  list->capacity = numElements;
   list->count = numElements;
   list->elements = elements;
   return list;
@@ -542,7 +542,7 @@ int dumpInstruction(WrenVM* vm, ObjFn* fn, int i)
     {
       int constant = bytecode[i++];
       printf("CONSTANT ");
-      printValue(fn->constants[constant]);
+      wrenPrintValue(fn->constants[constant]);
       printf("\n");
       printf("%04d   | constant %d\n", i, constant);
       break;
@@ -768,7 +768,7 @@ void dumpStack(Fiber* fiber)
   printf(":: ");
   for (int i = 0; i < fiber->stackSize; i++)
   {
-    printValue(fiber->stack[i]);
+    wrenPrintValue(fiber->stack[i]);
     printf(" | ");
   }
   printf("\n");
@@ -1033,7 +1033,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
       {
         case METHOD_NONE:
           printf("Receiver ");
-          printValue(receiver);
+          wrenPrintValue(receiver);
           printf(" does not implement method \"%s\".\n",
                  vm->methods.names[symbol]);
           // TODO(bob): Throw an exception or halt the fiber or something.
@@ -1214,56 +1214,6 @@ void callFunction(Fiber* fiber, ObjFn* fn, int numArgs)
 
   // TODO(bob): Check for stack overflow.
   fiber->numFrames++;
-}
-
-void printValue(Value value)
-{
-  // TODO(bob): Unify these.
-#ifdef NAN_TAGGING
-  if (IS_NUM(value))
-  {
-    printf("%.14g", AS_NUM(value));
-  }
-  else if (IS_OBJ(value))
-  {
-    Obj* obj = AS_OBJ(value);
-    switch (obj->type)
-    {
-      case OBJ_CLASS: printf("[class %p]", obj); break;
-      case OBJ_FN: printf("[fn %p]", obj); break;
-      case OBJ_INSTANCE: printf("[instance %p]", obj); break;
-      case OBJ_LIST: printf("[list %p]", obj); break;
-      case OBJ_STRING: printf("%s", AS_CSTRING(value)); break;
-    }
-  }
-  else
-  {
-    switch (GET_TAG(value))
-    {
-      case TAG_FALSE: printf("false"); break;
-      case TAG_NAN: printf("NaN"); break;
-      case TAG_NULL: printf("null"); break;
-      case TAG_TRUE: printf("true"); break;
-    }
-  }
-#else
-  switch (value.type)
-  {
-    case VAL_FALSE: printf("false"); break;
-    case VAL_NULL: printf("null"); break;
-    case VAL_NUM: printf("%.14g", AS_NUM(value)); break;
-    case VAL_TRUE: printf("true"); break;
-    case VAL_OBJ:
-      switch (value.obj->type)
-      {
-        case OBJ_CLASS: printf("[class %p]", value.obj); break;
-        case OBJ_FN: printf("[fn %p]", value.obj); break;
-        case OBJ_INSTANCE: printf("[instance %p]", value.obj); break;
-        case OBJ_LIST: printf("[list %p]", value.obj); break;
-        case OBJ_STRING: printf("%s", AS_CSTRING(value)); break;
-      }
-  }
-#endif
 }
 
 void pinObj(WrenVM* vm, Obj* obj)

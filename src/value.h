@@ -125,8 +125,14 @@ typedef struct
 typedef struct
 {
   Obj obj;
+
+  // The number of elements allocated.
+  int capacity;
+
+  // The number of items in the list.
   int count;
-  // Pointer to a contiguous array of [length] elements.
+
+  // Pointer to a contiguous array of [capacity] elements.
   Value* elements;
 } ObjList;
 
@@ -315,10 +321,12 @@ typedef struct
 
 // Returns non-zero if [a] and [b] are strictly equal using built-in equality
 // semantics. This is identity for object values, and value equality for others.
-int valuesEqual(Value a, Value b);
+int wrenValuesEqual(Value a, Value b);
 
 // Returns the class of [value].
 ObjClass* wrenGetClass(WrenVM* vm, Value value);
+
+void wrenPrintValue(Value value);
 
 int valueIsBool(Value value);
 int valueIsFn(Value value);

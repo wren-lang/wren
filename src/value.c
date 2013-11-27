@@ -1,7 +1,9 @@
+#include <stdio.h>
+
 #include "value.h"
 #include "vm.h"
 
-int valuesEqual(Value a, Value b)
+int wrenValuesEqual(Value a, Value b)
 {
 #ifdef NAN_TAGGING
   return a.bits == b.bits;
@@ -12,8 +14,6 @@ int valuesEqual(Value a, Value b)
 #endif
 }
 
-
-// Returns the class of [object].
 ObjClass* wrenGetClass(WrenVM* vm, Value value)
 {
 #ifdef NAN_TAGGING
@@ -57,6 +57,67 @@ ObjClass* wrenGetClass(WrenVM* vm, Value value)
         case OBJ_STRING: return vm->stringClass;
         case OBJ_INSTANCE: return AS_INSTANCE(value)->classObj;
       }
+    }
+  }
+#endif
+}
+
+static void printList(ObjList* list)
+{
+  printf("[");
+  for (int i = 0; i < list->count; i++)
+  {
+    if (i > 0) printf(", ");
+    wrenPrintValue(list->elements[i]);
+  }
+  printf("]");
+}
+
+void wrenPrintValue(Value value)
+{
+  // TODO(bob): Unify these.
+#ifdef NAN_TAGGING
+  if (IS_NUM(value))
+  {
+    printf("%.14g", AS_NUM(value));
+  }
+  else if (IS_OBJ(value))
+  {
+    Obj* obj = AS_OBJ(value);
+    switch (obj->type)
+    {
+      case OBJ_CLASS: printf("[class %p]", obj); break;
+      case OBJ_FN: printf("[fn %p]", obj); break;
+      case OBJ_INSTANCE: printf("[instance %p]", obj); break;
+      case OBJ_LIST: printList((ObjList*)obj); break;
+      case OBJ_STRING: printf("%s", AS_CSTRING(value)); break;
+    }
+  }
+  else
+  {
+    switch (GET_TAG(value))
+    {
+      case TAG_FALSE: printf("false"); break;
+      case TAG_NAN: printf("NaN"); break;
+      case TAG_NULL: printf("null"); break;
+      case TAG_TRUE: printf("true"); break;
+    }
+  }
+#else
+  switch (value.type)
+  {
+    case VAL_FALSE: printf("false"); break;
+    case VAL_NULL: printf("null"); break;
+    case VAL_NUM: printf("%.14g", AS_NUM(value)); break;
+    case VAL_TRUE: printf("true"); break;
+    case VAL_OBJ:
+      switch (value.obj->type)
+    {
+      case OBJ_CLASS: printf("[class %p]", value.obj); break;
+      case OBJ_FN: printf("[fn %p]", value.obj); break;
+      case OBJ_INSTANCE: printf("[instance %p]", value.obj); break;
+      case OBJ_LIST: printList((ObjList*)value.obj); break;
+      case OBJ_STRING: printf("%s", AS_CSTRING(value)); break;
     }
   }
 #endif

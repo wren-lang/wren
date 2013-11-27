@@ -184,6 +184,8 @@ struct sFiber
   int numFrames;
 };
 
+void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
+
 // TODO(bob): Make these static or prefix their names.
 
 // Creates a new function object. Assumes the compiler will fill it in with
@@ -235,8 +237,6 @@ Value interpret(WrenVM* vm, ObjFn* fn);
 // Push [fn] onto [fiber]'s callstack and invoke it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
 void callFunction(Fiber* fiber, ObjFn* fn, int numArgs);
-
-void printValue(Value value);
 
 // Mark [obj] as a GC root so that it doesn't get collected.
 void pinObj(WrenVM* vm, Obj* obj);

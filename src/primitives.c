@@ -27,6 +27,10 @@
 #define DEF_FIBER_PRIMITIVE(prim) \
     static void primitive_##prim(WrenVM* vm, Fiber* fiber, Value* args)
 
+// TODO(bob): Tune these.
+#define LIST_MIN_CAPACITY (16)
+#define LIST_GROW_FACTOR (2)
+
 DEF_PRIMITIVE(bool_not)
 {
   return BOOL_VAL(!AS_BOOL(args[0]));
@@ -59,6 +63,28 @@ DEF_FIBER_PRIMITIVE(fn_call5) { callFunction(fiber, AS_FN(args[0]), 6); }
 DEF_FIBER_PRIMITIVE(fn_call6) { callFunction(fiber, AS_FN(args[0]), 7); }
 DEF_FIBER_PRIMITIVE(fn_call7) { callFunction(fiber, AS_FN(args[0]), 8); }
 DEF_FIBER_PRIMITIVE(fn_call8) { callFunction(fiber, AS_FN(args[0]), 9); }
+
+DEF_PRIMITIVE(list_add)
+{
+  ObjList* list = AS_LIST(args[0]);
+
+  // TODO(bob): Move this into value or other module?
+  // Grow the list if needed.
+  if (list->capacity < list->count + 1)
+  {
+    int capacity = list->capacity * LIST_GROW_FACTOR;
+    if (capacity < LIST_MIN_CAPACITY) capacity = LIST_MIN_CAPACITY;
+
+    list->capacity *= 2;
+    list->elements = wrenReallocate(vm, list->elements,
+        list->capacity * sizeof(Value), capacity * sizeof(Value));
+    // TODO(bob): Handle allocation failure.
+    list->capacity = capacity;
+  }
+
+  list->elements[list->count++] = args[1];
+  return args[1];
+}
 
 DEF_PRIMITIVE(list_count)
 {
@@ -175,12 +201,12 @@ DEF_PRIMITIVE(num_bangeq)
 
 DEF_PRIMITIVE(object_eqeq)
 {
-  return BOOL_VAL(valuesEqual(args[0], args[1]));
+  return BOOL_VAL(wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_PRIMITIVE(object_bangeq)
 {
-  return BOOL_VAL(!valuesEqual(args[0], args[1]));
+  return BOOL_VAL(!wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_PRIMITIVE(object_type)
@@ -279,7 +305,7 @@ DEF_PRIMITIVE(string_subscript)
 
 DEF_PRIMITIVE(io_write)
 {
-  printValue(args[1]);
+  wrenPrintValue(args[1]);
   printf("\n");
   return args[1];
 }
@@ -324,6 +350,7 @@ void wrenLoadCore(WrenVM* vm)
   FIBER_PRIMITIVE(vm->fnClass, "call        ", fn_call8);
 
   vm->listClass = defineClass(vm, "List", vm->objectClass);
+  PRIMITIVE(vm->listClass, "add ", list_add);
   PRIMITIVE(vm->listClass, "count", list_count);
   PRIMITIVE(vm->listClass, "[ ]", list_subscript);
 
