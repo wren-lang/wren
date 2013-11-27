@@ -64,26 +64,59 @@ DEF_FIBER_PRIMITIVE(fn_call6) { callFunction(fiber, AS_FN(args[0]), 7); }
 DEF_FIBER_PRIMITIVE(fn_call7) { callFunction(fiber, AS_FN(args[0]), 8); }
 DEF_FIBER_PRIMITIVE(fn_call8) { callFunction(fiber, AS_FN(args[0]), 9); }
 
+// Grows [list] if needed to ensure it can hold [count] elements.
+static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
+{
+  if (list->capacity >= count) return;
+
+  int capacity = list->capacity * LIST_GROW_FACTOR;
+  if (capacity < LIST_MIN_CAPACITY) capacity = LIST_MIN_CAPACITY;
+
+  list->capacity *= 2;
+  list->elements = wrenReallocate(vm, list->elements,
+      list->capacity * sizeof(Value), capacity * sizeof(Value));
+  // TODO(bob): Handle allocation failure.
+  list->capacity = capacity;
+}
+
+// Validates that [index] is an integer within `[0, count)`. Also allows
+// negative indices which map backwards from the end. Returns the valid positive
+// index value, or -1 if the index wasn't valid (not a number, not an int, out
+// of bounds).
+static int validateIndex(Value index, int count)
+{
+  if (!IS_NUM(index)) return -1;
+
+  double indexNum = AS_NUM(index);
+  int intIndex = (int)indexNum;
+  // Make sure the index is an integer.
+  if (indexNum != intIndex) return -1;
+
+  // Negative indices count from the end.
+  if (indexNum < 0) indexNum = count + indexNum;
+
+  // Check bounds.
+  if (indexNum < 0 || indexNum >= count) return -1;
+  
+  return indexNum;
+}
+
 DEF_PRIMITIVE(list_add)
 {
   ObjList* list = AS_LIST(args[0]);
 
-  // TODO(bob): Move this into value or other module?
-  // Grow the list if needed.
-  if (list->capacity < list->count + 1)
-  {
-    int capacity = list->capacity * LIST_GROW_FACTOR;
-    if (capacity < LIST_MIN_CAPACITY) capacity = LIST_MIN_CAPACITY;
-
-    list->capacity *= 2;
-    list->elements = wrenReallocate(vm, list->elements,
-        list->capacity * sizeof(Value), capacity * sizeof(Value));
-    // TODO(bob): Handle allocation failure.
-    list->capacity = capacity;
-  }
-
+  ensureListCapacity(vm, list, list->count + 1);
   list->elements[list->count++] = args[1];
   return args[1];
+}
+
+DEF_PRIMITIVE(list_clear)
+{
+  ObjList* list = AS_LIST(args[0]);
+  wrenReallocate(vm, list->elements, list->capacity * sizeof(Value), 0);
+  list->capacity = 0;
+  list->count = 0;
+  return NULL_VAL;
 }
 
 DEF_PRIMITIVE(list_count)
@@ -92,24 +125,36 @@ DEF_PRIMITIVE(list_count)
   return NUM_VAL(list->count);
 }
 
-DEF_PRIMITIVE(list_subscript)
+DEF_PRIMITIVE(list_insert)
 {
-  // TODO(bob): Instead of returning null here, all of these failure cases
-  // should signal an error explicitly somehow.
-  if (!IS_NUM(args[1])) return NULL_VAL;
-
-  double indexNum = AS_NUM(args[1]);
-  int index = (int)indexNum;
-  // Make sure the index is an integer.
-  if (indexNum != index) return NULL_VAL;
-
   ObjList* list = AS_LIST(args[0]);
 
-  // Negative indices count from the end.
-  if (index < 0) index = list->count + index;
+  int index = validateIndex(args[2], list->count + 1);
+  // TODO(bob): Instead of returning null here, should signal an error
+  // explicitly somehow.
+  if (index == -1) return NULL_VAL;
 
-  // Check bounds.
-  if (index < 0 || index >= list->count) return NULL_VAL;
+  ensureListCapacity(vm, list, list->count + 1);
+
+  // Shift items down.
+  for (int i = list->count; i > index; i--)
+  {
+    list->elements[i] = list->elements[i - 1];
+  }
+
+  list->elements[index] = args[1];
+  list->count++;
+  return args[1];
+}
+
+DEF_PRIMITIVE(list_subscript)
+{
+  ObjList* list = AS_LIST(args[0]);
+
+  int index = validateIndex(args[1], list->count);
+  // TODO(bob): Instead of returning null here, should signal an error
+  // explicitly somehow.
+  if (index == -1) return NULL_VAL;
 
   return list->elements[index];
 }
@@ -351,7 +396,9 @@ void wrenLoadCore(WrenVM* vm)
 
   vm->listClass = defineClass(vm, "List", vm->objectClass);
   PRIMITIVE(vm->listClass, "add ", list_add);
+  PRIMITIVE(vm->listClass, "clear", list_clear);
   PRIMITIVE(vm->listClass, "count", list_count);
+  PRIMITIVE(vm->listClass, "insert  ", list_insert);
   PRIMITIVE(vm->listClass, "[ ]", list_subscript);
 
   vm->nullClass = defineClass(vm, "Null", vm->objectClass);
