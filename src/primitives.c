@@ -158,8 +158,6 @@ DEF_PRIMITIVE(list_removeAt)
 
   Value removed = list->elements[index];
 
-  // TODO(bob): When should the capacity be shrunk?
-
   // Shift items up.
   for (int i = index; i < list->count - 1; i++)
   {
