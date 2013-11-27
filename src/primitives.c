@@ -129,6 +129,7 @@ DEF_PRIMITIVE(list_insert)
 {
   ObjList* list = AS_LIST(args[0]);
 
+  // count + 1 here so you can "insert" at the very end.
   int index = validateIndex(args[2], list->count + 1);
   // TODO(bob): Instead of returning null here, should signal an error
   // explicitly somehow.
@@ -145,6 +146,36 @@ DEF_PRIMITIVE(list_insert)
   list->elements[index] = args[1];
   list->count++;
   return args[1];
+}
+
+DEF_PRIMITIVE(list_removeAt)
+{
+  ObjList* list = AS_LIST(args[0]);
+  int index = validateIndex(args[1], list->count);
+  // TODO(bob): Instead of returning null here, should signal an error
+  // explicitly somehow.
+  if (index == -1) return NULL_VAL;
+
+  Value removed = list->elements[index];
+
+  // TODO(bob): When should the capacity be shrunk?
+
+  // Shift items up.
+  for (int i = index; i < list->count - 1; i++)
+  {
+    list->elements[i] = list->elements[i + 1];
+  }
+
+  // If we have too much excess capacity, shrink it.
+  if (list->capacity / LIST_GROW_FACTOR >= list->count)
+  {
+    wrenReallocate(vm, list->elements, sizeof(Value) * list->capacity,
+                   sizeof(Value) * (list->capacity / LIST_GROW_FACTOR));
+    list->capacity /= LIST_GROW_FACTOR;
+  }
+
+  list->count--;
+  return removed;
 }
 
 DEF_PRIMITIVE(list_subscript)
@@ -399,6 +430,7 @@ void wrenLoadCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "clear", list_clear);
   PRIMITIVE(vm->listClass, "count", list_count);
   PRIMITIVE(vm->listClass, "insert  ", list_insert);
+  PRIMITIVE(vm->listClass, "removeAt ", list_removeAt);
   PRIMITIVE(vm->listClass, "[ ]", list_subscript);
 
   vm->nullClass = defineClass(vm, "Null", vm->objectClass);
