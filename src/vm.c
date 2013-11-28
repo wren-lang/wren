@@ -4,9 +4,9 @@
 
 #include "common.h"
 #include "compiler.h"
-#include "primitives.h"
 #include "vm.h"
 #include "wren.h"
+#include "wren_core.h"
 
 WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
 {
@@ -31,7 +31,7 @@ WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
     vm->globals[i] = NULL_VAL;
   }
 
-  wrenLoadCore(vm);
+  wrenInitializeCore(vm);
 
   return vm;
 }

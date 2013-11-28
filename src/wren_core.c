@@ -4,39 +4,55 @@
 #include <string.h>
 #include <time.h>
 
-#include "primitives.h"
+#include "wren_core.h"
 #include "value.h"
 
-#define PRIMITIVE(cls, name, prim) \
+// Binds a native method named [name] (in Wren) implemented using C function
+// [fn] to `ObjClass` [cls].
+#define NATIVE(cls, name, fn) \
     { \
       int symbol = ensureSymbol(&vm->methods, name, strlen(name)); \
       cls->methods[symbol].type = METHOD_PRIMITIVE; \
-      cls->methods[symbol].primitive = primitive_##prim; \
+      cls->methods[symbol].primitive = native_##fn; \
     }
 
-#define FIBER_PRIMITIVE(cls, name, prim) \
+// Binds a "fiber native" method named [name] (in Wren) implemented using C
+// function [fn] to `ObjClass` [cls]. Unlike regular native methods, fiber
+// natives have access to the fiber itself and can do lower-level stuff like
+// pushing callframes.
+#define FIBER_NATIVE(cls, name, fn) \
     { \
       int symbol = ensureSymbol(&vm->methods, name, strlen(name)); \
       cls->methods[symbol].type = METHOD_FIBER; \
-      cls->methods[symbol].fiberPrimitive = primitive_##prim; \
+      cls->methods[symbol].fiberPrimitive = native_##fn; \
     }
 
-#define DEF_PRIMITIVE(prim) \
-    static Value primitive_##prim(WrenVM* vm, Value* args)
+// Defines a native method whose C function name is [native]. This abstracts
+// the actual type signature of a native function and makes it clear which C
+// functions are intended to be invoked as natives.
+#define DEF_NATIVE(native) \
+    static Value native_##native(WrenVM* vm, Value* args)
 
-#define DEF_FIBER_PRIMITIVE(prim) \
-    static void primitive_##prim(WrenVM* vm, Fiber* fiber, Value* args)
+// Defines a fiber native method whose C function name is [native].
+#define DEF_FIBER_NATIVE(native) \
+    static void native_##native(WrenVM* vm, Fiber* fiber, Value* args)
 
 // TODO(bob): Tune these.
+// The initial (and minimum) capacity of a non-empty list object.
 #define LIST_MIN_CAPACITY (16)
+
+// The rate at which a list's capacity grows when the size exceeds the current
+// capacity. The new capacity will be determined by *multiplying* the old
+// capacity by this. Growing geometrically is necessary to ensure that adding
+// to a list has O(1) amortized complexity.
 #define LIST_GROW_FACTOR (2)
 
-DEF_PRIMITIVE(bool_not)
+DEF_NATIVE(bool_not)
 {
   return BOOL_VAL(!AS_BOOL(args[0]));
 }
 
-DEF_PRIMITIVE(bool_toString)
+DEF_NATIVE(bool_toString)
 {
   // TODO(bob): Intern these strings or something.
   if (AS_BOOL(args[0]))
@@ -54,15 +70,15 @@ DEF_PRIMITIVE(bool_toString)
 // the callstack, we again use as many arguments. That ensures that the result
 // of evaluating the block goes into the slot that the caller of *this*
 // primitive is expecting.
-DEF_FIBER_PRIMITIVE(fn_call0) { callFunction(fiber, AS_FN(args[0]), 1); }
-DEF_FIBER_PRIMITIVE(fn_call1) { callFunction(fiber, AS_FN(args[0]), 2); }
-DEF_FIBER_PRIMITIVE(fn_call2) { callFunction(fiber, AS_FN(args[0]), 3); }
-DEF_FIBER_PRIMITIVE(fn_call3) { callFunction(fiber, AS_FN(args[0]), 4); }
-DEF_FIBER_PRIMITIVE(fn_call4) { callFunction(fiber, AS_FN(args[0]), 5); }
-DEF_FIBER_PRIMITIVE(fn_call5) { callFunction(fiber, AS_FN(args[0]), 6); }
-DEF_FIBER_PRIMITIVE(fn_call6) { callFunction(fiber, AS_FN(args[0]), 7); }
-DEF_FIBER_PRIMITIVE(fn_call7) { callFunction(fiber, AS_FN(args[0]), 8); }
-DEF_FIBER_PRIMITIVE(fn_call8) { callFunction(fiber, AS_FN(args[0]), 9); }
+DEF_FIBER_NATIVE(fn_call0) { callFunction(fiber, AS_FN(args[0]), 1); }
+DEF_FIBER_NATIVE(fn_call1) { callFunction(fiber, AS_FN(args[0]), 2); }
+DEF_FIBER_NATIVE(fn_call2) { callFunction(fiber, AS_FN(args[0]), 3); }
+DEF_FIBER_NATIVE(fn_call3) { callFunction(fiber, AS_FN(args[0]), 4); }
+DEF_FIBER_NATIVE(fn_call4) { callFunction(fiber, AS_FN(args[0]), 5); }
+DEF_FIBER_NATIVE(fn_call5) { callFunction(fiber, AS_FN(args[0]), 6); }
+DEF_FIBER_NATIVE(fn_call6) { callFunction(fiber, AS_FN(args[0]), 7); }
+DEF_FIBER_NATIVE(fn_call7) { callFunction(fiber, AS_FN(args[0]), 8); }
+DEF_FIBER_NATIVE(fn_call8) { callFunction(fiber, AS_FN(args[0]), 9); }
 
 // Grows [list] if needed to ensure it can hold [count] elements.
 static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
@@ -101,7 +117,7 @@ static int validateIndex(Value index, int count)
   return indexNum;
 }
 
-DEF_PRIMITIVE(list_add)
+DEF_NATIVE(list_add)
 {
   ObjList* list = AS_LIST(args[0]);
 
@@ -110,7 +126,7 @@ DEF_PRIMITIVE(list_add)
   return args[1];
 }
 
-DEF_PRIMITIVE(list_clear)
+DEF_NATIVE(list_clear)
 {
   ObjList* list = AS_LIST(args[0]);
   wrenReallocate(vm, list->elements, list->capacity * sizeof(Value), 0);
@@ -119,13 +135,13 @@ DEF_PRIMITIVE(list_clear)
   return NULL_VAL;
 }
 
-DEF_PRIMITIVE(list_count)
+DEF_NATIVE(list_count)
 {
   ObjList* list = AS_LIST(args[0]);
   return NUM_VAL(list->count);
 }
 
-DEF_PRIMITIVE(list_insert)
+DEF_NATIVE(list_insert)
 {
   ObjList* list = AS_LIST(args[0]);
 
@@ -148,7 +164,7 @@ DEF_PRIMITIVE(list_insert)
   return args[1];
 }
 
-DEF_PRIMITIVE(list_removeAt)
+DEF_NATIVE(list_removeAt)
 {
   ObjList* list = AS_LIST(args[0]);
   int index = validateIndex(args[1], list->count);
@@ -176,7 +192,7 @@ DEF_PRIMITIVE(list_removeAt)
   return removed;
 }
 
-DEF_PRIMITIVE(list_subscript)
+DEF_NATIVE(list_subscript)
 {
   ObjList* list = AS_LIST(args[0]);
 
@@ -188,12 +204,12 @@ DEF_PRIMITIVE(list_subscript)
   return list->elements[index];
 }
 
-DEF_PRIMITIVE(num_abs)
+DEF_NATIVE(num_abs)
 {
   return NUM_VAL(fabs(AS_NUM(args[0])));
 }
 
-DEF_PRIMITIVE(num_toString)
+DEF_NATIVE(num_toString)
 {
   // TODO(bob): What size should this be?
   char temp[100];
@@ -201,94 +217,94 @@ DEF_PRIMITIVE(num_toString)
   return (Value)wrenNewString(vm, temp, strlen(temp));
 }
 
-DEF_PRIMITIVE(num_negate)
+DEF_NATIVE(num_negate)
 {
   return NUM_VAL(-AS_NUM(args[0]));
 }
 
-DEF_PRIMITIVE(num_minus)
+DEF_NATIVE(num_minus)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   return NUM_VAL(AS_NUM(args[0]) - AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(num_plus)
+DEF_NATIVE(num_plus)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   // TODO(bob): Handle coercion to string if RHS is a string.
   return NUM_VAL(AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(num_multiply)
+DEF_NATIVE(num_multiply)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   return NUM_VAL(AS_NUM(args[0]) * AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(num_divide)
+DEF_NATIVE(num_divide)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   return NUM_VAL(AS_NUM(args[0]) / AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(num_mod)
+DEF_NATIVE(num_mod)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   return NUM_VAL(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
-DEF_PRIMITIVE(num_lt)
+DEF_NATIVE(num_lt)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   return BOOL_VAL(AS_NUM(args[0]) < AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(num_gt)
+DEF_NATIVE(num_gt)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   return BOOL_VAL(AS_NUM(args[0]) > AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(num_lte)
+DEF_NATIVE(num_lte)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   return BOOL_VAL(AS_NUM(args[0]) <= AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(num_gte)
+DEF_NATIVE(num_gte)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
   return BOOL_VAL(AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(num_eqeq)
+DEF_NATIVE(num_eqeq)
 {
   if (!IS_NUM(args[1])) return FALSE_VAL;
   return BOOL_VAL(AS_NUM(args[0]) == AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(num_bangeq)
+DEF_NATIVE(num_bangeq)
 {
   if (!IS_NUM(args[1])) return TRUE_VAL;
   return BOOL_VAL(AS_NUM(args[0]) != AS_NUM(args[1]));
 }
 
-DEF_PRIMITIVE(object_eqeq)
+DEF_NATIVE(object_eqeq)
 {
   return BOOL_VAL(wrenValuesEqual(args[0], args[1]));
 }
 
-DEF_PRIMITIVE(object_bangeq)
+DEF_NATIVE(object_bangeq)
 {
   return BOOL_VAL(!wrenValuesEqual(args[0], args[1]));
 }
 
-DEF_PRIMITIVE(object_type)
+DEF_NATIVE(object_type)
 {
   return OBJ_VAL(wrenGetClass(vm, args[0]));
 }
 
-DEF_PRIMITIVE(string_contains)
+DEF_NATIVE(string_contains)
 {
   const char* string = AS_CSTRING(args[0]);
   // TODO(bob): Check type of arg first!
@@ -300,18 +316,18 @@ DEF_PRIMITIVE(string_contains)
   return BOOL_VAL(strstr(string, search) != NULL);
 }
 
-DEF_PRIMITIVE(string_count)
+DEF_NATIVE(string_count)
 {
   double count = strlen(AS_CSTRING(args[0]));
   return NUM_VAL(count);
 }
 
-DEF_PRIMITIVE(string_toString)
+DEF_NATIVE(string_toString)
 {
   return args[0];
 }
 
-DEF_PRIMITIVE(string_plus)
+DEF_NATIVE(string_plus)
 {
   if (!IS_STRING(args[1])) return vm->unsupported;
   // TODO(bob): Handle coercion to string of RHS.
@@ -331,7 +347,7 @@ DEF_PRIMITIVE(string_plus)
   return value;
 }
 
-DEF_PRIMITIVE(string_eqeq)
+DEF_NATIVE(string_eqeq)
 {
   if (!IS_STRING(args[1])) return FALSE_VAL;
   const char* a = AS_CSTRING(args[0]);
@@ -339,7 +355,7 @@ DEF_PRIMITIVE(string_eqeq)
   return BOOL_VAL(strcmp(a, b) == 0);
 }
 
-DEF_PRIMITIVE(string_bangeq)
+DEF_NATIVE(string_bangeq)
 {
   if (!IS_STRING(args[1])) return TRUE_VAL;
   const char* a = AS_CSTRING(args[0]);
@@ -347,7 +363,7 @@ DEF_PRIMITIVE(string_bangeq)
   return BOOL_VAL(strcmp(a, b) != 0);
 }
 
-DEF_PRIMITIVE(string_subscript)
+DEF_NATIVE(string_subscript)
 {
   // TODO(bob): Instead of returning null here, all of these failure cases
   // should signal an error explicitly somehow.
@@ -377,14 +393,14 @@ DEF_PRIMITIVE(string_subscript)
   return value;
 }
 
-DEF_PRIMITIVE(io_write)
+DEF_NATIVE(io_write)
 {
   wrenPrintValue(args[1]);
   printf("\n");
   return args[1];
 }
 
-DEF_PRIMITIVE(os_clock)
+DEF_NATIVE(os_clock)
 {
   double time = (double)clock() / CLOCKS_PER_SEC;
   return NUM_VAL(time);
@@ -398,70 +414,70 @@ static ObjClass* defineClass(WrenVM* vm, const char* name, ObjClass* superclass)
   return classObj;
 }
 
-void wrenLoadCore(WrenVM* vm)
+void wrenInitializeCore(WrenVM* vm)
 {
   vm->objectClass = defineClass(vm, "Object", NULL);
-  PRIMITIVE(vm->objectClass, "== ", object_eqeq);
-  PRIMITIVE(vm->objectClass, "!= ", object_bangeq);
-  PRIMITIVE(vm->objectClass, "type", object_type);
+  NATIVE(vm->objectClass, "== ", object_eqeq);
+  NATIVE(vm->objectClass, "!= ", object_bangeq);
+  NATIVE(vm->objectClass, "type", object_type);
 
   // The "Class" class is the superclass of all metaclasses.
   vm->classClass = defineClass(vm, "Class", vm->objectClass);
 
   vm->boolClass = defineClass(vm, "Bool", vm->objectClass);
-  PRIMITIVE(vm->boolClass, "toString", bool_toString);
-  PRIMITIVE(vm->boolClass, "!", bool_not);
+  NATIVE(vm->boolClass, "toString", bool_toString);
+  NATIVE(vm->boolClass, "!", bool_not);
 
   vm->fnClass = defineClass(vm, "Function", vm->objectClass);
-  FIBER_PRIMITIVE(vm->fnClass, "call", fn_call0);
-  FIBER_PRIMITIVE(vm->fnClass, "call ", fn_call1);
-  FIBER_PRIMITIVE(vm->fnClass, "call  ", fn_call2);
-  FIBER_PRIMITIVE(vm->fnClass, "call   ", fn_call3);
-  FIBER_PRIMITIVE(vm->fnClass, "call    ", fn_call4);
-  FIBER_PRIMITIVE(vm->fnClass, "call     ", fn_call5);
-  FIBER_PRIMITIVE(vm->fnClass, "call      ", fn_call6);
-  FIBER_PRIMITIVE(vm->fnClass, "call       ", fn_call7);
-  FIBER_PRIMITIVE(vm->fnClass, "call        ", fn_call8);
+  FIBER_NATIVE(vm->fnClass, "call", fn_call0);
+  FIBER_NATIVE(vm->fnClass, "call ", fn_call1);
+  FIBER_NATIVE(vm->fnClass, "call  ", fn_call2);
+  FIBER_NATIVE(vm->fnClass, "call   ", fn_call3);
+  FIBER_NATIVE(vm->fnClass, "call    ", fn_call4);
+  FIBER_NATIVE(vm->fnClass, "call     ", fn_call5);
+  FIBER_NATIVE(vm->fnClass, "call      ", fn_call6);
+  FIBER_NATIVE(vm->fnClass, "call       ", fn_call7);
+  FIBER_NATIVE(vm->fnClass, "call        ", fn_call8);
 
   vm->listClass = defineClass(vm, "List", vm->objectClass);
-  PRIMITIVE(vm->listClass, "add ", list_add);
-  PRIMITIVE(vm->listClass, "clear", list_clear);
-  PRIMITIVE(vm->listClass, "count", list_count);
-  PRIMITIVE(vm->listClass, "insert  ", list_insert);
-  PRIMITIVE(vm->listClass, "removeAt ", list_removeAt);
-  PRIMITIVE(vm->listClass, "[ ]", list_subscript);
+  NATIVE(vm->listClass, "add ", list_add);
+  NATIVE(vm->listClass, "clear", list_clear);
+  NATIVE(vm->listClass, "count", list_count);
+  NATIVE(vm->listClass, "insert  ", list_insert);
+  NATIVE(vm->listClass, "removeAt ", list_removeAt);
+  NATIVE(vm->listClass, "[ ]", list_subscript);
 
   vm->nullClass = defineClass(vm, "Null", vm->objectClass);
 
   vm->numClass = defineClass(vm, "Num", vm->objectClass);
-  PRIMITIVE(vm->numClass, "abs", num_abs);
-  PRIMITIVE(vm->numClass, "toString", num_toString)
-  PRIMITIVE(vm->numClass, "-", num_negate);
-  PRIMITIVE(vm->numClass, "- ", num_minus);
-  PRIMITIVE(vm->numClass, "+ ", num_plus);
-  PRIMITIVE(vm->numClass, "* ", num_multiply);
-  PRIMITIVE(vm->numClass, "/ ", num_divide);
-  PRIMITIVE(vm->numClass, "% ", num_mod);
-  PRIMITIVE(vm->numClass, "< ", num_lt);
-  PRIMITIVE(vm->numClass, "> ", num_gt);
-  PRIMITIVE(vm->numClass, "<= ", num_lte);
-  PRIMITIVE(vm->numClass, ">= ", num_gte);
+  NATIVE(vm->numClass, "abs", num_abs);
+  NATIVE(vm->numClass, "toString", num_toString)
+  NATIVE(vm->numClass, "-", num_negate);
+  NATIVE(vm->numClass, "- ", num_minus);
+  NATIVE(vm->numClass, "+ ", num_plus);
+  NATIVE(vm->numClass, "* ", num_multiply);
+  NATIVE(vm->numClass, "/ ", num_divide);
+  NATIVE(vm->numClass, "% ", num_mod);
+  NATIVE(vm->numClass, "< ", num_lt);
+  NATIVE(vm->numClass, "> ", num_gt);
+  NATIVE(vm->numClass, "<= ", num_lte);
+  NATIVE(vm->numClass, ">= ", num_gte);
   // TODO(bob): The only reason there are here is so that 0 != -0. Is that what
   // we want?
-  PRIMITIVE(vm->numClass, "== ", num_eqeq);
-  PRIMITIVE(vm->numClass, "!= ", num_bangeq);
+  NATIVE(vm->numClass, "== ", num_eqeq);
+  NATIVE(vm->numClass, "!= ", num_bangeq);
 
   vm->stringClass = defineClass(vm, "String", vm->objectClass);
-  PRIMITIVE(vm->stringClass, "contains ", string_contains);
-  PRIMITIVE(vm->stringClass, "count", string_count);
-  PRIMITIVE(vm->stringClass, "toString", string_toString)
-  PRIMITIVE(vm->stringClass, "+ ", string_plus);
-  PRIMITIVE(vm->stringClass, "== ", string_eqeq);
-  PRIMITIVE(vm->stringClass, "!= ", string_bangeq);
-  PRIMITIVE(vm->stringClass, "[ ]", string_subscript);
+  NATIVE(vm->stringClass, "contains ", string_contains);
+  NATIVE(vm->stringClass, "count", string_count);
+  NATIVE(vm->stringClass, "toString", string_toString)
+  NATIVE(vm->stringClass, "+ ", string_plus);
+  NATIVE(vm->stringClass, "== ", string_eqeq);
+  NATIVE(vm->stringClass, "!= ", string_bangeq);
+  NATIVE(vm->stringClass, "[ ]", string_subscript);
 
   ObjClass* ioClass = defineClass(vm, "IO", vm->objectClass);
-  PRIMITIVE(ioClass, "write ", io_write);
+  NATIVE(ioClass, "write ", io_write);
 
   // TODO(bob): Making this an instance is lame. The only reason we're doing it
   // is because "IO.write()" looks ugly. Maybe just get used to that?
@@ -469,7 +485,7 @@ void wrenLoadCore(WrenVM* vm)
   vm->globals[addSymbol(&vm->globalSymbols, "io", 2)] = ioObject;
 
   ObjClass* osClass = defineClass(vm, "OS", vm->objectClass);
-  PRIMITIVE(osClass->metaclass, "clock", os_clock);
+  NATIVE(osClass->metaclass, "clock", os_clock);
 
   // TODO(bob): Make this a distinct object type.
   ObjClass* unsupportedClass = wrenNewClass(vm, vm->objectClass, 0);
