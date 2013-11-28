@@ -6,6 +6,32 @@
 #include "common.h"
 #include "wren.h"
 
+// This defines the built-in types and their core representations in memory.
+// Since Wren is dynamically typed, any variable can hold a value of any type,
+// and the type can change at runtime. Implementing this efficiently is
+// critical for performance.
+//
+// The main type exposed by this is [Value]. A C variable of that type is a
+// storage location that can hold any Wren value. The stack, global variables,
+// and instance fields are all implemented in C as variables of type Value.
+//
+// The built-in types for booleans, numbers, and null are unboxed: their value
+// is stored directly in the Value, and copying a Value copies the value. Other
+// types--classes, instances of classes, functions, lists, and strings--are all
+// reference types. They are stored on the heap and the Value just stores a
+// pointer to it. Copying the Value copies a reference to the same object. The
+// Wren implementation calls these "Obj", or objects, though to a user, all
+// values are objects.
+//
+// There are two supported Value representations. The main one uses a technique
+// called "NaN tagging" (explained in detail below) to store a number, any of
+// the value types, or a pointer all inside a single double-precision floating
+// point value. A larger, slower, Value type that uses a struct to store these
+// is also supported, and is useful for debugging the VM.
+//
+// The representation is controlled by the `NAN_TAGGING` define. If that's
+// defined, Nan tagging is used.
+
 // TODO(bob): This should be in VM. (Or, really, we shouldn't hardcode this at
 // all and have growable symbol tables.)
 #define MAX_SYMBOLS 256
@@ -168,16 +194,16 @@ typedef struct
 #define BOOL_VAL(boolean) (boolean ? TRUE_VAL : FALSE_VAL)
 
 // Returns non-zero if [value] is a bool.
-#define IS_BOOL(value) (valueIsBool(value))
+#define IS_BOOL(value) (wrenIsBool(value))
 
 // Returns non-zero if [value] is a function object.
-#define IS_FN(value) (valueIsFn(value))
+#define IS_FN(value) (wrenIsFn(value))
 
 // Returns non-zero if [value] is an instance.
-#define IS_INSTANCE(value) (valueIsInstance(value))
+#define IS_INSTANCE(value) (wrenIsInstance(value))
 
 // Returns non-zero if [value] is a string object.
-#define IS_STRING(value) (valueIsString(value))
+#define IS_STRING(value) (wrenIsString(value))
 
 
 #ifdef NAN_TAGGING
@@ -289,7 +315,7 @@ typedef struct
 #define GET_TAG(value) ((int)((value).bits & MASK_TAG))
 
 // Converts a pointer to an Obj to a Value.
-#define OBJ_VAL(obj) (objectToValue((Obj*)(obj)))
+#define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))
 
 #else
 
@@ -307,7 +333,7 @@ typedef struct
 #define IS_NUM(value) ((value).type == VAL_NUM)
 
 // Convert [obj], an `Obj*`, to a [Value].
-#define OBJ_VAL(obj) (objectToValue((Obj*)(obj)))
+#define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))
 
 // double -> Value.
 #define NUM_VAL(n) ((Value){ VAL_NUM, n, NULL })
@@ -319,19 +345,36 @@ typedef struct
 
 #endif
 
-// Returns non-zero if [a] and [b] are strictly equal using built-in equality
-// semantics. This is identity for object values, and value equality for others.
-int wrenValuesEqual(Value a, Value b);
+// Creates a new class object.
+ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields);
+
+// Creates a new function object. Assumes the compiler will fill it in with
+// bytecode, constants, etc.
+ObjFn* wrenNewFunction(WrenVM* vm);
+
+// Creates a new instance of the given [classObj].
+Value wrenNewInstance(WrenVM* vm, ObjClass* classObj);
+
+// Creates a new list with [numElements] elements (which are left
+// uninitialized.)
+ObjList* wrenNewList(WrenVM* vm, int numElements);
+
+// Creates a new string object and copies [text] into it.
+Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 
 // Returns the class of [value].
 ObjClass* wrenGetClass(WrenVM* vm, Value value);
 
+// Returns non-zero if [a] and [b] are strictly equal using built-in equality
+// semantics. This is identity for object values, and value equality for others.
+int wrenValuesEqual(Value a, Value b);
+
 void wrenPrintValue(Value value);
 
-int valueIsBool(Value value);
-int valueIsFn(Value value);
-int valueIsInstance(Value value);
-int valueIsString(Value value);
-Value objectToValue(Obj* obj);
+int wrenIsBool(Value value);
+int wrenIsFn(Value value);
+int wrenIsInstance(Value value);
+int wrenIsString(Value value);
+Value wrenObjectToValue(Obj* obj);
 
 #endif

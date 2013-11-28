@@ -179,7 +179,7 @@ static int initCompiler(Compiler* compiler, Parser* parser,
   // Propagate the enclosing class downwards.
   compiler->fields = parent != NULL ? parent->fields :  NULL;
 
-  compiler->fn = newFunction(parser->vm);
+  compiler->fn = wrenNewFunction(parser->vm);
   compiler->fn->numConstants = 0;
 
   compiler->scope = NULL;
@@ -966,7 +966,7 @@ static void number(Compiler* compiler, int allowAssignment)
 static void string(Compiler* compiler, int allowAssignment)
 {
   // Define a constant for the literal.
-  int constant = addConstant(compiler, newString(compiler->parser->vm,
+  int constant = addConstant(compiler, wrenNewString(compiler->parser->vm,
       compiler->parser->currentString, compiler->parser->currentStringLength));
 
   // Compile the code to load the constant.

@@ -188,23 +188,6 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
 // TODO(bob): Make these static or prefix their names.
 
-// Creates a new function object. Assumes the compiler will fill it in with
-// bytecode, constants, etc.
-ObjFn* newFunction(WrenVM* vm);
-
-// Creates a new class object.
-ObjClass* newClass(WrenVM* vm, ObjClass* superclass, int numFields);
-
-// Creates a new instance of the given [classObj].
-Value newInstance(WrenVM* vm, ObjClass* classObj);
-
-// Creates a new list with [numElements] elements (which are left
-// uninitialized.)
-ObjList* newList(WrenVM* vm, int numElements);
-
-// Creates a new string object and copies [text] into it.
-Value newString(WrenVM* vm, const char* text, size_t length);
-
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);
 

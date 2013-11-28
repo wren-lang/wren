@@ -41,11 +41,11 @@ DEF_PRIMITIVE(bool_toString)
   // TODO(bob): Intern these strings or something.
   if (AS_BOOL(args[0]))
   {
-    return newString(vm, "true", 4);
+    return wrenNewString(vm, "true", 4);
   }
   else
   {
-    return newString(vm, "false", 5);
+    return wrenNewString(vm, "false", 5);
   }
 }
 
@@ -198,7 +198,7 @@ DEF_PRIMITIVE(num_toString)
   // TODO(bob): What size should this be?
   char temp[100];
   sprintf(temp, "%.14g", AS_NUM(args[0]));
-  return (Value)newString(vm, temp, strlen(temp));
+  return (Value)wrenNewString(vm, temp, strlen(temp));
 }
 
 DEF_PRIMITIVE(num_negate)
@@ -322,7 +322,7 @@ DEF_PRIMITIVE(string_plus)
   size_t leftLength = strlen(left);
   size_t rightLength = strlen(right);
 
-  Value value = newString(vm, NULL, leftLength + rightLength);
+  Value value = wrenNewString(vm, NULL, leftLength + rightLength);
   ObjString* string = AS_STRING(value);
   strcpy(string->value, left);
   strcpy(string->value + leftLength, right);
@@ -370,7 +370,7 @@ DEF_PRIMITIVE(string_subscript)
 
   // The result is a one-character string.
   // TODO(bob): Handle UTF-8.
-  Value value = newString(vm, NULL, 2);
+  Value value = wrenNewString(vm, NULL, 2);
   ObjString* result = AS_STRING(value);
   result->value[0] = AS_CSTRING(args[0])[index];
   result->value[1] = '\0';
@@ -392,7 +392,7 @@ DEF_PRIMITIVE(os_clock)
 
 static ObjClass* defineClass(WrenVM* vm, const char* name, ObjClass* superclass)
 {
-  ObjClass* classObj = newClass(vm, superclass, 0);
+  ObjClass* classObj = wrenNewClass(vm, superclass, 0);
   int symbol = addSymbol(&vm->globalSymbols, name, strlen(name));
   vm->globals[symbol] = OBJ_VAL(classObj);
   return classObj;
@@ -465,13 +465,13 @@ void wrenLoadCore(WrenVM* vm)
 
   // TODO(bob): Making this an instance is lame. The only reason we're doing it
   // is because "IO.write()" looks ugly. Maybe just get used to that?
-  Value ioObject = newInstance(vm, ioClass);
+  Value ioObject = wrenNewInstance(vm, ioClass);
   vm->globals[addSymbol(&vm->globalSymbols, "io", 2)] = ioObject;
 
   ObjClass* osClass = defineClass(vm, "OS", vm->objectClass);
   PRIMITIVE(osClass->metaclass, "clock", os_clock);
 
   // TODO(bob): Make this a distinct object type.
-  ObjClass* unsupportedClass = newClass(vm, vm->objectClass, 0);
-  vm->unsupported = (Value)newInstance(vm, unsupportedClass);
+  ObjClass* unsupportedClass = wrenNewClass(vm, vm->objectClass, 0);
+  vm->unsupported = (Value)wrenNewInstance(vm, unsupportedClass);
 }

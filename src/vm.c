@@ -107,16 +107,6 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   return realloc(memory, newSize);
 }
 
-static void* allocate(WrenVM* vm, size_t size)
-{
-  return wrenReallocate(vm, NULL, 0, size);
-}
-
-static void* deallocate(WrenVM* vm, void* memory, size_t oldSize)
-{
-  return wrenReallocate(vm, memory, oldSize, 0);
-}
-
 static void markValue(Value value);
 
 static void markFn(ObjFn* fn)
@@ -211,6 +201,11 @@ void markValue(Value value)
 {
   if (!IS_OBJ(value)) return;
   markObj(AS_OBJ(value));
+}
+
+static void* deallocate(WrenVM* vm, void* memory, size_t oldSize)
+{
+  return wrenReallocate(vm, memory, oldSize, 0);
 }
 
 static void freeObj(WrenVM* vm, Obj* obj)
@@ -325,131 +320,6 @@ static void collectGarbage(WrenVM* vm)
       obj = &(*obj)->next;
     }
   }
-}
-
-static void initObj(WrenVM* vm, Obj* obj, ObjType type)
-{
-  obj->type = type;
-  obj->flags = 0;
-  obj->next = vm->first;
-  vm->first = obj;
-}
-
-static ObjClass* newSingleClass(WrenVM* vm, ObjClass* metaclass,
-                                ObjClass* superclass, int numFields)
-{
-  ObjClass* obj = allocate(vm, sizeof(ObjClass));
-  initObj(vm, &obj->obj, OBJ_CLASS);
-  obj->metaclass = metaclass;
-  obj->superclass = superclass;
-  obj->numFields = numFields;
-
-  // Inherit methods from its superclass (unless it's Object, which has none).
-  if (superclass != NULL)
-  {
-    for (int i = 0; i < MAX_SYMBOLS; i++)
-    {
-      obj->methods[i] = superclass->methods[i];
-    }
-  }
-  else
-  {
-    for (int i = 0; i < MAX_SYMBOLS; i++)
-    {
-      obj->methods[i].type = METHOD_NONE;
-    }
-  }
-
-  return obj;
-}
-
-ObjClass* newClass(WrenVM* vm, ObjClass* superclass, int numFields)
-{
-  // Make the metaclass.
-  // TODO(bob): What is the metaclass's metaclass?
-  // TODO(bob): Handle static fields.
-  ObjClass* metaclass = newSingleClass(vm, NULL, vm->classClass, 0);
-
-  // Make sure it isn't collected when we allocate the metaclass.
-  pinObj(vm, (Obj*)metaclass);
-
-  ObjClass* classObj = newSingleClass(vm, metaclass, superclass, numFields);
-  classObj->numFields = numFields;
-
-  unpinObj(vm, (Obj*)metaclass);
-
-  return classObj;
-}
-
-ObjFn* newFunction(WrenVM* vm)
-{
-  // Allocate these before the function in case they trigger a GC which would
-  // free the function.
-  // TODO(bob): Hack! make variable sized.
-  unsigned char* bytecode = allocate(vm, sizeof(Code) * 1024);
-  Value* constants = allocate(vm, sizeof(Value) * 256);
-
-  ObjFn* fn = allocate(vm, sizeof(ObjFn));
-  initObj(vm, &fn->obj, OBJ_FN);
-
-  fn->bytecode = bytecode;
-  fn->constants = constants;
-
-  return fn;
-}
-
-Value newInstance(WrenVM* vm, ObjClass* classObj)
-{
-  ObjInstance* instance = allocate(vm,
-      sizeof(ObjInstance) + classObj->numFields * sizeof(Value));
-  initObj(vm, &instance->obj, OBJ_INSTANCE);
-  instance->classObj = classObj;
-
-  // Initialize fields to null.
-  for (int i = 0; i < classObj->numFields; i++)
-  {
-    instance->fields[i] = NULL_VAL;
-  }
-
-  return OBJ_VAL(instance);
-}
-
-ObjList* newList(WrenVM* vm, int numElements)
-{
-  // Allocate this before the list object in case it triggers a GC which would
-  // free the list.
-  Value* elements = NULL;
-  if (numElements > 0)
-  {
-    elements = allocate(vm, sizeof(Value) * numElements);
-  }
-
-  ObjList* list = allocate(vm, sizeof(ObjList));
-  initObj(vm, &list->obj, OBJ_LIST);
-  list->capacity = numElements;
-  list->count = numElements;
-  list->elements = elements;
-  return list;
-}
-
-Value newString(WrenVM* vm, const char* text, size_t length)
-{
-  // Allocate before the string object in case this triggers a GC which would
-  // free the string object.
-  char* heapText = allocate(vm, length + 1);
-
-  ObjString* string = allocate(vm, sizeof(ObjString));
-  initObj(vm, &string->obj, OBJ_STRING);
-  string->value = heapText;
-
-  // Copy the string (if given one).
-  if (text != NULL)
-  {
-    strncpy(heapText, text, length);
-    heapText[length] = '\0';
-  }
-
-  return OBJ_VAL(string);
 }
 
 void initSymbolTable(SymbolTable* symbols)
@@ -886,7 +756,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
         superclass = vm->objectClass;
       }
 
-      ObjClass* classObj = newClass(vm, superclass, numFields);
+      ObjClass* classObj = wrenNewClass(vm, superclass, numFields);
 
       // Assume the first class being defined is Object.
       if (vm->objectClass == NULL)
@@ -907,7 +777,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
     CASE_CODE(LIST):
     {
       int numElements = READ_ARG();
-      ObjList* list = newList(vm, numElements);
+      ObjList* list = wrenNewList(vm, numElements);
       for (int i = 0; i < numElements; i++)
       {
         list->elements[i] = fiber->stack[fiber->stackSize - numElements + i];
@@ -1070,7 +940,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
 
         case METHOD_CTOR:
         {
-          Value instance = newInstance(vm, AS_CLASS(receiver));
+          Value instance = wrenNewInstance(vm, AS_CLASS(receiver));
 
           // Store the new instance in the receiver slot so that it can be
           // "this" in the body of the constructor and returned by it.
