@@ -1,6 +1,13 @@
 #ifndef wren_common_h
 #define wren_common_h
 
+// This header contains macros and defines used across the entire Wren
+// implementation. In particular, it contains "configuration" defines that
+// control how Wren works. Some of these are only used while hacking on
+// debugging Wren itself.
+//
+// This header is *not* intended to be included by code outside of Wren itself.
+
 // Define this to stress test the GC. It will perform a collection before every
 // allocation.
 //#define DEBUG_GC_STRESS

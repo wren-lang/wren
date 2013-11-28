@@ -1,8 +1,8 @@
 #ifndef wren_vm_h
 #define wren_vm_h
 
-#include "common.h"
-#include "value.h"
+#include "wren_common.h"
+#include "wren_value.h"
 
 // TODO(bob): Make these externally controllable.
 #define STACK_SIZE 1024

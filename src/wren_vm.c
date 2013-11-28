@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "common.h"
-#include "compiler.h"
-#include "vm.h"
 #include "wren.h"
+#include "wren_common.h"
+#include "wren_compiler.h"
+#include "wren_vm.h"
 #include "wren_core.h"
 
 WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)

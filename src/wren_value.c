@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "value.h"
-#include "vm.h"
+#include "wren_value.h"
+#include "wren_vm.h"
 
 static void* allocate(WrenVM* vm, size_t size)
 {

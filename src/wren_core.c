@@ -5,7 +5,7 @@
 #include <time.h>
 
 #include "wren_core.h"
-#include "value.h"
+#include "wren_value.h"
 
 // Binds a native method named [name] (in Wren) implemented using C function
 // [fn] to `ObjClass` [cls].

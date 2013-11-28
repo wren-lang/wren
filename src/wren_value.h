@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "common.h"
+#include "wren_common.h"
 #include "wren.h"
 
 // This defines the built-in types and their core representations in memory.

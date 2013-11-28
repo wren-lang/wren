@@ -3,10 +3,15 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "common.h"
-#include "compiler.h"
+#include "wren_common.h"
+#include "wren_compiler.h"
 
-#define MAX_NAME 256
+// This is written in bottom-up order, so the tokenization comes first, then
+// parsing/code generation. This minimizes the number of explicit forward
+// declarations needed.
+
+// The maximum length of a method signature.
+#define MAX_METHOD_NAME 256
 
 // TODO(bob): Are these really worth the effort?
 #define PUSH_SCOPE  \
@@ -1006,7 +1011,7 @@ static void this_(Compiler* compiler, int allowAssignment)
 // Subscript or "array indexing" operator like `foo[bar]`.
 static void subscript(Compiler* compiler, int allowAssignment)
 {
-  char name[MAX_NAME];
+  char name[MAX_METHOD_NAME];
   int length = 1;
   int numArgs = 0;
 
@@ -1041,7 +1046,7 @@ static void subscript(Compiler* compiler, int allowAssignment)
 
 void call(Compiler* compiler, int allowAssignment)
 {
-  char name[MAX_NAME];
+  char name[MAX_METHOD_NAME];
   int length = 0;
   int numArgs = 0;
 
@@ -1376,7 +1381,7 @@ void method(Compiler* compiler, Code instruction, SignatureFn signature)
   int constant = initCompiler(&methodCompiler, compiler->parser, compiler, 1);
 
   // Build the method name.
-  char name[MAX_NAME];
+  char name[MAX_METHOD_NAME];
   int length = compiler->parser->previous.end -
                compiler->parser->previous.start;
   strncpy(name, compiler->parser->source + compiler->parser->previous.start,
