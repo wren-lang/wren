@@ -23,7 +23,10 @@ WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
 
   // TODO(bob): Make this configurable.
   vm->nextGC = 1024 * 1024 * 10;
+  vm->first = NULL;
 
+  vm->pinned = NULL;
+  
   // Clear out the global variables. This ensures they are NULL before being
   // initialized in case we do a garbage collection before one gets initialized.
   for (int i = 0; i < MAX_SYMBOLS; i++)
@@ -284,9 +287,11 @@ static void collectGarbage(WrenVM* vm)
   }
 
   // Pinned objects.
-  for (int j = 0; j < vm->numPinned; j++)
+  PinnedObj* pinned = vm->pinned;
+  while (pinned != NULL)
   {
-    markObj(vm->pinned[j]);
+    markObj(pinned->obj);
+    pinned = pinned->previous;
   }
 
   // Stack functions.
@@ -1086,14 +1091,14 @@ void callFunction(Fiber* fiber, ObjFn* fn, int numArgs)
   fiber->numFrames++;
 }
 
-void pinObj(WrenVM* vm, Obj* obj)
+void pinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned)
 {
-  ASSERT(vm->numPinned < MAX_PINNED - 1, "Too many pinned objects.");
-  vm->pinned[vm->numPinned++] = obj;
+  pinned->obj = obj;
+  pinned->previous = vm->pinned;
+  vm->pinned = pinned;
 }
 
-void unpinObj(WrenVM* vm, Obj* obj)
+void unpinObj(WrenVM* vm)
 {
-  ASSERT(vm->pinned[vm->numPinned - 1] == obj, "Unpinning out of stack order.");
-  vm->numPinned--;
+  vm->pinned = vm->pinned->previous;
 }

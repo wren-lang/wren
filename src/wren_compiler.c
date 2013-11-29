@@ -1542,7 +1542,8 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, 0);
 
-  pinObj(vm, (Obj*)compiler.fn);
+  PinnedObj pinned;
+  pinObj(vm, (Obj*)compiler.fn, &pinned);
 
   for (;;)
   {
@@ -1563,7 +1564,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
 
   emit(&compiler, CODE_END);
 
-  unpinObj(vm, (Obj*)compiler.fn);
+  unpinObj(vm);
 
   return parser.hasError ? NULL : compiler.fn;
 }

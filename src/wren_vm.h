@@ -7,7 +7,6 @@
 // TODO(bob): Make these externally controllable.
 #define STACK_SIZE 1024
 #define MAX_CALL_FRAMES 256
-#define MAX_PINNED 16
 
 typedef enum
 {
@@ -117,6 +116,23 @@ typedef struct
   int count;
 } SymbolTable;
 
+// A pinned object is an Obj that has been temporarily made an explicit GC root.
+// This is for temporary or new objects that are not otherwise reachable but
+// should not be collected.
+//
+// They are organized as linked list of these objects stored on the stack. The
+// WrenVM has a pointer to the head of the list and walks it if a collection
+// occurs. This implies that pinned objects need to have stack semantics: only
+// the most recently pinned object can be unpinned.
+typedef struct sPinnedObj
+{
+  // The pinned object.
+  Obj* obj;
+
+  // The next pinned object.
+  struct sPinnedObj* previous;
+} PinnedObj;
+
 struct WrenVM
 {
   SymbolTable methods;
@@ -151,13 +167,9 @@ struct WrenVM
   // The first object in the linked list of all currently allocated objects.
   Obj* first;
 
-  // How many pinned objects are in the stack.
-  int numPinned;
-
-  // The stack "pinned" objects. These are temporary explicit GC roots so that
-  // the collector can find them before they are reachable through a normal
-  // root.
-  Obj* pinned[MAX_PINNED];
+  // The head of the list of pinned objects. Will be `NULL` if nothing is
+  // pinned.
+  PinnedObj* pinned;
 };
 
 typedef struct
@@ -221,10 +233,11 @@ Value interpret(WrenVM* vm, ObjFn* fn);
 // arguments (including the receiver) to be on the top of the stack already.
 void callFunction(Fiber* fiber, ObjFn* fn, int numArgs);
 
-// Mark [obj] as a GC root so that it doesn't get collected.
-void pinObj(WrenVM* vm, Obj* obj);
+// Mark [obj] as a GC root so that it doesn't get collected. Initializes
+// [pinned], which must be then passed to [unpinObj].
+void pinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned);
 
-// Unmark [obj] as a GC root so that it doesn't get collected.
-void unpinObj(WrenVM* vm, Obj* obj);
+// Remove the most recently pinned object from the list of pinned GC roots.
+void unpinObj(WrenVM* vm);
 
 #endif

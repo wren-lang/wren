@@ -53,12 +53,13 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
   ObjClass* metaclass = newClass(vm, NULL, vm->classClass, 0);
 
   // Make sure it isn't collected when we allocate the metaclass.
-  pinObj(vm, (Obj*)metaclass);
+  PinnedObj pinned;
+  pinObj(vm, (Obj*)metaclass, &pinned);
 
   ObjClass* classObj = newClass(vm, metaclass, superclass, numFields);
   classObj->numFields = numFields;
 
-  unpinObj(vm, (Obj*)metaclass);
+  unpinObj(vm);
 
   return classObj;
 }
