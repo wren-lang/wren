@@ -83,6 +83,12 @@ typedef enum
   CODE_CALL_8,
   CODE_CALL_9,
   CODE_CALL_10,
+  CODE_CALL_11,
+  CODE_CALL_12,
+  CODE_CALL_13,
+  CODE_CALL_14,
+  CODE_CALL_15,
+  CODE_CALL_16,
 
   // Jump the instruction pointer [arg] forward.
   CODE_JUMP,

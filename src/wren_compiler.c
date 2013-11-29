@@ -23,6 +23,11 @@
 // TODO(bob): Get rid of this and use a growable buffer.
 #define MAX_STRING (1024)
 
+// The maximum number of arguments that can be passed to a method. Note that
+// this limtation is hardcoded in other places in the VM, in particular, the
+// `CODE_CALL_XX` instructions assume a certain maximum number.
+#define MAX_PARAMETERS (16)
+
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -766,13 +771,25 @@ static void finishBlock(Compiler* compiler)
   }
 }
 
+// Parses an optional parenthesis-delimited parameter list.
 static void parameterList(Compiler* compiler, char* name, int* length)
 {
   // Parse the parameter list, if any.
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
+    int numParams = 0;
     do
     {
+      // The VM can only handle a certain number of parameters, so check for
+      // this explicitly and give a usable error.
+      if (++numParams == MAX_PARAMETERS + 1)
+      {
+        // Only show an error at exactly max + 1 and don't break so that we can
+        // keep parsing the parameter list and minimize cascaded errors.
+        error(compiler, "Cannot have more than %d parameters.",
+              MAX_PARAMETERS);
+      }
+
       // Define a local variable in the method for the parameter.
       declareVariable(compiler);
 
@@ -1034,15 +1051,24 @@ static void subscript(Compiler* compiler, int allowAssignment)
   // Parse the argument list.
   do
   {
+    // The VM can only handle a certain number of parameters, so check for
+    // this explicitly and give a usable error.
+    if (++numArgs == MAX_PARAMETERS + 1)
+    {
+      // Only show an error at exactly max + 1 and don't break so that we can
+      // keep parsing the parameter list and minimize cascaded errors.
+      error(compiler, "Cannot pass more than %d arguments to a method.",
+            MAX_PARAMETERS);
+    }
+
     statement(compiler);
 
     // Add a space in the name for each argument. Lets us overload by
     // arity.
-    numArgs++;
     name[length++] = ' ';
-    // TODO(bob): Check for length overflow.
   }
   while (match(compiler, TOKEN_COMMA));
+
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
 
   name[length++] = ']';
@@ -1081,11 +1107,20 @@ void call(Compiler* compiler, int allowAssignment)
   {
     do
     {
+      // The VM can only handle a certain number of parameters, so check for
+      // this explicitly and give a usable error.
+      if (++numArgs == MAX_PARAMETERS + 1)
+      {
+        // Only show an error at exactly max + 1 and don't break so that we can
+        // keep parsing the parameter list and minimize cascaded errors.
+        error(compiler, "Cannot pass more than %d arguments to a method.",
+              MAX_PARAMETERS);
+      }
+      
       statement(compiler);
 
       // Add a space in the name for each argument. Lets us overload by
       // arity.
-      numArgs++;
       name[length++] = ' ';
     }
     while (match(compiler, TOKEN_COMMA));
@@ -1096,7 +1131,6 @@ void call(Compiler* compiler, int allowAssignment)
 
   // Compile the method call.
   emit(compiler, CODE_CALL_0 + numArgs);
-  // TODO(bob): Handle > 10 args.
   emit(compiler, symbol);
 }
 

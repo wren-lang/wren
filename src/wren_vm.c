@@ -26,7 +26,7 @@ WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
   vm->first = NULL;
 
   vm->pinned = NULL;
-  
+
   // Clear out the global variables. This ensures they are NULL before being
   // initialized in case we do a garbage collection before one gets initialized.
   for (int i = 0; i < MAX_SYMBOLS; i++)
@@ -558,6 +558,12 @@ int dumpInstruction(WrenVM* vm, ObjFn* fn, int i)
     case CODE_CALL_8:
     case CODE_CALL_9:
     case CODE_CALL_10:
+    case CODE_CALL_11:
+    case CODE_CALL_12:
+    case CODE_CALL_13:
+    case CODE_CALL_14:
+    case CODE_CALL_15:
+    case CODE_CALL_16:
     {
       // Add one for the implicit receiver argument.
       int numArgs = bytecode[i - 1] - CODE_CALL_0;
@@ -711,6 +717,12 @@ Value interpret(WrenVM* vm, ObjFn* fn)
     &&code_CALL_8,
     &&code_CALL_9,
     &&code_CALL_10,
+    &&code_CALL_11,
+    &&code_CALL_12,
+    &&code_CALL_13,
+    &&code_CALL_14,
+    &&code_CALL_15,
+    &&code_CALL_16,
     &&code_JUMP,
     &&code_LOOP,
     &&code_JUMP_IF,
@@ -896,6 +908,12 @@ Value interpret(WrenVM* vm, ObjFn* fn)
     CASE_CODE(CALL_8):
     CASE_CODE(CALL_9):
     CASE_CODE(CALL_10):
+    CASE_CODE(CALL_11):
+    CASE_CODE(CALL_12):
+    CASE_CODE(CALL_13):
+    CASE_CODE(CALL_14):
+    CASE_CODE(CALL_15):
+    CASE_CODE(CALL_16):
     {
       // Add one for the implicit receiver argument.
       int numArgs = instruction - CODE_CALL_0 + 1;

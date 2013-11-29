@@ -79,6 +79,14 @@ DEF_FIBER_NATIVE(fn_call5) { callFunction(fiber, AS_FN(args[0]), 6); }
 DEF_FIBER_NATIVE(fn_call6) { callFunction(fiber, AS_FN(args[0]), 7); }
 DEF_FIBER_NATIVE(fn_call7) { callFunction(fiber, AS_FN(args[0]), 8); }
 DEF_FIBER_NATIVE(fn_call8) { callFunction(fiber, AS_FN(args[0]), 9); }
+DEF_FIBER_NATIVE(fn_call9) { callFunction(fiber, AS_FN(args[0]), 10); }
+DEF_FIBER_NATIVE(fn_call10) { callFunction(fiber, AS_FN(args[0]), 11); }
+DEF_FIBER_NATIVE(fn_call11) { callFunction(fiber, AS_FN(args[0]), 12); }
+DEF_FIBER_NATIVE(fn_call12) { callFunction(fiber, AS_FN(args[0]), 13); }
+DEF_FIBER_NATIVE(fn_call13) { callFunction(fiber, AS_FN(args[0]), 14); }
+DEF_FIBER_NATIVE(fn_call14) { callFunction(fiber, AS_FN(args[0]), 15); }
+DEF_FIBER_NATIVE(fn_call15) { callFunction(fiber, AS_FN(args[0]), 16); }
+DEF_FIBER_NATIVE(fn_call16) { callFunction(fiber, AS_FN(args[0]), 17); }
 
 // Grows [list] if needed to ensure it can hold [count] elements.
 static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
@@ -438,6 +446,14 @@ void wrenInitializeCore(WrenVM* vm)
   FIBER_NATIVE(vm->fnClass, "call      ", fn_call6);
   FIBER_NATIVE(vm->fnClass, "call       ", fn_call7);
   FIBER_NATIVE(vm->fnClass, "call        ", fn_call8);
+  FIBER_NATIVE(vm->fnClass, "call         ", fn_call9);
+  FIBER_NATIVE(vm->fnClass, "call          ", fn_call10);
+  FIBER_NATIVE(vm->fnClass, "call           ", fn_call11);
+  FIBER_NATIVE(vm->fnClass, "call            ", fn_call12);
+  FIBER_NATIVE(vm->fnClass, "call             ", fn_call13);
+  FIBER_NATIVE(vm->fnClass, "call              ", fn_call14);
+  FIBER_NATIVE(vm->fnClass, "call               ", fn_call15);
+  FIBER_NATIVE(vm->fnClass, "call                ", fn_call16);
 
   vm->listClass = defineClass(vm, "List", vm->objectClass);
   NATIVE(vm->listClass, "add ", list_add);

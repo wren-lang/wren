@@ -24,3 +24,27 @@ io.write(f7.call(1, 2, 3, 4, 5, 6, 7)) // expect: 28
 
 var f8 = fn(a, b, c, d, e, f, g, h) a + b + c + d + e + f + g + h
 io.write(f8.call(1, 2, 3, 4, 5, 6, 7, 8)) // expect: 36
+
+var f9 = fn(a, b, c, d, e, f, g, h, i) a + b + c + d + e + f + g + h + i
+io.write(f9.call(1, 2, 3, 4, 5, 6, 7, 8, 9)) // expect: 45
+
+var f10 = fn(a, b, c, d, e, f, g, h, i, j) a + b + c + d + e + f + g + h + i + j
+io.write(f10.call(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) // expect: 55
+
+var f11 = fn(a, b, c, d, e, f, g, h, i, j, k) a + b + c + d + e + f + g + h + i + j + k
+io.write(f11.call(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) // expect: 66
+
+var f12 = fn(a, b, c, d, e, f, g, h, i, j, k, l) a + b + c + d + e + f + g + h + i + j + k + l
+io.write(f12.call(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) // expect: 78
+
+var f13 = fn(a, b, c, d, e, f, g, h, i, j, k, l, m) a + b + c + d + e + f + g + h + i + j + k + l + m
+io.write(f13.call(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) // expect: 91
+
+var f14 = fn(a, b, c, d, e, f, g, h, i, j, k, l, m, n) a + b + c + d + e + f + g + h + i + j + k + l + m + n
+io.write(f14.call(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)) // expect: 105
+
+var f15 = fn(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) a + b + c + d + e + f + g + h + i + j + k + l + m + n + o
+io.write(f15.call(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) // expect: 120
+
+var f16 = fn(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p
+io.write(f16.call(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)) // expect: 136
