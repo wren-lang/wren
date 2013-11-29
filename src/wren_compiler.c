@@ -526,8 +526,12 @@ static void readRawToken(Parser* parser)
 // newlines that aren't meaningful.
 static void nextToken(Parser* parser)
 {
-  // TODO(bob): Check for EOF.
   parser->previous = parser->current;
+
+  // If we are out of tokens, don't try to tokenize any more. We *do* still
+  // copy the TOKEN_EOF to previous so that code that expects it to be consumed
+  // will still work.
+  if (parser->current.type == TOKEN_EOF) return;
 
   for (;;)
   {
@@ -614,7 +618,6 @@ static void consume(Compiler* compiler, TokenType expected,
   nextToken(compiler->parser);
   if (compiler->parser->previous.type != expected)
   {
-    // TODO(bob): Better error.
     error(compiler, errorMessage);
   }
 }
@@ -863,12 +866,21 @@ static void function(Compiler* compiler, int allowAssignment)
 
 static void field(Compiler* compiler, int allowAssignment)
 {
-  // TODO(bob): Check for null fields.
-
-  // Look up the field, or implicitly define it.
-  int field = ensureSymbol(compiler->fields,
-       compiler->parser->source + compiler->parser->previous.start,
-       compiler->parser->previous.end - compiler->parser->previous.start);
+  int field;
+  if (compiler->fields != NULL)
+  {
+    // Look up the field, or implicitly define it.
+    field = ensureSymbol(compiler->fields,
+        compiler->parser->source + compiler->parser->previous.start,
+        compiler->parser->previous.end - compiler->parser->previous.start);
+  }
+  else
+  {
+    error(compiler, "Cannot reference a field outside of a class definition.");
+    // Initialize it with a fake value so we can keep parsing and minimize the
+    // number of cascaded errors.
+    field = 255;
+  }
 
   // If there's an "=" after a field name, it's an assignment.
   if (match(compiler, TOKEN_EQ))
@@ -1018,7 +1030,6 @@ static void subscript(Compiler* compiler, int allowAssignment)
   // Build the method name. To allow overloading by arity, we add a space to
   // the name for each argument.
   name[0] = '[';
-  // TODO(bob): Check for length overflow.
 
   // Parse the argument list.
   do
@@ -1029,6 +1040,7 @@ static void subscript(Compiler* compiler, int allowAssignment)
     // arity.
     numArgs++;
     name[length++] = ' ';
+    // TODO(bob): Check for length overflow.
   }
   while (match(compiler, TOKEN_COMMA));
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
@@ -1231,8 +1243,7 @@ void parsePrecedence(Compiler* compiler, int allowAssignment,
 
   if (prefix == NULL)
   {
-    // TODO(bob): Handle error better.
-    error(compiler, "No prefix parser.");
+    error(compiler, "Unexpected token for expression.");
     return;
   }
 
@@ -1531,7 +1542,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
 
   // Zero-init the current token. This will get copied to previous when
   // advance() is called below.
-  parser.current.type = TOKEN_EOF;
+  parser.current.type = TOKEN_ERROR;
   parser.current.start = 0;
   parser.current.end = 0;
   parser.current.line = 0;
