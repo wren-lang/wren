@@ -30,15 +30,15 @@ elapsed: (\d+\.\d+)""")
 
 LANGUAGES = [
   ("wren",   "../build/Release/wren", ".wren"),
+  ("js",     "node",                  ".js"),
   ("lua",    "lua",                   ".lua"),
   ("python", "python",                ".py"),
-  ("ruby",   "ruby",                  ".rb"),
-  ("js",     "node",                  ".js")
+  ("ruby",   "ruby",                  ".rb")
 ]
 
 # How many times to run a given benchmark. Should be an odd number to get the
 # right median.
-NUM_TRIALS = 7
+NUM_TRIALS = 5
 
 results = []
 
@@ -65,7 +65,8 @@ def run_benchmark_once(benchmark, language):
 
 
 def run_benchmark(benchmark, language):
-  print "{0} - {1:10s}".format(benchmark[0], language[0]),
+  name = "{0} - {1}".format(benchmark[0], language[0])
+  print "{0:22s}".format(name),
 
   if not os.path.exists(benchmark[0] + language[2]):
     print "No implementation for this language"
@@ -84,10 +85,17 @@ def run_benchmark(benchmark, language):
   print " mean: {0:.4f} median: {1:.4f} std_dev: {2:.4f}".format(
       stats[0], stats[1], stats[2])
 
-  results.append([benchmark[0] + " - " + language[0], times])
+  results.append([name, times])
 
 def graph_results():
   print
+
+  INCREMENT = {
+    '-': 'o',
+    'o': 'O',
+    'O': '0',
+    '0': '0'
+  }
 
   # Scale everything by the highest time.
   highest = 0
@@ -95,15 +103,19 @@ def graph_results():
     time = max(result[1])
     if time > highest: highest = time
 
-  print "{0:24s} 0.0 {1:76.4f}".format("", highest)
+  print "{0:22s}0.0 {1:64.4f}".format("", highest)
   for result in results:
-    line = ["-"] * 80
+    line = ["-"] * 68
     for time in result[1]:
-      line[int(time / highest * 79)] = "O"
-    print "{0:24s} {1}".format(result[0], "".join(line))
+      index = int(time / highest * 67)
+      line[index] = INCREMENT[line[index]]
+    print "{0:22s}{1}".format(result[0], "".join(line))
+  print
+
 
 for benchmark in BENCHMARKS:
   for language in LANGUAGES:
     run_benchmark(benchmark, language)
+  graph_results()
+  results = []
 
-graph_results()
