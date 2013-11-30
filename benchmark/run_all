@@ -1,20 +1,32 @@
 #!/usr/bin/python
 
 import math
+import os
 import re
 import subprocess
 import sys
 
-FIB_OUTPUT_PATTERN = re.compile(r"""832040
-832040
-832040
-832040
-832040
-elapsed: (\d+\.\d+)""", re.MULTILINE)
+BENCHMARKS = []
 
-BENCHMARKS = [
-  ("fib", FIB_OUTPUT_PATTERN)
-]
+def BENCHMARK(name, pattern):
+  BENCHMARKS.append((name, re.compile(pattern, re.MULTILINE)))
+
+BENCHMARK("binary_trees", """stretch tree of depth 15\t check: -1
+32768\t trees of depth 4\t check: -32768
+8192\t trees of depth 6\t check: -8192
+2048\t trees of depth 8\t check: -2048
+512\t trees of depth 10\t check: -512
+128\t trees of depth 12\t check: -128
+32\t trees of depth 14\t check: -32
+long lived tree of depth 14\t check: -1
+elapsed: (\\d+\\.\\d+)""")
+
+BENCHMARK("fib", r"""832040
+832040
+832040
+832040
+832040
+elapsed: (\d+\.\d+)""")
 
 LANGUAGES = [
   ("wren",   "../build/Release/wren", ".wren"),
@@ -47,20 +59,25 @@ def run_benchmark_once(benchmark, language):
   if match:
     return float(match.group(1))
   else:
+    print "Incorrect output:"
+    print out
     return None
 
 
 def run_benchmark(benchmark, language):
   print "{0} - {1:10s}".format(benchmark[0], language[0]),
 
+  if not os.path.exists(benchmark[0] + language[2]):
+    print "No implementation for this language"
+    return
+
   times = []
   for i in range(0, NUM_TRIALS):
-    times.append(run_benchmark_once(benchmark, language))
+    time = run_benchmark_once(benchmark, language)
+    if not time:
+      return
+    times.append(time)
     sys.stdout.write(".")
-
-  if None in times:
-    print "error"
-    return
 
   times.sort()
   stats = calc_stats(times)
@@ -78,12 +95,12 @@ def graph_results():
     time = max(result[1])
     if time > highest: highest = time
 
-  print "{0:15s} 0.0 {1:76.4f}".format("", highest)
+  print "{0:24s} 0.0 {1:76.4f}".format("", highest)
   for result in results:
     line = ["-"] * 80
     for time in result[1]:
       line[int(time / highest * 79)] = "O"
-    print "{0:15s} {1}".format(result[0], "".join(line))
+    print "{0:24s} {1}".format(result[0], "".join(line))
 
 for benchmark in BENCHMARKS:
   for language in LANGUAGES:

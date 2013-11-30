@@ -401,12 +401,13 @@ static void readString(Parser* parser)
         case '"':  addStringChar(parser, '"'); break;
         case '\\': addStringChar(parser, '\\'); break;
         case 'n':  addStringChar(parser, '\n'); break;
+        case 't':  addStringChar(parser, '\t'); break;
         default:
           // TODO(bob): Emit error token.
           break;
       }
 
-      // TODO(bob): Other escapes (/t, /r, etc.), Unicode escape sequences.
+      // TODO(bob): Other escapes (\r, etc.), Unicode escape sequences.
     }
     else
     {
