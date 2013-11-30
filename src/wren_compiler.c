@@ -1447,8 +1447,8 @@ void method(Compiler* compiler, Code instruction, SignatureFn signature)
     // The receiver is always stored in the first local slot.
     // TODO(bob): Will need to do something different to handle functions
     // enclosed in methods.
-    emit(compiler, CODE_LOAD_LOCAL);
-    emit(compiler, 0);
+    emit(&methodCompiler, CODE_LOAD_LOCAL);
+    emit(&methodCompiler, 0);
   }
 
   emit(&methodCompiler, CODE_END);
