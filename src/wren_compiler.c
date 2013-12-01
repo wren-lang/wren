@@ -10,8 +10,9 @@
 // parsing/code generation. This minimizes the number of explicit forward
 // declarations needed.
 
-// The maximum length of a method signature.
-#define MAX_METHOD_NAME 256
+// The maximum length of a method signature. This includes the name, and the
+// extra spaces added to handle arity.
+#define MAX_METHOD_SIGNATURE 256
 
 // TODO(bob): Get rid of this and use a growable buffer.
 #define MAX_STRING (1024)
@@ -800,6 +801,19 @@ static int resolveName(Compiler* compiler, int* isGlobal)
   return findSymbol(&compiler->parser->vm->globalSymbols, start, length);
 }
 
+// Copies the identifier from the previously consumed `TOKEN_NAME` into [name],
+// which should point to a buffer large enough to contain it. Returns the
+// length of the name.
+static int copyName(Compiler* compiler, char* name)
+{
+  const char* start = compiler->parser->source +
+                      compiler->parser->previous.start;
+  int length = compiler->parser->previous.end -
+               compiler->parser->previous.start;
+  strncpy(name, start, length);
+  return length;
+}
+
 // Grammar ---------------------------------------------------------------------
 
 typedef enum
@@ -1129,7 +1143,7 @@ static void this_(Compiler* compiler, int allowAssignment)
 // Subscript or "array indexing" operator like `foo[bar]`.
 static void subscript(Compiler* compiler, int allowAssignment)
 {
-  char name[MAX_METHOD_NAME];
+  char name[MAX_METHOD_SIGNATURE];
   int length = 1;
   int numArgs = 0;
 
@@ -1167,31 +1181,21 @@ static void subscript(Compiler* compiler, int allowAssignment)
 
   // Compile the method call.
   emit(compiler, CODE_CALL_0 + numArgs);
-  // TODO(bob): Handle > 10 args.
   emit(compiler, symbol);
 }
 
 void call(Compiler* compiler, int allowAssignment)
 {
-  char name[MAX_METHOD_NAME];
-  int length = 0;
-  int numArgs = 0;
-
+  // Build the method name.
   consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
-
-  // Build the method name. To allow overloading by arity, we add a space to
-  // the name for each argument.
-  int partLength = compiler->parser->previous.end -
-  compiler->parser->previous.start;
-  strncpy(name + length,
-          compiler->parser->source + compiler->parser->previous.start,
-          partLength);
-  length += partLength;
+  char name[MAX_METHOD_SIGNATURE];
+  int length = copyName(compiler, name);
   // TODO(bob): Check for length overflow.
 
   // TODO(bob): Check for "=" here and set assignment and return.
 
   // Parse the argument list, if any.
+  int numArgs = 0;
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
     do
@@ -1488,11 +1492,8 @@ void method(Compiler* compiler, Code instruction, SignatureFn signature)
   int constant = initCompiler(&methodCompiler, compiler->parser, compiler, 1);
 
   // Build the method name.
-  char name[MAX_METHOD_NAME];
-  int length = compiler->parser->previous.end -
-               compiler->parser->previous.start;
-  strncpy(name, compiler->parser->source + compiler->parser->previous.start,
-          length);
+  char name[MAX_METHOD_SIGNATURE];
+  int length = copyName(compiler, name);
 
   // Compile the method signature.
   signature(&methodCompiler, name, &length);
