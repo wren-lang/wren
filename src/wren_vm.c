@@ -10,13 +10,11 @@
 
 WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
 {
-  // TODO(bob): Get rid of explicit malloc() here.
   WrenVM* vm = reallocateFn(NULL, 0, sizeof(WrenVM));
   initSymbolTable(&vm->methods);
   initSymbolTable(&vm->globalSymbols);
 
-  // TODO(bob): Get rid of explicit malloc() here.
-  vm->fiber = malloc(sizeof(Fiber));
+  vm->fiber = reallocateFn(NULL, 0, sizeof(Fiber));
   vm->fiber->stackSize = 0;
   vm->fiber->numFrames = 0;
   vm->totalAllocated = 0;
@@ -33,6 +31,8 @@ WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
   {
     vm->globals[i] = NULL_VAL;
   }
+
+  vm->reallocate = reallocateFn;
 
   wrenInitializeCore(vm);
 
@@ -99,15 +99,8 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   }
 #endif
 
-  if (newSize == 0)
-  {
-    ASSERT(memory != NULL, "Must have pointer to free.");
-    free(memory);
-    return NULL;
-  }
-
-  // TODO(bob): Let external code provide allocator.
-  return realloc(memory, newSize);
+  ASSERT(newSize != 0 || memory != NULL, "Must have pointer to free.");
+  return vm->reallocate(memory, oldSize, newSize);
 }
 
 static void markValue(Value value);

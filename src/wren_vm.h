@@ -176,6 +176,9 @@ struct WrenVM
   // The head of the list of pinned objects. Will be `NULL` if nothing is
   // pinned.
   PinnedObj* pinned;
+
+  // The externally-provided function used to allocate memory.
+  WrenReallocateFn reallocate;
 };
 
 typedef struct
