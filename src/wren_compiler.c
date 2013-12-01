@@ -88,11 +88,11 @@ typedef struct Token_s
 {
   TokenType type;
 
-  // The beginning of the token as an offset of characters in the source.
-  int start;
+  // The beginning of the token, pointing directly into the source.
+  const char* start;
 
-  // The offset of the character immediately following the end of the token.
-  int end;
+  // The length of the token in characters.
+  int length;
 
   // The 1-based line where the token appears.
   int line;
@@ -104,11 +104,11 @@ typedef struct
 
   const char* source;
 
-  // The index in source of the beginning of the currently-being-lexed token.
-  int tokenStart;
+  // The beginning of the currently-being-lexed token in [source].
+  const char* tokenStart;
 
-  // The position of the current character being lexed.
-  int currentChar;
+  // The current character being lexed in [source].
+  const char* currentChar;
 
   // The 1-based line number of [currentChar].
   int currentLine;
@@ -140,7 +140,7 @@ typedef struct
   const char* name;
 
   // The length of the local variable's name.
-  size_t length;
+  int length;
 
   // The depth in the scope chain that this variable was declared at. Zero is
   // the outermost scope--parameters for a method, or the first local block in
@@ -262,15 +262,10 @@ static void endCompiler(Compiler* compiler, int constant)
 static void error(Compiler* compiler, const char* format, ...)
 {
   compiler->parser->hasError = 1;
-  fprintf(stderr, "[Line %d] Error on '", compiler->parser->previous.line);
 
-  for (int i = compiler->parser->previous.start;
-       i < compiler->parser->previous.end; i++)
-  {
-    putc(compiler->parser->source[i], stderr);
-  }
-
-  fprintf(stderr, "': ");
+  Token* token = &compiler->parser->previous;
+  fprintf(stderr, "[Line %d] Error on '%.*s': ",
+          token->line, token->length, token->start);
 
   va_list args;
   va_start(args, format);
@@ -297,7 +292,7 @@ static int isDigit(char c)
 // Returns the current character the parser is sitting on.
 static char peekChar(Parser* parser)
 {
-  return parser->source[parser->currentChar];
+  return *parser->currentChar;
 }
 
 // Returns the character after the current character.
@@ -305,7 +300,7 @@ static char peekNextChar(Parser* parser)
 {
   // If we're at the end of the source, don't read past it.
   if (peekChar(parser) == '\0') return '\0';
-  return parser->source[parser->currentChar + 1];
+  return *(parser->currentChar + 1);
 }
 
 // Advances the parser forward one character.
@@ -322,7 +317,7 @@ static void makeToken(Parser* parser, TokenType type)
 {
   parser->current.type = type;
   parser->current.start = parser->tokenStart;
-  parser->current.end = parser->currentChar;
+  parser->current.length = (int)(parser->currentChar - parser->tokenStart);
   parser->current.line = parser->currentLine;
 }
 
@@ -387,7 +382,7 @@ static int isKeyword(Parser* parser, const char* keyword)
   size_t length = parser->currentChar - parser->tokenStart;
   size_t keywordLength = strlen(keyword);
   return length == keywordLength &&
-      strncmp(parser->source + parser->tokenStart, keyword, length) == 0;
+      strncmp(parser->tokenStart, keyword, length) == 0;
 }
 
 // Finishes lexing a number literal.
@@ -470,7 +465,7 @@ static void readString(Parser* parser)
   makeToken(parser, TOKEN_STRING);
 }
 
-// Lex the next token and store it in parser.current. Does not do any newline
+// Lex the next token and store it in [parser.current]. Does not do any newline
 // filtering.
 static void readRawToken(Parser* parser)
 {
@@ -670,7 +665,8 @@ static int match(Compiler* compiler, TokenType expected)
 }
 
 // Consumes the current token. Emits an error if its type is not [expected].
-static void consume(Compiler* compiler, TokenType expected,
+// Returns the consumed token.
+static Token* consume(Compiler* compiler, TokenType expected,
                     const char* errorMessage)
 {
   nextToken(compiler->parser);
@@ -678,6 +674,8 @@ static void consume(Compiler* compiler, TokenType expected,
   {
     error(compiler, errorMessage);
   }
+
+  return &compiler->parser->previous;
 }
 
 // Variables and scopes --------------------------------------------------------
@@ -686,19 +684,14 @@ static void consume(Compiler* compiler, TokenType expected,
 // name. Returns its symbol.
 static int declareVariable(Compiler* compiler)
 {
-  consume(compiler, TOKEN_NAME, "Expected variable name.");
-
-  const char* name = compiler->parser->source +
-                     compiler->parser->previous.start;
-  size_t length = compiler->parser->previous.end -
-                  compiler->parser->previous.start;
+  Token* token = consume(compiler, TOKEN_NAME, "Expected variable name.");
 
   // Top-level global scope.
   if (compiler->scopeDepth == -1)
   {
     SymbolTable* symbols = &compiler->parser->vm->globalSymbols;
 
-    int symbol = addSymbol(symbols, name, length);
+    int symbol = addSymbol(symbols, token->start, token->length);
     if (symbol == -1)
     {
       error(compiler, "Global variable is already defined.");
@@ -716,7 +709,8 @@ static int declareVariable(Compiler* compiler)
     // Once we escape this scope and hit an outer one, we can stop.
     if (local->depth < compiler->scopeDepth) break;
 
-    if (local->length == length && strncmp(local->name, name, length) == 0)
+    if (local->length == token->length &&
+        strncmp(local->name, token->start, token->length) == 0)
     {
       error(compiler, "Variable is already declared in this scope.");
       return i;
@@ -732,8 +726,8 @@ static int declareVariable(Compiler* compiler)
 
   // Define a new local variable in the current scope.
   Local* local = &compiler->locals[compiler->numLocals];
-  local->name = name;
-  local->length = length;
+  local->name = token->start;
+  local->length = token->length;
   local->depth = compiler->scopeDepth;
   return compiler->numLocals++;
 }
@@ -806,18 +800,15 @@ static void popScope(Compiler* compiler)
 // [isGlobal] to non-zero if the name is in global scope, or 0 if in local.
 static int resolveName(Compiler* compiler, int* isGlobal)
 {
-  const char* start = compiler->parser->source +
-                      compiler->parser->previous.start;
-  size_t length = compiler->parser->previous.end -
-                  compiler->parser->previous.start;
+  Token* token = &compiler->parser->previous;
 
   // Look it up in the local scopes. Look in reverse order so that the most
   // nested variable is found first and shadows outer ones.
   *isGlobal = 0;
   for (int i = compiler->numLocals - 1; i >= 0; i--)
   {
-    if (compiler->locals[i].length == length &&
-        strncmp(start, compiler->locals[i].name, length) == 0)
+    if (compiler->locals[i].length == token->length &&
+        strncmp(token->start, compiler->locals[i].name, token->length) == 0)
     {
       return i;
     }
@@ -834,7 +825,8 @@ static int resolveName(Compiler* compiler, int* isGlobal)
 
   // If we got here, it wasn't in a local scope, so try the global scope.
   *isGlobal = 1;
-  return findSymbol(&compiler->parser->vm->globalSymbols, start, length);
+  return findSymbol(&compiler->parser->vm->globalSymbols,
+                    token->start, token->length);
 }
 
 // Copies the identifier from the previously consumed `TOKEN_NAME` into [name],
@@ -842,12 +834,9 @@ static int resolveName(Compiler* compiler, int* isGlobal)
 // length of the name.
 static int copyName(Compiler* compiler, char* name)
 {
-  const char* start = compiler->parser->source +
-                      compiler->parser->previous.start;
-  int length = compiler->parser->previous.end -
-               compiler->parser->previous.start;
-  strncpy(name, start, length);
-  return length;
+  Token* token = &compiler->parser->previous;
+  strncpy(name, token->start, token->length);
+  return token->length;
 }
 
 // Grammar ---------------------------------------------------------------------
@@ -942,6 +931,7 @@ static void parameterList(Compiler* compiler, char* name, int* length)
       declareVariable(compiler);
 
       // Add a space in the name for the parameter.
+      // TODO(bob): How can name be null?
       if (name != NULL) name[(*length)++] = ' ';
       // TODO(bob): Check for length overflow.
     }
@@ -1032,8 +1022,8 @@ static void field(Compiler* compiler, int allowAssignment)
   {
     // Look up the field, or implicitly define it.
     field = ensureSymbol(compiler->fields,
-        compiler->parser->source + compiler->parser->previous.start,
-        compiler->parser->previous.end - compiler->parser->previous.start);
+        compiler->parser->previous.start,
+        compiler->parser->previous.length);
   }
   else
   {
@@ -1120,9 +1110,9 @@ static void number(Compiler* compiler, int allowAssignment)
   Token* token = &compiler->parser->previous;
   char* end;
 
-  double value = strtod(compiler->parser->source + token->start, &end);
+  double value = strtod(token->start, &end);
   // TODO(bob): Check errno == ERANGE here.
-  if (end == compiler->parser->source + token->start)
+  if (end == token->start)
   {
     error(compiler, "Invalid number literal.");
     value = 0;
@@ -1668,15 +1658,15 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
   // Ignore leading newlines.
   parser.skipNewlines = 1;
 
-  parser.tokenStart = 0;
-  parser.currentChar = 0;
+  parser.tokenStart = source;
+  parser.currentChar = source;
   parser.currentLine = 1;
 
   // Zero-init the current token. This will get copied to previous when
   // advance() is called below.
   parser.current.type = TOKEN_ERROR;
-  parser.current.start = 0;
-  parser.current.end = 0;
+  parser.current.start = source;
+  parser.current.length = 0;
   parser.current.line = 0;
 
   // Read the first token.
