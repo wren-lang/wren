@@ -13,13 +13,6 @@
 // The maximum length of a method signature.
 #define MAX_METHOD_NAME 256
 
-// TODO(bob): Are these really worth the effort?
-#define PUSH_SCOPE  \
-    Scope scope##__LINE__; \
-    pushScope(compiler, &scope##__LINE__);
-
-#define POP_SCOPE popScope(compiler)
-
 // TODO(bob): Get rid of this and use a growable buffer.
 #define MAX_STRING (1024)
 
@@ -130,17 +123,23 @@ typedef struct
   int currentStringLength;
 } Parser;
 
-typedef struct sScope
-{
-  // The number of previously defined local variables when this scope was
-  // created. Used to know how many variables to discard when this scope is
-  // exited.
-  int previousLocals;
+// TODO(bob): Move and doc.
+#define MAX_LOCALS (255)
 
-  // The scope enclosing this one, or NULL if this is the top scope in the
-  // function.
-  struct sScope* parent;
-} Scope;
+typedef struct
+{
+  // The name of the local variable. This points directly into the original
+  // source code string.
+  const char* name;
+
+  // The length of the local variable's name.
+  size_t length;
+
+  // The depth in the scope chain that this variable was declared at. Zero is
+  // the outermost scope--parameters for a method, or the first local block in
+  // top level code. One is the scope within that, etc.
+  int depth;
+} Local;
 
 typedef struct sCompiler
 {
@@ -154,9 +153,6 @@ typedef struct sCompiler
   ObjFn* fn;
   int numCodes;
 
-  // Symbol table for declared local variables in this block.
-  SymbolTable locals;
-
   // Symbol table for the fields of the nearest enclosing class, or NULL if not
   // currently inside a class.
   SymbolTable* fields;
@@ -164,8 +160,16 @@ typedef struct sCompiler
   // Non-zero if the function being compiled is a method.
   int isMethod;
 
-  // The current local variable scope. Initially NULL.
-  Scope* scope;
+  // The number of local variables currently in scope.
+  int numLocals;
+
+  // The current level of block scope nesting, where zero is no nesting. A -1
+  // here means top-level code is being compiled and there is no block scope
+  // in effect at all. Any variables declared will be global.
+  int scopeDepth;
+
+  // The currently in scope local variables.
+  Local locals[MAX_LOCALS];
 } Compiler;
 
 // Adds [constant] to the constant pool and returns its index.
@@ -184,7 +188,24 @@ static int initCompiler(Compiler* compiler, Parser* parser,
   compiler->numCodes = 0;
   compiler->isMethod = isMethod;
 
-  initSymbolTable(&compiler->locals);
+  if (parent == NULL)
+  {
+    // Compiling top-level code, so the initial scope is global.
+    compiler->scopeDepth = -1;
+    compiler->numLocals = 0;
+  }
+  else
+  {
+    // Declare a fake local variable for "this" so that it's slot in the stack
+    // is taken.
+    compiler->numLocals = 1;
+    compiler->locals[0].name = NULL;
+    compiler->locals[0].length = 0;
+    compiler->locals[0].depth = -1;
+
+    // The initial scope for function or method is a local scope.
+    compiler->scopeDepth = 0;
+  }
 
   // Propagate the enclosing class downwards.
   compiler->fields = parent != NULL ? parent->fields :  NULL;
@@ -192,14 +213,7 @@ static int initCompiler(Compiler* compiler, Parser* parser,
   compiler->fn = wrenNewFunction(parser->vm);
   compiler->fn->numConstants = 0;
 
-  compiler->scope = NULL;
-
   if (parent == NULL) return -1;
-
-  // TODO(bob): Hackish.
-  // Define a fake local slot for the receiver so that later locals have the
-  // correct slot indices.
-  addSymbol(&compiler->locals, "(this)", 6);
 
   // Add the block to the constant table. Do this eagerly so it's reachable by
   // the GC.
@@ -643,37 +657,56 @@ static int declareVariable(Compiler* compiler)
 {
   consume(compiler, TOKEN_NAME, "Expected variable name.");
 
-  SymbolTable* symbols;
-  // The top-level scope of the top-level compiler is global scope.
-  if (compiler->parent == NULL && compiler->scope == NULL)
-  {
-    // Top level global variable.
-    symbols = &compiler->parser->vm->globalSymbols;
-  }
-  else
-  {
-    // Nested block, so this is a local variable.
-    symbols = &compiler->locals;
-  }
+  const char* name = compiler->parser->source +
+                     compiler->parser->previous.start;
+  size_t length = compiler->parser->previous.end -
+                  compiler->parser->previous.start;
 
-  int symbol = addSymbol(symbols,
-      compiler->parser->source + compiler->parser->previous.start,
-      compiler->parser->previous.end - compiler->parser->previous.start);
-
-  if (symbol == -1)
+  // Top-level global scope.
+  if (compiler->scopeDepth == -1)
   {
-    error(compiler, "Variable is already defined.");
-    // TODO(bob): Need to allow shadowing for local variables.
+    SymbolTable* symbols = &compiler->parser->vm->globalSymbols;
+
+    int symbol = addSymbol(symbols, name, length);
+    if (symbol == -1)
+    {
+      error(compiler, "Global variable is already defined.");
+    }
+
+    return symbol;
   }
 
-  return symbol;
+  // See if there is already a variable with this name declared in the current
+  // scope. (Outer scopes are OK: those get shadowed.)
+  for (int i = compiler->numLocals - 1; i >= 0; i--)
+  {
+    Local* local = &compiler->locals[i];
+
+    // Once we escape this scope and hit an outer one, we can stop.
+    if (local->depth < compiler->scopeDepth) break;
+
+    if (local->length == length && strncmp(local->name, name, length) == 0)
+    {
+      error(compiler, "Variable is already declared in this scope.");
+      return i;
+    }
+  }
+
+  // Define a new local variable in the current scope.
+  Local* local = &compiler->locals[compiler->numLocals];
+  local->name = name;
+  local->length = length;
+  local->depth = compiler->scopeDepth;
+
+  // TODO(bob): Check for too many.
+  return compiler->numLocals++;
 }
 
 // Stores a variable with the previously defined symbol in the current scope.
 static void defineVariable(Compiler* compiler, int symbol)
 {
-  // The top-level scope of the top-level compiler is global scope.
-  if (compiler->parent == NULL && compiler->scope == NULL)
+  // Handle top-level global scope.
+  if (compiler->scopeDepth == -1)
   {
     // It's a global variable, so store the value in the global slot.
     emit(compiler, CODE_STORE_GLOBAL);
@@ -701,6 +734,59 @@ static void defineVariable(Compiler* compiler, int symbol)
     // sometimes.
     emit(compiler, CODE_DUP);
   }
+}
+
+// Starts a new local block scope.
+static void pushScope(Compiler* compiler)
+{
+  compiler->scopeDepth++;
+}
+
+// Closes the last pushed block scope.
+static void popScope(Compiler* compiler)
+{
+  ASSERT(compiler->scopeDepth > -1, "Cannot pop top-level scope.");
+
+  // Pop locals off the stack.
+  // TODO(bob): Could make a single instruction that pops multiple values if
+  // this is a bottleneck.
+  while (compiler->numLocals > 0 &&
+         compiler->locals[compiler->numLocals - 1].depth ==
+            compiler->scopeDepth)
+  {
+    compiler->numLocals--;
+    emit(compiler, CODE_POP);
+  }
+
+  compiler->scopeDepth--;
+}
+
+// Look up the previously consumed token, which is presumed to be a TOKEN_NAME
+// in the current scope to see what name it is bound to. Returns the index of
+// the name either in global or local scope. Returns -1 if not found. Sets
+// [isGlobal] to non-zero if the name is in global scope, or 0 if in local.
+static int resolveName(Compiler* compiler, int* isGlobal)
+{
+  const char* start = compiler->parser->source +
+                      compiler->parser->previous.start;
+  size_t length = compiler->parser->previous.end -
+                  compiler->parser->previous.start;
+
+  // Look it up in the local scopes. Look in reverse order so that the most
+  // nested variable is found first and shadows outer ones.
+  *isGlobal = 0;
+  for (int i = compiler->numLocals - 1; i >= 0; i--)
+  {
+    if (compiler->locals[i].length == length &&
+        strncmp(start, compiler->locals[i].name, length) == 0)
+    {
+      return i;
+    }
+  }
+
+  // If we got here, it wasn't in a local scope, so try the global scope.
+  *isGlobal = 1;
+  return findSymbol(&compiler->parser->vm->globalSymbols, start, length);
 }
 
 // Grammar ---------------------------------------------------------------------
@@ -919,23 +1005,11 @@ static void field(Compiler* compiler, int allowAssignment)
 
 static void name(Compiler* compiler, int allowAssignment)
 {
-  // See if it's a local in this scope.
-  int local = findSymbol(&compiler->locals,
-      compiler->parser->source + compiler->parser->previous.start,
-      compiler->parser->previous.end - compiler->parser->previous.start);
+  // Look up the name in the scope chain.
+  int isGlobal;
+  int index = resolveName(compiler, &isGlobal);
 
-  // TODO(bob): Look up names in outer local scopes.
-
-  // See if it's a global variable.
-  int global = 0;
-  if (local == -1)
-  {
-    global = findSymbol(&compiler->parser->vm->globalSymbols,
-        compiler->parser->source + compiler->parser->previous.start,
-        compiler->parser->previous.end - compiler->parser->previous.start);
-  }
-
-  if (local == -1 && global == -1)
+  if (index == -1)
   {
     error(compiler, "Undefined variable.");
   }
@@ -948,28 +1022,31 @@ static void name(Compiler* compiler, int allowAssignment)
     // Compile the right-hand side.
     statement(compiler);
 
-    if (local != -1)
+    if (isGlobal)
+    {
+      emit(compiler, CODE_STORE_GLOBAL);
+      emit(compiler, index);
+    }
+    else
     {
       emit(compiler, CODE_STORE_LOCAL);
-      emit(compiler, local);
-      return;
+      emit(compiler, index);
     }
 
-    emit(compiler, CODE_STORE_GLOBAL);
-    emit(compiler, global);
     return;
   }
 
   // Otherwise, it's just a variable access.
-  if (local != -1)
+  if (isGlobal)
+  {
+    emit(compiler, CODE_LOAD_GLOBAL);
+    emit(compiler, index);
+  }
+  else
   {
     emit(compiler, CODE_LOAD_LOCAL);
-    emit(compiler, local);
-    return;
+    emit(compiler, index);
   }
-
-  emit(compiler, CODE_LOAD_GLOBAL);
-  emit(compiler, global);
 }
 
 static void null(Compiler* compiler, int allowAssignment)
@@ -1307,33 +1384,6 @@ void assignment(Compiler* compiler)
   expression(compiler, 1);
 }
 
-// Starts a new local block scope.
-static void pushScope(Compiler* compiler, Scope* scope)
-{
-  scope->parent = compiler->scope;
-  scope->previousLocals = compiler->locals.count;
-  compiler->scope = scope;
-}
-
-// Closes the last pushed block scope.
-static void popScope(Compiler* compiler)
-{
-  ASSERT(compiler->scope != NULL, "Cannot pop top-level scope.");
-
-  Scope* scope = compiler->scope;
-
-  // Pop locals off the stack.
-  // TODO(bob): Could make a single instruction that pops multiple values if
-  // this is a bottleneck.
-  for (int i = scope->previousLocals; i < compiler->locals.count; i++)
-  {
-    emit(compiler, CODE_POP);
-  }
-
-  truncateSymbolTable(&compiler->locals, scope->previousLocals);
-  compiler->scope = scope->parent;
-}
-
 // Parses a "statement": any expression including expressions like variable
 // declarations which can only appear at the top level of a block.
 void statement(Compiler* compiler)
@@ -1350,9 +1400,9 @@ void statement(Compiler* compiler)
     int ifJump = emit(compiler, 255);
 
     // Compile the then branch.
-    PUSH_SCOPE;
+    pushScope(compiler);
     definition(compiler);
-    POP_SCOPE;
+    popScope(compiler);
 
     // Jump over the else branch when the if branch is taken.
     emit(compiler, CODE_JUMP);
@@ -1363,9 +1413,9 @@ void statement(Compiler* compiler)
     // Compile the else branch if there is one.
     if (match(compiler, TOKEN_ELSE))
     {
-      PUSH_SCOPE;
+      pushScope(compiler);
       definition(compiler);
-      POP_SCOPE;
+      popScope(compiler);
     }
     else
     {
@@ -1392,9 +1442,9 @@ void statement(Compiler* compiler)
     int exitJump = emit(compiler, 255);
 
     // Compile the body.
-    PUSH_SCOPE;
+    pushScope(compiler);
     definition(compiler);
-    POP_SCOPE;
+    popScope(compiler);
 
     // Loop back to the top.
     emit(compiler, CODE_LOOP);
@@ -1411,9 +1461,9 @@ void statement(Compiler* compiler)
   // Curly block.
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
-    PUSH_SCOPE;
+    pushScope(compiler);
     finishBlock(compiler);
-    POP_SCOPE;
+    popScope(compiler);
     return;
   }
 

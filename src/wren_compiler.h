@@ -17,7 +17,7 @@
 // AST objects. The compiler does almost no dynamic allocation while running.
 //
 // Compilation is also faster since we don't create a bunch of temporary data
-// structures and destroy.
+// structures and destroy them after generating code.
 
 // Compiles [source], a string of Wren source code, to an [ObjFn] that will
 // execute that code when invoked.
