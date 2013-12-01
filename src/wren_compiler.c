@@ -211,6 +211,12 @@ static int initCompiler(Compiler* compiler, Parser* parser,
     compiler->locals[0].depth = -1;
 
     // The initial scope for function or method is a local scope.
+    // TODO(bob): Need to explicitly pop this scope at end of fn/method so
+    // that we can correctly close over locals declared at top level of member.
+    // also, when done compiling fn/method, need to count total number of
+    // upvalues and store in fnobj. note: have to make sure we include upvalues
+    // added because a fn within this one closed over something outside of this
+    // one and we had to add upvalue here to flatten the closure.
     compiler->scopeDepth = 0;
   }
 
@@ -225,6 +231,31 @@ static int initCompiler(Compiler* compiler, Parser* parser,
   // Add the block to the constant table. Do this eagerly so it's reachable by
   // the GC.
   return addConstant(parent, OBJ_VAL(compiler->fn));
+}
+
+// Emits one bytecode instruction or argument.
+static int emit(Compiler* compiler, Code code)
+{
+  compiler->fn->bytecode[compiler->numCodes++] = code;
+  return compiler->numCodes - 1;
+}
+
+// Finishes [compiler], which is compiling a function, method, or chunk of top
+// level code. If there is a parent compiler, then this emits code in the
+// parent compiler to load the resulting function.
+static void endCompiler(Compiler* compiler, int constant)
+{
+  // End the function's code.
+  emit(compiler, CODE_END);
+
+  // TODO(bob): will need to compile different code to capture upvalues if fn
+  // has them.
+  if (compiler->parent != NULL)
+  {
+    // In the function that contains this one, load the resulting function object.
+    emit(compiler->parent, CODE_CONSTANT);
+    emit(compiler->parent, constant);
+  }
 }
 
 // Outputs a compile or syntax error.
@@ -649,14 +680,7 @@ static void consume(Compiler* compiler, TokenType expected,
   }
 }
 
-// Code generation utilities ---------------------------------------------------
-
-// Emits one bytecode instruction or argument.
-static int emit(Compiler* compiler, Code code)
-{
-  compiler->fn->bytecode[compiler->numCodes++] = code;
-  return compiler->numCodes - 1;
-}
+// Variables and scopes --------------------------------------------------------
 
 // Parses a name token and declares a variable in the current scope with that
 // name. Returns its symbol.
@@ -770,6 +794,9 @@ static void popScope(Compiler* compiler)
     emit(compiler, CODE_POP);
   }
 
+  // TODO(bob): Need to emit code to capture upvalue for any local going out of
+  // scope now that is closed over.
+  
   compiler->scopeDepth--;
 }
 
@@ -795,6 +822,15 @@ static int resolveName(Compiler* compiler, int* isGlobal)
       return i;
     }
   }
+
+  // TODO(bob): Closures!
+  // look in current upvalues to see if we've already closed over it
+  //   if so, just use that
+  // walk up parent chain looking in their local scopes for variable
+  // if we find it, need to close over it here
+  // add upvalue to fn being compiled
+  //   return index of upvalue
+  // instead of isGlobal, should be some local/upvalue/global enum
 
   // If we got here, it wasn't in a local scope, so try the global scope.
   *isGlobal = 1;
@@ -986,11 +1022,7 @@ static void function(Compiler* compiler, int allowAssignment)
     expression(&fnCompiler, 0);
   }
 
-  emit(&fnCompiler, CODE_END);
-
-  // Compile the code to load it.
-  emit(compiler, CODE_CONSTANT);
-  emit(compiler, constant);
+  endCompiler(&fnCompiler, constant);
 }
 
 static void field(Compiler* compiler, int allowAssignment)
@@ -1047,6 +1079,8 @@ static void name(Compiler* compiler, int allowAssignment)
     // Compile the right-hand side.
     statement(compiler);
 
+    // TODO(bob): Handle assigning to upvalue.
+
     if (isGlobal)
     {
       emit(compiler, CODE_STORE_GLOBAL);
@@ -1060,6 +1094,8 @@ static void name(Compiler* compiler, int allowAssignment)
 
     return;
   }
+
+  // TODO(bob): Handle reading upvalue.
 
   // Otherwise, it's just a variable access.
   if (isGlobal)
@@ -1514,12 +1550,11 @@ void method(Compiler* compiler, Code instruction, SignatureFn signature)
     emit(&methodCompiler, 0);
   }
 
-  emit(&methodCompiler, CODE_END);
+  endCompiler(&methodCompiler, constant);
 
-  // Compile the code to define the method it.
+  // Compile the code to define the method.
   emit(compiler, instruction);
   emit(compiler, symbol);
-  emit(compiler, constant);
 }
 
 // Compiles a name-binding statement.
@@ -1670,7 +1705,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
     emit(&compiler, CODE_POP);
   }
 
-  emit(&compiler, CODE_END);
+  endCompiler(&compiler, -1);
 
   unpinObj(vm);
 

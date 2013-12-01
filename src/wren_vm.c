@@ -554,7 +554,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
     {
       int type = instruction;
       int symbol = READ_ARG();
-      int constant = READ_ARG();
+      Value method = POP();
       ObjClass* classObj = AS_CLASS(PEEK());
 
       switch (type)
@@ -576,8 +576,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
           break;
       }
 
-      ObjFn* body = AS_FN(frame->fn->constants[constant]);
-      classObj->methods[symbol].fn = body;
+      classObj->methods[symbol].fn = AS_FN(method);
       DISPATCH();
     }
 

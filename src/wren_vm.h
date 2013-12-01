@@ -28,17 +28,21 @@ typedef enum
   // Pop a superclass off the stack, then push a new class that extends it.
   CODE_SUBCLASS,
 
-  // Add a method for symbol [arg1] with body stored in constant [arg2] to the
-  // class on the top of stack. Does not modify the stack.
+  // Define a method for symbol [arg] whose body is the function popped off the
+  // top of the stack. The class receiving the method is on top of the stack
+  // (after the function is popped off) and remains after this.
   CODE_METHOD_INSTANCE,
 
-  // Add a method for symbol [arg1] with body stored in constant [arg2] to the
-  // metaclass of the class on the top of stack. Does not modify the stack.
+  // Define a method for symbol [arg] whose body is the function popped off the
+  // top of the stack. The class receiving the method is the metaclass of the
+  // class on top of the stack (after the function is popped off) and remains
+  // after this.
   CODE_METHOD_STATIC,
 
-  // Add a constructor method for symbol [arg1] with body stored in constant
-  // [arg2] to the metaclass of the class on the top of stack. Does not modify
-  // the stack.
+  // Define a constructor method for symbol [arg] whose body is the function
+  // popped off the top of the stack. The class receiving the method is the
+  // metaclass of the class on top of the stack (after the function is popped
+  // off) and remains after this.
   CODE_METHOD_CTOR,
 
   // Create a new list with [arg] elements. The top [arg] values on the stack
@@ -114,6 +118,19 @@ typedef enum
   // The current block is done and should be exited.
   CODE_END
 } Code;
+
+
+// TODO(bob): add opcode for closure
+// functions with no upvalues can just be loaded as constants like normal
+// functions which do have upvalues need a CODE_CLOSURE op. it takes the
+// constant index of the fn as an argument.
+// it loads that fn, then wraps it in a closure object.
+// then it captures all of the upvalues.
+// those can either be upvalues for locals, or upvalues that close over an
+// outer upvalue.
+//
+// then add ops for loading and storing an upvalue. take upvalue index as arg.
+
 
 typedef struct
 {
