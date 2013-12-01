@@ -21,6 +21,15 @@
 // `CODE_CALL_XX` instructions assume a certain maximum number.
 #define MAX_PARAMETERS (16)
 
+// The maximum number of local (i.e. non-global) variables that can be declared
+// in a single function, method, or chunk of top level code. This is the
+// maximum number of variables in scope at one time, and spans block scopes.
+//
+// Note that this limitation is also explicit in the bytecode. Since
+// [CODE_LOAD_LOCAL] and [CODE_STORE_LOCAL] use a single argument byte to
+// identify the local, only 256 can be in scope at one time.
+#define MAX_LOCALS (256)
+
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -122,9 +131,6 @@ typedef struct
   char currentString[MAX_STRING];
   int currentStringLength;
 } Parser;
-
-// TODO(bob): Move and doc.
-#define MAX_LOCALS (255)
 
 typedef struct
 {
@@ -692,13 +698,18 @@ static int declareVariable(Compiler* compiler)
     }
   }
 
+  if (compiler->numLocals == MAX_LOCALS)
+  {
+    error(compiler, "Cannot declare more than %d variables in one scope.",
+          MAX_LOCALS);
+    return -1;
+  }
+
   // Define a new local variable in the current scope.
   Local* local = &compiler->locals[compiler->numLocals];
   local->name = name;
   local->length = length;
   local->depth = compiler->scopeDepth;
-
-  // TODO(bob): Check for too many.
   return compiler->numLocals++;
 }
 
