@@ -74,10 +74,10 @@ pre {
   box-shadow: 0 10px 30px -10px hsl(195, 55%, 10%) inset;
 }
 
-.column {
+.page {
   position: relative;
   margin: 0 auto;
-  width: 640px;
+  width: 840px;
 }
 
 .header h1 {
@@ -99,31 +99,47 @@ pre {
   transition: color 0.2s;
 }
 
-.header h1 small {
-  font: 16px "Source Code Pro", helvetica, arial, sans-serif;
-  font-weight: 300;
-  color: hsl(195, 50%, 50%);
-  letter-spacing: 0;
-}
-
-.header ul {
+.header h2 {
   float: right;
   margin: 0;
   padding: 44px 0 0 0;
-}
-
-.header li {
-  display: inline;
   font: 17px "Source Sans Pro", helvetica, arial, sans-serif;
   font-weight: 300;
   letter-spacing: 1px;
-  margin: 0;
-  padding: 0 0 0 15px;
+  color: hsl(195, 50%, 50%);
 }
 
-.header li a {
-  color: hsl(195, 40%, 80%);
-  transition: color 0.2s;
+.content {
+  display: inline-block;
+  width: 620px;
+}
+
+.nav {
+  position: absolute;
+  right: 0;
+  width: 140px;
+  padding: 20px 20px 0 20px;
+  background: hsl(195, 40%, 95%);
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+  border-bottom: solid 2px hsl(195, 50%, 90%);
+}
+
+.nav h2 {
+  font: normal 18px "Sanchez", helvetica, arial, sans-serif;
+  margin: 0;
+}
+
+.nav ul {
+  padding: 0;
+  margin: 6px 0 20px 0;
+}
+
+.nav li {
+  font: 15px "Source Sans Pro", helvetica, arial, sans-serif;
+  font-weight: 400;
+  list-style-type: none;
+  margin: 0 0 6px 0;
 }
 
 .footer {
@@ -141,7 +157,7 @@ pre {
 .codehilite pre span.vi { color: #784bab; } /* instance variable */
 .codehilite pre span.k  { color: hsl(195, 80%, 40%); } /* keyword message */
 .codehilite pre span.p  { color: #777;    } /* punctuation ()[]{} */
-.codehilite pre span.s  { color: hsl(40, 90%, 45%); } /* string */
+.codehilite pre span.s  { color: hsl(330, 60%, 55%); } /* string */
 .codehilite pre span.se { color: hsl(30, 90%, 45%); } /* string escape */
 .codehilite pre span.nb { color: #30a138; } /* built-in name: self undefined */
 .codehilite pre span.o  { color: hsl(195, 100%, 35%); } /* operator */
