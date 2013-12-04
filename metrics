@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import glob
+import itertools
 import re
 
 TODO_PATTERN = re.compile(r'\s*// TODO\(')
@@ -19,7 +20,8 @@ num_expects = 0
 num_test_empty = 0
 num_test = 0
 
-for source_path in glob.iglob("src/*.[ch]"):
+files = itertools.chain(glob.iglob("src/*.[ch]"), glob.iglob("include/*.[ch]"))
+for source_path in files:
   num_files += 1
   with open(source_path, "r") as input:
     for line in input:
