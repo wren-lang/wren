@@ -47,10 +47,12 @@ typedef enum
 
 typedef enum {
   OBJ_CLASS,
+  OBJ_CLOSURE,
   OBJ_FN,
   OBJ_INSTANCE,
   OBJ_LIST,
-  OBJ_STRING
+  OBJ_STRING,
+  OBJ_UPVALUE
 } ObjType;
 
 typedef enum
@@ -61,8 +63,8 @@ typedef enum
 
 typedef struct sObj
 {
-  ObjType type   : 3;
-  ObjFlags flags : 1;
+  unsigned int type  : 3; // ObjType.
+  unsigned int flags : 1; // ObjFlags.
 
   // The next object in the linked list of all currently allocated objects.
   struct sObj* next;
@@ -92,13 +94,65 @@ typedef struct sFiber Fiber;
 typedef Value (*Primitive)(WrenVM* vm, Value* args);
 typedef void (*FiberPrimitive)(WrenVM* vm, Fiber* fiber, Value* args);
 
+// A first-class function object. A raw ObjFn can be used and invoked directly
+// if it has no upvalues (i.e. [numUpvalues] is zero). If it does use upvalues,
+// it must be wrapped in an [ObjClosure] first. The compiler is responsible for
+// emitting code to ensure that that happens.
 typedef struct
 {
   Obj obj;
-  unsigned char* bytecode;
-  Value* constants;
   int numConstants;
+  int numUpvalues;
+  unsigned char* bytecode;
+
+  // TODO(bob): Flexible array?
+  Value* constants;
 } ObjFn;
+
+// The dynamically allocated data structure for a variable that has been used
+// by a closure. Whenever a function accesses a variable declared in an
+// enclosing function, it will get to it through this.
+//
+// An upvalue can be either "closed" or "open". An open upvalue points directly
+// to a [Value] that is still stored on the fiber's stack because the local
+// variable is still in scope in the function where it's declared.
+//
+// When that local variable goes out of scope, the upvalue pointing to it will
+// be closed. When that happens, the value gets copied off the stack into the
+// upvalue itself. That way, it can have a longer lifetime than the stack
+// variable.
+typedef struct sUpvalue
+{
+  // The object header. Note that upvalues have this because they are garbage
+  // collected, but they are not first class Wren objects.
+  Obj obj;
+
+  // Pointer to the variable this upvalue is referencing.
+  Value* value;
+
+  // If the upvalue is closed (i.e. the local variable it was pointing too has
+  // been popped off the stack) then the closed-over value will be hoisted out
+  // of the stack into here. [value] will then be changed to point to this.
+  Value closed;
+
+  // Open upvalues are stored in a linked list by the fiber. This points to the
+  // next upvalue in that list.
+  struct sUpvalue* next;
+} Upvalue;
+
+// An instance of a first-class function and the environment it has closed over.
+// Unlike [ObjFn], this has captured the upvalues that the function accesses.
+typedef struct
+{
+  Obj obj;
+
+  // The function that this closure is an instance of.
+  ObjFn* fn;
+
+  // TODO(bob): Make a flexible array.
+  // The upvalues this function has closed over.
+  Upvalue** upvalues;
+} ObjClosure;
 
 typedef enum
 {
@@ -127,7 +181,9 @@ typedef struct
   {
     Primitive primitive;
     FiberPrimitive fiberPrimitive;
-    ObjFn* fn;
+
+    // May be a [ObjFn] or [ObjClosure].
+    Value fn;
   };
 } Method;
 
@@ -172,6 +228,9 @@ typedef struct
 // Value -> ObjClass*.
 #define AS_CLASS(value) ((ObjClass*)AS_OBJ(value))
 
+// Value -> ObjClosure*.
+#define AS_CLOSURE(value) ((ObjClosure*)AS_OBJ(value))
+
 // Value -> ObjFn*.
 #define AS_FN(value) ((ObjFn*)AS_OBJ(value))
 
@@ -195,6 +254,9 @@ typedef struct
 
 // Returns non-zero if [value] is a bool.
 #define IS_BOOL(value) (wrenIsBool(value))
+
+// Returns non-zero if [value] is a closure.
+#define IS_CLOSURE(value) (wrenIsClosure(value))
 
 // Returns non-zero if [value] is a function object.
 #define IS_FN(value) (wrenIsFn(value))
@@ -348,6 +410,10 @@ typedef struct
 // Creates a new class object.
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields);
 
+// Creates a new closure object that invokes [fn]. Allocates room for its
+// upvalues, but assumes outside code will populate it.
+ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
+
 // Creates a new function object. Assumes the compiler will fill it in with
 // bytecode, constants, etc.
 ObjFn* wrenNewFunction(WrenVM* vm);
@@ -362,6 +428,9 @@ ObjList* wrenNewList(WrenVM* vm, int numElements);
 // Creates a new string object and copies [text] into it.
 Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 
+// Creates a new open upvalue pointing to [value] on the stack.
+Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
+
 // Returns the class of [value].
 ObjClass* wrenGetClass(WrenVM* vm, Value value);
 
@@ -372,6 +441,7 @@ int wrenValuesEqual(Value a, Value b);
 void wrenPrintValue(Value value);
 
 int wrenIsBool(Value value);
+int wrenIsClosure(Value value);
 int wrenIsFn(Value value);
 int wrenIsInstance(Value value);
 int wrenIsString(Value value);

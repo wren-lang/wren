@@ -6,27 +6,12 @@ if (false) io.write("bad")
 if (true) io.write("good") else io.write("bad") // expect: good
 if (false) io.write("bad") else io.write("good") // expect: good
 
-// Allow statements for then branch.
+// Allow blocks for branches.
 if (true) { io.write("block") } // expect: block
-if (true) if (true) io.write("double") // expect: double
-
-// Allow statements for else branch.
 if (false) null else { io.write("block") } // expect: block
-if (false) null else if (true) io.write("double") // expect: double
-
-// Return the 'then' expression if the condition is true.
-var a = if (true) "good"
-io.write(a) // expect: good
-
-// Return null if the condition is false and there is no else.
-var b = if (false) "bad"
-io.write(b) // expect: null
-
-// Return the 'else' expression if the condition is false.
-var c = if (false) "bad" else "good"
-io.write(c) // expect: good
 
 // Assignment in if condition.
+var a = false
 if (a = true) io.write(a) // expect: true
 
 // Newline after "if".
@@ -36,14 +21,6 @@ if
 // Newline after "else".
 if (false) io.write("bad") else
 io.write("good") // expect: good
-
-// Definition in then arm.
-if (true) var a = io.write("ok") // expect: ok
-if (true) class Foo {} // no error
-
-// Definition in else arm.
-if (false) null else var a = io.write("ok") // expect: ok
-if (true) null else class Foo {} // no error
 
 // Only false is falsy.
 if (0) io.write(0) // expect: 0

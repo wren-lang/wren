@@ -4,7 +4,7 @@ class Foo {
   this new(a) { io.write(a) }
   this new(a, b) { io.write(a + b) }
 
-  toString { "Foo" }
+  toString { return "Foo" }
 }
 
 // Can overload by arity.

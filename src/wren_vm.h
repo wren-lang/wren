@@ -50,11 +50,27 @@ typedef enum
   // the new list.
   CODE_LIST,
 
+  // Creates a closure for the function stored at [arg] in the constant table.
+  //
+  // Following the function argument is a number of arguments, two for each
+  // upvalue. The first is non-zero if the variable being captured is a local
+  // (as opposed to an upvalue), and the second is the index of the local or
+  // upvalue being captured.
+  //
+  // Pushes the created closure.
+  CODE_CLOSURE,
+
   // Pushes the value in local slot [arg].
   CODE_LOAD_LOCAL,
 
   // Stores the top of stack in local slot [arg]. Does not pop it.
   CODE_STORE_LOCAL,
+
+  // Pushes the value in upvalue [arg].
+  CODE_LOAD_UPVALUE,
+
+  // Stores the top of stack in upvalue [arg]. Does not pop it.
+  CODE_STORE_UPVALUE,
 
   // Pushes the value in global slot [arg].
   CODE_LOAD_GLOBAL,
@@ -115,7 +131,15 @@ typedef enum
   // Pop [a] then [b] and push true if [b] is an instance of [a].
   CODE_IS,
 
-  // The current block is done and should be exited.
+  // Close the upvalue for the local on the top of the stack, then pop it.
+  CODE_CLOSE_UPVALUE,
+
+  // Exit from the current function and return the value on the top of the
+  // stack.
+  CODE_RETURN,
+
+  // This pseudo-instruction indicates the end of the bytecode. It should
+  // always be preceded by a `CODE_RETURN`, so is never actually executed.
   CODE_END
 } Code;
 
@@ -147,6 +171,7 @@ typedef struct
 // WrenVM has a pointer to the head of the list and walks it if a collection
 // occurs. This implies that pinned objects need to have stack semantics: only
 // the most recently pinned object can be unpinned.
+// TODO(bob): Move into wren_vm.c.
 typedef struct sPinnedObj
 {
   // The pinned object.
@@ -156,6 +181,7 @@ typedef struct sPinnedObj
   struct sPinnedObj* previous;
 } PinnedObj;
 
+// TODO(bob): Move into wren_vm.c?
 struct WrenVM
 {
   SymbolTable methods;
@@ -198,14 +224,15 @@ struct WrenVM
   WrenReallocateFn reallocate;
 };
 
+// TODO(bob): Move into wren_vm.c.
 typedef struct
 {
   // Index of the current (really next-to-be-executed) instruction in the
   // block's bytecode.
   int ip;
 
-  // The function being executed.
-  ObjFn* fn;
+  // The function or closure being executed.
+  Value fn;
 
   // Index of the first stack slot used by this call frame. This will contain
   // the receiver, followed by the function's parameters, then local variables
@@ -213,6 +240,7 @@ typedef struct
   int stackStart;
 } CallFrame;
 
+// TODO(bob): Move into wren_vm.c.
 struct sFiber
 {
   Value stack[STACK_SIZE];
@@ -220,6 +248,11 @@ struct sFiber
 
   CallFrame frames[MAX_CALL_FRAMES];
   int numFrames;
+
+  // Pointer to the first node in the linked list of open upvalues that are
+  // pointing to values still on the stack. The head of the list will be the
+  // upvalue closest to the top of the stack, and then the list works downwards.
+  Upvalue* openUpvalues;
 };
 
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
@@ -253,11 +286,12 @@ const char* getSymbolName(SymbolTable* symbols, int symbol);
 // Returns the global variable named [name].
 Value findGlobal(WrenVM* vm, const char* name);
 
-Value interpret(WrenVM* vm, ObjFn* fn);
+Value interpret(WrenVM* vm, Value function);
 
-// Push [fn] onto [fiber]'s callstack and invoke it. Expects [numArgs]
+// Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
-void callFunction(Fiber* fiber, ObjFn* fn, int numArgs);
+// [function] can be an `ObjFn` or `ObjClosure`.
+void wrenCallFunction(Fiber* fiber, Value function, int numArgs);
 
 // Mark [obj] as a GC root so that it doesn't get collected. Initializes
 // [pinned], which must be then passed to [unpinObj].

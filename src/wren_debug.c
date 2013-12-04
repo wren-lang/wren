@@ -2,7 +2,7 @@
 
 #include "wren_debug.h"
 
-static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i)
+int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 {
   int start = i;
   unsigned char* bytecode = fn->bytecode;
@@ -88,6 +88,24 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i)
       break;
     }
 
+    case CODE_CLOSURE:
+    {
+      int constant = bytecode[i++];
+      printf("CLOSURE ");
+      wrenPrintValue(fn->constants[constant]);
+      printf("\n");
+      printf("%04d   | constant %d\n", i, constant);
+      ObjFn* loadedFn = AS_FN(fn->constants[constant]);
+      for (int j = 0; j < loadedFn->numUpvalues; j++)
+      {
+        int isLocal = bytecode[i++];
+        printf("%04d   | upvalue %d isLocal %d\n", i, j, isLocal);
+        int index = bytecode[i++];
+        printf("%04d   | upvalue %d index %d\n", i, j, index);
+      }
+      break;
+    }
+
     case CODE_LOAD_LOCAL:
     {
       int local = bytecode[i++];
@@ -101,6 +119,22 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i)
       int local = bytecode[i++];
       printf("STORE_LOCAL %d\n", local);
       printf("%04d   | local %d\n", i, local);
+      break;
+    }
+
+    case CODE_LOAD_UPVALUE:
+    {
+      int upvalue = bytecode[i++];
+      printf("LOAD_UPVALUE %d\n", upvalue);
+      printf("%04d   | upvalue %d\n", i, upvalue);
+      break;
+    }
+
+    case CODE_STORE_UPVALUE:
+    {
+      int upvalue = bytecode[i++];
+      printf("STORE_UPVALUE %d\n", upvalue);
+      printf("%04d   | upvalue %d\n", i, upvalue);
       break;
     }
 
@@ -217,6 +251,14 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i)
       printf("CODE_IS\n");
       break;
 
+    case CODE_CLOSE_UPVALUE:
+      printf("CLOSE_UPVALUE\n");
+      break;
+
+    case CODE_RETURN:
+      printf("CODE_RETURN\n");
+      break;
+
     case CODE_END:
       printf("CODE_END\n");
       break;
@@ -236,13 +278,13 @@ void wrenDebugDumpCode(WrenVM* vm, ObjFn* fn)
   int i = 0;
   for (;;)
   {
-    int offset = dumpInstruction(vm, fn, i);
+    int offset = wrenDebugDumpInstruction(vm, fn, i);
     if (offset == -1) break;
     i += offset;
   }
 }
 
-void dumpStack(Fiber* fiber)
+void wrenDebugDumpStack(Fiber* fiber)
 {
   printf(":: ");
   for (int i = 0; i < fiber->stackSize; i++)

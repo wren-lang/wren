@@ -1,18 +1,18 @@
 class Foo {
-  + other { "infix + " + other }
-  - other { "infix - " + other }
-  * other { "infix * " + other }
-  / other { "infix / " + other }
-  % other { "infix % " + other }
-  < other { "infix < " + other }
-  > other { "infix > " + other }
-  <= other { "infix <= " + other }
-  >= other { "infix >= " + other }
-  == other { "infix == " + other }
-  != other { "infix != " + other }
+  + other { return "infix + " + other }
+  - other { return "infix - " + other }
+  * other { return "infix * " + other }
+  / other { return "infix / " + other }
+  % other { return "infix % " + other }
+  < other { return "infix < " + other }
+  > other { return "infix > " + other }
+  <= other { return "infix <= " + other }
+  >= other { return "infix >= " + other }
+  == other { return "infix == " + other }
+  != other { return "infix != " + other }
 
-  ! { "prefix !" }
-  - { "prefix -" }
+  ! { return "prefix !" }
+  - { return "prefix -" }
 }
 
 var foo = Foo.new

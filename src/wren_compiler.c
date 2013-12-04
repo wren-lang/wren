@@ -27,9 +27,13 @@
 // maximum number of variables in scope at one time, and spans block scopes.
 //
 // Note that this limitation is also explicit in the bytecode. Since
-// [CODE_LOAD_LOCAL] and [CODE_STORE_LOCAL] use a single argument byte to
+// `CODE_LOAD_LOCAL` and `CODE_STORE_LOCAL` use a single argument byte to
 // identify the local, only 256 can be in scope at one time.
 #define MAX_LOCALS (256)
+
+// The maximum number of upvalues (i.e. variables from enclosing functions)
+// that a function can close over.
+#define MAX_UPVALUES (256)
 
 typedef enum
 {
@@ -67,6 +71,7 @@ typedef enum
   TOKEN_IF,
   TOKEN_IS,
   TOKEN_NULL,
+  TOKEN_RETURN,
   TOKEN_STATIC,
   TOKEN_THIS,
   TOKEN_TRUE,
@@ -146,13 +151,26 @@ typedef struct
   // the outermost scope--parameters for a method, or the first local block in
   // top level code. One is the scope within that, etc.
   int depth;
+
+  // Non-zero if this local variable is being used as an upvalue.
+  int isUpvalue;
 } Local;
+
+typedef struct
+{
+  // Non-zero if this upvalue is capturing a local variable from the enclosing
+  // function. Zero if it's capturing an upvalue.
+  int isLocal;
+
+  // The index of the local or upvalue being captured in the enclosing function.
+  int index;
+} CompilerUpvalue;
 
 typedef struct sCompiler
 {
   Parser* parser;
 
-  // The compiler for the block enclosing this one, or NULL if it's the
+  // The compiler for the function enclosing this one, or NULL if it's the
   // top level.
   struct sCompiler* parent;
 
@@ -177,11 +195,17 @@ typedef struct sCompiler
 
   // The currently in scope local variables.
   Local locals[MAX_LOCALS];
+
+  // The upvalues that this function has captured from outer scopes. The count
+  // of them is stored in `fn->numUpvalues`.
+  CompilerUpvalue upvalues[MAX_UPVALUES];
 } Compiler;
 
 // Adds [constant] to the constant pool and returns its index.
 static int addConstant(Compiler* compiler, Value constant)
 {
+  // TODO(bob): Look for existing equal constant.
+  // TODO(bob): Check for overflow.
   compiler->fn->constants[compiler->fn->numConstants++] = constant;
   return compiler->fn->numConstants - 1;
 }
@@ -209,14 +233,9 @@ static int initCompiler(Compiler* compiler, Parser* parser,
     compiler->locals[0].name = NULL;
     compiler->locals[0].length = 0;
     compiler->locals[0].depth = -1;
+    compiler->locals[0].isUpvalue = 0;
 
     // The initial scope for function or method is a local scope.
-    // TODO(bob): Need to explicitly pop this scope at end of fn/method so
-    // that we can correctly close over locals declared at top level of member.
-    // also, when done compiling fn/method, need to count total number of
-    // upvalues and store in fnobj. note: have to make sure we include upvalues
-    // added because a fn within this one closed over something outside of this
-    // one and we had to add upvalue here to flatten the closure.
     compiler->scopeDepth = 0;
   }
 
@@ -224,38 +243,12 @@ static int initCompiler(Compiler* compiler, Parser* parser,
   compiler->fields = parent != NULL ? parent->fields :  NULL;
 
   compiler->fn = wrenNewFunction(parser->vm);
-  compiler->fn->numConstants = 0;
 
   if (parent == NULL) return -1;
 
   // Add the block to the constant table. Do this eagerly so it's reachable by
   // the GC.
   return addConstant(parent, OBJ_VAL(compiler->fn));
-}
-
-// Emits one bytecode instruction or argument.
-static int emit(Compiler* compiler, Code code)
-{
-  compiler->fn->bytecode[compiler->numCodes++] = code;
-  return compiler->numCodes - 1;
-}
-
-// Finishes [compiler], which is compiling a function, method, or chunk of top
-// level code. If there is a parent compiler, then this emits code in the
-// parent compiler to load the resulting function.
-static void endCompiler(Compiler* compiler, int constant)
-{
-  // End the function's code.
-  emit(compiler, CODE_END);
-
-  // TODO(bob): will need to compile different code to capture upvalues if fn
-  // has them.
-  if (compiler->parent != NULL)
-  {
-    // In the function that contains this one, load the resulting function object.
-    emit(compiler->parent, CODE_CONSTANT);
-    emit(compiler->parent, constant);
-  }
 }
 
 // Outputs a compile or syntax error.
@@ -417,6 +410,7 @@ static void readName(Parser* parser, TokenType type)
   if (isKeyword(parser, "if")) type = TOKEN_IF;
   if (isKeyword(parser, "is")) type = TOKEN_IS;
   if (isKeyword(parser, "null")) type = TOKEN_NULL;
+  if (isKeyword(parser, "return")) type = TOKEN_RETURN;
   if (isKeyword(parser, "static")) type = TOKEN_STATIC;
   if (isKeyword(parser, "this")) type = TOKEN_THIS;
   if (isKeyword(parser, "true")) type = TOKEN_TRUE;
@@ -680,6 +674,13 @@ static Token* consume(Compiler* compiler, TokenType expected,
 
 // Variables and scopes --------------------------------------------------------
 
+// Emits one bytecode instruction or argument.
+static int emit(Compiler* compiler, Code code)
+{
+  compiler->fn->bytecode[compiler->numCodes++] = code;
+  return compiler->numCodes - 1;
+}
+
 // Parses a name token and declares a variable in the current scope with that
 // name. Returns its symbol.
 static int declareVariable(Compiler* compiler)
@@ -729,41 +730,22 @@ static int declareVariable(Compiler* compiler)
   local->name = token->start;
   local->length = token->length;
   local->depth = compiler->scopeDepth;
+  local->isUpvalue = 0;
   return compiler->numLocals++;
 }
 
 // Stores a variable with the previously defined symbol in the current scope.
 static void defineVariable(Compiler* compiler, int symbol)
 {
-  // Handle top-level global scope.
-  if (compiler->scopeDepth == -1)
-  {
-    // It's a global variable, so store the value in the global slot.
-    emit(compiler, CODE_STORE_GLOBAL);
-    emit(compiler, symbol);
-  }
-  else
-  {
-    // It's a local variable. The value is already in the right slot to store
-    // the local, but later code will pop and discard that. To cancel that out
-    // duplicate it now, so that the temporary value will be discarded and
-    // leave the local still on the stack.
-    // TODO(bob): Since variables are declared in statement position, this
-    // generates a lot of code like:
-    //
-    //   var a = "value"
-    //   io.write(a)
-    //
-    //   CODE_CONSTANT "value" // put constant into local slot
-    //   CODE_DUP              // dup it so the top is a temporary
-    //   CODE_POP              // discard previous result in sequence
-    //   <code for io.write...>
-    //
-    // Would be good to either peephole optimize this or be smarter about
-    // generating code for defining local variables to not emit the DUP
-    // sometimes.
-    emit(compiler, CODE_DUP);
-  }
+  // Store the variable. If it's a local, the result of the initializer is
+  // in the correct slot on the stack already so we're done.
+  if (compiler->scopeDepth >= 0) return;
+
+  // It's a global variable, so store the value in the global slot and then
+  // discard the temporary for the initializer.
+  emit(compiler, CODE_STORE_GLOBAL);
+  emit(compiler, symbol);
+  emit(compiler, CODE_POP);
 }
 
 // Starts a new local block scope.
@@ -772,39 +754,42 @@ static void pushScope(Compiler* compiler)
   compiler->scopeDepth++;
 }
 
-// Closes the last pushed block scope.
+// Closes the last pushed block scope. This should only be called in a statement
+// context where no temporaries are still on the stack.
 static void popScope(Compiler* compiler)
 {
   ASSERT(compiler->scopeDepth > -1, "Cannot pop top-level scope.");
 
   // Pop locals off the stack.
-  // TODO(bob): Could make a single instruction that pops multiple values if
-  // this is a bottleneck.
   while (compiler->numLocals > 0 &&
          compiler->locals[compiler->numLocals - 1].depth ==
             compiler->scopeDepth)
   {
     compiler->numLocals--;
-    emit(compiler, CODE_POP);
+
+    // If the local was closed over, make sure the upvalue gets closed when it
+    // goes out of scope on the stack.
+    if (compiler->locals[compiler->numLocals].isUpvalue)
+    {
+      emit(compiler, CODE_CLOSE_UPVALUE);
+    }
+    else
+    {
+      emit(compiler, CODE_POP);
+    }
   }
 
-  // TODO(bob): Need to emit code to capture upvalue for any local going out of
-  // scope now that is closed over.
-  
   compiler->scopeDepth--;
 }
 
-// Look up the previously consumed token, which is presumed to be a TOKEN_NAME
-// in the current scope to see what name it is bound to. Returns the index of
-// the name either in global or local scope. Returns -1 if not found. Sets
-// [isGlobal] to non-zero if the name is in global scope, or 0 if in local.
-static int resolveName(Compiler* compiler, int* isGlobal)
+// Attempts to look up the previously consumed name token in the local variables
+// of [compiler]. If found, returns its index, otherwise returns -1.
+static int resolveLocal(Compiler* compiler)
 {
   Token* token = &compiler->parser->previous;
 
   // Look it up in the local scopes. Look in reverse order so that the most
   // nested variable is found first and shadows outer ones.
-  *isGlobal = 0;
   for (int i = compiler->numLocals - 1; i >= 0; i--)
   {
     if (compiler->locals[i].length == token->length &&
@@ -814,17 +799,103 @@ static int resolveName(Compiler* compiler, int* isGlobal)
     }
   }
 
-  // TODO(bob): Closures!
-  // look in current upvalues to see if we've already closed over it
-  //   if so, just use that
-  // walk up parent chain looking in their local scopes for variable
-  // if we find it, need to close over it here
-  // add upvalue to fn being compiled
-  //   return index of upvalue
-  // instead of isGlobal, should be some local/upvalue/global enum
+  return -1;
+}
+
+// Adds an upvalue to [compiler]'s function with the given properties. Does not
+// add one if an upvalue for that variable is already in the list. Returns the
+// index of the uvpalue.
+static int addUpvalue(Compiler* compiler, int isLocal, int index)
+{
+  // Look for an existing one.
+  for (int i = 0; i < compiler->fn->numUpvalues; i++)
+  {
+    CompilerUpvalue* upvalue = &compiler->upvalues[i];
+    if (upvalue->index == index && upvalue->isLocal == isLocal) return i;
+  }
+
+  // If we got here, it's a new upvalue.
+  compiler->upvalues[compiler->fn->numUpvalues].isLocal = isLocal;
+  compiler->upvalues[compiler->fn->numUpvalues].index = index;
+  return compiler->fn->numUpvalues++;
+}
+
+// Attempts to look up the previously consumed name token in the functions
+// enclosing the one being compiled by [compiler]. If found, it adds an upvalue
+// for it to this compiler's list of upvalues (unless it's already in there)
+// and returns its index. If not found, returns -1.
+//
+// If the name is found outside of the immediately enclosing function, this
+// will flatten the closure and add upvalues to all of the intermediate
+// functions so that it gets walked down to this one.
+static int findUpvalue(Compiler* compiler)
+{
+  // If we are out of enclosing functions, it can't be an upvalue.
+  if (compiler->parent == NULL)
+  {
+    return -1;
+  }
+
+  // See if it's a local variable in the immediately enclosing function.
+  int local = resolveLocal(compiler->parent);
+  if (local != -1)
+  {
+    // Mark the local as an upvalue so we know to close it when it goes out of
+    // scope.
+    compiler->parent->locals[local].isUpvalue = 1;
+
+    return addUpvalue(compiler, 1, local);
+  }
+
+  // See if it's an upvalue in the immediately enclosing function. In other
+  // words, if its a local variable in a non-immediately enclosing function.
+  // This will "flatten" closures automatically: it will add upvalues to all
+  // of the intermediate functions to get from the function where a local is
+  // declared all the way into the possibly deeply nested function that is
+  // closing over it.
+  int upvalue = findUpvalue(compiler->parent);
+  if (upvalue != -1)
+  {
+    return addUpvalue(compiler, 0, upvalue);
+  }
+
+  // If we got here, we walked all the way up the parent chain and couldn't
+  // find it.
+  return -1;
+}
+
+// A name may resolve to refer to a variable in a few different places: local
+// scope in the current function, an upvalue for variables being closed over
+// from enclosing functions, or a top-level global variable.
+typedef enum
+{
+  NAME_LOCAL,
+  NAME_UPVALUE,
+  NAME_GLOBAL
+} ResolvedName;
+
+// Look up the previously consumed token, which is presumed to be a TOKEN_NAME
+// in the current scope to see what name it is bound to. Returns the index of
+// the name either in global or local scope. Returns -1 if not found. Sets
+// [isGlobal] to non-zero if the name is in global scope, or 0 if in local.
+static int resolveName(Compiler* compiler, ResolvedName* resolved)
+{
+  Token* token = &compiler->parser->previous;
+
+  // Look it up in the local scopes. Look in reverse order so that the most
+  // nested variable is found first and shadows outer ones.
+  *resolved = NAME_LOCAL;
+  int local = resolveLocal(compiler);
+  if (local != -1) return local;
+
+  // If we got here, it's not a local, so lets see if we are closing over an
+  // outer local.
+  *resolved = NAME_UPVALUE;
+  int upvalue = findUpvalue(compiler);
+  if (upvalue != -1) return upvalue;
 
   // If we got here, it wasn't in a local scope, so try the global scope.
-  *isGlobal = 1;
+  *resolved = NAME_GLOBAL;
   return findSymbol(&compiler->parser->vm->globalSymbols,
                     token->start, token->length);
 }
@@ -837,6 +908,43 @@ static int copyName(Compiler* compiler, char* name)
   Token* token = &compiler->parser->previous;
   strncpy(name, token->start, token->length);
   return token->length;
+}
+
+// Finishes [compiler], which is compiling a function, method, or chunk of top
+// level code. If there is a parent compiler, then this emits code in the
+// parent compiler to load the resulting function.
+static void endCompiler(Compiler* compiler, int constant)
+{
+  // Mark the end of the bytecode. Since it may contain multiple early returns,
+  // we can't rely on CODE_RETURN to tell us we're at the end.
+  emit(compiler, CODE_END);
+
+  // In the function that contains this one, load the resulting function object.
+  if (compiler->parent != NULL)
+  {
+    // If the function has no upvalues, we don't need to create a closure.
+    // We can just load and run the function directly.
+    if (compiler->fn->numUpvalues == 0)
+    {
+      emit(compiler->parent, CODE_CONSTANT);
+      emit(compiler->parent, constant);
+    }
+    else
+    {
+      // Capture the upvalues in the new closure object.
+      emit(compiler->parent, CODE_CLOSURE);
+      emit(compiler->parent, constant);
+
+      // Emit arguments for each upvalue to know whether to capture a local or
+      // an upvalue.
+      // TODO(bob): Do something more efficient here?
+      for (int i = 0; i < compiler->fn->numUpvalues; i++)
+      {
+        emit(compiler->parent, compiler->upvalues[i].isLocal);
+        emit(compiler->parent, compiler->upvalues[i].index);
+      }
+    }
+  }
 }
 
 // Grammar ---------------------------------------------------------------------
@@ -858,10 +966,8 @@ typedef enum
 } Precedence;
 
 // Forward declarations since the grammar is recursive.
-static void expression(Compiler* compiler, int allowAssignment);
-static void assignment(Compiler* compiler);
+static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
-static void definition(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, int allowAssignment,
                             Precedence precedence);
 
@@ -892,7 +998,7 @@ static void finishBlock(Compiler* compiler)
 {
   for (;;)
   {
-    definition(compiler);
+    statement(compiler);
 
     // If there is no newline, it must be the end of the block on the same line.
     if (!match(compiler, TOKEN_LINE))
@@ -902,9 +1008,6 @@ static void finishBlock(Compiler* compiler)
     }
 
     if (match(compiler, TOKEN_RIGHT_BRACE)) break;
-
-    // Discard the result of the previous expression.
-    emit(compiler, CODE_POP);
   }
 }
 
@@ -942,7 +1045,7 @@ static void parameterList(Compiler* compiler, char* name, int* length)
 
 static void grouping(Compiler* compiler, int allowAssignment)
 {
-  assignment(compiler);
+  expression(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
@@ -955,7 +1058,7 @@ static void list(Compiler* compiler, int allowAssignment)
     do
     {
       numElements++;
-      assignment(compiler);
+      expression(compiler);
     } while (match(compiler, TOKEN_COMMA));
   }
 
@@ -1004,12 +1107,16 @@ static void function(Compiler* compiler, int allowAssignment)
   {
     // Block body.
     finishBlock(&fnCompiler);
+
+    // Implicitly return null.
+    emit(&fnCompiler, CODE_NULL);
+    emit(&fnCompiler, CODE_RETURN);
   }
   else
   {
     // Single expression body.
-    // TODO(bob): Allow assignment here?
-    expression(&fnCompiler, 0);
+    expression(&fnCompiler);
+    emit(&fnCompiler, CODE_RETURN);
   }
 
   endCompiler(&fnCompiler, constant);
@@ -1039,7 +1146,7 @@ static void field(Compiler* compiler, int allowAssignment)
     if (!allowAssignment) error(compiler, "Invalid assignment.");
 
     // Compile the right-hand side.
-    statement(compiler);
+    expression(compiler);
 
     emit(compiler, CODE_STORE_FIELD);
     emit(compiler, field);
@@ -1053,13 +1160,9 @@ static void field(Compiler* compiler, int allowAssignment)
 static void name(Compiler* compiler, int allowAssignment)
 {
   // Look up the name in the scope chain.
-  int isGlobal;
-  int index = resolveName(compiler, &isGlobal);
-
-  if (index == -1)
-  {
-    error(compiler, "Undefined variable.");
-  }
+  ResolvedName resolved;
+  int index = resolveName(compiler, &resolved);
+  if (index == -1) error(compiler, "Undefined variable.");
 
   // If there's an "=" after a bare name, it's a variable assignment.
   if (match(compiler, TOKEN_EQ))
@@ -1067,37 +1170,28 @@ static void name(Compiler* compiler, int allowAssignment)
     if (!allowAssignment) error(compiler, "Invalid assignment.");
 
     // Compile the right-hand side.
-    statement(compiler);
+    expression(compiler);
 
-    // TODO(bob): Handle assigning to upvalue.
-
-    if (isGlobal)
+    switch (resolved)
     {
-      emit(compiler, CODE_STORE_GLOBAL);
-      emit(compiler, index);
-    }
-    else
-    {
-      emit(compiler, CODE_STORE_LOCAL);
-      emit(compiler, index);
+      case NAME_LOCAL: emit(compiler, CODE_STORE_LOCAL); break;
+      case NAME_UPVALUE: emit(compiler, CODE_STORE_UPVALUE); break;
+      case NAME_GLOBAL: emit(compiler, CODE_STORE_GLOBAL); break;
     }
 
+    emit(compiler, index);
     return;
   }
 
-  // TODO(bob): Handle reading upvalue.
-
   // Otherwise, it's just a variable access.
-  if (isGlobal)
+  switch (resolved)
   {
-    emit(compiler, CODE_LOAD_GLOBAL);
-    emit(compiler, index);
+    case NAME_LOCAL: emit(compiler, CODE_LOAD_LOCAL); break;
+    case NAME_UPVALUE: emit(compiler, CODE_LOAD_UPVALUE); break;
+    case NAME_GLOBAL: emit(compiler, CODE_LOAD_GLOBAL); break;
   }
-  else
-  {
-    emit(compiler, CODE_LOAD_LOCAL);
-    emit(compiler, index);
-  }
+
+  emit(compiler, index);
 }
 
 static void null(Compiler* compiler, int allowAssignment)
@@ -1190,7 +1284,7 @@ static void subscript(Compiler* compiler, int allowAssignment)
             MAX_PARAMETERS);
     }
 
-    statement(compiler);
+    expression(compiler);
 
     // Add a space in the name for each argument. Lets us overload by
     // arity.
@@ -1235,8 +1329,8 @@ void call(Compiler* compiler, int allowAssignment)
         error(compiler, "Cannot pass more than %d arguments to a method.",
               MAX_PARAMETERS);
       }
-      
-      statement(compiler);
+
+      expression(compiler);
 
       // Add a space in the name for each argument. Lets us overload by
       // arity.
@@ -1373,6 +1467,7 @@ GrammarRule rules[] =
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IS            */ INFIX(PREC_IS, is),
   /* TOKEN_NULL          */ PREFIX(null),
+  /* TOKEN_RETURN        */ UNUSED,
   /* TOKEN_STATIC        */ UNUSED,
   /* TOKEN_THIS          */ PREFIX(this_),
   /* TOKEN_TRUE          */ PREFIX(boolean),
@@ -1410,105 +1505,11 @@ void parsePrecedence(Compiler* compiler, int allowAssignment,
   }
 }
 
-// Parses an expression (or, really, the subset of expressions that can appear
-// outside of the top level of a block). Does not include "statement-like"
-// things like variable declarations.
-void expression(Compiler* compiler, int allowAssignment)
+// Parses an expression. Unlike statements, expressions leave a resulting value
+// on the stack.
+void expression(Compiler* compiler)
 {
-  parsePrecedence(compiler, allowAssignment, PREC_LOWEST);
-}
-
-// Compiles an assignment expression.
-void assignment(Compiler* compiler)
-{
-  // Assignment statement.
-  expression(compiler, 1);
-}
-
-// Parses a "statement": any expression including expressions like variable
-// declarations which can only appear at the top level of a block.
-void statement(Compiler* compiler)
-{
-  if (match(compiler, TOKEN_IF))
-  {
-    // Compile the condition.
-    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
-    assignment(compiler);
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
-
-    // Jump to the else branch if the condition is false.
-    emit(compiler, CODE_JUMP_IF);
-    int ifJump = emit(compiler, 255);
-
-    // Compile the then branch.
-    pushScope(compiler);
-    definition(compiler);
-    popScope(compiler);
-
-    // Jump over the else branch when the if branch is taken.
-    emit(compiler, CODE_JUMP);
-    int elseJump = emit(compiler, 255);
-
-    patchJump(compiler, ifJump);
-
-    // Compile the else branch if there is one.
-    if (match(compiler, TOKEN_ELSE))
-    {
-      pushScope(compiler);
-      definition(compiler);
-      popScope(compiler);
-    }
-    else
-    {
-      // Just default to null.
-      emit(compiler, CODE_NULL);
-    }
-
-    // Patch the jump over the else.
-    patchJump(compiler, elseJump);
-    return;
-  }
-
-  if (match(compiler, TOKEN_WHILE))
-  {
-    // Remember what instruction to loop back to.
-    int loopStart = compiler->numCodes - 1;
-
-    // Compile the condition.
-    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
-    assignment(compiler);
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
-
-    emit(compiler, CODE_JUMP_IF);
-    int exitJump = emit(compiler, 255);
-
-    // Compile the body.
-    pushScope(compiler);
-    definition(compiler);
-    popScope(compiler);
-
-    // Loop back to the top.
-    emit(compiler, CODE_LOOP);
-    int loopOffset = compiler->numCodes - loopStart;
-    emit(compiler, loopOffset);
-
-    patchJump(compiler, exitJump);
-
-    // A while loop always evaluates to null.
-    emit(compiler, CODE_NULL);
-    return;
-  }
-
-  // Curly block.
-  if (match(compiler, TOKEN_LEFT_BRACE))
-  {
-    pushScope(compiler);
-    finishBlock(compiler);
-    popScope(compiler);
-    return;
-  }
-
-  assignment(compiler);
+  parsePrecedence(compiler, 1, PREC_LOWEST);
 }
 
 // Compiles a method definition inside a class body.
@@ -1528,16 +1529,22 @@ void method(Compiler* compiler, Code instruction, SignatureFn signature)
 
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
   finishBlock(&methodCompiler);
+  // TODO(bob): Single-expression methods that implicitly return the result.
 
-  // If it's a constructor, return "this", not the result of the body.
+  // If it's a constructor, return "this".
   if (instruction == CODE_METHOD_CTOR)
   {
-    emit(&methodCompiler, CODE_POP);
     // The receiver is always stored in the first local slot.
-    // TODO(bob): Will need to do something different to handle functions
-    // enclosed in methods.
     emit(&methodCompiler, CODE_LOAD_LOCAL);
     emit(&methodCompiler, 0);
+
+    emit(&methodCompiler, CODE_RETURN);
+  }
+  else
+  {
+    // End the method's code.
+    emit(&methodCompiler, CODE_NULL);
+    emit(&methodCompiler, CODE_RETURN);
   }
 
   endCompiler(&methodCompiler, constant);
@@ -1547,8 +1554,34 @@ void method(Compiler* compiler, Code instruction, SignatureFn signature)
   emit(compiler, symbol);
 }
 
-// Compiles a name-binding statement.
-void definition(Compiler* compiler)
+// Parses a curly block or an expression statement. Used in places like the
+// arms of an if statement where either a single expression or a curly body is
+// allowed.
+void block(Compiler* compiler)
+{
+  // Curly block.
+  if (match(compiler, TOKEN_LEFT_BRACE))
+  {
+    pushScope(compiler);
+    finishBlock(compiler);
+    popScope(compiler);
+    return;
+  }
+
+  // TODO(bob): Only allowing expressions here means you can't do:
+  //
+  // if (foo) return "blah"
+  //
+  // since return is a statement (or should it be an expression?).
+
+  // Expression statement.
+  expression(compiler);
+  emit(compiler, CODE_POP);
+}
+
+// Compiles a statement. These can only appear at the top-level or within
+// curly blocks. Unlike expressions, these do not leave a value on the stack.
+void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_CLASS))
   {
@@ -1571,9 +1604,6 @@ void definition(Compiler* compiler)
     // the value until we've compiled all the methods to see which fields are
     // used.
     int numFieldsInstruction = emit(compiler, 255);
-
-    // Store it in its name.
-    defineVariable(compiler, symbol);
 
     // Compile the method definitions.
     consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
@@ -1602,8 +1632,7 @@ void definition(Compiler* compiler)
       }
       else if (match(compiler, TOKEN_THIS))
       {
-        // If the method name is prefixed with "this", it's a named constructor.
-        // TODO(bob): Allow defining unnamed constructor.
+        // If the method name is prefixed with "this", it's a constructor.
         instruction = CODE_METHOD_CTOR;
       }
 
@@ -1625,6 +1654,51 @@ void definition(Compiler* compiler)
     compiler->fn->bytecode[numFieldsInstruction] = fields.count;
 
     compiler->fields = previousFields;
+
+    // Store it in its name.
+    defineVariable(compiler, symbol);
+    return;
+  }
+
+  if (match(compiler, TOKEN_IF))
+  {
+    // Compile the condition.
+    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    expression(compiler);
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
+
+    // Jump to the else branch if the condition is false.
+    emit(compiler, CODE_JUMP_IF);
+    int ifJump = emit(compiler, 255);
+
+    // Compile the then branch.
+    block(compiler);
+
+    // Jump over the else branch when the if branch is taken.
+    emit(compiler, CODE_JUMP);
+    int elseJump = emit(compiler, 255);
+
+    patchJump(compiler, ifJump);
+
+    // Compile the else branch if there is one.
+    if (match(compiler, TOKEN_ELSE))
+    {
+      block(compiler);
+    }
+
+    // Patch the jump over the else.
+    patchJump(compiler, elseJump);
+    return;
+  }
+
+  if (match(compiler, TOKEN_RETURN))
+  {
+    // Compile the return value.
+    // TODO(bob): Implicitly return null if there is a newline or } after the
+    // "return".
+    expression(compiler);
+
+    emit(compiler, CODE_RETURN);
     return;
   }
 
@@ -1637,13 +1711,38 @@ void definition(Compiler* compiler)
     consume(compiler, TOKEN_EQ, "Expect '=' after variable name.");
 
     // Compile the initializer.
-    statement(compiler);
+    expression(compiler);
 
     defineVariable(compiler, symbol);
     return;
   }
 
-  statement(compiler);
+  if (match(compiler, TOKEN_WHILE))
+  {
+    // Remember what instruction to loop back to.
+    int loopStart = compiler->numCodes - 1;
+
+    // Compile the condition.
+    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    expression(compiler);
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
+
+    emit(compiler, CODE_JUMP_IF);
+    int exitJump = emit(compiler, 255);
+
+    // Compile the body.
+    block(compiler);
+
+    // Loop back to the top.
+    emit(compiler, CODE_LOOP);
+    int loopOffset = compiler->numCodes - loopStart;
+    emit(compiler, loopOffset);
+
+    patchJump(compiler, exitJump);
+    return;
+  }
+
+  block(compiler);
 }
 
 // Parses [source] to a "function" (a chunk of top-level code) for execution by
@@ -1680,7 +1779,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
 
   for (;;)
   {
-    definition(&compiler);
+    statement(&compiler);
 
     // If there is no newline, it must be the end of the block on the same line.
     if (!match(&compiler, TOKEN_LINE))
@@ -1690,10 +1789,10 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
     }
 
     if (match(&compiler, TOKEN_EOF)) break;
-
-    // Discard the result of the previous expression.
-    emit(&compiler, CODE_POP);
   }
+
+  emit(&compiler, CODE_NULL);
+  emit(&compiler, CODE_RETURN);
 
   endCompiler(&compiler, -1);
 

@@ -3,7 +3,7 @@ class Foo {
   this baz { io.write("this baz") }
   this bar(arg) { io.write("this bar " + arg) }
 
-  toString { "Foo" }
+  toString { return "Foo" }
 }
 
 // Different names.

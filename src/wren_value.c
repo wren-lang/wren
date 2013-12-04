@@ -64,6 +64,24 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
   return classObj;
 }
 
+ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
+{
+  // Allocate this before the closure in case it triggers a GC which would
+  // free the closure.
+  Upvalue** upvalues = allocate(vm, sizeof(Upvalue*) * fn->numUpvalues);
+
+  // Clear the upvalue array. We need to do this in case a GC is triggered
+  // after the closure is created but before the upvalue array is populated.
+  for (int i = 0; i < fn->numUpvalues; i++) upvalues[i] = NULL;
+
+  ObjClosure* closure = allocate(vm, sizeof(ObjClosure));
+  initObj(vm, &closure->obj, OBJ_CLOSURE);
+
+  closure->fn = fn;
+  closure->upvalues = upvalues;
+  return closure;
+}
+
 ObjFn* wrenNewFunction(WrenVM* vm)
 {
   // Allocate these before the function in case they trigger a GC which would
@@ -75,6 +93,8 @@ ObjFn* wrenNewFunction(WrenVM* vm)
   ObjFn* fn = allocate(vm, sizeof(ObjFn));
   initObj(vm, &fn->obj, OBJ_FN);
 
+  fn->numConstants = 0;
+  fn->numUpvalues = 0;
   fn->bytecode = bytecode;
   fn->constants = constants;
 
@@ -135,15 +155,36 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   return OBJ_VAL(string);
 }
 
+Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
+{
+  Upvalue* upvalue = allocate(vm, sizeof(Upvalue));
+  initObj(vm, &upvalue->obj, OBJ_UPVALUE);
+
+  upvalue->value = value;
+  upvalue->next = NULL;
+  return upvalue;
+}
+
 static ObjClass* getObjectClass(WrenVM* vm, Obj* obj)
 {
   switch (obj->type)
   {
-    case OBJ_CLASS: return ((ObjClass*)obj)->metaclass;
+    case OBJ_CLASS:
+    {
+      ObjClass* classObj = (ObjClass*)obj;
+      return classObj->metaclass;
+    }
+    case OBJ_CLOSURE: return vm->fnClass;
     case OBJ_FN: return vm->fnClass;
     case OBJ_INSTANCE: return ((ObjInstance*)obj)->classObj;
     case OBJ_LIST: return vm->listClass;
     case OBJ_STRING: return vm->stringClass;
+    case OBJ_UPVALUE:
+      ASSERT(0, "Upvalues should not be used as first-class objects.");
+      return NULL;
+    default:
+      ASSERT(0, "Unreachable.");
+      return NULL;
   }
 }
 
@@ -203,10 +244,14 @@ static void printObject(Obj* obj)
   switch (obj->type)
   {
     case OBJ_CLASS: printf("[class %p]", obj); break;
+    case OBJ_CLOSURE: printf("[closure %p]", obj); break;
     case OBJ_FN: printf("[fn %p]", obj); break;
     case OBJ_INSTANCE: printf("[instance %p]", obj); break;
     case OBJ_LIST: printList((ObjList*)obj); break;
     case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
+    case OBJ_UPVALUE:
+      ASSERT(0, "Upvalues should not be used as first-class objects.");
+      break;
   }
 }
 
@@ -253,6 +298,11 @@ int wrenIsBool(Value value)
 #else
   return value.type == VAL_FALSE || value.type == VAL_TRUE;
 #endif
+}
+
+int wrenIsClosure(Value value)
+{
+  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_CLOSURE;
 }
 
 int wrenIsFn(Value value)

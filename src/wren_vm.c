@@ -17,6 +17,8 @@ WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
   vm->fiber = reallocateFn(NULL, 0, sizeof(Fiber));
   vm->fiber->stackSize = 0;
   vm->fiber->numFrames = 0;
+  vm->fiber->openUpvalues = NULL;
+
   vm->totalAllocated = 0;
 
   // TODO(bob): Make this configurable.
@@ -52,7 +54,7 @@ int wrenInterpret(WrenVM* vm, const char* source)
   if (fn == NULL) return 1;
 
   // TODO(bob): Return error code on runtime errors.
-  interpret(vm, fn);
+  interpret(vm, OBJ_VAL(fn));
   return 0;
 }
 
@@ -75,6 +77,10 @@ static void collectGarbage(WrenVM* vm);
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 {
   ASSERT(memory == NULL || oldSize > 0, "Cannot take unsized previous memory.");
+
+#ifdef TRACE_MEMORY
+  printf("reallocate %p %ld -> %ld\n", memory, oldSize, newSize);
+#endif
 
   vm->totalAllocated += newSize - oldSize;
 
@@ -105,19 +111,6 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 
 static void markValue(Value value);
 
-static void markFn(ObjFn* fn)
-{
-  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
-  if (fn->obj.flags & FLAG_MARKED) return;
-  fn->obj.flags |= FLAG_MARKED;
-
-  // Mark the constants.
-  for (int i = 0; i < fn->numConstants; i++)
-  {
-    markValue(fn->constants[i]);
-  }
-}
-
 static void markClass(ObjClass* classObj)
 {
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
@@ -135,8 +128,21 @@ static void markClass(ObjClass* classObj)
   {
     if (classObj->methods[i].type == METHOD_BLOCK)
     {
-      markFn(classObj->methods[i].fn);
+      markValue(classObj->methods[i].fn);
     }
+  }
+}
+
+static void markFn(ObjFn* fn)
+{
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (fn->obj.flags & FLAG_MARKED) return;
+  fn->obj.flags |= FLAG_MARKED;
+
+  // Mark the constants.
+  for (int i = 0; i < fn->numConstants; i++)
+  {
+    markValue(fn->constants[i]);
   }
 }
 
@@ -157,10 +163,47 @@ static void markInstance(ObjInstance* instance)
 
 static void markList(ObjList* list)
 {
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (list->obj.flags & FLAG_MARKED) return;
+  list->obj.flags |= FLAG_MARKED;
+
+  // Mark the elements.
   Value* elements = list->elements;
   for (int i = 0; i < list->count; i++)
   {
     markValue(elements[i]);
+  }
+}
+
+static void markUpvalue(Upvalue* upvalue)
+{
+  // This can happen if a GC is triggered in the middle of initializing the
+  // closure.
+  if (upvalue == NULL) return;
+
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (upvalue->obj.flags & FLAG_MARKED) return;
+  upvalue->obj.flags |= FLAG_MARKED;
+
+  // Mark the closed-over object (if it is closed).
+  markValue(upvalue->closed);
+}
+
+static void markClosure(ObjClosure* closure)
+{
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (closure->obj.flags & FLAG_MARKED) return;
+  closure->obj.flags |= FLAG_MARKED;
+
+  // Mark the function.
+  markFn(closure->fn);
+
+  // Mark the upvalues.
+  for (int i = 0; i < closure->fn->numUpvalues; i++)
+  {
+    Upvalue** upvalues = closure->upvalues;
+    Upvalue* upvalue = upvalues[i];
+    markUpvalue(upvalue);
   }
 }
 
@@ -172,13 +215,14 @@ static void markObj(Obj* obj)
   for (int i = 0; i < indent; i++) printf("  ");
   printf("mark ");
   wrenPrintValue(OBJ_VAL(obj));
-  printf("\n");
+  printf(" @ %p\n", obj);
 #endif
 
   // Traverse the object's fields.
   switch (obj->type)
   {
     case OBJ_CLASS: markClass((ObjClass*)obj); break;
+    case OBJ_CLOSURE: markClosure((ObjClosure*)obj); break;
     case OBJ_FN: markFn((ObjFn*)obj); break;
     case OBJ_INSTANCE: markInstance((ObjInstance*)obj); break;
     case OBJ_LIST: markList((ObjList*)obj); break;
@@ -186,6 +230,7 @@ static void markObj(Obj* obj)
       // Just mark the string itself.
       obj->flags |= FLAG_MARKED;
       break;
+    case OBJ_UPVALUE: markUpvalue((Upvalue*)obj); break;
   }
 
 #ifdef TRACE_MEMORY
@@ -209,6 +254,7 @@ static void freeObj(WrenVM* vm, Obj* obj)
 #ifdef TRACE_MEMORY
   printf("free ");
   wrenPrintValue(OBJ_VAL(obj));
+  printf(" @ %p\n", obj);
 #endif
 
   // Free any additional heap data allocated by the object.
@@ -219,6 +265,16 @@ static void freeObj(WrenVM* vm, Obj* obj)
     case OBJ_CLASS:
       size = sizeof(ObjClass);
       break;
+
+    case OBJ_CLOSURE:
+    {
+      size = sizeof(ObjClosure);
+      ObjClosure* closure = (ObjClosure*)obj;
+      // TODO(bob): Bad! Function may have already been freed.
+      deallocate(vm, closure->upvalues,
+                 sizeof(Upvalue*) * closure->fn->numUpvalues);
+      break;
+    }
 
     case OBJ_FN:
     {
@@ -236,6 +292,7 @@ static void freeObj(WrenVM* vm, Obj* obj)
 
       // Include the size of the field array.
       ObjInstance* instance = (ObjInstance*)obj;
+      // TODO(bob): Bad! Class may already have been freed!
       size += sizeof(Value) * instance->classObj->numFields;
       break;
     }
@@ -246,7 +303,7 @@ static void freeObj(WrenVM* vm, Obj* obj)
       ObjList* list = (ObjList*)obj;
       if (list->elements != NULL)
       {
-        deallocate(vm, list->elements, sizeof(Value) * list->count);
+        deallocate(vm, list->elements, sizeof(Value) * list->capacity);
       }
       break;
     }
@@ -259,6 +316,10 @@ static void freeObj(WrenVM* vm, Obj* obj)
       deallocate(vm, string->value, strlen(string->value));
       break;
     }
+
+    case OBJ_UPVALUE:
+      size = sizeof(Upvalue);
+      break;
   }
 
   deallocate(vm, obj, size);
@@ -290,13 +351,21 @@ static void collectGarbage(WrenVM* vm)
   // Stack functions.
   for (int k = 0; k < vm->fiber->numFrames; k++)
   {
-    markFn(vm->fiber->frames[k].fn);
+    markValue(vm->fiber->frames[k].fn);
   }
 
   // Stack variables.
   for (int l = 0; l < vm->fiber->stackSize; l++)
   {
     markValue(vm->fiber->stack[l]);
+  }
+
+  // Open upvalues.
+  Upvalue* upvalue = vm->fiber->openUpvalues;
+  while (upvalue != NULL)
+  {
+    markUpvalue(upvalue);
+    upvalue = upvalue->next;
   }
 
   // Collect any unmarked objects.
@@ -396,10 +465,72 @@ Value findGlobal(WrenVM* vm, const char* name)
   return vm->globals[symbol];
 }
 
-Value interpret(WrenVM* vm, ObjFn* fn)
+// Captures the local variable in [slot] into an [Upvalue]. If that local is
+// already in an upvalue, the existing one will be used. (This is important to
+// ensure that multiple closures closing over the same variable actually see
+// the same variable.) Otherwise, it will create a new open upvalue and add it
+// the fiber's list of upvalues.
+static Upvalue* captureUpvalue(WrenVM* vm, Fiber* fiber, int slot)
+{
+  Value* local = &fiber->stack[slot];
+
+  // If there are no open upvalues at all, we must need a new one.
+  if (fiber->openUpvalues == NULL)
+  {
+    fiber->openUpvalues = wrenNewUpvalue(vm, local);
+    return fiber->openUpvalues;
+  }
+
+  Upvalue* prevUpvalue = NULL;
+  Upvalue* upvalue = fiber->openUpvalues;
+
+  // Walk towards the bottom of the stack until we find a previously existsing
+  // upvalue or pass where it should be.
+  while (upvalue != NULL && upvalue->value > local)
+  {
+    prevUpvalue = upvalue;
+    upvalue = upvalue->next;
+  }
+
+  // Found an existing upvalue for this local.
+  if (upvalue->value == local) return upvalue;
+
+  // We've walked past this local on the stack, so there must not be an
+  // upvalue for it already. Make a new one and link it in in the right
+  // place to keep the list sorted.
+  Upvalue* createdUpvalue = wrenNewUpvalue(vm, local);
+  if (prevUpvalue == NULL)
+  {
+    // The new one is the first one in the list.
+    fiber->openUpvalues = createdUpvalue;
+  }
+  else
+  {
+    prevUpvalue->next = createdUpvalue;
+  }
+
+  createdUpvalue->next = upvalue;
+  return createdUpvalue;
+}
+
+static void closeUpvalue(Fiber* fiber)
+{
+  Upvalue* upvalue = fiber->openUpvalues;
+
+  // Move the value into the upvalue itself and point the upvalue to it.
+  upvalue->closed = fiber->stack[fiber->stackSize - 1];
+  upvalue->value = &upvalue->closed;
+
+  // Remove it from the open upvalue list.
+  fiber->openUpvalues = upvalue->next;
+}
+
+// The main bytecode interpreter loop. This is where the magic happens. It is
+// also, as you can imagine, highly performance critical.
+Value interpret(WrenVM* vm, Value function)
 {
   Fiber* fiber = vm->fiber;
-  callFunction(fiber, fn, 0);
+  wrenCallFunction(fiber, function, 0);
 
   // These macros are designed to only be invoked within this function.
   // TODO(bob): Check for stack overflow.
@@ -409,11 +540,13 @@ Value interpret(WrenVM* vm, ObjFn* fn)
   #define READ_ARG()  (frame->ip++, bytecode[ip++])
 
   // Hoist these into local variables. They are accessed frequently in the loop
-  // but change less frequently. Keeping them in locals and updating them when
-  // a call frame has been pushed or pop gives a large speed boost.
-  CallFrame* frame = &fiber->frames[fiber->numFrames - 1];
-  int ip = frame->ip;
-  unsigned char* bytecode = frame->fn->bytecode;
+  // but assigned less frequently. Keeping them in locals and updating them when
+  // a call frame has been pushed or popped gives a large speed boost.
+  register CallFrame* frame;
+  register int ip;
+  register ObjFn* fn;
+  register Upvalue** upvalues;
+  register unsigned char* bytecode;
 
   // Use this before a CallFrame is pushed to store the local variables back
   // into the current one.
@@ -421,10 +554,20 @@ Value interpret(WrenVM* vm, ObjFn* fn)
 
   // Use this after a CallFrame has been pushed or popped to refresh the local
   // variables.
-  #define LOAD_FRAME() \
-      frame = &fiber->frames[fiber->numFrames - 1]; \
-      ip = frame->ip; \
-      bytecode = frame->fn->bytecode \
+  #define LOAD_FRAME()                                \
+      frame = &fiber->frames[fiber->numFrames - 1];   \
+      ip = frame->ip;                                 \
+      if (IS_FN(frame->fn))                           \
+      {                                               \
+        fn = AS_FN(frame->fn);                        \
+        upvalues = NULL;                              \
+      }                                               \
+      else                                            \
+      {                                               \
+        fn = AS_CLOSURE(frame->fn)->fn;               \
+        upvalues = AS_CLOSURE(frame->fn)->upvalues;   \
+      }                                               \
+      bytecode = fn->bytecode
 
   #ifdef COMPUTED_GOTOS
 
@@ -439,8 +582,11 @@ Value interpret(WrenVM* vm, ObjFn* fn)
     &&code_METHOD_STATIC,
     &&code_METHOD_CTOR,
     &&code_LIST,
+    &&code_CLOSURE,
     &&code_LOAD_LOCAL,
     &&code_STORE_LOCAL,
+    &&code_LOAD_UPVALUE,
+    &&code_STORE_UPVALUE,
     &&code_LOAD_GLOBAL,
     &&code_STORE_GLOBAL,
     &&code_LOAD_FIELD,
@@ -470,7 +616,8 @@ Value interpret(WrenVM* vm, ObjFn* fn)
     &&code_AND,
     &&code_OR,
     &&code_IS,
-    &&code_END
+    &&code_CLOSE_UPVALUE,
+    &&code_RETURN
   };
 
   #define INTERPRET_LOOP    DISPATCH();
@@ -485,11 +632,13 @@ Value interpret(WrenVM* vm, ObjFn* fn)
 
   #endif
 
+  LOAD_FRAME();
+
   Code instruction;
   INTERPRET_LOOP
   {
     CASE_CODE(CONSTANT):
-      PUSH(frame->fn->constants[READ_ARG()]);
+      PUSH(fn->constants[READ_ARG()]);
       DISPATCH();
 
     CASE_CODE(NULL):  PUSH(NULL_VAL); DISPATCH();
@@ -526,25 +675,9 @@ Value interpret(WrenVM* vm, ObjFn* fn)
       // TODO(bob): Can this be inherited?
       int newSymbol = ensureSymbol(&vm->methods, "new", strlen("new"));
       classObj->metaclass->methods[newSymbol].type = METHOD_CTOR;
-      classObj->metaclass->methods[newSymbol].fn = NULL;
+      classObj->metaclass->methods[newSymbol].fn = NULL_VAL;
 
       PUSH(OBJ_VAL(classObj));
-      DISPATCH();
-    }
-
-    CASE_CODE(LIST):
-    {
-      int numElements = READ_ARG();
-      ObjList* list = wrenNewList(vm, numElements);
-      for (int i = 0; i < numElements; i++)
-      {
-        list->elements[i] = fiber->stack[fiber->stackSize - numElements + i];
-      }
-
-      // Discard the elements.
-      fiber->stackSize -= numElements;
-
-      PUSH(OBJ_VAL(list));
       DISPATCH();
     }
 
@@ -576,7 +709,56 @@ Value interpret(WrenVM* vm, ObjFn* fn)
           break;
       }
 
-      classObj->methods[symbol].fn = AS_FN(method);
+      classObj->methods[symbol].fn = method;
+      DISPATCH();
+    }
+
+    CASE_CODE(LIST):
+    {
+      int numElements = READ_ARG();
+      ObjList* list = wrenNewList(vm, numElements);
+      for (int i = 0; i < numElements; i++)
+      {
+        list->elements[i] = fiber->stack[fiber->stackSize - numElements + i];
+      }
+
+      // Discard the elements.
+      fiber->stackSize -= numElements;
+
+      PUSH(OBJ_VAL(list));
+      DISPATCH();
+    }
+
+    CASE_CODE(CLOSURE):
+    {
+      ObjFn* prototype = AS_FN(fn->constants[READ_ARG()]);
+
+      ASSERT(prototype->numUpvalues > 0,
+             "Should not create closure for functions that don't need it.");
+
+      // Create the closure and push it on the stack before creating upvalues
+      // so that it doesn't get collected.
+      ObjClosure* closure = wrenNewClosure(vm, prototype);
+      PUSH(OBJ_VAL(closure));
+
+      // Capture upvalues.
+      for (int i = 0; i < prototype->numUpvalues; i++)
+      {
+        int isLocal = READ_ARG();
+        int index = READ_ARG();
+        if (isLocal)
+        {
+          // Make an new upvalue to close over the parent's local variable.
+          closure->upvalues[i] = captureUpvalue(vm, fiber,
+                                                frame->stackStart + index);
+        }
+        else
+        {
+          // Use the same upvalue as the current call frame.
+          closure->upvalues[i] = upvalues[index];
+        }
+      }
+
       DISPATCH();
     }
 
@@ -591,6 +773,26 @@ Value interpret(WrenVM* vm, ObjFn* fn)
     {
       int local = READ_ARG();
       fiber->stack[frame->stackStart + local] = PEEK();
+      DISPATCH();
+    }
+
+    CASE_CODE(LOAD_UPVALUE):
+    {
+      ASSERT(upvalues != NULL,
+             "Should not have CODE_LOAD_UPVALUE instruction in non-closure.");
+
+      int upvalue = READ_ARG();
+      PUSH(*upvalues[upvalue]->value);
+      DISPATCH();
+    }
+
+    CASE_CODE(STORE_UPVALUE):
+    {
+      ASSERT(upvalues != NULL,
+             "Should not have CODE_STORE_UPVALUE instruction in non-closure.");
+
+      int upvalue = READ_ARG();
+      *upvalues[upvalue]->value = POP();
       DISPATCH();
     }
 
@@ -697,7 +899,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
 
         case METHOD_BLOCK:
           STORE_FRAME();
-          callFunction(fiber, method->fn, numArgs);
+          wrenCallFunction(fiber, method->fn, numArgs);
           LOAD_FRAME();
           break;
 
@@ -709,7 +911,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
           // "this" in the body of the constructor and returned by it.
           fiber->stack[fiber->stackSize - numArgs] = instance;
 
-          if (method->fn == NULL)
+          if (IS_NULL(method->fn))
           {
             // Default constructor, so no body to call. Just discard the
             // stack slots for the arguments (but leave one for the instance).
@@ -719,7 +921,7 @@ Value interpret(WrenVM* vm, ObjFn* fn)
           {
             // Invoke the constructor body.
             STORE_FRAME();
-            callFunction(fiber, method->fn, numArgs);
+            wrenCallFunction(fiber, method->fn, numArgs);
             LOAD_FRAME();
           }
           break;
@@ -818,7 +1020,11 @@ Value interpret(WrenVM* vm, ObjFn* fn)
       DISPATCH();
     }
 
-    CASE_CODE(END):
+    CASE_CODE(CLOSE_UPVALUE):
+      closeUpvalue(fiber);
+      DISPATCH();
+
+    CASE_CODE(RETURN):
     {
       Value result = POP();
       fiber->numFrames--;
@@ -830,18 +1036,31 @@ Value interpret(WrenVM* vm, ObjFn* fn)
       // caller expects it.
       fiber->stack[frame->stackStart] = result;
 
+      // Close any upvalues still in scope.
+      Value* firstValue = &fiber->stack[frame->stackStart];
+      while (fiber->openUpvalues != NULL &&
+             fiber->openUpvalues->value >= firstValue)
+      {
+        closeUpvalue(fiber);
+      }
+
       // Discard the stack slots for the call frame (leaving one slot for the
       // result).
       fiber->stackSize = frame->stackStart + 1;
       LOAD_FRAME();
       DISPATCH();
     }
+
+    CASE_CODE(END):
+      // A CODE_END should always be preceded by a CODE_RETURN. If we get here,
+      // the compiler generated wrong code.
+      ASSERT(0, "Should not execute past end of bytecode.");
   }
 }
 
-void callFunction(Fiber* fiber, ObjFn* fn, int numArgs)
+void wrenCallFunction(Fiber* fiber, Value function, int numArgs)
 {
-  fiber->frames[fiber->numFrames].fn = fn;
+  fiber->frames[fiber->numFrames].fn = function;
   fiber->frames[fiber->numFrames].ip = 0;
   fiber->frames[fiber->numFrames].stackStart = fiber->stackSize - numArgs;
 

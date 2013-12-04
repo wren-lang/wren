@@ -12,6 +12,8 @@
 #include "wren_value.h"
 #include "wren_vm.h"
 
+int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i);
 void wrenDebugDumpCode(WrenVM* vm, ObjFn* fn);
+void wrenDebugDumpStack(Fiber* fiber);
 
 #endif

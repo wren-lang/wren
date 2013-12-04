@@ -8,8 +8,8 @@ while (c < 3) io.write(c = c + 1)
 // Block body.
 var a = 0
 while (a < 3) {
-    io.write(a)
-    a = a + 1
+  io.write(a)
+  a = a + 1
 }
 // expect: 0
 // expect: 1
@@ -22,14 +22,3 @@ while
 // expect: 1
 // expect: 2
 // expect: 3
-
-// Result is null.
-var e = 0
-var f = while (e < 3) {
-  e = e + 1
-}
-io.write(f) // expect: null
-
-// Definition body.
-while (false) var a = "ok" // no error
-while (false) class Foo {} // no error

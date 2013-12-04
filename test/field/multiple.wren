@@ -27,3 +27,4 @@ foo.write
 // TODO(bob): Inherited fields.
 // TODO(bob): Trying to get or set a field outside of a class.
 // TODO(bob): Fields in nested classes.
+// TODO(bob): Closing over fields.

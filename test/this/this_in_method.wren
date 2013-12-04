@@ -1,6 +1,6 @@
 class Foo {
-  bar { this }
-  baz { "baz" }
+  bar { return this }
+  baz { return "baz" }
 }
 
-Foo.new.bar.baz
+io.write(Foo.new.bar.baz) // expect: baz

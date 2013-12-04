@@ -70,23 +70,23 @@ DEF_NATIVE(bool_toString)
 // the callstack, we again use as many arguments. That ensures that the result
 // of evaluating the block goes into the slot that the caller of *this*
 // primitive is expecting.
-DEF_FIBER_NATIVE(fn_call0) { callFunction(fiber, AS_FN(args[0]), 1); }
-DEF_FIBER_NATIVE(fn_call1) { callFunction(fiber, AS_FN(args[0]), 2); }
-DEF_FIBER_NATIVE(fn_call2) { callFunction(fiber, AS_FN(args[0]), 3); }
-DEF_FIBER_NATIVE(fn_call3) { callFunction(fiber, AS_FN(args[0]), 4); }
-DEF_FIBER_NATIVE(fn_call4) { callFunction(fiber, AS_FN(args[0]), 5); }
-DEF_FIBER_NATIVE(fn_call5) { callFunction(fiber, AS_FN(args[0]), 6); }
-DEF_FIBER_NATIVE(fn_call6) { callFunction(fiber, AS_FN(args[0]), 7); }
-DEF_FIBER_NATIVE(fn_call7) { callFunction(fiber, AS_FN(args[0]), 8); }
-DEF_FIBER_NATIVE(fn_call8) { callFunction(fiber, AS_FN(args[0]), 9); }
-DEF_FIBER_NATIVE(fn_call9) { callFunction(fiber, AS_FN(args[0]), 10); }
-DEF_FIBER_NATIVE(fn_call10) { callFunction(fiber, AS_FN(args[0]), 11); }
-DEF_FIBER_NATIVE(fn_call11) { callFunction(fiber, AS_FN(args[0]), 12); }
-DEF_FIBER_NATIVE(fn_call12) { callFunction(fiber, AS_FN(args[0]), 13); }
-DEF_FIBER_NATIVE(fn_call13) { callFunction(fiber, AS_FN(args[0]), 14); }
-DEF_FIBER_NATIVE(fn_call14) { callFunction(fiber, AS_FN(args[0]), 15); }
-DEF_FIBER_NATIVE(fn_call15) { callFunction(fiber, AS_FN(args[0]), 16); }
-DEF_FIBER_NATIVE(fn_call16) { callFunction(fiber, AS_FN(args[0]), 17); }
+DEF_FIBER_NATIVE(fn_call0) { wrenCallFunction(fiber, args[0], 1); }
+DEF_FIBER_NATIVE(fn_call1) { wrenCallFunction(fiber, args[0], 2); }
+DEF_FIBER_NATIVE(fn_call2) { wrenCallFunction(fiber, args[0], 3); }
+DEF_FIBER_NATIVE(fn_call3) { wrenCallFunction(fiber, args[0], 4); }
+DEF_FIBER_NATIVE(fn_call4) { wrenCallFunction(fiber, args[0], 5); }
+DEF_FIBER_NATIVE(fn_call5) { wrenCallFunction(fiber, args[0], 6); }
+DEF_FIBER_NATIVE(fn_call6) { wrenCallFunction(fiber, args[0], 7); }
+DEF_FIBER_NATIVE(fn_call7) { wrenCallFunction(fiber, args[0], 8); }
+DEF_FIBER_NATIVE(fn_call8) { wrenCallFunction(fiber, args[0], 9); }
+DEF_FIBER_NATIVE(fn_call9) { wrenCallFunction(fiber, args[0], 10); }
+DEF_FIBER_NATIVE(fn_call10) { wrenCallFunction(fiber, args[0], 11); }
+DEF_FIBER_NATIVE(fn_call11) { wrenCallFunction(fiber, args[0], 12); }
+DEF_FIBER_NATIVE(fn_call12) { wrenCallFunction(fiber, args[0], 13); }
+DEF_FIBER_NATIVE(fn_call13) { wrenCallFunction(fiber, args[0], 14); }
+DEF_FIBER_NATIVE(fn_call14) { wrenCallFunction(fiber, args[0], 15); }
+DEF_FIBER_NATIVE(fn_call15) { wrenCallFunction(fiber, args[0], 16); }
+DEF_FIBER_NATIVE(fn_call16) { wrenCallFunction(fiber, args[0], 17); }
 
 // Grows [list] if needed to ensure it can hold [count] elements.
 static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
@@ -121,7 +121,7 @@ static int validateIndex(Value index, int count)
 
   // Check bounds.
   if (indexNum < 0 || indexNum >= count) return -1;
-  
+
   return indexNum;
 }
 
