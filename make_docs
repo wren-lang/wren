@@ -4,9 +4,9 @@ import glob
 import markdown
 import os
 import shutil
+import sys
+import time
 from datetime import datetime
-
-# from finch import FinchLexer
 
 TEMPLATE = """
 <!DOCTYPE html>
@@ -39,7 +39,7 @@ TEMPLATE = """
       <li>Method calls</li>
       <li>Variables</li>
       <li>Blocks</li>
-      <li>Flow control</li>
+      <li><a href="flow-control.html">Flow control</a></li>
     </ul>
     <h2>Objects</h2>
     <ul>
@@ -65,9 +65,22 @@ TEMPLATE = """
 </html>
 """
 
-def format_file(path):
+def format_file(path, skip_up_to_date):
   basename = os.path.basename(path)
   basename = basename.split('.')[0]
+
+  out_path = "build/site/" + basename + ".html"
+
+  # See if it's up to date.
+  source_mod = os.path.getmtime(path)
+  source_mod = max(source_mod, os.path.getmtime('doc/site/template.html'))
+
+  dest_mod = 0
+  if os.path.exists(out_path):
+    dest_mod = os.path.getmtime(out_path)
+
+  if skip_up_to_date and source_mod < dest_mod:
+    return
 
   title = ""
 
@@ -98,11 +111,20 @@ def format_file(path):
 
   fields = {'title': title, 'html': html, 'mod': mod_str}
 
+  with open("doc/site/template.html") as f:
+    template = f.read()
+
   # Write the html output.
-  with open("build/site/" + basename + ".html", 'w') as out:
-    out.write(TEMPLATE.format(**fields))
+  with open(out_path, 'w') as out:
+    out.write(template.format(**fields))
 
   print "converted", basename
+
+
+def format_files(skip_up_to_date):
+  for f in glob.iglob("doc/site/*.markdown"):
+    format_file(f, skip_up_to_date)
+
 
 # Clean the output directory.
 if os.path.exists("build/site"):
@@ -110,8 +132,13 @@ if os.path.exists("build/site"):
 os.mkdir("build/site")
 
 # Process each markdown file.
-for f in glob.iglob("doc/site/*.markdown"):
-  format_file(f)
+format_files(False)
 
 # Copy the CSS file.
 shutil.copyfile("doc/site/style.css", "build/site/style.css")
+
+# TODO(bob): Check for CSS modification.
+if len(sys.argv) == 2 and sys.argv[1] == '--watch':
+  while True:
+    format_files(True)
+    time.sleep(0.3)
