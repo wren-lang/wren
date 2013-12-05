@@ -476,6 +476,7 @@ static void readRawToken(Parser* parser)
       case ']': makeToken(parser, TOKEN_RIGHT_BRACKET); return;
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
+      case ';': makeToken(parser, TOKEN_LINE); return;
       case ':': makeToken(parser, TOKEN_COLON); return;
       case '.': makeToken(parser, TOKEN_DOT); return;
       case ',': makeToken(parser, TOKEN_COMMA); return;
