@@ -297,6 +297,13 @@ DEF_NATIVE(num_bangeq)
   return BOOL_VAL(AS_NUM(args[0]) != AS_NUM(args[1]));
 }
 
+DEF_NATIVE(num_bitwiseNot)
+{
+  // Bitwise operators always work on 32-bit unsigned ints.
+  uint32_t value = (uint32_t)AS_NUM(args[0]);
+  return NUM_VAL(~value);
+}
+
 DEF_NATIVE(object_eqeq)
 {
   return BOOL_VAL(wrenValuesEqual(args[0], args[1]));
@@ -478,6 +485,8 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, "> ", num_gt);
   NATIVE(vm->numClass, "<= ", num_lte);
   NATIVE(vm->numClass, ">= ", num_gte);
+  NATIVE(vm->numClass, "~", num_bitwiseNot);
+
   // TODO(bob): The only reason there are here is so that 0 != -0. Is that what
   // we want?
   NATIVE(vm->numClass, "== ", num_eqeq);

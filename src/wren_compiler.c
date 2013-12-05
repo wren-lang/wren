@@ -56,6 +56,7 @@ typedef enum
   TOKEN_AMP,
   TOKEN_AMPAMP,
   TOKEN_BANG,
+  TOKEN_TILDE,
   TOKEN_EQ,
   TOKEN_LT,
   TOKEN_GT,
@@ -481,6 +482,9 @@ static void readRawToken(Parser* parser)
       case '.': makeToken(parser, TOKEN_DOT); return;
       case ',': makeToken(parser, TOKEN_COMMA); return;
       case '*': makeToken(parser, TOKEN_STAR); return;
+      case '%': makeToken(parser, TOKEN_PERCENT); return;
+      case '+': makeToken(parser, TOKEN_PLUS); return;
+      case '~': makeToken(parser, TOKEN_TILDE); return;
       case '/':
         if (peekChar(parser) == '/')
         {
@@ -497,8 +501,6 @@ static void readRawToken(Parser* parser)
         makeToken(parser, TOKEN_SLASH);
         return;
 
-      case '%': makeToken(parser, TOKEN_PERCENT); return;
-      case '+': makeToken(parser, TOKEN_PLUS); return;
       case '-':
         if (isDigit(peekChar(parser)))
         {
@@ -614,6 +616,7 @@ static void nextToken(Parser* parser)
       case TOKEN_AMP:
       case TOKEN_AMPAMP:
       case TOKEN_BANG:
+      case TOKEN_TILDE:
       case TOKEN_EQ:
       case TOKEN_LT:
       case TOKEN_GT:
@@ -1432,6 +1435,7 @@ void mixedSignature(Compiler* compiler, char* name, int* length)
 #define INFIX(prec, fn)            { NULL, fn, NULL, prec, NULL }
 #define INFIX_OPERATOR(prec, name) { NULL, infixOp, infixSignature, prec, name }
 #define PREFIX_OPERATOR(name)      { unaryOp, NULL, unarySignature, PREC_NONE, name }
+#define OPERATOR(name)             { unaryOp, infixOp, mixedSignature, PREC_TERM, name }
 
 GrammarRule rules[] =
 {
@@ -1448,12 +1452,13 @@ GrammarRule rules[] =
   /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/ "),
   /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_TERM, "% "),
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
-  /* TOKEN_MINUS         */ { unaryOp, infixOp, mixedSignature, PREC_TERM, "- " },
+  /* TOKEN_MINUS         */ OPERATOR("- "),
   /* TOKEN_PIPE          */ UNUSED,
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGIC, or),
   /* TOKEN_AMP           */ UNUSED,
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGIC, and),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
+  /* TOKEN_TILDE         */ PREFIX_OPERATOR("~"),
   /* TOKEN_EQ            */ UNUSED,
   /* TOKEN_LT            */ INFIX_OPERATOR(PREC_COMPARISON, "< "),
   /* TOKEN_GT            */ INFIX_OPERATOR(PREC_COMPARISON, "> "),
