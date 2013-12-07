@@ -10,13 +10,6 @@
 // parsing/code generation. This minimizes the number of explicit forward
 // declarations needed.
 
-// The maximum length of a method signature. This includes the name, and the
-// extra spaces added to handle arity.
-#define MAX_METHOD_SIGNATURE 256
-
-// TODO(bob): Get rid of this and use a growable buffer.
-#define MAX_STRING (1024)
-
 // The maximum number of arguments that can be passed to a method. Note that
 // this limtation is hardcoded in other places in the VM, in particular, the
 // `CODE_CALL_XX` instructions assume a certain maximum number.
@@ -34,6 +27,18 @@
 // The maximum number of upvalues (i.e. variables from enclosing functions)
 // that a function can close over.
 #define MAX_UPVALUES (256)
+
+// The maximum name of a method, not including the signature. This is an
+// arbitrary but enforced maximum just so we know how long the method name
+// strings need to be in the parser.
+#define MAX_METHOD_NAME (64)
+
+// The maximum length of a method signature. This includes the name, and the
+// extra spaces added to handle arity, and another byte to terminate the string.
+#define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + MAX_PARAMETERS + 1)
+
+// TODO(bob): Get rid of this and use a growable buffer.
+#define MAX_STRING (1024)
 
 typedef enum
 {
@@ -910,8 +915,17 @@ static int resolveName(Compiler* compiler, ResolvedName* resolved)
 static int copyName(Compiler* compiler, char* name)
 {
   Token* token = &compiler->parser->previous;
-  strncpy(name, token->start, token->length);
-  return token->length;
+  int length = token->length;
+
+  if (length > MAX_METHOD_NAME)
+  {
+    error(compiler, "Method names cannot be longer than %d characters.",
+          MAX_METHOD_NAME);
+    length = MAX_METHOD_NAME;
+  }
+
+  strncpy(name, token->start, length);
+  return length;
 }
 
 // Finishes [compiler], which is compiling a function, method, or chunk of top
@@ -1015,7 +1029,10 @@ static void finishBlock(Compiler* compiler)
   }
 }
 
-// Parses an optional parenthesis-delimited parameter list.
+// Parses an optional parenthesis-delimited parameter list. If the parameter
+// list is for a method, [name] will be the name of the method and this will
+// modify it to handle arity in the signature. For functions, [name] will be
+// `null`.
 static void parameterList(Compiler* compiler, char* name, int* length)
 {
   // Parse the parameter list, if any.
@@ -1038,7 +1055,6 @@ static void parameterList(Compiler* compiler, char* name, int* length)
       declareVariable(compiler);
 
       // Add a space in the name for the parameter.
-      // TODO(bob): How can name be null?
       if (name != NULL) name[(*length)++] = ' ';
       // TODO(bob): Check for length overflow.
     }
@@ -1314,7 +1330,6 @@ void call(Compiler* compiler, int allowAssignment)
   consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
   char name[MAX_METHOD_SIGNATURE];
   int length = copyName(compiler, name);
-  // TODO(bob): Check for length overflow.
 
   // TODO(bob): Check for "=" here and set assignment and return.
 

@@ -143,19 +143,6 @@ typedef enum
   CODE_END
 } Code;
 
-
-// TODO(bob): add opcode for closure
-// functions with no upvalues can just be loaded as constants like normal
-// functions which do have upvalues need a CODE_CLOSURE op. it takes the
-// constant index of the fn as an argument.
-// it loads that fn, then wraps it in a closure object.
-// then it captures all of the upvalues.
-// those can either be upvalues for locals, or upvalues that close over an
-// outer upvalue.
-//
-// then add ops for loading and storing an upvalue. take upvalue index as arg.
-
-
 typedef struct
 {
   // TODO(bob): Make this dynamically sized.
