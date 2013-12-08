@@ -8,3 +8,6 @@ xcuserdata/
 # I leave a temporary Wren script at the top level so that I can quickly test
 # stuff.
 scratch.wren
+
+# The baseline file is machine-specific, so doesn't get checked in.
+benchmark/baseline.txt

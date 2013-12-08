@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import argparse
 import math
 import os
 import re
@@ -10,7 +11,7 @@ BENCHMARKS = []
 
 def BENCHMARK(name, pattern):
   regex = re.compile(pattern + "\n" + r"elapsed: (\d+\.\d+)", re.MULTILINE)
-  BENCHMARKS.append((name, regex))
+  BENCHMARKS.append([name, regex, None])
 
 BENCHMARK("binary_trees", """stretch tree of depth 15\t check: -1
 32768\t trees of depth 4\t check: -32768
@@ -40,9 +41,25 @@ LANGUAGES = [
 
 # How many times to run a given benchmark. Should be an odd number to get the
 # right median.
-NUM_TRIALS = 5
+NUM_TRIALS = 7
 
 results = []
+
+def green(text):
+  if sys.platform == 'win32':
+    return text
+  return '\033[32m' + text + '\033[0m'
+
+def red(text):
+  if sys.platform == 'win32':
+    return text
+  return '\033[31m' + text + '\033[0m'
+
+def yellow(text):
+  if sys.platform == 'win32':
+    return text
+  return '\033[33m' + text + '\033[0m'
+
 
 def calc_stats(nums):
   """Calculates the mean, median, and std deviation of a list of numbers."""
@@ -84,10 +101,33 @@ def run_benchmark_language(benchmark, language):
 
   times.sort()
   stats = calc_stats(times)
-  print " mean: {0:.4f} median: {1:.4f} std_dev: {2:.4f}".format(
-      stats[0], stats[1], stats[2])
 
-  results.append([name, times])
+  comparison = ""
+  if language[0] == "wren":
+    if benchmark[2] != None:
+      ratio = 100 * stats[1] / benchmark[2]
+      comparison =  "{0:.2f}% of baseline".format(ratio)
+      if ratio > 105:
+        comparison = red(comparison)
+      if ratio < 95:
+        comparison = green(comparison)
+    else:
+      comparison = "no baseline"
+  else:
+    # Hack: assumes wren is first language.
+    wren_time = results[0][2]
+    ratio = stats[1] / wren_time
+    comparison =  "{0:.2f}x wren".format(ratio)
+    if ratio < 1:
+      comparison = red(comparison)
+    if ratio > 1:
+      comparison = green(comparison)
+
+  print " mean: {0:.2f} median: {1:.2f} std_dev: {2:.2f} {3:s}".format(
+      stats[0], stats[1], stats[2], comparison)
+
+  results.append([name, times, stats[1]])
+  return stats
 
 
 def run_benchmark(benchmark):
@@ -123,18 +163,54 @@ def graph_results():
   print
 
 
+def read_baseline():
+  if os.path.exists("baseline.txt"):
+    with open("baseline.txt") as f:
+      for line in f.readlines():
+        name, mean, median = line.split(",")
+        for benchmark in BENCHMARKS:
+          if benchmark[0] == name:
+            benchmark[2] = float(median)
+
+
+def generate_baseline():
+  print "generating baseline"
+  baseline_text = ""
+  for benchmark in BENCHMARKS:
+    stats = run_benchmark_language(benchmark, LANGUAGES[0])
+    baseline_text += ("{},{},{}\n".format(
+          benchmark[0], stats[0], stats[1]))
+
+  # Write them to a file.
+  with open("baseline.txt", 'w') as out:
+    out.write(baseline_text)
+
+
 def main():
-  # If a benchmark name is passed, just run it.
-  if len(sys.argv) == 2:
-    benchmark_name = sys.argv[1]
-    for benchmark in BENCHMARKS:
-      if benchmark[0] == benchmark_name:
-        run_benchmark(benchmark)
+  parser = argparse.ArgumentParser(description="Run the benchmarks")
+  parser.add_argument("benchmark", nargs='?',
+      default="all",
+      help="The benchmark to run")
+  parser.add_argument("-b", "--generate-baseline",
+      action="store_true",
+      help="Generate a baseline file")
+
+  args = parser.parse_args()
+
+  if args.generate_baseline:
+    generate_baseline()
     return
 
-  # Otherwise run them all.
-  for benchmark in BENCHMARKS:
-    run_benchmark(benchmark)
+  read_baseline()
 
+  if args.benchmark == "all":
+    for benchmark in BENCHMARKS:
+      run_benchmark(benchmark)
+    return
+
+  # Run the given benchmark.
+  for benchmark in BENCHMARKS:
+    if benchmark[0] == args.benchmark:
+      run_benchmark(benchmark)
 
 main()
