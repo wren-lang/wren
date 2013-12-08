@@ -13,10 +13,10 @@ class Tree {
 
   check {
     if (_left == null) {
-      _item
-    } else {
-      _item + _left.check - _right.check
+      return _item
     }
+
+    return _item + _left.check - _right.check
   }
 }
 
