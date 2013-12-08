@@ -5,8 +5,9 @@
 #include "wren.h"
 #include "wren_common.h"
 #include "wren_compiler.h"
-#include "wren_vm.h"
 #include "wren_core.h"
+#include "wren_vm.h"
+#include "wren_debug.h"
 
 WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
 {
@@ -939,10 +940,6 @@ Value interpret(WrenVM* vm, Value function)
 
     CASE_CODE(LOOP):
     {
-      // The loop body's result is on the top of the stack. Since we are
-      // looping and running the body again, discard it.
-      POP();
-
       // Jump back to the top of the loop.
       int offset = READ_ARG();
       ip -= offset;

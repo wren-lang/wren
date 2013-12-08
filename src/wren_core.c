@@ -212,6 +212,12 @@ DEF_NATIVE(list_subscript)
   return list->elements[index];
 }
 
+DEF_NATIVE(null_toString)
+{
+  // TODO(bob): Intern this string or something.
+  return wrenNewString(vm, "null", 4);
+}
+
 DEF_NATIVE(num_abs)
 {
   return NUM_VAL(fabs(AS_NUM(args[0])));
@@ -471,6 +477,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "[ ]", list_subscript);
 
   vm->nullClass = defineClass(vm, "Null", vm->objectClass);
+  NATIVE(vm->nullClass, "toString", null_toString);
 
   vm->numClass = defineClass(vm, "Num", vm->objectClass);
   NATIVE(vm->numClass, "abs", num_abs);

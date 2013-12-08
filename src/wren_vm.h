@@ -186,6 +186,7 @@ struct WrenVM
   Value unsupported;
 
   SymbolTable globalSymbols;
+
   // TODO(bob): Using a fixed array is gross here.
   Value globals[MAX_SYMBOLS];
 
