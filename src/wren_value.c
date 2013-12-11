@@ -24,11 +24,12 @@ static ObjClass* newClass(WrenVM* vm, ObjClass* metaclass,
   initObj(vm, &obj->obj, OBJ_CLASS);
   obj->metaclass = metaclass;
   obj->superclass = superclass;
-  obj->numFields = numFields;
 
-  // Inherit methods from its superclass (unless it's Object, which has none).
   if (superclass != NULL)
   {
+    obj->numFields = superclass->numFields + numFields;
+
+    // Inherit methods from its superclass.
     for (int i = 0; i < MAX_SYMBOLS; i++)
     {
       obj->methods[i] = superclass->methods[i];
@@ -36,6 +37,9 @@ static ObjClass* newClass(WrenVM* vm, ObjClass* metaclass,
   }
   else
   {
+    obj->numFields = numFields;
+
+    // Object has no superclass, so just clear these out.
     for (int i = 0; i < MAX_SYMBOLS; i++)
     {
       obj->methods[i].type = METHOD_NONE;
@@ -57,7 +61,6 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
   pinObj(vm, (Obj*)metaclass, &pinned);
 
   ObjClass* classObj = newClass(vm, metaclass, superclass, numFields);
-  classObj->numFields = numFields;
 
   unpinObj(vm);
 

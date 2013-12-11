@@ -177,6 +177,9 @@ typedef enum
 typedef struct
 {
   MethodType type;
+
+  // The method function itself. The [type] determines which field of the union
+  // is used.
   union
   {
     Primitive primitive;
@@ -192,7 +195,11 @@ typedef struct sObjClass
   Obj obj;
   struct sObjClass* metaclass;
   struct sObjClass* superclass;
+
+  // The number of fields needed for an instance of this class, including all
+  // of its superclass fields.
   int numFields;
+
   // TODO(bob): Hack. Probably don't want to use this much space.
   Method methods[MAX_SYMBOLS];
 } ObjClass;

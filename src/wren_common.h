@@ -1,12 +1,17 @@
 #ifndef wren_common_h
 #define wren_common_h
 
+// TODO(bob): Use stdbool.h and `bool` for bools instead of int/1/0.
+
 // This header contains macros and defines used across the entire Wren
 // implementation. In particular, it contains "configuration" defines that
 // control how Wren works. Some of these are only used while hacking on
 // debugging Wren itself.
 //
 // This header is *not* intended to be included by code outside of Wren itself.
+
+// TODO(bob): Prefix these with Wren and use #if instead of #ifdef. That way
+// the flags can be set externally.
 
 // Define this to stress test the GC. It will perform a collection before every
 // allocation.

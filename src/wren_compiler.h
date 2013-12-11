@@ -23,4 +23,19 @@
 // execute that code when invoked.
 ObjFn* wrenCompile(WrenVM* vm, const char* source);
 
+// When a class is defined, its superclass is not known until runtime since
+// class definitions are just imperative statements. Most of the bytecode for a
+// a method doesn't care, but there are two places where it matters:
+//
+//   - To load or store a field, we need to know its index of the field in the
+//     instance's field array. We need to adjust this so that subclass fields
+//     are positioned after superclass fields, and we don't know this until the
+//     superclass is known.
+//
+//   - Superclass calls need to know which superclass to dispatch to.
+//
+// We could handle this dynamically, but that adds overhead. Instead, when a
+// method is bound, we walk the bytecode for the function and patch it up.
+void wrenBindMethod(ObjClass* classObj, ObjFn* fn);
+
 #endif

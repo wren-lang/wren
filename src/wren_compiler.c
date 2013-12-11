@@ -1821,3 +1821,89 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
 
   return parser.hasError ? NULL : compiler.fn;
 }
+
+void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
+{
+  int ip = 0;
+  for (;;)
+  {
+    Code instruction = fn->bytecode[ip++];
+    switch (instruction)
+    {
+        // Instructions with no arguments:
+      case CODE_NULL:
+      case CODE_FALSE:
+      case CODE_TRUE:
+      case CODE_DUP:
+      case CODE_POP:
+      case CODE_IS:
+      case CODE_CLOSE_UPVALUE:
+      case CODE_RETURN:
+        break;
+
+        // Instructions with one argument:
+      case CODE_CONSTANT:
+      case CODE_CLASS:
+      case CODE_SUBCLASS:
+      case CODE_LIST:
+      case CODE_LOAD_LOCAL:
+      case CODE_STORE_LOCAL:
+      case CODE_LOAD_UPVALUE:
+      case CODE_STORE_UPVALUE:
+      case CODE_LOAD_GLOBAL:
+      case CODE_STORE_GLOBAL:
+      case CODE_CALL_0:
+      case CODE_CALL_1:
+      case CODE_CALL_2:
+      case CODE_CALL_3:
+      case CODE_CALL_4:
+      case CODE_CALL_5:
+      case CODE_CALL_6:
+      case CODE_CALL_7:
+      case CODE_CALL_8:
+      case CODE_CALL_9:
+      case CODE_CALL_10:
+      case CODE_CALL_11:
+      case CODE_CALL_12:
+      case CODE_CALL_13:
+      case CODE_CALL_14:
+      case CODE_CALL_15:
+      case CODE_CALL_16:
+      case CODE_JUMP:
+      case CODE_LOOP:
+      case CODE_JUMP_IF:
+      case CODE_AND:
+      case CODE_OR:
+        ip++;
+        break;
+
+        // Instructions with two arguments:
+      case CODE_METHOD_INSTANCE:
+      case CODE_METHOD_STATIC:
+      case CODE_METHOD_CTOR:
+        ip += 2;
+        break;
+
+      case CODE_CLOSURE:
+      {
+        int constant = fn->bytecode[ip++];
+        ObjFn* loadedFn = AS_FN(fn->constants[constant]);
+        ip += loadedFn->numUpvalues;
+        break;
+      }
+
+      case CODE_LOAD_FIELD:
+      case CODE_STORE_FIELD:
+        // Shift this class's fields down past the inherited ones.
+        fn->bytecode[ip++] += classObj->superclass->numFields;
+        break;
+
+      case CODE_END:
+        return;
+
+      default:
+        ASSERT(0, "Unknown instruction.");
+        break;
+    }
+  }
+}

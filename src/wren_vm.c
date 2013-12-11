@@ -710,6 +710,9 @@ Value interpret(WrenVM* vm, Value function)
           break;
       }
 
+      ObjFn* methodFn = IS_FN(method) ? AS_FN(method) : AS_CLOSURE(method)->fn;
+      wrenBindMethod(classObj, methodFn);
+
       classObj->methods[symbol].fn = method;
       DISPATCH();
     }
@@ -1057,11 +1060,11 @@ Value interpret(WrenVM* vm, Value function)
 
 void wrenCallFunction(Fiber* fiber, Value function, int numArgs)
 {
+  // TODO(bob): Check for stack overflow.
   fiber->frames[fiber->numFrames].fn = function;
   fiber->frames[fiber->numFrames].ip = 0;
   fiber->frames[fiber->numFrames].stackStart = fiber->stackSize - numArgs;
 
-  // TODO(bob): Check for stack overflow.
   fiber->numFrames++;
 }
 
