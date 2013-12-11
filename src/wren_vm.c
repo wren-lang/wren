@@ -673,7 +673,11 @@ Value interpret(WrenVM* vm, Value function)
       }
 
       // Define a "new" method on the metaclass.
-      // TODO(bob): Can this be inherited?
+      // TODO(bob): It would be better to define this at compile time, only if
+      // the class has no default constructor. I have a patch that did that,
+      // but for mysterious reasons, it significantly degraded the performance
+      // of the method_call benchmark.
+      // See: https://gist.github.com/munificent/7912965
       int newSymbol = ensureSymbol(&vm->methods, "new", strlen("new"));
       classObj->metaclass->methods[newSymbol].type = METHOD_CTOR;
       classObj->metaclass->methods[newSymbol].fn = NULL_VAL;
