@@ -130,9 +130,10 @@ def run_benchmark_language(benchmark, language):
   return stats
 
 
-def run_benchmark(benchmark):
+def run_benchmark(benchmark, languages):
   for language in LANGUAGES:
-    run_benchmark_language(benchmark, language)
+    if not languages or language[0] in languages:
+      run_benchmark_language(benchmark, language)
   graph_results()
   del results[0:len(results)]
 
@@ -191,9 +192,12 @@ def main():
   parser.add_argument("benchmark", nargs='?',
       default="all",
       help="The benchmark to run")
-  parser.add_argument("-b", "--generate-baseline",
+  parser.add_argument("--generate-baseline",
       action="store_true",
       help="Generate a baseline file")
+  parser.add_argument("-l", "--language",
+      action="append",
+      help="Which language(s) to run benchmarks for")
 
   args = parser.parse_args()
 
@@ -205,12 +209,12 @@ def main():
 
   if args.benchmark == "all":
     for benchmark in BENCHMARKS:
-      run_benchmark(benchmark)
+      run_benchmark(benchmark, args.language)
     return
 
   # Run the given benchmark.
   for benchmark in BENCHMARKS:
     if benchmark[0] == args.benchmark:
-      run_benchmark(benchmark)
+      run_benchmark(benchmark, args.language)
 
 main()
