@@ -79,6 +79,7 @@ typedef enum
   TOKEN_NULL,
   TOKEN_RETURN,
   TOKEN_STATIC,
+  TOKEN_SUPER,
   TOKEN_THIS,
   TOKEN_TRUE,
   TOKEN_VAR,
@@ -418,6 +419,7 @@ static void readName(Parser* parser, TokenType type)
   if (isKeyword(parser, "null")) type = TOKEN_NULL;
   if (isKeyword(parser, "return")) type = TOKEN_RETURN;
   if (isKeyword(parser, "static")) type = TOKEN_STATIC;
+  if (isKeyword(parser, "super")) type = TOKEN_SUPER;
   if (isKeyword(parser, "this")) type = TOKEN_THIS;
   if (isKeyword(parser, "true")) type = TOKEN_TRUE;
   if (isKeyword(parser, "var")) type = TOKEN_VAR;
@@ -634,6 +636,7 @@ static void nextToken(Parser* parser)
       case TOKEN_IF:
       case TOKEN_IS:
       case TOKEN_STATIC:
+      case TOKEN_SUPER:
       case TOKEN_VAR:
       case TOKEN_WHILE:
         parser->skipNewlines = 1;
@@ -1490,6 +1493,7 @@ GrammarRule rules[] =
   /* TOKEN_NULL          */ PREFIX(null),
   /* TOKEN_RETURN        */ UNUSED,
   /* TOKEN_STATIC        */ UNUSED,
+  /* TOKEN_SUPER         */ UNUSED,
   /* TOKEN_THIS          */ PREFIX(this_),
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
