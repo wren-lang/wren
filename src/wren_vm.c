@@ -673,15 +673,6 @@ Value interpret(WrenVM* vm, Value function)
       Method* method = &classObj->methods[symbol];
       switch (method->type)
       {
-        case METHOD_NONE:
-          printf("Receiver ");
-          wrenPrintValue(receiver);
-          printf(" does not implement method \"%s\".\n",
-                 vm->methods.names[symbol]);
-          // TODO(bob): Throw an exception or halt the fiber or something.
-          exit(1);
-          break;
-
         case METHOD_PRIMITIVE:
         {
           Value* args = &fiber->stack[fiber->stackSize - numArgs];
@@ -724,6 +715,15 @@ Value interpret(WrenVM* vm, Value function)
           LOAD_FRAME();
           break;
         }
+          
+        case METHOD_NONE:
+          printf("Receiver ");
+          wrenPrintValue(receiver);
+          printf(" does not implement method \"%s\".\n",
+                 vm->methods.names[symbol]);
+          // TODO(bob): Throw an exception or halt the fiber or something.
+          exit(1);
+          break;
       }
       DISPATCH();
     }

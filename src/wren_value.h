@@ -156,9 +156,6 @@ typedef struct
 
 typedef enum
 {
-  // No method for the given symbol.
-  METHOD_NONE,
-
   // A primitive method implemented in C that immediately returns a value.
   METHOD_PRIMITIVE,
 
@@ -171,7 +168,10 @@ typedef enum
   // A constructor. This will be defined on the metaclass. If [fn] is non-NULL,
   // then it's a user-defined constructor and [fn] is the initialization code.
   // Otherwise, it's a default constructor.
-  METHOD_CTOR
+  METHOD_CTOR,
+
+  // No method for the given symbol.
+  METHOD_NONE
 } MethodType;
 
 typedef struct
