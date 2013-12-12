@@ -22,29 +22,6 @@ typedef enum
   // Push true onto the stack.
   CODE_TRUE,
 
-  // Define a new empty class and push it.
-  CODE_CLASS,
-
-  // Pop a superclass off the stack, then push a new class that extends it.
-  CODE_SUBCLASS,
-
-  // Define a method for symbol [arg] whose body is the function popped off the
-  // top of the stack. The class receiving the method is on top of the stack
-  // (after the function is popped off) and remains after this.
-  CODE_METHOD_INSTANCE,
-
-  // Define a method for symbol [arg] whose body is the function popped off the
-  // top of the stack. The class receiving the method is the metaclass of the
-  // class on top of the stack (after the function is popped off) and remains
-  // after this.
-  CODE_METHOD_STATIC,
-
-  // Define a constructor method for symbol [arg] whose body is the function
-  // popped off the top of the stack. The class receiving the method is the
-  // metaclass of the class on top of the stack (after the function is popped
-  // off) and remains after this.
-  CODE_METHOD_CTOR,
-
   // Create a new list with [arg] elements. The top [arg] values on the stack
   // are the elements in forward order. Removes the elements and then pushes
   // the new list.
@@ -137,6 +114,29 @@ typedef enum
   // Exit from the current function and return the value on the top of the
   // stack.
   CODE_RETURN,
+
+  // Define a new empty class and push it.
+  CODE_CLASS,
+
+  // Pop a superclass off the stack, then push a new class that extends it.
+  CODE_SUBCLASS,
+
+  // Define a method for symbol [arg] whose body is the function popped off the
+  // top of the stack. The class receiving the method is on top of the stack
+  // (after the function is popped off) and remains after this.
+  CODE_METHOD_INSTANCE,
+
+  // Define a method for symbol [arg] whose body is the function popped off the
+  // top of the stack. The class receiving the method is the metaclass of the
+  // class on top of the stack (after the function is popped off) and remains
+  // after this.
+  CODE_METHOD_STATIC,
+
+  // Define a constructor method for symbol [arg] whose body is the function
+  // popped off the top of the stack. The class receiving the method is the
+  // metaclass of the class on top of the stack (after the function is popped
+  // off) and remains after this.
+  CODE_METHOD_CTOR,
 
   // This pseudo-instruction indicates the end of the bytecode. It should
   // always be preceded by a `CODE_RETURN`, so is never actually executed.

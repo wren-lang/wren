@@ -577,11 +577,6 @@ Value interpret(WrenVM* vm, Value function)
     &&code_NULL,
     &&code_FALSE,
     &&code_TRUE,
-    &&code_CLASS,
-    &&code_SUBCLASS,
-    &&code_METHOD_INSTANCE,
-    &&code_METHOD_STATIC,
-    &&code_METHOD_CTOR,
     &&code_LIST,
     &&code_CLOSURE,
     &&code_LOAD_LOCAL,
@@ -618,7 +613,12 @@ Value interpret(WrenVM* vm, Value function)
     &&code_OR,
     &&code_IS,
     &&code_CLOSE_UPVALUE,
-    &&code_RETURN
+    &&code_RETURN,
+    &&code_CLASS,
+    &&code_SUBCLASS,
+    &&code_METHOD_INSTANCE,
+    &&code_METHOD_STATIC,
+    &&code_METHOD_CTOR
   };
 
   #define INTERPRET_LOOP    DISPATCH();
@@ -646,78 +646,85 @@ Value interpret(WrenVM* vm, Value function)
     CASE_CODE(FALSE): PUSH(FALSE_VAL); DISPATCH();
     CASE_CODE(TRUE):  PUSH(TRUE_VAL); DISPATCH();
 
-    CASE_CODE(CLASS):
-    CASE_CODE(SUBCLASS):
+    CASE_CODE(CALL_0):
+    CASE_CODE(CALL_1):
+    CASE_CODE(CALL_2):
+    CASE_CODE(CALL_3):
+    CASE_CODE(CALL_4):
+    CASE_CODE(CALL_5):
+    CASE_CODE(CALL_6):
+    CASE_CODE(CALL_7):
+    CASE_CODE(CALL_8):
+    CASE_CODE(CALL_9):
+    CASE_CODE(CALL_10):
+    CASE_CODE(CALL_11):
+    CASE_CODE(CALL_12):
+    CASE_CODE(CALL_13):
+    CASE_CODE(CALL_14):
+    CASE_CODE(CALL_15):
+    CASE_CODE(CALL_16):
     {
-      int isSubclass = instruction == CODE_SUBCLASS;
-      int numFields = READ_ARG();
-
-      ObjClass* superclass;
-      if (isSubclass)
-      {
-        // TODO(bob): Handle the superclass not being a class object!
-        superclass = AS_CLASS(POP());
-      }
-      else
-      {
-        // Implicit Object superclass.
-        superclass = vm->objectClass;
-      }
-
-      ObjClass* classObj = wrenNewClass(vm, superclass, numFields);
-
-      // Assume the first class being defined is Object.
-      if (vm->objectClass == NULL)
-      {
-        vm->objectClass = classObj;
-      }
-
-      // Define a "new" method on the metaclass.
-      // TODO(bob): It would be better to define this at compile time, only if
-      // the class has no default constructor. I have a patch that did that,
-      // but for mysterious reasons, it significantly degraded the performance
-      // of the method_call benchmark.
-      // See: https://gist.github.com/munificent/7912965
-      int newSymbol = ensureSymbol(&vm->methods, "new", strlen("new"));
-      classObj->metaclass->methods[newSymbol].type = METHOD_CTOR;
-      classObj->metaclass->methods[newSymbol].fn = NULL_VAL;
-
-      PUSH(OBJ_VAL(classObj));
-      DISPATCH();
-    }
-
-    CASE_CODE(METHOD_INSTANCE):
-    CASE_CODE(METHOD_STATIC):
-    CASE_CODE(METHOD_CTOR):
-    {
-      int type = instruction;
+      // Add one for the implicit receiver argument.
+      int numArgs = instruction - CODE_CALL_0 + 1;
       int symbol = READ_ARG();
-      Value method = POP();
-      ObjClass* classObj = AS_CLASS(PEEK());
 
-      switch (type)
+      Value receiver = fiber->stack[fiber->stackSize - numArgs];
+      ObjClass* classObj = wrenGetClass(vm, receiver);
+      Method* method = &classObj->methods[symbol];
+      switch (method->type)
       {
-        case CODE_METHOD_INSTANCE:
-          classObj->methods[symbol].type = METHOD_BLOCK;
+        case METHOD_NONE:
+          printf("Receiver ");
+          wrenPrintValue(receiver);
+          printf(" does not implement method \"%s\".\n",
+                 vm->methods.names[symbol]);
+          // TODO(bob): Throw an exception or halt the fiber or something.
+          exit(1);
           break;
 
-        case CODE_METHOD_STATIC:
-          // Statics are defined on the metaclass.
-          classObj = classObj->metaclass;
-          classObj->methods[symbol].type = METHOD_BLOCK;
+        case METHOD_PRIMITIVE:
+        {
+          Value* args = &fiber->stack[fiber->stackSize - numArgs];
+          Value result = method->primitive(vm, args);
+
+          fiber->stack[fiber->stackSize - numArgs] = result;
+
+          // Discard the stack slots for the arguments (but leave one for
+          // the result).
+          fiber->stackSize -= numArgs - 1;
+          break;
+        }
+
+        case METHOD_FIBER:
+        {
+          STORE_FRAME();
+          Value* args = &fiber->stack[fiber->stackSize - numArgs];
+          method->fiberPrimitive(vm, fiber, args);
+          LOAD_FRAME();
+          break;
+        }
+
+        case METHOD_BLOCK:
+          STORE_FRAME();
+          wrenCallFunction(fiber, method->fn, numArgs);
+          LOAD_FRAME();
           break;
 
-        case CODE_METHOD_CTOR:
-          // Constructors are like statics.
-          classObj = classObj->metaclass;
-          classObj->methods[symbol].type = METHOD_CTOR;
+        case METHOD_CTOR:
+        {
+          Value instance = wrenNewInstance(vm, AS_CLASS(receiver));
+
+          // Store the new instance in the receiver slot so that it can be
+          // "this" in the body of the constructor and returned by it.
+          fiber->stack[fiber->stackSize - numArgs] = instance;
+
+          // Invoke the constructor body.
+          STORE_FRAME();
+          wrenCallFunction(fiber, method->fn, numArgs);
+          LOAD_FRAME();
           break;
+        }
       }
-
-      ObjFn* methodFn = IS_FN(method) ? AS_FN(method) : AS_CLOSURE(method)->fn;
-      wrenBindMethod(classObj, methodFn);
-
-      classObj->methods[symbol].fn = method;
       DISPATCH();
     }
 
@@ -847,97 +854,6 @@ Value interpret(WrenVM* vm, Value function)
     CASE_CODE(DUP): PUSH(PEEK()); DISPATCH();
     CASE_CODE(POP): POP(); DISPATCH();
 
-    CASE_CODE(CALL_0):
-    CASE_CODE(CALL_1):
-    CASE_CODE(CALL_2):
-    CASE_CODE(CALL_3):
-    CASE_CODE(CALL_4):
-    CASE_CODE(CALL_5):
-    CASE_CODE(CALL_6):
-    CASE_CODE(CALL_7):
-    CASE_CODE(CALL_8):
-    CASE_CODE(CALL_9):
-    CASE_CODE(CALL_10):
-    CASE_CODE(CALL_11):
-    CASE_CODE(CALL_12):
-    CASE_CODE(CALL_13):
-    CASE_CODE(CALL_14):
-    CASE_CODE(CALL_15):
-    CASE_CODE(CALL_16):
-    {
-      // Add one for the implicit receiver argument.
-      int numArgs = instruction - CODE_CALL_0 + 1;
-      int symbol = READ_ARG();
-
-      Value receiver = fiber->stack[fiber->stackSize - numArgs];
-      ObjClass* classObj = wrenGetClass(vm, receiver);
-      Method* method = &classObj->methods[symbol];
-      switch (method->type)
-      {
-        case METHOD_NONE:
-          printf("Receiver ");
-          wrenPrintValue(receiver);
-          printf(" does not implement method \"%s\".\n",
-                 vm->methods.names[symbol]);
-          // TODO(bob): Throw an exception or halt the fiber or something.
-          exit(1);
-          break;
-
-        case METHOD_PRIMITIVE:
-        {
-          Value* args = &fiber->stack[fiber->stackSize - numArgs];
-          Value result = method->primitive(vm, args);
-
-          fiber->stack[fiber->stackSize - numArgs] = result;
-
-          // Discard the stack slots for the arguments (but leave one for
-          // the result).
-          fiber->stackSize -= numArgs - 1;
-          break;
-        }
-
-        case METHOD_FIBER:
-        {
-          STORE_FRAME();
-          Value* args = &fiber->stack[fiber->stackSize - numArgs];
-          method->fiberPrimitive(vm, fiber, args);
-          LOAD_FRAME();
-          break;
-        }
-
-        case METHOD_BLOCK:
-          STORE_FRAME();
-          wrenCallFunction(fiber, method->fn, numArgs);
-          LOAD_FRAME();
-          break;
-
-        case METHOD_CTOR:
-        {
-          Value instance = wrenNewInstance(vm, AS_CLASS(receiver));
-
-          // Store the new instance in the receiver slot so that it can be
-          // "this" in the body of the constructor and returned by it.
-          fiber->stack[fiber->stackSize - numArgs] = instance;
-
-          if (IS_NULL(method->fn))
-          {
-            // Default constructor, so no body to call. Just discard the
-            // stack slots for the arguments (but leave one for the instance).
-            fiber->stackSize -= numArgs - 1;
-          }
-          else
-          {
-            // Invoke the constructor body.
-            STORE_FRAME();
-            wrenCallFunction(fiber, method->fn, numArgs);
-            LOAD_FRAME();
-          }
-          break;
-        }
-      }
-      DISPATCH();
-    }
-
     CASE_CODE(JUMP):
     {
       int offset = READ_ARG();
@@ -1052,6 +968,65 @@ Value interpret(WrenVM* vm, Value function)
       // result).
       fiber->stackSize = frame->stackStart + 1;
       LOAD_FRAME();
+      DISPATCH();
+    }
+
+    CASE_CODE(CLASS):
+    CASE_CODE(SUBCLASS):
+    {
+      int isSubclass = instruction == CODE_SUBCLASS;
+      int numFields = READ_ARG();
+
+      ObjClass* superclass;
+      if (isSubclass)
+      {
+        // TODO(bob): Handle the superclass not being a class object!
+        superclass = AS_CLASS(POP());
+      }
+      else
+      {
+        // Implicit Object superclass.
+        superclass = vm->objectClass;
+      }
+
+      ObjClass* classObj = wrenNewClass(vm, superclass, numFields);
+
+      PUSH(OBJ_VAL(classObj));
+      DISPATCH();
+    }
+
+    CASE_CODE(METHOD_INSTANCE):
+    CASE_CODE(METHOD_STATIC):
+    CASE_CODE(METHOD_CTOR):
+    {
+      int type = instruction;
+      int symbol = READ_ARG();
+      Value method = POP();
+      ObjClass* classObj = AS_CLASS(PEEK());
+
+      switch (type)
+      {
+        case CODE_METHOD_INSTANCE:
+          classObj->methods[symbol].type = METHOD_BLOCK;
+          break;
+
+        case CODE_METHOD_STATIC:
+          // Statics are defined on the metaclass.
+          classObj = classObj->metaclass;
+          classObj->methods[symbol].type = METHOD_BLOCK;
+          break;
+
+        case CODE_METHOD_CTOR:
+          // Constructors are like statics.
+          classObj = classObj->metaclass;
+          classObj->methods[symbol].type = METHOD_CTOR;
+          break;
+      }
+
+      ObjFn* methodFn = IS_FN(method) ? AS_FN(method) : AS_CLOSURE(method)->fn;
+      wrenBindMethod(classObj, methodFn);
+
+      classObj->methods[symbol].fn = method;
       DISPATCH();
     }
 

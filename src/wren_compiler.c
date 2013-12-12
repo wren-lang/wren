@@ -1604,6 +1604,24 @@ void block(Compiler* compiler)
   emit(compiler, CODE_POP);
 }
 
+// Defines a default constructor method with an empty body.
+static void defaultConstructor(Compiler* compiler)
+{
+  Compiler ctorCompiler;
+  int constant = initCompiler(&ctorCompiler, compiler->parser, compiler, 1);
+
+  // Just return the receiver which is in the first local slot.
+  emit(&ctorCompiler, CODE_LOAD_LOCAL);
+  emit(&ctorCompiler, 0);
+  emit(&ctorCompiler, CODE_RETURN);
+
+  endCompiler(&ctorCompiler, constant);
+
+  // Define the constructor method.
+  emit(compiler, CODE_METHOD_CTOR);
+  emit(compiler, ensureSymbol(&compiler->parser->vm->methods, "new", 3));
+}
+
 // Compiles a statement. These can only appear at the top-level or within
 // curly blocks. Unlike expressions, these do not leave a value on the stack.
 void statement(Compiler* compiler)
@@ -1630,21 +1648,20 @@ void statement(Compiler* compiler)
     // used.
     int numFieldsInstruction = emit(compiler, 255);
 
-    // Compile the method definitions.
-    consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
-
-    // Set up a symbol table for the class's fields.
+    // Set up a symbol table for the class's fields. We'll initially compile
+    // them to slots starting at zero. When the method is bound to the close
+    // the bytecode will be adjusted by [wrenBindMethod] to take inherited
+    // fields into account.
     SymbolTable* previousFields = compiler->fields;
     SymbolTable fields;
     initSymbolTable(&fields);
     compiler->fields = &fields;
 
-    // TODO(bob): Need to handle inherited fields. Ideally, a subclass's fields
-    // would be statically compiled to slot indexes right after the superclass
-    // ones, but we don't know the superclass statically. Instead, will
-    // probably have to determine the field offset at class creation time in
-    // the VM and then adjust by that every time a field is accessed/modified.
+    // Classes with no explicitly defined constructor get a default one.
+    int hasConstructor = 0;
 
+    // Compile the method definitions.
+    consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
     while (!match(compiler, TOKEN_RIGHT_BRACE))
     {
       Code instruction = CODE_METHOD_INSTANCE;
@@ -1659,6 +1676,7 @@ void statement(Compiler* compiler)
       {
         // If the method name is prefixed with "this", it's a constructor.
         instruction = CODE_METHOD_CTOR;
+        hasConstructor = 1;
       }
 
       SignatureFn signature = rules[compiler->parser->current.type].method;
@@ -1674,6 +1692,8 @@ void statement(Compiler* compiler)
       consume(compiler, TOKEN_LINE,
               "Expect newline after definition in class.");
     }
+
+    if (!hasConstructor) defaultConstructor(compiler);
 
     // Update the class with the number of fields.
     compiler->fn->bytecode[numFieldsInstruction] = fields.count;
