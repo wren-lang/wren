@@ -6,5 +6,5 @@ def fib(n):
 
 start = time.clock()
 for i in range(0, 5):
-  print(fib(30))
+  print(fib(28))
 print("elapsed: " + str(time.clock() - start))

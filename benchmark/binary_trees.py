@@ -18,11 +18,11 @@ def check_tree((item, left, right)):
     return item + check_tree(left) - check_tree(right)
 
 min_depth = 4
-max_depth = max(min_depth + 2, 14)
+max_depth = 12
 stretch_depth = max_depth + 1
 
 start = time.clock()
-print "stretch tree of depth %d\t check:" % stretch_depth, check_tree(make_tree(0, stretch_depth))
+print "stretch tree of depth %d check:" % stretch_depth, check_tree(make_tree(0, stretch_depth))
 
 long_lived_tree = make_tree(0, max_depth)
 
@@ -33,8 +33,8 @@ for depth in xrange(min_depth, stretch_depth, 2):
     for i in xrange(1, iterations + 1):
         check += check_tree(make_tree(i, depth)) + check_tree(make_tree(-i, depth))
 
-    print "%d\t trees of depth %d\t check:" % (iterations * 2, depth), check
+    print "%d trees of depth %d check:" % (iterations * 2, depth), check
     iterations /= 4
 
-print "long lived tree of depth %d\t check:" % max_depth, check_tree(long_lived_tree)
+print "long lived tree of depth %d check:" % max_depth, check_tree(long_lived_tree)
 print("elapsed: " + str(time.clock() - start))

@@ -21,12 +21,12 @@ class Tree {
 }
 
 var minDepth = 4
-var maxDepth = 14
+var maxDepth = 12
 var stretchDepth = maxDepth + 1
 
 var start = OS.clock
 
-io.write("stretch tree of depth " + stretchDepth.toString + "\t check: " +
+io.write("stretch tree of depth " + stretchDepth.toString + " check: " +
     Tree.new(0, stretchDepth).check.toString)
 
 var longLivedTree = Tree.new(0, maxDepth)
@@ -48,13 +48,13 @@ while (depth < stretchDepth) {
     i = i + 1
   }
 
-  io.write((iterations * 2).toString + "\t trees of depth " + depth.toString +
-      "\t check: " + check.toString)
+  io.write((iterations * 2).toString + " trees of depth " + depth.toString +
+      " check: " + check.toString)
   iterations = iterations / 4
   depth = depth + 2
 }
 
-io.write("long lived tree of depth " + maxDepth.toString + "\t check: " +
+io.write("long lived tree of depth " + maxDepth.toString + " check: " +
     longLivedTree.check.toString)
 
 io.write("elapsed: " + (OS.clock - start).toString)

@@ -21,7 +21,7 @@ local function ItemCheck(tree)
   end
 end
 
-local N = 14
+local N = 12
 local mindepth = 4
 local maxdepth = mindepth + 2
 if maxdepth < N then maxdepth = N end
@@ -31,7 +31,7 @@ local start = os.clock()
 do
   local stretchdepth = maxdepth + 1
   local stretchtree = BottomUpTree(0, stretchdepth)
-  io.write(string.format("stretch tree of depth %d\t check: %d\n",
+  io.write(string.format("stretch tree of depth %d check: %d\n",
     stretchdepth, ItemCheck(stretchtree)))
 end
 
@@ -44,11 +44,11 @@ for depth=mindepth,maxdepth,2 do
     check = check + ItemCheck(BottomUpTree(1, depth)) +
             ItemCheck(BottomUpTree(-1, depth))
   end
-  io.write(string.format("%d\t trees of depth %d\t check: %d\n",
+  io.write(string.format("%d trees of depth %d check: %d\n",
     iterations*2, depth, check))
 end
 
-io.write(string.format("long lived tree of depth %d\t check: %d\n",
+io.write(string.format("long lived tree of depth %d check: %d\n",
   maxdepth, ItemCheck(longlivedtree)))
 
 io.write(string.format("elapsed: %.8f\n", os.clock() - start))

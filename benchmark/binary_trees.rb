@@ -17,7 +17,7 @@ def bottom_up_tree(item, depth)
   [bottom_up_tree(item_item - 1, depth), item, bottom_up_tree(item_item, depth)]
 end
 
-max_depth = 14
+max_depth = 12
 min_depth = 4
 
 max_depth = min_depth + 2 if min_depth + 2 > max_depth
@@ -26,7 +26,7 @@ stretch_depth = max_depth + 1
 stretch_tree = bottom_up_tree(0, stretch_depth)
 
 start = Time.now
-puts "stretch tree of depth #{stretch_depth}\t check: #{item_check(*stretch_tree)}"
+puts "stretch tree of depth #{stretch_depth} check: #{item_check(*stretch_tree)}"
 stretch_tree = nil
 
 long_lived_tree = bottom_up_tree(0, max_depth)
@@ -44,8 +44,8 @@ min_depth.step(max_depth + 1, 2) do |depth|
     check += item_check(*temp_tree)
   end
 
-  puts "#{iterations * 2}\t trees of depth #{depth}\t check: #{check}"
+  puts "#{iterations * 2} trees of depth #{depth} check: #{check}"
 end
 
-puts "long lived tree of depth #{max_depth}\t check: #{item_check(*long_lived_tree)}"
+puts "long lived tree of depth #{max_depth} check: #{item_check(*long_lived_tree)}"
 puts "elapsed: " + (Time.now - start).to_s

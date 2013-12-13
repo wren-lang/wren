@@ -8,6 +8,6 @@ end
 
 start = Time.now
 for i in 0...5
-  puts fib(30)
+  puts fib(28)
 end
 puts "elapsed: " + (Time.now - start).to_s

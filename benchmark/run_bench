@@ -7,41 +7,39 @@ import re
 import subprocess
 import sys
 
+# How many times to run a given benchmark. Should be an odd number to get the
+# right median.
+NUM_TRIALS = 7
+
 BENCHMARKS = []
 
 def BENCHMARK(name, pattern):
   regex = re.compile(pattern + "\n" + r"elapsed: (\d+\.\d+)", re.MULTILINE)
   BENCHMARKS.append([name, regex, None])
 
-BENCHMARK("binary_trees", """stretch tree of depth 15\t check: -1
-32768\t trees of depth 4\t check: -32768
-8192\t trees of depth 6\t check: -8192
-2048\t trees of depth 8\t check: -2048
-512\t trees of depth 10\t check: -512
-128\t trees of depth 12\t check: -128
-32\t trees of depth 14\t check: -32
-long lived tree of depth 14\t check: -1""")
+BENCHMARK("binary_trees", """stretch tree of depth 13 check: -1
+8192 trees of depth 4 check: -8192
+2048 trees of depth 6 check: -2048
+512 trees of depth 8 check: -512
+128 trees of depth 10 check: -128
+32 trees of depth 12 check: -32
+long lived tree of depth 12 check: -1""")
 
-BENCHMARK("fib", r"""832040
-832040
-832040
-832040
-832040""")
+BENCHMARK("fib", r"""317811
+317811
+317811
+317811
+317811""")
 
 BENCHMARK("method_call", r"""true
 false""")
 
 LANGUAGES = [
   ("wren",   "../build/Release/wren", ".wren"),
-  ("js",     "node",                  ".js"),
   ("lua",    "lua",                   ".lua"),
   ("python", "python",                ".py"),
   ("ruby",   "ruby",                  ".rb")
 ]
-
-# How many times to run a given benchmark. Should be an odd number to get the
-# right median.
-NUM_TRIALS = 7
 
 results = []
 
@@ -62,16 +60,17 @@ def yellow(text):
 
 
 def calc_stats(nums):
-  """Calculates the mean, median, and std deviation of a list of numbers."""
+  """Calculates the best, mean, and median of a list of numbers."""
   mean = sum(nums) / len(nums)
   nums.sort()
   median = nums[(len(nums) - 1) / 2]
   diffs = ((n - mean) * (n - mean) for n in nums)
   std_dev = math.sqrt(sum(diffs) / len(nums))
-  return [mean, median, std_dev]
+  return [nums[0], mean, median, std_dev]
 
 
-def run_benchmark_once(benchmark, language):
+def run_trial(benchmark, language):
+  """Runs one benchmark one time for one language."""
   args = [language[1], benchmark[0] + language[2]]
   out = subprocess.check_output(args, universal_newlines=True)
   match = benchmark[1].match(out)
@@ -84,6 +83,7 @@ def run_benchmark_once(benchmark, language):
 
 
 def run_benchmark_language(benchmark, language):
+  """Runs one benchmark for a number of trials for one language."""
   name = "{0} - {1}".format(benchmark[0], language[0])
   print "{0:22s}".format(name),
 
@@ -93,7 +93,7 @@ def run_benchmark_language(benchmark, language):
 
   times = []
   for i in range(0, NUM_TRIALS):
-    time = run_benchmark_once(benchmark, language)
+    time = run_trial(benchmark, language)
     if not time:
       return
     times.append(time)
@@ -105,7 +105,7 @@ def run_benchmark_language(benchmark, language):
   comparison = ""
   if language[0] == "wren":
     if benchmark[2] != None:
-      ratio = 100 * stats[1] / benchmark[2]
+      ratio = 100 * stats[0] / benchmark[2]
       comparison =  "{0:.2f}% of baseline".format(ratio)
       if ratio > 105:
         comparison = red(comparison)
@@ -123,19 +123,51 @@ def run_benchmark_language(benchmark, language):
     if ratio > 1:
       comparison = green(comparison)
 
-  print " mean: {0:.2f} median: {1:.2f} std_dev: {2:.2f} {3:s}".format(
+  print " best: {0:.2f} mean: {1:.2f} median: {2:.2f} {3:s}".format(
       stats[0], stats[1], stats[2], comparison)
 
-  results.append([name, times, stats[1]])
+  results.append([name, times, stats[0]])
   return stats
 
 
 def run_benchmark(benchmark, languages):
+  """Runs one benchmark for the given languages (or all of them)."""
   for language in LANGUAGES:
     if not languages or language[0] in languages:
       run_benchmark_language(benchmark, language)
   graph_results()
   del results[0:len(results)]
+
+
+# TODO(bob): Hook this up so it can be called.
+def solo_benchmark(benchmark, language):
+  """Runs a single language benchmark repeatedly, graphing the results."""
+  base = benchmark[2]
+  total = 0
+  for i in range(0, NUM_TRIALS):
+    time = run_trial(benchmark, language)
+    total += time
+    ratio = 100 * time / base
+
+    # TODO(bob): Show scale.
+
+    line = [" "] * 51
+    line[25] = "|"
+    index = 25 + int((time - base) * 200)
+    if index < 0: index = 0
+    if index > 50: index = 50
+    line[index] = "*"
+
+    comparison = "{0:.4f} ({1:6.2f}%) {2}".format(time, ratio, "".join(line))
+    if ratio > 105:
+      comparison = red(comparison)
+    if ratio < 95:
+      comparison = green(comparison)
+    print comparison
+
+  total /= NUM_TRIALS
+  print "----"
+  print "{0:.4f} ({1:6.2f}%)".format(total, 100 * total / base)
 
 
 def graph_results():
@@ -168,10 +200,10 @@ def read_baseline():
   if os.path.exists("baseline.txt"):
     with open("baseline.txt") as f:
       for line in f.readlines():
-        name, mean, median = line.split(",")
+        name, best = line.split(",")
         for benchmark in BENCHMARKS:
           if benchmark[0] == name:
-            benchmark[2] = float(median)
+            benchmark[2] = float(best)
 
 
 def generate_baseline():
@@ -179,8 +211,7 @@ def generate_baseline():
   baseline_text = ""
   for benchmark in BENCHMARKS:
     stats = run_benchmark_language(benchmark, LANGUAGES[0])
-    baseline_text += ("{},{},{}\n".format(
-          benchmark[0], stats[0], stats[1]))
+    baseline_text += ("{},{}\n".format(benchmark[0], stats[0]))
 
   # Write them to a file.
   with open("baseline.txt", 'w') as out:
@@ -207,6 +238,7 @@ def main():
 
   read_baseline()
 
+  # Run all benchmarks.
   if args.benchmark == "all":
     for benchmark in BENCHMARKS:
       run_benchmark(benchmark, args.language)
