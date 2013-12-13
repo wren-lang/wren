@@ -22,21 +22,6 @@ typedef enum
   // Push true onto the stack.
   CODE_TRUE,
 
-  // Create a new list with [arg] elements. The top [arg] values on the stack
-  // are the elements in forward order. Removes the elements and then pushes
-  // the new list.
-  CODE_LIST,
-
-  // Creates a closure for the function stored at [arg] in the constant table.
-  //
-  // Following the function argument is a number of arguments, two for each
-  // upvalue. The first is non-zero if the variable being captured is a local
-  // (as opposed to an upvalue), and the second is the index of the local or
-  // upvalue being captured.
-  //
-  // Pushes the created closure.
-  CODE_CLOSURE,
-
   // Pushes the value in local slot [arg].
   CODE_LOAD_LOCAL,
 
@@ -114,6 +99,21 @@ typedef enum
   // Exit from the current function and return the value on the top of the
   // stack.
   CODE_RETURN,
+
+  // Create a new list with [arg] elements. The top [arg] values on the stack
+  // are the elements in forward order. Removes the elements and then pushes
+  // the new list.
+  CODE_LIST,
+
+  // Creates a closure for the function stored at [arg] in the constant table.
+  //
+  // Following the function argument is a number of arguments, two for each
+  // upvalue. The first is non-zero if the variable being captured is a local
+  // (as opposed to an upvalue), and the second is the index of the local or
+  // upvalue being captured.
+  //
+  // Pushes the created closure.
+  CODE_CLOSURE,
 
   // Define a new empty class and push it.
   CODE_CLASS,

@@ -577,8 +577,6 @@ Value interpret(WrenVM* vm, Value function)
     &&code_NULL,
     &&code_FALSE,
     &&code_TRUE,
-    &&code_LIST,
-    &&code_CLOSURE,
     &&code_LOAD_LOCAL,
     &&code_STORE_LOCAL,
     &&code_LOAD_UPVALUE,
@@ -614,6 +612,8 @@ Value interpret(WrenVM* vm, Value function)
     &&code_IS,
     &&code_CLOSE_UPVALUE,
     &&code_RETURN,
+    &&code_LIST,
+    &&code_CLOSURE,
     &&code_CLASS,
     &&code_SUBCLASS,
     &&code_METHOD_INSTANCE,
@@ -725,55 +725,6 @@ Value interpret(WrenVM* vm, Value function)
           exit(1);
           break;
       }
-      DISPATCH();
-    }
-
-    CASE_CODE(LIST):
-    {
-      int numElements = READ_ARG();
-      ObjList* list = wrenNewList(vm, numElements);
-      for (int i = 0; i < numElements; i++)
-      {
-        list->elements[i] = fiber->stack[fiber->stackSize - numElements + i];
-      }
-
-      // Discard the elements.
-      fiber->stackSize -= numElements;
-
-      PUSH(OBJ_VAL(list));
-      DISPATCH();
-    }
-
-    CASE_CODE(CLOSURE):
-    {
-      ObjFn* prototype = AS_FN(fn->constants[READ_ARG()]);
-
-      ASSERT(prototype->numUpvalues > 0,
-             "Should not create closure for functions that don't need it.");
-
-      // Create the closure and push it on the stack before creating upvalues
-      // so that it doesn't get collected.
-      ObjClosure* closure = wrenNewClosure(vm, prototype);
-      PUSH(OBJ_VAL(closure));
-
-      // Capture upvalues.
-      for (int i = 0; i < prototype->numUpvalues; i++)
-      {
-        int isLocal = READ_ARG();
-        int index = READ_ARG();
-        if (isLocal)
-        {
-          // Make an new upvalue to close over the parent's local variable.
-          closure->upvalues[i] = captureUpvalue(vm, fiber,
-                                                frame->stackStart + index);
-        }
-        else
-        {
-          // Use the same upvalue as the current call frame.
-          closure->upvalues[i] = upvalues[index];
-        }
-      }
-
       DISPATCH();
     }
 
@@ -968,6 +919,55 @@ Value interpret(WrenVM* vm, Value function)
       // result).
       fiber->stackSize = frame->stackStart + 1;
       LOAD_FRAME();
+      DISPATCH();
+    }
+
+    CASE_CODE(LIST):
+    {
+      int numElements = READ_ARG();
+      ObjList* list = wrenNewList(vm, numElements);
+      for (int i = 0; i < numElements; i++)
+      {
+        list->elements[i] = fiber->stack[fiber->stackSize - numElements + i];
+      }
+
+      // Discard the elements.
+      fiber->stackSize -= numElements;
+
+      PUSH(OBJ_VAL(list));
+      DISPATCH();
+    }
+
+    CASE_CODE(CLOSURE):
+    {
+      ObjFn* prototype = AS_FN(fn->constants[READ_ARG()]);
+
+      ASSERT(prototype->numUpvalues > 0,
+             "Should not create closure for functions that don't need it.");
+
+      // Create the closure and push it on the stack before creating upvalues
+      // so that it doesn't get collected.
+      ObjClosure* closure = wrenNewClosure(vm, prototype);
+      PUSH(OBJ_VAL(closure));
+
+      // Capture upvalues.
+      for (int i = 0; i < prototype->numUpvalues; i++)
+      {
+        int isLocal = READ_ARG();
+        int index = READ_ARG();
+        if (isLocal)
+        {
+          // Make an new upvalue to close over the parent's local variable.
+          closure->upvalues[i] = captureUpvalue(vm, fiber,
+                                                frame->stackStart + index);
+        }
+        else
+        {
+          // Use the same upvalue as the current call frame.
+          closure->upvalues[i] = upvalues[index];
+        }
+      }
+      
       DISPATCH();
     }
 

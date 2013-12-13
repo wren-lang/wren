@@ -1867,9 +1867,6 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
 
         // Instructions with one argument:
       case CODE_CONSTANT:
-      case CODE_CLASS:
-      case CODE_SUBCLASS:
-      case CODE_LIST:
       case CODE_LOAD_LOCAL:
       case CODE_STORE_LOCAL:
       case CODE_LOAD_UPVALUE:
@@ -1898,6 +1895,9 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
       case CODE_JUMP_IF:
       case CODE_AND:
       case CODE_OR:
+      case CODE_LIST:
+      case CODE_CLASS:
+      case CODE_SUBCLASS:
         ip++;
         break;
 

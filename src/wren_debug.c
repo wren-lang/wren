@@ -34,32 +34,6 @@ int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
       printf("TRUE\n");
       break;
 
-    case CODE_LIST:
-    {
-      int count = bytecode[i++];
-      printf("LIST\n");
-      printf("%04d   | count %d\n", i, count);
-      break;
-    }
-
-    case CODE_CLOSURE:
-    {
-      int constant = bytecode[i++];
-      printf("CLOSURE ");
-      wrenPrintValue(fn->constants[constant]);
-      printf("\n");
-      printf("%04d   | constant %d\n", i, constant);
-      ObjFn* loadedFn = AS_FN(fn->constants[constant]);
-      for (int j = 0; j < loadedFn->numUpvalues; j++)
-      {
-        int isLocal = bytecode[i++];
-        printf("%04d   | upvalue %d isLocal %d\n", i, j, isLocal);
-        int index = bytecode[i++];
-        printf("%04d   | upvalue %d index %d\n", i, j, index);
-      }
-      break;
-    }
-
     case CODE_LOAD_LOCAL:
     {
       int local = bytecode[i++];
@@ -212,6 +186,32 @@ int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
     case CODE_RETURN:
       printf("CODE_RETURN\n");
       break;
+
+    case CODE_LIST:
+    {
+      int count = bytecode[i++];
+      printf("LIST\n");
+      printf("%04d   | count %d\n", i, count);
+      break;
+    }
+
+    case CODE_CLOSURE:
+    {
+      int constant = bytecode[i++];
+      printf("CLOSURE ");
+      wrenPrintValue(fn->constants[constant]);
+      printf("\n");
+      printf("%04d   | constant %d\n", i, constant);
+      ObjFn* loadedFn = AS_FN(fn->constants[constant]);
+      for (int j = 0; j < loadedFn->numUpvalues; j++)
+      {
+        int isLocal = bytecode[i++];
+        printf("%04d   | upvalue %d isLocal %d\n", i, j, isLocal);
+        int index = bytecode[i++];
+        printf("%04d   | upvalue %d index %d\n", i, j, index);
+      }
+      break;
+    }
 
     case CODE_CLASS:
     {
