@@ -165,11 +165,6 @@ typedef enum
   // A normal user-defined method.
   METHOD_BLOCK,
 
-  // A constructor. This will be defined on the metaclass. If [fn] is non-NULL,
-  // then it's a user-defined constructor and [fn] is the initialization code.
-  // Otherwise, it's a default constructor.
-  METHOD_CTOR,
-
   // No method for the given symbol.
   METHOD_NONE
 } MethodType;

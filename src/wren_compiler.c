@@ -1568,7 +1568,8 @@ void expression(Compiler* compiler)
 }
 
 // Compiles a method definition inside a class body.
-void method(Compiler* compiler, Code instruction, SignatureFn signature)
+void method(Compiler* compiler, Code instruction, int isConstructor,
+            SignatureFn signature)
 {
   Compiler methodCompiler;
   int constant = initCompiler(&methodCompiler, compiler->parser, compiler, 1);
@@ -1583,11 +1584,16 @@ void method(Compiler* compiler, Code instruction, SignatureFn signature)
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
+
+  // If this is a constructor, the first thing is does is create the new
+  // instance.
+  if (isConstructor) emit(&methodCompiler, CODE_NEW);
+
   finishBlock(&methodCompiler);
   // TODO(bob): Single-expression methods that implicitly return the result.
 
   // If it's a constructor, return "this".
-  if (instruction == CODE_METHOD_CTOR)
+  if (isConstructor)
   {
     // The receiver is always stored in the first local slot.
     emit(&methodCompiler, CODE_LOAD_LOCAL);
@@ -1640,7 +1646,10 @@ static void defaultConstructor(Compiler* compiler)
   Compiler ctorCompiler;
   int constant = initCompiler(&ctorCompiler, compiler->parser, compiler, 1);
 
-  // Just return the receiver which is in the first local slot.
+  // Create the instance of the class.
+  emit(&ctorCompiler, CODE_NEW);
+
+  // Then return the receiver which is in the first local slot.
   emit(&ctorCompiler, CODE_LOAD_LOCAL);
   emit(&ctorCompiler, 0);
   emit(&ctorCompiler, CODE_RETURN);
@@ -1648,7 +1657,7 @@ static void defaultConstructor(Compiler* compiler)
   endCompiler(&ctorCompiler, constant);
 
   // Define the constructor method.
-  emit(compiler, CODE_METHOD_CTOR);
+  emit(compiler, CODE_METHOD_STATIC);
   emit(compiler, ensureSymbol(&compiler->parser->vm->methods, "new", 3));
 }
 
@@ -1695,6 +1704,8 @@ void statement(Compiler* compiler)
     while (!match(compiler, TOKEN_RIGHT_BRACE))
     {
       Code instruction = CODE_METHOD_INSTANCE;
+      int isConstructor = 0;
+
       if (match(compiler, TOKEN_STATIC))
       {
         instruction = CODE_METHOD_STATIC;
@@ -1705,8 +1716,11 @@ void statement(Compiler* compiler)
       else if (match(compiler, TOKEN_THIS))
       {
         // If the method name is prefixed with "this", it's a constructor.
-        instruction = CODE_METHOD_CTOR;
+        isConstructor = 1;
         hasConstructor = 1;
+
+        // Constructors are defined on the class.
+        instruction = CODE_METHOD_STATIC;
       }
 
       SignatureFn signature = rules[compiler->parser->current.type].method;
@@ -1718,7 +1732,7 @@ void statement(Compiler* compiler)
         break;
       }
 
-      method(compiler, instruction, signature);
+      method(compiler, instruction, isConstructor, signature);
       consume(compiler, TOKEN_LINE,
               "Expect newline after definition in class.");
     }
@@ -1894,6 +1908,7 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
       case CODE_IS:
       case CODE_CLOSE_UPVALUE:
       case CODE_RETURN:
+      case CODE_NEW:
         break;
 
         // Instructions with one argument:
@@ -1952,7 +1967,6 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
         // Instructions with two arguments:
       case CODE_METHOD_INSTANCE:
       case CODE_METHOD_STATIC:
-      case CODE_METHOD_CTOR:
         ip += 2;
         break;
 

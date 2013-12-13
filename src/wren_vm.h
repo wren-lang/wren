@@ -120,6 +120,9 @@ typedef enum
   // stack.
   CODE_RETURN,
 
+  // Create a new instance of the receiver, which is assumed to be a class.
+  CODE_NEW,
+
   // Create a new list with [arg] elements. The top [arg] values on the stack
   // are the elements in forward order. Removes the elements and then pushes
   // the new list.
@@ -151,12 +154,6 @@ typedef enum
   // class on top of the stack (after the function is popped off) and remains
   // after this.
   CODE_METHOD_STATIC,
-
-  // Define a constructor method for symbol [arg] whose body is the function
-  // popped off the top of the stack. The class receiving the method is the
-  // metaclass of the class on top of the stack (after the function is popped
-  // off) and remains after this.
-  CODE_METHOD_CTOR,
 
   // This pseudo-instruction indicates the end of the bytecode. It should
   // always be preceded by a `CODE_RETURN`, so is never actually executed.

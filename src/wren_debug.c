@@ -212,6 +212,10 @@ int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
       printf("CODE_RETURN\n");
       break;
 
+    case CODE_NEW:
+      printf("CODE_NEW\n");
+      break;
+
     case CODE_LIST:
     {
       int count = bytecode[i++];
@@ -257,30 +261,16 @@ int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
     case CODE_METHOD_INSTANCE:
     {
       int symbol = bytecode[i++];
-      int constant = bytecode[i++];
       printf("METHOD_INSTANCE \"%s\"\n", getSymbolName(&vm->methods, symbol));
-      printf("%04d   | symbol %d\n", i - 1, symbol);
-      printf("%04d   | constant %d\n", i, constant);
+      printf("%04d   | symbol %d\n", i, symbol);
       break;
     }
 
     case CODE_METHOD_STATIC:
     {
       int symbol = bytecode[i++];
-      int constant = bytecode[i++];
       printf("METHOD_STATIC \"%s\"\n", getSymbolName(&vm->methods, symbol));
-      printf("%04d   | symbol %d\n", i - 1, symbol);
-      printf("%04d   | constant %d\n", i, constant);
-      break;
-    }
-
-    case CODE_METHOD_CTOR:
-    {
-      int symbol = bytecode[i++];
-      int constant = bytecode[i++];
-      printf("METHOD_CTOR \"%s\"\n", getSymbolName(&vm->methods, symbol));
-      printf("%04d   | symbol %d\n", i - 1, symbol);
-      printf("%04d   | constant %d\n", i, constant);
+      printf("%04d   | symbol %d\n", i, symbol);
       break;
     }
 

@@ -629,13 +629,13 @@ Value interpret(WrenVM* vm, Value function)
     &&code_IS,
     &&code_CLOSE_UPVALUE,
     &&code_RETURN,
+    &&code_NEW,
     &&code_LIST,
     &&code_CLOSURE,
     &&code_CLASS,
     &&code_SUBCLASS,
     &&code_METHOD_INSTANCE,
-    &&code_METHOD_STATIC,
-    &&code_METHOD_CTOR
+    &&code_METHOD_STATIC
   };
 
   #define INTERPRET_LOOP    DISPATCH();
@@ -718,21 +718,6 @@ Value interpret(WrenVM* vm, Value function)
           LOAD_FRAME();
           break;
 
-        case METHOD_CTOR:
-        {
-          Value instance = wrenNewInstance(vm, AS_CLASS(receiver));
-
-          // Store the new instance in the receiver slot so that it can be
-          // "this" in the body of the constructor and returned by it.
-          fiber->stack[fiber->stackSize - numArgs] = instance;
-
-          // Invoke the constructor body.
-          STORE_FRAME();
-          wrenCallFunction(fiber, method->fn, numArgs);
-          LOAD_FRAME();
-          break;
-        }
-
         case METHOD_NONE:
           printf("Receiver ");
           wrenPrintValue(receiver);
@@ -766,7 +751,7 @@ Value interpret(WrenVM* vm, Value function)
       // TODO(bob): Almost completely copied from CALL. Unify somehow.
 
       // Add one for the implicit receiver argument.
-      int numArgs = instruction - CODE_CALL_0 + 1;
+      int numArgs = instruction - CODE_SUPER_0 + 1;
       int symbol = READ_ARG();
 
       Value receiver = fiber->stack[fiber->stackSize - numArgs];
@@ -805,21 +790,6 @@ Value interpret(WrenVM* vm, Value function)
           wrenCallFunction(fiber, method->fn, numArgs);
           LOAD_FRAME();
           break;
-
-        case METHOD_CTOR:
-        {
-          Value instance = wrenNewInstance(vm, AS_CLASS(receiver));
-
-          // Store the new instance in the receiver slot so that it can be
-          // "this" in the body of the constructor and returned by it.
-          fiber->stack[fiber->stackSize - numArgs] = instance;
-
-          // Invoke the constructor body.
-          STORE_FRAME();
-          wrenCallFunction(fiber, method->fn, numArgs);
-          LOAD_FRAME();
-          break;
-        }
 
         case METHOD_NONE:
           printf("Receiver ");
@@ -1000,6 +970,18 @@ Value interpret(WrenVM* vm, Value function)
       closeUpvalue(fiber);
       DISPATCH();
 
+    CASE_CODE(NEW):
+    {
+      // The current receiver is the class itself.
+      Value receiver = fiber->stack[frame->stackStart];
+      Value instance = wrenNewInstance(vm, AS_CLASS(receiver));
+
+      // Store the new instance back in the receiver slot so that now it can be
+      // "this" in the body of the constructor and returned by it.
+      fiber->stack[frame->stackStart] = instance;
+      DISPATCH();
+    }
+
     CASE_CODE(RETURN):
     {
       Value result = POP();
@@ -1102,7 +1084,6 @@ Value interpret(WrenVM* vm, Value function)
 
     CASE_CODE(METHOD_INSTANCE):
     CASE_CODE(METHOD_STATIC):
-    CASE_CODE(METHOD_CTOR):
     {
       int type = instruction;
       int symbol = READ_ARG();
@@ -1119,12 +1100,6 @@ Value interpret(WrenVM* vm, Value function)
           // Statics are defined on the metaclass.
           classObj = classObj->metaclass;
           classObj->methods[symbol].type = METHOD_BLOCK;
-          break;
-
-        case CODE_METHOD_CTOR:
-          // Constructors are like statics.
-          classObj = classObj->metaclass;
-          classObj->methods[symbol].type = METHOD_CTOR;
           break;
       }
 
