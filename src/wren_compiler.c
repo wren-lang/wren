@@ -211,7 +211,8 @@ typedef struct sCompiler
 // Adds [constant] to the constant pool and returns its index.
 static int addConstant(Compiler* compiler, Value constant)
 {
-  // TODO(bob): Look for existing equal constant.
+  // TODO(bob): Look for existing equal constant. Note that we need to *not*
+  // do that for the placeholder constant created for super calls.
   // TODO(bob): Check for overflow.
   compiler->fn->constants[compiler->fn->numConstants++] = constant;
   return compiler->fn->numConstants - 1;
@@ -264,8 +265,16 @@ static void error(Compiler* compiler, const char* format, ...)
   compiler->parser->hasError = 1;
 
   Token* token = &compiler->parser->previous;
-  fprintf(stderr, "[Line %d] Error on '%.*s': ",
-          token->line, token->length, token->start);
+  fprintf(stderr, "[Line %d] Error on ", token->line);
+  if (token->type == TOKEN_LINE)
+  {
+    // Don't print the newline itself since that looks wonky.
+    fprintf(stderr, "newline: ");
+  }
+  else
+  {
+    fprintf(stderr, "'%.*s': ", token->length, token->start);
+  }
 
   va_list args;
   va_start(args, format);
@@ -1066,6 +1075,48 @@ static void parameterList(Compiler* compiler, char* name, int* length)
   }
 }
 
+// Compiles the method name and argument list for a "<...>.name(...)" call.
+static void namedCall(Compiler* compiler, int allowAssignment, Code instruction)
+{
+  // Build the method name.
+  consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
+  char name[MAX_METHOD_SIGNATURE];
+  int length = copyName(compiler, name);
+
+  // TODO(bob): Check for "=" here and set assignment and return.
+
+  // Parse the argument list, if any.
+  int numArgs = 0;
+  if (match(compiler, TOKEN_LEFT_PAREN))
+  {
+    do
+    {
+      // The VM can only handle a certain number of parameters, so check for
+      // this explicitly and give a usable error.
+      if (++numArgs == MAX_PARAMETERS + 1)
+      {
+        // Only show an error at exactly max + 1 and don't break so that we can
+        // keep parsing the parameter list and minimize cascaded errors.
+        error(compiler, "Cannot pass more than %d arguments to a method.",
+              MAX_PARAMETERS);
+      }
+
+      expression(compiler);
+
+      // Add a space in the name for each argument. Lets us overload by
+      // arity.
+      name[length++] = ' ';
+    }
+    while (match(compiler, TOKEN_COMMA));
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+  }
+
+  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
+
+  emit(compiler, instruction + numArgs);
+  emit(compiler, symbol);
+}
+
 static void grouping(Compiler* compiler, int allowAssignment)
 {
   expression(compiler);
@@ -1254,6 +1305,22 @@ static void string(Compiler* compiler, int allowAssignment)
   emit(compiler, constant);
 }
 
+static void super_(Compiler* compiler, int allowAssignment)
+{
+  // TODO(bob): Error if this is not in a method.
+  // The receiver is always stored in the first local slot.
+  // TODO(bob): Will need to do something different to handle functions
+  // enclosed in methods.
+  emit(compiler, CODE_LOAD_LOCAL);
+  emit(compiler, 0);
+
+  // TODO(bob): Super operator and constructor calls.
+  consume(compiler, TOKEN_DOT, "Expect '.' after 'super'.");
+
+  // Compile the superclass call.
+  namedCall(compiler, allowAssignment, CODE_SUPER_0);
+}
+
 static void this_(Compiler* compiler, int allowAssignment)
 {
   // Walk up the parent chain to see if there is an enclosing method.
@@ -1329,44 +1396,7 @@ static void subscript(Compiler* compiler, int allowAssignment)
 
 void call(Compiler* compiler, int allowAssignment)
 {
-  // Build the method name.
-  consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
-  char name[MAX_METHOD_SIGNATURE];
-  int length = copyName(compiler, name);
-
-  // TODO(bob): Check for "=" here and set assignment and return.
-
-  // Parse the argument list, if any.
-  int numArgs = 0;
-  if (match(compiler, TOKEN_LEFT_PAREN))
-  {
-    do
-    {
-      // The VM can only handle a certain number of parameters, so check for
-      // this explicitly and give a usable error.
-      if (++numArgs == MAX_PARAMETERS + 1)
-      {
-        // Only show an error at exactly max + 1 and don't break so that we can
-        // keep parsing the parameter list and minimize cascaded errors.
-        error(compiler, "Cannot pass more than %d arguments to a method.",
-              MAX_PARAMETERS);
-      }
-
-      expression(compiler);
-
-      // Add a space in the name for each argument. Lets us overload by
-      // arity.
-      name[length++] = ' ';
-    }
-    while (match(compiler, TOKEN_COMMA));
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
-  }
-
-  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
-
-  // Compile the method call.
-  emit(compiler, CODE_CALL_0 + numArgs);
-  emit(compiler, symbol);
+  namedCall(compiler, allowAssignment, CODE_CALL_0);
 }
 
 void is(Compiler* compiler, int allowAssignment)
@@ -1493,7 +1523,7 @@ GrammarRule rules[] =
   /* TOKEN_NULL          */ PREFIX(null),
   /* TOKEN_RETURN        */ UNUSED,
   /* TOKEN_STATIC        */ UNUSED,
-  /* TOKEN_SUPER         */ UNUSED,
+  /* TOKEN_SUPER         */ PREFIX(super_),
   /* TOKEN_THIS          */ PREFIX(this_),
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
@@ -1848,6 +1878,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
 
 void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
 {
+  // TODO(bob): What about functions nested inside [fn]?
   int ip = 0;
   for (;;)
   {
@@ -1890,6 +1921,23 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
       case CODE_CALL_14:
       case CODE_CALL_15:
       case CODE_CALL_16:
+      case CODE_SUPER_0:
+      case CODE_SUPER_1:
+      case CODE_SUPER_2:
+      case CODE_SUPER_3:
+      case CODE_SUPER_4:
+      case CODE_SUPER_5:
+      case CODE_SUPER_6:
+      case CODE_SUPER_7:
+      case CODE_SUPER_8:
+      case CODE_SUPER_9:
+      case CODE_SUPER_10:
+      case CODE_SUPER_11:
+      case CODE_SUPER_12:
+      case CODE_SUPER_13:
+      case CODE_SUPER_14:
+      case CODE_SUPER_15:
+      case CODE_SUPER_16:
       case CODE_JUMP:
       case CODE_LOOP:
       case CODE_JUMP_IF:

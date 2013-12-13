@@ -126,10 +126,35 @@ int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
     case CODE_CALL_15:
     case CODE_CALL_16:
     {
-      // Add one for the implicit receiver argument.
       int numArgs = bytecode[i - 1] - CODE_CALL_0;
       int symbol = bytecode[i++];
       printf("CALL_%d \"%s\"\n", numArgs,
+             getSymbolName(&vm->methods, symbol));
+      printf("%04d   | symbol %d\n", i, symbol);
+      break;
+    }
+
+    case CODE_SUPER_0:
+    case CODE_SUPER_1:
+    case CODE_SUPER_2:
+    case CODE_SUPER_3:
+    case CODE_SUPER_4:
+    case CODE_SUPER_5:
+    case CODE_SUPER_6:
+    case CODE_SUPER_7:
+    case CODE_SUPER_8:
+    case CODE_SUPER_9:
+    case CODE_SUPER_10:
+    case CODE_SUPER_11:
+    case CODE_SUPER_12:
+    case CODE_SUPER_13:
+    case CODE_SUPER_14:
+    case CODE_SUPER_15:
+    case CODE_SUPER_16:
+    {
+      int numArgs = bytecode[i - 1] - CODE_SUPER_0;
+      int symbol = bytecode[i++];
+      printf("SUPER_%d \"%s\"\n", numArgs,
              getSymbolName(&vm->methods, symbol));
       printf("%04d   | symbol %d\n", i, symbol);
       break;

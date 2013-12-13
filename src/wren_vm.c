@@ -604,6 +604,23 @@ Value interpret(WrenVM* vm, Value function)
     &&code_CALL_14,
     &&code_CALL_15,
     &&code_CALL_16,
+    &&code_SUPER_0,
+    &&code_SUPER_1,
+    &&code_SUPER_2,
+    &&code_SUPER_3,
+    &&code_SUPER_4,
+    &&code_SUPER_5,
+    &&code_SUPER_6,
+    &&code_SUPER_7,
+    &&code_SUPER_8,
+    &&code_SUPER_9,
+    &&code_SUPER_10,
+    &&code_SUPER_11,
+    &&code_SUPER_12,
+    &&code_SUPER_13,
+    &&code_SUPER_14,
+    &&code_SUPER_15,
+    &&code_SUPER_16,
     &&code_JUMP,
     &&code_LOOP,
     &&code_JUMP_IF,
@@ -715,7 +732,95 @@ Value interpret(WrenVM* vm, Value function)
           LOAD_FRAME();
           break;
         }
-          
+
+        case METHOD_NONE:
+          printf("Receiver ");
+          wrenPrintValue(receiver);
+          printf(" does not implement method \"%s\".\n",
+                 vm->methods.names[symbol]);
+          // TODO(bob): Throw an exception or halt the fiber or something.
+          exit(1);
+          break;
+      }
+      DISPATCH();
+    }
+
+    CASE_CODE(SUPER_0):
+    CASE_CODE(SUPER_1):
+    CASE_CODE(SUPER_2):
+    CASE_CODE(SUPER_3):
+    CASE_CODE(SUPER_4):
+    CASE_CODE(SUPER_5):
+    CASE_CODE(SUPER_6):
+    CASE_CODE(SUPER_7):
+    CASE_CODE(SUPER_8):
+    CASE_CODE(SUPER_9):
+    CASE_CODE(SUPER_10):
+    CASE_CODE(SUPER_11):
+    CASE_CODE(SUPER_12):
+    CASE_CODE(SUPER_13):
+    CASE_CODE(SUPER_14):
+    CASE_CODE(SUPER_15):
+    CASE_CODE(SUPER_16):
+    {
+      // TODO(bob): Almost completely copied from CALL. Unify somehow.
+
+      // Add one for the implicit receiver argument.
+      int numArgs = instruction - CODE_CALL_0 + 1;
+      int symbol = READ_ARG();
+
+      Value receiver = fiber->stack[fiber->stackSize - numArgs];
+      ObjClass* classObj = wrenGetClass(vm, receiver);
+
+      // Ignore methods defined on the receiver's immediate class.
+      classObj = classObj->superclass;
+
+      Method* method = &classObj->methods[symbol];
+      switch (method->type)
+      {
+        case METHOD_PRIMITIVE:
+        {
+          Value* args = &fiber->stack[fiber->stackSize - numArgs];
+          Value result = method->primitive(vm, args);
+
+          fiber->stack[fiber->stackSize - numArgs] = result;
+
+          // Discard the stack slots for the arguments (but leave one for
+          // the result).
+          fiber->stackSize -= numArgs - 1;
+          break;
+        }
+
+        case METHOD_FIBER:
+        {
+          STORE_FRAME();
+          Value* args = &fiber->stack[fiber->stackSize - numArgs];
+          method->fiberPrimitive(vm, fiber, args);
+          LOAD_FRAME();
+          break;
+        }
+
+        case METHOD_BLOCK:
+          STORE_FRAME();
+          wrenCallFunction(fiber, method->fn, numArgs);
+          LOAD_FRAME();
+          break;
+
+        case METHOD_CTOR:
+        {
+          Value instance = wrenNewInstance(vm, AS_CLASS(receiver));
+
+          // Store the new instance in the receiver slot so that it can be
+          // "this" in the body of the constructor and returned by it.
+          fiber->stack[fiber->stackSize - numArgs] = instance;
+
+          // Invoke the constructor body.
+          STORE_FRAME();
+          wrenCallFunction(fiber, method->fn, numArgs);
+          LOAD_FRAME();
+          break;
+        }
+
         case METHOD_NONE:
           printf("Receiver ");
           wrenPrintValue(receiver);
@@ -967,7 +1072,7 @@ Value interpret(WrenVM* vm, Value function)
           closure->upvalues[i] = upvalues[index];
         }
       }
-      
+
       DISPATCH();
     }
 

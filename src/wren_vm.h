@@ -72,6 +72,26 @@ typedef enum
   CODE_CALL_15,
   CODE_CALL_16,
 
+  // Invoke a superclass method with symbol [arg]. The number indicates the
+  // number of arguments (not including the receiver).
+  CODE_SUPER_0,
+  CODE_SUPER_1,
+  CODE_SUPER_2,
+  CODE_SUPER_3,
+  CODE_SUPER_4,
+  CODE_SUPER_5,
+  CODE_SUPER_6,
+  CODE_SUPER_7,
+  CODE_SUPER_8,
+  CODE_SUPER_9,
+  CODE_SUPER_10,
+  CODE_SUPER_11,
+  CODE_SUPER_12,
+  CODE_SUPER_13,
+  CODE_SUPER_14,
+  CODE_SUPER_15,
+  CODE_SUPER_16,
+
   // Jump the instruction pointer [arg] forward.
   CODE_JUMP,
 
