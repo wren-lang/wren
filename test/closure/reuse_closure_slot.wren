@@ -14,6 +14,6 @@
   }
 }
 
-// TODO(bob): Closing over this.
-// TODO(bob): Close over fn/method parameter.
-// TODO(bob): Maximum number of closed-over variables (directly and/or indirect).
+// TODO: Closing over this.
+// TODO: Close over fn/method parameter.
+// TODO: Maximum number of closed-over variables (directly and/or indirect).

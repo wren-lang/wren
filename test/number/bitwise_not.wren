@@ -6,7 +6,7 @@ io.write(~23) // expect: 4294967272
 io.write(~4294967295) // expect: 0
 
 // Past max u32 value.
-// TODO(bob): Is this right?
+// TODO: Is this right?
 io.write(~4294967296) // expect: 4294967295
 
 // Negative numbers.

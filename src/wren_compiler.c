@@ -37,7 +37,7 @@
 // extra spaces added to handle arity, and another byte to terminate the string.
 #define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + MAX_PARAMETERS + 1)
 
-// TODO(bob): Get rid of this and use a growable buffer.
+// TODO: Get rid of this and use a growable buffer.
 #define MAX_STRING (1024)
 
 typedef enum
@@ -137,7 +137,7 @@ typedef struct
   // Non-zero if a syntax or compile error has occurred.
   int hasError;
 
-  // TODO(bob): Dynamically allocate this.
+  // TODO: Dynamically allocate this.
   // A buffer for the unescaped text of the current token if it's a string
   // literal. Unlike the raw token, this will have escape sequences translated
   // to their literal equivalent.
@@ -211,9 +211,9 @@ typedef struct sCompiler
 // Adds [constant] to the constant pool and returns its index.
 static int addConstant(Compiler* compiler, Value constant)
 {
-  // TODO(bob): Look for existing equal constant. Note that we need to *not*
-  // do that for the placeholder constant created for super calls.
-  // TODO(bob): Check for overflow.
+  // TODO: Look for existing equal constant. Note that we need to *not* do that
+  // for the placeholder constant created for super calls.
+  // TODO: Check for overflow.
   compiler->fn->constants[compiler->fn->numConstants++] = constant;
   return compiler->fn->numConstants - 1;
 }
@@ -361,7 +361,7 @@ static void skipBlockComment(Parser* parser)
   int nesting = 1;
   while (nesting > 0)
   {
-    // TODO(bob): Unterminated comment. Should return error.
+    // TODO: Unterminated comment. Should return error.
     if (peekChar(parser) == '\0') return;
 
     if (peekChar(parser) == '/' && peekNextChar(parser) == '*')
@@ -397,7 +397,7 @@ static int isKeyword(Parser* parser, const char* keyword)
 // Finishes lexing a number literal.
 static void readNumber(Parser* parser)
 {
-  // TODO(bob): Hex, scientific, etc.
+  // TODO: Hex, scientific, etc.
   while (isDigit(peekChar(parser))) nextChar(parser);
 
   // See if it has a floating point. Make sure there is a digit after the "."
@@ -461,11 +461,11 @@ static void readString(Parser* parser)
         case 'n':  addStringChar(parser, '\n'); break;
         case 't':  addStringChar(parser, '\t'); break;
         default:
-          // TODO(bob): Emit error token.
+          // TODO: Emit error token.
           break;
       }
 
-      // TODO(bob): Other escapes (\r, etc.), Unicode escape sequences.
+      // TODO: Other escapes (\r, etc.), Unicode escape sequences.
     }
     else
     {
@@ -576,7 +576,7 @@ static void readRawToken(Parser* parser)
         }
         else
         {
-          // TODO(bob): Handle error.
+          // TODO: Handle error.
           makeToken(parser, TOKEN_ERROR);
         }
         return;
@@ -967,7 +967,7 @@ static void endCompiler(Compiler* compiler, int constant)
 
       // Emit arguments for each upvalue to know whether to capture a local or
       // an upvalue.
-      // TODO(bob): Do something more efficient here?
+      // TODO: Do something more efficient here?
       for (int i = 0; i < compiler->fn->numUpvalues; i++)
       {
         emit(compiler->parent, compiler->upvalues[i].isLocal);
@@ -1068,7 +1068,7 @@ static void parameterList(Compiler* compiler, char* name, int* length)
 
       // Add a space in the name for the parameter.
       if (name != NULL) name[(*length)++] = ' ';
-      // TODO(bob): Check for length overflow.
+      // TODO: Check for length overflow.
     }
     while (match(compiler, TOKEN_COMMA));
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
@@ -1083,7 +1083,7 @@ static void namedCall(Compiler* compiler, int allowAssignment, Code instruction)
   char name[MAX_METHOD_SIGNATURE];
   int length = copyName(compiler, name);
 
-  // TODO(bob): Check for "=" here and set assignment and return.
+  // TODO: Check for "=" here and set assignment and return.
 
   // Parse the argument list, if any.
   int numArgs = 0;
@@ -1140,7 +1140,7 @@ static void list(Compiler* compiler, int allowAssignment)
 
   // Create the list.
   emit(compiler, CODE_LIST);
-  // TODO(bob): Handle lists >255 elements.
+  // TODO: Handle lists >255 elements.
   emit(compiler, numElements);
 }
 
@@ -1279,7 +1279,7 @@ static void number(Compiler* compiler, int allowAssignment)
   char* end;
 
   double value = strtod(token->start, &end);
-  // TODO(bob): Check errno == ERANGE here.
+  // TODO: Check errno == ERANGE here.
   if (end == token->start)
   {
     error(compiler, "Invalid number literal.");
@@ -1307,14 +1307,14 @@ static void string(Compiler* compiler, int allowAssignment)
 
 static void super_(Compiler* compiler, int allowAssignment)
 {
-  // TODO(bob): Error if this is not in a method.
+  // TODO: Error if this is not in a method.
   // The receiver is always stored in the first local slot.
-  // TODO(bob): Will need to do something different to handle functions
-  // enclosed in methods.
+  // TODO: Will need to do something different to handle functions enclosed
+  // in methods.
   emit(compiler, CODE_LOAD_LOCAL);
   emit(compiler, 0);
 
-  // TODO(bob): Super operator and constructor calls.
+  // TODO: Super operator and constructor calls.
   consume(compiler, TOKEN_DOT, "Expect '.' after 'super'.");
 
   // Compile the superclass call.
@@ -1344,8 +1344,8 @@ static void this_(Compiler* compiler, int allowAssignment)
   }
 
   // The receiver is always stored in the first local slot.
-  // TODO(bob): Will need to do something different to handle functions
-  // enclosed in methods.
+  // TODO: Will need to do something different to handle functions enclosed in
+  // methods.
   emit(compiler, CODE_LOAD_LOCAL);
   emit(compiler, 0);
 }
@@ -1387,7 +1387,7 @@ static void subscript(Compiler* compiler, int allowAssignment)
   name[length++] = ']';
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
-  // TODO(bob): Check for "=" here and handle subscript setters.
+  // TODO: Check for "=" here and handle subscript setters.
 
   // Compile the method call.
   emit(compiler, CODE_CALL_0 + numArgs);
@@ -1590,7 +1590,7 @@ void method(Compiler* compiler, Code instruction, int isConstructor,
   if (isConstructor) emit(&methodCompiler, CODE_NEW);
 
   finishBlock(&methodCompiler);
-  // TODO(bob): Single-expression methods that implicitly return the result.
+  // TODO: Single-expression methods that implicitly return the result.
 
   // If it's a constructor, return "this".
   if (isConstructor)
@@ -1629,7 +1629,7 @@ void block(Compiler* compiler)
     return;
   }
 
-  // TODO(bob): Only allowing expressions here means you can't do:
+  // TODO: Only allowing expressions here means you can't do:
   //
   // if (foo) return "blah"
   //
@@ -1709,7 +1709,7 @@ void statement(Compiler* compiler)
       if (match(compiler, TOKEN_STATIC))
       {
         instruction = CODE_METHOD_STATIC;
-        // TODO(bob): Need to handle fields inside static methods correctly.
+        // TODO: Need to handle fields inside static methods correctly.
         // Currently, they're compiled as instance fields, which will be wrong
         // wrong wrong given that the receiver is actually the class obj.
       }
@@ -1783,7 +1783,7 @@ void statement(Compiler* compiler)
   if (match(compiler, TOKEN_RETURN))
   {
     // Compile the return value.
-    // TODO(bob): Implicitly return null if there is a newline or } after the
+    // TODO: Implicitly return null if there is a newline or } after the
     // "return".
     expression(compiler);
 
@@ -1793,10 +1793,10 @@ void statement(Compiler* compiler)
 
   if (match(compiler, TOKEN_VAR))
   {
-    // TODO(bob): Variable should not be in scope until after initializer.
+    // TODO: Variable should not be in scope until after initializer.
     int symbol = declareVariable(compiler);
 
-    // TODO(bob): Allow uninitialized vars?
+    // TODO: Allow uninitialized vars?
     consume(compiler, TOKEN_EQ, "Expect '=' after variable name.");
 
     // Compile the initializer.
@@ -1892,7 +1892,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
 
 void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
 {
-  // TODO(bob): What about functions nested inside [fn]?
+  // TODO: What about functions nested inside [fn]?
   int ip = 0;
   for (;;)
   {

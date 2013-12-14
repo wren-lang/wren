@@ -8,7 +8,7 @@
 // This is the source file for the standalone command line interpreter. It is
 // not needed if you are embedding Wren in an application.
 
-// TODO(bob): Don't hardcode this.
+// TODO: Don't hardcode this.
 #define MAX_LINE 1024
 
 static void failIf(int condition, int exitCode, const char* format, ...)
@@ -76,9 +76,9 @@ static int runRepl()
     char line[MAX_LINE];
     fgets(line, MAX_LINE, stdin);
 
-    // TODO(bob): Handle failure.
+    // TODO: Handle failure.
     wrenInterpret(vm, line);
-    // TODO(bob): Figure out how this should work with wren API.
+    // TODO: Figure out how this should work with wren API.
     /*
     ObjFn* fn = compile(vm, line);
 

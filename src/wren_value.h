@@ -32,8 +32,8 @@
 // The representation is controlled by the `NAN_TAGGING` define. If that's
 // defined, Nan tagging is used.
 
-// TODO(bob): This should be in VM. (Or, really, we shouldn't hardcode this at
-// all and have growable symbol tables.)
+// TODO: This should be in VM. (Or, really, we shouldn't hardcode this at all
+// and have growable symbol tables.)
 #define MAX_SYMBOLS 256
 
 typedef enum
@@ -105,7 +105,7 @@ typedef struct
   int numUpvalues;
   unsigned char* bytecode;
 
-  // TODO(bob): Flexible array?
+  // TODO: Flexible array?
   Value* constants;
 } ObjFn;
 
@@ -149,7 +149,7 @@ typedef struct
   // The function that this closure is an instance of.
   ObjFn* fn;
 
-  // TODO(bob): Make a flexible array.
+  // TODO: Make a flexible array.
   // The upvalues this function has closed over.
   Upvalue** upvalues;
 } ObjClosure;
@@ -195,7 +195,7 @@ typedef struct sObjClass
   // of its superclass fields.
   int numFields;
 
-  // TODO(bob): Hack. Probably don't want to use this much space.
+  // TODO: Hack. Probably don't want to use this much space.
   Method methods[MAX_SYMBOLS];
 } ObjClass;
 

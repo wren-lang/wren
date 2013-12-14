@@ -1,7 +1,7 @@
 // Single expression body.
 (fn io.write("ok")).call // expect: ok
 
-// TODO(bob): Precedence of fn body.
+// TODO: Precedence of fn body.
 
 // Curly body.
 fn {
@@ -29,5 +29,3 @@ fn {
 
 
 }.call
-
-// TODO(bob): Arguments.

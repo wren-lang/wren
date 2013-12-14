@@ -1,5 +1,5 @@
-// TODO(bob): What happens if the index isn't an integer?
-// TODO(bob): Out of bounds.
+// TODO: What happens if the index isn't an integer?
+// TODO: Out of bounds.
 
 // Add to empty list.
 var a = []

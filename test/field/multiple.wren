@@ -24,7 +24,7 @@ foo.write
 // expect: 4
 // expect: 5
 
-// TODO(bob): Inherited fields.
-// TODO(bob): Trying to get or set a field outside of a class.
-// TODO(bob): Fields in nested classes.
-// TODO(bob): Closing over fields.
+// TODO: Inherited fields.
+// TODO: Trying to get or set a field outside of a class.
+// TODO: Fields in nested classes.
+// TODO: Closing over fields.

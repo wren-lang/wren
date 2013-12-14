@@ -20,8 +20,8 @@ bar.method(1, 2) // expect: bar
 bar.method(1, 2, 3) // expect: foo
 bar.method(1, 2, 3, 4) // expect: bar
 
-// TODO(bob): Overriding (or BETA-style refining?).
-// TODO(bob): Private fields.
-// TODO(bob): Super (or inner) calls.
-// TODO(bob): Grammar for what expressions can follow "is".
-// TODO(bob): Prevent extending built-in types.
+// TODO: Overriding.
+// TODO: Private fields.
+// TODO: Super (or inner) calls.
+// TODO: Grammar for what expressions can follow "is".
+// TODO: Prevent extending built-in types.

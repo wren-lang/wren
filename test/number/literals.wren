@@ -6,5 +6,5 @@ io.write(-0)      // expect: -0
 io.write(123.456) // expect: 123.456
 io.write(-0.001)  // expect: -0.001
 
-// TODO(bob): Hex? Scientific notation?
-// TODO(bob): Literals at and beyond numeric limits.
+// TODO: Hex? Scientific notation?
+// TODO: Literals at and beyond numeric limits.

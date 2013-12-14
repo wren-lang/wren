@@ -6,6 +6,6 @@
 // Other stuff: ឃᢆ᯽₪ℜ↩⊗┺░
 // Emoji: ☃☺♣
 
-// TODO(bob): What about combining characters?
+// TODO: What about combining characters?
 
 io.write("ok") // expect: ok

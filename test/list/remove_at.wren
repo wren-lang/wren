@@ -24,7 +24,7 @@ f.removeAt(-1)
 io.write(f) // expect: [1, 2]
 
 // Out of bounds.
-// TODO(bob): Signal error in better way.
+// TODO: Signal error in better way.
 io.write([1, 2, 3].removeAt(3)) // expect: null
 io.write([1, 2, 3].removeAt(-4)) // expect: null
 

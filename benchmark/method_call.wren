@@ -30,14 +30,14 @@ class NthToggle {
   }
 }
 
-// TODO(bob): The follow the other examples, we should be using inheritance
-// here. Since Wren doesn't currently support inherited fields or calling
-// superclass constructors, it doesn't. It probably won't make a huge perf
-// difference, but it should be fixed when possible to be:
+// TODO: The follow the other examples, we should be using inheritance here.
+// Since Wren doesn't currently support inherited fields or calling superclass
+// constructors, it doesn't. It probably won't make a huge perf difference,
+// but it should be fixed when possible to be:
 /*
 class NthToggle is Toggle {
   this new(startState, maxCounter) {
-    // TODO(bob): Need to distinguish superclass method calls from superclass
+    // TODO: Need to distinguish superclass method calls from superclass
     // constructor calls.
     super.new(startState)
     _countMax = maxCounter

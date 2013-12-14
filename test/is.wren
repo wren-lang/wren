@@ -20,6 +20,6 @@ io.write((fn 1) is Object) // expect: true
 io.write("s" is Object) // expect: true
 io.write(123 is Object) // expect: true
 
-// TODO(bob): Non-class on RHS.
-// TODO(bob): Precedence and associativity.
-// TODO(bob): Metaclasses ("Num is Class").
+// TODO: Non-class on RHS.
+// TODO: Precedence and associativity.
+// TODO: Metaclasses ("Num is Class").

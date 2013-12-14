@@ -1,4 +1,4 @@
 io.write(5 * 3) // expect: 15
 io.write(12.34 * 0.3) // expect: 3.702
 
-// TODO(bob): Unsupported RHS types.
+// TODO: Unsupported RHS types.

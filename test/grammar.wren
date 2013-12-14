@@ -1,4 +1,3 @@
-
 // * has higher precedence than +.
 io.write(2 + 3 * 4) // expect: 14
 
@@ -26,7 +25,7 @@ io.write(false == 1 >= 2) // expect: true
 // Unary - has lower precedence than ..
 io.write(-"abc".count) // expect: -3
 
-// TODO(bob): %, associativity.
+// TODO: %, associativity.
 
 // Using () for grouping.
 io.write((2 * (6 - (2 + 2)))) // expect: 4

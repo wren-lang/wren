@@ -11,14 +11,14 @@ io.write("abcd"[-2]) // expect: c
 io.write("abcd"[-1]) // expect: d
 
 // Handle out of bounds.
-// TODO(bob): Should halt the fiber or raise an error somehow.
+// TODO: Should halt the fiber or raise an error somehow.
 io.write("abcd"[4])  // expect: null
 io.write("abcd"[-5]) // expect: null
 
 // Handle wrong argument type.
-// TODO(bob): Should halt the fiber or raise an error somehow.
+// TODO: Should halt the fiber or raise an error somehow.
 io.write("abcd"[true]) // expect: null
 
 // Handle non-integer index.
-// TODO(bob): Should halt the fiber or raise an error somehow.
+// TODO: Should halt the fiber or raise an error somehow.
 io.write("abcd"[1.5]) // expect: null

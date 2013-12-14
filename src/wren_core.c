@@ -37,7 +37,7 @@
 #define DEF_FIBER_NATIVE(native) \
     static void native_##native(WrenVM* vm, Fiber* fiber, Value* args)
 
-// TODO(bob): Tune these.
+// TODO: Tune these.
 // The initial (and minimum) capacity of a non-empty list object.
 #define LIST_MIN_CAPACITY (16)
 
@@ -54,7 +54,7 @@ DEF_NATIVE(bool_not)
 
 DEF_NATIVE(bool_toString)
 {
-  // TODO(bob): Intern these strings or something.
+  // TODO: Intern these strings or something.
   if (AS_BOOL(args[0]))
   {
     return wrenNewString(vm, "true", 4);
@@ -99,7 +99,7 @@ static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
   list->capacity *= 2;
   list->elements = wrenReallocate(vm, list->elements,
       list->capacity * sizeof(Value), capacity * sizeof(Value));
-  // TODO(bob): Handle allocation failure.
+  // TODO: Handle allocation failure.
   list->capacity = capacity;
 }
 
@@ -155,8 +155,8 @@ DEF_NATIVE(list_insert)
 
   // count + 1 here so you can "insert" at the very end.
   int index = validateIndex(args[2], list->count + 1);
-  // TODO(bob): Instead of returning null here, should signal an error
-  // explicitly somehow.
+  // TODO: Instead of returning null here, should signal an error explicitly
+  // somehow.
   if (index == -1) return NULL_VAL;
 
   ensureListCapacity(vm, list, list->count + 1);
@@ -176,8 +176,8 @@ DEF_NATIVE(list_removeAt)
 {
   ObjList* list = AS_LIST(args[0]);
   int index = validateIndex(args[1], list->count);
-  // TODO(bob): Instead of returning null here, should signal an error
-  // explicitly somehow.
+  // TODO: Instead of returning null here, should signal an error explicitly
+  // somehow.
   if (index == -1) return NULL_VAL;
 
   Value removed = list->elements[index];
@@ -205,8 +205,8 @@ DEF_NATIVE(list_subscript)
   ObjList* list = AS_LIST(args[0]);
 
   int index = validateIndex(args[1], list->count);
-  // TODO(bob): Instead of returning null here, should signal an error
-  // explicitly somehow.
+  // TODO: Instead of returning null here, should signal an error explicitly
+  // somehow.
   if (index == -1) return NULL_VAL;
 
   return list->elements[index];
@@ -214,7 +214,7 @@ DEF_NATIVE(list_subscript)
 
 DEF_NATIVE(null_toString)
 {
-  // TODO(bob): Intern this string or something.
+  // TODO: Intern this string or something.
   return wrenNewString(vm, "null", 4);
 }
 
@@ -225,7 +225,7 @@ DEF_NATIVE(num_abs)
 
 DEF_NATIVE(num_toString)
 {
-  // TODO(bob): What size should this be?
+  // TODO: What size should this be?
   char temp[100];
   sprintf(temp, "%.14g", AS_NUM(args[0]));
   return (Value)wrenNewString(vm, temp, strlen(temp));
@@ -245,7 +245,7 @@ DEF_NATIVE(num_minus)
 DEF_NATIVE(num_plus)
 {
   if (!IS_NUM(args[1])) return vm->unsupported;
-  // TODO(bob): Handle coercion to string if RHS is a string.
+  // TODO: Handle coercion to string if RHS is a string.
   return NUM_VAL(AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
@@ -328,7 +328,7 @@ DEF_NATIVE(object_type)
 DEF_NATIVE(string_contains)
 {
   const char* string = AS_CSTRING(args[0]);
-  // TODO(bob): Check type of arg first!
+  // TODO: Check type of arg first!
   const char* search = AS_CSTRING(args[1]);
 
   // Corner case, the empty string contains the empty string.
@@ -351,7 +351,7 @@ DEF_NATIVE(string_toString)
 DEF_NATIVE(string_plus)
 {
   if (!IS_STRING(args[1])) return vm->unsupported;
-  // TODO(bob): Handle coercion to string of RHS.
+  // TODO: Handle coercion to string of RHS.
 
   const char* left = AS_CSTRING(args[0]);
   const char* right = AS_CSTRING(args[1]);
@@ -386,8 +386,8 @@ DEF_NATIVE(string_bangeq)
 
 DEF_NATIVE(string_subscript)
 {
-  // TODO(bob): Instead of returning null here, all of these failure cases
-  // should signal an error explicitly somehow.
+  // TODO: Instead of returning null here, all of these failure cases should
+  // signal an error explicitly somehow.
   if (!IS_NUM(args[1])) return NULL_VAL;
 
   double indexNum = AS_NUM(args[1]);
@@ -398,7 +398,7 @@ DEF_NATIVE(string_subscript)
   ObjString* string = AS_STRING(args[0]);
 
   // Negative indices count from the end.
-  // TODO(bob): Strings should cache their length.
+  // TODO: Strings should cache their length.
   int length = (int)strlen(string->value);
   if (index < 0) index = length + index;
 
@@ -406,7 +406,7 @@ DEF_NATIVE(string_subscript)
   if (index < 0 || index >= length) return NULL_VAL;
 
   // The result is a one-character string.
-  // TODO(bob): Handle UTF-8.
+  // TODO: Handle UTF-8.
   Value value = wrenNewString(vm, NULL, 2);
   ObjString* result = AS_STRING(value);
   result->value[0] = AS_CSTRING(args[0])[index];
@@ -494,8 +494,8 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, ">= ", num_gte);
   NATIVE(vm->numClass, "~", num_bitwiseNot);
 
-  // TODO(bob): The only reason there are here is so that 0 != -0. Is that what
-  // we want?
+  // TODO: The only reason there are here is so that 0 != -0. Is that what we
+  // want?
   NATIVE(vm->numClass, "== ", num_eqeq);
   NATIVE(vm->numClass, "!= ", num_bangeq);
 
@@ -511,15 +511,15 @@ void wrenInitializeCore(WrenVM* vm)
   ObjClass* ioClass = defineClass(vm, "IO", vm->objectClass);
   NATIVE(ioClass, "write ", io_write);
 
-  // TODO(bob): Making this an instance is lame. The only reason we're doing it
-  // is because "IO.write()" looks ugly. Maybe just get used to that?
+  // TODO: Making this an instance is lame. The only reason we're doing it is
+  // because "IO.write()" looks ugly. Maybe just get used to that?
   Value ioObject = wrenNewInstance(vm, ioClass);
   vm->globals[addSymbol(&vm->globalSymbols, "io", 2)] = ioObject;
 
   ObjClass* osClass = defineClass(vm, "OS", vm->objectClass);
   NATIVE(osClass->metaclass, "clock", os_clock);
 
-  // TODO(bob): Make this a distinct object type.
+  // TODO: Make this a distinct object type.
   ObjClass* unsupportedClass = wrenNewClass(vm, vm->objectClass, 0);
   vm->unsupported = (Value)wrenNewInstance(vm, unsupportedClass);
 }

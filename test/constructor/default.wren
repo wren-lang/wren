@@ -7,5 +7,5 @@ var foo = Foo.new
 io.write(foo is Foo) // expect: true
 io.write(foo.toString) // expect: Foo
 
-// TODO(bob): Test that class doesn't get default constructor if it has an
-// explicit one.
+// TODO: Test that class doesn't get default constructor if it has an explicit
+// one.

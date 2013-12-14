@@ -1,5 +1,5 @@
 class Foo {
-  // TODO(bob): Do we want to require an explicit "new" here?
+  // TODO: Do we want to require an explicit "new" here?
   this new { io.write("zero") }
   this new(a) { io.write(a) }
   this new(a, b) { io.write(a + b) }

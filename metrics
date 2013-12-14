@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
 import glob
+import fnmatch
 import itertools
+import os
 import re
 
-TODO_PATTERN = re.compile(r'\s*// TODO\(')
+TODO_PATTERN = re.compile(r'\s*// TODO:')
 DOC_PATTERN = re.compile(r'\s*//')
 EXPECT_PATTERN = re.compile(r'// expect')
 
@@ -42,24 +44,25 @@ for source_path in files:
 
       num_code += 1
 
-for test_path in glob.iglob("test/*.wren"):
-  num_test_files += 1
-  with open(test_path, "r") as input:
-    for line in input:
-      if (line.strip() == ""):
-        num_test_empty += 1
-      else:
-        num_test += 1
+for dir_path, dir_names, file_names in os.walk("test"):
+  for file_name in fnmatch.filter(file_names, "*.wren"):
+    num_test_files += 1
+    with open(os.path.join(dir_path, file_name), "r") as input:
+      for line in input:
+        if (line.strip() == ""):
+          num_test_empty += 1
+        else:
+          num_test += 1
 
-      match = TODO_PATTERN.match(line)
-      if match:
-        num_test_todos += 1
-        continue
+        match = TODO_PATTERN.match(line)
+        if match:
+          num_test_todos += 1
+          continue
 
-      match = EXPECT_PATTERN.search(line)
-      if match:
-        num_expects += 1
-        continue
+        match = EXPECT_PATTERN.search(line)
+        if match:
+          num_expects += 1
+          continue
 
 print "source:"
 print "  files          ", num_files

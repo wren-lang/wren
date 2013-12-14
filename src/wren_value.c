@@ -52,8 +52,8 @@ static ObjClass* newClass(WrenVM* vm, ObjClass* metaclass,
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
 {
   // Make the metaclass.
-  // TODO(bob): What is the metaclass's metaclass?
-  // TODO(bob): Handle static fields.
+  // TODO: What is the metaclass's metaclass?
+  // TODO: Handle static fields.
   ObjClass* metaclass = newClass(vm, NULL, vm->classClass, 0);
 
   // Make sure it isn't collected when we allocate the metaclass.
@@ -89,7 +89,7 @@ ObjFn* wrenNewFunction(WrenVM* vm)
 {
   // Allocate these before the function in case they trigger a GC which would
   // free the function.
-  // TODO(bob): Hack! make variable sized.
+  // TODO: Hack! make variable sized.
   unsigned char* bytecode = allocate(vm, sizeof(Code) * 1024);
   Value* constants = allocate(vm, sizeof(Value) * 256);
 
@@ -154,7 +154,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
     strncpy(heapText, text, length);
     heapText[length] = '\0';
   }
-  
+
   return OBJ_VAL(string);
 }
 

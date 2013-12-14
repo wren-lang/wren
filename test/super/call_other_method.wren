@@ -15,8 +15,8 @@ Derived.new.bar
 // expect: Derived.bar
 // expect: Base.foo
 
-// TODO(bob): Super constructor calls.
-// TODO(bob): Super operator calls.
-// TODO(bob): Calling super outside of a class.
-// TODO(bob): Super calls inside nested functions in methods.
-// TODO(bob): Super where there is no inherited method.
+// TODO: Super constructor calls.
+// TODO: Super operator calls.
+// TODO: Calling super outside of a class.
+// TODO: Super calls inside nested functions in methods.
+// TODO: Super where there is no inherited method.

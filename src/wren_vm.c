@@ -22,7 +22,7 @@ WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
 
   vm->bytesAllocated = 0;
 
-  // TODO(bob): Make this configurable.
+  // TODO: Make this configurable.
   vm->nextGC = 1024 * 1024 * 10;
   vm->first = NULL;
 
@@ -54,7 +54,7 @@ int wrenInterpret(WrenVM* vm, const char* source)
   ObjFn* fn = wrenCompile(vm, source);
   if (fn == NULL) return 1;
 
-  // TODO(bob): Return error code on runtime errors.
+  // TODO: Return error code on runtime errors.
   interpret(vm, OBJ_VAL(fn));
   return 0;
 }
@@ -232,7 +232,7 @@ static void markString(WrenVM* vm, ObjString* string)
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjString);
-  // TODO(bob): O(n) calculation here is lame!
+  // TODO: O(n) calculation here is lame!
   vm->bytesAllocated += strlen(string->value);
 }
 
@@ -410,7 +410,7 @@ void truncateSymbolTable(SymbolTable* symbols, int count)
 
 int addSymbolUnchecked(SymbolTable* symbols, const char* name, size_t length)
 {
-  // TODO(bob): Get rid of explicit malloc here.
+  // TODO: Get rid of explicit malloc here.
   symbols->names[symbols->count] = malloc(length + 1);
   strncpy(symbols->names[symbols->count], name, length);
   symbols->names[symbols->count][length] = '\0';
@@ -439,7 +439,7 @@ int ensureSymbol(SymbolTable* symbols, const char* name, size_t length)
 int findSymbol(SymbolTable* symbols, const char* name, size_t length)
 {
   // See if the symbol is already defined.
-  // TODO(bob): O(n). Do something better.
+  // TODO: O(n). Do something better.
   for (int i = 0; i < symbols->count; i++)
   {
     if (strlen(symbols->names[i]) == length &&
@@ -457,7 +457,7 @@ const char* getSymbolName(SymbolTable* symbols, int symbol)
 Value findGlobal(WrenVM* vm, const char* name)
 {
   int symbol = findSymbol(&vm->globalSymbols, name, strlen(name));
-  // TODO(bob): Handle failure.
+  // TODO: Handle failure.
   return vm->globals[symbol];
 }
 
@@ -529,7 +529,7 @@ Value interpret(WrenVM* vm, Value function)
   wrenCallFunction(fiber, function, 0);
 
   // These macros are designed to only be invoked within this function.
-  // TODO(bob): Check for stack overflow.
+  // TODO: Check for stack overflow.
   #define PUSH(value) (fiber->stack[fiber->stackSize++] = value)
   #define POP()       (fiber->stack[--fiber->stackSize])
   #define PEEK()      (fiber->stack[fiber->stackSize - 1])
@@ -718,7 +718,7 @@ Value interpret(WrenVM* vm, Value function)
           wrenPrintValue(receiver);
           printf(" does not implement method \"%s\".\n",
                  vm->methods.names[symbol]);
-          // TODO(bob): Throw an exception or halt the fiber or something.
+          // TODO: Throw an exception or halt the fiber or something.
           exit(1);
           break;
       }
@@ -743,7 +743,7 @@ Value interpret(WrenVM* vm, Value function)
     CASE_CODE(SUPER_15):
     CASE_CODE(SUPER_16):
     {
-      // TODO(bob): Almost completely copied from CALL. Unify somehow.
+      // TODO: Almost completely copied from CALL. Unify somehow.
 
       // Add one for the implicit receiver argument.
       int numArgs = instruction - CODE_SUPER_0 + 1;
@@ -791,7 +791,7 @@ Value interpret(WrenVM* vm, Value function)
           wrenPrintValue(receiver);
           printf(" does not implement method \"%s\".\n",
                  vm->methods.names[symbol]);
-          // TODO(bob): Throw an exception or halt the fiber or something.
+          // TODO: Throw an exception or halt the fiber or something.
           exit(1);
           break;
       }
@@ -849,7 +849,7 @@ Value interpret(WrenVM* vm, Value function)
     CASE_CODE(LOAD_FIELD):
     {
       int field = READ_ARG();
-      // TODO(bob): We'll have to do something better here to handle functions
+      // TODO: We'll have to do something better here to handle functions
       // inside methods.
       Value receiver = fiber->stack[frame->stackStart];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
@@ -862,7 +862,7 @@ Value interpret(WrenVM* vm, Value function)
     CASE_CODE(STORE_FIELD):
     {
       int field = READ_ARG();
-      // TODO(bob): We'll have to do something better here to handle functions
+      // TODO: We'll have to do something better here to handle functions
       // inside methods.
       Value receiver = fiber->stack[frame->stackStart];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
@@ -940,7 +940,7 @@ Value interpret(WrenVM* vm, Value function)
 
     CASE_CODE(IS):
     {
-      // TODO(bob): What if classObj is not a class?
+      // TODO: What if classObj is not a class?
       ObjClass* expected = AS_CLASS(POP());
       Value obj = POP();
 
@@ -1062,7 +1062,7 @@ Value interpret(WrenVM* vm, Value function)
       ObjClass* superclass;
       if (isSubclass)
       {
-        // TODO(bob): Handle the superclass not being a class object!
+        // TODO: Handle the superclass not being a class object!
         superclass = AS_CLASS(POP());
       }
       else
@@ -1114,7 +1114,7 @@ Value interpret(WrenVM* vm, Value function)
 
 void wrenCallFunction(Fiber* fiber, Value function, int numArgs)
 {
-  // TODO(bob): Check for stack overflow.
+  // TODO: Check for stack overflow.
   fiber->frames[fiber->numFrames].fn = function;
   fiber->frames[fiber->numFrames].ip = 0;
   fiber->frames[fiber->numFrames].stackStart = fiber->stackSize - numArgs;

@@ -10,5 +10,5 @@ io.write(-4.2 % -3.1) // expect: -1.1
 // Left associative.
 io.write(13 % 7 % 4) // expect: 2
 
-// TODO(bob): Unsupported RHS types.
-// TODO(bob): Error on mod by zero.
+// TODO: Unsupported RHS types.
+// TODO: Error on mod by zero.

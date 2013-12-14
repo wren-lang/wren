@@ -34,7 +34,7 @@ void wrenFreeVM(WrenVM* vm);
 
 // Runs [source], a string of Wren source code in a new fiber in [vm]. Returns
 // zero if successful.
-// TODO(bob): Define error codes.
+// TODO: Define error codes.
 int wrenInterpret(WrenVM* vm, const char* source);
 
 #endif

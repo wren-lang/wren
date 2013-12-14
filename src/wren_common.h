@@ -1,7 +1,7 @@
 #ifndef wren_common_h
 #define wren_common_h
 
-// TODO(bob): Use stdbool.h and `bool` for bools instead of int/1/0.
+// TODO: Use stdbool.h and `bool` for bools instead of int/1/0.
 
 // This header contains macros and defines used across the entire Wren
 // implementation. In particular, it contains "configuration" defines that

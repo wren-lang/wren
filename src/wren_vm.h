@@ -4,7 +4,7 @@
 #include "wren_common.h"
 #include "wren_value.h"
 
-// TODO(bob): Make these externally controllable.
+// TODO: Make these externally controllable.
 #define STACK_SIZE 1024
 #define MAX_CALL_FRAMES 256
 
@@ -162,7 +162,7 @@ typedef enum
 
 typedef struct
 {
-  // TODO(bob): Make this dynamically sized.
+  // TODO: Make this dynamically sized.
   char* names[MAX_SYMBOLS];
   int count;
 } SymbolTable;
@@ -175,7 +175,7 @@ typedef struct
 // WrenVM has a pointer to the head of the list and walks it if a collection
 // occurs. This implies that pinned objects need to have stack semantics: only
 // the most recently pinned object can be unpinned.
-// TODO(bob): Move into wren_vm.c.
+// TODO: Move into wren_vm.c.
 typedef struct sPinnedObj
 {
   // The pinned object.
@@ -185,7 +185,7 @@ typedef struct sPinnedObj
   struct sPinnedObj* previous;
 } PinnedObj;
 
-// TODO(bob): Move into wren_vm.c?
+// TODO: Move into wren_vm.c?
 struct WrenVM
 {
   SymbolTable methods;
@@ -204,15 +204,15 @@ struct WrenVM
 
   SymbolTable globalSymbols;
 
-  // TODO(bob): Using a fixed array is gross here.
+  // TODO: Using a fixed array is gross here.
   Value globals[MAX_SYMBOLS];
 
-  // TODO(bob): Support more than one fiber.
+  // TODO: Support more than one fiber.
   Fiber* fiber;
 
   // Memory management data:
 
-  // TODO(bob): Temp.
+  // TODO: Temp.
   // The number of bytes that are known to be currently allocated. Includes all
   // memory that was proven live after the last GC, as well as any new bytes
   // that were allocated since then. Does *not* include bytes for objects that
@@ -233,7 +233,7 @@ struct WrenVM
   WrenReallocateFn reallocate;
 };
 
-// TODO(bob): Move into wren_vm.c.
+// TODO: Move into wren_vm.c.
 typedef struct
 {
   // Index of the current (really next-to-be-executed) instruction in the
@@ -249,7 +249,7 @@ typedef struct
   int stackStart;
 } CallFrame;
 
-// TODO(bob): Move into wren_vm.c.
+// TODO: Move into wren_vm.c.
 struct sFiber
 {
   Value stack[STACK_SIZE];
@@ -266,7 +266,7 @@ struct sFiber
 
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
-// TODO(bob): Make these static or prefix their names.
+// TODO: Make these static or prefix their names.
 
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);
