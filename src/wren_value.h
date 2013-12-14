@@ -70,7 +70,7 @@ typedef struct sObj
   struct sObj* next;
 } Obj;
 
-#ifdef NAN_TAGGING
+#if WREN_NAN_TAGGING
 
 typedef union
 {
@@ -270,8 +270,6 @@ typedef struct
 #define IS_STRING(value) (wrenIsString(value))
 
 
-#ifdef NAN_TAGGING
-
 // An IEEE 754 double-precision float is a 64-bit value with bits laid out like:
 //
 // 1 Sign bit
@@ -328,6 +326,7 @@ typedef struct
 // all stuffed into a single 64-bit sequence. Even better, we don't have to
 // do any masking or work to extract number values: they are unmodified. This
 // means math on numbers is fast.
+#if WREN_NAN_TAGGING
 
 // A mask that selects the sign bit.
 #define SIGN_BIT ((uint64_t)1 << 63)

@@ -193,7 +193,7 @@ static ObjClass* getObjectClass(WrenVM* vm, Obj* obj)
 
 ObjClass* wrenGetClass(WrenVM* vm, Value value)
 {
-#ifdef NAN_TAGGING
+  #if WREN_NAN_TAGGING
   if (IS_NUM(value)) return vm->numClass;
   if (IS_OBJ(value)) return getObjectClass(vm, AS_OBJ(value));
 
@@ -204,7 +204,7 @@ ObjClass* wrenGetClass(WrenVM* vm, Value value)
     case TAG_NULL: return vm->nullClass;
     case TAG_TRUE: return vm->boolClass;
   }
-#else
+  #else
   switch (value.type)
   {
     case VAL_FALSE: return vm->boolClass;
@@ -213,22 +213,22 @@ ObjClass* wrenGetClass(WrenVM* vm, Value value)
     case VAL_TRUE: return vm->boolClass;
     case VAL_OBJ: return getObjectClass(vm, value.obj);
   }
-#endif
+  #endif
 
   return NULL; // Unreachable.
 }
 
 int wrenValuesEqual(Value a, Value b)
 {
-#ifdef NAN_TAGGING
+  #if WREN_NAN_TAGGING
   // Value types have unique bit representations and we compare object types
   // by identity (i.e. pointer), so all we need to do is compare the bits.
   return a.bits == b.bits;
-#else
+  #else
   if (a.type != b.type) return 0;
   if (a.type == VAL_NUM) return a.num == b.num;
   return a.obj == b.obj;
-#endif
+  #endif
 }
 
 static void printList(ObjList* list)
@@ -260,7 +260,7 @@ static void printObject(Obj* obj)
 
 void wrenPrintValue(Value value)
 {
-#ifdef NAN_TAGGING
+  #if WREN_NAN_TAGGING
   if (IS_NUM(value))
   {
     printf("%.14g", AS_NUM(value));
@@ -279,7 +279,7 @@ void wrenPrintValue(Value value)
       case TAG_TRUE: printf("true"); break;
     }
   }
-#else
+  #else
   switch (value.type)
   {
     case VAL_FALSE: printf("false"); break;
@@ -291,16 +291,16 @@ void wrenPrintValue(Value value)
       printObject(AS_OBJ(value));
     }
   }
-#endif
+  #endif
 }
 
 int wrenIsBool(Value value)
 {
-#ifdef NAN_TAGGING
+  #if WREN_NAN_TAGGING
   return value.bits == TRUE_VAL.bits || value.bits == FALSE_VAL.bits;
-#else
+  #else
   return value.type == VAL_FALSE || value.type == VAL_TRUE;
-#endif
+  #endif
 }
 
 int wrenIsClosure(Value value)
@@ -325,12 +325,12 @@ int wrenIsString(Value value)
 
 Value wrenObjectToValue(Obj* obj)
 {
-#ifdef NAN_TAGGING
+  #if WREN_NAN_TAGGING
   return (Value)(SIGN_BIT | QNAN | (uint64_t)(obj));
-#else
+  #else
   Value value;
   value.type = VAL_OBJ;
   value.obj = obj;
   return value;
-#endif
+  #endif
 }

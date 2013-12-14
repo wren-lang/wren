@@ -10,34 +10,57 @@
 //
 // This header is *not* intended to be included by code outside of Wren itself.
 
-// TODO(bob): Prefix these with Wren and use #if instead of #ifdef. That way
-// the flags can be set externally.
+// These flags let you control some details of the interpreter's implementation.
+// Usually they trade-off a bit of portability for speed. They default to the
+// most efficient behavior.
 
-// Define this to stress test the GC. It will perform a collection before every
-// allocation.
-//#define DEBUG_GC_STRESS
+// If non-zero, then Wren will use a NaN-tagged double for its core value
+// representation. Otherwise, it will use a larger more conventional struct.
+// The former is significantly faster and more compact. The latter is useful for
+// debugging and may be more portable.
+//
+// Defaults to on.
+#ifndef WREN_NAN_TAGGING
+#define WREN_NAN_TAGGING (1)
+#endif
 
-// Define this to log memory operations.
-//#define TRACE_MEMORY
-
-#define NAN_TAGGING
-
-// If this is set, the VM's interpreter loop uses computed gotos. See this for
+// If non-zero, the VM's interpreter loop uses computed gotos. See this for
 // more: http://gcc.gnu.org/onlinedocs/gcc-3.1.1/gcc/Labels-as-Values.html
-// TODO(bob): Automatically define this based on whether or not it's supported.
-#define COMPUTED_GOTOS
+// Enabling this speeds up the main dispatch loop a bit, but requires compiler
+// support.
+//
+// Defaults to on.
+#ifndef WREN_COMPUTED_GOTO
+#define WREN_COMPUTED_GOTO (1)
+#endif
 
+// These flags are useful for debugging and hacking on Wren itself. They are not
+// intended to be used for production code. They default to off.
+
+// Set this to non-zero to stress test the GC. It will perform a collection
+// before every allocation. This is useful to ensure that memory is always
+// correctly pinned.
+#define WREN_DEBUG_GC_STRESS (0)
+
+// Set this to non-zero to log memory operations as they occur.
+#define WREN_TRACE_MEMORY (0)
+
+// Assertions are used to validate program invariants. They indicate things the
+// program expects to be true about its internal state during execution. If an
+// assertion fails, there is a bug in Wren.
+//
+// Assertions add significant overhead, so are only enabled in debug builds.
 #ifdef DEBUG
 
-  #define ASSERT(condition, message)                                   \
-    if (!(condition)) {                                                \
-      printf("ASSERT FAIL " __FILE__ ":%d - %s\n", __LINE__, message); \
-      abort();                                                         \
-    }
+#define ASSERT(condition, message)                                   \
+  if (!(condition)) {                                                \
+    printf("ASSERT FAIL " __FILE__ ":%d - %s\n", __LINE__, message); \
+    abort();                                                         \
+  }
 
 #else
 
-  #define ASSERT(condition, message) ;
+#define ASSERT(condition, message) ;
 
 #endif
 

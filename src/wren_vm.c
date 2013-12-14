@@ -79,32 +79,32 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 {
   ASSERT(memory == NULL || oldSize > 0, "Cannot take unsized previous memory.");
 
-#ifdef TRACE_MEMORY
+  #if WREN_TRACE_MEMORY
   printf("reallocate %p %ld -> %ld\n", memory, oldSize, newSize);
-#endif
+  #endif
 
   vm->totalAllocated += newSize - oldSize;
 
-#ifdef DEBUG_GC_STRESS
+  #if WREN_DEBUG_GC_STRESS
   if (newSize > oldSize)
   {
     collectGarbage(vm);
   }
-#else
+  #else
   if (vm->totalAllocated > vm->nextGC)
   {
-#ifdef TRACE_MEMORY
+    #if WREN_TRACE_MEMORY
     size_t before = vm->totalAllocated;
-#endif
+    #endif
     collectGarbage(vm);
     vm->nextGC = vm->totalAllocated * 3 / 2;
 
-#ifdef TRACE_MEMORY
+    #if WREN_TRACE_MEMORY
     printf("GC %ld before, %ld after (%ld collected), next at %ld\n",
            before, vm->totalAllocated, before - vm->totalAllocated, vm->nextGC);
-#endif
+    #endif
   }
-#endif
+  #endif
 
   ASSERT(newSize != 0 || memory != NULL, "Must have pointer to free.");
   return vm->reallocate(memory, oldSize, newSize);
@@ -210,14 +210,14 @@ static void markClosure(ObjClosure* closure)
 
 static void markObj(Obj* obj)
 {
-#ifdef TRACE_MEMORY
+  #if WREN_TRACE_MEMORY
   static int indent = 0;
   indent++;
   for (int i = 0; i < indent; i++) printf("  ");
   printf("mark ");
   wrenPrintValue(OBJ_VAL(obj));
   printf(" @ %p\n", obj);
-#endif
+  #endif
 
   // Traverse the object's fields.
   switch (obj->type)
@@ -234,9 +234,9 @@ static void markObj(Obj* obj)
     case OBJ_UPVALUE: markUpvalue((Upvalue*)obj); break;
   }
 
-#ifdef TRACE_MEMORY
+  #if WREN_TRACE_MEMORY
   indent--;
-#endif
+  #endif
 }
 
 void markValue(Value value)
@@ -252,11 +252,11 @@ static void* deallocate(WrenVM* vm, void* memory, size_t oldSize)
 
 static void freeObj(WrenVM* vm, Obj* obj)
 {
-#ifdef TRACE_MEMORY
+  #if WREN_TRACE_MEMORY
   printf("free ");
   wrenPrintValue(OBJ_VAL(obj));
   printf(" @ %p\n", obj);
-#endif
+  #endif
 
   // Free any additional heap data allocated by the object.
   size_t size;
@@ -329,9 +329,9 @@ static void freeObj(WrenVM* vm, Obj* obj)
 static void collectGarbage(WrenVM* vm)
 {
   // Mark all reachable objects.
-#ifdef TRACE_MEMORY
+  #if WREN_TRACE_MEMORY
   printf("-- gc --\n");
-#endif
+  #endif
 
   // Global variables.
   for (int i = 0; i < vm->globalSymbols.count; i++)
@@ -570,7 +570,7 @@ Value interpret(WrenVM* vm, Value function)
       }                                               \
       bytecode = fn->bytecode
 
-  #ifdef COMPUTED_GOTOS
+  #if WREN_COMPUTED_GOTO
 
   static void* dispatchTable[] = {
     &&code_CONSTANT,
