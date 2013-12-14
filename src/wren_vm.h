@@ -212,8 +212,12 @@ struct WrenVM
 
   // Memory management data:
 
-  // How many bytes of object data have been allocated so far.
-  size_t totalAllocated;
+  // TODO(bob): Temp.
+  // The number of bytes that are known to be currently allocated. Includes all
+  // memory that was proven live after the last GC, as well as any new bytes
+  // that were allocated since then. Does *not* include bytes for objects that
+  // were freed since the last GC.
+  size_t bytesAllocated;
 
   // The number of total allocated bytes that will trigger the next GC.
   size_t nextGC;

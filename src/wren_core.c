@@ -137,7 +137,7 @@ DEF_NATIVE(list_add)
 DEF_NATIVE(list_clear)
 {
   ObjList* list = AS_LIST(args[0]);
-  wrenReallocate(vm, list->elements, list->capacity * sizeof(Value), 0);
+  wrenReallocate(vm, list->elements, 0, 0);
   list->capacity = 0;
   list->count = 0;
   return NULL_VAL;

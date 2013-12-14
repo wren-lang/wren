@@ -20,7 +20,7 @@ WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
   vm->fiber->numFrames = 0;
   vm->fiber->openUpvalues = NULL;
 
-  vm->totalAllocated = 0;
+  vm->bytesAllocated = 0;
 
   // TODO(bob): Make this configurable.
   vm->nextGC = 1024 * 1024 * 10;
@@ -61,80 +61,73 @@ int wrenInterpret(WrenVM* vm, const char* source)
 
 static void collectGarbage(WrenVM* vm);
 
-// A generic allocation that handles all memory changes, like so:
-//
-// - To allocate new memory, [memory] is NULL and [oldSize] is zero.
-//
-// - To attempt to grow an existing allocation, [memory] is the memory,
-//   [oldSize] is its previous size, and [newSize] is the desired size.
-//   It returns [memory] if it was able to grow it in place, or a new pointer
-//   if it had to move it.
-//
-// - To shrink memory, [memory], [oldSize], and [newSize] are the same as above
-//   but it will always return [memory]. If [newSize] is zero, the memory will
-//   be freed and `NULL` will be returned.
-//
-// - To free memory, [newSize] will be zero.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 {
-  ASSERT(memory == NULL || oldSize > 0, "Cannot take unsized previous memory.");
-
   #if WREN_TRACE_MEMORY
   printf("reallocate %p %ld -> %ld\n", memory, oldSize, newSize);
   #endif
 
-  vm->totalAllocated += newSize - oldSize;
+  // If new bytes are being allocated, add them to the total count. If objects
+  // are being completely deallocated, we don't track that (since we don't
+  // track the original size). Instead, that will be handled while marking
+  // during the next GC.
+  vm->bytesAllocated += newSize - oldSize;
 
   #if WREN_DEBUG_GC_STRESS
-  if (newSize > oldSize)
-  {
-    collectGarbage(vm);
-  }
+
+  // Since collecting calls this function to free things, make sure we don't
+  // recurse.
+  if (newSize > 0) collectGarbage(vm);
+
   #else
-  if (vm->totalAllocated > vm->nextGC)
+
+  if (vm->bytesAllocated > vm->nextGC)
   {
     #if WREN_TRACE_MEMORY
-    size_t before = vm->totalAllocated;
+    size_t before = vm->bytesAllocated;
     #endif
+
     collectGarbage(vm);
-    vm->nextGC = vm->totalAllocated * 3 / 2;
+    vm->nextGC = vm->bytesAllocated * 3 / 2;
 
     #if WREN_TRACE_MEMORY
     printf("GC %ld before, %ld after (%ld collected), next at %ld\n",
-           before, vm->totalAllocated, before - vm->totalAllocated, vm->nextGC);
+           before, vm->bytesAllocated, before - vm->bytesAllocated, vm->nextGC);
     #endif
   }
   #endif
 
-  ASSERT(newSize != 0 || memory != NULL, "Must have pointer to free.");
   return vm->reallocate(memory, oldSize, newSize);
 }
 
-static void markValue(Value value);
+static void markValue(WrenVM* vm, Value value);
 
-static void markClass(ObjClass* classObj)
+static void markClass(WrenVM* vm, ObjClass* classObj)
 {
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
   if (classObj->obj.flags & FLAG_MARKED) return;
   classObj->obj.flags |= FLAG_MARKED;
 
   // The metaclass.
-  if (classObj->metaclass != NULL) markClass(classObj->metaclass);
+  if (classObj->metaclass != NULL) markClass(vm, classObj->metaclass);
 
   // The superclass.
-  if (classObj->superclass != NULL) markClass(classObj->superclass);
+  if (classObj->superclass != NULL) markClass(vm, classObj->superclass);
 
   // Method function objects.
   for (int i = 0; i < MAX_SYMBOLS; i++)
   {
     if (classObj->methods[i].type == METHOD_BLOCK)
     {
-      markValue(classObj->methods[i].fn);
+      markValue(vm, classObj->methods[i].fn);
     }
   }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjClass);
 }
 
-static void markFn(ObjFn* fn)
+static void markFn(WrenVM* vm, ObjFn* fn)
 {
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
   if (fn->obj.flags & FLAG_MARKED) return;
@@ -143,26 +136,35 @@ static void markFn(ObjFn* fn)
   // Mark the constants.
   for (int i = 0; i < fn->numConstants; i++)
   {
-    markValue(fn->constants[i]);
+    markValue(vm, fn->constants[i]);
   }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjFn);
+  vm->bytesAllocated += sizeof(Code) * 1024;
+  vm->bytesAllocated += sizeof(Value) * 256;
 }
 
-static void markInstance(ObjInstance* instance)
+static void markInstance(WrenVM* vm, ObjInstance* instance)
 {
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
   if (instance->obj.flags & FLAG_MARKED) return;
   instance->obj.flags |= FLAG_MARKED;
 
-  markClass(instance->classObj);
+  markClass(vm, instance->classObj);
 
   // Mark the fields.
   for (int i = 0; i < instance->classObj->numFields; i++)
   {
-    markValue(instance->fields[i]);
+    markValue(vm, instance->fields[i]);
   }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjInstance);
+  vm->bytesAllocated += sizeof(Value) * instance->classObj->numFields;
 }
 
-static void markList(ObjList* list)
+static void markList(WrenVM* vm, ObjList* list)
 {
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
   if (list->obj.flags & FLAG_MARKED) return;
@@ -172,11 +174,18 @@ static void markList(ObjList* list)
   Value* elements = list->elements;
   for (int i = 0; i < list->count; i++)
   {
-    markValue(elements[i]);
+    markValue(vm, elements[i]);
+  }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjList);
+  if (list->elements != NULL)
+  {
+    vm->bytesAllocated += sizeof(Value) * list->capacity;
   }
 }
 
-static void markUpvalue(Upvalue* upvalue)
+static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
 {
   // This can happen if a GC is triggered in the middle of initializing the
   // closure.
@@ -186,29 +195,48 @@ static void markUpvalue(Upvalue* upvalue)
   if (upvalue->obj.flags & FLAG_MARKED) return;
   upvalue->obj.flags |= FLAG_MARKED;
 
-  // Mark the closed-over object (if it is closed).
-  markValue(upvalue->closed);
+  // Mark the closed-over object (in case it is closed).
+  markValue(vm, upvalue->closed);
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(Upvalue);
 }
 
-static void markClosure(ObjClosure* closure)
+static void markClosure(WrenVM* vm, ObjClosure* closure)
 {
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
   if (closure->obj.flags & FLAG_MARKED) return;
   closure->obj.flags |= FLAG_MARKED;
 
   // Mark the function.
-  markFn(closure->fn);
+  markFn(vm, closure->fn);
 
   // Mark the upvalues.
   for (int i = 0; i < closure->fn->numUpvalues; i++)
   {
     Upvalue** upvalues = closure->upvalues;
     Upvalue* upvalue = upvalues[i];
-    markUpvalue(upvalue);
+    markUpvalue(vm, upvalue);
   }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjClosure);
+  vm->bytesAllocated += sizeof(Upvalue*) * closure->fn->numUpvalues;
 }
 
-static void markObj(Obj* obj)
+static void markString(WrenVM* vm, ObjString* string)
+{
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (string->obj.flags & FLAG_MARKED) return;
+  string->obj.flags |= FLAG_MARKED;
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjString);
+  // TODO(bob): O(n) calculation here is lame!
+  vm->bytesAllocated += strlen(string->value);
+}
+
+static void markObj(WrenVM* vm, Obj* obj)
 {
   #if WREN_TRACE_MEMORY
   static int indent = 0;
@@ -222,16 +250,13 @@ static void markObj(Obj* obj)
   // Traverse the object's fields.
   switch (obj->type)
   {
-    case OBJ_CLASS: markClass((ObjClass*)obj); break;
-    case OBJ_CLOSURE: markClosure((ObjClosure*)obj); break;
-    case OBJ_FN: markFn((ObjFn*)obj); break;
-    case OBJ_INSTANCE: markInstance((ObjInstance*)obj); break;
-    case OBJ_LIST: markList((ObjList*)obj); break;
-    case OBJ_STRING:
-      // Just mark the string itself.
-      obj->flags |= FLAG_MARKED;
-      break;
-    case OBJ_UPVALUE: markUpvalue((Upvalue*)obj); break;
+    case OBJ_CLASS:    markClass(   vm, (ObjClass*)   obj); break;
+    case OBJ_CLOSURE:  markClosure( vm, (ObjClosure*) obj); break;
+    case OBJ_FN:       markFn(      vm, (ObjFn*)      obj); break;
+    case OBJ_INSTANCE: markInstance(vm, (ObjInstance*)obj); break;
+    case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
+    case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
+    case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
   }
 
   #if WREN_TRACE_MEMORY
@@ -239,15 +264,15 @@ static void markObj(Obj* obj)
   #endif
 }
 
-void markValue(Value value)
+void markValue(WrenVM* vm, Value value)
 {
   if (!IS_OBJ(value)) return;
-  markObj(AS_OBJ(value));
+  markObj(vm, AS_OBJ(value));
 }
 
-static void* deallocate(WrenVM* vm, void* memory, size_t oldSize)
+static void* deallocate(WrenVM* vm, void* memory)
 {
-  return wrenReallocate(vm, memory, oldSize, 0);
+  return wrenReallocate(vm, memory, 0, 0);
 }
 
 static void freeObj(WrenVM* vm, Obj* obj)
@@ -258,72 +283,32 @@ static void freeObj(WrenVM* vm, Obj* obj)
   printf(" @ %p\n", obj);
   #endif
 
-  // Free any additional heap data allocated by the object.
-  size_t size;
-
   switch (obj->type)
   {
-    case OBJ_CLASS:
-      size = sizeof(ObjClass);
-      break;
-
     case OBJ_CLOSURE:
-    {
-      size = sizeof(ObjClosure);
-      ObjClosure* closure = (ObjClosure*)obj;
-      // TODO(bob): Bad! Function may have already been freed.
-      deallocate(vm, closure->upvalues,
-                 sizeof(Upvalue*) * closure->fn->numUpvalues);
+      deallocate(vm, ((ObjClosure*)obj)->upvalues);
       break;
-    }
 
     case OBJ_FN:
-    {
-      // TODO(bob): Don't hardcode array sizes.
-      size = sizeof(ObjFn);
-      ObjFn* fn = (ObjFn*)obj;
-      deallocate(vm, fn->bytecode, sizeof(Code) * 1024);
-      deallocate(vm, fn->constants, sizeof(Value) * 256);
+      deallocate(vm, ((ObjFn*)obj)->bytecode);
+      deallocate(vm, ((ObjFn*)obj)->constants);
       break;
-    }
-
-    case OBJ_INSTANCE:
-    {
-      size = sizeof(ObjInstance);
-
-      // Include the size of the field array.
-      ObjInstance* instance = (ObjInstance*)obj;
-      // TODO(bob): Bad! Class may already have been freed!
-      size += sizeof(Value) * instance->classObj->numFields;
-      break;
-    }
 
     case OBJ_LIST:
-    {
-      size = sizeof(ObjList);
-      ObjList* list = (ObjList*)obj;
-      if (list->elements != NULL)
-      {
-        deallocate(vm, list->elements, sizeof(Value) * list->capacity);
-      }
+      deallocate(vm, ((ObjList*)obj)->elements);
       break;
-    }
 
     case OBJ_STRING:
-    {
-      size = sizeof(ObjString);
-      ObjString* string = (ObjString*)obj;
-      // TODO(bob): O(n) calculation here is lame!
-      deallocate(vm, string->value, strlen(string->value));
+      deallocate(vm, ((ObjString*)obj)->value);
       break;
-    }
 
+    case OBJ_CLASS:
+    case OBJ_INSTANCE:
     case OBJ_UPVALUE:
-      size = sizeof(Upvalue);
       break;
   }
 
-  deallocate(vm, obj, size);
+  deallocate(vm, obj);
 }
 
 static void collectGarbage(WrenVM* vm)
@@ -333,39 +318,49 @@ static void collectGarbage(WrenVM* vm)
   printf("-- gc --\n");
   #endif
 
+  // Reset this. As we mark objects, their size will be counted again so that
+  // we can track how much memory is in use without needing to know the size
+  // of each *freed* object.
+  //
+  // This is important because when freeing an unmarked object, we don't always
+  // know how much memory it is using. For example, when freeing an instance,
+  // we need to know its class to know how big it is, but it's class may have
+  // already been freed.
+  vm->bytesAllocated = 0;
+
   // Global variables.
   for (int i = 0; i < vm->globalSymbols.count; i++)
   {
     // Check for NULL to handle globals that have been defined (at compile time)
     // but not yet initialized.
-    if (!IS_NULL(vm->globals[i])) markValue(vm->globals[i]);
+    if (!IS_NULL(vm->globals[i])) markValue(vm, vm->globals[i]);
   }
 
   // Pinned objects.
   PinnedObj* pinned = vm->pinned;
   while (pinned != NULL)
   {
-    markObj(pinned->obj);
+    markObj(vm, pinned->obj);
     pinned = pinned->previous;
   }
 
   // Stack functions.
   for (int k = 0; k < vm->fiber->numFrames; k++)
   {
-    markValue(vm->fiber->frames[k].fn);
+    markValue(vm, vm->fiber->frames[k].fn);
   }
 
   // Stack variables.
   for (int l = 0; l < vm->fiber->stackSize; l++)
   {
-    markValue(vm->fiber->stack[l]);
+    markValue(vm, vm->fiber->stack[l]);
   }
 
   // Open upvalues.
   Upvalue* upvalue = vm->fiber->openUpvalues;
   while (upvalue != NULL)
   {
-    markUpvalue(upvalue);
+    markUpvalue(vm, upvalue);
     upvalue = upvalue->next;
   }
 
