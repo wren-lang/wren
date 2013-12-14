@@ -240,7 +240,7 @@
 		29AB1F101816E3AD004B501E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_C_LANGUAGE_STANDARD = c89;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_PEDANTIC = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -249,7 +249,7 @@
 		29AB1F111816E3AD004B501E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_C_LANGUAGE_STANDARD = c89;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_PEDANTIC = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

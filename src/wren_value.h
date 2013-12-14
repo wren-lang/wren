@@ -446,6 +446,17 @@ int wrenIsClosure(Value value);
 int wrenIsFn(Value value);
 int wrenIsInstance(Value value);
 int wrenIsString(Value value);
-Value wrenObjectToValue(Obj* obj);
+
+inline Value wrenObjectToValue(Obj* obj)
+{
+#if WREN_NAN_TAGGING
+  return (Value)(SIGN_BIT | QNAN | (uint64_t)(obj));
+#else
+  Value value;
+  value.type = VAL_OBJ;
+  value.obj = obj;
+  return value;
+#endif
+}
 
 #endif
