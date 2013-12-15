@@ -945,14 +945,14 @@ Value interpret(WrenVM* vm, Value function)
       Value obj = POP();
 
       ObjClass* actual = wrenGetClass(vm, obj);
-      int isInstance = 0;
+      bool isInstance = false;
 
       // Walk the superclass chain looking for the class.
       while (actual != NULL)
       {
         if (actual == expected)
         {
-          isInstance = 1;
+          isInstance = true;
           break;
         }
         actual = actual->superclass;
@@ -1035,7 +1035,7 @@ Value interpret(WrenVM* vm, Value function)
       // Capture upvalues.
       for (int i = 0; i < prototype->numUpvalues; i++)
       {
-        int isLocal = READ_ARG();
+        bool isLocal = READ_ARG();
         int index = READ_ARG();
         if (isLocal)
         {
@@ -1056,7 +1056,7 @@ Value interpret(WrenVM* vm, Value function)
     CASE_CODE(CLASS):
     CASE_CODE(SUBCLASS):
     {
-      int isSubclass = instruction == CODE_SUBCLASS;
+      bool isSubclass = instruction == CODE_SUBCLASS;
       int numFields = READ_ARG();
 
       ObjClass* superclass;

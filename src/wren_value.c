@@ -218,14 +218,14 @@ ObjClass* wrenGetClass(WrenVM* vm, Value value)
   return NULL; // Unreachable.
 }
 
-int wrenValuesEqual(Value a, Value b)
+bool wrenValuesEqual(Value a, Value b)
 {
   #if WREN_NAN_TAGGING
   // Value types have unique bit representations and we compare object types
   // by identity (i.e. pointer), so all we need to do is compare the bits.
   return a.bits == b.bits;
   #else
-  if (a.type != b.type) return 0;
+  if (a.type != b.type) return false;
   if (a.type == VAL_NUM) return a.num == b.num;
   return a.obj == b.obj;
   #endif
@@ -294,7 +294,7 @@ void wrenPrintValue(Value value)
   #endif
 }
 
-int wrenIsBool(Value value)
+bool wrenIsBool(Value value)
 {
   #if WREN_NAN_TAGGING
   return value.bits == TRUE_VAL.bits || value.bits == FALSE_VAL.bits;
@@ -303,22 +303,22 @@ int wrenIsBool(Value value)
   #endif
 }
 
-int wrenIsClosure(Value value)
+bool wrenIsClosure(Value value)
 {
   return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_CLOSURE;
 }
 
-int wrenIsFn(Value value)
+bool wrenIsFn(Value value)
 {
   return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_FN;
 }
 
-int wrenIsInstance(Value value)
+bool wrenIsInstance(Value value)
 {
   return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_INSTANCE;
 }
 
-int wrenIsString(Value value)
+bool wrenIsString(Value value)
 {
   return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_STRING;
 }

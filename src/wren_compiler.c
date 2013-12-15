@@ -1,6 +1,7 @@
+#include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 
 #include "wren_common.h"
@@ -131,11 +132,11 @@ typedef struct
   // The most recently consumed/advanced token.
   Token previous;
 
-  // Non-zero if subsequent newline tokens should be discarded.
-  int skipNewlines;
+  // If subsequent newline tokens should be discarded.
+  bool skipNewlines;
 
-  // Non-zero if a syntax or compile error has occurred.
-  int hasError;
+  // If a syntax or compile error has occurred.
+  bool hasError;
 
   // TODO: Dynamically allocate this.
   // A buffer for the unescaped text of the current token if it's a string
@@ -159,15 +160,15 @@ typedef struct
   // top level code. One is the scope within that, etc.
   int depth;
 
-  // Non-zero if this local variable is being used as an upvalue.
-  int isUpvalue;
+  // If this local variable is being used as an upvalue.
+  bool isUpvalue;
 } Local;
 
 typedef struct
 {
-  // Non-zero if this upvalue is capturing a local variable from the enclosing
-  // function. Zero if it's capturing an upvalue.
-  int isLocal;
+  // True if this upvalue is capturing a local variable from the enclosing
+  // function. False if it's capturing an upvalue.
+  bool isLocal;
 
   // The index of the local or upvalue being captured in the enclosing function.
   int index;
@@ -189,8 +190,8 @@ typedef struct sCompiler
   // currently inside a class.
   SymbolTable* fields;
 
-  // Non-zero if the function being compiled is a method.
-  int isMethod;
+  // If the function being compiled is a method.
+  bool isMethod;
 
   // The number of local variables currently in scope.
   int numLocals;
@@ -220,7 +221,7 @@ static int addConstant(Compiler* compiler, Value constant)
 
 // Initializes [compiler].
 static int initCompiler(Compiler* compiler, Parser* parser,
-                         Compiler* parent, int isMethod)
+                         Compiler* parent, bool isMethod)
 {
   compiler->parser = parser;
   compiler->parent = parent;
@@ -241,7 +242,7 @@ static int initCompiler(Compiler* compiler, Parser* parser,
     compiler->locals[0].name = NULL;
     compiler->locals[0].length = 0;
     compiler->locals[0].depth = -1;
-    compiler->locals[0].isUpvalue = 0;
+    compiler->locals[0].isUpvalue = false;
 
     // The initial scope for function or method is a local scope.
     compiler->scopeDepth = 0;
@@ -262,7 +263,7 @@ static int initCompiler(Compiler* compiler, Parser* parser,
 // Outputs a compile or syntax error.
 static void error(Compiler* compiler, const char* format, ...)
 {
-  compiler->parser->hasError = 1;
+  compiler->parser->hasError = true;
 
   Token* token = &compiler->parser->previous;
   fprintf(stderr, "[Line %d] Error on ", token->line);
@@ -286,14 +287,14 @@ static void error(Compiler* compiler, const char* format, ...)
 
 // Lexing ----------------------------------------------------------------------
 
-// Returns non-zero if [c] is a valid (non-initial) identifier character.
-static int isName(char c)
+// Returns true if [c] is a valid (non-initial) identifier character.
+static bool isName(char c)
 {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
-// Returns non-zero if [c] is a digit.
-static int isDigit(char c)
+// Returns true if [c] is a digit.
+static bool isDigit(char c)
 {
   return c >= '0' && c <= '9';
 }
@@ -385,8 +386,8 @@ static void skipBlockComment(Parser* parser)
   }
 }
 
-// Returns non-zero if the current token's text matches [keyword].
-static int isKeyword(Parser* parser, const char* keyword)
+// Returns true if the current token's text matches [keyword].
+static bool isKeyword(Parser* parser, const char* keyword)
 {
   size_t length = parser->currentChar - parser->tokenStart;
   size_t keywordLength = strlen(keyword);
@@ -609,7 +610,7 @@ static void nextToken(Parser* parser)
         if (!parser->skipNewlines)
         {
           // Collapse multiple newlines into one.
-          parser->skipNewlines = 1;
+          parser->skipNewlines = true;
 
           // Emit this newline.
           return;
@@ -648,14 +649,14 @@ static void nextToken(Parser* parser)
       case TOKEN_SUPER:
       case TOKEN_VAR:
       case TOKEN_WHILE:
-        parser->skipNewlines = 1;
+        parser->skipNewlines = true;
 
         // Emit this token.
         return;
 
         // Newlines are meaningful after other tokens.
       default:
-        parser->skipNewlines = 0;
+        parser->skipNewlines = false;
         return;
     }
   }
@@ -669,14 +670,14 @@ static TokenType peek(Compiler* compiler)
   return compiler->parser->current.type;
 }
 
-// Consumes the current token if its type is [expected]. Returns non-zero if a
+// Consumes the current token if its type is [expected]. Returns true if a
 // token was consumed.
-static int match(Compiler* compiler, TokenType expected)
+static bool match(Compiler* compiler, TokenType expected)
 {
-  if (peek(compiler) != expected) return 0;
+  if (peek(compiler) != expected) return false;
 
   nextToken(compiler->parser);
-  return 1;
+  return true;
 }
 
 // Consumes the current token. Emits an error if its type is not [expected].
@@ -751,7 +752,7 @@ static int declareVariable(Compiler* compiler)
   local->name = token->start;
   local->length = token->length;
   local->depth = compiler->scopeDepth;
-  local->isUpvalue = 0;
+  local->isUpvalue = false;
   return compiler->numLocals++;
 }
 
@@ -826,7 +827,7 @@ static int resolveLocal(Compiler* compiler)
 // Adds an upvalue to [compiler]'s function with the given properties. Does not
 // add one if an upvalue for that variable is already in the list. Returns the
 // index of the uvpalue.
-static int addUpvalue(Compiler* compiler, int isLocal, int index)
+static int addUpvalue(Compiler* compiler, bool isLocal, int index)
 {
   // Look for an existing one.
   for (int i = 0; i < compiler->fn->numUpvalues; i++)
@@ -863,7 +864,7 @@ static int findUpvalue(Compiler* compiler)
   {
     // Mark the local as an upvalue so we know to close it when it goes out of
     // scope.
-    compiler->parent->locals[local].isUpvalue = 1;
+    compiler->parent->locals[local].isUpvalue = true;
 
     return addUpvalue(compiler, 1, local);
   }
@@ -897,8 +898,9 @@ typedef enum
 
 // Look up the previously consumed token, which is presumed to be a TOKEN_NAME
 // in the current scope to see what name it is bound to. Returns the index of
-// the name either in global or local scope. Returns -1 if not found. Sets
-// [isGlobal] to non-zero if the name is in global scope, or 0 if in local.
+// the name either in global scope, local scope, or the enclosing function's
+// upvalue list. Returns -1 if not found. Sets [resolved] to the scope where the
+// name was resolved.
 static int resolveName(Compiler* compiler, ResolvedName* resolved)
 {
   Token* token = &compiler->parser->previous;
@@ -970,7 +972,7 @@ static void endCompiler(Compiler* compiler, int constant)
       // TODO: Do something more efficient here?
       for (int i = 0; i < compiler->fn->numUpvalues; i++)
       {
-        emit(compiler->parent, compiler->upvalues[i].isLocal);
+        emit(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0);
         emit(compiler->parent, compiler->upvalues[i].index);
       }
     }
@@ -998,10 +1000,10 @@ typedef enum
 // Forward declarations since the grammar is recursive.
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
-static void parsePrecedence(Compiler* compiler, int allowAssignment,
+static void parsePrecedence(Compiler* compiler, bool allowAssignment,
                             Precedence precedence);
 
-typedef void (*GrammarFn)(Compiler*, int allowAssignment);
+typedef void (*GrammarFn)(Compiler*, bool allowAssignment);
 
 typedef void (*SignatureFn)(Compiler* compiler, char* name, int* length);
 
@@ -1076,7 +1078,8 @@ static void parameterList(Compiler* compiler, char* name, int* length)
 }
 
 // Compiles the method name and argument list for a "<...>.name(...)" call.
-static void namedCall(Compiler* compiler, int allowAssignment, Code instruction)
+static void namedCall(Compiler* compiler, bool allowAssignment,
+                      Code instruction)
 {
   // Build the method name.
   consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
@@ -1117,13 +1120,13 @@ static void namedCall(Compiler* compiler, int allowAssignment, Code instruction)
   emit(compiler, symbol);
 }
 
-static void grouping(Compiler* compiler, int allowAssignment)
+static void grouping(Compiler* compiler, bool allowAssignment)
 {
   expression(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-static void list(Compiler* compiler, int allowAssignment)
+static void list(Compiler* compiler, bool allowAssignment)
 {
   // Compile the list elements.
   int numElements = 0;
@@ -1145,7 +1148,7 @@ static void list(Compiler* compiler, int allowAssignment)
 }
 
 // Unary operators like `-foo`.
-static void unaryOp(Compiler* compiler, int allowAssignment)
+static void unaryOp(Compiler* compiler, bool allowAssignment)
 {
   GrammarRule* rule = &rules[compiler->parser->previous.type];
 
@@ -1158,7 +1161,7 @@ static void unaryOp(Compiler* compiler, int allowAssignment)
   emit(compiler, symbol);
 }
 
-static void boolean(Compiler* compiler, int allowAssignment)
+static void boolean(Compiler* compiler, bool allowAssignment)
 {
   if (compiler->parser->previous.type == TOKEN_FALSE)
   {
@@ -1170,7 +1173,7 @@ static void boolean(Compiler* compiler, int allowAssignment)
   }
 }
 
-static void function(Compiler* compiler, int allowAssignment)
+static void function(Compiler* compiler, bool allowAssignment)
 {
   Compiler fnCompiler;
   int constant = initCompiler(&fnCompiler, compiler->parser, compiler, 0);
@@ -1196,7 +1199,7 @@ static void function(Compiler* compiler, int allowAssignment)
   endCompiler(&fnCompiler, constant);
 }
 
-static void field(Compiler* compiler, int allowAssignment)
+static void field(Compiler* compiler, bool allowAssignment)
 {
   int field;
   if (compiler->fields != NULL)
@@ -1231,7 +1234,7 @@ static void field(Compiler* compiler, int allowAssignment)
   emit(compiler, field);
 }
 
-static void name(Compiler* compiler, int allowAssignment)
+static void name(Compiler* compiler, bool allowAssignment)
 {
   // Look up the name in the scope chain.
   ResolvedName resolved;
@@ -1268,12 +1271,12 @@ static void name(Compiler* compiler, int allowAssignment)
   emit(compiler, index);
 }
 
-static void null(Compiler* compiler, int allowAssignment)
+static void null(Compiler* compiler, bool allowAssignment)
 {
   emit(compiler, CODE_NULL);
 }
 
-static void number(Compiler* compiler, int allowAssignment)
+static void number(Compiler* compiler, bool allowAssignment)
 {
   Token* token = &compiler->parser->previous;
   char* end;
@@ -1294,7 +1297,7 @@ static void number(Compiler* compiler, int allowAssignment)
   emit(compiler, constant);
 }
 
-static void string(Compiler* compiler, int allowAssignment)
+static void string(Compiler* compiler, bool allowAssignment)
 {
   // Define a constant for the literal.
   int constant = addConstant(compiler, wrenNewString(compiler->parser->vm,
@@ -1305,7 +1308,7 @@ static void string(Compiler* compiler, int allowAssignment)
   emit(compiler, constant);
 }
 
-static void super_(Compiler* compiler, int allowAssignment)
+static void super_(Compiler* compiler, bool allowAssignment)
 {
   // TODO: Error if this is not in a method.
   // The receiver is always stored in the first local slot.
@@ -1321,16 +1324,16 @@ static void super_(Compiler* compiler, int allowAssignment)
   namedCall(compiler, allowAssignment, CODE_SUPER_0);
 }
 
-static void this_(Compiler* compiler, int allowAssignment)
+static void this_(Compiler* compiler, bool allowAssignment)
 {
   // Walk up the parent chain to see if there is an enclosing method.
   Compiler* thisCompiler = compiler;
-  int insideMethod = 0;
+  bool insideMethod = false;
   while (thisCompiler != NULL)
   {
     if (thisCompiler->isMethod)
     {
-      insideMethod = 1;
+      insideMethod = true;
       break;
     }
 
@@ -1351,7 +1354,7 @@ static void this_(Compiler* compiler, int allowAssignment)
 }
 
 // Subscript or "array indexing" operator like `foo[bar]`.
-static void subscript(Compiler* compiler, int allowAssignment)
+static void subscript(Compiler* compiler, bool allowAssignment)
 {
   char name[MAX_METHOD_SIGNATURE];
   int length = 1;
@@ -1394,12 +1397,12 @@ static void subscript(Compiler* compiler, int allowAssignment)
   emit(compiler, symbol);
 }
 
-void call(Compiler* compiler, int allowAssignment)
+void call(Compiler* compiler, bool allowAssignment)
 {
   namedCall(compiler, allowAssignment, CODE_CALL_0);
 }
 
-void is(Compiler* compiler, int allowAssignment)
+void is(Compiler* compiler, bool allowAssignment)
 {
   // Compile the right-hand side.
   parsePrecedence(compiler, 0, PREC_CALL);
@@ -1407,7 +1410,7 @@ void is(Compiler* compiler, int allowAssignment)
   emit(compiler, CODE_IS);
 }
 
-void and(Compiler* compiler, int allowAssignment)
+void and(Compiler* compiler, bool allowAssignment)
 {
   // Skip the right argument if the left is false.
   emit(compiler, CODE_AND);
@@ -1418,7 +1421,7 @@ void and(Compiler* compiler, int allowAssignment)
   patchJump(compiler, jump);
 }
 
-void or(Compiler* compiler, int allowAssignment)
+void or(Compiler* compiler, bool allowAssignment)
 {
   // Skip the right argument if the left is true.
   emit(compiler, CODE_OR);
@@ -1429,7 +1432,7 @@ void or(Compiler* compiler, int allowAssignment)
   patchJump(compiler, jump);
 }
 
-void infixOp(Compiler* compiler, int allowAssignment)
+void infixOp(Compiler* compiler, bool allowAssignment)
 {
   GrammarRule* rule = &rules[compiler->parser->previous.type];
 
@@ -1538,7 +1541,7 @@ GrammarRule rules[] =
 };
 
 // The main entrypoint for the top-down operator precedence parser.
-void parsePrecedence(Compiler* compiler, int allowAssignment,
+void parsePrecedence(Compiler* compiler, bool allowAssignment,
                      Precedence precedence)
 {
   nextToken(compiler->parser);
@@ -1568,7 +1571,7 @@ void expression(Compiler* compiler)
 }
 
 // Compiles a method definition inside a class body.
-void method(Compiler* compiler, Code instruction, int isConstructor,
+void method(Compiler* compiler, Code instruction, bool isConstructor,
             SignatureFn signature)
 {
   Compiler methodCompiler;
@@ -1697,14 +1700,14 @@ void statement(Compiler* compiler)
     compiler->fields = &fields;
 
     // Classes with no explicitly defined constructor get a default one.
-    int hasConstructor = 0;
+    bool hasConstructor = false;
 
     // Compile the method definitions.
     consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
     while (!match(compiler, TOKEN_RIGHT_BRACE))
     {
       Code instruction = CODE_METHOD_INSTANCE;
-      int isConstructor = 0;
+      bool isConstructor = false;
 
       if (match(compiler, TOKEN_STATIC))
       {
@@ -1716,8 +1719,8 @@ void statement(Compiler* compiler)
       else if (match(compiler, TOKEN_THIS))
       {
         // If the method name is prefixed with "this", it's a constructor.
-        isConstructor = 1;
-        hasConstructor = 1;
+        isConstructor = true;
+        hasConstructor = true;
 
         // Constructors are defined on the class.
         instruction = CODE_METHOD_STATIC;
@@ -1841,10 +1844,10 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
   Parser parser;
   parser.vm = vm;
   parser.source = source;
-  parser.hasError = 0;
+  parser.hasError = false;
 
   // Ignore leading newlines.
-  parser.skipNewlines = 1;
+  parser.skipNewlines = true;
 
   parser.tokenStart = source;
   parser.currentChar = source;

@@ -1,6 +1,7 @@
 #ifndef wren_value_h
 #define wren_value_h
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "wren_common.h"
@@ -251,22 +252,22 @@ typedef struct
 // Value -> const char*.
 #define AS_CSTRING(v) (AS_STRING(v)->value)
 
-// Convert [boolean], an int, to a boolean [Value].
+// Convert [boolean] to a boolean [Value].
 #define BOOL_VAL(boolean) (boolean ? TRUE_VAL : FALSE_VAL)
 
-// Returns non-zero if [value] is a bool.
+// Returns true if [value] is a bool.
 #define IS_BOOL(value) (wrenIsBool(value))
 
-// Returns non-zero if [value] is a closure.
+// Returns true if [value] is a closure.
 #define IS_CLOSURE(value) (wrenIsClosure(value))
 
-// Returns non-zero if [value] is a function object.
+// Returns true if [value] is a function object.
 #define IS_FN(value) (wrenIsFn(value))
 
-// Returns non-zero if [value] is an instance.
+// Returns true if [value] is an instance.
 #define IS_INSTANCE(value) (wrenIsInstance(value))
 
-// Returns non-zero if [value] is a string object.
+// Returns true if [value] is a string object.
 #define IS_STRING(value) (wrenIsString(value))
 
 
@@ -435,17 +436,17 @@ Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
 // Returns the class of [value].
 ObjClass* wrenGetClass(WrenVM* vm, Value value);
 
-// Returns non-zero if [a] and [b] are strictly equal using built-in equality
+// Returns true if [a] and [b] are strictly equal using built-in equality
 // semantics. This is identity for object values, and value equality for others.
-int wrenValuesEqual(Value a, Value b);
+bool wrenValuesEqual(Value a, Value b);
 
 void wrenPrintValue(Value value);
 
-int wrenIsBool(Value value);
-int wrenIsClosure(Value value);
-int wrenIsFn(Value value);
-int wrenIsInstance(Value value);
-int wrenIsString(Value value);
+bool wrenIsBool(Value value);
+bool wrenIsClosure(Value value);
+bool wrenIsFn(Value value);
+bool wrenIsInstance(Value value);
+bool wrenIsString(Value value);
 
 inline Value wrenObjectToValue(Obj* obj)
 {

@@ -131,8 +131,8 @@ typedef enum
   // Creates a closure for the function stored at [arg] in the constant table.
   //
   // Following the function argument is a number of arguments, two for each
-  // upvalue. The first is non-zero if the variable being captured is a local
-  // (as opposed to an upvalue), and the second is the index of the local or
+  // upvalue. The first is true if the variable being captured is a local (as
+  // opposed to an upvalue), and the second is the index of the local or
   // upvalue being captured.
   //
   // Pushes the created closure.

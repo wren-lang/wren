@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +12,7 @@
 // TODO: Don't hardcode this.
 #define MAX_LINE 1024
 
-static void failIf(int condition, int exitCode, const char* format, ...)
+static void failIf(bool condition, int exitCode, const char* format, ...)
 {
   if (!condition) return;
 
