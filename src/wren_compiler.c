@@ -260,7 +260,14 @@ static int initCompiler(Compiler* compiler, Parser* parser,
   return addConstant(parent, OBJ_VAL(compiler->fn));
 }
 
-// Outputs a compile or syntax error.
+// Outputs a compile or syntax error. This also marks the compilation as having
+// an error, which ensures that the resulting code will be discarded and never
+// run. This means that after calling error(), it's fine to generate whatever
+// invalid bytecode you want since it won't be used.
+//
+// You'll note that most places that call error() continue to parse and compile
+// after that. That's so that we can try to find as many compilation errors in
+// one pass as possible instead of just bailing at the first one.
 static void error(Compiler* compiler, const char* format, ...)
 {
   compiler->parser->hasError = true;
@@ -1308,9 +1315,27 @@ static void string(Compiler* compiler, bool allowAssignment)
   emit(compiler, constant);
 }
 
+// Returns true if [compiler] is compiling a chunk of code that is either
+// directly or indirectly contained in a method for a class.
+static bool isInsideMethod(Compiler* compiler)
+{
+  // Walk up the parent chain to see if there is an enclosing method.
+  while (compiler != NULL)
+  {
+    if (compiler->isMethod) return true;
+    compiler = compiler->parent;
+  }
+
+  return false;
+}
+
 static void super_(Compiler* compiler, bool allowAssignment)
 {
-  // TODO: Error if this is not in a method.
+  if (!isInsideMethod(compiler))
+  {
+    error(compiler, "Cannot use 'super' outside of a method.");
+  }
+
   // The receiver is always stored in the first local slot.
   // TODO: Will need to do something different to handle functions enclosed
   // in methods.
@@ -1326,24 +1351,9 @@ static void super_(Compiler* compiler, bool allowAssignment)
 
 static void this_(Compiler* compiler, bool allowAssignment)
 {
-  // Walk up the parent chain to see if there is an enclosing method.
-  Compiler* thisCompiler = compiler;
-  bool insideMethod = false;
-  while (thisCompiler != NULL)
-  {
-    if (thisCompiler->isMethod)
-    {
-      insideMethod = true;
-      break;
-    }
-
-    thisCompiler = thisCompiler->parent;
-  }
-
-  if (!insideMethod)
+  if (!isInsideMethod(compiler))
   {
     error(compiler, "Cannot use 'this' outside of a method.");
-    return;
   }
 
   // The receiver is always stored in the first local slot.
