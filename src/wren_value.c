@@ -69,19 +69,16 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
 
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 {
-  // Allocate this before the closure in case it triggers a GC which would
-  // free the closure.
-  Upvalue** upvalues = allocate(vm, sizeof(Upvalue*) * fn->numUpvalues);
-
-  // Clear the upvalue array. We need to do this in case a GC is triggered
-  // after the closure is created but before the upvalue array is populated.
-  for (int i = 0; i < fn->numUpvalues; i++) upvalues[i] = NULL;
-
-  ObjClosure* closure = allocate(vm, sizeof(ObjClosure));
+  ObjClosure* closure = allocate(vm,
+      sizeof(ObjClosure) + sizeof(Upvalue*) * fn->numUpvalues);
   initObj(vm, &closure->obj, OBJ_CLOSURE);
 
   closure->fn = fn;
-  closure->upvalues = upvalues;
+
+  // Clear the upvalue array. We need to do this in case a GC is triggered
+  // after the closure is created but before the upvalue array is populated.
+  for (int i = 0; i < fn->numUpvalues; i++) closure->upvalues[i] = NULL;
+
   return closure;
 }
 

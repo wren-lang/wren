@@ -150,9 +150,8 @@ typedef struct
   // The function that this closure is an instance of.
   ObjFn* fn;
 
-  // TODO: Make a flexible array.
   // The upvalues this function has closed over.
-  Upvalue** upvalues;
+  Upvalue* upvalues[];
 } ObjClosure;
 
 typedef enum
