@@ -54,7 +54,20 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
   // Make the metaclass.
   // TODO: What is the metaclass's metaclass?
   // TODO: Handle static fields.
-  ObjClass* metaclass = newClass(vm, NULL, vm->classClass, 0);
+  // The metaclass inheritance chain mirrors the class's inheritance chain
+  // except that when the latter bottoms out at "Object", the metaclass one
+  // bottoms out at "Class".
+  ObjClass* metaclassSuperclass;
+  if (superclass == vm->objectClass)
+  {
+    metaclassSuperclass = vm->classClass;
+  }
+  else
+  {
+    metaclassSuperclass = superclass->metaclass;
+  }
+
+  ObjClass* metaclass = newClass(vm, NULL, metaclassSuperclass, 0);
 
   // Make sure it isn't collected when we allocate the metaclass.
   PinnedObj pinned;

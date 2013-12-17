@@ -1342,7 +1342,7 @@ static void super_(Compiler* compiler, bool allowAssignment)
   emit(compiler, CODE_LOAD_LOCAL);
   emit(compiler, 0);
 
-  // TODO: Super operator and constructor calls.
+  // TODO: Super operator calls.
   consume(compiler, TOKEN_DOT, "Expect '.' after 'super'.");
 
   // Compile the superclass call.
@@ -1596,11 +1596,40 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
 
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
-  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
+  if (isConstructor)
+  {
+    // See if there is a superclass constructor call, which comes before the
+    // opening '{'.
+    if (match(compiler, TOKEN_SUPER))
+    {
+      // Push a copy of the class onto the stack so it can be the receiver for
+      // the superclass constructor call.
+      emit(&methodCompiler, CODE_LOAD_LOCAL);
+      emit(&methodCompiler, 0);
 
-  // If this is a constructor, the first thing is does is create the new
-  // instance.
-  if (isConstructor) emit(&methodCompiler, CODE_NEW);
+      consume(compiler, TOKEN_DOT, "Expect '.' after 'super'.");
+
+      // Compile the superclass call.
+      // TODO(bob): What if there turns out to not be a superclass constructor
+      // that matches this?
+      namedCall(&methodCompiler, false, CODE_SUPER_0);
+
+      // The superclass call will return the new instance, so store it back
+      // into slot 0 to replace the receiver with the new object.
+      emit(&methodCompiler, CODE_STORE_LOCAL);
+      emit(&methodCompiler, 0);
+
+      // Then remove it from the stack.
+      emit(&methodCompiler, CODE_POP);
+    }
+    else
+    {
+      // Otherwise, just create the new instance.
+      emit(&methodCompiler, CODE_NEW);
+    }
+  }
+
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
 
   finishBlock(&methodCompiler);
   // TODO: Single-expression methods that implicitly return the result.
