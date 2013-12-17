@@ -11,9 +11,10 @@ Languages come in four rough performance buckets, from slowest to fastest:
 3.  JIT compilers for dynamically typed languages: Modern JavaScript VMs,
     LuaJIT, PyPy, some Lisp/Scheme implementations.
 
-4.  Statically typed languages: C, C++, Java, C#, Haskell, etc.
+4.  Statically compiled statically typed languages: C, C++, Java, C#, Haskell,
+    etc.
 
-Most languages in the first bucket aren't suitable for real-world use. (Servers are one exception, because you can always throw more hardware at a slow language there.) Languages in the second bucket are slower than the last two buckets, but are fast enough for production use, even on client hardware, as the success of the listed languages shows. Languages in the third bucket are quite fast, but their implementations are breathtakingly complex, often rivalling that of compilers for statically-typed languages.
+Most languages in the first bucket aren't suitable for production use. (Servers are one exception, because you can always throw more hardware at a slow language there.) Languages in the second bucket are fast enough for many use cases, even on client hardware, as the success of the listed languages shows. Languages in the third bucket are quite fast, but their implementations are breathtakingly complex, often rivalling that of compilers for statically-typed languages.
 
 ## Why is Wren fast?
 
@@ -23,19 +24,21 @@ There are a few things Wren has to give it a leg up:
 
 ### A compact value representation
 
-A core piece of a dynamic language implementation is the data structure used for variables. It needs to be able to store (or reference) a value of any type, while also being as compact as possible. Wren uses a technique called *NaN tagging* for this.
+A core piece of a dynamic language implementation is the data structure used for variables. It needs to be able to store (or reference) a value of any type, while also being as compact as possible. Wren uses a technique called *[NaN tagging][]* for this.
+
+[nan tagging]: http://wingolog.org/archives/2011/05/18/value-representation-in-javascript-implementations
 
 All values are stored internally in Wren as small, eight byte double-precision floats. Since that is also Wren's number type, in order to do arithmetic, no conversion is needed before the "raw" number can be accessed: a value holding a number *is* a valid double. This keeps arithmetic fast.
 
 To store values of other types, it turns out there's a ton of unused bits in a "NaN" double. There's room in there for a pointer as well as some other stuff. For simple values like `true`, `false`, and `null`, Wren uses special bit patterns and stores them directly in the value. For other objects like strings that are heap allocated, Wren stores the pointer in there.
 
-This means numbers, bools, and null are unboxed. It also means an entire value is only eight bytes. Smaller = faster when you take into account CPU caching and the cost of passing values around.
+This means numbers, bools, and null are unboxed. It also means an entire value is only eight bytes, the native word size on 64-bit machines. Smaller = faster when you take into account CPU caching and the cost of passing values around.
 
 ### Fixed object layout
 
 Most dynamic languages treat objects as loose bags of named properties. You can freely add and remove properties from an object after you've created it. Languages like Lua and JavaScript don't even have a well-defined concept of a "type" of object.
 
-Wren is strictly class-based. Every object is an instance of a class. Classes in turn have a well-defined declarative syntax, and cannot be imperatively modified. Finally, fields in Wren are always class-private: they can only be accessed from methods defined directly on that class.
+Wren is strictly class-based. Every object is an instance of a class. Classes in turn have a well-defined declarative syntax, and cannot be imperatively modified. In addition, fields in Wren are always class-private: they can only be accessed from methods defined directly on that class.
 
 Put all of that together and it means you can determine at *compile* time exactly how many fields an object has and what they are. In other languages, when you create an object, you allocate some initial memory for it, but that may have to be reallocated multiple times as fields are added and the object grows. Wren just does a single allocation up front for exactly the right number of fields.
 
