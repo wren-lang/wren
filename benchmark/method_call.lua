@@ -34,7 +34,7 @@ NthToggle = Toggle:new()
 function NthToggle:activate ()
   self.counter = self.counter + 1
   if self.counter >= self.count_max then
-    self.state = not self.state
+    Toggle.activate(self)
     self.counter = 0
   end
   return self

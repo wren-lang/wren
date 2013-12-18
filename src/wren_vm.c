@@ -521,6 +521,35 @@ static void closeUpvalue(Fiber* fiber)
   fiber->openUpvalues = upvalue->next;
 }
 
+static void bindMethod(int methodType, int symbol, ObjClass* classObj,
+                       Value method)
+{
+  ObjFn* methodFn = IS_FN(method) ? AS_FN(method) : AS_CLOSURE(method)->fn;
+
+  // Methods are always bound against the class, and not the metaclass, even
+  // for static methods, so that constructors (which are static) get bound like
+  // instance methods.
+  wrenBindMethod(classObj, methodFn);
+
+  // TODO: Note that this code could be simplified, but doing so seems to
+  // degrade performance on the method_call benchmark. My guess is simplifying
+  // this causes this function to be small enough to be inlined in the bytecode
+  // loop, which then affects instruction caching.
+  switch (methodType)
+  {
+    case CODE_METHOD_INSTANCE:
+      classObj->methods[symbol].type = METHOD_BLOCK;
+      classObj->methods[symbol].fn = method;
+      break;
+
+    case CODE_METHOD_STATIC:
+      // Statics are defined on the metaclass.
+      classObj->metaclass->methods[symbol].type = METHOD_BLOCK;
+      classObj->metaclass->methods[symbol].fn = method;
+      break;
+  }
+}
+
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical.
 Value interpret(WrenVM* vm, Value function)
@@ -1084,24 +1113,7 @@ Value interpret(WrenVM* vm, Value function)
       int symbol = READ_ARG();
       Value method = POP();
       ObjClass* classObj = AS_CLASS(PEEK());
-
-      switch (type)
-      {
-        case CODE_METHOD_INSTANCE:
-          classObj->methods[symbol].type = METHOD_BLOCK;
-          break;
-
-        case CODE_METHOD_STATIC:
-          // Statics are defined on the metaclass.
-          classObj = classObj->metaclass;
-          classObj->methods[symbol].type = METHOD_BLOCK;
-          break;
-      }
-
-      ObjFn* methodFn = IS_FN(method) ? AS_FN(method) : AS_CLOSURE(method)->fn;
-      wrenBindMethod(classObj, methodFn);
-
-      classObj->methods[symbol].fn = method;
+      bindMethod(type, symbol, classObj, method);
       DISPATCH();
     }
 

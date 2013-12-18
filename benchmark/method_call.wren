@@ -10,36 +10,8 @@ class Toggle {
   }
 }
 
-class NthToggle {
-  this new(startState, maxCounter) {
-    _state = startState
-    _countMax = maxCounter
-    _count = 0
-  }
-
-  value { return _state }
-
-  activate {
-    _count = _count + 1
-    if (_count >= _countMax) {
-      _state = !_state
-      _count = 0
-    }
-
-    return this
-  }
-}
-
-// TODO: The follow the other examples, we should be using inheritance here.
-// Since Wren doesn't currently support inherited fields or calling superclass
-// constructors, it doesn't. It probably won't make a huge perf difference,
-// but it should be fixed when possible to be:
-/*
 class NthToggle is Toggle {
-  this new(startState, maxCounter) {
-    // TODO: Need to distinguish superclass method calls from superclass
-    // constructor calls.
-    super.new(startState)
+  this new(startState, maxCounter) super.new(startState) {
     _countMax = maxCounter
     _count = 0
   }
@@ -47,14 +19,13 @@ class NthToggle is Toggle {
   activate {
     _count = _count + 1
     if (_count >= _countMax) {
-      _state = !_state
+      super.activate
       _count = 0
     }
 
     return this
   }
 }
-*/
 
 var start = OS.clock
 var n = 1000000

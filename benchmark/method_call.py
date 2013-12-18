@@ -4,7 +4,7 @@
 import sys
 import time
 
-class Toggle:
+class Toggle(object):
     def __init__(self, start_state):
         self.bool = start_state
     def value(self):
@@ -21,7 +21,7 @@ class NthToggle(Toggle):
     def activate(self):
         self.counter += 1
         if (self.counter >= self.count_max):
-            self.bool = not self.bool
+            super(NthToggle, self).activate()
             self.counter = 0
         return(self)
 

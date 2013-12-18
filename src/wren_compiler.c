@@ -1805,20 +1805,25 @@ void statement(Compiler* compiler)
     // Compile the then branch.
     block(compiler);
 
-    // Jump over the else branch when the if branch is taken.
-    emit(compiler, CODE_JUMP);
-    int elseJump = emit(compiler, 255);
-
-    patchJump(compiler, ifJump);
-
     // Compile the else branch if there is one.
     if (match(compiler, TOKEN_ELSE))
     {
+      // Jump over the else branch when the if branch is taken.
+      emit(compiler, CODE_JUMP);
+      int elseJump = emit(compiler, 255);
+
+      patchJump(compiler, ifJump);
+      
       block(compiler);
+
+      // Patch the jump over the else.
+      patchJump(compiler, elseJump);
+    }
+    else
+    {
+      patchJump(compiler, ifJump);
     }
 
-    // Patch the jump over the else.
-    patchJump(compiler, elseJump);
     return;
   }
 

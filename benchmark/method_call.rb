@@ -29,7 +29,7 @@ class NthToggle < Toggle
     def activate
         @counter += 1
         if @counter >= @count_max
-            @bool = !@bool
+            super
             @counter = 0
         end
         self
