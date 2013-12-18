@@ -1610,8 +1610,18 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
       consume(compiler, TOKEN_DOT, "Expect '.' after 'super'.");
 
       // Compile the superclass call.
-      // TODO(bob): What if there turns out to not be a superclass constructor
-      // that matches this?
+      // TODO: What if there turns out to not be a superclass constructor that
+      // matches this?
+      // TODO: This is being compiled in an instance context even though the
+      // instance hasn't been created yet. Consider something like:
+      //
+      //     class Foo is Bar {
+      //       new super(_someField) { ... }
+      //     }
+      //
+      // The access of _someField in the super() expression is going to do bad
+      // things since the receiver at that point in time is still the class.
+      // Need to handle this better.
       namedCall(&methodCompiler, false, CODE_SUPER_0);
 
       // The superclass call will return the new instance, so store it back
