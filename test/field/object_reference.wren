@@ -19,15 +19,15 @@ class Node {
   }
 }
 
-var a = Node.new
+var a = new Node
 a.set(null, "a", null)
-var b = Node.new
+var b = new Node
 b.set(null, "b", null)
-var c = Node.new
+var c = new Node
 c.set(a, "c", b)
 a = null
 b = null
-var d = Node.new
+var d = new Node
 d.set(c, "d", null)
 c = null
 d.write

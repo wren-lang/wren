@@ -1,6 +1,6 @@
 class A {
-  this new(arg) {
-    io.write("A.new " + arg)
+  new(arg) {
+    io.write("new A " + arg)
     _field = arg
   }
 
@@ -8,8 +8,9 @@ class A {
 }
 
 class B is A {
-  this otherName(arg1, arg2) super.new(arg2) {
-    io.write("B.otherName " + arg1)
+  new(arg1, arg2) {
+    super(arg2)
+    io.write("new B " + arg1)
     _field = arg1
   }
 
@@ -17,18 +18,19 @@ class B is A {
 }
 
 class C is B {
-  this create super.otherName("one", "two") {
-    io.write("C.create")
+  new {
+    super("one", "two")
+    io.write("new C")
     _field = "c"
   }
 
   cField { return _field }
 }
 
-var c = C.create
-// expect: A.new two
-// expect: B.otherName one
-// expect: C.create
+var c = new C
+// expect: new A two
+// expect: new B one
+// expect: new C
 io.write(c is A) // expect: true
 io.write(c is B) // expect: true
 io.write(c is C) // expect: true

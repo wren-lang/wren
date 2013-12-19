@@ -320,6 +320,13 @@ DEF_NATIVE(object_bangeq)
   return BOOL_VAL(!wrenValuesEqual(args[0], args[1]));
 }
 
+DEF_NATIVE(object_new)
+{
+  // This is the default argument-less constructor that all objects inherit.
+  // It just returns "this".
+  return args[0];
+}
+
 DEF_NATIVE(object_type)
 {
   return OBJ_VAL(wrenGetClass(vm, args[0]));
@@ -440,6 +447,7 @@ void wrenInitializeCore(WrenVM* vm)
   vm->objectClass = defineClass(vm, "Object", NULL);
   NATIVE(vm->objectClass, "== ", object_eqeq);
   NATIVE(vm->objectClass, "!= ", object_bangeq);
+  NATIVE(vm->objectClass, "new", object_new);
   NATIVE(vm->objectClass, "type", object_type);
 
   // The "Class" class is the superclass of all metaclasses.

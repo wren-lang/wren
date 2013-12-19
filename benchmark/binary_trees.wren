@@ -1,13 +1,13 @@
 // Ported from the Python version.
 
 class Tree {
-  this new(item, depth) {
+  new(item, depth) {
     _item = item
     if (depth > 0) {
       var item2 = item + item
       depth = depth - 1
-      _left = Tree.new(item2 - 1, depth)
-      _right = Tree.new(item2, depth)
+      _left = new Tree(item2 - 1, depth)
+      _right = new Tree(item2, depth)
     }
   }
 
@@ -27,9 +27,9 @@ var stretchDepth = maxDepth + 1
 var start = OS.clock
 
 io.write("stretch tree of depth " + stretchDepth.toString + " check: " +
-    Tree.new(0, stretchDepth).check.toString)
+    new Tree(0, stretchDepth).check.toString)
 
-var longLivedTree = Tree.new(0, maxDepth)
+var longLivedTree = new Tree(0, maxDepth)
 
 // iterations = 2 ** maxDepth
 var iterations = 1
@@ -44,7 +44,7 @@ while (depth < stretchDepth) {
   var check = 0
   var i = 1
   while (i < iterations + 1) {
-    check = check + Tree.new(i, depth).check + Tree.new(-i, depth).check
+    check = check + new Tree(i, depth).check + new Tree(-i, depth).check
     i = i + 1
   }
 

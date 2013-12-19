@@ -22,7 +22,7 @@ class Bar is Foo {
   }
 }
 
-var bar = Bar.new
+var bar = new Bar
 bar.foo("foo 1", "foo 2")
 bar.bar("bar 1", "bar 2")
 

@@ -77,6 +77,7 @@ typedef enum
   TOKEN_FN,
   TOKEN_IF,
   TOKEN_IS,
+  TOKEN_NEW,
   TOKEN_NULL,
   TOKEN_RETURN,
   TOKEN_STATIC,
@@ -190,9 +191,6 @@ typedef struct sCompiler
   // currently inside a class.
   SymbolTable* fields;
 
-  // If the function being compiled is a method.
-  bool isMethod;
-
   // The number of local variables currently in scope.
   int numLocals;
 
@@ -200,6 +198,14 @@ typedef struct sCompiler
   // here means top-level code is being compiled and there is no block scope
   // in effect at all. Any variables declared will be global.
   int scopeDepth;
+
+  // The name of the method this compiler is compiling, or NULL if this
+  // compiler is not for a method. Note that this is just the bare method name,
+  // and not its full signature.
+  const char* methodName;
+
+  // The length of the method name being compiled.
+  int methodLength;
 
   // The currently in scope local variables.
   Local locals[MAX_LOCALS];
@@ -220,13 +226,14 @@ static int addConstant(Compiler* compiler, Value constant)
 }
 
 // Initializes [compiler].
-static int initCompiler(Compiler* compiler, Parser* parser,
-                         Compiler* parent, bool isMethod)
+static int initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
+                        const char* methodName, int methodLength)
 {
   compiler->parser = parser;
   compiler->parent = parent;
   compiler->numCodes = 0;
-  compiler->isMethod = isMethod;
+  compiler->methodName = methodName;
+  compiler->methodLength = methodLength;
 
   if (parent == NULL)
   {
@@ -433,6 +440,7 @@ static void readName(Parser* parser, TokenType type)
   if (isKeyword(parser, "fn")) type = TOKEN_FN;
   if (isKeyword(parser, "if")) type = TOKEN_IF;
   if (isKeyword(parser, "is")) type = TOKEN_IS;
+  if (isKeyword(parser, "new")) type = TOKEN_NEW;
   if (isKeyword(parser, "null")) type = TOKEN_NULL;
   if (isKeyword(parser, "return")) type = TOKEN_RETURN;
   if (isKeyword(parser, "static")) type = TOKEN_STATIC;
@@ -652,6 +660,7 @@ static void nextToken(Parser* parser)
       case TOKEN_ELSE:
       case TOKEN_IF:
       case TOKEN_IS:
+      case TOKEN_NEW:
       case TOKEN_STATIC:
       case TOKEN_SUPER:
       case TOKEN_VAR:
@@ -1084,17 +1093,10 @@ static void parameterList(Compiler* compiler, char* name, int* length)
   }
 }
 
-// Compiles the method name and argument list for a "<...>.name(...)" call.
-static void namedCall(Compiler* compiler, bool allowAssignment,
-                      Code instruction)
+// Compiles an (optional) argument list and then calls it.
+static void methodCall(Compiler* compiler, Code instruction,
+                       char name[MAX_METHOD_SIGNATURE], int length)
 {
-  // Build the method name.
-  consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
-  char name[MAX_METHOD_SIGNATURE];
-  int length = copyName(compiler, name);
-
-  // TODO: Check for "=" here and set assignment and return.
-
   // Parse the argument list, if any.
   int numArgs = 0;
   if (match(compiler, TOKEN_LEFT_PAREN))
@@ -1125,6 +1127,20 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
 
   emit(compiler, instruction + numArgs);
   emit(compiler, symbol);
+}
+
+// Compiles the method name and argument list for a "<...>.name(...)" call.
+static void namedCall(Compiler* compiler, bool allowAssignment,
+                      Code instruction)
+{
+  // Build the method name.
+  consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
+  char name[MAX_METHOD_SIGNATURE];
+  int length = copyName(compiler, name);
+
+  // TODO: Check for "=" here and set assignment and return.
+
+  methodCall(compiler, instruction, name, length);
 }
 
 static void grouping(Compiler* compiler, bool allowAssignment)
@@ -1183,7 +1199,8 @@ static void boolean(Compiler* compiler, bool allowAssignment)
 static void function(Compiler* compiler, bool allowAssignment)
 {
   Compiler fnCompiler;
-  int constant = initCompiler(&fnCompiler, compiler->parser, compiler, 0);
+  int constant = initCompiler(&fnCompiler, compiler->parser, compiler,
+                              NULL, 0);
 
   parameterList(&fnCompiler, NULL, NULL);
 
@@ -1322,11 +1339,26 @@ static bool isInsideMethod(Compiler* compiler)
   // Walk up the parent chain to see if there is an enclosing method.
   while (compiler != NULL)
   {
-    if (compiler->isMethod) return true;
+    if (compiler->methodName != NULL) return true;
     compiler = compiler->parent;
   }
 
   return false;
+}
+
+static void new_(Compiler* compiler, bool allowAssignment)
+{
+  // TODO: Instead of an expression, explicitly only allow a dotted name.
+  // Compile the class.
+  parsePrecedence(compiler, false, PREC_CALL);
+
+  // Create the instance of the class.
+  emit(compiler, CODE_NEW);
+
+  // Invoke the constructor on the new instance.
+  char name[MAX_METHOD_SIGNATURE];
+  strcpy(name, "new");
+  methodCall(compiler, CODE_CALL_0, name, 3);
 }
 
 static void super_(Compiler* compiler, bool allowAssignment)
@@ -1343,10 +1375,37 @@ static void super_(Compiler* compiler, bool allowAssignment)
   emit(compiler, 0);
 
   // TODO: Super operator calls.
-  consume(compiler, TOKEN_DOT, "Expect '.' after 'super'.");
+  // TODO: A bare "super" should call the superclass method of the same name
+  // with no arguments.
 
-  // Compile the superclass call.
-  namedCall(compiler, allowAssignment, CODE_SUPER_0);
+  // See if it's a named super call, or an unnamed one.
+  if (match(compiler, TOKEN_DOT))
+  {
+    // Compile the superclass call.
+    namedCall(compiler, allowAssignment, CODE_SUPER_0);
+  }
+  else
+  {
+    // No explicit name, so use the name of the enclosing method.
+    char name[MAX_METHOD_SIGNATURE];
+    int length = 0;
+    
+    Compiler* thisCompiler = compiler;
+    while (thisCompiler != NULL)
+    {
+      if (thisCompiler->methodName != NULL)
+      {
+        length = thisCompiler->methodLength;
+        strncpy(name, thisCompiler->methodName, length);
+        break;
+      }
+
+      thisCompiler = thisCompiler->parent;
+    }
+
+    // Call the superclass method with the same name.
+    methodCall(compiler, CODE_SUPER_0, name, length);
+  }
 }
 
 static void this_(Compiler* compiler, bool allowAssignment)
@@ -1487,6 +1546,13 @@ void mixedSignature(Compiler* compiler, char* name, int* length)
   }
 }
 
+// Compiles a method signature for a constructor.
+void constructorSignature(Compiler* compiler, char* name, int* length)
+{
+  // Add the parameters, if there are any.
+  parameterList(compiler, name, length);
+}
+
 // This table defines all of the parsing rules for the prefix and infix
 // expressions in the grammar. Expressions are parsed using a Pratt parser.
 //
@@ -1533,6 +1599,7 @@ GrammarRule rules[] =
   /* TOKEN_FN            */ PREFIX(function),
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IS            */ INFIX(PREC_IS, is),
+  /* TOKEN_NEW           */ { new_, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_NULL          */ PREFIX(null),
   /* TOKEN_RETURN        */ UNUSED,
   /* TOKEN_STATIC        */ UNUSED,
@@ -1584,60 +1651,18 @@ void expression(Compiler* compiler)
 void method(Compiler* compiler, Code instruction, bool isConstructor,
             SignatureFn signature)
 {
-  Compiler methodCompiler;
-  int constant = initCompiler(&methodCompiler, compiler->parser, compiler, 1);
-
   // Build the method name.
   char name[MAX_METHOD_SIGNATURE];
   int length = copyName(compiler, name);
+
+  Compiler methodCompiler;
+  int constant = initCompiler(&methodCompiler, compiler->parser, compiler,
+                              name, length);
 
   // Compile the method signature.
   signature(&methodCompiler, name, &length);
 
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
-
-  if (isConstructor)
-  {
-    // See if there is a superclass constructor call, which comes before the
-    // opening '{'.
-    if (match(compiler, TOKEN_SUPER))
-    {
-      // Push a copy of the class onto the stack so it can be the receiver for
-      // the superclass constructor call.
-      emit(&methodCompiler, CODE_LOAD_LOCAL);
-      emit(&methodCompiler, 0);
-
-      consume(compiler, TOKEN_DOT, "Expect '.' after 'super'.");
-
-      // Compile the superclass call.
-      // TODO: What if there turns out to not be a superclass constructor that
-      // matches this?
-      // TODO: This is being compiled in an instance context even though the
-      // instance hasn't been created yet. Consider something like:
-      //
-      //     class Foo is Bar {
-      //       new super(_someField) { ... }
-      //     }
-      //
-      // The access of _someField in the super() expression is going to do bad
-      // things since the receiver at that point in time is still the class.
-      // Need to handle this better.
-      namedCall(&methodCompiler, false, CODE_SUPER_0);
-
-      // The superclass call will return the new instance, so store it back
-      // into slot 0 to replace the receiver with the new object.
-      emit(&methodCompiler, CODE_STORE_LOCAL);
-      emit(&methodCompiler, 0);
-
-      // Then remove it from the stack.
-      emit(&methodCompiler, CODE_POP);
-    }
-    else
-    {
-      // Otherwise, just create the new instance.
-      emit(&methodCompiler, CODE_NEW);
-    }
-  }
 
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
 
@@ -1650,15 +1675,14 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
     // The receiver is always stored in the first local slot.
     emit(&methodCompiler, CODE_LOAD_LOCAL);
     emit(&methodCompiler, 0);
-
-    emit(&methodCompiler, CODE_RETURN);
   }
   else
   {
-    // End the method's code.
+    // Implicitly return null in case there is no explicit return.
     emit(&methodCompiler, CODE_NULL);
-    emit(&methodCompiler, CODE_RETURN);
   }
+
+  emit(&methodCompiler, CODE_RETURN);
 
   endCompiler(&methodCompiler, constant);
 
@@ -1690,27 +1714,6 @@ void block(Compiler* compiler)
   // Expression statement.
   expression(compiler);
   emit(compiler, CODE_POP);
-}
-
-// Defines a default constructor method with an empty body.
-static void defaultConstructor(Compiler* compiler)
-{
-  Compiler ctorCompiler;
-  int constant = initCompiler(&ctorCompiler, compiler->parser, compiler, 1);
-
-  // Create the instance of the class.
-  emit(&ctorCompiler, CODE_NEW);
-
-  // Then return the receiver which is in the first local slot.
-  emit(&ctorCompiler, CODE_LOAD_LOCAL);
-  emit(&ctorCompiler, 0);
-  emit(&ctorCompiler, CODE_RETURN);
-
-  endCompiler(&ctorCompiler, constant);
-
-  // Define the constructor method.
-  emit(compiler, CODE_METHOD_STATIC);
-  emit(compiler, ensureSymbol(&compiler->parser->vm->methods, "new", 3));
 }
 
 // Compiles a statement. These can only appear at the top-level or within
@@ -1748,9 +1751,6 @@ void statement(Compiler* compiler)
     initSymbolTable(&fields);
     compiler->fields = &fields;
 
-    // Classes with no explicitly defined constructor get a default one.
-    bool hasConstructor = false;
-
     // Compile the method definitions.
     consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
     while (!match(compiler, TOKEN_RIGHT_BRACE))
@@ -1765,14 +1765,10 @@ void statement(Compiler* compiler)
         // Currently, they're compiled as instance fields, which will be wrong
         // wrong wrong given that the receiver is actually the class obj.
       }
-      else if (match(compiler, TOKEN_THIS))
+      else if (peek(compiler) == TOKEN_NEW)
       {
-        // If the method name is prefixed with "this", it's a constructor.
+        // If the method name is "new", it's a constructor.
         isConstructor = true;
-        hasConstructor = true;
-
-        // Constructors are defined on the class.
-        instruction = CODE_METHOD_STATIC;
       }
 
       SignatureFn signature = rules[compiler->parser->current.type].method;
@@ -1788,8 +1784,6 @@ void statement(Compiler* compiler)
       consume(compiler, TOKEN_LINE,
               "Expect newline after definition in class.");
     }
-
-    if (!hasConstructor) defaultConstructor(compiler);
 
     // Update the class with the number of fields.
     compiler->fn->bytecode[numFieldsInstruction] = fields.count;
@@ -1918,7 +1912,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
   nextToken(&parser);
 
   Compiler compiler;
-  initCompiler(&compiler, &parser, NULL, 0);
+  initCompiler(&compiler, &parser, NULL, NULL, 0);
 
   PinnedObj pinned;
   pinObj(vm, (Obj*)compiler.fn, &pinned);

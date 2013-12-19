@@ -8,5 +8,5 @@ class Foo {
   }
 }
 
-Foo.new.method("param")
+(new Foo).method("param")
 f.call // expect: param

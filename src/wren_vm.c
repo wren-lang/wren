@@ -996,13 +996,9 @@ Value interpret(WrenVM* vm, Value function)
 
     CASE_CODE(NEW):
     {
-      // The current receiver is the class itself.
-      Value receiver = fiber->stack[frame->stackStart];
-      Value instance = wrenNewInstance(vm, AS_CLASS(receiver));
-
-      // Store the new instance back in the receiver slot so that now it can be
-      // "this" in the body of the constructor and returned by it.
-      fiber->stack[frame->stackStart] = instance;
+      // TODO: Handle object not being a class.
+      ObjClass* classObj = AS_CLASS(POP());
+      PUSH(wrenNewInstance(vm, classObj));
       DISPATCH();
     }
 

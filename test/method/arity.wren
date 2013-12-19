@@ -18,7 +18,7 @@ class Foo {
   method(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) { return a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p}
 }
 
-var foo = Foo.new
+var foo = new Foo
 io.write(foo.method) // expect: 0
 io.write(foo.method(1)) // expect: 1
 io.write(foo.method(1, 2)) // expect: 3

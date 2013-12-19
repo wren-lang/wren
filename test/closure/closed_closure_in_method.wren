@@ -8,7 +8,7 @@ var foo = null
     }
   }
 
-  foo = Foo.new
+  foo = new Foo
 }
 
 foo.method // expect: local

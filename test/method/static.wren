@@ -6,8 +6,7 @@ class Foo {
   static bar(arg) { return "on metaclass " + arg }
 }
 
-io.write("on metaclass " + "arg") // expect: on metaclass arg
-io.write(Foo.new.bar)        // expect: on instance
-io.write(Foo.bar)            // expect: on metaclass
-io.write(Foo.new.bar("arg")) // expect: on instance arg
-io.write(Foo.bar("arg"))     // expect: on metaclass arg
+io.write((new Foo).bar)        // expect: on instance
+io.write(Foo.bar)              // expect: on metaclass
+io.write((new Foo).bar("arg")) // expect: on instance arg
+io.write(Foo.bar("arg"))       // expect: on metaclass arg

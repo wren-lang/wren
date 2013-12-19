@@ -1,18 +1,17 @@
 class Foo {
-  // TODO: Do we want to require an explicit "new" here?
-  this new { io.write("zero") }
-  this new(a) { io.write(a) }
-  this new(a, b) { io.write(a + b) }
+  new { io.write("zero") }
+  new(a) { io.write(a) }
+  new(a, b) { io.write(a + b) }
 
   toString { return "Foo" }
 }
 
 // Can overload by arity.
-Foo.new // expect: zero
-Foo.new("one") // expect: one
-Foo.new("one", "two") // expect: onetwo
+new Foo // expect: zero
+new Foo("one") // expect: one
+new Foo("one", "two") // expect: onetwo
 
 // Returns the new instance.
-var foo = Foo.new // expect: zero
+var foo = new Foo // expect: zero
 io.write(foo is Foo) // expect: true
 io.write(foo.toString) // expect: Foo

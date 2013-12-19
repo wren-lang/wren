@@ -3,7 +3,7 @@ class Foo {
 }
 
 // A class with no constructors gets an argument-less "new" one by default.
-var foo = Foo.new
+var foo = new Foo
 io.write(foo is Foo) // expect: true
 io.write(foo.toString) // expect: Foo
 
