@@ -20,3 +20,4 @@ class Derived is Base {
 // TODO: Calling super outside of a class.
 // TODO: Super calls inside nested functions in methods.
 // TODO: Super where there is no inherited method.
+// TODO: Super setter calls.

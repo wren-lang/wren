@@ -882,7 +882,7 @@ static int findUpvalue(Compiler* compiler)
     // scope.
     compiler->parent->locals[local].isUpvalue = true;
 
-    return addUpvalue(compiler, 1, local);
+    return addUpvalue(compiler, true, local);
   }
 
   // See if it's an upvalue in the immediately enclosing function. In other
@@ -894,7 +894,7 @@ static int findUpvalue(Compiler* compiler)
   int upvalue = findUpvalue(compiler->parent);
   if (upvalue != -1)
   {
-    return addUpvalue(compiler, 0, upvalue);
+    return addUpvalue(compiler, false, upvalue);
   }
 
   // If we got here, we walked all the way up the parent chain and couldn't
@@ -1129,7 +1129,8 @@ static void methodCall(Compiler* compiler, Code instruction,
   emit(compiler, symbol);
 }
 
-// Compiles the method name and argument list for a "<...>.name(...)" call.
+// Compiles an expression that starts with ".name". That includes getters,
+// method calls with arguments, and setter calls.
 static void namedCall(Compiler* compiler, bool allowAssignment,
                       Code instruction)
 {
@@ -1138,9 +1139,25 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
   char name[MAX_METHOD_SIGNATURE];
   int length = copyName(compiler, name);
 
-  // TODO: Check for "=" here and set assignment and return.
+  if (match(compiler, TOKEN_EQ))
+  {
+    if (!allowAssignment) error(compiler, "Invalid assignment.");
 
-  methodCall(compiler, instruction, name, length);
+    name[length++] = '=';
+    name[length++] = ' ';
+
+    // Compile the assigned value.
+    // TODO: Allow assignment here.
+    expression(compiler);
+
+    int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
+    emit(compiler, instruction + 1);
+    emit(compiler, symbol);
+  }
+  else
+  {
+    methodCall(compiler, instruction, name, length);
+  }
 }
 
 static void grouping(Compiler* compiler, bool allowAssignment)
@@ -1176,7 +1193,7 @@ static void unaryOp(Compiler* compiler, bool allowAssignment)
   GrammarRule* rule = &rules[compiler->parser->previous.type];
 
   // Compile the argument.
-  parsePrecedence(compiler, 0, PREC_UNARY + 1);
+  parsePrecedence(compiler, false, PREC_UNARY + 1);
 
   // Call the operator method on the left-hand side.
   int symbol = ensureSymbol(&compiler->parser->vm->methods, rule->name, 1);
@@ -1474,7 +1491,7 @@ void call(Compiler* compiler, bool allowAssignment)
 void is(Compiler* compiler, bool allowAssignment)
 {
   // Compile the right-hand side.
-  parsePrecedence(compiler, 0, PREC_CALL);
+  parsePrecedence(compiler, false, PREC_CALL);
 
   emit(compiler, CODE_IS);
 }
@@ -1485,7 +1502,7 @@ void and(Compiler* compiler, bool allowAssignment)
   emit(compiler, CODE_AND);
   int jump = emit(compiler, 255);
 
-  parsePrecedence(compiler, 0, PREC_LOGIC);
+  parsePrecedence(compiler, false, PREC_LOGIC);
 
   patchJump(compiler, jump);
 }
@@ -1496,7 +1513,7 @@ void or(Compiler* compiler, bool allowAssignment)
   emit(compiler, CODE_OR);
   int jump = emit(compiler, 255);
 
-  parsePrecedence(compiler, 0, PREC_LOGIC);
+  parsePrecedence(compiler, false, PREC_LOGIC);
 
   patchJump(compiler, jump);
 }
@@ -1506,7 +1523,7 @@ void infixOp(Compiler* compiler, bool allowAssignment)
   GrammarRule* rule = &rules[compiler->parser->previous.type];
 
   // Compile the right-hand side.
-  parsePrecedence(compiler, 0, rule->precedence + 1);
+  parsePrecedence(compiler, false, rule->precedence + 1);
 
   // Call the operator method on the left-hand side.
   int symbol = ensureSymbol(&compiler->parser->vm->methods,
@@ -1543,6 +1560,26 @@ void mixedSignature(Compiler* compiler, char* name, int* length)
 
     // Parse the parameter name.
     declareVariable(compiler);
+  }
+}
+
+// Compiles a method signature for a named method or setter.
+void namedSignature(Compiler* compiler, char* name, int* length)
+{
+  if (match(compiler, TOKEN_EQ))
+  {
+    // It's a setter.
+    // TODO: Allow setters with parameters? Like: foo.bar(1, 2) = "blah"
+    name[(*length)++] = '=';
+    name[(*length)++] = ' ';
+
+    // Parse the value parameter.
+    declareVariable(compiler);
+  }
+  else
+  {
+    // Regular named method with an optional parameter list.
+    parameterList(compiler, name, length);
   }
 }
 
@@ -1609,7 +1646,7 @@ GrammarRule rules[] =
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_WHILE         */ UNUSED,
   /* TOKEN_FIELD         */ PREFIX(field),
-  /* TOKEN_NAME          */ { name, NULL, parameterList, PREC_NONE, NULL },
+  /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(number),
   /* TOKEN_STRING        */ PREFIX(string),
   /* TOKEN_LINE          */ UNUSED,
@@ -1644,7 +1681,7 @@ void parsePrecedence(Compiler* compiler, bool allowAssignment,
 // on the stack.
 void expression(Compiler* compiler)
 {
-  parsePrecedence(compiler, 1, PREC_LOWEST);
+  parsePrecedence(compiler, true, PREC_LOWEST);
 }
 
 // Compiles a method definition inside a class body.
@@ -1716,82 +1753,90 @@ void block(Compiler* compiler)
   emit(compiler, CODE_POP);
 }
 
+// Compiles a class definition. Assumes the "class" token has already been
+// consumed.
+static void classStatement(Compiler* compiler)
+{
+  // Create a variable to store the class in.
+  // TODO: Allow anonymous classes?
+  int symbol = declareVariable(compiler);
+
+  // Load the superclass (if there is one).
+  if (match(compiler, TOKEN_IS))
+  {
+    parsePrecedence(compiler, false, PREC_CALL);
+    emit(compiler, CODE_SUBCLASS);
+  }
+  else
+  {
+    // Create the empty class.
+    emit(compiler, CODE_CLASS);
+  }
+
+  // Store a placeholder for the number of fields argument. We don't know
+  // the value until we've compiled all the methods to see which fields are
+  // used.
+  int numFieldsInstruction = emit(compiler, 255);
+
+  // Set up a symbol table for the class's fields. We'll initially compile
+  // them to slots starting at zero. When the method is bound to the close
+  // the bytecode will be adjusted by [wrenBindMethod] to take inherited
+  // fields into account.
+  SymbolTable* previousFields = compiler->fields;
+  SymbolTable fields;
+  initSymbolTable(&fields);
+  compiler->fields = &fields;
+
+  // Compile the method definitions.
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
+  while (!match(compiler, TOKEN_RIGHT_BRACE))
+  {
+    Code instruction = CODE_METHOD_INSTANCE;
+    bool isConstructor = false;
+
+    if (match(compiler, TOKEN_STATIC))
+    {
+      instruction = CODE_METHOD_STATIC;
+      // TODO: Need to handle fields inside static methods correctly.
+      // Currently, they're compiled as instance fields, which will be wrong
+      // wrong wrong given that the receiver is actually the class obj.
+    }
+    else if (peek(compiler) == TOKEN_NEW)
+    {
+      // If the method name is "new", it's a constructor.
+      isConstructor = true;
+    }
+
+    SignatureFn signature = rules[compiler->parser->current.type].method;
+    nextToken(compiler->parser);
+
+    if (signature == NULL)
+    {
+      error(compiler, "Expect method definition.");
+      break;
+    }
+
+    method(compiler, instruction, isConstructor, signature);
+    consume(compiler, TOKEN_LINE,
+            "Expect newline after definition in class.");
+  }
+
+  // Update the class with the number of fields.
+  compiler->fn->bytecode[numFieldsInstruction] = fields.count;
+
+  compiler->fields = previousFields;
+
+  // Store it in its name.
+  defineVariable(compiler, symbol);
+}
+
 // Compiles a statement. These can only appear at the top-level or within
 // curly blocks. Unlike expressions, these do not leave a value on the stack.
 void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_CLASS))
   {
-    // Create a variable to store the class in.
-    int symbol = declareVariable(compiler);
-
-    // Load the superclass (if there is one).
-    if (match(compiler, TOKEN_IS))
-    {
-      parsePrecedence(compiler, 0, PREC_CALL);
-      emit(compiler, CODE_SUBCLASS);
-    }
-    else
-    {
-      // Create the empty class.
-      emit(compiler, CODE_CLASS);
-    }
-
-    // Store a placeholder for the number of fields argument. We don't know
-    // the value until we've compiled all the methods to see which fields are
-    // used.
-    int numFieldsInstruction = emit(compiler, 255);
-
-    // Set up a symbol table for the class's fields. We'll initially compile
-    // them to slots starting at zero. When the method is bound to the close
-    // the bytecode will be adjusted by [wrenBindMethod] to take inherited
-    // fields into account.
-    SymbolTable* previousFields = compiler->fields;
-    SymbolTable fields;
-    initSymbolTable(&fields);
-    compiler->fields = &fields;
-
-    // Compile the method definitions.
-    consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
-    while (!match(compiler, TOKEN_RIGHT_BRACE))
-    {
-      Code instruction = CODE_METHOD_INSTANCE;
-      bool isConstructor = false;
-
-      if (match(compiler, TOKEN_STATIC))
-      {
-        instruction = CODE_METHOD_STATIC;
-        // TODO: Need to handle fields inside static methods correctly.
-        // Currently, they're compiled as instance fields, which will be wrong
-        // wrong wrong given that the receiver is actually the class obj.
-      }
-      else if (peek(compiler) == TOKEN_NEW)
-      {
-        // If the method name is "new", it's a constructor.
-        isConstructor = true;
-      }
-
-      SignatureFn signature = rules[compiler->parser->current.type].method;
-      nextToken(compiler->parser);
-
-      if (signature == NULL)
-      {
-        error(compiler, "Expect method definition.");
-        break;
-      }
-
-      method(compiler, instruction, isConstructor, signature);
-      consume(compiler, TOKEN_LINE,
-              "Expect newline after definition in class.");
-    }
-
-    // Update the class with the number of fields.
-    compiler->fn->bytecode[numFieldsInstruction] = fields.count;
-
-    compiler->fields = previousFields;
-
-    // Store it in its name.
-    defineVariable(compiler, symbol);
+    classStatement(compiler);
     return;
   }
 
