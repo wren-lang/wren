@@ -7,9 +7,8 @@ import re
 import subprocess
 import sys
 
-# How many times to run a given benchmark. Should be an odd number to get the
-# right median.
-NUM_TRIALS = 7
+# How many times to run a given benchmark.
+NUM_TRIALS = 10
 
 BENCHMARKS = []
 
@@ -59,14 +58,13 @@ def yellow(text):
   return '\033[33m' + text + '\033[0m'
 
 
-def calc_stats(nums):
-  """Calculates the best, mean, and median of a list of numbers."""
-  mean = sum(nums) / len(nums)
-  nums.sort()
-  median = nums[(len(nums) - 1) / 2]
-  diffs = ((n - mean) * (n - mean) for n in nums)
-  std_dev = math.sqrt(sum(diffs) / len(nums))
-  return [nums[0], mean, median, std_dev]
+def get_score(time):
+  """
+  Converts time into a "score". This is the inverse of the time with an
+  arbitrary scale applied to get the number in a nice range. The goal here is
+  to have benchmark results where faster = bigger number.
+  """
+  return 1000.0 / time
 
 
 def run_trial(benchmark, language):
@@ -99,35 +97,34 @@ def run_benchmark_language(benchmark, language):
     times.append(time)
     sys.stdout.write(".")
 
-  times.sort()
-  stats = calc_stats(times)
+  best = min(times)
+  score = get_score(best)
 
   comparison = ""
   if language[0] == "wren":
     if benchmark[2] != None:
-      ratio = 100 * stats[0] / benchmark[2]
-      comparison =  "{0:.2f}% of baseline".format(ratio)
+      ratio = 100 * score / benchmark[2]
+      comparison =  "{:6.2f}% relative to baseline".format(ratio)
       if ratio > 105:
-        comparison = red(comparison)
-      if ratio < 95:
         comparison = green(comparison)
+      if ratio < 95:
+        comparison = red(comparison)
     else:
       comparison = "no baseline"
   else:
     # Hack: assumes wren is first language.
-    wren_time = results[0][2]
-    ratio = stats[1] / wren_time
-    comparison =  "{0:.2f}x wren".format(ratio)
-    if ratio < 1:
-      comparison = red(comparison)
-    if ratio > 1:
+    wren_score = results[0][2]
+    ratio = 100.0 * wren_score / score
+    comparison =  "{:6.2f}%".format(ratio)
+    if ratio > 105:
       comparison = green(comparison)
+    if ratio < 95:
+      comparison = red(comparison)
 
-  print " best: {0:.2f} mean: {1:.2f} median: {2:.2f} {3:s}".format(
-      stats[0], stats[1], stats[2], comparison)
+  print " {:4.0f}  {:4.2f}s  {:s}".format(score, best, comparison)
 
-  results.append([name, times, stats[0]])
-  return stats
+  results.append([name, times, score])
+  return score
 
 
 def run_benchmark(benchmark, languages):
@@ -137,37 +134,6 @@ def run_benchmark(benchmark, languages):
       run_benchmark_language(benchmark, language)
   graph_results()
   del results[0:len(results)]
-
-
-# TODO(bob): Hook this up so it can be called.
-def solo_benchmark(benchmark, language):
-  """Runs a single language benchmark repeatedly, graphing the results."""
-  base = benchmark[2]
-  total = 0
-  for i in range(0, NUM_TRIALS):
-    time = run_trial(benchmark, language)
-    total += time
-    ratio = 100 * time / base
-
-    # TODO(bob): Show scale.
-
-    line = [" "] * 51
-    line[25] = "|"
-    index = 25 + int((time - base) * 200)
-    if index < 0: index = 0
-    if index > 50: index = 50
-    line[index] = "*"
-
-    comparison = "{0:.4f} ({1:6.2f}%) {2}".format(time, ratio, "".join(line))
-    if ratio > 105:
-      comparison = red(comparison)
-    if ratio < 95:
-      comparison = green(comparison)
-    print comparison
-
-  total /= NUM_TRIALS
-  print "----"
-  print "{0:.4f} ({1:6.2f}%)".format(total, 100 * total / base)
 
 
 def graph_results():
@@ -180,17 +146,17 @@ def graph_results():
     '0': '0'
   }
 
-  # Scale everything by the highest time.
+  # Scale everything by the highest score.
   highest = 0
   for result in results:
-    time = max(result[1])
-    if time > highest: highest = time
+    score = get_score(min(result[1]))
+    if score > highest: highest = score
 
-  print "{0:22s}0.0 {1:64.4f}".format("", highest)
+  print "{0:22s}0 {1:66.0f}".format("", highest)
   for result in results:
     line = ["-"] * 68
     for time in result[1]:
-      index = int(time / highest * 67)
+      index = int(get_score(time) / highest * 67)
       line[index] = INCREMENT[line[index]]
     print "{0:22s}{1}".format(result[0], "".join(line))
   print
@@ -210,8 +176,8 @@ def generate_baseline():
   print "generating baseline"
   baseline_text = ""
   for benchmark in BENCHMARKS:
-    stats = run_benchmark_language(benchmark, LANGUAGES[0])
-    baseline_text += ("{},{}\n".format(benchmark[0], stats[0]))
+    best = run_benchmark_language(benchmark, LANGUAGES[0])
+    baseline_text += ("{},{}\n".format(benchmark[0], best))
 
   # Write them to a file.
   with open("baseline.txt", 'w') as out:
