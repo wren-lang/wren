@@ -222,6 +222,14 @@ struct WrenVM
   // The number of total allocated bytes that will trigger the next GC.
   size_t nextGC;
 
+  // The minimum value for [nextGC] when recalculated after a collection.
+  size_t minNextGC;
+
+  // The scale factor used to calculate [nextGC] from the current number of in
+  // use bytes, as a percent. For example, 150 here means that nextGC will be
+  // 50% larger than the current number of in-use bytes.
+  int heapScalePercent;
+
   // The first object in the linked list of all currently allocated objects.
   Obj* first;
 

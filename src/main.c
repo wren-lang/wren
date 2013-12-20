@@ -49,15 +49,9 @@ static char* readFile(const char* path)
   return buffer;
 }
 
-static void* reallocate(void* memory, size_t oldSize, size_t newSize)
-{
-  return realloc(memory, newSize);
-}
-
-static int runFile(const char* path)
+static int runFile(WrenVM* vm, const char* path)
 {
   char* source = readFile(path);
-  WrenVM* vm = wrenNewVM(reallocate);
 
   int result = wrenInterpret(vm, source);
 
@@ -67,10 +61,8 @@ static int runFile(const char* path)
   return result;
 }
 
-static int runRepl()
+static int runRepl(WrenVM* vm)
 {
-  WrenVM* vm = wrenNewVM(reallocate);
-
   for (;;)
   {
     printf("> ");
@@ -99,9 +91,22 @@ static int runRepl()
 
 int main(int argc, const char* argv[])
 {
-  if (argc == 1) return runRepl();
-  if (argc == 2) return runFile(argv[1]);
+  if (argc < 1 || argc > 2)
+  {
+    fprintf(stderr, "Usage: wren [file]");
+    return 1;
+  }
 
-  fprintf(stderr, "Usage: wren [file]");
-  return 1;
+  WrenConfiguration config = {
+    .reallocateFn = NULL,
+    .heapGrowthPercent = 0,
+    .minHeapSize = 0,
+    // Since we're running in a separate process, be generous with memory.
+    .initialHeapSize = 1024 * 1024 * 100
+  };
+
+  WrenVM* vm = wrenNewVM(&config);
+
+  if (argc == 1) return runRepl(vm);
+  if (argc == 2) return runFile(vm, argv[1]);
 }

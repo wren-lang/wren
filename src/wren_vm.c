@@ -9,23 +9,54 @@
 #include "wren_vm.h"
 #include "wren_debug.h"
 
-WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
+// The built-in reallocation function used when one is not provided by the
+// configuration.
+static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)
 {
-  WrenVM* vm = reallocateFn(NULL, 0, sizeof(WrenVM));
+  return realloc(memory, newSize);
+}
+
+WrenVM* wrenNewVM(WrenConfiguration* configuration)
+{
+  WrenReallocateFn reallocate = defaultReallocate;
+  if (configuration->reallocateFn != NULL)
+  {
+    reallocate = configuration->reallocateFn;
+  }
+
+  WrenVM* vm = reallocate(NULL, 0, sizeof(WrenVM));
   initSymbolTable(&vm->methods);
   initSymbolTable(&vm->globalSymbols);
 
-  vm->fiber = reallocateFn(NULL, 0, sizeof(Fiber));
+  vm->fiber = reallocate(NULL, 0, sizeof(Fiber));
   vm->fiber->stackSize = 0;
   vm->fiber->numFrames = 0;
   vm->fiber->openUpvalues = NULL;
 
   vm->bytesAllocated = 0;
 
-  // TODO: Make this configurable.
-  vm->nextGC = 1024 * 1024 * 100;
-  vm->first = NULL;
+  vm->nextGC = 1024 * 1024 * 10;
+  if (configuration->initialHeapSize != 0)
+  {
+    vm->nextGC = configuration->initialHeapSize;
+  }
 
+  vm->minNextGC = 1024 * 1024;
+  if (configuration->minHeapSize != 0)
+  {
+    vm->minNextGC = configuration->minHeapSize;
+  }
+
+  vm->heapScalePercent = 150;
+  if (configuration->heapGrowthPercent != 0)
+  {
+    // +100 here because the configuration gives us the *additional* size of
+    // the heap relative to the in-use memory, while heapScalePercent is the
+    // *total* size of the heap relative to in-use.
+    vm->heapScalePercent = 100 + configuration->heapGrowthPercent;
+  }
+
+  vm->first = NULL;
   vm->pinned = NULL;
 
   // Clear out the global variables. This ensures they are NULL before being
@@ -35,7 +66,7 @@ WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
     vm->globals[i] = NULL_VAL;
   }
 
-  vm->reallocate = reallocateFn;
+  vm->reallocate = reallocate;
 
   wrenInitializeCore(vm);
 
@@ -88,7 +119,8 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
     #endif
 
     collectGarbage(vm);
-    vm->nextGC = vm->bytesAllocated * 3 / 2;
+    vm->nextGC = vm->bytesAllocated * vm->heapScalePercent / 100;
+    if (vm->nextGC < vm->minNextGC) vm->nextGC = vm->minNextGC;
 
     #if WREN_TRACE_MEMORY
     printf("GC %ld before, %ld after (%ld collected), next at %ld\n",

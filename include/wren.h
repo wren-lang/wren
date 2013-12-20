@@ -23,10 +23,53 @@ typedef struct WrenVM WrenVM;
 //   [oldSize] will be zero. It should return NULL.
 typedef void* (*WrenReallocateFn)(void* memory, size_t oldSize, size_t newSize);
 
-// Creates a new Wren virtual machine. It allocates memory for the VM itself
-// using [reallocateFn] and then uses that throughout its lifetime to manage
-// memory.
-WrenVM* wrenNewVM(WrenReallocateFn reallocateFn);
+typedef struct
+{
+  // The callback Wren will use to allocate, reallocate, and deallocate memory.
+  //
+  // If `NULL`, defaults to a built-in function that uses `realloc` and `free`.
+  WrenReallocateFn reallocateFn;
+
+  // The number of bytes Wren will allocate before triggering the first garbage
+  // collection.
+  //
+  // If zero, defaults to 10MB.
+  size_t initialHeapSize;
+
+  // After a collection occurs, the threshold for the next collection is
+  // determined based on the number of bytes remaining in use. This allows Wren
+  // to shrink its memory usage automatically after reclaiming a large amount
+  // of memory.
+  //
+  // This can be used to ensure that the heap does not get too small, which can
+  // in turn lead to a large number of collections afterwards as the heap grows
+  // back to a usable size.
+  //
+  // If zero, defaults to 1MB.
+  size_t minHeapSize;
+
+  // Wren will grow (and shrink) the heap automatically as the number of bytes
+  // remaining in use after a collection changes. This number determines the
+  // amount of additional memory Wren will use after a collection, as a
+  // percentage of the current heap size.
+  //
+  // For example, say that this is 50. After a garbage collection, Wren there
+  // are 400 bytes of memory still in use. That means the next collection will
+  // be triggered after a total of 600 bytes are allocated (including the 400
+  // already in use.
+  //
+  // Setting this to a smaller number wastes less memory, but triggers more
+  // frequent garbage collections.
+  //
+  // If zero, defaults to 50.
+  int heapGrowthPercent;
+} WrenConfiguration;
+
+// Creates a new Wren virtual machine using the given [configuration]. Wren
+// will copy the configuration data, so the argument passed to this can be
+// freed after calling this. If [configuration] is `NULL`, uses a default
+// configuration.
+WrenVM* wrenNewVM(WrenConfiguration* configuration);
 
 // Disposes of all resources is use by [vm], which was previously created by a
 // call to [wrenNewVM].
