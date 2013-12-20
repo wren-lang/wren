@@ -1176,6 +1176,9 @@ static void list(Compiler* compiler, bool allowAssignment)
     {
       numElements++;
       expression(compiler);
+
+      // Ignore a newline after the element but before the ',' or ']'.
+      match(compiler, TOKEN_LINE);
     } while (match(compiler, TOKEN_COMMA));
   }
 

@@ -20,6 +20,13 @@ io.write((fn 1) is Object) // expect: true
 io.write("s" is Object) // expect: true
 io.write(123 is Object) // expect: true
 
+// Classes extend Class.
+io.write(Num is Class) // expect: true
+io.write(null is Class) // expect: false
+io.write(true is Class) // expect: false
+io.write((fn 1) is Class) // expect: false
+io.write("s" is Class) // expect: false
+io.write(123 is Class) // expect: false
+
 // TODO: Non-class on RHS.
 // TODO: Precedence and associativity.
-// TODO: Metaclasses ("Num is Class").
