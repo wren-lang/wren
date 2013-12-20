@@ -23,7 +23,7 @@ WrenVM* wrenNewVM(WrenReallocateFn reallocateFn)
   vm->bytesAllocated = 0;
 
   // TODO: Make this configurable.
-  vm->nextGC = 1024 * 1024 * 10;
+  vm->nextGC = 1024 * 1024 * 100;
   vm->first = NULL;
 
   vm->pinned = NULL;
