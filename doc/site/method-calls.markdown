@@ -1,14 +1,15 @@
 ^title Method Calls
 
-Wren is object-oriented, so most code consists of method calls. They look like
-this:
+Wren is object-oriented, so most code consists of method calls. Most of them
+look like so:
 
     :::wren
     io.write("hello")
     items.add("another")
     items.insert(1, "value")
 
-You have a *receiver* on the left, followed by a `.`, then a name and an argument list in parentheses. Semantically, a method call works like this:
+You have a *receiver* on the left, followed by a `.`, then a name and an
+argument list in parentheses. Semantically, a method call works like this:
 
 1. Look up the class of the receiver.
 2. Look up the method on it by name.
@@ -38,19 +39,30 @@ Instead of having a single `add` method where you have to check for "undefined"
 or missing arguments, Wren just treats them as different methods that you can
 implement separately.
 
-## Prefix Operators
+## Setters
 
-Wren has mostly the same operators you know and love from C, with the same
-precedence and associativity. These operators are prefix (they come before
-their operand):
+Modifying a public property of some object looks like you expect:
+
+    :::wren
+    point.x = 123
+
+You can probably guess by now, but again this is just another special syntax
+for a regular method call. The semantics for the above are "invoke the `x=`
+method on `point`, passing `123` as an argument."
+
+## Operators
+
+Wren has most of the same operators you know and love from C and friends, with
+the same precedence and associativity. They are listed here because they are
+just a special syntax for regular method calls.
+
+Wren has a few prefix operators:
 
     :::wren
     ! ~ -
 
-Semantically, these operators are just method calls on their operand. An
-expression like `!possible` just means "call the `!` on `possible`".
-
-### Infix Operators
+They are just method calls on the operand without any other arguments. An
+expression like `!possible` just means "call the `!` method on `possible`".
 
 These operators are infix (they have operands on either side):
 
@@ -66,9 +78,18 @@ left operand is the receiver, and the right operand gets passed to it. So
 `a + b` is semantically interpreted as "invoke the `+` method on `a`, passing
 it `b`".
 
-### The `is` operator
+## Subscript operators
 
-The `is` keyword can be used as an infix operator in expression. It performs a
-type test. The left operand is an object and the right operand is a class. It
-evaluates to `true` if the object is an instance of the class (or one of its
-subclasses).
+Most languages use square brackets (`[]`) for working with collection-like
+objects. For example:
+
+    :::wren
+    list.add["item"]
+    map["key"] = "value"
+
+You know the refrain by now. In Wren, these are just method calls. Subscript
+operators can also be overloaded by arity, which is useful for things like
+multi-dimensional arrays:
+
+    :::wren
+    table[3, 5] = "value"

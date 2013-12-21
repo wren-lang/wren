@@ -68,4 +68,13 @@ Identifiers are similar to other programming languages. They start with a letter
 
 Identifiers that start with underscore (`_`) are special in Wren. They are used to indicate fields in [classes](classes.html).
 
+**TODO: Move this somewhere else:*
+
+### The `is` operator
+
+The `is` keyword can be used as an infix operator in expression. It performs a
+type test. The left operand is an object and the right operand is a class. It
+evaluates to `true` if the object is an instance of the class (or one of its
+subclasses).
+
 **TODO: blocks, assignment, functions, lists, maps**
