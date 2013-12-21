@@ -243,11 +243,23 @@ static int initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   }
   else
   {
-    // Declare a fake local variable for "this" so that it's slot in the stack
-    // is taken.
+    // Declare a fake local variable for the receiver so that it's slot in the
+    // stack is taken. For methods, we call this "this", so that we can resolve
+    // references to that like a normal variable. For functions, they have no
+    // explicit "this". So we pick a bogus name. That way references to "this"
+    // inside a function will try to walk up the parent chain to find a method
+    // enclosing the function whose "this" we can close over.
     compiler->numLocals = 1;
-    compiler->locals[0].name = NULL;
-    compiler->locals[0].length = 0;
+    if (methodName != NULL)
+    {
+      compiler->locals[0].name = "this";
+      compiler->locals[0].length = 4;
+    }
+    else
+    {
+      compiler->locals[0].name = NULL;
+      compiler->locals[0].length = 0;
+    }
     compiler->locals[0].depth = -1;
     compiler->locals[0].isUpvalue = false;
 
@@ -1391,8 +1403,6 @@ static void super_(Compiler* compiler, bool allowAssignment)
   emit(compiler, 0);
 
   // TODO: Super operator calls.
-  // TODO: A bare "super" should call the superclass method of the same name
-  // with no arguments.
 
   // See if it's a named super call, or an unnamed one.
   if (match(compiler, TOKEN_DOT))
@@ -1429,13 +1439,11 @@ static void this_(Compiler* compiler, bool allowAssignment)
   if (!isInsideMethod(compiler))
   {
     error(compiler, "Cannot use 'this' outside of a method.");
+    return;
   }
 
-  // The receiver is always stored in the first local slot.
-  // TODO: Will need to do something different to handle functions enclosed in
-  // methods.
-  emit(compiler, CODE_LOAD_LOCAL);
-  emit(compiler, 0);
+  // "this" works just like any other lexically scoped variable.
+  name(compiler, false);
 }
 
 // Subscript or "array indexing" operator like `foo[bar]`.

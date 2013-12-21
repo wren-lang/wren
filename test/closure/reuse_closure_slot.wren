@@ -14,6 +14,5 @@
   }
 }
 
-// TODO: Closing over this.
-// TODO: Close over fn/method parameter.
 // TODO: Maximum number of closed-over variables (directly and/or indirect).
+// TODO: Shadow variable used in closure.

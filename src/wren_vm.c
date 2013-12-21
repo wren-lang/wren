@@ -546,7 +546,7 @@ static void closeUpvalue(Fiber* fiber)
   Upvalue* upvalue = fiber->openUpvalues;
 
   // Move the value into the upvalue itself and point the upvalue to it.
-  upvalue->closed = fiber->stack[fiber->stackSize - 1];
+  upvalue->closed = *upvalue->value;
   upvalue->value = &upvalue->closed;
 
   // Remove it from the open upvalue list.
@@ -1042,10 +1042,6 @@ Value interpret(WrenVM* vm, Value function)
       // If we are returning from the top-level block, just return the value.
       if (fiber->numFrames == 0) return result;
 
-      // Store the result of the block in the first slot, which is where the
-      // caller expects it.
-      fiber->stack[frame->stackStart] = result;
-
       // Close any upvalues still in scope.
       Value* firstValue = &fiber->stack[frame->stackStart];
       while (fiber->openUpvalues != NULL &&
@@ -1053,6 +1049,10 @@ Value interpret(WrenVM* vm, Value function)
       {
         closeUpvalue(fiber);
       }
+
+      // Store the result of the block in the first slot, which is where the
+      // caller expects it.
+      fiber->stack[frame->stackStart] = result;
 
       // Discard the stack slots for the call frame (leaving one slot for the
       // result).
