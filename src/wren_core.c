@@ -212,6 +212,19 @@ DEF_NATIVE(list_subscript)
   return list->elements[index];
 }
 
+DEF_NATIVE(list_subscriptSetter)
+{
+  ObjList* list = AS_LIST(args[0]);
+
+  int index = validateIndex(args[1], list->count);
+  // TODO: Instead of returning null here, should signal an error explicitly
+  // somehow.
+  if (index == -1) return NULL_VAL;
+
+  list->elements[index] = args[2];
+  return args[2];
+}
+
 DEF_NATIVE(null_toString)
 {
   // TODO: Intern this string or something.
@@ -483,6 +496,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "insert  ", list_insert);
   NATIVE(vm->listClass, "removeAt ", list_removeAt);
   NATIVE(vm->listClass, "[ ]", list_subscript);
+  NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
 
   vm->nullClass = defineClass(vm, "Null", vm->objectClass);
   NATIVE(vm->nullClass, "toString", null_toString);

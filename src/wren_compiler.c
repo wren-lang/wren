@@ -1059,6 +1059,19 @@ static void finishBlock(Compiler* compiler)
   }
 }
 
+// The VM can only handle a certain number of parameters, so check that we
+// haven't exceeded that and give a usable error.
+static void validateNumParameters(Compiler* compiler, int numArgs)
+{
+  if (numArgs == MAX_PARAMETERS + 1)
+  {
+    // Only show an error at exactly max + 1 so that we can keep parsing the
+    // parameters and minimize cascaded errors.
+    error(compiler, "Methods cannot have more than %d parameters.",
+          MAX_PARAMETERS);
+  }
+}
+
 // Parses an optional parenthesis-delimited parameter list. If the parameter
 // list is for a method, [name] will be the name of the method and this will
 // modify it to handle arity in the signature. For functions, [name] will be
@@ -1071,15 +1084,7 @@ static void parameterList(Compiler* compiler, char* name, int* length)
     int numParams = 0;
     do
     {
-      // The VM can only handle a certain number of parameters, so check for
-      // this explicitly and give a usable error.
-      if (++numParams == MAX_PARAMETERS + 1)
-      {
-        // Only show an error at exactly max + 1 and don't break so that we can
-        // keep parsing the parameter list and minimize cascaded errors.
-        error(compiler, "Cannot have more than %d parameters.",
-              MAX_PARAMETERS);
-      }
+      validateNumParameters(compiler, ++numParams);
 
       // Define a local variable in the method for the parameter.
       declareVariable(compiler);
@@ -1103,16 +1108,7 @@ static void methodCall(Compiler* compiler, Code instruction,
   {
     do
     {
-      // The VM can only handle a certain number of parameters, so check for
-      // this explicitly and give a usable error.
-      if (++numArgs == MAX_PARAMETERS + 1)
-      {
-        // Only show an error at exactly max + 1 and don't break so that we can
-        // keep parsing the parameter list and minimize cascaded errors.
-        error(compiler, "Cannot pass more than %d arguments to a method.",
-              MAX_PARAMETERS);
-      }
-
+      validateNumParameters(compiler, ++numArgs);
       expression(compiler);
 
       // Add a space in the name for each argument. Lets us overload by
@@ -1456,16 +1452,7 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   // Parse the argument list.
   do
   {
-    // The VM can only handle a certain number of parameters, so check for
-    // this explicitly and give a usable error.
-    if (++numArgs == MAX_PARAMETERS + 1)
-    {
-      // Only show an error at exactly max + 1 and don't break so that we can
-      // keep parsing the parameter list and minimize cascaded errors.
-      error(compiler, "Cannot pass more than %d arguments to a method.",
-            MAX_PARAMETERS);
-    }
-
+    validateNumParameters(compiler, ++numArgs);
     expression(compiler);
 
     // Add a space in the name for each argument. Lets us overload by
@@ -1477,9 +1464,19 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
 
   name[length++] = ']';
-  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
-  // TODO: Check for "=" here and handle subscript setters.
+  if (match(compiler, TOKEN_EQ))
+  {
+    if (!allowAssignment) error(compiler, "Invalid assignment.");
+
+    name[length++] = '=';
+
+    // Compile the assigned value.
+    validateNumParameters(compiler, ++numArgs);
+    expression(compiler);
+  }
+
+  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
   // Compile the method call.
   emit(compiler, CODE_CALL_0 + numArgs);
