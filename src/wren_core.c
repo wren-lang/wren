@@ -47,6 +47,31 @@
 // to a list has O(1) amortized complexity.
 #define LIST_GROW_FACTOR (2)
 
+// This string literal is generated automatically from corelib.wren using
+// make_corelib. Do not edit here.
+const char* coreLibSource =
+"class IO {\n"
+"  static write(obj) {\n"
+"    IO.write__native__(obj.toString)\n"
+"    return obj\n"
+"  }\n"
+"}\n"
+"\n"
+"class List {\n"
+"  toString {\n"
+"    var result = \"[\"\n"
+"    var i = 0\n"
+"    // TODO: Use for loop.\n"
+"    while (i < this.count) {\n"
+"      if (i > 0) result = result + \", \"\n"
+"      result = result + this[i].toString\n"
+"      i = i + 1\n"
+"    }\n"
+"    result = result + \"]\"\n"
+"    return result\n"
+"  }\n"
+"}\n";
+
 DEF_NATIVE(bool_not)
 {
   return BOOL_VAL(!AS_BOOL(args[0]));
@@ -340,6 +365,11 @@ DEF_NATIVE(object_new)
   return args[0];
 }
 
+DEF_NATIVE(object_toString)
+{
+  return wrenNewString(vm, "<object>", 8);
+}
+
 DEF_NATIVE(object_type)
 {
   return OBJ_VAL(wrenGetClass(vm, args[0]));
@@ -467,6 +497,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->objectClass, "== ", object_eqeq);
   NATIVE(vm->objectClass, "!= ", object_bangeq);
   NATIVE(vm->objectClass, "new", object_new);
+  NATIVE(vm->objectClass, "toString", object_toString);
   NATIVE(vm->objectClass, "type", object_type);
 
   // Now we can define Class, which is a subclass of Object, but Object's
@@ -524,15 +555,6 @@ void wrenInitializeCore(WrenVM* vm)
   FIBER_NATIVE(vm->fnClass, "call               ", fn_call15);
   FIBER_NATIVE(vm->fnClass, "call                ", fn_call16);
 
-  vm->listClass = defineClass(vm, "List");
-  NATIVE(vm->listClass, "add ", list_add);
-  NATIVE(vm->listClass, "clear", list_clear);
-  NATIVE(vm->listClass, "count", list_count);
-  NATIVE(vm->listClass, "insert  ", list_insert);
-  NATIVE(vm->listClass, "removeAt ", list_removeAt);
-  NATIVE(vm->listClass, "[ ]", list_subscript);
-  NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
-
   vm->nullClass = defineClass(vm, "Null");
   NATIVE(vm->nullClass, "toString", null_toString);
 
@@ -565,13 +587,24 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->stringClass, "!= ", string_bangeq);
   NATIVE(vm->stringClass, "[ ]", string_subscript);
 
-  ObjClass* ioClass = defineClass(vm, "IO");
-  NATIVE(ioClass->metaclass, "write ", io_write);
-
   ObjClass* osClass = defineClass(vm, "OS");
   NATIVE(osClass->metaclass, "clock", os_clock);
 
   // TODO: Make this a distinct object type.
   ObjClass* unsupportedClass = wrenNewClass(vm, vm->objectClass, 0);
   vm->unsupported = (Value)wrenNewInstance(vm, unsupportedClass);
+
+  wrenInterpret(vm, coreLibSource);
+
+  vm->listClass = AS_CLASS(findGlobal(vm, "List"));
+  NATIVE(vm->listClass, "add ", list_add);
+  NATIVE(vm->listClass, "clear", list_clear);
+  NATIVE(vm->listClass, "count", list_count);
+  NATIVE(vm->listClass, "insert  ", list_insert);
+  NATIVE(vm->listClass, "removeAt ", list_removeAt);
+  NATIVE(vm->listClass, "[ ]", list_subscript);
+  NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
+
+  ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
+  NATIVE(ioClass->metaclass, "write__native__ ", io_write);
 }
