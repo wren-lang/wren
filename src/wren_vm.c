@@ -594,16 +594,15 @@ Value interpret(WrenVM* vm, Value function)
   #define PUSH(value) (fiber->stack[fiber->stackSize++] = value)
   #define POP()       (fiber->stack[--fiber->stackSize])
   #define PEEK()      (fiber->stack[fiber->stackSize - 1])
-  #define READ_ARG()  (frame->ip++, bytecode[ip++])
+  #define READ_ARG()  (*ip++)
 
   // Hoist these into local variables. They are accessed frequently in the loop
   // but assigned less frequently. Keeping them in locals and updating them when
   // a call frame has been pushed or popped gives a large speed boost.
   register CallFrame* frame;
-  register int ip;
+  register unsigned char* ip;
   register ObjFn* fn;
   register Upvalue** upvalues;
-  register unsigned char* bytecode;
 
   // Use this before a CallFrame is pushed to store the local variables back
   // into the current one.
@@ -623,8 +622,7 @@ Value interpret(WrenVM* vm, Value function)
       {                                               \
         fn = AS_CLOSURE(frame->fn)->fn;               \
         upvalues = AS_CLOSURE(frame->fn)->upvalues;   \
-      }                                               \
-      bytecode = fn->bytecode
+      }
 
   #if WREN_COMPUTED_GOTO
 
@@ -696,11 +694,11 @@ Value interpret(WrenVM* vm, Value function)
 
   #define INTERPRET_LOOP    DISPATCH();
   #define CASE_CODE(name)   code_##name
-  #define DISPATCH()        goto *dispatchTable[instruction = bytecode[ip++]]
+  #define DISPATCH()        goto *dispatchTable[instruction = *ip++]
 
   #else
 
-  #define INTERPRET_LOOP    for (;;) switch (instruction = bytecode[ip++])
+  #define INTERPRET_LOOP    for (;;) switch (instruction = *ip++)
   #define CASE_CODE(name)   case CODE_##name
   #define DISPATCH()        break
 
@@ -711,9 +709,7 @@ Value interpret(WrenVM* vm, Value function)
   Code instruction;
   INTERPRET_LOOP
   {
-    CASE_CODE(CONSTANT):
-      PUSH(fn->constants[READ_ARG()]);
-      DISPATCH();
+    CASE_CODE(POP): POP(); DISPATCH();
 
     CASE_CODE(NULL):  PUSH(NULL_VAL); DISPATCH();
     CASE_CODE(FALSE): PUSH(FALSE_VAL); DISPATCH();
@@ -785,6 +781,24 @@ Value interpret(WrenVM* vm, Value function)
       }
       DISPATCH();
     }
+
+    CASE_CODE(LOAD_LOCAL):
+    {
+      int local = READ_ARG();
+      PUSH(fiber->stack[frame->stackStart + local]);
+      DISPATCH();
+    }
+
+    CASE_CODE(STORE_LOCAL):
+    {
+      int local = READ_ARG();
+      fiber->stack[frame->stackStart + local] = PEEK();
+      DISPATCH();
+    }
+
+    CASE_CODE(CONSTANT):
+      PUSH(fn->constants[READ_ARG()]);
+      DISPATCH();
 
     CASE_CODE(SUPER_0):
     CASE_CODE(SUPER_1):
@@ -859,20 +873,6 @@ Value interpret(WrenVM* vm, Value function)
       DISPATCH();
     }
 
-    CASE_CODE(LOAD_LOCAL):
-    {
-      int local = READ_ARG();
-      PUSH(fiber->stack[frame->stackStart + local]);
-      DISPATCH();
-    }
-
-    CASE_CODE(STORE_LOCAL):
-    {
-      int local = READ_ARG();
-      fiber->stack[frame->stackStart + local] = PEEK();
-      DISPATCH();
-    }
-
     CASE_CODE(LOAD_UPVALUE):
     {
       ASSERT(upvalues != NULL,
@@ -934,7 +934,6 @@ Value interpret(WrenVM* vm, Value function)
     }
 
     CASE_CODE(DUP): PUSH(PEEK()); DISPATCH();
-    CASE_CODE(POP): POP(); DISPATCH();
 
     CASE_CODE(JUMP):
     {
@@ -957,6 +956,7 @@ Value interpret(WrenVM* vm, Value function)
       Value condition = POP();
 
       // False is the only falsey value.
+      // TODO: Null should be falsey too.
       if (IS_FALSE(condition)) ip += offset;
       DISPATCH();
     }
@@ -967,6 +967,7 @@ Value interpret(WrenVM* vm, Value function)
       Value condition = PEEK();
 
       // False is the only falsey value.
+      // TODO: Null should be falsey too.
       if (!IS_FALSE(condition))
       {
         // Discard the condition and evaluate the right hand side.
@@ -986,6 +987,7 @@ Value interpret(WrenVM* vm, Value function)
       Value condition = PEEK();
 
       // False is the only falsey value.
+      // TODO: Null should be falsey too.
       if (IS_FALSE(condition))
       {
         // Discard the condition and evaluate the right hand side.
@@ -1155,9 +1157,19 @@ Value interpret(WrenVM* vm, Value function)
 void wrenCallFunction(Fiber* fiber, Value function, int numArgs)
 {
   // TODO: Check for stack overflow.
-  fiber->frames[fiber->numFrames].fn = function;
-  fiber->frames[fiber->numFrames].ip = 0;
-  fiber->frames[fiber->numFrames].stackStart = fiber->stackSize - numArgs;
+  CallFrame* frame = &fiber->frames[fiber->numFrames];
+  frame->fn = function;
+  frame->stackStart = fiber->stackSize - numArgs;
+
+  frame->ip = 0;
+  if (IS_FN(function))
+  {
+    frame->ip = AS_FN(function)->bytecode;
+  }
+  else
+  {
+    frame->ip = AS_CLOSURE(function)->fn->bytecode;
+  }
 
   fiber->numFrames++;
 }

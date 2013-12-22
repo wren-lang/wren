@@ -244,9 +244,9 @@ struct WrenVM
 // TODO: Move into wren_vm.c.
 typedef struct
 {
-  // Index of the current (really next-to-be-executed) instruction in the
-  // block's bytecode.
-  int ip;
+  // Pointer to the current (really next-to-be-executed) instruction in the
+  // function's bytecode.
+  unsigned char* ip;
 
   // The function or closure being executed.
   Value fn;
