@@ -7,11 +7,11 @@ class Foo {
     _e = e
   }
   write {
-    io.write(_a)
-    io.write(_b)
-    io.write(_c)
-    io.write(_d)
-    io.write(_e)
+    IO.write(_a)
+    IO.write(_b)
+    IO.write(_c)
+    IO.write(_d)
+    IO.write(_e)
   }
 }
 

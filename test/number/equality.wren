@@ -1,19 +1,19 @@
-io.write(123 == 123)  // expect: true
-io.write(123 == 124)  // expect: false
-io.write(-3 == 3)     // expect: false
-io.write(0 == -0)     // expect: true
+IO.write(123 == 123)  // expect: true
+IO.write(123 == 124)  // expect: false
+IO.write(-3 == 3)     // expect: false
+IO.write(0 == -0)     // expect: true
 
 // Not equal to other types.
-io.write(123 == "123") // expect: false
-io.write(1 == true)    // expect: false
-io.write(0 == false)   // expect: false
+IO.write(123 == "123") // expect: false
+IO.write(1 == true)    // expect: false
+IO.write(0 == false)   // expect: false
 
-io.write(123 != 123)  // expect: false
-io.write(123 != 124)  // expect: true
-io.write(-3 != 3)     // expect: true
-io.write(0 != -0)     // expect: false
+IO.write(123 != 123)  // expect: false
+IO.write(123 != 124)  // expect: true
+IO.write(-3 != 3)     // expect: true
+IO.write(0 != -0)     // expect: false
 
 // Not equal to other types.
-io.write(123 != "123") // expect: true
-io.write(1 != true)    // expect: true
-io.write(0 != false)   // expect: true
+IO.write(123 != "123") // expect: true
+IO.write(1 != true)    // expect: true
+IO.write(0 != false)   // expect: true

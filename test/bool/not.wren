@@ -1,3 +1,3 @@
-io.write(!true)    // expect: false
-io.write(!false)   // expect: true
-io.write(!!true)   // expect: true
+IO.write(!true)    // expect: false
+IO.write(!false)   // expect: true
+IO.write(!!true)   // expect: true

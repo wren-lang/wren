@@ -1,28 +1,28 @@
 // Evaluate the 'then' expression if the condition is true.
-if (true) io.write("good") // expect: good
-if (false) io.write("bad")
+if (true) IO.write("good") // expect: good
+if (false) IO.write("bad")
 
 // Evaluate the 'else' expression if the condition is false.
-if (true) io.write("good") else io.write("bad") // expect: good
-if (false) io.write("bad") else io.write("good") // expect: good
+if (true) IO.write("good") else IO.write("bad") // expect: good
+if (false) IO.write("bad") else IO.write("good") // expect: good
 
 // Allow blocks for branches.
-if (true) { io.write("block") } // expect: block
-if (false) null else { io.write("block") } // expect: block
+if (true) { IO.write("block") } // expect: block
+if (false) null else { IO.write("block") } // expect: block
 
 // Assignment in if condition.
 var a = false
-if (a = true) io.write(a) // expect: true
+if (a = true) IO.write(a) // expect: true
 
 // Newline after "if".
 if
-(true) io.write("good") // expect: good
+(true) IO.write("good") // expect: good
 
 // Newline after "else".
-if (false) io.write("bad") else
-io.write("good") // expect: good
+if (false) IO.write("bad") else
+IO.write("good") // expect: good
 
 // Only false is falsy.
-if (0) io.write(0) // expect: 0
-if (null) io.write(null) // expect: null
-if ("") io.write("empty") // expect: empty
+if (0) IO.write(0) // expect: 0
+if (null) IO.write(null) // expect: null
+if ("") IO.write("empty") // expect: empty

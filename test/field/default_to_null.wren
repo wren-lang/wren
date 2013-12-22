@@ -1,5 +1,5 @@
 class Foo {
-  write { io.write(_field) }
+  write { IO.write(_field) }
 }
 
 (new Foo).write // expect: null

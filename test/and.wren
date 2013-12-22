@@ -1,26 +1,26 @@
 // Note: These tests implicitly depend on ints being truthy.
-//       Also rely on io.write() returning its argument.
+//       Also rely on IO.write() returning its argument.
 
 // Return the first non-true argument.
-io.write(false && 1) // expect: false
-io.write(true && 1) // expect: 1
-io.write(1 && 2 && false) // expect: false
+IO.write(false && 1) // expect: false
+IO.write(true && 1) // expect: 1
+IO.write(1 && 2 && false) // expect: false
 
 // Return the last argument if all are true.
-io.write(1 && true) // expect: true
-io.write(1 && 2 && 3) // expect: 3
+IO.write(1 && true) // expect: true
+IO.write(1 && 2 && 3) // expect: 3
 
 // Short-circuit at the first false argument.
-io.write(true) && // expect: true
-    io.write(false) && // expect: false
-    io.write(false) // should not print
+IO.write(true) && // expect: true
+    IO.write(false) && // expect: false
+    IO.write(false) // should not print
 
 // Swallow a trailing newline.
-io.write(true &&
+IO.write(true &&
     true) // expect: true
 
 // Only false is falsy.
-io.write(0 && true) // expect: true
-io.write(null && true) // expect: true
-io.write("" && true) // expect: true
-io.write(false && true) // expect: false
+IO.write(0 && true) // expect: true
+IO.write(null && true) // expect: true
+IO.write("" && true) // expect: true
+IO.write(false && true) // expect: false

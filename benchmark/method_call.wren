@@ -39,7 +39,7 @@ while (i < n) {
   i = i + 1
 }
 
-io.write(toggle.value)
+IO.write(toggle.value)
 
 val = true
 var ntoggle = new NthToggle(val, 3)
@@ -50,6 +50,6 @@ while (i < n) {
   i = i + 1
 }
 
-io.write(ntoggle.value)
+IO.write(ntoggle.value)
 
-io.write("elapsed: " + (OS.clock - start).toString)
+IO.write("elapsed: " + (OS.clock - start).toString)

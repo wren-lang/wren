@@ -1,15 +1,15 @@
 class Foo {
-  methodOnFoo { io.write("foo") }
-  method(a) { io.write("foo") }
-  method(a, b, c) { io.write("foo") }
-  override { io.write("foo") }
+  methodOnFoo { IO.write("foo") }
+  method(a) { IO.write("foo") }
+  method(a, b, c) { IO.write("foo") }
+  override { IO.write("foo") }
 }
 
 class Bar is Foo {
-  methodOnBar { io.write("bar") }
-  method(a, b) { io.write("bar") }
-  method(a, b, c, d) { io.write("bar") }
-  override { io.write("bar") }
+  methodOnBar { IO.write("bar") }
+  method(a, b) { IO.write("bar") }
+  method(a, b, c, d) { IO.write("bar") }
+  override { IO.write("bar") }
 }
 
 var bar = new Bar

@@ -259,7 +259,7 @@
     var a253 = a252
     var a254 = a253
     var a255 = a254
-    io.write(a255) // expect: value a
+    IO.write(a255) // expect: value a
   }
 
   {
@@ -519,6 +519,6 @@
     var b253 = b252
     var b254 = b253
     var b255 = b254
-    io.write(b255) // expect: value b
+    IO.write(b255) // expect: value b
   }
 }

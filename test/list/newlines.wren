@@ -8,7 +8,7 @@ var list = [
 
 ]
 
-io.write(list[0]) // expect: a
-io.write(list[1]) // expect: b
-io.write(list[2]) // expect: c
-io.write(list[3]) // expect: d
+IO.write(list[0]) // expect: a
+IO.write(list[1]) // expect: b
+IO.write(list[2]) // expect: c
+IO.write(list[3]) // expect: d

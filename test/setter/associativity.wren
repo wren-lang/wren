@@ -13,6 +13,6 @@ var c = new Foo("c")
 
 // Assignment is right-associative.
 a.bar = b.bar = c.bar = "d"
-io.write(a.toString) // expect: d
-io.write(b.toString) // expect: d
-io.write(c.toString) // expect: d
+IO.write(a.toString) // expect: d
+IO.write(b.toString) // expect: d
+IO.write(c.toString) // expect: d

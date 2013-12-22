@@ -1,2 +1,2 @@
-io.write("".toString == "") // expect: true
-io.write("blah".toString == "blah") // expect: true
+IO.write("".toString == "") // expect: true
+IO.write("blah".toString == "blah") // expect: true

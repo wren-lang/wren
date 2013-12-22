@@ -1,7 +1,7 @@
 class Foo {
-  new { io.write("zero") }
-  new(a) { io.write(a) }
-  new(a, b) { io.write(a + b) }
+  new { IO.write("zero") }
+  new(a) { IO.write(a) }
+  new(a, b) { IO.write(a + b) }
 
   toString { return "Foo" }
 }
@@ -13,5 +13,5 @@ new Foo("one", "two") // expect: onetwo
 
 // Returns the new instance.
 var foo = new Foo // expect: zero
-io.write(foo is Foo) // expect: true
-io.write(foo.toString) // expect: Foo
+IO.write(foo is Foo) // expect: true
+IO.write(foo.toString) // expect: Foo

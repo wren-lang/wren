@@ -2,7 +2,7 @@ var f = null
 
 fn(param) {
   f = fn {
-    io.write(param)
+    IO.write(param)
   }
 }.call("param")
 

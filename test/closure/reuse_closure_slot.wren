@@ -3,7 +3,7 @@
 
   {
     var a = "a"
-    f = fn io.write(a)
+    f = fn IO.write(a)
   }
 
   {

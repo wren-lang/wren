@@ -19,20 +19,20 @@ class Foo {
 }
 
 var foo = new Foo
-io.write(foo.method) // expect: 0
-io.write(foo.method(1)) // expect: 1
-io.write(foo.method(1, 2)) // expect: 3
-io.write(foo.method(1, 2, 3)) // expect: 6
-io.write(foo.method(1, 2, 3, 4)) // expect: 10
-io.write(foo.method(1, 2, 3, 4, 5)) // expect: 15
-io.write(foo.method(1, 2, 3, 4, 5, 6)) // expect: 21
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7)) // expect: 28
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8)) // expect: 36
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9)) // expect: 45
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) // expect: 55
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) // expect: 66
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) // expect: 78
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) // expect: 91
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)) // expect: 105
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) // expect: 120
-io.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)) // expect: 136
+IO.write(foo.method) // expect: 0
+IO.write(foo.method(1)) // expect: 1
+IO.write(foo.method(1, 2)) // expect: 3
+IO.write(foo.method(1, 2, 3)) // expect: 6
+IO.write(foo.method(1, 2, 3, 4)) // expect: 10
+IO.write(foo.method(1, 2, 3, 4, 5)) // expect: 15
+IO.write(foo.method(1, 2, 3, 4, 5, 6)) // expect: 21
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7)) // expect: 28
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8)) // expect: 36
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9)) // expect: 45
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) // expect: 55
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) // expect: 66
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) // expect: 78
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) // expect: 91
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)) // expect: 105
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) // expect: 120
+IO.write(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)) // expect: 136

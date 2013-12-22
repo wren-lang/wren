@@ -3,11 +3,11 @@ var global = "global"
 
 class Foo {
   method {
-    io.write(global)
+    IO.write(global)
   }
 
   static classMethod {
-    io.write(global)
+    IO.write(global)
   }
 }
 

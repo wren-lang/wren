@@ -1,3 +1,3 @@
 fn {
-  io.write(notDefined)  // expect error
+  IO.write(notDefined)  // expect error
 }.call

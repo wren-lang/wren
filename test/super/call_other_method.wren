@@ -1,12 +1,12 @@
 class Base {
   foo {
-    io.write("Base.foo")
+    IO.write("Base.foo")
   }
 }
 
 class Derived is Base {
   bar {
-    io.write("Derived.bar")
+    IO.write("Derived.bar")
     super.foo
   }
 }

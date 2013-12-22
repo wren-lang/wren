@@ -1,5 +1,5 @@
 class Foo {
-  write { io.write(_field) } // Compile a use of the field...
+  write { IO.write(_field) } // Compile a use of the field...
   init { _field = "value" }  // ...before an assignment to it.
 }
 

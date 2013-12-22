@@ -1,6 +1,6 @@
 class Foo {
-  bar = value { io.write("set") }
-  bar { io.write("get") }
+  bar = value { IO.write("set") }
+  bar { IO.write("get") }
 }
 
 var foo = new Foo

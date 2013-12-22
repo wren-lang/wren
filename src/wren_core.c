@@ -436,6 +436,7 @@ DEF_NATIVE(string_subscript)
 
 DEF_NATIVE(io_write)
 {
+  // TODO: Should call toString on its argument.
   wrenPrintValue(args[1]);
   printf("\n");
   return args[1];
@@ -531,12 +532,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->stringClass, "[ ]", string_subscript);
 
   ObjClass* ioClass = defineClass(vm, "IO", vm->objectClass);
-  NATIVE(ioClass, "write ", io_write);
-
-  // TODO: Making this an instance is lame. The only reason we're doing it is
-  // because "IO.write()" looks ugly. Maybe just get used to that?
-  Value ioObject = wrenNewInstance(vm, ioClass);
-  vm->globals[addSymbol(&vm->globalSymbols, "io", 2)] = ioObject;
+  NATIVE(ioClass->metaclass, "write ", io_write);
 
   ObjClass* osClass = defineClass(vm, "OS", vm->objectClass);
   NATIVE(osClass->metaclass, "clock", os_clock);

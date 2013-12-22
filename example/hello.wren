@@ -1,1 +1,1 @@
-io.write("Hello, world!")
+IO.write("Hello, world!")

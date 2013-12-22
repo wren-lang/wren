@@ -3,11 +3,11 @@ var a = "out"
 if (true) {
   var a = "in"
 }
-io.write(a) // expect: out
+IO.write(a) // expect: out
 
 // Create a local scope for the 'else' expression.
 var b = "out"
 if (false) "dummy" else {
   var b = "in"
 }
-io.write(b) // expect: out
+IO.write(b) // expect: out

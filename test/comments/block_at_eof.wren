@@ -1,2 +1,2 @@
-io.write("ok") // expect: ok
+IO.write("ok") // expect: ok
 /* comment */

@@ -1,1 +1,1 @@
-var a = "ok"; io.write(a) // expect: ok
+var a = "ok"; IO.write(a) // expect: ok

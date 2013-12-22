@@ -1,2 +1,2 @@
-io.write("".count)   // expect: 0
-io.write("a string") // expect: a string
+IO.write("".count)   // expect: 0
+IO.write("a string") // expect: a string
