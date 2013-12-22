@@ -17,63 +17,65 @@ static void initObj(WrenVM* vm, Obj* obj, ObjType type)
   vm->first = obj;
 }
 
-static ObjClass* newClass(WrenVM* vm, ObjClass* metaclass,
-                          ObjClass* superclass, int numFields)
+ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields)
 {
-  ObjClass* obj = allocate(vm, sizeof(ObjClass));
-  initObj(vm, &obj->obj, OBJ_CLASS);
-  obj->metaclass = metaclass;
-  obj->superclass = superclass;
+  ObjClass* classObj = allocate(vm, sizeof(ObjClass));
+  initObj(vm, &classObj->obj, OBJ_CLASS);
+  classObj->metaclass = NULL;
+  classObj->superclass = NULL;
+  classObj->numFields = numFields;
 
-  if (superclass != NULL)
+  // Clear out the method table.
+  for (int i = 0; i < MAX_SYMBOLS; i++)
   {
-    obj->numFields = superclass->numFields + numFields;
-
-    // Inherit methods from its superclass.
-    for (int i = 0; i < MAX_SYMBOLS; i++)
-    {
-      obj->methods[i] = superclass->methods[i];
-    }
-  }
-  else
-  {
-    obj->numFields = numFields;
-
-    // Object has no superclass, so just clear these out.
-    for (int i = 0; i < MAX_SYMBOLS; i++)
-    {
-      obj->methods[i].type = METHOD_NONE;
-    }
+    classObj->methods[i].type = METHOD_NONE;
   }
 
-  return obj;
+  return classObj;
+}
+
+void wrenBindSuperclass(ObjClass* subclass, ObjClass* superclass)
+{
+  ASSERT(superclass != NULL, "Must have superclass.");
+
+  subclass->superclass = superclass;
+
+  // Include the superclass in the total number of fields.
+  subclass->numFields += superclass->numFields;
+
+  // Inherit methods from its superclass.
+  for (int i = 0; i < MAX_SYMBOLS; i++)
+  {
+    subclass->methods[i] = superclass->methods[i];
+  }
 }
 
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
 {
-  // Make the metaclass.
-  // TODO: What is the metaclass's metaclass?
+  // Create the metaclass.
   // TODO: Handle static fields.
+  ObjClass* metaclass = wrenNewSingleClass(vm, 0);
+  metaclass->metaclass = vm->classClass;
+
   // The metaclass inheritance chain mirrors the class's inheritance chain
   // except that when the latter bottoms out at "Object", the metaclass one
   // bottoms out at "Class".
-  ObjClass* metaclassSuperclass;
   if (superclass == vm->objectClass)
   {
-    metaclassSuperclass = vm->classClass;
+    wrenBindSuperclass(metaclass, vm->classClass);
   }
   else
   {
-    metaclassSuperclass = superclass->metaclass;
+    wrenBindSuperclass(metaclass, superclass->metaclass);
   }
-
-  ObjClass* metaclass = newClass(vm, NULL, metaclassSuperclass, 0);
 
   // Make sure it isn't collected when we allocate the metaclass.
   PinnedObj pinned;
   pinObj(vm, (Obj*)metaclass, &pinned);
 
-  ObjClass* classObj = newClass(vm, metaclass, superclass, numFields);
+  ObjClass* classObj = wrenNewSingleClass(vm, numFields);
+  classObj->metaclass = metaclass;
+  wrenBindSuperclass(classObj, superclass);
 
   unpinObj(vm);
 

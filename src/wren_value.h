@@ -408,7 +408,17 @@ typedef struct
 
 #endif
 
-// Creates a new class object.
+// Creates a new "raw" class. It has no metaclass or superclass whatsoever.
+// This is only used for bootstrapping the initial Object and Class classes,
+// which are a little special.
+ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields);
+
+// Makes [superclass] the superclass of [subclass], and causes subclass to
+// inherit its methods. This should be called before any methods are defined
+// on subclass.
+void wrenBindSuperclass(ObjClass* subclass, ObjClass* superclass);
+
+// Creates a new class object as well as its associated metaclass.
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields);
 
 // Creates a new closure object that invokes [fn]. Allocates room for its

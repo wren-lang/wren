@@ -448,9 +448,9 @@ DEF_NATIVE(os_clock)
   return NUM_VAL(time);
 }
 
-static ObjClass* defineClass(WrenVM* vm, const char* name, ObjClass* superclass)
+static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
-  ObjClass* classObj = wrenNewClass(vm, superclass, 0);
+  ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0);
   int symbol = addSymbol(&vm->globalSymbols, name, strlen(name));
   vm->globals[symbol] = OBJ_VAL(classObj);
   return classObj;
@@ -458,20 +458,54 @@ static ObjClass* defineClass(WrenVM* vm, const char* name, ObjClass* superclass)
 
 void wrenInitializeCore(WrenVM* vm)
 {
-  vm->objectClass = defineClass(vm, "Object", NULL);
+  // Define the root Object class. This has to be done a little specially
+  // because it has no superclass and an unusual metaclass (Class).
+  vm->objectClass = wrenNewSingleClass(vm, 0);
+  int objectSymbol = addSymbol(&vm->globalSymbols, "Object", strlen("Object"));
+  vm->globals[objectSymbol] = OBJ_VAL(vm->objectClass);
+
   NATIVE(vm->objectClass, "== ", object_eqeq);
   NATIVE(vm->objectClass, "!= ", object_bangeq);
   NATIVE(vm->objectClass, "new", object_new);
   NATIVE(vm->objectClass, "type", object_type);
 
-  // The "Class" class is the superclass of all metaclasses.
-  vm->classClass = defineClass(vm, "Class", vm->objectClass);
+  // Now we can define Class, which is a subclass of Object, but Object's
+  // metaclass.
+  vm->classClass = wrenNewSingleClass(vm, 0);
+  int classSymbol = addSymbol(&vm->globalSymbols, "Class", strlen("Class"));
+  vm->globals[classSymbol] = OBJ_VAL(vm->classClass);
 
-  vm->boolClass = defineClass(vm, "Bool", vm->objectClass);
+  // Now that Object and Class are defined, we can wire them up to each other.
+  wrenBindSuperclass(vm->classClass, vm->objectClass);
+  vm->objectClass->metaclass = vm->classClass;
+  vm->classClass->metaclass = vm->classClass;
+
+  // The core class diagram ends up looking like this, where single lines point
+  // to a class's superclass, and double lines point to its metaclass:
+  //
+  //             __________        /====\
+  //            /          \      //    \\
+  //           v            \     v      \\
+  //     .---------.   .--------------.  //
+  //     | Object  |==>|    Class     |==/
+  //     '---------'   '--------------'
+  //          ^               ^
+  //          |               |
+  //     .---------.   .--------------.   \
+  //     |  Base   |==>|  Base.type   |    |
+  //     '---------'   '--------------'    |
+  //          ^               ^            | Hypothetical example classes
+  //          |               |            |
+  //     .---------.   .--------------.    |
+  //     | Derived |==>| Derived.type |    |
+  //     '---------'   '--------------'    /
+
+  // The rest of the classes can not be defined normally.
+  vm->boolClass = defineClass(vm, "Bool");
   NATIVE(vm->boolClass, "toString", bool_toString);
   NATIVE(vm->boolClass, "!", bool_not);
 
-  vm->fnClass = defineClass(vm, "Function", vm->objectClass);
+  vm->fnClass = defineClass(vm, "Function");
   FIBER_NATIVE(vm->fnClass, "call", fn_call0);
   FIBER_NATIVE(vm->fnClass, "call ", fn_call1);
   FIBER_NATIVE(vm->fnClass, "call  ", fn_call2);
@@ -490,7 +524,7 @@ void wrenInitializeCore(WrenVM* vm)
   FIBER_NATIVE(vm->fnClass, "call               ", fn_call15);
   FIBER_NATIVE(vm->fnClass, "call                ", fn_call16);
 
-  vm->listClass = defineClass(vm, "List", vm->objectClass);
+  vm->listClass = defineClass(vm, "List");
   NATIVE(vm->listClass, "add ", list_add);
   NATIVE(vm->listClass, "clear", list_clear);
   NATIVE(vm->listClass, "count", list_count);
@@ -499,10 +533,10 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "[ ]", list_subscript);
   NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
 
-  vm->nullClass = defineClass(vm, "Null", vm->objectClass);
+  vm->nullClass = defineClass(vm, "Null");
   NATIVE(vm->nullClass, "toString", null_toString);
 
-  vm->numClass = defineClass(vm, "Num", vm->objectClass);
+  vm->numClass = defineClass(vm, "Num");
   NATIVE(vm->numClass, "abs", num_abs);
   NATIVE(vm->numClass, "toString", num_toString)
   NATIVE(vm->numClass, "-", num_negate);
@@ -517,12 +551,12 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, ">= ", num_gte);
   NATIVE(vm->numClass, "~", num_bitwiseNot);
 
-  // TODO: The only reason there are here is so that 0 != -0. Is that what we
-  // want?
+  // These are defined just so that 0 and -0 are equal, which is specified by
+  // IEEE 754 even though they have different bit representations.
   NATIVE(vm->numClass, "== ", num_eqeq);
   NATIVE(vm->numClass, "!= ", num_bangeq);
 
-  vm->stringClass = defineClass(vm, "String", vm->objectClass);
+  vm->stringClass = defineClass(vm, "String");
   NATIVE(vm->stringClass, "contains ", string_contains);
   NATIVE(vm->stringClass, "count", string_count);
   NATIVE(vm->stringClass, "toString", string_toString)
@@ -531,10 +565,10 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->stringClass, "!= ", string_bangeq);
   NATIVE(vm->stringClass, "[ ]", string_subscript);
 
-  ObjClass* ioClass = defineClass(vm, "IO", vm->objectClass);
+  ObjClass* ioClass = defineClass(vm, "IO");
   NATIVE(ioClass->metaclass, "write ", io_write);
 
-  ObjClass* osClass = defineClass(vm, "OS", vm->objectClass);
+  ObjClass* osClass = defineClass(vm, "OS");
   NATIVE(osClass->metaclass, "clock", os_clock);
 
   // TODO: Make this a distinct object type.
