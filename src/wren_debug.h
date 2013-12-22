@@ -14,6 +14,6 @@
 
 int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i);
 void wrenDebugDumpCode(WrenVM* vm, ObjFn* fn);
-void wrenDebugDumpStack(Fiber* fiber);
+void wrenDebugDumpStack(ObjFiber* fiber);
 
 #endif

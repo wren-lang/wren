@@ -37,6 +37,10 @@
 // and have growable symbol tables.)
 #define MAX_SYMBOLS 256
 
+// TODO: Make these externally controllable.
+#define STACK_SIZE 1024
+#define MAX_CALL_FRAMES 256
+
 typedef enum
 {
   VAL_FALSE,
@@ -49,6 +53,7 @@ typedef enum
 typedef enum {
   OBJ_CLASS,
   OBJ_CLOSURE,
+  OBJ_FIBER,
   OBJ_FN,
   OBJ_INSTANCE,
   OBJ_LIST,
@@ -90,26 +95,6 @@ typedef struct
 
 #endif
 
-typedef struct sFiber Fiber;
-
-typedef Value (*Primitive)(WrenVM* vm, Value* args);
-typedef void (*FiberPrimitive)(WrenVM* vm, Fiber* fiber, Value* args);
-
-// A first-class function object. A raw ObjFn can be used and invoked directly
-// if it has no upvalues (i.e. [numUpvalues] is zero). If it does use upvalues,
-// it must be wrapped in an [ObjClosure] first. The compiler is responsible for
-// emitting code to ensure that that happens.
-typedef struct
-{
-  Obj obj;
-  int numConstants;
-  int numUpvalues;
-  unsigned char* bytecode;
-
-  // TODO: Flexible array?
-  Value* constants;
-} ObjFn;
-
 // The dynamically allocated data structure for a variable that has been used
 // by a closure. Whenever a function accesses a variable declared in an
 // enclosing function, it will get to it through this.
@@ -140,6 +125,54 @@ typedef struct sUpvalue
   // next upvalue in that list.
   struct sUpvalue* next;
 } Upvalue;
+
+typedef struct
+{
+  // Pointer to the current (really next-to-be-executed) instruction in the
+  // function's bytecode.
+  unsigned char* ip;
+
+  // The function or closure being executed.
+  Value fn;
+
+  // Index of the first stack slot used by this call frame. This will contain
+  // the receiver, followed by the function's parameters, then local variables
+  // and temporaries.
+  int stackStart;
+} CallFrame;
+
+typedef struct
+{
+  Obj obj;
+  Value stack[STACK_SIZE];
+  int stackSize;
+
+  CallFrame frames[MAX_CALL_FRAMES];
+  int numFrames;
+
+  // Pointer to the first node in the linked list of open upvalues that are
+  // pointing to values still on the stack. The head of the list will be the
+  // upvalue closest to the top of the stack, and then the list works downwards.
+  Upvalue* openUpvalues;
+} ObjFiber;
+
+typedef Value (*Primitive)(WrenVM* vm, Value* args);
+typedef void (*FiberPrimitive)(WrenVM* vm, ObjFiber* fiber, Value* args);
+
+// A first-class function object. A raw ObjFn can be used and invoked directly
+// if it has no upvalues (i.e. [numUpvalues] is zero). If it does use upvalues,
+// it must be wrapped in an [ObjClosure] first. The compiler is responsible for
+// emitting code to ensure that that happens.
+typedef struct
+{
+  Obj obj;
+  int numConstants;
+  int numUpvalues;
+  unsigned char* bytecode;
+
+  // TODO: Flexible array?
+  Value* constants;
+} ObjFn;
 
 // An instance of a first-class function and the environment it has closed over.
 // Unlike [ObjFn], this has captured the upvalues that the function accesses.
@@ -425,6 +458,9 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields);
 // upvalues, but assumes outside code will populate it.
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 
+// Creates a new fiber object.
+ObjFiber* wrenNewFiber(WrenVM* vm);
+
 // Creates a new function object. Assumes the compiler will fill it in with
 // bytecode, constants, etc.
 ObjFn* wrenNewFunction(WrenVM* vm);
@@ -453,6 +489,7 @@ void wrenPrintValue(Value value);
 
 bool wrenIsBool(Value value);
 bool wrenIsClosure(Value value);
+bool wrenIsFiber(Value value);
 bool wrenIsFn(Value value);
 bool wrenIsInstance(Value value);
 bool wrenIsString(Value value);

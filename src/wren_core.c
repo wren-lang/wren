@@ -35,7 +35,7 @@
 
 // Defines a fiber native method whose C function name is [native].
 #define DEF_FIBER_NATIVE(native) \
-    static void native_##native(WrenVM* vm, Fiber* fiber, Value* args)
+    static void native_##native(WrenVM* vm, ObjFiber* fiber, Value* args)
 
 // TODO: Tune these.
 // The initial (and minimum) capacity of a non-empty list object.
@@ -163,6 +163,7 @@ DEF_NATIVE(list_clear)
 {
   ObjList* list = AS_LIST(args[0]);
   wrenReallocate(vm, list->elements, 0, 0);
+  list->elements = NULL;
   list->capacity = 0;
   list->count = 0;
   return NULL_VAL;
@@ -276,56 +277,57 @@ DEF_NATIVE(num_negate)
 
 DEF_NATIVE(num_minus)
 {
-  if (!IS_NUM(args[1])) return vm->unsupported;
+  // TODO: Handle unsupported operand types better.
+  if (!IS_NUM(args[1])) return NULL_VAL;
   return NUM_VAL(AS_NUM(args[0]) - AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_plus)
 {
-  if (!IS_NUM(args[1])) return vm->unsupported;
+  if (!IS_NUM(args[1])) return NULL_VAL;
   // TODO: Handle coercion to string if RHS is a string.
   return NUM_VAL(AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_multiply)
 {
-  if (!IS_NUM(args[1])) return vm->unsupported;
+  if (!IS_NUM(args[1])) return NULL_VAL;
   return NUM_VAL(AS_NUM(args[0]) * AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_divide)
 {
-  if (!IS_NUM(args[1])) return vm->unsupported;
+  if (!IS_NUM(args[1])) return NULL_VAL;
   return NUM_VAL(AS_NUM(args[0]) / AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_mod)
 {
-  if (!IS_NUM(args[1])) return vm->unsupported;
+  if (!IS_NUM(args[1])) return NULL_VAL;
   return NUM_VAL(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_NATIVE(num_lt)
 {
-  if (!IS_NUM(args[1])) return vm->unsupported;
+  if (!IS_NUM(args[1])) return NULL_VAL;
   return BOOL_VAL(AS_NUM(args[0]) < AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_gt)
 {
-  if (!IS_NUM(args[1])) return vm->unsupported;
+  if (!IS_NUM(args[1])) return NULL_VAL;
   return BOOL_VAL(AS_NUM(args[0]) > AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_lte)
 {
-  if (!IS_NUM(args[1])) return vm->unsupported;
+  if (!IS_NUM(args[1])) return NULL_VAL;
   return BOOL_VAL(AS_NUM(args[0]) <= AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_gte)
 {
-  if (!IS_NUM(args[1])) return vm->unsupported;
+  if (!IS_NUM(args[1])) return NULL_VAL;
   return BOOL_VAL(AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
@@ -400,7 +402,7 @@ DEF_NATIVE(string_toString)
 
 DEF_NATIVE(string_plus)
 {
-  if (!IS_STRING(args[1])) return vm->unsupported;
+  if (!IS_STRING(args[1])) return NULL_VAL;
   // TODO: Handle coercion to string of RHS.
 
   const char* left = AS_CSTRING(args[0]);
@@ -536,6 +538,8 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->boolClass, "toString", bool_toString);
   NATIVE(vm->boolClass, "!", bool_not);
 
+  vm->fiberClass = defineClass(vm, "Fiber");
+  
   vm->fnClass = defineClass(vm, "Function");
   FIBER_NATIVE(vm->fnClass, "call", fn_call0);
   FIBER_NATIVE(vm->fnClass, "call ", fn_call1);
@@ -589,10 +593,6 @@ void wrenInitializeCore(WrenVM* vm)
 
   ObjClass* osClass = defineClass(vm, "OS");
   NATIVE(osClass->metaclass, "clock", os_clock);
-
-  // TODO: Make this a distinct object type.
-  ObjClass* unsupportedClass = wrenNewClass(vm, vm->objectClass, 0);
-  vm->unsupported = (Value)wrenNewInstance(vm, unsupportedClass);
 
   wrenInterpret(vm, coreLibSource);
 

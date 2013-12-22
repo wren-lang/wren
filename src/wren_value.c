@@ -57,6 +57,10 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
   ObjClass* metaclass = wrenNewSingleClass(vm, 0);
   metaclass->metaclass = vm->classClass;
 
+  // Make sure the metaclass isn't collected when we allocate the class.
+  PinnedObj pinned;
+  pinObj(vm, (Obj*)metaclass, &pinned);
+
   // The metaclass inheritance chain mirrors the class's inheritance chain
   // except that when the latter bottoms out at "Object", the metaclass one
   // bottoms out at "Class".
@@ -68,10 +72,6 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
   {
     wrenBindSuperclass(metaclass, superclass->metaclass);
   }
-
-  // Make sure it isn't collected when we allocate the metaclass.
-  PinnedObj pinned;
-  pinObj(vm, (Obj*)metaclass, &pinned);
 
   ObjClass* classObj = wrenNewSingleClass(vm, numFields);
   classObj->metaclass = metaclass;
@@ -95,6 +95,18 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
   for (int i = 0; i < fn->numUpvalues; i++) closure->upvalues[i] = NULL;
 
   return closure;
+}
+
+ObjFiber* wrenNewFiber(WrenVM* vm)
+{
+  ObjFiber* fiber = allocate(vm, sizeof(ObjFiber));
+  initObj(vm, &fiber->obj, OBJ_FIBER);
+
+  fiber->stackSize = 0;
+  fiber->numFrames = 0;
+  fiber->openUpvalues = NULL;
+
+  return fiber;
 }
 
 ObjFn* wrenNewFunction(WrenVM* vm)
@@ -190,6 +202,7 @@ static ObjClass* getObjectClass(WrenVM* vm, Obj* obj)
       return classObj->metaclass;
     }
     case OBJ_CLOSURE: return vm->fnClass;
+    case OBJ_FIBER: return vm->fiberClass;
     case OBJ_FN: return vm->fnClass;
     case OBJ_INSTANCE: return ((ObjInstance*)obj)->classObj;
     case OBJ_LIST: return vm->listClass;
@@ -260,6 +273,7 @@ static void printObject(Obj* obj)
   {
     case OBJ_CLASS: printf("[class %p]", obj); break;
     case OBJ_CLOSURE: printf("[closure %p]", obj); break;
+    case OBJ_FIBER: printf("[fiber %p]", obj); break;
     case OBJ_FN: printf("[fn %p]", obj); break;
     case OBJ_INSTANCE: printf("[instance %p]", obj); break;
     case OBJ_LIST: printList((ObjList*)obj); break;
@@ -318,6 +332,11 @@ bool wrenIsBool(Value value)
 bool wrenIsClosure(Value value)
 {
   return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_CLOSURE;
+}
+
+bool wrenIsFiber(Value value)
+{
+  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_FIBER;
 }
 
 bool wrenIsFn(Value value)

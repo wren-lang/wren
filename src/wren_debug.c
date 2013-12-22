@@ -299,7 +299,7 @@ void wrenDebugDumpCode(WrenVM* vm, ObjFn* fn)
   }
 }
 
-void wrenDebugDumpStack(Fiber* fiber)
+void wrenDebugDumpStack(ObjFiber* fiber)
 {
   printf(":: ");
   for (int i = 0; i < fiber->stackSize; i++)

@@ -25,13 +25,11 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   }
 
   WrenVM* vm = reallocate(NULL, 0, sizeof(WrenVM));
+
+  vm->reallocate = reallocate;
+  
   initSymbolTable(&vm->methods);
   initSymbolTable(&vm->globalSymbols);
-
-  vm->fiber = reallocate(NULL, 0, sizeof(Fiber));
-  vm->fiber->stackSize = 0;
-  vm->fiber->numFrames = 0;
-  vm->fiber->openUpvalues = NULL;
 
   vm->bytesAllocated = 0;
 
@@ -66,10 +64,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
     vm->globals[i] = NULL_VAL;
   }
 
-  vm->reallocate = reallocate;
-
   wrenInitializeCore(vm);
-
   return vm;
 }
 
@@ -78,16 +73,6 @@ void wrenFreeVM(WrenVM* vm)
   clearSymbolTable(&vm->methods);
   clearSymbolTable(&vm->globalSymbols);
   free(vm);
-}
-
-int wrenInterpret(WrenVM* vm, const char* source)
-{
-  ObjFn* fn = wrenCompile(vm, source);
-  if (fn == NULL) return 1;
-
-  // TODO: Return error code on runtime errors.
-  interpret(vm, OBJ_VAL(fn));
-  return 0;
 }
 
 static void collectGarbage(WrenVM* vm);
@@ -234,6 +219,33 @@ static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
   vm->bytesAllocated += sizeof(Upvalue);
 }
 
+static void markFiber(WrenVM* vm, ObjFiber* fiber)
+{
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (fiber->obj.flags & FLAG_MARKED) return;
+  fiber->obj.flags |= FLAG_MARKED;
+
+  // Stack functions.
+  for (int k = 0; k < fiber->numFrames; k++)
+  {
+    markValue(vm, fiber->frames[k].fn);
+  }
+
+  // Stack variables.
+  for (int l = 0; l < fiber->stackSize; l++)
+  {
+    markValue(vm, fiber->stack[l]);
+  }
+
+  // Open upvalues.
+  Upvalue* upvalue = fiber->openUpvalues;
+  while (upvalue != NULL)
+  {
+    markUpvalue(vm, upvalue);
+    upvalue = upvalue->next;
+  }
+}
+
 static void markClosure(WrenVM* vm, ObjClosure* closure)
 {
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
@@ -284,6 +296,7 @@ static void markObj(WrenVM* vm, Obj* obj)
   {
     case OBJ_CLASS:    markClass(   vm, (ObjClass*)   obj); break;
     case OBJ_CLOSURE:  markClosure( vm, (ObjClosure*) obj); break;
+    case OBJ_FIBER:    markFiber(   vm, (ObjFiber*)   obj); break;
     case OBJ_FN:       markFn(      vm, (ObjFn*)      obj); break;
     case OBJ_INSTANCE: markInstance(vm, (ObjInstance*)obj); break;
     case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
@@ -374,26 +387,6 @@ static void collectGarbage(WrenVM* vm)
   {
     markObj(vm, pinned->obj);
     pinned = pinned->previous;
-  }
-
-  // Stack functions.
-  for (int k = 0; k < vm->fiber->numFrames; k++)
-  {
-    markValue(vm, vm->fiber->frames[k].fn);
-  }
-
-  // Stack variables.
-  for (int l = 0; l < vm->fiber->stackSize; l++)
-  {
-    markValue(vm, vm->fiber->stack[l]);
-  }
-
-  // Open upvalues.
-  Upvalue* upvalue = vm->fiber->openUpvalues;
-  while (upvalue != NULL)
-  {
-    markUpvalue(vm, upvalue);
-    upvalue = upvalue->next;
   }
 
   // Collect any unmarked objects.
@@ -498,7 +491,7 @@ Value findGlobal(WrenVM* vm, const char* name)
 // ensure that multiple closures closing over the same variable actually see
 // the same variable.) Otherwise, it will create a new open upvalue and add it
 // the fiber's list of upvalues.
-static Upvalue* captureUpvalue(WrenVM* vm, Fiber* fiber, int slot)
+static Upvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, int slot)
 {
   Value* local = &fiber->stack[slot];
 
@@ -541,7 +534,7 @@ static Upvalue* captureUpvalue(WrenVM* vm, Fiber* fiber, int slot)
   return createdUpvalue;
 }
 
-static void closeUpvalue(Fiber* fiber)
+static void closeUpvalue(ObjFiber* fiber)
 {
   Upvalue* upvalue = fiber->openUpvalues;
 
@@ -584,11 +577,8 @@ static void bindMethod(int methodType, int symbol, ObjClass* classObj,
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical.
-Value interpret(WrenVM* vm, Value function)
+static Value interpret(WrenVM* vm, ObjFiber* fiber)
 {
-  Fiber* fiber = vm->fiber;
-  wrenCallFunction(fiber, function, 0);
-
   // These macros are designed to only be invoked within this function.
   // TODO: Check for stack overflow.
   #define PUSH(value) (fiber->stack[fiber->stackSize++] = value)
@@ -1152,9 +1142,31 @@ Value interpret(WrenVM* vm, Value function)
       // the compiler generated wrong code.
       ASSERT(0, "Should not execute past end of bytecode.");
   }
+
+  ASSERT(0, "Should not reach end of interpret.");
 }
 
-void wrenCallFunction(Fiber* fiber, Value function, int numArgs)
+int wrenInterpret(WrenVM* vm, const char* source)
+{
+  ObjFiber* fiber = wrenNewFiber(vm);
+  PinnedObj pinned;
+  pinObj(vm, (Obj*)fiber, &pinned);
+
+  int result = 1;
+  ObjFn* fn = wrenCompile(vm, source);
+  if (fn != NULL)
+  {
+    wrenCallFunction(fiber, OBJ_VAL(fn), 0);
+    // TODO: Return error code on runtime errors.
+    interpret(vm, fiber);
+    result = 0;
+  }
+
+  unpinObj(vm);
+  return result;
+}
+
+void wrenCallFunction(ObjFiber* fiber, Value function, int numArgs)
 {
   // TODO: Check for stack overflow.
   CallFrame* frame = &fiber->frames[fiber->numFrames];

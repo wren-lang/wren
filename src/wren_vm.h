@@ -4,10 +4,6 @@
 #include "wren_common.h"
 #include "wren_value.h"
 
-// TODO: Make these externally controllable.
-#define STACK_SIZE 1024
-#define MAX_CALL_FRAMES 256
-
 typedef enum
 {
   // Load the constant at index [arg].
@@ -192,6 +188,7 @@ struct WrenVM
 
   ObjClass* boolClass;
   ObjClass* classClass;
+  ObjClass* fiberClass;
   ObjClass* fnClass;
   ObjClass* listClass;
   ObjClass* nullClass;
@@ -199,16 +196,10 @@ struct WrenVM
   ObjClass* objectClass;
   ObjClass* stringClass;
 
-  // The singleton values.
-  Value unsupported;
-
   SymbolTable globalSymbols;
 
   // TODO: Using a fixed array is gross here.
   Value globals[MAX_SYMBOLS];
-
-  // TODO: Support more than one fiber.
-  Fiber* fiber;
 
   // Memory management data:
 
@@ -239,37 +230,6 @@ struct WrenVM
 
   // The externally-provided function used to allocate memory.
   WrenReallocateFn reallocate;
-};
-
-// TODO: Move into wren_vm.c.
-typedef struct
-{
-  // Pointer to the current (really next-to-be-executed) instruction in the
-  // function's bytecode.
-  unsigned char* ip;
-
-  // The function or closure being executed.
-  Value fn;
-
-  // Index of the first stack slot used by this call frame. This will contain
-  // the receiver, followed by the function's parameters, then local variables
-  // and temporaries.
-  int stackStart;
-} CallFrame;
-
-// TODO: Move into wren_vm.c.
-struct sFiber
-{
-  Value stack[STACK_SIZE];
-  int stackSize;
-
-  CallFrame frames[MAX_CALL_FRAMES];
-  int numFrames;
-
-  // Pointer to the first node in the linked list of open upvalues that are
-  // pointing to values still on the stack. The head of the list will be the
-  // upvalue closest to the top of the stack, and then the list works downwards.
-  Upvalue* openUpvalues;
 };
 
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
@@ -303,12 +263,10 @@ const char* getSymbolName(SymbolTable* symbols, int symbol);
 // Returns the global variable named [name].
 Value findGlobal(WrenVM* vm, const char* name);
 
-Value interpret(WrenVM* vm, Value function);
-
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
 // [function] can be an `ObjFn` or `ObjClosure`.
-void wrenCallFunction(Fiber* fiber, Value function, int numArgs);
+void wrenCallFunction(ObjFiber* fiber, Value function, int numArgs);
 
 // Mark [obj] as a GC root so that it doesn't get collected. Initializes
 // [pinned], which must be then passed to [unpinObj].
