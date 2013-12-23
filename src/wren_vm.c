@@ -616,6 +616,8 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
 
   #if WREN_COMPUTED_GOTO
 
+  // Note that the order of instructions here must exacly match the Code enum
+  // in wren_vm.h or horrendously bad things happen.
   static void* dispatchTable[] = {
     &&code_CONSTANT,
     &&code_NULL,
@@ -631,7 +633,6 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
     &&code_STORE_FIELD_THIS,
     &&code_LOAD_FIELD,
     &&code_STORE_FIELD,
-    &&code_DUP,
     &&code_POP,
     &&code_CALL_0,
     &&code_CALL_1,
@@ -775,18 +776,12 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
     }
 
     CASE_CODE(LOAD_LOCAL):
-    {
-      int local = READ_ARG();
-      PUSH(fiber->stack[frame->stackStart + local]);
+      PUSH(fiber->stack[frame->stackStart + READ_ARG()]);
       DISPATCH();
-    }
 
     CASE_CODE(STORE_LOCAL):
-    {
-      int local = READ_ARG();
-      fiber->stack[frame->stackStart + local] = PEEK();
+      fiber->stack[frame->stackStart + READ_ARG()] = PEEK();
       DISPATCH();
-    }
 
     CASE_CODE(CONSTANT):
       PUSH(fn->constants[READ_ARG()]);
@@ -866,38 +861,24 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
     }
 
     CASE_CODE(LOAD_UPVALUE):
-    {
       ASSERT(upvalues != NULL,
              "Should not have CODE_LOAD_UPVALUE instruction in non-closure.");
-
-      int upvalue = READ_ARG();
-      PUSH(*upvalues[upvalue]->value);
+      PUSH(*upvalues[READ_ARG()]->value);
       DISPATCH();
-    }
 
     CASE_CODE(STORE_UPVALUE):
-    {
       ASSERT(upvalues != NULL,
              "Should not have CODE_STORE_UPVALUE instruction in non-closure.");
-
-      int upvalue = READ_ARG();
-      *upvalues[upvalue]->value = POP();
+      *upvalues[READ_ARG()]->value = POP();
       DISPATCH();
-    }
 
     CASE_CODE(LOAD_GLOBAL):
-    {
-      int global = READ_ARG();
-      PUSH(vm->globals[global]);
+      PUSH(vm->globals[READ_ARG()]);
       DISPATCH();
-    }
 
     CASE_CODE(STORE_GLOBAL):
-    {
-      int global = READ_ARG();
-      vm->globals[global] = PEEK();
+      vm->globals[READ_ARG()] = PEEK();
       DISPATCH();
-    }
 
     CASE_CODE(LOAD_FIELD_THIS):
     {
@@ -942,8 +923,6 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
       instance->fields[field] = PEEK();
       DISPATCH();
     }
-
-    CASE_CODE(DUP): PUSH(PEEK()); DISPATCH();
 
     CASE_CODE(JUMP):
     {

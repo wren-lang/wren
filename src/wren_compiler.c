@@ -2022,7 +2022,6 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
       case CODE_NULL:
       case CODE_FALSE:
       case CODE_TRUE:
-      case CODE_DUP:
       case CODE_POP:
       case CODE_IS:
       case CODE_CLOSE_UPVALUE:

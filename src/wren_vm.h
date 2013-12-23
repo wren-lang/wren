@@ -54,9 +54,6 @@ typedef enum
   // [arg] in it. Does not pop the value.
   CODE_STORE_FIELD,
 
-  // Push a copy of the top of stack.
-  CODE_DUP,
-
   // Pop and discard the top of stack.
   CODE_POP,
 

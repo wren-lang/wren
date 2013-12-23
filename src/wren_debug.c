@@ -116,10 +116,6 @@ int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
       break;
     }
 
-    case CODE_DUP:
-      printf("DUP\n");
-      break;
-
     case CODE_POP:
       printf("POP\n");
       break;
