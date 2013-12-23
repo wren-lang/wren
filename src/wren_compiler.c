@@ -29,6 +29,11 @@
 // that a function can close over.
 #define MAX_UPVALUES (256)
 
+// The maximum number of distinct constants that a function can contain. This
+// value is explicit in the bytecode since `CODE_CONSTANT` only takes a single
+// argument.
+#define MAX_CONSTANTS (256)
+
 // The maximum name of a method, not including the signature. This is an
 // arbitrary but enforced maximum just so we know how long the method name
 // strings need to be in the parser.
@@ -215,13 +220,75 @@ typedef struct sCompiler
   CompilerUpvalue upvalues[MAX_UPVALUES];
 } Compiler;
 
+// Outputs a compile or syntax error. This also marks the compilation as having
+// an error, which ensures that the resulting code will be discarded and never
+// run. This means that after calling lexError(), it's fine to generate whatever
+// invalid bytecode you want since it won't be used.
+static void lexError(Parser* parser, const char* format, ...)
+{
+  parser->hasError = true;
+
+  fprintf(stderr, "[Line %d] Error: ", parser->currentLine);
+
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+
+  fprintf(stderr, "\n");
+}
+
+// Outputs a compile or syntax error. This also marks the compilation as having
+// an error, which ensures that the resulting code will be discarded and never
+// run. This means that after calling error(), it's fine to generate whatever
+// invalid bytecode you want since it won't be used.
+//
+// You'll note that most places that call error() continue to parse and compile
+// after that. That's so that we can try to find as many compilation errors in
+// one pass as possible instead of just bailing at the first one.
+static void error(Compiler* compiler, const char* format, ...)
+{
+  compiler->parser->hasError = true;
+
+  Token* token = &compiler->parser->previous;
+  fprintf(stderr, "[Line %d] Error on ", token->line);
+  if (token->type == TOKEN_LINE)
+  {
+    // Don't print the newline itself since that looks wonky.
+    fprintf(stderr, "newline: ");
+  }
+  else
+  {
+    fprintf(stderr, "'%.*s': ", token->length, token->start);
+  }
+
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+
+  fprintf(stderr, "\n");
+}
+
 // Adds [constant] to the constant pool and returns its index.
 static int addConstant(Compiler* compiler, Value constant)
 {
-  // TODO: Look for existing equal constant. Note that we need to *not* do that
-  // for the placeholder constant created for super calls.
-  // TODO: Check for overflow.
-  compiler->fn->constants[compiler->fn->numConstants++] = constant;
+  // See if an equivalent constant has already been added.
+  for (int i = 0; i < compiler->fn->numConstants; i++)
+  {
+    if (wrenValuesEqual(compiler->fn->constants[i], constant)) return i;
+  }
+
+  if (compiler->fn->numConstants < MAX_CONSTANTS)
+  {
+    compiler->fn->constants[compiler->fn->numConstants++] = constant;
+  }
+  else
+  {
+    error(compiler, "A function may only contain %d unique constants.",
+          MAX_CONSTANTS);
+  }
+
   return compiler->fn->numConstants - 1;
 }
 
@@ -277,56 +344,6 @@ static int initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   // Add the block to the constant table. Do this eagerly so it's reachable by
   // the GC.
   return addConstant(parent, OBJ_VAL(compiler->fn));
-}
-
-// Outputs a compile or syntax error. This also marks the compilation as having
-// an error, which ensures that the resulting code will be discarded and never
-// run. This means that after calling lexError(), it's fine to generate whatever
-// invalid bytecode you want since it won't be used.
-static void lexError(Parser* parser, const char* format, ...)
-{
-  parser->hasError = true;
-
-  fprintf(stderr, "[Line %d] Error: ", parser->currentLine);
-
-  va_list args;
-  va_start(args, format);
-  vfprintf(stderr, format, args);
-  va_end(args);
-
-  fprintf(stderr, "\n");
-}
-
-// Outputs a compile or syntax error. This also marks the compilation as having
-// an error, which ensures that the resulting code will be discarded and never
-// run. This means that after calling error(), it's fine to generate whatever
-// invalid bytecode you want since it won't be used.
-//
-// You'll note that most places that call error() continue to parse and compile
-// after that. That's so that we can try to find as many compilation errors in
-// one pass as possible instead of just bailing at the first one.
-static void error(Compiler* compiler, const char* format, ...)
-{
-  compiler->parser->hasError = true;
-
-  Token* token = &compiler->parser->previous;
-  fprintf(stderr, "[Line %d] Error on ", token->line);
-  if (token->type == TOKEN_LINE)
-  {
-    // Don't print the newline itself since that looks wonky.
-    fprintf(stderr, "newline: ");
-  }
-  else
-  {
-    fprintf(stderr, "'%.*s': ", token->length, token->start);
-  }
-
-  va_list args;
-  va_start(args, format);
-  vfprintf(stderr, format, args);
-  va_end(args);
-
-  fprintf(stderr, "\n");
 }
 
 // Lexing ----------------------------------------------------------------------
