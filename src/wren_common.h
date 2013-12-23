@@ -62,4 +62,8 @@
 
 #endif
 
+// Assertion to indicate that the given point in the code should never be
+// reached.
+#define UNREACHABLE() ASSERT(false, "This line should not be reached.");
+
 #endif

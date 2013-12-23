@@ -912,38 +912,29 @@ static int findUpvalue(Compiler* compiler, const char* name, int length)
   return -1;
 }
 
-// A name may resolve to refer to a variable in a few different places: local
-// scope in the current function, an upvalue for variables being closed over
-// from enclosing functions, or a top-level global variable.
-typedef enum
-{
-  NAME_LOCAL,
-  NAME_UPVALUE,
-  NAME_GLOBAL
-} ResolvedName;
-// TODO: Just ditch this and use CODE_LOAD_LOCAL, et. al.
-
 // Look up [name] in the current scope to see what name it is bound to. Returns
 // the index of the name either in global scope, local scope, or the enclosing
-// function's upvalue list. Returns -1 if not found. Sets [resolved] to the
-// scope where the name was resolved.
+// function's upvalue list. Returns -1 if not found.
+//
+// Sets [loadInstruction] to the instruction needed to load the variable. Will
+// be one of [CODE_LOAD_LOCAL], [CODE_LOAD_UPVALUE], or [CODE_LOAD_GLOBAL].
 static int resolveName(Compiler* compiler, const char* name, int length,
-                       ResolvedName* resolved)
+                       Code* loadInstruction)
 {
   // Look it up in the local scopes. Look in reverse order so that the most
   // nested variable is found first and shadows outer ones.
-  *resolved = NAME_LOCAL;
+  *loadInstruction = CODE_LOAD_LOCAL;
   int local = resolveLocal(compiler, name, length);
   if (local != -1) return local;
 
   // If we got here, it's not a local, so lets see if we are closing over an
   // outer local.
-  *resolved = NAME_UPVALUE;
+  *loadInstruction = CODE_LOAD_UPVALUE;
   int upvalue = findUpvalue(compiler, name, length);
   if (upvalue != -1) return upvalue;
 
   // If we got here, it wasn't in a local scope, so try the global scope.
-  *resolved = NAME_GLOBAL;
+  *loadInstruction = CODE_LOAD_GLOBAL;
   return findSymbol(&compiler->parser->vm->globalSymbols, name, length);
 }
 
@@ -1282,26 +1273,14 @@ static void field(Compiler* compiler, bool allowAssignment)
   emit(compiler, field);
 }
 
-// Compiles a reference or assignment to a named variable, including "this".
-static void loadVariable(Compiler* compiler, ResolvedName resolved, int index)
-{
-  switch (resolved)
-  {
-    case NAME_LOCAL: emit(compiler, CODE_LOAD_LOCAL); break;
-    case NAME_UPVALUE: emit(compiler, CODE_LOAD_UPVALUE); break;
-    case NAME_GLOBAL: emit(compiler, CODE_LOAD_GLOBAL); break;
-  }
-
-  emit(compiler, index);
-}
-
 static void name(Compiler* compiler, bool allowAssignment)
 {
   // Look up the name in the scope chain.
   Token* token = &compiler->parser->previous;
 
-  ResolvedName resolved;
-  int index = resolveName(compiler, token->start, token->length, &resolved);
+  Code loadInstruction;
+  int index = resolveName(compiler, token->start, token->length,
+                          &loadInstruction);
   if (index == -1) error(compiler, "Undefined variable.");
 
   // If there's an "=" after a bare name, it's a variable assignment.
@@ -1312,18 +1291,22 @@ static void name(Compiler* compiler, bool allowAssignment)
     // Compile the right-hand side.
     expression(compiler);
 
-    switch (resolved)
+    // Emit the store instruction.
+    switch (loadInstruction)
     {
-      case NAME_LOCAL: emit(compiler, CODE_STORE_LOCAL); break;
-      case NAME_UPVALUE: emit(compiler, CODE_STORE_UPVALUE); break;
-      case NAME_GLOBAL: emit(compiler, CODE_STORE_GLOBAL); break;
+      case CODE_LOAD_LOCAL: emit(compiler, CODE_STORE_LOCAL); break;
+      case CODE_LOAD_UPVALUE: emit(compiler, CODE_STORE_UPVALUE); break;
+      case CODE_LOAD_GLOBAL: emit(compiler, CODE_STORE_GLOBAL); break;
+      default:
+        UNREACHABLE();
     }
-
-    emit(compiler, index);
-    return;
+  }
+  else
+  {
+    emit(compiler, loadInstruction);
   }
 
-  loadVariable(compiler, resolved, index);
+  emit(compiler, index);
 }
 
 static void null(Compiler* compiler, bool allowAssignment)
@@ -1400,10 +1383,11 @@ static void super_(Compiler* compiler, bool allowAssignment)
   }
 
   // Look up "this" in the scope chain.
-  ResolvedName resolved;
-  int index = resolveName(compiler, "this", 4, &resolved);
-  loadVariable(compiler, resolved, index);
-  
+  Code loadInstruction;
+  int index = resolveName(compiler, "this", 4, &loadInstruction);
+  emit(compiler, loadInstruction);
+  emit(compiler, index);
+
   // TODO: Super operator calls.
 
   // See if it's a named super call, or an unnamed one.
