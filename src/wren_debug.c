@@ -84,6 +84,22 @@ int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
       break;
     }
 
+    case CODE_LOAD_FIELD_THIS:
+    {
+      int field = bytecode[i++];
+      printf("LOAD_FIELD_THIS %d\n", field);
+      printf("%04d   | field %d\n", i, field);
+      break;
+    }
+
+    case CODE_STORE_FIELD_THIS:
+    {
+      int field = bytecode[i++];
+      printf("STORE_FIELD_THIS %d\n", field);
+      printf("%04d   | field %d\n", i, field);
+      break;
+    }
+
     case CODE_LOAD_FIELD:
     {
       int field = bytecode[i++];

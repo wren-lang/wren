@@ -1155,6 +1155,16 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
   }
 }
 
+// Loads the receiver of the currently enclosing method. Correctly handles
+// functions defined inside methods.
+static void loadThis(Compiler* compiler)
+{
+  Code loadInstruction;
+  int index = resolveName(compiler, "this", 4, &loadInstruction);
+  emit(compiler, loadInstruction);
+  emit(compiler, index);
+}
+
 static void grouping(Compiler* compiler, bool allowAssignment)
 {
   expression(compiler);
@@ -1264,12 +1274,31 @@ static void field(Compiler* compiler, bool allowAssignment)
     // Compile the right-hand side.
     expression(compiler);
 
-    emit(compiler, CODE_STORE_FIELD);
-    emit(compiler, field);
-    return;
+    // If we're directly inside a method, use a more optimal instruction.
+    if (compiler->methodName != NULL)
+    {
+      emit(compiler, CODE_STORE_FIELD_THIS);
+    }
+    else
+    {
+      loadThis(compiler);
+      emit(compiler, CODE_STORE_FIELD);
+    }
+  }
+  else
+  {
+    // If we're directly inside a method, use a more optimal instruction.
+    if (compiler->methodName != NULL)
+    {
+      emit(compiler, CODE_LOAD_FIELD_THIS);
+    }
+    else
+    {
+      loadThis(compiler);
+      emit(compiler, CODE_LOAD_FIELD);
+    }
   }
 
-  emit(compiler, CODE_LOAD_FIELD);
   emit(compiler, field);
 }
 
@@ -1382,11 +1411,7 @@ static void super_(Compiler* compiler, bool allowAssignment)
     error(compiler, "Cannot use 'super' outside of a method.");
   }
 
-  // Look up "this" in the scope chain.
-  Code loadInstruction;
-  int index = resolveName(compiler, "this", 4, &loadInstruction);
-  emit(compiler, loadInstruction);
-  emit(compiler, index);
+  loadThis(compiler);
 
   // TODO: Super operator calls.
 
@@ -1428,8 +1453,7 @@ static void this_(Compiler* compiler, bool allowAssignment)
     return;
   }
 
-  // "this" works just like any other lexically scoped variable.
-  name(compiler, false);
+  loadThis(compiler);
 }
 
 // Subscript or "array indexing" operator like `foo[bar]`.
@@ -2075,6 +2099,8 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
 
       case CODE_LOAD_FIELD:
       case CODE_STORE_FIELD:
+      case CODE_LOAD_FIELD_THIS:
+      case CODE_STORE_FIELD_THIS:
         // Shift this class's fields down past the inherited ones.
         fn->bytecode[ip++] += classObj->superclass->numFields;
         break;

@@ -6,6 +6,7 @@ class Foo {
     _d = d
     _e = e
   }
+
   write {
     IO.write(_a)
     IO.write(_b)
@@ -23,7 +24,3 @@ foo.write
 // expect: 3
 // expect: 4
 // expect: 5
-
-// TODO: Trying to get or set a field outside of a class.
-// TODO: Fields in nested classes.
-// TODO: Closing over fields.

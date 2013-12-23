@@ -36,10 +36,22 @@ typedef enum
   // Stores the top of stack in global slot [arg]. Does not pop it.
   CODE_STORE_GLOBAL,
 
-  // Pushes the value of the field in slot [arg] for the current receiver.
+  // Pushes the value of the field in slot [arg] of the receiver of the current
+  // function. This is used for regular field accesses on "this" directly in
+  // methods. This instruction is faster than the more general CODE_LOAD_FIELD
+  // instruction.
+  CODE_LOAD_FIELD_THIS,
+
+  // Stores the top of the stack in field slot [arg] in the receiver of the
+  // current value. Does not pop the value. This instruction is faster than the
+  // more general CODE_LOAD_FIELD instruction.
+  CODE_STORE_FIELD_THIS,
+
+  // Pops an instance and pushes the value of the field in slot [arg] of it.
   CODE_LOAD_FIELD,
 
-  // Stores the top of stack in field slot [arg] in the current receiver.
+  // Pops an instance and stores the subsequent top of stack in field slot
+  // [arg] in it. Does not pop the value.
   CODE_STORE_FIELD,
 
   // Push a copy of the top of stack.

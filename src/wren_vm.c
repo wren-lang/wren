@@ -627,6 +627,8 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
     &&code_STORE_UPVALUE,
     &&code_LOAD_GLOBAL,
     &&code_STORE_GLOBAL,
+    &&code_LOAD_FIELD_THIS,
+    &&code_STORE_FIELD_THIS,
     &&code_LOAD_FIELD,
     &&code_STORE_FIELD,
     &&code_DUP,
@@ -897,12 +899,32 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
       DISPATCH();
     }
 
+    CASE_CODE(LOAD_FIELD_THIS):
+    {
+      int field = READ_ARG();
+      Value receiver = fiber->stack[frame->stackStart];
+      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
+      ObjInstance* instance = AS_INSTANCE(receiver);
+      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+      PUSH(instance->fields[field]);
+      DISPATCH();
+    }
+
+    CASE_CODE(STORE_FIELD_THIS):
+    {
+      int field = READ_ARG();
+      Value receiver = fiber->stack[frame->stackStart];
+      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
+      ObjInstance* instance = AS_INSTANCE(receiver);
+      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+      instance->fields[field] = PEEK();
+      DISPATCH();
+    }
+
     CASE_CODE(LOAD_FIELD):
     {
       int field = READ_ARG();
-      // TODO: We'll have to do something better here to handle functions
-      // inside methods.
-      Value receiver = fiber->stack[frame->stackStart];
+      Value receiver = POP();
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
       ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
@@ -913,9 +935,7 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
     CASE_CODE(STORE_FIELD):
     {
       int field = READ_ARG();
-      // TODO: We'll have to do something better here to handle functions
-      // inside methods.
-      Value receiver = fiber->stack[frame->stackStart];
+      Value receiver = POP();
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
       ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
