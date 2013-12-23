@@ -1900,11 +1900,16 @@ void statement(Compiler* compiler)
     // TODO: Variable should not be in scope until after initializer.
     int symbol = declareVariable(compiler);
 
-    // TODO: Allow uninitialized vars?
-    consume(compiler, TOKEN_EQ, "Expect '=' after variable name.");
-
     // Compile the initializer.
-    expression(compiler);
+    if (match(compiler, TOKEN_EQ))
+    {
+      expression(compiler);
+    }
+    else
+    {
+      // Default initialize it to null.
+      null(compiler, false);
+    }
 
     defineVariable(compiler, symbol);
     return;
