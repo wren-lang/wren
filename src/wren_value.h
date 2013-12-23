@@ -257,6 +257,8 @@ typedef struct
 {
   Obj obj;
   char* value;
+
+  // TODO: Flexible array.
 } ObjString;
 
 

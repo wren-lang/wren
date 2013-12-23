@@ -1127,7 +1127,6 @@ static void parameterList(Compiler* compiler, char* name, int* length)
 
       // Add a space in the name for the parameter.
       if (name != NULL) name[(*length)++] = ' ';
-      // TODO: Check for length overflow.
     }
     while (match(compiler, TOKEN_COMMA));
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
@@ -1179,7 +1178,6 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
     name[length++] = ' ';
 
     // Compile the assigned value.
-    // TODO: Allow assignment here.
     expression(compiler);
 
     int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);

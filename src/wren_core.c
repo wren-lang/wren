@@ -79,7 +79,6 @@ DEF_NATIVE(bool_not)
 
 DEF_NATIVE(bool_toString)
 {
-  // TODO: Intern these strings or something.
   if (AS_BOOL(args[0]))
   {
     return wrenNewString(vm, "true", 4);
@@ -253,7 +252,6 @@ DEF_NATIVE(list_subscriptSetter)
 
 DEF_NATIVE(null_toString)
 {
-  // TODO: Intern this string or something.
   return wrenNewString(vm, "null", 4);
 }
 
@@ -264,10 +262,11 @@ DEF_NATIVE(num_abs)
 
 DEF_NATIVE(num_toString)
 {
-  // TODO: What size should this be?
-  char temp[100];
-  sprintf(temp, "%.14g", AS_NUM(args[0]));
-  return (Value)wrenNewString(vm, temp, strlen(temp));
+  // According to Lua implementation, this should be enough for longest number
+  // formatted using %.14g.
+  char buffer[21];
+  sprintf(buffer, "%.14g", AS_NUM(args[0]));
+  return (Value)wrenNewString(vm, buffer, strlen(buffer));
 }
 
 DEF_NATIVE(num_negate)
@@ -466,9 +465,8 @@ DEF_NATIVE(string_subscript)
   return value;
 }
 
-DEF_NATIVE(io_write)
+DEF_NATIVE(io_writeString)
 {
-  // TODO: Should call toString on its argument.
   wrenPrintValue(args[1]);
   printf("\n");
   return args[1];
@@ -606,5 +604,5 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
 
   ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
-  NATIVE(ioClass->metaclass, "write__native__ ", io_write);
+  NATIVE(ioClass->metaclass, "write__native__ ", io_writeString);
 }
