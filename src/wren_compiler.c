@@ -281,6 +281,24 @@ static int initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
 // Outputs a compile or syntax error. This also marks the compilation as having
 // an error, which ensures that the resulting code will be discarded and never
+// run. This means that after calling lexError(), it's fine to generate whatever
+// invalid bytecode you want since it won't be used.
+static void lexError(Parser* parser, const char* format, ...)
+{
+  parser->hasError = true;
+
+  fprintf(stderr, "[Line %d] Error: ", parser->currentLine);
+
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+
+  fprintf(stderr, "\n");
+}
+
+// Outputs a compile or syntax error. This also marks the compilation as having
+// an error, which ensures that the resulting code will be discarded and never
 // run. This means that after calling error(), it's fine to generate whatever
 // invalid bytecode you want since it won't be used.
 //
@@ -344,6 +362,7 @@ static char nextChar(Parser* parser)
 {
   char c = peekChar(parser);
   parser->currentChar++;
+  if (c == '\n') parser->currentLine++;
   return c;
 }
 
@@ -388,8 +407,11 @@ static void skipBlockComment(Parser* parser)
   int nesting = 1;
   while (nesting > 0)
   {
-    // TODO: Unterminated comment. Should return error.
-    if (peekChar(parser) == '\0') return;
+    if (peekChar(parser) == '\0')
+    {
+      lexError(parser, "Unterminated block comment.");
+      return;
+    }
 
     if (peekChar(parser) == '/' && peekNextChar(parser) == '*')
     {
@@ -581,7 +603,6 @@ static void readRawToken(Parser* parser)
         return;
 
       case '\n':
-        parser->currentLine++;
         makeToken(parser, TOKEN_LINE);
         return;
 
@@ -604,8 +625,7 @@ static void readRawToken(Parser* parser)
         }
         else
         {
-          // TODO: Handle error.
-          makeToken(parser, TOKEN_ERROR);
+          lexError(parser, "Invalid character '%c'.", c);
         }
         return;
     }

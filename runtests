@@ -35,7 +35,7 @@ else:
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
-ERROR_PATTERN = re.compile(r'\[Line (\d+)\] Error ')
+ERROR_PATTERN = re.compile(r'\[Line (\d+)\] Error')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
 
