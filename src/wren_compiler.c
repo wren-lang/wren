@@ -832,18 +832,16 @@ static void popScope(Compiler* compiler)
   compiler->scopeDepth--;
 }
 
-// Attempts to look up the previously consumed name token in the local variables
-// of [compiler]. If found, returns its index, otherwise returns -1.
-static int resolveLocal(Compiler* compiler)
+// Attempts to look up the name in the local variables of [compiler]. If found,
+// returns its index, otherwise returns -1.
+static int resolveLocal(Compiler* compiler, const char* name, int length)
 {
-  Token* token = &compiler->parser->previous;
-
   // Look it up in the local scopes. Look in reverse order so that the most
   // nested variable is found first and shadows outer ones.
   for (int i = compiler->numLocals - 1; i >= 0; i--)
   {
-    if (compiler->locals[i].length == token->length &&
-        strncmp(token->start, compiler->locals[i].name, token->length) == 0)
+    if (compiler->locals[i].length == length &&
+        strncmp(name, compiler->locals[i].name, length) == 0)
     {
       return i;
     }
@@ -870,15 +868,15 @@ static int addUpvalue(Compiler* compiler, bool isLocal, int index)
   return compiler->fn->numUpvalues++;
 }
 
-// Attempts to look up the previously consumed name token in the functions
-// enclosing the one being compiled by [compiler]. If found, it adds an upvalue
-// for it to this compiler's list of upvalues (unless it's already in there)
-// and returns its index. If not found, returns -1.
+// Attempts to look up [name] in the functions enclosing the one being compiled
+// by [compiler]. If found, it adds an upvalue for it to this compiler's list
+// of upvalues (unless it's already in there) and returns its index. If not
+// found, returns -1.
 //
 // If the name is found outside of the immediately enclosing function, this
 // will flatten the closure and add upvalues to all of the intermediate
 // functions so that it gets walked down to this one.
-static int findUpvalue(Compiler* compiler)
+static int findUpvalue(Compiler* compiler, const char* name, int length)
 {
   // If we are out of enclosing functions, it can't be an upvalue.
   if (compiler->parent == NULL)
@@ -887,7 +885,7 @@ static int findUpvalue(Compiler* compiler)
   }
 
   // See if it's a local variable in the immediately enclosing function.
-  int local = resolveLocal(compiler->parent);
+  int local = resolveLocal(compiler->parent, name, length);
   if (local != -1)
   {
     // Mark the local as an upvalue so we know to close it when it goes out of
@@ -903,7 +901,7 @@ static int findUpvalue(Compiler* compiler)
   // of the intermediate functions to get from the function where a local is
   // declared all the way into the possibly deeply nested function that is
   // closing over it.
-  int upvalue = findUpvalue(compiler->parent);
+  int upvalue = findUpvalue(compiler->parent, name, length);
   if (upvalue != -1)
   {
     return addUpvalue(compiler, false, upvalue);
@@ -923,32 +921,30 @@ typedef enum
   NAME_UPVALUE,
   NAME_GLOBAL
 } ResolvedName;
+// TODO: Just ditch this and use CODE_LOAD_LOCAL, et. al.
 
-// Look up the previously consumed token, which is presumed to be a TOKEN_NAME
-// in the current scope to see what name it is bound to. Returns the index of
-// the name either in global scope, local scope, or the enclosing function's
-// upvalue list. Returns -1 if not found. Sets [resolved] to the scope where the
-// name was resolved.
-static int resolveName(Compiler* compiler, ResolvedName* resolved)
+// Look up [name] in the current scope to see what name it is bound to. Returns
+// the index of the name either in global scope, local scope, or the enclosing
+// function's upvalue list. Returns -1 if not found. Sets [resolved] to the
+// scope where the name was resolved.
+static int resolveName(Compiler* compiler, const char* name, int length,
+                       ResolvedName* resolved)
 {
-  Token* token = &compiler->parser->previous;
-
   // Look it up in the local scopes. Look in reverse order so that the most
   // nested variable is found first and shadows outer ones.
   *resolved = NAME_LOCAL;
-  int local = resolveLocal(compiler);
+  int local = resolveLocal(compiler, name, length);
   if (local != -1) return local;
 
   // If we got here, it's not a local, so lets see if we are closing over an
   // outer local.
   *resolved = NAME_UPVALUE;
-  int upvalue = findUpvalue(compiler);
+  int upvalue = findUpvalue(compiler, name, length);
   if (upvalue != -1) return upvalue;
 
   // If we got here, it wasn't in a local scope, so try the global scope.
   *resolved = NAME_GLOBAL;
-  return findSymbol(&compiler->parser->vm->globalSymbols,
-                    token->start, token->length);
+  return findSymbol(&compiler->parser->vm->globalSymbols, name, length);
 }
 
 // Copies the identifier from the previously consumed `TOKEN_NAME` into [name],
@@ -1286,11 +1282,26 @@ static void field(Compiler* compiler, bool allowAssignment)
   emit(compiler, field);
 }
 
+// Compiles a reference or assignment to a named variable, including "this".
+static void loadVariable(Compiler* compiler, ResolvedName resolved, int index)
+{
+  switch (resolved)
+  {
+    case NAME_LOCAL: emit(compiler, CODE_LOAD_LOCAL); break;
+    case NAME_UPVALUE: emit(compiler, CODE_LOAD_UPVALUE); break;
+    case NAME_GLOBAL: emit(compiler, CODE_LOAD_GLOBAL); break;
+  }
+
+  emit(compiler, index);
+}
+
 static void name(Compiler* compiler, bool allowAssignment)
 {
   // Look up the name in the scope chain.
+  Token* token = &compiler->parser->previous;
+
   ResolvedName resolved;
-  int index = resolveName(compiler, &resolved);
+  int index = resolveName(compiler, token->start, token->length, &resolved);
   if (index == -1) error(compiler, "Undefined variable.");
 
   // If there's an "=" after a bare name, it's a variable assignment.
@@ -1312,15 +1323,7 @@ static void name(Compiler* compiler, bool allowAssignment)
     return;
   }
 
-  // Otherwise, it's just a variable access.
-  switch (resolved)
-  {
-    case NAME_LOCAL: emit(compiler, CODE_LOAD_LOCAL); break;
-    case NAME_UPVALUE: emit(compiler, CODE_LOAD_UPVALUE); break;
-    case NAME_GLOBAL: emit(compiler, CODE_LOAD_GLOBAL); break;
-  }
-
-  emit(compiler, index);
+  loadVariable(compiler, resolved, index);
 }
 
 static void null(Compiler* compiler, bool allowAssignment)
@@ -1396,12 +1399,11 @@ static void super_(Compiler* compiler, bool allowAssignment)
     error(compiler, "Cannot use 'super' outside of a method.");
   }
 
-  // The receiver is always stored in the first local slot.
-  // TODO: Will need to do something different to handle functions enclosed
-  // in methods.
-  emit(compiler, CODE_LOAD_LOCAL);
-  emit(compiler, 0);
-
+  // Look up "this" in the scope chain.
+  ResolvedName resolved;
+  int index = resolveName(compiler, "this", 4, &resolved);
+  loadVariable(compiler, resolved, index);
+  
   // TODO: Super operator calls.
 
   // See if it's a named super call, or an unnamed one.
