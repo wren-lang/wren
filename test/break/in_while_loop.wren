@@ -2,10 +2,7 @@ var i = 0
 while (true) {
   i = i + 1
   IO.write(i)
-  if (i > 2) {
-    // TODO: Should not require block for break.
-    break
-  }
+  if (i > 2) break
   IO.write(i)
 }
 // expect: 1

@@ -1062,6 +1062,7 @@ typedef enum
 // Forward declarations since the grammar is recursive.
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
+static void definition(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, bool allowAssignment,
                             Precedence precedence);
 
@@ -1092,7 +1093,7 @@ static void finishBlock(Compiler* compiler)
 {
   for (;;)
   {
-    statement(compiler);
+    definition(compiler);
 
     // If there is no newline, it must be the end of the block on the same line.
     if (!match(compiler, TOKEN_LINE))
@@ -1807,92 +1808,8 @@ void block(Compiler* compiler)
     return;
   }
 
-  // TODO: Only allowing expressions here means you can't do:
-  //
-  // if (foo) return "blah"
-  //
-  // since return is a statement (or should it be an expression?).
-
-  // Expression statement.
-  expression(compiler);
-  emit(compiler, CODE_POP);
-}
-
-// Compiles a class definition. Assumes the "class" token has already been
-// consumed.
-static void classStatement(Compiler* compiler)
-{
-  // Create a variable to store the class in.
-  // TODO: Allow anonymous classes?
-  int symbol = declareVariable(compiler);
-
-  // Load the superclass (if there is one).
-  if (match(compiler, TOKEN_IS))
-  {
-    parsePrecedence(compiler, false, PREC_CALL);
-    emit(compiler, CODE_SUBCLASS);
-  }
-  else
-  {
-    // Create the empty class.
-    emit(compiler, CODE_CLASS);
-  }
-
-  // Store a placeholder for the number of fields argument. We don't know
-  // the value until we've compiled all the methods to see which fields are
-  // used.
-  int numFieldsInstruction = emit(compiler, 255);
-
-  // Set up a symbol table for the class's fields. We'll initially compile
-  // them to slots starting at zero. When the method is bound to the close
-  // the bytecode will be adjusted by [wrenBindMethod] to take inherited
-  // fields into account.
-  SymbolTable* previousFields = compiler->fields;
-  SymbolTable fields;
-  initSymbolTable(&fields);
-  compiler->fields = &fields;
-
-  // Compile the method definitions.
-  consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
-  while (!match(compiler, TOKEN_RIGHT_BRACE))
-  {
-    Code instruction = CODE_METHOD_INSTANCE;
-    bool isConstructor = false;
-
-    if (match(compiler, TOKEN_STATIC))
-    {
-      instruction = CODE_METHOD_STATIC;
-      // TODO: Need to handle fields inside static methods correctly.
-      // Currently, they're compiled as instance fields, which will be wrong
-      // wrong wrong given that the receiver is actually the class obj.
-    }
-    else if (peek(compiler) == TOKEN_NEW)
-    {
-      // If the method name is "new", it's a constructor.
-      isConstructor = true;
-    }
-
-    SignatureFn signature = rules[compiler->parser->current.type].method;
-    nextToken(compiler->parser);
-
-    if (signature == NULL)
-    {
-      error(compiler, "Expect method definition.");
-      break;
-    }
-
-    method(compiler, instruction, isConstructor, signature);
-    consume(compiler, TOKEN_LINE,
-            "Expect newline after definition in class.");
-  }
-
-  // Update the class with the number of fields.
-  compiler->fn->bytecode[numFieldsInstruction] = fields.count;
-
-  compiler->fields = previousFields;
-
-  // Store it in its name.
-  defineVariable(compiler, symbol);
+  // Single statement body.
+  statement(compiler);
 }
 
 // Returns the number of arguments to the instruction at [ip] in [fn]'s
@@ -2000,12 +1917,6 @@ void statement(Compiler* compiler)
     return;
   }
 
-  if (match(compiler, TOKEN_CLASS))
-  {
-    classStatement(compiler);
-    return;
-  }
-
   if (match(compiler, TOKEN_IF))
   {
     // Compile the condition.
@@ -2053,6 +1964,105 @@ void statement(Compiler* compiler)
     return;
   }
 
+  if (match(compiler, TOKEN_WHILE))
+  {
+    whileStatement(compiler);
+    return;
+  }
+
+  // Expression statement.
+  expression(compiler);
+  emit(compiler, CODE_POP);
+}
+
+// Compiles a class definition. Assumes the "class" token has already been
+// consumed.
+static void classDefinition(Compiler* compiler)
+{
+  // Create a variable to store the class in.
+  // TODO: Allow anonymous classes?
+  int symbol = declareVariable(compiler);
+
+  // Load the superclass (if there is one).
+  if (match(compiler, TOKEN_IS))
+  {
+    parsePrecedence(compiler, false, PREC_CALL);
+    emit(compiler, CODE_SUBCLASS);
+  }
+  else
+  {
+    // Create the empty class.
+    emit(compiler, CODE_CLASS);
+  }
+
+  // Store a placeholder for the number of fields argument. We don't know
+  // the value until we've compiled all the methods to see which fields are
+  // used.
+  int numFieldsInstruction = emit(compiler, 255);
+
+  // Set up a symbol table for the class's fields. We'll initially compile
+  // them to slots starting at zero. When the method is bound to the close
+  // the bytecode will be adjusted by [wrenBindMethod] to take inherited
+  // fields into account.
+  SymbolTable* previousFields = compiler->fields;
+  SymbolTable fields;
+  initSymbolTable(&fields);
+  compiler->fields = &fields;
+
+  // Compile the method definitions.
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
+  while (!match(compiler, TOKEN_RIGHT_BRACE))
+  {
+    Code instruction = CODE_METHOD_INSTANCE;
+    bool isConstructor = false;
+
+    if (match(compiler, TOKEN_STATIC))
+    {
+      instruction = CODE_METHOD_STATIC;
+      // TODO: Need to handle fields inside static methods correctly.
+      // Currently, they're compiled as instance fields, which will be wrong
+      // wrong wrong given that the receiver is actually the class obj.
+    }
+    else if (peek(compiler) == TOKEN_NEW)
+    {
+      // If the method name is "new", it's a constructor.
+      isConstructor = true;
+    }
+
+    SignatureFn signature = rules[compiler->parser->current.type].method;
+    nextToken(compiler->parser);
+
+    if (signature == NULL)
+    {
+      error(compiler, "Expect method definition.");
+      break;
+    }
+
+    method(compiler, instruction, isConstructor, signature);
+    consume(compiler, TOKEN_LINE,
+            "Expect newline after definition in class.");
+  }
+
+  // Update the class with the number of fields.
+  compiler->fn->bytecode[numFieldsInstruction] = fields.count;
+
+  compiler->fields = previousFields;
+
+  // Store it in its name.
+  defineVariable(compiler, symbol);
+}
+
+// Compiles a "definition". These are the statements that bind new variables.
+// They can only appear at the top level of a block and are prohibited in places
+// like the non-curly body of an if or while.
+void definition(Compiler* compiler)
+{
+  if (match(compiler, TOKEN_CLASS))
+  {
+    classDefinition(compiler);
+    return;
+  }
+
   if (match(compiler, TOKEN_VAR))
   {
     // TODO: Variable should not be in scope until after initializer.
@@ -2070,12 +2080,6 @@ void statement(Compiler* compiler)
     }
 
     defineVariable(compiler, symbol);
-    return;
-  }
-
-  if (match(compiler, TOKEN_WHILE))
-  {
-    whileStatement(compiler);
     return;
   }
 
@@ -2116,7 +2120,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
 
   for (;;)
   {
-    statement(&compiler);
+    definition(&compiler);
 
     // If there is no newline, it must be the end of the block on the same line.
     if (!match(&compiler, TOKEN_LINE))

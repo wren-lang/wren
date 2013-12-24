@@ -1,18 +1,12 @@
 var i = 0
 while (true) {
   IO.write("outer " + i.toString)
-  if (i > 1) {
-    // TODO: Should not require block for break.
-    break
-  }
+  if (i > 1) break
 
   var j = 0
   while (true) {
     IO.write("inner " + j.toString)
-    if (j > 1) {
-      // TODO: Should not require block for break.
-      break
-    }
+    if (j > 1) break
 
     j = j + 1
   }
