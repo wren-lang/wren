@@ -76,10 +76,12 @@ typedef enum
   TOKEN_EQEQ,
   TOKEN_BANGEQ,
 
+  TOKEN_BREAK,
   TOKEN_CLASS,
   TOKEN_ELSE,
   TOKEN_FALSE,
   TOKEN_FN,
+  TOKEN_FOR,
   TOKEN_IF,
   TOKEN_IS,
   TOKEN_NEW,
@@ -204,6 +206,10 @@ typedef struct sCompiler
   // in effect at all. Any variables declared will be global.
   int scopeDepth;
 
+  // Index of the first instruction of the body of the innermost loop currently
+  // being compiled. Will be -1 if not currently inside a loop.
+  int loopBody;
+
   // The name of the method this compiler is compiling, or NULL if this
   // compiler is not for a method. Note that this is just the bare method name,
   // and not its full signature.
@@ -299,6 +305,7 @@ static int initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->parser = parser;
   compiler->parent = parent;
   compiler->numCodes = 0;
+  compiler->loopBody = -1;
   compiler->methodName = methodName;
   compiler->methodLength = methodLength;
 
@@ -485,10 +492,12 @@ static void readName(Parser* parser, TokenType type)
     nextChar(parser);
   }
 
+  if (isKeyword(parser, "break")) type = TOKEN_BREAK;
   if (isKeyword(parser, "class")) type = TOKEN_CLASS;
   if (isKeyword(parser, "else")) type = TOKEN_ELSE;
   if (isKeyword(parser, "false")) type = TOKEN_FALSE;
   if (isKeyword(parser, "fn")) type = TOKEN_FN;
+  if (isKeyword(parser, "for")) type = TOKEN_FOR;
   if (isKeyword(parser, "if")) type = TOKEN_IF;
   if (isKeyword(parser, "is")) type = TOKEN_IS;
   if (isKeyword(parser, "new")) type = TOKEN_NEW;
@@ -707,6 +716,7 @@ static void nextToken(Parser* parser)
       case TOKEN_BANGEQ:
       case TOKEN_CLASS:
       case TOKEN_ELSE:
+      case TOKEN_FOR:
       case TOKEN_IF:
       case TOKEN_IS:
       case TOKEN_NEW:
@@ -1683,10 +1693,12 @@ GrammarRule rules[] =
   /* TOKEN_GTEQ          */ INFIX_OPERATOR(PREC_COMPARISON, ">= "),
   /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "== "),
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!= "),
+  /* TOKEN_BREAK         */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
   /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
   /* TOKEN_FN            */ PREFIX(function),
+  /* TOKEN_FOR           */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IS            */ INFIX(PREC_IS, is),
   /* TOKEN_NEW           */ { new_, NULL, constructorSignature, PREC_NONE, NULL },
@@ -1883,10 +1895,111 @@ static void classStatement(Compiler* compiler)
   defineVariable(compiler, symbol);
 }
 
+// Returns the number of arguments to the instruction at [ip] in [fn]'s
+// bytecode.
+static int getNumArguments(ObjFn* fn, int ip)
+{
+  Code instruction = fn->bytecode[ip];
+  switch (instruction)
+  {
+    case CODE_NULL:
+    case CODE_FALSE:
+    case CODE_TRUE:
+    case CODE_POP:
+    case CODE_IS:
+    case CODE_CLOSE_UPVALUE:
+    case CODE_RETURN:
+    case CODE_NEW:
+      return 0;
+
+      // Instructions with two arguments:
+    case CODE_METHOD_INSTANCE:
+    case CODE_METHOD_STATIC:
+      return 2;
+
+    case CODE_CLOSURE:
+    {
+      int constant = fn->bytecode[ip + 1];
+      ObjFn* loadedFn = AS_FN(fn->constants[constant]);
+
+      // There is an argument for the constant, then one for each upvalue.
+      return 1 + loadedFn->numUpvalues;
+    }
+
+    default:
+      // Most instructions have one argument.
+      return 1;
+  }
+}
+
+static void whileStatement(Compiler* compiler)
+{
+  // Remember what instruction to loop back to.
+  int loopStart = compiler->numCodes - 1;
+
+  // Compile the condition.
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+  expression(compiler);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
+
+  emit(compiler, CODE_JUMP_IF);
+  int exitJump = emit(compiler, 255);
+
+  // Compile the body.
+  int outerLoopBody = compiler->loopBody;
+  compiler->loopBody = compiler->numCodes;
+
+  block(compiler);
+
+  // Loop back to the top.
+  emit(compiler, CODE_LOOP);
+  int loopOffset = compiler->numCodes - loopStart;
+  emit(compiler, loopOffset);
+
+  patchJump(compiler, exitJump);
+
+  // Find any break placeholder instructions (which will be CODE_END in the
+  // bytecode) and replace them with real jumps.
+  int i = compiler->loopBody;
+  while (i < compiler->numCodes)
+  {
+    if (compiler->fn->bytecode[i] == CODE_END)
+    {
+      compiler->fn->bytecode[i] = CODE_JUMP;
+      patchJump(compiler, i + 1);
+      i += 2;
+    }
+    else
+    {
+      // Skip this instruction and its arguments.
+      i += 1 + getNumArguments(compiler->fn, i);
+    }
+  }
+
+  compiler->loopBody = outerLoopBody;
+}
+
 // Compiles a statement. These can only appear at the top-level or within
 // curly blocks. Unlike expressions, these do not leave a value on the stack.
 void statement(Compiler* compiler)
 {
+  if (match(compiler, TOKEN_BREAK))
+  {
+    if (compiler->loopBody == -1)
+    {
+      error(compiler, "Cannot use 'break' outside of a loop.");
+    }
+
+    // Emit a placeholder instruction for the jump to the end of the body. When
+    // we're done compiling the loop body and know where the end is, we'll
+    // replace these with `CODE_JUMP` instructions with appropriate offsets.
+    // We use `CODE_END` here because that can't occur in the middle of
+    // bytecode.
+    emit(compiler, CODE_END);
+    emit(compiler, 0);
+    return;
+  }
+
   if (match(compiler, TOKEN_CLASS))
   {
     classStatement(compiler);
@@ -1962,26 +2075,7 @@ void statement(Compiler* compiler)
 
   if (match(compiler, TOKEN_WHILE))
   {
-    // Remember what instruction to loop back to.
-    int loopStart = compiler->numCodes - 1;
-
-    // Compile the condition.
-    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
-    expression(compiler);
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
-
-    emit(compiler, CODE_JUMP_IF);
-    int exitJump = emit(compiler, 255);
-
-    // Compile the body.
-    block(compiler);
-
-    // Loop back to the top.
-    emit(compiler, CODE_LOOP);
-    int loopOffset = compiler->numCodes - loopStart;
-    emit(compiler, loopOffset);
-
-    patchJump(compiler, exitJump);
+    whileStatement(compiler);
     return;
   }
 
