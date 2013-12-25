@@ -83,6 +83,7 @@ typedef enum
   TOKEN_FN,
   TOKEN_FOR,
   TOKEN_IF,
+  TOKEN_IN,
   TOKEN_IS,
   TOKEN_NEW,
   TOKEN_NULL,
@@ -499,6 +500,7 @@ static void readName(Parser* parser, TokenType type)
   if (isKeyword(parser, "fn")) type = TOKEN_FN;
   if (isKeyword(parser, "for")) type = TOKEN_FOR;
   if (isKeyword(parser, "if")) type = TOKEN_IF;
+  if (isKeyword(parser, "in")) type = TOKEN_IN;
   if (isKeyword(parser, "is")) type = TOKEN_IS;
   if (isKeyword(parser, "new")) type = TOKEN_NEW;
   if (isKeyword(parser, "null")) type = TOKEN_NULL;
@@ -718,6 +720,7 @@ static void nextToken(Parser* parser)
       case TOKEN_ELSE:
       case TOKEN_FOR:
       case TOKEN_IF:
+      case TOKEN_IN:
       case TOKEN_IS:
       case TOKEN_NEW:
       case TOKEN_STATIC:
@@ -771,11 +774,31 @@ static Token* consume(Compiler* compiler, TokenType expected,
 
 // Variables and scopes --------------------------------------------------------
 
-// Emits one bytecode instruction or argument.
+// Emits one bytecode instruction or argument. Returns its index.
 static int emit(Compiler* compiler, Code code)
 {
   compiler->fn->bytecode[compiler->numCodes++] = code;
   return compiler->numCodes - 1;
+}
+
+// Emits one bytecode instruction followed by an argument. Returns the index of
+// the argument in the bytecode.
+static int emit1(Compiler* compiler, Code instruction, uint8_t arg)
+{
+  emit(compiler, instruction);
+  return emit(compiler, arg);
+}
+
+// Create a new local variable with [name]. Assumes the current scope is local
+// and the name is unique.
+static int defineLocal(Compiler* compiler, const char* name, int length)
+{
+  Local* local = &compiler->locals[compiler->numLocals];
+  local->name = name;
+  local->length = length;
+  local->depth = compiler->scopeDepth;
+  local->isUpvalue = false;
+  return compiler->numLocals++;
 }
 
 // Parses a name token and declares a variable in the current scope with that
@@ -822,13 +845,7 @@ static int declareVariable(Compiler* compiler)
     return -1;
   }
 
-  // Define a new local variable in the current scope.
-  Local* local = &compiler->locals[compiler->numLocals];
-  local->name = token->start;
-  local->length = token->length;
-  local->depth = compiler->scopeDepth;
-  local->isUpvalue = false;
-  return compiler->numLocals++;
+  return defineLocal(compiler, token->start, token->length);
 }
 
 // Stores a variable with the previously defined symbol in the current scope.
@@ -840,8 +857,7 @@ static void defineVariable(Compiler* compiler, int symbol)
 
   // It's a global variable, so store the value in the global slot and then
   // discard the temporary for the initializer.
-  emit(compiler, CODE_STORE_GLOBAL);
-  emit(compiler, symbol);
+  emit1(compiler, CODE_STORE_GLOBAL, symbol);
   emit(compiler, CODE_POP);
 }
 
@@ -1020,22 +1036,20 @@ static void endCompiler(Compiler* compiler, int constant)
     // We can just load and run the function directly.
     if (compiler->fn->numUpvalues == 0)
     {
-      emit(compiler->parent, CODE_CONSTANT);
-      emit(compiler->parent, constant);
+      emit1(compiler->parent, CODE_CONSTANT, constant);
     }
     else
     {
       // Capture the upvalues in the new closure object.
-      emit(compiler->parent, CODE_CLOSURE);
-      emit(compiler->parent, constant);
+      emit1(compiler->parent, CODE_CLOSURE, constant);
 
       // Emit arguments for each upvalue to know whether to capture a local or
       // an upvalue.
       // TODO: Do something more efficient here?
       for (int i = 0; i < compiler->fn->numUpvalues; i++)
       {
-        emit(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0);
-        emit(compiler->parent, compiler->upvalues[i].index);
+        emit1(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0,
+              compiler->upvalues[i].index);
       }
     }
   }
@@ -1167,8 +1181,7 @@ static void methodCall(Compiler* compiler, Code instruction,
 
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
-  emit(compiler, instruction + numArgs);
-  emit(compiler, symbol);
+  emit1(compiler, instruction + numArgs, symbol);
 }
 
 // Compiles an expression that starts with ".name". That includes getters,
@@ -1192,8 +1205,7 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
     expression(compiler);
 
     int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
-    emit(compiler, instruction + 1);
-    emit(compiler, symbol);
+    emit1(compiler, instruction + 1, symbol);
   }
   else
   {
@@ -1207,8 +1219,7 @@ static void loadThis(Compiler* compiler)
 {
   Code loadInstruction;
   int index = resolveName(compiler, "this", 4, &loadInstruction);
-  emit(compiler, loadInstruction);
-  emit(compiler, index);
+  emit1(compiler, loadInstruction, index);
 }
 
 static void grouping(Compiler* compiler, bool allowAssignment)
@@ -1236,9 +1247,8 @@ static void list(Compiler* compiler, bool allowAssignment)
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after list elements.");
 
   // Create the list.
-  emit(compiler, CODE_LIST);
   // TODO: Handle lists >255 elements.
-  emit(compiler, numElements);
+  emit1(compiler, CODE_LIST, numElements);
 }
 
 // Unary operators like `-foo`.
@@ -1251,20 +1261,13 @@ static void unaryOp(Compiler* compiler, bool allowAssignment)
 
   // Call the operator method on the left-hand side.
   int symbol = ensureSymbol(&compiler->parser->vm->methods, rule->name, 1);
-  emit(compiler, CODE_CALL_0);
-  emit(compiler, symbol);
+  emit1(compiler, CODE_CALL_0, symbol);
 }
 
 static void boolean(Compiler* compiler, bool allowAssignment)
 {
-  if (compiler->parser->previous.type == TOKEN_FALSE)
-  {
-    emit(compiler, CODE_FALSE);
-  }
-  else
-  {
-    emit(compiler, CODE_TRUE);
-  }
+  emit(compiler,
+       compiler->parser->previous.type == TOKEN_FALSE ? CODE_FALSE : CODE_TRUE);
 }
 
 static void function(Compiler* compiler, bool allowAssignment)
@@ -1323,12 +1326,12 @@ static void field(Compiler* compiler, bool allowAssignment)
     // If we're directly inside a method, use a more optimal instruction.
     if (compiler->methodName != NULL)
     {
-      emit(compiler, CODE_STORE_FIELD_THIS);
+      emit1(compiler, CODE_STORE_FIELD_THIS, field);
     }
     else
     {
       loadThis(compiler);
-      emit(compiler, CODE_STORE_FIELD);
+      emit1(compiler, CODE_STORE_FIELD, field);
     }
   }
   else
@@ -1336,16 +1339,14 @@ static void field(Compiler* compiler, bool allowAssignment)
     // If we're directly inside a method, use a more optimal instruction.
     if (compiler->methodName != NULL)
     {
-      emit(compiler, CODE_LOAD_FIELD_THIS);
+      emit1(compiler, CODE_LOAD_FIELD_THIS, field);
     }
     else
     {
       loadThis(compiler);
-      emit(compiler, CODE_LOAD_FIELD);
+      emit1(compiler, CODE_LOAD_FIELD, field);
     }
   }
-
-  emit(compiler, field);
 }
 
 static void name(Compiler* compiler, bool allowAssignment)
@@ -1369,19 +1370,17 @@ static void name(Compiler* compiler, bool allowAssignment)
     // Emit the store instruction.
     switch (loadInstruction)
     {
-      case CODE_LOAD_LOCAL: emit(compiler, CODE_STORE_LOCAL); break;
-      case CODE_LOAD_UPVALUE: emit(compiler, CODE_STORE_UPVALUE); break;
-      case CODE_LOAD_GLOBAL: emit(compiler, CODE_STORE_GLOBAL); break;
+      case CODE_LOAD_LOCAL: emit1(compiler, CODE_STORE_LOCAL, index); break;
+      case CODE_LOAD_UPVALUE: emit1(compiler, CODE_STORE_UPVALUE, index); break;
+      case CODE_LOAD_GLOBAL: emit1(compiler, CODE_STORE_GLOBAL, index); break;
       default:
         UNREACHABLE();
     }
   }
   else
   {
-    emit(compiler, loadInstruction);
+    emit1(compiler, loadInstruction, index);
   }
-
-  emit(compiler, index);
 }
 
 static void null(Compiler* compiler, bool allowAssignment)
@@ -1406,8 +1405,7 @@ static void number(Compiler* compiler, bool allowAssignment)
   int constant = addConstant(compiler, NUM_VAL(value));
 
   // Compile the code to load the constant.
-  emit(compiler, CODE_CONSTANT);
-  emit(compiler, constant);
+  emit1(compiler, CODE_CONSTANT, constant);
 }
 
 static void string(Compiler* compiler, bool allowAssignment)
@@ -1417,8 +1415,7 @@ static void string(Compiler* compiler, bool allowAssignment)
       compiler->parser->currentString, compiler->parser->currentStringLength));
 
   // Compile the code to load the constant.
-  emit(compiler, CODE_CONSTANT);
-  emit(compiler, constant);
+  emit1(compiler, CODE_CONSTANT, constant);
 }
 
 // Returns true if [compiler] is compiling a chunk of code that is either
@@ -1543,8 +1540,7 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
 
   // Compile the method call.
-  emit(compiler, CODE_CALL_0 + numArgs);
-  emit(compiler, symbol);
+  emit1(compiler, CODE_CALL_0 + numArgs, symbol);
 }
 
 void call(Compiler* compiler, bool allowAssignment)
@@ -1563,22 +1559,16 @@ void is(Compiler* compiler, bool allowAssignment)
 void and(Compiler* compiler, bool allowAssignment)
 {
   // Skip the right argument if the left is false.
-  emit(compiler, CODE_AND);
-  int jump = emit(compiler, 255);
-
+  int jump = emit1(compiler, CODE_AND, 255);
   parsePrecedence(compiler, false, PREC_LOGIC);
-
   patchJump(compiler, jump);
 }
 
 void or(Compiler* compiler, bool allowAssignment)
 {
   // Skip the right argument if the left is true.
-  emit(compiler, CODE_OR);
-  int jump = emit(compiler, 255);
-
+  int jump = emit1(compiler, CODE_OR, 255);
   parsePrecedence(compiler, false, PREC_LOGIC);
-
   patchJump(compiler, jump);
 }
 
@@ -1592,8 +1582,7 @@ void infixOp(Compiler* compiler, bool allowAssignment)
   // Call the operator method on the left-hand side.
   int symbol = ensureSymbol(&compiler->parser->vm->methods,
                             rule->name, strlen(rule->name));
-  emit(compiler, CODE_CALL_1);
-  emit(compiler, symbol);
+  emit1(compiler, CODE_CALL_1, symbol);
 }
 
 // Compiles a method signature for an infix operator.
@@ -1701,6 +1690,7 @@ GrammarRule rules[] =
   /* TOKEN_FN            */ PREFIX(function),
   /* TOKEN_FOR           */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
+  /* TOKEN_IN            */ UNUSED,
   /* TOKEN_IS            */ INFIX(PREC_IS, is),
   /* TOKEN_NEW           */ { new_, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_NULL          */ PREFIX(null),
@@ -1776,8 +1766,7 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
   if (isConstructor)
   {
     // The receiver is always stored in the first local slot.
-    emit(&methodCompiler, CODE_LOAD_LOCAL);
-    emit(&methodCompiler, 0);
+    emit1(&methodCompiler, CODE_LOAD_LOCAL, 0);
   }
   else
   {
@@ -1790,8 +1779,7 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
   endCompiler(&methodCompiler, constant);
 
   // Compile the code to define the method.
-  emit(compiler, instruction);
-  emit(compiler, symbol);
+  emit1(compiler, instruction, symbol);
 }
 
 // Parses a curly block or an expression statement. Used in places like the
@@ -1849,32 +1837,15 @@ static int getNumArguments(ObjFn* fn, int ip)
   }
 }
 
-static void whileStatement(Compiler* compiler)
+static int startLoopBody(Compiler* compiler)
 {
-  // Remember what instruction to loop back to.
-  int loopStart = compiler->numCodes - 1;
-
-  // Compile the condition.
-  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
-  expression(compiler);
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
-
-  emit(compiler, CODE_JUMP_IF);
-  int exitJump = emit(compiler, 255);
-
-  // Compile the body.
   int outerLoopBody = compiler->loopBody;
   compiler->loopBody = compiler->numCodes;
+  return outerLoopBody;
+}
 
-  block(compiler);
-
-  // Loop back to the top.
-  emit(compiler, CODE_LOOP);
-  int loopOffset = compiler->numCodes - loopStart;
-  emit(compiler, loopOffset);
-
-  patchJump(compiler, exitJump);
-
+static void endLoopBody(Compiler* compiler, int outerLoopBody)
+{
   // Find any break placeholder instructions (which will be CODE_END in the
   // bytecode) and replace them with real jumps.
   int i = compiler->loopBody;
@@ -1896,6 +1867,137 @@ static void whileStatement(Compiler* compiler)
   compiler->loopBody = outerLoopBody;
 }
 
+static void forStatement(Compiler* compiler)
+{
+  // A for statement like:
+  //
+  //     for (i in sequence.expression) {
+  //       IO.write(i)
+  //     }
+  //
+  // Is compiled to bytecode almost as if the source looked like this:
+  //
+  //     {
+  //       var seq_ = sequence.expression
+  //       var iter_
+  //       while (true) {
+  //         iter_ = seq_.iterate(iter_)
+  //         if (!iter_) break
+  //         var i = set_.iteratorValue(iter_)
+  //         IO.write(i)
+  //       }
+  //     }
+  //
+  // It's not exactly this, because the synthetic variables `seq_` and `iter_`
+  // actually get names that aren't valid Wren identfiers. Also, the `while`
+  // and `break` are just the bytecode for explicit loops and jumps. But that's
+  // the basic idea.
+  //
+  // The important parts are:
+  // - The sequence expression is only evaluated once.
+  // - The .iterate() method is used to advance the iterator and determine if
+  //   it should exit the loop.
+  // - The .iteratorValue() method is used to get the value at the current
+  //   iterator position.
+
+  // Create a scope for the hidden local variables used for the iterator.
+  pushScope(compiler);
+
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+  consume(compiler, TOKEN_NAME, "Expect for loop variable name.");
+
+  // Remember the name of the loop variable.
+  const char* name = compiler->parser->previous.start;
+  int length = compiler->parser->previous.length;
+
+  consume(compiler, TOKEN_IN, "Expect 'in' after loop variable.");
+
+  // Evaluate the sequence expression and store it in a hidden local variable.
+  // The space in the variable name ensures it won't collide with a user-defined
+  // variable.
+  expression(compiler);
+  int seqSlot = defineLocal(compiler, "seq ", 4);
+
+  // Create another hidden local for the iterator object.
+  null(compiler, false);
+  int iterSlot = defineLocal(compiler, "iter ", 5);
+
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
+
+  // Remember what instruction to loop back to.
+  int loopStart = compiler->numCodes - 1;
+
+  // Advance the iterator by calling the ".iterate" method on the sequence.
+  emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
+  emit1(compiler, CODE_LOAD_LOCAL, iterSlot);
+
+  int iterateSymbol = ensureSymbol(&compiler->parser->vm->methods,
+                                   "iterate ", 8);
+  emit1(compiler, CODE_CALL_1, iterateSymbol);
+
+  // Store the iterator back in its local for the next iteration.
+  emit1(compiler, CODE_STORE_LOCAL, iterSlot);
+  // TODO: We can probably get this working with a bit less stack juggling.
+
+  // If it returned something falsy, jump out of the loop.
+  int exitJump = emit1(compiler, CODE_JUMP_IF, 255);
+
+  // Create a scope for the loop body.
+  pushScope(compiler);
+
+  // Get the current value in the sequence by calling ".iteratorValue".
+  emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
+  emit1(compiler, CODE_LOAD_LOCAL, iterSlot);
+
+  int iteratorValueSymbol = ensureSymbol(&compiler->parser->vm->methods,
+                                         "iteratorValue ", 14);
+  emit1(compiler, CODE_CALL_1, iteratorValueSymbol);
+
+  // Bind it to the loop variable.
+  defineLocal(compiler, name, length);
+
+  // Compile the body.
+  int outerLoopBody = startLoopBody(compiler);
+  block(compiler);
+
+  popScope(compiler);
+
+  // Loop back to the top.
+  emit(compiler, CODE_LOOP);
+  int loopOffset = compiler->numCodes - loopStart;
+  emit(compiler, loopOffset);
+
+  patchJump(compiler, exitJump);
+  endLoopBody(compiler, outerLoopBody);
+
+  popScope(compiler);
+}
+
+static void whileStatement(Compiler* compiler)
+{
+  // Remember what instruction to loop back to.
+  int loopStart = compiler->numCodes - 1;
+
+  // Compile the condition.
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+  expression(compiler);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
+
+  int exitJump = emit1(compiler, CODE_JUMP_IF, 255);
+
+  // Compile the body.
+  int outerLoopBody = startLoopBody(compiler);
+  block(compiler);
+
+  // Loop back to the top.
+  emit(compiler, CODE_LOOP);
+  int loopOffset = compiler->numCodes - loopStart;
+  emit(compiler, loopOffset);
+
+  patchJump(compiler, exitJump);
+  endLoopBody(compiler, outerLoopBody);
+}
+
 // Compiles a statement. These can only appear at the top-level or within
 // curly blocks. Unlike expressions, these do not leave a value on the stack.
 void statement(Compiler* compiler)
@@ -1912,10 +2014,11 @@ void statement(Compiler* compiler)
     // replace these with `CODE_JUMP` instructions with appropriate offsets.
     // We use `CODE_END` here because that can't occur in the middle of
     // bytecode.
-    emit(compiler, CODE_END);
-    emit(compiler, 0);
+    emit1(compiler, CODE_END, 0);
     return;
   }
+
+  if (match(compiler, TOKEN_FOR)) return forStatement(compiler);
 
   if (match(compiler, TOKEN_IF))
   {
@@ -1925,8 +2028,7 @@ void statement(Compiler* compiler)
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
 
     // Jump to the else branch if the condition is false.
-    emit(compiler, CODE_JUMP_IF);
-    int ifJump = emit(compiler, 255);
+    int ifJump = emit1(compiler, CODE_JUMP_IF, 255);
 
     // Compile the then branch.
     block(compiler);
@@ -1935,8 +2037,7 @@ void statement(Compiler* compiler)
     if (match(compiler, TOKEN_ELSE))
     {
       // Jump over the else branch when the if branch is taken.
-      emit(compiler, CODE_JUMP);
-      int elseJump = emit(compiler, 255);
+      int elseJump = emit1(compiler, CODE_JUMP, 255);
 
       patchJump(compiler, ifJump);
       
@@ -1964,11 +2065,7 @@ void statement(Compiler* compiler)
     return;
   }
 
-  if (match(compiler, TOKEN_WHILE))
-  {
-    whileStatement(compiler);
-    return;
-  }
+  if (match(compiler, TOKEN_WHILE)) return whileStatement(compiler);
 
   // Expression statement.
   expression(compiler);
@@ -2052,36 +2149,32 @@ static void classDefinition(Compiler* compiler)
   defineVariable(compiler, symbol);
 }
 
+static void variableDefinition(Compiler* compiler)
+{
+  // TODO: Variable should not be in scope until after initializer.
+  int symbol = declareVariable(compiler);
+
+  // Compile the initializer.
+  if (match(compiler, TOKEN_EQ))
+  {
+    expression(compiler);
+  }
+  else
+  {
+    // Default initialize it to null.
+    null(compiler, false);
+  }
+
+  defineVariable(compiler, symbol);
+}
+
 // Compiles a "definition". These are the statements that bind new variables.
 // They can only appear at the top level of a block and are prohibited in places
 // like the non-curly body of an if or while.
 void definition(Compiler* compiler)
 {
-  if (match(compiler, TOKEN_CLASS))
-  {
-    classDefinition(compiler);
-    return;
-  }
-
-  if (match(compiler, TOKEN_VAR))
-  {
-    // TODO: Variable should not be in scope until after initializer.
-    int symbol = declareVariable(compiler);
-
-    // Compile the initializer.
-    if (match(compiler, TOKEN_EQ))
-    {
-      expression(compiler);
-    }
-    else
-    {
-      // Default initialize it to null.
-      null(compiler, false);
-    }
-
-    defineVariable(compiler, symbol);
-    return;
-  }
+  if (match(compiler, TOKEN_CLASS)) return classDefinition(compiler);
+  if (match(compiler, TOKEN_VAR)) return variableDefinition(compiler);
 
   block(compiler);
 }

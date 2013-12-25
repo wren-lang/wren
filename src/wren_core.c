@@ -197,6 +197,30 @@ DEF_NATIVE(list_insert)
   return args[1];
 }
 
+DEF_NATIVE(list_iterate)
+{
+  // If we're starting the iteration, return the first index.
+  if (IS_NULL(args[1])) return NUM_VAL(0);
+
+  ObjList* list = AS_LIST(args[0]);
+  double index = AS_NUM(args[1]);
+  // TODO: Handle arg not a number or not an integer.
+
+  // Stop if we're out of elements.
+  if (index >= list->count - 1) return FALSE_VAL;
+
+  // Otherwise, move to the next index.
+  return NUM_VAL(index + 1);
+}
+
+DEF_NATIVE(list_iteratorValue)
+{
+  ObjList* list = AS_LIST(args[0]);
+  double index = AS_NUM(args[1]);
+  // TODO: Handle index out of bounds or not integer.
+  return list->elements[(int)index];
+}
+
 DEF_NATIVE(list_removeAt)
 {
   ObjList* list = AS_LIST(args[0]);
@@ -599,6 +623,8 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "clear", list_clear);
   NATIVE(vm->listClass, "count", list_count);
   NATIVE(vm->listClass, "insert  ", list_insert);
+  NATIVE(vm->listClass, "iterate ", list_iterate);
+  NATIVE(vm->listClass, "iteratorValue ", list_iteratorValue);
   NATIVE(vm->listClass, "removeAt ", list_removeAt);
   NATIVE(vm->listClass, "[ ]", list_subscript);
   NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);

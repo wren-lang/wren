@@ -689,6 +689,19 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
   #define CASE_CODE(name)   code_##name
   #define DISPATCH()        goto *dispatchTable[instruction = *ip++]
 
+  // If you want to debug the VM and see the stack as each instruction is
+  // executed, uncomment this.
+  // TODO: Use a #define to enable/disable this.
+  /*
+  #define DISPATCH() \
+    { \
+      wrenDebugDumpStack(fiber); \
+      wrenDebugDumpInstruction(vm, fn, (int)(ip - fn->bytecode)); \
+      instruction = *ip++; \
+      goto *dispatchTable[instruction]; \
+    }
+  */
+
   #else
 
   #define INTERPRET_LOOP    for (;;) switch (instruction = *ip++)
@@ -1015,6 +1028,7 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(CLOSE_UPVALUE):
       closeUpvalue(fiber);
+      POP();
       DISPATCH();
 
     CASE_CODE(NEW):

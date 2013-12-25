@@ -26,8 +26,8 @@ Some people like to see all of the reserved words in a programming language in
 one lump. If you're one of those folks, here you go:
 
     :::wren
-    class else false fn for if is null
-    return static this true var while
+    break class else false fn for if in is
+    null return static this true var while
 
 ## Statement terminators
 
