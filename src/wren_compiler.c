@@ -2244,84 +2244,6 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
     Code instruction = fn->bytecode[ip++];
     switch (instruction)
     {
-        // Instructions with no arguments:
-      case CODE_NULL:
-      case CODE_FALSE:
-      case CODE_TRUE:
-      case CODE_POP:
-      case CODE_IS:
-      case CODE_CLOSE_UPVALUE:
-      case CODE_RETURN:
-      case CODE_NEW:
-        break;
-
-        // Instructions with one argument:
-      case CODE_CONSTANT:
-      case CODE_LOAD_LOCAL:
-      case CODE_STORE_LOCAL:
-      case CODE_LOAD_UPVALUE:
-      case CODE_STORE_UPVALUE:
-      case CODE_LOAD_GLOBAL:
-      case CODE_STORE_GLOBAL:
-      case CODE_CALL_0:
-      case CODE_CALL_1:
-      case CODE_CALL_2:
-      case CODE_CALL_3:
-      case CODE_CALL_4:
-      case CODE_CALL_5:
-      case CODE_CALL_6:
-      case CODE_CALL_7:
-      case CODE_CALL_8:
-      case CODE_CALL_9:
-      case CODE_CALL_10:
-      case CODE_CALL_11:
-      case CODE_CALL_12:
-      case CODE_CALL_13:
-      case CODE_CALL_14:
-      case CODE_CALL_15:
-      case CODE_CALL_16:
-      case CODE_SUPER_0:
-      case CODE_SUPER_1:
-      case CODE_SUPER_2:
-      case CODE_SUPER_3:
-      case CODE_SUPER_4:
-      case CODE_SUPER_5:
-      case CODE_SUPER_6:
-      case CODE_SUPER_7:
-      case CODE_SUPER_8:
-      case CODE_SUPER_9:
-      case CODE_SUPER_10:
-      case CODE_SUPER_11:
-      case CODE_SUPER_12:
-      case CODE_SUPER_13:
-      case CODE_SUPER_14:
-      case CODE_SUPER_15:
-      case CODE_SUPER_16:
-      case CODE_JUMP:
-      case CODE_LOOP:
-      case CODE_JUMP_IF:
-      case CODE_AND:
-      case CODE_OR:
-      case CODE_LIST:
-      case CODE_CLASS:
-      case CODE_SUBCLASS:
-        ip++;
-        break;
-
-        // Instructions with two arguments:
-      case CODE_METHOD_INSTANCE:
-      case CODE_METHOD_STATIC:
-        ip += 2;
-        break;
-
-      case CODE_CLOSURE:
-      {
-        int constant = fn->bytecode[ip++];
-        ObjFn* loadedFn = AS_FN(fn->constants[constant]);
-        ip += loadedFn->numUpvalues;
-        break;
-      }
-
       case CODE_LOAD_FIELD:
       case CODE_STORE_FIELD:
       case CODE_LOAD_FIELD_THIS:
@@ -2334,7 +2256,8 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
         return;
 
       default:
-        ASSERT(0, "Unknown instruction.");
+        // Other instructions are unaffected, so just skip over them.
+        ip += getNumArguments(fn, ip - 1);
         break;
     }
   }
