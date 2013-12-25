@@ -70,6 +70,31 @@ const char* coreLibSource =
 "    result = result + \"]\"\n"
 "    return result\n"
 "  }\n"
+"}\n"
+"\n"
+"class Range {\n"
+"  new(min, max) {\n"
+"    _min = min\n"
+"    _max = max\n"
+"  }\n"
+"\n"
+"  min { return _min }\n"
+"  max { return _max }\n"
+"\n"
+"  iterate(previous) {\n"
+"    if (previous == null) return _min\n"
+"    if (previous == _max) return false\n"
+"    return previous + 1\n"
+"  }\n"
+"\n"
+"  iteratorValue(iterator) {\n"
+"    return iterator\n"
+"  }\n"
+"}\n"
+"\n"
+"class Num {\n"
+"  .. other { return new Range(this, other) }\n"
+"  ... other { return new Range(this, other - 1) }\n"
 "}\n";
 
 DEF_NATIVE(bool_not)
@@ -584,26 +609,6 @@ void wrenInitializeCore(WrenVM* vm)
   vm->nullClass = defineClass(vm, "Null");
   NATIVE(vm->nullClass, "toString", null_toString);
 
-  vm->numClass = defineClass(vm, "Num");
-  NATIVE(vm->numClass, "abs", num_abs);
-  NATIVE(vm->numClass, "toString", num_toString)
-  NATIVE(vm->numClass, "-", num_negate);
-  NATIVE(vm->numClass, "- ", num_minus);
-  NATIVE(vm->numClass, "+ ", num_plus);
-  NATIVE(vm->numClass, "* ", num_multiply);
-  NATIVE(vm->numClass, "/ ", num_divide);
-  NATIVE(vm->numClass, "% ", num_mod);
-  NATIVE(vm->numClass, "< ", num_lt);
-  NATIVE(vm->numClass, "> ", num_gt);
-  NATIVE(vm->numClass, "<= ", num_lte);
-  NATIVE(vm->numClass, ">= ", num_gte);
-  NATIVE(vm->numClass, "~", num_bitwiseNot);
-
-  // These are defined just so that 0 and -0 are equal, which is specified by
-  // IEEE 754 even though they have different bit representations.
-  NATIVE(vm->numClass, "== ", num_eqeq);
-  NATIVE(vm->numClass, "!= ", num_bangeq);
-
   vm->stringClass = defineClass(vm, "String");
   NATIVE(vm->stringClass, "contains ", string_contains);
   NATIVE(vm->stringClass, "count", string_count);
@@ -628,6 +633,26 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "removeAt ", list_removeAt);
   NATIVE(vm->listClass, "[ ]", list_subscript);
   NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
+
+  vm->numClass = AS_CLASS(findGlobal(vm, "Num"));
+  NATIVE(vm->numClass, "abs", num_abs);
+  NATIVE(vm->numClass, "toString", num_toString)
+  NATIVE(vm->numClass, "-", num_negate);
+  NATIVE(vm->numClass, "- ", num_minus);
+  NATIVE(vm->numClass, "+ ", num_plus);
+  NATIVE(vm->numClass, "* ", num_multiply);
+  NATIVE(vm->numClass, "/ ", num_divide);
+  NATIVE(vm->numClass, "% ", num_mod);
+  NATIVE(vm->numClass, "< ", num_lt);
+  NATIVE(vm->numClass, "> ", num_gt);
+  NATIVE(vm->numClass, "<= ", num_lte);
+  NATIVE(vm->numClass, ">= ", num_gte);
+  NATIVE(vm->numClass, "~", num_bitwiseNot);
+
+  // These are defined just so that 0 and -0 are equal, which is specified by
+  // IEEE 754 even though they have different bit representations.
+  NATIVE(vm->numClass, "== ", num_eqeq);
+  NATIVE(vm->numClass, "!= ", num_bangeq);
 
   ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
   NATIVE(ioClass->metaclass, "write__native__ ", io_writeString);

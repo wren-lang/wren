@@ -29,14 +29,21 @@ class NthToggle is Toggle {
 }
 
 var start = OS.clock
-var n = 1000000
-var i = 0
+var n = 100000
 var val = true
 var toggle = new Toggle(val)
 
-while (i < n) {
+for (i in 0...n) {
   val = toggle.activate.value
-  i = i + 1
+  val = toggle.activate.value
+  val = toggle.activate.value
+  val = toggle.activate.value
+  val = toggle.activate.value
+  val = toggle.activate.value
+  val = toggle.activate.value
+  val = toggle.activate.value
+  val = toggle.activate.value
+  val = toggle.activate.value
 }
 
 IO.write(toggle.value)
@@ -44,10 +51,17 @@ IO.write(toggle.value)
 val = true
 var ntoggle = new NthToggle(val, 3)
 
-i = 0
-while (i < n) {
+for (i in 0...n) {
   val = ntoggle.activate.value
-  i = i + 1
+  val = ntoggle.activate.value
+  val = ntoggle.activate.value
+  val = ntoggle.activate.value
+  val = ntoggle.activate.value
+  val = ntoggle.activate.value
+  val = ntoggle.activate.value
+  val = ntoggle.activate.value
+  val = ntoggle.activate.value
+  val = ntoggle.activate.value
 }
 
 IO.write(ntoggle.value)

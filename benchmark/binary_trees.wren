@@ -33,10 +33,8 @@ var longLivedTree = new Tree(0, maxDepth)
 
 // iterations = 2 ** maxDepth
 var iterations = 1
-var d = 0
-while (d < maxDepth) {
+for (d in 0...maxDepth) {
   iterations = iterations * 2
-  d = d + 1
 }
 
 var depth = minDepth

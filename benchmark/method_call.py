@@ -29,11 +29,20 @@ class NthToggle(Toggle):
 def main():
     start = time.clock()
 
-    NUM = 1000000
+    NUM = 100000
 
     val = 1
     toggle = Toggle(val)
     for i in xrange(0,NUM):
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
         val = toggle.activate().value()
     if val:
         print "true"
@@ -43,6 +52,15 @@ def main():
     val = 1
     ntoggle = NthToggle(val, 3)
     for i in xrange(0,NUM):
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
         val = ntoggle.activate().value()
     if val:
         print "true"

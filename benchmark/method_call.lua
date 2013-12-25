@@ -54,11 +54,20 @@ end
 
 function main ()
   local start = os.clock()
-  local N = 1000000
+  local N = 100000
 
   local val = 1
   local toggle = Toggle:new(val)
   for i=1,N do
+    val = toggle:activate():value()
+    val = toggle:activate():value()
+    val = toggle:activate():value()
+    val = toggle:activate():value()
+    val = toggle:activate():value()
+    val = toggle:activate():value()
+    val = toggle:activate():value()
+    val = toggle:activate():value()
+    val = toggle:activate():value()
     val = toggle:activate():value()
   end
   print(val and "true" or "false")
@@ -66,6 +75,15 @@ function main ()
   val = 1
   local ntoggle = NthToggle:new(val, 3)
   for i=1,N do
+    val = ntoggle:activate():value()
+    val = ntoggle:activate():value()
+    val = ntoggle:activate():value()
+    val = ntoggle:activate():value()
+    val = ntoggle:activate():value()
+    val = ntoggle:activate():value()
+    val = ntoggle:activate():value()
+    val = ntoggle:activate():value()
+    val = ntoggle:activate():value()
     val = ntoggle:activate():value()
   end
   print(val and "true" or "false")

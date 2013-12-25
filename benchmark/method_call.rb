@@ -39,11 +39,20 @@ end
 def main()
     start = Time.now
 
-    n = 1000000
+    n = 100000
 
     val = 1
     toggle = Toggle.new(val)
     n.times do
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
+        val = toggle.activate().value()
         val = toggle.activate().value()
     end
     if val then puts "true" else puts "false" end
@@ -51,6 +60,15 @@ def main()
     val = 1
     ntoggle = NthToggle.new(val, 3)
     n.times do
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
+        val = ntoggle.activate().value()
         val = ntoggle.activate().value()
     end
     if val then puts "true" else puts "false" end

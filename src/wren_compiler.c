@@ -56,6 +56,8 @@ typedef enum
   TOKEN_RIGHT_BRACE,
   TOKEN_COLON,
   TOKEN_DOT,
+  TOKEN_DOTDOT,
+  TOKEN_DOTDOTDOT,
   TOKEN_COMMA,
   TOKEN_STAR,
   TOKEN_SLASH,
@@ -573,7 +575,24 @@ static void readRawToken(Parser* parser)
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
       case ';': makeToken(parser, TOKEN_LINE); return;
       case ':': makeToken(parser, TOKEN_COLON); return;
-      case '.': makeToken(parser, TOKEN_DOT); return;
+      case '.':
+        if (peekChar(parser) == '.')
+        {
+          nextChar(parser);
+          if (peekChar(parser) == '.')
+          {
+            nextChar(parser);
+            makeToken(parser, TOKEN_DOTDOTDOT);
+            return;
+          }
+
+          makeToken(parser, TOKEN_DOTDOT);
+          return;
+        }
+
+        makeToken(parser, TOKEN_DOT);
+        return;
+
       case ',': makeToken(parser, TOKEN_COMMA); return;
       case '*': makeToken(parser, TOKEN_STAR); return;
       case '%': makeToken(parser, TOKEN_PERCENT); return;
@@ -697,6 +716,8 @@ static void nextToken(Parser* parser)
       case TOKEN_LEFT_BRACKET:
       case TOKEN_LEFT_BRACE:
       case TOKEN_DOT:
+      case TOKEN_DOTDOT:
+      case TOKEN_DOTDOTDOT:
       case TOKEN_COMMA:
       case TOKEN_STAR:
       case TOKEN_SLASH:
@@ -1066,6 +1087,7 @@ typedef enum
   PREC_IS,         // is
   PREC_EQUALITY,   // == !=
   PREC_COMPARISON, // < > <= >=
+  PREC_RANGE,      // .. ...
   PREC_BITWISE,    // | &
   PREC_TERM,       // + -
   PREC_FACTOR,     // * / %
@@ -1664,6 +1686,8 @@ GrammarRule rules[] =
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
   /* TOKEN_COLON         */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
+  /* TOKEN_DOTDOT        */ INFIX_OPERATOR(PREC_RANGE, ".. "),
+  /* TOKEN_DOTDOTDOT     */ INFIX_OPERATOR(PREC_RANGE, "... "),
   /* TOKEN_COMMA         */ UNUSED,
   /* TOKEN_STAR          */ INFIX_OPERATOR(PREC_FACTOR, "* "),
   /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/ "),

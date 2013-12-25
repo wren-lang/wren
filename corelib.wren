@@ -21,3 +21,28 @@ class List {
     return result
   }
 }
+
+class Range {
+  new(min, max) {
+    _min = min
+    _max = max
+  }
+
+  min { return _min }
+  max { return _max }
+
+  iterate(previous) {
+    if (previous == null) return _min
+    if (previous == _max) return false
+    return previous + 1
+  }
+
+  iteratorValue(iterator) {
+    return iterator
+  }
+}
+
+class Num {
+  .. other { return new Range(this, other) }
+  ... other { return new Range(this, other - 1) }
+}
