@@ -133,7 +133,7 @@ typedef struct
   unsigned char* ip;
 
   // The function or closure being executed.
-  Value fn;
+  Obj* fn;
 
   // Index of the first stack slot used by this call frame. This will contain
   // the receiver, followed by the function's parameters, then local variables
@@ -214,7 +214,7 @@ typedef struct
     FiberPrimitive fiberPrimitive;
 
     // May be a [ObjFn] or [ObjClosure].
-    Value fn;
+    Obj* fn;
   };
 } Method;
 

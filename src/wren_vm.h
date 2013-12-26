@@ -275,7 +275,7 @@ Value findGlobal(WrenVM* vm, const char* name);
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
 // [function] can be an `ObjFn` or `ObjClosure`.
-void wrenCallFunction(ObjFiber* fiber, Value function, int numArgs);
+void wrenCallFunction(ObjFiber* fiber, Obj* function, int numArgs);
 
 // Mark [obj] as a GC root so that it doesn't get collected. Initializes
 // [pinned], which must be then passed to [unpinObj].

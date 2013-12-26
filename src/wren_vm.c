@@ -118,6 +118,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 }
 
 static void markValue(WrenVM* vm, Value value);
+static void markObj(WrenVM* vm, Obj* obj);
 
 static void markClass(WrenVM* vm, ObjClass* classObj)
 {
@@ -136,7 +137,7 @@ static void markClass(WrenVM* vm, ObjClass* classObj)
   {
     if (classObj->methods[i].type == METHOD_BLOCK)
     {
-      markValue(vm, classObj->methods[i].fn);
+      markObj(vm, classObj->methods[i].fn);
     }
   }
 
@@ -228,7 +229,7 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
   // Stack functions.
   for (int k = 0; k < fiber->numFrames; k++)
   {
-    markValue(vm, fiber->frames[k].fn);
+    markObj(vm, fiber->frames[k].fn);
   }
 
   // Stack variables.
@@ -280,7 +281,7 @@ static void markString(WrenVM* vm, ObjString* string)
   vm->bytesAllocated += strlen(string->value);
 }
 
-static void markObj(WrenVM* vm, Obj* obj)
+void markObj(WrenVM* vm, Obj* obj)
 {
   #if WREN_TRACE_MEMORY
   static int indent = 0;
@@ -330,10 +331,6 @@ static void freeObj(WrenVM* vm, Obj* obj)
 
   switch (obj->type)
   {
-    case OBJ_CLOSURE:
-      deallocate(vm, ((ObjClosure*)obj)->upvalues);
-      break;
-
     case OBJ_FN:
       deallocate(vm, ((ObjFn*)obj)->bytecode);
       deallocate(vm, ((ObjFn*)obj)->constants);
@@ -348,6 +345,7 @@ static void freeObj(WrenVM* vm, Obj* obj)
       break;
 
     case OBJ_CLASS:
+    case OBJ_CLOSURE:
     case OBJ_INSTANCE:
     case OBJ_UPVALUE:
       break;
@@ -564,13 +562,13 @@ static void bindMethod(int methodType, int symbol, ObjClass* classObj,
   {
     case CODE_METHOD_INSTANCE:
       classObj->methods[symbol].type = METHOD_BLOCK;
-      classObj->methods[symbol].fn = method;
+      classObj->methods[symbol].fn = AS_OBJ(method);
       break;
 
     case CODE_METHOD_STATIC:
       // Statics are defined on the metaclass.
       classObj->metaclass->methods[symbol].type = METHOD_BLOCK;
-      classObj->metaclass->methods[symbol].fn = method;
+      classObj->metaclass->methods[symbol].fn = AS_OBJ(method);
       break;
   }
 }
@@ -600,18 +598,18 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
 
   // Use this after a CallFrame has been pushed or popped to refresh the local
   // variables.
-  #define LOAD_FRAME()                                \
-      frame = &fiber->frames[fiber->numFrames - 1];   \
-      ip = frame->ip;                                 \
-      if (IS_FN(frame->fn))                           \
-      {                                               \
-        fn = AS_FN(frame->fn);                        \
-        upvalues = NULL;                              \
-      }                                               \
-      else                                            \
-      {                                               \
-        fn = AS_CLOSURE(frame->fn)->fn;               \
-        upvalues = AS_CLOSURE(frame->fn)->upvalues;   \
+  #define LOAD_FRAME()                                 \
+      frame = &fiber->frames[fiber->numFrames - 1];    \
+      ip = frame->ip;                                  \
+      if (frame->fn->type == OBJ_FN)                   \
+      {                                                \
+        fn = (ObjFn*)frame->fn;                        \
+        upvalues = NULL;                               \
+      }                                                \
+      else                                             \
+      {                                                \
+        fn = ((ObjClosure*)frame->fn)->fn;             \
+        upvalues = ((ObjClosure*)frame->fn)->upvalues; \
       }
 
   #if WREN_COMPUTED_GOTO
@@ -1169,7 +1167,7 @@ int wrenInterpret(WrenVM* vm, const char* source)
   ObjFn* fn = wrenCompile(vm, source);
   if (fn != NULL)
   {
-    wrenCallFunction(fiber, OBJ_VAL(fn), 0);
+    wrenCallFunction(fiber, (Obj*)fn, 0);
     // TODO: Return error code on runtime errors.
     interpret(vm, fiber);
     result = 0;
@@ -1179,7 +1177,7 @@ int wrenInterpret(WrenVM* vm, const char* source)
   return result;
 }
 
-void wrenCallFunction(ObjFiber* fiber, Value function, int numArgs)
+void wrenCallFunction(ObjFiber* fiber, Obj* function, int numArgs)
 {
   // TODO: Check for stack overflow.
   CallFrame* frame = &fiber->frames[fiber->numFrames];
@@ -1187,13 +1185,13 @@ void wrenCallFunction(ObjFiber* fiber, Value function, int numArgs)
   frame->stackStart = fiber->stackSize - numArgs;
 
   frame->ip = 0;
-  if (IS_FN(function))
+  if (function->type == OBJ_FN)
   {
-    frame->ip = AS_FN(function)->bytecode;
+    frame->ip = ((ObjFn*)function)->bytecode;
   }
   else
   {
-    frame->ip = AS_CLOSURE(function)->fn->bytecode;
+    frame->ip = ((ObjClosure*)function)->fn->bytecode;
   }
 
   fiber->numFrames++;
