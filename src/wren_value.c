@@ -114,7 +114,6 @@ ObjFn* wrenNewFunction(WrenVM* vm)
   // Allocate these before the function in case they trigger a GC which would
   // free the function.
   // TODO: Hack! make variable sized.
-  unsigned char* bytecode = allocate(vm, sizeof(Code) * 1024);
   Value* constants = allocate(vm, sizeof(Value) * 256);
 
   ObjFn* fn = allocate(vm, sizeof(ObjFn));
@@ -122,7 +121,6 @@ ObjFn* wrenNewFunction(WrenVM* vm)
 
   fn->numConstants = 0;
   fn->numUpvalues = 0;
-  fn->bytecode = bytecode;
   fn->constants = constants;
 
   return fn;

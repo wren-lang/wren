@@ -332,7 +332,6 @@ static void freeObj(WrenVM* vm, Obj* obj)
   switch (obj->type)
   {
     case OBJ_FN:
-      deallocate(vm, ((ObjFn*)obj)->bytecode);
       deallocate(vm, ((ObjFn*)obj)->constants);
       break;
 

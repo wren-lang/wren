@@ -168,10 +168,12 @@ typedef struct
   Obj obj;
   int numConstants;
   int numUpvalues;
-  unsigned char* bytecode;
 
   // TODO: Flexible array?
   Value* constants;
+
+  // TODO: Hack! Don't hardcode.
+  unsigned char bytecode[1024];
 } ObjFn;
 
 // An instance of a first-class function and the environment it has closed over.
