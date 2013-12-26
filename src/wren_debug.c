@@ -5,8 +5,8 @@
 int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 {
   int start = i;
-  unsigned char* bytecode = fn->bytecode;
-  unsigned char code = bytecode[i++];
+  uint8_t* bytecode = fn->bytecode;
+  Code code = bytecode[i++];
 
   printf("%04d  ", i);
 

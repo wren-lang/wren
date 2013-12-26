@@ -130,7 +130,7 @@ typedef struct
 {
   // Pointer to the current (really next-to-be-executed) instruction in the
   // function's bytecode.
-  unsigned char* ip;
+  uint8_t* ip;
 
   // The function or closure being executed.
   Obj* fn;
@@ -173,7 +173,7 @@ typedef struct
   Value* constants;
 
   // TODO: Hack! Don't hardcode.
-  unsigned char bytecode[1024];
+  uint8_t bytecode[2048];
 } ObjFn;
 
 // An instance of a first-class function and the environment it has closed over.

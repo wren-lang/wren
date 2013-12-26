@@ -159,7 +159,7 @@ static void markFn(WrenVM* vm, ObjFn* fn)
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFn);
-  vm->bytesAllocated += sizeof(Code) * 1024;
+  vm->bytesAllocated += sizeof(Code) * 2048;
   vm->bytesAllocated += sizeof(Value) * 256;
 }
 
@@ -587,7 +587,7 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
   // but assigned less frequently. Keeping them in locals and updating them when
   // a call frame has been pushed or popped gives a large speed boost.
   register CallFrame* frame;
-  register unsigned char* ip;
+  register uint8_t* ip;
   register ObjFn* fn;
   register Upvalue** upvalues;
 
