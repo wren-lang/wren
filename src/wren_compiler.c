@@ -1068,27 +1068,27 @@ static ObjFn* endCompiler(Compiler* compiler)
 {
   // If we hit an error, don't bother creating the function since it's borked
   // anyway.
-  if (compiler->parser->hasError) return NULL;
+  if (compiler->parser->hasError)
+  {
+    // Free the bytecode since it won't be used.
+    wrenReallocate(compiler->parser->vm, compiler->bytecode, 0, 0);
+    
+    return NULL;
+  }
 
   // Mark the end of the bytecode. Since it may contain multiple early returns,
   // we can't rely on CODE_RETURN to tell us we're at the end.
   emit(compiler, CODE_END);
 
   // Create a function object for the code we just compiled.
-  ObjFn* fn = wrenNewFunction(compiler->parser->vm);
+  ObjFn* fn = wrenNewFunction(compiler->parser->vm,
+                              compiler->constants->elements,
+                              compiler->constants->count,
+                              compiler->numUpvalues,
+                              compiler->bytecode,
+                              compiler->bytecodeLength);
   PinnedObj pinned;
   pinObj(compiler->parser->vm, (Obj*)fn, &pinned);
-
-  // TODO: Temp. Should pass this in to newfunction.
-  for (int i = 0; i < compiler->constants->count; i++)
-  {
-    fn->constants[i] = compiler->constants->elements[i];
-  }
-  fn->numConstants = compiler->constants->count;
-  fn->numUpvalues = compiler->numUpvalues;
-
-  // Copy over the bytecode.
-  memcpy(fn->bytecode, compiler->bytecode, compiler->bytecodeLength);
 
   // In the function that contains this one, load the resulting function object.
   if (compiler->parent != NULL)
@@ -1116,9 +1116,6 @@ static ObjFn* endCompiler(Compiler* compiler)
       }
     }
   }
-
-  // Free the compiler's growable buffer.
-  wrenReallocate(compiler->parser->vm, compiler->bytecode, 0, 0);
 
   // Pop this compiler off the stack.
   wrenSetCompiler(compiler->parser->vm, compiler->parent);

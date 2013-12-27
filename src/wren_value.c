@@ -119,19 +119,33 @@ ObjFiber* wrenNewFiber(WrenVM* vm)
   return fiber;
 }
 
-ObjFn* wrenNewFunction(WrenVM* vm)
+ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
+                       int numUpvalues, u_int8_t* bytecode, int bytecodeLength)
 {
-  // Allocate these before the function in case they trigger a GC which would
+  // Allocate this before the function in case they trigger a GC which would
   // free the function.
-  // TODO: Hack! make variable sized.
-  Value* constants = allocate(vm, sizeof(Value) * 256);
+  Value* copiedConstants = NULL;
+  if (numConstants > 0)
+  {
+    copiedConstants = allocate(vm, sizeof(Value) * numConstants);
+    for (int i = 0; i < numConstants; i++)
+    {
+      copiedConstants[i] = constants[i];
+    }
+  }
 
   ObjFn* fn = allocate(vm, sizeof(ObjFn));
   initObj(vm, &fn->obj, OBJ_FN);
 
-  fn->numConstants = 0;
-  fn->numUpvalues = 0;
-  fn->constants = constants;
+  // TODO: Should eventually copy this instead of taking ownership. When the
+  // compiler grows this, its capacity will often exceed the actual used size.
+  // Copying to an exact-sized buffer will save a bit of memory. I tried doing
+  // this, but it made the "for" benchmark ~15% slower for some unknown reason.
+  fn->bytecode = bytecode;
+  fn->constants = copiedConstants;
+  fn->numUpvalues = numUpvalues;
+  fn->numConstants = numConstants;
+  fn->bytecodeLength = bytecodeLength;
 
   return fn;
 }
@@ -139,7 +153,7 @@ ObjFn* wrenNewFunction(WrenVM* vm)
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
 {
   ObjInstance* instance = allocate(vm,
-                                   sizeof(ObjInstance) + classObj->numFields * sizeof(Value));
+      sizeof(ObjInstance) + classObj->numFields * sizeof(Value));
   initObj(vm, &instance->obj, OBJ_INSTANCE);
   instance->classObj = classObj;
 

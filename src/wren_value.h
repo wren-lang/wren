@@ -166,14 +166,13 @@ typedef void (*FiberPrimitive)(WrenVM* vm, ObjFiber* fiber, Value* args);
 typedef struct
 {
   Obj obj;
-  int numConstants;
-  int numUpvalues;
-
-  // TODO: Flexible array?
+  // TODO: Make one of these a flexible array? I tried each and it didn't seem
+  // to help perf, but it bears more investigation.
   Value* constants;
-
-  // TODO: Hack! Don't hardcode. Make flexible array.
-  uint8_t bytecode[2048];
+  uint8_t* bytecode;
+  int numUpvalues;
+  int numConstants;
+  int bytecodeLength;
 } ObjFn;
 
 // An instance of a first-class function and the environment it has closed over.
@@ -465,9 +464,11 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 // Creates a new fiber object.
 ObjFiber* wrenNewFiber(WrenVM* vm);
 
-// Creates a new function object. Assumes the compiler will fill it in with
-// bytecode, constants, etc.
-ObjFn* wrenNewFunction(WrenVM* vm);
+// Creates a new function object with the given code and constants. The new
+// function will take over ownership of [bytecode]. It will copy [constants]
+// into its own array.
+ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
+                       int numUpvalues, u_int8_t* bytecode, int bytecodeLength);
 
 // Creates a new instance of the given [classObj].
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj);

@@ -72,6 +72,7 @@ void wrenFreeVM(WrenVM* vm)
 {
   clearSymbolTable(&vm->methods);
   clearSymbolTable(&vm->globalSymbols);
+  // TODO: Use VM's allocate fn.
   free(vm);
 }
 
@@ -118,8 +119,8 @@ static void markFn(WrenVM* vm, ObjFn* fn)
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFn);
-  vm->bytesAllocated += sizeof(Code) * 2048;
-  vm->bytesAllocated += sizeof(Value) * 256;
+  vm->bytesAllocated += sizeof(uint8_t) * fn->bytecodeLength;
+  vm->bytesAllocated += sizeof(Value) * fn->numConstants;
 }
 
 static void markInstance(WrenVM* vm, ObjInstance* instance)
@@ -292,6 +293,7 @@ static void freeObj(WrenVM* vm, Obj* obj)
   {
     case OBJ_FN:
       wrenReallocate(vm, ((ObjFn*)obj)->constants, 0, 0);
+      wrenReallocate(vm, ((ObjFn*)obj)->bytecode, 0, 0);
       break;
 
     case OBJ_LIST:
@@ -418,6 +420,7 @@ void clearSymbolTable(SymbolTable* symbols)
 {
   for (int i = 0; i < symbols->count; i++)
   {
+    // TODO: Use VM's allocate fn.
     free(symbols->names[i]);
   }
 }
@@ -427,6 +430,7 @@ void truncateSymbolTable(SymbolTable* symbols, int count)
   ASSERT(count <= symbols->count, "Cannot truncate to larger size.");
   for (int i = count; i < symbols->count; i++)
   {
+    // TODO: Use VM's allocate fn.
     free(symbols->names[i]);
   }
   symbols->count = count;
