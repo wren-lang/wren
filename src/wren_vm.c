@@ -70,10 +70,9 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
 void wrenFreeVM(WrenVM* vm)
 {
-  clearSymbolTable(&vm->methods);
-  clearSymbolTable(&vm->globalSymbols);
-  // TODO: Use VM's allocate fn.
-  free(vm);
+  clearSymbolTable(vm, &vm->methods);
+  clearSymbolTable(vm, &vm->globalSymbols);
+  wrenReallocate(vm, vm, 0, 0);
 }
 
 static void collectGarbage(WrenVM* vm);
@@ -416,52 +415,42 @@ void initSymbolTable(SymbolTable* symbols)
   symbols->count = 0;
 }
 
-void clearSymbolTable(SymbolTable* symbols)
+void clearSymbolTable(WrenVM* vm, SymbolTable* symbols)
 {
   for (int i = 0; i < symbols->count; i++)
   {
-    // TODO: Use VM's allocate fn.
-    free(symbols->names[i]);
+    wrenReallocate(vm, symbols->names[i], 0, 0);
   }
 }
 
-void truncateSymbolTable(SymbolTable* symbols, int count)
+static int addSymbolUnchecked(WrenVM* vm, SymbolTable* symbols,
+                              const char* name, size_t length)
 {
-  ASSERT(count <= symbols->count, "Cannot truncate to larger size.");
-  for (int i = count; i < symbols->count; i++)
-  {
-    // TODO: Use VM's allocate fn.
-    free(symbols->names[i]);
-  }
-  symbols->count = count;
-}
-
-int addSymbolUnchecked(SymbolTable* symbols, const char* name, size_t length)
-{
-  // TODO: Get rid of explicit malloc here.
-  symbols->names[symbols->count] = malloc(length + 1);
+  symbols->names[symbols->count] = wrenReallocate(vm, NULL, 0,
+                                                  sizeof(char) * (length + 1));
   strncpy(symbols->names[symbols->count], name, length);
   symbols->names[symbols->count][length] = '\0';
 
   return symbols->count++;
 }
 
-int addSymbol(SymbolTable* symbols, const char* name, size_t length)
+int addSymbol(WrenVM* vm, SymbolTable* symbols, const char* name, size_t length)
 {
   // If already present, return an error.
   if (findSymbol(symbols, name, length) != -1) return -1;
 
-  return addSymbolUnchecked(symbols, name, length);
+  return addSymbolUnchecked(vm, symbols, name, length);
 }
 
-int ensureSymbol(SymbolTable* symbols, const char* name, size_t length)
+int ensureSymbol(WrenVM* vm, SymbolTable* symbols,
+                 const char* name, size_t length)
 {
   // See if the symbol is already defined.
   int existing = findSymbol(symbols, name, length);
   if (existing != -1) return existing;
 
   // New symbol, so add it.
-  return addSymbolUnchecked(symbols, name, length);
+  return addSymbolUnchecked(vm, symbols, name, length);
 }
 
 int findSymbol(SymbolTable* symbols, const char* name, size_t length)

@@ -44,9 +44,6 @@
 // extra spaces added to handle arity, and another byte to terminate the string.
 #define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + MAX_PARAMETERS + 1)
 
-// TODO: Get rid of this and use a growable buffer.
-#define MAX_STRING (1024)
-
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -885,7 +882,8 @@ static int declareVariable(Compiler* compiler)
   {
     SymbolTable* symbols = &compiler->parser->vm->globalSymbols;
 
-    int symbol = addSymbol(symbols, token->start, token->length);
+    int symbol = addSymbol(compiler->parser->vm, symbols,
+                           token->start, token->length);
     if (symbol == -1)
     {
       error(compiler, "Global variable is already defined.");
@@ -1282,7 +1280,8 @@ static void methodCall(Compiler* compiler, Code instruction,
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
-  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
+  int symbol = ensureSymbol(compiler->parser->vm,
+                            &compiler->parser->vm->methods, name, length);
 
   emit1(compiler, instruction + numArgs, symbol);
 }
@@ -1307,7 +1306,8 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
     // Compile the assigned value.
     expression(compiler);
 
-    int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
+    int symbol = ensureSymbol(compiler->parser->vm,
+                              &compiler->parser->vm->methods, name, length);
     emit1(compiler, instruction + 1, symbol);
   }
   else
@@ -1363,7 +1363,8 @@ static void unaryOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, PREC_UNARY + 1);
 
   // Call the operator method on the left-hand side.
-  int symbol = ensureSymbol(&compiler->parser->vm->methods, rule->name, 1);
+  int symbol = ensureSymbol(compiler->parser->vm,
+                            &compiler->parser->vm->methods, rule->name, 1);
   emit1(compiler, CODE_CALL_0, symbol);
 }
 
@@ -1405,7 +1406,7 @@ static void field(Compiler* compiler, bool allowAssignment)
   if (compiler->fields != NULL)
   {
     // Look up the field, or implicitly define it.
-    field = ensureSymbol(compiler->fields,
+    field = ensureSymbol(compiler->parser->vm, compiler->fields,
         compiler->parser->previous.start,
         compiler->parser->previous.length);
   }
@@ -1641,7 +1642,8 @@ static void subscript(Compiler* compiler, bool allowAssignment)
     expression(compiler);
   }
 
-  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
+  int symbol = ensureSymbol(compiler->parser->vm,
+                            &compiler->parser->vm->methods, name, length);
 
   // Compile the method call.
   emit1(compiler, CODE_CALL_0 + numArgs, symbol);
@@ -1684,7 +1686,8 @@ void infixOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, rule->precedence + 1);
 
   // Call the operator method on the left-hand side.
-  int symbol = ensureSymbol(&compiler->parser->vm->methods,
+  int symbol = ensureSymbol(compiler->parser->vm,
+                            &compiler->parser->vm->methods,
                             rule->name, strlen(rule->name));
   emit1(compiler, CODE_CALL_1, symbol);
 }
@@ -1860,7 +1863,8 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
   // Compile the method signature.
   signature(&methodCompiler, name, &length);
 
-  int symbol = ensureSymbol(&compiler->parser->vm->methods, name, length);
+  int symbol = ensureSymbol(compiler->parser->vm,
+                            &compiler->parser->vm->methods, name, length);
 
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
 
@@ -2038,7 +2042,8 @@ static void forStatement(Compiler* compiler)
   emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
   emit1(compiler, CODE_LOAD_LOCAL, iterSlot);
 
-  int iterateSymbol = ensureSymbol(&compiler->parser->vm->methods,
+  int iterateSymbol = ensureSymbol(compiler->parser->vm,
+                                   &compiler->parser->vm->methods,
                                    "iterate ", 8);
   emit1(compiler, CODE_CALL_1, iterateSymbol);
 
@@ -2056,7 +2061,8 @@ static void forStatement(Compiler* compiler)
   emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
   emit1(compiler, CODE_LOAD_LOCAL, iterSlot);
 
-  int iteratorValueSymbol = ensureSymbol(&compiler->parser->vm->methods,
+  int iteratorValueSymbol = ensureSymbol(compiler->parser->vm,
+                                         &compiler->parser->vm->methods,
                                          "iteratorValue ", 14);
   emit1(compiler, CODE_CALL_1, iteratorValueSymbol);
 

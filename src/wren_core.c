@@ -11,7 +11,7 @@
 // [fn] to `ObjClass` [cls].
 #define NATIVE(cls, name, fn) \
     { \
-      int symbol = ensureSymbol(&vm->methods, name, strlen(name)); \
+      int symbol = ensureSymbol(vm, &vm->methods, name, strlen(name)); \
       cls->methods[symbol].type = METHOD_PRIMITIVE; \
       cls->methods[symbol].primitive = native_##fn; \
     }
@@ -22,7 +22,7 @@
 // pushing callframes.
 #define FIBER_NATIVE(cls, name, fn) \
     { \
-      int symbol = ensureSymbol(&vm->methods, name, strlen(name)); \
+      int symbol = ensureSymbol(vm, &vm->methods, name, strlen(name)); \
       cls->methods[symbol].type = METHOD_FIBER; \
       cls->methods[symbol].fiberPrimitive = native_##fn; \
     }
@@ -477,7 +477,7 @@ DEF_NATIVE(os_clock)
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
   ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0);
-  int symbol = addSymbol(&vm->globalSymbols, name, strlen(name));
+  int symbol = addSymbol(vm, &vm->globalSymbols, name, strlen(name));
   vm->globals[symbol] = OBJ_VAL(classObj);
   return classObj;
 }
@@ -487,7 +487,8 @@ void wrenInitializeCore(WrenVM* vm)
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass and an unusual metaclass (Class).
   vm->objectClass = wrenNewSingleClass(vm, 0);
-  int objectSymbol = addSymbol(&vm->globalSymbols, "Object", strlen("Object"));
+  int objectSymbol = addSymbol(vm, &vm->globalSymbols,
+                               "Object", strlen("Object"));
   vm->globals[objectSymbol] = OBJ_VAL(vm->objectClass);
 
   NATIVE(vm->objectClass, "== ", object_eqeq);
@@ -499,7 +500,8 @@ void wrenInitializeCore(WrenVM* vm)
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
   vm->classClass = wrenNewSingleClass(vm, 0);
-  int classSymbol = addSymbol(&vm->globalSymbols, "Class", strlen("Class"));
+  int classSymbol = addSymbol(vm, &vm->globalSymbols,
+                              "Class", strlen("Class"));
   vm->globals[classSymbol] = OBJ_VAL(vm->classClass);
 
   // Now that Object and Class are defined, we can wire them up to each other.

@@ -284,20 +284,19 @@ void unpinObj(WrenVM* vm);
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);
 
-// Removes any symbols added after [count] symbols were defined.
-void truncateSymbolTable(SymbolTable* symbols, int count);
-
 // Frees all dynamically allocated memory used by the symbol table, but not the
 // SymbolTable itself.
-void clearSymbolTable(SymbolTable* symbols);
+void clearSymbolTable(WrenVM* vm, SymbolTable* symbols);
 
 // Adds name to the symbol table. Returns the index of it in the table. Returns
 // -1 if the symbol is already present.
-int addSymbol(SymbolTable* symbols, const char* name, size_t length);
+int addSymbol(WrenVM* vm, SymbolTable* symbols,
+              const char* name, size_t length);
 
 // Adds name to the symbol table. Returns the index of it in the table. Will
 // use an existing symbol if already present.
-int ensureSymbol(SymbolTable* symbols, const char* name, size_t length);
+int ensureSymbol(WrenVM* vm, SymbolTable* symbols,
+                 const char* name, size_t length);
 
 // Looks up name in the symbol table. Returns its index if found or -1 if not.
 int findSymbol(SymbolTable* symbols, const char* name, size_t length);
