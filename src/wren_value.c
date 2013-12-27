@@ -4,6 +4,16 @@
 #include "wren_value.h"
 #include "wren_vm.h"
 
+// TODO: Tune these.
+// The initial (and minimum) capacity of a non-empty list object.
+#define LIST_MIN_CAPACITY (16)
+
+// The rate at which a list's capacity grows when the size exceeds the current
+// capacity. The new capacity will be determined by *multiplying* the old
+// capacity by this. Growing geometrically is necessary to ensure that adding
+// to a list has O(1) amortized complexity.
+#define LIST_GROW_FACTOR (2)
+
 static void* allocate(WrenVM* vm, size_t size)
 {
   return wrenReallocate(vm, NULL, 0, size);
@@ -158,6 +168,80 @@ ObjList* wrenNewList(WrenVM* vm, int numElements)
   list->count = numElements;
   list->elements = elements;
   return list;
+}
+
+// Grows [list] if needed to ensure it can hold [count] elements.
+static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
+{
+  if (list->capacity >= count) return;
+
+  int capacity = list->capacity * LIST_GROW_FACTOR;
+  if (capacity < LIST_MIN_CAPACITY) capacity = LIST_MIN_CAPACITY;
+
+  list->capacity *= 2;
+  list->elements = wrenReallocate(vm, list->elements,
+      list->capacity * sizeof(Value), capacity * sizeof(Value));
+  // TODO: Handle allocation failure.
+  list->capacity = capacity;
+}
+
+void wrenListAdd(WrenVM* vm, ObjList* list, Value value)
+{
+  // TODO: Macro for pinning and unpinning.
+  PinnedObj pinned;
+  if (IS_OBJ(value)) pinObj(vm, AS_OBJ(value), &pinned);
+
+  ensureListCapacity(vm, list, list->count + 1);
+
+  if (IS_OBJ(value)) unpinObj(vm);
+
+  list->elements[list->count++] = value;
+}
+
+void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
+{
+  PinnedObj pinned;
+  if (IS_OBJ(value)) pinObj(vm, AS_OBJ(value), &pinned);
+
+  ensureListCapacity(vm, list, list->count + 1);
+
+  if (IS_OBJ(value)) unpinObj(vm);
+
+  // Shift items down.
+  for (int i = list->count; i > index; i--)
+  {
+    list->elements[i] = list->elements[i - 1];
+  }
+
+  list->elements[index] = value;
+  list->count++;
+}
+
+Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
+{
+  Value removed = list->elements[index];
+
+  PinnedObj pinned;
+  if (IS_OBJ(removed)) pinObj(vm, AS_OBJ(removed), &pinned);
+
+  // Shift items up.
+  for (int i = index; i < list->count - 1; i++)
+  {
+    list->elements[i] = list->elements[i + 1];
+  }
+
+  // If we have too much excess capacity, shrink it.
+  if (list->capacity / LIST_GROW_FACTOR >= list->count)
+  {
+    wrenReallocate(vm, list->elements, sizeof(Value) * list->capacity,
+                   sizeof(Value) * (list->capacity / LIST_GROW_FACTOR));
+    list->capacity /= LIST_GROW_FACTOR;
+  }
+
+  if (IS_OBJ(removed)) unpinObj(vm);
+
+  list->count--;
+  return removed;
 }
 
 Value wrenNewString(WrenVM* vm, const char* text, size_t length)

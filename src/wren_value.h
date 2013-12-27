@@ -172,7 +172,7 @@ typedef struct
   // TODO: Flexible array?
   Value* constants;
 
-  // TODO: Hack! Don't hardcode.
+  // TODO: Hack! Don't hardcode. Make flexible array.
   uint8_t bytecode[2048];
 } ObjFn;
 
@@ -476,6 +476,15 @@ Value wrenNewInstance(WrenVM* vm, ObjClass* classObj);
 // uninitialized.)
 ObjList* wrenNewList(WrenVM* vm, int numElements);
 
+// Adds [value] to [list], reallocating and growing its storage if needed.
+void wrenListAdd(WrenVM* vm, ObjList* list, Value value);
+
+// Inserts [value] in [list] at [index], shifting down the other elements.
+void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index);
+
+// Removes and returns the item at [index] from [list].
+Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
+
 // Creates a new string object and copies [text] into it.
 Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 
@@ -491,6 +500,7 @@ bool wrenValuesEqual(Value a, Value b);
 
 void wrenPrintValue(Value value);
 
+// TODO: Can these be inlined?
 bool wrenIsBool(Value value);
 bool wrenIsClosure(Value value);
 bool wrenIsFiber(Value value);

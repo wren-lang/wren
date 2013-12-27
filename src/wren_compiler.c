@@ -6,6 +6,7 @@
 
 #include "wren_common.h"
 #include "wren_compiler.h"
+#include "wren_vm.h"
 
 // This is written in bottom-up order, so the tokenization comes first, then
 // parsing/code generation. This minimizes the number of explicit forward
@@ -185,7 +186,7 @@ typedef struct
   int index;
 } CompilerUpvalue;
 
-typedef struct sCompiler
+struct sCompiler
 {
   Parser* parser;
 
@@ -193,9 +194,13 @@ typedef struct sCompiler
   // top level.
   struct sCompiler* parent;
 
-  // The function being compiled.
-  ObjFn* fn;
-  int numCodes;
+  // The growable buffer of code that's been compiled so far.
+  uint8_t* bytecode;
+
+  // The number of bytes of code generated so far.
+  int bytecodeLength;
+
+  ObjList* constants;
 
   // Symbol table for the fields of the nearest enclosing class, or NULL if not
   // currently inside a class.
@@ -225,9 +230,11 @@ typedef struct sCompiler
   Local locals[MAX_LOCALS];
 
   // The upvalues that this function has captured from outer scopes. The count
-  // of them is stored in `fn->numUpvalues`.
+  // of them is stored in [numUpvalues].
   CompilerUpvalue upvalues[MAX_UPVALUES];
-} Compiler;
+
+  int numUpvalues;
+};
 
 // Outputs a compile or syntax error. This also marks the compilation as having
 // an error, which ensures that the resulting code will be discarded and never
@@ -283,14 +290,16 @@ static void error(Compiler* compiler, const char* format, ...)
 static int addConstant(Compiler* compiler, Value constant)
 {
   // See if an equivalent constant has already been added.
-  for (int i = 0; i < compiler->fn->numConstants; i++)
+  for (int i = 0; i < compiler->constants->count; i++)
   {
-    if (wrenValuesEqual(compiler->fn->constants[i], constant)) return i;
+    // TODO: wrenValuesEqual doesn't check for string equality. Check for that
+    // explicitly here or intern strings globally or something.
+    if (wrenValuesEqual(compiler->constants->elements[i], constant)) return i;
   }
 
-  if (compiler->fn->numConstants < MAX_CONSTANTS)
+  if (compiler->constants->count < MAX_CONSTANTS)
   {
-    compiler->fn->constants[compiler->fn->numConstants++] = constant;
+    wrenListAdd(compiler->parser->vm, compiler->constants, constant);
   }
   else
   {
@@ -298,19 +307,35 @@ static int addConstant(Compiler* compiler, Value constant)
           MAX_CONSTANTS);
   }
 
-  return compiler->fn->numConstants - 1;
+  return compiler->constants->count - 1;
 }
 
 // Initializes [compiler].
-static int initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
-                        const char* methodName, int methodLength)
+static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
+                         const char* methodName, int methodLength)
 {
+  // TODO: Reorganize initialization and fields to be in same order as struct.
   compiler->parser = parser;
   compiler->parent = parent;
-  compiler->numCodes = 0;
+  compiler->bytecodeLength = 0;
   compiler->loopBody = -1;
   compiler->methodName = methodName;
   compiler->methodLength = methodLength;
+
+  // Initialize these to NULL before allocating them in case a GC gets
+  // triggered in the middle of creating these.
+  compiler->constants = NULL;
+  compiler->bytecode = NULL;
+
+  wrenSetCompiler(parser->vm, compiler);
+
+  // Create a growable list for the constants used by this function.
+  compiler->constants = wrenNewList(parser->vm, 0);
+
+  // TODO: Make initial size smaller.
+  compiler->bytecode = wrenReallocate(parser->vm, NULL, 0, 2048);
+
+  compiler->numUpvalues = 0;
 
   if (parent == NULL)
   {
@@ -346,14 +371,6 @@ static int initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
   // Propagate the enclosing class downwards.
   compiler->fields = parent != NULL ? parent->fields :  NULL;
-
-  compiler->fn = wrenNewFunction(parser->vm);
-
-  if (parent == NULL) return -1;
-
-  // Add the block to the constant table. Do this eagerly so it's reachable by
-  // the GC.
-  return addConstant(parent, OBJ_VAL(compiler->fn));
 }
 
 // Lexing ----------------------------------------------------------------------
@@ -798,8 +815,11 @@ static Token* consume(Compiler* compiler, TokenType expected,
 // Emits one bytecode instruction or argument. Returns its index.
 static int emit(Compiler* compiler, Code code)
 {
-  compiler->fn->bytecode[compiler->numCodes++] = code;
-  return compiler->numCodes - 1;
+  // TODO: Grow buffer if needed.
+  compiler->bytecode[compiler->bytecodeLength] = code;
+
+  compiler->bytecodeLength++;
+  return compiler->bytecodeLength - 1;
 }
 
 // Emits one bytecode instruction followed by an argument. Returns the index of
@@ -940,16 +960,16 @@ static int resolveLocal(Compiler* compiler, const char* name, int length)
 static int addUpvalue(Compiler* compiler, bool isLocal, int index)
 {
   // Look for an existing one.
-  for (int i = 0; i < compiler->fn->numUpvalues; i++)
+  for (int i = 0; i < compiler->numUpvalues; i++)
   {
     CompilerUpvalue* upvalue = &compiler->upvalues[i];
     if (upvalue->index == index && upvalue->isLocal == isLocal) return i;
   }
 
   // If we got here, it's a new upvalue.
-  compiler->upvalues[compiler->fn->numUpvalues].isLocal = isLocal;
-  compiler->upvalues[compiler->fn->numUpvalues].index = index;
-  return compiler->fn->numUpvalues++;
+  compiler->upvalues[compiler->numUpvalues].isLocal = isLocal;
+  compiler->upvalues[compiler->numUpvalues].index = index;
+  return compiler->numUpvalues++;
 }
 
 // Attempts to look up [name] in the functions enclosing the one being compiled
@@ -1044,18 +1064,40 @@ static int copyName(Compiler* compiler, char* name)
 // Finishes [compiler], which is compiling a function, method, or chunk of top
 // level code. If there is a parent compiler, then this emits code in the
 // parent compiler to load the resulting function.
-static void endCompiler(Compiler* compiler, int constant)
+static ObjFn* endCompiler(Compiler* compiler)
 {
+  // If we hit an error, don't bother creating the function since it's borked
+  // anyway.
+  if (compiler->parser->hasError) return NULL;
+
   // Mark the end of the bytecode. Since it may contain multiple early returns,
   // we can't rely on CODE_RETURN to tell us we're at the end.
   emit(compiler, CODE_END);
 
+  // Create a function object for the code we just compiled.
+  ObjFn* fn = wrenNewFunction(compiler->parser->vm);
+  PinnedObj pinned;
+  pinObj(compiler->parser->vm, (Obj*)fn, &pinned);
+
+  // TODO: Temp. Should pass this in to newfunction.
+  for (int i = 0; i < compiler->constants->count; i++)
+  {
+    fn->constants[i] = compiler->constants->elements[i];
+  }
+  fn->numConstants = compiler->constants->count;
+  fn->numUpvalues = compiler->numUpvalues;
+
+  // Copy over the bytecode.
+  memcpy(fn->bytecode, compiler->bytecode, compiler->bytecodeLength);
+
   // In the function that contains this one, load the resulting function object.
   if (compiler->parent != NULL)
   {
+    int constant = addConstant(compiler->parent, OBJ_VAL(fn));
+
     // If the function has no upvalues, we don't need to create a closure.
     // We can just load and run the function directly.
-    if (compiler->fn->numUpvalues == 0)
+    if (compiler->numUpvalues == 0)
     {
       emit1(compiler->parent, CODE_CONSTANT, constant);
     }
@@ -1067,13 +1109,23 @@ static void endCompiler(Compiler* compiler, int constant)
       // Emit arguments for each upvalue to know whether to capture a local or
       // an upvalue.
       // TODO: Do something more efficient here?
-      for (int i = 0; i < compiler->fn->numUpvalues; i++)
+      for (int i = 0; i < compiler->numUpvalues; i++)
       {
         emit1(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0,
               compiler->upvalues[i].index);
       }
     }
   }
+
+  // Free the compiler's growable buffer.
+  wrenReallocate(compiler->parser->vm, compiler->bytecode, 0, 0);
+
+  // Pop this compiler off the stack.
+  wrenSetCompiler(compiler->parser->vm, compiler->parent);
+
+  unpinObj(compiler->parser->vm);
+
+  return fn;
 }
 
 // Grammar ---------------------------------------------------------------------
@@ -1121,7 +1173,7 @@ GrammarRule rules[];
 // instruction with an offset that jumps to the current end of bytecode.
 static void patchJump(Compiler* compiler, int offset)
 {
-  compiler->fn->bytecode[offset] = compiler->numCodes - offset - 1;
+  compiler->bytecode[offset] = compiler->bytecodeLength - offset - 1;
 }
 
 // Parses a block body, after the initial "{" has been consumed.
@@ -1295,8 +1347,7 @@ static void boolean(Compiler* compiler, bool allowAssignment)
 static void function(Compiler* compiler, bool allowAssignment)
 {
   Compiler fnCompiler;
-  int constant = initCompiler(&fnCompiler, compiler->parser, compiler,
-                              NULL, 0);
+  initCompiler(&fnCompiler, compiler->parser, compiler, NULL, 0);
 
   parameterList(&fnCompiler, NULL, NULL);
 
@@ -1316,7 +1367,7 @@ static void function(Compiler* compiler, bool allowAssignment)
     emit(&fnCompiler, CODE_RETURN);
   }
 
-  endCompiler(&fnCompiler, constant);
+  endCompiler(&fnCompiler);
 }
 
 static void field(Compiler* compiler, bool allowAssignment)
@@ -1773,8 +1824,7 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
   int length = copyName(compiler, name);
 
   Compiler methodCompiler;
-  int constant = initCompiler(&methodCompiler, compiler->parser, compiler,
-                              name, length);
+  initCompiler(&methodCompiler, compiler->parser, compiler, name, length);
 
   // Compile the method signature.
   signature(&methodCompiler, name, &length);
@@ -1800,7 +1850,7 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
 
   emit(&methodCompiler, CODE_RETURN);
 
-  endCompiler(&methodCompiler, constant);
+  endCompiler(&methodCompiler);
 
   // Compile the code to define the method.
   emit1(compiler, instruction, symbol);
@@ -1826,9 +1876,10 @@ void block(Compiler* compiler)
 
 // Returns the number of arguments to the instruction at [ip] in [fn]'s
 // bytecode.
-static int getNumArguments(ObjFn* fn, int ip)
+static int getNumArguments(const uint8_t* bytecode, const Value* constants,
+                           int ip)
 {
-  Code instruction = fn->bytecode[ip];
+  Code instruction = bytecode[ip];
   switch (instruction)
   {
     case CODE_NULL:
@@ -1848,8 +1899,8 @@ static int getNumArguments(ObjFn* fn, int ip)
 
     case CODE_CLOSURE:
     {
-      int constant = fn->bytecode[ip + 1];
-      ObjFn* loadedFn = AS_FN(fn->constants[constant]);
+      int constant = bytecode[ip + 1];
+      ObjFn* loadedFn = AS_FN(constants[constant]);
 
       // There is an argument for the constant, then one for each upvalue.
       return 1 + loadedFn->numUpvalues;
@@ -1864,7 +1915,7 @@ static int getNumArguments(ObjFn* fn, int ip)
 static int startLoopBody(Compiler* compiler)
 {
   int outerLoopBody = compiler->loopBody;
-  compiler->loopBody = compiler->numCodes;
+  compiler->loopBody = compiler->bytecodeLength;
   return outerLoopBody;
 }
 
@@ -1873,18 +1924,19 @@ static void endLoopBody(Compiler* compiler, int outerLoopBody)
   // Find any break placeholder instructions (which will be CODE_END in the
   // bytecode) and replace them with real jumps.
   int i = compiler->loopBody;
-  while (i < compiler->numCodes)
+  while (i < compiler->bytecodeLength)
   {
-    if (compiler->fn->bytecode[i] == CODE_END)
+    if (compiler->bytecode[i] == CODE_END)
     {
-      compiler->fn->bytecode[i] = CODE_JUMP;
+      compiler->bytecode[i] = CODE_JUMP;
       patchJump(compiler, i + 1);
       i += 2;
     }
     else
     {
       // Skip this instruction and its arguments.
-      i += 1 + getNumArguments(compiler->fn, i);
+      i += 1 + getNumArguments(compiler->bytecode,
+                               compiler->constants->elements, i);
     }
   }
 
@@ -1949,7 +2001,7 @@ static void forStatement(Compiler* compiler)
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
 
   // Remember what instruction to loop back to.
-  int loopStart = compiler->numCodes - 1;
+  int loopStart = compiler->bytecodeLength - 1;
 
   // Advance the iterator by calling the ".iterate" method on the sequence.
   emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
@@ -1988,7 +2040,7 @@ static void forStatement(Compiler* compiler)
 
   // Loop back to the top.
   emit(compiler, CODE_LOOP);
-  int loopOffset = compiler->numCodes - loopStart;
+  int loopOffset = compiler->bytecodeLength - loopStart;
   emit(compiler, loopOffset);
 
   patchJump(compiler, exitJump);
@@ -2000,7 +2052,7 @@ static void forStatement(Compiler* compiler)
 static void whileStatement(Compiler* compiler)
 {
   // Remember what instruction to loop back to.
-  int loopStart = compiler->numCodes - 1;
+  int loopStart = compiler->bytecodeLength - 1;
 
   // Compile the condition.
   consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
@@ -2015,7 +2067,7 @@ static void whileStatement(Compiler* compiler)
 
   // Loop back to the top.
   emit(compiler, CODE_LOOP);
-  int loopOffset = compiler->numCodes - loopStart;
+  int loopOffset = compiler->bytecodeLength - loopStart;
   emit(compiler, loopOffset);
 
   patchJump(compiler, exitJump);
@@ -2165,8 +2217,7 @@ static void classDefinition(Compiler* compiler)
   }
 
   // Update the class with the number of fields.
-  compiler->fn->bytecode[numFieldsInstruction] = fields.count;
-
+  compiler->bytecode[numFieldsInstruction] = fields.count;
   compiler->fields = previousFields;
 
   // Store it in its name.
@@ -2232,9 +2283,6 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, NULL, 0);
 
-  PinnedObj pinned;
-  pinObj(vm, (Obj*)compiler.fn, &pinned);
-
   for (;;)
   {
     definition(&compiler);
@@ -2252,11 +2300,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
   emit(&compiler, CODE_NULL);
   emit(&compiler, CODE_RETURN);
 
-  endCompiler(&compiler, -1);
-
-  unpinObj(vm);
-
-  return parser.hasError ? NULL : compiler.fn;
+  return endCompiler(&compiler);
 }
 
 void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
@@ -2281,8 +2325,23 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
 
       default:
         // Other instructions are unaffected, so just skip over them.
-        ip += getNumArguments(fn, ip - 1);
+        ip += getNumArguments(fn->bytecode, fn->constants, ip - 1);
         break;
     }
+  }
+}
+
+void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
+{
+  // Walk up the parent chain to mark the outer compilers too. The VM only
+  // tracks the innermost one.
+  while (compiler != NULL)
+  {
+    if (compiler->constants != NULL)
+    {
+      wrenMarkValue(vm, OBJ_VAL(compiler->constants));
+    }
+
+    compiler = compiler->parent;
   }
 }

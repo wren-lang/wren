@@ -2,6 +2,7 @@
 #define wren_vm_h
 
 #include "wren_common.h"
+#include "wren_compiler.h"
 #include "wren_value.h"
 
 typedef enum
@@ -210,9 +211,13 @@ struct WrenVM
   // TODO: Using a fixed array is gross here.
   Value globals[MAX_SYMBOLS];
 
+  // The compiler that is currently compiling code. This is used so that heap
+  // allocated objects used by the compiler can be found if a GC is kicked off
+  // in the middle of a compile.
+  Compiler* compiler;
+  
   // Memory management data:
 
-  // TODO: Temp.
   // The number of bytes that are known to be currently allocated. Includes all
   // memory that was proven live after the last GC, as well as any new bytes
   // that were allocated since then. Does *not* include bytes for objects that
@@ -241,9 +246,40 @@ struct WrenVM
   WrenReallocateFn reallocate;
 };
 
+// A generic allocation function that handles all explicit memory management.
+// It's used like so:
+//
+// - To allocate new memory, [memory] is NULL and [oldSize] is zero. It should
+//   return the allocated memory or NULL on failure.
+//
+// - To attempt to grow an existing allocation, [memory] is the memory,
+//   [oldSize] is its previous size, and [newSize] is the desired size.
+//   It should return [memory] if it was able to grow it in place, or a new
+//   pointer if it had to move it.
+//
+// - To shrink memory, [memory], [oldSize], and [newSize] are the same as above
+//   but it will always return [memory].
+//
+// - To free memory, [memory] will be the memory to free and [newSize] and
+//   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
+// Mark [value] as reachable and still in use. This should only be called
+// during the sweep phase of a garbage collection.
+// TODO: Expose markObj instead?
+void wrenMarkValue(WrenVM* vm, Value value);
+
+// Sets the current Compiler being run to [compiler].
+void wrenSetCompiler(WrenVM* vm, Compiler* compiler);
+
 // TODO: Make these static or prefix their names.
+
+// Mark [obj] as a GC root so that it doesn't get collected. Initializes
+// [pinned], which must be then passed to [unpinObj].
+void pinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned);
+
+// Remove the most recently pinned object from the list of pinned GC roots.
+void unpinObj(WrenVM* vm);
 
 // Initializes the symbol table.
 void initSymbolTable(SymbolTable* symbols);
@@ -276,12 +312,5 @@ Value findGlobal(WrenVM* vm, const char* name);
 // arguments (including the receiver) to be on the top of the stack already.
 // [function] can be an `ObjFn` or `ObjClosure`.
 void wrenCallFunction(ObjFiber* fiber, Obj* function, int numArgs);
-
-// Mark [obj] as a GC root so that it doesn't get collected. Initializes
-// [pinned], which must be then passed to [unpinObj].
-void pinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned);
-
-// Remove the most recently pinned object from the list of pinned GC roots.
-void unpinObj(WrenVM* vm);
 
 #endif

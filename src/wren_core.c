@@ -37,16 +37,6 @@
 #define DEF_FIBER_NATIVE(native) \
     static void native_##native(WrenVM* vm, ObjFiber* fiber, Value* args)
 
-// TODO: Tune these.
-// The initial (and minimum) capacity of a non-empty list object.
-#define LIST_MIN_CAPACITY (16)
-
-// The rate at which a list's capacity grows when the size exceeds the current
-// capacity. The new capacity will be determined by *multiplying* the old
-// capacity by this. Growing geometrically is necessary to ensure that adding
-// to a list has O(1) amortized complexity.
-#define LIST_GROW_FACTOR (2)
-
 // This string literal is generated automatically from corelib.wren using
 // make_corelib. Do not edit here.
 const char* coreLibSource =
@@ -137,21 +127,6 @@ DEF_FIBER_NATIVE(fn_call14) { wrenCallFunction(fiber, AS_OBJ(args[0]), 15); }
 DEF_FIBER_NATIVE(fn_call15) { wrenCallFunction(fiber, AS_OBJ(args[0]), 16); }
 DEF_FIBER_NATIVE(fn_call16) { wrenCallFunction(fiber, AS_OBJ(args[0]), 17); }
 
-// Grows [list] if needed to ensure it can hold [count] elements.
-static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
-{
-  if (list->capacity >= count) return;
-
-  int capacity = list->capacity * LIST_GROW_FACTOR;
-  if (capacity < LIST_MIN_CAPACITY) capacity = LIST_MIN_CAPACITY;
-
-  list->capacity *= 2;
-  list->elements = wrenReallocate(vm, list->elements,
-      list->capacity * sizeof(Value), capacity * sizeof(Value));
-  // TODO: Handle allocation failure.
-  list->capacity = capacity;
-}
-
 // Validates that [index] is an integer within `[0, count)`. Also allows
 // negative indices which map backwards from the end. Returns the valid positive
 // index value, or -1 if the index wasn't valid (not a number, not an int, out
@@ -177,9 +152,7 @@ static int validateIndex(Value index, int count)
 DEF_NATIVE(list_add)
 {
   ObjList* list = AS_LIST(args[0]);
-
-  ensureListCapacity(vm, list, list->count + 1);
-  list->elements[list->count++] = args[1];
+  wrenListAdd(vm, list, args[1]);
   return args[1];
 }
 
@@ -209,16 +182,7 @@ DEF_NATIVE(list_insert)
   // somehow.
   if (index == -1) return NULL_VAL;
 
-  ensureListCapacity(vm, list, list->count + 1);
-
-  // Shift items down.
-  for (int i = list->count; i > index; i--)
-  {
-    list->elements[i] = list->elements[i - 1];
-  }
-
-  list->elements[index] = args[1];
-  list->count++;
+  wrenListInsert(vm, list, args[1], index);
   return args[1];
 }
 
@@ -254,24 +218,7 @@ DEF_NATIVE(list_removeAt)
   // somehow.
   if (index == -1) return NULL_VAL;
 
-  Value removed = list->elements[index];
-
-  // Shift items up.
-  for (int i = index; i < list->count - 1; i++)
-  {
-    list->elements[i] = list->elements[i + 1];
-  }
-
-  // If we have too much excess capacity, shrink it.
-  if (list->capacity / LIST_GROW_FACTOR >= list->count)
-  {
-    wrenReallocate(vm, list->elements, sizeof(Value) * list->capacity,
-                   sizeof(Value) * (list->capacity / LIST_GROW_FACTOR));
-    list->capacity /= LIST_GROW_FACTOR;
-  }
-
-  list->count--;
-  return removed;
+  return wrenListRemoveAt(vm, list, index);
 }
 
 DEF_NATIVE(list_subscript)

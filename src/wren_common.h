@@ -1,6 +1,8 @@
 #ifndef wren_common_h
 #define wren_common_h
 
+// TODO: Would be good to use "const" on pointer params when possible.
+
 // This header contains macros and defines used across the entire Wren
 // implementation. In particular, it contains "configuration" defines that
 // control how Wren works. Some of these are only used while hacking on

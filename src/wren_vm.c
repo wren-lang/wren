@@ -7,7 +7,6 @@
 #include "wren_compiler.h"
 #include "wren_core.h"
 #include "wren_vm.h"
-#include "wren_debug.h"
 
 // The built-in reallocation function used when one is not provided by the
 // configuration.
@@ -54,6 +53,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
     vm->heapScalePercent = 100 + configuration->heapGrowthPercent;
   }
 
+  vm->compiler = NULL;
   vm->first = NULL;
   vm->pinned = NULL;
 
@@ -77,47 +77,6 @@ void wrenFreeVM(WrenVM* vm)
 
 static void collectGarbage(WrenVM* vm);
 
-void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
-{
-  #if WREN_TRACE_MEMORY
-  printf("reallocate %p %ld -> %ld\n", memory, oldSize, newSize);
-  #endif
-
-  // If new bytes are being allocated, add them to the total count. If objects
-  // are being completely deallocated, we don't track that (since we don't
-  // track the original size). Instead, that will be handled while marking
-  // during the next GC.
-  vm->bytesAllocated += newSize - oldSize;
-
-  #if WREN_DEBUG_GC_STRESS
-
-  // Since collecting calls this function to free things, make sure we don't
-  // recurse.
-  if (newSize > 0) collectGarbage(vm);
-
-  #else
-
-  if (vm->bytesAllocated > vm->nextGC)
-  {
-    #if WREN_TRACE_MEMORY
-    size_t before = vm->bytesAllocated;
-    #endif
-
-    collectGarbage(vm);
-    vm->nextGC = vm->bytesAllocated * vm->heapScalePercent / 100;
-    if (vm->nextGC < vm->minNextGC) vm->nextGC = vm->minNextGC;
-
-    #if WREN_TRACE_MEMORY
-    printf("GC %ld before, %ld after (%ld collected), next at %ld\n",
-           before, vm->bytesAllocated, before - vm->bytesAllocated, vm->nextGC);
-    #endif
-  }
-  #endif
-
-  return vm->reallocate(memory, oldSize, newSize);
-}
-
-static void markValue(WrenVM* vm, Value value);
 static void markObj(WrenVM* vm, Obj* obj);
 
 static void markClass(WrenVM* vm, ObjClass* classObj)
@@ -154,7 +113,7 @@ static void markFn(WrenVM* vm, ObjFn* fn)
   // Mark the constants.
   for (int i = 0; i < fn->numConstants; i++)
   {
-    markValue(vm, fn->constants[i]);
+    wrenMarkValue(vm, fn->constants[i]);
   }
 
   // Keep track of how much memory is still in use.
@@ -174,7 +133,7 @@ static void markInstance(WrenVM* vm, ObjInstance* instance)
   // Mark the fields.
   for (int i = 0; i < instance->classObj->numFields; i++)
   {
-    markValue(vm, instance->fields[i]);
+    wrenMarkValue(vm, instance->fields[i]);
   }
 
   // Keep track of how much memory is still in use.
@@ -192,7 +151,7 @@ static void markList(WrenVM* vm, ObjList* list)
   Value* elements = list->elements;
   for (int i = 0; i < list->count; i++)
   {
-    markValue(vm, elements[i]);
+    wrenMarkValue(vm, elements[i]);
   }
 
   // Keep track of how much memory is still in use.
@@ -214,7 +173,7 @@ static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
   upvalue->obj.flags |= FLAG_MARKED;
 
   // Mark the closed-over object (in case it is closed).
-  markValue(vm, upvalue->closed);
+  wrenMarkValue(vm, upvalue->closed);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(Upvalue);
@@ -235,7 +194,7 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
   // Stack variables.
   for (int l = 0; l < fiber->stackSize; l++)
   {
-    markValue(vm, fiber->stack[l]);
+    wrenMarkValue(vm, fiber->stack[l]);
   }
 
   // Open upvalues.
@@ -283,14 +242,14 @@ static void markString(WrenVM* vm, ObjString* string)
 
 void markObj(WrenVM* vm, Obj* obj)
 {
-  #if WREN_TRACE_MEMORY
+#if WREN_TRACE_MEMORY
   static int indent = 0;
   indent++;
   for (int i = 0; i < indent; i++) printf("  ");
   printf("mark ");
   wrenPrintValue(OBJ_VAL(obj));
   printf(" @ %p\n", obj);
-  #endif
+#endif
 
   // Traverse the object's fields.
   switch (obj->type)
@@ -305,42 +264,42 @@ void markObj(WrenVM* vm, Obj* obj)
     case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
   }
 
-  #if WREN_TRACE_MEMORY
+#if WREN_TRACE_MEMORY
   indent--;
-  #endif
+#endif
 }
 
-void markValue(WrenVM* vm, Value value)
+void wrenMarkValue(WrenVM* vm, Value value)
 {
   if (!IS_OBJ(value)) return;
   markObj(vm, AS_OBJ(value));
 }
 
-static void* deallocate(WrenVM* vm, void* memory)
+void wrenSetCompiler(WrenVM* vm, Compiler* compiler)
 {
-  return wrenReallocate(vm, memory, 0, 0);
+  vm->compiler = compiler;
 }
 
 static void freeObj(WrenVM* vm, Obj* obj)
 {
-  #if WREN_TRACE_MEMORY
+#if WREN_TRACE_MEMORY
   printf("free ");
   wrenPrintValue(OBJ_VAL(obj));
   printf(" @ %p\n", obj);
-  #endif
+#endif
 
   switch (obj->type)
   {
     case OBJ_FN:
-      deallocate(vm, ((ObjFn*)obj)->constants);
+      wrenReallocate(vm, ((ObjFn*)obj)->constants, 0, 0);
       break;
 
     case OBJ_LIST:
-      deallocate(vm, ((ObjList*)obj)->elements);
+      wrenReallocate(vm, ((ObjList*)obj)->elements, 0, 0);
       break;
 
     case OBJ_STRING:
-      deallocate(vm, ((ObjString*)obj)->value);
+      wrenReallocate(vm, ((ObjString*)obj)->value, 0, 0);
       break;
 
     case OBJ_CLASS:
@@ -350,15 +309,15 @@ static void freeObj(WrenVM* vm, Obj* obj)
       break;
   }
 
-  deallocate(vm, obj);
+  wrenReallocate(vm, obj, 0, 0);
 }
 
 static void collectGarbage(WrenVM* vm)
 {
   // Mark all reachable objects.
-  #if WREN_TRACE_MEMORY
+#if WREN_TRACE_MEMORY
   printf("-- gc --\n");
-  #endif
+#endif
 
   // Reset this. As we mark objects, their size will be counted again so that
   // we can track how much memory is in use without needing to know the size
@@ -375,7 +334,7 @@ static void collectGarbage(WrenVM* vm)
   {
     // Check for NULL to handle globals that have been defined (at compile time)
     // but not yet initialized.
-    if (!IS_NULL(vm->globals[i])) markValue(vm, vm->globals[i]);
+    if (!IS_NULL(vm->globals[i])) wrenMarkValue(vm, vm->globals[i]);
   }
 
   // Pinned objects.
@@ -385,6 +344,9 @@ static void collectGarbage(WrenVM* vm)
     markObj(vm, pinned->obj);
     pinned = pinned->previous;
   }
+
+  // Any object the compiler is using (if there is one).
+  if (vm->compiler != NULL) wrenMarkCompiler(vm, vm->compiler);
 
   // Collect any unmarked objects.
   Obj** obj = &vm->first;
@@ -405,6 +367,46 @@ static void collectGarbage(WrenVM* vm)
       obj = &(*obj)->next;
     }
   }
+}
+
+void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
+{
+#if WREN_TRACE_MEMORY
+  printf("reallocate %p %ld -> %ld\n", memory, oldSize, newSize);
+#endif
+
+  // If new bytes are being allocated, add them to the total count. If objects
+  // are being completely deallocated, we don't track that (since we don't
+  // track the original size). Instead, that will be handled while marking
+  // during the next GC.
+  vm->bytesAllocated += newSize - oldSize;
+
+#if WREN_DEBUG_GC_STRESS
+
+  // Since collecting calls this function to free things, make sure we don't
+  // recurse.
+  if (newSize > 0) collectGarbage(vm);
+
+#else
+
+  if (vm->bytesAllocated > vm->nextGC)
+  {
+#if WREN_TRACE_MEMORY
+    size_t before = vm->bytesAllocated;
+#endif
+
+    collectGarbage(vm);
+    vm->nextGC = vm->bytesAllocated * vm->heapScalePercent / 100;
+    if (vm->nextGC < vm->minNextGC) vm->nextGC = vm->minNextGC;
+
+#if WREN_TRACE_MEMORY
+    printf("GC %ld before, %ld after (%ld collected), next at %ld\n",
+           before, vm->bytesAllocated, before - vm->bytesAllocated, vm->nextGC);
+#endif
+  }
+#endif
+  
+  return vm->reallocate(memory, oldSize, newSize);
 }
 
 void initSymbolTable(SymbolTable* symbols)
