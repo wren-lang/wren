@@ -1,4 +1,6 @@
-^title Flow Control
+^title Branching
+
+*Flow control* is used to determine which chunks of code are executed and how many times. Expressions and statements for deciding whether or not to execute some code are called *branching* and are covered here. To execute something more than once, you'll want [*looping*](looping.html).
 
 ## Truthiness
 
@@ -55,11 +57,3 @@ An `||` ("logical or") expression is reversed. If the left-hand argument is trut
     :::wren
     io.write(false || 1)  // 1
     io.write(1 || 2)      // 1
-
-## While statements
-
-**TODO**
-
-## For statements
-
-**TODO**
