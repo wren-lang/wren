@@ -1288,9 +1288,9 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
 
 double wrenGetArgumentDouble(WrenVM* vm, int index)
 {
-  ASSERT(vm->nativeCallSlot != NULL, "Must be in foreign call.");
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
   ASSERT(index >= 0, "index cannot be negative.");
-  ASSERT(index < vm->nativeCallNumArgs, "Not that many arguments.");
+  ASSERT(index < vm->foreignCallNumArgs, "Not that many arguments.");
 
   // + 1 to shift past the receiver.
   // TODO: Check actual value type first.

@@ -1192,6 +1192,9 @@ static void patchJump(Compiler* compiler, int offset)
 // Parses a block body, after the initial "{" has been consumed.
 static void finishBlock(Compiler* compiler)
 {
+  // Empty blocks do nothing.
+  if (match(compiler, TOKEN_RIGHT_BRACE)) return;
+
   for (;;)
   {
     definition(compiler);
