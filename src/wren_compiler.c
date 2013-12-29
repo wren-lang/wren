@@ -12,11 +12,6 @@
 // parsing/code generation. This minimizes the number of explicit forward
 // declarations needed.
 
-// The maximum number of arguments that can be passed to a method. Note that
-// this limtation is hardcoded in other places in the VM, in particular, the
-// `CODE_CALL_XX` instructions assume a certain maximum number.
-#define MAX_PARAMETERS (16)
-
 // The maximum number of local (i.e. non-global) variables that can be declared
 // in a single function, method, or chunk of top level code. This is the
 // maximum number of variables in scope at one time, and spans block scopes.
@@ -34,15 +29,6 @@
 // value is explicit in the bytecode since `CODE_CONSTANT` only takes a single
 // argument.
 #define MAX_CONSTANTS (256)
-
-// The maximum name of a method, not including the signature. This is an
-// arbitrary but enforced maximum just so we know how long the method name
-// strings need to be in the parser.
-#define MAX_METHOD_NAME (64)
-
-// The maximum length of a method signature. This includes the name, and the
-// extra spaces added to handle arity, and another byte to terminate the string.
-#define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + MAX_PARAMETERS + 1)
 
 typedef enum
 {

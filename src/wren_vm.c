@@ -64,6 +64,9 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
     vm->globals[i] = NULL_VAL;
   }
 
+  vm->nativeCallSlot = NULL;
+  vm->nativeCallNumArgs = 0;
+
   wrenInitializeCore(vm);
   return vm;
 }
@@ -567,6 +570,27 @@ static void bindMethod(int methodType, int symbol, ObjClass* classObj,
   }
 }
 
+static void callForeign(WrenVM* vm, ObjFiber* fiber, Method* method, int numArgs)
+{
+  vm->nativeCallSlot = &fiber->stack[fiber->stackSize - numArgs];
+
+  // Don't include the receiver.
+  vm->nativeCallNumArgs = numArgs - 1;
+
+  method->native(vm);
+
+  // Discard the stack slots for the arguments (but leave one for
+  // the result).
+  fiber->stackSize -= numArgs - 1;
+
+  // If nothing was returned, implicitly return null.
+  if (vm->nativeCallSlot != NULL)
+  {
+    *vm->nativeCallSlot = NULL_VAL;
+    vm->nativeCallSlot = NULL;
+  }
+}
+
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical.
 static Value interpret(WrenVM* vm, ObjFiber* fiber)
@@ -762,6 +786,10 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
           break;
         }
 
+        case METHOD_FOREIGN:
+          callForeign(vm, fiber, method, numArgs);
+          break;
+
         case METHOD_BLOCK:
           STORE_FRAME();
           wrenCallFunction(fiber, method->fn, numArgs);
@@ -846,6 +874,10 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
           LOAD_FRAME();
           break;
         }
+
+        case METHOD_FOREIGN:
+          callForeign(vm, fiber, method, numArgs);
+          break;
 
         case METHOD_BLOCK:
           STORE_FRAME();
@@ -1201,4 +1233,74 @@ void pinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned)
 void unpinObj(WrenVM* vm)
 {
   vm->pinned = vm->pinned->previous;
+}
+
+void wrenDefineMethod(WrenVM* vm, const char* className,
+                      const char* methodName, int numParams,
+                      WrenNativeMethodFn method)
+{
+  ASSERT(className != NULL, "Must provide class name.");
+
+  int length = (int)strlen(methodName);
+  ASSERT(methodName != NULL, "Must provide method name.");
+  ASSERT(strlen(methodName) < MAX_METHOD_NAME, "Method name too long.");
+
+  ASSERT(numParams >= 0, "numParams cannot be negative.");
+  ASSERT(numParams <= MAX_PARAMETERS, "Too many parameters.");
+
+  ASSERT(method != NULL, "Must provide method function.");
+
+  // Find or create the class to bind the method to.
+  int classSymbol = findSymbol(&vm->globalSymbols,
+                               className, strlen(className));
+  ObjClass* classObj;
+
+  if (classSymbol != -1)
+  {
+    // TODO: Handle name is not class.
+    classObj = AS_CLASS(vm->globals[classSymbol]);
+  }
+  else
+  {
+    // The class doesn't already exist, so create it.
+    // TODO: Allow passing in name for superclass?
+    classObj = wrenNewClass(vm, vm->objectClass, 0);
+    classSymbol = addSymbol(vm, &vm->globalSymbols,
+                            className, strlen(className));
+    vm->globals[classSymbol] = OBJ_VAL(classObj);
+  }
+
+  // Create a name for the method, including its arity.
+  char name[MAX_METHOD_SIGNATURE];
+  strncpy(name, methodName, length);
+  for (int i = 0; i < numParams; i++)
+  {
+    name[length++] = ' ';
+  }
+  name[length] = '\0';
+
+  // Bind the method.
+  int methodSymbol = ensureSymbol(vm, &vm->methods, name, length);
+
+  classObj->methods[methodSymbol].type = METHOD_FOREIGN;
+  classObj->methods[methodSymbol].native = method;
+}
+
+double wrenGetArgumentDouble(WrenVM* vm, int index)
+{
+  ASSERT(vm->nativeCallSlot != NULL, "Must be in foreign call.");
+  ASSERT(index >= 0, "index cannot be negative.");
+  ASSERT(index < vm->nativeCallNumArgs, "Not that many arguments.");
+
+  // + 1 to shift past the receiver.
+  // TODO: Check actual value type first.
+  return AS_NUM(*(vm->nativeCallSlot + index + 1));
+}
+
+void wrenReturnDouble(WrenVM* vm, double value)
+{
+  ASSERT(vm->nativeCallSlot != NULL, "Must be in foreign call.");
+
+  *vm->nativeCallSlot = NUM_VAL(value);
+  vm->nativeCallSlot = NULL;
 }

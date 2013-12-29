@@ -23,6 +23,8 @@ typedef struct WrenVM WrenVM;
 //   [oldSize] will be zero. It should return NULL.
 typedef void* (*WrenReallocateFn)(void* memory, size_t oldSize, size_t newSize);
 
+typedef void (*WrenNativeMethodFn)(WrenVM* vm);
+
 typedef struct
 {
   // The callback Wren will use to allocate, reallocate, and deallocate memory.
@@ -79,5 +81,26 @@ void wrenFreeVM(WrenVM* vm);
 // zero if successful.
 // TODO: Define error codes.
 int wrenInterpret(WrenVM* vm, const char* source);
+
+// Defines a foreign method implemented by the host application. Looks for a
+// global class named [className] to bind the method to. If not found, it will
+// be created automatically.
+//
+// Defines a method on that class named [methodName] accepting [numParams]
+// parameters. If a method already exists with that name and arity, it will be
+// replaced. When invoked, the method will call [method].
+void wrenDefineMethod(WrenVM* vm, const char* className,
+                      const char* methodName, int numParams,
+                      WrenNativeMethodFn method);
+
+// Reads an numeric argument for a foreign call. This must only be called within
+// a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
+// which ranges from 0 to the number of parameters the method expects - 1.
+double wrenGetArgumentDouble(WrenVM* vm, int index);
+
+// Provides a numeric return value for a foreign call. This must only be called
+// within a function provided to [wrenDefineMethod]. Once this is called, the
+// foreign call is done, and no more arguments can be read or return calls made.
+void wrenReturnDouble(WrenVM* vm, double value);
 
 #endif

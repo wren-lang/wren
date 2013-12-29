@@ -190,11 +190,16 @@ typedef struct
 
 typedef enum
 {
+  // TODO: Unify these three:
+
   // A primitive method implemented in C that immediately returns a value.
   METHOD_PRIMITIVE,
 
   // A built-in method that modifies the fiber directly.
   METHOD_FIBER,
+
+  // A externally-defined C method.
+  METHOD_FOREIGN,
 
   // A normal user-defined method.
   METHOD_BLOCK,
@@ -213,6 +218,7 @@ typedef struct
   {
     Primitive primitive;
     FiberPrimitive fiberPrimitive;
+    WrenNativeMethodFn native;
 
     // May be a [ObjFn] or [ObjClosure].
     Obj* fn;

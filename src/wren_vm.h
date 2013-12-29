@@ -244,6 +244,14 @@ struct WrenVM
 
   // The externally-provided function used to allocate memory.
   WrenReallocateFn reallocate;
+
+  // During a foreign function call, this will point to the first argument (the
+  // receiver) of the call on the fiber's stack.
+  Value* nativeCallSlot;
+
+  // During a foreign function call, this will contain the number of arguments
+  // to the function.
+  int nativeCallNumArgs;
 };
 
 // A generic allocation function that handles all explicit memory management.

@@ -45,6 +45,20 @@
 // Set this to true to log memory operations as they occur.
 #define WREN_TRACE_MEMORY false
 
+// The maximum number of arguments that can be passed to a method. Note that
+// this limtation is hardcoded in other places in the VM, in particular, the
+// `CODE_CALL_XX` instructions assume a certain maximum number.
+#define MAX_PARAMETERS (16)
+
+// The maximum name of a method, not including the signature. This is an
+// arbitrary but enforced maximum just so we know how long the method name
+// strings need to be in the parser.
+#define MAX_METHOD_NAME (64)
+
+// The maximum length of a method signature. This includes the name, and the
+// extra spaces added to handle arity, and another byte to terminate the string.
+#define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + MAX_PARAMETERS + 1)
+
 // Assertions are used to validate program invariants. They indicate things the
 // program expects to be true about its internal state during execution. If an
 // assertion fails, there is a bug in Wren.
