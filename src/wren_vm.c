@@ -64,8 +64,8 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
     vm->globals[i] = NULL_VAL;
   }
 
-  vm->nativeCallSlot = NULL;
-  vm->nativeCallNumArgs = 0;
+  vm->foreignCallSlot = NULL;
+  vm->foreignCallNumArgs = 0;
 
   wrenInitializeCore(vm);
   return vm;
@@ -572,10 +572,10 @@ static void bindMethod(int methodType, int symbol, ObjClass* classObj,
 
 static void callForeign(WrenVM* vm, ObjFiber* fiber, Method* method, int numArgs)
 {
-  vm->nativeCallSlot = &fiber->stack[fiber->stackSize - numArgs];
+  vm->foreignCallSlot = &fiber->stack[fiber->stackSize - numArgs];
 
   // Don't include the receiver.
-  vm->nativeCallNumArgs = numArgs - 1;
+  vm->foreignCallNumArgs = numArgs - 1;
 
   method->native(vm);
 
@@ -584,10 +584,10 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber, Method* method, int numArgs
   fiber->stackSize -= numArgs - 1;
 
   // If nothing was returned, implicitly return null.
-  if (vm->nativeCallSlot != NULL)
+  if (vm->foreignCallSlot != NULL)
   {
-    *vm->nativeCallSlot = NULL_VAL;
-    vm->nativeCallSlot = NULL;
+    *vm->foreignCallSlot = NULL_VAL;
+    vm->foreignCallSlot = NULL;
   }
 }
 
@@ -1294,13 +1294,13 @@ double wrenGetArgumentDouble(WrenVM* vm, int index)
 
   // + 1 to shift past the receiver.
   // TODO: Check actual value type first.
-  return AS_NUM(*(vm->nativeCallSlot + index + 1));
+  return AS_NUM(*(vm->foreignCallSlot + index + 1));
 }
 
 void wrenReturnDouble(WrenVM* vm, double value)
 {
-  ASSERT(vm->nativeCallSlot != NULL, "Must be in foreign call.");
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
 
-  *vm->nativeCallSlot = NUM_VAL(value);
-  vm->nativeCallSlot = NULL;
+  *vm->foreignCallSlot = NUM_VAL(value);
+  vm->foreignCallSlot = NULL;
 }

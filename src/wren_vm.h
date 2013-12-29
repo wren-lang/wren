@@ -247,11 +247,11 @@ struct WrenVM
 
   // During a foreign function call, this will point to the first argument (the
   // receiver) of the call on the fiber's stack.
-  Value* nativeCallSlot;
+  Value* foreignCallSlot;
 
   // During a foreign function call, this will contain the number of arguments
   // to the function.
-  int nativeCallNumArgs;
+  int foreignCallNumArgs;
 };
 
 // A generic allocation function that handles all explicit memory management.
