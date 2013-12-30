@@ -324,10 +324,8 @@ static void writeBuffer(WrenVM* vm, Buffer* buffer, uint8_t byte)
 
 static void freeBuffer(WrenVM* vm, Buffer* buffer)
 {
-  wrenReallocate(vm, buffer->bytes, buffer->capacity, 0);
-  buffer->bytes = NULL;
-  buffer->capacity = 0;
-  buffer->length = 0;
+  wrenReallocate(vm, buffer->bytes, 0, 0);
+  initBuffer(vm, buffer);
 }
 
 // Initializes [compiler].

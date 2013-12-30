@@ -476,8 +476,10 @@ DEF_NATIVE(os_clock)
 
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
-  ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0);
+  // Add the symbol first since it can trigger a GC.
   int symbol = addSymbol(vm, &vm->globalSymbols, name, strlen(name));
+
+  ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0);
   vm->globals[symbol] = OBJ_VAL(classObj);
   return classObj;
 }
@@ -486,9 +488,9 @@ void wrenInitializeCore(WrenVM* vm)
 {
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass and an unusual metaclass (Class).
-  vm->objectClass = wrenNewSingleClass(vm, 0);
   int objectSymbol = addSymbol(vm, &vm->globalSymbols,
                                "Object", strlen("Object"));
+  vm->objectClass = wrenNewSingleClass(vm, 0);
   vm->globals[objectSymbol] = OBJ_VAL(vm->objectClass);
 
   NATIVE(vm->objectClass, "== ", object_eqeq);
@@ -499,9 +501,9 @@ void wrenInitializeCore(WrenVM* vm)
 
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
-  vm->classClass = wrenNewSingleClass(vm, 0);
   int classSymbol = addSymbol(vm, &vm->globalSymbols,
                               "Class", strlen("Class"));
+  vm->classClass = wrenNewSingleClass(vm, 0);
   vm->globals[classSymbol] = OBJ_VAL(vm->classClass);
 
   // Now that Object and Class are defined, we can wire them up to each other.
