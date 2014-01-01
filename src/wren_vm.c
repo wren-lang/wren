@@ -293,45 +293,6 @@ void wrenSetCompiler(WrenVM* vm, Compiler* compiler)
   vm->compiler = compiler;
 }
 
-static void freeObj(WrenVM* vm, Obj* obj)
-{
-#if WREN_TRACE_MEMORY
-  printf("free ");
-  wrenPrintValue(OBJ_VAL(obj));
-  printf(" @ %p\n", obj);
-#endif
-
-  switch (obj->type)
-  {
-    case OBJ_FN:
-    {
-      ObjFn* fn = (ObjFn*)obj;
-      wrenReallocate(vm, fn->constants, 0, 0);
-      wrenReallocate(vm, fn->bytecode, 0, 0);
-      wrenReallocate(vm, fn->debug->name, 0, 0);
-      wrenReallocate(vm, fn->debug->sourceLines, 0, 0);
-      wrenReallocate(vm, fn->debug, 0, 0);
-      break;
-    }
-
-    case OBJ_LIST:
-      wrenReallocate(vm, ((ObjList*)obj)->elements, 0, 0);
-      break;
-
-    case OBJ_STRING:
-      wrenReallocate(vm, ((ObjString*)obj)->value, 0, 0);
-      break;
-
-    case OBJ_CLASS:
-    case OBJ_CLOSURE:
-    case OBJ_INSTANCE:
-    case OBJ_UPVALUE:
-      break;
-  }
-
-  wrenReallocate(vm, obj, 0, 0);
-}
-
 static void collectGarbage(WrenVM* vm)
 {
   // Mark all reachable objects.
@@ -377,7 +338,7 @@ static void collectGarbage(WrenVM* vm)
       // This object wasn't reached, so remove it from the list and free it.
       Obj* unreached = *obj;
       *obj = unreached->next;
-      freeObj(vm, unreached);
+      wrenFreeObj(vm, unreached);
     }
     else
     {

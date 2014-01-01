@@ -527,6 +527,9 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 // Creates a new open upvalue pointing to [value] on the stack.
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
 
+// Releases all memory owned by [obj], including [obj] itself.
+void wrenFreeObj(WrenVM* vm, Obj* obj);
+
 // Returns the class of [value].
 ObjClass* wrenGetClass(WrenVM* vm, Value value);
 
