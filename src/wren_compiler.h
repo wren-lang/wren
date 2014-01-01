@@ -24,7 +24,7 @@ typedef struct sCompiler Compiler;
 
 // Compiles [source], a string of Wren source code, to an [ObjFn] that will
 // execute that code when invoked.
-ObjFn* wrenCompile(WrenVM* vm, const char* source);
+ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source);
 
 // When a class is defined, its superclass is not known until runtime since
 // class definitions are just imperative statements. Most of the bytecode for a

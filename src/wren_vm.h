@@ -274,8 +274,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
 // Mark [value] as reachable and still in use. This should only be called
 // during the sweep phase of a garbage collection.
-// TODO: Expose markObj instead?
-void wrenMarkValue(WrenVM* vm, Value value);
+void wrenMarkObj(WrenVM* vm, Obj* obj);
 
 // Sets the current Compiler being run to [compiler].
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler);
@@ -314,10 +313,5 @@ const char* getSymbolName(SymbolTable* symbols, int symbol);
 
 // Returns the global variable named [name].
 Value findGlobal(WrenVM* vm, const char* name);
-
-// Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
-// arguments (including the receiver) to be on the top of the stack already.
-// [function] can be an `ObjFn` or `ObjClosure`.
-void wrenCallFunction(ObjFiber* fiber, Obj* function, int numArgs);
 
 #endif

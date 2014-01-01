@@ -53,7 +53,7 @@ static int runFile(WrenVM* vm, const char* path)
 {
   char* source = readFile(path);
 
-  int result = wrenInterpret(vm, source);
+  int result = wrenInterpret(vm, path, source);
 
   wrenFreeVM(vm);
   free(source);
@@ -70,7 +70,7 @@ static int runRepl(WrenVM* vm)
     fgets(line, MAX_LINE, stdin);
 
     // TODO: Handle failure.
-    wrenInterpret(vm, line);
+    wrenInterpret(vm, "(repl)", line);
     // TODO: Figure out how this should work with wren API.
     /*
     ObjFn* fn = compile(vm, line);
@@ -94,14 +94,14 @@ int main(int argc, const char* argv[])
   if (argc < 1 || argc > 2)
   {
     fprintf(stderr, "Usage: wren [file]");
-    return 1;
+    return 64; // EX_USAGE.
   }
 
   WrenConfiguration config = {
     .reallocateFn = NULL,
     .heapGrowthPercent = 0,
     .minHeapSize = 0,
-    // Since we're running in a separate process, be generous with memory.
+    // Since we're running in a standalone process, be generous with memory.
     .initialHeapSize = 1024 * 1024 * 100
   };
 

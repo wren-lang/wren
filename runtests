@@ -35,7 +35,9 @@ else:
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
-ERROR_PATTERN = re.compile(r'\[Line (\d+)\] Error')
+EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect runtime error: (.+)')
+ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
+STACK_TRACE_PATTERN = re.compile(r'\[.* line (\d+)\] in \(script\)')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
 
@@ -102,6 +104,8 @@ def run_test(path):
   # Read the test and parse out the expectations.
   expect_output = []
   expect_error = []
+  expect_runtime_error_line = 0
+  expect_runtime_error = None
   expect_return = 0
 
   print_line('Passed: ' + color.GREEN + str(passed) + color.DEFAULT +
@@ -118,16 +122,21 @@ def run_test(path):
       match = EXPECT_ERROR_PATTERN.search(line)
       if match:
         expect_error.append(line_num)
-        # If we expect compile errors in the test, it should return
-        # exit code 1.
-        expect_return = 1
+        # If we expect compile errors, it should exit with EX_DATAERR.
+        expect_return = 65
 
       match = EXPECT_ERROR_LINE_PATTERN.search(line)
       if match:
         expect_error.append(int(match.group(1)))
-        # If we expect compile errors in the test, it should return
-        # exit code 1.
-        expect_return = 1
+        # If we expect compile errors, it should exit with EX_DATAERR.
+        expect_return = 65
+
+      match = EXPECT_RUNTIME_ERROR_PATTERN.search(line)
+      if match:
+        expect_runtime_error_line = line_num
+        expect_runtime_error = match.group(1)
+        # If we expect a runtime error, it should exit with EX_SOFTWARE.
+        expect_return = 70
 
       match = SKIP_PATTERN.search(line)
       if match:
@@ -150,21 +159,44 @@ def run_test(path):
   fails = []
 
   # Validate that no unexpected errors occurred.
-  if expect_return == 1 and err != '':
+  if expect_return != 0 and err != '':
     lines = err.split('\n')
-    while len(lines) > 0:
-      line = lines.pop(0)
-      match = ERROR_PATTERN.search(line)
-      if match:
-        if float(match.group(1)) not in expect_error:
-          fails.append('Unexpected error:')
+    if expect_runtime_error:
+      # Make sure we got the right error.
+      if lines[0] != expect_runtime_error:
+        fails.append('Expected runtime error "' + expect_runtime_error +
+          '" and got:')
+        fails.append(lines[0])
+
+      # Make sure the stack trace has the right line.
+      match = STACK_TRACE_PATTERN.search(lines[1])
+      if not match:
+        fails.append('Expected stack trace and got:')
+        fails.append(lines[1])
+      else:
+        stack_line = int(match.group(1))
+        if stack_line != expect_runtime_error_line:
+          fails.append('Expected runtime error on line ' +
+              str(expect_runtime_error_line) + ' but was on line ' +
+              str(stack_line))
+    else:
+      lines = err.split('\n')
+      while len(lines) > 0:
+        line = lines.pop(0)
+        match = ERROR_PATTERN.search(line)
+        if match:
+          if float(match.group(1)) not in expect_error:
+            fails.append('Unexpected error:')
+            fails.append(line)
+        elif line != '':
+          fails.append('Unexpected output on stderr:')
           fails.append(line)
-      elif line != '':
-        fails.append('Unexpected output on stderr:')
-        fails.append(line)
   else:
     for line in expect_error:
       fails.append('Expected error on line ' + str(line) + ' and got none.')
+    if expect_runtime_error:
+      fails.append('Expected runtime error ' + expect_runtime_error +
+          ' and got none.')
 
   # Validate the exit code.
   if proc.returncode != expect_return:

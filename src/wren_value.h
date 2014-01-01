@@ -156,8 +156,44 @@ typedef struct
   Upvalue* openUpvalues;
 } ObjFiber;
 
-typedef Value (*Primitive)(WrenVM* vm, Value* args);
-typedef void (*FiberPrimitive)(WrenVM* vm, ObjFiber* fiber, Value* args);
+typedef enum
+{
+  // A normal value has been returned.
+  PRIM_VALUE,
+
+  // A runtime error occurred.
+  PRIM_ERROR,
+
+  // A new callframe has been pushed.
+  PRIM_CALL
+} PrimitiveResult;
+
+typedef struct
+{
+  Obj obj;
+  char* value;
+
+  // TODO: Flexible array.
+} ObjString;
+
+typedef PrimitiveResult (*Primitive)(WrenVM* vm, ObjFiber* fiber, Value* args);
+
+// Stores debugging information for a function used for things like stack
+// traces.
+typedef struct
+{
+  // The name of the function. Heap allocated and owned by the ObjFn.
+  char* name;
+
+  // The name of the source file where this function was defined. An [ObjString]
+  // because this will be shared among all functions defined in the same file.
+  ObjString* sourcePath;
+
+  // An array of line numbers. There is one element in this array for each
+  // bytecode in the function's bytecode array. The value of that element is
+  // the line in the source code that generated that instruction.
+  int* sourceLines;
+} FnDebug;
 
 // A first-class function object. A raw ObjFn can be used and invoked directly
 // if it has no upvalues (i.e. [numUpvalues] is zero). If it does use upvalues,
@@ -173,6 +209,7 @@ typedef struct
   int numUpvalues;
   int numConstants;
   int bytecodeLength;
+  FnDebug* debug;
 } ObjFn;
 
 // An instance of a first-class function and the environment it has closed over.
@@ -195,9 +232,6 @@ typedef enum
   // A primitive method implemented in C that immediately returns a value.
   METHOD_PRIMITIVE,
 
-  // A built-in method that modifies the fiber directly.
-  METHOD_FIBER,
-
   // A externally-defined C method.
   METHOD_FOREIGN,
 
@@ -217,8 +251,7 @@ typedef struct
   union
   {
     Primitive primitive;
-    FiberPrimitive fiberPrimitive;
-    WrenNativeMethodFn native;
+    WrenForeignMethodFn foreign;
 
     // May be a [ObjFn] or [ObjClosure].
     Obj* fn;
@@ -259,14 +292,6 @@ typedef struct
   // Pointer to a contiguous array of [capacity] elements.
   Value* elements;
 } ObjList;
-
-typedef struct
-{
-  Obj obj;
-  char* value;
-
-  // TODO: Flexible array.
-} ObjString;
 
 
 // Value -> ObjClass*.
@@ -470,11 +495,15 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 // Creates a new fiber object.
 ObjFiber* wrenNewFiber(WrenVM* vm);
 
+// TODO: The argument list here is getting a bit gratuitous.
 // Creates a new function object with the given code and constants. The new
-// function will take over ownership of [bytecode]. It will copy [constants]
-// into its own array.
+// function will take over ownership of [bytecode] and [sourceLines]. It will
+// copy [constants] into its own array.
 ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
-                       int numUpvalues, u_int8_t* bytecode, int bytecodeLength);
+                       int numUpvalues, u_int8_t* bytecode, int bytecodeLength,
+                       ObjString* debugSourcePath,
+                       const char* debugName, int debugNameLength,
+                       int* sourceLines);
 
 // Creates a new instance of the given [classObj].
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj);
@@ -505,6 +534,8 @@ ObjClass* wrenGetClass(WrenVM* vm, Value value);
 // semantics. This is identity for object values, and value equality for others.
 bool wrenValuesEqual(Value a, Value b);
 
+// TODO: Need to decide if this is for user output of values, or for debug
+// tracing.
 void wrenPrintValue(Value value);
 
 // TODO: Can these be inlined?

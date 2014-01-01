@@ -12,8 +12,9 @@
 #include "wren_value.h"
 #include "wren_vm.h"
 
-int wrenDebugDumpInstruction(WrenVM* vm, ObjFn* fn, int i);
-void wrenDebugDumpCode(WrenVM* vm, ObjFn* fn);
-void wrenDebugDumpStack(ObjFiber* fiber);
+void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber, Value error);
+int wrenDebugPrintInstruction(WrenVM* vm, ObjFn* fn, int i);
+void wrenDebugPrintCode(WrenVM* vm, ObjFn* fn);
+void wrenDebugPrintStack(ObjFiber* fiber);
 
 #endif

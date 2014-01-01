@@ -120,9 +120,12 @@ ObjFiber* wrenNewFiber(WrenVM* vm)
 }
 
 ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
-                       int numUpvalues, u_int8_t* bytecode, int bytecodeLength)
+                       int numUpvalues, u_int8_t* bytecode, int bytecodeLength,
+                       ObjString* debugSourcePath,
+                       const char* debugName, int debugNameLength,
+                       int* sourceLines)
 {
-  // Allocate this before the function in case they trigger a GC which would
+  // Allocate these before the function in case they trigger a GC which would
   // free the function.
   Value* copiedConstants = NULL;
   if (numConstants > 0)
@@ -134,6 +137,16 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
     }
   }
 
+  FnDebug* debug = allocate(vm, sizeof(FnDebug));
+
+  debug->sourcePath = debugSourcePath;
+
+  // Copy the function's name.
+  debug->name = allocate(vm, debugNameLength + 1);
+  strncpy(debug->name, debugName, debugNameLength + 1);
+
+  debug->sourceLines = sourceLines;
+  
   ObjFn* fn = allocate(vm, sizeof(ObjFn));
   initObj(vm, &fn->obj, OBJ_FN);
 
@@ -146,6 +159,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
   fn->numUpvalues = numUpvalues;
   fn->numConstants = numConstants;
   fn->bytecodeLength = bytecodeLength;
+  fn->debug = debug;
 
   return fn;
 }

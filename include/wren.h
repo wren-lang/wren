@@ -23,7 +23,7 @@ typedef struct WrenVM WrenVM;
 //   [oldSize] will be zero. It should return NULL.
 typedef void* (*WrenReallocateFn)(void* memory, size_t oldSize, size_t newSize);
 
-typedef void (*WrenNativeMethodFn)(WrenVM* vm);
+typedef void (*WrenForeignMethodFn)(WrenVM* vm);
 
 typedef struct
 {
@@ -80,7 +80,7 @@ void wrenFreeVM(WrenVM* vm);
 // Runs [source], a string of Wren source code in a new fiber in [vm]. Returns
 // zero if successful.
 // TODO: Define error codes.
-int wrenInterpret(WrenVM* vm, const char* source);
+int wrenInterpret(WrenVM* vm, const char* sourcePath, const char* source);
 
 // Defines a foreign method implemented by the host application. Looks for a
 // global class named [className] to bind the method to. If not found, it will
@@ -91,7 +91,7 @@ int wrenInterpret(WrenVM* vm, const char* source);
 // replaced. When invoked, the method will call [method].
 void wrenDefineMethod(WrenVM* vm, const char* className,
                       const char* methodName, int numParams,
-                      WrenNativeMethodFn method);
+                      WrenForeignMethodFn method);
 
 // Reads an numeric argument for a foreign call. This must only be called within
 // a function provided to [wrenDefineMethod]. Retrieves the argument at [index]

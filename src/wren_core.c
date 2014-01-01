@@ -16,26 +16,25 @@
       cls->methods[symbol].primitive = native_##fn; \
     }
 
-// Binds a "fiber native" method named [name] (in Wren) implemented using C
-// function [fn] to `ObjClass` [cls]. Unlike regular native methods, fiber
-// natives have access to the fiber itself and can do lower-level stuff like
-// pushing callframes.
-#define FIBER_NATIVE(cls, name, fn) \
-    { \
-      int symbol = ensureSymbol(vm, &vm->methods, name, strlen(name)); \
-      cls->methods[symbol].type = METHOD_FIBER; \
-      cls->methods[symbol].fiberPrimitive = native_##fn; \
-    }
-
 // Defines a native method whose C function name is [native]. This abstracts
 // the actual type signature of a native function and makes it clear which C
 // functions are intended to be invoked as natives.
 #define DEF_NATIVE(native) \
-    static Value native_##native(WrenVM* vm, Value* args)
+    static PrimitiveResult native_##native(WrenVM* vm, ObjFiber* fiber, Value* args)
 
-// Defines a fiber native method whose C function name is [native].
-#define DEF_FIBER_NATIVE(native) \
-    static void native_##native(WrenVM* vm, ObjFiber* fiber, Value* args)
+#define RETURN_VAL(value)   do { args[0] = value; return PRIM_VALUE; } while (0)
+
+#define RETURN_BOOL(value)  RETURN_VAL(BOOL_VAL(value))
+#define RETURN_FALSE        RETURN_VAL(FALSE_VAL)
+#define RETURN_NULL         RETURN_VAL(NULL_VAL)
+#define RETURN_NUM(value)   RETURN_VAL(NUM_VAL(value))
+#define RETURN_TRUE         RETURN_VAL(TRUE_VAL)
+
+#define RETURN_ERROR(msg) \
+    do { \
+      args[0] = wrenNewString(vm, msg, strlen(msg)); \
+      return PRIM_ERROR; \
+    } while (0);
 
 // This string literal is generated automatically from corelib.wren using
 // make_corelib. Do not edit here.
@@ -89,43 +88,22 @@ const char* coreLibSource =
 
 DEF_NATIVE(bool_not)
 {
-  return BOOL_VAL(!AS_BOOL(args[0]));
+  RETURN_BOOL(!AS_BOOL(args[0]));
 }
 
 DEF_NATIVE(bool_toString)
 {
   if (AS_BOOL(args[0]))
   {
-    return wrenNewString(vm, "true", 4);
+    RETURN_VAL(wrenNewString(vm, "true", 4));
   }
   else
   {
-    return wrenNewString(vm, "false", 5);
+    RETURN_VAL(wrenNewString(vm, "false", 5));
   }
 }
 
-// The call instruction leading to this primitive has one argument for the
-// receiver plus as many arguments as were passed. When we push the block onto
-// the callstack, we again use as many arguments. That ensures that the result
-// of evaluating the block goes into the slot that the caller of *this*
-// primitive is expecting.
-DEF_FIBER_NATIVE(fn_call0) { wrenCallFunction(fiber, AS_OBJ(args[0]), 1); }
-DEF_FIBER_NATIVE(fn_call1) { wrenCallFunction(fiber, AS_OBJ(args[0]), 2); }
-DEF_FIBER_NATIVE(fn_call2) { wrenCallFunction(fiber, AS_OBJ(args[0]), 3); }
-DEF_FIBER_NATIVE(fn_call3) { wrenCallFunction(fiber, AS_OBJ(args[0]), 4); }
-DEF_FIBER_NATIVE(fn_call4) { wrenCallFunction(fiber, AS_OBJ(args[0]), 5); }
-DEF_FIBER_NATIVE(fn_call5) { wrenCallFunction(fiber, AS_OBJ(args[0]), 6); }
-DEF_FIBER_NATIVE(fn_call6) { wrenCallFunction(fiber, AS_OBJ(args[0]), 7); }
-DEF_FIBER_NATIVE(fn_call7) { wrenCallFunction(fiber, AS_OBJ(args[0]), 8); }
-DEF_FIBER_NATIVE(fn_call8) { wrenCallFunction(fiber, AS_OBJ(args[0]), 9); }
-DEF_FIBER_NATIVE(fn_call9) { wrenCallFunction(fiber, AS_OBJ(args[0]), 10); }
-DEF_FIBER_NATIVE(fn_call10) { wrenCallFunction(fiber, AS_OBJ(args[0]), 11); }
-DEF_FIBER_NATIVE(fn_call11) { wrenCallFunction(fiber, AS_OBJ(args[0]), 12); }
-DEF_FIBER_NATIVE(fn_call12) { wrenCallFunction(fiber, AS_OBJ(args[0]), 13); }
-DEF_FIBER_NATIVE(fn_call13) { wrenCallFunction(fiber, AS_OBJ(args[0]), 14); }
-DEF_FIBER_NATIVE(fn_call14) { wrenCallFunction(fiber, AS_OBJ(args[0]), 15); }
-DEF_FIBER_NATIVE(fn_call15) { wrenCallFunction(fiber, AS_OBJ(args[0]), 16); }
-DEF_FIBER_NATIVE(fn_call16) { wrenCallFunction(fiber, AS_OBJ(args[0]), 17); }
+DEF_NATIVE(fn_call) { return PRIM_CALL; }
 
 // Validates that [index] is an integer within `[0, count)`. Also allows
 // negative indices which map backwards from the end. Returns the valid positive
@@ -153,7 +131,7 @@ DEF_NATIVE(list_add)
 {
   ObjList* list = AS_LIST(args[0]);
   wrenListAdd(vm, list, args[1]);
-  return args[1];
+  RETURN_VAL(args[1]);
 }
 
 DEF_NATIVE(list_clear)
@@ -163,13 +141,13 @@ DEF_NATIVE(list_clear)
   list->elements = NULL;
   list->capacity = 0;
   list->count = 0;
-  return NULL_VAL;
+  RETURN_NULL;
 }
 
 DEF_NATIVE(list_count)
 {
   ObjList* list = AS_LIST(args[0]);
-  return NUM_VAL(list->count);
+  RETURN_NUM(list->count);
 }
 
 DEF_NATIVE(list_insert)
@@ -180,26 +158,26 @@ DEF_NATIVE(list_insert)
   int index = validateIndex(args[2], list->count + 1);
   // TODO: Instead of returning null here, should signal an error explicitly
   // somehow.
-  if (index == -1) return NULL_VAL;
+  if (index == -1) RETURN_NULL;
 
   wrenListInsert(vm, list, args[1], index);
-  return args[1];
+  RETURN_VAL(args[1]);
 }
 
 DEF_NATIVE(list_iterate)
 {
   // If we're starting the iteration, return the first index.
-  if (IS_NULL(args[1])) return NUM_VAL(0);
+  if (IS_NULL(args[1])) RETURN_NUM(0);
 
   ObjList* list = AS_LIST(args[0]);
   double index = AS_NUM(args[1]);
   // TODO: Handle arg not a number or not an integer.
 
   // Stop if we're out of elements.
-  if (index >= list->count - 1) return FALSE_VAL;
+  if (index >= list->count - 1) RETURN_FALSE;
 
   // Otherwise, move to the next index.
-  return NUM_VAL(index + 1);
+  RETURN_NUM(index + 1);
 }
 
 DEF_NATIVE(list_iteratorValue)
@@ -207,7 +185,7 @@ DEF_NATIVE(list_iteratorValue)
   ObjList* list = AS_LIST(args[0]);
   double index = AS_NUM(args[1]);
   // TODO: Handle index out of bounds or not integer.
-  return list->elements[(int)index];
+  RETURN_VAL(list->elements[(int)index]);
 }
 
 DEF_NATIVE(list_removeAt)
@@ -216,9 +194,9 @@ DEF_NATIVE(list_removeAt)
   int index = validateIndex(args[1], list->count);
   // TODO: Instead of returning null here, should signal an error explicitly
   // somehow.
-  if (index == -1) return NULL_VAL;
+  if (index == -1) RETURN_NULL;
 
-  return wrenListRemoveAt(vm, list, index);
+  RETURN_VAL(wrenListRemoveAt(vm, list, index));
 }
 
 DEF_NATIVE(list_subscript)
@@ -228,9 +206,9 @@ DEF_NATIVE(list_subscript)
   int index = validateIndex(args[1], list->count);
   // TODO: Instead of returning null here, should signal an error explicitly
   // somehow.
-  if (index == -1) return NULL_VAL;
+  if (index == -1) RETURN_NULL;
 
-  return list->elements[index];
+  RETURN_VAL(list->elements[index]);
 }
 
 DEF_NATIVE(list_subscriptSetter)
@@ -240,20 +218,20 @@ DEF_NATIVE(list_subscriptSetter)
   int index = validateIndex(args[1], list->count);
   // TODO: Instead of returning null here, should signal an error explicitly
   // somehow.
-  if (index == -1) return NULL_VAL;
+  if (index == -1) RETURN_NULL;
 
   list->elements[index] = args[2];
-  return args[2];
+  RETURN_VAL(args[2]);
 }
 
 DEF_NATIVE(null_toString)
 {
-  return wrenNewString(vm, "null", 4);
+  RETURN_VAL(wrenNewString(vm, "null", 4));
 }
 
 DEF_NATIVE(num_abs)
 {
-  return NUM_VAL(fabs(AS_NUM(args[0])));
+  RETURN_NUM(fabs(AS_NUM(args[0])));
 }
 
 DEF_NATIVE(num_toString)
@@ -262,114 +240,129 @@ DEF_NATIVE(num_toString)
   // formatted using %.14g.
   char buffer[21];
   sprintf(buffer, "%.14g", AS_NUM(args[0]));
-  return (Value)wrenNewString(vm, buffer, strlen(buffer));
+  RETURN_VAL(wrenNewString(vm, buffer, strlen(buffer)));
 }
 
 DEF_NATIVE(num_negate)
 {
-  return NUM_VAL(-AS_NUM(args[0]));
+  RETURN_NUM(-AS_NUM(args[0]));
+}
+
+// Validates that the second argument in [args] is a Num. Returns true if it is.
+// If not, sets a type error and returns false.
+static bool checkNumType(WrenVM* vm, Value* args)
+{
+  if (IS_NUM(args[1])) return true;
+
+  const char* msg = "TypeError: Right operand must be Num.";
+  args[0] = wrenNewString(vm, msg, strlen(msg));
+  return false;
 }
 
 DEF_NATIVE(num_minus)
 {
-  // TODO: Handle unsupported operand types better.
-  if (!IS_NUM(args[1])) return NULL_VAL;
-  return NUM_VAL(AS_NUM(args[0]) - AS_NUM(args[1]));
+  if (!checkNumType(vm, args)) return PRIM_ERROR;
+  RETURN_NUM(AS_NUM(args[0]) - AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_plus)
 {
-  if (!IS_NUM(args[1])) return NULL_VAL;
+  if (!checkNumType(vm, args)) return PRIM_ERROR;
   // TODO: Handle coercion to string if RHS is a string.
-  return NUM_VAL(AS_NUM(args[0]) + AS_NUM(args[1]));
+  RETURN_NUM(AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_multiply)
 {
-  if (!IS_NUM(args[1])) return NULL_VAL;
-  return NUM_VAL(AS_NUM(args[0]) * AS_NUM(args[1]));
+  if (!checkNumType(vm, args)) return PRIM_ERROR;
+  RETURN_NUM(AS_NUM(args[0]) * AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_divide)
 {
-  if (!IS_NUM(args[1])) return NULL_VAL;
-  return NUM_VAL(AS_NUM(args[0]) / AS_NUM(args[1]));
+  if (!checkNumType(vm, args)) return PRIM_ERROR;
+  RETURN_NUM(AS_NUM(args[0]) / AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_mod)
 {
-  if (!IS_NUM(args[1])) return NULL_VAL;
-  return NUM_VAL(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
+  if (!checkNumType(vm, args)) return PRIM_ERROR;
+  if (!IS_NUM(args[1])) RETURN_NULL;
+  RETURN_NUM(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_NATIVE(num_lt)
 {
-  if (!IS_NUM(args[1])) return NULL_VAL;
-  return BOOL_VAL(AS_NUM(args[0]) < AS_NUM(args[1]));
+  // TODO: Error on wrong argument type.
+  if (!IS_NUM(args[1])) RETURN_NULL;
+  RETURN_BOOL(AS_NUM(args[0]) < AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_gt)
 {
-  if (!IS_NUM(args[1])) return NULL_VAL;
-  return BOOL_VAL(AS_NUM(args[0]) > AS_NUM(args[1]));
+  // TODO: Error on wrong argument type.
+  if (!IS_NUM(args[1])) RETURN_NULL;
+  RETURN_BOOL(AS_NUM(args[0]) > AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_lte)
 {
-  if (!IS_NUM(args[1])) return NULL_VAL;
-  return BOOL_VAL(AS_NUM(args[0]) <= AS_NUM(args[1]));
+  // TODO: Error on wrong argument type.
+  if (!IS_NUM(args[1])) RETURN_NULL;
+  RETURN_BOOL(AS_NUM(args[0]) <= AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_gte)
 {
-  if (!IS_NUM(args[1])) return NULL_VAL;
-  return BOOL_VAL(AS_NUM(args[0]) >= AS_NUM(args[1]));
+  // TODO: Error on wrong argument type.
+  if (!IS_NUM(args[1])) RETURN_NULL;
+  RETURN_BOOL(AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_eqeq)
 {
-  if (!IS_NUM(args[1])) return FALSE_VAL;
-  return BOOL_VAL(AS_NUM(args[0]) == AS_NUM(args[1]));
+  if (!IS_NUM(args[1])) RETURN_FALSE;
+  RETURN_BOOL(AS_NUM(args[0]) == AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_bangeq)
 {
-  if (!IS_NUM(args[1])) return TRUE_VAL;
-  return BOOL_VAL(AS_NUM(args[0]) != AS_NUM(args[1]));
+  if (!IS_NUM(args[1])) RETURN_TRUE;
+  RETURN_BOOL(AS_NUM(args[0]) != AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_bitwiseNot)
 {
   // Bitwise operators always work on 32-bit unsigned ints.
   uint32_t value = (uint32_t)AS_NUM(args[0]);
-  return NUM_VAL(~value);
+  RETURN_NUM(~value);
 }
 
 DEF_NATIVE(object_eqeq)
 {
-  return BOOL_VAL(wrenValuesEqual(args[0], args[1]));
+  RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_NATIVE(object_bangeq)
 {
-  return BOOL_VAL(!wrenValuesEqual(args[0], args[1]));
+  RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_NATIVE(object_new)
 {
   // This is the default argument-less constructor that all objects inherit.
   // It just returns "this".
-  return args[0];
+  RETURN_VAL(args[0]);
 }
 
 DEF_NATIVE(object_toString)
 {
-  return wrenNewString(vm, "<object>", 8);
+  RETURN_VAL(wrenNewString(vm, "<object>", 8));
 }
 
 DEF_NATIVE(object_type)
 {
-  return OBJ_VAL(wrenGetClass(vm, args[0]));
+  RETURN_VAL(OBJ_VAL(wrenGetClass(vm, args[0])));
 }
 
 DEF_NATIVE(string_contains)
@@ -379,25 +372,25 @@ DEF_NATIVE(string_contains)
   const char* search = AS_CSTRING(args[1]);
 
   // Corner case, the empty string contains the empty string.
-  if (strlen(string) == 0 && strlen(search) == 0) return TRUE_VAL;
+  if (strlen(string) == 0 && strlen(search) == 0) RETURN_TRUE;
 
-  return BOOL_VAL(strstr(string, search) != NULL);
+  RETURN_BOOL(strstr(string, search) != NULL);
 }
 
 DEF_NATIVE(string_count)
 {
   double count = strlen(AS_CSTRING(args[0]));
-  return NUM_VAL(count);
+  RETURN_NUM(count);
 }
 
 DEF_NATIVE(string_toString)
 {
-  return args[0];
+  RETURN_VAL(args[0]);
 }
 
 DEF_NATIVE(string_plus)
 {
-  if (!IS_STRING(args[1])) return NULL_VAL;
+  if (!IS_STRING(args[1])) RETURN_NULL;
   // TODO: Handle coercion to string of RHS.
 
   const char* left = AS_CSTRING(args[0]);
@@ -412,35 +405,35 @@ DEF_NATIVE(string_plus)
   strcpy(string->value + leftLength, right);
   string->value[leftLength + rightLength] = '\0';
 
-  return value;
+  RETURN_VAL(value);
 }
 
 DEF_NATIVE(string_eqeq)
 {
-  if (!IS_STRING(args[1])) return FALSE_VAL;
+  if (!IS_STRING(args[1])) RETURN_FALSE;
   const char* a = AS_CSTRING(args[0]);
   const char* b = AS_CSTRING(args[1]);
-  return BOOL_VAL(strcmp(a, b) == 0);
+  RETURN_BOOL(strcmp(a, b) == 0);
 }
 
 DEF_NATIVE(string_bangeq)
 {
-  if (!IS_STRING(args[1])) return TRUE_VAL;
+  if (!IS_STRING(args[1])) RETURN_TRUE;
   const char* a = AS_CSTRING(args[0]);
   const char* b = AS_CSTRING(args[1]);
-  return BOOL_VAL(strcmp(a, b) != 0);
+  RETURN_BOOL(strcmp(a, b) != 0);
 }
 
 DEF_NATIVE(string_subscript)
 {
   // TODO: Instead of returning null here, all of these failure cases should
   // signal an error explicitly somehow.
-  if (!IS_NUM(args[1])) return NULL_VAL;
+  if (!IS_NUM(args[1])) RETURN_NULL;
 
   double indexNum = AS_NUM(args[1]);
   int index = (int)indexNum;
   // Make sure the index is an integer.
-  if (indexNum != index) return NULL_VAL;
+  if (indexNum != index) RETURN_NULL;
 
   ObjString* string = AS_STRING(args[0]);
 
@@ -450,7 +443,7 @@ DEF_NATIVE(string_subscript)
   if (index < 0) index = length + index;
 
   // Check bounds.
-  if (index < 0 || index >= length) return NULL_VAL;
+  if (index < 0 || index >= length) RETURN_NULL;
 
   // The result is a one-character string.
   // TODO: Handle UTF-8.
@@ -458,20 +451,20 @@ DEF_NATIVE(string_subscript)
   ObjString* result = AS_STRING(value);
   result->value[0] = AS_CSTRING(args[0])[index];
   result->value[1] = '\0';
-  return value;
+  RETURN_VAL(value);
 }
 
 DEF_NATIVE(io_writeString)
 {
   wrenPrintValue(args[1]);
   printf("\n");
-  return args[1];
+  RETURN_VAL(args[1]);
 }
 
 DEF_NATIVE(os_clock)
 {
   double time = (double)clock() / CLOCKS_PER_SEC;
-  return NUM_VAL(time);
+  RETURN_NUM(time);
 }
 
 static ObjClass* defineClass(WrenVM* vm, const char* name)
@@ -539,23 +532,23 @@ void wrenInitializeCore(WrenVM* vm)
   vm->fiberClass = defineClass(vm, "Fiber");
   
   vm->fnClass = defineClass(vm, "Function");
-  FIBER_NATIVE(vm->fnClass, "call", fn_call0);
-  FIBER_NATIVE(vm->fnClass, "call ", fn_call1);
-  FIBER_NATIVE(vm->fnClass, "call  ", fn_call2);
-  FIBER_NATIVE(vm->fnClass, "call   ", fn_call3);
-  FIBER_NATIVE(vm->fnClass, "call    ", fn_call4);
-  FIBER_NATIVE(vm->fnClass, "call     ", fn_call5);
-  FIBER_NATIVE(vm->fnClass, "call      ", fn_call6);
-  FIBER_NATIVE(vm->fnClass, "call       ", fn_call7);
-  FIBER_NATIVE(vm->fnClass, "call        ", fn_call8);
-  FIBER_NATIVE(vm->fnClass, "call         ", fn_call9);
-  FIBER_NATIVE(vm->fnClass, "call          ", fn_call10);
-  FIBER_NATIVE(vm->fnClass, "call           ", fn_call11);
-  FIBER_NATIVE(vm->fnClass, "call            ", fn_call12);
-  FIBER_NATIVE(vm->fnClass, "call             ", fn_call13);
-  FIBER_NATIVE(vm->fnClass, "call              ", fn_call14);
-  FIBER_NATIVE(vm->fnClass, "call               ", fn_call15);
-  FIBER_NATIVE(vm->fnClass, "call                ", fn_call16);
+  NATIVE(vm->fnClass, "call", fn_call);
+  NATIVE(vm->fnClass, "call ", fn_call);
+  NATIVE(vm->fnClass, "call  ", fn_call);
+  NATIVE(vm->fnClass, "call   ", fn_call);
+  NATIVE(vm->fnClass, "call    ", fn_call);
+  NATIVE(vm->fnClass, "call     ", fn_call);
+  NATIVE(vm->fnClass, "call      ", fn_call);
+  NATIVE(vm->fnClass, "call       ", fn_call);
+  NATIVE(vm->fnClass, "call        ", fn_call);
+  NATIVE(vm->fnClass, "call         ", fn_call);
+  NATIVE(vm->fnClass, "call          ", fn_call);
+  NATIVE(vm->fnClass, "call           ", fn_call);
+  NATIVE(vm->fnClass, "call            ", fn_call);
+  NATIVE(vm->fnClass, "call             ", fn_call);
+  NATIVE(vm->fnClass, "call              ", fn_call);
+  NATIVE(vm->fnClass, "call               ", fn_call);
+  NATIVE(vm->fnClass, "call                ", fn_call);
 
   vm->nullClass = defineClass(vm, "Null");
   NATIVE(vm->nullClass, "toString", null_toString);
@@ -572,7 +565,7 @@ void wrenInitializeCore(WrenVM* vm)
   ObjClass* osClass = defineClass(vm, "OS");
   NATIVE(osClass->metaclass, "clock", os_clock);
 
-  wrenInterpret(vm, coreLibSource);
+  wrenInterpret(vm, "Wren core library", coreLibSource);
 
   vm->listClass = AS_CLASS(findGlobal(vm, "List"));
   NATIVE(vm->listClass, "add ", list_add);

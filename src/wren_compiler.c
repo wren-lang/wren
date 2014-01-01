@@ -118,6 +118,8 @@ typedef struct
 {
   WrenVM* vm;
 
+  ObjString* sourcePath;
+
   const char* source;
 
   // The beginning of the currently-being-lexed token in [source].
@@ -186,6 +188,10 @@ struct sCompiler
   // The growable buffer of code that's been compiled so far.
   Buffer bytecode;
 
+  // TODO: Make this actually growable.
+  // The buffer of source line mappings.
+  int* debugSourceLines;
+
   ObjList* constants;
 
   // Symbol table for the fields of the nearest enclosing class, or NULL if not
@@ -230,7 +236,8 @@ static void lexError(Parser* parser, const char* format, ...)
 {
   parser->hasError = true;
 
-  fprintf(stderr, "[Line %d] Error: ", parser->currentLine);
+  fprintf(stderr, "[%s line %d] Error: ",
+          parser->sourcePath->value, parser->currentLine);
 
   va_list args;
   va_start(args, format);
@@ -253,7 +260,9 @@ static void error(Compiler* compiler, const char* format, ...)
   compiler->parser->hasError = true;
 
   Token* token = &compiler->parser->previous;
-  fprintf(stderr, "[Line %d] Error on ", token->line);
+  fprintf(stderr, "[%s line %d] Error on ",
+          compiler->parser->sourcePath->value, token->line);
+
   if (token->type == TOKEN_LINE)
   {
     // Don't print the newline itself since that looks wonky.
@@ -340,6 +349,10 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->methodLength = methodLength;
 
   initBuffer(parser->vm, &compiler->bytecode);
+
+  // TODO: Make this grow!
+  compiler->debugSourceLines = wrenReallocate(parser->vm, NULL, 0,
+                                              sizeof(int) * 8192);
 
   // Initialize these to NULL before allocating them in case a GC gets
   // triggered in the middle of creating these.
@@ -832,6 +845,11 @@ static Token* consume(Compiler* compiler, TokenType expected,
 static int emit(Compiler* compiler, Code code)
 {
   writeBuffer(compiler->parser->vm, &compiler->bytecode, code);
+
+  // Assume the instruction is associated with the most recently consumed token.
+  compiler->debugSourceLines[compiler->bytecode.length] =
+      compiler->parser->previous.line;
+  
   return compiler->bytecode.length - 1;
 }
 
@@ -1078,15 +1096,16 @@ static int copyName(Compiler* compiler, char* name)
 // Finishes [compiler], which is compiling a function, method, or chunk of top
 // level code. If there is a parent compiler, then this emits code in the
 // parent compiler to load the resulting function.
-static ObjFn* endCompiler(Compiler* compiler)
+static ObjFn* endCompiler(Compiler* compiler,
+                          const char* debugName, int debugNameLength)
 {
   // If we hit an error, don't bother creating the function since it's borked
   // anyway.
   if (compiler->parser->hasError)
   {
-    // Free the bytecode since it won't be used.
+    // Free the code since it won't be used.
     freeBuffer(compiler->parser->vm, &compiler->bytecode);
-
+    wrenReallocate(compiler->parser->vm, compiler->debugSourceLines, 0, 0);
     return NULL;
   }
 
@@ -1100,7 +1119,10 @@ static ObjFn* endCompiler(Compiler* compiler)
                               compiler->constants->count,
                               compiler->numUpvalues,
                               compiler->bytecode.bytes,
-                              compiler->bytecode.length);
+                              compiler->bytecode.length,
+                              compiler->parser->sourcePath,
+                              debugName, debugNameLength,
+                              compiler->debugSourceLines);
   PinnedObj pinned;
   pinObj(compiler->parser->vm, (Obj*)fn, &pinned);
 
@@ -1384,7 +1406,7 @@ static void function(Compiler* compiler, bool allowAssignment)
     emit(&fnCompiler, CODE_RETURN);
   }
 
-  endCompiler(&fnCompiler);
+  endCompiler(&fnCompiler, "(fn)", 4);
 }
 
 static void field(Compiler* compiler, bool allowAssignment)
@@ -1872,7 +1894,7 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
 
   emit(&methodCompiler, CODE_RETURN);
 
-  endCompiler(&methodCompiler);
+  endCompiler(&methodCompiler, name, length);
 
   // Compile the code to define the method.
   emit1(compiler, instruction, symbol);
@@ -2280,10 +2302,11 @@ void definition(Compiler* compiler)
 
 // Parses [source] to a "function" (a chunk of top-level code) for execution by
 // [vm].
-ObjFn* wrenCompile(WrenVM* vm, const char* source)
+ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 {
   Parser parser;
   parser.vm = vm;
+  parser.sourcePath = NULL;
   parser.source = source;
   parser.hasError = false;
 
@@ -2309,6 +2332,11 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, NULL, 0);
 
+  // Create a string for the source path now that the compiler is initialized
+  // so we can be sure it won't get garbage collected.
+  parser.sourcePath = AS_STRING(wrenNewString(vm, sourcePath,
+                                              strlen(sourcePath)));
+
   for (;;)
   {
     definition(&compiler);
@@ -2326,7 +2354,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* source)
   emit(&compiler, CODE_NULL);
   emit(&compiler, CODE_RETURN);
 
-  return endCompiler(&compiler);
+  return endCompiler(&compiler, "(script)", 8);
 }
 
 void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
@@ -2359,13 +2387,18 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
 
 void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 {
+  if (compiler->parser->sourcePath != NULL)
+  {
+    wrenMarkObj(vm, (Obj*)compiler->parser->sourcePath);
+  }
+
   // Walk up the parent chain to mark the outer compilers too. The VM only
   // tracks the innermost one.
   while (compiler != NULL)
   {
     if (compiler->constants != NULL)
     {
-      wrenMarkValue(vm, OBJ_VAL(compiler->constants));
+      wrenMarkObj(vm, (Obj*)compiler->constants);
     }
 
     compiler = compiler->parent;

@@ -6,6 +6,9 @@
 #include "wren_common.h"
 #include "wren_compiler.h"
 #include "wren_core.h"
+// TODO: This is used for printing the stack trace on an error. This should be
+// behind a flag so that you can use Wren with all debugging info stripped out.
+#include "wren_debug.h"
 #include "wren_vm.h"
 
 // The built-in reallocation function used when one is not provided by the
@@ -80,7 +83,7 @@ void wrenFreeVM(WrenVM* vm)
 
 static void collectGarbage(WrenVM* vm);
 
-static void markObj(WrenVM* vm, Obj* obj);
+static void markValue(WrenVM* vm, Value value);
 
 static void markClass(WrenVM* vm, ObjClass* classObj)
 {
@@ -99,7 +102,7 @@ static void markClass(WrenVM* vm, ObjClass* classObj)
   {
     if (classObj->methods[i].type == METHOD_BLOCK)
     {
-      markObj(vm, classObj->methods[i].fn);
+      wrenMarkObj(vm, classObj->methods[i].fn);
     }
   }
 
@@ -116,13 +119,20 @@ static void markFn(WrenVM* vm, ObjFn* fn)
   // Mark the constants.
   for (int i = 0; i < fn->numConstants; i++)
   {
-    wrenMarkValue(vm, fn->constants[i]);
+    markValue(vm, fn->constants[i]);
   }
+
+  wrenMarkObj(vm, (Obj*)fn->debug->sourcePath);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFn);
   vm->bytesAllocated += sizeof(uint8_t) * fn->bytecodeLength;
   vm->bytesAllocated += sizeof(Value) * fn->numConstants;
+
+  // The debug line number buffer.
+  vm->bytesAllocated += sizeof(int) * fn->bytecodeLength;
+
+  // TODO: What about the function name?
 }
 
 static void markInstance(WrenVM* vm, ObjInstance* instance)
@@ -136,7 +146,7 @@ static void markInstance(WrenVM* vm, ObjInstance* instance)
   // Mark the fields.
   for (int i = 0; i < instance->classObj->numFields; i++)
   {
-    wrenMarkValue(vm, instance->fields[i]);
+    markValue(vm, instance->fields[i]);
   }
 
   // Keep track of how much memory is still in use.
@@ -154,7 +164,7 @@ static void markList(WrenVM* vm, ObjList* list)
   Value* elements = list->elements;
   for (int i = 0; i < list->count; i++)
   {
-    wrenMarkValue(vm, elements[i]);
+    markValue(vm, elements[i]);
   }
 
   // Keep track of how much memory is still in use.
@@ -176,7 +186,7 @@ static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
   upvalue->obj.flags |= FLAG_MARKED;
 
   // Mark the closed-over object (in case it is closed).
-  wrenMarkValue(vm, upvalue->closed);
+  markValue(vm, upvalue->closed);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(Upvalue);
@@ -191,13 +201,13 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
   // Stack functions.
   for (int k = 0; k < fiber->numFrames; k++)
   {
-    markObj(vm, fiber->frames[k].fn);
+    wrenMarkObj(vm, fiber->frames[k].fn);
   }
 
   // Stack variables.
   for (int l = 0; l < fiber->stackSize; l++)
   {
-    wrenMarkValue(vm, fiber->stack[l]);
+    markValue(vm, fiber->stack[l]);
   }
 
   // Open upvalues.
@@ -243,7 +253,7 @@ static void markString(WrenVM* vm, ObjString* string)
   vm->bytesAllocated += strlen(string->value);
 }
 
-void markObj(WrenVM* vm, Obj* obj)
+void wrenMarkObj(WrenVM* vm, Obj* obj)
 {
 #if WREN_TRACE_MEMORY
   static int indent = 0;
@@ -272,10 +282,10 @@ void markObj(WrenVM* vm, Obj* obj)
 #endif
 }
 
-void wrenMarkValue(WrenVM* vm, Value value)
+void markValue(WrenVM* vm, Value value)
 {
   if (!IS_OBJ(value)) return;
-  markObj(vm, AS_OBJ(value));
+  wrenMarkObj(vm, AS_OBJ(value));
 }
 
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler)
@@ -294,9 +304,15 @@ static void freeObj(WrenVM* vm, Obj* obj)
   switch (obj->type)
   {
     case OBJ_FN:
-      wrenReallocate(vm, ((ObjFn*)obj)->constants, 0, 0);
-      wrenReallocate(vm, ((ObjFn*)obj)->bytecode, 0, 0);
+    {
+      ObjFn* fn = (ObjFn*)obj;
+      wrenReallocate(vm, fn->constants, 0, 0);
+      wrenReallocate(vm, fn->bytecode, 0, 0);
+      wrenReallocate(vm, fn->debug->name, 0, 0);
+      wrenReallocate(vm, fn->debug->sourceLines, 0, 0);
+      wrenReallocate(vm, fn->debug, 0, 0);
       break;
+    }
 
     case OBJ_LIST:
       wrenReallocate(vm, ((ObjList*)obj)->elements, 0, 0);
@@ -338,14 +354,14 @@ static void collectGarbage(WrenVM* vm)
   {
     // Check for NULL to handle globals that have been defined (at compile time)
     // but not yet initialized.
-    if (!IS_NULL(vm->globals[i])) wrenMarkValue(vm, vm->globals[i]);
+    if (!IS_NULL(vm->globals[i])) markValue(vm, vm->globals[i]);
   }
 
   // Pinned objects.
   PinnedObj* pinned = vm->pinned;
   while (pinned != NULL)
   {
-    markObj(vm, pinned->obj);
+    wrenMarkObj(vm, pinned->obj);
     pinned = pinned->previous;
   }
 
@@ -570,14 +586,15 @@ static void bindMethod(int methodType, int symbol, ObjClass* classObj,
   }
 }
 
-static void callForeign(WrenVM* vm, ObjFiber* fiber, Method* method, int numArgs)
+static void callForeign(WrenVM* vm, ObjFiber* fiber,
+                        WrenForeignMethodFn foreign, int numArgs)
 {
   vm->foreignCallSlot = &fiber->stack[fiber->stackSize - numArgs];
 
   // Don't include the receiver.
   vm->foreignCallNumArgs = numArgs - 1;
 
-  method->native(vm);
+  foreign(vm);
 
   // Discard the stack slots for the arguments (but leave one for
   // the result).
@@ -591,9 +608,50 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber, Method* method, int numArgs
   }
 }
 
+static void methodNotFound(WrenVM* vm, ObjFiber* fiber, Value* receiver,
+                           int symbol)
+{
+  // TODO: Tune size.
+  char message[200];
+
+  // TODO: Include receiver in message.
+  snprintf(message, 200, "Receiver does not implement method '%s'.",
+           vm->methods.names[symbol]);
+
+  // Store the error message in the receiver slot so that it's on the fiber's
+  // stack and doesn't get garbage collected.
+  *receiver = wrenNewString(vm, message, strlen(message));
+
+  wrenDebugPrintStackTrace(vm, fiber, *receiver);
+}
+
+// Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
+// arguments (including the receiver) to be on the top of the stack already.
+// [function] can be an `ObjFn` or `ObjClosure`.
+static void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
+{
+  // TODO: Check for stack overflow.
+  CallFrame* frame = &fiber->frames[fiber->numFrames];
+  frame->fn = function;
+  frame->stackStart = fiber->stackSize - numArgs;
+
+  frame->ip = 0;
+  if (function->type == OBJ_FN)
+  {
+    frame->ip = ((ObjFn*)function)->bytecode;
+  }
+  else
+  {
+    frame->ip = ((ObjClosure*)function)->fn->bytecode;
+  }
+
+  fiber->numFrames++;
+}
+
 // The main bytecode interpreter loop. This is where the magic happens. It is
-// also, as you can imagine, highly performance critical.
-static Value interpret(WrenVM* vm, ObjFiber* fiber)
+// also, as you can imagine, highly performance critical. Returns `true` if the
+// fiber completed without error.
+static bool interpret(WrenVM* vm, ObjFiber* fiber)
 {
   // These macros are designed to only be invoked within this function.
   // TODO: Check for stack overflow.
@@ -711,8 +769,8 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
   /*
   #define DISPATCH() \
     { \
-      wrenDebugDumpStack(fiber); \
-      wrenDebugDumpInstruction(vm, fn, (int)(ip - fn->bytecode)); \
+      wrenDebugPrintStack(fiber); \
+      wrenDebugPrintInstruction(vm, fn, (int)(ip - fn->bytecode)); \
       instruction = *ip++; \
       goto *dispatchTable[instruction]; \
     }
@@ -767,43 +825,47 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
         case METHOD_PRIMITIVE:
         {
           Value* args = &fiber->stack[fiber->stackSize - numArgs];
-          Value result = method->primitive(vm, args);
 
-          fiber->stack[fiber->stackSize - numArgs] = result;
+          // After calling this, the result will be in the first arg slot.
+          switch (method->primitive(vm, fiber, args))
+          {
+            case PRIM_VALUE:
+              // The result is now in the first arg slot. Discard the other
+              // stack slots.
+              fiber->stackSize -= numArgs - 1;
+              break;
 
-          // Discard the stack slots for the arguments (but leave one for
-          // the result).
-          fiber->stackSize -= numArgs - 1;
-          break;
-        }
+            case PRIM_ERROR:
+              STORE_FRAME();
+              wrenDebugPrintStackTrace(vm, fiber, args[0]);
+              return false;
 
-        case METHOD_FIBER:
-        {
-          STORE_FRAME();
-          Value* args = &fiber->stack[fiber->stackSize - numArgs];
-          method->fiberPrimitive(vm, fiber, args);
-          LOAD_FRAME();
+            case PRIM_CALL:
+              STORE_FRAME();
+              // TODO: What if the function doesn't expect the same number of
+              // args?
+              callFunction(fiber, AS_OBJ(args[0]), numArgs);
+              LOAD_FRAME();
+              break;
+          }
           break;
         }
 
         case METHOD_FOREIGN:
-          callForeign(vm, fiber, method, numArgs);
+          callForeign(vm, fiber, method->foreign, numArgs);
           break;
 
         case METHOD_BLOCK:
           STORE_FRAME();
-          wrenCallFunction(fiber, method->fn, numArgs);
+          callFunction(fiber, method->fn, numArgs);
           LOAD_FRAME();
           break;
 
         case METHOD_NONE:
-          printf("Receiver ");
-          wrenPrintValue(receiver);
-          printf(" does not implement method \"%s\".\n",
-                 vm->methods.names[symbol]);
-          // TODO: Throw an exception or halt the fiber or something.
-          exit(1);
-          break;
+          STORE_FRAME();
+          methodNotFound(vm, fiber, &fiber->stack[fiber->stackSize - numArgs],
+                         symbol);
+          return false;
       }
       DISPATCH();
     }
@@ -856,43 +918,45 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
         case METHOD_PRIMITIVE:
         {
           Value* args = &fiber->stack[fiber->stackSize - numArgs];
-          Value result = method->primitive(vm, args);
 
-          fiber->stack[fiber->stackSize - numArgs] = result;
+          // After calling this, the result will be in the first arg slot.
+          switch (method->primitive(vm, fiber, args))
+          {
+            case PRIM_VALUE:
+              // The result is now in the first arg slot. Discard the other
+              // stack slots.
+              fiber->stackSize -= numArgs - 1;
+              break;
 
-          // Discard the stack slots for the arguments (but leave one for
-          // the result).
-          fiber->stackSize -= numArgs - 1;
-          break;
-        }
+            case PRIM_ERROR:
+              STORE_FRAME();
+              wrenDebugPrintStackTrace(vm, fiber, args[0]);
+              return false;
 
-        case METHOD_FIBER:
-        {
-          STORE_FRAME();
-          Value* args = &fiber->stack[fiber->stackSize - numArgs];
-          method->fiberPrimitive(vm, fiber, args);
-          LOAD_FRAME();
+            case PRIM_CALL:
+              STORE_FRAME();
+              callFunction(fiber, AS_OBJ(args[0]), numArgs);
+              LOAD_FRAME();
+              break;
+          }
           break;
         }
 
         case METHOD_FOREIGN:
-          callForeign(vm, fiber, method, numArgs);
+          callForeign(vm, fiber, method->foreign, numArgs);
           break;
 
         case METHOD_BLOCK:
           STORE_FRAME();
-          wrenCallFunction(fiber, method->fn, numArgs);
+          callFunction(fiber, method->fn, numArgs);
           LOAD_FRAME();
           break;
 
         case METHOD_NONE:
-          printf("Receiver ");
-          wrenPrintValue(receiver);
-          printf(" does not implement method \"%s\".\n",
-                 vm->methods.names[symbol]);
-          // TODO: Throw an exception or halt the fiber or something.
-          exit(1);
-          break;
+          STORE_FRAME();
+          methodNotFound(vm, fiber, &fiber->stack[fiber->stackSize - numArgs],
+                         symbol);
+          return false;
       }
       DISPATCH();
     }
@@ -1068,8 +1132,8 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
       Value result = POP();
       fiber->numFrames--;
 
-      // If we are returning from the top-level block, just return the value.
-      if (fiber->numFrames == 0) return result;
+      // If we are returning from the top-level block, we succeeded.
+      if (fiber->numFrames == 0) return true;
 
       // Close any upvalues still in scope.
       Value* firstValue = &fiber->stack[frame->stackStart];
@@ -1183,44 +1247,28 @@ static Value interpret(WrenVM* vm, ObjFiber* fiber)
   ASSERT(0, "Should not reach end of interpret.");
 }
 
-int wrenInterpret(WrenVM* vm, const char* source)
+int wrenInterpret(WrenVM* vm, const char* sourcePath, const char* source)
 {
   ObjFiber* fiber = wrenNewFiber(vm);
   PinnedObj pinned;
   pinObj(vm, (Obj*)fiber, &pinned);
 
-  int result = 1;
-  ObjFn* fn = wrenCompile(vm, source);
+  // TODO: Move actual error codes to main.c and return something Wren-specific
+  // from here.
+  int result = 0;
+  ObjFn* fn = wrenCompile(vm, sourcePath, source);
   if (fn != NULL)
   {
-    wrenCallFunction(fiber, (Obj*)fn, 0);
-    // TODO: Return error code on runtime errors.
-    interpret(vm, fiber);
-    result = 0;
+    callFunction(fiber, (Obj*)fn, 0);
+    if (!interpret(vm, fiber)) result = 70; // EX_SOFTWARE.
+  }
+  else
+  {
+    result = 65; // EX_DATAERR.
   }
 
   unpinObj(vm);
   return result;
-}
-
-void wrenCallFunction(ObjFiber* fiber, Obj* function, int numArgs)
-{
-  // TODO: Check for stack overflow.
-  CallFrame* frame = &fiber->frames[fiber->numFrames];
-  frame->fn = function;
-  frame->stackStart = fiber->stackSize - numArgs;
-
-  frame->ip = 0;
-  if (function->type == OBJ_FN)
-  {
-    frame->ip = ((ObjFn*)function)->bytecode;
-  }
-  else
-  {
-    frame->ip = ((ObjClosure*)function)->fn->bytecode;
-  }
-
-  fiber->numFrames++;
 }
 
 void pinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned)
@@ -1237,7 +1285,7 @@ void unpinObj(WrenVM* vm)
 
 void wrenDefineMethod(WrenVM* vm, const char* className,
                       const char* methodName, int numParams,
-                      WrenNativeMethodFn method)
+                      WrenForeignMethodFn method)
 {
   ASSERT(className != NULL, "Must provide class name.");
 
@@ -1283,7 +1331,7 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
   int methodSymbol = ensureSymbol(vm, &vm->methods, name, length);
 
   classObj->methods[methodSymbol].type = METHOD_FOREIGN;
-  classObj->methods[methodSymbol].native = method;
+  classObj->methods[methodSymbol].foreign = method;
 }
 
 double wrenGetArgumentDouble(WrenVM* vm, int index)
