@@ -106,14 +106,6 @@ typedef struct Token_s
   int line;
 } Token;
 
-// A growable byte buffer.
-typedef struct
-{
-  uint8_t* bytes;
-  int length;
-  int capacity;
-} Buffer;
-
 typedef struct
 {
   WrenVM* vm;
@@ -146,7 +138,7 @@ typedef struct
   // A buffer for the unescaped text of the current token if it's a string
   // literal. Unlike the raw token, this will have escape sequences translated
   // to their literal equivalent.
-  Buffer string;
+  ByteBuffer string;
 } Parser;
 
 typedef struct
@@ -186,11 +178,10 @@ struct sCompiler
   struct sCompiler* parent;
 
   // The growable buffer of code that's been compiled so far.
-  Buffer bytecode;
+  ByteBuffer bytecode;
 
-  // TODO: Make this actually growable.
-  // The buffer of source line mappings.
-  int* debugSourceLines;
+  // The growable buffer of source line mappings.
+  IntBuffer debugSourceLines;
 
   ObjList* constants;
 
@@ -305,38 +296,6 @@ static int addConstant(Compiler* compiler, Value constant)
   return compiler->constants->count - 1;
 }
 
-static void initBuffer(WrenVM* vm, Buffer* buffer)
-{
-  buffer->bytes = NULL;
-  buffer->capacity = 0;
-  buffer->length = 0;
-}
-
-static void ensureBufferCapacity(WrenVM* vm, Buffer* buffer, int needed)
-{
-  // Do nothing if already big enough.
-  if (buffer->capacity >= needed) return;
-
-  // Give it an initial bump, then double each time.
-  int capacity = buffer->capacity == 0 ? 2 : buffer->capacity * 2;
-  buffer->bytes = wrenReallocate(vm, buffer->bytes,
-                                 buffer->capacity, capacity);
-  // TODO: Handle allocation failure.
-  buffer->capacity = capacity;
-}
-
-static void writeBuffer(WrenVM* vm, Buffer* buffer, uint8_t byte)
-{
-  ensureBufferCapacity(vm, buffer, buffer->length + 1);
-  buffer->bytes[buffer->length++] = byte;
-}
-
-static void freeBuffer(WrenVM* vm, Buffer* buffer)
-{
-  wrenReallocate(vm, buffer->bytes, 0, 0);
-  initBuffer(vm, buffer);
-}
-
 // Initializes [compiler].
 static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
                          const char* methodName, int methodLength)
@@ -348,11 +307,8 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->methodName = methodName;
   compiler->methodLength = methodLength;
 
-  initBuffer(parser->vm, &compiler->bytecode);
-
-  // TODO: Make this grow!
-  compiler->debugSourceLines = wrenReallocate(parser->vm, NULL, 0,
-                                              sizeof(int) * 8192);
+  wrenByteBufferInit(parser->vm, &compiler->bytecode);
+  wrenIntBufferInit(parser->vm, &compiler->debugSourceLines);
 
   // Initialize these to NULL before allocating them in case a GC gets
   // triggered in the middle of creating these.
@@ -565,13 +521,13 @@ static void readName(Parser* parser, TokenType type)
 // Adds [c] to the current string literal being tokenized.
 static void addStringChar(Parser* parser, char c)
 {
-  writeBuffer(parser->vm, &parser->string, c);
+  wrenByteBufferWrite(parser->vm, &parser->string, c);
 }
 
 // Finishes lexing a string literal.
 static void readString(Parser* parser)
 {
-  freeBuffer(parser->vm, &parser->string);
+  wrenByteBufferClear(parser->vm, &parser->string);
 
   for (;;)
   {
@@ -844,13 +800,13 @@ static Token* consume(Compiler* compiler, TokenType expected,
 // Emits one bytecode instruction or argument. Returns its index.
 static int emit(Compiler* compiler, Code code)
 {
-  writeBuffer(compiler->parser->vm, &compiler->bytecode, code);
+  wrenByteBufferWrite(compiler->parser->vm, &compiler->bytecode, code);
 
   // Assume the instruction is associated with the most recently consumed token.
-  compiler->debugSourceLines[compiler->bytecode.length] =
-      compiler->parser->previous.line;
+  wrenIntBufferWrite(compiler->parser->vm, &compiler->debugSourceLines,
+      compiler->parser->previous.line);
   
-  return compiler->bytecode.length - 1;
+  return compiler->bytecode.count - 1;
 }
 
 // Emits one bytecode instruction followed by an argument. Returns the index of
@@ -1105,8 +1061,8 @@ static ObjFn* endCompiler(Compiler* compiler,
   if (compiler->parser->hasError)
   {
     // Free the code since it won't be used.
-    freeBuffer(compiler->parser->vm, &compiler->bytecode);
-    wrenReallocate(compiler->parser->vm, compiler->debugSourceLines, 0, 0);
+    wrenByteBufferClear(compiler->parser->vm, &compiler->bytecode);
+    wrenIntBufferClear(compiler->parser->vm, &compiler->debugSourceLines);
     return NULL;
   }
 
@@ -1119,11 +1075,11 @@ static ObjFn* endCompiler(Compiler* compiler,
                               compiler->constants->elements,
                               compiler->constants->count,
                               compiler->numUpvalues,
-                              compiler->bytecode.bytes,
-                              compiler->bytecode.length,
+                              compiler->bytecode.data,
+                              compiler->bytecode.count,
                               compiler->parser->sourcePath,
                               debugName, debugNameLength,
-                              compiler->debugSourceLines);
+                              compiler->debugSourceLines.data);
   PinnedObj pinned;
   pinObj(compiler->parser->vm, (Obj*)fn, &pinned);
 
@@ -1207,7 +1163,7 @@ GrammarRule rules[];
 // instruction with an offset that jumps to the current end of bytecode.
 static void patchJump(Compiler* compiler, int offset)
 {
-  compiler->bytecode.bytes[offset] = compiler->bytecode.length - offset - 1;
+  compiler->bytecode.data[offset] = compiler->bytecode.count - offset - 1;
 }
 
 // Parses a block body, after the initial "{" has been consumed.
@@ -1527,9 +1483,9 @@ static void string(Compiler* compiler, bool allowAssignment)
 {
   // Define a constant for the literal.
   int constant = addConstant(compiler, wrenNewString(compiler->parser->vm,
-      (char*)compiler->parser->string.bytes, compiler->parser->string.length));
+      (char*)compiler->parser->string.data, compiler->parser->string.count));
 
-  freeBuffer(compiler->parser->vm, &compiler->parser->string);
+  wrenByteBufferClear(compiler->parser->vm, &compiler->parser->string);
 
   // Compile the code to load the constant.
   emit1(compiler, CODE_CONSTANT, constant);
@@ -1953,7 +1909,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
 static int startLoopBody(Compiler* compiler)
 {
   int outerLoopBody = compiler->loopBody;
-  compiler->loopBody = compiler->bytecode.length;
+  compiler->loopBody = compiler->bytecode.count;
   return outerLoopBody;
 }
 
@@ -1962,18 +1918,18 @@ static void endLoopBody(Compiler* compiler, int outerLoopBody)
   // Find any break placeholder instructions (which will be CODE_END in the
   // bytecode) and replace them with real jumps.
   int i = compiler->loopBody;
-  while (i < compiler->bytecode.length)
+  while (i < compiler->bytecode.count)
   {
-    if (compiler->bytecode.bytes[i] == CODE_END)
+    if (compiler->bytecode.data[i] == CODE_END)
     {
-      compiler->bytecode.bytes[i] = CODE_JUMP;
+      compiler->bytecode.data[i] = CODE_JUMP;
       patchJump(compiler, i + 1);
       i += 2;
     }
     else
     {
       // Skip this instruction and its arguments.
-      i += 1 + getNumArguments(compiler->bytecode.bytes,
+      i += 1 + getNumArguments(compiler->bytecode.data,
                                compiler->constants->elements, i);
     }
   }
@@ -2039,7 +1995,7 @@ static void forStatement(Compiler* compiler)
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
 
   // Remember what instruction to loop back to.
-  int loopStart = compiler->bytecode.length - 1;
+  int loopStart = compiler->bytecode.count - 1;
 
   // Advance the iterator by calling the ".iterate" method on the sequence.
   emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
@@ -2074,7 +2030,7 @@ static void forStatement(Compiler* compiler)
 
   // Loop back to the top.
   emit(compiler, CODE_LOOP);
-  int loopOffset = compiler->bytecode.length - loopStart;
+  int loopOffset = compiler->bytecode.count - loopStart;
   emit(compiler, loopOffset);
 
   patchJump(compiler, exitJump);
@@ -2086,7 +2042,7 @@ static void forStatement(Compiler* compiler)
 static void whileStatement(Compiler* compiler)
 {
   // Remember what instruction to loop back to.
-  int loopStart = compiler->bytecode.length - 1;
+  int loopStart = compiler->bytecode.count - 1;
 
   // Compile the condition.
   consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
@@ -2101,7 +2057,7 @@ static void whileStatement(Compiler* compiler)
 
   // Loop back to the top.
   emit(compiler, CODE_LOOP);
-  int loopOffset = compiler->bytecode.length - loopStart;
+  int loopOffset = compiler->bytecode.count - loopStart;
   emit(compiler, loopOffset);
 
   patchJump(compiler, exitJump);
@@ -2251,7 +2207,7 @@ static void classDefinition(Compiler* compiler)
   }
 
   // Update the class with the number of fields.
-  compiler->bytecode.bytes[numFieldsInstruction] = fields.count;
+  compiler->bytecode.data[numFieldsInstruction] = fields.count;
   compiler->fields = previousFields;
 
   // Store it in its name.
@@ -2312,7 +2268,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
   parser.current.length = 0;
   parser.current.line = 0;
 
-  initBuffer(vm, &parser.string);
+  wrenByteBufferInit(vm, &parser.string);
 
   // Read the first token.
   nextToken(&parser);

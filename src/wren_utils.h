@@ -36,4 +36,22 @@ int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length);
 // Given an index in the symbol table, returns its name.
 const char* wrenSymbolTableGetName(SymbolTable* symbols, int symbol);
 
+// We need buffers of a few different types. To avoid lots of casting between
+// void* and back, we'll use the preprocessor as a poor man's generics and let
+// it generate a few type-specific ones.
+#define DECLARE_BUFFER(name, type) \
+    typedef struct \
+    { \
+      type* data; \
+      int count; \
+      int capacity; \
+    } name##Buffer; \
+    \
+    void wren##name##BufferInit(WrenVM* vm, name##Buffer* buffer); \
+    void wren##name##BufferClear(WrenVM* vm, name##Buffer* buffer); \
+    void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
+
+DECLARE_BUFFER(Byte, uint8_t);
+DECLARE_BUFFER(Int, int);
+
 #endif
