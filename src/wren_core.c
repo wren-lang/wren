@@ -87,6 +87,80 @@ const char* coreLibSource =
 "  ... other { return new Range(this, other - 1) }\n"
 "}\n";
 
+// TODO: Remove this and migrate everything to use validateIndex().
+// Validates that [index] is an integer within `[0, count)`. Also allows
+// negative indices which map backwards from the end. Returns the valid positive
+// index value, or -1 if the index wasn't valid (not a number, not an int, out
+// of bounds).
+static int validateIndexOld(Value index, int count)
+{
+  if (!IS_NUM(index)) return -1;
+
+  double indexNum = AS_NUM(index);
+  int intIndex = (int)indexNum;
+  // Make sure the index is an integer.
+  if (indexNum != intIndex) return -1;
+
+  // Negative indices count from the end.
+  if (indexNum < 0) indexNum = count + indexNum;
+
+  // Check bounds.
+  if (indexNum < 0 || indexNum >= count) return -1;
+
+  return indexNum;
+}
+
+// Validates that the given argument in [args] is a Num. Returns true if it is.
+// If not, reports an error and returns false.
+static bool validateNum(WrenVM* vm, Value* args, int index, const char* argName)
+{
+  if (IS_NUM(args[index])) return true;
+
+  char message[100];
+  snprintf(message, 100, "%s must be a number.", argName);
+  args[0] = wrenNewString(vm, message, strlen(message));
+  return false;
+}
+
+// Validates that the given argument in [args] is an integer. Returns true if
+// it is. If not, reports an error and returns false.
+static bool validateInt(WrenVM* vm, Value* args, int index, const char* argName)
+{
+  // Make sure it's a number first.
+  if (!validateNum(vm, args, index, argName)) return false;
+
+  double value = AS_NUM(args[index]);
+  if (trunc(value) == value) return true;
+
+  char message[100];
+  snprintf(message, 100, "%s must be an integer.", argName);
+  args[0] = wrenNewString(vm, message, strlen(message));
+  return false;
+}
+
+// Validates that [index] is an integer within `[0, count)`. Also allows
+// negative indices which map backwards from the end. Returns the valid positive
+// index value. If invalid, reports an error and returns -1.
+static int validateIndex(WrenVM* vm, Value* args, int count, int argIndex,
+                         const char* argName)
+{
+  if (!validateInt(vm, args, argIndex, argName)) return -1;
+
+  int index = (int)AS_NUM(args[argIndex]);
+
+  // Negative indices count from the end.
+  if (index < 0) index = count + index;
+
+  // Check bounds.
+  if (index >= 0 && index < count) return index;
+
+  char message[100];
+  snprintf(message, 100, "%s out of bounds.", argName);
+  args[0] = wrenNewString(vm, message, strlen(message));
+
+  return -1;
+}
+
 DEF_NATIVE(bool_not)
 {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -105,28 +179,6 @@ DEF_NATIVE(bool_toString)
 }
 
 DEF_NATIVE(fn_call) { return PRIM_CALL; }
-
-// Validates that [index] is an integer within `[0, count)`. Also allows
-// negative indices which map backwards from the end. Returns the valid positive
-// index value, or -1 if the index wasn't valid (not a number, not an int, out
-// of bounds).
-static int validateIndex(Value index, int count)
-{
-  if (!IS_NUM(index)) return -1;
-
-  double indexNum = AS_NUM(index);
-  int intIndex = (int)indexNum;
-  // Make sure the index is an integer.
-  if (indexNum != intIndex) return -1;
-
-  // Negative indices count from the end.
-  if (indexNum < 0) indexNum = count + indexNum;
-
-  // Check bounds.
-  if (indexNum < 0 || indexNum >= count) return -1;
-
-  return indexNum;
-}
 
 DEF_NATIVE(list_add)
 {
@@ -156,10 +208,8 @@ DEF_NATIVE(list_insert)
   ObjList* list = AS_LIST(args[0]);
 
   // count + 1 here so you can "insert" at the very end.
-  int index = validateIndex(args[2], list->count + 1);
-  // TODO: Instead of returning null here, should signal an error explicitly
-  // somehow.
-  if (index == -1) RETURN_NULL;
+  int index = validateIndex(vm, args, list->count + 1, 2, "Index");
+  if (index == -1) return PRIM_ERROR;
 
   wrenListInsert(vm, list, args[1], index);
   RETURN_VAL(args[1]);
@@ -170,12 +220,13 @@ DEF_NATIVE(list_iterate)
   // If we're starting the iteration, return the first index.
   if (IS_NULL(args[1])) RETURN_NUM(0);
 
-  ObjList* list = AS_LIST(args[0]);
-  double index = AS_NUM(args[1]);
-  // TODO: Handle arg not a number or not an integer.
+  if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
 
-  // Stop if we're out of elements.
-  if (index >= list->count - 1) RETURN_FALSE;
+  ObjList* list = AS_LIST(args[0]);
+  int index = (int)AS_NUM(args[1]);
+
+  // Stop if we're out of bounds.
+  if (index < 0 || index >= list->count - 1) RETURN_FALSE;
 
   // Otherwise, move to the next index.
   RETURN_NUM(index + 1);
@@ -184,15 +235,16 @@ DEF_NATIVE(list_iterate)
 DEF_NATIVE(list_iteratorValue)
 {
   ObjList* list = AS_LIST(args[0]);
-  double index = AS_NUM(args[1]);
-  // TODO: Handle index out of bounds or not integer.
-  RETURN_VAL(list->elements[(int)index]);
+  int index = validateIndex(vm, args, list->count, 1, "Iterator");
+  if (index == -1) return PRIM_ERROR;
+
+  RETURN_VAL(list->elements[index]);
 }
 
 DEF_NATIVE(list_removeAt)
 {
   ObjList* list = AS_LIST(args[0]);
-  int index = validateIndex(args[1], list->count);
+  int index = validateIndexOld(args[1], list->count);
   // TODO: Instead of returning null here, should signal an error explicitly
   // somehow.
   if (index == -1) RETURN_NULL;
@@ -204,7 +256,7 @@ DEF_NATIVE(list_subscript)
 {
   ObjList* list = AS_LIST(args[0]);
 
-  int index = validateIndex(args[1], list->count);
+  int index = validateIndexOld(args[1], list->count);
   // TODO: Instead of returning null here, should signal an error explicitly
   // somehow.
   if (index == -1) RETURN_NULL;
@@ -216,7 +268,7 @@ DEF_NATIVE(list_subscriptSetter)
 {
   ObjList* list = AS_LIST(args[0]);
 
-  int index = validateIndex(args[1], list->count);
+  int index = validateIndexOld(args[1], list->count);
   // TODO: Instead of returning null here, should signal an error explicitly
   // somehow.
   if (index == -1) RETURN_NULL;
@@ -249,45 +301,34 @@ DEF_NATIVE(num_negate)
   RETURN_NUM(-AS_NUM(args[0]));
 }
 
-// Validates that the second argument in [args] is a Num. Returns true if it is.
-// If not, sets a type error and returns false.
-static bool checkNumType(WrenVM* vm, Value* args)
-{
-  if (IS_NUM(args[1])) return true;
-
-  const char* msg = "TypeError: Right operand must be Num.";
-  args[0] = wrenNewString(vm, msg, strlen(msg));
-  return false;
-}
-
 DEF_NATIVE(num_minus)
 {
-  if (!checkNumType(vm, args)) return PRIM_ERROR;
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_NUM(AS_NUM(args[0]) - AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_plus)
 {
-  if (!checkNumType(vm, args)) return PRIM_ERROR;
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   // TODO: Handle coercion to string if RHS is a string.
   RETURN_NUM(AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_multiply)
 {
-  if (!checkNumType(vm, args)) return PRIM_ERROR;
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_NUM(AS_NUM(args[0]) * AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_divide)
 {
-  if (!checkNumType(vm, args)) return PRIM_ERROR;
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_NUM(AS_NUM(args[0]) / AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_mod)
 {
-  if (!checkNumType(vm, args)) return PRIM_ERROR;
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   if (!IS_NUM(args[1])) RETURN_NULL;
   RETURN_NUM(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
