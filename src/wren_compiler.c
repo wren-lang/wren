@@ -110,8 +110,11 @@ typedef struct
 {
   WrenVM* vm;
 
+  // Heap-allocated string representing the path to the code being parsed. Used
+  // for stack traces.
   ObjString* sourcePath;
 
+  // The source code being parsed.
   const char* source;
 
   // The beginning of the currently-being-lexed token in [source].
@@ -177,20 +180,20 @@ struct sCompiler
   // top level.
   struct sCompiler* parent;
 
-  // The growable buffer of code that's been compiled so far.
-  ByteBuffer bytecode;
-
-  // The growable buffer of source line mappings.
-  IntBuffer debugSourceLines;
-
+  // The constants that have been defined in this function so far.
   ObjList* constants;
 
-  // Symbol table for the fields of the nearest enclosing class, or NULL if not
-  // currently inside a class.
-  SymbolTable* fields;
+  // The currently in scope local variables.
+  Local locals[MAX_LOCALS];
 
   // The number of local variables currently in scope.
   int numLocals;
+
+  // The upvalues that this function has captured from outer scopes. The count
+  // of them is stored in [numUpvalues].
+  CompilerUpvalue upvalues[MAX_UPVALUES];
+
+  int numUpvalues;
 
   // The current level of block scope nesting, where zero is no nesting. A -1
   // here means top-level code is being compiled and there is no block scope
@@ -201,6 +204,10 @@ struct sCompiler
   // being compiled. Will be -1 if not currently inside a loop.
   int loopBody;
 
+  // Symbol table for the fields of the nearest enclosing class, or NULL if not
+  // currently inside a class.
+  SymbolTable* fields;
+
   // The name of the method this compiler is compiling, or NULL if this
   // compiler is not for a method. Note that this is just the bare method name,
   // and not its full signature.
@@ -209,14 +216,11 @@ struct sCompiler
   // The length of the method name being compiled.
   int methodLength;
 
-  // The currently in scope local variables.
-  Local locals[MAX_LOCALS];
+  // The growable buffer of code that's been compiled so far.
+  ByteBuffer bytecode;
 
-  // The upvalues that this function has captured from outer scopes. The count
-  // of them is stored in [numUpvalues].
-  CompilerUpvalue upvalues[MAX_UPVALUES];
-
-  int numUpvalues;
+  // The growable buffer of source line mappings.
+  IntBuffer debugSourceLines;
 };
 
 // Outputs a compile or syntax error. This also marks the compilation as having
@@ -300,32 +304,47 @@ static int addConstant(Compiler* compiler, Value constant)
 static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
                          const char* methodName, int methodLength)
 {
-  // TODO: Reorganize initialization and fields to be in same order as struct.
+  /*
+   Parser* parser;
+   struct sCompiler* parent;
+   ObjList* constants;
+
+   Local locals[MAX_LOCALS];
+   int numLocals;
+   CompilerUpvalue upvalues[MAX_UPVALUES];
+   int numUpvalues;
+   int scopeDepth;
+   int loopBody;
+   SymbolTable* fields;
+   const char* methodName;
+   int methodLength;
+   ByteBuffer bytecode;
+   IntBuffer debugSourceLines;
+  */
+
   compiler->parser = parser;
   compiler->parent = parent;
+
+  // Initialize this to NULL before allocating in case a GC gets triggered in
+  // the middle of initializing the compiler.
+  compiler->constants = NULL;
+
+  compiler->numUpvalues = 0;
   compiler->loopBody = -1;
   compiler->methodName = methodName;
   compiler->methodLength = methodLength;
-
-  wrenByteBufferInit(parser->vm, &compiler->bytecode);
-  wrenIntBufferInit(parser->vm, &compiler->debugSourceLines);
-
-  // Initialize these to NULL before allocating them in case a GC gets
-  // triggered in the middle of creating these.
-  compiler->constants = NULL;
 
   wrenSetCompiler(parser->vm, compiler);
 
   // Create a growable list for the constants used by this function.
   compiler->constants = wrenNewList(parser->vm, 0);
 
-  compiler->numUpvalues = 0;
-
   if (parent == NULL)
   {
+    compiler->numLocals = 0;
+
     // Compiling top-level code, so the initial scope is global.
     compiler->scopeDepth = -1;
-    compiler->numLocals = 0;
   }
   else
   {
@@ -355,6 +374,9 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
   // Propagate the enclosing class downwards.
   compiler->fields = parent != NULL ? parent->fields :  NULL;
+
+  wrenByteBufferInit(parser->vm, &compiler->bytecode);
+  wrenIntBufferInit(parser->vm, &compiler->debugSourceLines);
 }
 
 // Lexing ----------------------------------------------------------------------
@@ -2252,10 +2274,6 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
   parser.vm = vm;
   parser.sourcePath = NULL;
   parser.source = source;
-  parser.hasError = false;
-
-  // Ignore leading newlines.
-  parser.skipNewlines = true;
 
   parser.tokenStart = source;
   parser.currentChar = source;
@@ -2267,6 +2285,10 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
   parser.current.start = source;
   parser.current.length = 0;
   parser.current.line = 0;
+
+  // Ignore leading newlines.
+  parser.skipNewlines = true;
+  parser.hasError = false;
 
   wrenByteBufferInit(vm, &parser.string);
 
