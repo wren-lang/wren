@@ -33,10 +33,6 @@
 // The representation is controlled by the `NAN_TAGGING` define. If that's
 // defined, Nan tagging is used.
 
-// TODO: This should be in VM. (Or, really, we shouldn't hardcode this at all
-// and have growable symbol tables.)
-#define MAX_SYMBOLS 256
-
 // TODO: Make these externally controllable.
 #define STACK_SIZE 1024
 #define MAX_CALL_FRAMES 256

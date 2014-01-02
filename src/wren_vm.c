@@ -30,8 +30,8 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
   vm->reallocate = reallocate;
   
-  initSymbolTable(&vm->methods);
-  initSymbolTable(&vm->globalSymbols);
+  wrenSymbolTableInit(&vm->methods);
+  wrenSymbolTableInit(&vm->globalSymbols);
 
   vm->bytesAllocated = 0;
 
@@ -76,8 +76,8 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
 void wrenFreeVM(WrenVM* vm)
 {
-  clearSymbolTable(vm, &vm->methods);
-  clearSymbolTable(vm, &vm->globalSymbols);
+  wrenSymbolTableClear(vm, &vm->methods);
+  wrenSymbolTableClear(vm, &vm->globalSymbols);
   wrenReallocate(vm, vm, 0, 0);
 }
 
@@ -388,74 +388,6 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 #endif
   
   return vm->reallocate(memory, oldSize, newSize);
-}
-
-void initSymbolTable(SymbolTable* symbols)
-{
-  symbols->count = 0;
-}
-
-void clearSymbolTable(WrenVM* vm, SymbolTable* symbols)
-{
-  for (int i = 0; i < symbols->count; i++)
-  {
-    wrenReallocate(vm, symbols->names[i], 0, 0);
-  }
-}
-
-static int addSymbolUnchecked(WrenVM* vm, SymbolTable* symbols,
-                              const char* name, size_t length)
-{
-  symbols->names[symbols->count] = wrenReallocate(vm, NULL, 0,
-                                                  sizeof(char) * (length + 1));
-  strncpy(symbols->names[symbols->count], name, length);
-  symbols->names[symbols->count][length] = '\0';
-
-  return symbols->count++;
-}
-
-int addSymbol(WrenVM* vm, SymbolTable* symbols, const char* name, size_t length)
-{
-  // If already present, return an error.
-  if (findSymbol(symbols, name, length) != -1) return -1;
-
-  return addSymbolUnchecked(vm, symbols, name, length);
-}
-
-int ensureSymbol(WrenVM* vm, SymbolTable* symbols,
-                 const char* name, size_t length)
-{
-  // See if the symbol is already defined.
-  int existing = findSymbol(symbols, name, length);
-  if (existing != -1) return existing;
-
-  // New symbol, so add it.
-  return addSymbolUnchecked(vm, symbols, name, length);
-}
-
-int findSymbol(SymbolTable* symbols, const char* name, size_t length)
-{
-  // See if the symbol is already defined.
-  // TODO: O(n). Do something better.
-  for (int i = 0; i < symbols->count; i++)
-  {
-    if (strlen(symbols->names[i]) == length &&
-        strncmp(symbols->names[i], name, length) == 0) return i;
-  }
-
-  return -1;
-}
-
-const char* getSymbolName(SymbolTable* symbols, int symbol)
-{
-  return symbols->names[symbol];
-}
-
-Value findGlobal(WrenVM* vm, const char* name)
-{
-  int symbol = findSymbol(&vm->globalSymbols, name, strlen(name));
-  // TODO: Handle failure.
-  return vm->globals[symbol];
 }
 
 // Captures the local variable in [slot] into an [Upvalue]. If that local is
@@ -1260,7 +1192,7 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
   ASSERT(method != NULL, "Must provide method function.");
 
   // Find or create the class to bind the method to.
-  int classSymbol = findSymbol(&vm->globalSymbols,
+  int classSymbol = wrenSymbolTableFind(&vm->globalSymbols,
                                className, strlen(className));
   ObjClass* classObj;
 
@@ -1274,7 +1206,7 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
     // The class doesn't already exist, so create it.
     // TODO: Allow passing in name for superclass?
     classObj = wrenNewClass(vm, vm->objectClass, 0);
-    classSymbol = addSymbol(vm, &vm->globalSymbols,
+    classSymbol = wrenSymbolTableAdd(vm, &vm->globalSymbols,
                             className, strlen(className));
     vm->globals[classSymbol] = OBJ_VAL(classObj);
   }
@@ -1289,7 +1221,7 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
   name[length] = '\0';
 
   // Bind the method.
-  int methodSymbol = ensureSymbol(vm, &vm->methods, name, length);
+  int methodSymbol = wrenSymbolTableEnsure(vm, &vm->methods, name, length);
 
   classObj->methods[methodSymbol].type = METHOD_FOREIGN;
   classObj->methods[methodSymbol].foreign = method;

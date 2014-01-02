@@ -884,7 +884,7 @@ static int declareVariable(Compiler* compiler)
   {
     SymbolTable* symbols = &compiler->parser->vm->globalSymbols;
 
-    int symbol = addSymbol(compiler->parser->vm, symbols,
+    int symbol = wrenSymbolTableAdd(compiler->parser->vm, symbols,
                            token->start, token->length);
     if (symbol == -1)
     {
@@ -1071,7 +1071,8 @@ static int resolveName(Compiler* compiler, const char* name, int length,
 
   // If we got here, it wasn't in a local scope, so try the global scope.
   *loadInstruction = CODE_LOAD_GLOBAL;
-  return findSymbol(&compiler->parser->vm->globalSymbols, name, length);
+  return wrenSymbolTableFind(
+      &compiler->parser->vm->globalSymbols, name, length);
 }
 
 // Copies the identifier from the previously consumed `TOKEN_NAME` into [name],
@@ -1268,6 +1269,15 @@ static void parameterList(Compiler* compiler, char* name, int* length)
   }
 }
 
+// Gets the symbol for a method [name]. If [length] is 0, it will be calculated
+// from a null-terminated [name].
+static int methodSymbol(Compiler* compiler, const char* name, int length)
+{
+  if (length == 0) length = (int)strlen(name);
+  return wrenSymbolTableEnsure(compiler->parser->vm,
+                               &compiler->parser->vm->methods, name, length);
+}
+
 // Compiles an (optional) argument list and then calls it.
 static void methodCall(Compiler* compiler, Code instruction,
                        char name[MAX_METHOD_SIGNATURE], int length)
@@ -1289,10 +1299,7 @@ static void methodCall(Compiler* compiler, Code instruction,
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
-  int symbol = ensureSymbol(compiler->parser->vm,
-                            &compiler->parser->vm->methods, name, length);
-
-  emit1(compiler, instruction + numArgs, symbol);
+  emit1(compiler, instruction + numArgs, methodSymbol(compiler, name, length));
 }
 
 // Compiles an expression that starts with ".name". That includes getters,
@@ -1315,9 +1322,7 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
     // Compile the assigned value.
     expression(compiler);
 
-    int symbol = ensureSymbol(compiler->parser->vm,
-                              &compiler->parser->vm->methods, name, length);
-    emit1(compiler, instruction + 1, symbol);
+    emit1(compiler, instruction + 1, methodSymbol(compiler, name, length));
   }
   else
   {
@@ -1372,9 +1377,7 @@ static void unaryOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, PREC_UNARY + 1);
 
   // Call the operator method on the left-hand side.
-  int symbol = ensureSymbol(compiler->parser->vm,
-                            &compiler->parser->vm->methods, rule->name, 1);
-  emit1(compiler, CODE_CALL_0, symbol);
+  emit1(compiler, CODE_CALL_0, methodSymbol(compiler, rule->name, 1));
 }
 
 static void boolean(Compiler* compiler, bool allowAssignment)
@@ -1415,7 +1418,7 @@ static void field(Compiler* compiler, bool allowAssignment)
   if (compiler->fields != NULL)
   {
     // Look up the field, or implicitly define it.
-    field = ensureSymbol(compiler->parser->vm, compiler->fields,
+    field = wrenSymbolTableEnsure(compiler->parser->vm, compiler->fields,
         compiler->parser->previous.start,
         compiler->parser->previous.length);
   }
@@ -1651,11 +1654,8 @@ static void subscript(Compiler* compiler, bool allowAssignment)
     expression(compiler);
   }
 
-  int symbol = ensureSymbol(compiler->parser->vm,
-                            &compiler->parser->vm->methods, name, length);
-
   // Compile the method call.
-  emit1(compiler, CODE_CALL_0 + numArgs, symbol);
+  emit1(compiler, CODE_CALL_0 + numArgs, methodSymbol(compiler, name, length));
 }
 
 void call(Compiler* compiler, bool allowAssignment)
@@ -1695,10 +1695,7 @@ void infixOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, rule->precedence + 1);
 
   // Call the operator method on the left-hand side.
-  int symbol = ensureSymbol(compiler->parser->vm,
-                            &compiler->parser->vm->methods,
-                            rule->name, strlen(rule->name));
-  emit1(compiler, CODE_CALL_1, symbol);
+  emit1(compiler, CODE_CALL_1, methodSymbol(compiler, rule->name, 0));
 }
 
 // Compiles a method signature for an infix operator.
@@ -1872,9 +1869,6 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
   // Compile the method signature.
   signature(&methodCompiler, name, &length);
 
-  int symbol = ensureSymbol(compiler->parser->vm,
-                            &compiler->parser->vm->methods, name, length);
-
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
 
   finishBlock(&methodCompiler);
@@ -1897,7 +1891,7 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
   endCompiler(&methodCompiler, name, length);
 
   // Compile the code to define the method.
-  emit1(compiler, instruction, symbol);
+  emit1(compiler, instruction, methodSymbol(compiler, name, length));
 }
 
 // Parses a curly block or an expression statement. Used in places like the
@@ -2051,10 +2045,7 @@ static void forStatement(Compiler* compiler)
   emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
   emit1(compiler, CODE_LOAD_LOCAL, iterSlot);
 
-  int iterateSymbol = ensureSymbol(compiler->parser->vm,
-                                   &compiler->parser->vm->methods,
-                                   "iterate ", 8);
-  emit1(compiler, CODE_CALL_1, iterateSymbol);
+  emit1(compiler, CODE_CALL_1, methodSymbol(compiler, "iterate ", 8));
 
   // Store the iterator back in its local for the next iteration.
   emit1(compiler, CODE_STORE_LOCAL, iterSlot);
@@ -2070,10 +2061,7 @@ static void forStatement(Compiler* compiler)
   emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
   emit1(compiler, CODE_LOAD_LOCAL, iterSlot);
 
-  int iteratorValueSymbol = ensureSymbol(compiler->parser->vm,
-                                         &compiler->parser->vm->methods,
-                                         "iteratorValue ", 14);
-  emit1(compiler, CODE_CALL_1, iteratorValueSymbol);
+  emit1(compiler, CODE_CALL_1, methodSymbol(compiler, "iteratorValue ", 14));
 
   // Bind it to the loop variable.
   defineLocal(compiler, name, length);
@@ -2225,7 +2213,7 @@ static void classDefinition(Compiler* compiler)
   // fields into account.
   SymbolTable* previousFields = compiler->fields;
   SymbolTable fields;
-  initSymbolTable(&fields);
+  wrenSymbolTableInit(&fields);
   compiler->fields = &fields;
 
   // Compile the method definitions.

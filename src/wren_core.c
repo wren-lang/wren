@@ -11,7 +11,8 @@
 // [fn] to `ObjClass` [cls].
 #define NATIVE(cls, name, fn) \
     { \
-      int symbol = ensureSymbol(vm, &vm->methods, name, strlen(name)); \
+      int symbol = wrenSymbolTableEnsure(vm, \
+          &vm->methods, name, strlen(name)); \
       cls->methods[symbol].type = METHOD_PRIMITIVE; \
       cls->methods[symbol].primitive = native_##fn; \
     }
@@ -470,19 +471,26 @@ DEF_NATIVE(os_clock)
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
   // Add the symbol first since it can trigger a GC.
-  int symbol = addSymbol(vm, &vm->globalSymbols, name, strlen(name));
+  int symbol = wrenSymbolTableAdd(vm, &vm->globalSymbols, name, strlen(name));
 
   ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0);
   vm->globals[symbol] = OBJ_VAL(classObj);
   return classObj;
 }
 
+// Returns the global variable named [name].
+static Value findGlobal(WrenVM* vm, const char* name)
+{
+  int symbol = wrenSymbolTableFind(&vm->globalSymbols, name, strlen(name));
+  return vm->globals[symbol];
+}
+
 void wrenInitializeCore(WrenVM* vm)
 {
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass and an unusual metaclass (Class).
-  int objectSymbol = addSymbol(vm, &vm->globalSymbols,
-                               "Object", strlen("Object"));
+  int objectSymbol = wrenSymbolTableAdd(vm, &vm->globalSymbols,
+                                        "Object", strlen("Object"));
   vm->objectClass = wrenNewSingleClass(vm, 0);
   vm->globals[objectSymbol] = OBJ_VAL(vm->objectClass);
 
@@ -494,8 +502,8 @@ void wrenInitializeCore(WrenVM* vm)
 
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
-  int classSymbol = addSymbol(vm, &vm->globalSymbols,
-                              "Class", strlen("Class"));
+  int classSymbol = wrenSymbolTableAdd(vm, &vm->globalSymbols,
+                                       "Class", strlen("Class"));
   vm->classClass = wrenNewSingleClass(vm, 0);
   vm->globals[classSymbol] = OBJ_VAL(vm->classClass);
 

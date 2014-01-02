@@ -4,6 +4,7 @@
 #include "wren_common.h"
 #include "wren_compiler.h"
 #include "wren_value.h"
+#include "wren_utils.h"
 
 typedef enum
 {
@@ -166,13 +167,6 @@ typedef enum
   CODE_END
 } Code;
 
-typedef struct
-{
-  // TODO: Make this dynamically sized.
-  char* names[MAX_SYMBOLS];
-  int count;
-} SymbolTable;
-
 // A pinned object is an Obj that has been temporarily made an explicit GC root.
 // This is for temporary or new objects that are not otherwise reachable but
 // should not be collected.
@@ -287,31 +281,5 @@ void pinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned);
 
 // Remove the most recently pinned object from the list of pinned GC roots.
 void unpinObj(WrenVM* vm);
-
-// Initializes the symbol table.
-void initSymbolTable(SymbolTable* symbols);
-
-// Frees all dynamically allocated memory used by the symbol table, but not the
-// SymbolTable itself.
-void clearSymbolTable(WrenVM* vm, SymbolTable* symbols);
-
-// Adds name to the symbol table. Returns the index of it in the table. Returns
-// -1 if the symbol is already present.
-int addSymbol(WrenVM* vm, SymbolTable* symbols,
-              const char* name, size_t length);
-
-// Adds name to the symbol table. Returns the index of it in the table. Will
-// use an existing symbol if already present.
-int ensureSymbol(WrenVM* vm, SymbolTable* symbols,
-                 const char* name, size_t length);
-
-// Looks up name in the symbol table. Returns its index if found or -1 if not.
-int findSymbol(SymbolTable* symbols, const char* name, size_t length);
-
-// Given an index in the symbol table, returns its name.
-const char* getSymbolName(SymbolTable* symbols, int symbol);
-
-// Returns the global variable named [name].
-Value findGlobal(WrenVM* vm, const char* name);
 
 #endif

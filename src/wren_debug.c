@@ -106,7 +106,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int global = bytecode[i];
       printf("LOAD_GLOBAL \"%s\"\n",
-             getSymbolName(&vm->globalSymbols, global));
+             wrenSymbolTableGetName(&vm->globalSymbols, global));
       PRINT_ARG("global %d\n", global);
       break;
     }
@@ -115,7 +115,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int global = bytecode[i];
       printf("STORE_GLOBAL \"%s\"\n",
-             getSymbolName(&vm->globalSymbols, global));
+             wrenSymbolTableGetName(&vm->globalSymbols, global));
       PRINT_ARG("global %d\n", global);
       break;
     }
@@ -174,7 +174,8 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int numArgs = bytecode[i - 1] - CODE_CALL_0;
       int symbol = bytecode[i];
-      printf("CALL_%d \"%s\"\n", numArgs, getSymbolName(&vm->methods, symbol));
+      printf("CALL_%d \"%s\"\n",
+             numArgs, wrenSymbolTableGetName(&vm->methods, symbol));
       PRINT_ARG("symbol %d\n", symbol);
       break;
     }
@@ -199,7 +200,8 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int numArgs = bytecode[i - 1] - CODE_SUPER_0;
       int symbol = bytecode[i];
-      printf("SUPER_%d \"%s\"\n", numArgs, getSymbolName(&vm->methods, symbol));
+      printf("SUPER_%d \"%s\"\n",
+             numArgs, wrenSymbolTableGetName(&vm->methods, symbol));
       PRINT_ARG("symbol %d\n", symbol);
       break;
     }
@@ -294,7 +296,8 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_METHOD_INSTANCE:
     {
       int symbol = bytecode[i];
-      printf("METHOD_INSTANCE \"%s\"\n", getSymbolName(&vm->methods, symbol));
+      printf("METHOD_INSTANCE \"%s\"\n",
+             wrenSymbolTableGetName(&vm->methods, symbol));
       PRINT_ARG("symbol %d\n", symbol);
       break;
     }
@@ -302,7 +305,8 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_METHOD_STATIC:
     {
       int symbol = bytecode[i];
-      printf("METHOD_STATIC \"%s\"\n", getSymbolName(&vm->methods, symbol));
+      printf("METHOD_STATIC \"%s\"\n",
+             wrenSymbolTableGetName(&vm->methods, symbol));
       PRINT_ARG("symbol %d\n", symbol);
       break;
     }
