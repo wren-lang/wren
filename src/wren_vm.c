@@ -11,6 +11,10 @@
 #include "wren_debug.h"
 #include "wren_vm.h"
 
+#if WREN_TRACE_MEMORY || WREN_TRACE_GC
+#include <time.h>
+#endif
+
 // The built-in reallocation function used when one is not provided by the
 // configuration.
 static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)
@@ -295,10 +299,14 @@ void wrenSetCompiler(WrenVM* vm, Compiler* compiler)
 
 static void collectGarbage(WrenVM* vm)
 {
-  // Mark all reachable objects.
-#if WREN_TRACE_MEMORY
+#if WREN_TRACE_MEMORY || WREN_TRACE_GC
   printf("-- gc --\n");
+
+  size_t before = vm->bytesAllocated;
+  double startTime = (double)clock() / CLOCKS_PER_SEC;
 #endif
+
+  // Mark all reachable objects.
 
   // Reset this. As we mark objects, their size will be counted again so that
   // we can track how much memory is in use without needing to know the size
@@ -348,6 +356,16 @@ static void collectGarbage(WrenVM* vm)
       obj = &(*obj)->next;
     }
   }
+
+  vm->nextGC = vm->bytesAllocated * vm->heapScalePercent / 100;
+  if (vm->nextGC < vm->minNextGC) vm->nextGC = vm->minNextGC;
+
+#if WREN_TRACE_MEMORY || WREN_TRACE_GC
+  double elapsed = ((double)clock() / CLOCKS_PER_SEC) - startTime;
+  printf("GC %ld before, %ld after (%ld collected), next at %ld. Took %.3fs.\n",
+         before, vm->bytesAllocated, before - vm->bytesAllocated, vm->nextGC,
+         elapsed);
+#endif
 }
 
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
@@ -363,28 +381,11 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   vm->bytesAllocated += newSize - oldSize;
 
 #if WREN_DEBUG_GC_STRESS
-
   // Since collecting calls this function to free things, make sure we don't
   // recurse.
   if (newSize > 0) collectGarbage(vm);
-
 #else
-
-  if (vm->bytesAllocated > vm->nextGC)
-  {
-#if WREN_TRACE_MEMORY
-    size_t before = vm->bytesAllocated;
-#endif
-
-    collectGarbage(vm);
-    vm->nextGC = vm->bytesAllocated * vm->heapScalePercent / 100;
-    if (vm->nextGC < vm->minNextGC) vm->nextGC = vm->minNextGC;
-
-#if WREN_TRACE_MEMORY
-    printf("GC %ld before, %ld after (%ld collected), next at %ld\n",
-           before, vm->bytesAllocated, before - vm->bytesAllocated, vm->nextGC);
-#endif
-  }
+  if (vm->bytesAllocated > vm->nextGC) collectGarbage(vm);
 #endif
   
   return vm->reallocate(memory, oldSize, newSize);
