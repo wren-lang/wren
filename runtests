@@ -195,8 +195,8 @@ def run_test(path):
     for line in expect_error:
       fails.append('Expected error on line ' + str(line) + ' and got none.')
     if expect_runtime_error:
-      fails.append('Expected runtime error ' + expect_runtime_error +
-          ' and got none.')
+      fails.append('Expected runtime error "' + expect_runtime_error +
+          '" and got none.')
 
   # Validate the exit code.
   if proc.returncode != expect_return:

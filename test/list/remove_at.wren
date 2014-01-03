@@ -23,10 +23,5 @@ var f = [1, 2, 3]
 f.removeAt(-1)
 IO.write(f) // expect: [1, 2]
 
-// Out of bounds.
-// TODO: Signal error in better way.
-IO.write([1, 2, 3].removeAt(3)) // expect: null
-IO.write([1, 2, 3].removeAt(-4)) // expect: null
-
 // Return the removed value.
 IO.write([3, 4, 5].removeAt(1)) // expect: 4

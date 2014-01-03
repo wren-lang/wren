@@ -87,29 +87,6 @@ const char* coreLibSource =
 "  ... other { return new Range(this, other - 1) }\n"
 "}\n";
 
-// TODO: Remove this and migrate everything to use validateIndex().
-// Validates that [index] is an integer within `[0, count)`. Also allows
-// negative indices which map backwards from the end. Returns the valid positive
-// index value, or -1 if the index wasn't valid (not a number, not an int, out
-// of bounds).
-static int validateIndexOld(Value index, int count)
-{
-  if (!IS_NUM(index)) return -1;
-
-  double indexNum = AS_NUM(index);
-  int intIndex = (int)indexNum;
-  // Make sure the index is an integer.
-  if (indexNum != intIndex) return -1;
-
-  // Negative indices count from the end.
-  if (indexNum < 0) indexNum = count + indexNum;
-
-  // Check bounds.
-  if (indexNum < 0 || indexNum >= count) return -1;
-
-  return indexNum;
-}
-
 // Validates that the given argument in [args] is a Num. Returns true if it is.
 // If not, reports an error and returns false.
 static bool validateNum(WrenVM* vm, Value* args, int index, const char* argName)
@@ -159,6 +136,19 @@ static int validateIndex(WrenVM* vm, Value* args, int count, int argIndex,
   args[0] = wrenNewString(vm, message, strlen(message));
 
   return -1;
+}
+
+// Validates that the given argument in [args] is a String. Returns true if it
+// is. If not, reports an error and returns false.
+static bool validateString(WrenVM* vm, Value* args, int index,
+                           const char* argName)
+{
+  if (IS_STRING(args[index])) return true;
+
+  char message[100];
+  snprintf(message, 100, "%s must be a string.", argName);
+  args[0] = wrenNewString(vm, message, strlen(message));
+  return false;
 }
 
 DEF_NATIVE(bool_not)
@@ -244,10 +234,8 @@ DEF_NATIVE(list_iteratorValue)
 DEF_NATIVE(list_removeAt)
 {
   ObjList* list = AS_LIST(args[0]);
-  int index = validateIndexOld(args[1], list->count);
-  // TODO: Instead of returning null here, should signal an error explicitly
-  // somehow.
-  if (index == -1) RETURN_NULL;
+  int index = validateIndex(vm, args, list->count, 1, "Index");
+  if (index == -1) return PRIM_ERROR;
 
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
 }
@@ -255,11 +243,8 @@ DEF_NATIVE(list_removeAt)
 DEF_NATIVE(list_subscript)
 {
   ObjList* list = AS_LIST(args[0]);
-
-  int index = validateIndexOld(args[1], list->count);
-  // TODO: Instead of returning null here, should signal an error explicitly
-  // somehow.
-  if (index == -1) RETURN_NULL;
+  int index = validateIndex(vm, args, list->count, 1, "Subscript");
+  if (index == -1) return PRIM_ERROR;
 
   RETURN_VAL(list->elements[index]);
 }
@@ -267,11 +252,8 @@ DEF_NATIVE(list_subscript)
 DEF_NATIVE(list_subscriptSetter)
 {
   ObjList* list = AS_LIST(args[0]);
-
-  int index = validateIndexOld(args[1], list->count);
-  // TODO: Instead of returning null here, should signal an error explicitly
-  // somehow.
-  if (index == -1) RETURN_NULL;
+  int index = validateIndex(vm, args, list->count, 1, "Subscript");
+  if (index == -1) return PRIM_ERROR;
 
   list->elements[index] = args[2];
   RETURN_VAL(args[2]);
@@ -409,8 +391,9 @@ DEF_NATIVE(object_type)
 
 DEF_NATIVE(string_contains)
 {
+  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+
   const char* string = AS_CSTRING(args[0]);
-  // TODO: Check type of arg first!
   const char* search = AS_CSTRING(args[1]);
 
   // Corner case, the empty string contains the empty string.
@@ -468,24 +451,12 @@ DEF_NATIVE(string_bangeq)
 
 DEF_NATIVE(string_subscript)
 {
-  // TODO: Instead of returning null here, all of these failure cases should
-  // signal an error explicitly somehow.
-  if (!IS_NUM(args[1])) RETURN_NULL;
-
-  double indexNum = AS_NUM(args[1]);
-  int index = (int)indexNum;
-  // Make sure the index is an integer.
-  if (indexNum != index) RETURN_NULL;
-
   ObjString* string = AS_STRING(args[0]);
-
-  // Negative indices count from the end.
   // TODO: Strings should cache their length.
   int length = (int)strlen(string->value);
-  if (index < 0) index = length + index;
 
-  // Check bounds.
-  if (index < 0 || index >= length) RETURN_NULL;
+  int index = validateIndex(vm, args, length, 1, "Subscript");
+  if (index == -1) return PRIM_ERROR;
 
   // The result is a one-character string.
   // TODO: Handle UTF-8.
