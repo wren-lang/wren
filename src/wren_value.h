@@ -6,6 +6,7 @@
 
 #include "wren_common.h"
 #include "wren.h"
+#include "wren_utils.h"
 
 // This defines the built-in types and their core representations in memory.
 // Since Wren is dynamically typed, any variable can hold a value of any type,
@@ -254,6 +255,8 @@ typedef struct
   };
 } Method;
 
+DECLARE_BUFFER(Method, Method);
+
 typedef struct sObjClass
 {
   Obj obj;
@@ -264,8 +267,15 @@ typedef struct sObjClass
   // of its superclass fields.
   int numFields;
 
-  // TODO: Hack. Probably don't want to use this much space.
-  Method methods[MAX_SYMBOLS];
+  // The table of methods that are defined in or inherited by this class.
+  // Methods are called by symbol, and the symbol directly maps to an index in
+  // this table. This makes method calls fast at the expense of empty cells in
+  // the list for methods the class doesn't support.
+  //
+  // You can think of it as a hash table that never has collisions but has a
+  // really low load factor. Since methods are pretty small (just a type and a
+  // pointer), this should be a worthwhile trade-off.
+  MethodBuffer methods;
 } ObjClass;
 
 typedef struct
@@ -479,10 +489,12 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields);
 // Makes [superclass] the superclass of [subclass], and causes subclass to
 // inherit its methods. This should be called before any methods are defined
 // on subclass.
-void wrenBindSuperclass(ObjClass* subclass, ObjClass* superclass);
+void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass);
 
 // Creates a new class object as well as its associated metaclass.
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields);
+
+void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
 
 // Creates a new closure object that invokes [fn]. Allocates room for its
 // upvalues, but assumes outside code will populate it.

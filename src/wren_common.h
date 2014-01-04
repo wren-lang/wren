@@ -60,9 +60,6 @@
 // extra spaces added to handle arity, and another byte to terminate the string.
 #define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + MAX_PARAMETERS + 1)
 
-// TODO: Don't hardcode this.
-#define MAX_SYMBOLS 256
-
 // Assertions are used to validate program invariants. They indicate things the
 // program expects to be true about its internal state during execution. If an
 // assertion fails, there is a bug in Wren.

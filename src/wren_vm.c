@@ -34,8 +34,8 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
   vm->reallocate = reallocate;
   
-  wrenSymbolTableInit(&vm->methods);
-  wrenSymbolTableInit(&vm->globalSymbols);
+  wrenSymbolTableInit(vm, &vm->methods);
+  wrenSymbolTableInit(vm, &vm->globalSymbols);
 
   vm->bytesAllocated = 0;
 
@@ -66,7 +66,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
   // Clear out the global variables. This ensures they are NULL before being
   // initialized in case we do a garbage collection before one gets initialized.
-  for (int i = 0; i < MAX_SYMBOLS; i++)
+  for (int i = 0; i < MAX_GLOBALS; i++)
   {
     vm->globals[i] = NULL_VAL;
   }
@@ -102,16 +102,17 @@ static void markClass(WrenVM* vm, ObjClass* classObj)
   if (classObj->superclass != NULL) markClass(vm, classObj->superclass);
 
   // Method function objects.
-  for (int i = 0; i < MAX_SYMBOLS; i++)
+  for (int i = 0; i < classObj->methods.count; i++)
   {
-    if (classObj->methods[i].type == METHOD_BLOCK)
+    if (classObj->methods.data[i].type == METHOD_BLOCK)
     {
-      wrenMarkObj(vm, classObj->methods[i].fn);
+      wrenMarkObj(vm, classObj->methods.data[i].fn);
     }
   }
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjClass);
+  vm->bytesAllocated += classObj->methods.capacity * sizeof(Method);
 }
 
 static void markFn(WrenVM* vm, ObjFn* fn)
@@ -319,7 +320,7 @@ static void collectGarbage(WrenVM* vm)
   vm->bytesAllocated = 0;
 
   // Global variables.
-  for (int i = 0; i < vm->globalSymbols.count; i++)
+  for (int i = 0; i < vm->globalSymbols.names.count; i++)
   {
     // Check for NULL to handle globals that have been defined (at compile time)
     // but not yet initialized.
@@ -451,33 +452,27 @@ static void closeUpvalue(ObjFiber* fiber)
   fiber->openUpvalues = upvalue->next;
 }
 
-static void bindMethod(int methodType, int symbol, ObjClass* classObj,
-                       Value method)
+static void bindMethod(WrenVM* vm, int methodType, int symbol,
+                       ObjClass* classObj, Value methodValue)
 {
-  ObjFn* methodFn = IS_FN(method) ? AS_FN(method) : AS_CLOSURE(method)->fn;
+  ObjFn* methodFn = IS_FN(methodValue) ? AS_FN(methodValue)
+                                       : AS_CLOSURE(methodValue)->fn;
 
   // Methods are always bound against the class, and not the metaclass, even
   // for static methods, so that constructors (which are static) get bound like
   // instance methods.
-  wrenBindMethod(classObj, methodFn);
+  wrenBindMethodCode(classObj, methodFn);
 
-  // TODO: Note that this code could be simplified, but doing so seems to
-  // degrade performance on the method_call benchmark. My guess is simplifying
-  // this causes this function to be small enough to be inlined in the bytecode
-  // loop, which then affects instruction caching.
-  switch (methodType)
+  Method method;
+  method.type = METHOD_BLOCK;
+  method.fn = AS_OBJ(methodValue);
+
+  if (methodType == CODE_METHOD_STATIC)
   {
-    case CODE_METHOD_INSTANCE:
-      classObj->methods[symbol].type = METHOD_BLOCK;
-      classObj->methods[symbol].fn = AS_OBJ(method);
-      break;
-
-    case CODE_METHOD_STATIC:
-      // Statics are defined on the metaclass.
-      classObj->metaclass->methods[symbol].type = METHOD_BLOCK;
-      classObj->metaclass->methods[symbol].fn = AS_OBJ(method);
-      break;
+    classObj = classObj->metaclass;
   }
+
+  wrenBindMethod(vm, classObj, symbol, method);
 }
 
 static void callForeign(WrenVM* vm, ObjFiber* fiber,
@@ -510,7 +505,7 @@ static void methodNotFound(WrenVM* vm, ObjFiber* fiber, Value* receiver,
 
   // TODO: Include receiver in message.
   snprintf(message, 200, "Receiver does not implement method '%s'.",
-           vm->methods.names[symbol]);
+           vm->methods.names.data[symbol]);
 
   // Store the error message in the receiver slot so that it's on the fiber's
   // stack and doesn't get garbage collected.
@@ -549,10 +544,12 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 {
   // These macros are designed to only be invoked within this function.
   // TODO: Check for stack overflow.
-  #define PUSH(value) (fiber->stack[fiber->stackSize++] = value)
-  #define POP()       (fiber->stack[--fiber->stackSize])
-  #define PEEK()      (fiber->stack[fiber->stackSize - 1])
-  #define READ_ARG()  (*ip++)
+  #define PUSH(value)  (fiber->stack[fiber->stackSize++] = value)
+  #define POP()        (fiber->stack[--fiber->stackSize])
+  #define PEEK()       (fiber->stack[fiber->stackSize - 1])
+  #define PEEK2()      (fiber->stack[fiber->stackSize - 2])
+  #define READ_BYTE()  (*ip++)
+  #define READ_SHORT() (ip += 2, (ip[-2] << 8) | ip[-1])
 
   // Hoist these into local variables. They are accessed frequently in the loop
   // but assigned less frequently. Keeping them in locals and updating them when
@@ -655,7 +652,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
   #define INTERPRET_LOOP    DISPATCH();
   #define CASE_CODE(name)   code_##name
-  #define DISPATCH()        goto *dispatchTable[instruction = *ip++]
+  #define DISPATCH()        goto *dispatchTable[instruction = READ_BYTE()]
 
   // If you want to debug the VM and see the stack as each instruction is
   // executed, uncomment this.
@@ -672,7 +669,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
   #else
 
-  #define INTERPRET_LOOP    for (;;) switch (instruction = *ip++)
+  #define INTERPRET_LOOP    for (;;) switch (instruction = READ_BYTE())
   #define CASE_CODE(name)   case CODE_##name
   #define DISPATCH()        break
 
@@ -709,11 +706,21 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
     {
       // Add one for the implicit receiver argument.
       int numArgs = instruction - CODE_CALL_0 + 1;
-      int symbol = READ_ARG();
+      int symbol = READ_SHORT();
 
       Value receiver = fiber->stack[fiber->stackSize - numArgs];
       ObjClass* classObj = wrenGetClass(vm, receiver);
-      Method* method = &classObj->methods[symbol];
+
+      // If the class's method table doesn't include the symbol, bail.
+      if (classObj->methods.count < symbol)
+      {
+        STORE_FRAME();
+        methodNotFound(vm, fiber, &fiber->stack[fiber->stackSize - numArgs],
+                       symbol);
+        return false;
+      }
+
+      Method* method = &classObj->methods.data[symbol];
       switch (method->type)
       {
         case METHOD_PRIMITIVE:
@@ -765,15 +772,15 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
     }
 
     CASE_CODE(LOAD_LOCAL):
-      PUSH(fiber->stack[frame->stackStart + READ_ARG()]);
+      PUSH(fiber->stack[frame->stackStart + READ_BYTE()]);
       DISPATCH();
 
     CASE_CODE(STORE_LOCAL):
-      fiber->stack[frame->stackStart + READ_ARG()] = PEEK();
+      fiber->stack[frame->stackStart + READ_BYTE()] = PEEK();
       DISPATCH();
 
     CASE_CODE(CONSTANT):
-      PUSH(fn->constants[READ_ARG()]);
+      PUSH(fn->constants[READ_SHORT()]);
       DISPATCH();
 
     CASE_CODE(SUPER_0):
@@ -798,7 +805,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
       // Add one for the implicit receiver argument.
       int numArgs = instruction - CODE_SUPER_0 + 1;
-      int symbol = READ_ARG();
+      int symbol = READ_SHORT();
 
       Value receiver = fiber->stack[fiber->stackSize - numArgs];
       ObjClass* classObj = wrenGetClass(vm, receiver);
@@ -806,7 +813,16 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
       // Ignore methods defined on the receiver's immediate class.
       classObj = classObj->superclass;
 
-      Method* method = &classObj->methods[symbol];
+      // If the class's method table doesn't include the symbol, bail.
+      if (classObj->methods.count < symbol)
+      {
+        STORE_FRAME();
+        methodNotFound(vm, fiber, &fiber->stack[fiber->stackSize - numArgs],
+                       symbol);
+        return false;
+      }
+
+      Method* method = &classObj->methods.data[symbol];
       switch (method->type)
       {
         case METHOD_PRIMITIVE:
@@ -858,26 +874,26 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
     CASE_CODE(LOAD_UPVALUE):
       ASSERT(upvalues != NULL,
              "Should not have CODE_LOAD_UPVALUE instruction in non-closure.");
-      PUSH(*upvalues[READ_ARG()]->value);
+      PUSH(*upvalues[READ_BYTE()]->value);
       DISPATCH();
 
     CASE_CODE(STORE_UPVALUE):
       ASSERT(upvalues != NULL,
              "Should not have CODE_STORE_UPVALUE instruction in non-closure.");
-      *upvalues[READ_ARG()]->value = POP();
+      *upvalues[READ_BYTE()]->value = POP();
       DISPATCH();
 
     CASE_CODE(LOAD_GLOBAL):
-      PUSH(vm->globals[READ_ARG()]);
+      PUSH(vm->globals[READ_BYTE()]);
       DISPATCH();
 
     CASE_CODE(STORE_GLOBAL):
-      vm->globals[READ_ARG()] = PEEK();
+      vm->globals[READ_BYTE()] = PEEK();
       DISPATCH();
 
     CASE_CODE(LOAD_FIELD_THIS):
     {
-      int field = READ_ARG();
+      int field = READ_BYTE();
       Value receiver = fiber->stack[frame->stackStart];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
@@ -888,7 +904,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(STORE_FIELD_THIS):
     {
-      int field = READ_ARG();
+      int field = READ_BYTE();
       Value receiver = fiber->stack[frame->stackStart];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
@@ -899,7 +915,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(LOAD_FIELD):
     {
-      int field = READ_ARG();
+      int field = READ_BYTE();
       Value receiver = POP();
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
@@ -910,7 +926,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(STORE_FIELD):
     {
-      int field = READ_ARG();
+      int field = READ_BYTE();
       Value receiver = POP();
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
@@ -921,7 +937,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(JUMP):
     {
-      int offset = READ_ARG();
+      int offset = READ_BYTE();
       ip += offset;
       DISPATCH();
     }
@@ -929,14 +945,14 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
     CASE_CODE(LOOP):
     {
       // Jump back to the top of the loop.
-      int offset = READ_ARG();
+      int offset = READ_BYTE();
       ip -= offset;
       DISPATCH();
     }
 
     CASE_CODE(JUMP_IF):
     {
-      int offset = READ_ARG();
+      int offset = READ_BYTE();
       Value condition = POP();
 
       // False is the only falsey value.
@@ -947,7 +963,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(AND):
     {
-      int offset = READ_ARG();
+      int offset = READ_BYTE();
       Value condition = PEEK();
 
       // False is the only falsey value.
@@ -967,7 +983,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(OR):
     {
-      int offset = READ_ARG();
+      int offset = READ_BYTE();
       Value condition = PEEK();
 
       // False is the only falsey value.
@@ -1016,8 +1032,12 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
     CASE_CODE(NEW):
     {
       // TODO: Handle object not being a class.
-      ObjClass* classObj = AS_CLASS(POP());
-      PUSH(wrenNewInstance(vm, classObj));
+      // Make sure the class stays on the stack until after the instance is
+      // allocated so that it doesn't get collected.
+      ObjClass* classObj = AS_CLASS(PEEK());
+      Value instance = wrenNewInstance(vm, classObj);
+      POP();
+      PUSH(instance);
       DISPATCH();
     }
 
@@ -1050,7 +1070,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(LIST):
     {
-      int numElements = READ_ARG();
+      int numElements = READ_BYTE();
       ObjList* list = wrenNewList(vm, numElements);
       for (int i = 0; i < numElements; i++)
       {
@@ -1066,7 +1086,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(CLOSURE):
     {
-      ObjFn* prototype = AS_FN(fn->constants[READ_ARG()]);
+      ObjFn* prototype = AS_FN(fn->constants[READ_SHORT()]);
 
       ASSERT(prototype->numUpvalues > 0,
              "Should not create closure for functions that don't need it.");
@@ -1079,8 +1099,8 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
       // Capture upvalues.
       for (int i = 0; i < prototype->numUpvalues; i++)
       {
-        bool isLocal = READ_ARG();
-        int index = READ_ARG();
+        bool isLocal = READ_BYTE();
+        int index = READ_BYTE();
         if (isLocal)
         {
           // Make an new upvalue to close over the parent's local variable.
@@ -1101,13 +1121,13 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
     CASE_CODE(SUBCLASS):
     {
       bool isSubclass = instruction == CODE_SUBCLASS;
-      int numFields = READ_ARG();
+      int numFields = READ_BYTE();
 
       ObjClass* superclass;
       if (isSubclass)
       {
         // TODO: Handle the superclass not being a class object!
-        superclass = AS_CLASS(POP());
+        superclass = AS_CLASS(PEEK());
       }
       else
       {
@@ -1117,6 +1137,10 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
       ObjClass* classObj = wrenNewClass(vm, superclass, numFields);
 
+      // Don't pop the superclass off the stack until the subclass is done
+      // being created, to make sure it doesn't get collected.
+      if (isSubclass) POP();
+      
       PUSH(OBJ_VAL(classObj));
       DISPATCH();
     }
@@ -1125,10 +1149,11 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
     CASE_CODE(METHOD_STATIC):
     {
       int type = instruction;
-      int symbol = READ_ARG();
-      Value method = POP();
-      ObjClass* classObj = AS_CLASS(PEEK());
-      bindMethod(type, symbol, classObj, method);
+      int symbol = READ_SHORT();
+      Value method = PEEK();
+      ObjClass* classObj = AS_CLASS(PEEK2());
+      bindMethod(vm, type, symbol, classObj, method);
+      POP();
       DISPATCH();
     }
 
@@ -1179,7 +1204,7 @@ void unpinObj(WrenVM* vm)
 
 void wrenDefineMethod(WrenVM* vm, const char* className,
                       const char* methodName, int numParams,
-                      WrenForeignMethodFn method)
+                      WrenForeignMethodFn methodFn)
 {
   ASSERT(className != NULL, "Must provide class name.");
 
@@ -1190,7 +1215,7 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
   ASSERT(numParams >= 0, "numParams cannot be negative.");
   ASSERT(numParams <= MAX_PARAMETERS, "Too many parameters.");
 
-  ASSERT(method != NULL, "Must provide method function.");
+  ASSERT(methodFn != NULL, "Must provide method function.");
 
   // Find or create the class to bind the method to.
   int classSymbol = wrenSymbolTableFind(&vm->globalSymbols,
@@ -1224,8 +1249,10 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
   // Bind the method.
   int methodSymbol = wrenSymbolTableEnsure(vm, &vm->methods, name, length);
 
-  classObj->methods[methodSymbol].type = METHOD_FOREIGN;
-  classObj->methods[methodSymbol].foreign = method;
+  Method method;
+  method.type = METHOD_FOREIGN;
+  method.foreign = methodFn;
+  wrenBindMethod(vm, classObj, methodSymbol, method);
 }
 
 double wrenGetArgumentDouble(WrenVM* vm, int index)

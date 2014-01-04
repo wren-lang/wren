@@ -54,15 +54,18 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
   #define PRINT_ARG \
       printLine(fn, i, lastLine); printf(" %04d    ", ++i); printf
 
+  // TODO: Come up with a cleaner way of displaying 16-bit args.
+  
   switch (code)
   {
     case CODE_CONSTANT:
     {
-      int constant = bytecode[i];
+      int constant = (bytecode[i] << 8) | bytecode[i + 1];
       printf("CONSTANT '");
       wrenPrintValue(fn->constants[constant]);
       printf("'\n");
       PRINT_ARG("constant %d\n", constant);
+      PRINT_ARG("\n");
       break;
     }
 
@@ -105,8 +108,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_LOAD_GLOBAL:
     {
       int global = bytecode[i];
-      printf("LOAD_GLOBAL \"%s\"\n",
-             wrenSymbolTableGetName(&vm->globalSymbols, global));
+      printf("LOAD_GLOBAL \"%s\"\n", vm->globalSymbols.names.data[global]);
       PRINT_ARG("global %d\n", global);
       break;
     }
@@ -114,8 +116,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_STORE_GLOBAL:
     {
       int global = bytecode[i];
-      printf("STORE_GLOBAL \"%s\"\n",
-             wrenSymbolTableGetName(&vm->globalSymbols, global));
+      printf("STORE_GLOBAL \"%s\"\n", vm->globalSymbols.names.data[global]);
       PRINT_ARG("global %d\n", global);
       break;
     }
@@ -173,10 +174,10 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_CALL_16:
     {
       int numArgs = bytecode[i - 1] - CODE_CALL_0;
-      int symbol = bytecode[i];
-      printf("CALL_%d \"%s\"\n",
-             numArgs, wrenSymbolTableGetName(&vm->methods, symbol));
+      int symbol = (bytecode[i] << 8) | bytecode[i + 1];
+      printf("CALL_%d \"%s\"\n", numArgs, vm->methods.names.data[symbol]);
       PRINT_ARG("symbol %d\n", symbol);
+      PRINT_ARG("\n");
       break;
     }
 
@@ -199,10 +200,10 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_SUPER_16:
     {
       int numArgs = bytecode[i - 1] - CODE_SUPER_0;
-      int symbol = bytecode[i];
-      printf("SUPER_%d \"%s\"\n",
-             numArgs, wrenSymbolTableGetName(&vm->methods, symbol));
+      int symbol = (bytecode[i] << 8) | bytecode[i + 1];
+      printf("SUPER_%d \"%s\"\n", numArgs, vm->methods.names.data[symbol]);
       PRINT_ARG("symbol %d\n", symbol);
+      PRINT_ARG("\n");
       break;
     }
 
@@ -261,11 +262,12 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 
     case CODE_CLOSURE:
     {
-      int constant = bytecode[i];
+      int constant = (bytecode[i] << 8) | bytecode[i + 1];
       printf("CLOSURE ");
       wrenPrintValue(fn->constants[constant]);
       printf("\n");
       PRINT_ARG("constant %d\n", constant);
+      PRINT_ARG("\n");
       ObjFn* loadedFn = AS_FN(fn->constants[constant]);
       for (int j = 0; j < loadedFn->numUpvalues; j++)
       {
@@ -295,19 +297,19 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 
     case CODE_METHOD_INSTANCE:
     {
-      int symbol = bytecode[i];
-      printf("METHOD_INSTANCE \"%s\"\n",
-             wrenSymbolTableGetName(&vm->methods, symbol));
+      int symbol = (bytecode[i] << 8) | bytecode[i + 1];
+      printf("METHOD_INSTANCE \"%s\"\n", vm->methods.names.data[symbol]);
       PRINT_ARG("symbol %d\n", symbol);
+      PRINT_ARG("\n");
       break;
     }
 
     case CODE_METHOD_STATIC:
     {
-      int symbol = bytecode[i];
-      printf("METHOD_STATIC \"%s\"\n",
-             wrenSymbolTableGetName(&vm->methods, symbol));
+      int symbol = (bytecode[i] << 8) | bytecode[i + 1];
+      printf("METHOD_STATIC \"%s\"\n", vm->methods.names.data[symbol]);
       PRINT_ARG("symbol %d\n", symbol);
+      PRINT_ARG("\n");
       break;
     }
 

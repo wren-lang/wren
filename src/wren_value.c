@@ -14,6 +14,8 @@
 // to a list has O(1) amortized complexity.
 #define LIST_GROW_FACTOR (2)
 
+DEFINE_BUFFER(Method, Method)
+
 static void* allocate(WrenVM* vm, size_t size)
 {
   return wrenReallocate(vm, NULL, 0, size);
@@ -35,16 +37,15 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields)
   classObj->superclass = NULL;
   classObj->numFields = numFields;
 
-  // Clear out the method table.
-  for (int i = 0; i < MAX_SYMBOLS; i++)
-  {
-    classObj->methods[i].type = METHOD_NONE;
-  }
-
+  PinnedObj pinned;
+  pinObj(vm, (Obj*)classObj, &pinned);
+  wrenMethodBufferInit(vm, &classObj->methods);
+  unpinObj(vm);
+  
   return classObj;
 }
 
-void wrenBindSuperclass(ObjClass* subclass, ObjClass* superclass)
+void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
 {
   ASSERT(superclass != NULL, "Must have superclass.");
 
@@ -54,9 +55,9 @@ void wrenBindSuperclass(ObjClass* subclass, ObjClass* superclass)
   subclass->numFields += superclass->numFields;
 
   // Inherit methods from its superclass.
-  for (int i = 0; i < MAX_SYMBOLS; i++)
+  for (int i = 0; i < superclass->methods.count; i++)
   {
-    subclass->methods[i] = superclass->methods[i];
+    wrenBindMethod(vm, subclass, i, superclass->methods.data[i]);
   }
 }
 
@@ -76,20 +77,41 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
   // bottoms out at "Class".
   if (superclass == vm->objectClass)
   {
-    wrenBindSuperclass(metaclass, vm->classClass);
+    wrenBindSuperclass(vm, metaclass, vm->classClass);
   }
   else
   {
-    wrenBindSuperclass(metaclass, superclass->metaclass);
+    wrenBindSuperclass(vm, metaclass, superclass->metaclass);
   }
 
   ObjClass* classObj = wrenNewSingleClass(vm, numFields);
-  classObj->metaclass = metaclass;
-  wrenBindSuperclass(classObj, superclass);
 
+  // Make sure the class isn't collected while the inherited methods are being
+  // bound.
+  PinnedObj pinned2;
+  pinObj(vm, (Obj*)classObj, &pinned2);
+
+  classObj->metaclass = metaclass;
+  wrenBindSuperclass(vm, classObj, superclass);
+
+  unpinObj(vm);
   unpinObj(vm);
 
   return classObj;
+}
+
+void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
+{
+  // Make sure the buffer is big enough to reach the symbol's index.
+  // TODO: Do a single grow instead of a loop.
+  Method noMethod;
+  noMethod.type = METHOD_NONE;
+  while (symbol >= classObj->methods.count)
+  {
+    wrenMethodBufferWrite(vm, &classObj->methods, noMethod);
+  }
+
+  classObj->methods.data[symbol] = method;
 }
 
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
@@ -313,6 +335,10 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
 
   switch (obj->type)
   {
+    case OBJ_CLASS:
+      wrenMethodBufferClear(vm, &((ObjClass*)obj)->methods);
+      break;
+
     case OBJ_FN:
     {
       ObjFn* fn = (ObjFn*)obj;
@@ -332,7 +358,6 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       wrenReallocate(vm, ((ObjString*)obj)->value, 0, 0);
       break;
 
-    case OBJ_CLASS:
     case OBJ_CLOSURE:
     case OBJ_INSTANCE:
     case OBJ_UPVALUE:

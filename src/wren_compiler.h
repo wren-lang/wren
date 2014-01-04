@@ -39,7 +39,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source);
 //
 // We could handle this dynamically, but that adds overhead. Instead, when a
 // method is bound, we walk the bytecode for the function and patch it up.
-void wrenBindMethod(ObjClass* classObj, ObjFn* fn);
+void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn);
 
 // Reaches all of the heap-allocated objects in use by [compiler] (and all of
 // its parents) so that they are not collected by the GC.

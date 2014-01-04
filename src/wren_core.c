@@ -13,8 +13,10 @@
     { \
       int symbol = wrenSymbolTableEnsure(vm, \
           &vm->methods, name, strlen(name)); \
-      cls->methods[symbol].type = METHOD_PRIMITIVE; \
-      cls->methods[symbol].primitive = native_##fn; \
+      Method method; \
+      method.type = METHOD_PRIMITIVE; \
+      method.primitive = native_##fn; \
+      wrenBindMethod(vm, cls, symbol, method); \
     }
 
 // Defines a native method whose C function name is [native]. This abstracts
@@ -520,7 +522,7 @@ void wrenInitializeCore(WrenVM* vm)
   vm->globals[classSymbol] = OBJ_VAL(vm->classClass);
 
   // Now that Object and Class are defined, we can wire them up to each other.
-  wrenBindSuperclass(vm->classClass, vm->objectClass);
+  wrenBindSuperclass(vm, vm->classClass, vm->objectClass);
   vm->objectClass->metaclass = vm->classClass;
   vm->classClass->metaclass = vm->classClass;
 
@@ -550,7 +552,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->boolClass, "!", bool_not);
 
   vm->fiberClass = defineClass(vm, "Fiber");
-  
+
   vm->fnClass = defineClass(vm, "Function");
   NATIVE(vm->fnClass, "call", fn_call);
   NATIVE(vm->fnClass, "call ", fn_call);

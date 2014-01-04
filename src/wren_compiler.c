@@ -27,8 +27,8 @@
 
 // The maximum number of distinct constants that a function can contain. This
 // value is explicit in the bytecode since `CODE_CONSTANT` only takes a single
-// argument.
-#define MAX_CONSTANTS (256)
+// two-byte argument.
+#define MAX_CONSTANTS (1 << 16)
 
 typedef enum
 {
@@ -279,14 +279,6 @@ static void error(Compiler* compiler, const char* format, ...)
 // Adds [constant] to the constant pool and returns its index.
 static int addConstant(Compiler* compiler, Value constant)
 {
-  // See if an equivalent constant has already been added.
-  for (int i = 0; i < compiler->constants->count; i++)
-  {
-    // TODO: wrenValuesEqual doesn't check for string equality. Check for that
-    // explicitly here or intern strings globally or something.
-    if (wrenValuesEqual(compiler->constants->elements[i], constant)) return i;
-  }
-
   if (compiler->constants->count < MAX_CONSTANTS)
   {
     wrenListAdd(compiler->parser->vm, compiler->constants, constant);
@@ -304,24 +296,6 @@ static int addConstant(Compiler* compiler, Value constant)
 static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
                          const char* methodName, int methodLength)
 {
-  /*
-   Parser* parser;
-   struct sCompiler* parent;
-   ObjList* constants;
-
-   Local locals[MAX_LOCALS];
-   int numLocals;
-   CompilerUpvalue upvalues[MAX_UPVALUES];
-   int numUpvalues;
-   int scopeDepth;
-   int loopBody;
-   SymbolTable* fields;
-   const char* methodName;
-   int methodLength;
-   ByteBuffer bytecode;
-   IntBuffer debugSourceLines;
-  */
-
   compiler->parser = parser;
   compiler->parent = parent;
 
@@ -827,16 +801,25 @@ static int emit(Compiler* compiler, Code code)
   // Assume the instruction is associated with the most recently consumed token.
   wrenIntBufferWrite(compiler->parser->vm, &compiler->debugSourceLines,
       compiler->parser->previous.line);
-  
+
   return compiler->bytecode.count - 1;
 }
 
-// Emits one bytecode instruction followed by an argument. Returns the index of
-// the argument in the bytecode.
-static int emit1(Compiler* compiler, Code instruction, uint8_t arg)
+// Emits one bytecode instruction followed by a 8-bit argument. Returns the
+// index of the argument in the bytecode.
+static int emitByte(Compiler* compiler, Code instruction, uint8_t arg)
 {
   emit(compiler, instruction);
   return emit(compiler, arg);
+}
+
+// Emits one bytecode instruction followed by a 16-bit argument, which will be
+// written big endian.
+static void emitShort(Compiler* compiler, Code instruction, uint16_t arg)
+{
+  emit(compiler, instruction);
+  emit(compiler, (arg >> 8) & 0xff);
+  emit(compiler, arg & 0xff);
 }
 
 // Create a new local variable with [name]. Assumes the current scope is local
@@ -908,7 +891,8 @@ static void defineVariable(Compiler* compiler, int symbol)
 
   // It's a global variable, so store the value in the global slot and then
   // discard the temporary for the initializer.
-  emit1(compiler, CODE_STORE_GLOBAL, symbol);
+  emitByte(compiler, CODE_STORE_GLOBAL, symbol);
+  // TODO: Allow more than 256 globals.
   emit(compiler, CODE_POP);
 }
 
@@ -1072,6 +1056,8 @@ static int copyName(Compiler* compiler, char* name)
   return length;
 }
 
+#include "wren_debug.h"
+
 // Finishes [compiler], which is compiling a function, method, or chunk of top
 // level code. If there is a parent compiler, then this emits code in the
 // parent compiler to load the resulting function.
@@ -1114,20 +1100,20 @@ static ObjFn* endCompiler(Compiler* compiler,
     // We can just load and run the function directly.
     if (compiler->numUpvalues == 0)
     {
-      emit1(compiler->parent, CODE_CONSTANT, constant);
+      emitShort(compiler->parent, CODE_CONSTANT, constant);
     }
     else
     {
       // Capture the upvalues in the new closure object.
-      emit1(compiler->parent, CODE_CLOSURE, constant);
+      emitShort(compiler->parent, CODE_CLOSURE, constant);
 
       // Emit arguments for each upvalue to know whether to capture a local or
       // an upvalue.
       // TODO: Do something more efficient here?
       for (int i = 0; i < compiler->numUpvalues; i++)
       {
-        emit1(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0,
-              compiler->upvalues[i].index);
+        emitByte(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0,
+                 compiler->upvalues[i].index);
       }
     }
   }
@@ -1137,6 +1123,8 @@ static ObjFn* endCompiler(Compiler* compiler,
 
   unpinObj(compiler->parser->vm);
 
+  //  wrenDebugPrintCode(compiler->parser->vm, fn);
+  
   return fn;
 }
 
@@ -1277,7 +1265,8 @@ static void methodCall(Compiler* compiler, Code instruction,
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
-  emit1(compiler, instruction + numArgs, methodSymbol(compiler, name, length));
+  emitShort(compiler, instruction + numArgs,
+            methodSymbol(compiler, name, length));
 }
 
 // Compiles an expression that starts with ".name". That includes getters,
@@ -1300,7 +1289,7 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
     // Compile the assigned value.
     expression(compiler);
 
-    emit1(compiler, instruction + 1, methodSymbol(compiler, name, length));
+    emitShort(compiler, instruction + 1, methodSymbol(compiler, name, length));
   }
   else
   {
@@ -1314,7 +1303,7 @@ static void loadThis(Compiler* compiler)
 {
   Code loadInstruction;
   int index = resolveName(compiler, "this", 4, &loadInstruction);
-  emit1(compiler, loadInstruction, index);
+  emitByte(compiler, loadInstruction, index);
 }
 
 static void grouping(Compiler* compiler, bool allowAssignment)
@@ -1343,7 +1332,7 @@ static void list(Compiler* compiler, bool allowAssignment)
 
   // Create the list.
   // TODO: Handle lists >255 elements.
-  emit1(compiler, CODE_LIST, numElements);
+  emitByte(compiler, CODE_LIST, numElements);
 }
 
 // Unary operators like `-foo`.
@@ -1355,7 +1344,7 @@ static void unaryOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, PREC_UNARY + 1);
 
   // Call the operator method on the left-hand side.
-  emit1(compiler, CODE_CALL_0, methodSymbol(compiler, rule->name, 1));
+  emitShort(compiler, CODE_CALL_0, methodSymbol(compiler, rule->name, 1));
 }
 
 static void boolean(Compiler* compiler, bool allowAssignment)
@@ -1408,6 +1397,8 @@ static void field(Compiler* compiler, bool allowAssignment)
     field = 255;
   }
 
+  // TODO: Make sure field number fits in byte.
+
   // If there's an "=" after a field name, it's an assignment.
   if (match(compiler, TOKEN_EQ))
   {
@@ -1419,12 +1410,12 @@ static void field(Compiler* compiler, bool allowAssignment)
     // If we're directly inside a method, use a more optimal instruction.
     if (compiler->methodName != NULL)
     {
-      emit1(compiler, CODE_STORE_FIELD_THIS, field);
+      emitByte(compiler, CODE_STORE_FIELD_THIS, field);
     }
     else
     {
       loadThis(compiler);
-      emit1(compiler, CODE_STORE_FIELD, field);
+      emitByte(compiler, CODE_STORE_FIELD, field);
     }
   }
   else
@@ -1432,12 +1423,12 @@ static void field(Compiler* compiler, bool allowAssignment)
     // If we're directly inside a method, use a more optimal instruction.
     if (compiler->methodName != NULL)
     {
-      emit1(compiler, CODE_LOAD_FIELD_THIS, field);
+      emitByte(compiler, CODE_LOAD_FIELD_THIS, field);
     }
     else
     {
       loadThis(compiler);
-      emit1(compiler, CODE_LOAD_FIELD, field);
+      emitByte(compiler, CODE_LOAD_FIELD, field);
     }
   }
 }
@@ -1463,16 +1454,22 @@ static void name(Compiler* compiler, bool allowAssignment)
     // Emit the store instruction.
     switch (loadInstruction)
     {
-      case CODE_LOAD_LOCAL: emit1(compiler, CODE_STORE_LOCAL, index); break;
-      case CODE_LOAD_UPVALUE: emit1(compiler, CODE_STORE_UPVALUE, index); break;
-      case CODE_LOAD_GLOBAL: emit1(compiler, CODE_STORE_GLOBAL, index); break;
+      case CODE_LOAD_LOCAL:
+        emitByte(compiler, CODE_STORE_LOCAL, index);
+        break;
+      case CODE_LOAD_UPVALUE:
+        emitByte(compiler, CODE_STORE_UPVALUE, index);
+        break;
+      case CODE_LOAD_GLOBAL:
+        emitByte(compiler, CODE_STORE_GLOBAL, index);
+        break;
       default:
         UNREACHABLE();
     }
   }
   else
   {
-    emit1(compiler, loadInstruction, index);
+    emitByte(compiler, loadInstruction, index);
   }
 }
 
@@ -1498,7 +1495,7 @@ static void number(Compiler* compiler, bool allowAssignment)
   int constant = addConstant(compiler, NUM_VAL(value));
 
   // Compile the code to load the constant.
-  emit1(compiler, CODE_CONSTANT, constant);
+  emitShort(compiler, CODE_CONSTANT, constant);
 }
 
 static void string(Compiler* compiler, bool allowAssignment)
@@ -1510,7 +1507,7 @@ static void string(Compiler* compiler, bool allowAssignment)
   wrenByteBufferClear(compiler->parser->vm, &compiler->parser->string);
 
   // Compile the code to load the constant.
-  emit1(compiler, CODE_CONSTANT, constant);
+  emitShort(compiler, CODE_CONSTANT, constant);
 }
 
 // Returns true if [compiler] is compiling a chunk of code that is either
@@ -1564,7 +1561,7 @@ static void super_(Compiler* compiler, bool allowAssignment)
     // No explicit name, so use the name of the enclosing method.
     char name[MAX_METHOD_SIGNATURE];
     int length = 0;
-    
+
     Compiler* thisCompiler = compiler;
     while (thisCompiler != NULL)
     {
@@ -1633,7 +1630,8 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   }
 
   // Compile the method call.
-  emit1(compiler, CODE_CALL_0 + numArgs, methodSymbol(compiler, name, length));
+  emitShort(compiler, CODE_CALL_0 + numArgs,
+            methodSymbol(compiler, name, length));
 }
 
 void call(Compiler* compiler, bool allowAssignment)
@@ -1652,7 +1650,7 @@ void is(Compiler* compiler, bool allowAssignment)
 void and(Compiler* compiler, bool allowAssignment)
 {
   // Skip the right argument if the left is false.
-  int jump = emit1(compiler, CODE_AND, 255);
+  int jump = emitByte(compiler, CODE_AND, 255);
   parsePrecedence(compiler, false, PREC_LOGIC);
   patchJump(compiler, jump);
 }
@@ -1660,7 +1658,7 @@ void and(Compiler* compiler, bool allowAssignment)
 void or(Compiler* compiler, bool allowAssignment)
 {
   // Skip the right argument if the left is true.
-  int jump = emit1(compiler, CODE_OR, 255);
+  int jump = emitByte(compiler, CODE_OR, 255);
   parsePrecedence(compiler, false, PREC_LOGIC);
   patchJump(compiler, jump);
 }
@@ -1673,7 +1671,7 @@ void infixOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, rule->precedence + 1);
 
   // Call the operator method on the left-hand side.
-  emit1(compiler, CODE_CALL_1, methodSymbol(compiler, rule->name, 0));
+  emitShort(compiler, CODE_CALL_1, methodSymbol(compiler, rule->name, 0));
 }
 
 // Compiles a method signature for an infix operator.
@@ -1856,7 +1854,7 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
   if (isConstructor)
   {
     // The receiver is always stored in the first local slot.
-    emit1(&methodCompiler, CODE_LOAD_LOCAL, 0);
+    emitByte(&methodCompiler, CODE_LOAD_LOCAL, 0);
   }
   else
   {
@@ -1869,7 +1867,7 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
   endCompiler(&methodCompiler, name, length);
 
   // Compile the code to define the method.
-  emit1(compiler, instruction, methodSymbol(compiler, name, length));
+  emitShort(compiler, instruction, methodSymbol(compiler, name, length));
 }
 
 // Parses a curly block or an expression statement. Used in places like the
@@ -1909,17 +1907,54 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
       return 0;
 
       // Instructions with two arguments:
+    case CODE_CONSTANT:
+    case CODE_CALL_0:
+    case CODE_CALL_1:
+    case CODE_CALL_2:
+    case CODE_CALL_3:
+    case CODE_CALL_4:
+    case CODE_CALL_5:
+    case CODE_CALL_6:
+    case CODE_CALL_7:
+    case CODE_CALL_8:
+    case CODE_CALL_9:
+    case CODE_CALL_10:
+    case CODE_CALL_11:
+    case CODE_CALL_12:
+    case CODE_CALL_13:
+    case CODE_CALL_14:
+    case CODE_CALL_15:
+    case CODE_CALL_16:
+    case CODE_SUPER_0:
+    case CODE_SUPER_1:
+    case CODE_SUPER_2:
+    case CODE_SUPER_3:
+    case CODE_SUPER_4:
+    case CODE_SUPER_5:
+    case CODE_SUPER_6:
+    case CODE_SUPER_7:
+    case CODE_SUPER_8:
+    case CODE_SUPER_9:
+    case CODE_SUPER_10:
+    case CODE_SUPER_11:
+    case CODE_SUPER_12:
+    case CODE_SUPER_13:
+    case CODE_SUPER_14:
+    case CODE_SUPER_15:
+    case CODE_SUPER_16:
+      return 2;
+
     case CODE_METHOD_INSTANCE:
     case CODE_METHOD_STATIC:
-      return 2;
+      return 3;
 
     case CODE_CLOSURE:
     {
-      int constant = bytecode[ip + 1];
+      int constant = (bytecode[ip + 1] << 8) | bytecode[ip + 2];
       ObjFn* loadedFn = AS_FN(constants[constant]);
 
-      // There is an argument for the constant, then one for each upvalue.
-      return 1 + loadedFn->numUpvalues;
+      // There are two arguments for the constant, then one for each upvalue.
+      return 2 + loadedFn->numUpvalues;
     }
 
     default:
@@ -2020,26 +2055,28 @@ static void forStatement(Compiler* compiler)
   int loopStart = compiler->bytecode.count - 1;
 
   // Advance the iterator by calling the ".iterate" method on the sequence.
-  emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
-  emit1(compiler, CODE_LOAD_LOCAL, iterSlot);
+  emitByte(compiler, CODE_LOAD_LOCAL, seqSlot);
+  emitByte(compiler, CODE_LOAD_LOCAL, iterSlot);
 
-  emit1(compiler, CODE_CALL_1, methodSymbol(compiler, "iterate ", 8));
+  emitShort(compiler, CODE_CALL_1, methodSymbol(compiler, "iterate ", 8));
 
   // Store the iterator back in its local for the next iteration.
-  emit1(compiler, CODE_STORE_LOCAL, iterSlot);
+  emitByte(compiler, CODE_STORE_LOCAL, iterSlot);
   // TODO: We can probably get this working with a bit less stack juggling.
 
   // If it returned something falsy, jump out of the loop.
-  int exitJump = emit1(compiler, CODE_JUMP_IF, 255);
+  // TODO: Support longer jumps.
+  int exitJump = emitByte(compiler, CODE_JUMP_IF, 255);
 
   // Create a scope for the loop body.
   pushScope(compiler);
 
   // Get the current value in the sequence by calling ".iteratorValue".
-  emit1(compiler, CODE_LOAD_LOCAL, seqSlot);
-  emit1(compiler, CODE_LOAD_LOCAL, iterSlot);
+  emitByte(compiler, CODE_LOAD_LOCAL, seqSlot);
+  emitByte(compiler, CODE_LOAD_LOCAL, iterSlot);
 
-  emit1(compiler, CODE_CALL_1, methodSymbol(compiler, "iteratorValue ", 14));
+  emitShort(compiler, CODE_CALL_1,
+            methodSymbol(compiler, "iteratorValue ", 14));
 
   // Bind it to the loop variable.
   defineLocal(compiler, name, length);
@@ -2071,7 +2108,8 @@ static void whileStatement(Compiler* compiler)
   expression(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
 
-  int exitJump = emit1(compiler, CODE_JUMP_IF, 255);
+  // TODO: Support longer jumps.
+  int exitJump = emitByte(compiler, CODE_JUMP_IF, 255);
 
   // Compile the body.
   int outerLoopBody = startLoopBody(compiler);
@@ -2080,6 +2118,7 @@ static void whileStatement(Compiler* compiler)
   // Loop back to the top.
   emit(compiler, CODE_LOOP);
   int loopOffset = compiler->bytecode.count - loopStart;
+  // TODO: Support longer jumps.
   emit(compiler, loopOffset);
 
   patchJump(compiler, exitJump);
@@ -2102,7 +2141,7 @@ void statement(Compiler* compiler)
     // replace these with `CODE_JUMP` instructions with appropriate offsets.
     // We use `CODE_END` here because that can't occur in the middle of
     // bytecode.
-    emit1(compiler, CODE_END, 0);
+    emitByte(compiler, CODE_END, 0);
     return;
   }
 
@@ -2116,7 +2155,7 @@ void statement(Compiler* compiler)
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
 
     // Jump to the else branch if the condition is false.
-    int ifJump = emit1(compiler, CODE_JUMP_IF, 255);
+    int ifJump = emitByte(compiler, CODE_JUMP_IF, 255);
 
     // Compile the then branch.
     block(compiler);
@@ -2125,10 +2164,10 @@ void statement(Compiler* compiler)
     if (match(compiler, TOKEN_ELSE))
     {
       // Jump over the else branch when the if branch is taken.
-      int elseJump = emit1(compiler, CODE_JUMP, 255);
+      int elseJump = emitByte(compiler, CODE_JUMP, 255);
 
       patchJump(compiler, ifJump);
-      
+
       block(compiler);
 
       // Patch the jump over the else.
@@ -2191,7 +2230,7 @@ static void classDefinition(Compiler* compiler)
   // fields into account.
   SymbolTable* previousFields = compiler->fields;
   SymbolTable fields;
-  wrenSymbolTableInit(&fields);
+  wrenSymbolTableInit(compiler->parser->vm, &fields);
   compiler->fields = &fields;
 
   // Compile the method definitions.
@@ -2229,9 +2268,11 @@ static void classDefinition(Compiler* compiler)
   }
 
   // Update the class with the number of fields.
-  compiler->bytecode.data[numFieldsInstruction] = fields.count;
+  compiler->bytecode.data[numFieldsInstruction] = fields.names.count;
   compiler->fields = previousFields;
 
+  wrenSymbolTableClear(compiler->parser->vm, &fields);
+  
   // Store it in its name.
   defineVariable(compiler, symbol);
 }
@@ -2323,7 +2364,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
   return endCompiler(&compiler, "(script)", 8);
 }
 
-void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
+void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 {
   // TODO: What about functions nested inside [fn]?
   int ip = 0;
@@ -2338,6 +2379,8 @@ void wrenBindMethod(ObjClass* classObj, ObjFn* fn)
       case CODE_STORE_FIELD_THIS:
         // Shift this class's fields down past the inherited ones.
         fn->bytecode[ip++] += classObj->superclass->numFields;
+
+        // TODO: Make sure field number still fits in byte.
         break;
 
       case CODE_END:

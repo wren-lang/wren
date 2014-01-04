@@ -6,6 +6,9 @@
 #include "wren_value.h"
 #include "wren_utils.h"
 
+// TODO: Get rid of this.
+#define MAX_GLOBALS 256
+
 typedef enum
 {
   // Load the constant at index [arg].
@@ -203,7 +206,7 @@ struct WrenVM
   SymbolTable globalSymbols;
 
   // TODO: Using a fixed array is gross here.
-  Value globals[MAX_SYMBOLS];
+  Value globals[MAX_GLOBALS];
 
   // The compiler that is currently compiling code. This is used so that heap
   // allocated objects used by the compiler can be found if a GC is kicked off
