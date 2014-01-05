@@ -16,16 +16,16 @@ class Foo {
 }
 
 var foo = new Foo
-IO.write(foo + "a") // expect: infix + a
-IO.write(foo - "a") // expect: infix - a
-IO.write(foo * "a") // expect: infix * a
-IO.write(foo / "a") // expect: infix / a
-IO.write(foo % "a") // expect: infix % a
-IO.write(foo < "a") // expect: infix < a
-IO.write(foo > "a") // expect: infix > a
-IO.write(foo <= "a") // expect: infix <= a
-IO.write(foo >= "a") // expect: infix >= a
-IO.write(foo == "a") // expect: infix == a
-IO.write(foo != "a") // expect: infix != a
-IO.write(!foo) // expect: prefix !
-IO.write(-foo) // expect: prefix -
+IO.print(foo + "a") // expect: infix + a
+IO.print(foo - "a") // expect: infix - a
+IO.print(foo * "a") // expect: infix * a
+IO.print(foo / "a") // expect: infix / a
+IO.print(foo % "a") // expect: infix % a
+IO.print(foo < "a") // expect: infix < a
+IO.print(foo > "a") // expect: infix > a
+IO.print(foo <= "a") // expect: infix <= a
+IO.print(foo >= "a") // expect: infix >= a
+IO.print(foo == "a") // expect: infix == a
+IO.print(foo != "a") // expect: infix != a
+IO.print(!foo) // expect: prefix !
+IO.print(-foo) // expect: prefix -

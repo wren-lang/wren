@@ -3,4 +3,4 @@ class Foo {
   baz { return "baz" }
 }
 
-IO.write((new Foo).bar.baz) // expect: baz
+IO.print((new Foo).bar.baz) // expect: baz

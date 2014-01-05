@@ -3,7 +3,7 @@ var f = null
 {
   var local = "local"
   f = fn {
-    IO.write(local)
+    IO.print(local)
   }
 }
 

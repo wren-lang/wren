@@ -1,13 +1,13 @@
-IO.write(Num == Num)  // expect: true
-IO.write(Num == Bool) // expect: false
+IO.print(Num == Num)  // expect: true
+IO.print(Num == Bool) // expect: false
 
 // Not equal to other types.
-IO.write(Num == 123)  // expect: false
-IO.write(Num == true) // expect: false
+IO.print(Num == 123)  // expect: false
+IO.print(Num == true) // expect: false
 
-IO.write(Num != Num)  // expect: false
-IO.write(Num != Bool) // expect: true
+IO.print(Num != Num)  // expect: false
+IO.print(Num != Bool) // expect: true
 
 // Not equal to other types.
-IO.write(Num != 123)  // expect: true
-IO.write(Num != true) // expect: true
+IO.print(Num != 123)  // expect: true
+IO.print(Num != true) // expect: true

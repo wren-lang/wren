@@ -13,4 +13,4 @@ class Foo {
 }
 
 var closure = (new Foo).getClosure
-IO.write(closure.call.call.call) // expect: Foo
+IO.print(closure.call.call.call) // expect: Foo

@@ -1,6 +1,6 @@
 var a = "global"
 {
   var a = "shadow"
-  IO.write(a) // expect: shadow
+  IO.print(a) // expect: shadow
 }
-IO.write(a) // expect: global
+IO.print(a) // expect: global

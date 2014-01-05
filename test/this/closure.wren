@@ -9,4 +9,4 @@ class Foo {
 }
 
 var closure = (new Foo).getClosure
-IO.write(closure.call) // expect: Foo
+IO.print(closure.call) // expect: Foo

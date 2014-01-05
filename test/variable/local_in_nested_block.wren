@@ -1,6 +1,6 @@
 {
   var a = "outer"
   {
-    IO.write(a) // expect: outer
+    IO.print(a) // expect: outer
   }
 }

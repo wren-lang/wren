@@ -1,5 +1,5 @@
 // In middle of line.
-IO.write/* ... */(/* */"ok"/* */) // expect: ok
+IO.print/* ... */(/* */"ok"/* */) // expect: ok
 
 // Nested.
-IO.write(/* in /* nest */ out */"ok") // expect: ok
+IO.print(/* in /* nest */ out */"ok") // expect: ok

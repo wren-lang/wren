@@ -11,7 +11,7 @@ class Node {
       _left.write
     }
 
-    IO.write(_value)
+    IO.print(_value)
 
     if (_right is Node) {
       _right.write

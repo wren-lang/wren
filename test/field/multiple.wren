@@ -8,11 +8,11 @@ class Foo {
   }
 
   write {
-    IO.write(_a)
-    IO.write(_b)
-    IO.write(_c)
-    IO.write(_d)
-    IO.write(_e)
+    IO.print(_a)
+    IO.print(_b)
+    IO.print(_c)
+    IO.print(_d)
+    IO.print(_e)
   }
 }
 

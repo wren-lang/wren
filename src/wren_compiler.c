@@ -514,10 +514,71 @@ static void readName(Parser* parser, TokenType type)
   makeToken(parser, type);
 }
 
-// Adds [c] to the current string literal being tokenized.
-static void addStringChar(Parser* parser, char c)
+// Adds [c] to the current string literal being tokenized. If [c] is outside of
+// ASCII range, it will emit the UTF-8 encoded byte sequence for it.
+static void addStringChar(Parser* parser, uint32_t c)
 {
-  wrenByteBufferWrite(parser->vm, &parser->string, c);
+  ByteBuffer* buffer = &parser->string;
+
+  if (c <= 0x7f)
+  {
+    // Single byte (i.e. fits in ASCII).
+    wrenByteBufferWrite(parser->vm, buffer, c);
+  }
+  else if (c <= 0x7ff)
+  {
+    // Two byte sequence: 110xxxxx	 10xxxxxx.
+    wrenByteBufferWrite(parser->vm, buffer, 0xc0 | ((c & 0x7c0) >> 6));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | (c & 0x3f));
+  }
+  else if (c <= 0xffff)
+  {
+    // Three byte sequence: 1110xxxx	 10xxxxxx 10xxxxxx.
+    wrenByteBufferWrite(parser->vm, buffer, 0xe0 | ((c & 0xf000) >> 12));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | ((c & 0xfc0) >> 6));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | (c & 0x3f));
+  }
+  else if (c <= 0x10ffff)
+  {
+    // Four byte sequence: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx.
+    wrenByteBufferWrite(parser->vm, buffer, 0xf0 | ((c & 0x1c0000) >> 18));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | ((c & 0x3f000) >> 12));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | ((c & 0xfc0) >> 6));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | (c & 0x3f));
+  }
+  else
+  {
+    // Invalid Unicode value. See: http://tools.ietf.org/html/rfc3629
+    // TODO: Error.
+  }
+}
+
+// Reads the next character, which should be a hex digit (0-9, a-f, or A-F) and
+// returns its numeric value. If the character isn't a hex digit, returns -1.
+static int readHexDigit(Parser* parser)
+{
+  char c = nextChar(parser);
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+  return -1;
+}
+
+// Reads a four hex digit Unicode escape sequence in a string literal.
+static void readUnicodeEscape(Parser* parser)
+{
+  int value = 0;
+  for (int i = 0; i < 4; i++)
+  {
+    char digit = readHexDigit(parser);
+    // TODO: Signal error.
+    if (digit == -1) return;
+
+    value = (value * 16) | digit;
+  }
+
+  // TODO: Handle encoding!
+  addStringChar(parser, value);
 }
 
 // Finishes lexing a string literal.
@@ -538,6 +599,7 @@ static void readString(Parser* parser)
         case '\\': addStringChar(parser, '\\'); break;
         case 'n':  addStringChar(parser, '\n'); break;
         case 't':  addStringChar(parser, '\t'); break;
+        case 'u':  readUnicodeEscape(parser); break;
         default:
           // TODO: Emit error token.
           break;

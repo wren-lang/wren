@@ -1,2 +1,2 @@
 class Foo {}
-IO.write((new Foo).toString) // expect: <object>
+IO.print((new Foo).toString) // expect: <object>

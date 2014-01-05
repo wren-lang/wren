@@ -43,8 +43,14 @@
 // make_corelib. Do not edit here.
 const char* coreLibSource =
 "class IO {\n"
+"  static print(obj) {\n"
+"    IO.writeString_(obj.toString)\n"
+"    IO.writeString_(\"\n\")\n"
+"    return obj\n"
+"  }\n"
+"\n"
 "  static write(obj) {\n"
-"    IO.write__native__(obj.toString)\n"
+"    IO.writeString_(obj.toString)\n"
 "    return obj\n"
 "  }\n"
 "}\n"
@@ -471,9 +477,9 @@ DEF_NATIVE(string_subscript)
 
 DEF_NATIVE(io_writeString)
 {
+  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
   wrenPrintValue(args[1]);
-  printf("\n");
-  RETURN_VAL(args[1]);
+  RETURN_NULL;
 }
 
 DEF_NATIVE(os_clock)
@@ -621,5 +627,5 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, "!= ", num_bangeq);
 
   ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
-  NATIVE(ioClass->metaclass, "write__native__ ", io_writeString);
+  NATIVE(ioClass->metaclass, "writeString_ ", io_writeString);
 }

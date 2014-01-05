@@ -1,15 +1,15 @@
 class Foo {
-  static methodOnFoo { IO.write("foo") }
-  static method(a) { IO.write("foo") }
-  static method(a, b, c) { IO.write("foo") }
-  static override { IO.write("foo") }
+  static methodOnFoo { IO.print("foo") }
+  static method(a) { IO.print("foo") }
+  static method(a, b, c) { IO.print("foo") }
+  static override { IO.print("foo") }
 }
 
 class Bar is Foo {
-  static methodOnBar { IO.write("bar") }
-  static method(a, b) { IO.write("bar") }
-  static method(a, b, c, d) { IO.write("bar") }
-  static override { IO.write("bar") }
+  static methodOnBar { IO.print("bar") }
+  static method(a, b) { IO.print("bar") }
+  static method(a, b, c, d) { IO.print("bar") }
+  static override { IO.print("bar") }
 }
 
 Bar.methodOnFoo // expect: foo

@@ -7,9 +7,9 @@ fn {
     fn {
       var c = "c"
       f = fn {
-        IO.write(a)
-        IO.write(b)
-        IO.write(c)
+        IO.print(a)
+        IO.print(b)
+        IO.print(c)
       }
     }.call
   }.call

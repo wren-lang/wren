@@ -1,1 +1,1 @@
-IO.write(notDefined)  // expect error
+IO.print(notDefined)  // expect error

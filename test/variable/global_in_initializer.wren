@@ -1,2 +1,2 @@
 var a = a == null
-IO.write(a) // expect: true
+IO.print(a) // expect: true

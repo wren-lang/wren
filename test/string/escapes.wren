@@ -1,8 +1,7 @@
 // Escape characters.
-IO.write("\"")     // expect: "
-IO.write("\\")     // expect: \
-IO.write("(\n)")   // expect: (
+IO.print("\"")     // expect: "
+IO.print("\\")     // expect: \
+IO.print("(\n)")   // expect: (
                    // expect: )
 
 // TODO: Non-printing escapes like \t.
-// TODO: Unicode escape sequences.

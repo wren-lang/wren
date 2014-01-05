@@ -3,4 +3,4 @@ class Foo {
 }
 
 var foo = new Foo
-IO.write(foo.bar = "value") // expect: result
+IO.print(foo.bar = "value") // expect: result

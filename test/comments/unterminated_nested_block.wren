@@ -1,4 +1,4 @@
 // expect error line 4
-IO.write("nope") /* /* /*
+IO.print("nope") /* /* /*
 */
 oops

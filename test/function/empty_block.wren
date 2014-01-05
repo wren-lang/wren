@@ -1,2 +1,2 @@
 var f = fn {}
-IO.write(f.call) // expect: null
+IO.print(f.call) // expect: null

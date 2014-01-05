@@ -2,7 +2,7 @@
   var local = "local"
   class Foo {
     method {
-      IO.write(local)
+      IO.print(local)
     }
   }
 

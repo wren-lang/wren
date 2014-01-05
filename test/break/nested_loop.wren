@@ -1,11 +1,11 @@
 var i = 0
 while (true) {
-  IO.write("outer " + i.toString)
+  IO.print("outer " + i.toString)
   if (i > 1) break
 
   var j = 0
   while (true) {
-    IO.write("inner " + j.toString)
+    IO.print("inner " + j.toString)
     if (j > 1) break
 
     j = j + 1

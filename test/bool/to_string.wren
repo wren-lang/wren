@@ -1,2 +1,2 @@
-IO.write(true.toString)  // expect: true
-IO.write(false.toString) // expect: false
+IO.print(true.toString)  // expect: true
+IO.print(false.toString) // expect: false

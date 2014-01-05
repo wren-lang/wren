@@ -3,7 +3,7 @@ var f = null
 class Foo {
   method(param) {
     f = fn {
-      IO.write(param)
+      IO.print(param)
     }
   }
 }

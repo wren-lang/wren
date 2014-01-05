@@ -1,4 +1,4 @@
-IO.write([] is List)      // expect: true
-IO.write([] is Object)    // expect: true
-IO.write([] is Bool)      // expect: false
-IO.write([].type == List) // expect: true
+IO.print([] is List)      // expect: true
+IO.print([] is Object)    // expect: true
+IO.print([] is Bool)      // expect: false
+IO.print([].type == List) // expect: true

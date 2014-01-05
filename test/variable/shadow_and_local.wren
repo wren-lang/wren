@@ -1,8 +1,8 @@
 {
   var a = "outer"
   {
-    IO.write(a) // expect: outer
+    IO.print(a) // expect: outer
     var a = "inner"
-    IO.write(a) // expect: inner
+    IO.print(a) // expect: inner
   }
 }

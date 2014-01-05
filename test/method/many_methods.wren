@@ -2021,4 +2021,4 @@ result = result + foo.method996
 result = result + foo.method997
 result = result + foo.method998
 result = result + foo.method999
-IO.write(result) // expect: 1000
+IO.print(result) // expect: 1000
