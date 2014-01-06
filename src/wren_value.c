@@ -165,7 +165,8 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
 
   // Copy the function's name.
   debug->name = allocate(vm, debugNameLength + 1);
-  strncpy(debug->name, debugName, debugNameLength + 1);
+  strncpy(debug->name, debugName, debugNameLength);
+  debug->name[debugNameLength] = '\0';
 
   debug->sourceLines = sourceLines;
   
