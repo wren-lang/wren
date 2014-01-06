@@ -8,6 +8,10 @@
 #include "wren_compiler.h"
 #include "wren_vm.h"
 
+#if WREN_DUMP_COMPILED_CODE
+  #include "wren_debug.h"
+#endif
+
 // This is written in bottom-up order, so the tokenization comes first, then
 // parsing/code generation. This minimizes the number of explicit forward
 // declarations needed.
@@ -172,6 +176,27 @@ typedef struct
   int index;
 } CompilerUpvalue;
 
+// Keeps track of bookkeeping information for the current loop being compiled.
+typedef struct sLoop
+{
+  // Index of the instruction that the loop should jump back to.
+  int start;
+
+  // Index of the argument for the CODE_JUMP_IF instruction used to exit the
+  // loop. Stored so we can patch it once we know where the loop ends.
+  int exitJump;
+
+  // Index of the first instruction of the body of the loop.
+  int body;
+
+  // Depth of the scope(s) that need to be exited if a break is hit inside the
+  // loop.
+  int scopeDepth;
+
+  // The loop enclosing this one, or NULL if this is the outermost loop.
+  struct sLoop* enclosing;
+} Loop;
+
 struct sCompiler
 {
   Parser* parser;
@@ -200,9 +225,8 @@ struct sCompiler
   // in effect at all. Any variables declared will be global.
   int scopeDepth;
 
-  // Index of the first instruction of the body of the innermost loop currently
-  // being compiled. Will be -1 if not currently inside a loop.
-  int loopBody;
+  // The current innermost loop being compiled, or NULL if not in a loop.
+  Loop* loop;
 
   // Symbol table for the fields of the nearest enclosing class, or NULL if not
   // currently inside a class.
@@ -304,7 +328,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->constants = NULL;
 
   compiler->numUpvalues = 0;
-  compiler->loopBody = -1;
+  compiler->loop = NULL;
   compiler->methodName = methodName;
   compiler->methodLength = methodLength;
 
@@ -964,22 +988,23 @@ static void pushScope(Compiler* compiler)
   compiler->scopeDepth++;
 }
 
-// Closes the last pushed block scope. This should only be called in a statement
-// context where no temporaries are still on the stack.
-static void popScope(Compiler* compiler)
+// Generates code to discard local variables at [depth] or greater. Does *not*
+// actually undeclare variables or pop any scopes, though. This is called
+// directly when compiling "break" statements to ditch the local variables
+// before jumping out of the loop even though they are still in scope *past*
+// the break instruction.
+//
+// Returns the number of local variables that were eliminated.
+static int discardLocals(Compiler* compiler, int depth)
 {
-  ASSERT(compiler->scopeDepth > -1, "Cannot pop top-level scope.");
+  ASSERT(compiler->scopeDepth > -1, "Cannot exit top-level scope.");
 
-  // Pop locals off the stack.
-  while (compiler->numLocals > 0 &&
-         compiler->locals[compiler->numLocals - 1].depth ==
-            compiler->scopeDepth)
+  int local = compiler->numLocals - 1;
+  while (local >= 0 && compiler->locals[local].depth >= depth)
   {
-    compiler->numLocals--;
-
     // If the local was closed over, make sure the upvalue gets closed when it
     // goes out of scope on the stack.
-    if (compiler->locals[compiler->numLocals].isUpvalue)
+    if (compiler->locals[local].isUpvalue)
     {
       emit(compiler, CODE_CLOSE_UPVALUE);
     }
@@ -987,8 +1012,19 @@ static void popScope(Compiler* compiler)
     {
       emit(compiler, CODE_POP);
     }
+
+    local--;
   }
 
+  return compiler->numLocals - local - 1;
+}
+
+// Closes the last pushed block scope and discards any local variables declared
+// in that scope. This should only be called in a statement context where no
+// temporaries are still on the stack.
+static void popScope(Compiler* compiler)
+{
+  compiler->numLocals -= discardLocals(compiler, compiler->scopeDepth);
   compiler->scopeDepth--;
 }
 
@@ -1185,8 +1221,10 @@ static ObjFn* endCompiler(Compiler* compiler,
 
   unpinObj(compiler->parser->vm);
 
-  //  wrenDebugPrintCode(compiler->parser->vm, fn);
-  
+  #if WREN_DUMP_COMPILED_CODE
+    wrenDebugPrintCode(compiler->parser->vm, fn);
+  #endif
+
   return fn;
 }
 
@@ -2025,18 +2063,46 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
   }
 }
 
-static int startLoopBody(Compiler* compiler)
+// Marks the beginning of a loop. Keeps track of the current instruction so we
+// know what to loop back to at the end of the body.
+static void startLoop(Compiler* compiler, Loop* loop)
 {
-  int outerLoopBody = compiler->loopBody;
-  compiler->loopBody = compiler->bytecode.count;
-  return outerLoopBody;
+  loop->enclosing = compiler->loop;
+  loop->start = compiler->bytecode.count - 1;
+  loop->scopeDepth = compiler->scopeDepth;
+  compiler->loop = loop;
 }
 
-static void endLoopBody(Compiler* compiler, int outerLoopBody)
+// Emits the [CODE_JUMP_IF] instruction used to test the loop condition and
+// potentially exit the loop. Keeps track of the instruction so we can patch it
+// later once we know where the end of the body is.
+static void testExitLoop(Compiler* compiler)
 {
+  // TODO: Support longer jumps.
+  compiler->loop->exitJump = emitByte(compiler, CODE_JUMP_IF, 255);
+}
+
+// Compiles the body of the loop and tracks its extent so that contained "break"
+// statements can be handled correctly.
+static void loopBody(Compiler* compiler)
+{
+  compiler->loop->body = compiler->bytecode.count;
+  block(compiler);
+}
+
+// Ends the current innermost loop. Patches up all jumps and breaks now that
+// we know where the end of the loop is.
+static void endLoop(Compiler* compiler)
+{
+  emit(compiler, CODE_LOOP);
+  int loopOffset = compiler->bytecode.count - compiler->loop->start;
+  emit(compiler, loopOffset);
+
+  patchJump(compiler, compiler->loop->exitJump);
+
   // Find any break placeholder instructions (which will be CODE_END in the
   // bytecode) and replace them with real jumps.
-  int i = compiler->loopBody;
+  int i = compiler->loop->body;
   while (i < compiler->bytecode.count)
   {
     if (compiler->bytecode.data[i] == CODE_END)
@@ -2053,7 +2119,7 @@ static void endLoopBody(Compiler* compiler, int outerLoopBody)
     }
   }
 
-  compiler->loopBody = outerLoopBody;
+  compiler->loop = compiler->loop->enclosing;
 }
 
 static void forStatement(Compiler* compiler)
@@ -2113,8 +2179,8 @@ static void forStatement(Compiler* compiler)
 
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
 
-  // Remember what instruction to loop back to.
-  int loopStart = compiler->bytecode.count - 1;
+  Loop loop;
+  startLoop(compiler, &loop);
 
   // Advance the iterator by calling the ".iterate" method on the sequence.
   emitByte(compiler, CODE_LOAD_LOCAL, seqSlot);
@@ -2126,12 +2192,7 @@ static void forStatement(Compiler* compiler)
   emitByte(compiler, CODE_STORE_LOCAL, iterSlot);
   // TODO: We can probably get this working with a bit less stack juggling.
 
-  // If it returned something falsy, jump out of the loop.
-  // TODO: Support longer jumps.
-  int exitJump = emitByte(compiler, CODE_JUMP_IF, 255);
-
-  // Create a scope for the loop body.
-  pushScope(compiler);
+  testExitLoop(compiler);
 
   // Get the current value in the sequence by calling ".iteratorValue".
   emitByte(compiler, CODE_LOAD_LOCAL, seqSlot);
@@ -2140,51 +2201,35 @@ static void forStatement(Compiler* compiler)
   emitShort(compiler, CODE_CALL_1,
             methodSymbol(compiler, "iteratorValue ", 14));
 
-  // Bind it to the loop variable.
+  // Bind the loop variable in its own scope. This ensures we get a fresh
+  // variable each iteration so that closures for it don't all see the same one.
+  pushScope(compiler);
   defineLocal(compiler, name, length);
 
-  // Compile the body.
-  int outerLoopBody = startLoopBody(compiler);
-  block(compiler);
+  loopBody(compiler);
 
+  // Loop variable.
   popScope(compiler);
 
-  // Loop back to the top.
-  emit(compiler, CODE_LOOP);
-  int loopOffset = compiler->bytecode.count - loopStart;
-  emit(compiler, loopOffset);
+  endLoop(compiler);
 
-  patchJump(compiler, exitJump);
-  endLoopBody(compiler, outerLoopBody);
-
+  // Hidden variables.
   popScope(compiler);
 }
 
 static void whileStatement(Compiler* compiler)
 {
-  // Remember what instruction to loop back to.
-  int loopStart = compiler->bytecode.count - 1;
+  Loop loop;
+  startLoop(compiler, &loop);
 
   // Compile the condition.
   consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
   expression(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
 
-  // TODO: Support longer jumps.
-  int exitJump = emitByte(compiler, CODE_JUMP_IF, 255);
-
-  // Compile the body.
-  int outerLoopBody = startLoopBody(compiler);
-  block(compiler);
-
-  // Loop back to the top.
-  emit(compiler, CODE_LOOP);
-  int loopOffset = compiler->bytecode.count - loopStart;
-  // TODO: Support longer jumps.
-  emit(compiler, loopOffset);
-
-  patchJump(compiler, exitJump);
-  endLoopBody(compiler, outerLoopBody);
+  testExitLoop(compiler);
+  loopBody(compiler);
+  endLoop(compiler);
 }
 
 // Compiles a statement. These can only appear at the top-level or within
@@ -2193,10 +2238,15 @@ void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_BREAK))
   {
-    if (compiler->loopBody == -1)
+    if (compiler->loop == NULL)
     {
       error(compiler, "Cannot use 'break' outside of a loop.");
+      return;
     }
+
+    // Since we will be jumping out of the scope, make sure any locals in it
+    // are discarded first.
+    discardLocals(compiler, compiler->loop->scopeDepth + 1);
 
     // Emit a placeholder instruction for the jump to the end of the body. When
     // we're done compiling the loop body and know where the end is, we'll

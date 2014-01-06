@@ -46,6 +46,9 @@
 // Set this to true to log garbage collections as they occur.
 #define WREN_TRACE_GC false
 
+// Set this to true to print out the compiled bytecode of each function.
+#define WREN_DUMP_COMPILED_CODE false
+
 // The maximum number of arguments that can be passed to a method. Note that
 // this limtation is hardcoded in other places in the VM, in particular, the
 // `CODE_CALL_XX` instructions assume a certain maximum number.
