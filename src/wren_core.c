@@ -279,10 +279,25 @@ DEF_NATIVE(num_abs)
 
 DEF_NATIVE(num_toString)
 {
-  // According to Lua implementation, this should be enough for longest number
-  // formatted using %.14g.
-  char buffer[21];
-  sprintf(buffer, "%.14g", AS_NUM(args[0]));
+  // I think this should be large enough to hold any double converted to a
+  // string using "%.14g". Example:
+  //
+  //     -1.12345678901234e-1022
+  //
+  // So we have:
+  //
+  // + 1 char for sign
+  // + 1 char for digit
+  // + 1 char for "."
+  // + 14 chars for decimal digits
+  // + 1 char for "e"
+  // + 1 char for "-" or "+"
+  // + 4 chars for exponent
+  // + 1 char for "\0"
+  // = 24
+  char buffer[24];
+  double value = AS_NUM(args[0]);
+  sprintf(buffer, "%.14g", value);
   RETURN_VAL(wrenNewString(vm, buffer, strlen(buffer)));
 }
 
