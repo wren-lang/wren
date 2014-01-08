@@ -321,6 +321,7 @@ Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
   initObj(vm, &upvalue->obj, OBJ_UPVALUE);
 
   upvalue->value = value;
+  upvalue->closed = NULL_VAL;
   upvalue->next = NULL;
   return upvalue;
 }
