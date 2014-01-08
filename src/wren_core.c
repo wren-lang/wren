@@ -277,9 +277,34 @@ DEF_NATIVE(num_abs)
   RETURN_NUM(fabs(AS_NUM(args[0])));
 }
 
+DEF_NATIVE(num_ceil)
+{
+  RETURN_NUM(ceil(AS_NUM(args[0])));
+}
+
+DEF_NATIVE(num_cos)
+{
+  RETURN_NUM(cos(AS_NUM(args[0])));
+}
+
 DEF_NATIVE(num_floor)
 {
   RETURN_NUM(floor(AS_NUM(args[0])));
+}
+
+DEF_NATIVE(num_isNan)
+{
+  RETURN_BOOL(isnan(AS_NUM(args[0])));
+}
+
+DEF_NATIVE(num_sin)
+{
+  RETURN_NUM(sin(AS_NUM(args[0])));
+}
+
+DEF_NATIVE(num_sqrt)
+{
+  RETURN_NUM(sqrt(AS_NUM(args[0])));
 }
 
 DEF_NATIVE(num_toString)
@@ -628,7 +653,12 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->numClass = AS_CLASS(findGlobal(vm, "Num"));
   NATIVE(vm->numClass, "abs", num_abs);
+  NATIVE(vm->numClass, "ceil", num_ceil);
+  NATIVE(vm->numClass, "cos", num_cos);
   NATIVE(vm->numClass, "floor", num_floor);
+  NATIVE(vm->numClass, "isNan", num_isNan);
+  NATIVE(vm->numClass, "sin", num_sin);
+  NATIVE(vm->numClass, "sqrt", num_sqrt);
   NATIVE(vm->numClass, "toString", num_toString)
   NATIVE(vm->numClass, "-", num_negate);
   NATIVE(vm->numClass, "- ", num_minus);

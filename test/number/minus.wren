@@ -6,5 +6,3 @@ IO.print(3 - 2 - 1)  // expect: 0
 // Unary negation.
 var a = 3
 IO.print(-a) // expect: -3
-
-// TODO: Unsupported RHS types.
