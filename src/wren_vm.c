@@ -937,7 +937,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(JUMP):
     {
-      int offset = READ_BYTE();
+      int offset = READ_SHORT();
       ip += offset;
       DISPATCH();
     }
@@ -945,14 +945,14 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
     CASE_CODE(LOOP):
     {
       // Jump back to the top of the loop.
-      int offset = READ_BYTE();
+      int offset = READ_SHORT();
       ip -= offset;
       DISPATCH();
     }
 
     CASE_CODE(JUMP_IF):
     {
-      int offset = READ_BYTE();
+      int offset = READ_SHORT();
       Value condition = POP();
 
       // False is the only falsey value.
@@ -963,7 +963,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(AND):
     {
-      int offset = READ_BYTE();
+      int offset = READ_SHORT();
       Value condition = PEEK();
 
       // False is the only falsey value.
@@ -983,7 +983,7 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
     CASE_CODE(OR):
     {
-      int offset = READ_BYTE();
+      int offset = READ_SHORT();
       Value condition = PEEK();
 
       // False is the only falsey value.

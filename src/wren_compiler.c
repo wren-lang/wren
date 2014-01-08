@@ -908,6 +908,16 @@ static void emitShort(Compiler* compiler, Code instruction, uint16_t arg)
   emit(compiler, arg & 0xff);
 }
 
+// Emits [instruction] followed by a placeholder for a jump offset. The
+// placeholder can be patched by calling [jumpPatch]. Returns the index of the
+// placeholder.
+static int emitJump(Compiler* compiler, Code instruction)
+{
+  emit(compiler, instruction);
+  emit(compiler, 0xff);
+  return emit(compiler, 0xff) - 1;
+}
+
 // Create a new local variable with [name]. Assumes the current scope is local
 // and the name is unique.
 static int defineLocal(Compiler* compiler, const char* name, int length)
@@ -1273,7 +1283,11 @@ GrammarRule rules[];
 // instruction with an offset that jumps to the current end of bytecode.
 static void patchJump(Compiler* compiler, int offset)
 {
-  compiler->bytecode.data[offset] = compiler->bytecode.count - offset - 1;
+  // - 2 to adjust for the bytecode for the jump offset itself.
+  int jump = compiler->bytecode.count - offset - 2;
+  // TODO: Check for overflow.
+  compiler->bytecode.data[offset] = (jump >> 8) & 0xff;
+  compiler->bytecode.data[offset + 1] = jump & 0xff;
 }
 
 // Parses a block body, after the initial "{" has been consumed.
@@ -1750,7 +1764,7 @@ void is(Compiler* compiler, bool allowAssignment)
 void and(Compiler* compiler, bool allowAssignment)
 {
   // Skip the right argument if the left is false.
-  int jump = emitByte(compiler, CODE_AND, 255);
+  int jump = emitJump(compiler, CODE_AND);
   parsePrecedence(compiler, false, PREC_LOGIC);
   patchJump(compiler, jump);
 }
@@ -1758,7 +1772,7 @@ void and(Compiler* compiler, bool allowAssignment)
 void or(Compiler* compiler, bool allowAssignment)
 {
   // Skip the right argument if the left is true.
-  int jump = emitByte(compiler, CODE_OR, 255);
+  int jump = emitJump(compiler, CODE_OR);
   parsePrecedence(compiler, false, PREC_LOGIC);
   patchJump(compiler, jump);
 }
@@ -2004,9 +2018,24 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_CLOSE_UPVALUE:
     case CODE_RETURN:
     case CODE_NEW:
+    case CODE_CLASS:
+    case CODE_SUBCLASS:
+    case CODE_END:
       return 0;
 
-      // Instructions with two arguments:
+    case CODE_LOAD_LOCAL:
+    case CODE_STORE_LOCAL:
+    case CODE_LOAD_UPVALUE:
+    case CODE_STORE_UPVALUE:
+    case CODE_LOAD_GLOBAL:
+    case CODE_STORE_GLOBAL:
+    case CODE_LOAD_FIELD_THIS:
+    case CODE_STORE_FIELD_THIS:
+    case CODE_LOAD_FIELD:
+    case CODE_STORE_FIELD:
+    case CODE_LIST:
+      return 1;
+
     case CODE_CONSTANT:
     case CODE_CALL_0:
     case CODE_CALL_1:
@@ -2042,11 +2071,14 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_SUPER_14:
     case CODE_SUPER_15:
     case CODE_SUPER_16:
-      return 2;
-
+    case CODE_JUMP:
+    case CODE_LOOP:
+    case CODE_JUMP_IF:
+    case CODE_AND:
+    case CODE_OR:
     case CODE_METHOD_INSTANCE:
     case CODE_METHOD_STATIC:
-      return 3;
+      return 2;
 
     case CODE_CLOSURE:
     {
@@ -2056,10 +2088,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
       // There are two arguments for the constant, then one for each upvalue.
       return 2 + loadedFn->numUpvalues;
     }
-
-    default:
-      // Most instructions have one argument.
-      return 1;
   }
 }
 
@@ -2078,8 +2106,7 @@ static void startLoop(Compiler* compiler, Loop* loop)
 // later once we know where the end of the body is.
 static void testExitLoop(Compiler* compiler)
 {
-  // TODO: Support longer jumps.
-  compiler->loop->exitJump = emitByte(compiler, CODE_JUMP_IF, 255);
+  compiler->loop->exitJump = emitJump(compiler, CODE_JUMP_IF);
 }
 
 // Compiles the body of the loop and tracks its extent so that contained "break"
@@ -2094,9 +2121,9 @@ static void loopBody(Compiler* compiler)
 // we know where the end of the loop is.
 static void endLoop(Compiler* compiler)
 {
-  emit(compiler, CODE_LOOP);
-  int loopOffset = compiler->bytecode.count - compiler->loop->start;
-  emit(compiler, loopOffset);
+  int loopOffset = compiler->bytecode.count - compiler->loop->start + 2;
+  // TODO: Check for overflow.
+  emitShort(compiler, CODE_LOOP, loopOffset);
 
   patchJump(compiler, compiler->loop->exitJump);
 
@@ -2253,7 +2280,7 @@ void statement(Compiler* compiler)
     // replace these with `CODE_JUMP` instructions with appropriate offsets.
     // We use `CODE_END` here because that can't occur in the middle of
     // bytecode.
-    emitByte(compiler, CODE_END, 0);
+    emitJump(compiler, CODE_END);
     return;
   }
 
@@ -2267,7 +2294,7 @@ void statement(Compiler* compiler)
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
 
     // Jump to the else branch if the condition is false.
-    int ifJump = emitByte(compiler, CODE_JUMP_IF, 255);
+    int ifJump = emitJump(compiler, CODE_JUMP_IF);
 
     // Compile the then branch.
     block(compiler);
@@ -2276,7 +2303,7 @@ void statement(Compiler* compiler)
     if (match(compiler, TOKEN_ELSE))
     {
       // Jump over the else branch when the if branch is taken.
-      int elseJump = emitByte(compiler, CODE_JUMP, 255);
+      int elseJump = emitJump(compiler, CODE_JUMP);
 
       patchJump(compiler, ifJump);
 
