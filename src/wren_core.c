@@ -277,6 +277,11 @@ DEF_NATIVE(num_abs)
   RETURN_NUM(fabs(AS_NUM(args[0])));
 }
 
+DEF_NATIVE(num_floor)
+{
+  RETURN_NUM(floor(AS_NUM(args[0])));
+}
+
 DEF_NATIVE(num_toString)
 {
   // I think this should be large enough to hold any double converted to a
@@ -623,6 +628,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->numClass = AS_CLASS(findGlobal(vm, "Num"));
   NATIVE(vm->numClass, "abs", num_abs);
+  NATIVE(vm->numClass, "floor", num_floor);
   NATIVE(vm->numClass, "toString", num_toString)
   NATIVE(vm->numClass, "-", num_negate);
   NATIVE(vm->numClass, "- ", num_minus);
