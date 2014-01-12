@@ -176,6 +176,97 @@ DEF_NATIVE(bool_toString)
   }
 }
 
+DEF_NATIVE(fiber_create)
+{
+  if (!IS_FN(args[1]) && !IS_CLOSURE(args[1]))
+  {
+    RETURN_ERROR("Argument must be a function.");
+  }
+
+  ObjFiber* newFiber = wrenNewFiber(vm, AS_OBJ(args[1]));
+
+  // The compiler expect the first slot of a function to hold the receiver.
+  // Since a fiber's stack is invoked directly, it doesn't have one, so put it
+  // in here.
+  // TODO: Is there a cleaner solution?
+  // TODO: If we make growable stacks, make sure this grows it.
+  newFiber->stack[0] = NULL_VAL;
+  newFiber->stackSize++;
+
+  RETURN_VAL(OBJ_VAL(newFiber));
+}
+
+DEF_NATIVE(fiber_run)
+{
+  // TODO: Error if the fiber is already complete.
+  ObjFiber* runFiber = AS_FIBER(args[0]);
+
+  // Remember who ran it.
+  runFiber->caller = fiber;
+
+  // If the fiber was yielded, make the yield call return null.
+  if (runFiber->stackSize > 0)
+  {
+    runFiber->stack[runFiber->stackSize - 1] = NULL_VAL;
+  }
+
+  return PRIM_RUN_FIBER;
+}
+
+DEF_NATIVE(fiber_run1)
+{
+  // TODO: Error if the fiber is already complete.
+  ObjFiber* runFiber = AS_FIBER(args[0]);
+
+  // Remember who ran it.
+  runFiber->caller = fiber;
+
+  // If the fiber was yielded, make the yield call return the value passed to
+  // run.
+  if (runFiber->stackSize > 0)
+  {
+    runFiber->stack[runFiber->stackSize - 1] = args[1];
+  }
+
+  // When the calling fiber resumes, we'll store the result of the run call
+  // in its stack. Since fiber.run(value) has two arguments (the fiber and the
+  // value) and we only need one slot for the result, discard the other slot
+  // now.
+  fiber->stackSize--;
+
+  return PRIM_RUN_FIBER;
+}
+
+DEF_NATIVE(fiber_yield)
+{
+  // TODO: Handle caller being null.
+
+  // Make the caller's run method return null.
+  fiber->caller->stack[fiber->caller->stackSize - 1] = NULL_VAL;
+
+  // Return the fiber to resume.
+  args[0] = OBJ_VAL(fiber->caller);
+  return PRIM_RUN_FIBER;
+}
+
+DEF_NATIVE(fiber_yield1)
+{
+  // TODO: Handle caller being null.
+
+  // Make the caller's run method return the argument passed to yield.
+  fiber->caller->stack[fiber->caller->stackSize - 1] = args[1];
+
+  // When the yielding fiber resumes, we'll store the result of the yield call
+  // in its stack. Since Fiber.yield(value) has two arguments (the Fiber class
+  // and the value) and we only need one slot for the result, discard the other
+  // slot now.
+  fiber->stackSize--;
+
+  // Return the fiber to resume.
+  args[0] = OBJ_VAL(fiber->caller);
+  return PRIM_RUN_FIBER;
+}
+
 DEF_NATIVE(fn_call) { return PRIM_CALL; }
 
 DEF_NATIVE(list_add)
@@ -603,6 +694,15 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->boolClass, "!", bool_not);
 
   vm->fiberClass = defineClass(vm, "Fiber");
+  // TODO: Is there a way we can make this a regular constructor?
+  NATIVE(vm->fiberClass->metaclass, "create ", fiber_create);
+  NATIVE(vm->fiberClass->metaclass, "yield", fiber_yield);
+  NATIVE(vm->fiberClass->metaclass, "yield ", fiber_yield1);
+  NATIVE(vm->fiberClass, "run", fiber_run);
+  NATIVE(vm->fiberClass, "run ", fiber_run1);
+  // TODO: Primitives for switching to a fiber without setting the caller.
+  // (I.e. symmetric coroutines.) Also a getter to tell if a fiber is complete
+  // or not.
 
   vm->fnClass = defineClass(vm, "Function");
   NATIVE(vm->fnClass, "call", fn_call);

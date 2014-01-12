@@ -212,7 +212,10 @@ struct WrenVM
   // allocated objects used by the compiler can be found if a GC is kicked off
   // in the middle of a compile.
   Compiler* compiler;
-  
+
+  // The fiber that is currently running.
+  ObjFiber* fiber;
+
   // Memory management data:
 
   // The number of bytes that are known to be currently allocated. Includes all

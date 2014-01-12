@@ -129,14 +129,28 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
   return closure;
 }
 
-ObjFiber* wrenNewFiber(WrenVM* vm)
+ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
 {
   ObjFiber* fiber = allocate(vm, sizeof(ObjFiber));
   initObj(vm, &fiber->obj, OBJ_FIBER);
 
+  // Push the stack frame for the function.
   fiber->stackSize = 0;
-  fiber->numFrames = 0;
+  fiber->numFrames = 1;
   fiber->openUpvalues = NULL;
+  fiber->caller = NULL;
+
+  CallFrame* frame = &fiber->frames[0];
+  frame->fn = fn;
+  frame->stackStart = 0;
+  if (fn->type == OBJ_FN)
+  {
+    frame->ip = ((ObjFn*)fn)->bytecode;
+  }
+  else
+  {
+    frame->ip = ((ObjClosure*)fn)->fn->bytecode;
+  }
 
   return fiber;
 }

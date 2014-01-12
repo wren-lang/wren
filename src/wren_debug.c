@@ -350,7 +350,7 @@ void wrenDebugPrintCode(WrenVM* vm, ObjFn* fn)
 
 void wrenDebugPrintStack(ObjFiber* fiber)
 {
-  printf(":: ");
+  printf("(fiber %p) ", fiber);
   for (int i = 0; i < fiber->stackSize; i++)
   {
     wrenPrintValue(fiber->stack[i]);

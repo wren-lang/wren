@@ -61,6 +61,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   }
 
   vm->compiler = NULL;
+  vm->fiber = NULL;
   vm->first = NULL;
   vm->pinned = NULL;
 
@@ -83,6 +84,8 @@ void wrenFreeVM(WrenVM* vm)
   wrenSymbolTableClear(vm, &vm->methods);
   wrenSymbolTableClear(vm, &vm->globalSymbols);
   wrenReallocate(vm, vm, 0, 0);
+
+  // TODO: Need to free all allocated objects.
 }
 
 static void collectGarbage(WrenVM* vm);
@@ -222,6 +225,9 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
     markUpvalue(vm, upvalue);
     upvalue = upvalue->next;
   }
+
+  // The caller.
+  if (fiber->caller != NULL) markFiber(vm, fiber->caller);
 }
 
 static void markClosure(WrenVM* vm, ObjClosure* closure)
@@ -334,6 +340,9 @@ static void collectGarbage(WrenVM* vm)
     wrenMarkObj(vm, pinned->obj);
     pinned = pinned->previous;
   }
+
+  // The current fiber.
+  if (vm->fiber != NULL) wrenMarkObj(vm, (Obj*)vm->fiber);
 
   // Any object the compiler is using (if there is one).
   if (vm->compiler != NULL) wrenMarkCompiler(vm, vm->compiler);
@@ -540,8 +549,17 @@ static void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical. Returns `true` if the
 // fiber completed without error.
-static bool interpret(WrenVM* vm, ObjFiber* fiber)
+static bool runInterpreter(WrenVM* vm)
 {
+  // Hoist these into local variables. They are accessed frequently in the loop
+  // but assigned less frequently. Keeping them in locals and updating them when
+  // a call frame has been pushed or popped gives a large speed boost.
+  register ObjFiber* fiber = vm->fiber;
+  register CallFrame* frame;
+  register uint8_t* ip;
+  register ObjFn* fn;
+  register Upvalue** upvalues;
+
   // These macros are designed to only be invoked within this function.
   // TODO: Check for stack overflow.
   #define PUSH(value)  (fiber->stack[fiber->stackSize++] = value)
@@ -550,14 +568,6 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
   #define PEEK2()      (fiber->stack[fiber->stackSize - 2])
   #define READ_BYTE()  (*ip++)
   #define READ_SHORT() (ip += 2, (ip[-2] << 8) | ip[-1])
-
-  // Hoist these into local variables. They are accessed frequently in the loop
-  // but assigned less frequently. Keeping them in locals and updating them when
-  // a call frame has been pushed or popped gives a large speed boost.
-  register CallFrame* frame;
-  register uint8_t* ip;
-  register ObjFn* fn;
-  register Upvalue** upvalues;
 
   // Use this before a CallFrame is pushed to store the local variables back
   // into the current one.
@@ -748,6 +758,12 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
               callFunction(fiber, AS_OBJ(args[0]), numArgs);
               LOAD_FRAME();
               break;
+
+            case PRIM_RUN_FIBER:
+              STORE_FRAME();
+              fiber = AS_FIBER(args[0]);
+              LOAD_FRAME();
+              break;
           }
           break;
         }
@@ -846,6 +862,12 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
             case PRIM_CALL:
               STORE_FRAME();
               callFunction(fiber, AS_OBJ(args[0]), numArgs);
+              LOAD_FRAME();
+              break;
+
+            case PRIM_RUN_FIBER:
+              STORE_FRAME();
+              fiber = AS_FIBER(args[0]);
               LOAD_FRAME();
               break;
           }
@@ -1046,24 +1068,39 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
       Value result = POP();
       fiber->numFrames--;
 
-      // If we are returning from the top-level block, we succeeded.
-      if (fiber->numFrames == 0) return true;
-
-      // Close any upvalues still in scope.
-      Value* firstValue = &fiber->stack[frame->stackStart];
-      while (fiber->openUpvalues != NULL &&
-             fiber->openUpvalues->value >= firstValue)
+      // If the fiber is complete, end it.
+      if (fiber->numFrames == 0)
       {
-        closeUpvalue(fiber);
+        // If this is the main fiber, we're done.
+        if (fiber->caller == NULL) return true;
+
+        // TODO: Do we need to close upvalues here?
+
+        // We have a calling fiber to resume.
+        fiber = fiber->caller;
+
+        // Store the result in the resuming fiber.
+        fiber->stack[fiber->stackSize - 1] = result;
+      }
+      else
+      {
+        // Close any upvalues still in scope.
+        Value* firstValue = &fiber->stack[frame->stackStart];
+        while (fiber->openUpvalues != NULL &&
+               fiber->openUpvalues->value >= firstValue)
+        {
+          closeUpvalue(fiber);
+        }
+
+        // Store the result of the block in the first slot, which is where the
+        // caller expects it.
+        fiber->stack[frame->stackStart] = result;
+
+        // Discard the stack slots for the call frame (leaving one slot for the
+        // result).
+        fiber->stackSize = frame->stackStart + 1;
       }
 
-      // Store the result of the block in the first slot, which is where the
-      // caller expects it.
-      fiber->stack[frame->stackStart] = result;
-
-      // Discard the stack slots for the call frame (leaving one slot for the
-      // result).
-      fiber->stackSize = frame->stackStart + 1;
       LOAD_FRAME();
       DISPATCH();
     }
@@ -1168,25 +1205,25 @@ static bool interpret(WrenVM* vm, ObjFiber* fiber)
 
 int wrenInterpret(WrenVM* vm, const char* sourcePath, const char* source)
 {
-  ObjFiber* fiber = wrenNewFiber(vm);
-  PinnedObj pinned;
-  pinObj(vm, (Obj*)fiber, &pinned);
-
   // TODO: Move actual error codes to main.c and return something Wren-specific
   // from here.
   int result = 0;
   ObjFn* fn = wrenCompile(vm, sourcePath, source);
   if (fn != NULL)
   {
-    callFunction(fiber, (Obj*)fn, 0);
-    if (!interpret(vm, fiber)) result = 70; // EX_SOFTWARE.
+    PinnedObj pinned;
+    pinObj(vm, (Obj*)fn, &pinned);
+
+    vm->fiber = wrenNewFiber(vm, (Obj*)fn);
+
+    unpinObj(vm);
+
+    if (!runInterpreter(vm)) result = 70; // EX_SOFTWARE.
   }
   else
   {
     result = 65; // EX_DATAERR.
   }
-
-  unpinObj(vm);
   return result;
 }
 

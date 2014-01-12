@@ -138,7 +138,7 @@ typedef struct
   int stackStart;
 } CallFrame;
 
-typedef struct
+typedef struct sObjFiber
 {
   Obj obj;
   Value stack[STACK_SIZE];
@@ -151,6 +151,10 @@ typedef struct
   // pointing to values still on the stack. The head of the list will be the
   // upvalue closest to the top of the stack, and then the list works downwards.
   Upvalue* openUpvalues;
+
+  // The fiber that ran this one. If this fiber is yielded, control will resume
+  // to this one. May be `NULL`.
+  struct sObjFiber* caller;
 } ObjFiber;
 
 typedef enum
@@ -162,7 +166,11 @@ typedef enum
   PRIM_ERROR,
 
   // A new callframe has been pushed.
-  PRIM_CALL
+  PRIM_CALL,
+
+  // A fiber is being switched to.
+  PRIM_RUN_FIBER
+
 } PrimitiveResult;
 
 typedef struct
@@ -305,6 +313,9 @@ typedef struct
 
 // Value -> ObjClosure*.
 #define AS_CLOSURE(value) ((ObjClosure*)AS_OBJ(value))
+
+// Value -> ObjFiber*.
+#define AS_FIBER(v) ((ObjFiber*)AS_OBJ(v))
 
 // Value -> ObjFn*.
 #define AS_FN(value) ((ObjFn*)AS_OBJ(value))
@@ -500,8 +511,9 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
 // upvalues, but assumes outside code will populate it.
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 
-// Creates a new fiber object.
-ObjFiber* wrenNewFiber(WrenVM* vm);
+// Creates a new fiber object that will invoke [fn], which can be a function or
+// closure.
+ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 
 // TODO: The argument list here is getting a bit gratuitous.
 // Creates a new function object with the given code and constants. The new
