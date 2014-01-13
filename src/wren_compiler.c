@@ -621,15 +621,18 @@ static void readString(Parser* parser)
       {
         case '"':  addStringChar(parser, '"'); break;
         case '\\': addStringChar(parser, '\\'); break;
+        case 'a':  addStringChar(parser, '\a'); break;
+        case 'b':  addStringChar(parser, '\b'); break;
+        case 'f':  addStringChar(parser, '\f'); break;
         case 'n':  addStringChar(parser, '\n'); break;
+        case 'r':  addStringChar(parser, '\r'); break;
         case 't':  addStringChar(parser, '\t'); break;
+        case 'v':  addStringChar(parser, '\v'); break;
         case 'u':  readUnicodeEscape(parser); break;
         default:
           // TODO: Emit error token.
           break;
       }
-
-      // TODO: Other escapes (\r, etc.), Unicode escape sequences.
     }
     else
     {
