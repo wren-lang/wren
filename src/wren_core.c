@@ -196,10 +196,17 @@ DEF_NATIVE(fiber_create)
   RETURN_VAL(OBJ_VAL(newFiber));
 }
 
+DEF_NATIVE(fiber_isDone)
+{
+  ObjFiber* runFiber = AS_FIBER(args[0]);
+  RETURN_BOOL(runFiber->numFrames == 0);
+}
+
 DEF_NATIVE(fiber_run)
 {
-  // TODO: Error if the fiber is already complete.
   ObjFiber* runFiber = AS_FIBER(args[0]);
+
+  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot run a finished fiber.");
 
   // Remember who ran it.
   runFiber->caller = fiber;
@@ -215,8 +222,9 @@ DEF_NATIVE(fiber_run)
 
 DEF_NATIVE(fiber_run1)
 {
-  // TODO: Error if the fiber is already complete.
   ObjFiber* runFiber = AS_FIBER(args[0]);
+
+  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot run a finished fiber.");
 
   // Remember who ran it.
   runFiber->caller = fiber;
@@ -239,7 +247,7 @@ DEF_NATIVE(fiber_run1)
 
 DEF_NATIVE(fiber_yield)
 {
-  // TODO: Handle caller being null.
+  if (fiber->caller == NULL) RETURN_ERROR("No fiber to yield to.");
 
   // Make the caller's run method return null.
   fiber->caller->stack[fiber->caller->stackSize - 1] = NULL_VAL;
@@ -251,7 +259,7 @@ DEF_NATIVE(fiber_yield)
 
 DEF_NATIVE(fiber_yield1)
 {
-  // TODO: Handle caller being null.
+  if (fiber->caller == NULL) RETURN_ERROR("No fiber to yield to.");
 
   // Make the caller's run method return the argument passed to yield.
   fiber->caller->stack[fiber->caller->stackSize - 1] = args[1];
@@ -698,6 +706,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->fiberClass->metaclass, "create ", fiber_create);
   NATIVE(vm->fiberClass->metaclass, "yield", fiber_yield);
   NATIVE(vm->fiberClass->metaclass, "yield ", fiber_yield1);
+  NATIVE(vm->fiberClass, "isDone", fiber_isDone);
   NATIVE(vm->fiberClass, "run", fiber_run);
   NATIVE(vm->fiberClass, "run ", fiber_run1);
   // TODO: Primitives for switching to a fiber without setting the caller.
