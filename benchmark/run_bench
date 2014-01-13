@@ -36,10 +36,12 @@ BENCHMARK("method_call", r"""true
 false""")
 
 LANGUAGES = [
-  ("wren",   "../build/Release/wren", ".wren"),
-  ("lua",    "lua",                   ".lua"),
-  ("python", "python",                ".py"),
-  ("ruby",   "ruby",                  ".rb")
+  ("wren",           ["../build/Release/wren"], ".wren"),
+  ("lua",            ["lua"],                   ".lua"),
+#  ("luajit",          ["luajit"],                ".lua"),
+  ("luajit (-joff)", ["luajit", "-joff"],       ".lua"),
+  ("python",         ["python"],                ".py"),
+  ("ruby",           ["ruby"],                  ".rb")
 ]
 
 results = []
@@ -71,7 +73,9 @@ def get_score(time):
 
 def run_trial(benchmark, language):
   """Runs one benchmark one time for one language."""
-  args = [language[1], benchmark[0] + language[2]]
+  args = []
+  args.extend(language[1])
+  args.append(benchmark[0] + language[2])
   out = subprocess.check_output(args, universal_newlines=True)
   match = benchmark[1].match(out)
   if match:
@@ -85,7 +89,7 @@ def run_trial(benchmark, language):
 def run_benchmark_language(benchmark, language):
   """Runs one benchmark for a number of trials for one language."""
   name = "{0} - {1}".format(benchmark[0], language[0])
-  print "{0:22s}".format(name),
+  print "{0:30s}".format(name),
 
   if not os.path.exists(benchmark[0] + language[2]):
     print "No implementation for this language"
@@ -123,7 +127,7 @@ def run_benchmark_language(benchmark, language):
     if ratio < 95:
       comparison = red(comparison)
 
-  print " {:4.0f}  {:4.2f}s  {:s}".format(score, best, comparison)
+  print " {:5.0f}  {:4.2f}s  {:s}".format(score, best, comparison)
 
   results.append([name, times, score])
   return score
@@ -154,13 +158,13 @@ def graph_results():
     score = get_score(min(result[1]))
     if score > highest: highest = score
 
-  print "{0:22s}0 {1:66.0f}".format("", highest)
+  print "{0:30s}0 {1:66.0f}".format("", highest)
   for result in results:
     line = ["-"] * 68
     for time in result[1]:
       index = int(get_score(time) / highest * 67)
       line[index] = INCREMENT[line[index]]
-    print "{0:22s}{1}".format(result[0], "".join(line))
+    print "{0:30s}{1}".format(result[0], "".join(line))
   print
 
 
