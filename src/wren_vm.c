@@ -85,7 +85,14 @@ void wrenFreeVM(WrenVM* vm)
   wrenSymbolTableClear(vm, &vm->globalSymbols);
   wrenReallocate(vm, vm, 0, 0);
 
-  // TODO: Need to free all allocated objects.
+  // Free all of the GC objects.
+  Obj* obj = vm->first;
+  while (obj != NULL)
+  {
+    Obj* next = obj->next;
+    wrenFreeObj(vm, obj);
+    obj = next;
+  }
 }
 
 static void collectGarbage(WrenVM* vm);
