@@ -1828,7 +1828,6 @@ void namedSignature(Compiler* compiler, char* name, int* length)
   if (match(compiler, TOKEN_EQ))
   {
     // It's a setter.
-    // TODO: Allow setters with parameters? Like: foo.bar(1, 2) = "blah"
     name[(*length)++] = '=';
     name[(*length)++] = ' ';
 
@@ -2326,9 +2325,15 @@ void statement(Compiler* compiler)
   if (match(compiler, TOKEN_RETURN))
   {
     // Compile the return value.
-    // TODO: Implicitly return null if there is a newline or } after the
-    // "return".
-    expression(compiler);
+    if (peek(compiler) == TOKEN_LINE || peek(compiler) == TOKEN_RIGHT_BRACE)
+    {
+      // Implicitly return null if there is no value.
+      emit(compiler, CODE_NULL);
+    }
+    else
+    {
+      expression(compiler);
+    }
 
     emit(compiler, CODE_RETURN);
     return;

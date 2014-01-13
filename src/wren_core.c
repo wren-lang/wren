@@ -185,7 +185,7 @@ DEF_NATIVE(fiber_create)
 
   ObjFiber* newFiber = wrenNewFiber(vm, AS_OBJ(args[1]));
 
-  // The compiler expect the first slot of a function to hold the receiver.
+  // The compiler expects the first slot of a function to hold the receiver.
   // Since a fiber's stack is invoked directly, it doesn't have one, so put it
   // in here.
   // TODO: Is there a cleaner solution?
