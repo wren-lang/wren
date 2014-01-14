@@ -20,15 +20,15 @@ I guess that's not the question you were asking. You want to know why I created 
 
 ## Why should *I* care that you created Wren?
 
-Ah, here's the real question. You want to know why Wren might be relevant to you. Good question! Here's the niche I'm trying to fill:
+Ah, here's the real question. You want to know why Wren might be relevant to *you*. Good question! Here's the niche I'm trying to fill:
 
 There are a handful of scripting languages that are in use for embedding in applications. Lua is the big one. There's also Guile, increasingly JavaScript, and some applications embed Python. I'm an ex-game developer, so when I think "scripting", I tend to think "game scripting".
 
 Lua is a good answer there: it's small, simple, and fast. But, and I don't mean this as a criticism, it's also weird if you're used to languages like C++ and Java. The syntax is clean but different. The semantics, especially the object model are unusual. Anyone can get used to 1-based indexing, but things like metatables really show that objects were bolted onto Lua after the fact.
 
-I feel like there's an opportunity for a language that's as small, simple, and fast as Lua, but also one that feels familiar and natural to someone with a convention OOP background. Wren is my attempt at that.
+I feel like there's an opportunity for a language that's as small, simple, and fast as Lua, but also one that feels familiar and natural to someone with a conventional OOP background. Wren is my attempt at that.
 
-Here's an example of doing object-oriented programming in Lua:
+Here's an example of object-oriented programming in Lua:
 
     :::lua
     Account = {}
@@ -77,7 +77,7 @@ Bytecode, meanwhile is quite simple while also fast enough for real-world usage.
 
 ## What about your other languages?
 
-This is a strange question if you don't happen to know who I am. In the past, I've hacked on a blogged about a couple of other hobby languages. The two most frequent are [Finch](http://finch.stuffwithstuff.com/) and [Magpie](http://magpie-lang.org/). Why a third?
+This is a strange question if you don't happen to know who I am. In the past, I've hacked on and blogged about a couple of other hobby languages. The two most frequent are [Finch](http://finch.stuffwithstuff.com/) and [Magpie](http://magpie-lang.org/). Why a third?
 
 Well, actually, Wren isn't my *third*, it's probably closer to tenth at this point. I try out lots of different ideas. Wren grew directly out of Finch. I started Finch to learn more about implementing an interpreter and also about the prototype paradigm. I learned a ton about both.
 
