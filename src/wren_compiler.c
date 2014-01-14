@@ -2381,7 +2381,7 @@ static void classDefinition(Compiler* compiler)
   compiler->fields = &fields;
 
   // Compile the method definitions.
-  consume(compiler, TOKEN_LEFT_BRACE, "Expect '}' after class body.");
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class body.");
   while (!match(compiler, TOKEN_RIGHT_BRACE))
   {
     Code instruction = CODE_METHOD_INSTANCE;

@@ -3,8 +3,8 @@ Q1: What does this resolve to:
     foo(arg)
 
    It could be:
-   1. this.foo(bar)
-   2. EnclosingClass.foo(bar) // i.e. a static method call
+   1. this.foo(arg)
+   2. EnclosingClass.foo(arg) // i.e. a static method call
    3. a call to a top-level function foo()
 
 If we adopt the idea that a module is just a class definition (with some
@@ -49,7 +49,7 @@ This is analogous to:
 The obvious solution is to use the class name:
 
   class SomeModule {
-    static foo(arg) { io.write("called foo!") }
+    static foo(arg) { IO.print("called foo!") }
 
     class SomeClass {
       bar {
@@ -63,7 +63,7 @@ class" is.
 
 Idea: it's unnamed, so you just use a leading ".":
 
-  def foo(arg) { io.write("called foo!") }
+  def foo(arg) { IO.print("called foo!") }
 
   class SomeClass {
     bar {
