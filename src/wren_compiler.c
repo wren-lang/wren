@@ -832,7 +832,6 @@ static void nextToken(Parser* parser)
       case TOKEN_IS:
       case TOKEN_NEW:
       case TOKEN_STATIC:
-      case TOKEN_SUPER:
       case TOKEN_VAR:
       case TOKEN_WHILE:
         parser->skipNewlines = true;
@@ -2513,7 +2512,6 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 
 void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 {
-  // TODO: What about functions nested inside [fn]?
   int ip = 0;
   for (;;)
   {
@@ -2529,6 +2527,16 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 
         // TODO: Make sure field number still fits in byte.
         break;
+
+      case CODE_CLOSURE:
+      {
+        // Bind the nested closure too.
+        int constant = (fn->bytecode[ip] << 8) | fn->bytecode[ip + 1];
+        wrenBindMethodCode(classObj, AS_FN(fn->constants[constant]));
+
+        ip += getNumArguments(fn->bytecode, fn->constants, ip - 1);
+        break;
+      }
 
       case CODE_END:
         return;
