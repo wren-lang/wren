@@ -63,6 +63,13 @@
 // extra spaces added to handle arity, and another byte to terminate the string.
 #define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + MAX_PARAMETERS + 1)
 
+// The maximum number of fields a class can have, including inherited fields.
+// This is explicit in the bytecode since `CODE_CLASS` and `CODE_SUBCLASS` take
+// a single byte for the number of fields. Note that it's 255 and not 256
+// because creating a class takes the *number* of fields, not the *highest
+// field index*.
+#define MAX_FIELDS (255)
+
 // Assertions are used to validate program invariants. They indicate things the
 // program expects to be true about its internal state during execution. If an
 // assertion fails, there is a bug in Wren.

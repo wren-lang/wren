@@ -1504,6 +1504,11 @@ static void field(Compiler* compiler, bool allowAssignment)
     field = wrenSymbolTableEnsure(compiler->parser->vm, compiler->fields,
         compiler->parser->previous.start,
         compiler->parser->previous.length);
+
+    if (field >= MAX_FIELDS)
+    {
+      error(compiler, "A class can only have %d fields.", MAX_FIELDS);
+    }
   }
   else
   {
@@ -1512,8 +1517,6 @@ static void field(Compiler* compiler, bool allowAssignment)
     // number of cascaded errors.
     field = 255;
   }
-
-  // TODO: Make sure field number fits in byte.
 
   // If there's an "=" after a field name, it's an assignment.
   if (match(compiler, TOKEN_EQ))
@@ -2350,7 +2353,6 @@ void statement(Compiler* compiler)
 static void classDefinition(Compiler* compiler)
 {
   // Create a variable to store the class in.
-  // TODO: Allow anonymous classes?
   int symbol = declareVariable(compiler);
 
   // Load the superclass (if there is one).
@@ -2522,10 +2524,10 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
       case CODE_STORE_FIELD:
       case CODE_LOAD_FIELD_THIS:
       case CODE_STORE_FIELD_THIS:
-        // Shift this class's fields down past the inherited ones.
+        // Shift this class's fields down past the inherited ones. We don't
+        // check for overflow here because we'll see if the number of fields
+        // overflows when the subclass is created.
         fn->bytecode[ip++] += classObj->superclass->numFields;
-
-        // TODO: Make sure field number still fits in byte.
         break;
 
       case CODE_CLOSURE:

@@ -530,6 +530,22 @@ static void methodNotFound(WrenVM* vm, ObjFiber* fiber, Value* receiver,
   wrenDebugPrintStackTrace(vm, fiber, *receiver);
 }
 
+static void tooManyInheritedFields(WrenVM* vm, ObjFiber* fiber, Value* slot)
+{
+  // TODO: Tune size.
+  char message[200];
+
+  // TODO: Include class name in message. Mention inheritance.
+  snprintf(message, 200,
+      "A class may not have more than %d fields, including inherited ones.",
+      MAX_FIELDS);
+
+  // Store the error message in the receiver slot so that it's on the fiber's
+  // stack and doesn't get garbage collected.
+  *slot = wrenNewString(vm, message, strlen(message));
+  wrenDebugPrintStackTrace(vm, fiber, *slot);
+}
+
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
 // [function] can be an `ObjFn` or `ObjClosure`.
@@ -1181,6 +1197,16 @@ static bool runInterpreter(WrenVM* vm)
 
       ObjClass* classObj = wrenNewClass(vm, superclass, numFields);
 
+      // Now that we know the total number of fields, make sure we don't
+      // overflow.
+      // TODO: Same check for static fields.
+      if (superclass->numFields + numFields > MAX_FIELDS)
+      {
+        STORE_FRAME();
+        tooManyInheritedFields(vm, fiber, &fiber->stack[fiber->stackSize - 1]);
+        return false;
+      }
+      
       // Don't pop the superclass off the stack until the subclass is done
       // being created, to make sure it doesn't get collected.
       if (isSubclass) POP();
