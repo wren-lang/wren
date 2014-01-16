@@ -232,6 +232,10 @@ struct sCompiler
   // currently inside a class.
   SymbolTable* fields;
 
+  // True if the current method being compiled is static. False if it's an
+  // instance method or we're not compiling a method.
+  bool isStaticMethod;
+
   // The name of the method this compiler is compiling, or NULL if this
   // compiler is not for a method. Note that this is just the bare method name,
   // and not its full signature.
@@ -343,6 +347,9 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
     // Compiling top-level code, so the initial scope is global.
     compiler->scopeDepth = -1;
+
+    compiler->fields = NULL;
+    compiler->isStaticMethod = false;
   }
   else
   {
@@ -368,10 +375,11 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
     // The initial scope for function or method is a local scope.
     compiler->scopeDepth = 0;
-  }
 
-  // Propagate the enclosing class downwards.
-  compiler->fields = parent != NULL ? parent->fields :  NULL;
+    // Propagate the enclosing class and method downwards.
+    compiler->fields = parent->fields;
+    compiler->isStaticMethod = parent->isStaticMethod;
+  }
 
   wrenByteBufferInit(parser->vm, &compiler->bytecode);
   wrenIntBufferInit(parser->vm, &compiler->debugSourceLines);
@@ -1497,8 +1505,15 @@ static void function(Compiler* compiler, bool allowAssignment)
 
 static void field(Compiler* compiler, bool allowAssignment)
 {
-  int field;
-  if (compiler->fields != NULL)
+  // Initialize it with a fake value so we can keep parsing and minimize the
+  // number of cascaded errors.
+  int field = 255;
+
+  if (compiler->isStaticMethod)
+  {
+    error(compiler, "Cannot use an instance field in a static method.");
+  }
+  else if (compiler->fields != NULL)
   {
     // Look up the field, or implicitly define it.
     field = wrenSymbolTableEnsure(compiler->parser->vm, compiler->fields,
@@ -1513,9 +1528,6 @@ static void field(Compiler* compiler, bool allowAssignment)
   else
   {
     error(compiler, "Cannot reference a field outside of a class definition.");
-    // Initialize it with a fake value so we can keep parsing and minimize the
-    // number of cascaded errors.
-    field = 255;
   }
 
   // If there's an "=" after a field name, it's an assignment.
@@ -1960,6 +1972,11 @@ void method(Compiler* compiler, Code instruction, bool isConstructor,
   Compiler methodCompiler;
   initCompiler(&methodCompiler, compiler->parser, compiler, name, length);
 
+  if (instruction == CODE_METHOD_STATIC)
+  {
+    methodCompiler.isStaticMethod = true;
+  }
+
   // Compile the method signature.
   signature(&methodCompiler, name, &length);
 
@@ -2166,18 +2183,15 @@ static void forStatement(Compiler* compiler)
   //     {
   //       var seq_ = sequence.expression
   //       var iter_
-  //       while (true) {
-  //         iter_ = seq_.iterate(iter_)
-  //         if (!iter_) break
+  //       while (iter_ = seq_.iterate(iter_)) {
   //         var i = set_.iteratorValue(iter_)
   //         IO.write(i)
   //       }
   //     }
   //
   // It's not exactly this, because the synthetic variables `seq_` and `iter_`
-  // actually get names that aren't valid Wren identfiers. Also, the `while`
-  // and `break` are just the bytecode for explicit loops and jumps. But that's
-  // the basic idea.
+  // actually get names that aren't valid Wren identfiers, but that's the basic
+  // idea.
   //
   // The important parts are:
   // - The sequence expression is only evaluated once.
@@ -2391,9 +2405,6 @@ static void classDefinition(Compiler* compiler)
     if (match(compiler, TOKEN_STATIC))
     {
       instruction = CODE_METHOD_STATIC;
-      // TODO: Need to handle fields inside static methods correctly.
-      // Currently, they're compiled as instance fields, which will be wrong
-      // wrong wrong given that the receiver is actually the class obj.
     }
     else if (peek(compiler) == TOKEN_NEW)
     {
