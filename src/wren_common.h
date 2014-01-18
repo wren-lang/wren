@@ -77,10 +77,11 @@
 // Assertions add significant overhead, so are only enabled in debug builds.
 #ifdef DEBUG
 
-#define ASSERT(condition, message)                                   \
-  if (!(condition)) {                                                \
-    printf("ASSERT FAIL " __FILE__ ":%d - %s\n", __LINE__, message); \
-    abort();                                                         \
+#define ASSERT(condition, message) \
+  if (!(condition)) { \
+    printf("[%s:%d] Assert failed in %s(): %s\n", \
+        __FILE__, __LINE__, __func__, message); \
+    abort(); \
   }
 
 #else
