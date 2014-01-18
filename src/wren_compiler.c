@@ -1645,14 +1645,7 @@ static void string(Compiler* compiler, bool allowAssignment)
 // directly or indirectly contained in a method for a class.
 static bool isInsideMethod(Compiler* compiler)
 {
-  // Walk up the parent chain to see if there is an enclosing method.
-  while (compiler != NULL)
-  {
-    if (compiler->methodName != NULL) return true;
-    compiler = compiler->parent;
-  }
-
-  return false;
+  return compiler->fields != NULL;
 }
 
 static void new_(Compiler* compiler, bool allowAssignment)
@@ -1675,6 +1668,10 @@ static void super_(Compiler* compiler, bool allowAssignment)
   if (!isInsideMethod(compiler))
   {
     error(compiler, "Cannot use 'super' outside of a method.");
+  }
+  else if (compiler->isStaticMethod)
+  {
+    error(compiler, "Cannot use 'super' in a static method.");
   }
 
   loadThis(compiler);

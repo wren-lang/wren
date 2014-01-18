@@ -72,17 +72,9 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
   PinnedObj pinned;
   pinObj(vm, (Obj*)metaclass, &pinned);
 
-  // The metaclass inheritance chain mirrors the class's inheritance chain
-  // except that when the latter bottoms out at "Object", the metaclass one
-  // bottoms out at "Class".
-  if (superclass == vm->objectClass)
-  {
-    wrenBindSuperclass(vm, metaclass, vm->classClass);
-  }
-  else
-  {
-    wrenBindSuperclass(vm, metaclass, superclass->metaclass);
-  }
+  // Metaclasses always inherit Class and do not parallel the non-metaclass
+  // hierarchy.
+  wrenBindSuperclass(vm, metaclass, vm->classClass);
 
   ObjClass* classObj = wrenNewSingleClass(vm, numFields);
 
