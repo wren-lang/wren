@@ -198,6 +198,23 @@ typedef struct sLoop
   struct sLoop* enclosing;
 } Loop;
 
+// Bookkeeping information for compiling a class definition.
+typedef struct
+{
+  // Symbol table for the fields of the class.
+  SymbolTable* fields;
+
+  // True if the current method being compiled is static.
+  bool isStaticMethod;
+
+  // The name of the method being compiled. Note that this is just the bare
+  // method name, and not its full signature.
+  const char* methodName;
+
+  // The length of the method name being compiled.
+  int methodLength;
+} ClassCompiler;
+
 struct sCompiler
 {
   Parser* parser;
@@ -229,21 +246,8 @@ struct sCompiler
   // The current innermost loop being compiled, or NULL if not in a loop.
   Loop* loop;
 
-  // Symbol table for the fields of the nearest enclosing class, or NULL if not
-  // currently inside a class.
-  SymbolTable* fields;
-
-  // True if the current method being compiled is static. False if it's an
-  // instance method or we're not compiling a method.
-  bool isStaticMethod;
-
-  // The name of the method this compiler is compiling, or NULL if this
-  // compiler is not for a method. Note that this is just the bare method name,
-  // and not its full signature.
-  const char* methodName;
-
-  // The length of the method name being compiled.
-  int methodLength;
+  // If this is a compiler for a method, keeps track of the class enclosing it.
+  ClassCompiler* enclosingClass;
 
   // The growable buffer of code that's been compiled so far.
   ByteBuffer bytecode;
@@ -323,7 +327,7 @@ static int addConstant(Compiler* compiler, Value constant)
 
 // Initializes [compiler].
 static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
-                         const char* methodName, int methodLength)
+                         bool isFunction)
 {
   compiler->parser = parser;
   compiler->parent = parent;
@@ -334,8 +338,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
   compiler->numUpvalues = 0;
   compiler->loop = NULL;
-  compiler->methodName = methodName;
-  compiler->methodLength = methodLength;
+  compiler->enclosingClass = NULL;
 
   wrenSetCompiler(parser->vm, compiler);
 
@@ -348,9 +351,6 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
     // Compiling top-level code, so the initial scope is global.
     compiler->scopeDepth = -1;
-
-    compiler->fields = NULL;
-    compiler->isStaticMethod = false;
   }
   else
   {
@@ -361,25 +361,21 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
     // inside a function will try to walk up the parent chain to find a method
     // enclosing the function whose "this" we can close over.
     compiler->numLocals = 1;
-    if (methodName != NULL)
-    {
-      compiler->locals[0].name = "this";
-      compiler->locals[0].length = 4;
-    }
-    else
+    if (isFunction)
     {
       compiler->locals[0].name = NULL;
       compiler->locals[0].length = 0;
+    }
+    else
+    {
+      compiler->locals[0].name = "this";
+      compiler->locals[0].length = 4;
     }
     compiler->locals[0].depth = -1;
     compiler->locals[0].isUpvalue = false;
 
     // The initial scope for function or method is a local scope.
     compiler->scopeDepth = 0;
-
-    // Propagate the enclosing class and method downwards.
-    compiler->fields = parent->fields;
-    compiler->isStaticMethod = parent->isStaticMethod;
   }
 
   wrenByteBufferInit(parser->vm, &compiler->bytecode);
@@ -1484,7 +1480,7 @@ static void boolean(Compiler* compiler, bool allowAssignment)
 static void function(Compiler* compiler, bool allowAssignment)
 {
   Compiler fnCompiler;
-  initCompiler(&fnCompiler, compiler->parser, compiler, NULL, 0);
+  initCompiler(&fnCompiler, compiler->parser, compiler, true);
 
   parameterList(&fnCompiler, NULL, NULL);
 
@@ -1507,20 +1503,39 @@ static void function(Compiler* compiler, bool allowAssignment)
   endCompiler(&fnCompiler, "(fn)", 4);
 }
 
+// Walks the compiler chain to find the nearest class enclosing this one.
+// Returns NULL if not currently inside a class definition.
+static ClassCompiler* getEnclosingClass(Compiler* compiler)
+{
+  while (compiler != NULL)
+  {
+    if (compiler->enclosingClass != NULL) return compiler->enclosingClass;
+    compiler = compiler->parent;
+  }
+
+  return NULL;
+}
+
 static void field(Compiler* compiler, bool allowAssignment)
 {
   // Initialize it with a fake value so we can keep parsing and minimize the
   // number of cascaded errors.
   int field = 255;
 
-  if (compiler->isStaticMethod)
+  ClassCompiler* enclosingClass = getEnclosingClass(compiler);
+
+  if (enclosingClass == NULL)
+  {
+    error(compiler, "Cannot reference a field outside of a class definition.");
+  }
+  else if (enclosingClass->isStaticMethod)
   {
     error(compiler, "Cannot use an instance field in a static method.");
   }
-  else if (compiler->fields != NULL)
+  else
   {
     // Look up the field, or implicitly define it.
-    field = wrenSymbolTableEnsure(compiler->parser->vm, compiler->fields,
+    field = wrenSymbolTableEnsure(compiler->parser->vm, enclosingClass->fields,
         compiler->parser->previous.start,
         compiler->parser->previous.length);
 
@@ -1529,42 +1544,28 @@ static void field(Compiler* compiler, bool allowAssignment)
       error(compiler, "A class can only have %d fields.", MAX_FIELDS);
     }
   }
-  else
-  {
-    error(compiler, "Cannot reference a field outside of a class definition.");
-  }
 
   // If there's an "=" after a field name, it's an assignment.
+  bool isLoad = true;
   if (match(compiler, TOKEN_EQ))
   {
     if (!allowAssignment) error(compiler, "Invalid assignment.");
 
     // Compile the right-hand side.
     expression(compiler);
+    isLoad = false;
+  }
 
-    // If we're directly inside a method, use a more optimal instruction.
-    if (compiler->methodName != NULL)
-    {
-      emitByte(compiler, CODE_STORE_FIELD_THIS, field);
-    }
-    else
-    {
-      loadThis(compiler);
-      emitByte(compiler, CODE_STORE_FIELD, field);
-    }
+  // If we're directly inside a method, use a more optimal instruction.
+  if (compiler->enclosingClass == enclosingClass)
+  {
+    emitByte(compiler, isLoad ? CODE_LOAD_FIELD_THIS : CODE_STORE_FIELD_THIS,
+             field);
   }
   else
   {
-    // If we're directly inside a method, use a more optimal instruction.
-    if (compiler->methodName != NULL)
-    {
-      emitByte(compiler, CODE_LOAD_FIELD_THIS, field);
-    }
-    else
-    {
-      loadThis(compiler);
-      emitByte(compiler, CODE_LOAD_FIELD, field);
-    }
+    loadThis(compiler);
+    emitByte(compiler, isLoad ? CODE_LOAD_FIELD : CODE_STORE_FIELD, field);
   }
 }
 
@@ -1645,13 +1646,6 @@ static void string(Compiler* compiler, bool allowAssignment)
   emitShort(compiler, CODE_CONSTANT, constant);
 }
 
-// Returns true if [compiler] is compiling a chunk of code that is either
-// directly or indirectly contained in a method for a class.
-static bool isInsideMethod(Compiler* compiler)
-{
-  return compiler->fields != NULL;
-}
-
 static void new_(Compiler* compiler, bool allowAssignment)
 {
   // TODO: Instead of an expression, explicitly only allow a dotted name.
@@ -1669,11 +1663,13 @@ static void new_(Compiler* compiler, bool allowAssignment)
 
 static void super_(Compiler* compiler, bool allowAssignment)
 {
-  if (!isInsideMethod(compiler))
+  ClassCompiler* enclosingClass = getEnclosingClass(compiler);
+
+  if (enclosingClass == NULL)
   {
     error(compiler, "Cannot use 'super' outside of a method.");
   }
-  else if (compiler->isStaticMethod)
+  else if (enclosingClass->isStaticMethod)
   {
     error(compiler, "Cannot use 'super' in a static method.");
   }
@@ -1692,20 +1688,8 @@ static void super_(Compiler* compiler, bool allowAssignment)
   {
     // No explicit name, so use the name of the enclosing method.
     char name[MAX_METHOD_SIGNATURE];
-    int length = 0;
-
-    Compiler* thisCompiler = compiler;
-    while (thisCompiler != NULL)
-    {
-      if (thisCompiler->methodName != NULL)
-      {
-        length = thisCompiler->methodLength;
-        strncpy(name, thisCompiler->methodName, length);
-        break;
-      }
-
-      thisCompiler = thisCompiler->parent;
-    }
+    int length = enclosingClass->methodLength;
+    strncpy(name, enclosingClass->methodName, length);
 
     // Call the superclass method with the same name.
     methodCall(compiler, CODE_SUPER_0, name, length);
@@ -1714,7 +1698,7 @@ static void super_(Compiler* compiler, bool allowAssignment)
 
 static void this_(Compiler* compiler, bool allowAssignment)
 {
-  if (!isInsideMethod(compiler))
+  if (getEnclosingClass(compiler) == NULL)
   {
     error(compiler, "Cannot use 'this' outside of a method.");
     return;
@@ -1964,20 +1948,20 @@ void expression(Compiler* compiler)
 }
 
 // Compiles a method definition inside a class body.
-void method(Compiler* compiler, Code instruction, bool isConstructor,
-            SignatureFn signature)
+void method(Compiler* compiler, ClassCompiler* classCompiler, Code instruction,
+            bool isConstructor, SignatureFn signature)
 {
   // Build the method name.
   char name[MAX_METHOD_SIGNATURE];
   int length = copyName(compiler, name);
 
-  Compiler methodCompiler;
-  initCompiler(&methodCompiler, compiler->parser, compiler, name, length);
+  classCompiler->methodName = name;
+  classCompiler->methodLength = length;
 
-  if (instruction == CODE_METHOD_STATIC)
-  {
-    methodCompiler.isStaticMethod = true;
-  }
+  Compiler methodCompiler;
+  initCompiler(&methodCompiler, compiler->parser, compiler, false);
+
+  methodCompiler.enclosingClass = classCompiler;
 
   // Compile the method signature.
   signature(&methodCompiler, name, &length);
@@ -2388,14 +2372,16 @@ static void classDefinition(Compiler* compiler)
   // used.
   int numFieldsInstruction = emit(compiler, 255);
 
+  ClassCompiler classCompiler;
+
   // Set up a symbol table for the class's fields. We'll initially compile
   // them to slots starting at zero. When the method is bound to the close
   // the bytecode will be adjusted by [wrenBindMethod] to take inherited
   // fields into account.
-  SymbolTable* previousFields = compiler->fields;
   SymbolTable fields;
   wrenSymbolTableInit(compiler->parser->vm, &fields);
-  compiler->fields = &fields;
+
+  classCompiler.fields = &fields;
 
   // Compile the method definitions.
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class body.");
@@ -2404,9 +2390,12 @@ static void classDefinition(Compiler* compiler)
     Code instruction = CODE_METHOD_INSTANCE;
     bool isConstructor = false;
 
+    classCompiler.isStaticMethod = false;
+
     if (match(compiler, TOKEN_STATIC))
     {
       instruction = CODE_METHOD_STATIC;
+      classCompiler.isStaticMethod = true;
     }
     else if (peek(compiler) == TOKEN_NEW)
     {
@@ -2423,17 +2412,15 @@ static void classDefinition(Compiler* compiler)
       break;
     }
 
-    method(compiler, instruction, isConstructor, signature);
+    method(compiler, &classCompiler, instruction, isConstructor, signature);
     consume(compiler, TOKEN_LINE,
             "Expect newline after definition in class.");
   }
 
   // Update the class with the number of fields.
   compiler->bytecode.data[numFieldsInstruction] = fields.names.count;
-  compiler->fields = previousFields;
-
   wrenSymbolTableClear(compiler->parser->vm, &fields);
-  
+
   // Store it in its name.
   defineVariable(compiler, symbol);
 }
@@ -2498,7 +2485,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
   nextToken(&parser);
 
   Compiler compiler;
-  initCompiler(&compiler, &parser, NULL, NULL, 0);
+  initCompiler(&compiler, &parser, NULL, true);
 
   // Create a string for the source path now that the compiler is initialized
   // so we can be sure it won't get garbage collected.
