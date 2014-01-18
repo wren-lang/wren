@@ -86,6 +86,7 @@ typedef enum
   TOKEN_WHILE,
 
   TOKEN_FIELD,
+  TOKEN_STATIC_FIELD,
   TOKEN_NAME,
   TOKEN_NUMBER,
   TOKEN_STRING,
@@ -754,7 +755,10 @@ static void readRawToken(Parser* parser)
         break;
 
       case '"': readString(parser); return;
-      case '_': readName(parser, TOKEN_FIELD); return;
+      case '_':
+        readName(parser,
+                 peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD);
+        return;
 
       default:
         if (isName(c))
@@ -1920,6 +1924,7 @@ GrammarRule rules[] =
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_WHILE         */ UNUSED,
   /* TOKEN_FIELD         */ PREFIX(field),
+  /* TOKEN_STATIC_FIELD  */ UNUSED, // TODO: Support.
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(number),
   /* TOKEN_STRING        */ PREFIX(string),
