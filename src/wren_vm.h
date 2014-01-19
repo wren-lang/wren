@@ -154,15 +154,13 @@ typedef enum
   // Pop a superclass off the stack, then push a new class that extends it.
   CODE_SUBCLASS,
 
-  // Define a method for symbol [arg] whose body is the function popped off the
-  // top of the stack. The class receiving the method is on top of the stack
-  // (after the function is popped off) and remains after this.
+  // Define a method for symbol [arg]. The class receiving the method is popped
+  // off the stack, then the function defining the body is popped.
   CODE_METHOD_INSTANCE,
 
-  // Define a method for symbol [arg] whose body is the function popped off the
-  // top of the stack. The class receiving the method is the metaclass of the
-  // class on top of the stack (after the function is popped off) and remains
-  // after this.
+  // Define a method for symbol [arg]. The class whose metaclass will receive
+  // the method is popped off the stack, then the function defining the body is
+  // popped.
   CODE_METHOD_STATIC,
 
   // This pseudo-instruction indicates the end of the bytecode. It should

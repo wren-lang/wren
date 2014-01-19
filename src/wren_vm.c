@@ -925,7 +925,7 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(STORE_UPVALUE):
       ASSERT(upvalues != NULL,
              "Should not have CODE_STORE_UPVALUE instruction in non-closure.");
-      *upvalues[READ_BYTE()]->value = POP();
+      *upvalues[READ_BYTE()]->value = PEEK();
       DISPATCH();
 
     CASE_CODE(LOAD_GLOBAL):
@@ -1220,9 +1220,10 @@ static bool runInterpreter(WrenVM* vm)
     {
       int type = instruction;
       int symbol = READ_SHORT();
-      Value method = PEEK();
-      ObjClass* classObj = AS_CLASS(PEEK2());
+      ObjClass* classObj = AS_CLASS(PEEK());
+      Value method = PEEK2();
       bindMethod(vm, type, symbol, classObj, method);
+      POP();
       POP();
       DISPATCH();
     }

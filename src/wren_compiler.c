@@ -940,11 +940,11 @@ static int defineLocal(Compiler* compiler, const char* name, int length)
   return compiler->numLocals++;
 }
 
-// Parses a name token and declares a variable in the current scope with that
-// name. Returns its symbol.
+// Declares a variable in the current scope with the name of the previously
+// consumed token. Returns its symbol.
 static int declareVariable(Compiler* compiler)
 {
-  Token* token = consume(compiler, TOKEN_NAME, "Expected variable name.");
+  Token* token = &compiler->parser->previous;
 
   // Top-level global scope.
   if (compiler->scopeDepth == -1)
@@ -986,6 +986,14 @@ static int declareVariable(Compiler* compiler)
   }
 
   return defineLocal(compiler, token->start, token->length);
+}
+
+// Parses a name token and declares a variable in the current scope with that
+// name. Returns its symbol.
+static int declareNamedVariable(Compiler* compiler)
+{
+  consume(compiler, TOKEN_NAME, "Expected variable name.");
+  return declareVariable(compiler);
 }
 
 // Stores a variable with the previously defined symbol in the current scope.
@@ -1349,7 +1357,7 @@ static void parameterList(Compiler* compiler, char* name, int* length)
       validateNumParameters(compiler, ++numParams);
 
       // Define a local variable in the method for the parameter.
-      declareVariable(compiler);
+      declareNamedVariable(compiler);
 
       // Add a space in the name for the parameter.
       if (name != NULL) name[(*length)++] = ' ';
@@ -1503,17 +1511,25 @@ static void function(Compiler* compiler, bool allowAssignment)
   endCompiler(&fnCompiler, "(fn)", 4);
 }
 
-// Walks the compiler chain to find the nearest class enclosing this one.
-// Returns NULL if not currently inside a class definition.
-static ClassCompiler* getEnclosingClass(Compiler* compiler)
+// Walks the compiler chain to find the compiler for the nearest class
+// enclosing this one. Returns NULL if not currently inside a class definition.
+static Compiler* getEnclosingClassCompiler(Compiler* compiler)
 {
   while (compiler != NULL)
   {
-    if (compiler->enclosingClass != NULL) return compiler->enclosingClass;
+    if (compiler->enclosingClass != NULL) return compiler;
     compiler = compiler->parent;
   }
 
   return NULL;
+}
+
+// Walks the compiler chain to find the nearest class enclosing this one.
+// Returns NULL if not currently inside a class definition.
+static ClassCompiler* getEnclosingClass(Compiler* compiler)
+{
+  compiler = getEnclosingClassCompiler(compiler);
+  return compiler == NULL ? NULL : compiler->enclosingClass;
 }
 
 static void field(Compiler* compiler, bool allowAssignment)
@@ -1557,7 +1573,8 @@ static void field(Compiler* compiler, bool allowAssignment)
   }
 
   // If we're directly inside a method, use a more optimal instruction.
-  if (compiler->enclosingClass == enclosingClass)
+  if (compiler->parent != NULL &&
+      compiler->parent->enclosingClass == enclosingClass)
   {
     emitByte(compiler, isLoad ? CODE_LOAD_FIELD_THIS : CODE_STORE_FIELD_THIS,
              field);
@@ -1569,16 +1586,11 @@ static void field(Compiler* compiler, bool allowAssignment)
   }
 }
 
-static void name(Compiler* compiler, bool allowAssignment)
+// Compiles a read or assignment to a variable at [index] using
+// [loadInstruction].
+static void variable(Compiler* compiler, bool allowAssignment, int index,
+                     Code loadInstruction)
 {
-  // Look up the name in the scope chain.
-  Token* token = &compiler->parser->previous;
-
-  Code loadInstruction;
-  int index = resolveName(compiler, token->start, token->length,
-                          &loadInstruction);
-  if (index == -1) error(compiler, "Undefined variable.");
-
   // If there's an "=" after a bare name, it's a variable assignment.
   if (match(compiler, TOKEN_EQ))
   {
@@ -1607,6 +1619,60 @@ static void name(Compiler* compiler, bool allowAssignment)
   {
     emitByte(compiler, loadInstruction, index);
   }
+}
+
+static void staticField(Compiler* compiler, bool allowAssignment)
+{
+  Code loadInstruction = CODE_LOAD_LOCAL;
+  int index = 255;
+
+  Compiler* classCompiler = getEnclosingClassCompiler(compiler);
+  if (classCompiler == NULL)
+  {
+    error(compiler, "Cannot use a static field outside of a class definition.");
+  }
+  else
+  {
+    // Look up the name in the scope chain.
+    Token* token = &compiler->parser->previous;
+
+    // If this is the first time we've seen this static field, implicitly
+    // define it as a variable in the scope surrounding the class definition.
+    if (resolveLocal(classCompiler, token->start, token->length) == -1)
+    {
+      int symbol = declareVariable(classCompiler);
+
+      // Implicitly initialize it to null.
+      emit(classCompiler, CODE_NULL);
+      defineVariable(classCompiler, symbol);
+
+      index = resolveName(compiler, token->start, token->length,
+                          &loadInstruction);
+    }
+    else
+    {
+      // It exists already, so resolve it properly. This is different from the
+      // above resolveLocal() call because we may have already closed over it
+      // as an upvalue.
+      index = resolveName(compiler, token->start, token->length,
+                          &loadInstruction);
+    }
+  }
+
+  variable(compiler, allowAssignment, index, loadInstruction);
+}
+
+static void name(Compiler* compiler, bool allowAssignment)
+{
+  // Look up the name in the scope chain.
+  Token* token = &compiler->parser->previous;
+
+  Code loadInstruction;
+  int index = resolveName(compiler, token->start, token->length,
+                          &loadInstruction);
+  if (index == -1) error(compiler, "Undefined variable.");
+
+  variable(compiler, allowAssignment, index, loadInstruction);
 }
 
 static void null(Compiler* compiler, bool allowAssignment)
@@ -1797,7 +1863,7 @@ void infixSignature(Compiler* compiler, char* name, int* length)
   name[(*length)++] = ' ';
 
   // Parse the parameter name.
-  declareVariable(compiler);
+  declareNamedVariable(compiler);
 }
 
 // Compiles a method signature for an unary operator (i.e. "!").
@@ -1817,7 +1883,7 @@ void mixedSignature(Compiler* compiler, char* name, int* length)
     name[(*length)++] = ' ';
 
     // Parse the parameter name.
-    declareVariable(compiler);
+    declareNamedVariable(compiler);
   }
 }
 
@@ -1831,7 +1897,7 @@ void namedSignature(Compiler* compiler, char* name, int* length)
     name[(*length)++] = ' ';
 
     // Parse the value parameter.
-    declareVariable(compiler);
+    declareNamedVariable(compiler);
   }
   else
   {
@@ -1908,7 +1974,7 @@ GrammarRule rules[] =
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_WHILE         */ UNUSED,
   /* TOKEN_FIELD         */ PREFIX(field),
-  /* TOKEN_STATIC_FIELD  */ UNUSED, // TODO: Support.
+  /* TOKEN_STATIC_FIELD  */ PREFIX(staticField),
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(number),
   /* TOKEN_STRING        */ PREFIX(string),
@@ -1945,50 +2011,6 @@ void parsePrecedence(Compiler* compiler, bool allowAssignment,
 void expression(Compiler* compiler)
 {
   parsePrecedence(compiler, true, PREC_LOWEST);
-}
-
-// Compiles a method definition inside a class body.
-void method(Compiler* compiler, ClassCompiler* classCompiler, Code instruction,
-            bool isConstructor, SignatureFn signature)
-{
-  // Build the method name.
-  char name[MAX_METHOD_SIGNATURE];
-  int length = copyName(compiler, name);
-
-  classCompiler->methodName = name;
-  classCompiler->methodLength = length;
-
-  Compiler methodCompiler;
-  initCompiler(&methodCompiler, compiler->parser, compiler, false);
-
-  methodCompiler.enclosingClass = classCompiler;
-
-  // Compile the method signature.
-  signature(&methodCompiler, name, &length);
-
-  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
-
-  finishBlock(&methodCompiler);
-  // TODO: Single-expression methods that implicitly return the result.
-
-  // If it's a constructor, return "this".
-  if (isConstructor)
-  {
-    // The receiver is always stored in the first local slot.
-    emitByte(&methodCompiler, CODE_LOAD_LOCAL, 0);
-  }
-  else
-  {
-    // Implicitly return null in case there is no explicit return.
-    emit(&methodCompiler, CODE_NULL);
-  }
-
-  emit(&methodCompiler, CODE_RETURN);
-
-  endCompiler(&methodCompiler, name, length);
-
-  // Compile the code to define the method.
-  emitShort(compiler, instruction, methodSymbol(compiler, name, length));
 }
 
 // Parses a curly block or an expression statement. Used in places like the
@@ -2348,12 +2370,53 @@ void statement(Compiler* compiler)
   emit(compiler, CODE_POP);
 }
 
+// Compiles a method definition inside a class body. Returns the symbol in the
+// method table for the new method.
+int method(Compiler* compiler, ClassCompiler* classCompiler, bool isConstructor,
+           SignatureFn signature)
+{
+  // Build the method name.
+  char name[MAX_METHOD_SIGNATURE];
+  int length = copyName(compiler, name);
+
+  classCompiler->methodName = name;
+  classCompiler->methodLength = length;
+
+  Compiler methodCompiler;
+  initCompiler(&methodCompiler, compiler->parser, compiler, false);
+
+  // Compile the method signature.
+  signature(&methodCompiler, name, &length);
+
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
+
+  finishBlock(&methodCompiler);
+  // TODO: Single-expression methods that implicitly return the result.
+
+  // If it's a constructor, return "this".
+  if (isConstructor)
+  {
+    // The receiver is always stored in the first local slot.
+    emitByte(&methodCompiler, CODE_LOAD_LOCAL, 0);
+  }
+  else
+  {
+    // Implicitly return null in case there is no explicit return.
+    emit(&methodCompiler, CODE_NULL);
+  }
+
+  emit(&methodCompiler, CODE_RETURN);
+  endCompiler(&methodCompiler, name, length);
+  return methodSymbol(compiler, name, length);
+}
+
 // Compiles a class definition. Assumes the "class" token has already been
 // consumed.
 static void classDefinition(Compiler* compiler)
 {
   // Create a variable to store the class in.
-  int symbol = declareVariable(compiler);
+  int symbol = declareNamedVariable(compiler);
+  bool isGlobal = compiler->scopeDepth == -1;
 
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
@@ -2372,6 +2435,14 @@ static void classDefinition(Compiler* compiler)
   // used.
   int numFieldsInstruction = emit(compiler, 255);
 
+  // Store it in its name.
+  defineVariable(compiler, symbol);
+
+  // Push a local variable scope. Static fields in a class body are hoisted out
+  // into local variables declared in this scope. Methods that use them will
+  // have upvalues referencing them.
+  pushScope(compiler);
+
   ClassCompiler classCompiler;
 
   // Set up a symbol table for the class's fields. We'll initially compile
@@ -2382,6 +2453,8 @@ static void classDefinition(Compiler* compiler)
   wrenSymbolTableInit(compiler->parser->vm, &fields);
 
   classCompiler.fields = &fields;
+
+  compiler->enclosingClass = &classCompiler;
 
   // Compile the method definitions.
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class body.");
@@ -2412,7 +2485,15 @@ static void classDefinition(Compiler* compiler)
       break;
     }
 
-    method(compiler, &classCompiler, instruction, isConstructor, signature);
+    int methodSymbol = method(compiler, &classCompiler, isConstructor,
+                              signature);
+
+    // Load the class.
+    emitByte(compiler, isGlobal ? CODE_LOAD_GLOBAL : CODE_LOAD_LOCAL, symbol);
+
+    // Define the method.
+    emitShort(compiler, instruction, methodSymbol);
+
     consume(compiler, TOKEN_LINE,
             "Expect newline after definition in class.");
   }
@@ -2421,14 +2502,15 @@ static void classDefinition(Compiler* compiler)
   compiler->bytecode.data[numFieldsInstruction] = fields.names.count;
   wrenSymbolTableClear(compiler->parser->vm, &fields);
 
-  // Store it in its name.
-  defineVariable(compiler, symbol);
+  compiler->enclosingClass = NULL;
+
+  popScope(compiler);
 }
 
 static void variableDefinition(Compiler* compiler)
 {
   // TODO: Variable should not be in scope until after initializer.
-  int symbol = declareVariable(compiler);
+  int symbol = declareNamedVariable(compiler);
 
   // Compile the initializer.
   if (match(compiler, TOKEN_EQ))
