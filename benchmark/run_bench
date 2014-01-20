@@ -30,7 +30,7 @@ BENCHMARK("fib", r"""317811
 317811
 317811""")
 
-BENCHMARK("for", r"""1999999000000""")
+BENCHMARK("for", r"""499999500000""")
 
 BENCHMARK("method_call", r"""true
 false""")

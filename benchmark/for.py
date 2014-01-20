@@ -1,8 +1,10 @@
 import time
 
-list = range(0, 2000000)
-
 start = time.clock()
+list = []
+for i in xrange(0, 1000000):
+  list.append(i)
+
 sum = 0
 for i in list:
   sum += i
