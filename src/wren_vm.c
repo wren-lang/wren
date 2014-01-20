@@ -150,11 +150,19 @@ static void markFn(WrenVM* vm, ObjFn* fn)
   // TODO: What about the function name?
 }
 
+// Sets the mark flag on [obj]. Returns true if it was already set so that we
+// can avoid recursing into already-processed objects. That ensures we don't
+// crash on an object cycle.
+static bool setMarkedFlag(Obj* obj)
+{
+  if (obj->flags & FLAG_MARKED) return true;
+  obj->flags |= FLAG_MARKED;
+  return false;
+}
+
 static void markInstance(WrenVM* vm, ObjInstance* instance)
 {
-  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
-  if (instance->obj.flags & FLAG_MARKED) return;
-  instance->obj.flags |= FLAG_MARKED;
+  if (setMarkedFlag(&instance->obj)) return;
 
   markClass(vm, instance->classObj);
 
@@ -171,9 +179,7 @@ static void markInstance(WrenVM* vm, ObjInstance* instance)
 
 static void markList(WrenVM* vm, ObjList* list)
 {
-  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
-  if (list->obj.flags & FLAG_MARKED) return;
-  list->obj.flags |= FLAG_MARKED;
+  if (setMarkedFlag(&list->obj)) return;
 
   // Mark the elements.
   Value* elements = list->elements;
@@ -196,9 +202,7 @@ static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
   // closure.
   if (upvalue == NULL) return;
 
-  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
-  if (upvalue->obj.flags & FLAG_MARKED) return;
-  upvalue->obj.flags |= FLAG_MARKED;
+  if (setMarkedFlag(&upvalue->obj)) return;
 
   // Mark the closed-over object (in case it is closed).
   markValue(vm, upvalue->closed);
@@ -209,20 +213,18 @@ static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
 
 static void markFiber(WrenVM* vm, ObjFiber* fiber)
 {
-  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
-  if (fiber->obj.flags & FLAG_MARKED) return;
-  fiber->obj.flags |= FLAG_MARKED;
+  if (setMarkedFlag(&fiber->obj)) return;
 
   // Stack functions.
-  for (int k = 0; k < fiber->numFrames; k++)
+  for (int i = 0; i < fiber->numFrames; i++)
   {
-    wrenMarkObj(vm, fiber->frames[k].fn);
+    wrenMarkObj(vm, fiber->frames[i].fn);
   }
 
   // Stack variables.
-  for (int l = 0; l < fiber->stackSize; l++)
+  for (int i = 0; i < fiber->stackSize; i++)
   {
-    markValue(vm, fiber->stack[l]);
+    markValue(vm, fiber->stack[i]);
   }
 
   // Open upvalues.
@@ -239,9 +241,7 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
 
 static void markClosure(WrenVM* vm, ObjClosure* closure)
 {
-  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
-  if (closure->obj.flags & FLAG_MARKED) return;
-  closure->obj.flags |= FLAG_MARKED;
+  if (setMarkedFlag(&closure->obj)) return;
 
   // Mark the function.
   markFn(vm, closure->fn);
@@ -249,8 +249,7 @@ static void markClosure(WrenVM* vm, ObjClosure* closure)
   // Mark the upvalues.
   for (int i = 0; i < closure->fn->numUpvalues; i++)
   {
-    Upvalue** upvalues = closure->upvalues;
-    Upvalue* upvalue = upvalues[i];
+    Upvalue* upvalue = closure->upvalues[i];
     markUpvalue(vm, upvalue);
   }
 
@@ -259,18 +258,9 @@ static void markClosure(WrenVM* vm, ObjClosure* closure)
   vm->bytesAllocated += sizeof(Upvalue*) * closure->fn->numUpvalues;
 }
 
-static void markRange(WrenVM* vm, ObjRange* range)
-{
-  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
-  if (range->obj.flags & FLAG_MARKED) return;
-  range->obj.flags |= FLAG_MARKED;
-}
-
 static void markString(WrenVM* vm, ObjString* string)
 {
-  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
-  if (string->obj.flags & FLAG_MARKED) return;
-  string->obj.flags |= FLAG_MARKED;
+  if (setMarkedFlag(&string->obj)) return;
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjString);
@@ -298,7 +288,7 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
     case OBJ_FN:       markFn(      vm, (ObjFn*)      obj); break;
     case OBJ_INSTANCE: markInstance(vm, (ObjInstance*)obj); break;
     case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
-    case OBJ_RANGE:    markRange(   vm, (ObjRange*)   obj); break;
+    case OBJ_RANGE:    setMarkedFlag(obj); break;
     case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
     case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
   }
