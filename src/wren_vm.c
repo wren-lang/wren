@@ -259,6 +259,13 @@ static void markClosure(WrenVM* vm, ObjClosure* closure)
   vm->bytesAllocated += sizeof(Upvalue*) * closure->fn->numUpvalues;
 }
 
+static void markRange(WrenVM* vm, ObjRange* range)
+{
+  // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
+  if (range->obj.flags & FLAG_MARKED) return;
+  range->obj.flags |= FLAG_MARKED;
+}
+
 static void markString(WrenVM* vm, ObjString* string)
 {
   // Don't recurse if already marked. Avoids getting stuck in a loop on cycles.
@@ -291,6 +298,7 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
     case OBJ_FN:       markFn(      vm, (ObjFn*)      obj); break;
     case OBJ_INSTANCE: markInstance(vm, (ObjInstance*)obj); break;
     case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
+    case OBJ_RANGE:    markRange(   vm, (ObjRange*)   obj); break;
     case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
     case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
   }

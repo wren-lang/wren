@@ -54,6 +54,7 @@ typedef enum {
   OBJ_FN,
   OBJ_INSTANCE,
   OBJ_LIST,
+  OBJ_RANGE,
   OBJ_STRING,
   OBJ_UPVALUE
 } ObjType;
@@ -66,7 +67,7 @@ typedef enum
 
 typedef struct sObj
 {
-  unsigned int type  : 3; // ObjType.
+  unsigned int type  : 4; // ObjType.
   unsigned int flags : 1; // ObjFlags.
 
   // The next object in the linked list of all currently allocated objects.
@@ -307,6 +308,17 @@ typedef struct
   Value* elements;
 } ObjList;
 
+typedef struct
+{
+  Obj obj;
+
+  // The beginning of the range.
+  double from;
+
+  // The end of the range. May be greater or less than [from].
+  double to;
+} ObjRange;
+
 
 // Value -> ObjClass*.
 #define AS_CLASS(value) ((ObjClass*)AS_OBJ(value))
@@ -329,6 +341,9 @@ typedef struct
 // Value -> double.
 #define AS_NUM(v) ((v).num)
 
+// Value -> ObjRange*.
+#define AS_RANGE(v) ((ObjRange*)AS_OBJ(v))
+
 // Value -> ObjString*.
 #define AS_STRING(v) ((ObjString*)AS_OBJ(v))
 
@@ -349,6 +364,9 @@ typedef struct
 
 // Returns true if [value] is an instance.
 #define IS_INSTANCE(value) (wrenIsInstance(value))
+
+// Returns true if [value] is a range object.
+#define IS_RANGE(value) (wrenIsRange(value))
 
 // Returns true if [value] is a string object.
 #define IS_STRING(value) (wrenIsString(value))
@@ -541,6 +559,9 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index);
 // Removes and returns the item at [index] from [list].
 Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
 
+// Creates a new range from [from] to [to].
+Value wrenNewRange(WrenVM* vm, double from, double to);
+
 // Creates a new string object and copies [text] into it.
 Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 
@@ -567,6 +588,7 @@ bool wrenIsClosure(Value value);
 bool wrenIsFiber(Value value);
 bool wrenIsFn(Value value);
 bool wrenIsInstance(Value value);
+bool wrenIsRange(Value value);
 bool wrenIsString(Value value);
 
 inline Value wrenObjectToValue(Obj* obj)

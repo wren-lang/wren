@@ -68,31 +68,6 @@ const char* coreLibSource =
 "    result = result + \"]\"\n"
 "    return result\n"
 "  }\n"
-"}\n"
-"\n"
-"class Range {\n"
-"  new(min, max) {\n"
-"    _min = min\n"
-"    _max = max\n"
-"  }\n"
-"\n"
-"  min { return _min }\n"
-"  max { return _max }\n"
-"\n"
-"  iterate(previous) {\n"
-"    if (previous == null) return _min\n"
-"    if (previous == _max) return false\n"
-"    return previous + 1\n"
-"  }\n"
-"\n"
-"  iteratorValue(iterator) {\n"
-"    return iterator\n"
-"  }\n"
-"}\n"
-"\n"
-"class Num {\n"
-"  .. other { return new Range(this, other) }\n"
-"  ... other { return new Range(this, other - 1) }\n"
 "}\n";
 
 // Validates that the given argument in [args] is a Num. Returns true if it is.
@@ -514,6 +489,26 @@ DEF_NATIVE(num_bitwiseNot)
   RETURN_NUM(~value);
 }
 
+DEF_NATIVE(num_dotDot)
+{
+  // TODO: Check arg type.
+  double from = AS_NUM(args[0]);
+  double to = AS_NUM(args[1]);
+
+  RETURN_VAL(wrenNewRange(vm, from, to));
+}
+
+DEF_NATIVE(num_dotDotDot)
+{
+  // TODO: Check arg type.
+  double from = AS_NUM(args[0]);
+
+  // TODO: Is this how we want half-open ranges to work?
+  double to = AS_NUM(args[1]) - 1;
+
+  RETURN_VAL(wrenNewRange(vm, from, to));
+}
+
 DEF_NATIVE(object_eqeq)
 {
   RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
@@ -539,6 +534,60 @@ DEF_NATIVE(object_toString)
 DEF_NATIVE(object_type)
 {
   RETURN_VAL(OBJ_VAL(wrenGetClass(vm, args[0])));
+}
+
+DEF_NATIVE(range_from)
+{
+  ObjRange* range = AS_RANGE(args[0]);
+  RETURN_NUM(range->from);
+}
+
+DEF_NATIVE(range_to)
+{
+  ObjRange* range = AS_RANGE(args[0]);
+  RETURN_NUM(range->to);
+}
+
+DEF_NATIVE(range_min)
+{
+  ObjRange* range = AS_RANGE(args[0]);
+  RETURN_NUM(fmin(range->from, range->to));
+}
+
+DEF_NATIVE(range_max)
+{
+  ObjRange* range = AS_RANGE(args[0]);
+  RETURN_NUM(fmax(range->from, range->to));
+}
+
+DEF_NATIVE(range_iterate)
+{
+  ObjRange* range = AS_RANGE(args[0]);
+
+  // Start the iteration.
+  if (IS_NULL(args[1])) RETURN_NUM(range->from);
+
+  if (!validateNum(vm, args, 1, "Iterator")) return PRIM_ERROR;
+
+  double iterator = AS_NUM(args[1]);
+
+  if (iterator >= range->to) RETURN_FALSE;
+
+  RETURN_NUM(AS_NUM(args[1]) + 1);
+}
+
+DEF_NATIVE(range_iteratorValue)
+{
+  // Assume the iterator is a number so that is the value of the range.
+  RETURN_VAL(args[1]);
+}
+
+DEF_NATIVE(range_toString)
+{
+  char buffer[51];
+  ObjRange* range = AS_RANGE(args[0]);
+  sprintf(buffer, "%.14g..%.14g", range->from, range->to);
+  RETURN_VAL(wrenNewString(vm, buffer, strlen(buffer)));
 }
 
 DEF_NATIVE(string_contains)
@@ -710,8 +759,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->fiberClass, "run", fiber_run);
   NATIVE(vm->fiberClass, "run ", fiber_run1);
   // TODO: Primitives for switching to a fiber without setting the caller.
-  // (I.e. symmetric coroutines.) Also a getter to tell if a fiber is complete
-  // or not.
+  // (I.e. symmetric coroutines.)
 
   vm->fnClass = defineClass(vm, "Function");
   NATIVE(vm->fnClass, "call", fn_call);
@@ -734,6 +782,38 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->nullClass = defineClass(vm, "Null");
   NATIVE(vm->nullClass, "toString", null_toString);
+
+  vm->numClass = defineClass(vm, "Num");
+  NATIVE(vm->numClass, "abs", num_abs);
+  NATIVE(vm->numClass, "ceil", num_ceil);
+  NATIVE(vm->numClass, "cos", num_cos);
+  NATIVE(vm->numClass, "floor", num_floor);
+  NATIVE(vm->numClass, "isNan", num_isNan);
+  NATIVE(vm->numClass, "sin", num_sin);
+  NATIVE(vm->numClass, "sqrt", num_sqrt);
+  NATIVE(vm->numClass, "toString", num_toString)
+  NATIVE(vm->numClass, "-", num_negate);
+  NATIVE(vm->numClass, "- ", num_minus);
+  NATIVE(vm->numClass, "+ ", num_plus);
+  NATIVE(vm->numClass, "* ", num_multiply);
+  NATIVE(vm->numClass, "/ ", num_divide);
+  NATIVE(vm->numClass, "% ", num_mod);
+  NATIVE(vm->numClass, "< ", num_lt);
+  NATIVE(vm->numClass, "> ", num_gt);
+  NATIVE(vm->numClass, "<= ", num_lte);
+  NATIVE(vm->numClass, ">= ", num_gte);
+  NATIVE(vm->numClass, "~", num_bitwiseNot);
+  NATIVE(vm->numClass, ".. ", num_dotDot);
+  NATIVE(vm->numClass, "... ", num_dotDotDot);
+
+  vm->rangeClass = defineClass(vm, "Range");
+  NATIVE(vm->rangeClass, "from", range_from);
+  NATIVE(vm->rangeClass, "to", range_to);
+  NATIVE(vm->rangeClass, "min", range_min);
+  NATIVE(vm->rangeClass, "max", range_max);
+  NATIVE(vm->rangeClass, "iterate ", range_iterate);
+  NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
+  NATIVE(vm->rangeClass, "toString", range_toString);
 
   vm->stringClass = defineClass(vm, "String");
   NATIVE(vm->stringClass, "contains ", string_contains);
@@ -759,27 +839,6 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "removeAt ", list_removeAt);
   NATIVE(vm->listClass, "[ ]", list_subscript);
   NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
-
-  vm->numClass = AS_CLASS(findGlobal(vm, "Num"));
-  NATIVE(vm->numClass, "abs", num_abs);
-  NATIVE(vm->numClass, "ceil", num_ceil);
-  NATIVE(vm->numClass, "cos", num_cos);
-  NATIVE(vm->numClass, "floor", num_floor);
-  NATIVE(vm->numClass, "isNan", num_isNan);
-  NATIVE(vm->numClass, "sin", num_sin);
-  NATIVE(vm->numClass, "sqrt", num_sqrt);
-  NATIVE(vm->numClass, "toString", num_toString)
-  NATIVE(vm->numClass, "-", num_negate);
-  NATIVE(vm->numClass, "- ", num_minus);
-  NATIVE(vm->numClass, "+ ", num_plus);
-  NATIVE(vm->numClass, "* ", num_multiply);
-  NATIVE(vm->numClass, "/ ", num_divide);
-  NATIVE(vm->numClass, "% ", num_mod);
-  NATIVE(vm->numClass, "< ", num_lt);
-  NATIVE(vm->numClass, "> ", num_gt);
-  NATIVE(vm->numClass, "<= ", num_lte);
-  NATIVE(vm->numClass, ">= ", num_gte);
-  NATIVE(vm->numClass, "~", num_bitwiseNot);
 
   // These are defined just so that 0 and -0 are equal, which is specified by
   // IEEE 754 even though they have different bit representations.

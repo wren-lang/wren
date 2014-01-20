@@ -301,6 +301,16 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
   return removed;
 }
 
+Value wrenNewRange(WrenVM* vm, double from, double to)
+{
+  ObjRange* range = allocate(vm, sizeof(ObjRange) + 16);
+  initObj(vm, &range->obj, OBJ_RANGE);
+  range->from = from;
+  range->to = to;
+
+  return OBJ_VAL(range);
+}
+
 Value wrenNewString(WrenVM* vm, const char* text, size_t length)
 {
   // Allocate before the string object in case this triggers a GC which would
@@ -368,6 +378,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
 
     case OBJ_CLOSURE:
     case OBJ_INSTANCE:
+    case OBJ_RANGE:
     case OBJ_UPVALUE:
       break;
   }
@@ -389,6 +400,7 @@ static ObjClass* getObjectClass(WrenVM* vm, Obj* obj)
     case OBJ_FN: return vm->fnClass;
     case OBJ_INSTANCE: return ((ObjInstance*)obj)->classObj;
     case OBJ_LIST: return vm->listClass;
+    case OBJ_RANGE: return vm->rangeClass;
     case OBJ_STRING: return vm->stringClass;
     case OBJ_UPVALUE:
       ASSERT(0, "Upvalues should not be used as first-class objects.");
@@ -460,6 +472,7 @@ static void printObject(Obj* obj)
     case OBJ_FN: printf("[fn %p]", obj); break;
     case OBJ_INSTANCE: printf("[instance %p]", obj); break;
     case OBJ_LIST: printList((ObjList*)obj); break;
+    case OBJ_RANGE: printf("[fn %p]", obj); break;
     case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
     case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
   }
@@ -528,6 +541,11 @@ bool wrenIsFn(Value value)
 bool wrenIsInstance(Value value)
 {
   return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_INSTANCE;
+}
+
+bool wrenIsRange(Value value)
+{
+  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_RANGE;
 }
 
 bool wrenIsString(Value value)

@@ -191,6 +191,7 @@ struct WrenVM
 {
   SymbolTable methods;
 
+  // TODO: Use an array for some of these.
   ObjClass* boolClass;
   ObjClass* classClass;
   ObjClass* fiberClass;
@@ -199,6 +200,7 @@ struct WrenVM
   ObjClass* nullClass;
   ObjClass* numClass;
   ObjClass* objectClass;
+  ObjClass* rangeClass;
   ObjClass* stringClass;
 
   SymbolTable globalSymbols;
