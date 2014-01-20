@@ -40,10 +40,8 @@ for (d in 0...maxDepth) {
 var depth = minDepth
 while (depth < stretchDepth) {
   var check = 0
-  var i = 1
-  while (i < iterations + 1) {
+  for (i in 1..iterations) {
     check = check + new Tree(i, depth).check + new Tree(-i, depth).check
-    i = i + 1
   }
 
   IO.print((iterations * 2).toString + " trees of depth " + depth.toString +
