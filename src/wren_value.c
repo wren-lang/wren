@@ -64,7 +64,6 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
 {
   // Create the metaclass.
-  // TODO: Handle static fields.
   ObjClass* metaclass = wrenNewSingleClass(vm, 0);
   metaclass->metaclass = vm->classClass;
 

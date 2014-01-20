@@ -582,7 +582,6 @@ static bool runInterpreter(WrenVM* vm)
   register Upvalue** upvalues;
 
   // These macros are designed to only be invoked within this function.
-  // TODO: Check for stack overflow.
   #define PUSH(value)  (fiber->stack[fiber->stackSize++] = value)
   #define POP()        (fiber->stack[--fiber->stackSize])
   #define PEEK()       (fiber->stack[fiber->stackSize - 1])
@@ -1197,7 +1196,6 @@ static bool runInterpreter(WrenVM* vm)
 
       // Now that we know the total number of fields, make sure we don't
       // overflow.
-      // TODO: Same check for static fields.
       if (superclass->numFields + numFields > MAX_FIELDS)
       {
         STORE_FRAME();
