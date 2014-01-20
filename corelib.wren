@@ -16,9 +16,7 @@ class IO {
 class List {
   toString {
     var result = "["
-    var i = 0
-    // TODO: Use for loop.
-    while (i < this.count) {
+    for (i in 0...this.count) {
       if (i > 0) result = result + ", "
       result = result + this[i].toString
       i = i + 1
