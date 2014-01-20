@@ -317,6 +317,9 @@ typedef struct
 
   // The end of the range. May be greater or less than [from].
   double to;
+
+  // True if [to] is included in the range.
+  bool isInclusive;
 } ObjRange;
 
 
@@ -560,7 +563,7 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index);
 Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
 
 // Creates a new range from [from] to [to].
-Value wrenNewRange(WrenVM* vm, double from, double to);
+Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 
 // Creates a new string object and copies [text] into it.
 Value wrenNewString(WrenVM* vm, const char* text, size_t length);

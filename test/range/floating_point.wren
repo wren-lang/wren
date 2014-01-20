@@ -23,3 +23,9 @@ IO.print((5...2).from) // expect: 5
 IO.print((3...0).from) // expect: 3
 IO.print((3...-5).from) // expect: 3
 IO.print((-2...-5).from) // expect: -2
+
+// TODO: Test toString.
+// TODO: Non-number RHS.
+// TODO: Non-integer RHS.
+// TODO: Range iteration.
+// TODO: Empty or negative ranges.

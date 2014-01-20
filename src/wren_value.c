@@ -301,12 +301,13 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
   return removed;
 }
 
-Value wrenNewRange(WrenVM* vm, double from, double to)
+Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
 {
   ObjRange* range = allocate(vm, sizeof(ObjRange) + 16);
   initObj(vm, &range->obj, OBJ_RANGE);
   range->from = from;
   range->to = to;
+  range->isInclusive = isInclusive;
 
   return OBJ_VAL(range);
 }

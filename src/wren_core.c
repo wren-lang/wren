@@ -491,22 +491,22 @@ DEF_NATIVE(num_bitwiseNot)
 
 DEF_NATIVE(num_dotDot)
 {
-  // TODO: Check arg type.
+  if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
+
   double from = AS_NUM(args[0]);
   double to = AS_NUM(args[1]);
 
-  RETURN_VAL(wrenNewRange(vm, from, to));
+  RETURN_VAL(wrenNewRange(vm, from, to, true));
 }
 
 DEF_NATIVE(num_dotDotDot)
 {
-  // TODO: Check arg type.
+  if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
+
   double from = AS_NUM(args[0]);
+  double to = AS_NUM(args[1]);
 
-  // TODO: Is this how we want half-open ranges to work?
-  double to = AS_NUM(args[1]) - 1;
-
-  RETURN_VAL(wrenNewRange(vm, from, to));
+  RETURN_VAL(wrenNewRange(vm, from, to, false));
 }
 
 DEF_NATIVE(object_eqeq)
@@ -560,9 +560,18 @@ DEF_NATIVE(range_max)
   RETURN_NUM(fmax(range->from, range->to));
 }
 
+DEF_NATIVE(range_isInclusive)
+{
+  ObjRange* range = AS_RANGE(args[0]);
+  RETURN_BOOL(range->isInclusive);
+}
+
 DEF_NATIVE(range_iterate)
 {
   ObjRange* range = AS_RANGE(args[0]);
+
+  // Special case: empty range.
+  if (range->from == range->to && !range->isInclusive) RETURN_FALSE;
 
   // Start the iteration.
   if (IS_NULL(args[1])) RETURN_NUM(range->from);
@@ -571,9 +580,21 @@ DEF_NATIVE(range_iterate)
 
   double iterator = AS_NUM(args[1]);
 
-  if (iterator >= range->to) RETURN_FALSE;
+  // Iterate towards [to] from [from].
+  if (range->from < range->to)
+  {
+    iterator++;
+    if (iterator > range->to) RETURN_FALSE;
+  }
+  else
+  {
+    iterator--;
+    if (iterator < range->to) RETURN_FALSE;
+  }
 
-  RETURN_NUM(AS_NUM(args[1]) + 1);
+  if (!range->isInclusive && iterator == range->to) RETURN_FALSE;
+
+  RETURN_NUM(iterator);
 }
 
 DEF_NATIVE(range_iteratorValue)
@@ -586,7 +607,8 @@ DEF_NATIVE(range_toString)
 {
   char buffer[51];
   ObjRange* range = AS_RANGE(args[0]);
-  sprintf(buffer, "%.14g..%.14g", range->from, range->to);
+  sprintf(buffer, "%.14g%s%.14g", range->from,
+          range->isInclusive ? ".." : "...", range->to);
   RETURN_VAL(wrenNewString(vm, buffer, strlen(buffer)));
 }
 
@@ -811,6 +833,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->rangeClass, "to", range_to);
   NATIVE(vm->rangeClass, "min", range_min);
   NATIVE(vm->rangeClass, "max", range_max);
+  NATIVE(vm->rangeClass, "isInclusive", range_isInclusive);
   NATIVE(vm->rangeClass, "iterate ", range_iterate);
   NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
   NATIVE(vm->rangeClass, "toString", range_toString);
