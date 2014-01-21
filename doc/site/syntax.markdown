@@ -11,13 +11,13 @@ bytecode for efficiency, but that's an implementation detail).
 
 Line comments start with `//` and end at the end of the line:
 
-    :::wren
+    :::dart
     // This is a comment.
 
 Block comments start with `/*` and end with `*/`. They can span multiple lines
 or be within a single one. Unlike C, block comments can nest in Wren:
 
-    :::wren
+    :::dart
     /* This is /* a nested */ comment. */
 
 ## Reserved Words
@@ -25,7 +25,7 @@ or be within a single one. Unlike C, block comments can nest in Wren:
 Some people like to see all of the reserved words in a programming language in
 one lump. If you're one of those folks, here you go:
 
-    :::wren
+    :::dart
     break class else false fn for if in is
     null return static this true var while
 
@@ -36,7 +36,7 @@ languages in the C tradition. However, Wren treats newlines as equivalent
 to a semicolon whenever it makes sense. In practice, this means you almost
 never write `;` unless you want to cram a bunch of statements on one line.
 
-    :::wren
+    :::dart
     // Two statements:
     io.write("hi")
     io.write("bye")
@@ -46,7 +46,7 @@ newline as a semicolon would trip things up. To handle that, Wren has a very
 simple rule. It ignores a newline following any token that can't end a
 statement. Specifically, that means any of these:
 
-    :::wren
+    :::dart
     ( [ { . , * / % + - | || & && ! ~ = < > <= >= == !=
     class else if is static var while
 
@@ -58,7 +58,7 @@ there, don't worry, you should be fine here.
 
 Identifiers are similar to other programming languages. They start with a letter or underscore and may contain letters, digits, and underscores. Case is sensitive.
 
-    :::wren
+    :::dart
     hi
     camelCase
     PascalCase
@@ -77,4 +77,4 @@ type test. The left operand is an object and the right operand is a class. It
 evaluates to `true` if the object is an instance of the class (or one of its
 subclasses).
 
-**TODO: blocks, assignment, functions, lists, maps**
+**TODO: blocks, assignment, maps**

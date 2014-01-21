@@ -1,12 +1,13 @@
 ^title Looping
 
-It's hard to write a useful program without executing some chunk of code repeatedly. To do that in Wren, you use looping statements. There are two in Wren, and they should be familiar if you've used other imperative languages.
+It's hard to write a useful program without executing some chunk of code repeatedly. To do that, you use looping statements. There are two in Wren, and they should be familiar if you've used other imperative languages.
 
 ## While statements
 
 A `while` statement executes a chunk of code as long as a condition continues to hold. For example:
 
-    :::wren
+    :::dart
+    // Hailstone sequence.
     var n = 27
     while (n != 1) {
       if (n % 2 == 0) {
@@ -16,20 +17,21 @@ A `while` statement executes a chunk of code as long as a condition continues to
       }
     }
 
-This evaluates the expression `n != 1`. If it is [truthy](flow-control.html), then it executes the body: `n = 3 * n + 1`. After that, it loops back to the top, and evaluates the condition again. It keeps doing this as long as the condition is evaluates to something truthy.
+This evaluates the expression `n != 1`. If it is [true](branching.html), then it executes the following body. After that, it loops back to the top, and evaluates the condition again. It keeps doing this as long as the condition evaluates to something true.
 
 The condition for a while loop can be any expression, and must be surrounded by parentheses. The body of the loop is usually a curly block but can also be a single statement:
 
-    :::wren
+    :::dart
     var n = 27
     while (n != 1) if (n % 2 == 0) n = n / 2 else n = 3 * n + 1
 
 ## For statements
 
-While statements are useful when you want to loop indefinitely or according to some complex condition. But in most cases, you're looping through a [list](lists.html) or some other "sequence" object, or you're terating through a range of numbers. That's what `for` is for. It looks like this:
+While statements are useful when you want to loop indefinitely or according to some complex condition. But in most cases, you're looping through a [list](lists.html), a series of numbers, or some other "sequence" object. That's what `for` is for. It looks like this:
 
+    :::dart
     for (beatle in ["george", "john", "paul", "ringo"]) {
-      IO.write(beatle)
+      IO.print(beatle)
     }
 
 A `for` loop has three components:
@@ -40,50 +42,58 @@ A `for` loop has three components:
 
 3. A *body*. This is a curly block or a single statement. It gets executed once for each iteration of the loop.
 
+### Numeric ranges
+
+As you can see, a `for` loop works with lists. To loop over a range of consecutive integers, or loop a fixed number of times, you can use a *range* expression, like so:
+
+    :::dart
+    for (i in 1..100) {
+      IO.print(i)
+    }
+
+This will loop over the numbers from 1 to 100, including 100 itself. If you want to leave off the last value, use three dots instead of two:
+
+    :::dart
+    for (i in 1...100) {
+      IO.print(i)
+    }
+
+This looks like some special "range" syntax in the `for` loop, but it's actually just a pair of operators. The `..` and `...` syntax are infix "range" operators. Like [other operators](method-calls.html), they are just special syntax for a regular method call.
+
+The number type implements them and returns instances of a `Range` class. That class in turn knows how to iterate over a series of numbers.
+
 ### The iterator protocol
 
-It's important to be able to use looping constructs over user-defined sequence-like objects and not just built-in lists. To make that happen, the semantics of a `for` are defined in terms of an "iterator protocol". The loop itself doesn't know anything about lists or numbers, it just knows how to call two particular methods on the object that resulted from evaluating the sequence expression.
+Lists and ranges cover the two most common kinds of loops, but you should also be able to walk over your own sequence-like objects. To enable that, the semantics of a `for` are defined in terms of an "iterator protocol". The loop itself doesn't know anything about lists or ranges, it just knows how to call two particular methods on the object that resulted from evaluating the sequence expression.
 
-It works like this. First Wren evaluates the sequence expression and stores it in a hidden variable. In our example, it will just be the list object. It also creates a hidden "iterator" variable an initializes it to `null`.
+It works like this. First Wren evaluates the sequence expression and stores it in a hidden variable. In the first example, it will just be the list object. It also creates a hidden "iterator" variable and initializes it to `null`.
 
-At the beginning of each iteration, it calls `iterate()` on the sequence, and passes in the iterator. So in the first iteration, it always passes in `null`. The sequence's job is to take that iterator and advance it to the next element in the sequence (or, in the case where it's `null`, to advance it to the *first* element). It then returns either the new iterator, or `false` to indicate that there are no more elements.
+At the beginning of each iteration, it calls `iterate()` on the sequence, and passes in the iterator. (So in the first iteration, it always passes in `null`.) The sequence's job is to take that iterator and advance it to the next element in the sequence (or, in the case where it's `null`, to advance it to the *first* element). It then returns either the new iterator, or `false` to indicate that there are no more elements.
 
-If `false` is returned, Wren exits out of the loop and we're done. If anything else is returned, that means that we have advanced to a new valid element. To get that, Wren then calls `iteratorValue()` on the sequence and passes in that iterator value that it just got from the sequence. The sequence uses that to look up and return the appropriate element.
+If `false` is returned, Wren exits out of the loop and we're done. If anything else is returned, that means that we have advanced to a new valid element. To get that, Wren then calls `iteratorValue()` on the sequence and passes in the iterator value that it just got from calling `iterate()`. The sequence uses that to look up and return the appropriate element.
 
-In other words, from Wren's perspective, the above loop looks something like this:
+In other words, from Wren's perspective, the example loop looks something like this:
 
+    :::dart
     {
       var iter_
       var seq_ = ["george", "john", "paul", "ringo"]
       while (iter_ = seq_.iterate(iter_)) {
         var beatle = seq_.iteratorValue(iter_)
-        IO.write(beatle)
+        IO.print(beatle)
       }
     }
 
-The built-in list type implements `iterate()` and `iteratorValue()` to walk over the list elements. You can implement the same methods in your classes to make your own types iterable.
-
-### Numeric ranges
-
-That just leaves iterating over numbers. Often you want to do something a fixed number of times, or with one of each of a range of consecutive numbers. In Wren, that looks like this:
-
-    for (i in 1..100) {
-      IO.write(i)
-    }
-
-This looks like some special range support in the `for` statement, but it's actually just the iterator protocol all over again. The `..` is a "range" operator. Like all other operators in Wren, it's just syntax for a method call. In this case, we're calling `..` on `1` and passing in `100`. The above example could just as well be written:
-
-    var nums = 1..100
-    for (i in nums) IO.write(i)
-
-The number class implements the `..` method and returns a `Range` object. This is just a simple data structure that tracks a minimum and maximum (here `1` and `100`). The range class implements `iterate()` and `iteratorValue()` to generate a series of consecutive numbers.
-
-If you don't want to execute the body of the loop for the last value, you can use `...` instead to get a half-open interval:
-
-    for (i in 1...100) {
-      IO.write(i)
-    }
-
-This will print up to `99`, but not `100`.
+The built-in List and Range types implement `iterate()` and `iteratorValue()` to walk over their respective sequences. You can implement the same methods in your classes to make your own types iterable.
 
 ## Break statements
+
+Sometimes, right in the middle of a loop body, you decide you want to bail out and stop. To do that, you can use a `break` statement. It's just the `break` keyword all by itself. That will immediately exit out of the nearest enclosing `while` or `for` loop.
+
+    :::dart
+    for (i in [1, 2, 3, 4]) {
+      IO.print(i)
+      if (i == 3) break
+    }
+
+So this program will print the numbers from 1 to 3, but will not print 4.
