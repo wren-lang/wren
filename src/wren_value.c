@@ -531,34 +531,9 @@ bool wrenIsBool(Value value)
   #endif
 }
 
-bool wrenIsClosure(Value value)
+bool wrenIsObjType(Value value, ObjType type)
 {
-  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_CLOSURE;
-}
-
-bool wrenIsFiber(Value value)
-{
-  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_FIBER;
-}
-
-bool wrenIsFn(Value value)
-{
-  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_FN;
-}
-
-bool wrenIsInstance(Value value)
-{
-  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_INSTANCE;
-}
-
-bool wrenIsRange(Value value)
-{
-  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_RANGE;
-}
-
-bool wrenIsString(Value value)
-{
-  return IS_OBJ(value) && AS_OBJ(value)->type == OBJ_STRING;
+  return IS_OBJ(value) && AS_OBJ(value)->type == type;
 }
 
 extern Value wrenObjectToValue(Obj* obj);

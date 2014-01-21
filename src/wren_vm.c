@@ -1047,17 +1047,21 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(IS):
     {
-      // TODO: What if classObj is not a class?
-      ObjClass* expected = AS_CLASS(POP());
-      Value obj = POP();
+      Value expected = POP();
+      if (!IS_CLASS(expected))
+      {
+        STORE_FRAME();
+        runtimeError(vm, fiber, "Right operand must be a class.");
+        return false;
+      }
 
-      ObjClass* actual = wrenGetClass(vm, obj);
+      ObjClass* actual = wrenGetClass(vm, POP());
       bool isInstance = false;
 
       // Walk the superclass chain looking for the class.
       while (actual != NULL)
       {
-        if (actual == expected)
+        if (actual == AS_CLASS(expected))
         {
           isInstance = true;
           break;

@@ -363,20 +363,23 @@ typedef struct
 // Returns true if [value] is a bool.
 #define IS_BOOL(value) (wrenIsBool(value))
 
+// Returns true if [value] is a class.
+#define IS_CLASS(value) (wrenIsObjType(value, OBJ_CLASS))
+
 // Returns true if [value] is a closure.
-#define IS_CLOSURE(value) (wrenIsClosure(value))
+#define IS_CLOSURE(value) (wrenIsObjType(value, OBJ_CLOSURE))
 
 // Returns true if [value] is a function object.
-#define IS_FN(value) (wrenIsFn(value))
+#define IS_FN(value) (wrenIsObjType(value, OBJ_FN))
 
 // Returns true if [value] is an instance.
-#define IS_INSTANCE(value) (wrenIsInstance(value))
+#define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE))
 
 // Returns true if [value] is a range object.
-#define IS_RANGE(value) (wrenIsRange(value))
+#define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))
 
 // Returns true if [value] is a string object.
-#define IS_STRING(value) (wrenIsString(value))
+#define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))
 
 
 // An IEEE 754 double-precision float is a 64-bit value with bits laid out like:
@@ -591,12 +594,7 @@ void wrenPrintValue(Value value);
 
 // TODO: Can these be inlined?
 bool wrenIsBool(Value value);
-bool wrenIsClosure(Value value);
-bool wrenIsFiber(Value value);
-bool wrenIsFn(Value value);
-bool wrenIsInstance(Value value);
-bool wrenIsRange(Value value);
-bool wrenIsString(Value value);
+bool wrenIsObjType(Value value, ObjType type);
 
 inline Value wrenObjectToValue(Obj* obj)
 {
