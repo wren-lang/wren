@@ -130,6 +130,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   fiber->numFrames = 1;
   fiber->openUpvalues = NULL;
   fiber->caller = NULL;
+  fiber->error = NULL;
 
   CallFrame* frame = &fiber->frames[0];
   frame->fn = fn;
@@ -356,6 +357,13 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
     case OBJ_CLASS:
       wrenMethodBufferClear(vm, &((ObjClass*)obj)->methods);
       break;
+
+    case OBJ_FIBER:
+    {
+      ObjFiber* fiber = ((ObjFiber*)obj);
+      if (fiber->error != NULL) wrenReallocate(vm, fiber->error, 0, 0);
+      break;
+    }
 
     case OBJ_FN:
     {

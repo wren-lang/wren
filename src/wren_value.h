@@ -156,6 +156,10 @@ typedef struct sObjFiber
   // The fiber that ran this one. If this fiber is yielded, control will resume
   // to this one. May be `NULL`.
   struct sObjFiber* caller;
+
+  // If the fiber failed because of a runtime error, this will contain the
+  // error message. Otherwise, it will be NULL.
+  char* error;
 } ObjFiber;
 
 typedef enum

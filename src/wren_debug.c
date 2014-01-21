@@ -2,11 +2,9 @@
 
 #include "wren_debug.h"
 
-void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber, Value error)
+void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
 {
-  // TODO: Handle error not being a string!
-  const char* errorMessage = AS_CSTRING(error);
-  fprintf(stderr, "%s\n", errorMessage);
+  fprintf(stderr, "%s\n", fiber->error);
 
   for (int i = fiber->numFrames - 1; i >= 0; i--)
   {

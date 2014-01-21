@@ -237,6 +237,10 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
 
   // The caller.
   if (fiber->caller != NULL) markFiber(vm, fiber->caller);
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjFiber);
+  // TODO: Count size of error message buffer.
 }
 
 static void markClosure(WrenVM* vm, ObjClosure* closure)
@@ -367,6 +371,8 @@ static void collectGarbage(WrenVM* vm)
     {
       // This object was reached, so unmark it (for the next GC) and move on to
       // the next.
+      // TODO: Can optimize this by rotating which value means "marked" after
+      // each GC. Then we don't need to clear it here.
       (*obj)->flags &= ~FLAG_MARKED;
       obj = &(*obj)->next;
     }
@@ -511,37 +517,43 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
   }
 }
 
-static void methodNotFound(WrenVM* vm, ObjFiber* fiber, Value* receiver,
-                           int symbol)
+// Puts [fiber] into a runtime failed state because of [error].
+static void runtimeError(WrenVM* vm, ObjFiber* fiber, const char* error)
 {
-  // TODO: Tune size.
-  char message[200];
+  // Copy the error onto the heap.
+  size_t length = strlen(error) + 1;
+  char* heapError = wrenReallocate(vm, NULL, 0, length);
+  strncpy(heapError, error, length);
 
-  // TODO: Include receiver in message.
-  snprintf(message, 200, "Receiver does not implement method '%s'.",
-           vm->methods.names.data[symbol]);
+  ASSERT(fiber->error == NULL, "Can only fail once.");
+  fiber->error = heapError;
 
-  // Store the error message in the receiver slot so that it's on the fiber's
-  // stack and doesn't get garbage collected.
-  *receiver = wrenNewString(vm, message, strlen(message));
-
-  wrenDebugPrintStackTrace(vm, fiber, *receiver);
+  // TODO: If the calling fiber is going to handle the error, we shouldn't dump
+  // a stack trace.
+  wrenDebugPrintStackTrace(vm, fiber);
 }
 
-static void tooManyInheritedFields(WrenVM* vm, ObjFiber* fiber, Value* slot)
+static void methodNotFound(WrenVM* vm, ObjFiber* fiber, int symbol)
 {
-  // TODO: Tune size.
-  char message[200];
+  char message[100];
+
+  // TODO: Include receiver in message.
+  snprintf(message, 100, "Receiver does not implement method '%s'.",
+           vm->methods.names.data[symbol]);
+
+  runtimeError(vm, fiber, message);
+}
+
+static void tooManyInheritedFields(WrenVM* vm, ObjFiber* fiber)
+{
+  char message[100];
 
   // TODO: Include class name in message. Mention inheritance.
-  snprintf(message, 200,
+  snprintf(message, 100,
       "A class may not have more than %d fields, including inherited ones.",
       MAX_FIELDS);
 
-  // Store the error message in the receiver slot so that it's on the fiber's
-  // stack and doesn't get garbage collected.
-  *slot = wrenNewString(vm, message, strlen(message));
-  wrenDebugPrintStackTrace(vm, fiber, *slot);
+  runtimeError(vm, fiber, message);
 }
 
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
@@ -745,8 +757,7 @@ static bool runInterpreter(WrenVM* vm)
       if (classObj->methods.count < symbol)
       {
         STORE_FRAME();
-        methodNotFound(vm, fiber, &fiber->stack[fiber->stackSize - numArgs],
-                       symbol);
+        methodNotFound(vm, fiber, symbol);
         return false;
       }
 
@@ -768,7 +779,7 @@ static bool runInterpreter(WrenVM* vm)
 
             case PRIM_ERROR:
               STORE_FRAME();
-              wrenDebugPrintStackTrace(vm, fiber, args[0]);
+              runtimeError(vm, fiber, AS_CSTRING(args[0]));
               return false;
 
             case PRIM_CALL:
@@ -800,8 +811,7 @@ static bool runInterpreter(WrenVM* vm)
 
         case METHOD_NONE:
           STORE_FRAME();
-          methodNotFound(vm, fiber, &fiber->stack[fiber->stackSize - numArgs],
-                         symbol);
+          methodNotFound(vm, fiber, symbol);
           return false;
       }
       DISPATCH();
@@ -853,8 +863,7 @@ static bool runInterpreter(WrenVM* vm)
       if (classObj->methods.count < symbol)
       {
         STORE_FRAME();
-        methodNotFound(vm, fiber, &fiber->stack[fiber->stackSize - numArgs],
-                       symbol);
+        methodNotFound(vm, fiber, symbol);
         return false;
       }
 
@@ -876,7 +885,7 @@ static bool runInterpreter(WrenVM* vm)
 
             case PRIM_ERROR:
               STORE_FRAME();
-              wrenDebugPrintStackTrace(vm, fiber, args[0]);
+              runtimeError(vm, fiber, AS_CSTRING(args[0]));
               return false;
 
             case PRIM_CALL:
@@ -906,8 +915,7 @@ static bool runInterpreter(WrenVM* vm)
 
         case METHOD_NONE:
           STORE_FRAME();
-          methodNotFound(vm, fiber, &fiber->stack[fiber->stackSize - numArgs],
-                         symbol);
+          methodNotFound(vm, fiber, symbol);
           return false;
       }
       DISPATCH();
@@ -1193,7 +1201,7 @@ static bool runInterpreter(WrenVM* vm)
       if (superclass->numFields + numFields > MAX_FIELDS)
       {
         STORE_FRAME();
-        tooManyInheritedFields(vm, fiber, &fiber->stack[fiber->stackSize - 1]);
+        tooManyInheritedFields(vm, fiber);
         return false;
       }
       

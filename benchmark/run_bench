@@ -135,10 +135,15 @@ def run_benchmark_language(benchmark, language):
 
 def run_benchmark(benchmark, languages):
   """Runs one benchmark for the given languages (or all of them)."""
+  num_languages = 0
   for language in LANGUAGES:
     if not languages or language[0] in languages:
+      num_languages += 1
       run_benchmark_language(benchmark, language)
-  graph_results()
+
+  if num_languages > 1:
+    graph_results()
+
   del results[0:len(results)]
 
 
