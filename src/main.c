@@ -69,6 +69,13 @@ static int runRepl(WrenVM* vm)
     char line[MAX_LINE];
     fgets(line, MAX_LINE, stdin);
 
+    // If stdin was closed (usually meaning the used entered Ctrl-D), exit.
+    if (feof(stdin))
+    {
+      printf("\n");
+      return 0;
+    }
+
     // TODO: Handle failure.
     wrenInterpret(vm, "(repl)", line);
     // TODO: Figure out how this should work with wren API.
