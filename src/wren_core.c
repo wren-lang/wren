@@ -61,7 +61,6 @@ const char* coreLibSource =
 "    for (i in 0...this.count) {\n"
 "      if (i > 0) result = result + \", \"\n"
 "      result = result + this[i].toString\n"
-"      i = i + 1\n"
 "    }\n"
 "    result = result + \"]\"\n"
 "    return result\n"
