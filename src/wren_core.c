@@ -436,35 +436,30 @@ DEF_NATIVE(num_divide)
 DEF_NATIVE(num_mod)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  if (!IS_NUM(args[1])) RETURN_NULL;
   RETURN_NUM(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_NATIVE(num_lt)
 {
-  // TODO: Error on wrong argument type.
-  if (!IS_NUM(args[1])) RETURN_NULL;
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_BOOL(AS_NUM(args[0]) < AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_gt)
 {
-  // TODO: Error on wrong argument type.
-  if (!IS_NUM(args[1])) RETURN_NULL;
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_BOOL(AS_NUM(args[0]) > AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_lte)
 {
-  // TODO: Error on wrong argument type.
-  if (!IS_NUM(args[1])) RETURN_NULL;
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_BOOL(AS_NUM(args[0]) <= AS_NUM(args[1]));
 }
 
 DEF_NATIVE(num_gte)
 {
-  // TODO: Error on wrong argument type.
-  if (!IS_NUM(args[1])) RETURN_NULL;
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_BOOL(AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
