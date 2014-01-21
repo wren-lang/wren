@@ -272,10 +272,6 @@ struct WrenVM
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
-// Mark [value] as reachable and still in use. This should only be called
-// during the sweep phase of a garbage collection.
-void wrenMarkObj(WrenVM* vm, Obj* obj);
-
 // Sets the current Compiler being run to [compiler].
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler);
 

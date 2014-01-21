@@ -343,6 +343,210 @@ Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
   return upvalue;
 }
 
+// Sets the mark flag on [obj]. Returns true if it was already set so that we
+// can avoid recursing into already-processed objects. That ensures we don't
+// crash on an object cycle.
+static bool setMarkedFlag(Obj* obj)
+{
+  if (obj->flags & FLAG_MARKED) return true;
+  obj->flags |= FLAG_MARKED;
+  return false;
+}
+
+static void markClass(WrenVM* vm, ObjClass* classObj)
+{
+  if (setMarkedFlag(&classObj->obj)) return;
+
+  // The metaclass.
+  if (classObj->metaclass != NULL) markClass(vm, classObj->metaclass);
+
+  // The superclass.
+  if (classObj->superclass != NULL) markClass(vm, classObj->superclass);
+
+  // Method function objects.
+  for (int i = 0; i < classObj->methods.count; i++)
+  {
+    if (classObj->methods.data[i].type == METHOD_BLOCK)
+    {
+      wrenMarkObj(vm, classObj->methods.data[i].fn);
+    }
+  }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjClass);
+  vm->bytesAllocated += classObj->methods.capacity * sizeof(Method);
+}
+
+static void markFn(WrenVM* vm, ObjFn* fn)
+{
+  if (setMarkedFlag(&fn->obj)) return;
+
+  // Mark the constants.
+  for (int i = 0; i < fn->numConstants; i++)
+  {
+    wrenMarkValue(vm, fn->constants[i]);
+  }
+
+  wrenMarkObj(vm, (Obj*)fn->debug->sourcePath);
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjFn);
+  vm->bytesAllocated += sizeof(uint8_t) * fn->bytecodeLength;
+  vm->bytesAllocated += sizeof(Value) * fn->numConstants;
+
+  // The debug line number buffer.
+  vm->bytesAllocated += sizeof(int) * fn->bytecodeLength;
+
+  // TODO: What about the function name?
+}
+
+static void markInstance(WrenVM* vm, ObjInstance* instance)
+{
+  if (setMarkedFlag(&instance->obj)) return;
+
+  markClass(vm, instance->classObj);
+
+  // Mark the fields.
+  for (int i = 0; i < instance->classObj->numFields; i++)
+  {
+    wrenMarkValue(vm, instance->fields[i]);
+  }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjInstance);
+  vm->bytesAllocated += sizeof(Value) * instance->classObj->numFields;
+}
+
+static void markList(WrenVM* vm, ObjList* list)
+{
+  if (setMarkedFlag(&list->obj)) return;
+
+  // Mark the elements.
+  Value* elements = list->elements;
+  for (int i = 0; i < list->count; i++)
+  {
+    wrenMarkValue(vm, elements[i]);
+  }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjList);
+  if (list->elements != NULL)
+  {
+    vm->bytesAllocated += sizeof(Value) * list->capacity;
+  }
+}
+
+static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
+{
+  // This can happen if a GC is triggered in the middle of initializing the
+  // closure.
+  if (upvalue == NULL) return;
+
+  if (setMarkedFlag(&upvalue->obj)) return;
+
+  // Mark the closed-over object (in case it is closed).
+  wrenMarkValue(vm, upvalue->closed);
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(Upvalue);
+}
+
+static void markFiber(WrenVM* vm, ObjFiber* fiber)
+{
+  if (setMarkedFlag(&fiber->obj)) return;
+
+  // Stack functions.
+  for (int i = 0; i < fiber->numFrames; i++)
+  {
+    wrenMarkObj(vm, fiber->frames[i].fn);
+  }
+
+  // Stack variables.
+  for (int i = 0; i < fiber->stackSize; i++)
+  {
+    wrenMarkValue(vm, fiber->stack[i]);
+  }
+
+  // Open upvalues.
+  Upvalue* upvalue = fiber->openUpvalues;
+  while (upvalue != NULL)
+  {
+    markUpvalue(vm, upvalue);
+    upvalue = upvalue->next;
+  }
+
+  // The caller.
+  if (fiber->caller != NULL) markFiber(vm, fiber->caller);
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjFiber);
+  // TODO: Count size of error message buffer.
+}
+
+static void markClosure(WrenVM* vm, ObjClosure* closure)
+{
+  if (setMarkedFlag(&closure->obj)) return;
+
+  // Mark the function.
+  markFn(vm, closure->fn);
+
+  // Mark the upvalues.
+  for (int i = 0; i < closure->fn->numUpvalues; i++)
+  {
+    Upvalue* upvalue = closure->upvalues[i];
+    markUpvalue(vm, upvalue);
+  }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjClosure);
+  vm->bytesAllocated += sizeof(Upvalue*) * closure->fn->numUpvalues;
+}
+
+static void markString(WrenVM* vm, ObjString* string)
+{
+  if (setMarkedFlag(&string->obj)) return;
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjString);
+  // TODO: O(n) calculation here is lame!
+  vm->bytesAllocated += strlen(string->value);
+}
+
+void wrenMarkObj(WrenVM* vm, Obj* obj)
+{
+#if WREN_TRACE_MEMORY
+  static int indent = 0;
+  indent++;
+  for (int i = 0; i < indent; i++) printf("  ");
+  printf("mark ");
+  wrenPrintValue(OBJ_VAL(obj));
+  printf(" @ %p\n", obj);
+#endif
+
+  // Traverse the object's fields.
+  switch (obj->type)
+  {
+    case OBJ_CLASS:    markClass(   vm, (ObjClass*)   obj); break;
+    case OBJ_CLOSURE:  markClosure( vm, (ObjClosure*) obj); break;
+    case OBJ_FIBER:    markFiber(   vm, (ObjFiber*)   obj); break;
+    case OBJ_FN:       markFn(      vm, (ObjFn*)      obj); break;
+    case OBJ_INSTANCE: markInstance(vm, (ObjInstance*)obj); break;
+    case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
+    case OBJ_RANGE:    setMarkedFlag(obj); break;
+    case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
+    case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
+  }
+
+#if WREN_TRACE_MEMORY
+  indent--;
+#endif
+}
+
+void wrenMarkValue(WrenVM* vm, Value value)
+{
+  if (!IS_OBJ(value)) return;
+  wrenMarkObj(vm, AS_OBJ(value));
+}
 
 void wrenFreeObj(WrenVM* vm, Obj* obj)
 {

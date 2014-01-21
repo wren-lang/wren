@@ -237,9 +237,8 @@ typedef struct
 
 typedef enum
 {
-  // TODO: Unify these three:
-
-  // A primitive method implemented in C that immediately returns a value.
+  // A primitive method implemented in C in the VM. Unlike foreign methods,
+  // this can directly manipulate the fiber's stack.
   METHOD_PRIMITIVE,
 
   // A externally-defined C method.
@@ -577,6 +576,14 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 
 // Creates a new open upvalue pointing to [value] on the stack.
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
+
+// Mark [value] as reachable and still in use. This should only be called
+// during the sweep phase of a garbage collection.
+void wrenMarkValue(WrenVM* vm, Value value);
+
+// Mark [obj] as reachable and still in use. This should only be called
+// during the sweep phase of a garbage collection.
+void wrenMarkObj(WrenVM* vm, Obj* obj);
 
 // Releases all memory owned by [obj], including [obj] itself.
 void wrenFreeObj(WrenVM* vm, Obj* obj);
