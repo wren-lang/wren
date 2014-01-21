@@ -18,9 +18,3 @@ IO.print(true) && // expect: true
 // Swallow a trailing newline.
 IO.print(true &&
     true) // expect: true
-
-// Only false is falsy.
-IO.print(0 && true) // expect: true
-IO.print(null && true) // expect: true
-IO.print("" && true) // expect: true
-IO.print(false && true) // expect: false

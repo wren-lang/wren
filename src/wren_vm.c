@@ -997,9 +997,7 @@ static bool runInterpreter(WrenVM* vm)
       int offset = READ_SHORT();
       Value condition = POP();
 
-      // False is the only falsey value.
-      // TODO: Null should be falsey too.
-      if (IS_FALSE(condition)) ip += offset;
+      if (IS_FALSE(condition) || IS_NULL(condition)) ip += offset;
       DISPATCH();
     }
 
@@ -1008,17 +1006,15 @@ static bool runInterpreter(WrenVM* vm)
       int offset = READ_SHORT();
       Value condition = PEEK();
 
-      // False is the only falsey value.
-      // TODO: Null should be falsey too.
-      if (!IS_FALSE(condition))
-      {
-        // Discard the condition and evaluate the right hand side.
-        POP();
-      }
-      else
+      if (IS_FALSE(condition) || IS_NULL(condition))
       {
         // Short-circuit the right hand side.
         ip += offset;
+      }
+      else
+      {
+        // Discard the condition and evaluate the right hand side.
+        POP();
       }
       DISPATCH();
     }
@@ -1028,9 +1024,7 @@ static bool runInterpreter(WrenVM* vm)
       int offset = READ_SHORT();
       Value condition = PEEK();
 
-      // False is the only falsey value.
-      // TODO: Null should be falsey too.
-      if (IS_FALSE(condition))
+      if (IS_FALSE(condition) || IS_NULL(condition))
       {
         // Discard the condition and evaluate the right hand side.
         POP();

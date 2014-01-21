@@ -1,8 +1,5 @@
 var fib = fn(n) {
-  if (n < 2) {
-    return n
-  }
-
+  if (n < 2) return n
   return fib.call(n - 1) + fib.call(n - 2)
 }
 
