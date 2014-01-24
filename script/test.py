@@ -8,29 +8,9 @@ from subprocess import Popen, PIPE
 import sys
 
 # Runs the tests.
-WREN_DIR = dirname(realpath(__file__))
+WREN_DIR = dirname(dirname(realpath(__file__)))
 TEST_DIR = join(WREN_DIR, 'test')
-
-if sys.platform == 'win32':
-  WREN_APP = join(WREN_DIR, 'Debug', 'wren.exe')
-  if not isfile(WREN_DIR):
-    WREN_APP = join(WREN_DIR, 'Release', 'wren.exe')
-  if not isfile(WREN_APP):
-    sys.exit('Cannot find wren.exe!')
-elif sys.platform.startswith('linux'):
-  WREN_APP = join(WREN_DIR, '1', 'out', 'Debug', 'wren')
-  if not isfile(WREN_APP):
-    WREN_APP = join(WREN_DIR, '1', 'out', 'Release', 'wren')
-  if not isfile(WREN_APP):
-    sys.exit('Cannot find wren!')
-elif sys.platform.startswith('darwin'):
-  WREN_APP = join(WREN_DIR, 'build', 'Debug', 'wren')
-  if not isfile(WREN_APP):
-    WREN_APP = join(WREN_DIR, 'build', 'Release', 'wren')
-  if not isfile(WREN_APP):
-    sys.exit('Cannot find wren!')
-else:
-  sys.exit('System not supported!')
+WREN_APP = join(WREN_DIR, 'wrend')
 
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error')

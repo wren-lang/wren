@@ -1,5 +1,9 @@
-# Output directory.
+# Intermediate files directory.
 build/
+
+# Built applications.
+wren
+wrend
 
 # XCode user-specific stuff.
 xcuserdata/

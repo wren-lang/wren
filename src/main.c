@@ -9,9 +9,6 @@
 // This is the source file for the standalone command line interpreter. It is
 // not needed if you are embedding Wren in an application.
 
-// TODO: Don't hardcode this.
-#define MAX_LINE 1024
-
 static void failIf(bool condition, int exitCode, const char* format, ...)
 {
   if (!condition) return;
@@ -66,8 +63,10 @@ static int runRepl(WrenVM* vm)
   for (;;)
   {
     printf("> ");
-    char line[MAX_LINE];
-    fgets(line, MAX_LINE, stdin);
+
+    char* line = NULL;
+    size_t size = 0;
+    getline(&line, &size, stdin);
 
     // If stdin was closed (usually meaning the used entered Ctrl-D), exit.
     if (feof(stdin))
@@ -77,7 +76,10 @@ static int runRepl(WrenVM* vm)
     }
 
     // TODO: Handle failure.
-    wrenInterpret(vm, "(repl)", line);
+    wrenInterpret(vm, "Prompt", line);
+
+    free(line);
+
     // TODO: Figure out how this should work with wren API.
     /*
     ObjFn* fn = compile(vm, line);

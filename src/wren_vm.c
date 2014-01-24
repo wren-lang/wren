@@ -478,7 +478,8 @@ static bool runInterpreter(WrenVM* vm)
     &&code_CLASS,
     &&code_SUBCLASS,
     &&code_METHOD_INSTANCE,
-    &&code_METHOD_STATIC
+    &&code_METHOD_STATIC,
+    &&code_END
   };
 
   #define INTERPRET_LOOP    DISPATCH();
@@ -1022,7 +1023,8 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(END):
       // A CODE_END should always be preceded by a CODE_RETURN. If we get here,
       // the compiler generated wrong code.
-      ASSERT(0, "Should not execute past end of bytecode.");
+      UNREACHABLE();
+      DISPATCH();
   }
 
   ASSERT(0, "Should not reach end of interpret.");

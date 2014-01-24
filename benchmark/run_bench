@@ -3,9 +3,14 @@
 import argparse
 import math
 import os
+import os.path
 import re
 import subprocess
 import sys
+
+# Runs the tests.
+WREN_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+BENCHMARK_DIR = os.path.join(WREN_DIR, 'benchmark')
 
 # How many times to run a given benchmark.
 NUM_TRIALS = 10
@@ -36,9 +41,8 @@ BENCHMARK("method_call", r"""true
 false""")
 
 LANGUAGES = [
-  ("wren",           ["../build/Release/wren"], ".wren"),
+  ("wren",           ["../wren"], ".wren"),
   ("lua",            ["lua"],                   ".lua"),
-#  ("luajit",          ["luajit"],                ".lua"),
   ("luajit (-joff)", ["luajit", "-joff"],       ".lua"),
   ("python",         ["python"],                ".py"),
   ("ruby",           ["ruby"],                  ".rb")
@@ -75,7 +79,7 @@ def run_trial(benchmark, language):
   """Runs one benchmark one time for one language."""
   args = []
   args.extend(language[1])
-  args.append(benchmark[0] + language[2])
+  args.append(os.path.join(BENCHMARK_DIR, benchmark[0] + language[2]))
   out = subprocess.check_output(args, universal_newlines=True)
   match = benchmark[1].match(out)
   if match:
@@ -91,7 +95,8 @@ def run_benchmark_language(benchmark, language):
   name = "{0} - {1}".format(benchmark[0], language[0])
   print "{0:30s}".format(name),
 
-  if not os.path.exists(benchmark[0] + language[2]):
+  if not os.path.exists(os.path.join(
+      BENCHMARK_DIR, benchmark[0] + language[2])):
     print "No implementation for this language"
     return
 
