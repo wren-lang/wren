@@ -2114,8 +2114,8 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
       int constant = (bytecode[ip + 1] << 8) | bytecode[ip + 2];
       ObjFn* loadedFn = AS_FN(constants[constant]);
 
-      // There are two arguments for the constant, then one for each upvalue.
-      return 2 + loadedFn->numUpvalues;
+      // There are two bytes for the constant, then two for each upvalue.
+      return 2 + (loadedFn->numUpvalues * 2);
     }
   }
 }
