@@ -2047,8 +2047,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_CLOSE_UPVALUE:
     case CODE_RETURN:
     case CODE_NEW:
-    case CODE_CLASS:
-    case CODE_SUBCLASS:
     case CODE_END:
       return 0;
 
@@ -2063,6 +2061,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_LOAD_FIELD:
     case CODE_STORE_FIELD:
     case CODE_LIST:
+    case CODE_CLASS:
       return 1;
 
     case CODE_CONSTANT:
@@ -2422,13 +2421,14 @@ static void classDefinition(Compiler* compiler)
   if (match(compiler, TOKEN_IS))
   {
     parsePrecedence(compiler, false, PREC_CALL);
-    emit(compiler, CODE_SUBCLASS);
   }
   else
   {
     // Create the empty class.
-    emit(compiler, CODE_CLASS);
+    emit(compiler, CODE_NULL);
   }
+
+  emit(compiler, CODE_CLASS);
 
   // Store a placeholder for the number of fields argument. We don't know
   // the value until we've compiled all the methods to see which fields are

@@ -476,7 +476,6 @@ static bool runInterpreter(WrenVM* vm)
     &&code_LIST,
     &&code_CLOSURE,
     &&code_CLASS,
-    &&code_SUBCLASS,
     &&code_METHOD_INSTANCE,
     &&code_METHOD_STATIC,
     &&code_END
@@ -971,21 +970,19 @@ static bool runInterpreter(WrenVM* vm)
     }
 
     CASE_CODE(CLASS):
-    CASE_CODE(SUBCLASS):
     {
-      bool isSubclass = instruction == CODE_SUBCLASS;
       int numFields = READ_BYTE();
 
       ObjClass* superclass;
-      if (isSubclass)
-      {
-        // TODO: Handle the superclass not being a class object!
-        superclass = AS_CLASS(PEEK());
-      }
-      else
+      if (IS_NULL(PEEK()))
       {
         // Implicit Object superclass.
         superclass = vm->objectClass;
+      }
+      else
+      {
+        // TODO: Handle the superclass not being a class object!
+        superclass = AS_CLASS(PEEK());
       }
 
       ObjClass* classObj = wrenNewClass(vm, superclass, numFields);
@@ -1001,7 +998,7 @@ static bool runInterpreter(WrenVM* vm)
       
       // Don't pop the superclass off the stack until the subclass is done
       // being created, to make sure it doesn't get collected.
-      if (isSubclass) POP();
+      POP();
       
       PUSH(OBJ_VAL(classObj));
       DISPATCH();

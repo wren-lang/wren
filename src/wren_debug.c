@@ -26,8 +26,12 @@ void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
   }
 }
 
-static void printLine(ObjFn* fn, int i, int* lastLine)
+static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 {
+  int start = i;
+  uint8_t* bytecode = fn->bytecode;
+  Code code = bytecode[i];
+
   int line = fn->debug->sourceLines[i];
   if (lastLine == NULL || *lastLine != line)
   {
@@ -38,32 +42,24 @@ static void printLine(ObjFn* fn, int i, int* lastLine)
   {
     printf("     ");
   }
-}
 
-static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
-{
-  int start = i;
-  uint8_t* bytecode = fn->bytecode;
-  Code code = bytecode[i++];
+  printf(" %04d  ", i++);
 
-  printLine(fn, i, lastLine);
-  printf(" %04d  ", i);
+  #define READ_BYTE() (bytecode[i++])
+  #define READ_SHORT() (i += 2, (bytecode[i - 2] << 8) | bytecode[i - 1])
 
-  #define PRINT_ARG \
-      printLine(fn, i, lastLine); printf(" %04d    ", ++i); printf
+  #define BYTE_INSTRUCTION(name) \
+      printf("%-16s %5d\n", name, READ_BYTE()); \
+      break; \
 
-  // TODO: Come up with a cleaner way of displaying 16-bit args.
-  
   switch (code)
   {
     case CODE_CONSTANT:
     {
-      int constant = (bytecode[i] << 8) | bytecode[i + 1];
-      printf("CONSTANT '");
+      int constant = READ_SHORT();
+      printf("%-16s %5d '", "CONSTANT", constant);
       wrenPrintValue(fn->constants[constant]);
       printf("'\n");
-      PRINT_ARG("constant %d\n", constant);
-      PRINT_ARG("\n");
       break;
     }
 
@@ -71,85 +67,31 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_FALSE: printf("FALSE\n"); break;
     case CODE_TRUE:  printf("TRUE\n"); break;
 
-    case CODE_LOAD_LOCAL:
-    {
-      int local = bytecode[i];
-      printf("LOAD_LOCAL %d\n", local);
-      PRINT_ARG("local %d\n", local);
-      break;
-    }
-
-    case CODE_STORE_LOCAL:
-    {
-      int local = bytecode[i];
-      printf("STORE_LOCAL %d\n", local);
-      PRINT_ARG("local %d\n", local);
-      break;
-    }
-
-    case CODE_LOAD_UPVALUE:
-    {
-      int upvalue = bytecode[i];
-      printf("LOAD_UPVALUE %d\n", upvalue);
-      PRINT_ARG("upvalue %d\n", upvalue);
-      break;
-    }
-
-    case CODE_STORE_UPVALUE:
-    {
-      int upvalue = bytecode[i];
-      printf("STORE_UPVALUE %d\n", upvalue);
-      PRINT_ARG("upvalue %d\n", upvalue);
-      break;
-    }
+    case CODE_LOAD_LOCAL: BYTE_INSTRUCTION("LOAD_LOCAL");
+    case CODE_STORE_LOCAL: BYTE_INSTRUCTION("STORE_LOCAL");
+    case CODE_LOAD_UPVALUE: BYTE_INSTRUCTION("LOAD_UPVALUE");
+    case CODE_STORE_UPVALUE: BYTE_INSTRUCTION("STORE_UPVALUE");
 
     case CODE_LOAD_GLOBAL:
     {
-      int global = bytecode[i];
-      printf("LOAD_GLOBAL \"%s\"\n", vm->globalSymbols.names.data[global]);
-      PRINT_ARG("global %d\n", global);
+      int global = READ_BYTE();
+      printf("%-16s %5d '%s'\n", "LOAD_GLOBAL", global,
+             vm->globalSymbols.names.data[global]);
       break;
     }
 
     case CODE_STORE_GLOBAL:
     {
-      int global = bytecode[i];
-      printf("STORE_GLOBAL \"%s\"\n", vm->globalSymbols.names.data[global]);
-      PRINT_ARG("global %d\n", global);
+      int global = READ_BYTE();
+      printf("%-16s %5d '%s'\n", "STORE_GLOBAL", global,
+             vm->globalSymbols.names.data[global]);
       break;
     }
 
-    case CODE_LOAD_FIELD_THIS:
-    {
-      int field = bytecode[i];
-      printf("LOAD_FIELD_THIS %d\n", field);
-      PRINT_ARG("field %d\n", field);
-      break;
-    }
-
-    case CODE_STORE_FIELD_THIS:
-    {
-      int field = bytecode[i];
-      printf("STORE_FIELD_THIS %d\n", field);
-      PRINT_ARG("field %d\n", field);
-      break;
-    }
-
-    case CODE_LOAD_FIELD:
-    {
-      int field = bytecode[i];
-      printf("LOAD_FIELD %d\n", field);
-      PRINT_ARG("field %d\n", field);
-      break;
-    }
-
-    case CODE_STORE_FIELD:
-    {
-      int field = bytecode[i];
-      printf("STORE_FIELD %d\n", field);
-      PRINT_ARG("field %d\n", field);
-      break;
-    }
+    case CODE_LOAD_FIELD_THIS: BYTE_INSTRUCTION("LOAD_FIELD_THIS");
+    case CODE_STORE_FIELD_THIS: BYTE_INSTRUCTION("STORE_FIELD_THIS");
+    case CODE_LOAD_FIELD: BYTE_INSTRUCTION("LOAD_FIELD");
+    case CODE_STORE_FIELD: BYTE_INSTRUCTION("STORE_FIELD");
 
     case CODE_POP: printf("POP\n"); break;
 
@@ -172,10 +114,9 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_CALL_16:
     {
       int numArgs = bytecode[i - 1] - CODE_CALL_0;
-      int symbol = (bytecode[i] << 8) | bytecode[i + 1];
-      printf("CALL_%d \"%s\"\n", numArgs, vm->methods.names.data[symbol]);
-      PRINT_ARG("symbol %d\n", symbol);
-      PRINT_ARG("\n");
+      int symbol = READ_SHORT();
+      printf("CALL_%-11d %5d '%s'\n", numArgs, symbol,
+             vm->methods.names.data[symbol]);
       break;
     }
 
@@ -198,50 +139,44 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_SUPER_16:
     {
       int numArgs = bytecode[i - 1] - CODE_SUPER_0;
-      int symbol = (bytecode[i] << 8) | bytecode[i + 1];
-      printf("SUPER_%d \"%s\"\n", numArgs, vm->methods.names.data[symbol]);
-      PRINT_ARG("symbol %d\n", symbol);
-      PRINT_ARG("\n");
+      int symbol = READ_SHORT();
+      printf("SUPER_%-10d %5d '%s'\n", numArgs, symbol,
+             vm->methods.names.data[symbol]);
       break;
     }
 
     case CODE_JUMP:
     {
-      int offset = bytecode[i];
-      printf("JUMP %d\n", offset);
-      PRINT_ARG("offset %d\n", offset);
+      int offset = READ_SHORT();
+      printf("%-16s %5d to %d\n", "JUMP", offset, i + offset);
       break;
     }
 
     case CODE_LOOP:
     {
-      int offset = bytecode[i];
-      printf("LOOP %d\n", offset);
-      PRINT_ARG("offset -%d\n", offset);
+      int offset = READ_SHORT();
+      printf("%-16s %5d to %d\n", "LOOP", offset, i - offset);
       break;
     }
 
     case CODE_JUMP_IF:
     {
-      int offset = bytecode[i];
-      printf("JUMP_IF %d\n", offset);
-      PRINT_ARG("offset %d\n", offset);
+      int offset = READ_SHORT();
+      printf("%-16s %5d to %d\n", "JUMP_IF", offset, i + offset);
       break;
     }
 
     case CODE_AND:
     {
-      int offset = bytecode[i];
-      printf("AND %d\n", offset);
-      PRINT_ARG("offset %d\n", offset);
+      int offset = READ_SHORT();
+      printf("%-16s %5d to %d\n", "AND", offset, i + offset);
       break;
     }
 
     case CODE_OR:
     {
-      int offset = bytecode[i];
-      printf("OR %d\n", offset);
-      PRINT_ARG("offset %d\n", offset);
+      int offset = READ_SHORT();
+      printf("%-16s %5d to %d\n", "OR", offset, i + offset);
       break;
     }
 
@@ -252,62 +187,49 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 
     case CODE_LIST:
     {
-      int count = bytecode[i];
-      printf("LIST\n");
-      PRINT_ARG("count %d\n", count);
+      int length = READ_BYTE();
+      printf("%-16s %5d length\n", "LIST", length);
       break;
     }
 
     case CODE_CLOSURE:
     {
-      int constant = (bytecode[i] << 8) | bytecode[i + 1];
-      printf("CLOSURE ");
+      int constant = READ_SHORT();
+      printf("%-16s %5d ", "CLOSURE", constant);
       wrenPrintValue(fn->constants[constant]);
-      printf("\n");
-      PRINT_ARG("constant %d\n", constant);
-      PRINT_ARG("\n");
+      printf(" ");
       ObjFn* loadedFn = AS_FN(fn->constants[constant]);
       for (int j = 0; j < loadedFn->numUpvalues; j++)
       {
-        int isLocal = bytecode[i];
-        PRINT_ARG("upvalue %d isLocal %d\n", j, isLocal);
-        int index = bytecode[i];
-        PRINT_ARG("upvalue %d index %d\n", j, index);
+        int isLocal = READ_BYTE();
+        int index = READ_BYTE();
+        if (j > 0) printf(", ");
+        printf("%s %d", isLocal ? "local" : "upvalue", index);
       }
+      printf("\n");
       break;
     }
 
     case CODE_CLASS:
     {
-      int numFields = bytecode[i];
-      printf("CLASS\n");
-      PRINT_ARG("num fields %d\n", numFields);
-      break;
-    }
-
-    case CODE_SUBCLASS:
-    {
-      int numFields = bytecode[i];
-      printf("SUBCLASS\n");
-      PRINT_ARG("num fields %d\n", numFields);
+      int numFields = READ_BYTE();
+      printf("%-16s %5d fields\n", "CLASS", numFields);
       break;
     }
 
     case CODE_METHOD_INSTANCE:
     {
-      int symbol = (bytecode[i] << 8) | bytecode[i + 1];
-      printf("METHOD_INSTANCE \"%s\"\n", vm->methods.names.data[symbol]);
-      PRINT_ARG("symbol %d\n", symbol);
-      PRINT_ARG("\n");
+      int symbol = READ_SHORT();
+      printf("%-16s %5d '%s'\n", "METHOD_INSTANCE", symbol,
+             vm->methods.names.data[symbol]);
       break;
     }
 
     case CODE_METHOD_STATIC:
     {
-      int symbol = (bytecode[i] << 8) | bytecode[i + 1];
-      printf("METHOD_STATIC \"%s\"\n", vm->methods.names.data[symbol]);
-      PRINT_ARG("symbol %d\n", symbol);
-      PRINT_ARG("\n");
+      int symbol = READ_SHORT();
+      printf("%-16s %5d '%s'\n", "METHOD_STATIC", symbol,
+             vm->methods.names.data[symbol]);
       break;
     }
 

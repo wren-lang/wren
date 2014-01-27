@@ -151,9 +151,6 @@ typedef enum
   // Define a new empty class and push it.
   CODE_CLASS,
 
-  // Pop a superclass off the stack, then push a new class that extends it.
-  CODE_SUBCLASS,
-
   // Define a method for symbol [arg]. The class receiving the method is popped
   // off the stack, then the function defining the body is popped.
   CODE_METHOD_INSTANCE,
@@ -162,7 +159,7 @@ typedef enum
   // the method is popped off the stack, then the function defining the body is
   // popped.
   CODE_METHOD_STATIC,
-
+  
   // This pseudo-instruction indicates the end of the bytecode. It should
   // always be preceded by a `CODE_RETURN`, so is never actually executed.
   CODE_END

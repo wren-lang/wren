@@ -1,5 +1,6 @@
 # Intermediate files directory.
 build/
+build_xcode/
 
 # Built applications.
 wren
