@@ -9,6 +9,26 @@
 // TODO: Get rid of this.
 #define MAX_GLOBALS 256
 
+// In order to token paste __LINE__, you need two weird levels of indirection
+// since __LINE__ isn't expanded when used in a token paste.
+// See: http://stackoverflow.com/a/1597129/9457
+#define WREN_TOKEN_PASTE(a, b) a ## b
+#define WREN_TOKEN_PASTE2(a, b) WREN_TOKEN_PASTE(a, b)
+
+// Mark [obj] as a GC root so that it doesn't get collected. Initializes
+// [pinned], which must be then passed to [unpinObj].
+#define WREN_PIN(vm, obj) \
+    do \
+    { \
+      PinnedObj WREN_TOKEN_PASTE2(wrenPinned, __LINE__); \
+      wrenPinObj(vm, (Obj*)obj, &WREN_TOKEN_PASTE2(wrenPinned, __LINE__)); \
+    } \
+    while (false)
+
+// Remove the most recently pinned object from the list of pinned GC roots.
+#define WREN_UNPIN(vm) \
+    wrenUnpinObj(vm)
+
 typedef enum
 {
   // Load the constant at index [arg].
@@ -148,7 +168,9 @@ typedef enum
   // Pushes the created closure.
   CODE_CLOSURE,
 
-  // Define a new empty class and push it.
+  // TODO: Doc.
+  // Define a new empty class and push it. Short [arg1] is a constant for the
+  // name of the class. Byte [arg2] is the number of fields in the class.
   CODE_CLASS,
 
   // Define a method for symbol [arg]. The class receiving the method is popped
@@ -272,13 +294,14 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 // Sets the current Compiler being run to [compiler].
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler);
 
-// TODO: Make these static or prefix their names.
-
 // Mark [obj] as a GC root so that it doesn't get collected. Initializes
-// [pinned], which must be then passed to [unpinObj].
-void pinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned);
+// [pinned], which must be then passed to [unpinObj]. This is not intended to be
+// used directly. Instead, use the [WREN_PIN_OBJ] macro.
+void wrenPinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned);
 
 // Remove the most recently pinned object from the list of pinned GC roots.
-void unpinObj(WrenVM* vm);
+// This is not intended to be used directly. Instead, use the [WREN_UNPIN_OBJ]
+// macro.
+void wrenUnpinObj(WrenVM* vm);
 
 #endif

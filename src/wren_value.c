@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "wren.h"
 #include "wren_value.h"
 #include "wren_vm.h"
 
@@ -29,18 +30,18 @@ static void initObj(WrenVM* vm, Obj* obj, ObjType type)
   vm->first = obj;
 }
 
-ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields)
+ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
 {
   ObjClass* classObj = allocate(vm, sizeof(ObjClass));
   initObj(vm, &classObj->obj, OBJ_CLASS);
   classObj->metaclass = NULL;
   classObj->superclass = NULL;
   classObj->numFields = numFields;
+  classObj->name = name;
 
-  PinnedObj pinned;
-  pinObj(vm, (Obj*)classObj, &pinned);
+  WREN_PIN(vm, classObj);
   wrenMethodBufferInit(vm, &classObj->methods);
-  unpinObj(vm);
+  WREN_UNPIN(vm);
   
   return classObj;
 }
@@ -61,32 +62,39 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
   }
 }
 
-ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields)
+ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
+                       ObjString* name)
 {
+  WREN_PIN(vm, name);
+
   // Create the metaclass.
-  ObjClass* metaclass = wrenNewSingleClass(vm, 0);
+  ObjString* metaclassName = wrenStringConcat(vm, name->value, " metaclass");
+  WREN_PIN(vm, metaclassName);
+
+  ObjClass* metaclass = wrenNewSingleClass(vm, 0, metaclassName);
   metaclass->metaclass = vm->classClass;
 
+  WREN_UNPIN(vm);
+
   // Make sure the metaclass isn't collected when we allocate the class.
-  PinnedObj pinned;
-  pinObj(vm, (Obj*)metaclass, &pinned);
+  WREN_PIN(vm, metaclass);
 
   // Metaclasses always inherit Class and do not parallel the non-metaclass
   // hierarchy.
   wrenBindSuperclass(vm, metaclass, vm->classClass);
 
-  ObjClass* classObj = wrenNewSingleClass(vm, numFields);
+  ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
 
   // Make sure the class isn't collected while the inherited methods are being
   // bound.
-  PinnedObj pinned2;
-  pinObj(vm, (Obj*)classObj, &pinned2);
+  WREN_PIN(vm, classObj);
 
   classObj->metaclass = metaclass;
   wrenBindSuperclass(vm, classObj, superclass);
 
-  unpinObj(vm);
-  unpinObj(vm);
+  WREN_UNPIN(vm);
+  WREN_UNPIN(vm);
+  WREN_UNPIN(vm);
 
   return classObj;
 }
@@ -244,25 +252,22 @@ static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
 
 void wrenListAdd(WrenVM* vm, ObjList* list, Value value)
 {
-  // TODO: Macro for pinning and unpinning.
-  PinnedObj pinned;
-  if (IS_OBJ(value)) pinObj(vm, AS_OBJ(value), &pinned);
+  if (IS_OBJ(value)) WREN_PIN(vm, AS_OBJ(value));
 
   ensureListCapacity(vm, list, list->count + 1);
 
-  if (IS_OBJ(value)) unpinObj(vm);
+  if (IS_OBJ(value)) WREN_UNPIN(vm);
 
   list->elements[list->count++] = value;
 }
 
 void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
 {
-  PinnedObj pinned;
-  if (IS_OBJ(value)) pinObj(vm, AS_OBJ(value), &pinned);
+  if (IS_OBJ(value)) WREN_PIN(vm, AS_OBJ(value));
 
   ensureListCapacity(vm, list, list->count + 1);
 
-  if (IS_OBJ(value)) unpinObj(vm);
+  if (IS_OBJ(value)) WREN_UNPIN(vm);
 
   // Shift items down.
   for (int i = list->count; i > index; i--)
@@ -278,8 +283,7 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
 {
   Value removed = list->elements[index];
 
-  PinnedObj pinned;
-  if (IS_OBJ(removed)) pinObj(vm, AS_OBJ(removed), &pinned);
+  if (IS_OBJ(removed)) WREN_PIN(vm, AS_OBJ(removed));
 
   // Shift items up.
   for (int i = index; i < list->count - 1; i++)
@@ -295,7 +299,7 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
     list->capacity /= LIST_GROW_FACTOR;
   }
 
-  if (IS_OBJ(removed)) unpinObj(vm);
+  if (IS_OBJ(removed)) WREN_UNPIN(vm);
 
   list->count--;
   return removed;
@@ -332,6 +336,20 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   return OBJ_VAL(string);
 }
 
+ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
+{
+  size_t leftLength = strlen(left);
+  size_t rightLength = strlen(right);
+
+  Value value = wrenNewString(vm, NULL, leftLength + rightLength);
+  ObjString* string = AS_STRING(value);
+  strcpy(string->value, left);
+  strcpy(string->value + leftLength, right);
+  string->value[leftLength + rightLength] = '\0';
+
+  return string;
+}
+
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 {
   Upvalue* upvalue = allocate(vm, sizeof(Upvalue));
@@ -353,6 +371,16 @@ static bool setMarkedFlag(Obj* obj)
   return false;
 }
 
+static void markString(WrenVM* vm, ObjString* string)
+{
+  if (setMarkedFlag(&string->obj)) return;
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjString);
+  // TODO: O(n) calculation here is lame!
+  vm->bytesAllocated += strlen(string->value);
+}
+
 static void markClass(WrenVM* vm, ObjClass* classObj)
 {
   if (setMarkedFlag(&classObj->obj)) return;
@@ -371,6 +399,8 @@ static void markClass(WrenVM* vm, ObjClass* classObj)
       wrenMarkObj(vm, classObj->methods.data[i].fn);
     }
   }
+
+  if (classObj->name != NULL) markString(vm, classObj->name);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjClass);
@@ -500,16 +530,6 @@ static void markClosure(WrenVM* vm, ObjClosure* closure)
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjClosure);
   vm->bytesAllocated += sizeof(Upvalue*) * closure->fn->numUpvalues;
-}
-
-static void markString(WrenVM* vm, ObjString* string)
-{
-  if (setMarkedFlag(&string->obj)) return;
-
-  // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjString);
-  // TODO: O(n) calculation here is lame!
-  vm->bytesAllocated += strlen(string->value);
 }
 
 void wrenMarkObj(WrenVM* vm, Obj* obj)

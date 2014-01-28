@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 #include "wren_common.h"
-#include "wren.h"
 #include "wren_utils.h"
 
 // This defines the built-in types and their core representations in memory.
@@ -288,6 +287,9 @@ typedef struct sObjClass
   // really low load factor. Since methods are pretty small (just a type and a
   // pointer), this should be a worthwhile trade-off.
   MethodBuffer methods;
+
+  // The name of the class.
+  ObjString* name;
 } ObjClass;
 
 typedef struct
@@ -522,7 +524,7 @@ typedef struct
 // Creates a new "raw" class. It has no metaclass or superclass whatsoever.
 // This is only used for bootstrapping the initial Object and Class classes,
 // which are a little special.
-ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields);
+ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name);
 
 // Makes [superclass] the superclass of [subclass], and causes subclass to
 // inherit its methods. This should be called before any methods are defined
@@ -530,7 +532,8 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields);
 void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass);
 
 // Creates a new class object as well as its associated metaclass.
-ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields);
+ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
+                       ObjString* name);
 
 void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
 
@@ -573,6 +576,9 @@ Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 
 // Creates a new string object and copies [text] into it.
 Value wrenNewString(WrenVM* vm, const char* text, size_t length);
+
+// Creates a new string that is the concatenation of [left] and [right].
+ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right);
 
 // Creates a new open upvalue pointing to [value] on the stack.
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);

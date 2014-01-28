@@ -971,6 +971,8 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(CLASS):
     {
+      ObjString* name = AS_STRING(fn->constants[READ_SHORT()]);
+
       int numFields = READ_BYTE();
 
       ObjClass* superclass;
@@ -985,7 +987,7 @@ static bool runInterpreter(WrenVM* vm)
         superclass = AS_CLASS(PEEK());
       }
 
-      ObjClass* classObj = wrenNewClass(vm, superclass, numFields);
+      ObjClass* classObj = wrenNewClass(vm, superclass, numFields, name);
 
       // Now that we know the total number of fields, make sure we don't
       // overflow.
@@ -1035,12 +1037,9 @@ int wrenInterpret(WrenVM* vm, const char* sourcePath, const char* source)
   ObjFn* fn = wrenCompile(vm, sourcePath, source);
   if (fn != NULL)
   {
-    PinnedObj pinned;
-    pinObj(vm, (Obj*)fn, &pinned);
-
+    WREN_PIN(vm, fn);
     vm->fiber = wrenNewFiber(vm, (Obj*)fn);
-
-    unpinObj(vm);
+    WREN_UNPIN(vm);
 
     if (!runInterpreter(vm)) result = 70; // EX_SOFTWARE.
   }
@@ -1051,14 +1050,14 @@ int wrenInterpret(WrenVM* vm, const char* sourcePath, const char* source)
   return result;
 }
 
-void pinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned)
+void wrenPinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned)
 {
   pinned->obj = obj;
   pinned->previous = vm->pinned;
   vm->pinned = pinned;
 }
 
-void unpinObj(WrenVM* vm)
+void wrenUnpinObj(WrenVM* vm)
 {
   vm->pinned = vm->pinned->previous;
 }
@@ -1091,10 +1090,18 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
   else
   {
     // The class doesn't already exist, so create it.
+    size_t length = strlen(className);
+    ObjString* nameString = AS_STRING(wrenNewString(vm, className, length));
+
+    WREN_PIN(vm, nameString);
+
     // TODO: Allow passing in name for superclass?
-    classObj = wrenNewClass(vm, vm->objectClass, 0);
+    classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
     classSymbol = wrenSymbolTableAdd(vm, &vm->globalSymbols,
-                            className, strlen(className));
+                            className, length);
+
+    WREN_UNPIN(vm);
+
     vm->globals[classSymbol] = OBJ_VAL(classObj);
   }
 

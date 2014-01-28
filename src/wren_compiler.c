@@ -1214,8 +1214,7 @@ static ObjFn* endCompiler(Compiler* compiler,
                               compiler->parser->sourcePath,
                               debugName, debugNameLength,
                               compiler->debugSourceLines.data);
-  PinnedObj pinned;
-  pinObj(compiler->parser->vm, (Obj*)fn, &pinned);
+  WREN_PIN(compiler->parser->vm, fn);
 
   // In the function that contains this one, load the resulting function object.
   if (compiler->parent != NULL)
@@ -1247,7 +1246,7 @@ static ObjFn* endCompiler(Compiler* compiler,
   // Pop this compiler off the stack.
   wrenSetCompiler(compiler->parser->vm, compiler->parent);
 
-  unpinObj(compiler->parser->vm);
+  WREN_UNPIN(compiler->parser->vm);
 
   #if WREN_DUMP_COMPILED_CODE
     wrenDebugPrintCode(compiler->parser->vm, fn);
@@ -2417,6 +2416,12 @@ static void classDefinition(Compiler* compiler)
   int symbol = declareNamedVariable(compiler);
   bool isGlobal = compiler->scopeDepth == -1;
 
+  // Make a string constant for the name.
+  int nameConstant = addConstant(compiler, wrenNewString(compiler->parser->vm,
+      compiler->parser->previous.start, compiler->parser->previous.length));
+
+  wrenByteBufferClear(compiler->parser->vm, &compiler->parser->string);
+
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
   {
@@ -2428,7 +2433,7 @@ static void classDefinition(Compiler* compiler)
     emit(compiler, CODE_NULL);
   }
 
-  emit(compiler, CODE_CLASS);
+  emitShort(compiler, CODE_CLASS, nameConstant);
 
   // Store a placeholder for the number of fields argument. We don't know
   // the value until we've compiled all the methods to see which fields are

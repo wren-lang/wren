@@ -27,6 +27,7 @@
 
 #define RETURN_VAL(value)   do { args[0] = value; return PRIM_VALUE; } while (0)
 
+#define RETURN_OBJ(obj)     RETURN_VAL(OBJ_VAL(obj))
 #define RETURN_BOOL(value)  RETURN_VAL(BOOL_VAL(value))
 #define RETURN_FALSE        RETURN_VAL(FALSE_VAL)
 #define RETURN_NULL         RETURN_VAL(NULL_VAL)
@@ -148,6 +149,12 @@ DEF_NATIVE(bool_toString)
   }
 }
 
+DEF_NATIVE(class_name)
+{
+  ObjClass* classObj = AS_CLASS(args[0]);
+  RETURN_OBJ(classObj->name);
+}
+
 DEF_NATIVE(fiber_create)
 {
   if (!IS_FN(args[1]) && !IS_CLOSURE(args[1]))
@@ -165,7 +172,7 @@ DEF_NATIVE(fiber_create)
   newFiber->stack[0] = NULL_VAL;
   newFiber->stackSize++;
 
-  RETURN_VAL(OBJ_VAL(newFiber));
+  RETURN_OBJ(newFiber);
 }
 
 DEF_NATIVE(fiber_isDone)
@@ -520,12 +527,23 @@ DEF_NATIVE(object_new)
 
 DEF_NATIVE(object_toString)
 {
+  if (IS_CLASS(args[0]))
+  {
+    RETURN_OBJ(AS_CLASS(args[0])->name);
+  }
+  else if (IS_INSTANCE(args[0]))
+  {
+    ObjInstance* instance = AS_INSTANCE(args[0]);
+    RETURN_OBJ(wrenStringConcat(vm, "instance of ",
+                                instance->classObj->name->value));
+  }
+
   RETURN_VAL(wrenNewString(vm, "<object>", 8));
 }
 
 DEF_NATIVE(object_type)
 {
-  RETURN_VAL(OBJ_VAL(wrenGetClass(vm, args[0])));
+  RETURN_OBJ(wrenGetClass(vm, args[0]));
 }
 
 DEF_NATIVE(range_from)
@@ -633,19 +651,7 @@ DEF_NATIVE(string_plus)
   if (!IS_STRING(args[1])) RETURN_NULL;
   // TODO: Handle coercion to string of RHS.
 
-  const char* left = AS_CSTRING(args[0]);
-  const char* right = AS_CSTRING(args[1]);
-
-  size_t leftLength = strlen(left);
-  size_t rightLength = strlen(right);
-
-  Value value = wrenNewString(vm, NULL, leftLength + rightLength);
-  ObjString* string = AS_STRING(value);
-  strcpy(string->value, left);
-  strcpy(string->value + leftLength, right);
-  string->value[leftLength + rightLength] = '\0';
-
-  RETURN_VAL(value);
+  RETURN_OBJ(wrenStringConcat(vm, AS_CSTRING(args[0]), AS_CSTRING(args[1])));
 }
 
 DEF_NATIVE(string_eqeq)
@@ -695,12 +701,36 @@ DEF_NATIVE(os_clock)
   RETURN_NUM(time);
 }
 
+static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
+{
+  size_t length = strlen(name);
+  int symbol = wrenSymbolTableAdd(vm, &vm->globalSymbols, name, length);
+
+  ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
+  WREN_PIN(vm, nameString);
+
+  ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
+  vm->globals[symbol] = OBJ_VAL(classObj);
+
+  WREN_UNPIN(vm);
+
+  return classObj;
+}
+
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
-  // Add the symbol first since it can trigger a GC.
-  int symbol = wrenSymbolTableAdd(vm, &vm->globalSymbols, name, strlen(name));
+  size_t length = strlen(name);
 
-  ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0);
+  // Add the symbol first since it can trigger a GC.
+  int symbol = wrenSymbolTableAdd(vm, &vm->globalSymbols, name, length);
+
+  ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
+  WREN_PIN(vm, nameString);
+
+  ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
+
+  WREN_UNPIN(vm);
+
   vm->globals[symbol] = OBJ_VAL(classObj);
   return classObj;
 }
@@ -716,11 +746,7 @@ void wrenInitializeCore(WrenVM* vm)
 {
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass and an unusual metaclass (Class).
-  int objectSymbol = wrenSymbolTableAdd(vm, &vm->globalSymbols,
-                                        "Object", strlen("Object"));
-  vm->objectClass = wrenNewSingleClass(vm, 0);
-  vm->globals[objectSymbol] = OBJ_VAL(vm->objectClass);
-
+  vm->objectClass = defineSingleClass(vm, "Object");
   NATIVE(vm->objectClass, "== ", object_eqeq);
   NATIVE(vm->objectClass, "!= ", object_bangeq);
   NATIVE(vm->objectClass, "new", object_new);
@@ -729,10 +755,8 @@ void wrenInitializeCore(WrenVM* vm)
 
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
-  int classSymbol = wrenSymbolTableAdd(vm, &vm->globalSymbols,
-                                       "Class", strlen("Class"));
-  vm->classClass = wrenNewSingleClass(vm, 0);
-  vm->globals[classSymbol] = OBJ_VAL(vm->classClass);
+  vm->classClass = defineSingleClass(vm, "Class");
+  NATIVE(vm->classClass, "name", class_name);
 
   // Now that Object and Class are defined, we can wire them up to each other.
   wrenBindSuperclass(vm, vm->classClass, vm->objectClass);
