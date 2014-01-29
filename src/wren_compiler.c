@@ -2420,7 +2420,7 @@ static void classDefinition(Compiler* compiler)
   int nameConstant = addConstant(compiler, wrenNewString(compiler->parser->vm,
       compiler->parser->previous.start, compiler->parser->previous.length));
 
-  wrenByteBufferClear(compiler->parser->vm, &compiler->parser->string);
+  emitShort(compiler, CODE_CONSTANT, nameConstant);
 
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
@@ -2433,12 +2433,10 @@ static void classDefinition(Compiler* compiler)
     emit(compiler, CODE_NULL);
   }
 
-  emitShort(compiler, CODE_CLASS, nameConstant);
-
   // Store a placeholder for the number of fields argument. We don't know
   // the value until we've compiled all the methods to see which fields are
   // used.
-  int numFieldsInstruction = emit(compiler, 255);
+  int numFieldsInstruction = emitByte(compiler, CODE_CLASS, 255);
 
   // Store it in its name.
   defineVariable(compiler, symbol);

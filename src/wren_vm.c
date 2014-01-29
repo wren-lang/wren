@@ -971,9 +971,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(CLASS):
     {
-      ObjString* name = AS_STRING(fn->constants[READ_SHORT()]);
-
-      int numFields = READ_BYTE();
+      ObjString* name = AS_STRING(PEEK2());
 
       ObjClass* superclass;
       if (IS_NULL(PEEK()))
@@ -987,6 +985,7 @@ static bool runInterpreter(WrenVM* vm)
         superclass = AS_CLASS(PEEK());
       }
 
+      int numFields = READ_BYTE();
       ObjClass* classObj = wrenNewClass(vm, superclass, numFields, name);
 
       // Now that we know the total number of fields, make sure we don't
@@ -998,10 +997,11 @@ static bool runInterpreter(WrenVM* vm)
         return false;
       }
       
-      // Don't pop the superclass off the stack until the subclass is done
-      // being created, to make sure it doesn't get collected.
+      // Don't pop the superclass and name off the stack until the subclass is
+      // done being created, to make sure it doesn't get collected.
       POP();
-      
+      POP();
+
       PUSH(OBJ_VAL(classObj));
       DISPATCH();
     }
