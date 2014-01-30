@@ -68,15 +68,25 @@ const char* coreLibSource =
 "  }\n"
 "}\n";
 
+
 // Validates that the given argument in [args] is a Num. Returns true if it is.
 // If not, reports an error and returns false.
 static bool validateNum(WrenVM* vm, Value* args, int index, const char* argName)
 {
   if (IS_NUM(args[index])) return true;
 
-  char message[100];
-  snprintf(message, 100, "%s must be a number.", argName);
-  args[0] = wrenNewString(vm, message, strlen(message));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " must be a number."));
+  return false;
+}
+
+// Validates that [value] is an integer. Returns true if it is. If not, reports
+// an error and returns false.
+static bool validateIntValue(WrenVM* vm, Value* args, double value,
+                             const char* argName)
+{
+  if (trunc(value) == value) return true;
+
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " must be an integer."));
   return false;
 }
 
@@ -87,24 +97,18 @@ static bool validateInt(WrenVM* vm, Value* args, int index, const char* argName)
   // Make sure it's a number first.
   if (!validateNum(vm, args, index, argName)) return false;
 
-  double value = AS_NUM(args[index]);
-  if (trunc(value) == value) return true;
-
-  char message[100];
-  snprintf(message, 100, "%s must be an integer.", argName);
-  args[0] = wrenNewString(vm, message, strlen(message));
-  return false;
+  return validateIntValue(vm, args, AS_NUM(args[index]), argName);
 }
 
-// Validates that [index] is an integer within `[0, count)`. Also allows
+// Validates that [value] is an integer within `[0, count)`. Also allows
 // negative indices which map backwards from the end. Returns the valid positive
 // index value. If invalid, reports an error and returns -1.
-static int validateIndex(WrenVM* vm, Value* args, int count, int argIndex,
-                         const char* argName)
+static int validateIndexValue(WrenVM* vm, Value* args, int count, double value,
+                              const char* argName)
 {
-  if (!validateInt(vm, args, argIndex, argName)) return -1;
+  if (!validateIntValue(vm, args, value, argName)) return -1;
 
-  int index = (int)AS_NUM(args[argIndex]);
+  int index = (int)value;
 
   // Negative indices count from the end.
   if (index < 0) index = count + index;
@@ -112,11 +116,19 @@ static int validateIndex(WrenVM* vm, Value* args, int count, int argIndex,
   // Check bounds.
   if (index >= 0 && index < count) return index;
 
-  char message[100];
-  snprintf(message, 100, "%s out of bounds.", argName);
-  args[0] = wrenNewString(vm, message, strlen(message));
-
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " out of bounds."));
   return -1;
+}
+
+// Validates that the argument at [argIndex] is an integer within `[0, count)`.
+// Also allows negative indices which map backwards from the end. Returns the
+// valid positive index value. If invalid, reports an error and returns -1.
+static int validateIndex(WrenVM* vm, Value* args, int count, int argIndex,
+                         const char* argName)
+{
+  if (!validateNum(vm, args, argIndex, argName)) return -1;
+
+  return validateIndexValue(vm, args, count, AS_NUM(args[argIndex]), argName);
 }
 
 // Validates that the given argument in [args] is a String. Returns true if it
@@ -126,9 +138,7 @@ static bool validateString(WrenVM* vm, Value* args, int index,
 {
   if (IS_STRING(args[index])) return true;
 
-  char message[100];
-  snprintf(message, 100, "%s must be a string.", argName);
-  args[0] = wrenNewString(vm, message, strlen(message));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " must be a string."));
   return false;
 }
 
@@ -329,10 +339,58 @@ DEF_NATIVE(list_removeAt)
 DEF_NATIVE(list_subscript)
 {
   ObjList* list = AS_LIST(args[0]);
-  int index = validateIndex(vm, args, list->count, 1, "Subscript");
-  if (index == -1) return PRIM_ERROR;
 
-  RETURN_VAL(list->elements[index]);
+  if (IS_NUM(args[1]))
+  {
+    int index = validateIndex(vm, args, list->count, 1, "Subscript");
+    if (index == -1) return PRIM_ERROR;
+
+    RETURN_VAL(list->elements[index]);
+  }
+
+  if (!IS_RANGE(args[1]))
+  {
+    RETURN_ERROR("Subscript must be a number or a range.");
+  }
+
+  ObjRange* range = AS_RANGE(args[1]);
+
+  int from = validateIndexValue(vm, args, list->count, range->from,
+                                "Range start");
+  if (from == -1) return PRIM_ERROR;
+
+  int to;
+  int count;
+
+  if (range->isInclusive)
+  {
+    to = validateIndexValue(vm, args, list->count, range->to, "Range end");
+    if (to == -1) return PRIM_ERROR;
+
+    count = abs(from - to) + 1;
+  }
+  else
+  {
+    if (!validateIntValue(vm, args, range->to, "Range end")) return PRIM_ERROR;
+
+    // Bounds check it manually here since the excusive range can hang over
+    // the edge.
+    to = (int)range->to;
+    if (to < 0) to = list->count + to;
+
+    if (to < -1 || to > list->count) RETURN_ERROR("Range end out of bounds.");
+
+    count = abs(from - to);
+  }
+
+  int step = from < to ? 1 : -1;
+  ObjList* result = wrenNewList(vm, count);
+  for (int i = 0; i < count; i++)
+  {
+    result->elements[i] = list->elements[from + (i * step)];
+  }
+
+  RETURN_OBJ(result);
 }
 
 DEF_NATIVE(list_subscriptSetter)

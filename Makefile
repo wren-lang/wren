@@ -41,7 +41,7 @@ prep:
 	mkdir -p build/debug build/release
 
 # Run the tests against the debug build of Wren.
-test: wrend
+test: debug
 	@./script/test.py
 
 # Generate the Wren site.
