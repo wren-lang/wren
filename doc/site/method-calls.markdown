@@ -83,7 +83,7 @@ it `b`".
 
 Most of these are probably familiar already. The `..` and `...` operators are
 "range" operators. The number type implements those and returns a range object,
-which can in turn be iterated over using a [`for`](loops.html) loop.
+which can in turn be iterated over using a `for` [loop](looping.html).
 
 ## Subscript operators
 

@@ -12,7 +12,7 @@ def format_file(path, skip_up_to_date):
   basename = os.path.basename(path)
   basename = basename.split('.')[0]
 
-  out_path = "build/site/" + basename + ".html"
+  out_path = "build/docs/" + basename + ".html"
 
   # See if it's up to date.
   source_mod = os.path.getmtime(path)
@@ -70,15 +70,18 @@ def format_files(skip_up_to_date):
 
 
 # Clean the output directory.
-if os.path.exists("build/site"):
-  shutil.rmtree("build/site")
-os.mkdir("build/site")
+if not os.path.exists("build"):
+  os.mkdir("build")
+
+if os.path.exists("build/docs"):
+  shutil.rmtree("build/docs")
+os.mkdir("build/docs")
 
 # Process each markdown file.
 format_files(False)
 
 # Copy the CSS file.
-shutil.copyfile("doc/site/style.css", "build/site/style.css")
+shutil.copyfile("doc/site/style.css", "build/docs/style.css")
 
 # TODO(bob): Check for CSS modification.
 if len(sys.argv) == 2 and sys.argv[1] == '--watch':

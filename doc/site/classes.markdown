@@ -28,9 +28,10 @@ To make our unicorn do stuff, we need to give it methods.
 This defines a `prance` method that takes no arguments. To support parameters, add a parenthesized parameter list after the method's name:
 
     :::dart
-    // Inside class...
-    prance(where, when) {
-      IO.print("The unicorn prances in " + where + " at " + when)
+    class Unicorn {
+      prance(where, when) {
+        IO.print("The unicorn prances in " + where + " at " + when)
+      }
     }
 
 Unlike most other dynamically-typed languages, in Wren you can have multiple methods in a class with the same name, as long as they take a different number of parameters. In other words, you can overload by arity. So this class is fine:

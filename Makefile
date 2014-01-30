@@ -46,6 +46,10 @@ test: wrend
 
 # Generate the Wren site.
 docs:
+	@./script/generate_docs.py
+
+# Continuously generate the Wren site.
+watchdocs:
 	@./script/generate_docs.py --watch
 
 # Take the contents of corelib.wren and copy them into src/wren_core.c.

@@ -3,9 +3,6 @@
 Values are the built-in object types that all other objects are composed of.
 They can be created through *literals*, expressions that evaluate to a value.
 
-All value types in Wren are immutable. That means that once created, they
-cannot be changed. `3` is always three and `"hi"` is always `"hi"`.
-
 ## Booleans
 
 A boolean value represents truth or falsehood. There are two boolean literals,
