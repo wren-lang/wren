@@ -44,6 +44,17 @@ def format_file(path, skip_up_to_date):
         else:
           print "UNKNOWN COMMAND:", command, args
 
+      elif stripped.startswith('#'):
+        # Add anchors to the headers.
+        index = stripped.find(" ")
+        headertype = stripped[:index]
+        header = stripped[index:].strip()
+        anchor = header.lower().replace(' ', '-')
+        anchor = anchor.translate(None, '.?!:/')
+
+        contents += indentation + headertype
+        contents += '{1} <a href="#{0}" name="{0}" class="header-anchor">#</a>\n'.format(anchor, header)
+
       else:
         contents = contents + line
 

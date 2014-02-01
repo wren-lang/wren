@@ -24,6 +24,7 @@ h3 {
 
 h1, h2, h3 {
   color: hsl(195, 90%, 50%);
+  outline: none;
 }
 
 a {
@@ -32,6 +33,19 @@ a {
 }
 
 a:hover {
+  color: hsl(195, 70%, 40%);
+}
+
+.header-anchor {
+  display: none;
+}
+
+h2:hover > .header-anchor, h3:hover > .header-anchor {
+  display: inline;
+  color: hsl(195, 30%, 90%);
+}
+
+h2:hover > .header-anchor:hover, h3:hover > .header-anchor:hover {
   color: hsl(195, 70%, 40%);
 }
 
