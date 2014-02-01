@@ -510,8 +510,8 @@ static bool runInterpreter(WrenVM* vm)
 
   Code instruction;
   INTERPRET_LOOP
-  {
-    CASE_CODE(POP): POP(); DISPATCH();
+  { // cast POP() to void to get rid of unused-value warning
+    CASE_CODE(POP): (void) POP(); DISPATCH();
 
     CASE_CODE(NULL):  PUSH(NULL_VAL); DISPATCH();
     CASE_CODE(FALSE): PUSH(FALSE_VAL); DISPATCH();
@@ -811,7 +811,7 @@ static bool runInterpreter(WrenVM* vm)
       else
       {
         // Discard the condition and evaluate the right hand side.
-        POP();
+        (void) POP();
       }
       DISPATCH();
     }
@@ -824,7 +824,7 @@ static bool runInterpreter(WrenVM* vm)
       if (IS_FALSE(condition) || IS_NULL(condition))
       {
         // Discard the condition and evaluate the right hand side.
-        POP();
+        (void) POP();
       }
       else
       {
@@ -863,7 +863,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(CLOSE_UPVALUE):
       closeUpvalue(fiber);
-      POP();
+      (void) POP();
       DISPATCH();
 
     CASE_CODE(NEW):
@@ -873,7 +873,7 @@ static bool runInterpreter(WrenVM* vm)
       // allocated so that it doesn't get collected.
       ObjClass* classObj = AS_CLASS(PEEK());
       Value instance = wrenNewInstance(vm, classObj);
-      POP();
+      (void) POP();
       PUSH(instance);
       DISPATCH();
     }
@@ -999,8 +999,8 @@ static bool runInterpreter(WrenVM* vm)
       
       // Don't pop the superclass and name off the stack until the subclass is
       // done being created, to make sure it doesn't get collected.
-      POP();
-      POP();
+      (void) POP();
+      (void) POP();
 
       PUSH(OBJ_VAL(classObj));
       DISPATCH();
@@ -1014,8 +1014,8 @@ static bool runInterpreter(WrenVM* vm)
       ObjClass* classObj = AS_CLASS(PEEK());
       Value method = PEEK2();
       bindMethod(vm, type, symbol, classObj, method);
-      POP();
-      POP();
+      (void) POP();
+      (void) POP();
       DISPATCH();
     }
 
