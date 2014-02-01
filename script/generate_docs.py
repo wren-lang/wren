@@ -8,7 +8,7 @@ import sys
 import time
 from datetime import datetime
 
-def compare_modification_times(path, out_path):
+def is_up_to_date(path, out_path):
   # See if it's up to date.
   source_mod = os.path.getmtime(path)
   source_mod = max(source_mod, os.path.getmtime('doc/site/template.html'))
@@ -22,9 +22,9 @@ def format_file(path, skip_up_to_date):
   basename = os.path.basename(path)
   basename = basename.split('.')[0]
 
-  out_path = "build/site/" + basename + ".html"
+  out_path = "build/docs/" + basename + ".html"
 
-  if skip_up_to_date and compare_modification_times(path, out_path):
+  if skip_up_to_date and is_up_to_date(path, out_path):
     # It's up to date.
     return
 
@@ -81,10 +81,11 @@ def format_file(path, skip_up_to_date):
 def format_files(skip_up_to_date):
   for f in glob.iglob("doc/site/*.markdown"):
     format_file(f, skip_up_to_date)
+
   # Copy the CSS file.
   css_in = "doc/site/style.css"
-  css_out = "build/site/style.css"
-  if skip_up_to_date and compare_modification_times(css_in, css_out):
+  css_out = "build/docs/style.css"
+  if skip_up_to_date and is_up_to_date(css_in, css_out):
     pass
   else:
     shutil.copyfile(css_in, css_out)
@@ -102,7 +103,7 @@ os.mkdir("build/docs")
 # Process each markdown file.
 format_files(False)
 
-# Watch files
+# Watch files.
 if len(sys.argv) == 2 and sys.argv[1] == '--watch':
   while True:
     format_files(True)
