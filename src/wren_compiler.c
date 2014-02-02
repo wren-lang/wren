@@ -590,6 +590,10 @@ static int readHexDigit(Parser* parser)
   if (c >= '0' && c <= '9') return c - '0';
   if (c >= 'a' && c <= 'f') return c - 'a' + 10;
   if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+
+  // Don't consume it if it isn't expected. Keeps us from reading past the end
+  // of an unterminated string.
+  parser->currentChar--;
   return -1;
 }
 
@@ -599,14 +603,26 @@ static void readUnicodeEscape(Parser* parser)
   int value = 0;
   for (int i = 0; i < 4; i++)
   {
+    if (peekChar(parser) == '"' || peekChar(parser) == '\0')
+    {
+      lexError(parser, "Incomplete Unicode escape sequence.");
+
+      // Don't consume it if it isn't expected. Keeps us from reading past the
+      // end of an unterminated string.
+      parser->currentChar--;
+      break;
+    }
+
     char digit = readHexDigit(parser);
-    // TODO: Signal error.
-    if (digit == -1) return;
+    if (digit == -1)
+    {
+      lexError(parser, "Invalid Unicode escape sequence.");
+      break;
+    }
 
     value = (value * 16) | digit;
   }
 
-  // TODO: Handle encoding!
   addStringChar(parser, value);
 }
 
@@ -619,6 +635,16 @@ static void readString(Parser* parser)
   {
     char c = nextChar(parser);
     if (c == '"') break;
+
+    if (c == '\0')
+    {
+      lexError(parser, "Unterminated string.");
+
+      // Don't consume it if it isn't expected. Keeps us from reading past the
+      // end of an unterminated string.
+      parser->currentChar--;
+      break;
+    }
 
     if (c == '\\')
     {
@@ -634,8 +660,10 @@ static void readString(Parser* parser)
         case 't':  addStringChar(parser, '\t'); break;
         case 'v':  addStringChar(parser, '\v'); break;
         case 'u':  readUnicodeEscape(parser); break;
+          // TODO: 'U' for 8 octet Unicode escapes.
         default:
-          // TODO: Emit error token.
+          lexError(parser, "Invalid escape character '%c'.",
+                   *(parser->currentChar - 1));
           break;
       }
     }
@@ -2544,9 +2572,13 @@ void definition(Compiler* compiler)
 // [vm].
 ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 {
+  ObjString* sourcePathObj = AS_STRING(wrenNewString(vm, sourcePath,
+                                                     strlen(sourcePath)));
+  WREN_PIN(vm, sourcePathObj);
+
   Parser parser;
   parser.vm = vm;
-  parser.sourcePath = NULL;
+  parser.sourcePath = sourcePathObj;
   parser.source = source;
 
   parser.tokenStart = source;
@@ -2572,10 +2604,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, true);
 
-  // Create a string for the source path now that the compiler is initialized
-  // so we can be sure it won't get garbage collected.
-  parser.sourcePath = AS_STRING(wrenNewString(vm, sourcePath,
-                                              strlen(sourcePath)));
+  WREN_UNPIN(vm);
 
   for (;;)
   {
