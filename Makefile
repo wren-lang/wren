@@ -42,7 +42,7 @@ prep:
 
 # Run the tests against the debug build of Wren.
 test: debug
-	@./script/test.py
+	@./script/test.py $(suite)
 
 # Generate the Wren site.
 docs:
