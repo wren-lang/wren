@@ -50,7 +50,13 @@ static int runFile(WrenVM* vm, const char* path)
 {
   char* source = readFile(path);
 
-  int result = wrenInterpret(vm, path, source);
+  int result;
+  switch (wrenInterpret(vm, path, source))
+  {
+    case WREN_RESULT_SUCCESS: result = 0; break;
+    case WREN_RESULT_COMPILE_ERROR: result = 65; break; // EX_DATAERR.
+    case WREN_RESULT_RUNTIME_ERROR: result = 70; break; // EX_SOFTWARE.
+  }
 
   wrenFreeVM(vm);
   free(source);
@@ -60,6 +66,9 @@ static int runFile(WrenVM* vm, const char* path)
 
 static int runRepl(WrenVM* vm)
 {
+  printf("\\\\/\"-\n");
+  printf(" \\_/   wren v0.0.0\n");
+
   for (;;)
   {
     printf("> ");

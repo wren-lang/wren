@@ -1029,25 +1029,24 @@ static bool runInterpreter(WrenVM* vm)
   ASSERT(0, "Should not reach end of interpret.");
 }
 
-int wrenInterpret(WrenVM* vm, const char* sourcePath, const char* source)
+WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
+                                  const char* source)
 {
-  // TODO: Move actual error codes to main.c and return something Wren-specific
-  // from here.
-  int result = 0;
   ObjFn* fn = wrenCompile(vm, sourcePath, source);
-  if (fn != NULL)
-  {
-    WREN_PIN(vm, fn);
-    vm->fiber = wrenNewFiber(vm, (Obj*)fn);
-    WREN_UNPIN(vm);
+  if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
 
-    if (!runInterpreter(vm)) result = 70; // EX_SOFTWARE.
+  WREN_PIN(vm, fn);
+  vm->fiber = wrenNewFiber(vm, (Obj*)fn);
+  WREN_UNPIN(vm);
+
+  if (runInterpreter(vm))
+  {
+    return WREN_RESULT_SUCCESS;
   }
   else
   {
-    result = 65; // EX_DATAERR.
+    return WREN_RESULT_RUNTIME_ERROR;
   }
-  return result;
 }
 
 void wrenPinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned)

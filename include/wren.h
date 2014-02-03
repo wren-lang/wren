@@ -68,6 +68,12 @@ typedef struct
   int heapGrowthPercent;
 } WrenConfiguration;
 
+typedef enum {
+  WREN_RESULT_SUCCESS,
+  WREN_RESULT_COMPILE_ERROR,
+  WREN_RESULT_RUNTIME_ERROR
+} WrenInterpretResult;
+
 // Creates a new Wren virtual machine using the given [configuration]. Wren
 // will copy the configuration data, so the argument passed to this can be
 // freed after calling this. If [configuration] is `NULL`, uses a default
@@ -78,10 +84,10 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration);
 // call to [wrenNewVM].
 void wrenFreeVM(WrenVM* vm);
 
-// Runs [source], a string of Wren source code in a new fiber in [vm]. Returns
-// zero if successful.
+// Runs [source], a string of Wren source code in a new fiber in [vm].
 // TODO: Define error codes.
-int wrenInterpret(WrenVM* vm, const char* sourcePath, const char* source);
+WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
+                                  const char* source);
 
 // Defines a foreign method implemented by the host application. Looks for a
 // global class named [className] to bind the method to. If not found, it will
