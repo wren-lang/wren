@@ -187,6 +187,8 @@ typedef struct
 
 typedef PrimitiveResult (*Primitive)(WrenVM* vm, ObjFiber* fiber, Value* args);
 
+// TODO: See if it's actually a perf improvement to have this in a separate
+// struct instead of in ObjFn.
 // Stores debugging information for a function used for things like stack
 // traces.
 typedef struct
@@ -217,7 +219,14 @@ typedef struct
   uint8_t* bytecode;
   int numUpvalues;
   int numConstants;
+
+  // TODO: Move to FnDebug?
   int bytecodeLength;
+
+  // The number of parameters this function expects. Used to ensure that .call
+  // handles a mismatch between number of parameters and arguments. This will
+  // only be set for fns, and not ObjFns that represent methods or scripts.
+  int numParams;
   FnDebug* debug;
 } ObjFn;
 
@@ -418,17 +427,17 @@ typedef struct
 // That leaves all of the remaining bits as available for us to play with. We
 // stuff a few different kinds of things here: special singleton values like
 // "true", "false", and "null", and pointers to objects allocated on the heap.
-// We'll use the sign bit to distinguish singleton values from pointers. If it's
-// set, it's a pointer.
+// We'll use the sign bit to distinguish singleton values from pointers. If
+// it's set, it's a pointer.
 //
 // v--Pointer or singleton?
-// S[NaN       ]1-----0--------------------------------------------
+// S[NaN       ]1--------------------------------------------------
 //
-// For singleton values, we just to enumerate the different values. We'll use
-// the low three bits of the mantissa for that, and only need a couple:
+// For singleton values, we just enumerate the different values. We'll use the
+// low three bits of the mantissa for that, and only need a couple:
 //
 // 3 Type bits--v
-// 0[NaN       ]1------0----------------------------------------[T]
+// 0[NaN       ]1-----------------------------------------------[T]
 //
 // For pointers, we are left with 48 bits of mantissa to store an address.
 // That's more than enough room for a 32-bit address. Even 64-bit machines
@@ -550,7 +559,8 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 // function will take over ownership of [bytecode] and [sourceLines]. It will
 // copy [constants] into its own array.
 ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
-                       int numUpvalues, u_int8_t* bytecode, int bytecodeLength,
+                       int numUpvalues, int numParams,
+                       u_int8_t* bytecode, int bytecodeLength,
                        ObjString* debugSourcePath,
                        const char* debugName, int debugNameLength,
                        int* sourceLines);

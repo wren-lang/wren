@@ -575,8 +575,6 @@ static bool runInterpreter(WrenVM* vm)
 
             case PRIM_CALL:
               STORE_FRAME();
-              // TODO: What if the function doesn't expect the same number of
-              // args?
               callFunction(fiber, AS_OBJ(args[0]), numArgs);
               LOAD_FRAME();
               break;

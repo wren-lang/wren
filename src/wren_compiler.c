@@ -238,6 +238,9 @@ struct sCompiler
 
   int numUpvalues;
 
+  // The number of parameters this method or function expects.
+  int numParams;
+
   // The current level of block scope nesting, where zero is no nesting. A -1
   // here means top-level code is being compiled and there is no block scope
   // in effect at all. Any variables declared will be global.
@@ -337,6 +340,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->constants = NULL;
 
   compiler->numUpvalues = 0;
+  compiler->numParams = 0;
   compiler->loop = NULL;
   compiler->enclosingClass = NULL;
 
@@ -1237,6 +1241,7 @@ static ObjFn* endCompiler(Compiler* compiler,
                               compiler->constants->elements,
                               compiler->constants->count,
                               compiler->numUpvalues,
+                              compiler->numParams,
                               compiler->bytecode.data,
                               compiler->bytecode.count,
                               compiler->parser->sourcePath,
@@ -1373,25 +1378,26 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
 // list is for a method, [name] will be the name of the method and this will
 // modify it to handle arity in the signature. For functions, [name] will be
 // `null`.
-static void parameterList(Compiler* compiler, char* name, int* length)
+static int parameterList(Compiler* compiler, char* name, int* length)
 {
-  // Parse the parameter list, if any.
-  if (match(compiler, TOKEN_LEFT_PAREN))
+  // The parameter list is optional.
+  if (!match(compiler, TOKEN_LEFT_PAREN)) return 0;
+
+  int numParams = 0;
+  do
   {
-    int numParams = 0;
-    do
-    {
-      validateNumParameters(compiler, ++numParams);
+    validateNumParameters(compiler, ++numParams);
 
-      // Define a local variable in the method for the parameter.
-      declareNamedVariable(compiler);
+    // Define a local variable in the method for the parameter.
+    declareNamedVariable(compiler);
 
-      // Add a space in the name for the parameter.
-      if (name != NULL) name[(*length)++] = ' ';
-    }
-    while (match(compiler, TOKEN_COMMA));
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    // Add a space in the name for the parameter.
+    if (name != NULL) name[(*length)++] = ' ';
   }
+  while (match(compiler, TOKEN_COMMA));
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+
+  return numParams;
 }
 
 // Gets the symbol for a method [name]. If [length] is 0, it will be calculated
@@ -1517,7 +1523,7 @@ static void function(Compiler* compiler, bool allowAssignment)
   Compiler fnCompiler;
   initCompiler(&fnCompiler, compiler->parser, compiler, true);
 
-  parameterList(&fnCompiler, NULL, NULL);
+  fnCompiler.numParams = parameterList(&fnCompiler, NULL, NULL);
 
   if (match(&fnCompiler, TOKEN_LEFT_BRACE))
   {

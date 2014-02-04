@@ -248,7 +248,32 @@ DEF_NATIVE(fiber_yield1)
   return PRIM_RUN_FIBER;
 }
 
-DEF_NATIVE(fn_call) { return PRIM_CALL; }
+static PrimitiveResult callFunction(WrenVM* vm, Value* args, int numArgs)
+{
+  ObjFn* fn = AS_FN(args[0]);
+  if (numArgs < fn->numParams) RETURN_ERROR("Function expects more arguments.");
+  
+  return PRIM_CALL;
+}
+
+DEF_NATIVE(fn_call0) { return callFunction(vm, args, 0); }
+DEF_NATIVE(fn_call1) { return callFunction(vm, args, 1); }
+DEF_NATIVE(fn_call2) { return callFunction(vm, args, 2); }
+DEF_NATIVE(fn_call3) { return callFunction(vm, args, 3); }
+DEF_NATIVE(fn_call4) { return callFunction(vm, args, 4); }
+DEF_NATIVE(fn_call5) { return callFunction(vm, args, 5); }
+DEF_NATIVE(fn_call6) { return callFunction(vm, args, 6); }
+DEF_NATIVE(fn_call7) { return callFunction(vm, args, 7); }
+DEF_NATIVE(fn_call8) { return callFunction(vm, args, 8); }
+DEF_NATIVE(fn_call9) { return callFunction(vm, args, 9); }
+DEF_NATIVE(fn_call10) { return callFunction(vm, args, 10); }
+DEF_NATIVE(fn_call11) { return callFunction(vm, args, 11); }
+DEF_NATIVE(fn_call12) { return callFunction(vm, args, 12); }
+DEF_NATIVE(fn_call13) { return callFunction(vm, args, 13); }
+DEF_NATIVE(fn_call14) { return callFunction(vm, args, 14); }
+DEF_NATIVE(fn_call15) { return callFunction(vm, args, 15); }
+DEF_NATIVE(fn_call16) { return callFunction(vm, args, 16); }
+
 
 DEF_NATIVE(list_add)
 {
@@ -829,23 +854,23 @@ void wrenInitializeCore(WrenVM* vm)
   // (I.e. symmetric coroutines.)
 
   vm->fnClass = defineClass(vm, "Function");
-  NATIVE(vm->fnClass, "call", fn_call);
-  NATIVE(vm->fnClass, "call ", fn_call);
-  NATIVE(vm->fnClass, "call  ", fn_call);
-  NATIVE(vm->fnClass, "call   ", fn_call);
-  NATIVE(vm->fnClass, "call    ", fn_call);
-  NATIVE(vm->fnClass, "call     ", fn_call);
-  NATIVE(vm->fnClass, "call      ", fn_call);
-  NATIVE(vm->fnClass, "call       ", fn_call);
-  NATIVE(vm->fnClass, "call        ", fn_call);
-  NATIVE(vm->fnClass, "call         ", fn_call);
-  NATIVE(vm->fnClass, "call          ", fn_call);
-  NATIVE(vm->fnClass, "call           ", fn_call);
-  NATIVE(vm->fnClass, "call            ", fn_call);
-  NATIVE(vm->fnClass, "call             ", fn_call);
-  NATIVE(vm->fnClass, "call              ", fn_call);
-  NATIVE(vm->fnClass, "call               ", fn_call);
-  NATIVE(vm->fnClass, "call                ", fn_call);
+  NATIVE(vm->fnClass, "call", fn_call0);
+  NATIVE(vm->fnClass, "call ", fn_call1);
+  NATIVE(vm->fnClass, "call  ", fn_call2);
+  NATIVE(vm->fnClass, "call   ", fn_call3);
+  NATIVE(vm->fnClass, "call    ", fn_call4);
+  NATIVE(vm->fnClass, "call     ", fn_call5);
+  NATIVE(vm->fnClass, "call      ", fn_call6);
+  NATIVE(vm->fnClass, "call       ", fn_call7);
+  NATIVE(vm->fnClass, "call        ", fn_call8);
+  NATIVE(vm->fnClass, "call         ", fn_call9);
+  NATIVE(vm->fnClass, "call          ", fn_call10);
+  NATIVE(vm->fnClass, "call           ", fn_call11);
+  NATIVE(vm->fnClass, "call            ", fn_call12);
+  NATIVE(vm->fnClass, "call             ", fn_call13);
+  NATIVE(vm->fnClass, "call              ", fn_call14);
+  NATIVE(vm->fnClass, "call               ", fn_call15);
+  NATIVE(vm->fnClass, "call                ", fn_call16);
 
   vm->nullClass = defineClass(vm, "Null");
   NATIVE(vm->nullClass, "toString", null_toString);

@@ -156,7 +156,8 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
 }
 
 ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
-                       int numUpvalues, u_int8_t* bytecode, int bytecodeLength,
+                       int numUpvalues, int numParams,
+                       u_int8_t* bytecode, int bytecodeLength,
                        ObjString* debugSourcePath,
                        const char* debugName, int debugNameLength,
                        int* sourceLines)
@@ -195,6 +196,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
   fn->constants = copiedConstants;
   fn->numUpvalues = numUpvalues;
   fn->numConstants = numConstants;
+  fn->numParams = numParams;
   fn->bytecodeLength = bytecodeLength;
   fn->debug = debug;
 
