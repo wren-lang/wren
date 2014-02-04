@@ -9,6 +9,8 @@
 // TODO: This is used for printing the stack trace on an error. This should be
 // behind a flag so that you can use Wren with all debugging info stripped out.
 #include "wren_debug.h"
+// TODO: Put this behind a flag so users can disable the IO library.
+#include "wren_io.h"
 #include "wren_vm.h"
 
 #if WREN_TRACE_MEMORY || WREN_TRACE_GC
@@ -76,6 +78,8 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->foreignCallNumArgs = 0;
 
   wrenInitializeCore(vm);
+  wrenLoadIOLibrary(vm);
+
   return vm;
 }
 
@@ -288,9 +292,7 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
   vm->foreignCallSlot = &fiber->stack[fiber->stackSize - numArgs];
-
-  // Don't include the receiver.
-  vm->foreignCallNumArgs = numArgs - 1;
+  vm->foreignCallNumArgs = numArgs;
 
   foreign(vm);
 
@@ -1061,9 +1063,9 @@ void wrenUnpinObj(WrenVM* vm)
   vm->pinned = vm->pinned->previous;
 }
 
-void wrenDefineMethod(WrenVM* vm, const char* className,
-                      const char* methodName, int numParams,
-                      WrenForeignMethodFn methodFn)
+static void defineMethod(WrenVM* vm, const char* className,
+                         const char* methodName, int numParams,
+                         WrenForeignMethodFn methodFn, bool isStatic)
 {
   ASSERT(className != NULL, "Must provide class name.");
 
@@ -1119,7 +1121,24 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
   Method method;
   method.type = METHOD_FOREIGN;
   method.foreign = methodFn;
+
+  if (isStatic) classObj = classObj->metaclass;
+  
   wrenBindMethod(vm, classObj, methodSymbol, method);
+}
+
+void wrenDefineMethod(WrenVM* vm, const char* className,
+                      const char* methodName, int numParams,
+                      WrenForeignMethodFn methodFn)
+{
+  defineMethod(vm, className, methodName, numParams, methodFn, false);
+}
+
+void wrenDefineStaticMethod(WrenVM* vm, const char* className,
+                            const char* methodName, int numParams,
+                            WrenForeignMethodFn methodFn)
+{
+  defineMethod(vm, className, methodName, numParams, methodFn, true);
 }
 
 double wrenGetArgumentDouble(WrenVM* vm, int index)
@@ -1128,9 +1147,18 @@ double wrenGetArgumentDouble(WrenVM* vm, int index)
   ASSERT(index >= 0, "index cannot be negative.");
   ASSERT(index < vm->foreignCallNumArgs, "Not that many arguments.");
 
-  // + 1 to shift past the receiver.
   // TODO: Check actual value type first.
-  return AS_NUM(*(vm->foreignCallSlot + index + 1));
+  return AS_NUM(*(vm->foreignCallSlot + index));
+}
+
+const char* wrenGetArgumentString(WrenVM* vm, int index)
+{
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
+  ASSERT(index >= 0, "index cannot be negative.");
+  ASSERT(index < vm->foreignCallNumArgs, "Not that many arguments.");
+
+  // TODO: Check actual value type first.
+  return AS_CSTRING(*(vm->foreignCallSlot + index));
 }
 
 void wrenReturnDouble(WrenVM* vm, double value)

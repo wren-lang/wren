@@ -40,22 +40,8 @@
       return PRIM_ERROR; \
     } while (0);
 
-// This string literal is generated automatically from corelib.wren using
-// make_corelib. Do not edit here.
-const char* coreLibSource =
-"class IO {\n"
-"  static print(obj) {\n"
-"    IO.writeString_(obj.toString)\n"
-"    IO.writeString_(\"\n\")\n"
-"    return obj\n"
-"  }\n"
-"\n"
-"  static write(obj) {\n"
-"    IO.writeString_(obj.toString)\n"
-"    return obj\n"
-"  }\n"
-"}\n"
-"\n"
+// This string literal is generated automatically from core. Do not edit.
+static const char* libSource =
 "class List {\n"
 "  toString {\n"
 "    var result = \"[\"\n"
@@ -67,7 +53,6 @@ const char* coreLibSource =
 "    return result\n"
 "  }\n"
 "}\n";
-
 
 // Validates that the given argument in [args] is a Num. Returns true if it is.
 // If not, reports an error and returns false.
@@ -746,13 +731,6 @@ DEF_NATIVE(string_subscript)
   RETURN_VAL(value);
 }
 
-DEF_NATIVE(io_writeString)
-{
-  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
-  wrenPrintValue(args[1]);
-  RETURN_NULL;
-}
-
 DEF_NATIVE(os_clock)
 {
   double time = (double)clock() / CLOCKS_PER_SEC;
@@ -924,7 +902,7 @@ void wrenInitializeCore(WrenVM* vm)
   ObjClass* osClass = defineClass(vm, "OS");
   NATIVE(osClass->metaclass, "clock", os_clock);
 
-  wrenInterpret(vm, "Wren core library", coreLibSource);
+  wrenInterpret(vm, "Wren core library", libSource);
 
   vm->listClass = AS_CLASS(findGlobal(vm, "List"));
   NATIVE(vm->listClass, "add ", list_add);
@@ -941,7 +919,4 @@ void wrenInitializeCore(WrenVM* vm)
   // IEEE 754 even though they have different bit representations.
   NATIVE(vm->numClass, "== ", num_eqeq);
   NATIVE(vm->numClass, "!= ", num_bangeq);
-
-  ObjClass* ioClass = AS_CLASS(findGlobal(vm, "IO"));
-  NATIVE(ioClass->metaclass, "writeString_ ", io_writeString);
 }

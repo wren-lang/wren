@@ -100,10 +100,30 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
                       const char* methodName, int numParams,
                       WrenForeignMethodFn method);
 
+// Defines a static foreign method implemented by the host application. Looks
+// for a global class named [className] to bind the method to. If not found, it
+// will be created automatically.
+//
+// Defines a static method on that class named [methodName] accepting
+// [numParams] parameters. If a method already exists with that name and arity,
+// it will be replaced. When invoked, the method will call [method].
+void wrenDefineStaticMethod(WrenVM* vm, const char* className,
+                            const char* methodName, int numParams,
+                            WrenForeignMethodFn method);
+
 // Reads an numeric argument for a foreign call. This must only be called within
 // a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
 // which ranges from 0 to the number of parameters the method expects - 1.
 double wrenGetArgumentDouble(WrenVM* vm, int index);
+
+// Reads an string argument for a foreign call. This must only be called within
+// a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
+// which ranges from 0 to the number of parameters the method expects - 1.
+//
+// The memory for the returned string is owned by Wren. You can inspect it
+// while in your foreign function, but cannot keep a pointer to it after the
+// function returns, since the garbage collector may reclaim it.
+const char* wrenGetArgumentString(WrenVM* vm, int index);
 
 // Provides a numeric return value for a foreign call. This must only be called
 // within a function provided to [wrenDefineMethod]. Once this is called, the

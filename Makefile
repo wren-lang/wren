@@ -52,6 +52,8 @@ docs:
 watchdocs:
 	@./script/generate_docs.py --watch
 
-# Take the contents of corelib.wren and copy them into src/wren_core.c.
-corelib:
-	@./script/generate_corelib.py
+# Take the contents of the scripts under builtin/ and copy them into their
+# respective wren_<name>.c source files.
+# TODO: Needs dependencies so it knows when to run.
+builtin:
+	@./script/generate_builtins.py
