@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "wren_io.h"
 
@@ -17,15 +18,21 @@ static const char* libSource =
 "  }\n"
 "}\n";
 
-static void writeString(WrenVM* vm)
+static void ioWriteString(WrenVM* vm)
 {
   const char* s = wrenGetArgumentString(vm, 1);
   // TODO: Check for null.
   printf("%s", s);
 }
 
+static void ioClock(WrenVM* vm)
+{
+  wrenReturnDouble(vm, (double)clock() / CLOCKS_PER_SEC);
+}
+
 void wrenLoadIOLibrary(WrenVM* vm)
 {
   wrenInterpret(vm, "Wren IO library", libSource);
-  wrenDefineStaticMethod(vm, "IO", "writeString_", 1, writeString);
+  wrenDefineStaticMethod(vm, "IO", "writeString_", 1, ioWriteString);
+  wrenDefineStaticMethod(vm, "IO", "clock", 0, ioClock);
 }

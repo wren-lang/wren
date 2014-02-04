@@ -24,7 +24,7 @@ var minDepth = 4
 var maxDepth = 12
 var stretchDepth = maxDepth + 1
 
-var start = OS.clock
+var start = IO.clock
 
 IO.print("stretch tree of depth " + stretchDepth.toString + " check: " +
     new Tree(0, stretchDepth).check.toString)
@@ -53,4 +53,4 @@ while (depth < stretchDepth) {
 IO.print("long lived tree of depth " + maxDepth.toString + " check: " +
     longLivedTree.check.toString)
 
-IO.print("elapsed: " + (OS.clock - start).toString)
+IO.print("elapsed: " + (IO.clock - start).toString)

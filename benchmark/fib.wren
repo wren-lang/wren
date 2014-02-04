@@ -3,8 +3,8 @@ var fib = fn(n) {
   return fib.call(n - 1) + fib.call(n - 2)
 }
 
-var start = OS.clock
+var start = IO.clock
 for (i in 1..5) {
   IO.print(fib.call(28))
 }
-IO.print("elapsed: " + (OS.clock - start).toString)
+IO.print("elapsed: " + (IO.clock - start).toString)

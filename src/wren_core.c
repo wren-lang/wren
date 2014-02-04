@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #include "wren_core.h"
 #include "wren_value.h"
@@ -731,12 +730,6 @@ DEF_NATIVE(string_subscript)
   RETURN_VAL(value);
 }
 
-DEF_NATIVE(os_clock)
-{
-  double time = (double)clock() / CLOCKS_PER_SEC;
-  RETURN_NUM(time);
-}
-
 static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 {
   size_t length = strlen(name);
@@ -898,9 +891,6 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->stringClass, "== ", string_eqeq);
   NATIVE(vm->stringClass, "!= ", string_bangeq);
   NATIVE(vm->stringClass, "[ ]", string_subscript);
-
-  ObjClass* osClass = defineClass(vm, "OS");
-  NATIVE(osClass->metaclass, "clock", os_clock);
 
   wrenInterpret(vm, "Wren core library", libSource);
 
