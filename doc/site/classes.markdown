@@ -14,9 +14,9 @@ Classes are created using the `class` keyword, unsurprisingly:
 
 This creates a class named `Unicorn` with no methods or fields.
 
-## Defining methods
+## Methods
 
-To make our unicorn do stuff, we need to give it methods.
+Once we've made a unicorn, to let it do stuff, we need to give it methods.
 
     :::dart
     class Unicorn {
@@ -34,7 +34,7 @@ This defines a `prance` method that takes no arguments. To support parameters, a
       }
     }
 
-Unlike most other dynamically-typed languages, in Wren you can have multiple methods in a class with the same name, as long as they take a different number of parameters. In other words, you can overload by arity. So this class is fine:
+Unlike most other dynamically-typed languages, in Wren you can have multiple methods in a class with the same name, as long as they take a different number of parameters. In technical terms, you can overload by *arity*. So this class is fine:
 
     :::dart
     class Unicorn {
@@ -51,13 +51,36 @@ Unlike most other dynamically-typed languages, in Wren you can have multiple met
       }
     }
 
-When you [call](method-calls.html) the `prance` method, it will select the right one based on how many arguments you pass it.
+When you [call](method-calls.html) the `prance` method, it selects the right one based on how many arguments you pass it.
 
 **TODO: Defining operators and setters.**
 
 ## Constructors
 
-**TODO**
+To create a new instance of a class, you use the `new` keyword. We can make a unicorn like so:
+
+    :::dart
+    new Unicorn
+
+You almost always want to define some state or do some other initialization on a new object. For that, you'll want to define a constructor, like so:
+
+    class Unicorn {
+      new {
+        IO.print("I am a constructor!")
+      }
+    }
+
+When you create an instance with `new`, its constructor will be invoked. Like methods, you can pass arguments to the constructor by adding a parenthesized parameter list after `new`:
+
+    class Unicorn {
+      new(name, color) {
+        IO.print("My name is " + name + " and I am " + color + ".")
+      }
+    }
+
+Values are passed to the constructor like so:
+
+    new Unicorn("Flicker", "purple")
 
 ## Fields
 
@@ -78,9 +101,9 @@ By default, any new class inherits from `Object`, which is the superclass from w
 
 This declares a new class `Pegasus` that inherits from `Unicorn`.
 
-The metaclass hierarchy parallels the regular class hierarchy. So, if `Pegasus` inherits from `Unicorn`, `Pegasus`'s metaclass will inherit from `Unicorn`'s metaclass. In more prosaic terms, this means that static methods are inherited and can be overridden. This includes constructors.
+The metaclass hierarchy does *not* parallel the regular class hierarchy. So, if `Pegasus` inherits from `Unicorn`, `Pegasus`'s metaclass will not inherit from `Unicorn`'s metaclass. In more prosaic terms, this means that static methods are not inherited.
 
-If you *don't* want your subclass to support some static method that it's superclass has, the simplest solution is to override it and make your method error out.
+Constructors, however, initialize the instance *after* it has been created. They are defined as instance methods on the class and not on the metaclass. That means that constructors *are* inherited.
 
 ## Superclass method calls
 
