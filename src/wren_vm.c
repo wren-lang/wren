@@ -1166,3 +1166,22 @@ void wrenReturnDouble(WrenVM* vm, double value)
   *vm->foreignCallSlot = NUM_VAL(value);
   vm->foreignCallSlot = NULL;
 }
+
+void wrenReturnNull(WrenVM* vm)
+{
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
+
+  *vm->foreignCallSlot = NULL_VAL;
+  vm->foreignCallSlot = NULL;
+}
+
+void wrenReturnString(WrenVM* vm, const char* text, int length)
+{
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
+
+  size_t size = length;
+  if (length == -1) size = strlen(text);
+
+  *vm->foreignCallSlot = wrenNewString(vm, text, size);
+  vm->foreignCallSlot = NULL;
+}
