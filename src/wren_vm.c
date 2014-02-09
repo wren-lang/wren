@@ -545,7 +545,7 @@ static bool runInterpreter(WrenVM* vm)
       ObjClass* classObj = wrenGetClass(vm, receiver);
 
       // If the class's method table doesn't include the symbol, bail.
-      if (classObj->methods.count < symbol)
+      if (symbol >= classObj->methods.count)
       {
         STORE_FRAME();
         methodNotFound(vm, fiber, symbol);
@@ -649,7 +649,7 @@ static bool runInterpreter(WrenVM* vm)
       classObj = classObj->superclass;
 
       // If the class's method table doesn't include the symbol, bail.
-      if (classObj->methods.count < symbol)
+      if (symbol >= classObj->methods.count)
       {
         STORE_FRAME();
         methodNotFound(vm, fiber, symbol);
