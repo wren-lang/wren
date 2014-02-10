@@ -250,7 +250,16 @@ DEF_NATIVE(fiber_yield1)
 
 static PrimitiveResult callFunction(WrenVM* vm, Value* args, int numArgs)
 {
-  ObjFn* fn = AS_FN(args[0]);
+  ObjFn* fn;
+  if (IS_CLOSURE(args[0]))
+  {
+    fn = AS_CLOSURE(args[0])->fn;
+  }
+  else
+  {
+    fn = AS_FN(args[0]);
+  }
+  
   if (numArgs < fn->numParams) RETURN_ERROR("Function expects more arguments.");
   
   return PRIM_CALL;
