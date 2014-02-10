@@ -296,8 +296,9 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
   // If we have too much excess capacity, shrink it.
   if (list->capacity / LIST_GROW_FACTOR >= list->count)
   {
-    wrenReallocate(vm, list->elements, sizeof(Value) * list->capacity,
-                   sizeof(Value) * (list->capacity / LIST_GROW_FACTOR));
+    list->elements = wrenReallocate(vm, list->elements,
+        sizeof(Value) * list->capacity,
+        sizeof(Value) * (list->capacity / LIST_GROW_FACTOR));
     list->capacity /= LIST_GROW_FACTOR;
   }
 
