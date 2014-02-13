@@ -1,8 +1,16 @@
+from __future__ import print_function
+
 import time
+
+# Map "range" to an efficient range in both Python 2 and 3.
+try:
+    range = xrange
+except NameError:
+    pass
 
 start = time.clock()
 list = []
-for i in xrange(0, 1000000):
+for i in range(0, 1000000):
   list.append(i)
 
 sum = 0

@@ -18,18 +18,16 @@ the layout & logic from the original. (Ugh.)
 
 From: https://gist.github.com/toastdriven/6408132
 
+I (Bob Nystrom) tweaked it a bit more. It now prints some output just to be
+sure it's doing the same work, and I use normal lists instead of wrapping it in
+OrderedCollection.
+
 """
 from __future__ import print_function
 import time
 
 __author__ = 'Daniel Lindsley'
 __license__ = 'BSD'
-
-
-# The JS variant implements "OrderedCollection", which basically completely
-# overlaps with ``list``. So we'll cheat. :D
-class OrderedCollection(list):
-    pass
 
 
 class Strength(object):
@@ -348,7 +346,7 @@ class Variable(object):
         super(Variable, self).__init__()
         self.name = name
         self.value = initial_value
-        self.constraints = OrderedCollection()
+        self.constraints = []
         self.determined_by = None
         self.mark = 0
         self.walk_strength = Strength.WEAKEST
@@ -421,7 +419,7 @@ class Planner(object):
         return plan
 
     def extract_plan_from_constraints(self, constraints):
-        sources = OrderedCollection()
+        sources = []
 
         for c in constraints:
             if c.is_input() and c.is_satisfied():
@@ -430,7 +428,7 @@ class Planner(object):
         return self.make_plan(sources)
 
     def add_propagate(self, c, mark):
-        todo = OrderedCollection()
+        todo = []
         todo.append(c)
 
         while len(todo):
@@ -449,8 +447,8 @@ class Planner(object):
         out.determined_by = None
         out.walk_strength = Strength.WEAKEST
         out.stay = True
-        unsatisfied = OrderedCollection()
-        todo = OrderedCollection()
+        unsatisfied = []
+        todo = []
         todo.append(out)
 
         while len(todo):
@@ -484,7 +482,7 @@ class Planner(object):
 class Plan(object):
     def __init__(self):
         super(Plan, self).__init__()
-        self.v = OrderedCollection()
+        self.v = []
 
     def add_constraint(self, c):
         self.v.append(c)
@@ -541,7 +539,7 @@ def chain_test(n):
 
     StayConstraint(last, Strength.STRONG_DEFAULT)
     edit = EditConstraint(first, Strength.PREFERRED)
-    edits = OrderedCollection()
+    edits = []
     edits.append(edit)
     plan = planner.extract_plan_from_constraints(edits)
 
@@ -549,7 +547,7 @@ def chain_test(n):
         first.value = i
         plan.execute()
 
-        total += last.value
+        total += int(last.value)
         if last.value != i:
             print("Chain test failed.")
 
@@ -569,7 +567,7 @@ def projection_test(n):
     offset = Variable("offset", 1000)
     src, dest = None, None
 
-    dests = OrderedCollection()
+    dests = []
 
     for i in range(n):
         src = Variable("src%s" % i, i)
@@ -580,27 +578,27 @@ def projection_test(n):
 
     change(src, 17)
 
-    total += dst.value
+    total += int(dst.value)
     if dst.value != 1170:
         print("Projection 1 failed")
 
     change(dst, 1050)
 
-    total += src.value
+    total += int(src.value)
     if src.value != 5:
         print("Projection 2 failed")
 
     change(scale, 5)
 
     for i in range(n - 1):
-        total += dests[i].value
+        total += int(dests[i].value)
         if dests[i].value != (i * 5 + 1000):
             print("Projection 3 failed")
 
     change(offset, 2000)
 
     for i in range(n - 1):
-        total += dests[i].value
+        total += int(dests[i].value)
         if dests[i].value != (i * 5 + 2000):
             print("Projection 4 failed")
 
@@ -608,7 +606,7 @@ def projection_test(n):
 def change(v, new_value):
     global planner
     edit = EditConstraint(v, Strength.PREFERRED)
-    edits = OrderedCollection()
+    edits = []
     edits.append(edit)
 
     plan = planner.extract_plan_from_constraints(edits)
