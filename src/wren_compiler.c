@@ -1434,13 +1434,12 @@ static void methodCall(Compiler* compiler, Code instruction,
             methodSymbol(compiler, name, length));
 }
 
-// Compiles an expression that starts with ".name". That includes getters,
-// method calls with arguments, and setter calls.
+// Compiles a call whose name is the previously consumed token. This includes
+// getters, method calls with arguments, and setter calls.
 static void namedCall(Compiler* compiler, bool allowAssignment,
                       Code instruction)
 {
   // Build the method name.
-  consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
   char name[MAX_METHOD_SIGNATURE];
   int length = copyName(compiler, name);
 
@@ -1703,9 +1702,23 @@ static void name(Compiler* compiler, bool allowAssignment)
   Code loadInstruction;
   int index = resolveName(compiler, token->start, token->length,
                           &loadInstruction);
-  if (index == -1) error(compiler, "Undefined variable.");
+  if (index != -1)
+  {
+    variable(compiler, allowAssignment, index, loadInstruction);
+    return;
+  }
 
-  variable(compiler, allowAssignment, index, loadInstruction);
+  // Otherwise, if we are inside a class, it's a getter call with an implicit
+  // receiver.
+  ClassCompiler* classCompiler = getEnclosingClass(compiler);
+  if (classCompiler == NULL)
+  {
+    error(compiler, "Undefined variable.");
+    return;
+  }
+
+  loadThis(compiler);
+  namedCall(compiler, allowAssignment, CODE_CALL_0);
 }
 
 static void null(Compiler* compiler, bool allowAssignment)
@@ -1781,6 +1794,7 @@ static void super_(Compiler* compiler, bool allowAssignment)
   if (match(compiler, TOKEN_DOT))
   {
     // Compile the superclass call.
+    consume(compiler, TOKEN_NAME, "Expect method name after 'super.'.");
     namedCall(compiler, allowAssignment, CODE_SUPER_0);
   }
   else
@@ -1851,6 +1865,7 @@ static void subscript(Compiler* compiler, bool allowAssignment)
 
 void call(Compiler* compiler, bool allowAssignment)
 {
+  consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
   namedCall(compiler, allowAssignment, CODE_CALL_0);
 }
 

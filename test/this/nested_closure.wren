@@ -3,7 +3,7 @@ class Foo {
     return fn {
       return fn {
         return fn {
-          return this.toString
+          return toString
         }
       }
     }
