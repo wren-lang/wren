@@ -18,6 +18,3 @@ for
 // expect: 1
 // expect: 2
 // expect: 3
-
-// TODO: Return from inside for loop.
-// TODO: Return closure from inside for loop.

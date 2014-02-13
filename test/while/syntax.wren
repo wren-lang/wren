@@ -22,5 +22,3 @@ while
 // expect: 1
 // expect: 2
 // expect: 3
-
-// TODO: Close over variable in body.

@@ -22,17 +22,4 @@
   IO.print(list) // expect: [7, 6, 5]
 }
 
-// TODO: Handle out of range.
-// TODO: Wrong non-number type.
-// TODO: Floating-point subscript.
-//{
-//  var list = [1, 2, 3, 4]
-//  list[4] = 1
-//}
-//
-//{
-//  var list = [1, 2, 3, 4]
-//  list[-5] = 1
-//}
-
 // TODO: Not in this dir, but need tests for subscript setter grammar.

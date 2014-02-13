@@ -14,5 +14,4 @@ IO.print("\u0b83")     // expect: ஃ
 IO.print("\u00B6")     // expect: ¶
 IO.print("\u00DE")     // expect: Þ
 
-// TODO: Missing digits in escape.
 // TODO: Syntax for Unicode escapes > 0xffff?
