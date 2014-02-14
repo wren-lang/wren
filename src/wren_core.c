@@ -51,6 +51,21 @@ static const char* libSource =
 "    result = result + \"]\"\n"
 "    return result\n"
 "  }\n"
+"\n"
+"  + that {\n"
+"    var newList = []\n"
+"    if (this.count > 0) {\n"
+"      for (element in this) {\n"
+"        newList.add(element)\n"
+"      }\n"
+"    }\n"
+"    if (that is Range || that.count > 0) {\n"
+"      for (element in that) {\n"
+"        newList.add(element)\n"
+"      }\n"
+"    }\n"
+"    return newList\n"
+"  }\n"
 "}\n";
 
 // Validates that the given argument in [args] is a Num. Returns true if it is.

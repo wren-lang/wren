@@ -8,4 +8,19 @@ class List {
     result = result + "]"
     return result
   }
+
+  + that {
+    var newList = []
+    if (this.count > 0) {
+      for (element in this) {
+        newList.add(element)
+      }
+    }
+    if (that is Range || that.count > 0) {
+      for (element in that) {
+        newList.add(element)
+      }
+    }
+    return newList
+  }
 }
