@@ -883,13 +883,19 @@ static bool runInterpreter(WrenVM* vm)
       Value result = POP();
       fiber->numFrames--;
 
+      // Close any upvalues still in scope.
+      Value* firstValue = &fiber->stack[frame->stackStart];
+      while (fiber->openUpvalues != NULL &&
+             fiber->openUpvalues->value >= firstValue)
+      {
+        closeUpvalue(fiber);
+      }
+
       // If the fiber is complete, end it.
       if (fiber->numFrames == 0)
       {
         // If this is the main fiber, we're done.
         if (fiber->caller == NULL) return true;
-
-        // TODO: Do we need to close upvalues here?
 
         // We have a calling fiber to resume.
         fiber = fiber->caller;
@@ -899,14 +905,6 @@ static bool runInterpreter(WrenVM* vm)
       }
       else
       {
-        // Close any upvalues still in scope.
-        Value* firstValue = &fiber->stack[frame->stackStart];
-        while (fiber->openUpvalues != NULL &&
-               fiber->openUpvalues->value >= firstValue)
-        {
-          closeUpvalue(fiber);
-        }
-
         // Store the result of the block in the first slot, which is where the
         // caller expects it.
         fiber->stack[frame->stackStart] = result;
