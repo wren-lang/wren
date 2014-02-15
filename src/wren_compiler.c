@@ -97,7 +97,7 @@ typedef enum
   TOKEN_EOF
 } TokenType;
 
-typedef struct Token_s
+typedef struct
 {
   TokenType type;
 

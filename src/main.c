@@ -77,7 +77,7 @@ static int runRepl(WrenVM* vm)
     size_t size = 0;
     getline(&line, &size, stdin);
 
-    // If stdin was closed (usually meaning the used entered Ctrl-D), exit.
+    // If stdin was closed (usually meaning the user entered Ctrl-D), exit.
     if (feof(stdin))
     {
       printf("\n");
