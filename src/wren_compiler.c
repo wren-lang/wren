@@ -2546,6 +2546,9 @@ static void classDefinition(Compiler* compiler)
     // Define the method.
     emitShort(compiler, instruction, methodSymbol);
 
+    // Don't require a newline after the last definition.
+    if (match(compiler, TOKEN_RIGHT_BRACE)) break;
+
     consume(compiler, TOKEN_LINE,
             "Expect newline after definition in class.");
   }
