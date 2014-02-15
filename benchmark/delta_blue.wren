@@ -64,15 +64,11 @@ class Strength {
   static weaker(s1, s2) { return s1.value > s2.value }
 
   static weakest(s1, s2) {
-    // TODO: Ternary operator.
-    if (Strength.weaker(s1, s2)) return s1
-    return s2
+    return Strength.weaker(s1, s2) ? s1 : s2
   }
 
   static strongest(s1, s2) {
-    // TODO: Ternary operator.
-    if (Strength.stronger(s1, s2)) return s1
-    return s2
+    return Strength.stronger(s1, s2) ? s1 : s2
   }
 }
 
@@ -432,15 +428,7 @@ class Variable {
 
   // Removes all traces of c from this variable.
   removeConstraint(constraint) {
-    // TODO: Better way to filter list.
-    var i = 0
-    while (i < _constraints.count) {
-      if (_constraints[i] == constraint) {
-        _constraints.removeAt(i)
-      } else {
-        i = i + 1
-      }
-    }
+    _constraints = _constraints.where(fn (c) c != constraint)
     if (_determinedBy == constraint) _determinedBy = null
   }
 }
