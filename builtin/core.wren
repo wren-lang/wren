@@ -16,4 +16,12 @@ class List {
     }
     return result
   }
+  
+  map (f) {
+    var result = []
+    for (element in this) {
+      result.add(f.call(element))
+    }
+    return result
+  }
 }

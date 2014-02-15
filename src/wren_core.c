@@ -59,6 +59,14 @@ static const char* libSource =
 "    }\n"
 "    return result\n"
 "  }\n"
+"  \n"
+"  map (f) {\n"
+"    var result = []\n"
+"    for (element in this) {\n"
+"      result.add(f.call(element))\n"
+"    }\n"
+"    return result\n"
+"  }\n"
 "}\n";
 
 // Validates that the given argument in [args] is a Num. Returns true if it is.
