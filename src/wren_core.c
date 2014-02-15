@@ -53,10 +53,7 @@ static const char* libSource =
 "  }\n"
 "\n"
 "  + that {\n"
-"    var result = []\n"
-"    for (element in this) {\n"
-"      result.add(element)\n"
-"    }\n"
+"    var result = this[0..-1]\n"
 "    for (element in that) {\n"
 "      result.add(element)\n"
 "    }\n"
@@ -388,6 +385,18 @@ DEF_NATIVE(list_subscript)
   }
 
   ObjRange* range = AS_RANGE(args[1]);
+
+  // TODO: This code is pretty hairy. Is there a more elegant way?
+  // Corner case: an empty range at zero is allowed on an empty list.
+  // This way, list[0..-1] and list[0...list.count] can be used to copy a list
+  // even when empty.
+  if (list->count == 0) {
+    if ((range->from == 0 && range->to == -1 && range->isInclusive) ||
+        (range->from == 0 && range->to == 0 && !range->isInclusive))
+    {
+      RETURN_OBJ(wrenNewList(vm, 0));
+    }
+  }
 
   int from = validateIndexValue(vm, args, list->count, range->from,
                                 "Range start");
