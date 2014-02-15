@@ -13,3 +13,6 @@ IO.print(d) // expect: [1, 2, 3, 4, 5, 6]
 IO.print(e) // expect: [1, 2, 3]
 IO.print(f) // expect: [1, 2, 3]
 IO.print(g) // expect: []
+
+// Doesn't modify original list.
+IO.print(a) // expect: [1, 2, 3]

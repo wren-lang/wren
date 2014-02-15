@@ -53,18 +53,14 @@ static const char* libSource =
 "  }\n"
 "\n"
 "  + that {\n"
-"    var newList = []\n"
-"    if (this.count > 0) {\n"
-"      for (element in this) {\n"
-"        newList.add(element)\n"
-"      }\n"
+"    var result = []\n"
+"    for (element in this) {\n"
+"      result.add(element)\n"
 "    }\n"
-"    if (that is Range || that.count > 0) {\n"
-"      for (element in that) {\n"
-"        newList.add(element)\n"
-"      }\n"
+"    for (element in that) {\n"
+"      result.add(element)\n"
 "    }\n"
-"    return newList\n"
+"    return result\n"
 "  }\n"
 "}\n";
 
@@ -336,12 +332,17 @@ DEF_NATIVE(list_insert)
 
 DEF_NATIVE(list_iterate)
 {
+  ObjList* list = AS_LIST(args[0]);
+
   // If we're starting the iteration, return the first index.
-  if (IS_NULL(args[1])) RETURN_NUM(0);
+  if (IS_NULL(args[1]))
+  {
+    if (list->count == 0) RETURN_FALSE;
+    RETURN_NUM(0);
+  }
 
   if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
 
-  ObjList* list = AS_LIST(args[0]);
   int index = (int)AS_NUM(args[1]);
 
   // Stop if we're out of bounds.
