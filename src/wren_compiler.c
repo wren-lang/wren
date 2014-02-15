@@ -58,6 +58,7 @@ typedef enum
   TOKEN_AMPAMP,
   TOKEN_BANG,
   TOKEN_TILDE,
+  TOKEN_QUESTION,
   TOKEN_EQ,
   TOKEN_LT,
   TOKEN_GT,
@@ -431,6 +432,9 @@ static void makeToken(Parser* parser, TokenType type)
   parser->current.start = parser->tokenStart;
   parser->current.length = (int)(parser->currentChar - parser->tokenStart);
   parser->current.line = parser->currentLine;
+
+  // Make line tokens appear on the line containing the "\n".
+  if (type == TOKEN_LINE) parser->current.line--;
 }
 
 // If the current character is [c], then consumes it and makes a token of type
@@ -722,6 +726,7 @@ static void readRawToken(Parser* parser)
       case '%': makeToken(parser, TOKEN_PERCENT); return;
       case '+': makeToken(parser, TOKEN_PLUS); return;
       case '~': makeToken(parser, TOKEN_TILDE); return;
+      case '?': makeToken(parser, TOKEN_QUESTION); return;
       case '/':
         if (peekChar(parser) == '/')
         {
@@ -857,6 +862,7 @@ static void nextToken(Parser* parser)
       case TOKEN_AMPAMP:
       case TOKEN_BANG:
       case TOKEN_TILDE:
+      case TOKEN_QUESTION:
       case TOKEN_EQ:
       case TOKEN_LT:
       case TOKEN_GT:
@@ -1893,6 +1899,29 @@ void or(Compiler* compiler, bool allowAssignment)
   patchJump(compiler, jump);
 }
 
+void conditional(Compiler* compiler, bool allowAssignment)
+{
+  // Jump to the else branch if the condition is false.
+  int ifJump = emitJump(compiler, CODE_JUMP_IF);
+
+  // Compile the then branch.
+  parsePrecedence(compiler, allowAssignment, PREC_LOGIC);
+
+  consume(compiler, TOKEN_COLON,
+          "Expect ':' after then branch of conditional operator.");
+
+  // Jump over the else branch when the if branch is taken.
+  int elseJump = emitJump(compiler, CODE_JUMP);
+
+  // Compile the else branch.
+  patchJump(compiler, ifJump);
+
+  parsePrecedence(compiler, allowAssignment, PREC_ASSIGNMENT);
+
+  // Patch the jump over the else.
+  patchJump(compiler, elseJump);
+}
+
 void infixOp(Compiler* compiler, bool allowAssignment)
 {
   GrammarRule* rule = &rules[compiler->parser->previous.type];
@@ -1996,6 +2025,7 @@ GrammarRule rules[] =
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGIC, and),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_TILDE         */ PREFIX_OPERATOR("~"),
+  /* TOKEN_QUESTION      */ INFIX(PREC_ASSIGNMENT, conditional),
   /* TOKEN_EQ            */ UNUSED,
   /* TOKEN_LT            */ INFIX_OPERATOR(PREC_COMPARISON, "< "),
   /* TOKEN_GT            */ INFIX_OPERATOR(PREC_COMPARISON, "> "),

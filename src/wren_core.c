@@ -307,6 +307,10 @@ DEF_NATIVE(fn_call14) { return callFunction(vm, args, 14); }
 DEF_NATIVE(fn_call15) { return callFunction(vm, args, 15); }
 DEF_NATIVE(fn_call16) { return callFunction(vm, args, 16); }
 
+DEF_NATIVE(fn_toString)
+{
+  RETURN_VAL(wrenNewString(vm, "<fn>", 4));
+}
 
 DEF_NATIVE(list_add)
 {
@@ -921,6 +925,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->fnClass, "call              ", fn_call14);
   NATIVE(vm->fnClass, "call               ", fn_call15);
   NATIVE(vm->fnClass, "call                ", fn_call16);
+  NATIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = defineClass(vm, "Null");
   NATIVE(vm->nullClass, "toString", null_toString);

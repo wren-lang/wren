@@ -57,3 +57,5 @@ An `||` ("logical or") expression is reversed. If the left-hand argument is trut
     :::wren
     io.write(false || 1)  // 1
     io.write(1 || 2)      // 1
+
+**TODO: Conditional operator.**
