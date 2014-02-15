@@ -16,4 +16,12 @@ class List {
     }
     return result
   }
+  
+  where (f) {
+    var result = []
+    for (element in this) {
+      if (f.call(element)) result.add(element)
+    }
+    return result
+  }
 }
