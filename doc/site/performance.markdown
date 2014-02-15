@@ -14,7 +14,7 @@ Languages come in four rough performance buckets, from slowest to fastest:
 4.  Statically compiled statically typed languages: C, C++, Java, C#, Haskell,
     etc.
 
-Most languages in the first bucket aren't suitable for production use. (Servers are one exception, because you can always throw more hardware at a slow language there.) Languages in the second bucket are fast enough for many use cases, even on client hardware, as the success of the listed languages shows. Languages in the third bucket are quite fast, but their implementations are breathtakingly complex, often rivalling that of compilers for statically-typed languages.
+Most languages in the first bucket aren't suitable for production use. (Servers are one exception, because you can always throw more hardware at a slow language there.) Languages in the second bucket are fast enough for many use cases, even on client hardware, as the success of the listed languages shows. Languages in the third bucket are quite fast, but their implementations are breathtakingly complex, often rivaling that of compilers for statically-typed languages.
 
 ## Why is Wren fast?
 
@@ -76,6 +76,6 @@ Wren cares about compatibility, but it requires C99 and IEEE double precision fl
 
 ## Do you have benchmarks to prove this?
 
-Benchmarks are somewhere between an art and a carvinal game. They can easily be manipulated to show what you want. But, yes, there are several benchmarks in the repo.
+Benchmarks are somewhere between an art and a carnival game. They can easily be manipulated to show what you want. But, yes, there are several benchmarks in the repo.
 
 **TODO: chart**
