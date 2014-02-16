@@ -41,7 +41,25 @@
 
 // This string literal is generated automatically from core. Do not edit.
 static const char* libSource =
-"class List {\n"
+"class Sequence {\n"
+"  map (f) {\n"
+"    var result = []\n"
+"    for (element in this) {\n"
+"      result.add(f.call(element))\n"
+"    }\n"
+"    return result\n"
+"  }\n"
+"\n"
+"  where (f) {\n"
+"    var result = []\n"
+"    for (element in this) {\n"
+"      if (f.call(element)) result.add(element)\n"
+"    }\n"
+"    return result\n"
+"  }\n"
+"}\n"
+"\n"
+"class List is Sequence {\n"
 "  toString {\n"
 "    var result = \"[\"\n"
 "    for (i in 0...count) {\n"
@@ -59,23 +77,9 @@ static const char* libSource =
 "    }\n"
 "    return result\n"
 "  }\n"
-"  \n"
-"  map (f) {\n"
-"    var result = []\n"
-"    for (element in this) {\n"
-"      result.add(f.call(element))\n"
-"    }\n"
-"    return result\n"
-"  }\n"
-"  \n"
-"  where (f) {\n"
-"    var result = []\n"
-"    for (element in this) {\n"
-"      if (f.call(element)) result.add(element)\n"
-"    }\n"
-"    return result\n"
-"  }\n"
-"}\n";
+"}\n"
+"\n"
+"class Range is Sequence {}\n";
 
 // Validates that the given argument in [args] is a Num. Returns true if it is.
 // If not, reports an error and returns false.
@@ -953,16 +957,6 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, ".. ", num_dotDot);
   NATIVE(vm->numClass, "... ", num_dotDotDot);
 
-  vm->rangeClass = defineClass(vm, "Range");
-  NATIVE(vm->rangeClass, "from", range_from);
-  NATIVE(vm->rangeClass, "to", range_to);
-  NATIVE(vm->rangeClass, "min", range_min);
-  NATIVE(vm->rangeClass, "max", range_max);
-  NATIVE(vm->rangeClass, "isInclusive", range_isInclusive);
-  NATIVE(vm->rangeClass, "iterate ", range_iterate);
-  NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
-  NATIVE(vm->rangeClass, "toString", range_toString);
-
   vm->stringClass = defineClass(vm, "String");
   NATIVE(vm->stringClass, "contains ", string_contains);
   NATIVE(vm->stringClass, "count", string_count);
@@ -984,6 +978,16 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "removeAt ", list_removeAt);
   NATIVE(vm->listClass, "[ ]", list_subscript);
   NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
+
+  vm->rangeClass = AS_CLASS(findGlobal(vm, "Range"));
+  NATIVE(vm->rangeClass, "from", range_from);
+  NATIVE(vm->rangeClass, "to", range_to);
+  NATIVE(vm->rangeClass, "min", range_min);
+  NATIVE(vm->rangeClass, "max", range_max);
+  NATIVE(vm->rangeClass, "isInclusive", range_isInclusive);
+  NATIVE(vm->rangeClass, "iterate ", range_iterate);
+  NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
+  NATIVE(vm->rangeClass, "toString", range_toString);
 
   // These are defined just so that 0 and -0 are equal, which is specified by
   // IEEE 754 even though they have different bit representations.
