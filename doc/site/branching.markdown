@@ -19,27 +19,27 @@ This means `0`, empty strings, and empty collections are all considered "true" v
 The simplest branching statement, `if` lets you conditionally skip a chunk of code. It looks like this:
 
     :::wren
-    if (ready) io.write("go!")
+    if (ready) IO.write("go!")
 
 That evaluates the parenthesized expression after `if`. If it's true, then the statement after the condition is evaluated. Otherwise it is skipped. Instead of a statement, you can have a block:
 
     :::wren
     if (ready) {
-      io.write("getSet")
-      io.write("go!")
+      IO.write("getSet")
+      IO.write("go!")
     }
 
 You may also provide an `else` branch. It will be executed if the condition is false:
 
     :::wren
-    if (ready) io.write("go!") else io.write("not ready!")
+    if (ready) IO.write("go!") else IO.write("not ready!")
 
 And, of course, it can take a block too:
 
     if (ready) {
-      io.write("go!")
+      IO.write("go!")
     } else {
-      io.write("not ready!")
+      IO.write("not ready!")
     }
 
 ## The logical operators `&&` and `||`
@@ -49,13 +49,13 @@ The `&&` and `||` operators are lumped here under branching because they conditi
 An `&&` ("logical and") expression evaluates the left-hand argument. If it's falsey, it returns that value. Otherwise it evaluates and returns the right-hand argument.
 
     :::wren
-    io.write(false && 1)  // false
-    io.write(1 && 2)      // 2
+    IO.write(false && 1)  // false
+    IO.write(1 && 2)      // 2
 
 An `||` ("logical or") expression is reversed. If the left-hand argument is truthy, it's returned, otherwise the right-hand argument is evaluated and returned:
 
     :::wren
-    io.write(false || 1)  // 1
-    io.write(1 || 2)      // 1
+    IO.write(false || 1)  // 1
+    IO.write(1 || 2)      // 1
 
 **TODO: Conditional operator.**

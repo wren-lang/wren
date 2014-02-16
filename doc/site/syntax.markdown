@@ -38,8 +38,8 @@ never write `;` unless you want to cram a bunch of statements on one line.
 
     :::dart
     // Two statements:
-    io.write("hi")
-    io.write("bye")
+    IO.write("hi")
+    IO.write("bye")
 
 Sometimes, though, a statement doesn't fit on a single line and treating the
 newline as a semicolon would trip things up. To handle that, Wren has a very
