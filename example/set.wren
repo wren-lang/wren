@@ -68,27 +68,25 @@ class Set {
     return new Set(_list.where(f))
   }
   
-  /*| that {
+  | that {
     // Union
-
-  }*/
+    return new Set(_list + that)
+  }
   
   + that {
     // A synonym for |
-    return new Set(_list + that)
-    // return this | that
+    return this | that
   }
   
-  /* & that {
+  & that {
     // Intersection
     return new Set(
       _list.where(fn (element) { 
         return that.contains(element)
       }) + that.where(fn (element) {
         return _list.contains(element)
-      })
-    )
-  } */ 
+      }))
+  }
   
   - that {
     // Set minus
