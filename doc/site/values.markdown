@@ -12,7 +12,7 @@ A boolean value represents truth or falsehood. There are two boolean literals,
 
 Like other scripting languages, Wren has a single numeric type: double-precision floating point. Number literals look like you expect coming from other languages:
 
-    :::dart
+    :::wren
     0
     1234
     -5678
@@ -26,12 +26,12 @@ Numbers are instances of the `Num` class.
 
 Strings are chunks of text. String literals are surrounded in double quotes:
 
-    :::dart
+    :::wren
     "hi there"
 
 A couple of escape characters are supported:
 
-    :::dart
+    :::wren
     "\n" // Newline.
     "\"" // A double quote character.
     "\\" // A backslash.

@@ -9,7 +9,7 @@ Classes contain both *behavior* and *state*. Behavior is defined in *methods* wh
 
 Classes are created using the `class` keyword, unsurprisingly:
 
-    :::dart
+    :::wren
     class Unicorn {}
 
 This creates a class named `Unicorn` with no methods or fields.
@@ -18,7 +18,7 @@ This creates a class named `Unicorn` with no methods or fields.
 
 Once we've made a unicorn, to let it do stuff, we need to give it methods.
 
-    :::dart
+    :::wren
     class Unicorn {
       prance {
         IO.print("The unicorn prances in a fancy manner!")
@@ -27,7 +27,7 @@ Once we've made a unicorn, to let it do stuff, we need to give it methods.
 
 This defines a `prance` method that takes no arguments. To support parameters, add a parenthesized parameter list after the method's name:
 
-    :::dart
+    :::wren
     class Unicorn {
       prance(where, when) {
         IO.print("The unicorn prances in " + where + " at " + when)
@@ -36,7 +36,7 @@ This defines a `prance` method that takes no arguments. To support parameters, a
 
 Unlike most other dynamically-typed languages, in Wren you can have multiple methods in a class with the same name, as long as they take a different number of parameters. In technical terms, you can overload by *arity*. So this class is fine:
 
-    :::dart
+    :::wren
     class Unicorn {
       prance {
         IO.print("The unicorn prances in a fancy manner!")
@@ -59,7 +59,7 @@ When you [call](method-calls.html) the `prance` method, it selects the right one
 
 To create a new instance of a class, you use the `new` keyword. We can make a unicorn like so:
 
-    :::dart
+    :::wren
     new Unicorn
 
 You almost always want to define some state or do some other initialization on a new object. For that, you'll want to define a constructor, like so:
@@ -96,7 +96,7 @@ A class can inherit from a "parent" or *superclass*. When you invoke a method on
 
 By default, any new class inherits from `Object`, which is the superclass from which all other classes ultimately descend. You can specify a different parent class using `is` when you declare the class:
 
-    :::dart
+    :::wren
     class Pegasus is Unicorn {}
 
 This declares a new class `Pegasus` that inherits from `Unicorn`.
