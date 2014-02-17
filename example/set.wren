@@ -24,12 +24,12 @@ class Set {
     }
   }
 
-  add (element) {
+  add(element) {
     _clean = false
     _list.add(element)
   }
   
-  remove (element) {
+  remove(element) {
     cleanup // Remove duplicates, so we can return early upon deletion.
     for (i in 0.._list.count) {
       if (_list[i] == element) {
@@ -39,7 +39,7 @@ class Set {
     }
   }
   
-  contains (element) {
+  contains(element) {
     return _list.contains(element)
   }
 
@@ -48,7 +48,7 @@ class Set {
     return _list.count
   }
   
-  iterate (i) {
+  iterate(i) {
     cleanup
     if (i == null) {
       if (count > 0) return 0
@@ -58,16 +58,16 @@ class Set {
     return i + 1
   }
   
-  iteratorValue (i) {
+  iteratorValue(i) {
     cleanup
     return _list[i]
   }
 
-  map (f) {
+  map(f) {
     return new Set(_list.map(f))
   }
   
-  where (f) {
+  where(f) {
     return new Set(_list.where(f))
   }
   
