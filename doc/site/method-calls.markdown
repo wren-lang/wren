@@ -1,5 +1,7 @@
 ^title Method Calls
 
+**TODO: Refactor `method-calls` and `classes` into using and creating classes.**
+
 Wren is object-oriented, so most code consists of method calls. Most of them
 look like so:
 
