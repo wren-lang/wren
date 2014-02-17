@@ -1,2 +1,0 @@
-cat $(find . -name "*.c" -o -name "*.h") | grep ";" | tr "
-" " " | sed "s/[^;]//g" | wc -c

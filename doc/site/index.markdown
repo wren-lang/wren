@@ -13,9 +13,9 @@ in a Lua-sized package.
       }
     }
 
- *  **Wren is small.** The codebase stays under 2,500 semicolons to keep the
-    language and libraries small enough to fit in your head. You can skim
-    [the whole thing][src] in one sitting.
+ *  **Wren is small.** The codebase is and always will be under 5,000
+    semicolons to keep the language and libraries small enough to fit in your
+    head. You can skim [the whole thing][src] in one sitting.
 
  *  **Wren is clean.** The codebase is *small*, but not *dense*. It is readable
     and [lovingly-commented][nan]. It's written in warning-free standard C99.
