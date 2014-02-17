@@ -26,7 +26,7 @@ a top-level function in another module would be something like:
 This leaves the question of how *do* you call top level functions in your own
 module? I.e., how do we call foo here:
 
-  def foo(arg) { io.write("called foo!") }
+  def foo(arg) { IO.write("called foo!") }
 
   class SomeClass {
     bar {
@@ -37,7 +37,7 @@ module? I.e., how do we call foo here:
 This is analogous to:
 
   class SomeModule {
-    static foo(arg) { io.write("called foo!") }
+    static foo(arg) { IO.write("called foo!") }
 
     class SomeClass {
       bar {

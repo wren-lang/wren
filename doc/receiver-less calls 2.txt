@@ -30,7 +30,7 @@ getters for them that return fields.
 That's weird if you take into account setters, though. Consider:
 
     class Foo {
-      a { io.write(_prop) }
+      a { IO.write(_prop) }
       _prop = value { ... }
     }
 

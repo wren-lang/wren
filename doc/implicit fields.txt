@@ -15,7 +15,7 @@ consider a module effectively a class. Consider:
     }
 
     class Inner {
-      io.write(_blah) // Does this declare field in Inner, or access Outer?
+      IO.write(_blah) // Does this declare field in Inner, or access Outer?
     }
   }
 
