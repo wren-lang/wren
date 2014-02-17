@@ -1,7 +1,7 @@
 ^title Classes
 
 Every value in Wren is an object, and every object is an instance of a class.
-Even `true` and `false` are full-featured objects, instances of the `Bool` class.
+Even `true` and `false` are full-featured objects &mdash; instances of the `Bool` class.
 
 Classes contain both *behavior* and *state*. Behavior is defined in *methods* which are stored in the class. State is defined in *fields*, whose values are stored in each instance.
 
