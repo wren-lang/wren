@@ -17,6 +17,8 @@ Line comments start with `//` and end at the end of the line:
 Block comments start with `/*` and end with `*/`. They can span multiple lines
 or be within a single one. Unlike C, block comments can nest in Wren:
 
+**TODO: The syntax highlighting isn't nesting:**
+
     :::wren
     /* This is /* a nested */ comment. */
 
