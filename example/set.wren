@@ -48,9 +48,12 @@ class Set {
     return _list.count
   }
   
-  // I'm not sure on these:
   iterate (i) {
     cleanup
+    if (i == null) {
+      if (count > 0) return 0
+      return null
+    }
     if (i < count || i >= count) return false  
     return i + 1
   }
