@@ -48,7 +48,7 @@ Likewise, when you access a field in other languages, the interpreter has to loo
 
 When you call a method on an object, the method must be located. It could be defined directly on the object's class, or it may be inheriting it from some superclass. This means that in the worst case, you may have to walk the inheritance chain to find it.
 
-Advanced implementations do very smart things to optimize this, but it's made more difficult by the mutable nature of the underlying language; if you can add new methods to existing classes freely or change the inheritance hierarchy, the lookup for a given method may actually change over time. You have to add guards to check for that, which cost CPU cycles.
+Advanced implementations do very smart things to optimize this, but it's made more difficult by the mutable nature of the underlying language: if you can add new methods to existing classes freely or change the inheritance hierarchy, the lookup for a given method may actually change over time. You have to add guards to check for that, which cost CPU cycles.
 
 Wren's inheritance hierarchy is static and fixed at class declaration time. This means that we can copy down all inherited methods in the subclass when it's created since we know those will never change. That means method dispatch just requires locating the method in the class of the receiver.
 
@@ -56,7 +56,7 @@ Wren's inheritance hierarchy is static and fixed at class declaration time. This
 
 On compilers that support it, Wren's core bytecode interpreter loop will use something called [*computed gotos*](http://eli.thegreenplace.net/2012/07/12/computed-goto-for-efficient-dispatch-tables/). The hot core of a bytecode interpreter is effectively a giant `switch` on the instruction being executed.
 
-Doing that using an actual `switch` wreaks havoc with the CPU's branch predictor; there is basically a single branch point for the entire interpreter. That quickly saturates the predictor and it just gets confused and fails to predict anything, which leads to more CPU stalls and pipeline flushes.
+Doing that using an actual `switch` wreaks havoc with the CPU's branch predictor: there is basically a single branch point for the entire interpreter. That quickly saturates the predictor and it just gets confused and fails to predict anything, which leads to more CPU stalls and pipeline flushes.
 
 Using computed gotos gives you a separate branch point at the end of each instruction. Each gets its own branch prediction, which will often succeed since some instruction pairs are more common than others. In my rough testing, this made a 5-10% performance difference.
 
