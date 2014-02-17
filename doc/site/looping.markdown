@@ -6,7 +6,7 @@ It's hard to write a useful program without executing some chunk of code repeate
 
 A `while` statement executes a chunk of code as long as a condition continues to hold. For example:
 
-    :::dart
+    :::wren
     // Hailstone sequence.
     var n = 27
     while (n != 1) {
@@ -21,7 +21,7 @@ This evaluates the expression `n != 1`. If it is [true](branching.html), then it
 
 The condition for a while loop can be any expression, and must be surrounded by parentheses. The body of the loop is usually a curly block but can also be a single statement:
 
-    :::dart
+    :::wren
     var n = 27
     while (n != 1) if (n % 2 == 0) n = n / 2 else n = 3 * n + 1
 
@@ -29,7 +29,7 @@ The condition for a while loop can be any expression, and must be surrounded by 
 
 While statements are useful when you want to loop indefinitely or according to some complex condition. But in most cases, you're looping through a [list](lists.html), a series of numbers, or some other "sequence" object. That's what `for` is for. It looks like this:
 
-    :::dart
+    :::wren
     for (beatle in ["george", "john", "paul", "ringo"]) {
       IO.print(beatle)
     }
@@ -46,14 +46,14 @@ A `for` loop has three components:
 
 As you can see, a `for` loop works with lists. To loop over a range of consecutive integers, or loop a fixed number of times, you can use a *range* expression, like so:
 
-    :::dart
+    :::wren
     for (i in 1..100) {
       IO.print(i)
     }
 
 This will loop over the numbers from 1 to 100, including 100 itself. If you want to leave off the last value, use three dots instead of two:
 
-    :::dart
+    :::wren
     for (i in 1...100) {
       IO.print(i)
     }
@@ -74,7 +74,7 @@ If `false` is returned, Wren exits out of the loop and we're done. If anything e
 
 In other words, from Wren's perspective, the example loop looks something like this:
 
-    :::dart
+    :::wren
     {
       var iter_
       var seq_ = ["george", "john", "paul", "ringo"]
@@ -90,7 +90,7 @@ The built-in List and Range types implement `iterate()` and `iteratorValue()` to
 
 Sometimes, right in the middle of a loop body, you decide you want to bail out and stop. To do that, you can use a `break` statement. It's just the `break` keyword all by itself. That will immediately exit out of the nearest enclosing `while` or `for` loop.
 
-    :::dart
+    :::wren
     for (i in [1, 2, 3, 4]) {
       IO.print(i)
       if (i == 3) break
