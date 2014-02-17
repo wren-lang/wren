@@ -55,6 +55,8 @@ When you [call](method-calls.html) the `prance` method, it selects the right one
 
 **TODO: Defining operators and setters.**
 
+**TODO: `static` methods.**
+
 ## Constructors
 
 To create a new instance of a class, you use the `new` keyword. We can make a unicorn like so:
