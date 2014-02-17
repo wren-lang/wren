@@ -21,9 +21,9 @@ defined until the end of the block where that definition appears.
 
     :::dart
     {
-        IO.write(a) // ERROR! a doesn't exist yet.
-        var a = 123
-        IO.write(a) // "123"
+      IO.write(a) // ERROR! a doesn't exist yet.
+      var a = 123
+      IO.write(a) // "123"
     }
     IO.write(a) // ERROR! a doesn't exist anymore.
 
@@ -35,8 +35,8 @@ something you likely intend to do much).
     :::dart
     var a = "outer"
     {
-        var a = "inner"
-        IO.write(a) // Prints "inner".
+      var a = "inner"
+      IO.write(a) // Prints "inner".
     }
     IO.write(a) // Prints "outer".
 
