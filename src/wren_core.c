@@ -42,7 +42,7 @@
 // This string literal is generated automatically from core. Do not edit.
 static const char* libSource =
 "class Sequence {\n"
-"  map (f) {\n"
+"  map(f) {\n"
 "    var result = []\n"
 "    for (element in this) {\n"
 "      result.add(f.call(element))\n"
@@ -50,7 +50,7 @@ static const char* libSource =
 "    return result\n"
 "  }\n"
 "\n"
-"  where (f) {\n"
+"  where(f) {\n"
 "    var result = []\n"
 "    for (element in this) {\n"
 "      if (f.call(element)) result.add(element)\n"

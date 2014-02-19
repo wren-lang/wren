@@ -1,5 +1,5 @@
 class Sequence {
-  map (f) {
+  map(f) {
     var result = []
     for (element in this) {
       result.add(f.call(element))
@@ -7,7 +7,7 @@ class Sequence {
     return result
   }
 
-  where (f) {
+  where(f) {
     var result = []
     for (element in this) {
       if (f.call(element)) result.add(element)
