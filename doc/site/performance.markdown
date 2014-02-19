@@ -28,7 +28,7 @@ A core piece of a dynamic language implementation is the data structure used for
 
 [nan tagging]: http://wingolog.org/archives/2011/05/18/value-representation-in-javascript-implementations
 
-All values are stored internally in Wren as small, eight byte double-precision floats. Since that is also Wren's number type, in order to do arithmetic, no conversion is needed before the "raw" number can be accessed: a value holding a number *is* a valid double. This keeps arithmetic fast.
+All values are stored internally in Wren as small, eight-byte double-precision floats. Since that is also Wren's number type, in order to do arithmetic, no conversion is needed before the "raw" number can be accessed: a value holding a number *is* a valid double. This keeps arithmetic fast.
 
 To store values of other types, it turns out there's a ton of unused bits in a "NaN" double. There's room in there for a pointer as well as some other stuff. For simple values like `true`, `false`, and `null`, Wren uses special bit patterns and stores them directly in the value. For other objects like strings that are heap allocated, Wren stores the pointer in there.
 
@@ -44,7 +44,7 @@ Put all of that together and it means you can determine at *compile* time exactl
 
 Likewise, when you access a field in other languages, the interpreter has to look it up by name in a hash table in the object, and then maybe walk its inheritance chain if it can't find it. It must do this every time since fields may be added freely. In Wren, field access is just accessing a slot in the instance by an offset known at compile time: it's just adding a few pointers.
 
-### Copy down inheritance
+### Copy-down inheritance
 
 When you call a method on an object, the method must be located. It could be defined directly on the object's class, or it may be inheriting it from some superclass. This means that in the worst case, you may have to walk the inheritance chain to find it.
 

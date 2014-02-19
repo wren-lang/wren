@@ -43,7 +43,7 @@ never write `;` unless you want to cram a bunch of statements on one line.
 
 Sometimes, though, a statement doesn't fit on a single line and treating the
 newline as a semicolon would trip things up. To handle that, Wren has a very
-simple rule. It ignores a newline following any token that can't end a
+simple rule: It ignores a newline following any token that can't end a
 statement. Specifically, that means any of these:
 
     :::dart
