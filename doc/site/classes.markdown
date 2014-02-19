@@ -1,5 +1,7 @@
 ^title Classes
 
+**TODO: Refactor `method-calls` and `classes` into using and creating classes.**
+
 Every value in Wren is an object, and every object is an instance of a class.
 Even `true` and `false` are full-featured objects&mdash;instances of the `Bool` class.
 
@@ -54,6 +56,8 @@ Unlike most other dynamically-typed languages, in Wren you can have multiple met
 When you [call](method-calls.html) the `prance` method, it selects the right one based on how many arguments you pass it.
 
 **TODO: Defining operators and setters.**
+
+**TODO: `static` methods.**
 
 ## Constructors
 
