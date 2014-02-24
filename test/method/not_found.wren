@@ -1,3 +1,3 @@
 class Foo {}
 
-(new Foo).someUnknownMethod // expect runtime error: Receiver does not implement method 'someUnknownMethod'.
+(new Foo).someUnknownMethod // expect runtime error: Foo does not implement method 'someUnknownMethod'.

@@ -4,4 +4,4 @@ class Foo {
 
 class Bar is Foo {}
 
-Bar.methodOnFoo // expect runtime error: Receiver does not implement method 'methodOnFoo'.
+Bar.methodOnFoo // expect runtime error: Bar metaclass does not implement method 'methodOnFoo'.

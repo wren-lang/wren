@@ -328,7 +328,7 @@ static void methodNotFound(WrenVM* vm, ObjFiber* fiber, int symbol, ObjClass* cl
 {
   char message[100];
 
-  snprintf(message, 100, "Receiver '%s' does not implement method '%s'.",
+  snprintf(message, 100, "%s does not implement method '%s'.",
            classObj->name->value,
            vm->methods.names.data[symbol]);
 
