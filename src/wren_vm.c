@@ -324,12 +324,12 @@ static void runtimeError(WrenVM* vm, ObjFiber* fiber, const char* error)
   wrenDebugPrintStackTrace(vm, fiber);
 }
 
-static void methodNotFound(WrenVM* vm, ObjFiber* fiber, int symbol)
+static void methodNotFound(WrenVM* vm, ObjFiber* fiber, int symbol, ObjClass* classObj)
 {
   char message[100];
 
-  // TODO: Include receiver in message.
-  snprintf(message, 100, "Receiver does not implement method '%s'.",
+  snprintf(message, 100, "%s does not implement method '%s'.",
+           classObj->name->value,
            vm->methods.names.data[symbol]);
 
   runtimeError(vm, fiber, message);
@@ -548,7 +548,7 @@ static bool runInterpreter(WrenVM* vm)
       if (symbol >= classObj->methods.count)
       {
         STORE_FRAME();
-        methodNotFound(vm, fiber, symbol);
+        methodNotFound(vm, fiber, symbol, classObj);
         return false;
       }
 
@@ -600,7 +600,7 @@ static bool runInterpreter(WrenVM* vm)
 
         case METHOD_NONE:
           STORE_FRAME();
-          methodNotFound(vm, fiber, symbol);
+          methodNotFound(vm, fiber, symbol, classObj);
           return false;
       }
       DISPATCH();
@@ -652,7 +652,7 @@ static bool runInterpreter(WrenVM* vm)
       if (symbol >= classObj->methods.count)
       {
         STORE_FRAME();
-        methodNotFound(vm, fiber, symbol);
+        methodNotFound(vm, fiber, symbol, classObj);
         return false;
       }
 
@@ -704,7 +704,7 @@ static bool runInterpreter(WrenVM* vm)
 
         case METHOD_NONE:
           STORE_FRAME();
-          methodNotFound(vm, fiber, symbol);
+          methodNotFound(vm, fiber, symbol, classObj);
           return false;
       }
       DISPATCH();
