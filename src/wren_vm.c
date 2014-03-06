@@ -868,7 +868,13 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(NEW):
     {
-      // TODO: Handle object not being a class.
+      if (!IS_CLASS(PEEK()))
+      {
+        STORE_FRAME();
+        runtimeError(vm, fiber, "Must provide a class to 'new' to construct.");
+        return false;
+      }
+
       // Make sure the class stays on the stack until after the instance is
       // allocated so that it doesn't get collected.
       ObjClass* classObj = AS_CLASS(PEEK());
