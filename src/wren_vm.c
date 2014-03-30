@@ -324,29 +324,6 @@ static void runtimeError(WrenVM* vm, ObjFiber* fiber, const char* error)
   wrenDebugPrintStackTrace(vm, fiber);
 }
 
-static void methodNotFound(WrenVM* vm, ObjFiber* fiber, int symbol, ObjClass* classObj)
-{
-  char message[100];
-
-  snprintf(message, 100, "%s does not implement method '%s'.",
-           classObj->name->value,
-           vm->methods.names.data[symbol]);
-
-  runtimeError(vm, fiber, message);
-}
-
-static void tooManyInheritedFields(WrenVM* vm, ObjFiber* fiber)
-{
-  char message[100];
-
-  // TODO: Include class name in message. Mention inheritance.
-  snprintf(message, 100,
-      "A class may not have more than %d fields, including inherited ones.",
-      MAX_FIELDS);
-
-  runtimeError(vm, fiber, message);
-}
-
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
 // [function] can be an `ObjFn` or `ObjClosure`.
@@ -412,6 +389,14 @@ static bool runInterpreter(WrenVM* vm)
         fn = ((ObjClosure*)frame->fn)->fn;             \
         upvalues = ((ObjClosure*)frame->fn)->upvalues; \
       }
+
+  #define RUNTIME_ERROR(error)                         \
+      do {                                             \
+        STORE_FRAME();                                 \
+        runtimeError(vm, fiber, error);                \
+        return false;                                  \
+      }                                                \
+      while (false)
 
   #if WREN_COMPUTED_GOTO
 
@@ -547,9 +532,11 @@ static bool runInterpreter(WrenVM* vm)
       // If the class's method table doesn't include the symbol, bail.
       if (symbol >= classObj->methods.count)
       {
-        STORE_FRAME();
-        methodNotFound(vm, fiber, symbol, classObj);
-        return false;
+        char message[100];
+        snprintf(message, 100, "%s does not implement method '%s'.",
+                 classObj->name->value,
+                 vm->methods.names.data[symbol]);
+        RUNTIME_ERROR(message);
       }
 
       Method* method = &classObj->methods.data[symbol];
@@ -569,9 +556,7 @@ static bool runInterpreter(WrenVM* vm)
               break;
 
             case PRIM_ERROR:
-              STORE_FRAME();
-              runtimeError(vm, fiber, AS_CSTRING(args[0]));
-              return false;
+              RUNTIME_ERROR(AS_CSTRING(args[0]));
 
             case PRIM_CALL:
               STORE_FRAME();
@@ -599,9 +584,13 @@ static bool runInterpreter(WrenVM* vm)
           break;
 
         case METHOD_NONE:
-          STORE_FRAME();
-          methodNotFound(vm, fiber, symbol, classObj);
-          return false;
+        {
+          char message[100];
+          snprintf(message, 100, "%s does not implement method '%s'.",
+                   classObj->name->value,
+                   vm->methods.names.data[symbol]);
+          RUNTIME_ERROR(message);
+        }
       }
       DISPATCH();
     }
@@ -651,9 +640,11 @@ static bool runInterpreter(WrenVM* vm)
       // If the class's method table doesn't include the symbol, bail.
       if (symbol >= classObj->methods.count)
       {
-        STORE_FRAME();
-        methodNotFound(vm, fiber, symbol, classObj);
-        return false;
+        char message[100];
+        snprintf(message, 100, "%s does not implement method '%s'.",
+                 classObj->name->value,
+                 vm->methods.names.data[symbol]);
+        RUNTIME_ERROR(message);
       }
 
       Method* method = &classObj->methods.data[symbol];
@@ -673,9 +664,7 @@ static bool runInterpreter(WrenVM* vm)
               break;
 
             case PRIM_ERROR:
-              STORE_FRAME();
-              runtimeError(vm, fiber, AS_CSTRING(args[0]));
-              return false;
+              RUNTIME_ERROR(AS_CSTRING(args[0]));
 
             case PRIM_CALL:
               STORE_FRAME();
@@ -703,9 +692,13 @@ static bool runInterpreter(WrenVM* vm)
           break;
 
         case METHOD_NONE:
-          STORE_FRAME();
-          methodNotFound(vm, fiber, symbol, classObj);
-          return false;
+        {
+          char message[100];
+          snprintf(message, 100, "%s does not implement method '%s'.",
+                   classObj->name->value,
+                   vm->methods.names.data[symbol]);
+          RUNTIME_ERROR(message);
+        }
       }
       DISPATCH();
     }
@@ -837,12 +830,7 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(IS):
     {
       Value expected = POP();
-      if (!IS_CLASS(expected))
-      {
-        STORE_FRAME();
-        runtimeError(vm, fiber, "Right operand must be a class.");
-        return false;
-      }
+      if (!IS_CLASS(expected)) RUNTIME_ERROR("Right operand must be a class.");
 
       ObjClass* actual = wrenGetClass(vm, POP());
       bool isInstance = false;
@@ -870,9 +858,7 @@ static bool runInterpreter(WrenVM* vm)
     {
       if (!IS_CLASS(PEEK()))
       {
-        STORE_FRAME();
-        runtimeError(vm, fiber, "Must provide a class to 'new' to construct.");
-        return false;
+        RUNTIME_ERROR("Must provide a class to 'new' to construct.");
       }
 
       // Make sure the class stays on the stack until after the instance is
@@ -996,9 +982,12 @@ static bool runInterpreter(WrenVM* vm)
       // overflow.
       if (superclass->numFields + numFields > MAX_FIELDS)
       {
-        STORE_FRAME();
-        tooManyInheritedFields(vm, fiber);
-        return false;
+        // TODO: Include class name in message. Mention inheritance.
+        char message[80];
+        snprintf(message, 80,
+            "A class may not have more than %d fields, including inherited "
+            "ones.", MAX_FIELDS);
+        RUNTIME_ERROR(message);
       }
       
       // Don't pop the superclass and name off the stack until the subclass is
