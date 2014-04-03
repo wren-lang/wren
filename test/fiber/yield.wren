@@ -1,10 +1,10 @@
-var fiber = Fiber.create(fn {
+var fiber = Fiber.create {
   IO.print("fiber 1")
   Fiber.yield
   IO.print("fiber 2")
   Fiber.yield
   IO.print("fiber 3")
-})
+}
 
 var result = fiber.run // expect: fiber 1
 IO.print("main 1") // expect: main 1

@@ -1,6 +1,6 @@
-var fiber = Fiber.create(fn {
+var fiber = Fiber.create {
   IO.print("fiber")
-})
+}
 
 // The first value passed to the fiber is ignored, since there's no yield call
 // to return it.

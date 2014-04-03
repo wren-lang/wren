@@ -1,6 +1,6 @@
-var fiber = Fiber.create(fn {
+var fiber = Fiber.create {
   IO.print("fiber")
-})
+}
 
 IO.print("before") // expect: before
 fiber.run          // expect: fiber

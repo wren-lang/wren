@@ -1,12 +1,12 @@
-var b = Fiber.create(fn {
+var b = Fiber.create {
   IO.print("fiber b")
-})
+}
 
-var a = Fiber.create(fn {
+var a = Fiber.create {
   IO.print("begin fiber a")
   b.run
   IO.print("end fiber a")
-})
+}
 
 IO.print("begin main")
 a.run

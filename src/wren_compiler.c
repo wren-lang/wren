@@ -846,7 +846,6 @@ static void nextToken(Parser* parser)
         // Discard newlines after tokens that cannot end an expression.
       case TOKEN_LEFT_PAREN:
       case TOKEN_LEFT_BRACKET:
-      case TOKEN_LEFT_BRACE:
       case TOKEN_DOT:
       case TOKEN_DOTDOT:
       case TOKEN_DOTDOTDOT:
@@ -1349,6 +1348,9 @@ static void patchJump(Compiler* compiler, int offset)
 // Parses a block body, after the initial "{" has been consumed.
 static void finishBlock(Compiler* compiler)
 {
+  // TODO: If no newline, just parse expr.
+  match(compiler, TOKEN_LINE);
+
   // Empty blocks do nothing.
   if (match(compiler, TOKEN_RIGHT_BRACE)) return;
 
@@ -1462,6 +1464,12 @@ static void methodCall(Compiler* compiler, Code instruction,
       finishBlock(&fnCompiler);
 
       // Implicitly return null.
+      emit(&fnCompiler, CODE_NULL);
+      emit(&fnCompiler, CODE_RETURN);
+    }
+    else if (match(&fnCompiler, TOKEN_RIGHT_BRACE))
+    {
+      // Empty body.
       emit(&fnCompiler, CODE_NULL);
       emit(&fnCompiler, CODE_RETURN);
     }
@@ -1580,6 +1588,9 @@ static void function(Compiler* compiler, bool allowAssignment)
 
   if (match(&fnCompiler, TOKEN_LEFT_BRACE))
   {
+    // TODO: If no newline, just parse expr.
+    match(compiler, TOKEN_LINE);
+
     // Block body.
     finishBlock(&fnCompiler);
 
@@ -2147,6 +2158,9 @@ void block(Compiler* compiler)
   // Curly block.
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
+    // TODO: If no newline, just parse expr.
+    match(compiler, TOKEN_LINE);
+
     pushScope(compiler);
     finishBlock(compiler);
     popScope(compiler);
@@ -2587,7 +2601,11 @@ static void classDefinition(Compiler* compiler)
   compiler->enclosingClass = &classCompiler;
 
   // Compile the method definitions.
-  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class body.");
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class declaration.");
+
+  // TODO: Should newline be required here?
+  match(compiler, TOKEN_LINE);
+
   while (!match(compiler, TOKEN_RIGHT_BRACE))
   {
     Code instruction = CODE_METHOD_INSTANCE;
