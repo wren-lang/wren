@@ -9,14 +9,14 @@ class Outer {
         method {
           IO.print(this) // expect: Inner
         }
-        toString { return "Inner" }
+        toString { "Inner" }
       }
 
       (new Inner).method
     }.call
   }
 
-  toString { return "Outer" }
+  toString { "Outer" }
 }
 
 (new Outer).method

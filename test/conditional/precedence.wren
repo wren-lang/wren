@@ -1,6 +1,6 @@
 class Foo {
-  static bar { return true }
-  static baz { return 1 }
+  static bar { true }
+  static baz { 1 }
 }
 
 // Condition precedence.

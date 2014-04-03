@@ -1,5 +1,5 @@
 class Foo {
-  bar = value { return "result" }
+  bar = value { "result" }
 }
 
 var foo = new Foo

@@ -1,9 +1,9 @@
 class Foo {
-  bar { return "on instance" }
-  static bar { return "on metaclass" }
+  bar { "on instance" }
+  static bar { "on metaclass" }
 
-  bar(arg) { return "on instance " + arg }
-  static bar(arg) { return "on metaclass " + arg }
+  bar(arg) { "on instance " + arg }
+  static bar(arg) { "on metaclass " + arg }
 }
 
 IO.print((new Foo).bar)        // expect: on instance

@@ -1333,27 +1333,64 @@ static void patchJump(Compiler* compiler, int offset)
 }
 
 // Parses a block body, after the initial "{" has been consumed.
-static void finishBlock(Compiler* compiler)
+//
+// Returns true if it was a statement body, false if it was an expression body.
+// (More precisely, returns false if a value was left on the stack. An empty
+// block returns true.)
+static bool finishBlock(Compiler* compiler)
 {
-  // TODO: If no newline, just parse expr.
-  match(compiler, TOKEN_LINE);
-
   // Empty blocks do nothing.
-  if (match(compiler, TOKEN_RIGHT_BRACE)) return;
+  if (match(compiler, TOKEN_RIGHT_BRACE)) {
+    return true;
+  }
 
-  for (;;)
+  // If there's no line after the "{", it's a single-expression body.
+  if (!match(compiler, TOKEN_LINE))
+  {
+    expression(compiler);
+    consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' at end of block.");
+    return false;
+  }
+
+  // Empty blocks (with just a newline inside) do nothing.
+  if (match(compiler, TOKEN_RIGHT_BRACE)) {
+    return true;
+  }
+
+  // Compile the definition list.
+  do
   {
     definition(compiler);
 
-    // If there is no newline, it must be the end of the block on the same line.
-    if (!match(compiler, TOKEN_LINE))
-    {
-      consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' after block body.");
-      break;
-    }
+    // If we got into a weird error state, don't get stuck in a loop.
+    if (peek(compiler) == TOKEN_EOF) return true;
 
-    if (match(compiler, TOKEN_RIGHT_BRACE)) break;
+    consume(compiler, TOKEN_LINE, "Expect newline after statement.");
   }
+  while (!match(compiler, TOKEN_RIGHT_BRACE));
+  return true;
+}
+
+// Parses a method or function body, after the initial "{" has been consumed.
+static void finishBody(Compiler* compiler, bool isConstructor)
+{
+  bool isStatementBody = finishBlock(compiler);
+
+  if (isConstructor)
+  {
+    // If the constructor body evaluates to a value, discard it.
+    if (!isStatementBody) emit(compiler, CODE_POP);
+
+    // The receiver is always stored in the first local slot.
+    emitByte(compiler, CODE_LOAD_LOCAL, 0);
+  }
+  else if (isStatementBody)
+  {
+    // Implicitly return null in statement bodies.
+    emit(compiler, CODE_NULL);
+  }
+
+  emit(compiler, CODE_RETURN);
 }
 
 // The VM can only handle a certain number of parameters, so check that we
@@ -1445,32 +1482,7 @@ static void methodCall(Compiler* compiler, Code instruction,
     fnCompiler.numParams = parameterList(&fnCompiler, NULL, NULL,
                                          TOKEN_PIPE, TOKEN_PIPE);
 
-    if (match(&fnCompiler, TOKEN_LINE))
-    {
-      // Block body.
-      finishBlock(&fnCompiler);
-
-      // Implicitly return null.
-      emit(&fnCompiler, CODE_NULL);
-      emit(&fnCompiler, CODE_RETURN);
-    }
-    else if (match(&fnCompiler, TOKEN_RIGHT_BRACE))
-    {
-      // Empty body.
-      emit(&fnCompiler, CODE_NULL);
-      emit(&fnCompiler, CODE_RETURN);
-    }
-    else
-    {
-      // TODO: Are we OK with a newline determining whether or not there's an
-      // implicit return value? Methods don't work this way.
-      // Single expression body.
-      expression(&fnCompiler);
-      emit(&fnCompiler, CODE_RETURN);
-
-      consume(compiler, TOKEN_RIGHT_BRACE,
-              "Expect '}' at end of block argument.");
-    }
+    finishBody(&fnCompiler, false);
 
     // TODO: Use the name of the method the block is being provided to.
     endCompiler(&fnCompiler, "(fn)", 4);
@@ -2122,11 +2134,12 @@ void block(Compiler* compiler)
   // Curly block.
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
-    // TODO: If no newline, just parse expr.
-    match(compiler, TOKEN_LINE);
-
     pushScope(compiler);
-    finishBlock(compiler);
+    if (!finishBlock(compiler))
+    {
+      // Block was an expression, so discard it.
+      emit(compiler, CODE_POP);
+    }
     popScope(compiler);
     return;
   }
@@ -2451,7 +2464,7 @@ void statement(Compiler* compiler)
   if (match(compiler, TOKEN_RETURN))
   {
     // Compile the return value.
-    if (peek(compiler) == TOKEN_LINE || peek(compiler) == TOKEN_RIGHT_BRACE)
+    if (peek(compiler) == TOKEN_LINE)
     {
       // Implicitly return null if there is no value.
       emit(compiler, CODE_NULL);
@@ -2492,22 +2505,7 @@ int method(Compiler* compiler, ClassCompiler* classCompiler, bool isConstructor,
 
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
 
-  finishBlock(&methodCompiler);
-  // TODO: Single-expression methods that implicitly return the result.
-
-  // If it's a constructor, return "this".
-  if (isConstructor)
-  {
-    // The receiver is always stored in the first local slot.
-    emitByte(&methodCompiler, CODE_LOAD_LOCAL, 0);
-  }
-  else
-  {
-    // Implicitly return null in case there is no explicit return.
-    emit(&methodCompiler, CODE_NULL);
-  }
-
-  emit(&methodCompiler, CODE_RETURN);
+  finishBody(&methodCompiler, isConstructor);
   endCompiler(&methodCompiler, name, length);
   return methodSymbol(compiler, name, length);
 }

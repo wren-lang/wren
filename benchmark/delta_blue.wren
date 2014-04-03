@@ -55,21 +55,15 @@ class Strength {
     _name = name
   }
 
-  value { return _value }
-  name { return _name }
+  value { _value }
+  name { _name }
 
-  nextWeaker { return ORDERED[_value] }
+  nextWeaker { ORDERED[_value] }
 
-  static stronger(s1, s2) { return s1.value < s2.value }
-  static weaker(s1, s2) { return s1.value > s2.value }
-
-  static weakest(s1, s2) {
-    return Strength.weaker(s1, s2) ? s1 : s2
-  }
-
-  static strongest(s1, s2) {
-    return Strength.stronger(s1, s2) ? s1 : s2
-  }
+  static stronger(s1, s2) { s1.value < s2.value }
+  static weaker(s1, s2) { s1.value > s2.value }
+  static weakest(s1, s2) { Strength.weaker(s1, s2) ? s1 : s2 }
+  static strongest(s1, s2) { Strength.stronger(s1, s2) ? s1 : s2 }
 }
 
 // Compile time computed constants.
@@ -93,7 +87,7 @@ class Constraint {
     _strength = strength
   }
 
-  strength { return _strength }
+  strength { _strength }
 
   // Activate this constraint and attempt to satisfy it.
   addConstraint {
@@ -133,7 +127,7 @@ class Constraint {
   // Normal constraints are not input constraints.  An input constraint
   // is one that depends on external state, such as the mouse, the
   // keybord, a clock, or some arbitraty piece of imperative code.
-  isInput { return false }
+  isInput { false }
 }
 
 // Abstract superclass for constraints having a single possible output variable.
@@ -158,14 +152,14 @@ class UnaryConstraint is Constraint {
   }
 
   // Returns true if this constraint is satisfied in the current solution.
-  isSatisfied { return _satisfied }
+  isSatisfied { _satisfied }
 
   markInputs(mark) {
     // has no inputs.
   }
 
   // Returns the current output variable.
-  output { return _myOutput }
+  output { _myOutput }
 
   // Calculate the walkabout strength, the stay flag, and, if it is
   // 'stay', the value for the current output of this constraint. Assume
@@ -181,7 +175,7 @@ class UnaryConstraint is Constraint {
     _satisfied = false
   }
 
-  inputsKnown(mark) { return true }
+  inputsKnown(mark) { true }
 
   removeFromGraph {
     if (_myOutput != null) _myOutput.removeConstraint(this)
@@ -211,7 +205,7 @@ class EditConstraint is UnaryConstraint {
   }
 
   // Edits indicate that a variable is to be changed by imperative code.
-  isInput { return true }
+  isInput { true }
 
   execute {
     // Edit constraints do nothing.
@@ -234,9 +228,9 @@ class BinaryConstraint is Constraint {
     addConstraint
   }
 
-  direction { return _direction }
-  v1 { return _v1 }
-  v2 { return _v2 }
+  direction { _direction }
+  v1 { _v1 }
+  v2 { _v2 }
 
   // Decides if this constraint can be satisfied and which way it
   // should flow based on the relative strength of the variables related,
@@ -283,7 +277,7 @@ class BinaryConstraint is Constraint {
   }
 
   // Answer true if this constraint is satisfied in the current solution.
-  isSatisfied { return _direction != NONE }
+  isSatisfied { _direction != NONE }
 
   // Mark the input variable with the given mark.
   markInputs(mark) {
@@ -408,17 +402,17 @@ class Variable {
     _value = value
   }
 
-  constraints { return _constraints }
-  determinedBy { return _determinedBy }
-  determinedBy = value { return _determinedBy = value }
-  mark { return _mark }
-  mark = value { return _mark = value }
-  walkStrength { return _walkStrength }
-  walkStrength = value { return _walkStrength = value }
-  stay { return _stay }
-  stay = value { return _stay = value }
-  value { return _value }
-  value = newValue { return _value = newValue }
+  constraints { _constraints }
+  determinedBy { _determinedBy }
+  determinedBy = value { _determinedBy = value }
+  mark { _mark }
+  mark = value { _mark = value }
+  walkStrength { _walkStrength }
+  walkStrength = value { _walkStrength = value }
+  stay { _stay }
+  stay = value { _stay = value }
+  value { _value }
+  value = newValue { _value = newValue }
 
   // Add the given constraint to the set of all constraints that refer
   // this variable.
@@ -445,7 +439,7 @@ class Plan {
     _list.add(constraint)
   }
 
-  size { return _list.count }
+  size { _list.count }
 
   execute {
     for (constraint in _list) {

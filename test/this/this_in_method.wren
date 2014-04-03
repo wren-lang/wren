@@ -1,6 +1,6 @@
 class Foo {
-  bar { return this }
-  baz { return "baz" }
+  bar { this }
+  baz { "baz" }
 }
 
 IO.print((new Foo).bar.baz) // expect: baz

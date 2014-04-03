@@ -1,5 +1,5 @@
 class Foo {
-  toString { return "Foo" }
+  toString { "Foo" }
 }
 
 // Classes inherit the argument-less "new" one by default.

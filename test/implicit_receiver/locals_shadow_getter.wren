@@ -1,5 +1,5 @@
 class Foo {
-  bar { return "getter" }
+  bar { "getter" }
 
   test {
     IO.print(bar) // expect: getter

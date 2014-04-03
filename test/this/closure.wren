@@ -1,9 +1,6 @@
 class Foo {
-  getClosure {
-    return new Fn { toString }
-  }
-
-  toString { return "Foo" }
+  getClosure { new Fn { toString } }
+  toString { "Foo" }
 }
 
 var closure = (new Foo).getClosure

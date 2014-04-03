@@ -4,7 +4,7 @@ class Foo {
     IO.print(this.bar) // expect: bar
   }
 
-  static bar { return "bar" }
+  static bar { "bar" }
 }
 
 Foo.test

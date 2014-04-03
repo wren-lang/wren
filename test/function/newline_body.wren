@@ -1,6 +1,4 @@
 var f = new Fn {
-  if (true) { return }
-  IO.print("bad")
+  // Hi.
 }
-
 IO.print(f.call) // expect: null

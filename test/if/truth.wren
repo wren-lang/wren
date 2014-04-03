@@ -1,7 +1,7 @@
 class Iter {
   new(value) { _value = value }
-  iterate(iterator) { return _value }
-  iteratorValue(iterator) { return "value" }
+  iterate(iterator) { _value }
+  iteratorValue(iterator) { "value" }
 }
 
 // False and null are false.
