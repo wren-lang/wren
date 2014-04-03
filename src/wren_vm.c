@@ -460,7 +460,6 @@ static bool runInterpreter(WrenVM* vm)
     &&code_IS,
     &&code_CLOSE_UPVALUE,
     &&code_RETURN,
-    &&code_NEW,
     &&code_LIST,
     &&code_CLOSURE,
     &&code_CLASS,
@@ -853,22 +852,6 @@ static bool runInterpreter(WrenVM* vm)
       closeUpvalue(fiber);
       DROP();
       DISPATCH();
-
-    CASE_CODE(NEW):
-    {
-      if (!IS_CLASS(PEEK()))
-      {
-        RUNTIME_ERROR("Must provide a class to 'new' to construct.");
-      }
-
-      // Make sure the class stays on the stack until after the instance is
-      // allocated so that it doesn't get collected.
-      ObjClass* classObj = AS_CLASS(PEEK());
-      Value instance = wrenNewInstance(vm, classObj);
-      DROP();
-      PUSH(instance);
-      DISPATCH();
-    }
 
     CASE_CODE(RETURN):
     {

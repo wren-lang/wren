@@ -1578,6 +1578,7 @@ static void boolean(Compiler* compiler, bool allowAssignment)
        compiler->parser->previous.type == TOKEN_FALSE ? CODE_FALSE : CODE_TRUE);
 }
 
+// TODO: Remove this syntax.
 static void function(Compiler* compiler, bool allowAssignment)
 {
   Compiler fnCompiler;
@@ -1829,8 +1830,9 @@ static void new_(Compiler* compiler, bool allowAssignment)
   // Compile the class.
   parsePrecedence(compiler, false, PREC_CALL);
 
-  // Create the instance of the class.
-  emit(compiler, CODE_NEW);
+  // TODO: Give this a name the user can't type to prevent explicit calls.
+  // Instantiate the instance.
+  emitShort(compiler, CODE_CALL_0, methodSymbol(compiler, "instantiate", 11));
 
   // Invoke the constructor on the new instance.
   char name[MAX_METHOD_SIGNATURE];
@@ -2186,7 +2188,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_IS:
     case CODE_CLOSE_UPVALUE:
     case CODE_RETURN:
-    case CODE_NEW:
     case CODE_END:
       return 0;
 

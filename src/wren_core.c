@@ -171,6 +171,12 @@ DEF_NATIVE(bool_toString)
   }
 }
 
+DEF_NATIVE(class_instantiate)
+{
+  ObjClass* classObj = AS_CLASS(args[0]);
+  RETURN_VAL(wrenNewInstance(vm, classObj));
+}
+
 DEF_NATIVE(class_name)
 {
   ObjClass* classObj = AS_CLASS(args[0]);
@@ -291,6 +297,20 @@ static PrimitiveResult callFunction(WrenVM* vm, Value* args, int numArgs)
   if (numArgs < fn->numParams) RETURN_ERROR("Function expects more arguments.");
 
   return PRIM_CALL;
+}
+
+DEF_NATIVE(fn_instantiate)
+{
+  // Return the Function class itself. When we then call "new" on it, it will
+  // return the block.
+  RETURN_VAL(args[0]);
+}
+
+DEF_NATIVE(fn_new)
+{
+  // TODO: Validate arg type.
+  // The block argument is already a function, so just return it.
+  RETURN_VAL(args[1]);
 }
 
 DEF_NATIVE(fn_call0) { return callFunction(vm, args, 0); }
@@ -691,6 +711,11 @@ DEF_NATIVE(object_type)
   RETURN_OBJ(wrenGetClass(vm, args[0]));
 }
 
+DEF_NATIVE(object_instantiate)
+{
+  RETURN_ERROR("Must provide a class to 'new' to construct.");
+}
+
 DEF_NATIVE(range_from)
 {
   ObjRange* range = AS_RANGE(args[0]);
@@ -884,16 +909,23 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->objectClass, "new", object_new);
   NATIVE(vm->objectClass, "toString", object_toString);
   NATIVE(vm->objectClass, "type", object_type);
+  NATIVE(vm->objectClass, "instantiate", object_instantiate);
 
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
   vm->classClass = defineSingleClass(vm, "Class");
-  NATIVE(vm->classClass, "name", class_name);
 
   // Now that Object and Class are defined, we can wire them up to each other.
   wrenBindSuperclass(vm, vm->classClass, vm->objectClass);
   vm->objectClass->metaclass = vm->classClass;
   vm->classClass->metaclass = vm->classClass;
+
+  // Define the methods specific to Class after wiring up its superclass to
+  // prevent the inherited ones from overwriting them.
+  // TODO: Now that instantiation is controlled by the class, implement "new"
+  // for List, Fiber, et. al.
+  NATIVE(vm->classClass, "instantiate", class_instantiate);
+  NATIVE(vm->classClass, "name", class_name);
 
   // The core class diagram ends up looking like this, where single lines point
   // to a class's superclass, and double lines point to its metaclass:
@@ -931,7 +963,11 @@ void wrenInitializeCore(WrenVM* vm)
   // TODO: Primitives for switching to a fiber without setting the caller.
   // (I.e. symmetric coroutines.)
 
-  vm->fnClass = defineClass(vm, "Function");
+  vm->fnClass = defineClass(vm, "Fn");
+
+  NATIVE(vm->fnClass->metaclass, "instantiate", fn_instantiate);
+  NATIVE(vm->fnClass->metaclass, "new ", fn_new);
+
   NATIVE(vm->fnClass, "call", fn_call0);
   NATIVE(vm->fnClass, "call ", fn_call1);
   NATIVE(vm->fnClass, "call  ", fn_call2);

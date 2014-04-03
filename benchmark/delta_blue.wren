@@ -428,7 +428,7 @@ class Variable {
 
   // Removes all traces of c from this variable.
   removeConstraint(constraint) {
-    _constraints = _constraints.where(fn (c) c != constraint)
+    _constraints = _constraints.where { |c| c != constraint }
     if (_determinedBy == constraint) _determinedBy = null
   }
 }

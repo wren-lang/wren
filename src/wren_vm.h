@@ -150,9 +150,6 @@ typedef enum
   // stack.
   CODE_RETURN,
 
-  // Create a new instance of the receiver, which is assumed to be a class.
-  CODE_NEW,
-
   // Create a new list with [arg] elements. The top [arg] values on the stack
   // are the elements in forward order. Removes the elements and then pushes
   // the new list.
