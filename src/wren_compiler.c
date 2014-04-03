@@ -71,7 +71,6 @@ typedef enum
   TOKEN_CLASS,
   TOKEN_ELSE,
   TOKEN_FALSE,
-  TOKEN_FN,
   TOKEN_FOR,
   TOKEN_IF,
   TOKEN_IN,
@@ -533,7 +532,6 @@ static void readName(Parser* parser, TokenType type)
   if (isKeyword(parser, "class")) type = TOKEN_CLASS;
   if (isKeyword(parser, "else")) type = TOKEN_ELSE;
   if (isKeyword(parser, "false")) type = TOKEN_FALSE;
-  if (isKeyword(parser, "fn")) type = TOKEN_FN;
   if (isKeyword(parser, "for")) type = TOKEN_FOR;
   if (isKeyword(parser, "if")) type = TOKEN_IF;
   if (isKeyword(parser, "in")) type = TOKEN_IN;
@@ -830,6 +828,9 @@ static void nextToken(Parser* parser)
   {
     readRawToken(parser);
 
+    // TODO: Instead of handling this here, we could have consume() and match()
+    // functions that also eat trailing newlines. Then use those in places
+    // where a newline after a token should be ignored.
     switch (parser->current.type)
     {
       case TOKEN_LINE:
@@ -847,27 +848,14 @@ static void nextToken(Parser* parser)
       case TOKEN_LEFT_PAREN:
       case TOKEN_LEFT_BRACKET:
       case TOKEN_DOT:
-      case TOKEN_DOTDOT:
-      case TOKEN_DOTDOTDOT:
       case TOKEN_COMMA:
-      case TOKEN_STAR:
-      case TOKEN_SLASH:
-      case TOKEN_PERCENT:
-      case TOKEN_PLUS:
       case TOKEN_MINUS:
       case TOKEN_PIPEPIPE:
-      case TOKEN_AMP:
       case TOKEN_AMPAMP:
       case TOKEN_BANG:
       case TOKEN_TILDE:
       case TOKEN_QUESTION:
       case TOKEN_EQ:
-      case TOKEN_LT:
-      case TOKEN_GT:
-      case TOKEN_LTEQ:
-      case TOKEN_GTEQ:
-      case TOKEN_EQEQ:
-      case TOKEN_BANGEQ:
       case TOKEN_CLASS:
       case TOKEN_ELSE:
       case TOKEN_FOR:
@@ -1577,37 +1565,6 @@ static void boolean(Compiler* compiler, bool allowAssignment)
        compiler->parser->previous.type == TOKEN_FALSE ? CODE_FALSE : CODE_TRUE);
 }
 
-// TODO: Remove this syntax.
-static void function(Compiler* compiler, bool allowAssignment)
-{
-  Compiler fnCompiler;
-  initCompiler(&fnCompiler, compiler->parser, compiler, true);
-
-  fnCompiler.numParams = parameterList(&fnCompiler, NULL, NULL,
-                                       TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
-
-  if (match(&fnCompiler, TOKEN_LEFT_BRACE))
-  {
-    // TODO: If no newline, just parse expr.
-    match(compiler, TOKEN_LINE);
-
-    // Block body.
-    finishBlock(&fnCompiler);
-
-    // Implicitly return null.
-    emit(&fnCompiler, CODE_NULL);
-    emit(&fnCompiler, CODE_RETURN);
-  }
-  else
-  {
-    // Single expression body.
-    expression(&fnCompiler);
-    emit(&fnCompiler, CODE_RETURN);
-  }
-
-  endCompiler(&fnCompiler, "(fn)", 4);
-}
-
 // Walks the compiler chain to find the compiler for the nearest class
 // enclosing this one. Returns NULL if not currently inside a class definition.
 static Compiler* getEnclosingClassCompiler(Compiler* compiler)
@@ -2104,7 +2061,6 @@ GrammarRule rules[] =
   /* TOKEN_CLASS         */ UNUSED,
   /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
-  /* TOKEN_FN            */ PREFIX(function),
   /* TOKEN_FOR           */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IN            */ UNUSED,
