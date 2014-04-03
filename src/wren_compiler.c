@@ -1384,10 +1384,11 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
 // list is for a method, [name] will be the name of the method and this will
 // modify it to handle arity in the signature. For functions, [name] will be
 // `null`.
-static int parameterList(Compiler* compiler, char* name, int* length)
+static int parameterList(Compiler* compiler, char* name, int* length,
+                         TokenType startToken, TokenType endToken)
 {
   // The parameter list is optional.
-  if (!match(compiler, TOKEN_LEFT_PAREN)) return 0;
+  if (!match(compiler, startToken)) return 0;
 
   int numParams = 0;
   do
@@ -1401,7 +1402,10 @@ static int parameterList(Compiler* compiler, char* name, int* length)
     if (name != NULL) name[(*length)++] = ' ';
   }
   while (match(compiler, TOKEN_COMMA));
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+
+  const char* message = (endToken == TOKEN_RIGHT_PAREN) ?
+      "Expect ')' after parameters." : "Expect '|' after parameters.";
+  consume(compiler, endToken, message);
 
   return numParams;
 }
@@ -1435,6 +1439,49 @@ static void methodCall(Compiler* compiler, Code instruction,
     while (match(compiler, TOKEN_COMMA));
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
+
+  // Parse the block argument, if any.
+  if (match(compiler, TOKEN_LEFT_BRACE))
+  {
+    // Add a space in the name for each argument. Lets us overload by
+    // arity.
+    name[length++] = ' ';
+    numArgs++;
+
+    Compiler fnCompiler;
+    initCompiler(&fnCompiler, compiler->parser, compiler, true);
+
+    // TODO: Allow newline between '{' and '|'?
+
+    fnCompiler.numParams = parameterList(&fnCompiler, NULL, NULL,
+                                         TOKEN_PIPE, TOKEN_PIPE);
+
+    if (match(&fnCompiler, TOKEN_LINE))
+    {
+      // Block body.
+      finishBlock(&fnCompiler);
+
+      // Implicitly return null.
+      emit(&fnCompiler, CODE_NULL);
+      emit(&fnCompiler, CODE_RETURN);
+    }
+    else
+    {
+      // TODO: Are we OK with a newline determining whether or not there's an
+      // implicit return value? Methods don't work this way.
+      // Single expression body.
+      expression(&fnCompiler);
+      emit(&fnCompiler, CODE_RETURN);
+
+      consume(compiler, TOKEN_RIGHT_BRACE,
+              "Expect '}' at end of block argument.");
+    }
+
+    // TODO: Use the name of the method the block is being provided to.
+    endCompiler(&fnCompiler, "(fn)", 4);
+  }
+
+  // TODO: Allow Grace-style mixfix methods?
 
   emitShort(compiler, instruction + numArgs,
             methodSymbol(compiler, name, length));
@@ -1528,7 +1575,8 @@ static void function(Compiler* compiler, bool allowAssignment)
   Compiler fnCompiler;
   initCompiler(&fnCompiler, compiler->parser, compiler, true);
 
-  fnCompiler.numParams = parameterList(&fnCompiler, NULL, NULL);
+  fnCompiler.numParams = parameterList(&fnCompiler, NULL, NULL,
+                                       TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
 
   if (match(&fnCompiler, TOKEN_LEFT_BRACE))
   {
@@ -1714,7 +1762,7 @@ static void name(Compiler* compiler, bool allowAssignment)
     return;
   }
 
-  // Otherwise, if we are inside a class, it's a getter call with an implicit
+  // Otherwise, if we are inside a class, it's a call with an implicit "this"
   // receiver.
   ClassCompiler* classCompiler = getEnclosingClass(compiler);
   if (classCompiler == NULL)
@@ -1979,7 +2027,7 @@ void namedSignature(Compiler* compiler, char* name, int* length)
   else
   {
     // Regular named method with an optional parameter list.
-    parameterList(compiler, name, length);
+    parameterList(compiler, name, length, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
   }
 }
 
@@ -1987,7 +2035,7 @@ void namedSignature(Compiler* compiler, char* name, int* length)
 void constructorSignature(Compiler* compiler, char* name, int* length)
 {
   // Add the parameters, if there are any.
-  parameterList(compiler, name, length);
+  parameterList(compiler, name, length, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
 }
 
 // This table defines all of the parsing rules for the prefix and infix
