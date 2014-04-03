@@ -16,7 +16,6 @@ IO.print(!false ? 1 : 2) // expect: 1
 IO.print(~0 ? 1 : 2) // expect: 1
 IO.print(3 is Num ? 1 : 2) // expect: 1
 IO.print(new Foo ? 1 : 2) // expect: 1
-IO.print(fn true ? 1 : 2) // expect: <fn>
 
 var a = 0
 IO.print(a = 3 ? 1 : 2) // expect: 1
@@ -34,8 +33,6 @@ IO.print(true ? !true : 2) // expect: false
 IO.print(true ? ~0 : 2) // expect: 4294967295
 IO.print(true ? 3 is Bool : 2) // expect: false
 IO.print(true ? new Foo : 2) // expect: instance of Foo
-// TODO: Is this what we want?
-IO.print(true ? fn 1 : 2) // expect: <fn>
 
 IO.print(true ? a = 5 : 2) // expect: 5
 IO.print(a) // expect: 5
@@ -52,7 +49,6 @@ IO.print(false ? 1 : !false) // expect: true
 IO.print(false ? 1 : ~0) // expect: 4294967295
 IO.print(false ? 1 : 3 is Num) // expect: true
 IO.print(false ? 1 : new Foo) // expect: instance of Foo
-IO.print(false ? 1 : fn 2) // expect: <fn>
 
 // Associativity.
 IO.print(true ? 2 : true ? 4 : 5) // expect: 2

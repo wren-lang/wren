@@ -3,16 +3,16 @@ var closure
 
 {
   var a = "before"
-  fiber = Fiber.create(fn {
+  fiber = Fiber.create {
     IO.print(a)
     Fiber.yield
     a = "after"
     Fiber.yield
     IO.print(a)
     a = "final"
-  })
+  }
 
-  closure = fn {
+  closure = new Fn {
     IO.print(a)
   }
 }

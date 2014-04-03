@@ -2,7 +2,7 @@ class Outer {
   method {
     IO.print(this) // expect: Outer
 
-    fn {
+    new Fn {
       IO.print(this) // expect: Outer
 
       class Inner {

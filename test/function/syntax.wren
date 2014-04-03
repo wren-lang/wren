@@ -1,25 +1,23 @@
 // Single expression body.
-(fn IO.print("ok")).call // expect: ok
-
-// TODO: Precedence of fn body.
+new Fn { IO.print("ok") }.call // expect: ok
 
 // Curly body.
-fn {
+new Fn {
   IO.print("ok") // expect: ok
 }.call
 
 // No trailing newline.
-fn {
+new Fn {
   IO.print("ok") }.call // expect: ok
 
 // Multiple expressions.
-fn {
+new Fn {
   IO.print("1") // expect: 1
   IO.print("2") // expect: 2
 }.call
 
 // Extra newlines.
-fn {
+new Fn {
 
 
   IO.print("1") // expect: 1

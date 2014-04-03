@@ -2,11 +2,11 @@ class Foo {
   new { _field = "Foo field" }
 
   closeOverGet {
-    return fn { return _field }
+    return new Fn { _field }
   }
 
   closeOverSet {
-    return fn { _field = "new value" }
+    return new Fn { _field = "new value" }
   }
 }
 

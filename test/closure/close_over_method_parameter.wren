@@ -2,7 +2,7 @@ var f = null
 
 class Foo {
   method(param) {
-    f = fn {
+    f = new Fn {
       IO.print(param)
     }
   }

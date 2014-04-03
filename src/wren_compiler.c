@@ -855,7 +855,6 @@ static void nextToken(Parser* parser)
       case TOKEN_PERCENT:
       case TOKEN_PLUS:
       case TOKEN_MINUS:
-      case TOKEN_PIPE:
       case TOKEN_PIPEPIPE:
       case TOKEN_AMP:
       case TOKEN_AMPAMP:
@@ -1986,6 +1985,13 @@ void conditional(Compiler* compiler, bool allowAssignment)
 void infixOp(Compiler* compiler, bool allowAssignment)
 {
   GrammarRule* rule = &rules[compiler->parser->previous.type];
+
+  // The pipe operator does not swallow a newline after it because when it's
+  // used as a block argument delimiter, the newline is significant. So,
+  // discard it here.
+  // TODO: Do something cleaner. Having the newline handling be context
+  // sensitive is super gross.
+  match(compiler, TOKEN_LINE);
 
   // Compile the right-hand side.
   parsePrecedence(compiler, false, rule->precedence + 1);

@@ -2,11 +2,11 @@ class Foo {
   new { _field = "Foo field" }
 
   closeOverFooGet {
-    return fn { return fn { return _field } }
+    return new Fn { new Fn { _field } }
   }
 
   closeOverFooSet {
-    return fn { return fn { _field = "new foo value" } }
+    return new Fn { new Fn { _field = "new foo value" } }
   }
 }
 
@@ -17,11 +17,11 @@ class Bar is Foo {
   }
 
   closeOverBarGet {
-    return fn { return fn { return _field } }
+    return new Fn { new Fn { _field } }
   }
 
   closeOverBarSet {
-    return fn { return fn { _field = "new bar value" } }
+    return new Fn { new Fn { _field = "new bar value" } }
   }
 }
 

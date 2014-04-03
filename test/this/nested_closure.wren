@@ -1,8 +1,8 @@
 class Foo {
   getClosure {
-    return fn {
-      return fn {
-        return fn {
+    return new Fn {
+      return new Fn {
+        return new Fn {
           return toString
         }
       }

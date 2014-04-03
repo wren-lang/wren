@@ -2,7 +2,7 @@ var f = null
 
 {
   var local = "local"
-  f = fn {
+  f = new Fn {
     IO.print(local)
   }
 }

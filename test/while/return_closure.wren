@@ -1,7 +1,7 @@
-var f = fn {
+var f = new Fn {
   while (true) {
     var i = "i"
-    return fn IO.print(i)
+    return new Fn { IO.print(i) }
   }
 }
 

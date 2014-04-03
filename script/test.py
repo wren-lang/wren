@@ -180,8 +180,9 @@ def run_test(path):
 
   # Validate the exit code.
   if proc.returncode != expect_return:
-    fails.append('Expected return code {0} and got {1}.'
+    fails.append('Expected return code {0} and got {1}. Stderr:'
         .format(expect_return, proc.returncode))
+    fails += err.split('\n')
   else:
     # Validate the output.
     expect_index = 0

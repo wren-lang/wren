@@ -1,4 +1,4 @@
-var f = fn {
+var f = new Fn {
   if (true) { return }
   IO.print("bad")
 }

@@ -1,4 +1,4 @@
-var f = fn {
+var f = new Fn {
   while (true) {
     var i = "i"
     return i

@@ -3,13 +3,13 @@ var g = null
 
 {
   var local = "local"
-  f = fn {
+  f = new Fn {
     IO.print(local)
     local = "after f"
     IO.print(local)
   }
 
-  g = fn {
+  g = new Fn {
     IO.print(local)
     local = "after g"
     IO.print(local)

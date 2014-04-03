@@ -4,9 +4,7 @@ class Base {
 
 class Derived is Base {
   getClosure {
-    return fn {
-      return super.toString
-    }
+    return new Fn { super.toString }
   }
 
   toString { return "Derived" }

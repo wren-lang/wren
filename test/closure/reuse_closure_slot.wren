@@ -3,7 +3,7 @@
 
   {
     var a = "a"
-    f = fn IO.print(a)
+    f = new Fn { IO.print(a) }
   }
 
   {

@@ -1,6 +1,6 @@
 var global = "global"
 // TODO: Forward reference to global declared after use.
 
-fn {
+new Fn {
   IO.print(global) // expect: global
 }.call
