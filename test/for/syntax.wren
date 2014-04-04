@@ -1,20 +1,14 @@
 // Single-expression body.
-for (i in [1, 2, 3]) IO.print(i)
+for (i in [1]) IO.print(i)
 // expect: 1
-// expect: 2
-// expect: 3
 
 // Block body.
-for (i in [1, 2, 3]) {
+for (i in [1]) {
   IO.print(i)
 }
 // expect: 1
-// expect: 2
-// expect: 3
 
-// Newline after "for".
-for
-(i in [1, 2, 3]) IO.print(i)
+// Newline after "in".
+for (i in
+  [1]) IO.print(i)
 // expect: 1
-// expect: 2
-// expect: 3

@@ -682,10 +682,16 @@ static void readString(Parser* parser)
   makeToken(parser, TOKEN_STRING);
 }
 
-// Lex the next token and store it in [parser.current]. Does not do any newline
-// filtering.
-static void readRawToken(Parser* parser)
+// Lex the next token and store it in [parser.current].
+static void nextToken(Parser* parser)
 {
+  parser->previous = parser->current;
+
+  // If we are out of tokens, don't try to tokenize any more. We *do* still
+  // copy the TOKEN_EOF to previous so that code that expects it to be consumed
+  // will still work.
+  if (parser->current.type == TOKEN_EOF) return;
+
   while (peekChar(parser) != '\0')
   {
     parser->tokenStart = parser->currentChar;
@@ -699,6 +705,9 @@ static void readRawToken(Parser* parser)
       case ']': makeToken(parser, TOKEN_RIGHT_BRACKET); return;
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
+        // TODO: Should treat ";" differently from "\n". An elided newline
+        // makes sense, but an elided explicit ";" is weird. This should not be
+        // valid: a + ; b
       case ';': makeToken(parser, TOKEN_LINE); return;
       case ':': makeToken(parser, TOKEN_COLON); return;
       case '.':
@@ -813,72 +822,6 @@ static void readRawToken(Parser* parser)
   makeToken(parser, TOKEN_EOF);
 }
 
-// Lex the next token in the source file and store it in parser.current. Omits
-// newlines that aren't meaningful.
-static void nextToken(Parser* parser)
-{
-  parser->previous = parser->current;
-
-  // If we are out of tokens, don't try to tokenize any more. We *do* still
-  // copy the TOKEN_EOF to previous so that code that expects it to be consumed
-  // will still work.
-  if (parser->current.type == TOKEN_EOF) return;
-
-  for (;;)
-  {
-    readRawToken(parser);
-
-    // TODO: Instead of handling this here, we could have consume() and match()
-    // functions that also eat trailing newlines. Then use those in places
-    // where a newline after a token should be ignored.
-    switch (parser->current.type)
-    {
-      case TOKEN_LINE:
-        if (!parser->skipNewlines)
-        {
-          // Collapse multiple newlines into one.
-          parser->skipNewlines = true;
-
-          // Emit this newline.
-          return;
-        }
-        break;
-
-        // Discard newlines after tokens that cannot end an expression.
-      case TOKEN_LEFT_PAREN:
-      case TOKEN_LEFT_BRACKET:
-      case TOKEN_DOT:
-      case TOKEN_COMMA:
-      case TOKEN_MINUS:
-      case TOKEN_PIPEPIPE:
-      case TOKEN_AMPAMP:
-      case TOKEN_BANG:
-      case TOKEN_TILDE:
-      case TOKEN_QUESTION:
-      case TOKEN_EQ:
-      case TOKEN_CLASS:
-      case TOKEN_ELSE:
-      case TOKEN_FOR:
-      case TOKEN_IF:
-      case TOKEN_IN:
-      case TOKEN_IS:
-      case TOKEN_NEW:
-      case TOKEN_STATIC:
-      case TOKEN_VAR:
-      case TOKEN_WHILE:
-        parser->skipNewlines = true;
-
-        // Emit this token.
-        return;
-
-        // Newlines are meaningful after other tokens.
-      default:
-        parser->skipNewlines = false;
-        return;
-    }
-  }
-}
-
 // Parsing ---------------------------------------------------------------------
 
 // Returns the type of the current token.
@@ -906,9 +849,39 @@ static Token* consume(Compiler* compiler, TokenType expected,
   if (compiler->parser->previous.type != expected)
   {
     error(compiler, errorMessage);
+
+    // If the next token is the one we want, assume the current one is just a
+    // spurious error and discard it to minimize the number of cascaded errors.
+    if (compiler->parser->current.type == expected) nextToken(compiler->parser);
   }
 
   return &compiler->parser->previous;
+}
+
+// Matches one or more newlines. Returns true if at least one was found.
+static bool matchLine(Compiler* compiler)
+{
+  if (!match(compiler, TOKEN_LINE)) return false;
+
+  while (match(compiler, TOKEN_LINE));
+  return true;
+}
+
+// Consumes the current token if its type is [expected]. Returns true if a
+// token was consumed. Since [expected] is known to be in the middle of an
+// expression, any newlines following it are consumed and discarded.
+static void ignoreNewlines(Compiler* compiler)
+{
+  matchLine(compiler);
+}
+
+// Consumes the current token. Emits an error if it is not a newline. Then
+// discards any duplicate newlines following it.
+static bool consumeLine(Compiler* compiler, const char* errorMessage)
+{
+  bool result = consume(compiler, TOKEN_LINE, errorMessage);
+  ignoreNewlines(compiler);
+  return result;
 }
 
 // Variables and scopes --------------------------------------------------------
@@ -1345,7 +1318,7 @@ static bool finishBlock(Compiler* compiler)
   }
 
   // If there's no line after the "{", it's a single-expression body.
-  if (!match(compiler, TOKEN_LINE))
+  if (!matchLine(compiler))
   {
     expression(compiler);
     consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' at end of block.");
@@ -1365,7 +1338,7 @@ static bool finishBlock(Compiler* compiler)
     // If we got into a weird error state, don't get stuck in a loop.
     if (peek(compiler) == TOKEN_EOF) return true;
 
-    consume(compiler, TOKEN_LINE, "Expect newline after statement.");
+    consumeLine(compiler, "Expect newline after statement.");
   }
   while (!match(compiler, TOKEN_RIGHT_BRACE));
   return true;
@@ -1419,6 +1392,7 @@ static int parameterList(Compiler* compiler, char* name, int* length,
   int numParams = 0;
   do
   {
+    ignoreNewlines(compiler);
     validateNumParameters(compiler, ++numParams);
 
     // Define a local variable in the method for the parameter.
@@ -1429,6 +1403,8 @@ static int parameterList(Compiler* compiler, char* name, int* length,
   }
   while (match(compiler, TOKEN_COMMA));
 
+  // Allow a newline before the closing ')'.
+  ignoreNewlines(compiler);
   const char* message = (endToken == TOKEN_RIGHT_PAREN) ?
       "Expect ')' after parameters." : "Expect '|' after parameters.";
   consume(compiler, endToken, message);
@@ -1455,6 +1431,7 @@ static void methodCall(Compiler* compiler, Code instruction,
   {
     do
     {
+      ignoreNewlines(compiler);
       validateNumParameters(compiler, ++numArgs);
       expression(compiler);
 
@@ -1463,6 +1440,9 @@ static void methodCall(Compiler* compiler, Code instruction,
       name[length++] = ' ';
     }
     while (match(compiler, TOKEN_COMMA));
+
+    // Allow a newline before the closing ')'.
+    ignoreNewlines(compiler);
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
@@ -1507,12 +1487,13 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
   {
     if (!allowAssignment) error(compiler, "Invalid assignment.");
 
+    ignoreNewlines(compiler);
+
     name[length++] = '=';
     name[length++] = ' ';
 
     // Compile the assigned value.
     expression(compiler);
-
     emitShort(compiler, instruction + 1, methodSymbol(compiler, name, length));
   }
   else
@@ -1544,14 +1525,14 @@ static void list(Compiler* compiler, bool allowAssignment)
   {
     do
     {
+      ignoreNewlines(compiler);
       numElements++;
       expression(compiler);
-
-      // Ignore a newline after the element but before the ',' or ']'.
-      match(compiler, TOKEN_LINE);
     } while (match(compiler, TOKEN_COMMA));
   }
 
+  // Allow newlines before the closing ']'.
+  ignoreNewlines(compiler);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after list elements.");
 
   // Create the list.
@@ -1563,6 +1544,8 @@ static void list(Compiler* compiler, bool allowAssignment)
 static void unaryOp(Compiler* compiler, bool allowAssignment)
 {
   GrammarRule* rule = &rules[compiler->parser->previous.type];
+
+  ignoreNewlines(compiler);
 
   // Compile the argument.
   parsePrecedence(compiler, false, PREC_UNARY + 1);
@@ -1792,22 +1775,6 @@ static void string(Compiler* compiler, bool allowAssignment)
   emitShort(compiler, CODE_CONSTANT, constant);
 }
 
-static void new_(Compiler* compiler, bool allowAssignment)
-{
-  // TODO: Instead of an expression, explicitly only allow a dotted name.
-  // Compile the class.
-  parsePrecedence(compiler, false, PREC_CALL);
-
-  // TODO: Give this a name the user can't type to prevent explicit calls.
-  // Instantiate the instance.
-  emitShort(compiler, CODE_CALL_0, methodSymbol(compiler, "instantiate", 11));
-
-  // Invoke the constructor on the new instance.
-  char name[MAX_METHOD_SIGNATURE];
-  strcpy(name, "new");
-  methodCall(compiler, CODE_CALL_0, name, 3);
-}
-
 static void super_(Compiler* compiler, bool allowAssignment)
 {
   ClassCompiler* enclosingClass = getEnclosingClass(compiler);
@@ -1869,6 +1836,7 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   // Parse the argument list.
   do
   {
+    ignoreNewlines(compiler);
     validateNumParameters(compiler, ++numArgs);
     expression(compiler);
 
@@ -1878,6 +1846,8 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   }
   while (match(compiler, TOKEN_COMMA));
 
+  // Allow a newline before the closing ']'.
+  ignoreNewlines(compiler);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
 
   name[length++] = ']';
@@ -1898,38 +1868,68 @@ static void subscript(Compiler* compiler, bool allowAssignment)
             methodSymbol(compiler, name, length));
 }
 
-void call(Compiler* compiler, bool allowAssignment)
+static void call(Compiler* compiler, bool allowAssignment)
 {
+  ignoreNewlines(compiler);
   consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
   namedCall(compiler, allowAssignment, CODE_CALL_0);
 }
 
-void is(Compiler* compiler, bool allowAssignment)
+static void new_(Compiler* compiler, bool allowAssignment)
 {
+  // Allow a dotted name after 'new'.
+  consume(compiler, TOKEN_NAME, "Expect name after 'new'.");
+  name(compiler, false);
+  while (match(compiler, TOKEN_DOT))
+  {
+    call(compiler, false);
+  }
+
+  // TODO: Give this a name the user can't type to prevent explicit calls.
+  // Instantiate the instance.
+  emitShort(compiler, CODE_CALL_0, methodSymbol(compiler, "instantiate", 11));
+
+  // Invoke the constructor on the new instance.
+  char name[MAX_METHOD_SIGNATURE];
+  strcpy(name, "new");
+  methodCall(compiler, CODE_CALL_0, name, 3);
+}
+
+static void is(Compiler* compiler, bool allowAssignment)
+{
+  ignoreNewlines(compiler);
+
   // Compile the right-hand side.
   parsePrecedence(compiler, false, PREC_CALL);
 
   emit(compiler, CODE_IS);
 }
 
-void and(Compiler* compiler, bool allowAssignment)
+static void and(Compiler* compiler, bool allowAssignment)
 {
+  ignoreNewlines(compiler);
+
   // Skip the right argument if the left is false.
   int jump = emitJump(compiler, CODE_AND);
   parsePrecedence(compiler, false, PREC_LOGIC);
   patchJump(compiler, jump);
 }
 
-void or(Compiler* compiler, bool allowAssignment)
+static void or(Compiler* compiler, bool allowAssignment)
 {
+  ignoreNewlines(compiler);
+
   // Skip the right argument if the left is true.
   int jump = emitJump(compiler, CODE_OR);
   parsePrecedence(compiler, false, PREC_LOGIC);
   patchJump(compiler, jump);
 }
 
-void conditional(Compiler* compiler, bool allowAssignment)
+static void conditional(Compiler* compiler, bool allowAssignment)
 {
+  // Ignore newline after '?'.
+  ignoreNewlines(compiler);
+
   // Jump to the else branch if the condition is false.
   int ifJump = emitJump(compiler, CODE_JUMP_IF);
 
@@ -1938,6 +1938,7 @@ void conditional(Compiler* compiler, bool allowAssignment)
 
   consume(compiler, TOKEN_COLON,
           "Expect ':' after then branch of conditional operator.");
+  ignoreNewlines(compiler);
 
   // Jump over the else branch when the if branch is taken.
   int elseJump = emitJump(compiler, CODE_JUMP);
@@ -1955,12 +1956,8 @@ void infixOp(Compiler* compiler, bool allowAssignment)
 {
   GrammarRule* rule = &rules[compiler->parser->previous.type];
 
-  // The pipe operator does not swallow a newline after it because when it's
-  // used as a block argument delimiter, the newline is significant. So,
-  // discard it here.
-  // TODO: Do something cleaner. Having the newline handling be context
-  // sensitive is super gross.
-  match(compiler, TOKEN_LINE);
+  // An infix operator cannot end an expression.
+  ignoreNewlines(compiler);
 
   // Compile the right-hand side.
   parsePrecedence(compiler, false, rule->precedence + 1);
@@ -2307,7 +2304,7 @@ static void forStatement(Compiler* compiler)
   //       var seq_ = sequence.expression
   //       var iter_
   //       while (iter_ = seq_.iterate(iter_)) {
-  //         var i = set_.iteratorValue(iter_)
+  //         var i = seq_.iteratorValue(iter_)
   //         IO.write(i)
   //       }
   //     }
@@ -2334,6 +2331,7 @@ static void forStatement(Compiler* compiler)
   int length = compiler->parser->previous.length;
 
   consume(compiler, TOKEN_IN, "Expect 'in' after loop variable.");
+  ignoreNewlines(compiler);
 
   // Evaluate the sequence expression and store it in a hidden local variable.
   // The space in the variable name ensures it won't collide with a user-defined
@@ -2565,7 +2563,7 @@ static void classDefinition(Compiler* compiler)
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class declaration.");
 
   // TODO: Should newline be required here?
-  match(compiler, TOKEN_LINE);
+  matchLine(compiler);
 
   while (!match(compiler, TOKEN_RIGHT_BRACE))
   {
@@ -2606,8 +2604,7 @@ static void classDefinition(Compiler* compiler)
     // Don't require a newline after the last definition.
     if (match(compiler, TOKEN_RIGHT_BRACE)) break;
 
-    consume(compiler, TOKEN_LINE,
-            "Expect newline after definition in class.");
+    consumeLine(compiler, "Expect newline after definition in class.");
   }
 
   // Update the class with the number of fields.
@@ -2684,6 +2681,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, true);
+  ignoreNewlines(&compiler);
 
   WREN_UNPIN(vm);
 
@@ -2692,7 +2690,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
     definition(&compiler);
 
     // If there is no newline, it must be the end of the block on the same line.
-    if (!match(&compiler, TOKEN_LINE))
+    if (!matchLine(&compiler))
     {
       consume(&compiler, TOKEN_EOF, "Expect end of file.");
       break;

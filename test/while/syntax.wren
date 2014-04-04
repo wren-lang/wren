@@ -14,11 +14,3 @@ while (a < 3) {
 // expect: 0
 // expect: 1
 // expect: 2
-
-// Newline after "while".
-var d = 0
-while
-(d < 3) IO.print(d = d + 1)
-// expect: 1
-// expect: 2
-// expect: 3

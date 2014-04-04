@@ -30,3 +30,7 @@ IO.print(123 is Class) // expect: false
 
 // TODO: Non-class on RHS.
 // TODO: Precedence and associativity.
+
+// Ignore newline after "is".
+IO.print(123 is
+  Num) // expect: true

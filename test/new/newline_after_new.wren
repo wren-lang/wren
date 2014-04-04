@@ -1,0 +1,2 @@
+new // expect error
+Fn {}

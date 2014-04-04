@@ -1,1 +1,1 @@
-true ? : 2 // expect error
+(true ? : 2) // expect error
