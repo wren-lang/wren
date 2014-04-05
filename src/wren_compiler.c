@@ -1456,9 +1456,6 @@ static void methodCall(Compiler* compiler, Code instruction,
 
     Compiler fnCompiler;
     initCompiler(&fnCompiler, compiler->parser, compiler, true);
-
-    // TODO: Allow newline between '{' and '|'?
-
     fnCompiler.numParams = parameterList(&fnCompiler, NULL, NULL,
                                          TOKEN_PIPE, TOKEN_PIPE);
 
@@ -2561,8 +2558,6 @@ static void classDefinition(Compiler* compiler)
 
   // Compile the method definitions.
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class declaration.");
-
-  // TODO: Should newline be required here?
   matchLine(compiler);
 
   while (!match(compiler, TOKEN_RIGHT_BRACE))

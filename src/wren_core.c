@@ -308,7 +308,11 @@ DEF_NATIVE(fn_instantiate)
 
 DEF_NATIVE(fn_new)
 {
-  // TODO: Validate arg type.
+  if (!IS_FN(args[1]) && !IS_CLOSURE(args[1]))
+  {
+    RETURN_ERROR("Argument must be a function.");
+  }
+
   // The block argument is already a function, so just return it.
   RETURN_VAL(args[1]);
 }
