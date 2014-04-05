@@ -4,6 +4,7 @@ import glob
 import markdown
 import os
 import shutil
+import subprocess
 import sys
 import time
 from datetime import datetime
@@ -78,18 +79,25 @@ def format_file(path, skip_up_to_date):
   print "converted", basename
 
 
+def check_sass():
+    source_mod = os.path.getmtime('doc/site/style.scss')
+
+    dest_mod = 0
+    if os.path.exists('build/docs/style.css'):
+      dest_mod = os.path.getmtime('build/docs/style.css')
+
+    if source_mod < dest_mod:
+        return
+
+    subprocess.call(['sass', 'doc/site/style.scss', 'build/docs/style.css'])
+    print "built css"
+
+
 def format_files(skip_up_to_date):
+  check_sass()
+
   for f in glob.iglob("doc/site/*.markdown"):
     format_file(f, skip_up_to_date)
-
-  # Copy the CSS file.
-  css_in = "doc/site/style.css"
-  css_out = "build/docs/style.css"
-  if skip_up_to_date and is_up_to_date(css_in, css_out):
-    pass
-  else:
-    shutil.copyfile(css_in, css_out)
-    print "copied css"
 
 
 # Clean the output directory.

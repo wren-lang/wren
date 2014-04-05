@@ -18,9 +18,9 @@ Most languages in the first bucket aren't suitable for production use. (Servers 
 
 ## Why is Wren fast?
 
-Wren is in the second bucket. If you want to have a simple implementation but be fast enough for real use, that's the natural home. Within that bucket, Wren's performance is quite competitive despite being much younger and with a much smaller, simpler codebase. What's the trick?
+Wren is in the second bucket. If you want to have a simple implementation but be fast enough for real use, that's the sweet spot. Within that bucket, Wren's performance is quite competitive despite being much younger and with a much smaller, simpler codebase.
 
-There are a few things Wren has to give it a leg up:
+Wren has a few tricks here to give it a leg up:
 
 ### A compact value representation
 
@@ -58,13 +58,13 @@ On compilers that support it, Wren's core bytecode interpreter loop will use som
 
 Doing that using an actual `switch` wreaks havoc with the CPU's branch predictor: there is basically a single branch point for the entire interpreter. That quickly saturates the predictor and it just gets confused and fails to predict anything, which leads to more CPU stalls and pipeline flushes.
 
-Using computed gotos gives you a separate branch point at the end of each instruction. Each gets its own branch prediction, which will often succeed since some instruction pairs are more common than others. In my rough testing, this made a 5-10% performance difference.
+Using computed gotos gives you a separate branch point at the end of each instruction. Each gets its own branch prediction, which oftens succeed since some instruction pairs are more common than others. In my rough testing, this made a 5-10% performance difference.
 
 ### A single-pass compiler
 
 Compile time is a relatively small component of a language's performance: code only has to be compiled once but a given line of code may be run many many times. Still, Wren's compiler is quite fast.
 
-It's modeled after Lua's compiler. Instead of tokenizing and then parsing to create a bunch AST structures which are then consumed and deallocated by later phases, it emits code directly during parsing. This means it does almost no memory allocation during a parse and has very little overhead.
+It's modeled after Lua's compiler. Instead of tokenizing and then parsing to create a bunch of AST structures which are then consumed and deallocated by later phases, it emits code directly during parsing. This means it does almost no memory allocation during a parse and has very little overhead.
 
 ## Why don't other languages do this?
 

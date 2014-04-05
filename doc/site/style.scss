@@ -1,0 +1,190 @@
+//$header: "Sanchez", helvetica, arial, sans-serif;
+$header: "Dosis", helvetica, arial, sans-serif;
+$body: "Source Sans Pro", georgia, serif;
+$code: "Source Code Pro", Menlo, Monaco, Consolas, monospace;
+
+// roboto: boring
+// dosis: nice, "wren" looks good, bit nerdy
+// mont: nice and wide
+// raleway: great w
+
+$p: 195;
+
+$light-gray: hsl($p, 20%, 80%);
+
+* {
+  box-sizing: border-box;
+}
+
+body, code, h1, h2, h3, p, pre, tt {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: #333;
+  background: #fff;
+}
+
+h1 {
+  font: 36px/40px $header;
+  margin: 50px 0 0 0;
+}
+
+h2 {
+  font: normal 24px $header;
+  margin: 24px 0 0 0;
+}
+
+h3 {
+  font: normal 18px $header;
+  margin: 24px 0 0 0;
+}
+
+h1, h2, h3 {
+  color: hsl($p, 90%, 50%);
+  outline: none;
+}
+
+a {
+  color: hsl($p, 80%, 40%);
+  text-decoration: none;
+  transition: color 0.3s, text-shadow 0.3s;
+}
+
+a:hover {
+  color: hsl(330, 100%, 50%);
+  text-shadow: 0 0 6px hsla(330, 100%, 50%, 0.2);
+}
+
+.header-anchor {
+  display: none;
+}
+
+h2:hover > .header-anchor, h3:hover > .header-anchor {
+  display: inline;
+  color: hsl($p, 30%, 90%);
+}
+
+h2:hover > .header-anchor:hover, h3:hover > .header-anchor:hover {
+  color: hsl($p, 70%, 40%);
+  text-shadow: 0 0 6px hsla($p, 100%, 50%, 0.2);
+}
+
+p, li {
+  font: 17px/26px $body;
+  margin: 10px 0;
+}
+
+p + p {
+  margin-top: 20px;
+}
+
+code, pre {
+  color: hsl($p, 20%, 40%);
+  font: 14px $code;
+  background: hsl($p, 20%, 97%);
+  border-radius: 4px;
+
+  border: solid 1px hsl($p, 30%, 92%);
+}
+
+code {
+  padding: 1px 3px;
+  white-space: nowrap;
+}
+
+pre {
+  margin: 12px 0;
+  line-height: 20px;
+  padding: 11px;
+}
+
+.page {
+  position: relative;
+  margin: 0 auto;
+  width: 840px;
+}
+
+.header {
+  position: absolute;
+  width: 840px;
+  height: 100px;
+  border-bottom: solid 1px hsl($p, 20%, 93%);
+
+  h1 {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    font: 56px $header;
+    font-weight: 300;
+    margin: 0;
+    letter-spacing: 2px;
+  }
+
+  h2 {
+    position: absolute;
+    right: 0;
+    bottom: 7px;
+    color: $light-gray;
+    font: 18px $header;
+    letter-spacing: 1px;
+  }
+}
+
+.content {
+  display: inline-block;
+  margin-top: 100px;
+  width: 620px;
+  margin-left: 220px;
+}
+
+.nav {
+  position: absolute;
+  left: 0;
+  width: 140px;
+  margin-top: 201px;
+
+  h2 {
+    color: $light-gray;
+    font: normal 18px $header;
+    margin: 0;
+    letter-spacing: 1px;
+  }
+
+  ul {
+    padding: 0;
+    margin: 6px 0 20px 0;
+  }
+
+  li {
+    font: 15px $body;
+    font-weight: 400;
+    list-style-type: none;
+    margin: 0 0 6px 0;
+  }
+}
+
+.footer {
+  color: $light-gray;
+  font: italic 14px $body;
+  text-align: center;
+  margin: 30px 0 40px 0;
+}
+
+// Syntax highlighting.
+.codehilite pre span.c1 { color: hsl($p, 20%, 65%); } /* line comment */
+.codehilite pre span.cm { color: hsl($p, 20%, 65%); } /* block comment */
+.codehilite pre span.vg { color: #5d3a85; } /* global variable */
+.codehilite pre span.vi { color: #784bab; } /* instance variable */
+.codehilite pre span.k  { color: hsl($p, 80%, 40%); } /* keyword message */
+.codehilite pre span.p  { color: #777; } /* punctuation ()[]{} */
+.codehilite pre span.s  { color: hsl(330, 60%, 55%); } /* string */
+.codehilite pre span.se { color: hsl(30, 90%, 45%); } /* string escape */
+.codehilite pre span.nb { color: #30a138; } /* built-in name: self undefined */
+.codehilite pre span.o  { color: hsl($p, 100%, 35%); } /* operator */
+.codehilite pre span.kd { color: hsl($p, 100%, 45%); } /* keyword decl */
+.codehilite pre span.nv { color: #24a36a; } /* argument name */
+.codehilite pre span.ow { color: #30a186; } /* user-defined operator */
+.codehilite pre span.mi { } /* number */
+.codehilite pre span.n  { } /* name */

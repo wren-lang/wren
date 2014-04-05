@@ -46,7 +46,7 @@ Here's the same example in Wren:
 The [performance page](performance.html) has more details, but the short answer is that bytecode is a nice trade-off between performance and simplicity. Also:
 
  *  Many devices like iPhones and game consoles don't allow executing code generated at runtime, which rules out a JIT.
- *  I think fibers are a really powerful tool, and implementing them is straightforward in a bytecode VM which doesn't use the native stack.
+ *  I think fibers are a really powerful tool, and implementing them is straightforward in a bytecode VM that doesn't use the native stack.
 
 ## What about your other languages?
 

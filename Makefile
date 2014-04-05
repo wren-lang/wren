@@ -12,7 +12,7 @@ OBJECTS = $(SOURCES:.c=.o)
 DEBUG_OBJECTS = $(addprefix build/debug/, $(notdir $(OBJECTS)))
 RELEASE_OBJECTS = $(addprefix build/release/, $(notdir $(OBJECTS)))
 
-.PHONY: all clean test docs corelib
+.PHONY: all clean test docs builtin
 
 all: release
 
