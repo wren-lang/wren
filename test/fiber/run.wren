@@ -1,4 +1,4 @@
-var fiber = Fiber.create {
+var fiber = new Fiber {
   IO.print("fiber")
 }
 

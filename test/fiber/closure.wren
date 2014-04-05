@@ -3,7 +3,7 @@ var closure
 
 {
   var a = "before"
-  fiber = Fiber.create {
+  fiber = new Fiber {
     IO.print(a)
     Fiber.yield
     a = "after"

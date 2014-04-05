@@ -81,6 +81,16 @@ static const char* libSource =
 "\n"
 "class Range is Sequence {}\n";
 
+// Validates that the given argument in [args] is a function. Returns true if
+// it is. If not, reports an error and returns false.
+static bool validateFn(WrenVM* vm, Value* args, int index, const char* argName)
+{
+  if (IS_FN(args[index]) || IS_CLOSURE(args[index])) return true;
+
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " must be a function."));
+  return false;
+}
+
 // Validates that the given argument in [args] is a Num. Returns true if it is.
 // If not, reports an error and returns false.
 static bool validateNum(WrenVM* vm, Value* args, int index, const char* argName)
@@ -183,12 +193,16 @@ DEF_NATIVE(class_name)
   RETURN_OBJ(classObj->name);
 }
 
-DEF_NATIVE(fiber_create)
+DEF_NATIVE(fiber_instantiate)
 {
-  if (!IS_FN(args[1]) && !IS_CLOSURE(args[1]))
-  {
-    RETURN_ERROR("Argument must be a function.");
-  }
+  // Return the Fiber class itself. When we then call "new" on it, it will
+  // create the fiber.
+  RETURN_VAL(args[0]);
+}
+
+DEF_NATIVE(fiber_new)
+{
+  if (!validateFn(vm, args, 1, "Argument")) return PRIM_ERROR;
 
   ObjFiber* newFiber = wrenNewFiber(vm, AS_OBJ(args[1]));
 
@@ -301,17 +315,14 @@ static PrimitiveResult callFunction(WrenVM* vm, Value* args, int numArgs)
 
 DEF_NATIVE(fn_instantiate)
 {
-  // Return the Function class itself. When we then call "new" on it, it will
+  // Return the Fn class itself. When we then call "new" on it, it will
   // return the block.
   RETURN_VAL(args[0]);
 }
 
 DEF_NATIVE(fn_new)
 {
-  if (!IS_FN(args[1]) && !IS_CLOSURE(args[1]))
-  {
-    RETURN_ERROR("Argument must be a function.");
-  }
+  if (!validateFn(vm, args, 1, "Argument")) return PRIM_ERROR;
 
   // The block argument is already a function, so just return it.
   RETURN_VAL(args[1]);
@@ -957,8 +968,8 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->boolClass, "!", bool_not);
 
   vm->fiberClass = defineClass(vm, "Fiber");
-  // TODO: Is there a way we can make this a regular constructor?
-  NATIVE(vm->fiberClass->metaclass, "create ", fiber_create);
+  NATIVE(vm->fiberClass->metaclass, "instantiate", fiber_instantiate);
+  NATIVE(vm->fiberClass->metaclass, "new ", fiber_new);
   NATIVE(vm->fiberClass->metaclass, "yield", fiber_yield);
   NATIVE(vm->fiberClass->metaclass, "yield ", fiber_yield1);
   NATIVE(vm->fiberClass, "isDone", fiber_isDone);

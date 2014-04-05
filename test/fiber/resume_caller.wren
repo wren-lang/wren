@@ -1,8 +1,8 @@
-var b = Fiber.create {
+var b = new Fiber {
   IO.print("fiber b")
 }
 
-var a = Fiber.create {
+var a = new Fiber {
   IO.print("begin fiber a")
   b.run
   IO.print("end fiber a")
