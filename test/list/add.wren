@@ -1,6 +1,4 @@
-var a = []
-a.add(1)
-IO.print(a) // expect: [1]
+var a = [1]
 a.add(2)
 IO.print(a) // expect: [1, 2]
 a.add(3)

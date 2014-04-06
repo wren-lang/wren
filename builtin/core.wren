@@ -17,6 +17,13 @@ class Sequence {
 }
 
 class List is Sequence {
+  addAll(other) {
+    for (element in other) {
+      add(element)
+    }
+    return other
+  }
+
   toString {
     var result = "["
     for (i in 0...count) {
