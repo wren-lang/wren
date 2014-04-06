@@ -26,7 +26,7 @@ Some people like to see all of the reserved words in a programming language in
 one lump. If you're one of those folks, here you go:
 
     :::dart
-    break class else falsefor if in is
+    break class else false for if in is
     null return static this true var while
 
 ## Statement terminators
