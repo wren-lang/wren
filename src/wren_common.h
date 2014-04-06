@@ -49,8 +49,13 @@
 // Set this to true to print out the compiled bytecode of each function.
 #define WREN_DUMP_COMPILED_CODE false
 
+// The maximum number of globals that may be defined at one time. This
+// limitation comes from the 16 bits used for the arguments to
+// `CODE_LOAD_GLOBAL` and `CODE_STORE_GLOBAL`.
+#define MAX_GLOBALS (65536)
+
 // The maximum number of arguments that can be passed to a method. Note that
-// this limtation is hardcoded in other places in the VM, in particular, the
+// this limitation is hardcoded in other places in the VM, in particular, the
 // `CODE_CALL_XX` instructions assume a certain maximum number.
 #define MAX_PARAMETERS (16)
 

@@ -15,6 +15,7 @@
 // to a list has O(1) amortized complexity.
 #define LIST_GROW_FACTOR (2)
 
+DEFINE_BUFFER(Value, Value)
 DEFINE_BUFFER(Method, Method)
 
 static void* allocate(WrenVM* vm, size_t size)

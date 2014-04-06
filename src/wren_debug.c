@@ -74,7 +74,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 
     case CODE_LOAD_GLOBAL:
     {
-      int global = READ_BYTE();
+      int global = READ_SHORT();
       printf("%-16s %5d '%s'\n", "LOAD_GLOBAL", global,
              vm->globalSymbols.names.data[global]);
       break;
@@ -82,7 +82,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 
     case CODE_STORE_GLOBAL:
     {
-      int global = READ_BYTE();
+      int global = READ_SHORT();
       printf("%-16s %5d '%s'\n", "STORE_GLOBAL", global,
              vm->globalSymbols.names.data[global]);
       break;

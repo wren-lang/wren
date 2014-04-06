@@ -883,34 +883,26 @@ DEF_NATIVE(string_subscript)
 static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 {
   size_t length = strlen(name);
-  int symbol = wrenSymbolTableAdd(vm, &vm->globalSymbols, name, length);
-
   ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
   WREN_PIN(vm, nameString);
 
   ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
-  vm->globals[symbol] = OBJ_VAL(classObj);
+  wrenDefineGlobal(vm, name, length, OBJ_VAL(classObj));
 
   WREN_UNPIN(vm);
-
   return classObj;
 }
 
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
   size_t length = strlen(name);
-
-  // Add the symbol first since it can trigger a GC.
-  int symbol = wrenSymbolTableAdd(vm, &vm->globalSymbols, name, length);
-
   ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
   WREN_PIN(vm, nameString);
 
   ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
+  wrenDefineGlobal(vm, name, length, OBJ_VAL(classObj));
 
   WREN_UNPIN(vm);
-
-  vm->globals[symbol] = OBJ_VAL(classObj);
   return classObj;
 }
 
@@ -918,7 +910,7 @@ static ObjClass* defineClass(WrenVM* vm, const char* name)
 static Value findGlobal(WrenVM* vm, const char* name)
 {
   int symbol = wrenSymbolTableFind(&vm->globalSymbols, name, strlen(name));
-  return vm->globals[symbol];
+  return vm->globals.data[symbol];
 }
 
 void wrenInitializeCore(WrenVM* vm)

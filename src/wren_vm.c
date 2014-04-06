@@ -38,6 +38,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   
   wrenSymbolTableInit(vm, &vm->methods);
   wrenSymbolTableInit(vm, &vm->globalSymbols);
+  wrenValueBufferInit(vm, &vm->globals);
 
   vm->bytesAllocated = 0;
 
@@ -67,13 +68,6 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->first = NULL;
   vm->pinned = NULL;
 
-  // Clear out the global variables. This ensures they are NULL before being
-  // initialized in case we do a garbage collection before one gets initialized.
-  for (int i = 0; i < MAX_GLOBALS; i++)
-  {
-    vm->globals[i] = NULL_VAL;
-  }
-
   vm->foreignCallSlot = NULL;
   vm->foreignCallNumArgs = 0;
 
@@ -85,10 +79,6 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
 void wrenFreeVM(WrenVM* vm)
 {
-  wrenSymbolTableClear(vm, &vm->methods);
-  wrenSymbolTableClear(vm, &vm->globalSymbols);
-  wrenReallocate(vm, vm, 0, 0);
-
   // Free all of the GC objects.
   Obj* obj = vm->first;
   while (obj != NULL)
@@ -97,6 +87,12 @@ void wrenFreeVM(WrenVM* vm)
     wrenFreeObj(vm, obj);
     obj = next;
   }
+
+  wrenSymbolTableClear(vm, &vm->methods);
+  wrenSymbolTableClear(vm, &vm->globalSymbols);
+  wrenValueBufferClear(vm, &vm->globals);
+
+  wrenReallocate(vm, vm, 0, 0);
 }
 
 static void collectGarbage(WrenVM* vm);
@@ -128,11 +124,9 @@ static void collectGarbage(WrenVM* vm)
   vm->bytesAllocated = 0;
 
   // Global variables.
-  for (int i = 0; i < vm->globalSymbols.names.count; i++)
+  for (int i = 0; i < vm->globals.count; i++)
   {
-    // Check for NULL to handle globals that have been defined (at compile time)
-    // but not yet initialized.
-    if (!IS_NULL(vm->globals[i])) wrenMarkValue(vm, vm->globals[i]);
+    wrenMarkValue(vm, vm->globals.data[i]);
   }
 
   // Pinned objects.
@@ -715,11 +709,11 @@ static bool runInterpreter(WrenVM* vm)
       DISPATCH();
 
     CASE_CODE(LOAD_GLOBAL):
-      PUSH(vm->globals[READ_BYTE()]);
+      PUSH(vm->globals.data[READ_SHORT()]);
       DISPATCH();
 
     CASE_CODE(STORE_GLOBAL):
-      vm->globals[READ_BYTE()] = PEEK();
+      vm->globals.data[READ_SHORT()] = PEEK();
       DISPATCH();
 
     CASE_CODE(LOAD_FIELD_THIS):
@@ -1025,6 +1019,20 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   }
 }
 
+int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
+{
+  if (vm->globals.count == MAX_GLOBALS) return -2;
+
+  if (IS_OBJ(value)) WREN_PIN(vm, AS_OBJ(value));
+
+  int symbol = wrenSymbolTableAdd(vm, &vm->globalSymbols, name, length);
+  if (symbol != -1) wrenValueBufferWrite(vm, &vm->globals, value);
+
+  if (IS_OBJ(value)) WREN_UNPIN(vm);
+
+  return symbol;
+}
+
 void wrenPinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned)
 {
   pinned->obj = obj;
@@ -1060,7 +1068,7 @@ static void defineMethod(WrenVM* vm, const char* className,
   if (classSymbol != -1)
   {
     // TODO: Handle name is not class.
-    classObj = AS_CLASS(vm->globals[classSymbol]);
+    classObj = AS_CLASS(vm->globals.data[classSymbol]);
   }
   else
   {
@@ -1072,12 +1080,9 @@ static void defineMethod(WrenVM* vm, const char* className,
 
     // TODO: Allow passing in name for superclass?
     classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-    classSymbol = wrenSymbolTableAdd(vm, &vm->globalSymbols,
-                            className, length);
+    wrenDefineGlobal(vm, className, length, OBJ_VAL(classObj));
 
     WREN_UNPIN(vm);
-
-    vm->globals[classSymbol] = OBJ_VAL(classObj);
   }
 
   // Create a name for the method, including its arity.

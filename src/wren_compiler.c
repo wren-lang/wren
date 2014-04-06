@@ -946,13 +946,16 @@ static int declareVariable(Compiler* compiler)
   // Top-level global scope.
   if (compiler->scopeDepth == -1)
   {
-    SymbolTable* symbols = &compiler->parser->vm->globalSymbols;
+    int symbol = wrenDefineGlobal(compiler->parser->vm,
+                                  token->start, token->length, NULL_VAL);
 
-    int symbol = wrenSymbolTableAdd(compiler->parser->vm, symbols,
-                           token->start, token->length);
     if (symbol == -1)
     {
       error(compiler, "Global variable is already defined.");
+    }
+    else if (symbol == -2)
+    {
+      error(compiler, "Too many global variables defined.");
     }
 
     return symbol;
@@ -1002,8 +1005,7 @@ static void defineVariable(Compiler* compiler, int symbol)
 
   // It's a global variable, so store the value in the global slot and then
   // discard the temporary for the initializer.
-  emitByte(compiler, CODE_STORE_GLOBAL, symbol);
-  // TODO: Allow more than 256 globals.
+  emitShort(compiler, CODE_STORE_GLOBAL, symbol);
   emit(compiler, CODE_POP);
 }
 
@@ -1505,6 +1507,8 @@ static void loadThis(Compiler* compiler)
 {
   Code loadInstruction;
   int index = resolveName(compiler, "this", 4, &loadInstruction);
+  ASSERT(index == -1 || loadInstruction != CODE_LOAD_GLOBAL,
+         "'this' should not be global.");
   emitByte(compiler, loadInstruction, index);
 }
 
@@ -1655,11 +1659,15 @@ static void variable(Compiler* compiler, bool allowAssignment, int index,
         emitByte(compiler, CODE_STORE_UPVALUE, index);
         break;
       case CODE_LOAD_GLOBAL:
-        emitByte(compiler, CODE_STORE_GLOBAL, index);
+        emitShort(compiler, CODE_STORE_GLOBAL, index);
         break;
       default:
         UNREACHABLE();
     }
+  }
+  else if (loadInstruction == CODE_LOAD_GLOBAL)
+  {
+    emitShort(compiler, loadInstruction, index);
   }
   else
   {
@@ -2164,8 +2172,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_STORE_LOCAL:
     case CODE_LOAD_UPVALUE:
     case CODE_STORE_UPVALUE:
-    case CODE_LOAD_GLOBAL:
-    case CODE_STORE_GLOBAL:
     case CODE_LOAD_FIELD_THIS:
     case CODE_STORE_FIELD_THIS:
     case CODE_LOAD_FIELD:
@@ -2175,6 +2181,8 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
       return 1;
 
     case CODE_CONSTANT:
+    case CODE_LOAD_GLOBAL:
+    case CODE_STORE_GLOBAL:
     case CODE_CALL_0:
     case CODE_CALL_1:
     case CODE_CALL_2:
@@ -2591,7 +2599,14 @@ static void classDefinition(Compiler* compiler)
                               signature);
 
     // Load the class.
-    emitByte(compiler, isGlobal ? CODE_LOAD_GLOBAL : CODE_LOAD_LOCAL, symbol);
+    if (isGlobal)
+    {
+      emitShort(compiler, CODE_LOAD_GLOBAL, symbol);
+    }
+    else
+    {
+      emitByte(compiler, CODE_LOAD_LOCAL, symbol);
+    }
 
     // Define the method.
     emitShort(compiler, instruction, methodSymbol);

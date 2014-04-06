@@ -92,6 +92,8 @@ typedef struct
 
 #endif
 
+DECLARE_BUFFER(Value, Value);
+
 // The dynamically allocated data structure for a variable that has been used
 // by a closure. Whenever a function accesses a variable declared in an
 // enclosing function, it will get to it through this.

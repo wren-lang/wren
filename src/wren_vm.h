@@ -6,9 +6,6 @@
 #include "wren_value.h"
 #include "wren_utils.h"
 
-// TODO: Get rid of this.
-#define MAX_GLOBALS 256
-
 // In order to token paste __LINE__, you need two weird levels of indirection
 // since __LINE__ isn't expanded when used in a token paste.
 // See: http://stackoverflow.com/a/1597129/9457
@@ -219,10 +216,10 @@ struct WrenVM
   ObjClass* rangeClass;
   ObjClass* stringClass;
 
+  // TODO: Move to end of struct since less frequently accessed?
   SymbolTable globalSymbols;
 
-  // TODO: Using a fixed array is gross here.
-  Value globals[MAX_GLOBALS];
+  ValueBuffer globals;
 
   // The compiler that is currently compiling code. This is used so that heap
   // allocated objects used by the compiler can be found if a GC is kicked off
@@ -287,6 +284,12 @@ struct WrenVM
 // - To free memory, [memory] will be the memory to free and [newSize] and
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
+
+// Adds a new global named [name] to the global namespace.
+//
+// Returns the symbol for the new global, -1 if a global with the given name
+// is already defined, or -2 if there are too many globals defined.
+int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value);
 
 // Sets the current Compiler being run to [compiler].
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler);
