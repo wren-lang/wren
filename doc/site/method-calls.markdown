@@ -6,7 +6,7 @@ Wren is object-oriented, so most code consists of method calls. Most of them
 look like so:
 
     :::wren
-    IO.write("hello")
+    IO.print("hello")
     items.add("another")
     items.insert(1, "value")
 

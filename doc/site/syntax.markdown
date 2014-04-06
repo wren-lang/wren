@@ -26,7 +26,7 @@ Some people like to see all of the reserved words in a programming language in
 one lump. If you're one of those folks, here you go:
 
     :::dart
-    break class else false fn for if in is
+    break class else falsefor if in is
     null return static this true var while
 
 ## Statement terminators
@@ -38,17 +38,13 @@ never write `;` unless you want to cram a bunch of statements on one line.
 
     :::dart
     // Two statements:
-    IO.write("hi")
-    IO.write("bye")
+    IO.print("hi")
+    IO.print("bye")
 
 Sometimes, though, a statement doesn't fit on a single line and treating the
 newline as a semicolon would trip things up. To handle that, Wren has a very
 simple rule: It ignores a newline following any token that can't end a
-statement. Specifically, that means any of these:
-
-    :::dart
-    ( [ { . , * / % + - | || & && ! ~ = < > <= >= == !=
-    class else if is static var while
+statement.
 
 Everywhere else, a newline is treated just like a `;`. Note that this is a very
 different system from how JavaScript handles semicolons. If you've been burned
@@ -70,7 +66,7 @@ Identifiers that start with underscore (`_`) are special in Wren. They are used 
 
 **TODO: Move this somewhere else:*
 
-### The `is` operator
+## The `is` operator
 
 The `is` keyword can be used as an infix operator in expression. It performs a
 type test. The left operand is an object and the right operand is a class. It

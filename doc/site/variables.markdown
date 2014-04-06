@@ -12,7 +12,7 @@ defined, it can be accessed by name as you would expect.
 
     :::dart
     var animal = "Slow Loris"
-    IO.write(animal) // Prints "Slow Loris".
+    IO.print(animal) // Prints "Slow Loris".
 
 ## Scope
 
@@ -21,11 +21,11 @@ defined until the end of the block where that definition appears.
 
     :::dart
     {
-      IO.write(a) // ERROR! a doesn't exist yet.
+      IO.print(a) // ERROR! a doesn't exist yet.
       var a = 123
-      IO.write(a) // "123"
+      IO.print(a) // "123"
     }
-    IO.write(a) // ERROR! a doesn't exist anymore.
+    IO.print(a) // ERROR! a doesn't exist anymore.
 
 Variables defined at the top level of a script are *global*. All other variables
 are *local*. Declaring a variable in an inner scope with the same name as an
@@ -36,9 +36,9 @@ something you likely intend to do much).
     var a = "outer"
     {
       var a = "inner"
-      IO.write(a) // Prints "inner".
+      IO.print(a) // Prints "inner".
     }
-    IO.write(a) // Prints "outer".
+    IO.print(a) // Prints "outer".
 
 Declaring a variable with the same name in the *same* scope *is* an error.
 
@@ -63,6 +63,6 @@ assigned value.
 
     :::dart
     var a = "before"
-    IO.write(a = "after") // Prints "after".
+    IO.print(a = "after") // Prints "after".
 
 **TODO: Forward references for globals, closures.**
