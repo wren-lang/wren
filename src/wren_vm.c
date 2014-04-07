@@ -6,15 +6,15 @@
 #include "wren_common.h"
 #include "wren_compiler.h"
 #include "wren_core.h"
-// TODO: This is used for printing the stack trace on an error. This should be
-// behind a flag so that you can use Wren with all debugging info stripped out.
 #include "wren_debug.h"
-// TODO: Put this behind a flag so users can disable the IO library.
-#include "wren_io.h"
 #include "wren_vm.h"
 
-#if WREN_TRACE_MEMORY || WREN_TRACE_GC
-#include <time.h>
+#if WREN_USE_LIB_IO
+  #include "wren_io.h"
+#endif
+
+#if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
+  #include <time.h>
 #endif
 
 // The built-in reallocation function used when one is not provided by the
@@ -72,7 +72,9 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->foreignCallNumArgs = 0;
 
   wrenInitializeCore(vm);
-  wrenLoadIOLibrary(vm);
+  #if WREN_USE_LIB_IO
+    wrenLoadIOLibrary(vm);
+  #endif
 
   return vm;
 }
@@ -104,7 +106,7 @@ void wrenSetCompiler(WrenVM* vm, Compiler* compiler)
 
 static void collectGarbage(WrenVM* vm)
 {
-#if WREN_TRACE_MEMORY || WREN_TRACE_GC
+#if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   printf("-- gc --\n");
 
   size_t before = vm->bytesAllocated;
@@ -158,8 +160,6 @@ static void collectGarbage(WrenVM* vm)
     {
       // This object was reached, so unmark it (for the next GC) and move on to
       // the next.
-      // TODO: Can optimize this by rotating which value means "marked" after
-      // each GC. Then we don't need to clear it here.
       (*obj)->flags &= ~FLAG_MARKED;
       obj = &(*obj)->next;
     }
@@ -168,7 +168,7 @@ static void collectGarbage(WrenVM* vm)
   vm->nextGC = vm->bytesAllocated * vm->heapScalePercent / 100;
   if (vm->nextGC < vm->minNextGC) vm->nextGC = vm->minNextGC;
 
-#if WREN_TRACE_MEMORY || WREN_TRACE_GC
+#if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   double elapsed = ((double)clock() / CLOCKS_PER_SEC) - startTime;
   printf("GC %ld before, %ld after (%ld collected), next at %ld. Took %.3fs.\n",
          before, vm->bytesAllocated, before - vm->bytesAllocated, vm->nextGC,
@@ -178,7 +178,7 @@ static void collectGarbage(WrenVM* vm)
 
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 {
-#if WREN_TRACE_MEMORY
+#if WREN_DEBUG_TRACE_MEMORY
   printf("reallocate %p %ld -> %ld\n", memory, oldSize, newSize);
 #endif
 
@@ -464,20 +464,19 @@ static bool runInterpreter(WrenVM* vm)
 
   #define INTERPRET_LOOP    DISPATCH();
   #define CASE_CODE(name)   code_##name
-  #define DISPATCH()        goto *dispatchTable[instruction = READ_BYTE()]
 
-  // If you want to debug the VM and see the stack as each instruction is
-  // executed, uncomment this.
-  // TODO: Use a #define to enable/disable this.
-  /*
-  #define DISPATCH() \
-    { \
-      wrenDebugPrintStack(fiber); \
-      wrenDebugPrintInstruction(vm, fn, (int)(ip - fn->bytecode)); \
-      instruction = *ip++; \
-      goto *dispatchTable[instruction]; \
-    }
-  */
+    #if WREN_DEBUG_TRACE_INSTRUCTIONS
+      // Prints the stack and instruction before each instruction is executed.
+      #define DISPATCH() \
+          { \
+            wrenDebugPrintStack(fiber); \
+            wrenDebugPrintInstruction(vm, fn, (int)(ip - fn->bytecode)); \
+            instruction = *ip++; \
+            goto *dispatchTable[instruction]; \
+          }
+    #else
+      #define DISPATCH()        goto *dispatchTable[instruction = READ_BYTE()]
+    #endif
 
   #else
 

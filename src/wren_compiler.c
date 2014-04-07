@@ -8,7 +8,7 @@
 #include "wren_compiler.h"
 #include "wren_vm.h"
 
-#if WREN_DUMP_COMPILED_CODE
+#if WREN_DEBUG_DUMP_COMPILED_CODE
   #include "wren_debug.h"
 #endif
 
@@ -1248,7 +1248,7 @@ static ObjFn* endCompiler(Compiler* compiler,
 
   WREN_UNPIN(compiler->parser->vm);
 
-  #if WREN_DUMP_COMPILED_CODE
+  #if WREN_DEBUG_DUMP_COMPILED_CODE
     wrenDebugPrintCode(compiler->parser->vm, fn);
   #endif
 

@@ -19,7 +19,7 @@
 //
 // Defaults to on.
 #ifndef WREN_NAN_TAGGING
-#define WREN_NAN_TAGGING true
+#define WREN_NAN_TAGGING 1
 #endif
 
 // If true, the VM's interpreter loop uses computed gotos. See this for more:
@@ -29,7 +29,14 @@
 //
 // Defaults to on.
 #ifndef WREN_COMPUTED_GOTO
-#define WREN_COMPUTED_GOTO true
+#define WREN_COMPUTED_GOTO 1
+#endif
+
+// If true, loads the "IO" class in the standard library.
+//
+// Defaults to on.
+#ifndef WREN_USE_LIB_IO
+#define WREN_USE_LIB_IO 1
 #endif
 
 // These flags are useful for debugging and hacking on Wren itself. They are not
@@ -38,16 +45,19 @@
 // Set this to true to stress test the GC. It will perform a collection before
 // every allocation. This is useful to ensure that memory is always correctly
 // pinned.
-#define WREN_DEBUG_GC_STRESS false
+#define WREN_DEBUG_GC_STRESS 0
 
 // Set this to true to log memory operations as they occur.
-#define WREN_TRACE_MEMORY false
+#define WREN_DEBUG_TRACE_MEMORY 0
 
 // Set this to true to log garbage collections as they occur.
-#define WREN_TRACE_GC false
+#define WREN_DEBUG_TRACE_GC 0
 
 // Set this to true to print out the compiled bytecode of each function.
-#define WREN_DUMP_COMPILED_CODE false
+#define WREN_DUMP_COMPILED_CODE 0
+
+// Set this to trace each instruction as it's executed.
+#define WREN_DEBUG_TRACE_INSTRUCTIONS 0
 
 // The maximum number of globals that may be defined at one time. This
 // limitation comes from the 16 bits used for the arguments to

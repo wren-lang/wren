@@ -538,7 +538,7 @@ static void markClosure(WrenVM* vm, ObjClosure* closure)
 
 void wrenMarkObj(WrenVM* vm, Obj* obj)
 {
-#if WREN_TRACE_MEMORY
+#if WREN_DEBUG_TRACE_MEMORY
   static int indent = 0;
   indent++;
   for (int i = 0; i < indent; i++) printf("  ");
@@ -561,7 +561,7 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
     case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
   }
 
-#if WREN_TRACE_MEMORY
+#if WREN_DEBUG_TRACE_MEMORY
   indent--;
 #endif
 }
@@ -574,7 +574,7 @@ void wrenMarkValue(WrenVM* vm, Value value)
 
 void wrenFreeObj(WrenVM* vm, Obj* obj)
 {
-#if WREN_TRACE_MEMORY
+#if WREN_DEBUG_TRACE_MEMORY
   printf("free ");
   wrenPrintValue(OBJ_VAL(obj));
   printf(" @ %p\n", obj);

@@ -1,7 +1,9 @@
+#include "wren_io.h"
+
+#if WREN_USE_LIB_IO
+
 #include <stdio.h>
 #include <time.h>
-
-#include "wren_io.h"
 
 // This string literal is generated automatically from io.wren. Do not edit.
 static const char* libSource =
@@ -36,3 +38,5 @@ void wrenLoadIOLibrary(WrenVM* vm)
   wrenDefineStaticMethod(vm, "IO", "writeString_", 1, ioWriteString);
   wrenDefineStaticMethod(vm, "IO", "clock", 0, ioClock);
 }
+
+#endif
