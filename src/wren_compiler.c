@@ -1159,7 +1159,7 @@ static int resolveName(Compiler* compiler, const char* name, int length,
   // If we got here, it wasn't in a local scope, so try the global scope.
   *loadInstruction = CODE_LOAD_GLOBAL;
   return wrenSymbolTableFind(
-      &compiler->parser->vm->globalSymbols, name, length);
+      &compiler->parser->vm->globalNames, name, length);
 }
 
 // Copies the identifier from the previously consumed `TOKEN_NAME` into [name],
@@ -1300,7 +1300,7 @@ GrammarRule rules[];
 // instruction with an offset that jumps to the current end of bytecode.
 static void patchJump(Compiler* compiler, int offset)
 {
-  // - 2 to adjust for the bytecode for the jump offset itself.
+  // -2 to adjust for the bytecode for the jump offset itself.
   int jump = compiler->bytecode.count - offset - 2;
   // TODO: Check for overflow.
   compiler->bytecode.data[offset] = (jump >> 8) & 0xff;
@@ -1420,7 +1420,7 @@ static int methodSymbol(Compiler* compiler, const char* name, int length)
 {
   if (length == 0) length = (int)strlen(name);
   return wrenSymbolTableEnsure(compiler->parser->vm,
-                               &compiler->parser->vm->methods, name, length);
+      &compiler->parser->vm->methodNames, name, length);
 }
 
 // Compiles an (optional) argument list and then calls it.
@@ -1890,9 +1890,8 @@ static void new_(Compiler* compiler, bool allowAssignment)
     call(compiler, false);
   }
 
-  // TODO: Give this a name the user can't type to prevent explicit calls.
-  // Instantiate the instance.
-  emitShort(compiler, CODE_CALL_0, methodSymbol(compiler, "instantiate", 11));
+  // The leading space in the name is to ensure users can't call it directly.
+  emitShort(compiler, CODE_CALL_0, methodSymbol(compiler, " instantiate", 12));
 
   // Invoke the constructor on the new instance.
   char name[MAX_METHOD_SIGNATURE];
@@ -2618,7 +2617,7 @@ static void classDefinition(Compiler* compiler)
   }
 
   // Update the class with the number of fields.
-  compiler->bytecode.data[numFieldsInstruction] = fields.names.count;
+  compiler->bytecode.data[numFieldsInstruction] = fields.count;
   wrenSymbolTableClear(compiler->parser->vm, &fields);
 
   compiler->enclosingClass = NULL;

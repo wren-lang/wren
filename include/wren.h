@@ -85,7 +85,6 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration);
 void wrenFreeVM(WrenVM* vm);
 
 // Runs [source], a string of Wren source code in a new fiber in [vm].
-// TODO: Define error codes.
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source);
 

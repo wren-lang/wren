@@ -36,8 +36,8 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
   vm->reallocate = reallocate;
   
-  wrenSymbolTableInit(vm, &vm->methods);
-  wrenSymbolTableInit(vm, &vm->globalSymbols);
+  wrenSymbolTableInit(vm, &vm->methodNames);
+  wrenSymbolTableInit(vm, &vm->globalNames);
   wrenValueBufferInit(vm, &vm->globals);
 
   vm->bytesAllocated = 0;
@@ -88,8 +88,8 @@ void wrenFreeVM(WrenVM* vm)
     obj = next;
   }
 
-  wrenSymbolTableClear(vm, &vm->methods);
-  wrenSymbolTableClear(vm, &vm->globalSymbols);
+  wrenSymbolTableClear(vm, &vm->methodNames);
+  wrenSymbolTableClear(vm, &vm->globalNames);
   wrenValueBufferClear(vm, &vm->globals);
 
   wrenReallocate(vm, vm, 0, 0);
@@ -528,7 +528,7 @@ static bool runInterpreter(WrenVM* vm)
         char message[100];
         snprintf(message, 100, "%s does not implement method '%s'.",
                  classObj->name->value,
-                 vm->methods.names.data[symbol]);
+                 vm->methodNames.data[symbol]);
         RUNTIME_ERROR(message);
       }
 
@@ -581,7 +581,7 @@ static bool runInterpreter(WrenVM* vm)
           char message[100];
           snprintf(message, 100, "%s does not implement method '%s'.",
                    classObj->name->value,
-                   vm->methods.names.data[symbol]);
+                   vm->methodNames.data[symbol]);
           RUNTIME_ERROR(message);
         }
       }
@@ -635,8 +635,7 @@ static bool runInterpreter(WrenVM* vm)
       {
         char message[100];
         snprintf(message, 100, "%s does not implement method '%s'.",
-                 classObj->name->value,
-                 vm->methods.names.data[symbol]);
+                 classObj->name->value, vm->methodNames.data[symbol]);
         RUNTIME_ERROR(message);
       }
 
@@ -688,8 +687,7 @@ static bool runInterpreter(WrenVM* vm)
         {
           char message[100];
           snprintf(message, 100, "%s does not implement method '%s'.",
-                   classObj->name->value,
-                   vm->methods.names.data[symbol]);
+                   classObj->name->value, vm->methodNames.data[symbol]);
           RUNTIME_ERROR(message);
         }
       }
@@ -1025,7 +1023,7 @@ int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
 
   if (IS_OBJ(value)) WREN_PIN(vm, AS_OBJ(value));
 
-  int symbol = wrenSymbolTableAdd(vm, &vm->globalSymbols, name, length);
+  int symbol = wrenSymbolTableAdd(vm, &vm->globalNames, name, length);
   if (symbol != -1) wrenValueBufferWrite(vm, &vm->globals, value);
 
   if (IS_OBJ(value)) WREN_UNPIN(vm);
@@ -1061,7 +1059,7 @@ static void defineMethod(WrenVM* vm, const char* className,
   ASSERT(methodFn != NULL, "Must provide method function.");
 
   // Find or create the class to bind the method to.
-  int classSymbol = wrenSymbolTableFind(&vm->globalSymbols,
+  int classSymbol = wrenSymbolTableFind(&vm->globalNames,
                                className, strlen(className));
   ObjClass* classObj;
 
@@ -1095,7 +1093,7 @@ static void defineMethod(WrenVM* vm, const char* className,
   name[length] = '\0';
 
   // Bind the method.
-  int methodSymbol = wrenSymbolTableEnsure(vm, &vm->methods, name, length);
+  int methodSymbol = wrenSymbolTableEnsure(vm, &vm->methodNames, name, length);
 
   Method method;
   method.type = METHOD_FOREIGN;

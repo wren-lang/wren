@@ -9,17 +9,17 @@ DEFINE_BUFFER(String, char*)
 
 void wrenSymbolTableInit(WrenVM* vm, SymbolTable* symbols)
 {
-  wrenStringBufferInit(vm, &symbols->names);
+  wrenStringBufferInit(vm, symbols);
 }
 
 void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
 {
-  for (int i = 0; i < symbols->names.count; i++)
+  for (int i = 0; i < symbols->count; i++)
   {
-    wrenReallocate(vm, symbols->names.data[i], 0, 0);
+    wrenReallocate(vm, symbols->data[i], 0, 0);
   }
 
-  wrenStringBufferClear(vm, &symbols->names);
+  wrenStringBufferClear(vm, symbols);
 }
 
 static int addSymbol(WrenVM* vm, SymbolTable* symbols,
@@ -29,8 +29,8 @@ static int addSymbol(WrenVM* vm, SymbolTable* symbols,
   strncpy(heapString, name, length);
   heapString[length] = '\0';
 
-  wrenStringBufferWrite(vm, &symbols->names, heapString);
-  return symbols->names.count - 1;
+  wrenStringBufferWrite(vm, symbols, heapString);
+  return symbols->count - 1;
 }
 
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols, const char* name,
@@ -57,10 +57,10 @@ int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length)
 {
   // See if the symbol is already defined.
   // TODO: O(n). Do something better.
-  for (int i = 0; i < symbols->names.count; i++)
+  for (int i = 0; i < symbols->count; i++)
   {
-    if (strlen(symbols->names.data[i]) == length &&
-        strncmp(symbols->names.data[i], name, length) == 0) return i;
+    if (strlen(symbols->data[i]) == length &&
+        strncmp(symbols->data[i], name, length) == 0) return i;
   }
 
   return -1;

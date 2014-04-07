@@ -202,8 +202,6 @@ typedef struct sPinnedObj
 // TODO: Move into wren_vm.c?
 struct WrenVM
 {
-  SymbolTable methods;
-
   // TODO: Use an array for some of these.
   ObjClass* boolClass;
   ObjClass* classClass;
@@ -216,15 +214,8 @@ struct WrenVM
   ObjClass* rangeClass;
   ObjClass* stringClass;
 
-  // TODO: Move to end of struct since less frequently accessed?
-  SymbolTable globalSymbols;
-
+  // The currently defined global variables.
   ValueBuffer globals;
-
-  // The compiler that is currently compiling code. This is used so that heap
-  // allocated objects used by the compiler can be found if a GC is kicked off
-  // in the middle of a compile.
-  Compiler* compiler;
 
   // The fiber that is currently running.
   ObjFiber* fiber;
@@ -258,6 +249,8 @@ struct WrenVM
   // The externally-provided function used to allocate memory.
   WrenReallocateFn reallocate;
 
+  // Foreign function data:
+
   // During a foreign function call, this will point to the first argument (the
   // receiver) of the call on the fiber's stack.
   Value* foreignCallSlot;
@@ -265,6 +258,21 @@ struct WrenVM
   // During a foreign function call, this will contain the number of arguments
   // to the function.
   int foreignCallNumArgs;
+
+  // Compiler and debugger data:
+  
+  // The compiler that is currently compiling code. This is used so that heap
+  // allocated objects used by the compiler can be found if a GC is kicked off
+  // in the middle of a compile.
+  Compiler* compiler;
+
+  // There is a single global symbol table for all method names on all classes.
+  // Method calls are dispatched directly by index in this table.
+  SymbolTable methodNames;
+
+  // Symbol table for the names of all global variables. Indexes here directly
+  // correspond to entries in [globals].
+  SymbolTable globalNames;
 };
 
 // A generic allocation function that handles all explicit memory management.

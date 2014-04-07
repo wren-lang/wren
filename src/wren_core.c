@@ -11,7 +11,7 @@
 #define NATIVE(cls, name, fn) \
     { \
       int symbol = wrenSymbolTableEnsure(vm, \
-          &vm->methods, name, strlen(name)); \
+          &vm->methodNames, name, strlen(name)); \
       Method method; \
       method.type = METHOD_PRIMITIVE; \
       method.primitive = native_##fn; \
@@ -909,7 +909,7 @@ static ObjClass* defineClass(WrenVM* vm, const char* name)
 // Returns the global variable named [name].
 static Value findGlobal(WrenVM* vm, const char* name)
 {
-  int symbol = wrenSymbolTableFind(&vm->globalSymbols, name, strlen(name));
+  int symbol = wrenSymbolTableFind(&vm->globalNames, name, strlen(name));
   return vm->globals.data[symbol];
 }
 
@@ -923,7 +923,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->objectClass, "new", object_new);
   NATIVE(vm->objectClass, "toString", object_toString);
   NATIVE(vm->objectClass, "type", object_type);
-  NATIVE(vm->objectClass, "instantiate", object_instantiate);
+  NATIVE(vm->objectClass, " instantiate", object_instantiate);
 
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
@@ -937,8 +937,8 @@ void wrenInitializeCore(WrenVM* vm)
   // Define the methods specific to Class after wiring up its superclass to
   // prevent the inherited ones from overwriting them.
   // TODO: Now that instantiation is controlled by the class, implement "new"
-  // for List, Fiber, et. al.
-  NATIVE(vm->classClass, "instantiate", class_instantiate);
+  // for List.
+  NATIVE(vm->classClass, " instantiate", class_instantiate);
   NATIVE(vm->classClass, "name", class_name);
 
   // The core class diagram ends up looking like this, where single lines point
@@ -967,7 +967,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->boolClass, "!", bool_not);
 
   vm->fiberClass = defineClass(vm, "Fiber");
-  NATIVE(vm->fiberClass->metaclass, "instantiate", fiber_instantiate);
+  NATIVE(vm->fiberClass->metaclass, " instantiate", fiber_instantiate);
   NATIVE(vm->fiberClass->metaclass, "new ", fiber_new);
   NATIVE(vm->fiberClass->metaclass, "yield", fiber_yield);
   NATIVE(vm->fiberClass->metaclass, "yield ", fiber_yield1);
@@ -979,7 +979,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->fnClass = defineClass(vm, "Fn");
 
-  NATIVE(vm->fnClass->metaclass, "instantiate", fn_instantiate);
+  NATIVE(vm->fnClass->metaclass, " instantiate", fn_instantiate);
   NATIVE(vm->fnClass->metaclass, "new ", fn_new);
 
   NATIVE(vm->fnClass, "call", fn_call0);

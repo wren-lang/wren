@@ -51,10 +51,7 @@ DECLARE_BUFFER(Byte, uint8_t);
 DECLARE_BUFFER(Int, int);
 DECLARE_BUFFER(String, char*);
 
-typedef struct
-{
-  StringBuffer names;
-} SymbolTable;
+typedef StringBuffer SymbolTable;
 
 // Initializes the symbol table.
 void wrenSymbolTableInit(WrenVM* vm, SymbolTable* symbols);
