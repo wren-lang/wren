@@ -132,7 +132,7 @@ static void collectGarbage(WrenVM* vm)
   }
 
   // Pinned objects.
-  PinnedObj* pinned = vm->pinned;
+  WrenPinnedObj* pinned = vm->pinned;
   while (pinned != NULL)
   {
     wrenMarkObj(vm, pinned->obj);
@@ -1030,7 +1030,7 @@ int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
   return symbol;
 }
 
-void wrenPinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned)
+void wrenPinObj(WrenVM* vm, Obj* obj, WrenPinnedObj* pinned)
 {
   pinned->obj = obj;
   pinned->previous = vm->pinned;

@@ -17,7 +17,7 @@
 #define WREN_PIN(vm, obj) \
     do \
     { \
-      PinnedObj WREN_TOKEN_PASTE2(wrenPinned, __LINE__); \
+      WrenPinnedObj WREN_TOKEN_PASTE2(wrenPinned, __LINE__); \
       wrenPinObj(vm, (Obj*)obj, &WREN_TOKEN_PASTE2(wrenPinned, __LINE__)); \
     } \
     while (false)
@@ -189,15 +189,14 @@ typedef enum
 // WrenVM has a pointer to the head of the list and walks it if a collection
 // occurs. This implies that pinned objects need to have stack semantics: only
 // the most recently pinned object can be unpinned.
-// TODO: Move into wren_vm.c.
-typedef struct sPinnedObj
+typedef struct sWrenPinnedObj
 {
   // The pinned object.
   Obj* obj;
 
   // The next pinned object.
-  struct sPinnedObj* previous;
-} PinnedObj;
+  struct sWrenPinnedObj* previous;
+} WrenPinnedObj;
 
 // TODO: Move into wren_vm.c?
 struct WrenVM
@@ -244,7 +243,7 @@ struct WrenVM
 
   // The head of the list of pinned objects. Will be `NULL` if nothing is
   // pinned.
-  PinnedObj* pinned;
+  WrenPinnedObj* pinned;
 
   // The externally-provided function used to allocate memory.
   WrenReallocateFn reallocate;
@@ -305,7 +304,7 @@ void wrenSetCompiler(WrenVM* vm, Compiler* compiler);
 // Mark [obj] as a GC root so that it doesn't get collected. Initializes
 // [pinned], which must be then passed to [unpinObj]. This is not intended to be
 // used directly. Instead, use the [WREN_PIN_OBJ] macro.
-void wrenPinObj(WrenVM* vm, Obj* obj, PinnedObj* pinned);
+void wrenPinObj(WrenVM* vm, Obj* obj, WrenPinnedObj* pinned);
 
 // Remove the most recently pinned object from the list of pinned GC roots.
 // This is not intended to be used directly. Instead, use the [WREN_UNPIN_OBJ]
