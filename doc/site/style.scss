@@ -3,14 +3,14 @@ $body: "Source Sans Pro", georgia, serif;
 $code: "Source Code Pro", Menlo, Monaco, Consolas, monospace;
 
 $primary:    hsl(30, 40%, 65%);
-$link:       hsl(30, 50%, 40%);
-$link-hover: hsl(195, 100%, 40%);
+$link:       hsl(195, 60%, 50%);
+$link-hover: hsl(195, 100%, 30%);
 $link-glow:  hsla(195, 100%, 60%, 0.2);
 
 $secondary-hue: 195;
 
-$light-gray: hsl(30, 10%, 80%);
-$lighter-gray: hsl(30, 10%, 93%);
+$light-gray: hsl(195, 10%, 80%);
+$lighter-gray: hsl(195, 10%, 93%);
 
 * {
   box-sizing: border-box;
@@ -81,9 +81,8 @@ p + p {
 code, pre {
   color: hsl($secondary-hue, 20%, 40%);
   font: 14px $code;
-  background: hsl($secondary-hue, 30%, 97%);
+  background: hsl($secondary-hue, 40%, 98%);
   border-radius: 4px;
-  border: solid 1px hsl($secondary-hue, 30%, 92%);
 }
 
 code {
@@ -92,9 +91,9 @@ code {
 }
 
 pre {
-  margin: 12px 0;
+  margin: 10px 0;
   line-height: 20px;
-  padding: 11px;
+  padding: 10px;
 }
 
 .page {
@@ -166,7 +165,7 @@ pre {
 
 .footer {
   color: $light-gray;
-  font: italic 14px $body;
+  font: 14px $body;
   text-align: center;
   margin: 30px 0 40px 0;
 }
