@@ -20,7 +20,7 @@ or be within a single one. Unlike C, block comments can nest in Wren:
     :::dart
     /* This is /* a nested */ comment. */
 
-## Reserved Words
+## Reserved words
 
 Some people like to see all of the reserved words in a programming language in
 one lump. If you're one of those folks, here you go:

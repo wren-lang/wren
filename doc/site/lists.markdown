@@ -7,7 +7,7 @@ A list is a compound object that holds a collection of elements identified by in
 
 Here, we've created a list of three elements. Notice that the elements don't have to be the same type.
 
-## Accessing Elements
+## Accessing elements
 
 You can access an element from a list by calling the [subscript operator](method-calls.html#subscript-operators) on it with the index of the element you want. Like most languages, indexes start at zero:
 
