@@ -616,7 +616,7 @@ void wrenPrintValue(Value value);
 
 // Returns true if [value] is a bool. Do not call this directly, instead use
 // [IS_BOOL].
-inline bool wrenIsBool(Value value)
+static inline bool wrenIsBool(Value value)
 {
 #if WREN_NAN_TAGGING
   return value.bits == TRUE_VAL.bits || value.bits == FALSE_VAL.bits;
@@ -627,13 +627,13 @@ inline bool wrenIsBool(Value value)
 
 // Returns true if [value] is an object of type [type]. Do not call this
 // directly, instead use the [IS___] macro for the type in question.
-inline bool wrenIsObjType(Value value, ObjType type)
+static inline bool wrenIsObjType(Value value, ObjType type)
 {
   return IS_OBJ(value) && AS_OBJ(value)->type == type;
 }
 
 // Converts the raw object pointer [obj] to a [Value].
-inline Value wrenObjectToValue(Obj* obj)
+static inline Value wrenObjectToValue(Obj* obj)
 {
 #if WREN_NAN_TAGGING
   return (Value)(SIGN_BIT | QNAN | (uint64_t)(obj));

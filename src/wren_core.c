@@ -358,6 +358,11 @@ DEF_NATIVE(fn_toString)
   RETURN_VAL(wrenNewString(vm, "<fn>", 4));
 }
 
+DEF_NATIVE(list_instantiate)
+{
+  RETURN_OBJ(wrenNewList(vm, 0));
+}
+
 DEF_NATIVE(list_add)
 {
   ObjList* list = AS_LIST(args[0]);
@@ -936,8 +941,6 @@ void wrenInitializeCore(WrenVM* vm)
 
   // Define the methods specific to Class after wiring up its superclass to
   // prevent the inherited ones from overwriting them.
-  // TODO: Now that instantiation is controlled by the class, implement "new"
-  // for List.
   NATIVE(vm->classClass, " instantiate", class_instantiate);
   NATIVE(vm->classClass, "name", class_name);
 
@@ -1041,6 +1044,7 @@ void wrenInitializeCore(WrenVM* vm)
   wrenInterpret(vm, "Wren core library", libSource);
 
   vm->listClass = AS_CLASS(findGlobal(vm, "List"));
+  NATIVE(vm->listClass->metaclass, " instantiate", list_instantiate);
   NATIVE(vm->listClass, "add ", list_add);
   NATIVE(vm->listClass, "clear", list_clear);
   NATIVE(vm->listClass, "count", list_count);
