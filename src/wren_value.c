@@ -749,19 +749,3 @@ void wrenPrintValue(Value value)
   }
   #endif
 }
-
-bool wrenIsBool(Value value)
-{
-  #if WREN_NAN_TAGGING
-  return value.bits == TRUE_VAL.bits || value.bits == FALSE_VAL.bits;
-  #else
-  return value.type == VAL_FALSE || value.type == VAL_TRUE;
-  #endif
-}
-
-bool wrenIsObjType(Value value, ObjType type)
-{
-  return IS_OBJ(value) && AS_OBJ(value)->type == type;
-}
-
-extern Value wrenObjectToValue(Obj* obj);

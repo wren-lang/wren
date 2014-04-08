@@ -372,6 +372,9 @@ typedef struct
 // Convert [boolean] to a boolean [Value].
 #define BOOL_VAL(boolean) (boolean ? TRUE_VAL : FALSE_VAL)
 
+// Convert [obj], an `Obj*`, to a [Value].
+#define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))
+
 // Returns true if [value] is a bool.
 #define IS_BOOL(value) (wrenIsBool(value))
 
@@ -501,9 +504,6 @@ typedef struct
 // Gets the singleton type tag for a Value (which must be a singleton).
 #define GET_TAG(value) ((int)((value).bits & MASK_TAG))
 
-// Converts a pointer to an Obj to a Value.
-#define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))
-
 #else
 
 // Value -> 0 or 1.
@@ -518,9 +518,6 @@ typedef struct
 #define IS_FALSE(value) ((value).type == VAL_FALSE)
 #define IS_NULL(value) ((value).type == VAL_NULL)
 #define IS_NUM(value) ((value).type == VAL_NUM)
-
-// Convert [obj], an `Obj*`, to a [Value].
-#define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))
 
 // double -> Value.
 #define NUM_VAL(n) ((Value){ VAL_NUM, n, NULL })
@@ -617,10 +614,25 @@ bool wrenValuesEqual(Value a, Value b);
 // tracing.
 void wrenPrintValue(Value value);
 
-// TODO: Can these be inlined?
-bool wrenIsBool(Value value);
-bool wrenIsObjType(Value value, ObjType type);
+// Returns true if [value] is a bool. Do not call this directly, instead use
+// [IS_BOOL].
+inline bool wrenIsBool(Value value)
+{
+#if WREN_NAN_TAGGING
+  return value.bits == TRUE_VAL.bits || value.bits == FALSE_VAL.bits;
+#else
+  return value.type == VAL_FALSE || value.type == VAL_TRUE;
+#endif
+}
 
+// Returns true if [value] is an object of type [type]. Do not call this
+// directly, instead use the [IS___] macro for the type in question.
+inline bool wrenIsObjType(Value value, ObjType type)
+{
+  return IS_OBJ(value) && AS_OBJ(value)->type == type;
+}
+
+// Converts the raw object pointer [obj] to a [Value].
 inline Value wrenObjectToValue(Obj* obj)
 {
 #if WREN_NAN_TAGGING
