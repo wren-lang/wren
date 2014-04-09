@@ -21,7 +21,7 @@ The simplest branching statement, `if` lets you conditionally skip a chunk of co
     :::wren
     if (ready) IO.print("go!")
 
-That evaluates the parenthesized expression after `if`. If it's true, then the statement after the condition is evaluated. Otherwise it is skipped. Instead of a statement, you can have a block:
+That evaluates the parenthesized expression after `if`. If it's true, then the statement after the condition is evaluated. Otherwise it is skipped. Instead of a statement, you can have a [block](syntax.html#blocks):
 
     :::wren
     if (ready) {

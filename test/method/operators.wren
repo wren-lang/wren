@@ -14,6 +14,7 @@ class Foo {
   |(other) { "infix | " + other }
 
   ! { "prefix !" }
+  ~ { "prefix ~" }
   - { "prefix -" }
 }
 
@@ -32,4 +33,5 @@ IO.print(foo != "a") // expect: infix != a
 IO.print(foo & "a") // expect: infix & a
 IO.print(foo | "a") // expect: infix | a
 IO.print(!foo) // expect: prefix !
+IO.print(~foo) // expect: prefix ~
 IO.print(-foo) // expect: prefix -

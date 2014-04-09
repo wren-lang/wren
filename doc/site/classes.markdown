@@ -1,7 +1,5 @@
 ^title Classes
 
-**TODO: Refactor `method-calls` and `classes` into using and creating classes.**
-
 Every value in Wren is an object, and every object is an instance of a class.
 Even `true` and `false` are full-featured objects&mdash;instances of the `Bool` class.
 
@@ -55,10 +53,6 @@ Unlike most other dynamically-typed languages, in Wren you can have multiple met
 
 When you [call](method-calls.html) the `prance` method, it selects the right one based on how many arguments you pass it.
 
-**TODO: Defining operators and setters.**
-
-**TODO: `static` methods.**
-
 ## Constructors
 
 To create a new instance of a class, you use the `new` keyword. We can make a unicorn like so:
@@ -68,14 +62,16 @@ To create a new instance of a class, you use the `new` keyword. We can make a un
 
 You almost always want to define some state or do some other initialization on a new object. For that, you'll want to define a constructor, like so:
 
+    :::dart
     class Unicorn {
       new {
         IO.print("I am a constructor!")
       }
     }
 
-When you create an instance with `new`, its constructor will be invoked. Like methods, you can pass arguments to the constructor by adding a parenthesized parameter list after `new`:
+When you create an instance with `new`, its constructor will be invoked. It's just a method with a special name. Like methods, you can pass arguments to the constructor by adding a parenthesized parameter list after `new`:
 
+    :::dart
     class Unicorn {
       new(name, color) {
         IO.print("My name is " + name + " and I am " + color + ".")
@@ -84,7 +80,46 @@ When you create an instance with `new`, its constructor will be invoked. Like me
 
 Values are passed to the constructor like so:
 
+    :::dart
     new Unicorn("Flicker", "purple")
+
+Like other methods, you can overload constructors by arity.
+
+## Operators
+
+Operators are just special syntax for regular [method calls](method-calls.html) on the left hand operand (or only operand in the case of unary operators like `!` and `~`). You can define them like so:
+
+    :::dart
+    class Unicorn {
+      // Infix:
+      +(other) {
+        IO.print("Adding to a unicorn?")
+      }
+
+      // Prefix:
+      ! {
+        IO.print("Negating a unicorn?!")
+      }
+    }
+
+This can be used to define any of these operators:
+
+    :::dart
+    // Infix:
+    +  -  *  /  %  <  >  <=  >=  ==  !=  &  |
+
+    // Prefix:
+    !  ~  -
+
+Note that `-` can be both a prefix and infix operator. If there's a parameter list, it's the infix one, otherwise, it's prefix. Since Wren supports overloading by arity, it's no problem for a class to define both.
+
+Operator overloading is really useful for types like vectors and complex numbers where the reader knows what the operators will do, but can make code deeply confusing if overused. When in doubt, use a real name.
+
+## Setters
+
+[Assignment](variables.html) *cannot* be overloaded. It isn't an operator, and its semantics are built right into the language.
+
+**TODO: ...**
 
 ## Fields
 

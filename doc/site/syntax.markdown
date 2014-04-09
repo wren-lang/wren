@@ -50,6 +50,30 @@ Everywhere else, a newline is treated just like a `;`. Note that this is a very
 different system from how JavaScript handles semicolons. If you've been burned
 there, don't worry, you should be fine here.
 
+## Blocks
+
+Wren uses curly braces to define *blocks*. Things like [control flow](branching.html) allow block bodies. [Method](method-calls.html) and [function](functions.html) bodies are also blocks. For example:
+
+    :::dart
+    if (happy && knowIt) {
+      hands.clap
+    } else IO.print("sad")
+
+Here we have a block for the then case, and just a single expression for the else. Blocks have two similar but not identical forms. If a there is a newline after the opening `{`, then the body contains a series of statements:
+
+    {
+      IO.print("one")
+      IO.print("two")
+      IO.print("three")
+    }
+
+If there is no newline, the block may only contain a single expression:
+
+    { "this is fine" }
+    { while (this) "is an error" }
+
+These are useful when defining method and function bodies. A normal block body implicitly returns `null`. If you want your method or function to return something different, you need an explicit `return` statement. However, a single-expression block with no newline after the `{` implicitly returns the result of that expression. This is a nice convenience for short methods and functions that just evaluate and return an expression.
+
 ## Names
 
 Identifiers are similar to other programming languages. They start with a letter or underscore and may contain letters, digits, and underscores. Case is sensitive.
