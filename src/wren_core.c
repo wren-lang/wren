@@ -595,7 +595,6 @@ DEF_NATIVE(num_minus)
 DEF_NATIVE(num_plus)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  // TODO: Handle coercion to string if RHS is a string.
   RETURN_NUM(AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
@@ -845,9 +844,7 @@ DEF_NATIVE(string_toString)
 
 DEF_NATIVE(string_plus)
 {
-  if (!IS_STRING(args[1])) RETURN_NULL;
-  // TODO: Handle coercion to string of RHS.
-
+  if (!validateString(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_OBJ(wrenStringConcat(vm, AS_CSTRING(args[0]), AS_CSTRING(args[1])));
 }
 
