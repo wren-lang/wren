@@ -65,5 +65,4 @@ for (i in 0...n) {
 }
 
 IO.print(ntoggle.value)
-
-IO.print("elapsed: " + (IO.clock - start).toString)
+IO.print("elapsed: ", IO.clock - start)

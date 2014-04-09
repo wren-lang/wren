@@ -7,4 +7,4 @@ var start = IO.clock
 for (i in 1..5) {
   IO.print(fib.call(28))
 }
-IO.print("elapsed: " + (IO.clock - start).toString)
+IO.print("elapsed: ", IO.clock - start)

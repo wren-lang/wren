@@ -1,6 +1,6 @@
 class A {
   new(arg) {
-    IO.print("new A " + arg)
+    IO.print("new A ", arg)
     _field = arg
   }
 
@@ -10,7 +10,7 @@ class A {
 class B is A {
   new(arg1, arg2) {
     super(arg2)
-    IO.print("new B " + arg1)
+    IO.print("new B ", arg1)
     _field = arg1
   }
 

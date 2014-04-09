@@ -7,4 +7,4 @@ var sum = 0
 for (i in list) sum = sum + i
 
 IO.print(sum)
-IO.print("elapsed: " + (IO.clock - start).toString)
+IO.print("elapsed: ", IO.clock - start)

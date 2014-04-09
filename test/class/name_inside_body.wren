@@ -1,10 +1,10 @@
 class Foo {
   static sayName {
-    IO.print(Foo.toString)
+    IO.print(Foo)
   }
 
   sayName {
-    IO.print(Foo.toString)
+    IO.print(Foo)
   }
 
   static toString { "Foo!" }
