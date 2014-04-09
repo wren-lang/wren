@@ -34,9 +34,9 @@ class List is Sequence {
     return result
   }
 
-  + that {
+  +(other) {
     var result = this[0..-1]
-    for (element in that) {
+    for (element in other) {
       result.add(element)
     }
     return result

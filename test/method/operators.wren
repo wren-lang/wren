@@ -1,17 +1,17 @@
 class Foo {
-  + other { "infix + " + other }
-  - other { "infix - " + other }
-  * other { "infix * " + other }
-  / other { "infix / " + other }
-  % other { "infix % " + other }
-  < other { "infix < " + other }
-  > other { "infix > " + other }
-  <= other { "infix <= " + other }
-  >= other { "infix >= " + other }
-  == other { "infix == " + other }
-  != other { "infix != " + other }
-  & other { "infix & " + other }
-  | other { "infix | " + other }
+  +(other) { "infix + " + other }
+  -(other) { "infix - " + other }
+  *(other) { "infix * " + other }
+  /(other) { "infix / " + other }
+  %(other) { "infix % " + other }
+  <(other) { "infix < " + other }
+  >(other) { "infix > " + other }
+  <=(other) { "infix <= " + other }
+  >=(other) { "infix >= " + other }
+  ==(other) { "infix == " + other }
+  !=(other) { "infix != " + other }
+  &(other) { "infix & " + other }
+  |(other) { "infix | " + other }
 
   ! { "prefix !" }
   - { "prefix -" }

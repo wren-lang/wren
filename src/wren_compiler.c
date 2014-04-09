@@ -1977,7 +1977,9 @@ void infixSignature(Compiler* compiler, char* name, int* length)
   name[(*length)++] = ' ';
 
   // Parse the parameter name.
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after operator name.");
   declareNamedVariable(compiler);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
 }
 
 // Compiles a method signature for an unary operator (i.e. "!").
@@ -1990,14 +1992,15 @@ void unarySignature(Compiler* compiler, char* name, int* length)
 // infix (i.e. "-").
 void mixedSignature(Compiler* compiler, char* name, int* length)
 {
-  // If there is a parameter name, it's an infix operator, otherwise it's unary.
-  if (compiler->parser->current.type == TOKEN_NAME)
+  // If there is a parameter, it's an infix operator, otherwise it's unary.
+  if (match(compiler, TOKEN_LEFT_PAREN))
   {
     // Add a space for the RHS parameter.
     name[(*length)++] = ' ';
 
     // Parse the parameter name.
     declareNamedVariable(compiler);
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
   }
 }
 
@@ -2011,7 +2014,9 @@ void namedSignature(Compiler* compiler, char* name, int* length)
     name[(*length)++] = ' ';
 
     // Parse the value parameter.
+    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after '='.");
     declareNamedVariable(compiler);
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
   }
   else
   {

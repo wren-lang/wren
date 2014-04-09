@@ -3,7 +3,7 @@ class Foo {
     IO.print("getter")
   }
 
-  static setter = value {
+  static setter=(value) {
     IO.print("setter")
   }
 

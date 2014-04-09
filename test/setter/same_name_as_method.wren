@@ -1,5 +1,5 @@
 class Foo {
-  bar = value { IO.print("set") }
+  bar=(value) { IO.print("set") }
   bar { IO.print("get") }
 }
 

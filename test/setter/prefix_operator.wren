@@ -1,5 +1,5 @@
 class Foo {
-  bar = value { value }
+  bar=(value) { value }
 }
 
 var foo = new Foo
