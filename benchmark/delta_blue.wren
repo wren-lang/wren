@@ -404,15 +404,15 @@ class Variable {
 
   constraints { _constraints }
   determinedBy { _determinedBy }
-  determinedBy = value { _determinedBy = value }
+  determinedBy=(value) { _determinedBy = value }
   mark { _mark }
-  mark = value { _mark = value }
+  mark=(value) { _mark = value }
   walkStrength { _walkStrength }
-  walkStrength = value { _walkStrength = value }
+  walkStrength=(value) { _walkStrength = value }
   stay { _stay }
-  stay = value { _stay = value }
+  stay=(value) { _stay = value }
   value { _value }
-  value = newValue { _value = newValue }
+  value=(newValue) { _value = newValue }
 
   // Add the given constraint to the set of all constraints that refer
   // this variable.
