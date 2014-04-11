@@ -5,17 +5,21 @@
 <title>{title} – Wren</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='http://fonts.googleapis.com/css?family=Dosis:300,400|Source+Sans+Pro:300,400,700,400italic,700italic|Source+Code+Pro:300,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 </head>
 <body id="top">
+<!--
 <a href="https://github.com/munificent/wren">
   <img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub">
-</a>
+</a>-->
 <div class="page">
-  <div class="header">
+  <header>
     <h1><a href="index.html">wren</a></h1>
     <h2>a classy little scripting language</h2>
-  </div>
-  <div class="nav">
+  </header>
+  <nav>
     <h2>welcome</h2>
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
@@ -46,11 +50,11 @@
       <li><a href="embedding.html">Embedding</a></li>
       <li><a href="getting-involved.html">Getting Involved</a></li>
     </ul>
-  </div>
-  <div class="content">
+  </nav>
+  <main>
     <h1>{title}</h1>
     {html}
-    <p class="footer">Last modified on {mod}. By Bob Nystrom.</p>
-  </div>
+    <p class="footer">Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Last modified on {mod} &mdash; By Bob Nystrom.</p>
+  </main>
 </body>
 </html>

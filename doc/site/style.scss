@@ -24,6 +24,7 @@ body, code, h1, h2, h3, p, pre, tt {
 body {
   color: #333;
   background: #fff;
+  padding: 0 40px;
 }
 
 h1 {
@@ -94,17 +95,19 @@ pre {
   margin: 10px 0;
   line-height: 20px;
   padding: 10px;
+
+  // Scroll horizontally if not wide enough.
+  overflow: auto;
 }
 
 .page {
   position: relative;
   margin: 0 auto;
-  width: 840px;
+  max-width: 840px;
 }
 
-.header {
-  position: absolute;
-  width: 840px;
+header {
+  position: relative;
   height: 100px;
   border-bottom: solid 1px $lighter-gray;
 
@@ -121,7 +124,7 @@ pre {
   h2 {
     position: absolute;
     right: 0;
-    bottom: 7px;
+    bottom: 11px;
     color: $light-gray;
     font: 18px $header;
     font-weight: 300;
@@ -129,18 +132,15 @@ pre {
   }
 }
 
-.content {
-  display: inline-block;
-  margin-top: 100px;
-  width: 620px;
+main {
   margin-left: 220px;
 }
 
-.nav {
+nav {
   position: absolute;
   left: 0;
   width: 140px;
-  margin-top: 201px;
+  margin-top: 102px;
 
   h2 {
     color: $light-gray;
@@ -187,3 +187,44 @@ pre {
 .codehilite pre span.ow { color: #30a186; } /* user-defined operator */
 .codehilite pre span.mi { } /* number */
 .codehilite pre span.n  { } /* name */
+
+@media only screen and (max-width: 639px) {
+  // Shrink the window padding.
+  body {
+    padding: 0 20px;
+  }
+
+  // Make the nav gutter narrower.
+  main {
+    margin-left: 140px;
+  }
+}
+
+@media only screen and (max-width: 479px) {
+  // Make the header centered.
+  header {
+    height: auto;
+
+    h1 {
+      position: relative;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    h2 {
+      position: relative;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  }
+
+  nav {
+    position: relative;
+    width: auto;
+    margin: 0;
+  }
+
+  main {
+    margin-left: 0;
+  }
+}
