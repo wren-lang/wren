@@ -58,4 +58,11 @@ An `||` ("logical or") expression is reversed. If the left-hand argument is trut
     IO.print(false || 1)  // 1
     IO.print(1 || 2)      // 1
 
-**TODO: Conditional operator.**
+## The conditional operator `?:`
+
+Also known as the "ternary" operator since it takes three arguments, Wren has the little "if statement in the form of an expression" you know and love from C and its bretheren.
+
+    :::dart
+    IO.print(1 != 2 ? "math is sane" : "math is not sane!")
+
+It takes a condition expression, followed by `?`, followed by a then expression, a `:`, then an else expression. Just like `if`, it evaluates the condition. If true, it evaluates (and returns) the then expression. Otherwise it does the else expression.

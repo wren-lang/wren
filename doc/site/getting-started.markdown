@@ -10,11 +10,11 @@ Getting Wren up and running on your machine should be pretty straightforward. Ti
 
 For Mac users, there is also an XCode project in the repo that you can use to hack on Wren. That's what I develop in. It builds fine from there but *may* not have the exact same build settings. The Makefile is the canonical way to compile it.
 
-For our Windows bretheren, there's still a little work to be done. Ideally, the repo would include a Visual Studio solution for building Wren. I don't have a Windows machine, but if someone does, I would be delighted to take a patch for this.
+For our Windows bretheren, there's still a little work to be done. Ideally, the repo would include a Visual Studio solution for building Wren. I don't have a Windows machine, but if you do, I would be delighted to take a patch for this.
 
 ## Interactive mode
 
-The above instructions will drop you into Wren's standalone interpreter in interactive mode. In that mode, you can type a line of code in, and it will immediately execute it. Here's something to try:
+The above instructions will drop you into Wren's standalone interpreter in interactive mode. You can type a line of code in, and it will immediately execute it. Here's something to try:
 
     :::dart
     IO.print("Hello, world!")
@@ -27,7 +27,7 @@ You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw your
 
 ## Running scripts
 
-The standalone interpreter can also load scripts from files and run them. Just pass the name of the script to wren. Copy and paste this into a file named `my_first_script.wren`:
+The standalone interpreter can also load scripts from files and run them. Just pass the name of the script to wren. Create a file named `my_first_script.wren` in your favorite text editor and paste this into it:
 
     :::dart
     for (yPixel in 0...24) {
@@ -55,9 +55,9 @@ Now run:
     :::bash
     $ ./wren my_first_script.wren
 
-Neat, right? You're a Wren programmer now! The next step is to [read more docs here](syntax.html) and learn your way around the language. If you run into bugs, or have ideas or questions, any and all of the following work:
+Neat, right? You're a Wren programmer now! The next step is to [read more docs](syntax.html) and learn your way around the language. If you run into bugs, or have ideas or questions, any and all of the following work:
 
- *  Say hi to me on twitter at [`@munificentbob`](https://twitter.com/intent/user?screen_name=munificentbob)
- *  [File a ticket](https://github.com/munificent/wren/issues) on GitHub
- *  Send a pull request
- *  Email me at [`bob@stuffwithstuff.com`](mailto:bob@stuffwithstuff.com)
+ *  Tell me on twitter at [`@munificentbob`](https://twitter.com/intent/user?screen_name=munificentbob).
+ *  [File a ticket](https://github.com/munificent/wren/issues) at [the GitHub repo](https://github.com/munificent/wren).
+ *  Send a pull request.
+ *  Email me at [`bob@stuffwithstuff.com`](mailto:bob@stuffwithstuff.com).

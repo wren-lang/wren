@@ -38,6 +38,24 @@ A couple of escape characters are supported:
 
 Their class is `String`.
 
+## Ranges
+
+A range is a little object that represents a consecutive range of numbers. They don't have their own dedicated literal syntax. Instead, the number class implements `..` and `...` operators to create them:
+
+    :::dart
+    3..8
+
+This creates a range from three two eight, including eight itself. If you want a half-inclusive range, use `...`:
+
+    :::dart
+    4..6
+
+This creates a range from four to six *not* including six itself. Ranges are commonly used for [looping](looping.html) over a sequences of numbers, but are useful in other places too. You can pass them to a [list](lists.html)'s subscript operator to return a subset of the list, for example:
+
+    var list = ["a", "b", "c", "d", "e"]
+    var slice = list[1..3]
+    IO.print(slice) // ["b", "c", "d"]
+
 ## Null
 
 Wren has a special value `null`, which is the only instance of the class `Null`.
