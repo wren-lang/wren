@@ -6,9 +6,9 @@ var fiber = new Fiber {
   IO.print(result)
 }
 
-fiber.run // expect: fiber 1
+fiber.call // expect: fiber 1
 IO.print("main 1") // expect: main 1
-fiber.run("run 1") // expect: run 1
+fiber.call("call 1") // expect: call 1
 IO.print("main 2") // expect: main 2
-fiber.run // expect: null
+fiber.call // expect: null
 IO.print("main 3") // expect: main 3

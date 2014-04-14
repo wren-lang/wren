@@ -17,9 +17,9 @@ var closure
   }
 }
 
-fiber.run    // expect: before
+fiber.call   // expect: before
 closure.call // expect: before
-fiber.run
+fiber.call
 closure.call // expect: after
-fiber.run    // expect: after
+fiber.call   // expect: after
 closure.call // expect: final

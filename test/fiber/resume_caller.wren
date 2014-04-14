@@ -4,12 +4,12 @@ var b = new Fiber {
 
 var a = new Fiber {
   IO.print("begin fiber a")
-  b.run
+  b.call
   IO.print("end fiber a")
 }
 
 IO.print("begin main")
-a.run
+a.call
 IO.print("end main")
 
 // expect: begin main

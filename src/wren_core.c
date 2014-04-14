@@ -224,18 +224,13 @@ DEF_NATIVE(fiber_new)
   RETURN_OBJ(newFiber);
 }
 
-DEF_NATIVE(fiber_isDone)
-{
-  ObjFiber* runFiber = AS_FIBER(args[0]);
-  RETURN_BOOL(runFiber->numFrames == 0);
-}
-
-DEF_NATIVE(fiber_run)
+DEF_NATIVE(fiber_call)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
 
-  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot run a finished fiber.");
-
+  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot call a finished fiber.");
+  if (runFiber->caller != NULL) RETURN_ERROR("Fiber has already been called.");
+  
   // Remember who ran it.
   runFiber->caller = fiber;
 
@@ -248,11 +243,12 @@ DEF_NATIVE(fiber_run)
   return PRIM_RUN_FIBER;
 }
 
-DEF_NATIVE(fiber_run1)
+DEF_NATIVE(fiber_call1)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
 
-  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot run a finished fiber.");
+  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot call a finished fiber.");
+  if (runFiber->caller != NULL) RETURN_ERROR("Fiber has already been called.");
 
   // Remember who ran it.
   runFiber->caller = fiber;
@@ -273,15 +269,69 @@ DEF_NATIVE(fiber_run1)
   return PRIM_RUN_FIBER;
 }
 
+DEF_NATIVE(fiber_isDone)
+{
+  ObjFiber* runFiber = AS_FIBER(args[0]);
+  RETURN_BOOL(runFiber->numFrames == 0);
+}
+
+DEF_NATIVE(fiber_run)
+{
+  ObjFiber* runFiber = AS_FIBER(args[0]);
+
+  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot run a finished fiber.");
+
+  // If the fiber was yielded, make the yield call return null.
+  if (runFiber->caller == NULL && runFiber->stackSize > 0)
+  {
+    runFiber->stack[runFiber->stackSize - 1] = NULL_VAL;
+  }
+
+  // Unlike run, this does not remember the calling fiber. Instead, it
+  // remember's *that* fiber's caller. You can think of it like tail call
+  // elimination. The switched-from fiber is discarded and when the switched
+  // to fiber completes or yields, control passes to the switched-from fiber's
+  // caller.
+  runFiber->caller = fiber->caller;
+
+  return PRIM_RUN_FIBER;
+}
+
+DEF_NATIVE(fiber_run1)
+{
+  ObjFiber* runFiber = AS_FIBER(args[0]);
+
+  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot run a finished fiber.");
+
+  // If the fiber was yielded, make the yield call return the value passed to
+  // run.
+  if (runFiber->caller == NULL && runFiber->stackSize > 0)
+  {
+    runFiber->stack[runFiber->stackSize - 1] = args[1];
+  }
+
+  // Unlike run, this does not remember the calling fiber. Instead, it
+  // remember's *that* fiber's caller. You can think of it like tail call
+  // elimination. The switched-from fiber is discarded and when the switched
+  // to fiber completes or yields, control passes to the switched-from fiber's
+  // caller.
+  runFiber->caller = fiber->caller;
+
+  return PRIM_RUN_FIBER;
+}
+
 DEF_NATIVE(fiber_yield)
 {
   if (fiber->caller == NULL) RETURN_ERROR("No fiber to yield to.");
 
+  ObjFiber* caller = fiber->caller;
+  fiber->caller = NULL;
+
   // Make the caller's run method return null.
-  fiber->caller->stack[fiber->caller->stackSize - 1] = NULL_VAL;
+  caller->stack[caller->stackSize - 1] = NULL_VAL;
 
   // Return the fiber to resume.
-  args[0] = OBJ_VAL(fiber->caller);
+  args[0] = OBJ_VAL(caller);
   return PRIM_RUN_FIBER;
 }
 
@@ -289,8 +339,11 @@ DEF_NATIVE(fiber_yield1)
 {
   if (fiber->caller == NULL) RETURN_ERROR("No fiber to yield to.");
 
+  ObjFiber* caller = fiber->caller;
+  fiber->caller = NULL;
+
   // Make the caller's run method return the argument passed to yield.
-  fiber->caller->stack[fiber->caller->stackSize - 1] = args[1];
+  caller->stack[caller->stackSize - 1] = args[1];
 
   // When the yielding fiber resumes, we'll store the result of the yield call
   // in its stack. Since Fiber.yield(value) has two arguments (the Fiber class
@@ -299,7 +352,7 @@ DEF_NATIVE(fiber_yield1)
   fiber->stackSize--;
 
   // Return the fiber to resume.
-  args[0] = OBJ_VAL(fiber->caller);
+  args[0] = OBJ_VAL(caller);
   return PRIM_RUN_FIBER;
 }
 
@@ -966,16 +1019,17 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->boolClass, "toString", bool_toString);
   NATIVE(vm->boolClass, "!", bool_not);
 
+  // TODO: Make fibers inherit Sequence and be iterable.
   vm->fiberClass = defineClass(vm, "Fiber");
   NATIVE(vm->fiberClass->metaclass, " instantiate", fiber_instantiate);
   NATIVE(vm->fiberClass->metaclass, "new ", fiber_new);
   NATIVE(vm->fiberClass->metaclass, "yield", fiber_yield);
   NATIVE(vm->fiberClass->metaclass, "yield ", fiber_yield1);
+  NATIVE(vm->fiberClass, "call", fiber_call);
+  NATIVE(vm->fiberClass, "call ", fiber_call1);
   NATIVE(vm->fiberClass, "isDone", fiber_isDone);
   NATIVE(vm->fiberClass, "run", fiber_run);
   NATIVE(vm->fiberClass, "run ", fiber_run1);
-  // TODO: Primitives for switching to a fiber without setting the caller.
-  // (I.e. symmetric coroutines.)
 
   vm->fnClass = defineClass(vm, "Fn");
 

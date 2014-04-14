@@ -5,7 +5,7 @@ var fiber = new Fiber {
 }
 
 IO.print(fiber.isDone)  // expect: false
-fiber.run               // expect: 1
+fiber.call              // expect: 1
 IO.print(fiber.isDone)  // expect: false
-fiber.run               // expect: 2
+fiber.call              // expect: 2
 IO.print(fiber.isDone)  // expect: true

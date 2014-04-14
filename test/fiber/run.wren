@@ -4,6 +4,6 @@ var fiber = new Fiber {
 
 IO.print("before") // expect: before
 fiber.run          // expect: fiber
-IO.print("after")  // expect: after
 
-// TODO: Test handles error if fiber tries to run itself.
+// This does not get run since we exit when the run fiber completes.
+IO.print("nope")

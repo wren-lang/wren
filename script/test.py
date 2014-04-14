@@ -17,7 +17,7 @@ EXPECT_ERROR_PATTERN = re.compile(r'// expect error')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect runtime error: (.+)')
 ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
-STACK_TRACE_PATTERN = re.compile(r'\[.* line (\d+)\] in \(script\)')
+STACK_TRACE_PATTERN = re.compile(r'\[.* line (\d+)\] in')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
 
