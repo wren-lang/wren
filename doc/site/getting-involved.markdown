@@ -1,3 +1,0 @@
-^title Getting Involved
-
-**TODO**

@@ -1,4 +1,5 @@
 ^title Lists
+^category types
 
 A list is a compound object that holds a collection of elements identified by integer index. You can create a list by placing a sequence of comma-separated expressions inside square brackets:
 
@@ -61,12 +62,14 @@ It's valid to "insert" after the last element in the list, but only *right* afte
 
 The opposite of `insert` is `removeAt`. It removes a single element from a given position in the list. All following items are shifted up to fill in the gap:
 
+    :::dart
     var letters = ["a", "b", "c"]
     letters.removeAt(1)
     IO.print(letters) // ["a", "c"]
 
 If you want to remove everything from the list, you can clear it:
 
+    :::dart
     hirsute.clear
     IO.print(hirsute) // []
 

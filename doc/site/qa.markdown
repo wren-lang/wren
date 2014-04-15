@@ -1,4 +1,5 @@
 ^title Q & A
+^category reference
 
 ## Why did you create Wren?
 
@@ -37,7 +38,7 @@ Here's an example of that kind of object-oriented programming in Lua:
 
 Here's the same example in Wren:
 
-    :::wren
+    :::dart
     class Account {
       new(balance) { _balance = balance }
       withdraw(amount) { _balance = _balance - amount }

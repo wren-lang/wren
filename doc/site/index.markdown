@@ -1,13 +1,13 @@
-^title Welcome
+^title Welcome!
 
 Wren is a *small, clean, fast, class-based scripting language.* Think Smalltalk
 in a Lua-sized package.
 
-    :::java
+    :::dart
     IO.print("Hello, world!")
 
     class Wren {
-      adjectives = ["small", "clean", "fast"]
+      adjectives = ["sm\nall", "clean", "fast"]
       languageType {
         "scripting"
       }

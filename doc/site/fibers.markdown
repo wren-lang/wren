@@ -1,4 +1,5 @@
 ^title Fibers
+^category types
 
 Fibers are a key part of Wren. They form its execution model, its concurrency story and take the place of exceptions in [error handling](error-handling.html). A fiber represents a "thread" of computation.
 

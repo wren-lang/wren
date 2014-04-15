@@ -1,4 +1,5 @@
 ^title Classes
+^category types
 
 Every value in Wren is an object, and every object is an instance of a class.
 Even `true` and `false` are full-featured objects&mdash;instances of the `Bool` class.
@@ -147,3 +148,5 @@ Constructors, however, initialize the instance *after* it has been created. They
 ## Superclass method calls
 
 **TODO**
+
+**TODO: this**
