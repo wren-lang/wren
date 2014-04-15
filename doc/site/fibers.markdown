@@ -1,10 +1,10 @@
 ^title Fibers
 
-Fibers are a key part of Wren. They form its execution model, its concurrency story and take the place of exceptions in [error handling](error-handling.html). A fiber represents a "thread" of computation.
+Fibers are a key part of Wren. They form its execution model, its concurrency story and take the place of exceptions in [error handling](error-handling.html).
 
-They are a bit like regular threads except they are *cooperatively* scheduled. That means Wren won't stop running a fiber and switch to another until the first one tells it to. You don't have to worry about nondeterministic context switches and all of the headaches those cause.
+They are a bit like threads except they are *cooperatively* scheduled. That means Wren won't stop running a fiber and switch to another until you tell to. You don't have to worry about context switches at random times and all of the headaches those cause.
 
-Fibers in Wren are dramatically more expressive than generators in Python and C#. They are similar to coroutines in Lua, but are a bit more expressive than those too (because Wren supports symmetric fibers as well as asymmetric ones).
+Fibers in Wren are dramatically more expressive than generators in Python and C#. They are on par with coroutines in Lua (though Wren supports both symmetric and asymmetric coroutines while Lua only directly has the latter).
 
 Fibers are lightweight and efficient in Wren. They are scheduled entirely by Wren, so they don't use OS thread resources, or require heavyweight context switches. They just need a bit of memory for their stacks. A fiber will get garbage collected like any other object when not referenced any more, so you can create them freely.
 
