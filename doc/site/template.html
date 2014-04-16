@@ -10,17 +10,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 </head>
 <body id="top">
-<!--
-<a href="https://github.com/munificent/wren">
-  <img style="position: absolute; top: 0; right: 0; border: 0; z-index: 100;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub">
-</a>-->
-<div class="page">
-  <header>
+<header>
+  <div class="page">
     <h1><a href="index.html">wren</a></h1>
     <h2>a classy little scripting language</h2>
-  </header>
-  <nav>
-    <h2>welcome</h2>
+  </div>
+</header>
+<div class="header-bar">
+  <div class="page">
+    <div class="{nav-col}">
+      <h1><small>{category}</small></h1>
+    </div>
+    <div class="{main-col}">
+      <h1>{title}</h1>
+    </div>
+  </div>
+</div>
+<div class="page">
+  <nav class="{nav-col}">
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
     </ul>
@@ -42,19 +49,23 @@
       <li><a href="lists.html">Lists</a></li>
       <li><a href="maps.html">Maps</a></li>
     </ul>
-    </ul>
-    <h2>other</h2>
+    <h2>reference</h2>
     <ul>
-      <li><a href="qa.html">Q &amp; A</a></li>
+      <li><a href="core-libraries.html">Core Libraries</a></li>
+      <li><a href="embedding-api.html">Embedding API</a></li>
       <li><a href="performance.html">Performance</a></li>
-      <li><a href="embedding.html">Embedding</a></li>
-      <li><a href="getting-involved.html">Getting Involved</a></li>
+      <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="qa.html">Q &amp; A</a></li>
     </ul>
   </nav>
-  <main>
-    <h1>{title}</h1>
+  <main class="{main-col}">
     {html}
-    <p class="footer">Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Last modified on {mod} &mdash; By Bob Nystrom.</p>
   </main>
+</div>
+<footer>
+  <div class="page">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Last modified on {mod} &mdash; By Bob Nystrom.</p>
+  </div>
+</footer>
 </body>
 </html>

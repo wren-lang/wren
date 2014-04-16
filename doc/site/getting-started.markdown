@@ -21,6 +21,7 @@ The above instructions will drop you into Wren's standalone interpreter in inter
 
 Or a little more exciting:
 
+    :::dart
     for (i in 1..10) IO.print("Counting up ", i)
 
 You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw your computer to the ground and storm off.

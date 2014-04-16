@@ -1,4 +1,5 @@
 ^title Looping
+^category language
 
 It's hard to write a useful program without executing some chunk of code repeatedly. To do that, you use looping statements. There are two in Wren, and they should be familiar if you've used other imperative languages.
 

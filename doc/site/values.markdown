@@ -1,4 +1,5 @@
 ^title Values
+^category types
 
 Values are the built-in object types that all other objects are composed of.
 They can be created through *literals*, expressions that evaluate to a value.
@@ -52,6 +53,7 @@ This creates a range from three two eight, including eight itself. If you want a
 
 This creates a range from four to six *not* including six itself. Ranges are commonly used for [looping](looping.html) over a sequences of numbers, but are useful in other places too. You can pass them to a [list](lists.html)'s subscript operator to return a subset of the list, for example:
 
+    :::dart
     var list = ["a", "b", "c", "d", "e"]
     var slice = list[1..3]
     IO.print(slice) // ["b", "c", "d"]

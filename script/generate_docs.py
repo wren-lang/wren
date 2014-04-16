@@ -30,6 +30,7 @@ def format_file(path, skip_up_to_date):
     return
 
   title = ""
+  category = ""
 
   # Read the markdown file and preprocess it.
   contents = ""
@@ -45,6 +46,8 @@ def format_file(path, skip_up_to_date):
 
         if command == "title":
           title = args
+        elif command == "category":
+          category = args
         else:
           print "UNKNOWN COMMAND:", command, args
 
@@ -67,7 +70,16 @@ def format_file(path, skip_up_to_date):
   modified = datetime.fromtimestamp(os.path.getmtime(path))
   mod_str = modified.strftime('%B %d, %Y')
 
-  fields = {'title': title, 'html': html, 'mod': mod_str}
+  nav_col = 'left-1'
+  main_col = 'right-2'
+  fields = {
+    'title': title,
+    'html': html,
+    'mod': mod_str,
+    'category': category,
+    'nav-col': nav_col,
+    'main-col': main_col
+  }
 
   with open("doc/site/template.html") as f:
     template = f.read()

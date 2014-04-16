@@ -1,4 +1,5 @@
 ^title Syntax
+^category language
 
 Wren's syntax is designed to be familiar to people coming from C-like languages while being as simple and expressive as possible within that framework.
 
@@ -33,6 +34,20 @@ Wren also has a few predefined identifiers:
     :::dart
     false null this true
 
+## Names
+
+Identifiers are similar to other programming languages. They start with a letter or underscore and may contain letters, digits, and underscores. Case is sensitive.
+
+    :::dart
+    hi
+    camelCase
+    PascalCase
+    _under_score
+    abc123
+    ALL_CAPS
+
+Identifiers that start with underscore (`_`) are special in Wren. They are used to indicate fields in [classes](classes.html).
+
 ## Statement terminators
 
 Officially, statements are terminated by a semicolon (`;`) like in other
@@ -56,7 +71,7 @@ there, don't worry, you should be fine here.
 
 ## Blocks
 
-Wren uses curly braces to define *blocks*. Things like [control flow](branching.html) allow block bodies. [Method](method-calls.html) and [function](functions.html) bodies are also blocks. For example:
+Wren uses curly braces to define *blocks*. Things like [control flow](branching.html) and [looping](looping.html) allow block bodies. [Method](method-calls.html) and [function](functions.html) bodies are also blocks. For example:
 
     :::dart
     if (happy && knowIt) {
@@ -65,6 +80,7 @@ Wren uses curly braces to define *blocks*. Things like [control flow](branching.
 
 Here we have a block for the then case, and just a single expression for the else. Blocks have two similar but not identical forms. If a there is a newline after the opening `{`, then the body contains a series of statements:
 
+    :::dart
     {
       IO.print("one")
       IO.print("two")
@@ -73,26 +89,13 @@ Here we have a block for the then case, and just a single expression for the els
 
 If there is no newline, the block may only contain a single expression:
 
+    :::dart
     { "this is fine" }
     { while (this) "is an error" }
 
 These are useful when defining method and function bodies. A normal block body implicitly returns `null`. If you want your method or function to return something different, you need an explicit `return` statement. However, a single-expression block with no newline after the `{` implicitly returns the result of that expression. This is a nice convenience for short methods and functions that just evaluate and return an expression.
 
-## Names
-
-Identifiers are similar to other programming languages. They start with a letter or underscore and may contain letters, digits, and underscores. Case is sensitive.
-
-    :::dart
-    hi
-    camelCase
-    PascalCase
-    _under_score
-    abc123
-    ALL_CAPS
-
-Identifiers that start with underscore (`_`) are special in Wren. They are used to indicate fields in [classes](classes.html).
-
-**TODO: Move this somewhere else:*
+**TODO: Move this somewhere else:**
 
 ## The `is` operator
 

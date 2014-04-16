@@ -1,4 +1,5 @@
 ^title Branching
+^category language
 
 *Control flow* is used to determine which chunks of code are executed and how many times. Expressions and statements for deciding whether or not to execute some code are called *branching* and are covered here. To execute something more than once, you'll want [*looping*](looping.html).
 
@@ -18,12 +19,12 @@ This means `0`, empty strings, and empty collections are all considered "true" v
 
 The simplest branching statement, `if` lets you conditionally skip a chunk of code. It looks like this:
 
-    :::wren
+    :::dart
     if (ready) IO.print("go!")
 
 That evaluates the parenthesized expression after `if`. If it's true, then the statement after the condition is evaluated. Otherwise it is skipped. Instead of a statement, you can have a [block](syntax.html#blocks):
 
-    :::wren
+    :::dart
     if (ready) {
       IO.print("getSet")
       IO.print("go!")
@@ -31,11 +32,12 @@ That evaluates the parenthesized expression after `if`. If it's true, then the s
 
 You may also provide an `else` branch. It will be executed if the condition is false:
 
-    :::wren
+    :::dart
     if (ready) IO.print("go!") else IO.print("not ready!")
 
 And, of course, it can take a block too:
 
+    :::dart
     if (ready) {
       IO.print("go!")
     } else {
@@ -48,13 +50,13 @@ The `&&` and `||` operators are lumped here under branching because they conditi
 
 An `&&` ("logical and") expression evaluates the left-hand argument. If it's falsey, it returns that value. Otherwise it evaluates and returns the right-hand argument.
 
-    :::wren
+    :::dart
     IO.print(false && 1)  // false
     IO.print(1 && 2)      // 2
 
 An `||` ("logical or") expression is reversed. If the left-hand argument is truthy, it's returned, otherwise the right-hand argument is evaluated and returned:
 
-    :::wren
+    :::dart
     IO.print(false || 1)  // 1
     IO.print(1 || 2)      // 1
 

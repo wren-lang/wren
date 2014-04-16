@@ -1,4 +1,5 @@
 ^title Functions
+^category types
 
 No self-respecting language today can get by without functions&mdash;first class little bundles of code. Since Wren is object-oriented, most of your code will live in methods on classes, but free-floating functions are still useful.
 
@@ -41,6 +42,7 @@ Of course, you don't *have* to use a block argument to pass a function to a meth
 
 Block arguments are purely sugar for creating a function and passing it in one little blob of syntax. There are some times when you want to create a function but *don't* need to pass it to a method. For that, you can call the `Fn` class's constructor:
 
+    :::dart
     var someFn = new Fn {
       IO.print("Hi!")
     }

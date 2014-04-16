@@ -1,11 +1,12 @@
 ^title Method Calls
+^category language
 
 **TODO: Refactor `method-calls` and `classes` into using and creating classes.**
 
 Wren is object-oriented, so most code consists of method calls. Most of them
 look like so:
 
-    :::wren
+    :::dart
     IO.print("hello")
     items.add("another")
     items.insert(1, "value")
@@ -19,7 +20,7 @@ argument list in parentheses. Semantically, a method call works like this:
 
 Methods that do not take any arguments leave off the `()`:
 
-    :::wren
+    :::dart
     text.length
 
 These are special "getters" or "accessors" in other languages. In Wren, they're
@@ -34,6 +35,7 @@ other. In technical terms, this means you can overload by *arity*.
 In normal human terms, it means you can overload by number of parameters. These
 are calls to two different methods:
 
+    :::dart
     items.add("one arg")
     items.add("first", "second")
 
@@ -45,7 +47,7 @@ implement separately.
 
 Modifying a public property of some object looks like you expect:
 
-    :::wren
+    :::dart
     point.x = 123
 
 You can probably guess by now, but again this is just another special syntax
@@ -60,7 +62,7 @@ just a special syntax for regular method calls.
 
 Wren has a few prefix operators:
 
-    :::wren
+    :::dart
     ! ~ -
 
 They are just method calls on the operand without any other arguments. An
@@ -70,7 +72,7 @@ We have a few other operators to play with. The remaining ones are
 infix&mdash;they have operators on either side. In order of increasing
 precedence, they are:
 
-    :::wren
+    :::dart
     == !=
     < > <= >=
     .. ...
@@ -92,7 +94,7 @@ which can in turn be iterated over using a `for` [loop](looping.html).
 Most languages use square brackets (`[]`) for working with collection-like
 objects. For example:
 
-    :::wren
+    :::dart
     list.add["item"]
     map["key"] = "value"
 
@@ -100,5 +102,5 @@ You know the refrain by now. In Wren, these are just method calls. Subscript
 operators can also be overloaded by arity, which is useful for things like
 multi-dimensional arrays:
 
-    :::wren
+    :::dart
     table[3, 5] = "value"

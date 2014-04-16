@@ -1,4 +1,5 @@
 ^title Performance
+^category reference
 
 Languages come in four rough performance buckets, from slowest to fastest:
 
@@ -8,17 +9,16 @@ Languages come in four rough performance buckets, from slowest to fastest:
 2.  Bytecode interpreters: CPython,
     Ruby 1.9 and later, Lua, early JavaScript VMs.
 
-3.  JIT compilers for dynamically typed languages: Modern JavaScript VMs,
+3.  JIT compiled dynamically typed languages: Modern JavaScript VMs,
     LuaJIT, PyPy, some Lisp/Scheme implementations.
 
-4.  Statically compiled statically typed languages: C, C++, Java, C#, Haskell,
-    etc.
+4.  Statically typed languages: C, C++, Java, C#, Haskell, etc.
 
 Most languages in the first bucket aren't suitable for production use. (Servers are one exception, because you can throw more hardware at a slow language there.) Languages in the second bucket are fast enough for many use cases, even on client hardware, as the success of the listed languages shows. Languages in the third bucket are quite fast, but their implementations are breathtakingly complex, often rivaling that of compilers for statically-typed languages.
 
 ## Why is Wren fast?
 
-Wren is in the second bucket. If you want to have a simple implementation but be fast enough for real use, that's the sweet spot. Within that bucket, Wren's performance is quite competitive despite being much younger and with a much smaller, simpler codebase. Wren has a few tricks up its sleeve:
+Wren is in the second bucket. If you want a simple implementation that's fast enough for real use, this is the sweet spot. Despite being younger and having a smaller codebase, Wren's performance is quite competitive with other languages in that bucket. It has a few tricks up its sleeve:
 
 ### A compact value representation
 
