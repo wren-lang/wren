@@ -16,5 +16,4 @@ class Derived is Base {
 // expect: Base.foo
 
 // TODO: Super operator calls.
-// TODO: Super where there is no inherited method.
 // TODO: Super setter calls.
