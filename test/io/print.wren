@@ -1,3 +1,10 @@
+class Foo {
+  toString { "Foo.toString" }
+}
+
+// Calls toString on argument.
+IO.print(new Foo) // expect: Foo.toString
+
 // With one argument, returns the argument.
 IO.print(IO.print(1) == 1) // expect: 1
                            // expect: true

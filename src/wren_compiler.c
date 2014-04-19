@@ -1405,8 +1405,6 @@ static int parameterList(Compiler* compiler, char* name, int* length,
   }
   while (match(compiler, TOKEN_COMMA));
 
-  // Allow a newline before the closing ')'.
-  ignoreNewlines(compiler);
   const char* message = (endToken == TOKEN_RIGHT_PAREN) ?
       "Expect ')' after parameters." : "Expect '|' after parameters.";
   consume(compiler, endToken, message);
@@ -1443,8 +1441,6 @@ static void methodCall(Compiler* compiler, Code instruction,
     }
     while (match(compiler, TOKEN_COMMA));
 
-    // Allow a newline before the closing ')'.
-    ignoreNewlines(compiler);
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 

@@ -59,6 +59,7 @@ int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length)
   // TODO: O(n). Do something better.
   for (int i = 0; i < symbols->count; i++)
   {
+    // TODO: strlen() here is gross. Symbol table should store lengths.
     if (strlen(symbols->data[i]) == length &&
         strncmp(symbols->data[i], name, length) == 0) return i;
   }
