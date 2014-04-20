@@ -1726,6 +1726,14 @@ static void name(Compiler* compiler, bool allowAssignment)
     return;
   }
 
+  // TODO: The fact that we walk the entire scope chain up to global before
+  // interpreting a name as an implicit "this" call means that surrounding
+  // names shadow ones in the class. This is good for things like globals.
+  // (You wouldn't want `new Fiber` translating to `new this.Fiber`, but may
+  // not be what we want for other names.) One option is to make capitalized
+  // names *always* global, and then a lowercase name will become on an
+  // implicit this if it's not a local in the nearest enclosing class.
+
   // Otherwise, if we are inside a class, it's a call with an implicit "this"
   // receiver.
   ClassCompiler* classCompiler = getEnclosingClass(compiler);

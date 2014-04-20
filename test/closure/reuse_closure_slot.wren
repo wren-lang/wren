@@ -15,4 +15,3 @@
 }
 
 // TODO: Maximum number of closed-over variables (directly and/or indirect).
-// TODO: Shadow variable used in closure.
