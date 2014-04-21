@@ -70,15 +70,11 @@ def format_file(path, skip_up_to_date):
   modified = datetime.fromtimestamp(os.path.getmtime(path))
   mod_str = modified.strftime('%B %d, %Y')
 
-  nav_col = 'left-1'
-  main_col = 'right-2'
   fields = {
     'title': title,
     'html': html,
     'mod': mod_str,
-    'category': category,
-    'nav-col': nav_col,
-    'main-col': main_col
+    'category': category
   }
 
   with open("doc/site/template.html") as f:

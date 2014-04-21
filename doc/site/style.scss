@@ -53,7 +53,8 @@ body {
 .page {
   position: relative;
   margin: 0 auto;
-  width: 800px;
+  padding: 0 20px;
+  width: 840px;
 
   // Clear contents.
   &:after {
@@ -63,10 +64,14 @@ body {
   }
 }
 
-.left-1 { float: left; width: 240px; }
-.left-2 { float: left; width: 520px; }
-.right-1 { float: right; width: 240px; }
-.right-2 { float: right; width: 520px; }
+.nav-column {
+  float: left;
+  width: 240px;
+}
+
+.main-column {
+  margin-left: 280px;
+}
 
 header {
   .page {
@@ -77,7 +82,7 @@ header {
 
   h1 {
     position: absolute;
-    left: 0;
+    left: 20px;
     bottom: 0;
     padding: 0;
     font: 64px $header;
@@ -87,7 +92,7 @@ header {
 
   h2 {
     position: absolute;
-    right: 0;
+    right: 20px;
     bottom: 11px;
     padding: 0;
     font: 18px $header;
@@ -103,26 +108,6 @@ header {
   a:hover {
     color: $blue-hover;
     text-shadow: 0 0 6px $blue-glow;
-  }
-
-  ul {
-    position: absolute;
-    display: inline-block;
-    right: 0;
-    bottom: 8px;
-    margin: 0;
-    padding: 0;
-  }
-
-  li {
-    display: inline-block;
-    position: relative;
-    margin: 0 5px;
-
-    font: 18px $header;
-    font-weight: 300;
-    letter-spacing: 1px;
-    text-align: center;
   }
 }
 
@@ -147,6 +132,8 @@ header {
 }
 
 nav {
+  @extend .nav-column;
+
   padding-top: 20px;
 
   h2 {
@@ -190,6 +177,7 @@ a {
 }
 
 main {
+  @extend .main-column;
   padding-top: 12px;
 }
 
@@ -335,45 +323,47 @@ table.chart {
   }
 }
 
-/*
-@media only screen and (max-width: 639px) {
-  // Shrink the window padding.
-  body {
-    padding: 0 20px;
-  }
-
-  // Make the nav gutter narrower.
-  main {
-    margin-left: 140px;
-  }
+@media only screen and (max-width: 839px) {
+  // 36 pixel columns.
+  .page { width: 760px; }
+  .nav-column { width: 216px; }
+  .main-column { margin-left: 252px; }
 }
 
-@media only screen and (max-width: 479px) {
-  // Make the header centered.
-  header {
-    height: auto;
+@media only screen and (max-width: 759px) {
+  // 32 pixel columns.
+  .page { width: 680px; }
+  .nav-column { width: 192px; }
+  .main-column { margin-left: 224px; }
+}
 
+@media only screen and (max-width: 639px) {
+  .page {
+    width: 100%;
+  }
+  .nav-column { display: none; }
+  .main-column { margin-left: 0; }
+
+  header {
     h1 {
       position: relative;
+      left: 0;
       text-align: center;
-      margin-top: 20px;
     }
 
     h2 {
       position: relative;
+      right: 0;
       text-align: center;
-      margin-bottom: 20px;
     }
   }
 
   nav {
-    position: relative;
-    width: auto;
-    margin: 0;
+    display: none;
   }
 
   main {
-    margin-left: 0;
+    float: none;
+    width: 100%;
   }
 }
-*/

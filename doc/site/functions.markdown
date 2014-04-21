@@ -93,7 +93,7 @@ It's an error to call a function with fewer or more arguments than its parameter
 
 ## Returning values
 
-Function bodies return values just like methods. If the body is a single expression&mdash;more precisely if there is no newline after the `{` or parameter list&mdash;then the function implicitly returns the value of the expression.
+The body of a function is a [block](syntax.html#blocks). If it is a single expression&mdash;more precisely if there is no newline after the `{` or parameter list&mdash;then the function implicitly returns the value of the expression.
 
 Otherwise, the body returns `null` by default. You can explicitly return a value using a `return` statement. In other words, these two functions do the same thing:
 
@@ -103,8 +103,6 @@ Otherwise, the body returns `null` by default. You can explicitly return a value
     new Fn {
       return "return value"
     }
-
-**TODO: Non-local returns?**
 
 ## Closures
 
