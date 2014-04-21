@@ -1,6 +1,92 @@
 ^title Performance
 ^category reference
 
+Even though most benchmarks aren't worth the pixels they're printed on, people seem to like them, so here's a few:
+
+<h3>Method Call</h3>
+<table class="chart">
+  <tr>
+    <th>wren</th><td><div class="chart-bar wren" style="width: 99%;">4930&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>luajit (-joff)</th><td><div class="chart-bar" style="width: 86%;">4266&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>ruby</th><td><div class="chart-bar" style="width: 55%;">2752&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>lua</th><td><div class="chart-bar" style="width: 35%;">1728&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>python3</th><td><div class="chart-bar" style="width: 17%;">865&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>python</th><td><div class="chart-bar" style="width: 15%;">764&nbsp;</div></td>
+  </tr>
+</table>
+<h3>DeltaBlue</h3>
+<table class="chart">
+  <tr>
+    <th>wren</th><td><div class="chart-bar wren" style="width: 99%;">6662&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>python3</th><td><div class="chart-bar" style="width: 35%;">2336&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>python</th><td><div class="chart-bar" style="width: 32%;">2166&nbsp;</div></td>
+  </tr>
+</table>
+<h3>Binary Trees</h3>
+<table class="chart">
+  <tr>
+    <th>luajit (-joff)</th><td><div class="chart-bar" style="width: 99%;">6442&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>wren</th><td><div class="chart-bar wren" style="width: 50%;">3253&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>ruby</th><td><div class="chart-bar" style="width: 43%;">2806&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>python3</th><td><div class="chart-bar" style="width: 29%;">1926&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>lua</th><td><div class="chart-bar" style="width: 21%;">1375&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>python</th><td><div class="chart-bar" style="width: 21%;">1353&nbsp;</div></td>
+  </tr>
+</table>
+<h3>Recursive Fibonacci</h3>
+<table class="chart">
+  <tr>
+    <th>luajit (-joff)</th><td><div class="chart-bar" style="width: 99%;">6869&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>ruby</th><td><div class="chart-bar" style="width: 45%;">3138&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>wren</th><td><div class="chart-bar wren" style="width: 43%;">2991&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>lua</th><td><div class="chart-bar" style="width: 42%;">2889&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>python3</th><td><div class="chart-bar" style="width: 18%;">1280&nbsp;</div></td>
+  </tr>
+  <tr>
+    <th>python</th><td><div class="chart-bar" style="width: 18%;">1253&nbsp;</div></td>
+  </tr>
+</table>
+
+Higher scores (longer bars) are better. The score is the inverse of the running time, so if one language's score is twice another's, that means the language is twice as fast. Each benchmark is run ten times and the best time is kept. It only measures the time taken to execute the benchmarked code itself, not interpreter startup.
+
+These were run on my MacBook Pro 2.3 GHz Intel Core i7 with 16 GB of 1,600 MHz DDR3 RAM. Tested against Lua 5.2.3, LuaJIT 2.0.2, Python 2.7.5, Python 3.3.4, ruby 2.0.0p247. LuaJIT is run with the JIT *disabled* (i.e. in bytecode interpreter mode) since all of the other languages are bytecode interpreters. LuaJIT with the JIT enabled is *much* faster than all of the other languages benchmarked, including Wren, because Mike Pall is a robot from the future.
+
+The benchmark harness and programs are [here](https://github.com/munificent/wren/tree/master/benchmark).
+
+## Why is Wren fast?
+
 Languages come in four rough performance buckets, from slowest to fastest:
 
 1.  Tree-walk interpreters: Ruby 1.8.7 and earlier, Io, that
@@ -16,9 +102,7 @@ Languages come in four rough performance buckets, from slowest to fastest:
 
 Most languages in the first bucket aren't suitable for production use. (Servers are one exception, because you can throw more hardware at a slow language there.) Languages in the second bucket are fast enough for many use cases, even on client hardware, as the success of the listed languages shows. Languages in the third bucket are quite fast, but their implementations are breathtakingly complex, often rivaling that of compilers for statically-typed languages.
 
-## Why is Wren fast?
-
-Wren is in the second bucket. If you want a simple implementation that's fast enough for real use, this is the sweet spot. Despite being younger and having a smaller codebase, Wren's performance is quite competitive with other languages in that bucket. It has a few tricks up its sleeve:
+Wren is in the second bucket. If you want a simple implementation that's fast enough for real use, this is the sweet spot. In addition, Wren has a few tricks up its sleeve:
 
 ### A compact value representation
 
@@ -69,9 +153,3 @@ Most of Wren's performance comes from language design decisions. While it's dyna
 Wren's closest sibling, by far, is Lua. Lua is more dynamic than Wren which makes its job harder. Lua also tries very hard to be compatible across a wide range of hardware and compilers. If you have a C89 compiler for it, odds are very good that you can run Lua on it.
 
 Wren cares about compatibility, but it requires C99 and IEEE double precision floats. That may exclude some edge case hardware, but makes things like NaN tagging, computed gotos, and some other tricks possible.
-
-## Do you have benchmarks to prove this?
-
-Benchmarks are somewhere between an art and a carnival game. They can easily be manipulated to show what you want. But, yes, there are several benchmarks in the repo.
-
-**TODO: chart**

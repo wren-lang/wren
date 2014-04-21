@@ -189,6 +189,10 @@ a {
   outline: none;
 }
 
+main {
+  padding-top: 12px;
+}
+
 a:hover {
   color: $blue-dark;
 }
@@ -296,6 +300,38 @@ body.reference {
     h3:hover > .header-anchor:hover {
       color: $gold-dark;
     }
+  }
+}
+
+// Bar charts on the performance page.
+table.chart {
+  width: 100%;
+
+  td, th {
+    line-height: 14px;
+    margin: 0;
+    padding: 0;
+  }
+
+  th {
+    font-size: 14px;
+    text-align: left;
+    width: 100px;
+  }
+
+  .chart-bar {
+    display: inline-block;
+    font: 13px $body;
+    color: $light;
+    background: $blue;
+    border-bottom: solid 1px $blue-dark;
+    text-align: right;
+    border-radius: 2px;
+  }
+
+  .chart-bar.wren {
+    background: mix($blue, $blue-dark, 30%);
+    border-bottom: solid 1px $blue-dark;
   }
 }
 

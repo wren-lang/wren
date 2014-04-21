@@ -51,7 +51,7 @@ LANGUAGES = [
   ("ruby",           ["ruby"],                  ".rb")
 ]
 
-results = []
+results = {}
 
 def green(text):
   if sys.platform == 'win32':
@@ -93,8 +93,14 @@ def run_trial(benchmark, language):
     return None
 
 
-def run_benchmark_language(benchmark, language):
-  """Runs one benchmark for a number of trials for one language."""
+def run_benchmark_language(benchmark, language, benchmark_result):
+  """
+  Runs one benchmark for a number of trials for one language.
+
+  Adds the result to benchmark_result, which is a map of language names to
+  results.
+  """
+
   name = "{0} - {1}".format(benchmark[0], language[0])
   print "{0:30s}".format(name),
 
@@ -126,8 +132,8 @@ def run_benchmark_language(benchmark, language):
     else:
       comparison = "no baseline"
   else:
-    # Hack: assumes wren is first language.
-    wren_score = results[0][2]
+    # Hack: assumes wren gets run first.
+    wren_score = benchmark_result["wren"]["score"]
     ratio = 100.0 * wren_score / score
     comparison =  "{:6.2f}%".format(ratio)
     if ratio > 105:
@@ -137,25 +143,32 @@ def run_benchmark_language(benchmark, language):
 
   print " {:5.0f}  {:4.2f}s  {:s}".format(score, best, comparison)
 
-  results.append([name, times, score])
+  benchmark_result[language[0]] = {
+    "desc": name,
+    "times": times,
+    "score": score
+  }
+
   return score
 
 
 def run_benchmark(benchmark, languages):
   """Runs one benchmark for the given languages (or all of them)."""
+
+  benchmark_result = {}
+  results[benchmark[0]] = benchmark_result
+
   num_languages = 0
   for language in LANGUAGES:
     if not languages or language[0] in languages:
       num_languages += 1
-      run_benchmark_language(benchmark, language)
+      run_benchmark_language(benchmark, language, benchmark_result)
 
   if num_languages > 1:
-    graph_results()
-
-  del results[0:len(results)]
+    graph_results(benchmark_result)
 
 
-def graph_results():
+def graph_results(benchmark_result):
   print
 
   INCREMENT = {
@@ -167,17 +180,17 @@ def graph_results():
 
   # Scale everything by the highest score.
   highest = 0
-  for result in results:
-    score = get_score(min(result[1]))
+  for language, result in benchmark_result.items():
+    score = get_score(min(result["times"]))
     if score > highest: highest = score
 
   print "{0:30s}0 {1:66.0f}".format("", highest)
-  for result in results:
+  for language, result in benchmark_result.items():
     line = ["-"] * 68
-    for time in result[1]:
+    for time in result["times"]:
       index = int(get_score(time) / highest * 67)
       line[index] = INCREMENT[line[index]]
-    print "{0:30s}{1}".format(result[0], "".join(line))
+    print "{0:30s}{1}".format(result["desc"], "".join(line))
   print
 
 
@@ -195,12 +208,47 @@ def generate_baseline():
   print "generating baseline"
   baseline_text = ""
   for benchmark in BENCHMARKS:
-    best = run_benchmark_language(benchmark, LANGUAGES[0])
+    best = run_benchmark_language(benchmark, LANGUAGES[0], {})
     baseline_text += ("{},{}\n".format(benchmark[0], best))
 
   # Write them to a file.
   with open("baseline.txt", 'w') as out:
     out.write(baseline_text)
+
+
+def print_html():
+  '''Print the results as an HTML chart.'''
+
+  def print_benchmark(benchmark, name):
+    print '<h3>{}</h3>'.format(name)
+    print '<table class="chart">'
+
+    # Scale everything by the highest score.
+    highest = 0
+    for language, result in results[benchmark].items():
+      score = get_score(min(result["times"]))
+      if score > highest: highest = score
+
+    languages = sorted(results[benchmark].keys(),
+        key=lambda lang: results[benchmark][lang]["score"], reverse=True)
+
+    for language in languages:
+      result = results[benchmark][language]
+      score = int(result["score"])
+      ratio = int(100 * score / highest)
+      css_class = "chart-bar"
+      if language == "wren":
+        css_class += " wren"
+      print '  <tr>'
+      print '    <th>{}</th><td><div class="{}" style="width: {}%;">{}&nbsp;</div></td>'.format(
+          language, css_class, ratio, score)
+      print '  </tr>'
+    print '</table>'
+
+  print_benchmark("method_call", "Method Call")
+  print_benchmark("delta_blue", "DeltaBlue")
+  print_benchmark("binary_trees", "Binary Trees")
+  print_benchmark("fib", "Recursive Fibonacci")
 
 
 def main():
@@ -214,6 +262,9 @@ def main():
   parser.add_argument("-l", "--language",
       action="append",
       help="Which language(s) to run benchmarks for")
+  parser.add_argument("--output-html",
+      action="store_true",
+      help="Output the results chart as HTML")
 
   args = parser.parse_args()
 
@@ -223,15 +274,13 @@ def main():
 
   read_baseline()
 
-  # Run all benchmarks.
-  if args.benchmark == "all":
-    for benchmark in BENCHMARKS:
-      run_benchmark(benchmark, args.language)
-    return
-
-  # Run the given benchmark.
+  # Run the benchmarks.
   for benchmark in BENCHMARKS:
-    if benchmark[0] == args.benchmark:
+    if benchmark[0] == args.benchmark or args.benchmark == "all":
       run_benchmark(benchmark, args.language)
+
+  if args.output_html:
+    print_html()
+
 
 main()
