@@ -62,28 +62,32 @@
 // The maximum number of globals that may be defined at one time. This
 // limitation comes from the 16 bits used for the arguments to
 // `CODE_LOAD_GLOBAL` and `CODE_STORE_GLOBAL`.
-#define MAX_GLOBALS (65536)
+#define MAX_GLOBALS 65536
 
 // The maximum number of arguments that can be passed to a method. Note that
 // this limitation is hardcoded in other places in the VM, in particular, the
 // `CODE_CALL_XX` instructions assume a certain maximum number.
-#define MAX_PARAMETERS (16)
+#define MAX_PARAMETERS 16
 
 // The maximum name of a method, not including the signature. This is an
 // arbitrary but enforced maximum just so we know how long the method name
 // strings need to be in the parser.
-#define MAX_METHOD_NAME (64)
+#define MAX_METHOD_NAME 64
 
 // The maximum length of a method signature. This includes the name, and the
 // extra spaces added to handle arity, and another byte to terminate the string.
 #define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + MAX_PARAMETERS + 1)
+
+// The maximum length of an identifier. The only real reason for this limitation
+// is so that error messages mentioning variables can be stack allocated.
+#define MAX_VARIABLE_NAME 64
 
 // The maximum number of fields a class can have, including inherited fields.
 // This is explicit in the bytecode since `CODE_CLASS` and `CODE_SUBCLASS` take
 // a single byte for the number of fields. Note that it's 255 and not 256
 // because creating a class takes the *number* of fields, not the *highest
 // field index*.
-#define MAX_FIELDS (255)
+#define MAX_FIELDS 255
 
 // Assertions are used to validate program invariants. They indicate things the
 // program expects to be true about its internal state during execution. If an

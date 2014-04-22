@@ -136,7 +136,7 @@ class Foo {
   }
 }
 
-class Bar is Foo {
+class Bar is Foo { // expect runtime error: Class 'Bar' may not have more than 255 fields, including inherited ones.
   new {
     super
     _field129 = 129
@@ -266,16 +266,15 @@ class Bar is Foo {
     _field253 = 253
     _field254 = 254
     _field255 = 255
+    _field256 = 256
   }
 
   bar {
     IO.print(_field129)
-    IO.print(_field255)
+    IO.print(_field256)
   }
 }
 
 var bar = new Bar
-bar.foo // expect: 1
-// expect: 128
-bar.bar // expect: 129
-// expect: 255
+bar.foo
+bar.bar

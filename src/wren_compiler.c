@@ -943,6 +943,12 @@ static int declareVariable(Compiler* compiler)
 {
   Token* token = &compiler->parser->previous;
 
+  if (token->length > MAX_VARIABLE_NAME)
+  {
+    error(compiler, "Variable name cannot be longer than %d characters.",
+          MAX_VARIABLE_NAME);
+  }
+
   // Top-level global scope.
   if (compiler->scopeDepth == -1)
   {

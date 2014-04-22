@@ -950,20 +950,20 @@ static bool runInterpreter(WrenVM* vm)
       }
 
       int numFields = READ_BYTE();
+
       ObjClass* classObj = wrenNewClass(vm, superclass, numFields, name);
 
       // Now that we know the total number of fields, make sure we don't
       // overflow.
       if (superclass->numFields + numFields > MAX_FIELDS)
       {
-        // TODO: Include class name in message. Mention inheritance.
-        char message[80];
-        snprintf(message, 80,
-            "A class may not have more than %d fields, including inherited "
-            "ones.", MAX_FIELDS);
+        char message[70 + MAX_VARIABLE_NAME];
+        snprintf(message, 70 + MAX_VARIABLE_NAME,
+            "Class '%s' may not have more than %d fields, including inherited "
+            "ones.", name->value, MAX_FIELDS);
         RUNTIME_ERROR(message);
       }
-      
+
       // Don't pop the superclass and name off the stack until the subclass is
       // done being created, to make sure it doesn't get collected.
       DROP();
