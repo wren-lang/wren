@@ -218,7 +218,7 @@ static Upvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, int slot)
   Upvalue* prevUpvalue = NULL;
   Upvalue* upvalue = fiber->openUpvalues;
 
-  // Walk towards the bottom of the stack until we find a previously existsing
+  // Walk towards the bottom of the stack until we find a previously existing
   // upvalue or pass where it should be.
   while (upvalue != NULL && upvalue->value > local)
   {
@@ -227,7 +227,7 @@ static Upvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, int slot)
   }
 
   // Found an existing upvalue for this local.
-  if (upvalue->value == local) return upvalue;
+  if (upvalue != NULL && upvalue->value == local) return upvalue;
 
   // We've walked past this local on the stack, so there must not be an
   // upvalue for it already. Make a new one and link it in in the right
