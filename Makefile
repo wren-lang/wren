@@ -12,27 +12,9 @@ OBJECTS = $(SOURCES:.c=.o)
 DEBUG_OBJECTS = $(addprefix build/debug/, $(notdir $(OBJECTS)))
 RELEASE_OBJECTS = $(addprefix build/release/, $(notdir $(OBJECTS)))
 
-.PHONY: all clean test docs builtin
+.PHONY: all clean test builtin docs watchdocs
 
 all: release
-
-# Debug build.
-debug: prep wrend
-
-wrend: $(DEBUG_OBJECTS)
-	$(CC) $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o wrend $^
-
-build/debug/%.o: src/%.c include/wren.h $(HEADERS)
-	$(CC) -c $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o $@ $<
-
-# Release build.
-release: prep wren
-
-wren: $(RELEASE_OBJECTS)
-	$(CC) $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o wren $^
-
-build/release/%.o: src/%.c include/wren.h $(HEADERS)
-	$(CC) -c $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o $@ $<
 
 clean:
 	rm -rf build wren wrend
@@ -40,9 +22,36 @@ clean:
 prep:
 	mkdir -p build/debug build/release
 
+# Debug build.
+debug: prep wrend
+
+# Debug command-line interpreter.
+wrend: $(DEBUG_OBJECTS)
+	$(CC) $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o wrend $^
+
+# Debug object files.
+build/debug/%.o: src/%.c include/wren.h $(HEADERS)
+	$(CC) -c $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o $@ $<
+
+# Release build.
+release: prep wren
+
+# Release command-line interpreter.
+wren: $(RELEASE_OBJECTS)
+	$(CC) $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o wren $^
+
+# Release object files.
+build/release/%.o: src/%.c include/wren.h $(HEADERS)
+	$(CC) -c $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o $@ $<
+
 # Run the tests against the debug build of Wren.
 test: debug
 	@./script/test.py $(suite)
+
+# Take the contents of the scripts under builtin/ and copy them into their
+# respective wren_<name>.c source files.
+builtin:
+	@./script/generate_builtins.py
 
 # Generate the Wren site.
 docs:
@@ -51,9 +60,3 @@ docs:
 # Continuously generate the Wren site.
 watchdocs:
 	@./script/generate_docs.py --watch
-
-# Take the contents of the scripts under builtin/ and copy them into their
-# respective wren_<name>.c source files.
-# TODO: Needs dependencies so it knows when to run.
-builtin:
-	@./script/generate_builtins.py
