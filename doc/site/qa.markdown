@@ -3,7 +3,7 @@
 
 ## Why did you create Wren?
 
-Most creative endeavors aren't immediately met with existential crises, but for programmers don't seem to like new languages. Here's the niche I'm trying to fill:
+Other creative endeavors aren't immediately met with existential crises, but for some reason programmers don't seem to like new languages. Here's the niche I'm trying to fill:
 
 There are a few scripting languages used for embedding in applications. Lua is the main one. TCL used to be. There's also Guile, increasingly JavaScript, and some applications embed Python. I'm an ex-game developer, so when I think "scripting", I tend to think "game scripting".
 

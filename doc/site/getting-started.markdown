@@ -28,7 +28,7 @@ You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw your
 
 ## Running scripts
 
-The standalone interpreter can also load scripts from files and run them. Just pass the name of the script to wren. Create a file named `my_first_script.wren` in your favorite text editor and paste this into it:
+The standalone interpreter can also load scripts from files and run them. Just pass the name of the script to wren. Create a file named "my_script.wren" in your favorite text editor and paste this into it:
 
     :::dart
     for (yPixel in 0...24) {
@@ -54,7 +54,7 @@ The standalone interpreter can also load scripts from files and run them. Just p
 Now run:
 
     :::bash
-    $ ./wren my_first_script.wren
+    $ ./wren my_script.wren
 
 Neat, right? You're a Wren programmer now! The next step is to [read more docs](syntax.html) and learn your way around the language. If you run into bugs, or have ideas or questions, any and all of the following work:
 

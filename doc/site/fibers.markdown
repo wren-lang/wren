@@ -3,9 +3,9 @@
 
 Fibers are a key part of Wren. They form its execution model, its concurrency story and take the place of exceptions in [error handling](error-handling.html).
 
-They are a bit like threads except they are *cooperatively* scheduled. That means Wren won't stop running a fiber and switch to another until you tell to. You don't have to worry about context switches at random times and all of the headaches those cause.
+They are a bit like threads except they are *cooperatively* scheduled. That means Wren doesn't pause one fiber and switch to another until you tell it to. You don't have to worry about context switches at random times and all of the headaches those cause.
 
-They are scheduled entirely by Wren, so they don't use OS thread resources, or require heavyweight context switches. They just need a bit of memory for their stacks. A fiber will get garbage collected like any other object when not referenced any more, so you can create them freely.
+Fibers are managed entirely by Wren, so they don't use OS thread resources, or require heavyweight context switches. They just need a bit of memory for their stacks. A fiber will get garbage collected like any other object when not referenced any more, so you can create them freely.
 
 They are lightweight enough that you can, for example, have a separate fiber for each entity in a game. Wren can handle thousands of them without any trouble. For example, when you run Wren in interactive mode, it creates a new fiber for every line of code you type in.
 

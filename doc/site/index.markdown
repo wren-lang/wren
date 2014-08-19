@@ -1,4 +1,4 @@
-^title Welcome!
+^title Welcome
 
 Wren is a *small, clean, fast, class-based scripting language.* Think Smalltalk
 in a Lua-sized package.

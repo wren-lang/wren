@@ -3,7 +3,7 @@
 
 *Control flow* is used to determine which chunks of code are executed and how many times. Expressions and statements for deciding whether or not to execute some code are called *branching* and are covered here. To execute something more than once, you'll want [*looping*](looping.html).
 
-## Truthiness
+## Truth
 
 Branching is conditional on the value of some expression. We take the entire universe of possible values and divide them into two buckets: some we consider "true" and the rest are "false". If the expression results in a value in the true bucket, we branch one way. Otherwise, we go the other way.
 
@@ -48,13 +48,13 @@ And, of course, it can take a block too:
 
 The `&&` and `||` operators are lumped here under branching because they conditionally execute some code&mdash;they short-circuit. Both of them are infix operators, and, depending on the value of the left-hand side, the right-hand operand expression may or may not be evaluated.
 
-An `&&` ("logical and") expression evaluates the left-hand argument. If it's falsey, it returns that value. Otherwise it evaluates and returns the right-hand argument.
+An `&&` ("logical and") expression evaluates the left-hand argument. If it's false, it returns that value. Otherwise it evaluates and returns the right-hand argument.
 
     :::dart
     IO.print(false && 1)  // false
     IO.print(1 && 2)      // 2
 
-An `||` ("logical or") expression is reversed. If the left-hand argument is truthy, it's returned, otherwise the right-hand argument is evaluated and returned:
+An `||` ("logical or") expression is reversed. If the left-hand argument is true, it's returned, otherwise the right-hand argument is evaluated and returned:
 
     :::dart
     IO.print(false || 1)  // 1

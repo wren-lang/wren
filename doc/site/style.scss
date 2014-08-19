@@ -1,9 +1,10 @@
-$header: "Dosis", helvetica, arial, sans-serif;
+$header: "Sanchez", helvetica, arial, sans-serif;
+$subheader: "Lato", helvetica, arial, sans-serif;
 $body: "Source Sans Pro", georgia, serif;
 $code: "Source Code Pro", Menlo, Monaco, Consolas, monospace;
 
-$dark: hsl(200, 30%, 20%);
-$light: hsl(30, 20%, 92%);
+$dark: hsl(200, 20%, 30%);
+$light: hsl(0, 0%, 100%);
 $gray-10: mix($dark, $light, 10%);
 $gray-20: mix($dark, $light, 20%);
 $gray-30: mix($dark, $light, 30%);
@@ -12,49 +13,35 @@ $gray-50: mix($dark, $light, 50%);
 $gray-60: mix($dark, $light, 60%);
 $gray-80: mix($dark, $light, 80%);
 
-$text: hsl(30, 10%, 40%);
+$text: mix($light, #000, 30%);
 
-$code-color: hsl(30, 5%, 55%);
-$code-bg:    mix($light, #fff, 50%);
+$code-color: hsl(200, 20%, 40%);
+$code-bg:    hsl(200, 20%, 97%);
 
-$blue:        hsl(200, 60%, 50%);
-$blue-hover:  hsl(200, 100%, 80%);
-$blue-dark:   hsl(200, 80%, 30%);
-$blue-glow:  hsla(200, 100%, 50%, 0.4);
-
-// TODO: Green is not currently used.
-$green:       hsl(100, 70%, 35%);
-$green-light: hsl(100, 70%, 45%);
-$green-hover: hsl(100, 80%, 70%);
-$green-dark:  hsl(100, 70%, 20%);
-$green-glow: hsla(100, 70%, 50%, 0.5);
-
-$gold:        hsl(40, 70%, 50%);
-$gold-hover:  hsl(40, 70%, 80%);
-$gold-dark:   hsl(40, 80%, 30%);
-$gold-glow:  hsla(40, 70%, 50%, 0.4);
+$link:        hsl(200, 40%, 50%);
+$link-hover:  hsl(200, 100%, 80%);
+$link-dark:   hsl(200, 80%, 30%);
+$link-glow:  hsla(200, 100%, 50%, 0.4);
 
 * {
   -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 
-body, code, h1, h2, h3, p, pre, tt {
+body, code, h1, h2, h3, p, pre {
   margin: 0;
   padding: 0;
 }
 
 body {
   background: $light;
-  color: hsl(40, 10%, 40%);
+  color: $text;
   font: 17px/26px $body;
 }
 
 .page {
-  position: relative;
   margin: 0 auto;
-  padding: 0 20px;
-  width: 840px;
+  width: 800px;
 
   // Clear contents.
   &:after {
@@ -64,84 +51,60 @@ body {
   }
 }
 
-.nav-column {
-  float: left;
-  width: 240px;
-}
-
 .main-column {
-  margin-left: 280px;
+  position: relative;
+  width: 560px;
 }
 
 header {
   .page {
-    height: 150px;
+    height: 120px;
   }
 
-  background: $dark;
+  background: $gray-80;
+  border-bottom: solid 1px $dark;
 
   h1 {
     position: absolute;
-    left: 20px;
-    bottom: 0;
+    left: 0;
+    top: 63px;
     padding: 0;
-    font: 64px $header;
-    font-weight: 300;
+    font: 400 48px $header;
     letter-spacing: 2px;
   }
 
   h2 {
     position: absolute;
-    right: 20px;
-    bottom: 11px;
+    right: 0;
+    top: 72px;
     padding: 0;
-    font: 18px $header;
-    font-weight: 300;
-    letter-spacing: 1px;
-    color: hsl(200, 30%, 40%);
+    font: 500 13px $subheader;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: $gray-50;
   }
 
   a {
-    color: $blue;
+    color: $gray-20;
   }
 
   a:hover {
-    color: $blue-hover;
-    text-shadow: 0 0 6px $blue-glow;
-  }
-}
-
-.header-bar {
-  height: 100px;
-  background: $gray-10;
-  border-top: solid 1px $gray-20;
-  border-bottom: solid 1px white;
-
-  h1 {
-    padding-top: 30px;
-    font: 48px/60px $header;
-    font-weight: 400;
-    color: $gray-60;
-
-    small {
-      font-size: 36px;
-      font-weight: 400;
-      color: $gray-40;
-    }
+    color: $link-hover;
+    text-shadow: 0 0 6px $link-glow;
   }
 }
 
 nav {
-  @extend .nav-column;
-
-  padding-top: 20px;
+  float: right;
+  width: 160px;
+  padding-top: 110px;
 
   h2 {
     color: $gray-30;
-    font: normal 18px $header;
-    font-weight: 300;
+    font: 500 11px $subheader;
+    text-transform: uppercase;
+    letter-spacing: 2px;
     margin: 0;
-    letter-spacing: 1px;
   }
 
   ul {
@@ -150,27 +113,33 @@ nav {
   }
 
   li {
-    font: 15px $body;
-    font-weight: 400;
+    font: 16px $body;
+    color: $gray-30;
     list-style-type: none;
     margin: 0 0 4px 0;
   }
 }
 
+h1 {
+  padding-top: 30px;
+  font: 500 36px/60px $header;
+  color: $link;
+}
+
 h2 {
-  font: normal 30px $header;
+  font: 500 24px $header;
   margin: 24px 0 0 0;
-  color: $blue;
+  color: $link;
 }
 
 h3 {
-  font: normal 24px $header;
+  font: 500 24px $header;
   margin: 24px 0 0 0;
-  color: $blue;
+  color: $link;
 }
 
 a {
-  color: $blue;
+  color: $link;
   text-decoration: none;
   transition: color 0.2s, text-shadow 0.2s;
   outline: none;
@@ -182,7 +151,7 @@ main {
 }
 
 a:hover {
-  color: $blue-dark;
+  color: $link-dark;
 }
 
 .header-anchor {
@@ -196,7 +165,7 @@ h3:hover > .header-anchor {
 
 h2:hover > .header-anchor:hover,
 h3:hover > .header-anchor:hover {
-  color: $blue-dark;
+  color: $link-dark;
 }
 
 p, li {
@@ -211,9 +180,9 @@ code, pre {
   color: $code-color;
   font: 14px $code;
   background: $code-bg;
-  border-radius: 4px;
-  border-bottom: solid 1px $gray-10;
-  border-top: solid 1px #fff;
+  border-radius: 2px;
+  border: solid 1px hsl(200, 20%, 93%);
+  border-bottom: solid 1px hsl(200, 20%, 80%);
 }
 
 code {
@@ -234,8 +203,18 @@ footer {
   margin-top: 20px;
   padding: 20px 0 40px 0;
   font: 14px $body;
-  background: hsl(40, 5%, 60%);
-  color: hsl(40, 15%, 85%);
+  background: $gray-80;
+  color: $gray-20;
+  border-top: solid 1px $dark;
+  text-align: center;
+
+  a {
+    color: $link-hover;
+  }
+
+  a:hover {
+    color: $link;
+  }
 }
 
 // Syntax highlighting.
@@ -244,51 +223,14 @@ footer {
   span.c1, span.cm { color: mix($code-color, $code-bg, 60%); }
 
   // Keywords.
-  span.k, span.kd, span.kc  { color: $blue; }
+  span.k, span.kd, span.kc  { color: hsl(200, 80%, 50%); }
 
   // Numbers.
-  span.m, span.mi { color: $green; }
+  span.m, span.mi { color: hsl(90, 80%, 35%); }
 
   // Strings.
-  span.s, span.s2  { color: $gold; }
-  span.se          { color: mix($gold, $gold-dark, 50%); }
-}
-
-// Category colors.
-body.reference {
-  a {
-    color: $gold;
-  }
-
-  a:hover {
-    color: $gold-dark;
-  }
-
-  header {
-    a:hover {
-      color: $gold-hover;
-    }
-  }
-
-  main {
-    h2, h3 {
-      color: $gold;
-    }
-
-    .header-anchor {
-      color: $light;
-    }
-
-    h2:hover > .header-anchor,
-    h3:hover > .header-anchor {
-      color: $gray-10;
-    }
-
-    h2:hover > .header-anchor:hover,
-    h3:hover > .header-anchor:hover {
-      color: $gold-dark;
-    }
-  }
+  span.s, span.s2  { color: hsl(45, 70%, 50%); }
+  span.se          { color: hsl(35, 70%, 50%); }
 }
 
 // Bar charts on the performance page.
@@ -311,59 +253,96 @@ table.chart {
     display: inline-block;
     font: 13px $body;
     color: $light;
-    background: $blue;
-    border-bottom: solid 1px $blue-dark;
+    background: $link;
+    border-bottom: solid 1px $link-dark;
     text-align: right;
     border-radius: 2px;
   }
 
   .chart-bar.wren {
-    background: mix($blue, $blue-dark, 30%);
-    border-bottom: solid 1px $blue-dark;
+    background: mix($link, $link-dark, 30%);
+    border-bottom: solid 1px $link-dark;
   }
 }
 
 @media only screen and (max-width: 839px) {
   // 36 pixel columns.
-  .page { width: 760px; }
-  .nav-column { width: 216px; }
-  .main-column { margin-left: 252px; }
+  .page { width: 720px; }
+  nav { width: 144px; }
+  .main-column { width: 504px; }
 }
 
 @media only screen and (max-width: 759px) {
   // 32 pixel columns.
-  .page { width: 680px; }
-  .nav-column { width: 192px; }
-  .main-column { margin-left: 224px; }
+  .page { width: 640px; }
+  nav { width: 128px; }
+  .main-column { width: 448px; }
+}
+
+@media only screen and (max-width: 679px) {
+  // 28 pixel columns.
+  .page { width: 560px; }
+  nav { width: 112px; }
+  .main-column { width: 392px; }
+
+  header h2 {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
 }
 
 @media only screen and (max-width: 639px) {
-  .page {
+  .page { width: 100%; }
+
+  nav {
+    float: none;
+    width: 100%;
+    padding: 10px 10px;
+    margin: 0;
+    background: $gray-10;
+    text-align: center;
+
+    section {
+      display: inline-block;
+      vertical-align: top;
+      text-align: left;
+      width: 30%;
+    }
+  }
+
+  .main-column {
+    padding: 0 20px;
     width: 100%;
   }
-  .nav-column { display: none; }
-  .main-column { margin-left: 0; }
 
   header {
     h1 {
       position: relative;
+      top: 10px;
       left: 0;
       text-align: center;
     }
 
     h2 {
       position: relative;
+      top: 0;
       right: 0;
       text-align: center;
+      font-size: 13px;
+      letter-spacing: 2px;
     }
-  }
-
-  nav {
-    display: none;
   }
 
   main {
     float: none;
     width: 100%;
+  }
+
+  pre {
+    font-size: 13px;
+  }
+
+  footer {
+    padding: 20px 20px 40px 20px;
   }
 }

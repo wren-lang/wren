@@ -138,7 +138,7 @@ On compilers that support it, Wren's core bytecode interpreter loop uses somethi
 
 Doing that using an actual `switch` confounds the CPU's [branch predictor](http://en.wikipedia.org/wiki/Branch_predictor): there is basically a single branch point for the entire interpreter. That quickly saturates the predictor and it just gets confused and fails to predict anything, which leads to more CPU stalls and pipeline flushes.
 
-Using computed gotos gives you a separate branch point at the end of each instruction. Each gets its own branch prediction, which oftens succeed since some instruction pairs are more common than others. In my rough testing, this made a 5-10% performance difference.
+Using computed gotos gives you a separate branch point at the end of each instruction. Each gets its own branch prediction, which often succeeds since some instruction pairs are more common than others. In my rough testing, this makes a 5-10% performance difference.
 
 ### A single-pass compiler
 
