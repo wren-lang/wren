@@ -4,6 +4,7 @@ $body: "Source Sans Pro", georgia, serif;
 $code: "Source Code Pro", Menlo, Monaco, Consolas, monospace;
 
 $dark: hsl(200, 20%, 30%);
+$darker: hsl(200, 20%, 10%);
 $light: hsl(0, 0%, 100%);
 $gray-10: mix($dark, $light, 10%);
 $gray-20: mix($dark, $light, 20%);
@@ -16,11 +17,11 @@ $gray-80: mix($dark, $light, 80%);
 $text: mix($light, #000, 30%);
 
 $code-color: hsl(200, 20%, 40%);
-$code-bg:    hsl(200, 20%, 97%);
+$code-bg:    hsl(200, 20%, 98%);
 
 $link:        hsl(200, 40%, 50%);
 $link-hover:  hsl(200, 100%, 80%);
-$link-dark:   hsl(200, 80%, 30%);
+$link-dark:   hsl(200, 60%, 20%);
 $link-glow:  hsla(200, 100%, 50%, 0.4);
 
 * {
@@ -36,7 +37,7 @@ body, code, h1, h2, h3, p, pre {
 body {
   background: $light;
   color: $text;
-  font: 17px/26px $body;
+  font: 16px/25px $body;
 }
 
 .page {
@@ -57,12 +58,14 @@ body {
 }
 
 header {
+  text-shadow: 0 1px 1px $darker;
+
   .page {
     height: 120px;
   }
 
-  background: $gray-80;
-  border-bottom: solid 1px $dark;
+  background: $dark;
+  border-bottom: solid 1px $darker;
 
   h1 {
     position: absolute;
@@ -133,7 +136,7 @@ h2 {
 }
 
 h3 {
-  font: 500 24px $header;
+  font: 18px $body;
   margin: 24px 0 0 0;
   color: $link;
 }
@@ -176,37 +179,45 @@ p + p {
   margin-top: 20px;
 }
 
+main > p, main > pre {
+  margin-left: 25px;
+}
+
 code, pre {
   color: $code-color;
-  font: 14px $code;
+  font: 13px $code;
   background: $code-bg;
   border-radius: 2px;
-  border: solid 1px hsl(200, 20%, 93%);
-  border-bottom: solid 1px hsl(200, 20%, 80%);
+  border: solid 1px hsl(200, 20%, 95%);
+  border-bottom: solid 1px hsl(200, 20%, 90%);
 }
 
 code {
-  padding: 1px 3px;
+  padding: 1px 2px;
   white-space: nowrap;
 }
 
 pre {
   margin: 10px 0;
-  line-height: 20px;
+  line-height: 18px;
   padding: 10px;
 
   // Scroll horizontally if not wide enough.
   overflow: auto;
+
+  margin-left: 25px;
 }
 
 footer {
   margin-top: 20px;
   padding: 20px 0 40px 0;
   font: 14px $body;
-  background: $gray-80;
+  background: $dark;
   color: $gray-20;
-  border-top: solid 1px $dark;
+  border-top: solid 1px $darker;
   text-align: center;
+
+  text-shadow: 0 1px 1px $darker;
 
   a {
     color: $link-hover;
@@ -236,6 +247,7 @@ footer {
 // Bar charts on the performance page.
 table.chart {
   width: 100%;
+  padding-left: 25px;
 
   td, th {
     line-height: 14px;

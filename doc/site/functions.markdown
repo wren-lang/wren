@@ -60,7 +60,7 @@ Once you have a function, how do you invoke it? Like everything in Wren, you do 
       }
     }
 
-Functions expose a `call` method that executes the body of the function. Of course, this is dynamically-dispatched like other methods, so you can define your own "function-like" classes and pass them to methods that expect real functions.
+Functions expose a `call` method that executes the body of the function. This method is dynamically-dispatched like any other, so you can define your own "function-like" classes and pass them to methods that expect "real" functions.
 
     :::dart
     class FakeFn {
@@ -73,7 +73,7 @@ Functions expose a `call` method that executes the body of the function. Of cour
 
 ## Function parameters
 
-Of course, functions aren't very useful if you can't pass values to them. The functions that we've seen so far take no parameters. To change that, you can provide a parameter list surrounded by `|` immediately after the opening brace of the body, like so:
+Of course, functions aren't very useful if you can't pass values to them. The functions that we've seen so far take no arguments. To change that, you can provide a parameter list surrounded by `|` immediately after the opening brace of the body, like so:
 
     :::dart
     blondie.callMe {|first, last|
