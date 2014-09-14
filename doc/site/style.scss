@@ -3,8 +3,8 @@ $subheader: "Lato", helvetica, arial, sans-serif;
 $body: "Source Sans Pro", georgia, serif;
 $code: "Source Code Pro", Menlo, Monaco, Consolas, monospace;
 
-$dark: hsl(200, 20%, 30%);
-$darker: hsl(200, 20%, 10%);
+$dark: hsl(210, 20%, 30%);
+$darker: hsl(210, 20%, 10%);
 $light: hsl(0, 0%, 100%);
 $gray-10: mix($dark, $light, 10%);
 $gray-20: mix($dark, $light, 20%);
@@ -16,13 +16,13 @@ $gray-80: mix($dark, $light, 80%);
 
 $text: mix($light, #000, 30%);
 
-$code-color: hsl(200, 20%, 40%);
-$code-bg:    hsl(200, 20%, 98%);
+$code-color: hsl(210, 20%, 40%);
+$code-bg:    hsl(210, 20%, 98%);
 
-$link:        hsl(200, 40%, 50%);
-$link-hover:  hsl(200, 100%, 80%);
-$link-dark:   hsl(200, 60%, 20%);
-$link-glow:  hsla(200, 100%, 50%, 0.4);
+$link:        hsl(210, 70%, 50%);
+$link-hover:  hsl(210, 100%, 80%);
+$link-dark:   hsl(210, 60%, 20%);
+$link-glow:  hsla(210, 100%, 50%, 0.4);
 
 * {
   -moz-box-sizing: border-box;
@@ -234,14 +234,14 @@ footer {
   span.c1, span.cm { color: mix($code-color, $code-bg, 60%); }
 
   // Keywords.
-  span.k, span.kd, span.kc  { color: hsl(200, 80%, 50%); }
+  span.k, span.kd, span.kc  { color: hsl(210, 80%, 60%); }
 
   // Numbers.
   span.m, span.mi { color: hsl(90, 80%, 35%); }
 
   // Strings.
-  span.s, span.s2  { color: hsl(45, 70%, 50%); }
-  span.se          { color: hsl(35, 70%, 50%); }
+  span.s, span.s2  { color: hsl(40, 80%, 50%); }
+  span.se          { color: hsl(30, 80%, 50%); }
 }
 
 // Bar charts on the performance page.
