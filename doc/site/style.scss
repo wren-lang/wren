@@ -3,7 +3,7 @@ $subheader: "Lato", helvetica, arial, sans-serif;
 $body: "Source Sans Pro", georgia, serif;
 $code: "Source Code Pro", Menlo, Monaco, Consolas, monospace;
 
-$dark: hsl(210, 20%, 30%);
+$dark: hsl(210, 10%, 25%);
 $darker: hsl(210, 20%, 10%);
 $light: hsl(0, 0%, 100%);
 $gray-10: mix($dark, $light, 10%);
@@ -14,12 +14,12 @@ $gray-50: mix($dark, $light, 50%);
 $gray-60: mix($dark, $light, 60%);
 $gray-80: mix($dark, $light, 80%);
 
-$text: mix($light, #000, 30%);
+$text: mix($light, #000, 20%);
 
 $code-color: hsl(210, 20%, 40%);
 $code-bg:    hsl(210, 20%, 98%);
 
-$link:        hsl(210, 70%, 50%);
+$link:        hsl(200, 60%, 50%);
 $link-hover:  hsl(210, 100%, 80%);
 $link-dark:   hsl(210, 60%, 20%);
 $link-glow:  hsla(210, 100%, 50%, 0.4);
@@ -179,10 +179,6 @@ p + p {
   margin-top: 20px;
 }
 
-main > p, main > pre {
-  margin-left: 25px;
-}
-
 code, pre {
   color: $code-color;
   font: 13px $code;
@@ -204,8 +200,6 @@ pre {
 
   // Scroll horizontally if not wide enough.
   overflow: auto;
-
-  margin-left: 25px;
 }
 
 footer {
