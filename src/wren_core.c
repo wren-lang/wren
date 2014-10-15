@@ -269,10 +269,17 @@ DEF_NATIVE(fiber_call1)
   return PRIM_RUN_FIBER;
 }
 
+DEF_NATIVE(fiber_error)
+{
+  ObjFiber* runFiber = AS_FIBER(args[0]);
+  if (runFiber->error == NULL) RETURN_NULL;
+  RETURN_OBJ(runFiber->error);
+}
+
 DEF_NATIVE(fiber_isDone)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
-  RETURN_BOOL(runFiber->numFrames == 0);
+  RETURN_BOOL(runFiber->numFrames == 0 || runFiber->error != NULL);
 }
 
 DEF_NATIVE(fiber_run)
@@ -320,12 +327,33 @@ DEF_NATIVE(fiber_run1)
   return PRIM_RUN_FIBER;
 }
 
+DEF_NATIVE(fiber_try)
+{
+  ObjFiber* runFiber = AS_FIBER(args[0]);
+
+  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot try a finished fiber.");
+  if (runFiber->caller != NULL) RETURN_ERROR("Fiber has already been called.");
+
+  // Remember who ran it.
+  runFiber->caller = fiber;
+  runFiber->callerIsTrying = true;
+
+  // If the fiber was yielded, make the yield call return null.
+  if (runFiber->stackSize > 0)
+  {
+    runFiber->stack[runFiber->stackSize - 1] = NULL_VAL;
+  }
+
+  return PRIM_RUN_FIBER;
+}
+
 DEF_NATIVE(fiber_yield)
 {
   if (fiber->caller == NULL) RETURN_ERROR("No fiber to yield to.");
 
   ObjFiber* caller = fiber->caller;
   fiber->caller = NULL;
+  fiber->callerIsTrying = false;
 
   // Make the caller's run method return null.
   caller->stack[caller->stackSize - 1] = NULL_VAL;
@@ -341,6 +369,7 @@ DEF_NATIVE(fiber_yield1)
 
   ObjFiber* caller = fiber->caller;
   fiber->caller = NULL;
+  fiber->callerIsTrying = false;
 
   // Make the caller's run method return the argument passed to yield.
   caller->stack[caller->stackSize - 1] = args[1];
@@ -1027,9 +1056,11 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->fiberClass->metaclass, "yield ", fiber_yield1);
   NATIVE(vm->fiberClass, "call", fiber_call);
   NATIVE(vm->fiberClass, "call ", fiber_call1);
+  NATIVE(vm->fiberClass, "error", fiber_error);
   NATIVE(vm->fiberClass, "isDone", fiber_isDone);
   NATIVE(vm->fiberClass, "run", fiber_run);
   NATIVE(vm->fiberClass, "run ", fiber_run1);
+  NATIVE(vm->fiberClass, "try", fiber_try);
 
   vm->fnClass = defineClass(vm, "Fn");
 

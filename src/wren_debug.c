@@ -4,7 +4,7 @@
 
 void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
 {
-  fprintf(stderr, "%s\n", fiber->error);
+  fprintf(stderr, "%s\n", fiber->error->value);
 
   for (int i = fiber->numFrames - 1; i >= 0; i--)
   {

@@ -303,19 +303,30 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
 }
 
 // Puts [fiber] into a runtime failed state because of [error].
-static void runtimeError(WrenVM* vm, ObjFiber* fiber, const char* error)
+//
+// Returns the fiber that should receive the error or `NULL` if no fiber
+// caught it.
+static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, const char* error)
 {
-  // Copy the error onto the heap.
-  size_t length = strlen(error) + 1;
-  char* heapError = wrenReallocate(vm, NULL, 0, length);
-  strncpy(heapError, error, length);
-
   ASSERT(fiber->error == NULL, "Can only fail once.");
-  fiber->error = heapError;
 
-  // TODO: If the calling fiber is going to handle the error, we shouldn't dump
-  // a stack trace.
+  // Store the error in the fiber so it can be accessed later.
+  fiber->error = AS_STRING(wrenNewString(vm, error, strlen(error)));
+
+  // If the caller ran this fiber using "try", give it the error.
+  if (fiber->callerIsTrying)
+  {
+    ObjFiber* caller = fiber->caller;
+
+    // Make the caller's try method return the error message.
+    caller->stack[caller->stackSize - 1] = OBJ_VAL(fiber->error);
+
+    return caller;
+  }
+
+  // If we got here, nothing caught the error, so show the stack trace.
   wrenDebugPrintStackTrace(vm, fiber);
+  return NULL;
 }
 
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
@@ -384,11 +395,16 @@ static bool runInterpreter(WrenVM* vm)
         upvalues = ((ObjClosure*)frame->fn)->upvalues; \
       }
 
+  // Terminates the current fiber with error string [error]. If another calling
+  // fiber is willing to catch the error, transfers control to it, otherwise
+  // exits the interpreter.
   #define RUNTIME_ERROR(error)                         \
       do {                                             \
         STORE_FRAME();                                 \
-        runtimeError(vm, fiber, error);                \
-        return false;                                  \
+        fiber = runtimeError(vm, fiber, error);        \
+        if (fiber == NULL) return false;               \
+        LOAD_FRAME();                                  \
+        DISPATCH();                                    \
       }                                                \
       while (false)
 
@@ -953,6 +969,11 @@ static bool runInterpreter(WrenVM* vm)
 
       ObjClass* classObj = wrenNewClass(vm, superclass, numFields, name);
 
+      // Don't pop the superclass and name off the stack until the subclass is
+      // done being created, to make sure it doesn't get collected.
+      DROP();
+      DROP();
+
       // Now that we know the total number of fields, make sure we don't
       // overflow.
       if (superclass->numFields + numFields > MAX_FIELDS)
@@ -963,11 +984,6 @@ static bool runInterpreter(WrenVM* vm)
             "ones.", name->value, MAX_FIELDS);
         RUNTIME_ERROR(message);
       }
-
-      // Don't pop the superclass and name off the stack until the subclass is
-      // done being created, to make sure it doesn't get collected.
-      DROP();
-      DROP();
 
       PUSH(OBJ_VAL(classObj));
       DISPATCH();

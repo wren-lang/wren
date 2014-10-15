@@ -94,6 +94,14 @@ typedef struct
 
 DECLARE_BUFFER(Value, Value);
 
+typedef struct
+{
+  Obj obj;
+  char* value;
+
+  // TODO: Flexible array.
+} ObjString;
+
 // The dynamically allocated data structure for a variable that has been used
 // by a closure. Whenever a function accesses a variable declared in an
 // enclosing function, it will get to it through this.
@@ -160,7 +168,12 @@ typedef struct sObjFiber
 
   // If the fiber failed because of a runtime error, this will contain the
   // error message. Otherwise, it will be NULL.
-  char* error;
+  ObjString* error;
+
+  // This will be true if the caller that called this fiber did so using "try".
+  // In that case, if this fiber fails with an error, the error will be given
+  // to the caller.
+  bool callerIsTrying;
 } ObjFiber;
 
 typedef enum
@@ -178,14 +191,6 @@ typedef enum
   PRIM_RUN_FIBER
 
 } PrimitiveResult;
-
-typedef struct
-{
-  Obj obj;
-  char* value;
-
-  // TODO: Flexible array.
-} ObjString;
 
 typedef PrimitiveResult (*Primitive)(WrenVM* vm, ObjFiber* fiber, Value* args);
 

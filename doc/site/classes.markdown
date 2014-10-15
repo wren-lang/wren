@@ -17,7 +17,7 @@ This creates a class named `Unicorn` with no methods or fields.
 
 ## Methods
 
-Once we've made a unicorn, to let it do stuff, we need to give it methods.
+To let our unicorn do stuff, we need to give it methods.
 
     :::dart
     class Unicorn {
@@ -35,7 +35,7 @@ This defines a `prance` method that takes no arguments. To support parameters, a
       }
     }
 
-Unlike most other dynamically-typed languages, in Wren you can have multiple methods in a class with the same name, as long as they take a different number of parameters. In technical terms, you can overload by *arity*. So this class is fine:
+Unlike most other dynamically-typed languages, in Wren you can have multiple methods in a class with the same name, as long as they take a different number of parameters. In technical terms, you can *overload by arity*. So this class is fine:
 
     :::dart
     class Unicorn {
@@ -118,7 +118,6 @@ Operator overloading is really useful for types like vectors and complex numbers
 
 ## Setters
 
-[Assignment](variables.html) *cannot* be overloaded. It isn't an operator, and its semantics are built right into the language.
 
 **TODO: ...**
 
@@ -143,7 +142,28 @@ This declares a new class `Pegasus` that inherits from `Unicorn`.
 
 The metaclass hierarchy does *not* parallel the regular class hierarchy. So, if `Pegasus` inherits from `Unicorn`, `Pegasus`'s metaclass will not inherit from `Unicorn`'s metaclass. In more prosaic terms, this means that static methods are not inherited.
 
+    :::dart
+    class Unicorn {
+      // Unicorns cannot fly. :(
+      static canFly { false }
+    }
+
+    class Pegasus is Unicorn {}
+
+    Pegasus.canFly // ERROR: Static methods are not inherited.
+
 Constructors, however, initialize the instance *after* it has been created. They are defined as instance methods on the class and not on the metaclass. That means that constructors *are* inherited.
+
+    :::dart
+    class Unicorn {
+      new(name) {
+        IO.print("My name is " + name + ".")
+      }
+    }
+
+    class Pegasus is Unicorn {}
+
+    new Pegasus("Fred") // Prints "My name is Fred.".
 
 ## Superclass method calls
 

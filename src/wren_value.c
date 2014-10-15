@@ -140,6 +140,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   fiber->openUpvalues = NULL;
   fiber->caller = NULL;
   fiber->error = NULL;
+  fiber->callerIsTrying = false;
 
   CallFrame* frame = &fiber->frames[0];
   frame->fn = fn;
@@ -512,6 +513,8 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
   // The caller.
   if (fiber->caller != NULL) markFiber(vm, fiber->caller);
 
+  if (fiber->error != NULL) markString(vm, fiber->error);
+
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFiber);
   // TODO: Count size of error message buffer.
@@ -586,13 +589,6 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       wrenMethodBufferClear(vm, &((ObjClass*)obj)->methods);
       break;
 
-    case OBJ_FIBER:
-    {
-      ObjFiber* fiber = ((ObjFiber*)obj);
-      if (fiber->error != NULL) wrenReallocate(vm, fiber->error, 0, 0);
-      break;
-    }
-
     case OBJ_FN:
     {
       ObjFn* fn = (ObjFn*)obj;
@@ -613,6 +609,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       break;
 
     case OBJ_CLOSURE:
+    case OBJ_FIBER:
     case OBJ_INSTANCE:
     case OBJ_RANGE:
     case OBJ_UPVALUE:
