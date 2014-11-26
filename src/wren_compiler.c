@@ -2248,6 +2248,9 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
       // There are two bytes for the constant, then two for each upvalue.
       return 2 + (loadedFn->numUpvalues * 2);
     }
+
+    default:
+      UNREACHABLE();
   }
 }
 

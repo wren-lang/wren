@@ -564,7 +564,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 // copy [constants] into its own array.
 ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
                        int numUpvalues, int numParams,
-                       u_int8_t* bytecode, int bytecodeLength,
+                       uint8_t* bytecode, int bytecodeLength,
                        ObjString* debugSourcePath,
                        const char* debugName, int debugNameLength,
                        int* sourceLines);

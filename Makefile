@@ -27,7 +27,7 @@ debug: prep wrend
 
 # Debug command-line interpreter.
 wrend: $(DEBUG_OBJECTS)
-	$(CC) $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o wrend $^
+	$(CC) $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -lm -o wrend $^
 
 # Debug object files.
 build/debug/%.o: src/%.c include/wren.h $(HEADERS)
@@ -38,7 +38,7 @@ release: prep wren
 
 # Release command-line interpreter.
 wren: $(RELEASE_OBJECTS)
-	$(CC) $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o wren $^
+	$(CC) $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -lm -o wren $^
 
 # Release object files.
 build/release/%.o: src/%.c include/wren.h $(HEADERS)

@@ -1,3 +1,5 @@
+#define _GNU_SOURCE // Makes getline() available in GCC.
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -56,6 +58,10 @@ static int runFile(WrenVM* vm, const char* path)
     case WREN_RESULT_SUCCESS: result = 0; break;
     case WREN_RESULT_COMPILE_ERROR: result = 65; break; // EX_DATAERR.
     case WREN_RESULT_RUNTIME_ERROR: result = 70; break; // EX_SOFTWARE.
+    default:
+      // Unreachable.
+      result = 255;
+      break;
   }
 
   wrenFreeVM(vm);
