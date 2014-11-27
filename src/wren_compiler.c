@@ -1731,12 +1731,19 @@ static void name(Compiler* compiler, bool allowAssignment)
     variable(compiler, allowAssignment, index, loadInstruction);
     return;
   }
+  // TODO: The fact that we return here if the variable is known and parse an
+  // optional argument list below if not means that the grammar is not
+  // context-free. A line of code in a method like "someName(foo)" is a parse
+  // error if "someName" is a defined variable in the surrounding scope and not
+  // if it isn't. Fix this. One option is to have "someName(foo)" always
+  // resolve to a self-call if there is an argument list, but that makes
+  // getters a little confusing.
 
   // TODO: The fact that we walk the entire scope chain up to global before
   // interpreting a name as an implicit "this" call means that surrounding
   // names shadow ones in the class. This is good for things like globals.
-  // (You wouldn't want `new Fiber` translating to `new this.Fiber`, but may
-  // not be what we want for other names.) One option is to make capitalized
+  // (You wouldn't want `new Fiber` translating to `new this.Fiber`.) But it
+  // may not be what we want for other names. One option is to make capitalized
   // names *always* global, and then a lowercase name will become on an
   // implicit this if it's not a local in the nearest enclosing class.
 
@@ -2299,7 +2306,7 @@ static void endLoop(Compiler* compiler)
     {
       compiler->bytecode.data[i] = CODE_JUMP;
       patchJump(compiler, i + 1);
-      i += 2;
+      i += 3;
     }
     else
     {
