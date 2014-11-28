@@ -35,7 +35,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   WrenVM* vm = reallocate(NULL, 0, sizeof(WrenVM));
 
   vm->reallocate = reallocate;
-  
+
   wrenSymbolTableInit(vm, &vm->methodNames);
   wrenSymbolTableInit(vm, &vm->globalNames);
   wrenValueBufferInit(vm, &vm->globals);
@@ -81,6 +81,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
 void wrenFreeVM(WrenVM* vm)
 {
+  // TODO: Check for already freed.
   // Free all of the GC objects.
   Obj* obj = vm->first;
   while (obj != NULL)
@@ -195,7 +196,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 #else
   if (vm->bytesAllocated > vm->nextGC) collectGarbage(vm);
 #endif
-  
+
   return vm->reallocate(memory, oldSize, newSize);
 }
 
@@ -1015,6 +1016,7 @@ static bool runInterpreter(WrenVM* vm)
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source)
 {
+  // TODO: Check for freed VM.
   ObjFn* fn = wrenCompile(vm, sourcePath, source);
   if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
 
@@ -1115,7 +1117,7 @@ static void defineMethod(WrenVM* vm, const char* className,
   method.foreign = methodFn;
 
   if (isStatic) classObj = classObj->metaclass;
-  
+
   wrenBindMethod(vm, classObj, methodSymbol, method);
 }
 

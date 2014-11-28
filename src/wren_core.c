@@ -230,7 +230,7 @@ DEF_NATIVE(fiber_call)
 
   if (runFiber->numFrames == 0) RETURN_ERROR("Cannot call a finished fiber.");
   if (runFiber->caller != NULL) RETURN_ERROR("Fiber has already been called.");
-  
+
   // Remember who ran it.
   runFiber->caller = fiber;
 
@@ -1026,22 +1026,22 @@ void wrenInitializeCore(WrenVM* vm)
   // The core class diagram ends up looking like this, where single lines point
   // to a class's superclass, and double lines point to its metaclass:
   //
-  //             __________        /====\
-  //            /          \      //    \\
-  //           v            \     v      \\
-  //     .---------.   .--------------.  //
-  //     | Object  |==>|    Class     |==/
+  //           .------------.    .========.
+  //           |            |    ||      ||
+  //           v            |    v       ||
+  //     .---------.   .--------------.  ||
+  //     | Object  |==>|    Class     |==='
   //     '---------'   '--------------'
   //          ^               ^
   //          |               |
-  //     .---------.   .--------------.   \
+  //     .---------.   .--------------.   -.
   //     |  Base   |==>|  Base.type   |    |
   //     '---------'   '--------------'    |
   //          ^               ^            | Hypothetical example classes
   //          |               |            |
   //     .---------.   .--------------.    |
   //     | Derived |==>| Derived.type |    |
-  //     '---------'   '--------------'    /
+  //     '---------'   '--------------'   -'
 
   // The rest of the classes can not be defined normally.
   vm->boolClass = defineClass(vm, "Bool");

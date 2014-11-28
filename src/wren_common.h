@@ -97,20 +97,32 @@
 #ifdef DEBUG
 
 #define ASSERT(condition, message) \
-  if (!(condition)) { \
-    printf("[%s:%d] Assert failed in %s(): %s\n", \
-        __FILE__, __LINE__, __func__, message); \
-    abort(); \
-  }
-
-#else
-
-#define ASSERT(condition, message) ;
-
-#endif
+  do \
+  { \
+    if (!(condition)) \
+    { \
+      fprintf(stderr, "[%s:%d] Assert failed in %s(): %s\n", \
+          __FILE__, __LINE__, __func__, message); \
+      abort(); \
+    } \
+  } \
+  while(0)
 
 // Assertion to indicate that the given point in the code should never be
 // reached.
-#define UNREACHABLE() ASSERT(false, "This line should not be reached.");
+#define UNREACHABLE() \
+  do \
+  { \
+    fprintf(stderr, "This line should not be reached.\n"); \
+    abort(); \
+  } \
+  while (0)
+
+#else
+
+#define ASSERT(condition, message) do { } while (0)
+#define UNREACHABLE() do { } while (0)
+
+#endif
 
 #endif
