@@ -668,7 +668,8 @@ ObjClass* wrenGetClass(WrenVM* vm, Value value)
   }
   #endif
 
-  return NULL; // Unreachable.
+  UNREACHABLE();
+  return NULL;
 }
 
 bool wrenValuesEqual(Value a, Value b)

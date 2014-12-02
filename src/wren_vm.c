@@ -1007,10 +1007,12 @@ static bool runInterpreter(WrenVM* vm)
       // A CODE_END should always be preceded by a CODE_RETURN. If we get here,
       // the compiler generated wrong code.
       UNREACHABLE();
-      DISPATCH();
   }
 
-  ASSERT(0, "Should not reach end of interpret.");
+  // We should only exit this function from an explicit return from CODE_RETURN
+  // or a runtime error.
+  UNREACHABLE();
+  return false;
 }
 
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
