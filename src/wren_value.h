@@ -588,8 +588,16 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 
-// Creates a new string object and copies [text] into it.
+// Creates a new string object of [length] and copies [text] into it.
+//
+// [text] may be NULL if [length] is zero.
 Value wrenNewString(WrenVM* vm, const char* text, size_t length);
+
+// Creates a new string object with a buffer large enough to hold a string of
+// [length] but does no initialization of the buffer.
+//
+// The caller is expected to fully initialize the buffer after calling.
+Value wrenNewUninitializedString(WrenVM* vm, size_t length);
 
 // Creates a new string that is the concatenation of [left] and [right].
 ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right);

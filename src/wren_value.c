@@ -323,6 +323,23 @@ Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
 
 Value wrenNewString(WrenVM* vm, const char* text, size_t length)
 {
+  // Allow NULL if the string is empty since byte buffers don't allocate any
+  // characters for a zero-length string.
+  ASSERT(length == 0 || text != NULL, "Unexpected NULL string.");
+
+  // TODO: Don't allocate a heap string at all for zero-length strings.
+  ObjString* string = AS_STRING(wrenNewUninitializedString(vm, length));
+
+  // Copy the string (if given one).
+  if (length > 0) strncpy(string->value, text, length);
+
+  string->value[length] = '\0';
+
+  return OBJ_VAL(string);
+}
+
+Value wrenNewUninitializedString(WrenVM* vm, size_t length)
+{
   // Allocate before the string object in case this triggers a GC which would
   // free the string object.
   char* heapText = allocate(vm, length + 1);
@@ -330,13 +347,6 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   ObjString* string = allocate(vm, sizeof(ObjString));
   initObj(vm, &string->obj, OBJ_STRING);
   string->value = heapText;
-
-  // Copy the string (if given one).
-  if (text != NULL)
-  {
-    strncpy(heapText, text, length);
-    heapText[length] = '\0';
-  }
 
   return OBJ_VAL(string);
 }
@@ -346,7 +356,7 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
   size_t leftLength = strlen(left);
   size_t rightLength = strlen(right);
 
-  Value value = wrenNewString(vm, NULL, leftLength + rightLength);
+  Value value = wrenNewUninitializedString(vm, leftLength + rightLength);
   ObjString* string = AS_STRING(value);
   strcpy(string->value, left);
   strcpy(string->value + leftLength, right);
