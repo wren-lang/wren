@@ -6,76 +6,76 @@ Even though most benchmarks aren't worth the pixels they're printed on, people s
 <h3>Method Call</h3>
 <table class="chart">
   <tr>
-    <th>wren</th><td><div class="chart-bar wren" style="width: 99%;">4930&nbsp;</div></td>
+    <th>wren</th><td><div class="chart-bar wren" style="width: 99%;">5100&nbsp;</div></td>
   </tr>
   <tr>
-    <th>luajit (-joff)</th><td><div class="chart-bar" style="width: 86%;">4266&nbsp;</div></td>
+    <th>luajit (-joff)</th><td><div class="chart-bar" style="width: 87%;">4441&nbsp;</div></td>
   </tr>
   <tr>
-    <th>ruby</th><td><div class="chart-bar" style="width: 55%;">2752&nbsp;</div></td>
+    <th>ruby</th><td><div class="chart-bar" style="width: 56%;">2868&nbsp;</div></td>
   </tr>
   <tr>
-    <th>lua</th><td><div class="chart-bar" style="width: 35%;">1728&nbsp;</div></td>
+    <th>lua</th><td><div class="chart-bar" style="width: 34%;">1742&nbsp;</div></td>
   </tr>
   <tr>
-    <th>python3</th><td><div class="chart-bar" style="width: 17%;">865&nbsp;</div></td>
+    <th>python3</th><td><div class="chart-bar" style="width: 17%;">884&nbsp;</div></td>
   </tr>
   <tr>
-    <th>python</th><td><div class="chart-bar" style="width: 15%;">764&nbsp;</div></td>
+    <th>python</th><td><div class="chart-bar" style="width: 15%;">779&nbsp;</div></td>
   </tr>
 </table>
 <h3>DeltaBlue</h3>
 <table class="chart">
   <tr>
-    <th>wren</th><td><div class="chart-bar wren" style="width: 99%;">6662&nbsp;</div></td>
+    <th>wren</th><td><div class="chart-bar wren" style="width: 99%;">7006&nbsp;</div></td>
   </tr>
   <tr>
-    <th>python3</th><td><div class="chart-bar" style="width: 35%;">2336&nbsp;</div></td>
+    <th>python3</th><td><div class="chart-bar" style="width: 33%;">2333&nbsp;</div></td>
   </tr>
   <tr>
-    <th>python</th><td><div class="chart-bar" style="width: 32%;">2166&nbsp;</div></td>
+    <th>python</th><td><div class="chart-bar" style="width: 30%;">2141&nbsp;</div></td>
   </tr>
 </table>
 <h3>Binary Trees</h3>
 <table class="chart">
   <tr>
-    <th>luajit (-joff)</th><td><div class="chart-bar" style="width: 99%;">6442&nbsp;</div></td>
+    <th>luajit (-joff)</th><td><div class="chart-bar" style="width: 99%;">6165&nbsp;</div></td>
   </tr>
   <tr>
-    <th>wren</th><td><div class="chart-bar wren" style="width: 50%;">3253&nbsp;</div></td>
+    <th>wren</th><td><div class="chart-bar wren" style="width: 54%;">3338&nbsp;</div></td>
   </tr>
   <tr>
-    <th>ruby</th><td><div class="chart-bar" style="width: 43%;">2806&nbsp;</div></td>
+    <th>ruby</th><td><div class="chart-bar" style="width: 43%;">2685&nbsp;</div></td>
   </tr>
   <tr>
-    <th>python3</th><td><div class="chart-bar" style="width: 29%;">1926&nbsp;</div></td>
+    <th>python3</th><td><div class="chart-bar" style="width: 31%;">1952&nbsp;</div></td>
   </tr>
   <tr>
-    <th>lua</th><td><div class="chart-bar" style="width: 21%;">1375&nbsp;</div></td>
+    <th>lua</th><td><div class="chart-bar" style="width: 22%;">1409&nbsp;</div></td>
   </tr>
   <tr>
-    <th>python</th><td><div class="chart-bar" style="width: 21%;">1353&nbsp;</div></td>
+    <th>python</th><td><div class="chart-bar" style="width: 21%;">1340&nbsp;</div></td>
   </tr>
 </table>
 <h3>Recursive Fibonacci</h3>
 <table class="chart">
   <tr>
-    <th>luajit (-joff)</th><td><div class="chart-bar" style="width: 99%;">6869&nbsp;</div></td>
+    <th>luajit (-joff)</th><td><div class="chart-bar" style="width: 99%;">7061&nbsp;</div></td>
   </tr>
   <tr>
-    <th>ruby</th><td><div class="chart-bar" style="width: 45%;">3138&nbsp;</div></td>
+    <th>ruby</th><td><div class="chart-bar" style="width: 43%;">3100&nbsp;</div></td>
   </tr>
   <tr>
-    <th>wren</th><td><div class="chart-bar wren" style="width: 43%;">2991&nbsp;</div></td>
+    <th>lua</th><td><div class="chart-bar" style="width: 40%;">2860&nbsp;</div></td>
   </tr>
   <tr>
-    <th>lua</th><td><div class="chart-bar" style="width: 42%;">2889&nbsp;</div></td>
+    <th>wren</th><td><div class="chart-bar wren" style="width: 34%;">2410&nbsp;</div></td>
   </tr>
   <tr>
-    <th>python3</th><td><div class="chart-bar" style="width: 18%;">1280&nbsp;</div></td>
+    <th>python</th><td><div class="chart-bar" style="width: 17%;">1253&nbsp;</div></td>
   </tr>
   <tr>
-    <th>python</th><td><div class="chart-bar" style="width: 18%;">1253&nbsp;</div></td>
+    <th>python3</th><td><div class="chart-bar" style="width: 17%;">1252&nbsp;</div></td>
   </tr>
 </table>
 
