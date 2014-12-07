@@ -808,7 +808,7 @@ DEF_NATIVE(object_toString)
   {
     ObjInstance* instance = AS_INSTANCE(args[0]);
     RETURN_OBJ(wrenStringConcat(vm, "instance of ",
-                                instance->classObj->name->value));
+                                instance->obj.classObj->name->value));
   }
 
   RETURN_VAL(wrenNewString(vm, "<object>", 8));
@@ -1015,8 +1015,8 @@ void wrenInitializeCore(WrenVM* vm)
 
   // Now that Object and Class are defined, we can wire them up to each other.
   wrenBindSuperclass(vm, vm->classClass, vm->objectClass);
-  vm->objectClass->metaclass = vm->classClass;
-  vm->classClass->metaclass = vm->classClass;
+  vm->objectClass->obj.classObj = vm->classClass;
+  vm->classClass->obj.classObj = vm->classClass;
 
   // Define the methods specific to Class after wiring up its superclass to
   // prevent the inherited ones from overwriting them.
@@ -1050,10 +1050,10 @@ void wrenInitializeCore(WrenVM* vm)
 
   // TODO: Make fibers inherit Sequence and be iterable.
   vm->fiberClass = defineClass(vm, "Fiber");
-  NATIVE(vm->fiberClass->metaclass, " instantiate", fiber_instantiate);
-  NATIVE(vm->fiberClass->metaclass, "new ", fiber_new);
-  NATIVE(vm->fiberClass->metaclass, "yield", fiber_yield);
-  NATIVE(vm->fiberClass->metaclass, "yield ", fiber_yield1);
+  NATIVE(vm->fiberClass->obj.classObj, " instantiate", fiber_instantiate);
+  NATIVE(vm->fiberClass->obj.classObj, "new ", fiber_new);
+  NATIVE(vm->fiberClass->obj.classObj, "yield", fiber_yield);
+  NATIVE(vm->fiberClass->obj.classObj, "yield ", fiber_yield1);
   NATIVE(vm->fiberClass, "call", fiber_call);
   NATIVE(vm->fiberClass, "call ", fiber_call1);
   NATIVE(vm->fiberClass, "error", fiber_error);
@@ -1064,8 +1064,8 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->fnClass = defineClass(vm, "Fn");
 
-  NATIVE(vm->fnClass->metaclass, " instantiate", fn_instantiate);
-  NATIVE(vm->fnClass->metaclass, "new ", fn_new);
+  NATIVE(vm->fnClass->obj.classObj, " instantiate", fn_instantiate);
+  NATIVE(vm->fnClass->obj.classObj, "new ", fn_new);
 
   NATIVE(vm->fnClass, "call", fn_call0);
   NATIVE(vm->fnClass, "call ", fn_call1);
@@ -1123,10 +1123,23 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->stringClass, "!= ", string_bangeq);
   NATIVE(vm->stringClass, "[ ]", string_subscript);
 
+  // When the base classes are defined, we allocate string objects for their
+  // names. However, we haven't created the string class itself yet, so those
+  // all have NULL class pointers. Now that we have a string class, go back and
+  // fix them up.
+  vm->objectClass->name->obj.classObj = vm->stringClass;
+  vm->classClass->name->obj.classObj = vm->stringClass;
+  vm->boolClass->name->obj.classObj = vm->stringClass;
+  vm->fiberClass->name->obj.classObj = vm->stringClass;
+  vm->fnClass->name->obj.classObj = vm->stringClass;
+  vm->nullClass->name->obj.classObj = vm->stringClass;
+  vm->numClass->name->obj.classObj = vm->stringClass;
+  vm->stringClass->name->obj.classObj = vm->stringClass;
+
   wrenInterpret(vm, "Wren core library", libSource);
 
   vm->listClass = AS_CLASS(findGlobal(vm, "List"));
-  NATIVE(vm->listClass->metaclass, " instantiate", list_instantiate);
+  NATIVE(vm->listClass->obj.classObj, " instantiate", list_instantiate);
   NATIVE(vm->listClass, "add ", list_add);
   NATIVE(vm->listClass, "clear", list_clear);
   NATIVE(vm->listClass, "count", list_count);

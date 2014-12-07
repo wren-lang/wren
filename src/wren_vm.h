@@ -322,4 +322,37 @@ void wrenPinObj(WrenVM* vm, Obj* obj, WrenPinnedObj* pinned);
 // macro.
 void wrenUnpinObj(WrenVM* vm);
 
+// Returns the class of [value].
+//
+// Defined here instead of in wren_value.h because it's critical that this be
+// inlined. That means it must be defined in the header, but the wren_value.h
+// header doesn't have a full definitely of WrenVM yet.
+static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
+{
+#if WREN_NAN_TAGGING
+  if (IS_NUM(value)) return vm->numClass;
+  if (IS_OBJ(value)) return AS_OBJ(value)->classObj;
+
+  switch (GET_TAG(value))
+  {
+    case TAG_FALSE: return vm->boolClass; break;
+    case TAG_NAN: return vm->numClass; break;
+    case TAG_NULL: return vm->nullClass; break;
+    case TAG_TRUE: return vm->boolClass; break;
+  }
+#else
+  switch (value.type)
+  {
+    case VAL_FALSE: return vm->boolClass;
+    case VAL_NULL: return vm->nullClass;
+    case VAL_NUM: return vm->numClass;
+    case VAL_TRUE: return vm->boolClass;
+    case VAL_OBJ: return AS_OBJ(value)->classObj;
+  }
+#endif
+
+  UNREACHABLE();
+  return NULL;
+}
+
 #endif

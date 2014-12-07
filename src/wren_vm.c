@@ -277,7 +277,7 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
 
   if (methodType == CODE_METHOD_STATIC)
   {
-    classObj = classObj->metaclass;
+    classObj = classObj->obj.classObj;
   }
 
   wrenBindMethod(vm, classObj, symbol, method);
@@ -541,7 +541,7 @@ static bool runInterpreter(WrenVM* vm)
       Value receiver = fiber->stack[frame->stackStart];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
-      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+      ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
       PUSH(instance->fields[field]);
       DISPATCH();
     }
@@ -574,7 +574,7 @@ static bool runInterpreter(WrenVM* vm)
       int symbol = READ_SHORT();
 
       Value receiver = fiber->stack[fiber->stackSize - numArgs];
-      ObjClass* classObj = wrenGetClass(vm, receiver);
+      ObjClass* classObj = wrenGetClassInline(vm, receiver);
 
       // If the class's method table doesn't include the symbol, bail.
       if (symbol >= classObj->methods.count)
@@ -675,7 +675,7 @@ static bool runInterpreter(WrenVM* vm)
       int symbol = READ_SHORT();
 
       Value receiver = fiber->stack[fiber->stackSize - numArgs];
-      ObjClass* classObj = wrenGetClass(vm, receiver);
+      ObjClass* classObj = wrenGetClassInline(vm, receiver);
 
       // Ignore methods defined on the receiver's immediate class.
       classObj = classObj->superclass;
@@ -770,7 +770,7 @@ static bool runInterpreter(WrenVM* vm)
       Value receiver = fiber->stack[frame->stackStart];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
-      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+      ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
       instance->fields[field] = PEEK();
       DISPATCH();
     }
@@ -781,7 +781,7 @@ static bool runInterpreter(WrenVM* vm)
       Value receiver = POP();
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
-      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+      ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
       PUSH(instance->fields[field]);
       DISPATCH();
     }
@@ -792,7 +792,7 @@ static bool runInterpreter(WrenVM* vm)
       Value receiver = POP();
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
-      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+      ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
       instance->fields[field] = PEEK();
       DISPATCH();
     }
@@ -1141,7 +1141,7 @@ static void defineMethod(WrenVM* vm, const char* className,
   method.type = METHOD_FOREIGN;
   method.foreign = methodFn;
 
-  if (isStatic) classObj = classObj->metaclass;
+  if (isStatic) classObj = classObj->obj.classObj;
 
   wrenBindMethod(vm, classObj, methodSymbol, method);
 }

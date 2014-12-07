@@ -17,10 +17,10 @@ RELEASE_OBJECTS = $(addprefix build/release/, $(notdir $(OBJECTS)))
 all: release
 
 clean:
-	rm -rf build wren wrend
+	@rm -rf build wren wrend
 
 prep:
-	mkdir -p build/debug build/release
+	@mkdir -p build/debug build/release
 
 # Debug build.
 debug: prep wrend

@@ -46,6 +46,9 @@ typedef enum
   VAL_OBJ
 } ValueType;
 
+// TODO: Can we eliminate this and use the classObj pointers to tell an object's
+// type instead?
+// Identifies which specific type a heap-allocated object is.
 typedef enum {
   OBJ_CLASS,
   OBJ_CLOSURE,
@@ -64,10 +67,18 @@ typedef enum
   FLAG_MARKED = 0x01,
 } ObjFlags;
 
+typedef struct sObjClass ObjClass;
+
+// Base struct for all heap-allocated objects.
 typedef struct sObj
 {
   unsigned int type  : 4; // ObjType.
+  // TODO: We could store this bit off to the side, or in the low bit of
+  // classObj to shrink objects a bit. Worth doing?
   unsigned int flags : 1; // ObjFlags.
+
+  // The object's class.
+  ObjClass* classObj;
 
   // The next object in the linked list of all currently allocated objects.
   struct sObj* next;
@@ -284,11 +295,10 @@ typedef struct
 
 DECLARE_BUFFER(Method, Method);
 
-typedef struct sObjClass
+struct sObjClass
 {
   Obj obj;
-  struct sObjClass* metaclass;
-  struct sObjClass* superclass;
+  ObjClass* superclass;
 
   // The number of fields needed for an instance of this class, including all
   // of its superclass fields.
@@ -306,12 +316,11 @@ typedef struct sObjClass
 
   // The name of the class.
   ObjString* name;
-} ObjClass;
+};
 
 typedef struct
 {
   Obj obj;
-  ObjClass* classObj;
   Value fields[];
 } ObjInstance;
 
@@ -617,6 +626,11 @@ void wrenMarkObj(WrenVM* vm, Obj* obj);
 void wrenFreeObj(WrenVM* vm, Obj* obj);
 
 // Returns the class of [value].
+//
+// Unlike wrenGetClassInline in wren_vm.h, this is not inlined. Inlining helps
+// performance (significantly) in some cases, but degrades it in others. The
+// ones used by the implementation were chosen to give the best results in the
+// benchmarks.
 ObjClass* wrenGetClass(WrenVM* vm, Value value);
 
 // Returns true if [a] and [b] are strictly equal using built-in equality
