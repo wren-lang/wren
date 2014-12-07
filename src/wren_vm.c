@@ -418,6 +418,15 @@ static bool runInterpreter(WrenVM* vm)
     &&code_NULL,
     &&code_FALSE,
     &&code_TRUE,
+    &&code_LOAD_LOCAL_0,
+    &&code_LOAD_LOCAL_1,
+    &&code_LOAD_LOCAL_2,
+    &&code_LOAD_LOCAL_3,
+    &&code_LOAD_LOCAL_4,
+    &&code_LOAD_LOCAL_5,
+    &&code_LOAD_LOCAL_6,
+    &&code_LOAD_LOCAL_7,
+    &&code_LOAD_LOCAL_8,
     &&code_LOAD_LOCAL,
     &&code_STORE_LOCAL,
     &&code_LOAD_UPVALUE,
@@ -482,18 +491,20 @@ static bool runInterpreter(WrenVM* vm)
   #define INTERPRET_LOOP    DISPATCH();
   #define CASE_CODE(name)   code_##name
 
-    #if WREN_DEBUG_TRACE_INSTRUCTIONS
-      // Prints the stack and instruction before each instruction is executed.
-      #define DISPATCH() \
-          { \
-            wrenDebugPrintStack(fiber); \
-            wrenDebugPrintInstruction(vm, fn, (int)(ip - fn->bytecode)); \
-            instruction = *ip++; \
-            goto *dispatchTable[instruction]; \
-          }
-    #else
-      #define DISPATCH()        goto *dispatchTable[instruction = READ_BYTE()]
-    #endif
+  #if WREN_DEBUG_TRACE_INSTRUCTIONS
+    // Prints the stack and instruction before each instruction is executed.
+    #define DISPATCH() \
+        { \
+          wrenDebugPrintStack(fiber); \
+          wrenDebugPrintInstruction(vm, fn, (int)(ip - fn->bytecode)); \
+          instruction = *ip++; \
+          goto *dispatchTable[instruction]; \
+        }
+  #else
+
+    #define DISPATCH()      goto *dispatchTable[instruction = READ_BYTE()];
+
+  #endif
 
   #else
 
@@ -508,6 +519,33 @@ static bool runInterpreter(WrenVM* vm)
   Code instruction;
   INTERPRET_LOOP
   {
+    CASE_CODE(LOAD_LOCAL_0):
+    CASE_CODE(LOAD_LOCAL_1):
+    CASE_CODE(LOAD_LOCAL_2):
+    CASE_CODE(LOAD_LOCAL_3):
+    CASE_CODE(LOAD_LOCAL_4):
+    CASE_CODE(LOAD_LOCAL_5):
+    CASE_CODE(LOAD_LOCAL_6):
+    CASE_CODE(LOAD_LOCAL_7):
+    CASE_CODE(LOAD_LOCAL_8):
+      PUSH(fiber->stack[frame->stackStart + instruction - CODE_LOAD_LOCAL_0]);
+      DISPATCH();
+
+    CASE_CODE(LOAD_LOCAL):
+      PUSH(fiber->stack[frame->stackStart + READ_BYTE()]);
+      DISPATCH();
+
+    CASE_CODE(LOAD_FIELD_THIS):
+    {
+      int field = READ_BYTE();
+      Value receiver = fiber->stack[frame->stackStart];
+      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
+      ObjInstance* instance = AS_INSTANCE(receiver);
+      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
+      PUSH(instance->fields[field]);
+      DISPATCH();
+    }
+
     CASE_CODE(POP):   DROP(); DISPATCH();
     CASE_CODE(NULL):  PUSH(NULL_VAL); DISPATCH();
     CASE_CODE(FALSE): PUSH(FALSE_VAL); DISPATCH();
@@ -603,10 +641,6 @@ static bool runInterpreter(WrenVM* vm)
       }
       DISPATCH();
     }
-
-    CASE_CODE(LOAD_LOCAL):
-      PUSH(fiber->stack[frame->stackStart + READ_BYTE()]);
-      DISPATCH();
 
     CASE_CODE(STORE_LOCAL):
       fiber->stack[frame->stackStart + READ_BYTE()] = PEEK();
@@ -729,17 +763,6 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(STORE_GLOBAL):
       vm->globals.data[READ_SHORT()] = PEEK();
       DISPATCH();
-
-    CASE_CODE(LOAD_FIELD_THIS):
-    {
-      int field = READ_BYTE();
-      Value receiver = fiber->stack[frame->stackStart];
-      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
-      ObjInstance* instance = AS_INSTANCE(receiver);
-      ASSERT(field < instance->classObj->numFields, "Out of bounds field.");
-      PUSH(instance->fields[field]);
-      DISPATCH();
-    }
 
     CASE_CODE(STORE_FIELD_THIS):
     {

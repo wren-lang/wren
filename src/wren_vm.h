@@ -40,6 +40,17 @@ typedef enum
   // Push true onto the stack.
   CODE_TRUE,
 
+  // Pushes the value in the given local slot.
+  CODE_LOAD_LOCAL_0,
+  CODE_LOAD_LOCAL_1,
+  CODE_LOAD_LOCAL_2,
+  CODE_LOAD_LOCAL_3,
+  CODE_LOAD_LOCAL_4,
+  CODE_LOAD_LOCAL_5,
+  CODE_LOAD_LOCAL_6,
+  CODE_LOAD_LOCAL_7,
+  CODE_LOAD_LOCAL_8,
+
   // Pushes the value in local slot [arg].
   CODE_LOAD_LOCAL,
 

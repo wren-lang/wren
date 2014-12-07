@@ -67,6 +67,16 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_FALSE: printf("FALSE\n"); break;
     case CODE_TRUE:  printf("TRUE\n"); break;
 
+    case CODE_LOAD_LOCAL_0: printf("LOAD_LOCAL_0\n"); break;
+    case CODE_LOAD_LOCAL_1: printf("LOAD_LOCAL_1\n"); break;
+    case CODE_LOAD_LOCAL_2: printf("LOAD_LOCAL_2\n"); break;
+    case CODE_LOAD_LOCAL_3: printf("LOAD_LOCAL_3\n"); break;
+    case CODE_LOAD_LOCAL_4: printf("LOAD_LOCAL_4\n"); break;
+    case CODE_LOAD_LOCAL_5: printf("LOAD_LOCAL_5\n"); break;
+    case CODE_LOAD_LOCAL_6: printf("LOAD_LOCAL_6\n"); break;
+    case CODE_LOAD_LOCAL_7: printf("LOAD_LOCAL_7\n"); break;
+    case CODE_LOAD_LOCAL_8: printf("LOAD_LOCAL_8\n"); break;
+
     case CODE_LOAD_LOCAL: BYTE_INSTRUCTION("LOAD_LOCAL");
     case CODE_STORE_LOCAL: BYTE_INSTRUCTION("STORE_LOCAL");
     case CODE_LOAD_UPVALUE: BYTE_INSTRUCTION("LOAD_UPVALUE");

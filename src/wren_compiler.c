@@ -1168,6 +1168,17 @@ static int resolveName(Compiler* compiler, const char* name, int length,
       &compiler->parser->vm->globalNames, name, length);
 }
 
+static void loadLocal(Compiler* compiler, int slot)
+{
+  if (slot <= 8)
+  {
+    emit(compiler, CODE_LOAD_LOCAL_0 + slot);
+    return;
+  }
+
+  emitByte(compiler, CODE_LOAD_LOCAL, slot);
+}
+
 // Copies the identifier from the previously consumed `TOKEN_NAME` into [name],
 // which should point to a buffer large enough to contain it. Returns the
 // length of the name.
@@ -1363,7 +1374,7 @@ static void finishBody(Compiler* compiler, bool isConstructor)
     if (!isStatementBody) emit(compiler, CODE_POP);
 
     // The receiver is always stored in the first local slot.
-    emitByte(compiler, CODE_LOAD_LOCAL, 0);
+    emit(compiler, CODE_LOAD_LOCAL_0);
   }
   else if (isStatementBody)
   {
@@ -1511,7 +1522,14 @@ static void loadThis(Compiler* compiler)
   int index = resolveName(compiler, "this", 4, &loadInstruction);
   ASSERT(index == -1 || loadInstruction != CODE_LOAD_GLOBAL,
          "'this' should not be global.");
-  emitByte(compiler, loadInstruction, index);
+  if (loadInstruction == CODE_LOAD_LOCAL)
+  {
+    loadLocal(compiler, index);
+  }
+  else
+  {
+    emitByte(compiler, loadInstruction, index);
+  }
 }
 
 static void grouping(Compiler* compiler, bool allowAssignment)
@@ -1670,6 +1688,10 @@ static void variable(Compiler* compiler, bool allowAssignment, int index,
   else if (loadInstruction == CODE_LOAD_GLOBAL)
   {
     emitShort(compiler, loadInstruction, index);
+  }
+  else if (loadInstruction == CODE_LOAD_LOCAL)
+  {
+    loadLocal(compiler, index);
   }
   else
   {
@@ -2187,6 +2209,15 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_CLOSE_UPVALUE:
     case CODE_RETURN:
     case CODE_END:
+    case CODE_LOAD_LOCAL_0:
+    case CODE_LOAD_LOCAL_1:
+    case CODE_LOAD_LOCAL_2:
+    case CODE_LOAD_LOCAL_3:
+    case CODE_LOAD_LOCAL_4:
+    case CODE_LOAD_LOCAL_5:
+    case CODE_LOAD_LOCAL_6:
+    case CODE_LOAD_LOCAL_7:
+    case CODE_LOAD_LOCAL_8:
       return 0;
 
     case CODE_LOAD_LOCAL:
@@ -2379,8 +2410,8 @@ static void forStatement(Compiler* compiler)
   startLoop(compiler, &loop);
 
   // Advance the iterator by calling the ".iterate" method on the sequence.
-  emitByte(compiler, CODE_LOAD_LOCAL, seqSlot);
-  emitByte(compiler, CODE_LOAD_LOCAL, iterSlot);
+  loadLocal(compiler, seqSlot);
+  loadLocal(compiler, iterSlot);
 
   emitShort(compiler, CODE_CALL_1, methodSymbol(compiler, "iterate ", 8));
 
@@ -2391,8 +2422,8 @@ static void forStatement(Compiler* compiler)
   testExitLoop(compiler);
 
   // Get the current value in the sequence by calling ".iteratorValue".
-  emitByte(compiler, CODE_LOAD_LOCAL, seqSlot);
-  emitByte(compiler, CODE_LOAD_LOCAL, iterSlot);
+  loadLocal(compiler, seqSlot);
+  loadLocal(compiler, iterSlot);
 
   emitShort(compiler, CODE_CALL_1,
             methodSymbol(compiler, "iteratorValue ", 14));
@@ -2630,7 +2661,7 @@ static void classDefinition(Compiler* compiler)
     }
     else
     {
-      emitByte(compiler, CODE_LOAD_LOCAL, symbol);
+      loadLocal(compiler, symbol);
     }
 
     // Define the method.
