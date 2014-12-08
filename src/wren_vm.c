@@ -363,9 +363,9 @@ static bool runInterpreter(WrenVM* vm)
   // a call frame has been pushed or popped gives a large speed boost.
   register ObjFiber* fiber = vm->fiber;
   register CallFrame* frame;
+  register Value* stackStart;
   register uint8_t* ip;
   register ObjFn* fn;
-  register Upvalue** upvalues;
 
   // These macros are designed to only be invoked within this function.
   #define PUSH(value)  (fiber->stack[fiber->stackSize++] = value)
@@ -384,16 +384,15 @@ static bool runInterpreter(WrenVM* vm)
   // variables.
   #define LOAD_FRAME()                                 \
       frame = &fiber->frames[fiber->numFrames - 1];    \
+      stackStart = &fiber->stack[frame->stackStart];   \
       ip = frame->ip;                                  \
       if (frame->fn->type == OBJ_FN)                   \
       {                                                \
         fn = (ObjFn*)frame->fn;                        \
-        upvalues = NULL;                               \
       }                                                \
       else                                             \
       {                                                \
         fn = ((ObjClosure*)frame->fn)->fn;             \
-        upvalues = ((ObjClosure*)frame->fn)->upvalues; \
       }
 
   // Terminates the current fiber with error string [error]. If another calling
@@ -528,17 +527,17 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(LOAD_LOCAL_6):
     CASE_CODE(LOAD_LOCAL_7):
     CASE_CODE(LOAD_LOCAL_8):
-      PUSH(fiber->stack[frame->stackStart + instruction - CODE_LOAD_LOCAL_0]);
+      PUSH(stackStart[instruction - CODE_LOAD_LOCAL_0]);
       DISPATCH();
 
     CASE_CODE(LOAD_LOCAL):
-      PUSH(fiber->stack[frame->stackStart + READ_BYTE()]);
+      PUSH(stackStart[READ_BYTE()]);
       DISPATCH();
 
     CASE_CODE(LOAD_FIELD_THIS):
     {
       int field = READ_BYTE();
-      Value receiver = fiber->stack[frame->stackStart];
+      Value receiver = stackStart[0];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
       ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
@@ -643,7 +642,7 @@ static bool runInterpreter(WrenVM* vm)
     }
 
     CASE_CODE(STORE_LOCAL):
-      fiber->stack[frame->stackStart + READ_BYTE()] = PEEK();
+      stackStart[READ_BYTE()] = PEEK();
       DISPATCH();
 
     CASE_CODE(CONSTANT):
@@ -745,16 +744,18 @@ static bool runInterpreter(WrenVM* vm)
     }
 
     CASE_CODE(LOAD_UPVALUE):
-      ASSERT(upvalues != NULL,
-             "Should not have CODE_LOAD_UPVALUE instruction in non-closure.");
+    {
+      Upvalue** upvalues = ((ObjClosure*)frame->fn)->upvalues;
       PUSH(*upvalues[READ_BYTE()]->value);
       DISPATCH();
+    }
 
     CASE_CODE(STORE_UPVALUE):
-      ASSERT(upvalues != NULL,
-             "Should not have CODE_STORE_UPVALUE instruction in non-closure.");
+    {
+      Upvalue** upvalues = ((ObjClosure*)frame->fn)->upvalues;
       *upvalues[READ_BYTE()]->value = PEEK();
       DISPATCH();
+    }
 
     CASE_CODE(LOAD_GLOBAL):
       PUSH(vm->globals.data[READ_SHORT()]);
@@ -767,7 +768,7 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(STORE_FIELD_THIS):
     {
       int field = READ_BYTE();
-      Value receiver = fiber->stack[frame->stackStart];
+      Value receiver = stackStart[0];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
       ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
@@ -890,7 +891,7 @@ static bool runInterpreter(WrenVM* vm)
       fiber->numFrames--;
 
       // Close any upvalues still in scope.
-      Value* firstValue = &fiber->stack[frame->stackStart];
+      Value* firstValue = stackStart;
       while (fiber->openUpvalues != NULL &&
              fiber->openUpvalues->value >= firstValue)
       {
@@ -913,7 +914,7 @@ static bool runInterpreter(WrenVM* vm)
       {
         // Store the result of the block in the first slot, which is where the
         // caller expects it.
-        fiber->stack[frame->stackStart] = result;
+        stackStart[0] = result;
 
         // Discard the stack slots for the call frame (leaving one slot for the
         // result).
@@ -966,7 +967,7 @@ static bool runInterpreter(WrenVM* vm)
         else
         {
           // Use the same upvalue as the current call frame.
-          closure->upvalues[i] = upvalues[index];
+          closure->upvalues[i] = ((ObjClosure*)frame->fn)->upvalues[index];
         }
       }
 
