@@ -539,16 +539,12 @@ DEF_NATIVE(list_subscript)
 
   ObjRange* range = AS_RANGE(args[1]);
 
-  // TODO: This code is pretty hairy. Is there a more elegant way?
   // Corner case: an empty range at zero is allowed on an empty list.
   // This way, list[0..-1] and list[0...list.count] can be used to copy a list
   // even when empty.
-  if (list->count == 0) {
-    if ((range->from == 0 && range->to == -1 && range->isInclusive) ||
-        (range->from == 0 && range->to == 0 && !range->isInclusive))
-    {
-      RETURN_OBJ(wrenNewList(vm, 0));
-    }
+  if (list->count == 0 && range->from == 0 &&
+      range->to == (range->isInclusive ? -1 : 0)) {
+    RETURN_OBJ(wrenNewList(vm, 0));
   }
 
   int from = validateIndexValue(vm, args, list->count, range->from,
