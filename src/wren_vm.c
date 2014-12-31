@@ -200,15 +200,13 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   return vm->reallocate(memory, oldSize, newSize);
 }
 
-// Captures the local variable in [slot] into an [Upvalue]. If that local is
+// Captures the local variable [local] into an [Upvalue]. If that local is
 // already in an upvalue, the existing one will be used. (This is important to
 // ensure that multiple closures closing over the same variable actually see
 // the same variable.) Otherwise, it will create a new open upvalue and add it
 // the fiber's list of upvalues.
-static Upvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, int slot)
+static Upvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
 {
-  Value* local = &fiber->stack[slot];
-
   // If there are no open upvalues at all, we must need a new one.
   if (fiber->openUpvalues == NULL)
   {
@@ -286,14 +284,14 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
 static void callForeign(WrenVM* vm, ObjFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
-  vm->foreignCallSlot = &fiber->stack[fiber->stackSize - numArgs];
+  vm->foreignCallSlot = fiber->stackTop - numArgs;
   vm->foreignCallNumArgs = numArgs;
 
   foreign(vm);
 
   // Discard the stack slots for the arguments (but leave one for
   // the result).
-  fiber->stackSize -= numArgs - 1;
+  fiber->stackTop -= numArgs - 1;
 
   // If nothing was returned, implicitly return null.
   if (vm->foreignCallSlot != NULL)
@@ -320,8 +318,7 @@ static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, const char* error)
     ObjFiber* caller = fiber->caller;
 
     // Make the caller's try method return the error message.
-    caller->stack[caller->stackSize - 1] = OBJ_VAL(fiber->error);
-
+    *(caller->stackTop - 1) = OBJ_VAL(fiber->error);
     return caller;
   }
 
@@ -338,7 +335,7 @@ static void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
   // TODO: Check for stack overflow.
   CallFrame* frame = &fiber->frames[fiber->numFrames];
   frame->fn = function;
-  frame->stackStart = fiber->stackSize - numArgs;
+  frame->stackStart = fiber->stackTop - numArgs;
 
   frame->ip = 0;
   if (function->type == OBJ_FN)
@@ -368,11 +365,11 @@ static bool runInterpreter(WrenVM* vm)
   register ObjFn* fn;
 
   // These macros are designed to only be invoked within this function.
-  #define PUSH(value)  (fiber->stack[fiber->stackSize++] = value)
-  #define POP()        (fiber->stack[--fiber->stackSize])
-  #define DROP()       (fiber->stackSize--)
-  #define PEEK()       (fiber->stack[fiber->stackSize - 1])
-  #define PEEK2()      (fiber->stack[fiber->stackSize - 2])
+  #define PUSH(value)  (*fiber->stackTop++ = value)
+  #define POP()        (*(--fiber->stackTop))
+  #define DROP()       (fiber->stackTop--)
+  #define PEEK()       (*(fiber->stackTop - 1))
+  #define PEEK2()      (*(fiber->stackTop - 2))
   #define READ_BYTE()  (*ip++)
   #define READ_SHORT() (ip += 2, (ip[-2] << 8) | ip[-1])
 
@@ -384,7 +381,7 @@ static bool runInterpreter(WrenVM* vm)
   // variables.
   #define LOAD_FRAME()                                 \
       frame = &fiber->frames[fiber->numFrames - 1];    \
-      stackStart = &fiber->stack[frame->stackStart];   \
+      stackStart = frame->stackStart;                  \
       ip = frame->ip;                                  \
       if (frame->fn->type == OBJ_FN)                   \
       {                                                \
@@ -572,7 +569,7 @@ static bool runInterpreter(WrenVM* vm)
       int numArgs = instruction - CODE_CALL_0 + 1;
       int symbol = READ_SHORT();
 
-      Value receiver = fiber->stack[fiber->stackSize - numArgs];
+      Value receiver = *(fiber->stackTop - numArgs);
       ObjClass* classObj = wrenGetClassInline(vm, receiver);
 
       // If the class's method table doesn't include the symbol, bail.
@@ -590,7 +587,7 @@ static bool runInterpreter(WrenVM* vm)
       {
         case METHOD_PRIMITIVE:
         {
-          Value* args = &fiber->stack[fiber->stackSize - numArgs];
+          Value* args = fiber->stackTop - numArgs;
 
           // After calling this, the result will be in the first arg slot.
           switch (method->primitive(vm, fiber, args))
@@ -598,7 +595,7 @@ static bool runInterpreter(WrenVM* vm)
             case PRIM_VALUE:
               // The result is now in the first arg slot. Discard the other
               // stack slots.
-              fiber->stackSize -= numArgs - 1;
+              fiber->stackTop -= numArgs - 1;
               break;
 
             case PRIM_ERROR:
@@ -673,7 +670,7 @@ static bool runInterpreter(WrenVM* vm)
       int numArgs = instruction - CODE_SUPER_0 + 1;
       int symbol = READ_SHORT();
 
-      Value receiver = fiber->stack[fiber->stackSize - numArgs];
+      Value receiver = *(fiber->stackTop - numArgs);
       ObjClass* classObj = wrenGetClassInline(vm, receiver);
 
       // Ignore methods defined on the receiver's immediate class.
@@ -693,7 +690,7 @@ static bool runInterpreter(WrenVM* vm)
       {
         case METHOD_PRIMITIVE:
         {
-          Value* args = &fiber->stack[fiber->stackSize - numArgs];
+          Value* args = fiber->stackTop - numArgs;
 
           // After calling this, the result will be in the first arg slot.
           switch (method->primitive(vm, fiber, args))
@@ -701,7 +698,7 @@ static bool runInterpreter(WrenVM* vm)
             case PRIM_VALUE:
               // The result is now in the first arg slot. Discard the other
               // stack slots.
-              fiber->stackSize -= numArgs - 1;
+              fiber->stackTop -= numArgs - 1;
               break;
 
             case PRIM_ERROR:
@@ -908,7 +905,7 @@ static bool runInterpreter(WrenVM* vm)
         fiber = fiber->caller;
 
         // Store the result in the resuming fiber.
-        fiber->stack[fiber->stackSize - 1] = result;
+        *(fiber->stackTop - 1) = result;
       }
       else
       {
@@ -918,7 +915,7 @@ static bool runInterpreter(WrenVM* vm)
 
         // Discard the stack slots for the call frame (leaving one slot for the
         // result).
-        fiber->stackSize = frame->stackStart + 1;
+        fiber->stackTop = frame->stackStart + 1;
       }
 
       LOAD_FRAME();
@@ -929,13 +926,14 @@ static bool runInterpreter(WrenVM* vm)
     {
       int numElements = READ_BYTE();
       ObjList* list = wrenNewList(vm, numElements);
+      // TODO: Do a straight memcopy.
       for (int i = 0; i < numElements; i++)
       {
-        list->elements[i] = fiber->stack[fiber->stackSize - numElements + i];
+        list->elements[i] = *(fiber->stackTop - numElements + i);
       }
 
       // Discard the elements.
-      fiber->stackSize -= numElements;
+      fiber->stackTop -= numElements;
 
       PUSH(OBJ_VAL(list));
       DISPATCH();

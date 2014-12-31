@@ -153,17 +153,17 @@ typedef struct
   // The function or closure being executed.
   Obj* fn;
 
-  // Index of the first stack slot used by this call frame. This will contain
+  // Pointer to the first stack slot used by this call frame. This will contain
   // the receiver, followed by the function's parameters, then local variables
   // and temporaries.
-  int stackStart;
+  Value* stackStart;
 } CallFrame;
 
 typedef struct sObjFiber
 {
   Obj obj;
   Value stack[STACK_SIZE];
-  int stackSize;
+  Value* stackTop;
 
   CallFrame frames[MAX_CALL_FRAMES];
   int numFrames;

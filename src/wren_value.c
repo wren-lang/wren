@@ -135,7 +135,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
 
   // Push the stack frame for the function.
-  fiber->stackSize = 0;
+  fiber->stackTop = fiber->stack;
   fiber->numFrames = 1;
   fiber->openUpvalues = NULL;
   fiber->caller = NULL;
@@ -144,7 +144,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
 
   CallFrame* frame = &fiber->frames[0];
   frame->fn = fn;
-  frame->stackStart = 0;
+  frame->stackStart = fiber->stack;
   if (fn->type == OBJ_FN)
   {
     frame->ip = ((ObjFn*)fn)->bytecode;
@@ -508,9 +508,9 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
   }
 
   // Stack variables.
-  for (int i = 0; i < fiber->stackSize; i++)
+  for (Value* slot = fiber->stack; slot < fiber->stackTop; slot++)
   {
-    wrenMarkValue(vm, fiber->stack[i]);
+    wrenMarkValue(vm, *slot);
   }
 
   // Open upvalues.

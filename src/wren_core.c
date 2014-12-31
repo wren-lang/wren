@@ -219,7 +219,7 @@ DEF_NATIVE(fiber_new)
   // TODO: Is there a cleaner solution?
   // TODO: If we make growable stacks, make sure this grows it.
   newFiber->stack[0] = NULL_VAL;
-  newFiber->stackSize++;
+  newFiber->stackTop++;
 
   RETURN_OBJ(newFiber);
 }
@@ -235,9 +235,9 @@ DEF_NATIVE(fiber_call)
   runFiber->caller = fiber;
 
   // If the fiber was yielded, make the yield call return null.
-  if (runFiber->stackSize > 0)
+  if (runFiber->stackTop > runFiber->stack)
   {
-    runFiber->stack[runFiber->stackSize - 1] = NULL_VAL;
+    *(runFiber->stackTop - 1) = NULL_VAL;
   }
 
   return PRIM_RUN_FIBER;
@@ -255,16 +255,16 @@ DEF_NATIVE(fiber_call1)
 
   // If the fiber was yielded, make the yield call return the value passed to
   // run.
-  if (runFiber->stackSize > 0)
+  if (runFiber->stackTop > runFiber->stack)
   {
-    runFiber->stack[runFiber->stackSize - 1] = args[1];
+    *(runFiber->stackTop - 1) = args[1];
   }
 
   // When the calling fiber resumes, we'll store the result of the run call
   // in its stack. Since fiber.run(value) has two arguments (the fiber and the
   // value) and we only need one slot for the result, discard the other slot
   // now.
-  fiber->stackSize--;
+  fiber->stackTop--;
 
   return PRIM_RUN_FIBER;
 }
@@ -289,9 +289,9 @@ DEF_NATIVE(fiber_run)
   if (runFiber->numFrames == 0) RETURN_ERROR("Cannot run a finished fiber.");
 
   // If the fiber was yielded, make the yield call return null.
-  if (runFiber->caller == NULL && runFiber->stackSize > 0)
+  if (runFiber->caller == NULL && runFiber->stackTop > runFiber->stack)
   {
-    runFiber->stack[runFiber->stackSize - 1] = NULL_VAL;
+    *(runFiber->stackTop - 1) = NULL_VAL;
   }
 
   // Unlike run, this does not remember the calling fiber. Instead, it
@@ -312,9 +312,9 @@ DEF_NATIVE(fiber_run1)
 
   // If the fiber was yielded, make the yield call return the value passed to
   // run.
-  if (runFiber->caller == NULL && runFiber->stackSize > 0)
+  if (runFiber->caller == NULL && runFiber->stackTop > runFiber->stack)
   {
-    runFiber->stack[runFiber->stackSize - 1] = args[1];
+    *(runFiber->stackTop - 1) = args[1];
   }
 
   // Unlike run, this does not remember the calling fiber. Instead, it
@@ -339,9 +339,9 @@ DEF_NATIVE(fiber_try)
   runFiber->callerIsTrying = true;
 
   // If the fiber was yielded, make the yield call return null.
-  if (runFiber->stackSize > 0)
+  if (runFiber->stackTop > runFiber->stack)
   {
-    runFiber->stack[runFiber->stackSize - 1] = NULL_VAL;
+    *(runFiber->stackTop - 1) = NULL_VAL;
   }
 
   return PRIM_RUN_FIBER;
@@ -356,7 +356,7 @@ DEF_NATIVE(fiber_yield)
   fiber->callerIsTrying = false;
 
   // Make the caller's run method return null.
-  caller->stack[caller->stackSize - 1] = NULL_VAL;
+  *(caller->stackTop - 1) = NULL_VAL;
 
   // Return the fiber to resume.
   args[0] = OBJ_VAL(caller);
@@ -372,13 +372,13 @@ DEF_NATIVE(fiber_yield1)
   fiber->callerIsTrying = false;
 
   // Make the caller's run method return the argument passed to yield.
-  caller->stack[caller->stackSize - 1] = args[1];
+  *(caller->stackTop - 1) = args[1];
 
   // When the yielding fiber resumes, we'll store the result of the yield call
   // in its stack. Since Fiber.yield(value) has two arguments (the Fiber class
   // and the value) and we only need one slot for the result, discard the other
   // slot now.
-  fiber->stackSize--;
+  fiber->stackTop--;
 
   // Return the fiber to resume.
   args[0] = OBJ_VAL(caller);
