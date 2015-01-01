@@ -224,6 +224,15 @@ DEF_NATIVE(fiber_new)
   RETURN_OBJ(newFiber);
 }
 
+DEF_NATIVE(fiber_abort)
+{
+  if (!validateString(vm, args, 1, "Error message")) return PRIM_ERROR;
+
+  // Move the error message to the return position.
+  args[0] = args[1];
+  return PRIM_ERROR;
+}
+
 DEF_NATIVE(fiber_call)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
@@ -1048,6 +1057,7 @@ void wrenInitializeCore(WrenVM* vm)
   vm->fiberClass = defineClass(vm, "Fiber");
   NATIVE(vm->fiberClass->obj.classObj, " instantiate", fiber_instantiate);
   NATIVE(vm->fiberClass->obj.classObj, "new ", fiber_new);
+  NATIVE(vm->fiberClass->obj.classObj, "abort ", fiber_abort);
   NATIVE(vm->fiberClass->obj.classObj, "yield", fiber_yield);
   NATIVE(vm->fiberClass->obj.classObj, "yield ", fiber_yield1);
   NATIVE(vm->fiberClass, "call", fiber_call);
