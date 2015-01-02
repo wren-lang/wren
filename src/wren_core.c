@@ -1090,6 +1090,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->fnClass, "call              ", fn_call14);
   NATIVE(vm->fnClass, "call               ", fn_call15);
   NATIVE(vm->fnClass, "call                ", fn_call16);
+  // TODO: "arity" getter.
   NATIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = defineClass(vm, "Null");
