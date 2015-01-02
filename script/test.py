@@ -231,3 +231,6 @@ else:
 for key in sorted(skipped.keys()):
   print ('Skipped ' + color.YELLOW + str(skipped[key]) + color.DEFAULT +
        ' tests: ' + key)
+
+if failed != 0:
+  sys.exit(1)
