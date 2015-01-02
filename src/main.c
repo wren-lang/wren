@@ -81,10 +81,10 @@ static int runRepl(WrenVM* vm)
 
     char* line = NULL;
     size_t size = 0;
-    ssize_t num_read = getline(&line, &size, stdin);
+    ssize_t numRead = getline(&line, &size, stdin);
 
     // If stdin was closed (usually meaning the user entered Ctrl-D), exit.
-    if (feof(stdin) || num_read == -1)
+    if (numRead == -1 || feof(stdin))
     {
       printf("\n");
       return 0;
