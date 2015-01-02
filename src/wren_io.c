@@ -3,7 +3,11 @@
 #if WREN_USE_LIB_IO
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
+
+// TODO: this is a somewhat arbitrary limit, do something smarter?
+#define MAX_READ_LEN 1024
 
 // This string literal is generated automatically from io.wren. Do not edit.
 static const char* libSource =
@@ -87,6 +91,11 @@ static const char* libSource =
 "    IO.writeString_(obj.toString)\n"
 "    return obj\n"
 "  }\n"
+"\n"
+"  static read(prompt) {\n"
+"    IO.write(prompt)\n"
+"    return IO.read\n"
+"  }\n"
 "}\n";
 
 static void ioWriteString(WrenVM* vm)
@@ -94,6 +103,18 @@ static void ioWriteString(WrenVM* vm)
   const char* s = wrenGetArgumentString(vm, 1);
   // TODO: Check for null.
   printf("%s", s);
+}
+
+static void ioRead(WrenVM* vm)
+{
+  char buffer[MAX_READ_LEN];
+  char* result = fgets(buffer, MAX_READ_LEN, stdin);
+
+  if (result == NULL) {
+    // TODO: handle error here
+  }
+
+  wrenReturnString(vm, buffer, strlen(buffer));
 }
 
 static void ioClock(WrenVM* vm)
@@ -106,6 +127,7 @@ void wrenLoadIOLibrary(WrenVM* vm)
   wrenInterpret(vm, "Wren IO library", libSource);
   wrenDefineStaticMethod(vm, "IO", "writeString_", 1, ioWriteString);
   wrenDefineStaticMethod(vm, "IO", "clock", 0, ioClock);
+  wrenDefineStaticMethod(vm, "IO", "read", 0, ioRead);
 }
 
 #endif

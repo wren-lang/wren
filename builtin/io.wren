@@ -78,4 +78,9 @@ class IO {
     IO.writeString_(obj.toString)
     return obj
   }
+
+  static read(prompt) {
+    IO.write(prompt)
+    return IO.read
+  }
 }
