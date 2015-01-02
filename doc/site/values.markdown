@@ -49,7 +49,7 @@ A range is a little object that represents a consecutive range of numbers. They 
 This creates a range from three two eight, including eight itself. If you want a half-inclusive range, use `...`:
 
     :::dart
-    4..6
+    4...6
 
 This creates a range from four to six *not* including six itself. Ranges are commonly used for [looping](looping.html) over a sequences of numbers, but are useful in other places too. You can pass them to a [list](lists.html)'s subscript operator to return a subset of the list, for example:
 
