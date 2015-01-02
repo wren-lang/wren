@@ -789,6 +789,7 @@ static void nextToken(Parser* parser)
         makeToken(parser, TOKEN_LINE);
         return;
 
+      case '\t':
       case ' ':
         // Skip forward until we run out of whitespace.
         while (peekChar(parser) == ' ') nextChar(parser);
