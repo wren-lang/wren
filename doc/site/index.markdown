@@ -7,7 +7,7 @@ in a Lua-sized package.
     IO.print("Hello, world!")
 
     class Wren {
-      adjectives = ["sm\nall", "clean", "fast"]
+      adjectives = ["small", "clean", "fast"]
       languageType {
         "scripting"
       }
