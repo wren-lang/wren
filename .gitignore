@@ -17,3 +17,7 @@ scratch.wren
 
 # The baseline file is machine-specific, so doesn't get checked in.
 benchmark/baseline.txt
+
+# built docs get copied here, which is presumed to be a separate checkout of
+# the repo so they can be pushed to GitHub Pages.
+gh-pages/

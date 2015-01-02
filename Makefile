@@ -60,3 +60,7 @@ docs:
 # Continuously generate the Wren site.
 watchdocs:
 	@./script/generate_docs.py --watch
+
+# Build the docs and copy them to a local "gh-pages" directory.
+gh-pages: docs
+	cp -r build/docs/. gh-pages
