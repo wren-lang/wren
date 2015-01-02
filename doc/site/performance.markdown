@@ -79,9 +79,9 @@ Even though most benchmarks aren't worth the pixels they're printed on, people s
   </tr>
 </table>
 
-Higher scores (longer bars) are better. The score is the inverse of the running time, so if one language's score is twice another's, that means the language is twice as fast. Each benchmark is run ten times and the best time is kept. It only measures the time taken to execute the benchmarked code itself, not interpreter startup.
+Longer bars are better. The score is the inverse of the running time, so if one language's score is twice another's, that means the language is twice as fast. Each benchmark is run ten times and the best time is kept. It only measures the time taken to execute the benchmarked code itself, not interpreter startup.
 
-These were run on my MacBook Pro 2.3 GHz Intel Core i7 with 16 GB of 1,600 MHz DDR3 RAM. Tested against Lua 5.2.3, LuaJIT 2.0.2, Python 2.7.5, Python 3.3.4, ruby 2.0.0p247. LuaJIT is run with the JIT *disabled* (i.e. in bytecode interpreter mode) since all of the other languages are bytecode interpreters. LuaJIT with the JIT enabled is *much* faster than all of the other languages benchmarked, including Wren, because Mike Pall is a robot from the future.
+These were run on my MacBook Pro 2.3 GHz Intel Core i7 with 16 GB of 1,600 MHz DDR3 RAM. Tested against Lua 5.2.3, LuaJIT 2.0.2, Python 2.7.5, Python 3.3.4, ruby 2.0.0p247. LuaJIT is run with the JIT *disabled* (i.e. in bytecode interpreter mode) since I want to support platforms where JIT-compilation is disallowed. LuaJIT with the JIT enabled is *much* faster than all of the other languages benchmarked, including Wren, because Mike Pall is a robot from the future.
 
 The benchmark harness and programs are [here](https://github.com/munificent/wren/tree/master/benchmark).
 
@@ -142,7 +142,7 @@ Using computed gotos gives you a separate branch point at the end of each instru
 
 ### A single-pass compiler
 
-Compile time is a relatively small component of a language's performance: code only has to be compiled once but a given line of code may be run many times. Still, Wren's compiler is quite fast.
+Compile time is a relatively small component of a language's performance: code only has to be compiled once but a given line of code may be run many times. However, fast compilation helps with *startup* speed&mdash;the time it takes to get anything up and running. For that, Wren's compiler is quite fast.
 
 It's modeled after Lua's compiler. Instead of tokenizing and then parsing to create a bunch of AST structures which are then consumed and deallocated by later phases, it emits code directly during parsing. This means it does minimal memory allocation during a parse and has very little overhead.
 

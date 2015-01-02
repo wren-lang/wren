@@ -1,7 +1,7 @@
 ^title Error Handling
 ^category language
 
-Errors come in a couple of different fun flavors.
+Errors come in a few fun flavors.
 
 ## Syntax errors
 
@@ -47,7 +47,7 @@ If you run this, Wren will print:
     :::text
     Foo does not implement method 'someRandomMethod'.
 
-Then it exits. Unlike some other languages, Wren will not try to proceed after a runtime error has occurred. A runtime error implies there's a bug in your code and it wants to draw your attention to it. To help you out, it prints a stack trace showing where in the code the error occurred, and all of the method calls that led to it.
+Then it stops executing code. Unlike some other languages, Wren doesn't keep plugging away after a runtime error has occurred. A runtime error implies there's a bug in your code and it wants to draw your attention to it. To help you out, it prints a stack trace showing where in the code the error occurred, and all of the method calls that led to it.
 
 Another common runtime error is passing an argument of the wrong type to a method. For example, lists are indexed using a number. If you try to pass some other type, it's an error:
 
@@ -67,7 +67,7 @@ These are the most two common kinds of runtime errors, but there are others. Stu
 
 Most of the time, runtime errors indicate a bug in your code and the best solution is to fix the bug. However, sometimes it's useful to be able to handle them at, uh, runtime.
 
-For simplicity's sake, Wren does not have exception handling. Instead, it takes advantage of [fibers](fibers.html) for handling errors. When a runtime error occurs, the current fiber is aborted. Normally, Wren will also abort any fibers that invoked that one, all the way to the main fiber, and then exit the VM.
+To keep the language simpler, Wren does not have exception handling. Instead, it takes advantage of [fibers](fibers.html) for handling errors. When a runtime error occurs, the current fiber is aborted. Normally, Wren will also abort any fibers that invoked that one, all the way to the main fiber, and then exit the VM.
 
 However, you can run a fiber using the `try` method. If a runtime error occurs in the called fiber, the error is captured and the `try` method returns the error message as a string.
 
