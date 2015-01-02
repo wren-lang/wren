@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Error Handling – Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="index.html">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+    </ul>
+    <section>
+      <h2>language</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="branching.html">Branching</a></li>
+        <li><a href="looping.html">Looping</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>types</h2>
+      <ul>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="fibers.html">Fibers</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="core-library.html">Core Library</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>Error Handling</h1>
+    <p>Errors come in a few fun flavors.</p>
+<h2>Syntax errors <a href="#syntax-errors" name="syntax-errors" class="header-anchor">#</a></h2>
+<p>The first errors you're likely to run into are syntax errors. These include simple bugs where your code doesn't follow the language's grammar, like:</p>
+<div class="codehilite"><pre><span class="m">1</span> <span class="o">+</span> <span class="o">*</span> <span class="m">2</span>
+</pre></div>
+
+
+<p>Wren will detect these errors as soon as it tries to read your code. When it hits one, you'll get a friendly error message, like:</p>
+<div class="codehilite"><pre>[script.wren line 1] Error on &#39;*&#39;: Unexpected token for expression.
+</pre></div>
+
+
+<p>Some slightly more "semantic" errors fall into this bucket too. Things like using a variable that hasn't been defined, or declaring two variables with the same name in the same scope. So if you do:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;once&quot;</span>
+<span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;twice&quot;</span>
+</pre></div>
+
+
+<p>Wren tells you:</p>
+<div class="codehilite"><pre>[script.wren line 2] Error on &#39;a&#39;: Global variable is already defined.
+</pre></div>
+
+
+<p>Note that it does this before it executes <em>any</em> code. Unlike some other scripting languages, Wren tries to help you find your errors as soon as possible when it can.</p>
+<p>If it starts running your code, you can be sure you don't have any errors related to syntax or variable scope.</p>
+<h2>Runtime errors <a href="#runtime-errors" name="runtime-errors" class="header-anchor">#</a></h2>
+<p>Alas, just fixing all of the "compile-time" errors doesn't mean your code does what you want. Your program may still have errors that can't be detected statically. Since they can't be found until your code is run, they're called "runtime" errors.</p>
+<p>Most runtime errors come from the VM itself. They arise from code trying to perform an operation that the VM can't do. The most common error is a "method not found" one. If you call a method on an object and its class (and all of its superclasses) don't define that method, there's nothing Wren can do:</p>
+<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Foo</span> <span class="p">{}</span>
+
+<span class="kd">var</span> <span class="n">foo</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Foo</span>
+<span class="n">foo</span><span class="p">.</span><span class="n">someRandomMethod</span>
+</pre></div>
+
+
+<p>If you run this, Wren will print:</p>
+<div class="codehilite"><pre>Foo does not implement method &#39;someRandomMethod&#39;.
+</pre></div>
+
+
+<p>Then it stops executing code. Unlike some other languages, Wren doesn't keep plugging away after a runtime error has occurred. A runtime error implies there's a bug in your code and it wants to draw your attention to it. To help you out, it prints a stack trace showing where in the code the error occurred, and all of the method calls that led to it.</p>
+<p>Another common runtime error is passing an argument of the wrong type to a method. For example, lists are indexed using a number. If you try to pass some other type, it's an error:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">]</span>
+</pre></div>
+
+
+<p>This exits with:</p>
+<div class="codehilite"><pre>Subscript must be a number or a range.
+[script.wren line 2] in (script)
+</pre></div>
+
+
+<p>These are the most two common kinds of runtime errors, but there are others. Stuff like out of bounds errors on lists, calling a function with the wrong number of arguments, etc.</p>
+<h2>Handling runtime errors <a href="#handling-runtime-errors" name="handling-runtime-errors" class="header-anchor">#</a></h2>
+<p>Most of the time, runtime errors indicate a bug in your code and the best solution is to fix the bug. However, sometimes it's useful to be able to handle them at, uh, runtime.</p>
+<p>To keep the language simpler, Wren does not have exception handling. Instead, it takes advantage of <a href="fibers.html">fibers</a> for handling errors. When a runtime error occurs, the current fiber is aborted. Normally, Wren will also abort any fibers that invoked that one, all the way to the main fiber, and then exit the VM.</p>
+<p>However, you can run a fiber using the <code>try</code> method. If a runtime error occurs in the called fiber, the error is captured and the <code>try</code> method returns the error message as a string.</p>
+<p>For example, if you run this program:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="m">123.</span><span class="n">badMethod</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="n">error</span> <span class="o">=</span> <span class="n">fiber</span><span class="p">.</span><span class="k">try</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Caught error: &quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+</pre></div>
+
+
+<p>It prints:</p>
+<div class="codehilite"><pre>Num does not implement method &#39;badMethod&#39;.
+</pre></div>
+
+
+<p>The called fiber can no longer be used, but any other fibers can proceed as usual. When a fiber has been aborted because of a runtime error, you can also get the error from the fiber object. Continuing the above example:</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="p">.</span><span class="n">error</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This also prints:</p>
+<div class="codehilite"><pre>Num does not implement method &#39;badMethod&#39;.
+</pre></div>
+
+
+<p>If you have a chain of fiber calls and a runtime error occurs, it will walk the chain looking for a <code>try</code> call, so this can also be used to capture runtime errors generated in fibers that are invoked by the one you called <code>try</code> on.</p>
+<h2>Creating runtime errors <a href="#creating-runtime-errors" name="creating-runtime-errors" class="header-anchor">#</a></h2>
+<p>Most runtime errors come from within the Wren VM, but you may want to be able to cause your own runtime errors to occur. This can be done by calling the <code>abort()</code> static method on <code>Fiber</code>:</p>
+<div class="codehilite"><pre><span class="n">Fiber</span><span class="p">.</span><span class="n">abort</span><span class="p">(</span><span class="s2">&quot;Something bad happened&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>You must pass in an error message, and it must be a string.</p>
+<h2>Failures <a href="#failures" name="failures" class="header-anchor">#</a></h2>
+<p>The last flavor of errors is the highest-level one. All of the above errors indicate <em>bugs</em>&mdash;places where the code itself is incorrect. But some errors indicate that the code simply couldn't accomplish its task for unforeseeable reasons. We'll call these "failures".</p>
+<p>Consider a program that reads in a string of input from the user and parses it to a number. Many strings are not valid numbers, so this parsing can fail. The only way the program could prevent that failure is by validating the string before its parsed, but validating that a string is a number is pretty much the same thing as parsing it.</p>
+<p>For cases like this where failure can occur and the program <em>will</em> want to handle it, fibers and <code>try</code> are too coarse-grained to work with. Instead, these operations will indicate failure by <em>returning</em> some sort of error indication.</p>
+<p>For example, a method for parsing a number could return a number on success and <code>null</code> to indicate parsing failed. Since Wren is dynamically typed, it's easy and natural for a method to return different types of values.</p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Values – Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="index.html">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+    </ul>
+    <section>
+      <h2>language</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="branching.html">Branching</a></li>
+        <li><a href="looping.html">Looping</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>types</h2>
+      <ul>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="fibers.html">Fibers</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="core-library.html">Core Library</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>Values</h1>
+    <p>Values are the built-in object types that all other objects are composed of.
+They can be created through <em>literals</em>, expressions that evaluate to a value.</p>
+<h2>Booleans <a href="#booleans" name="booleans" class="header-anchor">#</a></h2>
+<p>A boolean value represents truth or falsehood. There are two boolean literals,
+<code>true</code> and <code>false</code>. Its class is <code>Bool</code>.</p>
+<h2>Numbers <a href="#numbers" name="numbers" class="header-anchor">#</a></h2>
+<p>Like other scripting languages, Wren has a single numeric type: double-precision floating point. Number literals look like you expect coming from other languages:</p>
+<div class="codehilite"><pre><span class="m">0</span>
+<span class="m">1234</span>
+<span class="o">-</span><span class="m">5678</span>
+<span class="m">3.14159</span>
+<span class="m">1.0</span>
+<span class="o">-</span><span class="m">12.34</span>
+</pre></div>
+
+
+<p>Numbers are instances of the <code>Num</code> class.</p>
+<h2>Strings <a href="#strings" name="strings" class="header-anchor">#</a></h2>
+<p>Strings are chunks of text. String literals are surrounded in double quotes:</p>
+<div class="codehilite"><pre><span class="s2">&quot;hi there&quot;</span>
+</pre></div>
+
+
+<p>A couple of escape characters are supported:</p>
+<div class="codehilite"><pre><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="c1">// Newline.</span>
+<span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="c1">// A double quote character.</span>
+<span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="c1">// A backslash.</span>
+</pre></div>
+
+
+<p>Their class is <code>String</code>.</p>
+<h2>Ranges <a href="#ranges" name="ranges" class="header-anchor">#</a></h2>
+<p>A range is a little object that represents a consecutive range of numbers. They don't have their own dedicated literal syntax. Instead, the number class implements <code>..</code> and <code>...</code> operators to create them:</p>
+<div class="codehilite"><pre><span class="m">3.</span><span class="p">.</span><span class="m">8</span>
+</pre></div>
+
+
+<p>This creates a range from three two eight, including eight itself. If you want a half-inclusive range, use <code>...</code>:</p>
+<div class="codehilite"><pre><span class="m">4.</span><span class="p">.</span><span class="m">6</span>
+</pre></div>
+
+
+<p>This creates a range from four to six <em>not</em> including six itself. Ranges are commonly used for <a href="looping.html">looping</a> over a sequences of numbers, but are useful in other places too. You can pass them to a <a href="lists.html">list</a>'s subscript operator to return a subset of the list, for example:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">]</span>
+<span class="kd">var</span> <span class="n">slice</span> <span class="o">=</span> <span class="n">list</span><span class="p">[</span><span class="m">1.</span><span class="p">.</span><span class="m">3</span><span class="p">]</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">slice</span><span class="p">)</span> <span class="c1">// [&quot;b&quot;, &quot;c&quot;, &quot;d&quot;]</span>
+</pre></div>
+
+
+<h2>Null <a href="#null" name="null" class="header-anchor">#</a></h2>
+<p>Wren has a special value <code>null</code>, which is the only instance of the class <code>Null</code>.
+(Note the difference in case.) It functions a bit like <code>void</code> in some
+languages: it indicates the absence of a value. If you call a method that
+doesn't return anything and get its returned value, you get <code>null</code> back.</p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

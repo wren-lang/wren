@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Method Calls – Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="index.html">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+    </ul>
+    <section>
+      <h2>language</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="branching.html">Branching</a></li>
+        <li><a href="looping.html">Looping</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>types</h2>
+      <ul>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="fibers.html">Fibers</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="core-library.html">Core Library</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>Method Calls</h1>
+    <p><strong>TODO: Refactor <code>method-calls</code> and <code>classes</code> into using and creating classes.</strong></p>
+<p>Wren is object-oriented, so most code consists of method calls. Most of them
+look like so:</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
+<span class="n">items</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;another&quot;</span><span class="p">)</span>
+<span class="n">items</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>You have a <em>receiver</em> on the left, followed by a <code>.</code>, then a name and an
+argument list in parentheses. Semantically, a method call works like this:</p>
+<ol>
+<li>Look up the class of the receiver.</li>
+<li>Look up the method on it by name.</li>
+<li>Invoke the method.</li>
+</ol>
+<p>Methods that do not take any arguments leave off the <code>()</code>:</p>
+<div class="codehilite"><pre><span class="n">text</span><span class="p">.</span><span class="n">length</span>
+</pre></div>
+
+
+<p>These are special "getters" or "accessors" in other languages. In Wren, they're
+just methods.</p>
+<h2>Arity <a href="#arity" name="arity" class="header-anchor">#</a></h2>
+<p>Unlike most dynamic languages, the number of arguments to a method is part of
+its call signature. Methods with different signatures are distinct from each
+other. In technical terms, this means you can overload by <em>arity</em>.</p>
+<p>In normal human terms, it means you can overload by number of parameters. These
+are calls to two different methods:</p>
+<div class="codehilite"><pre><span class="n">items</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;one arg&quot;</span><span class="p">)</span>
+<span class="n">items</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;first&quot;</span><span class="p">,</span> <span class="s2">&quot;second&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Instead of having a single <code>add</code> method where you have to check for "undefined"
+or missing arguments, Wren just treats them as different methods that you can
+implement separately.</p>
+<h2>Setters <a href="#setters" name="setters" class="header-anchor">#</a></h2>
+<p>Modifying a public property of some object looks like you expect:</p>
+<div class="codehilite"><pre><span class="n">point</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="m">123</span>
+</pre></div>
+
+
+<p>You can probably guess by now, but again this is just another special syntax
+for a regular method call. The semantics for the above are "invoke the <code>x=</code>
+method on <code>point</code>, passing <code>123</code> as an argument."</p>
+<h2>Operators <a href="#operators" name="operators" class="header-anchor">#</a></h2>
+<p>Wren has most of the same operators you know and love from C and friends, with
+the same precedence and associativity. They are listed here because they are
+just a special syntax for regular method calls.</p>
+<p>Wren has a few prefix operators:</p>
+<div class="codehilite"><pre><span class="o">!</span> <span class="o">~</span> <span class="o">-</span>
+</pre></div>
+
+
+<p>They are just method calls on the operand without any other arguments. An
+expression like <code>!possible</code> just means "call the <code>!</code> method on <code>possible</code>".</p>
+<p>We have a few other operators to play with. The remaining ones are
+infix&mdash;they have operators on either side. In order of increasing
+precedence, they are:</p>
+<div class="codehilite"><pre><span class="o">==</span> <span class="o">!=</span>
+<span class="o">&lt;</span> <span class="o">&gt;</span> <span class="o">&lt;=</span> <span class="o">&gt;=</span>
+<span class="p">..</span> <span class="p">...</span>
+<span class="o">|</span> <span class="o">&amp;</span>
+<span class="o">+</span> <span class="o">-</span>
+<span class="o">*</span> <span class="o">/</span> <span class="o">%</span>
+</pre></div>
+
+
+<p>Like prefix operators, they are just a funny way of writing a method call. The
+left operand is the receiver, and the right operand gets passed to it. So
+<code>a + b</code> is semantically interpreted as "invoke the <code>+</code> method on <code>a</code>, passing
+it <code>b</code>".</p>
+<p>Most of these are probably familiar already. The <code>..</code> and <code>...</code> operators are
+"range" operators. The number type implements those and returns a range object,
+which can in turn be iterated over using a <code>for</code> <a href="looping.html">loop</a>.</p>
+<h2>Subscript operators <a href="#subscript-operators" name="subscript-operators" class="header-anchor">#</a></h2>
+<p>Most languages use square brackets (<code>[]</code>) for working with collection-like
+objects. For example:</p>
+<div class="codehilite"><pre><span class="n">first</span> <span class="o">=</span> <span class="n">list</span><span class="p">[</span><span class="m">0</span><span class="p">]</span>
+<span class="n">map</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span>
+</pre></div>
+
+
+<p>You know the refrain by now. In Wren, these are just method calls. Subscript
+operators can also be overloaded by arity, which is useful for things like
+multi-dimensional arrays:</p>
+<div class="codehilite"><pre><span class="n">table</span><span class="p">[</span><span class="m">3</span><span class="p">,</span> <span class="m">5</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span>
+</pre></div>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

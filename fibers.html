@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Fibers – Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="index.html">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+    </ul>
+    <section>
+      <h2>language</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="branching.html">Branching</a></li>
+        <li><a href="looping.html">Looping</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>types</h2>
+      <ul>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="fibers.html">Fibers</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="core-library.html">Core Library</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>Fibers</h1>
+    <p>Fibers are a key part of Wren. They form its execution model, its concurrency story and take the place of exceptions in <a href="error-handling.html">error handling</a>.</p>
+<p>They are a bit like threads except they are <em>cooperatively</em> scheduled. That means Wren doesn't pause one fiber and switch to another until you tell it to. You don't have to worry about context switches at random times and all of the headaches those cause.</p>
+<p>Fibers are managed entirely by Wren, so they don't use OS thread resources, or require heavyweight context switches. They just need a bit of memory for their stacks. A fiber will get garbage collected like any other object when not referenced any more, so you can create them freely.</p>
+<p>They are lightweight enough that you can, for example, have a separate fiber for each entity in a game. Wren can handle thousands of them without any trouble. For example, when you run Wren in interactive mode, it creates a new fiber for every line of code you type in.</p>
+<h2>Creating fibers <a href="#creating-fibers" name="creating-fibers" class="header-anchor">#</a></h2>
+<p>All Wren code runs within the context of a fiber. When you first start a Wren script, a main fiber is created for you automatically. You can spawn new fibers using the <code>Fiber</code> class's constructor:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;This runs in a separate fiber.&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Creating a fiber does not immediately run it. It's just a first class bundle of code sitting there waiting to be activated, a bit like a <a href="functions.html">function</a>.</p>
+<h2>Invoking fibers <a href="#invoking-fibers" name="invoking-fibers" class="header-anchor">#</a></h2>
+<p>Once you've created a fiber, you can invoke it (which suspends the current fiber) by calling its <code>call</code> method:</p>
+<div class="codehilite"><pre><span class="n">fiber</span><span class="p">.</span><span class="n">call</span>
+</pre></div>
+
+
+<p>The called fiber will execute its code until it reaches the end of its body or until it passes control to another fiber. If it reaches the end of its body, it's considered <em>done</em>:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Hi&quot;</span><span class="p">)</span> <span class="p">}</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">isDone</span> <span class="c1">// false</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">isDone</span> <span class="c1">// true</span>
+</pre></div>
+
+
+<p>When it finishes, it automatically resumes the fiber that called it. It's a runtime error to try to call a fiber that is already done.</p>
+<h2>Yielding <a href="#yielding" name="yielding" class="header-anchor">#</a></h2>
+<p>The main difference between fibers and functions is that a fiber can be suspended in the middle of its operation and then resumed later. Calling another fiber is one way to suspend a fiber, but that's more or less the same as one function calling another.</p>
+<p>Things get interesting when a fiber <em>yields</em>. A yielded fiber passes control <em>back</em> to the fiber that ran it, but <em>remembers where it is</em>. The next time the fiber is called, it picks up right where it left off and keeps going.</p>
+<p>You can make a fiber yield by calling the static <code>yield</code> method on <code>Fiber</code>:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;fiber 1&quot;</span><span class="p">)</span>
+  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;fiber 2&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;main 1&quot;</span><span class="p">)</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;main 2&quot;</span><span class="p">)</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;main 3&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This program prints:</p>
+<div class="codehilite"><pre>main 1
+fiber 1
+main 2
+fiber 2
+main 3
+</pre></div>
+
+
+<p>Note that even though this program has <em>concurrency</em>, it's still <em>deterministic</em>. You can reason precisely about what it's doing and aren't at the mercy of a thread scheduler playing Russian roulette with your code.</p>
+<h2>Passing values <a href="#passing-values" name="passing-values" class="header-anchor">#</a></h2>
+<p>Calling and yielding fibers is used for passing control, but it can also pass <em>data</em>. When you call a fiber, you can optionally pass a value to it. If the fiber has yielded and is waiting to resume, the value becomes the return value of the <code>yield</code> call:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="n">result</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;discarded&quot;</span><span class="p">)</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;sent&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This prints "sent". Note that the first value sent to the fiber through call is ignored. That's because the fiber isn't waiting on a <code>yield</code> call, so there's no where for the sent value to go.</p>
+<p>Fibers can also pass values <em>back</em> when they yield. If you pass an argument to <code>yield</code>, that will become the return value of the <code>call</code> that was used to invoke the fiber:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="s2">&quot;sent&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This also prints "sent".</p>
+<h2>Full coroutines <a href="#full-coroutines" name="full-coroutines" class="header-anchor">#</a></h2>
+<p>What we've seen so far is very similar to what you can do with languages like Python and C# that have <em>generators</em>. Those let you define a function call that you can suspend and resume. When using the function, it appears like a sequence you can iterate over.</p>
+<p>Wren's fibers can do that, but they can do much more. Like Lua, they are full <em>coroutines</em>&mdash;they can suspend from anywhere in the callstack. For example:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="p">(</span><span class="m">1.</span><span class="p">.</span><span class="m">10</span><span class="p">).</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="n">i</span><span class="o">|</span>
+    <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Here, we're calling <code>yield</code> from within a <a href="functions.html">function</a> being passed to the <code>map</code> method. This works fine in Wren because that inner <code>yield</code> call will suspend the call to <code>map</code> and the function passed to it as a callback.</p>
+<h2>Transferring control <a href="#transferring-control" name="transferring-control" class="header-anchor">#</a></h2>
+<p>Fibers have one more trick up their sleeves. When you execute a fiber using <code>call</code>, the fiber tracks which fiber it will return to when it yields. This lets you build up a chain of fiber calls that will eventually unwind back to the main fiber when all of the called ones yield or finish.</p>
+<p>This works fine for most uses, but sometimes you want something a little more freeform. For example, you may be creating a <a href="http://en.wikipedia.org/wiki/Finite-state_machine">state machine</a> where each state is a fiber. When you switch from one state to the next, you <em>don't</em> want to build an implicit stack of fibers to return to. There is no "returning" in this case. You just want to <em>transfer</em> to the next fiber and forget about the previous one entirely. (This is analogous to <a href="http://en.wikipedia.org/wiki/Tail_call">tail call elimination</a> for regular function calls.)</p>
+<p>To enable this, fibers also have a <code>run</code> method. This begins executing that fiber, and "forgets" the previous one. If the running fiber yields or ends, it will transfer control back to the last <em>called</em> one. (If there are no called fibers, it will end execution.)</p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

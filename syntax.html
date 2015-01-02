@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Syntax – Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="index.html">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+    </ul>
+    <section>
+      <h2>language</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="branching.html">Branching</a></li>
+        <li><a href="looping.html">Looping</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>types</h2>
+      <ul>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="fibers.html">Fibers</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="core-library.html">Core Library</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>Syntax</h1>
+    <p>Wren's syntax is designed to be familiar to people coming from C-like languages while being as simple and expressive as possible within that framework.</p>
+<p>Scripts are stored in plain text files with a <code>.wren</code> file extension. Wren does
+not compile ahead of time: programs are run directly from source, from top to
+bottom like a typical scripting language. (Internally, programs are compiled to
+bytecode for efficiency, but that's an implementation detail).</p>
+<h2>Comments <a href="#comments" name="comments" class="header-anchor">#</a></h2>
+<p>Line comments start with <code>//</code> and end at the end of the line:</p>
+<div class="codehilite"><pre><span class="c1">// This is a comment.</span>
+</pre></div>
+
+
+<p>Block comments start with <code>/*</code> and end with <code>*/</code>. They can span multiple lines
+or be within a single one. Unlike C, block comments can nest in Wren:</p>
+<div class="codehilite"><pre><span class="cm">/* This is /* a nested */</span> <span class="n">comment</span><span class="p">.</span> <span class="o">*/</span>
+</pre></div>
+
+
+<h2>Reserved words <a href="#reserved-words" name="reserved-words" class="header-anchor">#</a></h2>
+<p>Some people like to see all of the reserved words in a programming language in
+one lump. If you're one of those folks, here you go:</p>
+<div class="codehilite"><pre><span class="k">break</span> <span class="kd">class</span> <span class="nc">else</span> <span class="k">for</span> <span class="k">if</span> <span class="k">in</span> <span class="k">is</span> <span class="k">return</span> <span class="kd">static</span> <span class="kd">var</span> <span class="k">while</span>
+</pre></div>
+
+
+<p>Wren also has a few predefined identifiers:</p>
+<div class="codehilite"><pre><span class="kc">false</span> <span class="kc">null</span> <span class="k">this</span> <span class="kc">true</span>
+</pre></div>
+
+
+<h2>Names <a href="#names" name="names" class="header-anchor">#</a></h2>
+<p>Identifiers are similar to other programming languages. They start with a letter or underscore and may contain letters, digits, and underscores. Case is sensitive.</p>
+<div class="codehilite"><pre><span class="n">hi</span>
+<span class="n">camelCase</span>
+<span class="n">PascalCase</span>
+<span class="n">_under_score</span>
+<span class="n">abc123</span>
+<span class="n">ALL_CAPS</span>
+</pre></div>
+
+
+<p>Identifiers that start with underscore (<code>_</code>) are special in Wren. They are used to indicate fields in <a href="classes.html">classes</a>.</p>
+<h2>Statement terminators <a href="#statement-terminators" name="statement-terminators" class="header-anchor">#</a></h2>
+<p>Officially, statements are terminated by a semicolon (<code>;</code>) like in other
+languages in the C tradition. However, Wren treats newlines as equivalent
+to a semicolon whenever it makes sense. In practice, this means you almost
+never write <code>;</code> unless you want to cram a bunch of statements on one line.</p>
+<div class="codehilite"><pre><span class="c1">// Two statements:</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;hi&quot;</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;bye&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Sometimes, though, a statement doesn't fit on a single line and treating the
+newline as a semicolon would trip things up. To handle that, Wren has a very
+simple rule: It ignores a newline following any token that can't end a
+statement.</p>
+<p>Everywhere else, a newline is treated just like a <code>;</code>. Note that this is a very
+different system from how JavaScript handles semicolons. If you've been burned
+there, don't worry, you should be fine here.</p>
+<h2>Blocks <a href="#blocks" name="blocks" class="header-anchor">#</a></h2>
+<p>Wren uses curly braces to define <em>blocks</em>. Things like <a href="branching.html">control flow</a> and <a href="looping.html">looping</a> allow block bodies. <a href="method-calls.html">Method</a> and <a href="functions.html">function</a> bodies are also blocks. For example:</p>
+<div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">happy</span> <span class="o">&amp;&amp;</span> <span class="n">knowIt</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">hands</span><span class="p">.</span><span class="n">clap</span>
+<span class="p">}</span> <span class="k">else</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;sad&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Here we have a block for the then case, and just a single expression for the else. Blocks have two similar but not identical forms. If a there is a newline after the opening <code>{</code>, then the body contains a series of statements:</p>
+<div class="codehilite"><pre><span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;one&quot;</span><span class="p">)</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;two&quot;</span><span class="p">)</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;three&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>If there is no newline, the block may only contain a single expression:</p>
+<div class="codehilite"><pre><span class="p">{</span> <span class="s2">&quot;this is fine&quot;</span> <span class="p">}</span>
+<span class="p">{</span> <span class="k">while</span> <span class="p">(</span><span class="k">this</span><span class="p">)</span> <span class="s2">&quot;is an error&quot;</span> <span class="p">}</span>
+</pre></div>
+
+
+<p>These are useful when defining method and function bodies. A normal block body implicitly returns <code>null</code>. If you want your method or function to return something different, you need an explicit <code>return</code> statement. However, a single-expression block with no newline after the <code>{</code> implicitly returns the result of that expression. This is a nice convenience for short methods and functions that just evaluate and return an expression.</p>
+<p><strong>TODO: Move this somewhere else:</strong></p>
+<h2>The <code>is</code> operator <a href="#the-<code>is</code>-operator" name="the-<code>is</code>-operator" class="header-anchor">#</a></h2>
+<p>The <code>is</code> keyword can be used as an infix operator in expression. It performs a
+type test. The left operand is an object and the right operand is a class. It
+evaluates to <code>true</code> if the object is an instance of the class (or one of its
+subclasses).</p>
+<p><strong>TODO: blocks, assignment, maps</strong></p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

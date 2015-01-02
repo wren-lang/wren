@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Getting Started – Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="index.html">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+    </ul>
+    <section>
+      <h2>language</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="branching.html">Branching</a></li>
+        <li><a href="looping.html">Looping</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>types</h2>
+      <ul>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="fibers.html">Fibers</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="core-library.html">Core Library</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>Getting Started</h1>
+    <p>Getting Wren up and running on your machine should be pretty straightforward. Tiny C programs with no dependencies are nice that way. If you're on a Unix or Mac and you can rock a command line, it's just:</p>
+<div class="codehilite"><pre><span class="nv">$ </span>git clone https://github.com/munificent/wren.git
+<span class="nv">$ </span><span class="nb">cd </span>wren
+<span class="nv">$ </span>make
+<span class="nv">$ </span>./wren
+</pre></div>
+
+
+<p>For Mac users, there is also an XCode project in the repo that you can use to hack on Wren. That's what I develop in. It builds fine from there but <em>may</em> not have the exact same build settings. The Makefile is the canonical way to compile it.</p>
+<p>For our Windows bretheren, there's still a little work to be done. Ideally, the repo would include a Visual Studio solution for building Wren. I don't have a Windows machine, but if you do, I would be delighted to take a patch for this.</p>
+<h2>Interactive mode <a href="#interactive-mode" name="interactive-mode" class="header-anchor">#</a></h2>
+<p>The above instructions will drop you into Wren's standalone interpreter in interactive mode. You can type in a line of code, and it will immediately execute it. Here's something to try:</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Or a little more exciting:</p>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="k">in</span> <span class="m">1.</span><span class="p">.</span><span class="m">10</span><span class="p">)</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Counting up &quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</pre></div>
+
+
+<p>You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw your computer to the ground and storm off.</p>
+<h2>Running scripts <a href="#running-scripts" name="running-scripts" class="header-anchor">#</a></h2>
+<p>The standalone interpreter can also load scripts from files and run them. Just pass the name of the script to wren. Create a file named "my_script.wren" in your favorite text editor and paste this into it:</p>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">yPixel</span> <span class="k">in</span> <span class="m">0.</span><span class="p">..</span><span class="m">24</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="n">y</span> <span class="o">=</span> <span class="n">yPixel</span> <span class="o">/</span> <span class="m">12</span> <span class="o">-</span> <span class="m">1</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">xPixel</span> <span class="k">in</span> <span class="m">0.</span><span class="p">..</span><span class="m">80</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="n">x</span> <span class="o">=</span> <span class="n">xPixel</span> <span class="o">/</span> <span class="m">30</span> <span class="o">-</span> <span class="m">2</span>
+    <span class="kd">var</span> <span class="n">x0</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="kd">var</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">y</span>
+    <span class="kd">var</span> <span class="n">iter</span> <span class="o">=</span> <span class="m">0</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">iter</span> <span class="o">&lt;</span> <span class="m">11</span> <span class="o">&amp;&amp;</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">&lt;=</span> <span class="m">4</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="n">x1</span> <span class="o">=</span> <span class="p">(</span><span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span>
+      <span class="kd">var</span> <span class="n">y1</span> <span class="o">=</span> <span class="m">2</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">+</span> <span class="n">y</span>
+      <span class="n">x0</span> <span class="o">=</span> <span class="n">x1</span>
+      <span class="n">y0</span> <span class="o">=</span> <span class="n">y1</span>
+      <span class="n">iter</span> <span class="o">=</span> <span class="n">iter</span> <span class="o">+</span> <span class="m">1</span>
+    <span class="p">}</span>
+    <span class="n">IO</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; .-:;+=xX$&amp; &quot;</span><span class="p">[</span><span class="n">iter</span><span class="p">])</span>
+  <span class="p">}</span>
+
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Now run:</p>
+<div class="codehilite"><pre><span class="nv">$ </span>./wren my_script.wren
+</pre></div>
+
+
+<p>Neat, right? You're a Wren programmer now! The next step is to <a href="syntax.html">read more docs</a> and learn your way around the language. If you run into bugs, or have ideas or questions, any and all of the following work:</p>
+<ul>
+<li>Tell me on twitter at <a href="https://twitter.com/intent/user?screen_name=munificentbob"><code>@munificentbob</code></a>.</li>
+<li><a href="https://github.com/munificent/wren/issues">File a ticket</a> at <a href="https://github.com/munificent/wren">the GitHub repo</a>.</li>
+<li>Send a pull request.</li>
+<li>Email me at <a href="mailto:bob@stuffwithstuff.com"><code>bob@stuffwithstuff.com</code></a>.</li>
+</ul>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

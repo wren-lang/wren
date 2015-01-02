@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Core Library – Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="index.html">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+    </ul>
+    <section>
+      <h2>language</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="branching.html">Branching</a></li>
+        <li><a href="looping.html">Looping</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>types</h2>
+      <ul>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="fibers.html">Fibers</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="core-library.html">Core Library</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>Core Library</h1>
+    <h2>Object Class <a href="#object-class" name="object-class" class="header-anchor">#</a></h2>
+<h3><strong>==</strong>(other) and <strong>!=</strong>(other) operators <a href="#**==**(other)-and-**=**(other)-operators" name="**==**(other)-and-**=**(other)-operators" class="header-anchor">#</a></h3>
+<p>Compares two objects using built-in equality. This compares numbers by value, and all other objects are compared by identity&mdash;two objects are equal only if they are the exact same object.</p>
+<h3><strong>toString</strong> <a href="#**tostring**" name="**tostring**" class="header-anchor">#</a></h3>
+<p>A default string representation of the object.</p>
+<h3><strong>type</strong> <a href="#**type**" name="**type**" class="header-anchor">#</a></h3>
+<p>The <a href="#class-class">Class</a> of the object.</p>
+<h2>Class Class <a href="#class-class" name="class-class" class="header-anchor">#</a></h2>
+<h3><strong>name</strong> <a href="#**name**" name="**name**" class="header-anchor">#</a></h3>
+<p>The name of the class.</p>
+<h2>Bool Class <a href="#bool-class" name="bool-class" class="header-anchor">#</a></h2>
+<p>Boolean values. There are two instances, <code>true</code> and <code>false</code>.</p>
+<h3><strong>!</strong> operator <a href="#****-operator" name="****-operator" class="header-anchor">#</a></h3>
+<p>Negates the value.</p>
+<div class="codehilite"><pre><span class="o">&gt;</span> <span class="o">!</span><span class="nb">true</span>
+<span class="nb">false</span>
+<span class="o">&gt;</span> <span class="o">!</span><span class="nb">false</span>
+<span class="nb">true</span>
+</pre></div>
+
+
+<h3>toString <a href="#tostring" name="tostring" class="header-anchor">#</a></h3>
+<p>The string representation of the value, either <code>"true"</code> or <code>"false"</code>.</p>
+<h2>Fiber Class <a href="#fiber-class" name="fiber-class" class="header-anchor">#</a></h2>
+<p>A lightweight coroutine. <a href="fibers.html">Here</a> is a gentle introduction.</p>
+<h3>new <strong>Fiber</strong>(function) <a href="#new-**fiber**(function)" name="new-**fiber**(function)" class="header-anchor">#</a></h3>
+<p>Creates a new fiber that executes <code>function</code> in a separate coroutine when the fiber is run. Does not immediately start running the fiber.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;I won&#39;t get printed&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h3>Fiber.<strong>yield</strong> <a href="#fiber**yield**" name="fiber**yield**" class="header-anchor">#</a></h3>
+<p>Pauses the current fiber and transfers control to the parent fiber. "Parent" here means the last fiber that was started using <code>call</code> and not <code>run</code>.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Before yield&quot;</span><span class="p">)</span>
+  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;After yield&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span>              <span class="c1">// &quot;Before yield&quot;</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;After call&quot;</span><span class="p">)</span>  <span class="c1">// &quot;After call&quot;</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span>              <span class="c1">// &quot;After yield&quot;</span>
+</pre></div>
+
+
+<p>When resumed, the parent fiber's <code>call</code> method returns <code>null</code>.</p>
+<p>If a yielded fiber is resumed by calling <code>call()</code> or <code>run()</code> with an argument, <code>yield</code> returns that value.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">)</span> <span class="c1">// &quot;value&quot;</span>
+<span class="p">}</span>
+
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span>          <span class="c1">// Run until the first yield.</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="c1">// Resume the fiber.</span>
+</pre></div>
+
+
+<p>If it was resumed by calling <code>call</code> or <code>run</code> with no argument, returns <code>null</code>.</p>
+<p>It is a runtime error to call this when there is no parent fiber to return to.</p>
+<div class="codehilite"><pre><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span> <span class="c1">// ERROR</span>
+
+<span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span> <span class="c1">// ERROR</span>
+<span class="p">}.</span><span class="n">run</span>
+</pre></div>
+
+
+<h3>Fiber.<strong>yield</strong>(value) <a href="#fiber**yield**(value)" name="fiber**yield**(value)" class="header-anchor">#</a></h3>
+<p>Similar to <code>Fiber.yield</code> but provides a value to return to the parent fiber's <code>call</code>.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">)</span> <span class="c1">// &quot;value&quot;</span>
+</pre></div>
+
+
+<h3><strong>call</strong> <a href="#**call**" name="**call**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>call</strong>(value) <a href="#**call**(value)" name="**call**(value)" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>isDone</strong> <a href="#**isdone**" name="**isdone**" class="header-anchor">#</a></h3>
+<p>Whether the fiber's main function has completed and the fiber can no longer be run. This returns <code>false</code> if the fiber is currently running or has yielded.</p>
+<h3><strong>run</strong> <a href="#**run**" name="**run**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>run</strong>(value) <a href="#**run**(value)" name="**run**(value)" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h2>Fn Class <a href="#fn-class" name="fn-class" class="header-anchor">#</a></h2>
+<p>A first class function&mdash;an object that wraps an executable chunk of code. <a href="functions.html">Here</a> is a friendly introduction.</p>
+<h3>new <strong>Fn</strong>(function) <a href="#new-**fn**(function)" name="new-**fn**(function)" class="header-anchor">#</a></h3>
+<p>Creates a new function from... <code>function</code>. Of course, <code>function</code> is already be a function, so this really just returns the argument. It exists mainly to let you create a "bare" function when you don't want to immediately pass it as a <a href="functions.html#creating-functions">block argument</a> to some other method.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;The body&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>It is a runtime error if <code>block</code> is not a function.</p>
+<h3><strong>call</strong>(args...) <a href="#**call**(args)" name="**call**(args)" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h2>Num Class <a href="#num-class" name="num-class" class="header-anchor">#</a></h2>
+<p><strong>TODO</strong></p>
+<h3><strong>abs</strong> <a href="#**abs**" name="**abs**" class="header-anchor">#</a></h3>
+<p>The absolute value of the number.</p>
+<div class="codehilite"><pre><span class="o">-</span><span class="m">123.</span><span class="n">abs</span> <span class="c1">// 123</span>
+</pre></div>
+
+
+<h3><strong>ceil</strong> <a href="#**ceil**" name="**ceil**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>cos</strong> <a href="#**cos**" name="**cos**" class="header-anchor">#</a></h3>
+<p>The cosine of the number.</p>
+<h3><strong>floor</strong> <a href="#**floor**" name="**floor**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>isNan</strong> <a href="#**isnan**" name="**isnan**" class="header-anchor">#</a></h3>
+<p>Whether the number is <a href="http://en.wikipedia.org/wiki/NaN">not a number</a>. This is <code>false</code> for normal number values and infinities, and <code>true</code> for the result of <code>0/0</code>, the square root of a negative number, etc.</p>
+<h3><strong>sin</strong> <a href="#**sin**" name="**sin**" class="header-anchor">#</a></h3>
+<p>The sine of the number.</p>
+<h3><strong>sqrt</strong> <a href="#**sqrt**" name="**sqrt**" class="header-anchor">#</a></h3>
+<p>The square root of the number. Returns <code>nan</code> if the number is negative.</p>
+<h3><strong>-</strong> operator <a href="#**-**-operator" name="**-**-operator" class="header-anchor">#</a></h3>
+<p>Negates the number.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="m">123</span>
+<span class="o">-</span><span class="n">a</span> <span class="c1">// -123</span>
+</pre></div>
+
+
+<h3><strong>-</strong>(other), <strong>+</strong>(other), <strong>/</strong>(other), <strong>*</strong>(other) operators <a href="#**-**(other),-**+**(other),-****(other),-**\***(other)-operators" name="**-**(other),-**+**(other),-****(other),-**\***(other)-operators" class="header-anchor">#</a></h3>
+<p>The usual arithmetic operators you know and love. All of them do 64-bit floating point arithmetic. It is a runtime error if the right-hand operand is not a number. Wren doesn't roll with implicit conversions.</p>
+<h3><strong>%</strong>(denominator) operator <a href="#**%**(denominator)-operator" name="**%**(denominator)-operator" class="header-anchor">#</a></h3>
+<p>The floating-point remainder of this number divided by <code>denominator</code>.</p>
+<p>It is a runtime error if <code>denominator</code> is not a number.</p>
+<h3><strong>&lt;</strong>(other), <strong>&gt;</strong>(other), <strong>&lt;=</strong>(other), <strong>&gt;=</strong>(other) operators <a href="#**&lt;**(other),-**&gt;**(other),-**&lt;=**(other),-**&gt;=**(other)-operators" name="**&lt;**(other),-**&gt;**(other),-**&lt;=**(other),-**&gt;=**(other)-operators" class="header-anchor">#</a></h3>
+<p>Compares this and <code>other</code>, returning <code>true</code> or <code>false</code> based on how the numbers are ordered. It is a runtime error if <code>other</code> is not a number.</p>
+<h3><strong>~</strong> operator <a href="#**~**-operator" name="**~**-operator" class="header-anchor">#</a></h3>
+<p>Performs <em>bitwise</em> negation on the number. The number is first converted to a 32-bit unsigned value, which will truncate any floating point value. The bits of the result of that are then negated, yielding the result.</p>
+<h3><strong>&amp;</strong>(other) operator <a href="#**&**(other)-operator" name="**&**(other)-operator" class="header-anchor">#</a></h3>
+<p>Performs bitwise and on the number. Both numbers are first converted to 32-bit unsigned values. The result is then a 32-bit unsigned number where each bit is <code>true</code> only where the corresponding bits of both inputs were <code>true</code>.</p>
+<p>It is a runtime error if <code>other</code> is not a number.</p>
+<h3><strong>|</strong>(other) operator <a href="#**|**(other)-operator" name="**|**(other)-operator" class="header-anchor">#</a></h3>
+<p>Performs bitwise or on the number. Both numbers are first converted to 32-bit unsigned values. The result is then a 32-bit unsigned number where each bit is <code>true</code> only where the corresponding bits of both inputs were <code>true</code>.</p>
+<p>It is a runtime error if <code>other</code> is not a number.</p>
+<h3><strong>..</strong>(other) operator <a href="#****(other)-operator" name="****(other)-operator" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>...</strong>(other) operator <a href="#****(other)-operator" name="****(other)-operator" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h2>String Class <a href="#string-class" name="string-class" class="header-anchor">#</a></h2>
+<p><strong>TODO</strong></p>
+<h3><strong>contains</strong>(other) <a href="#**contains**(other)" name="**contains**(other)" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>count</strong> <a href="#**count**" name="**count**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>+</strong>(other) operator <a href="#**+**(other)-operator" name="**+**(other)-operator" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>==</strong>(other) operator <a href="#**==**(other)-operator" name="**==**(other)-operator" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>!=</strong>(other) operator <a href="#**=**(other)-operator" name="**=**(other)-operator" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>[</strong>index<strong>]</strong> operator <a href="#**[**index**]**-operator" name="**[**index**]**-operator" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h2>List Class <a href="#list-class" name="list-class" class="header-anchor">#</a></h2>
+<p><strong>TODO</strong></p>
+<h3><strong>add</strong>(item) <a href="#**add**(item)" name="**add**(item)" class="header-anchor">#</a></h3>
+<p>Appends <code>item</code> onto the end of the list.</p>
+<h3><strong>clear</strong> <a href="#**clear**" name="**clear**" class="header-anchor">#</a></h3>
+<p>Removes all items from the list.</p>
+<h3><strong>count</strong> <a href="#**count**" name="**count**" class="header-anchor">#</a></h3>
+<p>The number of items in the list.</p>
+<h3><strong>insert</strong>(item, index) <a href="#**insert**(item,-index)" name="**insert**(item,-index)" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#**iterate**(iterator),-**iteratorvalue**(iterator)" name="**iterate**(iterator),-**iteratorvalue**(iterator)" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>removeAt</strong>(index) <a href="#**removeat**(index)" name="**removeat**(index)" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>[</strong>index<strong>]</strong> operator <a href="#**[**index**]**-operator" name="**[**index**]**-operator" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>[</strong>index<strong>]=</strong>(item) operator <a href="#**[**index**]=**(item)-operator" name="**[**index**]=**(item)-operator" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h2>Range Class <a href="#range-class" name="range-class" class="header-anchor">#</a></h2>
+<p><strong>TODO</strong></p>
+<h3><strong>from</strong> <a href="#**from**" name="**from**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>to</strong> <a href="#**to**" name="**to**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>min</strong> <a href="#**min**" name="**min**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>max</strong> <a href="#**max**" name="**max**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>isInclusive</strong> <a href="#**isinclusive**" name="**isinclusive**" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#**iterate**(iterator),-**iteratorvalue**(iterator)" name="**iterate**(iterator),-**iteratorvalue**(iterator)" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

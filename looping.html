@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Looping – Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="index.html">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+    </ul>
+    <section>
+      <h2>language</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="branching.html">Branching</a></li>
+        <li><a href="looping.html">Looping</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>types</h2>
+      <ul>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="fibers.html">Fibers</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="core-library.html">Core Library</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>Looping</h1>
+    <p>It's hard to write a useful program without executing some chunk of code repeatedly. To do that, you use looping statements. There are two in Wren, and they should be familiar if you've used other imperative languages.</p>
+<h2>While statements <a href="#while-statements" name="while-statements" class="header-anchor">#</a></h2>
+<p>A <code>while</code> statement executes a chunk of code as long as a condition continues to hold. For example:</p>
+<div class="codehilite"><pre><span class="c1">// Hailstone sequence.</span>
+<span class="kd">var</span> <span class="n">n</span> <span class="o">=</span> <span class="m">27</span>
+<span class="k">while</span> <span class="p">(</span><span class="n">n</span> <span class="o">!=</span> <span class="m">1</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">%</span> <span class="m">2</span> <span class="o">==</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">n</span> <span class="o">/</span> <span class="m">2</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="m">3</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="m">1</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>This evaluates the expression <code>n != 1</code>. If it is <a href="branching.html">true</a>, then it executes the following body. After that, it loops back to the top, and evaluates the condition again. It keeps doing this as long as the condition evaluates to something true.</p>
+<p>The condition for a while loop can be any expression, and must be surrounded by parentheses. The body of the loop is usually a curly block but can also be a single statement:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">n</span> <span class="o">=</span> <span class="m">27</span>
+<span class="k">while</span> <span class="p">(</span><span class="n">n</span> <span class="o">!=</span> <span class="m">1</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">%</span> <span class="m">2</span> <span class="o">==</span> <span class="m">0</span><span class="p">)</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span> <span class="o">/</span> <span class="m">2</span> <span class="k">else</span> <span class="n">n</span> <span class="o">=</span> <span class="m">3</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="m">1</span>
+</pre></div>
+
+
+<h2>For statements <a href="#for-statements" name="for-statements" class="header-anchor">#</a></h2>
+<p>While statements are useful when you want to loop indefinitely or according to some complex condition. But in most cases, you're looping through a <a href="lists.html">list</a>, a series of numbers, or some other "sequence" object. That's what <code>for</code> is for. It looks like this:</p>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">beatle</span> <span class="k">in</span> <span class="p">[</span><span class="s2">&quot;george&quot;</span><span class="p">,</span> <span class="s2">&quot;john&quot;</span><span class="p">,</span> <span class="s2">&quot;paul&quot;</span><span class="p">,</span> <span class="s2">&quot;ringo&quot;</span><span class="p">])</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">beatle</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>A <code>for</code> loop has three components:</p>
+<ol>
+<li>
+<p>A <em>variable name</em> to bind. In the example, that's <code>beatle</code>. Wren will create a new variable with that name whose scope is the body of the loop.</p>
+</li>
+<li>
+<p>A <em>sequence expression</em>. This determines what you're looping over. It gets evaluated <em>once</em> before the body of the loop. In this case, it's a list literal, but it can be any expression.</p>
+</li>
+<li>
+<p>A <em>body</em>. This is a curly block or a single statement. It gets executed once for each iteration of the loop.</p>
+</li>
+</ol>
+<h2>Break statements <a href="#break-statements" name="break-statements" class="header-anchor">#</a></h2>
+<p>Sometimes, right in the middle of a loop body, you decide you want to bail out and stop. To do that, you can use a <code>break</code> statement. It's just the <code>break</code> keyword all by itself. That will immediately exit out of the nearest enclosing <code>while</code> or <code>for</code> loop.</p>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="k">in</span> <span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">])</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="m">3</span><span class="p">)</span> <span class="k">break</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>So this program will print the numbers from 1 to 3, but will not print 4.</p>
+<h2>Numeric ranges <a href="#numeric-ranges" name="numeric-ranges" class="header-anchor">#</a></h2>
+<p>Lists are one common use for <code>for</code> loops, but sometimes you want to walk over a sequence of numbers, or loop a number of times. For that, you can create a <a href="values.html#ranges">range object</a>, like so:</p>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="k">in</span> <span class="m">1.</span><span class="p">.</span><span class="m">100</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>This loops over the numbers from 1 to 100, including 100 itself. If you want to leave off the last value, use three dots instead of two:</p>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="k">in</span> <span class="m">1.</span><span class="p">..</span><span class="m">100</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>This looks like some special "range" syntax in the <code>for</code> loop, but it's actually just a pair of operators. The <code>..</code> and <code>...</code> syntax are infix "range" operators. Like <a href="method-calls.html">other operators</a>, they are just special syntax for a regular method call. The number type implements them and returns instances of a <code>Range</code> class. That class in turn knows how to iterate over a series of numbers.</p>
+<h2>The iterator protocol <a href="#the-iterator-protocol" name="the-iterator-protocol" class="header-anchor">#</a></h2>
+<p>Lists and ranges cover the two most common kinds of loops, but you should also be able to define your own sequences. To enable that, the semantics of a <code>for</code> are defined in terms of an "iterator protocol". The loop itself doesn't know anything about lists or ranges, it just knows how to call two particular methods on the object that resulted from evaluating the sequence expression.</p>
+<p>When you write a loop like this:</p>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="k">in</span> <span class="m">1.</span><span class="p">.</span><span class="m">100</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Wren sees it something like this:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">iter_</span> <span class="o">=</span> <span class="kc">null</span>
+<span class="kd">var</span> <span class="n">seq_</span> <span class="o">=</span> <span class="m">1.</span><span class="p">.</span><span class="m">100</span>
+<span class="k">while</span> <span class="p">(</span><span class="n">iter_</span> <span class="o">=</span> <span class="n">seq_</span><span class="p">.</span><span class="n">iterate</span><span class="p">(</span><span class="n">iter_</span><span class="p">))</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="n">i</span> <span class="o">=</span> <span class="n">seq_</span><span class="p">.</span><span class="n">iteratorValue</span><span class="p">(</span><span class="n">iter_</span><span class="p">)</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>First, Wren evaluates the sequence expression and stores it in a hidden variable (written <code>seq_</code> in the example but in reality it doesn't have a name you can use). It also creates a hidden "iterator" variable and initializes it to <code>null</code>.</p>
+<p>Each iteration, it calls <code>iterate()</code> on the sequence, passing in the current iterator value. (In the first iteration, it passes in <code>null</code>.) The sequence's job is to take that iterator and advance it to the next element in the sequence. (Or, in the case where the iterator is <code>null</code>, to advance it to the <em>first</em> element). It then returns either the new iterator, or <code>false</code> to indicate that there are no more elements.</p>
+<p>If <code>false</code> is returned, Wren exits out of the loop and we're done. If anything else is returned, that means that we have advanced to a new valid element. To get that, Wren then calls <code>iteratorValue()</code> on the sequence and passes in the iterator value that it just got from calling <code>iterate()</code>. The sequence uses that to look up and return the appropriate element.</p>
+<p>The built-in <a href="lists.html">List</a> and <a href="values.html#ranges">Range</a> types implement <code>iterate()</code> and <code>iteratorValue()</code> to walk over their respective sequences. You can implement the same methods in your classes to make your own types iterable.</p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Lists – Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="index.html">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+    </ul>
+    <section>
+      <h2>language</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="branching.html">Branching</a></li>
+        <li><a href="looping.html">Looping</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>types</h2>
+      <ul>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="fibers.html">Fibers</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="core-library.html">Core Library</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="contributing.html">Contributing</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>Lists</h1>
+    <p>A list is a compound object that holds a collection of elements identified by integer index. You can create a list by placing a sequence of comma-separated expressions inside square brackets:</p>
+<div class="codehilite"><pre><span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="s2">&quot;banana&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">]</span>
+</pre></div>
+
+
+<p>Here, we've created a list of three elements. Notice that the elements don't have to be the same type.</p>
+<h2>Accessing elements <a href="#accessing-elements" name="accessing-elements" class="header-anchor">#</a></h2>
+<p>You can access an element from a list by calling the <a href="method-calls.html#subscript-operators">subscript operator</a> on it with the index of the element you want. Like most languages, indexes start at zero:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">hirsute</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sideburns&quot;</span><span class="p">,</span> <span class="s2">&quot;porkchops&quot;</span><span class="p">,</span> <span class="s2">&quot;&#39;stache&quot;</span><span class="p">,</span> <span class="s2">&quot;goatee&quot;</span><span class="p">]</span>
+<span class="n">hirsute</span><span class="p">[</span><span class="m">0</span><span class="p">]</span> <span class="c1">// &quot;sideburns&quot;.</span>
+<span class="n">hirsute</span><span class="p">[</span><span class="m">1</span><span class="p">]</span> <span class="c1">// &quot;porkchops&quot;.</span>
+</pre></div>
+
+
+<p>Negative indices counts backwards from the end:</p>
+<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">[</span><span class="o">-</span><span class="m">1</span><span class="p">]</span> <span class="c1">// &quot;goatee&quot;.</span>
+<span class="n">hirsute</span><span class="p">[</span><span class="o">-</span><span class="m">2</span><span class="p">]</span> <span class="c1">// &quot;&#39;stache&quot;.</span>
+</pre></div>
+
+
+<p>It's a runtime error to pass an index outside of the bounds of the list. If you don't know what those bounds are, you can find out using count:</p>
+<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">.</span><span class="n">count</span> <span class="c1">// 3.</span>
+</pre></div>
+
+
+<h2>Slices and ranges <a href="#slices-and-ranges" name="slices-and-ranges" class="header-anchor">#</a></h2>
+<p>Sometimes you want to slice out a chunk of elements from a list. You can do that by passing a <a href="values.html#ranges">range</a> to the subscript operator, like so:</p>
+<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">[</span><span class="m">1.</span><span class="p">.</span><span class="m">2</span><span class="p">]</span> <span class="c1">// [&quot;porkchops&quot;, &quot;&#39;stache&quot;].</span>
+</pre></div>
+
+
+<p>This returns a new list containing the elements of the original list whose indices are within the given range. Both inclusive and exclusive ranges work and do what you expect.</p>
+<p>Negative bounds also work like they do when passing a single number, so to copy a list, you can just do:</p>
+<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">[</span><span class="m">0.</span><span class="p">.</span><span class="o">-</span><span class="m">1</span><span class="p">]</span>
+</pre></div>
+
+
+<h2>Adding elements <a href="#adding-elements" name="adding-elements" class="header-anchor">#</a></h2>
+<p>Lists are <em>mutable</em>, meaning their contents can be changed. You can swap out an existing element in the list using the subscript setter:</p>
+<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">[</span><span class="m">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;muttonchops&quot;</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">hirsute</span><span class="p">[</span><span class="m">1</span><span class="p">])</span> <span class="c1">// muttonchops.</span>
+</pre></div>
+
+
+<p>It's an error to set an element that's out of bounds. To grow a list, you can use <code>add</code> to append a single item to the end:</p>
+<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;goatee&quot;</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">hirsute</span><span class="p">.</span><span class="n">count</span><span class="p">)</span> <span class="c1">// 4.</span>
+</pre></div>
+
+
+<p>You can insert a new element at a specific position using <code>insert</code>:</p>
+<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;soul patch&quot;</span><span class="p">,</span> <span class="m">2</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The first argument is the value to insert, and the second is the index to insert it at. All elements following the inserted one will be pushed down to make room for it.</p>
+<p>It's valid to "insert" after the last element in the list, but only <em>right</em> after it. Like other methods, you can use a negative index to count from the back. Doing so counts back from the size of the list <em>after</em> it's grown by one:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
+<span class="n">letters</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="m">3</span><span class="p">)</span>   <span class="c1">// OK: inserts at end.</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>        <span class="c1">// [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;]</span>
+<span class="n">letters</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;e&quot;</span><span class="p">,</span> <span class="o">-</span><span class="m">2</span><span class="p">)</span>  <span class="c1">// Counts back from size after insert.</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>        <span class="c1">// [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;e&quot;, &quot;d&quot;]</span>
+</pre></div>
+
+
+<h2>Removing elements <a href="#removing-elements" name="removing-elements" class="header-anchor">#</a></h2>
+<p>The opposite of <code>insert</code> is <code>removeAt</code>. It removes a single element from a given position in the list. All following items are shifted up to fill in the gap:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
+<span class="n">letters</span><span class="p">.</span><span class="n">removeAt</span><span class="p">(</span><span class="m">1</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span> <span class="c1">// [&quot;a&quot;, &quot;c&quot;]</span>
+</pre></div>
+
+
+<p>If you want to remove everything from the list, you can clear it:</p>
+<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">.</span><span class="n">clear</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">hirsute</span><span class="p">)</span> <span class="c1">// []</span>
+</pre></div>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>
