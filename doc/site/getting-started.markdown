@@ -14,7 +14,7 @@ For our Windows bretheren, there's still a little work to be done. Ideally, the 
 
 ## Interactive mode
 
-The above instructions will drop you into Wren's standalone interpreter in interactive mode. You can type a line of code in, and it will immediately execute it. Here's something to try:
+The above instructions will drop you into Wren's standalone interpreter in interactive mode. You can type in a line of code, and it will immediately execute it. Here's something to try:
 
     :::dart
     IO.print("Hello, world!")
