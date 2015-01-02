@@ -65,5 +65,3 @@ assigned value.
     :::dart
     var a = "before"
     IO.print(a = "after") // Prints "after".
-
-**TODO: Forward references for globals, closures.**

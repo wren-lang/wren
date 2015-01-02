@@ -95,7 +95,7 @@ Most languages use square brackets (`[]`) for working with collection-like
 objects. For example:
 
     :::dart
-    list.add["item"]
+    first = list[0]
     map["key"] = "value"
 
 You know the refrain by now. In Wren, these are just method calls. Subscript

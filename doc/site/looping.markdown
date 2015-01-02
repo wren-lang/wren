@@ -57,7 +57,7 @@ So this program will print the numbers from 1 to 3, but will not print 4.
 
 ## Numeric ranges
 
-Lists are one common use for `for` loops, but sometimes you want to walk over a sequence of numbers, or loop a number of times. For that, you can use a *range* expression, like so:
+Lists are one common use for `for` loops, but sometimes you want to walk over a sequence of numbers, or loop a number of times. For that, you can create a [range object](values.html#ranges), like so:
 
     :::dart
     for (i in 1..100) {
@@ -100,4 +100,4 @@ Each iteration, it calls `iterate()` on the sequence, passing in the current ite
 
 If `false` is returned, Wren exits out of the loop and we're done. If anything else is returned, that means that we have advanced to a new valid element. To get that, Wren then calls `iteratorValue()` on the sequence and passes in the iterator value that it just got from calling `iterate()`. The sequence uses that to look up and return the appropriate element.
 
-The built-in List and Range types implement `iterate()` and `iteratorValue()` to walk over their respective sequences. You can implement the same methods in your classes to make your own types iterable.
+The built-in [List](lists.html) and [Range](values.html#ranges) types implement `iterate()` and `iteratorValue()` to walk over their respective sequences. You can implement the same methods in your classes to make your own types iterable.

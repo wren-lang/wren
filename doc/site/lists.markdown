@@ -13,20 +13,34 @@ Here, we've created a list of three elements. Notice that the elements don't hav
 You can access an element from a list by calling the [subscript operator](method-calls.html#subscript-operators) on it with the index of the element you want. Like most languages, indexes start at zero:
 
     :::dart
-    var hirsute = ["sideburns", "porkchops", "'stache"]
+    var hirsute = ["sideburns", "porkchops", "'stache", "goatee"]
     hirsute[0] // "sideburns".
     hirsute[1] // "porkchops".
 
 Negative indices counts backwards from the end:
 
     :::dart
-    hirsute[-1] // "'stache".
-    hirsute[-2] // "porkchops".
+    hirsute[-1] // "goatee".
+    hirsute[-2] // "'stache".
 
 It's a runtime error to pass an index outside of the bounds of the list. If you don't know what those bounds are, you can find out using count:
 
     :::dart
     hirsute.count // 3.
+
+## Slices and ranges
+
+Sometimes you want to slice out a chunk of elements from a list. You can do that by passing a [range](values.html#ranges) to the subscript operator, like so:
+
+    :::dart
+    hirsute[1..2] // ["porkchops", "'stache"].
+
+This returns a new list containing the elements of the original list whose indices are within the given range. Both inclusive and exclusive ranges work and do what you expect.
+
+Negative bounds also work like they do when passing a single number, so to copy a list, you can just do:
+
+    :::dart
+    hirsute[0..-1]
 
 ## Adding elements
 
@@ -72,5 +86,3 @@ If you want to remove everything from the list, you can clear it:
     :::dart
     hirsute.clear
     IO.print(hirsute) // []
-
-**TODO: Ranges, iteration, etc.**
