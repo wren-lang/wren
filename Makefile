@@ -1,16 +1,17 @@
 # Compiler flags.
-CFLAGS = -std=c99 -Wall -Werror
+CFLAGS := -std=c99 -Wall -Werror
 # TODO: Add -Wextra.
-DEBUG_CFLAGS = -O0 -DDEBUG
-RELEASE_CFLAGS = -Os
+
+DEBUG_CFLAGS := -O0 -DDEBUG
+RELEASE_CFLAGS := -Os
 
 # Files.
-SOURCES = $(wildcard src/*.c)
-HEADERS = $(wildcard src/*.h)
-OBJECTS = $(SOURCES:.c=.o)
+SOURCES := $(wildcard src/*.c)
+HEADERS := $(wildcard src/*.h)
+OBJECTS := $(SOURCES:.c=.o)
 
-DEBUG_OBJECTS = $(addprefix build/debug/, $(notdir $(OBJECTS)))
-RELEASE_OBJECTS = $(addprefix build/release/, $(notdir $(OBJECTS)))
+DEBUG_OBJECTS := $(addprefix build/debug/, $(notdir $(OBJECTS)))
+RELEASE_OBJECTS := $(addprefix build/release/, $(notdir $(OBJECTS)))
 
 .PHONY: all clean test builtin docs watchdocs
 
