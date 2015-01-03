@@ -271,7 +271,7 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
 
   Method method;
   method.type = METHOD_BLOCK;
-  method.fn = AS_OBJ(methodValue);
+  method.fn.obj = AS_OBJ(methodValue);
 
   if (methodType == CODE_METHOD_STATIC)
   {
@@ -590,7 +590,7 @@ static bool runInterpreter(WrenVM* vm)
           Value* args = fiber->stackTop - numArgs;
 
           // After calling this, the result will be in the first arg slot.
-          switch (method->primitive(vm, fiber, args))
+          switch (method->fn.primitive(vm, fiber, args))
           {
             case PRIM_VALUE:
               // The result is now in the first arg slot. Discard the other
@@ -617,12 +617,12 @@ static bool runInterpreter(WrenVM* vm)
         }
 
         case METHOD_FOREIGN:
-          callForeign(vm, fiber, method->foreign, numArgs);
+          callForeign(vm, fiber, method->fn.foreign, numArgs);
           break;
 
         case METHOD_BLOCK:
           STORE_FRAME();
-          callFunction(fiber, method->fn, numArgs);
+          callFunction(fiber, method->fn.obj, numArgs);
           LOAD_FRAME();
           break;
 
@@ -693,7 +693,7 @@ static bool runInterpreter(WrenVM* vm)
           Value* args = fiber->stackTop - numArgs;
 
           // After calling this, the result will be in the first arg slot.
-          switch (method->primitive(vm, fiber, args))
+          switch (method->fn.primitive(vm, fiber, args))
           {
             case PRIM_VALUE:
               // The result is now in the first arg slot. Discard the other
@@ -720,12 +720,12 @@ static bool runInterpreter(WrenVM* vm)
         }
 
         case METHOD_FOREIGN:
-          callForeign(vm, fiber, method->foreign, numArgs);
+          callForeign(vm, fiber, method->fn.foreign, numArgs);
           break;
 
         case METHOD_BLOCK:
           STORE_FRAME();
-          callFunction(fiber, method->fn, numArgs);
+          callFunction(fiber, method->fn.obj, numArgs);
           LOAD_FRAME();
           break;
 
@@ -1138,7 +1138,7 @@ static void defineMethod(WrenVM* vm, const char* className,
 
   Method method;
   method.type = METHOD_FOREIGN;
-  method.foreign = methodFn;
+  method.fn.foreign = methodFn;
 
   if (isStatic) classObj = classObj->obj.classObj;
 

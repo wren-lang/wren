@@ -412,7 +412,7 @@ static void markClass(WrenVM* vm, ObjClass* classObj)
   {
     if (classObj->methods.data[i].type == METHOD_BLOCK)
     {
-      wrenMarkObj(vm, classObj->methods.data[i].fn);
+      wrenMarkObj(vm, classObj->methods.data[i].fn.obj);
     }
   }
 

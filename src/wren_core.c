@@ -8,13 +8,13 @@
 
 // Binds a native method named [name] (in Wren) implemented using C function
 // [fn] to `ObjClass` [cls].
-#define NATIVE(cls, name, fn) \
+#define NATIVE(cls, name, function) \
     { \
       int symbol = wrenSymbolTableEnsure(vm, \
           &vm->methodNames, name, strlen(name)); \
       Method method; \
       method.type = METHOD_PRIMITIVE; \
-      method.primitive = native_##fn; \
+      method.fn.primitive = native_##function; \
       wrenBindMethod(vm, cls, symbol, method); \
     }
 

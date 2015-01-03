@@ -289,8 +289,8 @@ typedef struct
     WrenForeignMethodFn foreign;
 
     // May be a [ObjFn] or [ObjClosure].
-    Obj* fn;
-  };
+    Obj* obj;
+  } fn;
 } Method;
 
 DECLARE_BUFFER(Method, Method);
