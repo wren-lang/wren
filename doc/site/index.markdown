@@ -7,10 +7,8 @@ in a Lua-sized package.
     IO.print("Hello, world!")
 
     class Wren {
-      adjectives = ["small", "clean", "fast"]
-      languageType {
-        "scripting"
-      }
+      adjectives { ["small", "clean", "fast"] }
+      languageType { "scripting" }
     }
 
  *  **Wren is small.** The codebase is under 4,000 semicolons which keeps the
