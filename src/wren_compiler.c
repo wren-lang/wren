@@ -750,6 +750,10 @@ static void nextToken(Parser* parser)
         makeToken(parser, TOKEN_SLASH);
         return;
 
+      case '#':
+        skipLineComment(parser);
+        break;
+
       case '-':
         if (isDigit(peekChar(parser)))
         {
