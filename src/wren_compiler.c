@@ -705,10 +705,6 @@ static void nextToken(Parser* parser)
       case ']': makeToken(parser, TOKEN_RIGHT_BRACKET); return;
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
-        // TODO: Should treat ";" differently from "\n". An elided newline
-        // makes sense, but an elided explicit ";" is weird. This should not be
-        // valid: a + ; b
-      case ';': makeToken(parser, TOKEN_LINE); return;
       case ':': makeToken(parser, TOKEN_COLON); return;
       case '.':
         if (peekChar(parser) == '.')

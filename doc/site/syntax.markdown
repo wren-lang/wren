@@ -6,7 +6,7 @@ Wren's syntax is designed to be familiar to people coming from C-like languages 
 Scripts are stored in plain text files with a `.wren` file extension. Wren does
 not compile ahead of time: programs are run directly from source, from top to
 bottom like a typical scripting language. (Internally, programs are compiled to
-bytecode for efficiency, but that's an implementation detail).
+bytecode for efficiency, but that's an implementation detail.)
 
 ## Comments
 
@@ -48,26 +48,26 @@ Identifiers are similar to other programming languages. They start with a letter
 
 Identifiers that start with underscore (`_`) are special in Wren. They are used to indicate fields in [classes](classes.html).
 
-## Statement terminators
+## Newlines
 
-Officially, statements are terminated by a semicolon (`;`) like in other
-languages in the C tradition. However, Wren treats newlines as equivalent
-to a semicolon whenever it makes sense. In practice, this means you almost
-never write `;` unless you want to cram a bunch of statements on one line.
+Newlines (`\n`) are meaningful in Wren. They are used to separate statements:
 
     :::dart
     // Two statements:
-    IO.print("hi")
+    IO.print("hi") // Newline.
     IO.print("bye")
 
-Sometimes, though, a statement doesn't fit on a single line and treating the
-newline as a semicolon would trip things up. To handle that, Wren has a very
+Sometimes, though, a statement doesn't fit on a single line and jamming a
+newline in the middle would trip it up. To handle that, Wren has a very
 simple rule: It ignores a newline following any token that can't end a
 statement.
 
-Everywhere else, a newline is treated just like a `;`. Note that this is a very
-different system from how JavaScript handles semicolons. If you've been burned
-there, don't worry, you should be fine here.
+    :::dart
+    IO.print( // Newline here is ignored.
+        "hi")
+
+In practice, this means you can put each statement on its own line and wrap
+them across lines as needed without too much trouble.
 
 ## Blocks
 
