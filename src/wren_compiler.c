@@ -792,7 +792,7 @@ static void nextToken(Parser* parser)
       case '\t':
       case ' ':
         // Skip forward until we run out of whitespace.
-        while (peekChar(parser) == ' ') nextChar(parser);
+        while (peekChar(parser) == ' ' || peekChar(parser) == '\t') nextChar(parser);
         break;
 
       case '"': readString(parser); return;
