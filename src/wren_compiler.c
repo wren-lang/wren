@@ -682,6 +682,24 @@ static void readString(Parser* parser)
   makeToken(parser, TOKEN_STRING);
 }
 
+// Default behaviour for unmatched characters.
+static void unmatchedChar(Parser* parser, char c)
+{
+  // Handle unmatched character
+  if (isName(c))
+  {
+    readName(parser, TOKEN_NAME);
+  }
+  else if (isDigit(c))
+  {
+    readNumber(parser);
+  }
+  else
+  {
+    lexError(parser, "Invalid character '%c'.", c);
+  }
+}
+
 // Lex the next token and store it in [parser.current].
 static void nextToken(Parser* parser)
 {
@@ -800,19 +818,19 @@ static void nextToken(Parser* parser)
                  peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD);
         return;
 
+      case '#':
+        // Ignore shebang on the first line.
+        if (peekChar(parser) == '!' && parser->currentLine == 1)
+        {
+          skipLineComment(parser);
+          break;
+        }
+
+        unmatchedChar(parser, c);
+        return;
+
       default:
-        if (isName(c))
-        {
-          readName(parser, TOKEN_NAME);
-        }
-        else if (isDigit(c))
-        {
-          readNumber(parser);
-        }
-        else
-        {
-          lexError(parser, "Invalid character '%c'.", c);
-        }
+        unmatchedChar(parser, c);
         return;
     }
   }
