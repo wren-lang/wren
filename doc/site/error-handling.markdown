@@ -84,7 +84,7 @@ For example, if you run this program:
 It prints:
 
     :::text
-    Num does not implement method 'badMethod'.
+    Caught error: Num does not implement method 'badMethod'.
 
 The called fiber can no longer be used, but any other fibers can proceed as usual. When a fiber has been aborted because of a runtime error, you can also get the error from the fiber object. Continuing the above example:
 
