@@ -2747,7 +2747,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 
   WREN_UNPIN(vm);
 
-  for (;;)
+  while (!match(&compiler, TOKEN_EOF))
   {
     definition(&compiler);
 
@@ -2757,8 +2757,6 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
       consume(&compiler, TOKEN_EOF, "Expect end of file.");
       break;
     }
-
-    if (match(&compiler, TOKEN_EOF)) break;
   }
 
   emit(&compiler, CODE_NULL);
