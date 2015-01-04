@@ -24,6 +24,39 @@ static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)
   return realloc(memory, newSize);
 }
 
+// Returns the canonical name of a symbol with the argument spaces stripped off.
+char* canonicalSymbol(char* symbolName)
+{
+  // Find the end of the text in the given symbol name.
+  int pos = strlen(symbolName) - 1;
+  while (symbolName[pos] == ' ') pos--;
+
+  // Create a new string that contains only the symbol name.
+  char *canonicalizedSymbol = malloc(pos + 1);
+  strncpy(canonicalizedSymbol, symbolName, pos + 1);
+
+  return canonicalizedSymbol;
+}
+
+// Extracts the number of arguments from a symbol name.
+char* methodArgumentsString(char* symbolName)
+{
+  // Count the number of spaces to determine number of arguments for this
+  // symbol.
+  int pos = strlen(symbolName) - 1;
+  while (symbolName[pos] == ' ') pos--;
+
+  int args = strlen(symbolName) - pos - 1;
+
+  if (args == 1) return "1 argument";
+
+  int stringSize = args > 9 ? 13 : 12;
+  char* argumentString = malloc(stringSize);
+  snprintf(argumentString, stringSize, "%d arguments", args);
+
+  return argumentString;
+}
+
 WrenVM* wrenNewVM(WrenConfiguration* configuration)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -576,9 +609,10 @@ static bool runInterpreter(WrenVM* vm)
       if (symbol >= classObj->methods.count)
       {
         char message[100];
-        snprintf(message, 100, "%s does not implement method '%s'.",
+        snprintf(message, 100, "%s does not implement method '%s' with %s.",
                  classObj->name->value,
-                 vm->methodNames.data[symbol]);
+                 canonicalSymbol(vm->methodNames.data[symbol]),
+                 methodArgumentsString(vm->methodNames.data[symbol]));
         RUNTIME_ERROR(message);
       }
 
@@ -629,9 +663,10 @@ static bool runInterpreter(WrenVM* vm)
         case METHOD_NONE:
         {
           char message[100];
-          snprintf(message, 100, "%s does not implement method '%s'.",
-                   classObj->name->value,
-                   vm->methodNames.data[symbol]);
+          snprintf(message, 100, "%s does not implement method '%s' with %s.",
+                 classObj->name->value,
+                 canonicalSymbol(vm->methodNames.data[symbol]),
+                 methodArgumentsString(vm->methodNames.data[symbol]));
           RUNTIME_ERROR(message);
         }
       }
@@ -680,8 +715,10 @@ static bool runInterpreter(WrenVM* vm)
       if (symbol >= classObj->methods.count)
       {
         char message[100];
-        snprintf(message, 100, "%s does not implement method '%s'.",
-                 classObj->name->value, vm->methodNames.data[symbol]);
+        snprintf(message, 100, "%s does not implement method '%s' with %s.",
+                 classObj->name->value,
+                 canonicalSymbol(vm->methodNames.data[symbol]),
+                 methodArgumentsString(vm->methodNames.data[symbol]));
         RUNTIME_ERROR(message);
       }
 
@@ -732,8 +769,10 @@ static bool runInterpreter(WrenVM* vm)
         case METHOD_NONE:
         {
           char message[100];
-          snprintf(message, 100, "%s does not implement method '%s'.",
-                   classObj->name->value, vm->methodNames.data[symbol]);
+          snprintf(message, 100, "%s does not implement method '%s' with %s.",
+                 classObj->name->value,
+                 canonicalSymbol(vm->methodNames.data[symbol]),
+                 methodArgumentsString(vm->methodNames.data[symbol]));
           RUNTIME_ERROR(message);
         }
       }
