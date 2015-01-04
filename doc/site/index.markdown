@@ -41,6 +41,9 @@ a familiar, modern [syntax][].
     and [an easy-to-use C API][embedding]. It's written in warning-free
     standard C99.
 
+If you like the sound of this, [give it a try][try]! Even better, you can
+[contribute to Wren itself][contribute].
+
 [syntax]: syntax.html
 [src]: https://github.com/munificent/wren/tree/master/src
 [nan]: https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
@@ -48,3 +51,5 @@ a familiar, modern [syntax][].
 [classes]: classes.html
 [fibers]: fibers.html
 [embedding]: embedding-api.html
+[try]: getting-started.html
+[contribute]: contributing.html
