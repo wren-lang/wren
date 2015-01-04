@@ -685,7 +685,6 @@ static void readString(Parser* parser)
 // Default behaviour for unmatched characters.
 static void unmatchedChar(Parser* parser, char c)
 {
-  // Handle unmatched character
   if (isName(c))
   {
     readName(parser, TOKEN_NAME);
