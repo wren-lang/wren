@@ -90,8 +90,12 @@ static int runRepl(WrenVM* vm)
       return 0;
     }
 
-    // TODO: Handle failure.
-    wrenInterpret(vm, "Prompt", line);
+    // Do nothing if we received an empty line.
+    if (strcmp(line, "\n") != 0)
+    {
+      // TODO: Handle failure.
+      wrenInterpret(vm, "Prompt", line);
+    }
 
     free(line);
 
