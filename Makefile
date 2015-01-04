@@ -1,3 +1,4 @@
+AR = ar rcu
 # Compiler flags.
 CFLAGS = -std=c99 -Wall -Werror
 # TODO: Add -Wextra.
@@ -9,15 +10,16 @@ SOURCES = $(wildcard src/*.c)
 HEADERS = $(wildcard src/*.h)
 OBJECTS = $(SOURCES:.c=.o)
 
-DEBUG_OBJECTS = $(addprefix build/debug/, $(notdir $(OBJECTS)))
-RELEASE_OBJECTS = $(addprefix build/release/, $(notdir $(OBJECTS)))
+DEBUG_OBJECTS = $(subst build/debug/main.o,,$(addprefix build/debug/, $(notdir $(OBJECTS))))
+RELEASE_OBJECTS = $(subst build/release/main.o,,$(addprefix build/release/, $(notdir $(OBJECTS))))
+
 
 .PHONY: all clean test builtin docs watchdocs
 
 all: release
 
 clean:
-	@rm -rf build wren wrend
+	@rm -rf build wren wrend libwren.a libwrend.a
 
 prep:
 	@mkdir -p build/debug build/release
@@ -25,24 +27,32 @@ prep:
 # Debug build.
 debug: prep wrend
 
+# Debug shared lib
+libwrend.a: $(DEBUG_OBJECTS)
+	$(AR) $@ $^
+
 # Debug command-line interpreter.
-wrend: $(DEBUG_OBJECTS)
+wrend: build/debug/main.o libwrend.a
 	$(CC) $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o wrend $^ -lm
 
 # Debug object files.
 build/debug/%.o: src/%.c include/wren.h $(HEADERS)
-	$(CC) -c $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o $@ $<
+	$(CC) -c -fPIC $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o $@ $<
 
 # Release build.
 release: prep wren
 
+# Release shared lib
+libwren.a: $(RELEASE_OBJECTS)
+	$(AR) $@ $^
+
 # Release command-line interpreter.
-wren: $(RELEASE_OBJECTS)
+wren: build/release/main.o libwren.a
 	$(CC) $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o wren $^ -lm
 
 # Release object files.
 build/release/%.o: src/%.c include/wren.h $(HEADERS)
-	$(CC) -c $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o $@ $<
+	$(CC) -c -fPIC $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o $@ $<
 
 # Run the tests against the debug build of Wren.
 test: debug
