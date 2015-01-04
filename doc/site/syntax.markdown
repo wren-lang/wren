@@ -1,7 +1,8 @@
 ^title Syntax
 ^category language
 
-Wren's syntax is designed to be familiar to people coming from C-like languages while being as simple and expressive as possible within that framework.
+Wren's syntax is designed to be familiar to people coming from C-like languages
+while being a bit simpler and more streamlined.
 
 Scripts are stored in plain text files with a `.wren` file extension. Wren does
 not compile ahead of time: programs are run directly from source, from top to
@@ -27,16 +28,14 @@ Some people like to see all of the reserved words in a programming language in
 one lump. If you're one of those folks, here you go:
 
     :::dart
-    break class else for if in is return static var while
+    break class else false for if in is new null
+    return static super this true var while
 
-Wren also has a few predefined identifiers:
+## Identifiers
 
-    :::dart
-    false null this true
-
-## Names
-
-Identifiers are similar to other programming languages. They start with a letter or underscore and may contain letters, digits, and underscores. Case is sensitive.
+Naming rules are similar to other programming languages. Identifiers start with
+a letter or underscore and may contain letters, digits, and underscores. Case
+is sensitive.
 
     :::dart
     hi
@@ -46,7 +45,8 @@ Identifiers are similar to other programming languages. They start with a letter
     abc123
     ALL_CAPS
 
-Identifiers that start with underscore (`_`) are special in Wren. They are used to indicate fields in [classes](classes.html).
+Identifiers that start with underscore (`_`) are special in Wren. They are used
+to indicate [fields](classes.html#fields) in classes.
 
 ## Newlines
 
@@ -58,9 +58,8 @@ Newlines (`\n`) are meaningful in Wren. They are used to separate statements:
     IO.print("bye")
 
 Sometimes, though, a statement doesn't fit on a single line and jamming a
-newline in the middle would trip it up. To handle that, Wren has a very
-simple rule: It ignores a newline following any token that can't end a
-statement.
+newline in the middle would trip it up. To handle that, Wren has a very simple
+rule: It ignores a newline following any token that can't end a statement.
 
     :::dart
     IO.print( // Newline here is ignored.
@@ -71,14 +70,19 @@ them across lines as needed without too much trouble.
 
 ## Blocks
 
-Wren uses curly braces to define *blocks*. Things like [control flow](branching.html) and [looping](looping.html) allow block bodies. [Method](method-calls.html) and [function](functions.html) bodies are also blocks. For example:
+Wren uses curly braces to define *blocks*. You can use a block anywhere a
+statement is allowed, like in [control flow](control-flow.html) statements.
+[Method](classes.html#methods) and [function](functions.html) bodies are also
+blocks. For example, here we have a block for the then case, and a single
+statement for the else:
 
     :::dart
     if (happy && knowIt) {
       hands.clap
     } else IO.print("sad")
 
-Here we have a block for the then case, and just a single expression for the else. Blocks have two similar but not identical forms. If a there is a newline after the opening `{`, then the body contains a series of statements:
+Blocks have two similar but not identical forms. Typically, blocks contain a
+series of statements like:
 
     :::dart
     {
@@ -87,21 +91,23 @@ Here we have a block for the then case, and just a single expression for the els
       IO.print("three")
     }
 
-If there is no newline, the block may only contain a single expression:
+Blocks of this form when used for method and function bodies automatically
+return `null` after the block has completed. If you want to return a different
+value, you need an explicit `return` statement.
+
+However, it's pretty common to have a method or function that just evaluates
+and returns the result of a single expression. For that, Wren has a more
+compact notation:
 
     :::dart
-    { "this is fine" }
-    { while (this) "is an error" }
+    { "single expression" }
 
-These are useful when defining method and function bodies. A normal block body implicitly returns `null`. If you want your method or function to return something different, you need an explicit `return` statement. However, a single-expression block with no newline after the `{` implicitly returns the result of that expression. This is a nice convenience for short methods and functions that just evaluate and return an expression.
+If there is no newline after the `{` (or after the parameter list in a of
+[function](functions.html)), then the block may only contain a single
+expression, and it automatically returns the result of it. It's exactly the
+same as doing:
 
-**TODO: Move this somewhere else:**
-
-## The `is` operator
-
-The `is` keyword can be used as an infix operator in expression. It performs a
-type test. The left operand is an object and the right operand is a class. It
-evaluates to `true` if the object is an instance of the class (or one of its
-subclasses).
-
-**TODO: blocks, assignment, maps**
+    :::dart
+    {
+        return "single expression"
+    }

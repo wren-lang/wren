@@ -5,7 +5,9 @@
 
 ### **==**(other) and **!=**(other) operators
 
-Compares two objects using built-in equality. This compares numbers by value, and all other objects are compared by identity&mdash;two objects are equal only if they are the exact same object.
+Compares two objects using built-in equality. This compares numbers by value,
+and all other objects are compared by identity&mdash;two objects are equal only
+if they are the exact same object.
 
 ### **toString**
 
@@ -44,7 +46,8 @@ A lightweight coroutine. [Here](fibers.html) is a gentle introduction.
 
 ### new **Fiber**(function)
 
-Creates a new fiber that executes `function` in a separate coroutine when the fiber is run. Does not immediately start running the fiber.
+Creates a new fiber that executes `function` in a separate coroutine when the
+fiber is run. Does not immediately start running the fiber.
 
     :::dart
     var fiber = new Fiber {
@@ -53,7 +56,8 @@ Creates a new fiber that executes `function` in a separate coroutine when the fi
 
 ### Fiber.**yield**
 
-Pauses the current fiber and transfers control to the parent fiber. "Parent" here means the last fiber that was started using `call` and not `run`.
+Pauses the current fiber and transfers control to the parent fiber. "Parent"
+here means the last fiber that was started using `call` and not `run`.
 
     :::dart
     var fiber = new Fiber {
@@ -68,7 +72,8 @@ Pauses the current fiber and transfers control to the parent fiber. "Parent" her
 
 When resumed, the parent fiber's `call` method returns `null`.
 
-If a yielded fiber is resumed by calling `call()` or `run()` with an argument, `yield` returns that value.
+If a yielded fiber is resumed by calling `call()` or `run()` with an argument,
+`yield` returns that value.
 
     :::dart
     var fiber = new Fiber {
@@ -91,7 +96,8 @@ It is a runtime error to call this when there is no parent fiber to return to.
 
 ### Fiber.**yield**(value)
 
-Similar to `Fiber.yield` but provides a value to return to the parent fiber's `call`.
+Similar to `Fiber.yield` but provides a value to return to the parent fiber's
+`call`.
 
     :::dart
     var fiber = new Fiber {
@@ -110,7 +116,8 @@ Similar to `Fiber.yield` but provides a value to return to the parent fiber's `c
 
 ### **isDone**
 
-Whether the fiber's main function has completed and the fiber can no longer be run. This returns `false` if the fiber is currently running or has yielded.
+Whether the fiber's main function has completed and the fiber can no longer be
+run. This returns `false` if the fiber is currently running or has yielded.
 
 ### **run**
 
@@ -122,11 +129,15 @@ Whether the fiber's main function has completed and the fiber can no longer be r
 
 ## Fn Class
 
-A first class function&mdash;an object that wraps an executable chunk of code. [Here](functions.html) is a friendly introduction.
+A first class function&mdash;an object that wraps an executable chunk of code.
+[Here](functions.html) is a friendly introduction.
 
 ### new **Fn**(function)
 
-Creates a new function from... `function`. Of course, `function` is already be a function, so this really just returns the argument. It exists mainly to let you create a "bare" function when you don't want to immediately pass it as a [block argument](functions.html#creating-functions) to some other method.
+Creates a new function from... `function`. Of course, `function` is already be
+a function, so this really just returns the argument. It exists mainly to let
+you create a "bare" function when you don't want to immediately pass it as a
+[block argument](functions.html#block-arguments) to some other method.
 
     :::dart
     var fn = new Fn {
@@ -164,7 +175,9 @@ The cosine of the number.
 
 ### **isNan**
 
-Whether the number is [not a number](http://en.wikipedia.org/wiki/NaN). This is `false` for normal number values and infinities, and `true` for the result of `0/0`, the square root of a negative number, etc.
+Whether the number is [not a number](http://en.wikipedia.org/wiki/NaN). This is
+`false` for normal number values and infinities, and `true` for the result of
+`0/0`, the square root of a negative number, etc.
 
 ### **sin**
 
@@ -184,7 +197,9 @@ Negates the number.
 
 ### **-**(other), **+**(other), **/**(other), **\***(other) operators
 
-The usual arithmetic operators you know and love. All of them do 64-bit floating point arithmetic. It is a runtime error if the right-hand operand is not a number. Wren doesn't roll with implicit conversions.
+The usual arithmetic operators you know and love. All of them do 64-bit
+floating point arithmetic. It is a runtime error if the right-hand operand is
+not a number. Wren doesn't roll with implicit conversions.
 
 ### **%**(denominator) operator
 
@@ -194,21 +209,28 @@ It is a runtime error if `denominator` is not a number.
 
 ### **&lt;**(other), **&gt;**(other), **&lt;=**(other), **&gt;=**(other) operators
 
-Compares this and `other`, returning `true` or `false` based on how the numbers are ordered. It is a runtime error if `other` is not a number.
+Compares this and `other`, returning `true` or `false` based on how the numbers
+are ordered. It is a runtime error if `other` is not a number.
 
 ### **~** operator
 
-Performs *bitwise* negation on the number. The number is first converted to a 32-bit unsigned value, which will truncate any floating point value. The bits of the result of that are then negated, yielding the result.
+Performs *bitwise* negation on the number. The number is first converted to a
+32-bit unsigned value, which will truncate any floating point value. The bits
+of the result of that are then negated, yielding the result.
 
 ### **&**(other) operator
 
-Performs bitwise and on the number. Both numbers are first converted to 32-bit unsigned values. The result is then a 32-bit unsigned number where each bit is `true` only where the corresponding bits of both inputs were `true`.
+Performs bitwise and on the number. Both numbers are first converted to 32-bit
+unsigned values. The result is then a 32-bit unsigned number where each bit is
+`true` only where the corresponding bits of both inputs were `true`.
 
 It is a runtime error if `other` is not a number.
 
 ### **|**(other) operator
 
-Performs bitwise or on the number. Both numbers are first converted to 32-bit unsigned values. The result is then a 32-bit unsigned number where each bit is `true` only where the corresponding bits of both inputs were `true`.
+Performs bitwise or on the number. Both numbers are first converted to 32-bit
+unsigned values. The result is then a 32-bit unsigned number where each bit is
+`true` only where the corresponding bits of both inputs were `true`.
 
 It is a runtime error if `other` is not a number.
 
