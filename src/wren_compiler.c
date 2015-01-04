@@ -291,6 +291,11 @@ static void error(Compiler* compiler, const char* format, ...)
   compiler->parser->hasError = true;
 
   Token* token = &compiler->parser->previous;
+
+  // If the parse error was caused by an error token, the lexer has already
+  // reported it.
+  if (token->type == TOKEN_ERROR) return;
+
   fprintf(stderr, "[%s line %d] Error on ",
           compiler->parser->sourcePath->value, token->line);
 
