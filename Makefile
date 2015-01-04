@@ -10,6 +10,7 @@ SOURCES = $(wildcard src/*.c)
 HEADERS = $(wildcard src/*.h)
 OBJECTS = $(SOURCES:.c=.o)
 
+# Don't include main.c in the shared library.
 DEBUG_OBJECTS = $(subst build/debug/main.o,,$(addprefix build/debug/, $(notdir $(OBJECTS))))
 RELEASE_OBJECTS = $(subst build/release/main.o,,$(addprefix build/release/, $(notdir $(OBJECTS))))
 

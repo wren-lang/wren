@@ -3,9 +3,11 @@ build/
 build_xcode/
 .sass-cache/
 
-# Built applications.
+# Built files at the top level.
 wren
 wrend
+libwren.a
+libwrend.a
 
 # XCode user-specific stuff.
 xcuserdata/
