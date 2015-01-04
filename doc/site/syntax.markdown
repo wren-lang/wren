@@ -11,10 +11,11 @@ bytecode for efficiency, but that's an implementation detail.)
 
 ## Comments
 
-Line comments start with `//` and end at the end of the line:
+Line comments start with `//` or `#` and end at the end of the line:
 
     :::dart
     // This is a comment.
+    # This is also a comment.
 
 Block comments start with `/*` and end with `*/`. They can span multiple lines
 or be within a single one. Unlike C, block comments can nest in Wren:
