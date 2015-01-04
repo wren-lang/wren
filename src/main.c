@@ -39,7 +39,8 @@ static char* readFile(const char* path)
 
   // Read the entire file.
   size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
-  failIf(bytesRead < fileSize, 74, "Could not read file \"%s\".\n", path);
+  size_t filePos = ftell(file);
+  failIf(filePos < fileSize, 74, "Could not read file \"%s\".\n", path);
 
   // Terminate the string.
   buffer[bytesRead] = '\0';
