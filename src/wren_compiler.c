@@ -781,6 +781,9 @@ static void nextToken(Parser* parser)
         twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG);
         return;
 
+      case '\r':
+         twoCharToken(parser, '\n', TOKEN_LINE, TOKEN_LINE);
+         return;
       case '\n':
         makeToken(parser, TOKEN_LINE);
         return;
