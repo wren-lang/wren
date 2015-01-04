@@ -27,10 +27,9 @@
       <h2>language</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="expressions.html">Expressions</a></li>
         <li><a href="variables.html">Variables</a></li>
-        <li><a href="branching.html">Branching</a></li>
-        <li><a href="looping.html">Looping</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
         <li><a href="error-handling.html">Error Handling</a></li>
       </ul>
     </section>
@@ -58,19 +57,31 @@
   </nav>
   <main>
     <h1>Functions</h1>
-    <p>No self-respecting language today can get by without functions&mdash;first class little bundles of code. Since Wren is object-oriented, most of your code will live in methods on classes, but free-floating functions are still eminently handy.</p>
-<p>Functions are objects like everything else in Wren, instances of the <code>Fn</code> class.</p>
-<h2>Creating functions <a href="#creating-functions" name="creating-functions" class="header-anchor">#</a></h2>
-<p>Most of the time you create a function just to pass it to some method. For example, if you want to filter a <a href="lists.html">list</a> by some criteria, you'll call its <code>where</code> method, passing in a function that defines the predicate you're filtering on.</p>
-<p>Since that's the most common usage pattern, Wren's syntax optimizes for that. Taking a page from Ruby, a function is created by passing a <em>block argument</em> to a method. At its simplest, it looks like this:</p>
+    <p>No self-respecting language today can get by without functions&mdash;first
+class little bundles of code. Since Wren is object-oriented, most of your code
+will live in methods on classes, but free-floating functions are still
+eminently handy.</p>
+<p>Functions are objects like everything else in Wren, instances of the <code>Fn</code>
+class.</p>
+<h2>Block arguments <a href="#block-arguments" name="block-arguments" class="header-anchor">#</a></h2>
+<p>Most of the time you create a function just to pass it to some method. For
+example, if you want to filter a <a href="lists.html">list</a> by some criteria, you'll
+call its <code>where</code> method, passing in a function that defines the predicate
+you're filtering on.</p>
+<p>Since that's the most common usage pattern, Wren's syntax optimizes for that.
+Taking a page from Ruby, a function is created by passing a <em>block argument</em> to
+a method. At its simplest, it looks like this:</p>
 <div class="codehilite"><pre><span class="n">blondie</span><span class="p">.</span><span class="n">callMe</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;This is the body!&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
 
-<p>Here we're invoking the <code>callMe</code> method on <code>blondie</code>. We're passing one argument, a function whose body is everything between that pair of curly braces.</p>
-<p>Methods that take a block argument receive it as a normal parameter. <code>callMe</code> could be defined like so:</p>
+<p>Here we're invoking the <code>callMe</code> method on <code>blondie</code>. We're passing one
+argument, a function whose body is the following
+<a href="syntax.html#blocks">block</a>&mdash;everything between that pair of curly braces.</p>
+<p>Methods that take a block argument receive it as a normal parameter. <code>callMe</code>
+could be defined like so:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Blondie</span> <span class="p">{</span>
   <span class="n">callMe</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Call it...</span>
@@ -79,29 +90,37 @@
 </pre></div>
 
 
-<p>A method can take other arguments in addition to the block. They appear before the block just like a regular argument list. For example:</p>
+<p>A method can take other arguments in addition to the block. They appear before
+the block just like a regular argument list. For example:</p>
 <div class="codehilite"><pre><span class="n">blondie</span><span class="p">.</span><span class="n">callMeAt</span><span class="p">(</span><span class="m">867</span><span class="p">,</span> <span class="m">5309</span><span class="p">)</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;This is the body!&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
 
-<p>Of course, you don't <em>have</em> to use a block argument to pass a function to a method. If you already have a function object, you can pass it like a regular argument:</p>
+<p>Of course, you don't <em>have</em> to use a block argument to pass a function to a
+method. If you already have a function object, you can pass it like a regular
+argument:</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">someFn</span> <span class="o">=</span> <span class="c1">// Get a function...</span>
 <span class="n">blondie</span><span class="p">.</span><span class="n">callMe</span><span class="p">(</span><span class="n">someFn</span><span class="p">)</span>
 </pre></div>
 
 
-<p>Block arguments are purely sugar for creating a function and passing it in one little blob of syntax. There are some times when you want to create a function but <em>don't</em> need to pass it to a method. For that, you can call the <code>Fn</code> class's constructor:</p>
+<p>Block arguments are purely sugar for creating a function and passing it in one
+little blob of syntax. There are some times when you want to create a function
+but <em>don't</em> need to pass it to a method. For that, you can call the <code>Fn</code>
+class's constructor:</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">someFn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Hi!&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
 
-<p>As you can see it takes a block argument too! All the constructor does it return that, so this exists purely as a convenience method for you.</p>
+<p>As you can see it takes a block argument too! All the constructor does it
+return that, so this exists purely as a convenience method for you.</p>
 <h2>Calling functions <a href="#calling-functions" name="calling-functions" class="header-anchor">#</a></h2>
-<p>Once you have a function, how do you invoke it? Like everything in Wren, you do so by calling a method on it:</p>
+<p>Once you have a function, how do you invoke it? Like everything in Wren, you do
+so by calling a method on it:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Blondie</span> <span class="p">{</span>
   <span class="n">callMe</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">fn</span><span class="p">.</span><span class="n">call</span>
@@ -110,7 +129,9 @@
 </pre></div>
 
 
-<p>Functions expose a <code>call</code> method that executes the body of the function. This method is dynamically-dispatched like any other, so you can define your own "function-like" classes and pass them to methods that expect "real" functions.</p>
+<p>Functions expose a <code>call</code> method that executes the body of the function. This
+method is dynamically-dispatched like any other, so you can define your own
+"function-like" classes and pass them to methods that expect "real" functions.</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">FakeFn</span> <span class="p">{</span>
   <span class="n">call</span> <span class="p">{</span>
     <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;I&#39;m feeling functional!&quot;</span><span class="p">)</span>
@@ -122,14 +143,18 @@
 
 
 <h2>Function parameters <a href="#function-parameters" name="function-parameters" class="header-anchor">#</a></h2>
-<p>Of course, functions aren't very useful if you can't pass values to them. The functions that we've seen so far take no arguments. To change that, you can provide a parameter list surrounded by <code>|</code> immediately after the opening brace of the body, like so:</p>
+<p>Of course, functions aren't very useful if you can't pass values to them. The
+functions that we've seen so far take no arguments. To change that, you can
+provide a parameter list surrounded by <code>|</code> immediately after the opening brace
+of the body, like so:</p>
 <div class="codehilite"><pre><span class="n">blondie</span><span class="p">.</span><span class="n">callMe</span> <span class="p">{</span><span class="o">|</span><span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="o">|</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Hi, &quot;</span> <span class="o">+</span> <span class="n">first</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">last</span> <span class="o">+</span> <span class="s2">&quot;!&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
 
-<p>Here we're passing a function to <code>greet</code> that takes two parameters, <code>first</code> and <code>last</code>. They are passed to the function when it's called:</p>
+<p>Here we're passing a function to <code>greet</code> that takes two parameters, <code>first</code> and
+<code>last</code>. They are passed to the function when it's called:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Blondie</span> <span class="p">{</span>
   <span class="n">callMe</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">fn</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;Debbie&quot;</span><span class="p">,</span> <span class="s2">&quot;Harry&quot;</span><span class="p">)</span>
@@ -138,10 +163,16 @@
 </pre></div>
 
 
-<p>It's an error to call a function with fewer or more arguments than its parameter list expects.</p>
+<p>It's an error to call a function with fewer or more arguments than its
+parameter list expects.</p>
 <h2>Returning values <a href="#returning-values" name="returning-values" class="header-anchor">#</a></h2>
-<p>The body of a function is a <a href="syntax.html#blocks">block</a>. If it is a single expression&mdash;more precisely if there is no newline after the <code>{</code> or parameter list&mdash;then the function implicitly returns the value of the expression.</p>
-<p>Otherwise, the body returns <code>null</code> by default. You can explicitly return a value using a <code>return</code> statement. In other words, these two functions do the same thing:</p>
+<p>The body of a function is a <a href="syntax.html#blocks">block</a>. If it is a single
+expression&mdash;more precisely if there is no newline after the <code>{</code> or
+parameter list&mdash;then the function implicitly returns the value of the
+expression.</p>
+<p>Otherwise, the body returns <code>null</code> by default. You can explicitly return a
+value using a <code>return</code> statement. In other words, these two functions do the
+same thing:</p>
 <div class="codehilite"><pre><span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span> <span class="s2">&quot;return value&quot;</span> <span class="p">}</span>
 
 <span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span>
@@ -151,7 +182,9 @@
 
 
 <h2>Closures <a href="#closures" name="closures" class="header-anchor">#</a></h2>
-<p>As you expect, functions are closures&mdash;they can access variables defined outside of their scope. They will hold onto closed-over variables even after leaving the scope where the function is defined:</p>
+<p>As you expect, functions are closures&mdash;they can access variables defined
+outside of their scope. They will hold onto closed-over variables even after
+leaving the scope where the function is defined:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Counter</span> <span class="p">{</span>
   <span class="kd">static</span> <span class="n">create</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="n">i</span> <span class="o">=</span> <span class="m">0</span>
@@ -161,7 +194,10 @@
 </pre></div>
 
 
-<p>Here, the <code>create</code> method returns the function created on its second line. That function references a variable <code>i</code> declared outside of the function. Even after the function is returned from <code>create</code>, it is still able to read and assign to<code>i</code>:</p>
+<p>Here, the <code>create</code> method returns the function created on its second line. That
+function references a variable <code>i</code> declared outside of the function. Even after
+the function is returned from <code>create</code>, it is still able to read and assign
+to<code>i</code>:</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">.</span><span class="n">create</span>
 <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="p">.</span><span class="n">call</span><span class="p">)</span> <span class="c1">// Prints &quot;1&quot;.</span>
 <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="p">.</span><span class="n">call</span><span class="p">)</span> <span class="c1">// Prints &quot;2&quot;.</span>

@@ -27,10 +27,9 @@
       <h2>language</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="expressions.html">Expressions</a></li>
         <li><a href="variables.html">Variables</a></li>
-        <li><a href="branching.html">Branching</a></li>
-        <li><a href="looping.html">Looping</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
         <li><a href="error-handling.html">Error Handling</a></li>
       </ul>
     </section>
@@ -73,8 +72,8 @@ defined, it can be accessed by name as you would expect.</p>
 
 
 <h2>Scope <a href="#scope" name="scope" class="header-anchor">#</a></h2>
-<p>Wren has true block scope: a variable exists from the point where it is
-defined until the end of the block where that definition appears.</p>
+<p>Wren has true block scope: a variable exists from the point where it is defined
+until the end of the <a href="syntax.html#blocks">block</a> where that definition appears.</p>
 <div class="codehilite"><pre><span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c1">// ERROR! a doesn&#39;t exist yet.</span>
   <span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="m">123</span>
@@ -84,10 +83,10 @@ defined until the end of the block where that definition appears.</p>
 </pre></div>
 
 
-<p>Variables defined at the top level of a script are <em>global</em>. All other variables
-are <em>local</em>. Declaring a variable in an inner scope with the same name as an
-outer one is called <em>shadowing</em> and is not an error (although it's not
-something you likely intend to do much).</p>
+<p>Variables defined at the top level of a script are <em>global</em>. All other
+variables are <em>local</em>. Declaring a variable in an inner scope with the same
+name as an outer one is called <em>shadowing</em> and is not an error (although it's
+not something you likely intend to do much).</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;outer&quot;</span>
 <span class="p">{</span>
   <span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;inner&quot;</span>

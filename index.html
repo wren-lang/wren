@@ -27,10 +27,9 @@
       <h2>language</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="expressions.html">Expressions</a></li>
         <li><a href="variables.html">Variables</a></li>
-        <li><a href="branching.html">Branching</a></li>
-        <li><a href="looping.html">Looping</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
         <li><a href="error-handling.html">Error Handling</a></li>
       </ul>
     </section>
@@ -58,26 +57,30 @@
   </nav>
   <main>
     <h1>Welcome</h1>
-    <p>Wren is a <em>small, clean, fast, class-based scripting language.</em> Think Smalltalk
-in a Lua-sized package.</p>
+    <h2>Wren is a small, fast, class-based concurrent scripting language <a href="#wren-is-a-small,-fast,-class-based-concurrent-scripting-language" name="wren-is-a-small,-fast,-class-based-concurrent-scripting-language" class="header-anchor">#</a></h2>
+<p>Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in
+a familiar, modern <a href="syntax.html">syntax</a>.</p>
 <div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">)</span>
 
 <span class="kd">class</span> <span class="nc">Wren</span> <span class="p">{</span>
-  <span class="n">adjectives</span> <span class="p">{</span> <span class="p">[</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="s2">&quot;clean&quot;</span><span class="p">,</span> <span class="s2">&quot;fast&quot;</span><span class="p">]</span> <span class="p">}</span>
-  <span class="n">languageType</span> <span class="p">{</span> <span class="s2">&quot;scripting&quot;</span> <span class="p">}</span>
+  <span class="n">flyTo</span><span class="p">(</span><span class="n">city</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Flying to &quot;</span><span class="p">,</span> <span class="n">city</span><span class="p">)</span>
+  <span class="p">}</span>
 <span class="p">}</span>
+
+<span class="kd">var</span> <span class="n">adjectives</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="p">[</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="s2">&quot;clean&quot;</span><span class="p">,</span> <span class="s2">&quot;fast&quot;</span><span class="p">].</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="n">word</span><span class="o">|</span> <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">adjectives</span><span class="p">.</span><span class="n">isDone</span><span class="p">)</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">adjectives</span><span class="p">.</span><span class="n">call</span><span class="p">)</span>
 </pre></div>
 
 
 <ul>
 <li>
-<p><strong>Wren is small.</strong> The codebase is under 4,000 semicolons which keeps the
-    language and libraries small enough to fit in your head. You can skim
-    <a href="https://github.com/munificent/wren/tree/master/src">the whole thing</a> in one sitting.</p>
-</li>
-<li>
-<p><strong>Wren is clean.</strong> The codebase is <em>small</em>, but not <em>dense</em>. It is readable
-    and <a href="https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433">lovingly-commented</a>. It's written in warning-free standard C99.</p>
+<p><strong>Wren is small.</strong> The codebase is about <a href="https://github.com/munificent/wren/tree/master/src">5,000 lines</a>. You can
+    skim the whole thing in an afternoon. It's <em>small</em>, but not <em>dense</em>. It
+    is readable and <a href="https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433">lovingly-commented</a>.</p>
 </li>
 <li>
 <p><strong>Wren is fast.</strong> A fast single-pass compiler to tight bytecode, and a
@@ -90,9 +93,15 @@ in a Lua-sized package.</p>
     <a href="classes.html">classes</a> front and center.</p>
 </li>
 <li>
+<p><strong>Wren is concurrent.</strong> Lightweight <a href="fibers.html">fibers</a> are core to the execution
+    model and let you organize your program into an army of communicating
+    coroutines.</p>
+</li>
+<li>
 <p><strong>Wren is a scripting language.</strong> Wren is intended for embedding in
     applications. It has no dependencies, a small standard library,
-    and <a href="embedding-api.html">an easy-to-use C API</a>.</p>
+    and <a href="embedding-api.html">an easy-to-use C API</a>. It's written in warning-free
+    standard C99.</p>
 </li>
 </ul>
   </main>

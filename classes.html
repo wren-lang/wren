@@ -27,10 +27,9 @@
       <h2>language</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="expressions.html">Expressions</a></li>
         <li><a href="variables.html">Variables</a></li>
-        <li><a href="branching.html">Branching</a></li>
-        <li><a href="looping.html">Looping</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
         <li><a href="error-handling.html">Error Handling</a></li>
       </ul>
     </section>
@@ -59,8 +58,11 @@
   <main>
     <h1>Classes</h1>
     <p>Every value in Wren is an object, and every object is an instance of a class.
-Even <code>true</code> and <code>false</code> are full-featured objects&mdash;instances of the <code>Bool</code> class.</p>
-<p>Classes contain both <em>behavior</em> and <em>state</em>. Behavior is defined in <em>methods</em> which are stored in the class. State is defined in <em>fields</em>, whose values are stored in each instance.</p>
+Even <code>true</code> and <code>false</code> are full-featured objects&mdash;instances of the <code>Bool</code>
+class.</p>
+<p>Classes contain both <em>behavior</em> and <em>state</em>. Behavior is defined in <em>methods</em>
+which are stored in the class. State is defined in <em>fields</em>, whose values are
+stored in each instance.</p>
 <h2>Defining a class <a href="#defining-a-class" name="defining-a-class" class="header-anchor">#</a></h2>
 <p>Classes are created using the <code>class</code> keyword, unsurprisingly:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{}</span>
@@ -78,7 +80,8 @@ Even <code>true</code> and <code>false</code> are full-featured objects&mdash;in
 </pre></div>
 
 
-<p>This defines a <code>prance</code> method that takes no arguments. To support parameters, add a parenthesized parameter list after the method's name:</p>
+<p>This defines a <code>prance</code> method that takes no arguments. To support parameters,
+add a parenthesized parameter list after the method's name:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
   <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">when</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;The unicorn prances in &quot;</span> <span class="o">+</span> <span class="n">where</span> <span class="o">+</span> <span class="s2">&quot; at &quot;</span> <span class="o">+</span> <span class="n">when</span><span class="p">)</span>
@@ -87,7 +90,11 @@ Even <code>true</code> and <code>false</code> are full-featured objects&mdash;in
 </pre></div>
 
 
-<p>Unlike most other dynamically-typed languages, in Wren you can have multiple methods in a class with the same name, as long as they take a different number of parameters. In technical terms, you can <em>overload by arity</em>. So this class is fine:</p>
+<h3>Arity <a href="#arity" name="arity" class="header-anchor">#</a></h3>
+<p>Unlike most other dynamically-typed languages, in Wren you can have multiple
+methods in a class with the same name, as long as they take a different number
+of parameters. In technical terms, you can <em>overload by arity</em>. So this class
+is fine:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
   <span class="n">prance</span> <span class="p">{</span>
     <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;The unicorn prances in a fancy manner!&quot;</span><span class="p">)</span>
@@ -104,39 +111,25 @@ Even <code>true</code> and <code>false</code> are full-featured objects&mdash;in
 </pre></div>
 
 
-<p>When you <a href="method-calls.html">call</a> the <code>prance</code> method, it selects the right one based on how many arguments you pass it.</p>
-<h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
-<p>To create a new instance of a class, you use the <code>new</code> keyword. We can make a unicorn like so:</p>
-<div class="codehilite"><pre><span class="k">new</span> <span class="n">Unicorn</span>
+<p>And you can call each of the methods like so:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">unicorn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Unicorn</span>
+<span class="n">unicorn</span><span class="p">.</span><span class="n">prance</span>
+<span class="n">unicorn</span><span class="p">.</span><span class="n">prance</span><span class="p">(</span><span class="s2">&quot;Antwerp&quot;</span><span class="p">)</span>
+<span class="n">unicorn</span><span class="p">.</span><span class="n">prance</span><span class="p">(</span><span class="s2">&quot;Brussels&quot;</span><span class="p">,</span> <span class="s2">&quot;high noon&quot;</span><span class="p">)</span>
 </pre></div>
 
 
-<p>You almost always want to define some state or do some other initialization on a new object. For that, you'll want to define a constructor, like so:</p>
-<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
-  <span class="k">new</span> <span class="p">{</span>
-    <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;I am a constructor!&quot;</span><span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
-<p>When you create an instance with <code>new</code>, its constructor will be invoked. It's just a method with a special name. Like methods, you can pass arguments to the constructor by adding a parenthesized parameter list after <code>new</code>:</p>
-<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
-  <span class="k">new</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; and I am &quot;</span> <span class="o">+</span> <span class="n">color</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
-<p>Values are passed to the constructor like so:</p>
-<div class="codehilite"><pre><span class="k">new</span> <span class="n">Unicorn</span><span class="p">(</span><span class="s2">&quot;Flicker&quot;</span><span class="p">,</span> <span class="s2">&quot;purple&quot;</span><span class="p">)</span>
-</pre></div>
-
-
-<p>Like other methods, you can overload constructors by arity.</p>
-<h2>Operators <a href="#operators" name="operators" class="header-anchor">#</a></h2>
-<p>Operators are just special syntax for regular <a href="method-calls.html">method calls</a> on the left hand operand (or only operand in the case of unary operators like <code>!</code> and <code>~</code>). You can define them like so:</p>
+<p>The number of arguments provided at the callsite determines which method is
+chosen.</p>
+<p>It's often natural to have the same conceptual operation work with different
+sets of arguments. In other languages, you'd define a single method for the
+operation and have to check for "undefined" or missing arguments. Wren just
+treats them as different methods that you can implement separately.</p>
+<h3>Operators <a href="#operators" name="operators" class="header-anchor">#</a></h3>
+<p>Operators are just special syntax for a method call on the left hand operand
+(or only operand in the case of unary operators like <code>!</code> and <code>~</code>). In other
+words, you can think of <code>a + b</code> as meaning <code>a.+(b)</code>.</p>
+<p>You can define operators in your class like so:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
   <span class="c1">// Infix:</span>
   <span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="p">{</span>
@@ -160,23 +153,120 @@ Even <code>true</code> and <code>false</code> are full-featured objects&mdash;in
 </pre></div>
 
 
-<p>Note that <code>-</code> can be both a prefix and infix operator. If there's a parameter list, it's the infix one, otherwise, it's prefix. Since Wren supports overloading by arity, it's no problem for a class to define both.</p>
-<p>Operator overloading is really useful for types like vectors and complex numbers where the reader knows what the operators will do, but can make code deeply confusing if overused. When in doubt, use a real name.</p>
-<h2>Setters <a href="#setters" name="setters" class="header-anchor">#</a></h2>
-<p><strong>TODO: ...</strong></p>
-<h2>Fields <a href="#fields" name="fields" class="header-anchor">#</a></h2>
+<p>Note that <code>-</code> can be both a prefix and infix operator. If there's a parameter
+list, it's the infix one, otherwise, it's prefix. Since Wren supports
+overloading by arity, it's no problem for a class to define both.</p>
+<h3>Subscript operators <a href="#subscript-operators" name="subscript-operators" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
+<h3>Setters <a href="#setters" name="setters" class="header-anchor">#</a></h3>
+<p><strong>TODO</strong></p>
+<h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
+<p>To create a new instance of a class, you use the <code>new</code> keyword. We can make a
+unicorn like so:</p>
+<div class="codehilite"><pre><span class="k">new</span> <span class="n">Unicorn</span>
+</pre></div>
+
+
+<p>You almost always want to define some state or do some other initialization on
+a new object. For that, you'll want to define a constructor, like so:</p>
+<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
+  <span class="k">new</span> <span class="p">{</span>
+    <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;I am a constructor!&quot;</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>When you create an instance with <code>new</code>, its constructor will be invoked. It's
+just a method with a special name. Like methods, you can pass arguments to the
+constructor by adding a parenthesized parameter list after <code>new</code>:</p>
+<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
+  <span class="k">new</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; and I am &quot;</span> <span class="o">+</span> <span class="n">color</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Values are passed to the constructor like so:</p>
+<div class="codehilite"><pre><span class="k">new</span> <span class="n">Unicorn</span><span class="p">(</span><span class="s2">&quot;Flicker&quot;</span><span class="p">,</span> <span class="s2">&quot;purple&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Like other methods, you can overload constructors by <a href="#arity">arity</a>.</p>
+<h2>Fields <a href="#fields" name="fields" class="header-anchor">#</a></h2>
+<p>All state stored in instances is stored in <em>fields</em>. Each field has a named
+that starts with an underscore.</p>
+<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Rectangle</span> <span class="p">{</span>
+  <span class="n">area</span> <span class="p">{</span> <span class="n">_width</span> <span class="o">*</span> <span class="n">_height</span> <span class="p">}</span>
+
+  <span class="c1">// Other stuff...</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Here, <code>_width</code> and <code>_height</code> in the <code>area</code> <a href="classes.html#methods">getter</a> refer
+to fields on the rectangle instance. You can think of them like <code>this.width</code>
+and <code>this.height</code> in other languages.</p>
+<p>When a field name appears, Wren looks for the nearest enclosing class and looks
+up the field on the instance of that class. Field names cannot be used outside
+of an instance method. They <em>can</em> be used inside a <a href="functions.html">function</a>
+in a method. Wren will look outside any nested functions until it finds an
+enclosing method.</p>
+<p>Unlike <a href="variables.html">variables</a>, fields are implicitly declared by simply
+assigning to them. If you access a field before it has been initialized, its
+value is <code>null</code>.</p>
+<h3>Encapsulation <a href="#encapsulation" name="encapsulation" class="header-anchor">#</a></h3>
+<p>All fields are <em>protected</em> in Wren&mdash;an object's fields can only be
+directly accessed from within methods defined on the object's class, or its
+superclasses. You cannot even access fields on another instance of your own
+class, unlike C++ and Java.</p>
+<p>If you want to make a property of an object visible, you need to define a
+getter to expose it:</p>
+<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Rectangle</span> <span class="p">{</span>
+  <span class="n">width</span> <span class="p">{</span> <span class="n">_width</span> <span class="p">}</span>
+  <span class="n">height</span> <span class="p">{</span> <span class="n">_height</span> <span class="p">}</span>
+
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>To allow outside code to modify the field, you'll also need to provide setters:</p>
+<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Rectangle</span> <span class="p">{</span>
+  <span class="n">width</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="n">_width</span> <span class="o">=</span> <span class="n">value</span> <span class="p">}</span>
+  <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="n">_height</span> <span class="o">=</span> <span class="n">value</span> <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>One thing we've learned in the past forty years of software engineering is that
+encapsulating state tends to make code easier to maintain, so Wren defaults to
+keeping your object's state pretty tightly bundled up. Don't feel that you have
+to or even should define getters or setters for most of your object's fields.</p>
 <h2>Metaclasses and static members <a href="#metaclasses-and-static-members" name="metaclasses-and-static-members" class="header-anchor">#</a></h2>
 <p><strong>TODO</strong></p>
+<h3>Static fields <a href="#static-fields" name="static-fields" class="header-anchor">#</a></h3>
+<p>A name that starts with <em>two</em> underscores is a <em>static</em> field. They work
+similar to <a href="#fields">fields</a> except the data is stored on the class itself, and
+not the instance. They can be used in <em>both</em> instance and static methods.</p>
+<p><strong>TODO: Example.</strong></p>
 <h2>Inheritance <a href="#inheritance" name="inheritance" class="header-anchor">#</a></h2>
-<p>A class can inherit from a "parent" or <em>superclass</em>. When you invoke a method on an object of some class, if it can't be found, it walks up the chain of superclasses looking for it there.</p>
-<p>By default, any new class inherits from <code>Object</code>, which is the superclass from which all other classes ultimately descend. You can specify a different parent class using <code>is</code> when you declare the class:</p>
+<p>A class can inherit from a "parent" or <em>superclass</em>. When you invoke a method
+on an object of some class, if it can't be found, it walks up the chain of
+superclasses looking for it there.</p>
+<p>By default, any new class inherits from <code>Object</code>, which is the superclass from
+which all other classes ultimately descend. You can specify a different parent
+class using <code>is</code> when you declare the class:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Pegasus</span> <span class="k">is</span> <span class="n">Unicorn</span> <span class="p">{}</span>
 </pre></div>
 
 
 <p>This declares a new class <code>Pegasus</code> that inherits from <code>Unicorn</code>.</p>
-<p>The metaclass hierarchy does <em>not</em> parallel the regular class hierarchy. So, if <code>Pegasus</code> inherits from <code>Unicorn</code>, <code>Pegasus</code>'s metaclass will not inherit from <code>Unicorn</code>'s metaclass. In more prosaic terms, this means that static methods are not inherited.</p>
+<p>The metaclass hierarchy does <em>not</em> parallel the regular class hierarchy. So, if
+<code>Pegasus</code> inherits from <code>Unicorn</code>, <code>Pegasus</code>'s metaclass will not inherit from
+<code>Unicorn</code>'s metaclass. In more prosaic terms, this means that static methods
+are not inherited.</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
   <span class="c1">// Unicorns cannot fly. :(</span>
   <span class="kd">static</span> <span class="n">canFly</span> <span class="p">{</span> <span class="kc">false</span> <span class="p">}</span>
@@ -188,7 +278,9 @@ Even <code>true</code> and <code>false</code> are full-featured objects&mdash;in
 </pre></div>
 
 
-<p>Constructors, however, initialize the instance <em>after</em> it has been created. They are defined as instance methods on the class and not on the metaclass. That means that constructors <em>are</em> inherited.</p>
+<p>Constructors, however, initialize the instance <em>after</em> it has been created.
+They are defined as instance methods on the class and not on the metaclass.
+That means that constructors <em>are</em> inherited.</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
   <span class="k">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
@@ -199,11 +291,6 @@ Even <code>true</code> and <code>false</code> are full-featured objects&mdash;in
 
 <span class="k">new</span> <span class="n">Pegasus</span><span class="p">(</span><span class="s2">&quot;Fred&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;My name is Fred.&quot;.</span>
 </pre></div>
-
-
-<h2>Superclass method calls <a href="#superclass-method-calls" name="superclass-method-calls" class="header-anchor">#</a></h2>
-<p><strong>TODO</strong></p>
-<p><strong>TODO: this</strong></p>
   </main>
 </div>
 <footer>
