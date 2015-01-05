@@ -108,9 +108,7 @@ DECLARE_BUFFER(Value, Value);
 typedef struct
 {
   Obj obj;
-  char* value;
-
-  // TODO: Flexible array.
+  char value[];
 } ObjString;
 
 // The dynamically allocated data structure for a variable that has been used
