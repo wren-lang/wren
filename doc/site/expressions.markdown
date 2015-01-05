@@ -210,7 +210,7 @@ and returns the right-hand argument.
     IO.print(1 && 2)      // 2
 
 An `||` ("logical or") expression is reversed. If the left-hand argument is
-[false](control-flow.html#truth), it's returned, otherwise the right-hand
+[true](control-flow.html#truth), it's returned, otherwise the right-hand
 argument is evaluated and returned:
 
     :::dart
