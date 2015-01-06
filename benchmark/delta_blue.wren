@@ -142,7 +142,7 @@ class UnaryConstraint is Constraint {
   // Adds this constraint to the constraint graph.
   addToGraph {
     _myOutput.addConstraint(this)
-    _satisfied = false;
+    _satisfied = false
   }
 
   // Decides if this constraint can be satisfied and records that decision.
@@ -356,10 +356,10 @@ class ScaleConstraint is BinaryConstraint {
   // Enforce this constraint. Assume that it is satisfied.
   execute {
     if (direction == FORWARD) {
-      v2.value = v1.value * _scale.value + _offset.value;
+      v2.value = v1.value * _scale.value + _offset.value
     } else {
       // TODO: Is this the same semantics as ~/?
-      v1.value = ((v2.value - _offset.value) / _scale.value).floor;
+      v1.value = ((v2.value - _offset.value) / _scale.value).floor
     }
   }
 
