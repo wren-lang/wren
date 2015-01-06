@@ -1,4 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
+from __future__ import print_function
 
 from collections import defaultdict
 from os import listdir
@@ -55,11 +57,11 @@ def walk(dir, callback):
 
 def print_line(line=None):
   # Erase the line.
-  print '\033[2K',
+  print('\033[2K', end='')
   # Move the cursor to the beginning.
-  print '\r',
+  print('\r', end='')
   if line:
-    print line,
+    print(line, end='')
     sys.stdout.flush()
 
 
@@ -134,7 +136,7 @@ def run_test(path):
   # Invoke wren and run the test.
   proc = Popen([WREN_APP, path], stdout=PIPE, stderr=PIPE)
   (out, err) = proc.communicate()
-  (out, err) = out.replace('\r\n', '\n'),  err.replace('\r\n', '\n')
+  (out, err) = out.decode("utf-8").replace('\r\n', '\n'),  err.decode("utf-8").replace('\r\n', '\n')
 
   fails = []
 
@@ -193,6 +195,8 @@ def run_test(path):
       del out_lines[-1]
 
     for line in out_lines:
+      if sys.version_info < (3, 0):
+        line = line.encode('utf-8')
       if expect_index >= len(expect_output):
         fails.append('Got output "{0}" when none was expected.'.format(line))
       elif expect_output[expect_index][0] != line:
@@ -214,22 +218,22 @@ def run_test(path):
   else:
     failed += 1
     print_line(color.RED + 'FAIL' + color.DEFAULT + ': ' + path)
-    print
+    print('\n')
     for fail in fails:
-      print '     ', color.PINK + fail + color.DEFAULT
-    print
+      print('      ' + color.PINK + fail + color.DEFAULT)
+    print('\n')
 
 walk(TEST_DIR, run_test)
 
 print_line()
 if failed == 0:
-  print 'All ' + color.GREEN + str(passed) + color.DEFAULT + ' tests passed.'
+  print('All ' + color.GREEN + str(passed) + color.DEFAULT + ' tests passed.')
 else:
-  print (color.GREEN + str(passed) + color.DEFAULT + ' tests passed. ' +
+  print(color.GREEN + str(passed) + color.DEFAULT + ' tests passed. ' +
        color.RED + str(failed) + color.DEFAULT + ' tests failed.')
 
 for key in sorted(skipped.keys()):
-  print ('Skipped ' + color.YELLOW + str(skipped[key]) + color.DEFAULT +
+  print('Skipped ' + color.YELLOW + str(skipped[key]) + color.DEFAULT +
        ' tests: ' + key)
 
 if failed != 0:

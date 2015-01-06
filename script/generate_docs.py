@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import time
+import re
 from datetime import datetime
 
 def is_up_to_date(path, out_path):
@@ -49,7 +50,7 @@ def format_file(path, skip_up_to_date):
         elif command == "category":
           category = args
         else:
-          print "UNKNOWN COMMAND:", command, args
+          print(' '.join(["UNKNOWN COMMAND:", command, args]))
 
       elif stripped.startswith('#'):
         # Add anchors to the headers.
@@ -57,7 +58,7 @@ def format_file(path, skip_up_to_date):
         headertype = stripped[:index]
         header = stripped[index:].strip()
         anchor = header.lower().replace(' ', '-')
-        anchor = anchor.translate(None, '.?!:/')
+        anchor = re.compile('\.|\?|!|:|/').sub('', anchor)
 
         contents += indentation + headertype
         contents += '{1} <a href="#{0}" name="{0}" class="header-anchor">#</a>\n'.format(anchor, header)
@@ -84,7 +85,7 @@ def format_file(path, skip_up_to_date):
   with open(out_path, 'w') as out:
     out.write(template.format(**fields))
 
-  print "converted", basename
+  print("converted " + basename)
 
 
 def check_sass():
@@ -98,7 +99,7 @@ def check_sass():
         return
 
     subprocess.call(['sass', 'doc/site/style.scss', 'build/docs/style.css'])
-    print "built css"
+    print("built css")
 
 
 def format_files(skip_up_to_date):

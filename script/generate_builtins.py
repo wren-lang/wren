@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import glob
 import os.path
 import re
@@ -33,7 +34,7 @@ def copy_builtin(filename):
   with open("src/wren_" + name + ".c", "w") as f:
     f.write(c_source)
 
-  print name
+  print(name)
 
 
 for f in glob.iglob("builtin/*.wren"):

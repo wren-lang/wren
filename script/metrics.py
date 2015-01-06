@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import glob
 import fnmatch
@@ -64,17 +64,17 @@ for dir_path, dir_names, file_names in os.walk("test"):
           num_expects += 1
           continue
 
-print "source:"
-print "  files          ", num_files
-print "  semicolons     ", num_semicolons
-print "  TODOs          ", num_todos
-print "  comment lines  ", num_docs
-print "  code lines     ", num_code
-print "  empty lines    ", num_empty
-print
-print "test:"
-print "  files          ", num_test_files
-print "  TODOs          ", num_test_todos
-print "  expectations   ", num_expects
-print "  non-empty lines", num_test
-print "  empty lines    ", num_test_empty
+print("source:")
+print("  files           " + str(num_files))
+print("  semicolons      " + str(num_semicolons))
+print("  TODOs           " + str(num_todos))
+print("  comment lines   " + str(num_docs))
+print("  code lines      " + str(num_code))
+print("  empty lines     " + str(num_empty))
+print("\n")
+print("test:")
+print("  files           " + str(num_test_files))
+print("  TODOs           " + str(num_test_todos))
+print("  expectations    " + str(num_expects))
+print("  non-empty lines " + str(num_test))
+print("  empty lines     " + str(num_test_empty))
