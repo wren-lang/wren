@@ -75,3 +75,11 @@ watchdocs:
 # Build the docs and copy them to a local "gh-pages" directory.
 gh-pages: docs
 	cp -r build/docs/. gh-pages
+
+# Run the benchmark suite.
+benchmark: wren
+	@pushd benchmark && ./run_bench || popd
+
+# Run the metrics script.
+metrics:
+	@./script/metrics.py
