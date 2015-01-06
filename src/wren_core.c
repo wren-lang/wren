@@ -646,8 +646,15 @@ DEF_NATIVE(num_sqrt)
 
 DEF_NATIVE(num_toString)
 {
-  // I think this should be large enough to hold any double converted to a
-  // string using "%.14g". Example:
+  double value = AS_NUM(args[0]);
+
+  // Corner case: If the value is NaN, different versions of libc produce
+  // different outputs (some will format it signed and some won't). To get
+  // reliable output, handle that ourselves.
+  if (value != value) RETURN_VAL(wrenNewString(vm, "nan", 3));
+
+  // This is large enough to hold any double converted to a string using
+  // "%.14g". Example:
   //
   //     -1.12345678901234e-1022
   //
@@ -663,7 +670,6 @@ DEF_NATIVE(num_toString)
   // + 1 char for "\0"
   // = 24
   char buffer[24];
-  double value = AS_NUM(args[0]);
   sprintf(buffer, "%.14g", value);
   RETURN_VAL(wrenNewString(vm, buffer, strlen(buffer)));
 }
