@@ -781,16 +781,14 @@ static void nextToken(Parser* parser)
         twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG);
         return;
 
-      case '\r':
-         twoCharToken(parser, '\n', TOKEN_LINE, TOKEN_LINE);
-         return;
       case '\n':
         makeToken(parser, TOKEN_LINE);
         return;
 
       case ' ':
+      case '\r':
         // Skip forward until we run out of whitespace.
-        while (peekChar(parser) == ' ') nextChar(parser);
+        while (peekChar(parser) == ' ' || peekChar(parser) == '\r') nextChar(parser);
         break;
 
       case '"': readString(parser); return;
