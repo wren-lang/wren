@@ -78,7 +78,7 @@ gh-pages: docs
 
 # Run the benchmark suite.
 benchmark: wren
-	@pushd benchmark && ./run_bench || popd
+	@cd benchmark && ./run_bench || cd -
 
 # Run the metrics script.
 metrics:
