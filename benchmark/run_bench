@@ -104,7 +104,7 @@ def run_benchmark_language(benchmark, language, benchmark_result):
   """
 
   name = "{0} - {1}".format(benchmark[0], language[0])
-  print("{0:30s}".format(name), end='')
+  print("{0:30s}".format(name), end=' ')
 
   if not os.path.exists(os.path.join(
       BENCHMARK_DIR, benchmark[0] + language[2])):
@@ -171,7 +171,7 @@ def run_benchmark(benchmark, languages):
 
 
 def graph_results(benchmark_result):
-  print('\n')
+  print()
 
   INCREMENT = {
     '-': 'o',
@@ -193,7 +193,7 @@ def graph_results(benchmark_result):
       index = int(get_score(time) / highest * 67)
       line[index] = INCREMENT[line[index]]
     print("{0:30s}{1}".format(result["desc"], "".join(line)))
-  print('\n')
+  print()
 
 
 def read_baseline():
