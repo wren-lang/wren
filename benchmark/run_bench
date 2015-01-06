@@ -83,7 +83,11 @@ def run_trial(benchmark, language):
   args = []
   args.extend(language[1])
   args.append(os.path.join(BENCHMARK_DIR, benchmark[0] + language[2]))
-  out = subprocess.check_output(args, universal_newlines=True)
+  try:
+    out = subprocess.check_output(args, universal_newlines=True)
+  except OSError:
+    print('Interpreter was not found')
+    return None
   match = benchmark[1].match(out)
   if match:
     return float(match.group(1))
