@@ -388,9 +388,7 @@ static void markString(WrenVM* vm, ObjString* string)
   if (setMarkedFlag(&string->obj)) return;
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjString);
-  // TODO: O(n) calculation here is lame!
-  vm->bytesAllocated += strlen(string->value);
+  vm->bytesAllocated += sizeof(ObjString) + string->length + 1;
 }
 
 static void markClass(WrenVM* vm, ObjClass* classObj)
