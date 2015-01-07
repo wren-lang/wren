@@ -339,13 +339,8 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
 
 Value wrenNewUninitializedString(WrenVM* vm, size_t length)
 {
-  // Allocate before the string object in case this triggers a GC which would
-  // free the string object.
-  char* heapText = allocate(vm, length + 1);
-
-  ObjString* string = allocate(vm, sizeof(ObjString));
+  ObjString* string = allocate(vm, sizeof(ObjString) + length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
-  string->value = heapText;
 
   return OBJ_VAL(string);
 }
@@ -616,9 +611,6 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       break;
 
     case OBJ_STRING:
-      wrenReallocate(vm, ((ObjString*)obj)->value, 0, 0);
-      break;
-
     case OBJ_CLOSURE:
     case OBJ_FIBER:
     case OBJ_INSTANCE:
