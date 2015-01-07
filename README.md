@@ -43,6 +43,8 @@ while (!adjectives.isDone) IO.print(adjectives.call)
 If you like the sound of this, [give it a try][try]! Even better, you can
 [contribute to Wren itself][contribute].
 
+[![Build Status](https://travis-ci.org/munificent/wren.svg)](https://travis-ci.org/munificent/wren)
+
 [syntax]: http://munificent.github.io/wren/syntax.html
 [src]: https://github.com/munificent/wren/tree/master/src
 [nan]: https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
