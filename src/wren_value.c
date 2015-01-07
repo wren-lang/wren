@@ -341,6 +341,7 @@ Value wrenNewUninitializedString(WrenVM* vm, size_t length)
 {
   ObjString* string = allocate(vm, sizeof(ObjString) + length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
+  string->length = length;
 
   return OBJ_VAL(string);
 }

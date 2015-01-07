@@ -108,6 +108,7 @@ DECLARE_BUFFER(Value, Value);
 typedef struct
 {
   Obj obj;
+  size_t length; // not including null terminator
   char value[];
 } ObjString;
 
