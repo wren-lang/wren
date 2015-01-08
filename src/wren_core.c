@@ -947,7 +947,7 @@ DEF_NATIVE(string_eqeq)
   ObjString* a = AS_STRING(args[0]);
   ObjString* b = AS_STRING(args[1]);
   RETURN_BOOL(a->length == b->length &&
-    memcmp(a->value, b->value, a->length) == 0);
+      memcmp(a->value, b->value, a->length) == 0);
 }
 
 DEF_NATIVE(string_bangeq)
@@ -956,7 +956,7 @@ DEF_NATIVE(string_bangeq)
   ObjString* a = AS_STRING(args[0]);
   ObjString* b = AS_STRING(args[1]);
   RETURN_BOOL(a->length != b->length ||
-    memcmp(a->value, b->value, a->length) != 0);
+      memcmp(a->value, b->value, a->length) != 0);
 }
 
 DEF_NATIVE(string_subscript)
