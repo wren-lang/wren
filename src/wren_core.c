@@ -670,8 +670,8 @@ DEF_NATIVE(num_toString)
   // + 1 char for "\0"
   // = 24
   char buffer[24];
-  sprintf(buffer, "%.14g", value);
-  RETURN_VAL(wrenNewString(vm, buffer, strlen(buffer)));
+  int length = sprintf(buffer, "%.14g", value);
+  RETURN_VAL(wrenNewString(vm, buffer, length));
 }
 
 DEF_NATIVE(num_negate)
@@ -906,9 +906,9 @@ DEF_NATIVE(range_toString)
 {
   char buffer[51];
   ObjRange* range = AS_RANGE(args[0]);
-  sprintf(buffer, "%.14g%s%.14g", range->from,
-          range->isInclusive ? ".." : "...", range->to);
-  RETURN_VAL(wrenNewString(vm, buffer, strlen(buffer)));
+  int length = sprintf(buffer, "%.14g%s%.14g", range->from,
+                       range->isInclusive ? ".." : "...", range->to);
+  RETURN_VAL(wrenNewString(vm, buffer, length));
 }
 
 DEF_NATIVE(string_contains)
