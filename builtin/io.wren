@@ -4,7 +4,7 @@ class IO {
   }
 
   static print(obj) {
-    IO.writeString_(obj.toString)
+    IO.writeObject_(obj)
     IO.writeString_("\n")
     return obj
   }
@@ -70,12 +70,21 @@ class IO {
   }
 
   static printList_(objects) {
-    for (object in objects) IO.writeString_(object.toString)
+    for (object in objects) IO.writeObject_(object)
     IO.writeString_("\n")
   }
 
   static write(obj) {
-    IO.writeString_(obj.toString)
+    IO.writeObject_(obj)
     return obj
+  }
+
+  static writeObject_(obj) {
+    var string = obj.toString
+    if (string is String) {
+      IO.writeString_(string)
+    } else {
+      IO.writeString_("[invalid toString]")
+    }
   }
 }
