@@ -198,7 +198,7 @@ The `&&` and `||` operators are not like the other infix operators. They work
 more like [control flow](control-flow.html) structures than operators because
 they conditionally execute some code&mdash;they short-circuit. Depending on the
 value of the left-hand side, the right-hand operand expression may or may not
-be evaluated. Because of this, they cannot be overloaded and they behavior is
+be evaluated. Because of this, they cannot be overloaded and their behavior is
 fixed.
 
 A `&&` ("logical and") expression evaluates the left-hand argument. If it's
