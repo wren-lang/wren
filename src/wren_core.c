@@ -915,18 +915,18 @@ DEF_NATIVE(string_contains)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
 
-  const char* string = AS_CSTRING(args[0]);
-  const char* search = AS_CSTRING(args[1]);
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
 
   // Corner case, the empty string contains the empty string.
-  if (strlen(string) == 0 && strlen(search) == 0) RETURN_TRUE;
+  if (string->length == 0 && search->length == 0) RETURN_TRUE;
 
-  RETURN_BOOL(strstr(string, search) != NULL);
+  RETURN_BOOL(strstr(string->value, search->value) != NULL);
 }
 
 DEF_NATIVE(string_count)
 {
-  double count = strlen(AS_CSTRING(args[0]));
+  double count = AS_STRING(args[0])->length;
   RETURN_NUM(count);
 }
 
@@ -944,26 +944,26 @@ DEF_NATIVE(string_plus)
 DEF_NATIVE(string_eqeq)
 {
   if (!IS_STRING(args[1])) RETURN_FALSE;
-  const char* a = AS_CSTRING(args[0]);
-  const char* b = AS_CSTRING(args[1]);
-  RETURN_BOOL(strcmp(a, b) == 0);
+  ObjString* a = AS_STRING(args[0]);
+  ObjString* b = AS_STRING(args[1]);
+  RETURN_BOOL(a->length == b->length &&
+      memcmp(a->value, b->value, a->length) == 0);
 }
 
 DEF_NATIVE(string_bangeq)
 {
   if (!IS_STRING(args[1])) RETURN_TRUE;
-  const char* a = AS_CSTRING(args[0]);
-  const char* b = AS_CSTRING(args[1]);
-  RETURN_BOOL(strcmp(a, b) != 0);
+  ObjString* a = AS_STRING(args[0]);
+  ObjString* b = AS_STRING(args[1]);
+  RETURN_BOOL(a->length != b->length ||
+      memcmp(a->value, b->value, a->length) != 0);
 }
 
 DEF_NATIVE(string_subscript)
 {
   ObjString* string = AS_STRING(args[0]);
-  // TODO: Strings should cache their length.
-  int length = (int)strlen(string->value);
 
-  int index = validateIndex(vm, args, length, 1, "Subscript");
+  int index = validateIndex(vm, args, string->length, 1, "Subscript");
   if (index == -1) return PRIM_ERROR;
 
   // The result is a one-character string.

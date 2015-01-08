@@ -341,6 +341,7 @@ Value wrenNewUninitializedString(WrenVM* vm, size_t length)
 {
   ObjString* string = allocate(vm, sizeof(ObjString) + length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
+  string->length = length;
 
   return OBJ_VAL(string);
 }
@@ -387,9 +388,7 @@ static void markString(WrenVM* vm, ObjString* string)
   if (setMarkedFlag(&string->obj)) return;
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjString);
-  // TODO: O(n) calculation here is lame!
-  vm->bytesAllocated += strlen(string->value);
+  vm->bytesAllocated += sizeof(ObjString) + string->length + 1;
 }
 
 static void markClass(WrenVM* vm, ObjClass* classObj)
