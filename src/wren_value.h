@@ -109,7 +109,7 @@ typedef struct
 {
   Obj obj;
   // Does not include the null terminator.
-  size_t length;
+  int length;
   char value[];
 } ObjString;
 
