@@ -227,7 +227,7 @@ the <code>[]=</code> method on <code>map</code>, passing in <code>"key"</code> a
 more like <a href="control-flow.html">control flow</a> structures than operators because
 they conditionally execute some code&mdash;they short-circuit. Depending on the
 value of the left-hand side, the right-hand operand expression may or may not
-be evaluated. Because of this, they cannot be overloaded and they behavior is
+be evaluated. Because of this, they cannot be overloaded and their behavior is
 fixed.</p>
 <p>A <code>&amp;&amp;</code> ("logical and") expression evaluates the left-hand argument. If it's
 <a href="control-flow.html#truth">false</a>, it returns that value. Otherwise it evaluates
@@ -238,7 +238,7 @@ and returns the right-hand argument.</p>
 
 
 <p>An <code>||</code> ("logical or") expression is reversed. If the left-hand argument is
-<a href="control-flow.html#truth">false</a>, it's returned, otherwise the right-hand
+<a href="control-flow.html#truth">true</a>, it's returned, otherwise the right-hand
 argument is evaluated and returned:</p>
 <div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="kc">false</span> <span class="o">||</span> <span class="m">1</span><span class="p">)</span>  <span class="c1">// 1</span>
 <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="m">1</span> <span class="o">||</span> <span class="m">2</span><span class="p">)</span>      <span class="c1">// 1</span>
