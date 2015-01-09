@@ -24,6 +24,34 @@ static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)
   return realloc(memory, newSize);
 }
 
+char* methodNotFound(char* className, char* symbolName)
+{
+  // Count the number of spaces to determine number of arguments for this
+  // symbol.
+  int pos = strlen(symbolName) - 1;
+  while (symbolName[pos] == ' ') pos--;
+
+  int arguments = strlen(symbolName) - pos - 1;
+
+  // Create a new string that contains only the symbol name.
+  char *canonicalizedSymbol = malloc(pos + 1);
+  strncpy(canonicalizedSymbol, symbolName, pos + 1);
+
+  int messageLength = strlen(className) + strlen(canonicalizedSymbol) +
+                      (arguments > 9 ? 48 : 47) + (arguments == 1 ? 0 : 1);
+  char *message = malloc(messageLength);
+
+  snprintf(message, messageLength, "%s does not implement method '%s' with %d argument%s.",
+           className,
+           canonicalizedSymbol,
+           arguments,
+           arguments == 1 ? "" : "s");
+
+  free(canonicalizedSymbol);
+
+  return &message[0];
+}
+
 WrenVM* wrenNewVM(WrenConfiguration* configuration)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -575,11 +603,10 @@ static bool runInterpreter(WrenVM* vm)
       // If the class's method table doesn't include the symbol, bail.
       if (symbol >= classObj->methods.count)
       {
-        char message[100];
-        snprintf(message, 100, "%s does not implement method '%s'.",
-                 classObj->name->value,
-                 vm->methodNames.data[symbol]);
+        char *message = methodNotFound(classObj->name->value,
+                                       vm->methodNames.data[symbol]);
         RUNTIME_ERROR(message);
+        free(message);
       }
 
       Method* method = &classObj->methods.data[symbol];
@@ -628,11 +655,10 @@ static bool runInterpreter(WrenVM* vm)
 
         case METHOD_NONE:
         {
-          char message[100];
-          snprintf(message, 100, "%s does not implement method '%s'.",
-                   classObj->name->value,
-                   vm->methodNames.data[symbol]);
+          char *message = methodNotFound(classObj->name->value,
+                                         vm->methodNames.data[symbol]);
           RUNTIME_ERROR(message);
+          free(message);
         }
       }
       DISPATCH();
@@ -679,10 +705,10 @@ static bool runInterpreter(WrenVM* vm)
       // If the class's method table doesn't include the symbol, bail.
       if (symbol >= classObj->methods.count)
       {
-        char message[100];
-        snprintf(message, 100, "%s does not implement method '%s'.",
-                 classObj->name->value, vm->methodNames.data[symbol]);
+        char *message = methodNotFound(classObj->name->value,
+                                       vm->methodNames.data[symbol]);
         RUNTIME_ERROR(message);
+        free(message);
       }
 
       Method* method = &classObj->methods.data[symbol];
@@ -731,10 +757,10 @@ static bool runInterpreter(WrenVM* vm)
 
         case METHOD_NONE:
         {
-          char message[100];
-          snprintf(message, 100, "%s does not implement method '%s'.",
-                   classObj->name->value, vm->methodNames.data[symbol]);
+          char *message = methodNotFound(classObj->name->value,
+                                         vm->methodNames.data[symbol]);
           RUNTIME_ERROR(message);
+          free(message);
         }
       }
       DISPATCH();
