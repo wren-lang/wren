@@ -752,14 +752,7 @@ static void nextToken(Parser* parser)
         return;
 
       case '-':
-        if (isDigit(peekChar(parser)))
-        {
-          readNumber(parser);
-        }
-        else
-        {
-          makeToken(parser, TOKEN_MINUS);
-        }
+        makeToken(parser, TOKEN_MINUS);
         return;
 
       case '|':

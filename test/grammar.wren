@@ -25,6 +25,12 @@ IO.print(false == 1 >= 2) // expect: true
 // Unary - has lower precedence than ..
 IO.print(-"abc".count) // expect: -3
 
+// 1 - 1 is not space-sensitive.
+IO.print(1 - 1) // expect: 0
+IO.print(1 -1)  // expect: 0
+IO.print(1- 1)  // expect: 0
+IO.print(1-1)   // expect: 0
+
 // TODO: %, associativity.
 
 // Using () for grouping.
