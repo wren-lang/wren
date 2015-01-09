@@ -968,7 +968,7 @@ DEF_NATIVE(string_subscript)
 
   // The result is a one-character string.
   // TODO: Handle UTF-8.
-  Value value = wrenNewUninitializedString(vm, 2);
+  Value value = wrenNewUninitializedString(vm, 1);
   ObjString* result = AS_STRING(value);
   result->value[0] = AS_CSTRING(args[0])[index];
   result->value[1] = '\0';

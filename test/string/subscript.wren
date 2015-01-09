@@ -9,3 +9,6 @@ IO.print("abcd"[-4]) // expect: a
 IO.print("abcd"[-3]) // expect: b
 IO.print("abcd"[-2]) // expect: c
 IO.print("abcd"[-1]) // expect: d
+
+// Make sure the string's internal buffer size is correct.
+IO.print("abcd"[1] == "b") // expect: true
