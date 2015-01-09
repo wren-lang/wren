@@ -86,6 +86,55 @@ is that bytecode is a nice trade-off between performance and simplicity. Also:
  *  I think [fibers](fibers.html) are a really powerful tool, and implementing
     them is straightforward in a bytecode VM that doesn't use the native stack.
 
+## Why is the VM stack-based instead of register-based?
+
+Bytecode VMs come in two flavors. Stack-based VMs have short (usually one-byte)
+instructions whose operands are implicitly understood to be at the top of the
+stack. That means you often have a couple of instructions to push some stuff on
+the stack and then an instruction to do something.
+
+Register-based VMs have big instructions (usually 32 bits) that contain both an
+opcode and a couple of numbers indicating where in the stack the operands can
+be found. This is cool because it means, that, for example, this Lua statement:
+
+    :::lua
+    a = b + c
+
+Can be a single bytecode instruction. In a stack-based language, it would be
+four&mdash;push `b`, push `c`, add, store `a`. (Though note that in both cases
+you've got 32 total bits of code.)
+
+Lua used to be stack-based and switched to register-based and got a speed
+boost. Why not use registers for Wren?
+
+I've implemented a [register-based VM
+before](http://finch.stuffwithstuff.com/). I think it's a cool model, but I
+don't think it would bring much benefit for Wren. It's more effort to compile,
+and I'm trying to keep Wren's implementation as simple as possible.
+
+In return for that complexity, you can generate fewer instructions. However, I
+don't think Wren would be able to take advantage of that. Wren doesn't
+currently have any dedicated instructions for arithmetic. Operators are just
+regular method calls and can call user-defined procedures.
+
+The calling convention for methods requires all of their parameters to be at
+the top of the caller's stack so that they can become bottom of the callee's
+stack frame window. To call `+` in Wren, we still have to push the arguments on
+top of the stack. Likewise, the method calling convention places the return
+value where the first argument was, so we'd have to move it back down to the
+destination slot after the call.
+
+It may be worth having dedicated instructions for arithmetic that special case
+the built-in types before falling back to user-defined operator methods (which
+I assume is what Lua does since they added operator overloading late in the
+language's development). If that happens, it may be possible to switch to
+register-based.
+
+But I'm not convinced it would be an actual performance win. A lot of details
+of the language affect whether a register-based VM is better. For example,
+assignments are statements in Lua but expressions in Wren, which would make
+them harder to compile to efficient register-based code.
+
 ## What about your other languages?
 
 This is a strange question if you don't happen to know [who I am][me]. In the
