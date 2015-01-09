@@ -24,34 +24,6 @@ static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)
   return realloc(memory, newSize);
 }
 
-char* methodNotFound(char* className, char* symbolName)
-{
-  // Count the number of spaces to determine number of arguments for this
-  // symbol.
-  int pos = strlen(symbolName) - 1;
-  while (symbolName[pos] == ' ') pos--;
-
-  int arguments = strlen(symbolName) - pos - 1;
-
-  // Create a new string that contains only the symbol name.
-  char *canonicalizedSymbol = malloc(pos + 1);
-  strncpy(canonicalizedSymbol, symbolName, pos + 1);
-
-  int messageLength = strlen(className) + strlen(canonicalizedSymbol) +
-                      (arguments > 9 ? 48 : 47) + (arguments == 1 ? 0 : 1);
-  char *message = malloc(messageLength);
-
-  snprintf(message, messageLength, "%s does not implement method '%s' with %d argument%s.",
-           className,
-           canonicalizedSymbol,
-           arguments,
-           arguments == 1 ? "" : "s");
-
-  free(canonicalizedSymbol);
-
-  return &message[0];
-}
-
 WrenVM* wrenNewVM(WrenConfiguration* configuration)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -333,12 +305,12 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
 //
 // Returns the fiber that should receive the error or `NULL` if no fiber
 // caught it.
-static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, const char* error)
+static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, ObjString* error)
 {
   ASSERT(fiber->error == NULL, "Can only fail once.");
 
   // Store the error in the fiber so it can be accessed later.
-  fiber->error = AS_STRING(wrenNewString(vm, error, strlen(error)));
+  fiber->error = error;
 
   // If the caller ran this fiber using "try", give it the error.
   if (fiber->callerIsTrying)
@@ -353,6 +325,28 @@ static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, const char* error)
   // If we got here, nothing caught the error, so show the stack trace.
   wrenDebugPrintStackTrace(vm, fiber);
   return NULL;
+}
+
+// Creates a string containing an appropriate method not found error for a
+// method with [symbol] on [classObj].
+static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
+{
+  // Count the number of spaces to determine the number of parameters the
+  // method expects.
+  const char* methodName = vm->methodNames.data[symbol];
+
+  int methodLength = (int)strlen(methodName);
+  int numParams = 0;
+  while (methodName[methodLength - numParams - 1] == ' ') numParams++;
+
+  char message[MAX_VARIABLE_NAME + MAX_METHOD_NAME + 49];
+  sprintf(message, "%s does not implement method '%.*s' with %d argument%s.",
+          classObj->name->value,
+          methodLength - numParams, methodName,
+          numParams,
+          numParams == 1 ? "" : "s");
+
+  return AS_STRING(wrenNewString(vm, message, strlen(message)));
 }
 
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
@@ -603,10 +597,7 @@ static bool runInterpreter(WrenVM* vm)
       // If the class's method table doesn't include the symbol, bail.
       if (symbol >= classObj->methods.count)
       {
-        char *message = methodNotFound(classObj->name->value,
-                                       vm->methodNames.data[symbol]);
-        RUNTIME_ERROR(message);
-        free(message);
+        RUNTIME_ERROR(methodNotFound(vm, classObj, symbol));
       }
 
       Method* method = &classObj->methods.data[symbol];
@@ -626,7 +617,7 @@ static bool runInterpreter(WrenVM* vm)
               break;
 
             case PRIM_ERROR:
-              RUNTIME_ERROR(AS_CSTRING(args[0]));
+              RUNTIME_ERROR(AS_STRING(args[0]));
 
             case PRIM_CALL:
               STORE_FRAME();
@@ -654,12 +645,8 @@ static bool runInterpreter(WrenVM* vm)
           break;
 
         case METHOD_NONE:
-        {
-          char *message = methodNotFound(classObj->name->value,
-                                         vm->methodNames.data[symbol]);
-          RUNTIME_ERROR(message);
-          free(message);
-        }
+          RUNTIME_ERROR(methodNotFound(vm, classObj, symbol));
+          break;
       }
       DISPATCH();
     }
@@ -705,10 +692,7 @@ static bool runInterpreter(WrenVM* vm)
       // If the class's method table doesn't include the symbol, bail.
       if (symbol >= classObj->methods.count)
       {
-        char *message = methodNotFound(classObj->name->value,
-                                       vm->methodNames.data[symbol]);
-        RUNTIME_ERROR(message);
-        free(message);
+        RUNTIME_ERROR(methodNotFound(vm, classObj, symbol));
       }
 
       Method* method = &classObj->methods.data[symbol];
@@ -728,7 +712,7 @@ static bool runInterpreter(WrenVM* vm)
               break;
 
             case PRIM_ERROR:
-              RUNTIME_ERROR(AS_CSTRING(args[0]));
+              RUNTIME_ERROR(AS_STRING(args[0]));
 
             case PRIM_CALL:
               STORE_FRAME();
@@ -756,12 +740,8 @@ static bool runInterpreter(WrenVM* vm)
           break;
 
         case METHOD_NONE:
-        {
-          char *message = methodNotFound(classObj->name->value,
-                                         vm->methodNames.data[symbol]);
-          RUNTIME_ERROR(message);
-          free(message);
-        }
+          RUNTIME_ERROR(methodNotFound(vm, classObj, symbol));
+          break;
       }
       DISPATCH();
     }
@@ -884,7 +864,11 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(IS):
     {
       Value expected = POP();
-      if (!IS_CLASS(expected)) RUNTIME_ERROR("Right operand must be a class.");
+      if (!IS_CLASS(expected))
+      {
+        const char* message = "Right operand must be a class.";
+        RUNTIME_ERROR(AS_STRING(wrenNewString(vm, message, strlen(message))));
+      }
 
       ObjClass* actual = wrenGetClass(vm, POP());
       bool isInstance = false;
@@ -1031,7 +1015,8 @@ static bool runInterpreter(WrenVM* vm)
         snprintf(message, 70 + MAX_VARIABLE_NAME,
             "Class '%s' may not have more than %d fields, including inherited "
             "ones.", name->value, MAX_FIELDS);
-        RUNTIME_ERROR(message);
+
+        RUNTIME_ERROR(AS_STRING(wrenNewString(vm, message, strlen(message))));
       }
 
       PUSH(OBJ_VAL(classObj));
