@@ -1835,28 +1835,28 @@ static void super_(Compiler* compiler, bool allowAssignment)
   else if (enclosingClass->isStaticMethod)
   {
     error(compiler, "Cannot use 'super' in a static method.");
-  }
+  } else {
+    loadThis(compiler);
 
-  loadThis(compiler);
+    // TODO: Super operator calls.
 
-  // TODO: Super operator calls.
+    // See if it's a named super call, or an unnamed one.
+    if (match(compiler, TOKEN_DOT))
+    {
+      // Compile the superclass call.
+      consume(compiler, TOKEN_NAME, "Expect method name after 'super.'.");
+      namedCall(compiler, allowAssignment, CODE_SUPER_0);
+    }
+    else
+    {
+      // No explicit name, so use the name of the enclosing method.
+      char name[MAX_METHOD_SIGNATURE];
+      int length = enclosingClass->methodLength;
+      strncpy(name, enclosingClass->methodName, length);
 
-  // See if it's a named super call, or an unnamed one.
-  if (match(compiler, TOKEN_DOT))
-  {
-    // Compile the superclass call.
-    consume(compiler, TOKEN_NAME, "Expect method name after 'super.'.");
-    namedCall(compiler, allowAssignment, CODE_SUPER_0);
-  }
-  else
-  {
-    // No explicit name, so use the name of the enclosing method.
-    char name[MAX_METHOD_SIGNATURE];
-    int length = enclosingClass->methodLength;
-    strncpy(name, enclosingClass->methodName, length);
-
-    // Call the superclass method with the same name.
-    methodCall(compiler, CODE_SUPER_0, name, length);
+      // Call the superclass method with the same name.
+      methodCall(compiler, CODE_SUPER_0, name, length);
+    }
   }
 }
 
