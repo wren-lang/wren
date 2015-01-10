@@ -244,31 +244,57 @@ It is a runtime error if `other` is not a number.
 
 ## String Class
 
-**TODO**
+An object representing a string that is created via the string literal syntax.
 
 ### **contains**(other)
 
-**TODO**
+Checks if `other` is a substring of the string.
+
+It is a runtime error if `other` is not a string.
 
 ### **count**
 
-**TODO**
+Returns the length of the string.
+
+### **endsWith(suffix)**
+
+Checks if the string ends with `suffix`.
+
+It is a runtime error if `suffix` is not a string.
+
+### **indexOf(search)**
+
+Returns the index of `search` in the string or -1 if `search` is not a substring
+of the string.
+
+It is a runtime error if `search` is not a string.
+
+### **startsWith(prefix)**
+
+Checks if the string starts with `prefix`.
+
+It is a runtime error if `prefix` is not a string.
 
 ### **+**(other) operator
 
-**TODO**
+Returns a new string that concatenates this string and `other`.
+
+It is a runtime error if `other` is not a string.
 
 ### **==**(other) operator
 
-**TODO**
+Checks if the string is equal to `other`.
 
 ### **!=**(other) operator
 
-**TODO**
+Check if the string is not equal to `other`.
 
 ### **[**index**]** operator
 
-**TODO**
+Returns a one character string of the value at `index`. This does not handle
+UTF-8 characters correctly.
+
+It is a runtime error if `index` is greater than the length of the string.
 
 ## List Class
 

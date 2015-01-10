@@ -930,6 +930,47 @@ DEF_NATIVE(string_count)
   RETURN_NUM(count);
 }
 
+DEF_NATIVE(string_endsWith)
+{
+  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
+
+  // Corner case, if the search string is longer than return false right away.
+  if (search->length > string->length) RETURN_FALSE;
+
+  int result = memcmp(string->value + string->length - search->length,
+                       search->value, search->length);
+
+  RETURN_BOOL(result == 0);
+}
+
+DEF_NATIVE(string_indexOf)
+{
+  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
+
+  char* firstOccurrence = strstr(string->value, search->value);
+
+  RETURN_NUM(firstOccurrence ? (firstOccurrence - string->value) : -1);
+}
+
+DEF_NATIVE(string_startsWith)
+{
+  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
+
+  // Corner case, if the search string is longer than return false right away.
+  if (search->length > string->length) RETURN_FALSE;
+
+  RETURN_BOOL(memcmp(string->value, search->value, search->length) == 0);
+}
+
 DEF_NATIVE(string_toString)
 {
   RETURN_VAL(args[0]);
@@ -1130,7 +1171,10 @@ void wrenInitializeCore(WrenVM* vm)
   vm->stringClass = defineClass(vm, "String");
   NATIVE(vm->stringClass, "contains ", string_contains);
   NATIVE(vm->stringClass, "count", string_count);
-  NATIVE(vm->stringClass, "toString", string_toString)
+  NATIVE(vm->stringClass, "endsWith ", string_endsWith);
+  NATIVE(vm->stringClass, "indexOf ", string_indexOf);
+  NATIVE(vm->stringClass, "startsWith ", string_startsWith);
+  NATIVE(vm->stringClass, "toString", string_toString);
   NATIVE(vm->stringClass, "+ ", string_plus);
   NATIVE(vm->stringClass, "== ", string_eqeq);
   NATIVE(vm->stringClass, "!= ", string_bangeq);
