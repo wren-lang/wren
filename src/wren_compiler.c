@@ -2689,21 +2689,26 @@ static void classDefinition(Compiler* compiler)
 
 static void variableDefinition(Compiler* compiler)
 {
-  // TODO: Variable should not be in scope until after initializer.
-  int symbol = declareNamedVariable(compiler);
+  do {
+    ignoreNewlines(compiler);
 
-  // Compile the initializer.
-  if (match(compiler, TOKEN_EQ))
-  {
-    expression(compiler);
-  }
-  else
-  {
-    // Default initialize it to null.
-    null(compiler, false);
-  }
+    // TODO: Variable should not be in scope until after initializer.
+    int symbol = declareNamedVariable(compiler);
 
-  defineVariable(compiler, symbol);
+    // Compile the initializer.
+    if (match(compiler, TOKEN_EQ))
+    {
+      expression(compiler);
+    }
+    else
+    {
+      // Default initialize it to null.
+      null(compiler, false);
+    }
+
+    defineVariable(compiler, symbol);
+  }
+  while (match(compiler, TOKEN_COMMA));
 }
 
 // Compiles a "definition". These are the statements that bind new variables.
