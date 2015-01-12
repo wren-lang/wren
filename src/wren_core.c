@@ -955,7 +955,7 @@ DEF_NATIVE(string_indexOf)
 
   char* firstOccurrence = strstr(string->value, search->value);
 
-  RETURN_NUM(firstOccurrence ? (firstOccurrence - string->value) : -1);
+  RETURN_NUM(firstOccurrence ? firstOccurrence - string->value : -1);
 }
 
 DEF_NATIVE(string_startsWith)

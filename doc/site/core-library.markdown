@@ -244,7 +244,7 @@ It is a runtime error if `other` is not a number.
 
 ## String Class
 
-An object representing a string that is created via the string literal syntax.
+A string of Unicode code points stored in UTF-8.
 
 ### **contains**(other)
 
@@ -264,8 +264,8 @@ It is a runtime error if `suffix` is not a string.
 
 ### **indexOf(search)**
 
-Returns the index of `search` in the string or -1 if `search` is not a substring
-of the string.
+Returns the index of `search` in the string or -1 if `search` is not a
+substring of the string.
 
 It is a runtime error if `search` is not a string.
 
@@ -291,10 +291,11 @@ Check if the string is not equal to `other`.
 
 ### **[**index**]** operator
 
-Returns a one character string of the value at `index`. This does not handle
-UTF-8 characters correctly.
+Returns a one character string of the value at `index`.
 
 It is a runtime error if `index` is greater than the length of the string.
+
+*Note: This does not currently handle UTF-8 characters correctly.*
 
 ## List Class
 
