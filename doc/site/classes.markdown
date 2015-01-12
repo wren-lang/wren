@@ -240,6 +240,8 @@ class using `is` when you declare the class:
 
 This declares a new class `Pegasus` that inherits from `Unicorn`.
 
+Note that you should not create classes that inherit from the built-in types (Bool, Num, String, Range, List). The built-in types expect their internal bit representation to be very specific and get horribly confused when you invoke one of the inherited built-in methods on the derived type.
+
 The metaclass hierarchy does *not* parallel the regular class hierarchy. So, if
 `Pegasus` inherits from `Unicorn`, `Pegasus`'s metaclass will not inherit from
 `Unicorn`'s metaclass. In more prosaic terms, this means that static methods
