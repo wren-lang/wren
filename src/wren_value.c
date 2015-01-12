@@ -15,8 +15,8 @@
 // to a list has O(1) amortized complexity.
 #define LIST_GROW_FACTOR (2)
 
-DEFINE_BUFFER(Value, Value)
-DEFINE_BUFFER(Method, Method)
+DEFINE_BUFFER(Value, Value);
+DEFINE_BUFFER(Method, Method);
 
 static void* allocate(WrenVM* vm, size_t size)
 {
@@ -43,7 +43,7 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
   WREN_PIN(vm, classObj);
   wrenMethodBufferInit(vm, &classObj->methods);
   WREN_UNPIN(vm);
-  
+
   return classObj;
 }
 
@@ -186,7 +186,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
   debug->name[debugNameLength] = '\0';
 
   debug->sourceLines = sourceLines;
-  
+
   ObjFn* fn = allocate(vm, sizeof(ObjFn));
   initObj(vm, &fn->obj, OBJ_FN, vm->fnClass);
 

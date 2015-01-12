@@ -3,9 +3,9 @@
 #include "wren_utils.h"
 #include "wren_vm.h"
 
-DEFINE_BUFFER(Byte, uint8_t)
-DEFINE_BUFFER(Int, int)
-DEFINE_BUFFER(String, char*)
+DEFINE_BUFFER(Byte, uint8_t);
+DEFINE_BUFFER(Int, int);
+DEFINE_BUFFER(String, char*);
 
 void wrenSymbolTableInit(WrenVM* vm, SymbolTable* symbols)
 {
