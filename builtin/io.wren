@@ -79,6 +79,11 @@ class IO {
     return obj
   }
 
+  static read(prompt) {
+    IO.write(prompt)
+    return IO.read
+  }
+
   static writeObject_(obj) {
     var string = obj.toString
     if (string is String) {
