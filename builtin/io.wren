@@ -80,6 +80,7 @@ class IO {
   }
 
   static read(prompt) {
+    if (!(prompt is String)) Fiber.abort("Prompt must be a string.")
     IO.write(prompt)
     return IO.read
   }

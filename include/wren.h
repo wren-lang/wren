@@ -85,6 +85,10 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration);
 void wrenFreeVM(WrenVM* vm);
 
 // Runs [source], a string of Wren source code in a new fiber in [vm].
+//
+// [sourcePath] is a string describing where [source] was located, for use in
+// debugging stack traces. It must not be `null`. If an empty string, it will
+// not be shown in a stack trace.
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source);
 

@@ -20,6 +20,7 @@ EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect runtime error: (.+)')
 ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
 STACK_TRACE_PATTERN = re.compile(r'\[.* line (\d+)\] in')
+STDIN_PATTERN = re.compile(r'// stdin: (.*)')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
 
@@ -90,6 +91,8 @@ def run_test(path):
   expect_runtime_error = None
   expect_return = 0
 
+  input_lines = []
+
   print_line('Passed: ' + color.GREEN + str(passed) + color.DEFAULT +
              ' Failed: ' + color.RED + str(failed) + color.DEFAULT +
              ' Skipped: ' + color.YELLOW + str(num_skipped) + color.DEFAULT)
@@ -120,6 +123,10 @@ def run_test(path):
         # If we expect a runtime error, it should exit with EX_SOFTWARE.
         expect_return = 70
 
+      match = STDIN_PATTERN.search(line)
+      if match:
+        input_lines.append(match.group(1) + '\n')
+
       match = SKIP_PATTERN.search(line)
       if match:
         num_skipped += 1
@@ -133,10 +140,16 @@ def run_test(path):
 
       line_num += 1
 
+  # If any input is fed to the test in stdin, concatetate it into one string.
+  input_string = None
+  if input_lines > 0:
+    input_string = "".join(input_lines)
+
   # Invoke wren and run the test.
-  proc = Popen([WREN_APP, path], stdout=PIPE, stderr=PIPE)
-  (out, err) = proc.communicate()
-  (out, err) = out.decode("utf-8").replace('\r\n', '\n'),  err.decode("utf-8").replace('\r\n', '\n')
+  proc = Popen([WREN_APP, path], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  (out, err) = proc.communicate(input_string)
+  out = out.decode("utf-8").replace('\r\n', '\n')
+  err = err.decode("utf-8").replace('\r\n', '\n')
 
   fails = []
 

@@ -93,6 +93,7 @@ static const char* libSource =
 "  }\n"
 "\n"
 "  static read(prompt) {\n"
+"    if (!(prompt is String)) Fiber.abort(\"Prompt must be a string.\")\n"
 "    IO.write(prompt)\n"
 "    return IO.read\n"
 "  }\n"
@@ -133,7 +134,7 @@ static void ioClock(WrenVM* vm)
 
 void wrenLoadIOLibrary(WrenVM* vm)
 {
-  wrenInterpret(vm, "Wren IO library", libSource);
+  wrenInterpret(vm, "", libSource);
   wrenDefineStaticMethod(vm, "IO", "writeString_", 1, ioWriteString);
   wrenDefineStaticMethod(vm, "IO", "clock", 0, ioClock);
   wrenDefineStaticMethod(vm, "IO", "read", 0, ioRead);

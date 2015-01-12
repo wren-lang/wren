@@ -1202,7 +1202,7 @@ void wrenInitializeCore(WrenVM* vm)
   vm->numClass->name->obj.classObj = vm->stringClass;
   vm->stringClass->name->obj.classObj = vm->stringClass;
 
-  wrenInterpret(vm, "Wren core library", libSource);
+  wrenInterpret(vm, "", libSource);
 
   vm->listClass = AS_CLASS(findGlobal(vm, "List"));
   NATIVE(vm->listClass->obj.classObj, " instantiate", list_instantiate);
