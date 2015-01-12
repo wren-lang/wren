@@ -19,7 +19,7 @@ On the other hand, it might be nice to be able to resume here if the code that
 provided the string is far away and you don't want to have to manually propagate
 the error out.
 
-Programmatic errors like unvalid argument types should halt the fiber but the
+Programmatic errors like invalid argument types should halt the fiber but the
 programmer will not want to resume that at runtime. Using the mechanism here is
 fine since it would then dump a stack trace, etc. But it won't take advantage
 of resuming.
@@ -76,5 +76,3 @@ Given those, I'm thinking:
    will run the fiber. If it fails with a programmatic error, the invoked fiber
    dies, but the parent does not. It gets the callstack and error as some sort
    of object it can poke at.
-
-
