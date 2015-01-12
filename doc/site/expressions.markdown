@@ -221,7 +221,7 @@ argument is evaluated and returned:
 
 Also known as the "ternary" operator since it takes three arguments, Wren has
 the little "if statement in the form of an expression" you know and love from C
-and its bretheren.
+and its brethren.
 
     :::dart
     IO.print(1 != 2 ? "math is sane" : "math is not sane!")
