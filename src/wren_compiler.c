@@ -1852,8 +1852,16 @@ static void super_(Compiler* compiler, bool allowAssignment)
   {
     // No explicit name, so use the name of the enclosing method.
     char name[MAX_METHOD_SIGNATURE];
-    int length = enclosingClass->methodLength;
-    strncpy(name, enclosingClass->methodName, length);
+    int length;
+    if (enclosingClass != NULL) {
+      length = enclosingClass->methodLength;
+      strncpy(name, enclosingClass->methodName, length);
+    } else {
+      // The compiler errored since super is called outside a method.
+      // We want to continue, but we cannot generate valid bytecode.
+      length = 0;
+      strncpy(name, "", length);
+    }
 
     // Call the superclass method with the same name.
     methodCall(compiler, CODE_SUPER_0, name, length);
