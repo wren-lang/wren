@@ -1857,8 +1857,9 @@ static void super_(Compiler* compiler, bool allowAssignment)
       length = enclosingClass->methodLength;
       strncpy(name, enclosingClass->methodName, length);
     } else {
-      // The compiler errored since super is called outside a method.
-      // We want to continue, but we cannot generate valid bytecode.
+      // We get here if super is used outside of a method. In that case, we
+      // have already reported the error, so just stub this out so we can keep
+      // going to try to find later errors.
       length = 0;
       strncpy(name, "", length);
     }
