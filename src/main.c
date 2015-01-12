@@ -25,7 +25,7 @@ static void failIf(bool condition, int exitCode, const char* format, ...)
 
 static char* readFile(const char* path)
 {
-  FILE* file = fopen(path, "r");
+  FILE* file = fopen(path, "rb");
   failIf(file == NULL, 66, "Could not open file \"%s\".\n", path);
 
   // Find out how big the file is.

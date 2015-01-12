@@ -784,8 +784,9 @@ static void nextToken(Parser* parser)
         return;
 
       case ' ':
+      case '\r':
         // Skip forward until we run out of whitespace.
-        while (peekChar(parser) == ' ') nextChar(parser);
+        while (peekChar(parser) == ' ' || peekChar(parser) == '\r') nextChar(parser);
         break;
 
       case '"': readString(parser); return;
