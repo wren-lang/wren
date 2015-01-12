@@ -2,7 +2,7 @@ AR = ar rcu
 # Compiler flags.
 CFLAGS = -std=c99 -Wall -Werror
 # TODO: Add -Wextra.
-DEBUG_CFLAGS = -O0 -DDEBUG
+DEBUG_CFLAGS = -O0 -DDEBUG -g
 RELEASE_CFLAGS = -Os
 
 # Files.
