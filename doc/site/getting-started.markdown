@@ -15,7 +15,7 @@ hack on Wren. That's what I develop in. It builds fine from there but *may* not
 have the exact same build settings. The Makefile is the canonical way to
 compile it.
 
-For our Windows bretheren, there's still a little work to be done. Ideally, the
+For our Windows brethren, there's still a little work to be done. Ideally, the
 repo would include a Visual Studio solution for building Wren. I don't have a
 Windows machine, but if you do, I would be delighted to take a patch for this.
 
