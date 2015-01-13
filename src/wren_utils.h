@@ -18,7 +18,7 @@
     } name##Buffer; \
     void wren##name##BufferInit(WrenVM* vm, name##Buffer* buffer); \
     void wren##name##BufferClear(WrenVM* vm, name##Buffer* buffer); \
-    void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data);
+    void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
 
 // This should be used once for each type instantiation, somewhere in a .c file.
 #define DEFINE_BUFFER(name, type) \
