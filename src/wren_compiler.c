@@ -534,22 +534,22 @@ static void readName(Parser* parser, TokenType type)
   }
 
   if (isKeyword(parser, "break")) type = TOKEN_BREAK;
-  if (isKeyword(parser, "class")) type = TOKEN_CLASS;
-  if (isKeyword(parser, "else")) type = TOKEN_ELSE;
-  if (isKeyword(parser, "false")) type = TOKEN_FALSE;
-  if (isKeyword(parser, "for")) type = TOKEN_FOR;
-  if (isKeyword(parser, "if")) type = TOKEN_IF;
-  if (isKeyword(parser, "in")) type = TOKEN_IN;
-  if (isKeyword(parser, "is")) type = TOKEN_IS;
-  if (isKeyword(parser, "new")) type = TOKEN_NEW;
-  if (isKeyword(parser, "null")) type = TOKEN_NULL;
-  if (isKeyword(parser, "return")) type = TOKEN_RETURN;
-  if (isKeyword(parser, "static")) type = TOKEN_STATIC;
-  if (isKeyword(parser, "super")) type = TOKEN_SUPER;
-  if (isKeyword(parser, "this")) type = TOKEN_THIS;
-  if (isKeyword(parser, "true")) type = TOKEN_TRUE;
-  if (isKeyword(parser, "var")) type = TOKEN_VAR;
-  if (isKeyword(parser, "while")) type = TOKEN_WHILE;
+  else if (isKeyword(parser, "class")) type = TOKEN_CLASS;
+  else if (isKeyword(parser, "else")) type = TOKEN_ELSE;
+  else if (isKeyword(parser, "false")) type = TOKEN_FALSE;
+  else if (isKeyword(parser, "for")) type = TOKEN_FOR;
+  else if (isKeyword(parser, "if")) type = TOKEN_IF;
+  else if (isKeyword(parser, "in")) type = TOKEN_IN;
+  else if (isKeyword(parser, "is")) type = TOKEN_IS;
+  else if (isKeyword(parser, "new")) type = TOKEN_NEW;
+  else if (isKeyword(parser, "null")) type = TOKEN_NULL;
+  else if (isKeyword(parser, "return")) type = TOKEN_RETURN;
+  else if (isKeyword(parser, "static")) type = TOKEN_STATIC;
+  else if (isKeyword(parser, "super")) type = TOKEN_SUPER;
+  else if (isKeyword(parser, "this")) type = TOKEN_THIS;
+  else if (isKeyword(parser, "true")) type = TOKEN_TRUE;
+  else if (isKeyword(parser, "var")) type = TOKEN_VAR;
+  else if (isKeyword(parser, "while")) type = TOKEN_WHILE;
 
   makeToken(parser, type);
 }
