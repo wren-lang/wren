@@ -1,13 +1,13 @@
-var global = "global"
+var Global = "global"
 // TODO: Forward reference to global declared after use.
 
 class Foo {
   method {
-    IO.print(global)
+    IO.print(Global)
   }
 
   static classMethod {
-    IO.print(global)
+    IO.print(Global)
   }
 }
 
