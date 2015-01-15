@@ -686,6 +686,7 @@ void wrenPrintValue(Value value)
       case TAG_NAN: printf("NaN"); break;
       case TAG_NULL: printf("null"); break;
       case TAG_TRUE: printf("true"); break;
+      case TAG_UNDEFINED: UNREACHABLE();
     }
   }
   #else
@@ -695,10 +696,8 @@ void wrenPrintValue(Value value)
     case VAL_NULL: printf("null"); break;
     case VAL_NUM: printf("%.14g", AS_NUM(value)); break;
     case VAL_TRUE: printf("true"); break;
-    case VAL_OBJ:
-    {
-      printObject(AS_OBJ(value));
-    }
+    case VAL_OBJ: printObject(AS_OBJ(value)); break;
+    case VAL_UNDEFINED: UNREACHABLE();
   }
   #endif
 }

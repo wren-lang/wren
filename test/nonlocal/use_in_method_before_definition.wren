@@ -1,6 +1,3 @@
-var Global = "global"
-// TODO: Forward reference to global declared after use.
-
 class Foo {
   method {
     IO.print(Global)
@@ -10,6 +7,8 @@ class Foo {
     IO.print(Global)
   }
 }
+
+var Global = "global"
 
 (new Foo).method // expect: global
 Foo.classMethod // expect: global

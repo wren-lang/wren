@@ -24,6 +24,11 @@
 // Wren implementation calls these "Obj", or objects, though to a user, all
 // values are objects.
 //
+// There is also a special singleton value "undefined". It is used to identify
+// globals that have been implicitly declared by use in a forward reference but
+// not yet explicitly declared. They only exist during compilation and do not
+// appear at runtime.
+//
 // There are two supported Value representations. The main one uses a technique
 // called "NaN tagging" (explained in detail below) to store a number, any of
 // the value types, or a pointer all inside a single double-precision floating
@@ -36,15 +41,6 @@
 // TODO: Make these externally controllable.
 #define STACK_SIZE 1024
 #define MAX_CALL_FRAMES 256
-
-typedef enum
-{
-  VAL_FALSE,
-  VAL_NULL,
-  VAL_NUM,
-  VAL_TRUE,
-  VAL_OBJ
-} ValueType;
 
 // TODO: Can we eliminate this and use the classObj pointers to tell an object's
 // type instead?
@@ -93,6 +89,16 @@ typedef union
 } Value;
 
 #else
+
+typedef enum
+{
+  VAL_FALSE,
+  VAL_NULL,
+  VAL_NUM,
+  VAL_TRUE,
+  VAL_UNDEFINED,
+  VAL_OBJ
+} ValueType;
 
 typedef struct
 {
@@ -487,19 +493,20 @@ typedef struct
 
 #define IS_FALSE(value) ((value).bits == FALSE_VAL.bits)
 #define IS_NULL(value) ((value).bits == (QNAN | TAG_NULL))
+#define IS_UNDEFINED(value) ((value).bits == (QNAN | TAG_UNDEFINED))
 
 // Masks out the tag bits used to identify the singleton value.
 #define MASK_TAG (7)
 
 // Tag values for the different singleton values.
-#define TAG_NAN     (0)
-#define TAG_NULL    (1)
-#define TAG_FALSE   (2)
-#define TAG_TRUE    (3)
-#define TAG_UNUSED1 (4)
-#define TAG_UNUSED2 (5)
-#define TAG_UNUSED3 (6)
-#define TAG_UNUSED4 (7)
+#define TAG_NAN       (0)
+#define TAG_NULL      (1)
+#define TAG_FALSE     (2)
+#define TAG_TRUE      (3)
+#define TAG_UNDEFINED (4)
+#define TAG_UNUSED2   (5)
+#define TAG_UNUSED3   (6)
+#define TAG_UNUSED4   (7)
 
 // double -> Value.
 #define NUM_VAL(n) ((Value)(double)(n))
@@ -511,9 +518,10 @@ typedef struct
 #define AS_OBJ(value) ((Obj*)((value).bits & ~(SIGN_BIT | QNAN)))
 
 // Singleton values.
-#define NULL_VAL   ((Value)(uint64_t)(QNAN | TAG_NULL))
-#define FALSE_VAL  ((Value)(uint64_t)(QNAN | TAG_FALSE))
-#define TRUE_VAL   ((Value)(uint64_t)(QNAN | TAG_TRUE))
+#define NULL_VAL      ((Value)(uint64_t)(QNAN | TAG_NULL))
+#define FALSE_VAL     ((Value)(uint64_t)(QNAN | TAG_FALSE))
+#define TRUE_VAL      ((Value)(uint64_t)(QNAN | TAG_TRUE))
+#define UNDEFINED_VAL ((Value)(uint64_t)(QNAN | TAG_UNDEFINED))
 
 // Gets the singleton type tag for a Value (which must be a singleton).
 #define GET_TAG(value) ((int)((value).bits & MASK_TAG))
@@ -532,14 +540,16 @@ typedef struct
 #define IS_FALSE(value) ((value).type == VAL_FALSE)
 #define IS_NULL(value) ((value).type == VAL_NULL)
 #define IS_NUM(value) ((value).type == VAL_NUM)
+#define IS_UNDEFINED(value) ((value).type == VAL_UNDEFINED)
 
 // double -> Value.
 #define NUM_VAL(n) ((Value){ VAL_NUM, n, NULL })
 
 // Singleton values.
-#define FALSE_VAL ((Value){ VAL_FALSE, 0.0, NULL })
-#define NULL_VAL ((Value){ VAL_NULL, 0.0, NULL })
-#define TRUE_VAL ((Value){ VAL_TRUE, 0.0, NULL })
+#define FALSE_VAL     ((Value){ VAL_FALSE, 0.0, NULL })
+#define NULL_VAL      ((Value){ VAL_NULL, 0.0, NULL })
+#define TRUE_VAL      ((Value){ VAL_TRUE, 0.0, NULL })
+#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, 0.0, NULL })
 
 #endif
 

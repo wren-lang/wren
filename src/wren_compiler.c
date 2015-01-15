@@ -177,7 +177,7 @@ typedef struct
   int index;
 } CompilerUpvalue;
 
-// Keeps track of bookkeeping information for the current loop being compiled.
+// Bookkeeping information for the current loop being compiled.
 typedef struct sLoop
 {
   // Index of the instruction that the loop should jump back to.
@@ -296,13 +296,16 @@ static void error(Compiler* compiler, const char* format, ...)
   // reported it.
   if (token->type == TOKEN_ERROR) return;
 
-  fprintf(stderr, "[%s line %d] Error on ",
+  fprintf(stderr, "[%s line %d] Error at ",
           compiler->parser->sourcePath->value, token->line);
 
   if (token->type == TOKEN_LINE)
   {
-    // Don't print the newline itself since that looks wonky.
     fprintf(stderr, "newline: ");
+  }
+  else if (token->type == TOKEN_EOF)
+  {
+    fprintf(stderr, "end of file: ");
   }
   else
   {
@@ -1799,9 +1802,21 @@ static void name(Compiler* compiler, bool allowAssignment)
                                    token->start, token->length);
   if (global == -1)
   {
-    // TODO: Implicitly declare it.
-    error(compiler, "Undefined variable.");
-    return;
+    if (isLocalName(token->start))
+    {
+      error(compiler, "Undefined variable.");
+      return;
+    }
+
+    // If it's a nonlocal name, implicitly define a global in the hopes that
+    // we get a real definition later.
+    global = wrenDeclareGlobal(compiler->parser->vm,
+                               token->start, token->length);
+
+    if (global == -2)
+    {
+      error(compiler, "Too many global variables defined.");
+    }
   }
 
   variable(compiler, allowAssignment, global, CODE_LOAD_GLOBAL);
@@ -2799,6 +2814,18 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 
   emit(&compiler, CODE_NULL);
   emit(&compiler, CODE_RETURN);
+
+  // See if there are any implicitly declared globals that never got an explicit
+  // definition.
+  // TODO: It would be nice if the error was on the line where it was used.
+  for (int i = 0; i < vm->globals.count; i++)
+  {
+    if (IS_UNDEFINED(vm->globals.data[i]))
+    {
+      error(&compiler, "Variable '%s' is used but not defined.",
+            vm->globalNames.data[i]);
+    }
+  }
 
   return endCompiler(&compiler, "(script)", 8);
 }
