@@ -1,0 +1,1 @@
+[1, 2, 3].forall("string") // expect runtime error: String does not implement method 'call' with 1 argument.

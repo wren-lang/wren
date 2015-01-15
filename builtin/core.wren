@@ -17,7 +17,7 @@ class Sequence {
 
   forall(f) {
     for (element in this) {
-      if (f.call(element) != true) return false
+      if (!f.call(element)) return false
     }
     return true
   }
