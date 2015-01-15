@@ -34,7 +34,7 @@ static char* readFile(const char* path)
   rewind(file);
 
   // Allocate a buffer for it.
-  char* buffer = malloc(fileSize + 1);
+  char* buffer = (char*)malloc(fileSize + 1);
   failIf(buffer == NULL, 74, "Could not read file \"%s\".\n", path);
 
   // Read the entire file.
