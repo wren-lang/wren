@@ -58,7 +58,7 @@ static const char* libSource =
 "    return result\n"
 "  }\n"
 "\n"
-"  forall(f) {\n"
+"  all(f) {\n"
 "    for (element in this) {\n"
 "      if (!f.call(element)) return false\n"
 "    }\n"
