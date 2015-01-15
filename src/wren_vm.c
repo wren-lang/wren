@@ -1069,14 +1069,39 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   }
 }
 
+int wrenDeclareGlobal(WrenVM* vm, const char* name, size_t length)
+{
+  if (vm->globals.count == MAX_GLOBALS) return -2;
+
+  wrenValueBufferWrite(vm, &vm->globals, UNDEFINED_VAL);
+  return wrenSymbolTableAdd(vm, &vm->globalNames, name, length);
+}
+
 int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
 {
   if (vm->globals.count == MAX_GLOBALS) return -2;
 
   if (IS_OBJ(value)) WREN_PIN(vm, AS_OBJ(value));
 
-  int symbol = wrenSymbolTableAdd(vm, &vm->globalNames, name, length);
-  if (symbol != -1) wrenValueBufferWrite(vm, &vm->globals, value);
+  // See if the global is already explicitly or implicitly declared.
+  int symbol = wrenSymbolTableFind(&vm->globalNames, name, length);
+
+  if (symbol == -1)
+  {
+    // Brand new global.
+    symbol = wrenSymbolTableAdd(vm, &vm->globalNames, name, length);
+    wrenValueBufferWrite(vm, &vm->globals, value);
+  }
+  else if (IS_UNDEFINED(vm->globals.data[symbol]))
+  {
+    // Explicitly declaring an implicitly declared one. Mark it as defined.
+    vm->globals.data[symbol] = value;
+  }
+  else
+  {
+    // Already explicitly declared.
+    symbol = -1;
+  }
 
   if (IS_OBJ(value)) WREN_UNPIN(vm);
 

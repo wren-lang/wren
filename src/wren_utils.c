@@ -22,8 +22,8 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
   wrenStringBufferClear(vm, symbols);
 }
 
-static int addSymbol(WrenVM* vm, SymbolTable* symbols,
-                     const char* name, size_t length)
+int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols, const char* name,
+                       size_t length)
 {
   char* heapString = wrenReallocate(vm, NULL, 0, sizeof(char) * (length + 1));
   strncpy(heapString, name, length);
@@ -31,15 +31,6 @@ static int addSymbol(WrenVM* vm, SymbolTable* symbols,
 
   wrenStringBufferWrite(vm, symbols, heapString);
   return symbols->count - 1;
-}
-
-int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols, const char* name,
-                       size_t length)
-{
-  // If already present, return an error.
-  if (wrenSymbolTableFind(symbols, name, length) != -1) return -1;
-
-  return addSymbol(vm, symbols, name, length);
 }
 
 int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
@@ -50,7 +41,7 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
   if (existing != -1) return existing;
 
   // New symbol, so add it.
-  return addSymbol(vm, symbols, name, length);
+  return wrenSymbolTableAdd(vm, symbols, name, length);
 }
 
 int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length)

@@ -177,7 +177,7 @@ typedef struct
   int index;
 } CompilerUpvalue;
 
-// Keeps track of bookkeeping information for the current loop being compiled.
+// Bookkeeping information for the current loop being compiled.
 typedef struct sLoop
 {
   // Index of the instruction that the loop should jump back to.
@@ -296,13 +296,16 @@ static void error(Compiler* compiler, const char* format, ...)
   // reported it.
   if (token->type == TOKEN_ERROR) return;
 
-  fprintf(stderr, "[%s line %d] Error on ",
+  fprintf(stderr, "[%s line %d] Error at ",
           compiler->parser->sourcePath->value, token->line);
 
   if (token->type == TOKEN_LINE)
   {
-    // Don't print the newline itself since that looks wonky.
     fprintf(stderr, "newline: ");
+  }
+  else if (token->type == TOKEN_EOF)
+  {
+    fprintf(stderr, "end of file: ");
   }
   else
   {
@@ -1117,13 +1120,13 @@ static int addUpvalue(Compiler* compiler, bool isLocal, int index)
 // If the name is found outside of the immediately enclosing function, this
 // will flatten the closure and add upvalues to all of the intermediate
 // functions so that it gets walked down to this one.
+//
+// If it reaches a method boundary, this stops and returns -1 since methods do
+// not close over local variables.
 static int findUpvalue(Compiler* compiler, const char* name, int length)
 {
-  // If we are out of enclosing functions, it can't be an upvalue.
-  if (compiler->parent == NULL)
-  {
-    return -1;
-  }
+  // If we are at a method boundary or the top level, we didn't find it.
+  if (compiler->parent == NULL || compiler->enclosingClass != NULL) return -1;
 
   // See if it's a local variable in the immediately enclosing function.
   int local = resolveLocal(compiler->parent, name, length);
@@ -1137,11 +1140,11 @@ static int findUpvalue(Compiler* compiler, const char* name, int length)
   }
 
   // See if it's an upvalue in the immediately enclosing function. In other
-  // words, if its a local variable in a non-immediately enclosing function.
-  // This will "flatten" closures automatically: it will add upvalues to all
-  // of the intermediate functions to get from the function where a local is
-  // declared all the way into the possibly deeply nested function that is
-  // closing over it.
+  // words, if it's a local variable in a non-immediately enclosing function.
+  // This "flattens" closures automatically: it adds upvalues to all of the
+  // intermediate functions to get from the function where a local is declared
+  // all the way into the possibly deeply nested function that is closing over
+  // it.
   int upvalue = findUpvalue(compiler->parent, name, length);
   if (upvalue != -1)
   {
@@ -1154,13 +1157,13 @@ static int findUpvalue(Compiler* compiler, const char* name, int length)
 }
 
 // Look up [name] in the current scope to see what name it is bound to. Returns
-// the index of the name either in global scope, local scope, or the enclosing
-// function's upvalue list. Returns -1 if not found.
+// the index of the name either in local scope, or the enclosing function's
+// upvalue list. Does not search the global scope. Returns -1 if not found.
 //
 // Sets [loadInstruction] to the instruction needed to load the variable. Will
-// be one of [CODE_LOAD_LOCAL], [CODE_LOAD_UPVALUE], or [CODE_LOAD_GLOBAL].
-static int resolveName(Compiler* compiler, const char* name, int length,
-                       Code* loadInstruction)
+// be [CODE_LOAD_LOCAL] or [CODE_LOAD_UPVALUE].
+static int resolveNonglobal(Compiler* compiler, const char* name, int length,
+                            Code* loadInstruction)
 {
   // Look it up in the local scopes. Look in reverse order so that the most
   // nested variable is found first and shadows outer ones.
@@ -1171,13 +1174,23 @@ static int resolveName(Compiler* compiler, const char* name, int length,
   // If we got here, it's not a local, so lets see if we are closing over an
   // outer local.
   *loadInstruction = CODE_LOAD_UPVALUE;
-  int upvalue = findUpvalue(compiler, name, length);
-  if (upvalue != -1) return upvalue;
+  return findUpvalue(compiler, name, length);
+}
 
-  // If we got here, it wasn't in a local scope, so try the global scope.
+// Look up [name] in the current scope to see what name it is bound to. Returns
+// the index of the name either in global scope, local scope, or the enclosing
+// function's upvalue list. Returns -1 if not found.
+//
+// Sets [loadInstruction] to the instruction needed to load the variable. Will
+// be one of [CODE_LOAD_LOCAL], [CODE_LOAD_UPVALUE], or [CODE_LOAD_GLOBAL].
+static int resolveName(Compiler* compiler, const char* name, int length,
+                       Code* loadInstruction)
+{
+  int nonglobal = resolveNonglobal(compiler, name, length, loadInstruction);
+  if (nonglobal != -1) return nonglobal;
+
   *loadInstruction = CODE_LOAD_GLOBAL;
-  return wrenSymbolTableFind(
-      &compiler->parser->vm->globalNames, name, length);
+  return wrenSymbolTableFind(&compiler->parser->vm->globalNames, name, length);
 }
 
 static void loadLocal(Compiler* compiler, int slot)
@@ -1531,9 +1544,7 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
 static void loadThis(Compiler* compiler)
 {
   Code loadInstruction;
-  int index = resolveName(compiler, "this", 4, &loadInstruction);
-  ASSERT(index == -1 || loadInstruction != CODE_LOAD_GLOBAL,
-         "'this' should not be global.");
+  int index = resolveNonglobal(compiler, "this", 4, &loadInstruction);
   if (loadInstruction == CODE_LOAD_LOCAL)
   {
     loadLocal(compiler, index);
@@ -1735,63 +1746,80 @@ static void staticField(Compiler* compiler, bool allowAssignment)
       // Implicitly initialize it to null.
       emit(classCompiler, CODE_NULL);
       defineVariable(classCompiler, symbol);
+    }
 
-      index = resolveName(compiler, token->start, token->length,
-                          &loadInstruction);
-    }
-    else
-    {
-      // It exists already, so resolve it properly. This is different from the
-      // above resolveLocal() call because we may have already closed over it
-      // as an upvalue.
-      index = resolveName(compiler, token->start, token->length,
-                          &loadInstruction);
-    }
+    // It definitely exists now, so resolve it properly. This is different from
+    // the above resolveLocal() call because we may have already closed over it
+    // as an upvalue.
+    index = resolveName(compiler, token->start, token->length,
+                        &loadInstruction);
   }
 
   variable(compiler, allowAssignment, index, loadInstruction);
 }
 
+// Returns `true` if [name] is a local variable name (starts with a lowercase
+// letter).
+static bool isLocalName(const char* name)
+{
+  return name[0] >= 'a' && name[0] <= 'z';
+}
+
+// Compiles a variable name or method call with an implicit receiver.
 static void name(Compiler* compiler, bool allowAssignment)
 {
-  // Look up the name in the scope chain.
+  // Look for the name in the scope chain up to the nearest enclosing method.
   Token* token = &compiler->parser->previous;
 
   Code loadInstruction;
-  int index = resolveName(compiler, token->start, token->length,
-                          &loadInstruction);
+  int index = resolveNonglobal(compiler, token->start, token->length,
+                               &loadInstruction);
   if (index != -1)
   {
     variable(compiler, allowAssignment, index, loadInstruction);
     return;
   }
-  // TODO: The fact that we return here if the variable is known and parse an
-  // optional argument list below if not means that the grammar is not
+
+  // TODO: The fact that we return above here if the variable is known and parse
+  // an optional argument list below if not means that the grammar is not
   // context-free. A line of code in a method like "someName(foo)" is a parse
   // error if "someName" is a defined variable in the surrounding scope and not
   // if it isn't. Fix this. One option is to have "someName(foo)" always
   // resolve to a self-call if there is an argument list, but that makes
   // getters a little confusing.
 
-  // TODO: The fact that we walk the entire scope chain up to global before
-  // interpreting a name as an implicit "this" call means that surrounding
-  // names shadow ones in the class. This is good for things like globals.
-  // (You wouldn't want `new Fiber` translating to `new this.Fiber`.) But it
-  // may not be what we want for other names. One option is to make capitalized
-  // names *always* global, and then a lowercase name will become on an
-  // implicit this if it's not a local in the nearest enclosing class.
-
-  // Otherwise, if we are inside a class, it's a call with an implicit "this"
-  // receiver.
-  ClassCompiler* classCompiler = getEnclosingClass(compiler);
-  if (classCompiler == NULL)
+  // If we're inside a method and the name is lowercase, treat it as a method
+  // on this.
+  if (isLocalName(token->start) && getEnclosingClass(compiler) != NULL)
   {
-    error(compiler, "Undefined variable.");
+    loadThis(compiler);
+    namedCall(compiler, allowAssignment, CODE_CALL_0);
     return;
   }
 
-  loadThis(compiler);
-  namedCall(compiler, allowAssignment, CODE_CALL_0);
+  // Otherwise, look for a global variable with the name.
+  int global = wrenSymbolTableFind(&compiler->parser->vm->globalNames,
+                                   token->start, token->length);
+  if (global == -1)
+  {
+    if (isLocalName(token->start))
+    {
+      error(compiler, "Undefined variable.");
+      return;
+    }
+
+    // If it's a nonlocal name, implicitly define a global in the hopes that
+    // we get a real definition later.
+    global = wrenDeclareGlobal(compiler->parser->vm,
+                               token->start, token->length);
+
+    if (global == -2)
+    {
+      error(compiler, "Too many global variables defined.");
+    }
+  }
+
+  variable(compiler, allowAssignment, global, CODE_LOAD_GLOBAL);
 }
 
 static void null(Compiler* compiler, bool allowAssignment)
@@ -2786,6 +2814,18 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 
   emit(&compiler, CODE_NULL);
   emit(&compiler, CODE_RETURN);
+
+  // See if there are any implicitly declared globals that never got an explicit
+  // definition.
+  // TODO: It would be nice if the error was on the line where it was used.
+  for (int i = 0; i < vm->globals.count; i++)
+  {
+    if (IS_UNDEFINED(vm->globals.data[i]))
+    {
+      error(&compiler, "Variable '%s' is used but not defined.",
+            vm->globalNames.data[i]);
+    }
+  }
 
   return endCompiler(&compiler, "(script)", 8);
 }

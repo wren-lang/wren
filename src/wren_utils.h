@@ -60,15 +60,14 @@ void wrenSymbolTableInit(WrenVM* vm, SymbolTable* symbols);
 // SymbolTable itself.
 void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols);
 
-// Adds name to the symbol table. Returns the index of it in the table. Returns
-// -1 if the symbol is already present.
+// Adds name to the symbol table. Returns the index of it in the table.
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
-              const char* name, size_t length);
+                       const char* name, size_t length);
 
 // Adds name to the symbol table. Returns the index of it in the table. Will
 // use an existing symbol if already present.
 int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
-                 const char* name, size_t length);
+                          const char* name, size_t length);
 
 // Looks up name in the symbol table. Returns its index if found or -1 if not.
 int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length);

@@ -79,8 +79,7 @@ ORDERED = [
   WEAKEST, WEAK_DEFAULT, NORMAL, STRONG_DEFAULT, PREFERRED, STRONG_REFERRED
 ]
 
-// TODO: Forward declarations.
-var planner
+var ThePlanner
 
 class Constraint {
   new(strength) {
@@ -92,7 +91,7 @@ class Constraint {
   // Activate this constraint and attempt to satisfy it.
   addConstraint {
     addToGraph
-    planner.incrementalAdd(this)
+    ThePlanner.incrementalAdd(this)
   }
 
   // Attempt to find a way to enforce this constraint. If successful,
@@ -114,13 +113,13 @@ class Constraint {
     var overridden = out.determinedBy
     if (overridden != null) overridden.markUnsatisfied
     out.determinedBy = this
-    if (!planner.addPropagate(this, mark)) IO.print("Cycle encountered")
+    if (!ThePlanner.addPropagate(this, mark)) IO.print("Cycle encountered")
     out.mark = mark
     return overridden
   }
 
   destroyConstraint {
-    if (isSatisfied) planner.incrementalRemove(this)
+    if (isSatisfied) ThePlanner.incrementalRemove(this)
     removeFromGraph
   }
 
@@ -629,7 +628,7 @@ var total = 0
 // of course, very low. Typical situations lie somewhere between these
 // two extremes.
 var chainTest = new Fn {|n|
-  planner = new Planner
+  ThePlanner = new Planner
   var prev = null
   var first = null
   var last = null
@@ -645,7 +644,7 @@ var chainTest = new Fn {|n|
 
   new StayConstraint(last, STRONG_DEFAULT)
   var edit = new EditConstraint(first, PREFERRED)
-  var plan = planner.extractPlanFromConstraints([edit])
+  var plan = ThePlanner.extractPlanFromConstraints([edit])
   for (i in 0...100) {
     first.value = i
     plan.execute
@@ -655,7 +654,7 @@ var chainTest = new Fn {|n|
 
 var change = new Fn {|v, newValue|
   var edit = new EditConstraint(v, PREFERRED)
-  var plan = planner.extractPlanFromConstraints([edit])
+  var plan = ThePlanner.extractPlanFromConstraints([edit])
   for (i in 0...10) {
     v.value = newValue
     plan.execute
@@ -669,7 +668,7 @@ var change = new Fn {|v, newValue|
 // time is measured to change a variable on either side of the
 // mapping and to change the scale and offset factors.
 var projectionTest = new Fn {|n|
-  planner = new Planner
+  ThePlanner = new Planner
   var scale = new Variable("scale", 10)
   var offset = new Variable("offset", 1000)
   var src = null

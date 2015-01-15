@@ -303,6 +303,13 @@ struct WrenVM
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
+// Adds a new implicitly declared global named [name] to the global namespace.
+//
+// Does not check to see if a global with that name is already declared or
+// defined. Returns the symbol for the new global or -2 if there are too many
+// globals defined.
+int wrenDeclareGlobal(WrenVM* vm, const char* name, size_t length);
+
 // Adds a new global named [name] to the global namespace.
 //
 // Returns the symbol for the new global, -1 if a global with the given name
@@ -339,6 +346,7 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
     case TAG_NAN: return vm->numClass; break;
     case TAG_NULL: return vm->nullClass; break;
     case TAG_TRUE: return vm->boolClass; break;
+    case TAG_UNDEFINED: UNREACHABLE();
   }
 #else
   switch (value.type)
@@ -348,6 +356,7 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
     case VAL_NUM: return vm->numClass;
     case VAL_TRUE: return vm->boolClass;
     case VAL_OBJ: return AS_OBJ(value)->classObj;
+    case VAL_UNDEFINED: UNREACHABLE();
   }
 #endif
 
