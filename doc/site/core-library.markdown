@@ -340,6 +340,14 @@ Tests whether all the elements in the list pass the `predicate`.
 
 **TODO**
 
+### **reduce**(f), **reduce**(acc, f)
+
+Implements a left fold, reducing the list to a single value. The given function
+is passed two arguments: the accumulator, then the current list value.
+
+The first list item is used as accumulator when calling the first variant. Thus,
+it only works on lists with two or more elements.
+
 ### **removeAt**(index)
 
 **TODO**
