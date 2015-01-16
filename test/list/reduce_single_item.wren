@@ -1,1 +1,2 @@
-[1].reduce {|a, b| a } // expect runtime error: Range start out of bounds.
+IO.print([1].reduce {|a, b| 42 }) // expect: 1
+IO.print([].reduce(1) {|a, b| 42 }) // expect: 1

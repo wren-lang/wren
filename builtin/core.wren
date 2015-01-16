@@ -29,7 +29,18 @@ class Sequence {
     return acc
   }
 
-  reduce(f) { this[1..-1].reduce(this[0], f) }
+  reduce(f) {
+    var iter = iterate(null)
+    if (!iter) Fiber.abort("Can't reduce an empty sequence.")
+
+    // Seed with the first element.
+    var result = iteratorValue(iter)
+    while (iter = iterate(iter)) {
+      result = f.call(result, iteratorValue(iter))
+    }
+
+    return result
+  }
 
 }
 
