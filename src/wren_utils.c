@@ -25,7 +25,8 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols, const char* name,
                        size_t length)
 {
-  char* heapString = wrenReallocate(vm, NULL, 0, sizeof(char) * (length + 1));
+  char* heapString = (char*)wrenReallocate(vm, NULL, 0,
+                                           sizeof(char) * (length + 1));
   strncpy(heapString, name, length);
   heapString[length] = '\0';
 

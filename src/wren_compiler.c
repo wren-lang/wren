@@ -901,10 +901,10 @@ static bool consumeLine(Compiler* compiler, const char* errorMessage)
 
 // Variables and scopes --------------------------------------------------------
 
-// Emits one bytecode instruction or argument. Returns its index.
-static int emit(Compiler* compiler, Code code)
+// Emits one bytecode instruction or single-byte argument. Returns its index.
+static int emit(Compiler* compiler, uint8_t byte)
 {
-  wrenByteBufferWrite(compiler->parser->vm, &compiler->bytecode, code);
+  wrenByteBufferWrite(compiler->parser->vm, &compiler->bytecode, byte);
 
   // Assume the instruction is associated with the most recently consumed token.
   wrenIntBufferWrite(compiler->parser->vm, &compiler->debugSourceLines,
@@ -913,9 +913,16 @@ static int emit(Compiler* compiler, Code code)
   return compiler->bytecode.count - 1;
 }
 
+// Emits one 16-bit argument, which will be written big endian.
+static void emitShort(Compiler* compiler, uint16_t arg)
+{
+  emit(compiler, (arg >> 8) & 0xff);
+  emit(compiler, arg & 0xff);
+}
+
 // Emits one bytecode instruction followed by a 8-bit argument. Returns the
 // index of the argument in the bytecode.
-static int emitByte(Compiler* compiler, Code instruction, uint8_t arg)
+static int emitByteArg(Compiler* compiler, Code instruction, uint8_t arg)
 {
   emit(compiler, instruction);
   return emit(compiler, arg);
@@ -923,11 +930,10 @@ static int emitByte(Compiler* compiler, Code instruction, uint8_t arg)
 
 // Emits one bytecode instruction followed by a 16-bit argument, which will be
 // written big endian.
-static void emitShort(Compiler* compiler, Code instruction, uint16_t arg)
+static void emitShortArg(Compiler* compiler, Code instruction, uint16_t arg)
 {
   emit(compiler, instruction);
-  emit(compiler, (arg >> 8) & 0xff);
-  emit(compiler, arg & 0xff);
+  emitShort(compiler, arg);
 }
 
 // Emits [instruction] followed by a placeholder for a jump offset. The
@@ -1026,7 +1032,7 @@ static void defineVariable(Compiler* compiler, int symbol)
 
   // It's a global variable, so store the value in the global slot and then
   // discard the temporary for the initializer.
-  emitShort(compiler, CODE_STORE_GLOBAL, symbol);
+  emitShortArg(compiler, CODE_STORE_GLOBAL, symbol);
   emit(compiler, CODE_POP);
 }
 
@@ -1201,7 +1207,7 @@ static void loadLocal(Compiler* compiler, int slot)
     return;
   }
 
-  emitByte(compiler, CODE_LOAD_LOCAL, slot);
+  emitByteArg(compiler, CODE_LOAD_LOCAL, slot);
 }
 
 // Copies the identifier from the previously consumed `TOKEN_NAME` into [name],
@@ -1267,20 +1273,20 @@ static ObjFn* endCompiler(Compiler* compiler,
     // We can just load and run the function directly.
     if (compiler->numUpvalues == 0)
     {
-      emitShort(compiler->parent, CODE_CONSTANT, constant);
+      emitShortArg(compiler->parent, CODE_CONSTANT, constant);
     }
     else
     {
       // Capture the upvalues in the new closure object.
-      emitShort(compiler->parent, CODE_CLOSURE, constant);
+      emitShortArg(compiler->parent, CODE_CLOSURE, constant);
 
       // Emit arguments for each upvalue to know whether to capture a local or
       // an upvalue.
       // TODO: Do something more efficient here?
       for (int i = 0; i < compiler->numUpvalues; i++)
       {
-        emitByte(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0,
-                 compiler->upvalues[i].index);
+        emit(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0);
+        emit(compiler->parent, compiler->upvalues[i].index);
       }
     }
   }
@@ -1316,13 +1322,6 @@ typedef enum
   PREC_CALL        // . () []
 } Precedence;
 
-// Forward declarations since the grammar is recursive.
-static void expression(Compiler* compiler);
-static void statement(Compiler* compiler);
-static void definition(Compiler* compiler);
-static void parsePrecedence(Compiler* compiler, bool allowAssignment,
-                            Precedence precedence);
-
 typedef void (*GrammarFn)(Compiler*, bool allowAssignment);
 
 typedef void (*SignatureFn)(Compiler* compiler, char* name, int* length);
@@ -1336,7 +1335,13 @@ typedef struct
   const char* name;
 } GrammarRule;
 
-GrammarRule rules[];
+// Forward declarations since the grammar is recursive.
+static GrammarRule* getRule(TokenType type);
+static void expression(Compiler* compiler);
+static void statement(Compiler* compiler);
+static void definition(Compiler* compiler);
+static void parsePrecedence(Compiler* compiler, bool allowAssignment,
+                            Precedence precedence);
 
 // Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
 // instruction with an offset that jumps to the current end of bytecode.
@@ -1507,8 +1512,8 @@ static void methodCall(Compiler* compiler, Code instruction,
 
   // TODO: Allow Grace-style mixfix methods?
 
-  emitShort(compiler, instruction + numArgs,
-            methodSymbol(compiler, name, length));
+  emitShortArg(compiler, (Code)(instruction + numArgs),
+               methodSymbol(compiler, name, length));
 }
 
 // Compiles a call whose name is the previously consumed token. This includes
@@ -1531,7 +1536,8 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
 
     // Compile the assigned value.
     expression(compiler);
-    emitShort(compiler, instruction + 1, methodSymbol(compiler, name, length));
+    emitShortArg(compiler, (Code)(instruction + 1),
+                 methodSymbol(compiler, name, length));
   }
   else
   {
@@ -1551,7 +1557,7 @@ static void loadThis(Compiler* compiler)
   }
   else
   {
-    emitByte(compiler, loadInstruction, index);
+    emitByteArg(compiler, loadInstruction, index);
   }
 }
 
@@ -1581,21 +1587,21 @@ static void list(Compiler* compiler, bool allowAssignment)
 
   // Create the list.
   // TODO: Handle lists >255 elements.
-  emitByte(compiler, CODE_LIST, numElements);
+  emitByteArg(compiler, CODE_LIST, numElements);
 }
 
 // Unary operators like `-foo`.
 static void unaryOp(Compiler* compiler, bool allowAssignment)
 {
-  GrammarRule* rule = &rules[compiler->parser->previous.type];
+  GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   ignoreNewlines(compiler);
 
   // Compile the argument.
-  parsePrecedence(compiler, false, PREC_UNARY + 1);
+  parsePrecedence(compiler, false, (Precedence)(PREC_UNARY + 1));
 
   // Call the operator method on the left-hand side.
-  emitShort(compiler, CODE_CALL_0, methodSymbol(compiler, rule->name, 1));
+  emitShortArg(compiler, CODE_CALL_0, methodSymbol(compiler, rule->name, 1));
 }
 
 static void boolean(Compiler* compiler, bool allowAssignment)
@@ -1669,13 +1675,13 @@ static void field(Compiler* compiler, bool allowAssignment)
   if (compiler->parent != NULL &&
       compiler->parent->enclosingClass == enclosingClass)
   {
-    emitByte(compiler, isLoad ? CODE_LOAD_FIELD_THIS : CODE_STORE_FIELD_THIS,
-             field);
+    emitByteArg(compiler, isLoad ? CODE_LOAD_FIELD_THIS : CODE_STORE_FIELD_THIS,
+                field);
   }
   else
   {
     loadThis(compiler);
-    emitByte(compiler, isLoad ? CODE_LOAD_FIELD : CODE_STORE_FIELD, field);
+    emitByteArg(compiler, isLoad ? CODE_LOAD_FIELD : CODE_STORE_FIELD, field);
   }
 }
 
@@ -1696,13 +1702,13 @@ static void variable(Compiler* compiler, bool allowAssignment, int index,
     switch (loadInstruction)
     {
       case CODE_LOAD_LOCAL:
-        emitByte(compiler, CODE_STORE_LOCAL, index);
+        emitByteArg(compiler, CODE_STORE_LOCAL, index);
         break;
       case CODE_LOAD_UPVALUE:
-        emitByte(compiler, CODE_STORE_UPVALUE, index);
+        emitByteArg(compiler, CODE_STORE_UPVALUE, index);
         break;
       case CODE_LOAD_GLOBAL:
-        emitShort(compiler, CODE_STORE_GLOBAL, index);
+        emitShortArg(compiler, CODE_STORE_GLOBAL, index);
         break;
       default:
         UNREACHABLE();
@@ -1710,7 +1716,7 @@ static void variable(Compiler* compiler, bool allowAssignment, int index,
   }
   else if (loadInstruction == CODE_LOAD_GLOBAL)
   {
-    emitShort(compiler, loadInstruction, index);
+    emitShortArg(compiler, loadInstruction, index);
   }
   else if (loadInstruction == CODE_LOAD_LOCAL)
   {
@@ -1718,7 +1724,7 @@ static void variable(Compiler* compiler, bool allowAssignment, int index,
   }
   else
   {
-    emitByte(compiler, loadInstruction, index);
+    emitByteArg(compiler, loadInstruction, index);
   }
 }
 
@@ -1844,7 +1850,7 @@ static void number(Compiler* compiler, bool allowAssignment)
   int constant = addConstant(compiler, NUM_VAL(value));
 
   // Compile the code to load the constant.
-  emitShort(compiler, CODE_CONSTANT, constant);
+  emitShortArg(compiler, CODE_CONSTANT, constant);
 }
 
 static void string(Compiler* compiler, bool allowAssignment)
@@ -1856,7 +1862,7 @@ static void string(Compiler* compiler, bool allowAssignment)
   wrenByteBufferClear(compiler->parser->vm, &compiler->parser->string);
 
   // Compile the code to load the constant.
-  emitShort(compiler, CODE_CONSTANT, constant);
+  emitShortArg(compiler, CODE_CONSTANT, constant);
 }
 
 static void super_(Compiler* compiler, bool allowAssignment)
@@ -1957,8 +1963,8 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   }
 
   // Compile the method call.
-  emitShort(compiler, CODE_CALL_0 + numArgs,
-            methodSymbol(compiler, name, length));
+  emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs),
+               methodSymbol(compiler, name, length));
 }
 
 static void call(Compiler* compiler, bool allowAssignment)
@@ -1979,7 +1985,8 @@ static void new_(Compiler* compiler, bool allowAssignment)
   }
 
   // The leading space in the name is to ensure users can't call it directly.
-  emitShort(compiler, CODE_CALL_0, methodSymbol(compiler, " instantiate", 12));
+  emitShortArg(compiler, CODE_CALL_0,
+               methodSymbol(compiler, " instantiate", 12));
 
   // Invoke the constructor on the new instance.
   char name[MAX_METHOD_SIGNATURE];
@@ -1997,7 +2004,7 @@ static void is(Compiler* compiler, bool allowAssignment)
   emit(compiler, CODE_IS);
 }
 
-static void and(Compiler* compiler, bool allowAssignment)
+static void and_(Compiler* compiler, bool allowAssignment)
 {
   ignoreNewlines(compiler);
 
@@ -2007,7 +2014,7 @@ static void and(Compiler* compiler, bool allowAssignment)
   patchJump(compiler, jump);
 }
 
-static void or(Compiler* compiler, bool allowAssignment)
+static void or_(Compiler* compiler, bool allowAssignment)
 {
   ignoreNewlines(compiler);
 
@@ -2046,16 +2053,16 @@ static void conditional(Compiler* compiler, bool allowAssignment)
 
 void infixOp(Compiler* compiler, bool allowAssignment)
 {
-  GrammarRule* rule = &rules[compiler->parser->previous.type];
+  GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   // An infix operator cannot end an expression.
   ignoreNewlines(compiler);
 
   // Compile the right-hand side.
-  parsePrecedence(compiler, false, rule->precedence + 1);
+  parsePrecedence(compiler, false, (Precedence)(rule->precedence + 1));
 
   // Call the operator method on the left-hand side.
-  emitShort(compiler, CODE_CALL_1, methodSymbol(compiler, rule->name, 0));
+  emitShortArg(compiler, CODE_CALL_1, methodSymbol(compiler, rule->name, 0));
 }
 
 // Compiles a method signature for an infix operator.
@@ -2150,9 +2157,9 @@ GrammarRule rules[] =
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
   /* TOKEN_MINUS         */ OPERATOR("- "),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE, "| "),
-  /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGIC, or),
+  /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGIC, or_),
   /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE, "& "),
-  /* TOKEN_AMPAMP        */ INFIX(PREC_LOGIC, and),
+  /* TOKEN_AMPAMP        */ INFIX(PREC_LOGIC, and_),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_TILDE         */ PREFIX_OPERATOR("~"),
   /* TOKEN_QUESTION      */ INFIX(PREC_ASSIGNMENT, conditional),
@@ -2189,6 +2196,12 @@ GrammarRule rules[] =
   /* TOKEN_ERROR         */ UNUSED,
   /* TOKEN_EOF           */ UNUSED
 };
+
+// Gets the [GrammarRule] associated with tokens of [type].
+static GrammarRule* getRule(TokenType type)
+{
+  return &rules[type];
+}
 
 // The main entrypoint for the top-down operator precedence parser.
 void parsePrecedence(Compiler* compiler, bool allowAssignment,
@@ -2247,7 +2260,7 @@ void block(Compiler* compiler)
 static int getNumArguments(const uint8_t* bytecode, const Value* constants,
                            int ip)
 {
-  Code instruction = bytecode[ip];
+  Code instruction = (Code)bytecode[ip];
   switch (instruction)
   {
     case CODE_NULL:
@@ -2374,7 +2387,7 @@ static void endLoop(Compiler* compiler)
 {
   int loopOffset = compiler->bytecode.count - compiler->loop->start + 2;
   // TODO: Check for overflow.
-  emitShort(compiler, CODE_LOOP, loopOffset);
+  emitShortArg(compiler, CODE_LOOP, loopOffset);
 
   patchJump(compiler, compiler->loop->exitJump);
 
@@ -2462,10 +2475,10 @@ static void forStatement(Compiler* compiler)
   loadLocal(compiler, seqSlot);
   loadLocal(compiler, iterSlot);
 
-  emitShort(compiler, CODE_CALL_1, methodSymbol(compiler, "iterate ", 8));
+  emitShortArg(compiler, CODE_CALL_1, methodSymbol(compiler, "iterate ", 8));
 
   // Store the iterator back in its local for the next iteration.
-  emitByte(compiler, CODE_STORE_LOCAL, iterSlot);
+  emitByteArg(compiler, CODE_STORE_LOCAL, iterSlot);
   // TODO: We can probably get this working with a bit less stack juggling.
 
   testExitLoop(compiler);
@@ -2474,8 +2487,8 @@ static void forStatement(Compiler* compiler)
   loadLocal(compiler, seqSlot);
   loadLocal(compiler, iterSlot);
 
-  emitShort(compiler, CODE_CALL_1,
-            methodSymbol(compiler, "iteratorValue ", 14));
+  emitShortArg(compiler, CODE_CALL_1,
+               methodSymbol(compiler, "iteratorValue ", 14));
 
   // Bind the loop variable in its own scope. This ensures we get a fresh
   // variable each iteration so that closures for it don't all see the same one.
@@ -2630,7 +2643,7 @@ static void classDefinition(Compiler* compiler)
   int nameConstant = addConstant(compiler, wrenNewString(compiler->parser->vm,
       compiler->parser->previous.start, compiler->parser->previous.length));
 
-  emitShort(compiler, CODE_CONSTANT, nameConstant);
+  emitShortArg(compiler, CODE_CONSTANT, nameConstant);
 
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
@@ -2646,7 +2659,7 @@ static void classDefinition(Compiler* compiler)
   // Store a placeholder for the number of fields argument. We don't know
   // the value until we've compiled all the methods to see which fields are
   // used.
-  int numFieldsInstruction = emitByte(compiler, CODE_CLASS, 255);
+  int numFieldsInstruction = emitByteArg(compiler, CODE_CLASS, 255);
 
   // Store it in its name.
   defineVariable(compiler, symbol);
@@ -2706,7 +2719,7 @@ static void classDefinition(Compiler* compiler)
     // Load the class.
     if (isGlobal)
     {
-      emitShort(compiler, CODE_LOAD_GLOBAL, symbol);
+      emitShortArg(compiler, CODE_LOAD_GLOBAL, symbol);
     }
     else
     {
@@ -2714,7 +2727,7 @@ static void classDefinition(Compiler* compiler)
     }
 
     // Define the method.
-    emitShort(compiler, instruction, methodSymbol);
+    emitShortArg(compiler, instruction, methodSymbol);
 
     // Don't require a newline after the last definition.
     if (match(compiler, TOKEN_RIGHT_BRACE)) break;
@@ -2835,7 +2848,7 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
   int ip = 0;
   for (;;)
   {
-    Code instruction = fn->bytecode[ip++];
+    Code instruction = (Code)fn->bytecode[ip++];
     switch (instruction)
     {
       case CODE_LOAD_FIELD:

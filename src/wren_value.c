@@ -18,10 +18,12 @@
 DEFINE_BUFFER(Value, Value);
 DEFINE_BUFFER(Method, Method);
 
-static void* allocate(WrenVM* vm, size_t size)
-{
-  return wrenReallocate(vm, NULL, 0, size);
-}
+#define ALLOCATE(vm, type) \
+    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
+#define ALLOCATE_FLEX(vm, type, extra) \
+    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) + extra))
+#define ALLOCATE_ARRAY(vm, type, count) \
+    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * count))
 
 static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 {
@@ -34,7 +36,7 @@ static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 
 ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
 {
-  ObjClass* classObj = allocate(vm, sizeof(ObjClass));
+  ObjClass* classObj = ALLOCATE(vm, ObjClass);
   initObj(vm, &classObj->obj, OBJ_CLASS, NULL);
   classObj->superclass = NULL;
   classObj->numFields = numFields;
@@ -116,8 +118,8 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
 
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 {
-  ObjClosure* closure = allocate(vm,
-      sizeof(ObjClosure) + sizeof(Upvalue*) * fn->numUpvalues);
+  ObjClosure* closure = ALLOCATE_FLEX(vm, ObjClosure,
+                                      sizeof(Upvalue*) * fn->numUpvalues);
   initObj(vm, &closure->obj, OBJ_CLOSURE, vm->fnClass);
 
   closure->fn = fn;
@@ -131,7 +133,7 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 
 ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
 {
-  ObjFiber* fiber = allocate(vm, sizeof(ObjFiber));
+  ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
 
   // Push the stack frame for the function.
@@ -169,25 +171,25 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
   Value* copiedConstants = NULL;
   if (numConstants > 0)
   {
-    copiedConstants = allocate(vm, sizeof(Value) * numConstants);
+    copiedConstants = ALLOCATE_ARRAY(vm, Value, numConstants);
     for (int i = 0; i < numConstants; i++)
     {
       copiedConstants[i] = constants[i];
     }
   }
 
-  FnDebug* debug = allocate(vm, sizeof(FnDebug));
+  FnDebug* debug = ALLOCATE(vm, FnDebug);
 
   debug->sourcePath = debugSourcePath;
 
   // Copy the function's name.
-  debug->name = allocate(vm, debugNameLength + 1);
+  debug->name = ALLOCATE_ARRAY(vm, char, debugNameLength + 1);
   strncpy(debug->name, debugName, debugNameLength);
   debug->name[debugNameLength] = '\0';
 
   debug->sourceLines = sourceLines;
 
-  ObjFn* fn = allocate(vm, sizeof(ObjFn));
+  ObjFn* fn = ALLOCATE(vm, ObjFn);
   initObj(vm, &fn->obj, OBJ_FN, vm->fnClass);
 
   // TODO: Should eventually copy this instead of taking ownership. When the
@@ -207,8 +209,8 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
 
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
 {
-  ObjInstance* instance = allocate(vm,
-      sizeof(ObjInstance) + classObj->numFields * sizeof(Value));
+  ObjInstance* instance = ALLOCATE_FLEX(vm, ObjInstance,
+                                        classObj->numFields * sizeof(Value));
   initObj(vm, &instance->obj, OBJ_INSTANCE, classObj);
 
   // Initialize fields to null.
@@ -227,10 +229,10 @@ ObjList* wrenNewList(WrenVM* vm, int numElements)
   Value* elements = NULL;
   if (numElements > 0)
   {
-    elements = allocate(vm, sizeof(Value) * numElements);
+    elements = ALLOCATE_ARRAY(vm, Value, numElements);
   }
 
-  ObjList* list = allocate(vm, sizeof(ObjList));
+  ObjList* list = ALLOCATE(vm, ObjList);
   initObj(vm, &list->obj, OBJ_LIST, vm->listClass);
   list->capacity = numElements;
   list->count = numElements;
@@ -247,7 +249,7 @@ static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
   if (capacity < LIST_MIN_CAPACITY) capacity = LIST_MIN_CAPACITY;
 
   list->capacity *= 2;
-  list->elements = wrenReallocate(vm, list->elements,
+  list->elements = (Value*)wrenReallocate(vm, list->elements,
       list->capacity * sizeof(Value), capacity * sizeof(Value));
   // TODO: Handle allocation failure.
   list->capacity = capacity;
@@ -297,7 +299,7 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
   // If we have too much excess capacity, shrink it.
   if (list->capacity / LIST_GROW_FACTOR >= list->count)
   {
-    list->elements = wrenReallocate(vm, list->elements,
+    list->elements = (Value*)wrenReallocate(vm, list->elements,
         sizeof(Value) * list->capacity,
         sizeof(Value) * (list->capacity / LIST_GROW_FACTOR));
     list->capacity /= LIST_GROW_FACTOR;
@@ -311,7 +313,7 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
 
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
 {
-  ObjRange* range = allocate(vm, sizeof(ObjRange) + 16);
+  ObjRange* range = ALLOCATE(vm, ObjRange);
   initObj(vm, &range->obj, OBJ_RANGE, vm->rangeClass);
   range->from = from;
   range->to = to;
@@ -339,7 +341,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
 
 Value wrenNewUninitializedString(WrenVM* vm, size_t length)
 {
-  ObjString* string = allocate(vm, sizeof(ObjString) + length + 1);
+  ObjString* string = ALLOCATE_FLEX(vm, ObjString, length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
   string->length = (int)length;
 
@@ -362,7 +364,7 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
 
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 {
-  Upvalue* upvalue = allocate(vm, sizeof(Upvalue));
+  Upvalue* upvalue = ALLOCATE(vm, Upvalue);
 
   // Upvalues are never used as first-class objects, so don't need a class.
   initObj(vm, &upvalue->obj, OBJ_UPVALUE, NULL);
@@ -624,19 +626,6 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
 ObjClass* wrenGetClass(WrenVM* vm, Value value)
 {
   return wrenGetClassInline(vm, value);
-}
-
-bool wrenValuesEqual(Value a, Value b)
-{
-  #if WREN_NAN_TAGGING
-  // Value types have unique bit representations and we compare object types
-  // by identity (i.e. pointer), so all we need to do is compare the bits.
-  return a.bits == b.bits;
-  #else
-  if (a.type != b.type) return false;
-  if (a.type == VAL_NUM) return a.num == b.num;
-  return a.obj == b.obj;
-  #endif
 }
 
 static void printList(ObjList* list)

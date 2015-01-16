@@ -38,8 +38,8 @@ a familiar, modern [syntax][].
 
  *  **Wren is a scripting language.** Wren is intended for embedding in
     applications. It has no dependencies, a small standard library,
-    and [an easy-to-use C API][embedding]. It's written in warning-free
-    standard C99.
+    and [an easy-to-use C API][embedding]. It compiles cleanly as C99, C++98
+    or anything later.
 
 If you like the sound of this, [give it a try][try]! Even better, you can
 [contribute to Wren itself][contribute].

@@ -82,11 +82,7 @@ typedef struct sObj
 
 #if WREN_NAN_TAGGING
 
-typedef union
-{
-  double num;
-  uint64_t bits;
-} Value;
+typedef uint64_t Value;
 
 #else
 
@@ -378,7 +374,7 @@ typedef struct
 #define AS_LIST(value) ((ObjList*)AS_OBJ(value))
 
 // Value -> double.
-#define AS_NUM(v) ((v).num)
+#define AS_NUM(value) (wrenValueToNum(value))
 
 // Value -> ObjRange*.
 #define AS_RANGE(v) ((ObjRange*)AS_OBJ(v))
@@ -391,6 +387,9 @@ typedef struct
 
 // Convert [boolean] to a boolean [Value].
 #define BOOL_VAL(boolean) (boolean ? TRUE_VAL : FALSE_VAL)
+
+// double -> Value.
+#define NUM_VAL(num) (wrenNumToValue(num))
 
 // Convert [obj], an `Obj*`, to a [Value].
 #define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))
@@ -482,18 +481,18 @@ typedef struct
 #define QNAN ((uint64_t)0x7ffc000000000000)
 
 // If the NaN bits are set, it's not a number.
-#define IS_NUM(value) (((value).bits & QNAN) != QNAN)
+#define IS_NUM(value) (((value) & QNAN) != QNAN)
 
 // Singleton values are NaN with the sign bit cleared. (This includes the
 // normal value of the actual NaN value used in numeric arithmetic.)
-#define IS_SINGLETON(value) (((value).bits & (QNAN | SIGN_BIT)) == QNAN)
+#define IS_SINGLETON(value) (((value) & (QNAN | SIGN_BIT)) == QNAN)
 
 // An object pointer is a NaN with a set sign bit.
-#define IS_OBJ(value) (((value).bits & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
+#define IS_OBJ(value) (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
 
-#define IS_FALSE(value) ((value).bits == FALSE_VAL.bits)
-#define IS_NULL(value) ((value).bits == (QNAN | TAG_NULL))
-#define IS_UNDEFINED(value) ((value).bits == (QNAN | TAG_UNDEFINED))
+#define IS_FALSE(value) ((value) == FALSE_VAL)
+#define IS_NULL(value) ((value) == (QNAN | TAG_NULL))
+#define IS_UNDEFINED(value) ((value) == (QNAN | TAG_UNDEFINED))
 
 // Masks out the tag bits used to identify the singleton value.
 #define MASK_TAG (7)
@@ -508,14 +507,11 @@ typedef struct
 #define TAG_UNUSED3   (6)
 #define TAG_UNUSED4   (7)
 
-// double -> Value.
-#define NUM_VAL(n) ((Value)(double)(n))
-
 // Value -> 0 or 1.
-#define AS_BOOL(value) ((value).bits == TRUE_VAL.bits)
+#define AS_BOOL(value) ((value) == TRUE_VAL)
 
 // Value -> Obj*.
-#define AS_OBJ(value) ((Obj*)((value).bits & ~(SIGN_BIT | QNAN)))
+#define AS_OBJ(value) ((Obj*)((value) & ~(SIGN_BIT | QNAN)))
 
 // Singleton values.
 #define NULL_VAL      ((Value)(uint64_t)(QNAN | TAG_NULL))
@@ -524,7 +520,7 @@ typedef struct
 #define UNDEFINED_VAL ((Value)(uint64_t)(QNAN | TAG_UNDEFINED))
 
 // Gets the singleton type tag for a Value (which must be a singleton).
-#define GET_TAG(value) ((int)((value).bits & MASK_TAG))
+#define GET_TAG(value) ((int)((value) & MASK_TAG))
 
 #else
 
@@ -541,9 +537,6 @@ typedef struct
 #define IS_NULL(value) ((value).type == VAL_NULL)
 #define IS_NUM(value) ((value).type == VAL_NUM)
 #define IS_UNDEFINED(value) ((value).type == VAL_UNDEFINED)
-
-// double -> Value.
-#define NUM_VAL(n) ((Value){ VAL_NUM, n, NULL })
 
 // Singleton values.
 #define FALSE_VAL     ((Value){ VAL_FALSE, 0.0, NULL })
@@ -645,7 +638,18 @@ ObjClass* wrenGetClass(WrenVM* vm, Value value);
 
 // Returns true if [a] and [b] are strictly equal using built-in equality
 // semantics. This is identity for object values, and value equality for others.
-bool wrenValuesEqual(Value a, Value b);
+static inline bool wrenValuesEqual(Value a, Value b)
+{
+#if WREN_NAN_TAGGING
+  // Value types have unique bit representations and we compare object types
+  // by identity (i.e. pointer), so all we need to do is compare the bits.
+  return a == b;
+#else
+  if (a.type != b.type) return false;
+  if (a.type == VAL_NUM) return a.num == b.num;
+  return a.obj == b.obj;
+#endif
+}
 
 // TODO: Need to decide if this is for user output of values, or for debug
 // tracing.
@@ -656,7 +660,7 @@ void wrenPrintValue(Value value);
 static inline bool wrenIsBool(Value value)
 {
 #if WREN_NAN_TAGGING
-  return value.bits == TRUE_VAL.bits || value.bits == FALSE_VAL.bits;
+  return value == TRUE_VAL || value == FALSE_VAL;
 #else
   return value.type == VAL_FALSE || value.type == VAL_TRUE;
 #endif
@@ -679,6 +683,44 @@ static inline Value wrenObjectToValue(Obj* obj)
   value.type = VAL_OBJ;
   value.obj = obj;
   return value;
+#endif
+}
+
+// Interprets [value] as a [double].
+static inline double wrenValueToNum(Value value)
+{
+#if WREN_NAN_TAGGING
+  // Use a union to let us reinterpret the uint64_t bits back to the double
+  // value it actually stores.
+  union
+  {
+    uint64_t bits;
+    double num;
+  } data;
+
+  data.bits = value;
+  return data.num;
+#else
+  return value.num;
+#endif
+}
+
+// Converts [num] to a [Value].
+static inline Value wrenNumToValue(double num)
+{
+#if WREN_NAN_TAGGING
+  // Use a union to let us reinterpret the bits making up the double as an
+  // opaque blob of bits.
+  union
+  {
+    uint64_t bits;
+    double num;
+  } data;
+
+  data.num = num;
+  return data.bits;
+#else
+  return (Value){ VAL_NUM, n, NULL };
 #endif
 }
 

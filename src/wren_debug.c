@@ -36,7 +36,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 {
   int start = i;
   uint8_t* bytecode = fn->bytecode;
-  Code code = bytecode[i];
+  Code code = (Code)bytecode[i];
 
   int line = fn->debug->sourceLines[i];
   if (lastLine == NULL || *lastLine != line)

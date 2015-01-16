@@ -34,12 +34,13 @@
       wrenReallocate(vm, buffer->data, 0, 0); \
       wren##name##BufferInit(vm, buffer); \
     } \
+    \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data) \
     { \
       if (buffer->capacity < buffer->count + 1) \
       { \
         int capacity = buffer->capacity == 0 ? 8 : buffer->capacity * 2; \
-        buffer->data = wrenReallocate(vm, buffer->data, \
+        buffer->data = (type*)wrenReallocate(vm, buffer->data, \
             buffer->capacity * sizeof(type), capacity * sizeof(type)); \
         buffer->capacity = capacity; \
       } \

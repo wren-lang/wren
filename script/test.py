@@ -42,7 +42,7 @@ else:
 passed = 0
 failed = 0
 skipped = defaultdict(int)
-num_skipped = 0;
+num_skipped = 0
 
 
 def walk(dir, callback):
