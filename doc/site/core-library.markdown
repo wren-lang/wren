@@ -313,7 +313,7 @@ Removes all items from the list.
 
 The number of items in the list.
 
-### **forall(predicate)**
+### **all(predicate)**
 
 Tests whether all the elements in the list pass the `predicate`.
 
