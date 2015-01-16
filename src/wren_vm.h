@@ -51,6 +51,9 @@ typedef enum
   CODE_LOAD_LOCAL_7,
   CODE_LOAD_LOCAL_8,
 
+  // Note: The compiler assumes the following _STORE instructions always
+  // immediately follow their corresponding _LOAD ones.
+  
   // Pushes the value in local slot [arg].
   CODE_LOAD_LOCAL,
 

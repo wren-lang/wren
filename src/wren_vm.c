@@ -32,7 +32,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
     reallocate = configuration->reallocateFn;
   }
 
-  WrenVM* vm = reallocate(NULL, 0, sizeof(WrenVM));
+  WrenVM* vm = (WrenVM*)reallocate(NULL, 0, sizeof(WrenVM));
 
   vm->reallocate = reallocate;
 
@@ -520,13 +520,13 @@ static bool runInterpreter(WrenVM* vm)
         }
   #else
 
-    #define DISPATCH()      goto *dispatchTable[instruction = READ_BYTE()];
+    #define DISPATCH() goto *dispatchTable[instruction = (Code)READ_BYTE()];
 
   #endif
 
   #else
 
-  #define INTERPRET_LOOP    for (;;) switch (instruction = READ_BYTE())
+  #define INTERPRET_LOOP    for (;;) switch (instruction = (Code)READ_BYTE())
   #define CASE_CODE(name)   case CODE_##name
   #define DISPATCH()        break
 
