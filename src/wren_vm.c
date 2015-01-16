@@ -526,9 +526,9 @@ static bool runInterpreter(WrenVM* vm)
 
   #else
 
-  #define INTERPRET_LOOP    for (;;) switch (instruction = READ_BYTE())
+  #define INTERPRET_LOOP    interpretLoop: switch (instruction = READ_BYTE())
   #define CASE_CODE(name)   case CODE_##name
-  #define DISPATCH()        break
+  #define DISPATCH()        goto interpretLoop
 
   #endif
 
