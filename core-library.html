@@ -4,7 +4,7 @@
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Core Library – Wren</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
-<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
@@ -227,19 +227,33 @@ unsigned values. The result is then a 32-bit unsigned number where each bit is
 <h3><strong>...</strong>(other) operator <a href="#****(other)-operator" name="****(other)-operator" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
 <h2>String Class <a href="#string-class" name="string-class" class="header-anchor">#</a></h2>
-<p><strong>TODO</strong></p>
+<p>A string of Unicode code points stored in UTF-8.</p>
 <h3><strong>contains</strong>(other) <a href="#**contains**(other)" name="**contains**(other)" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Checks if <code>other</code> is a substring of the string.</p>
+<p>It is a runtime error if <code>other</code> is not a string.</p>
 <h3><strong>count</strong> <a href="#**count**" name="**count**" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Returns the length of the string.</p>
+<h3><strong>endsWith(suffix)</strong> <a href="#**endswith(suffix)**" name="**endswith(suffix)**" class="header-anchor">#</a></h3>
+<p>Checks if the string ends with <code>suffix</code>.</p>
+<p>It is a runtime error if <code>suffix</code> is not a string.</p>
+<h3><strong>indexOf(search)</strong> <a href="#**indexof(search)**" name="**indexof(search)**" class="header-anchor">#</a></h3>
+<p>Returns the index of <code>search</code> in the string or -1 if <code>search</code> is not a
+substring of the string.</p>
+<p>It is a runtime error if <code>search</code> is not a string.</p>
+<h3><strong>startsWith(prefix)</strong> <a href="#**startswith(prefix)**" name="**startswith(prefix)**" class="header-anchor">#</a></h3>
+<p>Checks if the string starts with <code>prefix</code>.</p>
+<p>It is a runtime error if <code>prefix</code> is not a string.</p>
 <h3><strong>+</strong>(other) operator <a href="#**+**(other)-operator" name="**+**(other)-operator" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Returns a new string that concatenates this string and <code>other</code>.</p>
+<p>It is a runtime error if <code>other</code> is not a string.</p>
 <h3><strong>==</strong>(other) operator <a href="#**==**(other)-operator" name="**==**(other)-operator" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Checks if the string is equal to <code>other</code>.</p>
 <h3><strong>!=</strong>(other) operator <a href="#**=**(other)-operator" name="**=**(other)-operator" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Check if the string is not equal to <code>other</code>.</p>
 <h3><strong>[</strong>index<strong>]</strong> operator <a href="#**[**index**]**-operator" name="**[**index**]**-operator" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Returns a one character string of the value at <code>index</code>.</p>
+<p>It is a runtime error if <code>index</code> is greater than the length of the string.</p>
+<p><em>Note: This does not currently handle UTF-8 characters correctly.</em></p>
 <h2>List Class <a href="#list-class" name="list-class" class="header-anchor">#</a></h2>
 <p><strong>TODO</strong></p>
 <h3><strong>add</strong>(item) <a href="#**add**(item)" name="**add**(item)" class="header-anchor">#</a></h3>
@@ -248,6 +262,8 @@ unsigned values. The result is then a 32-bit unsigned number where each bit is
 <p>Removes all items from the list.</p>
 <h3><strong>count</strong> <a href="#**count**" name="**count**" class="header-anchor">#</a></h3>
 <p>The number of items in the list.</p>
+<h3><strong>all(predicate)</strong> <a href="#**all(predicate)**" name="**all(predicate)**" class="header-anchor">#</a></h3>
+<p>Tests whether all the elements in the list pass the <code>predicate</code>.</p>
 <h3><strong>insert</strong>(item, index) <a href="#**insert**(item,-index)" name="**insert**(item,-index)" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#**iterate**(iterator),-**iteratorvalue**(iterator)" name="**iterate**(iterator),-**iteratorvalue**(iterator)" class="header-anchor">#</a></h3>
