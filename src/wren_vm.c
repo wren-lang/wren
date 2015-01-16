@@ -352,14 +352,13 @@ static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
 // [function] can be an `ObjFn` or `ObjClosure`.
-static void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
+static inline void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
 {
   // TODO: Check for stack overflow.
-  CallFrame* frame = &fiber->frames[fiber->numFrames];
+  CallFrame* frame = &fiber->frames[fiber->numFrames++];
   frame->fn = function;
   frame->stackStart = fiber->stackTop - numArgs;
 
-  frame->ip = 0;
   if (function->type == OBJ_FN)
   {
     frame->ip = ((ObjFn*)function)->bytecode;
@@ -368,8 +367,6 @@ static void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
   {
     frame->ip = ((ObjClosure*)function)->fn->bytecode;
   }
-
-  fiber->numFrames++;
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
@@ -591,8 +588,9 @@ static bool runInterpreter(WrenVM* vm)
       int numArgs = instruction - CODE_CALL_0 + 1;
       int symbol = READ_SHORT();
 
-      Value receiver = *(fiber->stackTop - numArgs);
-      ObjClass* classObj = wrenGetClassInline(vm, receiver);
+      // The receiver is the first argument.
+      Value* args = fiber->stackTop - numArgs;
+      ObjClass* classObj = wrenGetClassInline(vm, args[0]);
 
       // If the class's method table doesn't include the symbol, bail.
       if (symbol >= classObj->methods.count)
@@ -605,8 +603,6 @@ static bool runInterpreter(WrenVM* vm)
       {
         case METHOD_PRIMITIVE:
         {
-          Value* args = fiber->stackTop - numArgs;
-
           // After calling this, the result will be in the first arg slot.
           switch (method->fn.primitive(vm, fiber, args))
           {
@@ -683,8 +679,9 @@ static bool runInterpreter(WrenVM* vm)
       int numArgs = instruction - CODE_SUPER_0 + 1;
       int symbol = READ_SHORT();
 
-      Value receiver = *(fiber->stackTop - numArgs);
-      ObjClass* classObj = wrenGetClassInline(vm, receiver);
+      // The receiver is the first argument.
+      Value* args = fiber->stackTop - numArgs;
+      ObjClass* classObj = wrenGetClassInline(vm, args[0]);
 
       // Ignore methods defined on the receiver's immediate class.
       classObj = classObj->superclass;
@@ -700,8 +697,6 @@ static bool runInterpreter(WrenVM* vm)
       {
         case METHOD_PRIMITIVE:
         {
-          Value* args = fiber->stackTop - numArgs;
-
           // After calling this, the result will be in the first arg slot.
           switch (method->fn.primitive(vm, fiber, args))
           {
