@@ -72,7 +72,7 @@ if they are the exact same object.</p>
 <h2>Bool Class <a href="#bool-class" name="bool-class" class="header-anchor">#</a></h2>
 <p>Boolean values. There are two instances, <code>true</code> and <code>false</code>.</p>
 <h3><strong>!</strong> operator <a href="#****-operator" name="****-operator" class="header-anchor">#</a></h3>
-<p>Negates the value.</p>
+<p>Returns the logical complement of the value.</p>
 <div class="codehilite"><pre><span class="o">&gt;</span> <span class="o">!</span><span class="nb">true</span>
 <span class="nb">false</span>
 <span class="o">&gt;</span> <span class="o">!</span><span class="nb">false</span>
@@ -169,6 +169,14 @@ you create a "bare" function when you don't want to immediately pass it as a
 <p>It is a runtime error if <code>block</code> is not a function.</p>
 <h3><strong>call</strong>(args...) <a href="#**call**(args)" name="**call**(args)" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
+<h2>Null Class <a href="#null-class" name="null-class" class="header-anchor">#</a></h2>
+<h3><strong>!</strong> operator <a href="#****-operator" name="****-operator" class="header-anchor">#</a></h3>
+<p>Returns <code>true</code>, since <code>null</code> is considered <a href="control-flow.html#truth">false</a>.</p>
+<div class="codehilite"><pre><span class="o">&gt;</span> <span class="o">!</span><span class="n">null</span>
+<span class="nb">true</span>
+</pre></div>
+
+
 <h2>Num Class <a href="#num-class" name="num-class" class="header-anchor">#</a></h2>
 <p><strong>TODO</strong></p>
 <h3><strong>abs</strong> <a href="#**abs**" name="**abs**" class="header-anchor">#</a></h3>
@@ -226,6 +234,9 @@ unsigned values. The result is then a 32-bit unsigned number where each bit is
 <p><strong>TODO</strong></p>
 <h3><strong>...</strong>(other) operator <a href="#****(other)-operator" name="****(other)-operator" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
+<h2>Object Class <a href="#object-class" name="object-class" class="header-anchor">#</a></h2>
+<h3><strong>!</strong> operator <a href="#****-operator" name="****-operator" class="header-anchor">#</a></h3>
+<p>Returns <code>false</code>, since most objects are considered <a href="control-flow.html#truth">true</a>.</p>
 <h2>String Class <a href="#string-class" name="string-class" class="header-anchor">#</a></h2>
 <p>A string of Unicode code points stored in UTF-8.</p>
 <h3><strong>contains</strong>(other) <a href="#**contains**(other)" name="**contains**(other)" class="header-anchor">#</a></h3>
@@ -256,14 +267,13 @@ substring of the string.</p>
 <p><em>Note: This does not currently handle UTF-8 characters correctly.</em></p>
 <h2>List Class <a href="#list-class" name="list-class" class="header-anchor">#</a></h2>
 <p><strong>TODO</strong></p>
+<p>Extends <a href="#sequence-class">Sequence</a>.</p>
 <h3><strong>add</strong>(item) <a href="#**add**(item)" name="**add**(item)" class="header-anchor">#</a></h3>
 <p>Appends <code>item</code> onto the end of the list.</p>
 <h3><strong>clear</strong> <a href="#**clear**" name="**clear**" class="header-anchor">#</a></h3>
 <p>Removes all items from the list.</p>
 <h3><strong>count</strong> <a href="#**count**" name="**count**" class="header-anchor">#</a></h3>
 <p>The number of items in the list.</p>
-<h3><strong>all(predicate)</strong> <a href="#**all(predicate)**" name="**all(predicate)**" class="header-anchor">#</a></h3>
-<p>Tests whether all the elements in the list pass the <code>predicate</code>.</p>
 <h3><strong>insert</strong>(item, index) <a href="#**insert**(item,-index)" name="**insert**(item,-index)" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#**iterate**(iterator),-**iteratorvalue**(iterator)" name="**iterate**(iterator),-**iteratorvalue**(iterator)" class="header-anchor">#</a></h3>
@@ -276,6 +286,7 @@ substring of the string.</p>
 <p><strong>TODO</strong></p>
 <h2>Range Class <a href="#range-class" name="range-class" class="header-anchor">#</a></h2>
 <p><strong>TODO</strong></p>
+<p>Extends <a href="#sequence-class">Sequence</a>.</p>
 <h3><strong>from</strong> <a href="#**from**" name="**from**" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
 <h3><strong>to</strong> <a href="#**to**" name="**to**" class="header-anchor">#</a></h3>
@@ -288,6 +299,15 @@ substring of the string.</p>
 <p><strong>TODO</strong></p>
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#**iterate**(iterator),-**iteratorvalue**(iterator)" name="**iterate**(iterator),-**iteratorvalue**(iterator)" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
+<h2>Sequence Class <a href="#sequence-class" name="sequence-class" class="header-anchor">#</a></h2>
+<p>An abstract base class for any iterable object. It provides a number of methods for working with sequences based on the core <a href="control-flow.html#the-iterator-protocol">iterator protocol</a>.</p>
+<h3><strong>all</strong>(predicate) <a href="#**all**(predicate)" name="**all**(predicate)" class="header-anchor">#</a></h3>
+<p>Tests whether all the elements in the list pass the <code>predicate</code>.</p>
+<h3><strong>reduce</strong>(function) <a href="#**reduce**(function)" name="**reduce**(function)" class="header-anchor">#</a></h3>
+<p>Reduces the sequence down to a single value. <code>function</code> is a function that takes two arguments, the accumulator and sequence item and returns the new accumulator value. The accumulator is initialized from the first item in the sequence. Then, the function is invoked on each remaining item in the sequence, iteratively updating the accumulator.</p>
+<p>It is a runtime error to call this on an empty sequence.</p>
+<h3><strong>reduce</strong>(seed, function) <a href="#**reduce**(seed,-function)" name="**reduce**(seed,-function)" class="header-anchor">#</a></h3>
+<p>Similar to above, but uses <code>seed</code> for the initial value of the accumulator. If the sequence is empty, returns <code>seed</code>.</p>
   </main>
 </div>
 <footer>
