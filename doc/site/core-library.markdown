@@ -316,6 +316,8 @@ It is a runtime error if `index` is greater than the length of the string.
 
 **TODO**
 
+Extends [Sequence](#sequence-class).
+
 ### **add**(item)
 
 Appends `item` onto the end of the list.
@@ -328,10 +330,6 @@ Removes all items from the list.
 
 The number of items in the list.
 
-### **all(predicate)**
-
-Tests whether all the elements in the list pass the `predicate`.
-
 ### **insert**(item, index)
 
 **TODO**
@@ -339,14 +337,6 @@ Tests whether all the elements in the list pass the `predicate`.
 ### **iterate**(iterator), **iteratorValue**(iterator)
 
 **TODO**
-
-### **reduce**(f), **reduce**(acc, f)
-
-Implements a left fold, reducing the list to a single value. The given function
-is passed two arguments: the accumulator, then the current list value.
-
-The first list item is used as accumulator when calling the first variant. Thus,
-it only works on non-empty lists.
 
 ### **removeAt**(index)
 
@@ -363,6 +353,8 @@ it only works on non-empty lists.
 ## Range Class
 
 **TODO**
+
+Extends [Sequence](#sequence-class).
 
 ### **from**
 
@@ -387,3 +379,21 @@ it only works on non-empty lists.
 ### **iterate**(iterator), **iteratorValue**(iterator)
 
 **TODO**
+
+## Sequence Class
+
+An abstract base class for any iterable object. It provides a number of methods for working with sequences based on the core [iterator protocol](control-flow.html#the-iterator-protocol).
+
+### **all**(predicate)
+
+Tests whether all the elements in the list pass the `predicate`.
+
+### **reduce**(function)
+
+Reduces the sequence down to a single value. `function` is a function that takes two arguments, the accumulator and sequence item and returns the new accumulator value. The accumulator is initialized from the first item in the sequence. Then, the function is invoked on each remaining item in the sequence, iteratively updating the accumulator.
+
+It is a runtime error to call this on an empty sequence.
+
+### **reduce**(seed, function)
+
+Similar to above, but uses `seed` for the initial value of the accumulator. If the sequence is empty, returns `seed`.
