@@ -6,8 +6,10 @@ build_xcode/
 # Built files at the top level.
 wren
 wrend
+wren-cpp
 libwren.a
 libwrend.a
+libwren-cpp.a
 
 # XCode user-specific stuff.
 xcuserdata/

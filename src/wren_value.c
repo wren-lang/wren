@@ -628,19 +628,6 @@ ObjClass* wrenGetClass(WrenVM* vm, Value value)
   return wrenGetClassInline(vm, value);
 }
 
-bool wrenValuesEqual(Value a, Value b)
-{
-  #if WREN_NAN_TAGGING
-  // Value types have unique bit representations and we compare object types
-  // by identity (i.e. pointer), so all we need to do is compare the bits.
-  return a.bits == b.bits;
-  #else
-  if (a.type != b.type) return false;
-  if (a.type == VAL_NUM) return a.num == b.num;
-  return a.obj == b.obj;
-  #endif
-}
-
 static void printList(ObjList* list)
 {
   printf("[");
