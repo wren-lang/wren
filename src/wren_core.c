@@ -849,6 +849,50 @@ DEF_NATIVE(object_bangeq)
   RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
+DEF_NATIVE(object_methods)
+{
+
+  ObjClass* classObj;
+
+  // For booleans, null and numbers we may be dealing with the primitive values
+  // instead of an object instance so we have to get the class that implements
+  // them directly.
+  if (IS_BOOL(args[0])) classObj = vm->boolClass;
+  else if (IS_NULL(args[0])) classObj = vm->nullClass;
+  else if (IS_NUM(args[0])) classObj = vm->numClass;
+  else
+  {
+    // For every other class simply pull the class object off of the instance.
+    ObjInstance* objInstance = AS_INSTANCE(args[0]);
+    classObj = objInstance->obj.classObj;
+  }
+
+  ObjList* methodList = wrenNewList(vm, 0);
+
+  for (int i = 0; i < classObj->methods.count; i++)
+  {
+    Method* method = &classObj->methods.data[i];
+    switch (method->type)
+    {
+      case METHOD_BLOCK:
+      case METHOD_PRIMITIVE:
+      case METHOD_FOREIGN:
+      {
+        // Retrieve the method name from the global symbol table.
+        char* symbolName = vm->methodNames.data[i];
+
+        Value methodName = wrenNewString(vm, symbolName, strlen(symbolName));
+        wrenListAdd(vm, methodList, methodName);
+        break;
+      }
+      case METHOD_NONE:
+        break;
+    }
+  }
+
+  RETURN_OBJ(methodList);
+}
+
 DEF_NATIVE(object_new)
 {
   // This is the default argument-less constructor that all objects inherit.
@@ -1104,6 +1148,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->objectClass, "!", object_not);
   NATIVE(vm->objectClass, "== ", object_eqeq);
   NATIVE(vm->objectClass, "!= ", object_bangeq);
+  NATIVE(vm->objectClass, "methods", object_methods);
   NATIVE(vm->objectClass, "new", object_new);
   NATIVE(vm->objectClass, "toString", object_toString);
   NATIVE(vm->objectClass, "type", object_type);
