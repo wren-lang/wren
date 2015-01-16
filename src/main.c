@@ -121,13 +121,15 @@ int main(int argc, const char* argv[])
     return 64; // EX_USAGE.
   }
 
-  WrenConfiguration config = {
-    .reallocateFn = NULL,
-    .heapGrowthPercent = 0,
-    .minHeapSize = 0,
-    // Since we're running in a standalone process, be generous with memory.
-    .initialHeapSize = 1024 * 1024 * 100
-  };
+  WrenConfiguration config;
+
+  // Since we're running in a standalone process, be generous with memory.
+  config.initialHeapSize = 1024 * 1024 * 100;
+
+  // Use defaults for these.
+  config.reallocateFn = NULL;
+  config.minHeapSize = 0;
+  config.heapGrowthPercent = 0;
 
   WrenVM* vm = wrenNewVM(&config);
 
