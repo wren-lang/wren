@@ -7,7 +7,8 @@
 #include <time.h>
 
 // TODO: This is an arbitrary limit Do something smarter.
-#define MAX_READ_LEN 1024
+#define MAX_LINE_LEN 1024
+#define MAX_FILE_LEN 1024 * 1024
 
 // This string literal is generated automatically from io.wren. Do not edit.
 static const char* libSource =
@@ -117,8 +118,8 @@ static void ioWriteString(WrenVM* vm)
 
 static void ioRead(WrenVM* vm)
 {
-  char buffer[MAX_READ_LEN];
-  char* result = fgets(buffer, MAX_READ_LEN, stdin);
+  char buffer[MAX_LINE_LEN];
+  char* result = fgets(buffer, sizeof buffer, stdin);
 
   if (result == NULL) {
     // TODO: handle error.
@@ -132,12 +133,31 @@ static void ioClock(WrenVM* vm)
   wrenReturnDouble(vm, (double)clock() / CLOCKS_PER_SEC);
 }
 
+static void ioReadFile(WrenVM* vm)
+{
+  const char* filename = wrenGetArgumentString(vm, 1);
+
+  char file_buffer[MAX_FILE_LEN];
+  char line_buffer[MAX_LINE_LEN];
+
+  FILE *fp = fopen(filename, "r");
+
+  while (fgets(line_buffer, sizeof line_buffer, fp) != NULL) {
+    strcat(file_buffer, line_buffer);
+  }
+
+  fclose(fp);
+
+  wrenReturnString(vm, file_buffer, (int)strlen(file_buffer));
+}
+
 void wrenLoadIOLibrary(WrenVM* vm)
 {
   wrenInterpret(vm, "", libSource);
   wrenDefineStaticMethod(vm, "IO", "writeString_", 1, ioWriteString);
   wrenDefineStaticMethod(vm, "IO", "clock", 0, ioClock);
   wrenDefineStaticMethod(vm, "IO", "read", 0, ioRead);
+  wrenDefineStaticMethod(vm, "IO", "readFile", 1, ioReadFile);
 }
 
 #endif
