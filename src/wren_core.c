@@ -620,6 +620,11 @@ DEF_NATIVE(list_subscriptSetter)
   RETURN_VAL(args[2]);
 }
 
+DEF_NATIVE(null_not)
+{
+  RETURN_VAL(TRUE_VAL);
+}
+
 DEF_NATIVE(null_toString)
 {
   RETURN_VAL(wrenNewString(vm, "null", 4));
@@ -806,6 +811,11 @@ DEF_NATIVE(num_dotDotDot)
   double to = AS_NUM(args[1]);
 
   RETURN_VAL(wrenNewRange(vm, from, to, false));
+}
+
+DEF_NATIVE(object_not)
+{
+  RETURN_VAL(FALSE_VAL);
 }
 
 DEF_NATIVE(object_eqeq)
@@ -1070,6 +1080,7 @@ void wrenInitializeCore(WrenVM* vm)
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass and an unusual metaclass (Class).
   vm->objectClass = defineSingleClass(vm, "Object");
+  NATIVE(vm->objectClass, "!", object_not);
   NATIVE(vm->objectClass, "== ", object_eqeq);
   NATIVE(vm->objectClass, "!= ", object_bangeq);
   NATIVE(vm->objectClass, "new", object_new);
@@ -1157,17 +1168,10 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = defineClass(vm, "Null");
+  NATIVE(vm->nullClass, "!", null_not);
   NATIVE(vm->nullClass, "toString", null_toString);
 
   vm->numClass = defineClass(vm, "Num");
-  NATIVE(vm->numClass, "abs", num_abs);
-  NATIVE(vm->numClass, "ceil", num_ceil);
-  NATIVE(vm->numClass, "cos", num_cos);
-  NATIVE(vm->numClass, "floor", num_floor);
-  NATIVE(vm->numClass, "isNan", num_isNan);
-  NATIVE(vm->numClass, "sin", num_sin);
-  NATIVE(vm->numClass, "sqrt", num_sqrt);
-  NATIVE(vm->numClass, "toString", num_toString)
   NATIVE(vm->numClass, "-", num_negate);
   NATIVE(vm->numClass, "- ", num_minus);
   NATIVE(vm->numClass, "+ ", num_plus);
@@ -1183,18 +1187,31 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, "| ", num_bitwiseOr);
   NATIVE(vm->numClass, ".. ", num_dotDot);
   NATIVE(vm->numClass, "... ", num_dotDotDot);
+  NATIVE(vm->numClass, "abs", num_abs);
+  NATIVE(vm->numClass, "ceil", num_ceil);
+  NATIVE(vm->numClass, "cos", num_cos);
+  NATIVE(vm->numClass, "floor", num_floor);
+  NATIVE(vm->numClass, "isNan", num_isNan);
+  NATIVE(vm->numClass, "sin", num_sin);
+  NATIVE(vm->numClass, "sqrt", num_sqrt);
+  NATIVE(vm->numClass, "toString", num_toString)
+
+  // These are defined just so that 0 and -0 are equal, which is specified by
+  // IEEE 754 even though they have different bit representations.
+  NATIVE(vm->numClass, "== ", num_eqeq);
+  NATIVE(vm->numClass, "!= ", num_bangeq);
 
   vm->stringClass = defineClass(vm, "String");
+  NATIVE(vm->stringClass, "+ ", string_plus);
+  NATIVE(vm->stringClass, "== ", string_eqeq);
+  NATIVE(vm->stringClass, "!= ", string_bangeq);
+  NATIVE(vm->stringClass, "[ ]", string_subscript);
   NATIVE(vm->stringClass, "contains ", string_contains);
   NATIVE(vm->stringClass, "count", string_count);
   NATIVE(vm->stringClass, "endsWith ", string_endsWith);
   NATIVE(vm->stringClass, "indexOf ", string_indexOf);
   NATIVE(vm->stringClass, "startsWith ", string_startsWith);
   NATIVE(vm->stringClass, "toString", string_toString);
-  NATIVE(vm->stringClass, "+ ", string_plus);
-  NATIVE(vm->stringClass, "== ", string_eqeq);
-  NATIVE(vm->stringClass, "!= ", string_bangeq);
-  NATIVE(vm->stringClass, "[ ]", string_subscript);
 
   // When the base classes are defined, we allocate string objects for their
   // names. However, we haven't created the string class itself yet, so those
@@ -1213,6 +1230,8 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->listClass = AS_CLASS(findGlobal(vm, "List"));
   NATIVE(vm->listClass->obj.classObj, " instantiate", list_instantiate);
+  NATIVE(vm->listClass, "[ ]", list_subscript);
+  NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
   NATIVE(vm->listClass, "add ", list_add);
   NATIVE(vm->listClass, "clear", list_clear);
   NATIVE(vm->listClass, "count", list_count);
@@ -1220,8 +1239,6 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "iterate ", list_iterate);
   NATIVE(vm->listClass, "iteratorValue ", list_iteratorValue);
   NATIVE(vm->listClass, "removeAt ", list_removeAt);
-  NATIVE(vm->listClass, "[ ]", list_subscript);
-  NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
 
   vm->rangeClass = AS_CLASS(findGlobal(vm, "Range"));
   NATIVE(vm->rangeClass, "from", range_from);
@@ -1232,9 +1249,4 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->rangeClass, "iterate ", range_iterate);
   NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
   NATIVE(vm->rangeClass, "toString", range_toString);
-
-  // These are defined just so that 0 and -0 are equal, which is specified by
-  // IEEE 754 even though they have different bit representations.
-  NATIVE(vm->numClass, "== ", num_eqeq);
-  NATIVE(vm->numClass, "!= ", num_bangeq);
 }

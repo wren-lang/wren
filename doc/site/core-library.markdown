@@ -29,7 +29,7 @@ Boolean values. There are two instances, `true` and `false`.
 
 ### **!** operator
 
-Negates the value.
+Returns the logical complement of the value.
 
     > !true
     false
@@ -150,6 +150,15 @@ It is a runtime error if `block` is not a function.
 
 **TODO**
 
+## Null Class
+
+### **!** operator
+
+Returns `true`, since `null` is considered [false](control-flow.html#truth).
+
+    > !null
+    true
+
 ## Num Class
 
 **TODO**
@@ -241,6 +250,12 @@ It is a runtime error if `other` is not a number.
 ### **...**(other) operator
 
 **TODO**
+
+## Object Class
+
+### **!** operator
+
+Returns `false`, since most objects are considered [true](control-flow.html#truth).
 
 ## String Class
 
