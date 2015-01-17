@@ -1236,3 +1236,11 @@ void wrenReturnString(WrenVM* vm, const char* text, int length)
   *vm->foreignCallSlot = wrenNewString(vm, text, size);
   vm->foreignCallSlot = NULL;
 }
+
+void wrenReturnBool(WrenVM* vm, bool value)
+{
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
+
+  *vm->foreignCallSlot = BOOL_VAL(value);
+  vm->foreignCallSlot = NULL;
+}
