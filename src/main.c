@@ -1,5 +1,3 @@
-#define _GNU_SOURCE // Makes getline() available in GCC.
-
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -7,6 +5,8 @@
 #include <string.h>
 
 #include "wren.h"
+
+#define MAX_LINE_LENGTH 1024 // TODO: Something less arbitrary.
 
 // This is the source file for the standalone command line interpreter. It is
 // not needed if you are embedding Wren in an application.
@@ -75,38 +75,24 @@ static int runRepl(WrenVM* vm)
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
 
+  char line[MAX_LINE_LENGTH];
+
   for (;;)
   {
     printf("> ");
 
-    char* line = NULL;
-    size_t size = 0;
-    ssize_t numRead = getline(&line, &size, stdin);
+    if (fgets(line, MAX_LINE_LENGTH, stdin))
+    {
+      // TODO: Handle failure.
+      wrenInterpret(vm, "Prompt", line);
 
-    // If stdin was closed (usually meaning the user entered Ctrl-D), exit.
-    if (numRead == -1 || feof(stdin))
+      // TODO: Automatically print the result of expressions.
+    }
+    else
     {
       printf("\n");
       return 0;
     }
-
-    // TODO: Handle failure.
-    wrenInterpret(vm, "Prompt", line);
-
-    free(line);
-
-    // TODO: Figure out how this should work with wren API.
-    /*
-    ObjFn* fn = compile(vm, line);
-
-    if (fn != NULL)
-    {
-      Value result = interpret(vm, fn);
-      printf("= ");
-      printValue(result);
-      printf("\n");
-    }
-    */
   }
 
   wrenFreeVM(vm);

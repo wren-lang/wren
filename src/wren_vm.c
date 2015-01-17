@@ -1007,7 +1007,7 @@ static bool runInterpreter(WrenVM* vm)
       if (superclass->numFields + numFields > MAX_FIELDS)
       {
         char message[70 + MAX_VARIABLE_NAME];
-        snprintf(message, 70 + MAX_VARIABLE_NAME,
+        sprintf(message,
             "Class '%s' may not have more than %d fields, including inherited "
             "ones.", name->value, MAX_FIELDS);
 
