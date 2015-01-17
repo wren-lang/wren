@@ -229,25 +229,25 @@ def print_html():
     print('<h3>{}</h3>'.format(name))
     print('<table class="chart">')
 
-    # Scale everything by the highest score.
+    # Scale everything by the highest time.
     highest = 0
     for language, result in results[benchmark].items():
-      score = get_score(min(result["times"]))
-      if score > highest: highest = score
+      time = min(result["times"])
+      if time > highest: highest = time
 
     languages = sorted(results[benchmark].keys(),
         key=lambda lang: results[benchmark][lang]["score"], reverse=True)
 
     for language in languages:
       result = results[benchmark][language]
-      score = int(result["score"])
-      ratio = int(100 * score / highest)
+      time = float(min(result["times"]))
+      ratio = int(100 * time / highest)
       css_class = "chart-bar"
       if language == "wren":
         css_class += " wren"
       print('  <tr>')
-      print('    <th>{}</th><td><div class="{}" style="width: {}%;">{}&nbsp;</div></td>'.format(
-          language, css_class, ratio, score))
+      print('    <th>{}</th><td><div class="{}" style="width: {}%;">{:4.2f}s&nbsp;</div></td>'.format(
+          language, css_class, ratio, time))
       print('  </tr>')
     print('</table>')
 
