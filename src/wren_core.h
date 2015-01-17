@@ -20,4 +20,21 @@
 
 void wrenInitializeCore(WrenVM* vm);
 
+typedef struct {
+  // Set to true if the range was not valid, with the assumption that the error
+  // was already set on the stack.
+  bool invalidRange;
+
+  // The index from which the range should start.
+  int start;
+
+  // The direction that the range is going; set to 1 if the range is increasing
+  // from the [start] index or -1 if the range is decreasing from the [start]
+  // index.
+  int step;
+
+  // Length of the range.
+  int count;
+} CalculatedRange;
+
 #endif
