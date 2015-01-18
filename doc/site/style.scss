@@ -24,6 +24,11 @@ $link-hover:  hsl(210, 100%, 80%);
 $link-dark:   hsl(210, 60%, 20%);
 $link-glow:  hsla(210, 100%, 50%, 0.4);
 
+$core-link:        hsl(150, 70%, 40%);
+$core-link-hover:  hsl(130, 70%, 70%);
+$core-link-dark:   hsl(160, 60%, 25%);
+$core-link-glow:  hsla(130, 90%, 50%, 0.4);
+
 * {
   -moz-box-sizing: border-box;
   box-sizing: border-box;
@@ -236,6 +241,53 @@ footer {
   // Strings.
   span.s, span.s2  { color: hsl(40, 80%, 50%); }
   span.se          { color: hsl(30, 80%, 50%); }
+}
+
+// Have a different primary color for the core library docs.
+body.core {
+  header {
+    a {
+      color: $gray-20;
+    }
+
+    a:hover {
+      color: $core-link-hover;
+      text-shadow: 0 0 6px $core-link-glow;
+    }
+  }
+
+  a {
+    color: $core-link;
+  }
+
+  a:hover {
+    color: $core-link-dark;
+  }
+
+  .header-anchor {
+    color: $light;
+  }
+
+  main {
+    h1, h2, h3 {
+      color: $core-link;
+    }
+
+    h2:hover > .header-anchor:hover,
+    h3:hover > .header-anchor:hover {
+      color: $core-link-dark;
+    }
+  }
+
+  footer {
+    a {
+      color: $core-link-hover;
+    }
+
+    a:hover {
+      color: $core-link;
+    }
+  }
 }
 
 // Bar charts on the performance page.

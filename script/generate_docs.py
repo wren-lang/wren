@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import glob
-import markdown
+import fnmatch
 import os
 import shutil
 import subprocess
@@ -9,6 +9,20 @@ import sys
 import time
 import re
 from datetime import datetime
+
+import markdown
+
+with open("doc/site/template.html") as f:
+  template = f.read()
+
+with open("doc/site/template-core.html") as f:
+  template_core = f.read()
+
+
+def ensure_dir(path):
+  if not os.path.exists(path):
+    os.mkdir(path)
+
 
 def is_up_to_date(path, out_path):
   # See if it's up to date.
@@ -24,9 +38,10 @@ def format_file(path, skip_up_to_date):
   basename = os.path.basename(path)
   basename = basename.split('.')[0]
 
-  out_path = "build/docs/" + basename + ".html"
+  in_path = os.path.join('doc/site', path)
+  out_path = "build/docs/" + os.path.splitext(path)[0] + ".html"
 
-  if skip_up_to_date and is_up_to_date(path, out_path):
+  if skip_up_to_date and is_up_to_date(in_path, out_path):
     # It's up to date.
     return
 
@@ -35,7 +50,7 @@ def format_file(path, skip_up_to_date):
 
   # Read the markdown file and preprocess it.
   contents = ""
-  with open(path, "r") as input:
+  with open(in_path, "r") as input:
     # Read each line, preprocessing the special codes.
     for line in input:
       stripped = line.lstrip()
@@ -68,8 +83,12 @@ def format_file(path, skip_up_to_date):
 
   html = markdown.markdown(contents, ['def_list', 'codehilite'])
 
-  modified = datetime.fromtimestamp(os.path.getmtime(path))
+  modified = datetime.fromtimestamp(os.path.getmtime(in_path))
   mod_str = modified.strftime('%B %d, %Y')
+
+  page_template = template
+  if category == 'core':
+    page_template = template_core
 
   fields = {
     'title': title,
@@ -78,14 +97,13 @@ def format_file(path, skip_up_to_date):
     'category': category
   }
 
-  with open("doc/site/template.html") as f:
-    template = f.read()
-
   # Write the html output.
-  with open(out_path, 'w') as out:
-    out.write(template.format(**fields))
+  ensure_dir(os.path.dirname(out_path))
 
-  print("converted " + basename)
+  with open(out_path, 'w') as out:
+    out.write(page_template.format(**fields))
+
+  print("converted " + path)
 
 
 def check_sass():
@@ -105,17 +123,16 @@ def check_sass():
 def format_files(skip_up_to_date):
   check_sass()
 
-  for f in glob.iglob("doc/site/*.markdown"):
-    format_file(f, skip_up_to_date)
+  for root, dirnames, filenames in os.walk('doc/site'):
+    for filename in fnmatch.filter(filenames, '*.markdown'):
+      f = os.path.relpath(os.path.join(root, filename), 'doc/site')
+      format_file(f, skip_up_to_date)
 
 
 # Clean the output directory.
-if not os.path.exists("build"):
-  os.mkdir("build")
-
 if os.path.exists("build/docs"):
   shutil.rmtree("build/docs")
-os.mkdir("build/docs")
+ensure_dir("build/docs")
 
 # Process each markdown file.
 format_files(False)
