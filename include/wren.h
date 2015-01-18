@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct WrenVM WrenVM;
 
@@ -147,5 +148,10 @@ void wrenReturnNull(WrenVM* vm);
 // will copy that many bytes from [text]. If it is -1, then the length of
 // [text] will be calculated using `strlen()`.
 void wrenReturnString(WrenVM* vm, const char* text, int length);
+
+// Provides a boolean return value for a foreign call. This must only be called
+// within a function provided to [wrenDefineMethod]. Once this is called, the
+// foreign call is done, and no more arguments can be read or return calls made.
+void wrenReturnBool(WrenVM* vm, bool value);
 
 #endif
