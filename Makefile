@@ -20,7 +20,7 @@ DEBUG_LIB_OBJECTS = $(subst build/debug/main.o,,$(DEBUG_OBJECTS))
 RELEASE_LIB_OBJECTS = $(subst build/release/main.o,,$(RELEASE_OBJECTS))
 RELEASE_CPP_LIB_OBJECTS = $(subst build/release-cpp/main.o,,$(RELEASE_CPP_OBJECTS))
 
-.PHONY: all clean test builtin docs watchdocs
+.PHONY: all clean test builtin docs watchdocs prep
 
 all: release
 
