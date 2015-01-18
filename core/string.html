@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>String Class – Wren</title>
+<link rel="stylesheet" type="text/css" href="../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top" class="core">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav>
+    <ul>
+      <li><a href="./">Core Library</a></li>
+    </ul>
+    <section>
+      <h2>core classes</h2>
+      <ul>
+        <li><a href="bool.html">Bool</a></li>
+        <li><a href="class.html">Class</a></li>
+        <li><a href="fiber.html">Fiber</a></li>
+        <li><a href="fn.html">Fn</a></li>
+        <li><a href="list.html">List</a></li>
+        <li><a href="null.html">Null</a></li>
+        <li><a href="num.html">Num</a></li>
+        <li><a href="object.html">Object</a></li>
+        <li><a href="range.html">Range</a></li>
+        <li><a href="sequence.html">Sequence</a></li>
+        <li><a href="string.html">String</a></li>
+      </ul>
+    </section>
+  </nav>
+  <main>
+    <h1>String Class</h1>
+    <p>A string of Unicode code points stored in UTF-8.</p>
+<h3><strong>contains</strong>(other) <a href="#**contains**(other)" name="**contains**(other)" class="header-anchor">#</a></h3>
+<p>Checks if <code>other</code> is a substring of the string.</p>
+<p>It is a runtime error if <code>other</code> is not a string.</p>
+<h3><strong>count</strong> <a href="#**count**" name="**count**" class="header-anchor">#</a></h3>
+<p>Returns the length of the string.</p>
+<h3><strong>endsWith(suffix)</strong> <a href="#**endswith(suffix)**" name="**endswith(suffix)**" class="header-anchor">#</a></h3>
+<p>Checks if the string ends with <code>suffix</code>.</p>
+<p>It is a runtime error if <code>suffix</code> is not a string.</p>
+<h3><strong>indexOf(search)</strong> <a href="#**indexof(search)**" name="**indexof(search)**" class="header-anchor">#</a></h3>
+<p>Returns the index of <code>search</code> in the string or -1 if <code>search</code> is not a
+substring of the string.</p>
+<p>It is a runtime error if <code>search</code> is not a string.</p>
+<h3><strong>startsWith(prefix)</strong> <a href="#**startswith(prefix)**" name="**startswith(prefix)**" class="header-anchor">#</a></h3>
+<p>Checks if the string starts with <code>prefix</code>.</p>
+<p>It is a runtime error if <code>prefix</code> is not a string.</p>
+<h3><strong>+</strong>(other) operator <a href="#**+**(other)-operator" name="**+**(other)-operator" class="header-anchor">#</a></h3>
+<p>Returns a new string that concatenates this string and <code>other</code>.</p>
+<p>It is a runtime error if <code>other</code> is not a string.</p>
+<h3><strong>==</strong>(other) operator <a href="#**==**(other)-operator" name="**==**(other)-operator" class="header-anchor">#</a></h3>
+<p>Checks if the string is equal to <code>other</code>.</p>
+<h3><strong>!=</strong>(other) operator <a href="#**=**(other)-operator" name="**=**(other)-operator" class="header-anchor">#</a></h3>
+<p>Check if the string is not equal to <code>other</code>.</p>
+<h3><strong>[</strong>index<strong>]</strong> operator <a href="#**[**index**]**-operator" name="**[**index**]**-operator" class="header-anchor">#</a></h3>
+<p>Returns a one character string of the value at <code>index</code>.</p>
+<p>It is a runtime error if <code>index</code> is greater than the length of the string.</p>
+<p><em>Note: This does not currently handle UTF-8 characters correctly.</em></p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

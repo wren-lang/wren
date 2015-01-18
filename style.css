@@ -157,6 +157,27 @@ footer {
 .codehilite pre span.se {
   color: #e68019; }
 
+body.core header a {
+  color: #d7d8da; }
+body.core header a:hover {
+  color: #7de88f;
+  text-shadow: 0 0 6px rgba(13, 242, 51, 0.4); }
+body.core a {
+  color: #1fad66; }
+body.core a:hover {
+  color: #19664d; }
+body.core .header-anchor {
+  color: white; }
+body.core main h1, body.core main h2, body.core main h3 {
+  color: #1fad66; }
+body.core main h2:hover > .header-anchor:hover,
+body.core main h3:hover > .header-anchor:hover {
+  color: #19664d; }
+body.core footer a {
+  color: #7de88f; }
+body.core footer a:hover {
+  color: #1fad66; }
+
 table.chart {
   width: 100%;
   padding-left: 25px; }
