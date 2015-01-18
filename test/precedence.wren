@@ -22,6 +22,10 @@ IO.print(false == 2 <= 1) // expect: true
 // >= has higher precedence than ==.
 IO.print(false == 1 >= 2) // expect: true
 
+// is has higher precedence than ==.
+IO.print(true == 10 is Num) // expect: true
+IO.print(10 is Num == false) // expect: false
+
 // Unary - has lower precedence than ..
 IO.print(-"abc".count) // expect: -3
 

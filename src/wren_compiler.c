@@ -1311,8 +1311,8 @@ typedef enum
   PREC_LOWEST,
   PREC_ASSIGNMENT, // =
   PREC_LOGIC,      // && ||
-  PREC_IS,         // is
   PREC_EQUALITY,   // == !=
+  PREC_IS,         // is
   PREC_COMPARISON, // < > <= >=
   PREC_RANGE,      // .. ...
   PREC_BITWISE,    // | &

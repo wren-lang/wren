@@ -28,9 +28,6 @@ IO.print(new Fn { 1 } is Class) // expect: false
 IO.print("s" is Class) // expect: false
 IO.print(123 is Class) // expect: false
 
-// TODO: Non-class on RHS.
-// TODO: Precedence and associativity.
-
 // Ignore newline after "is".
 IO.print(123 is
   Num) // expect: true
