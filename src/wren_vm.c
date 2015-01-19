@@ -1210,6 +1210,16 @@ const char* wrenGetArgumentString(WrenVM* vm, int index)
   return AS_CSTRING(*(vm->foreignCallSlot + index));
 }
 
+bool wrenGetArgumentBool(WrenVM* vm, int index)
+{
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
+  ASSERT(index >= 0, "index cannot be negative.");
+  ASSERT(index < vm->foreignCallNumArgs, "Not that many arguments.");
+
+  // TODO: Check actual value type first.
+  return AS_BOOL(*(vm->foreignCallSlot + index));
+}
+
 void wrenReturnDouble(WrenVM* vm, double value)
 {
   ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
