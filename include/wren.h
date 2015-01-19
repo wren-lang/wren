@@ -129,6 +129,9 @@ double wrenGetArgumentDouble(WrenVM* vm, int index);
 // function returns, since the garbage collector may reclaim it.
 const char* wrenGetArgumentString(WrenVM* vm, int index);
 
+// Reads a boolean argument for a foreign call. This must only be called within
+// a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
+// which ranges from 0 to the number of parameters the method expects - 1.
 bool wrenGetArgumentBool(WrenVM* vm, int index);
 
 // Provides a numeric return value for a foreign call. This must only be called
