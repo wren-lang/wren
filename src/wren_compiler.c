@@ -856,8 +856,7 @@ static bool match(Compiler* compiler, TokenType expected)
 }
 
 // Consumes the current token. Emits an error if its type is not [expected].
-// Returns the consumed token.
-static Token* consume(Compiler* compiler, TokenType expected,
+static void consume(Compiler* compiler, TokenType expected,
                     const char* errorMessage)
 {
   nextToken(compiler->parser);
@@ -869,8 +868,6 @@ static Token* consume(Compiler* compiler, TokenType expected,
     // spurious error and discard it to minimize the number of cascaded errors.
     if (compiler->parser->current.type == expected) nextToken(compiler->parser);
   }
-
-  return &compiler->parser->previous;
 }
 
 // Matches one or more newlines. Returns true if at least one was found.
@@ -892,11 +889,10 @@ static void ignoreNewlines(Compiler* compiler)
 
 // Consumes the current token. Emits an error if it is not a newline. Then
 // discards any duplicate newlines following it.
-static bool consumeLine(Compiler* compiler, const char* errorMessage)
+static void consumeLine(Compiler* compiler, const char* errorMessage)
 {
-  bool result = consume(compiler, TOKEN_LINE, errorMessage);
+  consume(compiler, TOKEN_LINE, errorMessage);
   ignoreNewlines(compiler);
-  return result;
 }
 
 // Variables and scopes --------------------------------------------------------
