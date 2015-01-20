@@ -424,7 +424,7 @@ static bool runInterpreter(WrenVM* vm)
       }                                                \
       while (false)
 
-  #if WREN_COMPUTED_GOTO
+  #if defined(WREN_COMPUTED_GOTO) && !defined(_MSC_VER)
 
   // Note that the order of instructions here must exacly match the Code enum
   // in wren_vm.h or horrendously bad things happen.
