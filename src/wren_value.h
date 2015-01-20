@@ -7,6 +7,12 @@
 #include "wren_common.h"
 #include "wren_utils.h"
 
+// Disable "zero-sized array" warning for the MSVC compiler.
+#ifdef _MSC_VER
+  #pragma warning( push )
+  #pragma warning( disable : 4200 )
+#endif
+
 // This defines the built-in types and their core representations in memory.
 // Since Wren is dynamically typed, any variable can hold a value of any type,
 // and the type can change at runtime. Implementing this efficiently is
@@ -723,5 +729,9 @@ static inline Value wrenNumToValue(double num)
   return (Value){ VAL_NUM, n, NULL };
 #endif
 }
+
+#ifdef _MSC_VER
+  #pragma warning( pop )
+#endif
 
 #endif

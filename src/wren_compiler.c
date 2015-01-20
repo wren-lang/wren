@@ -12,6 +12,10 @@
   #include "wren_debug.h"
 #endif
 
+#ifdef _MSC_VER
+  #pragma warning( disable : 4996 )
+#endif
+
 // This is written in bottom-up order, so the tokenization comes first, then
 // parsing/code generation. This minimizes the number of explicit forward
 // declarations needed.
@@ -627,7 +631,7 @@ static void readUnicodeEscape(Parser* parser)
       break;
     }
 
-    char digit = readHexDigit(parser);
+    int digit = readHexDigit(parser);
     if (digit == -1)
     {
       lexError(parser, "Invalid Unicode escape sequence.");
@@ -894,7 +898,7 @@ static void ignoreNewlines(Compiler* compiler)
 // discards any duplicate newlines following it.
 static bool consumeLine(Compiler* compiler, const char* errorMessage)
 {
-  bool result = consume(compiler, TOKEN_LINE, errorMessage);
+  bool result = consume(compiler, TOKEN_LINE, errorMessage) != NULL;
   ignoreNewlines(compiler);
   return result;
 }
@@ -2546,7 +2550,10 @@ void statement(Compiler* compiler)
     return;
   }
 
-  if (match(compiler, TOKEN_FOR)) return forStatement(compiler);
+  if (match(compiler, TOKEN_FOR)) {
+    forStatement(compiler);
+    return;
+  }
 
   if (match(compiler, TOKEN_IF))
   {
@@ -2599,7 +2606,10 @@ void statement(Compiler* compiler)
     return;
   }
 
-  if (match(compiler, TOKEN_WHILE)) return whileStatement(compiler);
+  if (match(compiler, TOKEN_WHILE)) {
+    whileStatement(compiler);
+    return;
+  }
 
   // Expression statement.
   expression(compiler);
@@ -2768,8 +2778,14 @@ static void variableDefinition(Compiler* compiler)
 // like the non-curly body of an if or while.
 void definition(Compiler* compiler)
 {
-  if (match(compiler, TOKEN_CLASS)) return classDefinition(compiler);
-  if (match(compiler, TOKEN_VAR)) return variableDefinition(compiler);
+  if (match(compiler, TOKEN_CLASS)) {
+    classDefinition(compiler);
+    return;
+  }
+  if (match(compiler, TOKEN_VAR)) {
+    variableDefinition(compiler);
+    return;
+  }
 
   block(compiler);
 }

@@ -17,6 +17,10 @@
   #include <time.h>
 #endif
 
+#ifdef _MSC_VER
+  #pragma warning( disable : 4996 )
+#endif
+
 // The built-in reallocation function used when one is not provided by the
 // configuration.
 static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)
@@ -424,7 +428,7 @@ static bool runInterpreter(WrenVM* vm)
       }                                                \
       while (false)
 
-  #if WREN_COMPUTED_GOTO
+  #if defined(WREN_COMPUTED_GOTO) && !defined(_MSC_VER)
 
   // Note that the order of instructions here must exacly match the Code enum
   // in wren_vm.h or horrendously bad things happen.
@@ -959,7 +963,7 @@ static bool runInterpreter(WrenVM* vm)
       // Capture upvalues.
       for (int i = 0; i < prototype->numUpvalues; i++)
       {
-        bool isLocal = READ_BYTE();
+        bool isLocal = READ_BYTE() != 0;
         int index = READ_BYTE();
         if (isLocal)
         {

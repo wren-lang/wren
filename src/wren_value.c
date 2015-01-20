@@ -5,6 +5,10 @@
 #include "wren_value.h"
 #include "wren_vm.h"
 
+#ifdef _MSC_VER
+  #pragma warning( disable : 4996 )
+#endif
+
 // TODO: Tune these.
 // The initial (and minimum) capacity of a non-empty list object.
 #define LIST_MIN_CAPACITY (16)

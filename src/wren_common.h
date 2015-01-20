@@ -127,4 +127,12 @@
 
 #endif
 
+#ifdef _MSC_VER
+  // When compiling in plain-C, the "inline" modifier is not present in the
+  // MSVC.
+  #ifndef __cplusplus
+    #define inline _inline
+  #endif
+#endif
+
 #endif
