@@ -1,24 +1,37 @@
-AR = ar rcu
+AR := ar rcu
 # Compiler flags.
-CFLAGS = -std=c99 -Wall -Werror
+CFLAGS := -std=c99 -Wall -Werror
 # TODO: Add -Wextra.
-CPPFLAGS = -std=c++98 -Wall -Werror
-DEBUG_CFLAGS = -O0 -DDEBUG -g
-RELEASE_CFLAGS = -Os
+CPPFLAGS := -std=c++98 -Wall -Werror
+DEBUG_CFLAGS := -O0 -DDEBUG -g
+RELEASE_CFLAGS := -Os
+
+# Detect the OS.
+TARGET_OS := $(lastword $(subst -, ,$(shell $(CC) -dumpmachine)))
+
+# Don't add -fPIC on Windows since it generates a warning which gets promoted
+# to an error by -Werror.
+ifeq      ($(TARGET_OS),mingw32)
+else ifeq ($(TARGET_OS),cygwin)
+	# Do nothing.
+else
+	CFLAGS += -fPIC
+	CPPFLAGS += -fPIC
+endif
 
 # Files.
-SOURCES = $(wildcard src/*.c)
-HEADERS = $(wildcard src/*.h)
-OBJECTS = $(SOURCES:.c=.o)
+SOURCES := $(wildcard src/*.c)
+HEADERS := $(wildcard src/*.h)
+OBJECTS := $(SOURCES:.c=.o)
 
 # Don't include main.c in the shared library.
-DEBUG_OBJECTS = $(addprefix build/debug/, $(notdir $(OBJECTS)))
-RELEASE_OBJECTS = $(addprefix build/release/, $(notdir $(OBJECTS)))
-RELEASE_CPP_OBJECTS = $(addprefix build/release-cpp/, $(notdir $(OBJECTS)))
+DEBUG_OBJECTS := $(addprefix build/debug/, $(notdir $(OBJECTS)))
+RELEASE_OBJECTS := $(addprefix build/release/, $(notdir $(OBJECTS)))
+RELEASE_CPP_OBJECTS := $(addprefix build/release-cpp/, $(notdir $(OBJECTS)))
 
-DEBUG_LIB_OBJECTS = $(subst build/debug/main.o,,$(DEBUG_OBJECTS))
-RELEASE_LIB_OBJECTS = $(subst build/release/main.o,,$(RELEASE_OBJECTS))
-RELEASE_CPP_LIB_OBJECTS = $(subst build/release-cpp/main.o,,$(RELEASE_CPP_OBJECTS))
+DEBUG_LIB_OBJECTS := $(subst build/debug/main.o,,$(DEBUG_OBJECTS))
+RELEASE_LIB_OBJECTS := $(subst build/release/main.o,,$(RELEASE_OBJECTS))
+RELEASE_CPP_LIB_OBJECTS := $(subst build/release-cpp/main.o,,$(RELEASE_CPP_OBJECTS))
 
 .PHONY: all clean test builtin docs watchdocs prep
 
@@ -43,7 +56,7 @@ wrend: $(DEBUG_OBJECTS)
 
 # Debug object files.
 build/debug/%.o: src/%.c include/wren.h $(HEADERS)
-	$(CC) -c -fPIC $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o $@ $<
+	$(CC) -c $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o $@ $<
 
 # Release build.
 release: prep wren libwren.a
@@ -58,7 +71,7 @@ wren: $(RELEASE_OBJECTS)
 
 # Release object files.
 build/release/%.o: src/%.c include/wren.h $(HEADERS)
-	$(CC) -c -fPIC $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o $@ $<
+	$(CC) -c $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o $@ $<
 
 # Release C++ build.
 release-cpp: prep wren-cpp libwren-cpp.a
@@ -73,7 +86,7 @@ wren-cpp: $(RELEASE_CPP_OBJECTS)
 
 # Release C++ object files.
 build/release-cpp/%.o: src/%.c include/wren.h $(HEADERS)
-	$(CC) -c -fPIC $(CPPFLAGS) $(RELEASE_CFLAGS) -Iinclude -o $@ -x c++ $<
+	$(CC) -c $(CPPFLAGS) $(RELEASE_CFLAGS) -Iinclude -o $@ -x c++ $<
 
 # Run the tests against the debug build of Wren.
 test: debug
