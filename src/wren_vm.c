@@ -959,7 +959,7 @@ static bool runInterpreter(WrenVM* vm)
       // Capture upvalues.
       for (int i = 0; i < prototype->numUpvalues; i++)
       {
-        bool isLocal = READ_BYTE();
+        bool isLocal = READ_BYTE() != 0;
         int index = READ_BYTE();
         if (isLocal)
         {

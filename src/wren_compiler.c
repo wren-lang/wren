@@ -894,7 +894,7 @@ static void ignoreNewlines(Compiler* compiler)
 // discards any duplicate newlines following it.
 static bool consumeLine(Compiler* compiler, const char* errorMessage)
 {
-  bool result = consume(compiler, TOKEN_LINE, errorMessage);
+  bool result = consume(compiler, TOKEN_LINE, errorMessage) != NULL;
   ignoreNewlines(compiler);
   return result;
 }
