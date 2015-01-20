@@ -115,7 +115,12 @@ void wrenDefineStaticMethod(WrenVM* vm, const char* className,
                             const char* methodName, int numParams,
                             WrenForeignMethodFn method);
 
-// Reads an numeric argument for a foreign call. This must only be called within
+// Reads a boolean argument for a foreign call. This must only be called within
+// a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
+// which ranges from 0 to the number of parameters the method expects - 1.
+bool wrenGetArgumentBool(WrenVM* vm, int index);
+
+// Reads a numeric argument for a foreign call. This must only be called within
 // a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
 // which ranges from 0 to the number of parameters the method expects - 1.
 double wrenGetArgumentDouble(WrenVM* vm, int index);
@@ -129,10 +134,10 @@ double wrenGetArgumentDouble(WrenVM* vm, int index);
 // function returns, since the garbage collector may reclaim it.
 const char* wrenGetArgumentString(WrenVM* vm, int index);
 
-// Reads a boolean argument for a foreign call. This must only be called within
-// a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
-// which ranges from 0 to the number of parameters the method expects - 1.
-bool wrenGetArgumentBool(WrenVM* vm, int index);
+// Provides a boolean return value for a foreign call. This must only be called
+// within a function provided to [wrenDefineMethod]. Once this is called, the
+// foreign call is done, and no more arguments can be read or return calls made.
+void wrenReturnBool(WrenVM* vm, bool value);
 
 // Provides a numeric return value for a foreign call. This must only be called
 // within a function provided to [wrenDefineMethod]. Once this is called, the
@@ -153,10 +158,5 @@ void wrenReturnNull(WrenVM* vm);
 // will copy that many bytes from [text]. If it is -1, then the length of
 // [text] will be calculated using `strlen()`.
 void wrenReturnString(WrenVM* vm, const char* text, int length);
-
-// Provides a boolean return value for a foreign call. This must only be called
-// within a function provided to [wrenDefineMethod]. Once this is called, the
-// foreign call is done, and no more arguments can be read or return calls made.
-void wrenReturnBool(WrenVM* vm, bool value);
 
 #endif

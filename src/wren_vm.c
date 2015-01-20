@@ -1190,6 +1190,16 @@ void wrenDefineStaticMethod(WrenVM* vm, const char* className,
   defineMethod(vm, className, methodName, numParams, methodFn, true);
 }
 
+bool wrenGetArgumentBool(WrenVM* vm, int index)
+{
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
+  ASSERT(index >= 0, "index cannot be negative.");
+  ASSERT(index < vm->foreignCallNumArgs, "Not that many arguments.");
+
+  // TODO: Check actual value type first.
+  return AS_BOOL(*(vm->foreignCallSlot + index));
+}
+
 double wrenGetArgumentDouble(WrenVM* vm, int index)
 {
   ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
@@ -1210,14 +1220,12 @@ const char* wrenGetArgumentString(WrenVM* vm, int index)
   return AS_CSTRING(*(vm->foreignCallSlot + index));
 }
 
-bool wrenGetArgumentBool(WrenVM* vm, int index)
+void wrenReturnBool(WrenVM* vm, bool value)
 {
   ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
-  ASSERT(index >= 0, "index cannot be negative.");
-  ASSERT(index < vm->foreignCallNumArgs, "Not that many arguments.");
 
-  // TODO: Check actual value type first.
-  return AS_BOOL(*(vm->foreignCallSlot + index));
+  *vm->foreignCallSlot = BOOL_VAL(value);
+  vm->foreignCallSlot = NULL;
 }
 
 void wrenReturnDouble(WrenVM* vm, double value)
@@ -1244,13 +1252,5 @@ void wrenReturnString(WrenVM* vm, const char* text, int length)
   if (length == -1) size = strlen(text);
 
   *vm->foreignCallSlot = wrenNewString(vm, text, size);
-  vm->foreignCallSlot = NULL;
-}
-
-void wrenReturnBool(WrenVM* vm, bool value)
-{
-  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
-
-  *vm->foreignCallSlot = BOOL_VAL(value);
   vm->foreignCallSlot = NULL;
 }
