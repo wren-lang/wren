@@ -208,47 +208,60 @@ static bool validateString(WrenVM* vm, Value* args, int index,
   return false;
 }
 
-// Given a [range] and the [length] of the object being operated on determine if
-// the range is valid and return a CalculatedRange.
-static CalculatedRange calculateRange(WrenVM* vm, Value* args, ObjRange* range,
-                                      int length)
+// Given a [range] and the [length] of the object being operated on, determines
+// the series of elements that should be chosen from the underlying object.
+// Handles ranges that count backwards from the end as well as negative ranges.
+//
+// Returns the index from which the range should start or -1 if the range is
+// invalid. After calling, [length] will be updated with the number of elements
+// in the resulting sequence. [step] will be direction that the range is going:
+// `1` if the range is increasing from the start index or `-1` if the range is
+// decreasing.
+static int calculateRange(WrenVM* vm, Value* args, ObjRange* range,
+                                      int* length, int* step)
 {
-  int from = validateIndexValue(vm, args, length, range->from,
+  // Corner case: an empty range at zero is allowed on an empty sequence.
+  // This way, list[0..-1] and list[0...list.count] can be used to copy a list
+  // even when empty.
+  if (*length == 0 && range->from == 0 &&
+      range->to == (range->isInclusive ? -1 : 0)) {
+    *step = 0;
+    return 0;
+  }
+
+  int from = validateIndexValue(vm, args, *length, range->from,
                                 "Range start");
-  if (from == -1) return (CalculatedRange){ true, 0, 0, 0 };
+  if (from == -1) return -1;
 
   int to;
-  int count;
 
   if (range->isInclusive)
   {
-    to = validateIndexValue(vm, args, length, range->to, "Range end");
-    if (to == -1) return (CalculatedRange){ true, 0, 0, 0 };
+    to = validateIndexValue(vm, args, *length, range->to, "Range end");
+    if (to == -1) return -1;
 
-    count = abs(from - to) + 1;
+    *length = abs(from - to) + 1;
   }
   else
   {
-    if (!validateIntValue(vm, args, range->to, "Range end"))
-    {
-      return (CalculatedRange){ true, 0, 0, 0 };
-    }
+    if (!validateIntValue(vm, args, range->to, "Range end")) return -1;
 
     // Bounds check it manually here since the excusive range can hang over
     // the edge.
     to = (int)range->to;
-    if (to < 0) to = length + to;
+    if (to < 0) to = *length + to;
 
-    if (to < -1 || to > length)
+    if (to < -1 || to > *length)
     {
       args[0] = wrenNewString(vm, "Range end out of bounds.", 24);
-      return (CalculatedRange){ true, 0, 0, 0 };
+      return -1;
     }
 
-    count = abs(from - to);
+    *length = abs(from - to);
   }
 
-  return (CalculatedRange){ false, from, (from < to ? 1 : -1), count };
+  *step = from < to ? 1 : -1;
+  return from;
 }
 
 DEF_NATIVE(bool_not)
@@ -626,24 +639,15 @@ DEF_NATIVE(list_subscript)
     RETURN_ERROR("Subscript must be a number or a range.");
   }
 
-  ObjRange* range = AS_RANGE(args[1]);
+  int step;
+  int count = list->count;
+  int start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);
+  if (start == -1) return PRIM_ERROR;
 
-  // Corner case: an empty range at zero is allowed on an empty list.
-  // This way, list[0..-1] and list[0...list.count] can be used to copy a list
-  // even when empty.
-  if (list->count == 0 && range->from == 0 &&
-      range->to == (range->isInclusive ? -1 : 0)) {
-    RETURN_OBJ(wrenNewList(vm, 0));
-  }
-
-  CalculatedRange bounds = calculateRange(vm, args, range, list->count);
-
-  if (bounds.invalidRange == true) return PRIM_ERROR;
-
-  ObjList* result = wrenNewList(vm, bounds.count);
-  for (int i = 0; i < bounds.count; i++)
+  ObjList* result = wrenNewList(vm, count);
+  for (int i = 0; i < count; i++)
   {
-    result->elements[i] = list->elements[bounds.start + (i * bounds.step)];
+    result->elements[i] = list->elements[start + (i * step)];
   }
 
   RETURN_OBJ(result);
@@ -1088,26 +1092,17 @@ DEF_NATIVE(string_subscript)
     RETURN_ERROR("Subscript must be a number or a range.");
   }
 
-  ObjRange* range = AS_RANGE(args[1]);
+  int step;
+  int count = string->length;
+  int start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);
+  if (start == -1) return PRIM_ERROR;
 
-  // Corner case: an empty range at zero is allowed on an empty string.
-  // This way, string[0..-1] and string[0...string.count] can be used to copy a
-  // string even when empty.
-  if (string->length == 0 && range->from == 0 &&
-      range->to == (range->isInclusive ? -1 : 0)) {
-    RETURN_VAL(wrenNewString(vm, "", 0));
-  }
-
-  CalculatedRange bounds = calculateRange(vm, args, range, string->length);
-
-  if (bounds.invalidRange == true) return PRIM_ERROR;
-
-  ObjString* result = AS_STRING(wrenNewUninitializedString(vm, bounds.count));
-  for (int i = 0; i < bounds.count; i++)
+  ObjString* result = AS_STRING(wrenNewUninitializedString(vm, count));
+  for (int i = 0; i < count; i++)
   {
-    result->value[i] = string->value[bounds.start + (i * bounds.step)];
+    result->value[i] = string->value[start + (i * step)];
   }
-  result->value[bounds.count] = '\0';
+  result->value[count] = '\0';
 
   RETURN_OBJ(result);
 }
