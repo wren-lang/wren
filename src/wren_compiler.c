@@ -2550,7 +2550,10 @@ void statement(Compiler* compiler)
     return;
   }
 
-  if (match(compiler, TOKEN_FOR)) return forStatement(compiler);
+  if (match(compiler, TOKEN_FOR)) {
+    forStatement(compiler);
+    return;
+  }
 
   if (match(compiler, TOKEN_IF))
   {
@@ -2603,7 +2606,10 @@ void statement(Compiler* compiler)
     return;
   }
 
-  if (match(compiler, TOKEN_WHILE)) return whileStatement(compiler);
+  if (match(compiler, TOKEN_WHILE)) {
+    whileStatement(compiler);
+    return;
+  }
 
   // Expression statement.
   expression(compiler);
@@ -2772,8 +2778,14 @@ static void variableDefinition(Compiler* compiler)
 // like the non-curly body of an if or while.
 void definition(Compiler* compiler)
 {
-  if (match(compiler, TOKEN_CLASS)) return classDefinition(compiler);
-  if (match(compiler, TOKEN_VAR)) return variableDefinition(compiler);
+  if (match(compiler, TOKEN_CLASS)) {
+    classDefinition(compiler);
+    return;
+  }
+  if (match(compiler, TOKEN_VAR)) {
+    variableDefinition(compiler);
+    return;
+  }
 
   block(compiler);
 }
