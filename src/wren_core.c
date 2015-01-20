@@ -6,6 +6,10 @@
 #include "wren_core.h"
 #include "wren_value.h"
 
+#ifdef _MSC_VER
+  #pragma warning( disable : 4996 )
+#endif
+
 // Binds a native method named [name] (in Wren) implemented using C function
 // [fn] to `ObjClass` [cls].
 #define NATIVE(cls, name, function) \

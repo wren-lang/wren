@@ -17,6 +17,10 @@
   #include <time.h>
 #endif
 
+#ifdef _MSC_VER
+  #pragma warning( disable : 4996 )
+#endif
+
 // The built-in reallocation function used when one is not provided by the
 // configuration.
 static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)

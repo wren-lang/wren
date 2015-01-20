@@ -3,6 +3,10 @@
 #include "wren_utils.h"
 #include "wren_vm.h"
 
+#ifdef _MSC_VER
+  #pragma warning( disable : 4996 )
+#endif
+
 DEFINE_BUFFER(Byte, uint8_t);
 DEFINE_BUFFER(Int, int);
 DEFINE_BUFFER(String, char*);

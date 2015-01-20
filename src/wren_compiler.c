@@ -12,6 +12,10 @@
   #include "wren_debug.h"
 #endif
 
+#ifdef _MSC_VER
+  #pragma warning( disable : 4996 )
+#endif
+
 // This is written in bottom-up order, so the tokenization comes first, then
 // parsing/code generation. This minimizes the number of explicit forward
 // declarations needed.

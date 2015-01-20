@@ -6,6 +6,10 @@
 
 #include "wren.h"
 
+#ifdef _MSC_VER
+  #pragma warning( disable : 4996 )
+#endif
+
 #define MAX_LINE_LENGTH 1024 // TODO: Something less arbitrary.
 
 // This is the source file for the standalone command line interpreter. It is
