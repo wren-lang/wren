@@ -552,7 +552,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(LOAD_FIELD_THIS):
     {
-      int field = READ_BYTE();
+      uint8_t field = READ_BYTE();
       Value receiver = stackStart[0];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
@@ -765,7 +765,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(STORE_FIELD_THIS):
     {
-      int field = READ_BYTE();
+      uint8_t field = READ_BYTE();
       Value receiver = stackStart[0];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
@@ -776,7 +776,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(LOAD_FIELD):
     {
-      int field = READ_BYTE();
+      uint8_t field = READ_BYTE();
       Value receiver = POP();
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
@@ -787,7 +787,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(STORE_FIELD):
     {
-      int field = READ_BYTE();
+      uint8_t field = READ_BYTE();
       Value receiver = POP();
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
       ObjInstance* instance = AS_INSTANCE(receiver);
@@ -798,7 +798,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(JUMP):
     {
-      int offset = READ_SHORT();
+      uint16_t offset = READ_SHORT();
       ip += offset;
       DISPATCH();
     }
@@ -806,14 +806,14 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(LOOP):
     {
       // Jump back to the top of the loop.
-      int offset = READ_SHORT();
+      uint16_t offset = READ_SHORT();
       ip -= offset;
       DISPATCH();
     }
 
     CASE_CODE(JUMP_IF):
     {
-      int offset = READ_SHORT();
+      uint16_t offset = READ_SHORT();
       Value condition = POP();
 
       if (IS_FALSE(condition) || IS_NULL(condition)) ip += offset;
@@ -822,7 +822,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(AND):
     {
-      int offset = READ_SHORT();
+      uint16_t offset = READ_SHORT();
       Value condition = PEEK();
 
       if (IS_FALSE(condition) || IS_NULL(condition))
@@ -840,7 +840,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(OR):
     {
-      int offset = READ_SHORT();
+      uint16_t offset = READ_SHORT();
       Value condition = PEEK();
 
       if (IS_FALSE(condition) || IS_NULL(condition))
@@ -929,7 +929,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(LIST):
     {
-      int numElements = READ_BYTE();
+      uint8_t numElements = READ_BYTE();
       ObjList* list = wrenNewList(vm, numElements);
       // TODO: Do a straight memcopy.
       for (int i = 0; i < numElements; i++)
@@ -959,8 +959,8 @@ static bool runInterpreter(WrenVM* vm)
       // Capture upvalues.
       for (int i = 0; i < prototype->numUpvalues; i++)
       {
-        bool isLocal = READ_BYTE();
-        int index = READ_BYTE();
+        uint8_t isLocal = READ_BYTE();
+        uint8_t index = READ_BYTE();
         if (isLocal)
         {
           // Make an new upvalue to close over the parent's local variable.
@@ -1021,11 +1021,10 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(METHOD_INSTANCE):
     CASE_CODE(METHOD_STATIC):
     {
-      int type = instruction;
-      int symbol = READ_SHORT();
+      uint16_t symbol = READ_SHORT();
       ObjClass* classObj = AS_CLASS(PEEK());
       Value method = PEEK2();
-      bindMethod(vm, type, symbol, classObj, method);
+      bindMethod(vm, instruction, symbol, classObj, method);
       DROP();
       DROP();
       DISPATCH();
