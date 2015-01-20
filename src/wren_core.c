@@ -208,6 +208,49 @@ static bool validateString(WrenVM* vm, Value* args, int index,
   return false;
 }
 
+// Given a [range] and the [length] of the object being operated on determine if
+// the range is valid and return a CalculatedRange.
+static CalculatedRange calculateRange(WrenVM* vm, Value* args, ObjRange* range,
+                                      int length)
+{
+  int from = validateIndexValue(vm, args, length, range->from,
+                                "Range start");
+  if (from == -1) return (CalculatedRange){ true, 0, 0, 0 };
+
+  int to;
+  int count;
+
+  if (range->isInclusive)
+  {
+    to = validateIndexValue(vm, args, length, range->to, "Range end");
+    if (to == -1) return (CalculatedRange){ true, 0, 0, 0 };
+
+    count = abs(from - to) + 1;
+  }
+  else
+  {
+    if (!validateIntValue(vm, args, range->to, "Range end"))
+    {
+      return (CalculatedRange){ true, 0, 0, 0 };
+    }
+
+    // Bounds check it manually here since the excusive range can hang over
+    // the edge.
+    to = (int)range->to;
+    if (to < 0) to = length + to;
+
+    if (to < -1 || to > length)
+    {
+      args[0] = wrenNewString(vm, "Range end out of bounds.", 24);
+      return (CalculatedRange){ true, 0, 0, 0 };
+    }
+
+    count = abs(from - to);
+  }
+
+  return (CalculatedRange){ false, from, (from < to ? 1 : -1), count };
+}
+
 DEF_NATIVE(bool_not)
 {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -593,39 +636,14 @@ DEF_NATIVE(list_subscript)
     RETURN_OBJ(wrenNewList(vm, 0));
   }
 
-  int from = validateIndexValue(vm, args, list->count, range->from,
-                                "Range start");
-  if (from == -1) return PRIM_ERROR;
+  CalculatedRange bounds = calculateRange(vm, args, range, list->count);
 
-  int to;
-  int count;
+  if (bounds.invalidRange == true) return PRIM_ERROR;
 
-  if (range->isInclusive)
+  ObjList* result = wrenNewList(vm, bounds.count);
+  for (int i = 0; i < bounds.count; i++)
   {
-    to = validateIndexValue(vm, args, list->count, range->to, "Range end");
-    if (to == -1) return PRIM_ERROR;
-
-    count = abs(from - to) + 1;
-  }
-  else
-  {
-    if (!validateIntValue(vm, args, range->to, "Range end")) return PRIM_ERROR;
-
-    // Bounds check it manually here since the excusive range can hang over
-    // the edge.
-    to = (int)range->to;
-    if (to < 0) to = list->count + to;
-
-    if (to < -1 || to > list->count) RETURN_ERROR("Range end out of bounds.");
-
-    count = abs(from - to);
-  }
-
-  int step = from < to ? 1 : -1;
-  ObjList* result = wrenNewList(vm, count);
-  for (int i = 0; i < count; i++)
-  {
-    result->elements[i] = list->elements[from + (i * step)];
+    result->elements[i] = list->elements[bounds.start + (i * bounds.step)];
   }
 
   RETURN_OBJ(result);
@@ -1051,16 +1069,47 @@ DEF_NATIVE(string_subscript)
 {
   ObjString* string = AS_STRING(args[0]);
 
-  int index = validateIndex(vm, args, string->length, 1, "Subscript");
-  if (index == -1) return PRIM_ERROR;
+  if (IS_NUM(args[1]))
+  {
+    int index = validateIndex(vm, args, string->length, 1, "Subscript");
+    if (index == -1) return PRIM_ERROR;
 
-  // The result is a one-character string.
-  // TODO: Handle UTF-8.
-  Value value = wrenNewUninitializedString(vm, 1);
-  ObjString* result = AS_STRING(value);
-  result->value[0] = AS_CSTRING(args[0])[index];
-  result->value[1] = '\0';
-  RETURN_VAL(value);
+    // The result is a one-character string.
+    // TODO: Handle UTF-8.
+    Value value = wrenNewUninitializedString(vm, 1);
+    ObjString* result = AS_STRING(value);
+    result->value[0] = AS_CSTRING(args[0])[index];
+    result->value[1] = '\0';
+    RETURN_VAL(value);
+  }
+
+  if (!IS_RANGE(args[1]))
+  {
+    RETURN_ERROR("Subscript must be a number or a range.");
+  }
+
+  ObjRange* range = AS_RANGE(args[1]);
+
+  // Corner case: an empty range at zero is allowed on an empty string.
+  // This way, string[0..-1] and string[0...string.count] can be used to copy a
+  // string even when empty.
+  if (string->length == 0 && range->from == 0 &&
+      range->to == (range->isInclusive ? -1 : 0)) {
+    RETURN_VAL(wrenNewString(vm, "", 0));
+  }
+
+  CalculatedRange bounds = calculateRange(vm, args, range, string->length);
+
+  if (bounds.invalidRange == true) return PRIM_ERROR;
+
+  ObjString* result = AS_STRING(wrenNewUninitializedString(vm, bounds.count));
+  for (int i = 0; i < bounds.count; i++)
+  {
+    result->value[i] = string->value[bounds.start + (i * bounds.step)];
+  }
+  result->value[bounds.count] = '\0';
+
+  RETURN_OBJ(result);
 }
 
 static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
