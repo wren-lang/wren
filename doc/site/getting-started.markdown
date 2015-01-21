@@ -70,9 +70,15 @@ Now run:
 
 Neat, right? You're a Wren programmer now! The next step is to [read more
 docs](syntax.html) and learn your way around the language. If you run into
-bugs, or have ideas or questions, any and all of the following work:
+bugs, or have ideas or questions, any of the following work:
 
- *  Tell me on twitter at [@munificentbob](https://twitter.com/intent/user?screen_name=munificentbob).
- *  [File a ticket](https://github.com/munificent/wren/issues) at [the GitHub repo](https://github.com/munificent/wren).
+ *  **Ask on the [Wren mailing list][list].**
+ *  Tell me on twitter at [@munificentbob][twitter].
+ *  [File a ticket][issue] at [the GitHub repo][repo].
  *  Send a pull request.
  *  Email me at [`robert@stuffwithstuff.com`](mailto:robert@stuffwithstuff.com).
+
+[list]: https://groups.google.com/forum/#!forum/wren-lang
+[twitter]: https://twitter.com/intent/user?screen_name=munificentbob
+[issue]: https://github.com/munificent/wren/issues
+[repo]: https://github.com/munificent/wren

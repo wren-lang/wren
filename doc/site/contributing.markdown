@@ -4,6 +4,15 @@
 It should be obvious by now that Wren is under active development and there's
 lots left to do. I am delighted to have you participate.
 
+## Getting acquainted
+
+[Pull requests][pull request] and [bug reports][issue] are always welcome. But,
+if you'd like to dip your toes in the water before diving in, please join
+[the mailing list][list] and say, "Hi". There's no strangers to Wren, just
+friends we haven't met yet.
+
+## The source
+
 Wren uses the OSI-approved [MIT license][mit]. I'm not sure exactly what that
 means, but I went with the most permissive license I could find.
 
@@ -22,8 +31,9 @@ helpful. Embedding Wren in an application will also exercise lots of corners of
 the system and highlight problems and missing features.
 
 Of course, new ideas are also welcome as well! If you have an idea for a
-significant change or addition, please do get in touch first before writing
-lots of code to make sure your idea will be a good fit.
+significant change or addition, please file a [proposal][] to discuss it
+before writing lots of code. Wren tries very *very* hard to be minimal which
+means often having to say "no" to language additions, even really cool ones.
 
 ## Making a change
 
@@ -67,6 +77,8 @@ email me (`robert` at `stuffwithstuff.com`). *Thank you!*
 [fork]: https://help.github.com/articles/fork-a-repo/
 [docs]: https://github.com/munificent/wren/tree/master/doc/site
 [issue]: https://github.com/munificent/wren/issues
+[proposal]: https://github.com/munificent/wren/labels/proposal
 [feature branches]: https://www.atlassian.com/git/tutorials/comparing-workflows/centralized-workflow
 [authors]: https://github.com/munificent/wren/tree/master/AUTHORS
 [pull request]: https://github.com/munificent/wren/pulls
+[list]: https://groups.google.com/forum/#!forum/wren-lang
