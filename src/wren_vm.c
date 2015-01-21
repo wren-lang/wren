@@ -35,6 +35,8 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   WrenVM* vm = (WrenVM*)reallocate(NULL, 0, sizeof(WrenVM));
 
   vm->reallocate = reallocate;
+  vm->foreignCallSlot = NULL;
+  vm->foreignCallNumArgs = 0;
 
   wrenSymbolTableInit(vm, &vm->methodNames);
   wrenSymbolTableInit(vm, &vm->globalNames);
@@ -66,10 +68,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->compiler = NULL;
   vm->fiber = NULL;
   vm->first = NULL;
-  vm->pinned = NULL;
-
-  vm->foreignCallSlot = NULL;
-  vm->foreignCallNumArgs = 0;
+  vm->numPinned = 0;
 
   wrenInitializeCore(vm);
   #if WREN_USE_LIB_IO
@@ -133,11 +132,9 @@ static void collectGarbage(WrenVM* vm)
   }
 
   // Pinned objects.
-  WrenPinnedObj* pinned = vm->pinned;
-  while (pinned != NULL)
+  for (int i = 0; i < vm->numPinned; i++)
   {
-    wrenMarkObj(vm, pinned->obj);
-    pinned = pinned->previous;
+    wrenMarkObj(vm, vm->pinned[i]);
   }
 
   // The current fiber.
@@ -1049,9 +1046,9 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   ObjFn* fn = wrenCompile(vm, sourcePath, source);
   if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
 
-  WREN_PIN(vm, fn);
+  wrenPushRoot(vm, (Obj*)fn);
   vm->fiber = wrenNewFiber(vm, (Obj*)fn);
-  WREN_UNPIN(vm);
+  wrenPopRoot(vm);
 
   if (runInterpreter(vm))
   {
@@ -1075,7 +1072,7 @@ int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
 {
   if (vm->globals.count == MAX_GLOBALS) return -2;
 
-  if (IS_OBJ(value)) WREN_PIN(vm, AS_OBJ(value));
+  if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
   // See if the global is already explicitly or implicitly declared.
   int symbol = wrenSymbolTableFind(&vm->globalNames, name, length);
@@ -1097,21 +1094,22 @@ int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
     symbol = -1;
   }
 
-  if (IS_OBJ(value)) WREN_UNPIN(vm);
+  if (IS_OBJ(value)) wrenPopRoot(vm);
 
   return symbol;
 }
 
-void wrenPinObj(WrenVM* vm, Obj* obj, WrenPinnedObj* pinned)
+// TODO: Inline?
+void wrenPushRoot(WrenVM* vm, Obj* obj)
 {
-  pinned->obj = obj;
-  pinned->previous = vm->pinned;
-  vm->pinned = pinned;
+  ASSERT(vm->numPinned < WREN_MAX_PINNED, "Too many pinned objects.");
+  vm->pinned[vm->numPinned++] = obj;
 }
 
-void wrenUnpinObj(WrenVM* vm)
+void wrenPopRoot(WrenVM* vm)
 {
-  vm->pinned = vm->pinned->previous;
+  ASSERT(vm->numPinned > 0, "No pinned object to unpin.");
+  vm->numPinned--;
 }
 
 static void defineMethod(WrenVM* vm, const char* className,
@@ -1145,13 +1143,13 @@ static void defineMethod(WrenVM* vm, const char* className,
     size_t length = strlen(className);
     ObjString* nameString = AS_STRING(wrenNewString(vm, className, length));
 
-    WREN_PIN(vm, nameString);
+    wrenPushRoot(vm, (Obj*)nameString);
 
     // TODO: Allow passing in name for superclass?
     classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
     wrenDefineGlobal(vm, className, length, OBJ_VAL(classObj));
 
-    WREN_UNPIN(vm);
+    wrenPopRoot(vm);
   }
 
   // Create a name for the method, including its arity.

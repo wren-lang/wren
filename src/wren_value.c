@@ -42,9 +42,9 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
   classObj->numFields = numFields;
   classObj->name = name;
 
-  WREN_PIN(vm, classObj);
+  wrenPushRoot(vm, (Obj*)classObj);
   wrenMethodBufferInit(vm, &classObj->methods);
-  WREN_UNPIN(vm);
+  wrenPopRoot(vm);
 
   return classObj;
 }
@@ -68,19 +68,19 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
                        ObjString* name)
 {
-  WREN_PIN(vm, name);
+  wrenPushRoot(vm, (Obj*)name);
 
   // Create the metaclass.
   ObjString* metaclassName = wrenStringConcat(vm, name->value, " metaclass");
-  WREN_PIN(vm, metaclassName);
+  wrenPushRoot(vm, (Obj*)metaclassName);
 
   ObjClass* metaclass = wrenNewSingleClass(vm, 0, metaclassName);
   metaclass->obj.classObj = vm->classClass;
 
-  WREN_UNPIN(vm);
+  wrenPopRoot(vm);
 
   // Make sure the metaclass isn't collected when we allocate the class.
-  WREN_PIN(vm, metaclass);
+  wrenPushRoot(vm, (Obj*)metaclass);
 
   // Metaclasses always inherit Class and do not parallel the non-metaclass
   // hierarchy.
@@ -90,14 +90,14 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
 
   // Make sure the class isn't collected while the inherited methods are being
   // bound.
-  WREN_PIN(vm, classObj);
+  wrenPushRoot(vm, (Obj*)classObj);
 
   classObj->obj.classObj = metaclass;
   wrenBindSuperclass(vm, classObj, superclass);
 
-  WREN_UNPIN(vm);
-  WREN_UNPIN(vm);
-  WREN_UNPIN(vm);
+  wrenPopRoot(vm);
+  wrenPopRoot(vm);
+  wrenPopRoot(vm);
 
   return classObj;
 }
@@ -257,22 +257,22 @@ static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
 
 void wrenListAdd(WrenVM* vm, ObjList* list, Value value)
 {
-  if (IS_OBJ(value)) WREN_PIN(vm, AS_OBJ(value));
+  if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
   ensureListCapacity(vm, list, list->count + 1);
 
-  if (IS_OBJ(value)) WREN_UNPIN(vm);
+  if (IS_OBJ(value)) wrenPopRoot(vm);
 
   list->elements[list->count++] = value;
 }
 
 void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
 {
-  if (IS_OBJ(value)) WREN_PIN(vm, AS_OBJ(value));
+  if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
   ensureListCapacity(vm, list, list->count + 1);
 
-  if (IS_OBJ(value)) WREN_UNPIN(vm);
+  if (IS_OBJ(value)) wrenPopRoot(vm);
 
   // Shift items down.
   for (int i = list->count; i > index; i--)
@@ -288,7 +288,7 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
 {
   Value removed = list->elements[index];
 
-  if (IS_OBJ(removed)) WREN_PIN(vm, AS_OBJ(removed));
+  if (IS_OBJ(removed)) wrenPushRoot(vm, AS_OBJ(removed));
 
   // Shift items up.
   for (int i = index; i < list->count - 1; i++)
@@ -305,7 +305,7 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
     list->capacity /= LIST_GROW_FACTOR;
   }
 
-  if (IS_OBJ(removed)) WREN_UNPIN(vm);
+  if (IS_OBJ(removed)) wrenPopRoot(vm);
 
   list->count--;
   return removed;

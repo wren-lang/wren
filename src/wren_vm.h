@@ -6,25 +6,9 @@
 #include "wren_value.h"
 #include "wren_utils.h"
 
-// In order to token paste __LINE__, you need two weird levels of indirection
-// since __LINE__ isn't expanded when used in a token paste.
-// See: http://stackoverflow.com/a/1597129/9457
-#define WREN_TOKEN_PASTE(a, b) a ## b
-#define WREN_TOKEN_PASTE2(a, b) WREN_TOKEN_PASTE(a, b)
-
-// Mark [obj] as a GC root so that it doesn't get collected. Initializes
-// [pinned], which must be then passed to [unpinObj].
-#define WREN_PIN(vm, obj) \
-    do \
-    { \
-      WrenPinnedObj WREN_TOKEN_PASTE2(wrenPinned, __LINE__); \
-      wrenPinObj(vm, (Obj*)obj, &WREN_TOKEN_PASTE2(wrenPinned, __LINE__)); \
-    } \
-    while (false)
-
-// Remove the most recently pinned object from the list of pinned GC roots.
-#define WREN_UNPIN(vm) \
-    wrenUnpinObj(vm)
+// The maximum number of objects that can be pinned to be visible to the GC at
+// one time.
+#define WREN_MAX_PINNED 4
 
 typedef enum
 {
@@ -53,7 +37,7 @@ typedef enum
 
   // Note: The compiler assumes the following _STORE instructions always
   // immediately follow their corresponding _LOAD ones.
-  
+
   // Pushes the value in local slot [arg].
   CODE_LOAD_LOCAL,
 
@@ -189,28 +173,11 @@ typedef enum
   // the method is popped off the stack, then the function defining the body is
   // popped.
   CODE_METHOD_STATIC,
-  
+
   // This pseudo-instruction indicates the end of the bytecode. It should
   // always be preceded by a `CODE_RETURN`, so is never actually executed.
   CODE_END
 } Code;
-
-// A pinned object is an Obj that has been temporarily made an explicit GC root.
-// This is for temporary or new objects that are not otherwise reachable but
-// should not be collected.
-//
-// They are organized as linked list of these objects stored on the stack. The
-// WrenVM has a pointer to the head of the list and walks it if a collection
-// occurs. This implies that pinned objects need to have stack semantics: only
-// the most recently pinned object can be unpinned.
-typedef struct sWrenPinnedObj
-{
-  // The pinned object.
-  Obj* obj;
-
-  // The next pinned object.
-  struct sWrenPinnedObj* previous;
-} WrenPinnedObj;
 
 // TODO: Move into wren_vm.c?
 struct WrenVM
@@ -235,6 +202,9 @@ struct WrenVM
 
   // Memory management data:
 
+  // The externally-provided function used to allocate memory.
+  WrenReallocateFn reallocate;
+
   // The number of bytes that are known to be currently allocated. Includes all
   // memory that was proven live after the last GC, as well as any new bytes
   // that were allocated since then. Does *not* include bytes for objects that
@@ -255,12 +225,16 @@ struct WrenVM
   // The first object in the linked list of all currently allocated objects.
   Obj* first;
 
-  // The head of the list of pinned objects. Will be `NULL` if nothing is
-  // pinned.
-  WrenPinnedObj* pinned;
+  // The list of pinned objects. A pinned object is an Obj that has been
+  // temporarily made an explicit GC root. This is for temporary or new objects
+  // that are not otherwise reachable but should not be collected.
+  //
+  // They are organized as a stack of pointers stored in this array. This
+  // implies that pinned objects need to have stack semantics: only the most
+  // recently pinned object can be unpinned.
+  Obj* pinned[WREN_MAX_PINNED];
 
-  // The externally-provided function used to allocate memory.
-  WrenReallocateFn reallocate;
+  int numPinned;
 
   // Foreign function data:
 
@@ -273,7 +247,7 @@ struct WrenVM
   int foreignCallNumArgs;
 
   // Compiler and debugger data:
-  
+
   // The compiler that is currently compiling code. This is used so that heap
   // allocated objects used by the compiler can be found if a GC is kicked off
   // in the middle of a compile.
@@ -325,12 +299,12 @@ void wrenSetCompiler(WrenVM* vm, Compiler* compiler);
 // Mark [obj] as a GC root so that it doesn't get collected. Initializes
 // [pinned], which must be then passed to [unpinObj]. This is not intended to be
 // used directly. Instead, use the [WREN_PIN_OBJ] macro.
-void wrenPinObj(WrenVM* vm, Obj* obj, WrenPinnedObj* pinned);
+void wrenPushRoot(WrenVM* vm, Obj* obj);
 
 // Remove the most recently pinned object from the list of pinned GC roots.
 // This is not intended to be used directly. Instead, use the [WREN_UNPIN_OBJ]
 // macro.
-void wrenUnpinObj(WrenVM* vm);
+void wrenPopRoot(WrenVM* vm);
 
 // Returns the class of [value].
 //

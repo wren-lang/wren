@@ -1111,12 +1111,12 @@ static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 {
   size_t length = strlen(name);
   ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
-  WREN_PIN(vm, nameString);
+  wrenPushRoot(vm, (Obj*)nameString);
 
   ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
   wrenDefineGlobal(vm, name, length, OBJ_VAL(classObj));
 
-  WREN_UNPIN(vm);
+  wrenPopRoot(vm);
   return classObj;
 }
 
@@ -1124,12 +1124,12 @@ static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
   size_t length = strlen(name);
   ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
-  WREN_PIN(vm, nameString);
+  wrenPushRoot(vm, (Obj*)nameString);
 
   ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
   wrenDefineGlobal(vm, name, length, OBJ_VAL(classObj));
 
-  WREN_UNPIN(vm);
+  wrenPopRoot(vm);
   return classObj;
 }
 
