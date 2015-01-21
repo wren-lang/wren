@@ -44,7 +44,7 @@
 
 // Set this to true to stress test the GC. It will perform a collection before
 // every allocation. This is useful to ensure that memory is always correctly
-// pinned.
+// reachable.
 #define WREN_DEBUG_GC_STRESS 0
 
 // Set this to true to log memory operations as they occur.

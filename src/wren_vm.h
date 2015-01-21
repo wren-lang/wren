@@ -6,9 +6,9 @@
 #include "wren_value.h"
 #include "wren_utils.h"
 
-// The maximum number of objects that can be pinned to be visible to the GC at
-// one time.
-#define WREN_MAX_PINNED 4
+// The maximum number of temporary objects that can be made visible to the GC
+// at one time.
+#define WREN_MAX_TEMP_ROOTS 4
 
 typedef enum
 {
@@ -225,16 +225,15 @@ struct WrenVM
   // The first object in the linked list of all currently allocated objects.
   Obj* first;
 
-  // The list of pinned objects. A pinned object is an Obj that has been
-  // temporarily made an explicit GC root. This is for temporary or new objects
-  // that are not otherwise reachable but should not be collected.
+  // The list of temporary roots. This is for temporary or new objects that are
+  // not otherwise reachable but should not be collected.
   //
   // They are organized as a stack of pointers stored in this array. This
-  // implies that pinned objects need to have stack semantics: only the most
-  // recently pinned object can be unpinned.
-  Obj* pinned[WREN_MAX_PINNED];
+  // implies that temporary roots need to have stack semantics: only the most
+  // recently pushed object can be released.
+  Obj* tempRoots[WREN_MAX_TEMP_ROOTS];
 
-  int numPinned;
+  int numTempRoots;
 
   // Foreign function data:
 
@@ -296,14 +295,10 @@ int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value);
 // Sets the current Compiler being run to [compiler].
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler);
 
-// Mark [obj] as a GC root so that it doesn't get collected. Initializes
-// [pinned], which must be then passed to [unpinObj]. This is not intended to be
-// used directly. Instead, use the [WREN_PIN_OBJ] macro.
+// Mark [obj] as a GC root so that it doesn't get collected.
 void wrenPushRoot(WrenVM* vm, Obj* obj);
 
-// Remove the most recently pinned object from the list of pinned GC roots.
-// This is not intended to be used directly. Instead, use the [WREN_UNPIN_OBJ]
-// macro.
+// Remove the most recently pushed temporary root.
 void wrenPopRoot(WrenVM* vm);
 
 // Returns the class of [value].

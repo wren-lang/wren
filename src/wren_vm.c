@@ -68,7 +68,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->compiler = NULL;
   vm->fiber = NULL;
   vm->first = NULL;
-  vm->numPinned = 0;
+  vm->numTempRoots = 0;
 
   wrenInitializeCore(vm);
   #if WREN_USE_LIB_IO
@@ -131,10 +131,10 @@ static void collectGarbage(WrenVM* vm)
     wrenMarkValue(vm, vm->globals.data[i]);
   }
 
-  // Pinned objects.
-  for (int i = 0; i < vm->numPinned; i++)
+  // Temporary roots.
+  for (int i = 0; i < vm->numTempRoots; i++)
   {
-    wrenMarkObj(vm, vm->pinned[i]);
+    wrenMarkObj(vm, vm->tempRoots[i]);
   }
 
   // The current fiber.
@@ -1102,14 +1102,14 @@ int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
 // TODO: Inline?
 void wrenPushRoot(WrenVM* vm, Obj* obj)
 {
-  ASSERT(vm->numPinned < WREN_MAX_PINNED, "Too many pinned objects.");
-  vm->pinned[vm->numPinned++] = obj;
+  ASSERT(vm->numTempRoots < WREN_MAX_TEMP_ROOTS, "Too many temporary roots.");
+  vm->tempRoots[vm->numTempRoots++] = obj;
 }
 
 void wrenPopRoot(WrenVM* vm)
 {
-  ASSERT(vm->numPinned > 0, "No pinned object to unpin.");
-  vm->numPinned--;
+  ASSERT(vm->numTempRoots > 0, "No temporary roots to release.");
+  vm->numTempRoots--;
 }
 
 static void defineMethod(WrenVM* vm, const char* className,
