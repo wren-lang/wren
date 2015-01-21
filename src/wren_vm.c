@@ -1100,6 +1100,12 @@ int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
   return symbol;
 }
 
+// TODO: The Microsoft 2013 compiler seems to oddly inline these two
+// functions, resulting in a memory access violation. For now, we are
+// disabling the optimizer itself. Need further investigation.
+#ifdef _MSC_VER
+  #pragma optimize("", off)
+#endif
 void wrenPinObj(WrenVM* vm, Obj* obj, WrenPinnedObj* pinned)
 {
   pinned->obj = obj;
@@ -1111,6 +1117,9 @@ void wrenUnpinObj(WrenVM* vm)
 {
   vm->pinned = vm->pinned->previous;
 }
+#ifdef _MSC_VER
+  #pragma optimize("", on)
+#endif
 
 static void defineMethod(WrenVM* vm, const char* className,
                          const char* methodName, int numParams,
