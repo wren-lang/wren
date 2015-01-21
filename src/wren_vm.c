@@ -1107,17 +1107,29 @@ int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
   return symbol;
 }
 
+#ifdef _MSC_VER
+  #pragma optimize("", off)
+#endif
 void wrenPinObj(WrenVM* vm, Obj* obj, WrenPinnedObj* pinned)
 {
   pinned->obj = obj;
   pinned->previous = vm->pinned;
   vm->pinned = pinned;
 }
+#ifdef _MSC_VER
+  #pragma optimize("", on)
+#endif
 
+#ifdef _MSC_VER
+  #pragma optimize("", off)
+#endif
 void wrenUnpinObj(WrenVM* vm)
 {
   vm->pinned = vm->pinned->previous;
 }
+#ifdef _MSC_VER
+  #pragma optimize("", on)
+#endif
 
 static void defineMethod(WrenVM* vm, const char* className,
                          const char* methodName, int numParams,
