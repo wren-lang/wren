@@ -483,16 +483,12 @@ typedef struct
 // If the NaN bits are set, it's not a number.
 #define IS_NUM(value) (((value) & QNAN) != QNAN)
 
-// Singleton values are NaN with the sign bit cleared. (This includes the
-// normal value of the actual NaN value used in numeric arithmetic.)
-#define IS_SINGLETON(value) (((value) & (QNAN | SIGN_BIT)) == QNAN)
-
 // An object pointer is a NaN with a set sign bit.
 #define IS_OBJ(value) (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
 
-#define IS_FALSE(value) ((value) == FALSE_VAL)
-#define IS_NULL(value) ((value) == (QNAN | TAG_NULL))
-#define IS_UNDEFINED(value) ((value) == (QNAN | TAG_UNDEFINED))
+#define IS_FALSE(value)     ((value) == FALSE_VAL)
+#define IS_NULL(value)      ((value) == NULL_VAL)
+#define IS_UNDEFINED(value) ((value) == UNDEFINED_VAL)
 
 // Masks out the tag bits used to identify the singleton value.
 #define MASK_TAG (7)
@@ -511,7 +507,7 @@ typedef struct
 #define AS_BOOL(value) ((value) == TRUE_VAL)
 
 // Value -> Obj*.
-#define AS_OBJ(value) ((Obj*)((value) & ~(SIGN_BIT | QNAN)))
+#define AS_OBJ(value) ((Obj*)(uintptr_t)((value) & ~(SIGN_BIT | QNAN)))
 
 // Singleton values.
 #define NULL_VAL      ((Value)(uint64_t)(QNAN | TAG_NULL))
@@ -533,9 +529,9 @@ typedef struct
 // Determines if [value] is a garbage-collected object or not.
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
 
-#define IS_FALSE(value) ((value).type == VAL_FALSE)
-#define IS_NULL(value) ((value).type == VAL_NULL)
-#define IS_NUM(value) ((value).type == VAL_NUM)
+#define IS_FALSE(value)     ((value).type == VAL_FALSE)
+#define IS_NULL(value)      ((value).type == VAL_NULL)
+#define IS_NUM(value)       ((value).type == VAL_NUM)
 #define IS_UNDEFINED(value) ((value).type == VAL_UNDEFINED)
 
 // Singleton values.
@@ -677,7 +673,12 @@ static inline bool wrenIsObjType(Value value, ObjType type)
 static inline Value wrenObjectToValue(Obj* obj)
 {
 #if WREN_NAN_TAGGING
-  return (Value)(SIGN_BIT | QNAN | (uint64_t)(obj));
+  // The triple casting is necessary here to satisfy some compilers:
+  // 1. (uintptr_t) Convert the pointer to a number of the right size.
+  // 2. (uint64_t)  Pad it up to 64 bits in 32-bit builds.
+  // 3. Or in the bits to make a tagged Nan.
+  // 4. Cast to a typedef'd value.
+  return (Value)(SIGN_BIT | QNAN | (uint64_t)(uintptr_t)(obj));
 #else
   Value value;
   value.type = VAL_OBJ;
