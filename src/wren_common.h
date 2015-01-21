@@ -127,4 +127,10 @@
 
 #endif
 
+// The Microsoft compiler does not sport the "inline" modifier when
+// compiling in plain-C
+#if defined( _MSC_VER ) && !defined(__cplusplus)
+  #define inline _inline
+#endif
+
 #endif
