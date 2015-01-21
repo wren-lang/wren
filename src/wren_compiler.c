@@ -1,16 +1,15 @@
+#include "wren_common.h"
+#include "wren_compiler.h"
+#include "wren_vm.h"
+#if WREN_DEBUG_DUMP_COMPILED_CODE
+  #include "wren_debug.h"
+#endif
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "wren_common.h"
-#include "wren_compiler.h"
-#include "wren_vm.h"
-
-#if WREN_DEBUG_DUMP_COMPILED_CODE
-  #include "wren_debug.h"
-#endif
 
 // This is written in bottom-up order, so the tokenization comes first, then
 // parsing/code generation. This minimizes the number of explicit forward

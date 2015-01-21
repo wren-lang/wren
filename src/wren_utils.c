@@ -1,7 +1,8 @@
-#include <string.h>
-
+#include "wren_common.h"
 #include "wren_utils.h"
 #include "wren_vm.h"
+
+#include <string.h>
 
 DEFINE_BUFFER(Byte, uint8_t);
 DEFINE_BUFFER(Int, int);

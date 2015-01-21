@@ -1,3 +1,4 @@
+#include "wren_common.h"
 #include "wren_io.h"
 
 #if WREN_USE_LIB_IO

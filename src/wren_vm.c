@@ -1,18 +1,16 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "wren.h"
 #include "wren_common.h"
+#include "wren_vm.h"
+#include "wren.h"
 #include "wren_compiler.h"
 #include "wren_core.h"
 #include "wren_debug.h"
-#include "wren_vm.h"
-
 #if WREN_USE_LIB_IO
   #include "wren_io.h"
 #endif
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   #include <time.h>
 #endif
