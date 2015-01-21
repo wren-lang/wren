@@ -2183,7 +2183,7 @@ GrammarRule rules[] =
   /* TOKEN_COMMA         */ UNUSED,
   /* TOKEN_STAR          */ INFIX_OPERATOR(PREC_FACTOR, "* "),
   /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/ "),
-  /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_TERM, "% "),
+  /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_FACTOR, "% "),
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
   /* TOKEN_MINUS         */ OPERATOR("- "),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE, "| "),
