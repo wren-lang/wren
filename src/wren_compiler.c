@@ -627,7 +627,7 @@ static void readUnicodeEscape(Parser* parser)
       break;
     }
 
-    char digit = readHexDigit(parser);
+    int digit = readHexDigit(parser);
     if (digit == -1)
     {
       lexError(parser, "Invalid Unicode escape sequence.");
