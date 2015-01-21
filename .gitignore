@@ -1,6 +1,5 @@
 # Intermediate files directory.
 build/
-build_xcode/
 .sass-cache/
 
 # Built files at the top level.
