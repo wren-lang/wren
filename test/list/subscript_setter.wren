@@ -21,5 +21,3 @@
   list[-3] = 7
   IO.print(list) // expect: [7, 6, 5]
 }
-
-// TODO: Not in this dir, but need tests for subscript setter grammar.

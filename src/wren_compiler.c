@@ -1424,16 +1424,13 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
   }
 }
 
-// Parses an optional parenthesis-delimited parameter list. If the parameter
-// list is for a method, [name] will be the name of the method and this will
-// modify it to handle arity in the signature. For functions, [name] will be
-// `null`.
-static int parameterList(Compiler* compiler, char* name, int* length,
-                         TokenType startToken, TokenType endToken)
+// Parses the rest of a parameter list after the opening delimeter, and closed
+// by [endToken]. If the parameter list is for a method, [name] will be the
+// name of the method and this will modify it to handle arity in the signature.
+// For functions, [name] will be `null`.
+static int finishParameterList(Compiler* compiler, char* name, int* length,
+                               TokenType endToken)
 {
-  // The parameter list is optional.
-  if (!match(compiler, startToken)) return 0;
-
   int numParams = 0;
   do
   {
@@ -1448,11 +1445,32 @@ static int parameterList(Compiler* compiler, char* name, int* length,
   }
   while (match(compiler, TOKEN_COMMA));
 
-  const char* message = (endToken == TOKEN_RIGHT_PAREN) ?
-      "Expect ')' after parameters." : "Expect '|' after parameters.";
+  const char* message;
+  switch (endToken)
+  {
+    case TOKEN_RIGHT_PAREN:   message = "Expect ')' after parameters."; break;
+    case TOKEN_RIGHT_BRACKET: message = "Expect ']' after parameters."; break;
+    case TOKEN_PIPE:          message = "Expect '|' after parameters."; break;
+    default:
+      message = NULL;
+      UNREACHABLE();
+  }
+
   consume(compiler, endToken, message);
 
   return numParams;
+}
+
+// Parses an optional delimited parameter list. If the parameter list is for a
+// method, [name] will be the name of the method and this will modify it to
+// handle arity in the signature. For functions, [name] will be `null`.
+static int parameterList(Compiler* compiler, char* name, int* length,
+                         TokenType startToken, TokenType endToken)
+{
+  // The parameter list is optional.
+  if (!match(compiler, startToken)) return 0;
+
+  return finishParameterList(compiler, name, length, endToken);
 }
 
 // Gets the symbol for a method [name]. If [length] is 0, it will be calculated
@@ -1528,7 +1546,6 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
     ignoreNewlines(compiler);
 
     name[length++] = '=';
-    name[length++] = ' ';
 
     // Compile the assigned value.
     expression(compiler);
@@ -2095,25 +2112,42 @@ void mixedSignature(Compiler* compiler, char* name, int* length)
   }
 }
 
+// Compiles an optional setter parameter in a method signature.
+//
+// Returns `true` if it was a setter.
+static bool maybeSetter(Compiler* compiler, char* name, int* length)
+{
+  // See if it's a setter.
+  if (!match(compiler, TOKEN_EQ)) return false;
+
+  // It's a setter.
+  name[(*length)++] = '=';
+
+  // Parse the value parameter.
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after '='.");
+  declareNamedVariable(compiler);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
+  return true;
+}
+
+// Compiles a method signature for a subscript operator.
+void subscriptSignature(Compiler* compiler, char* name, int* length)
+{
+  // Parse the parameters inside the subscript.
+  finishParameterList(compiler, name, length, TOKEN_RIGHT_BRACKET);
+  name[(*length)++] = ']';
+
+  maybeSetter(compiler, name, length);
+}
+
 // Compiles a method signature for a named method or setter.
 void namedSignature(Compiler* compiler, char* name, int* length)
 {
-  if (match(compiler, TOKEN_EQ))
-  {
-    // It's a setter.
-    name[(*length)++] = '=';
-    name[(*length)++] = ' ';
+  // If it's a setter, it can't also have a parameter list.
+  if (maybeSetter(compiler, name, length)) return;
 
-    // Parse the value parameter.
-    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after '='.");
-    declareNamedVariable(compiler);
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
-  }
-  else
-  {
-    // Regular named method with an optional parameter list.
-    parameterList(compiler, name, length, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
-  }
+  // Regular named method with an optional parameter list.
+  parameterList(compiler, name, length, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
 }
 
 // Compiles a method signature for a constructor.
@@ -2138,7 +2172,7 @@ GrammarRule rules[] =
 {
   /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
-  /* TOKEN_LEFT_BRACKET  */ { list, subscript, NULL, PREC_CALL, NULL },
+  /* TOKEN_LEFT_BRACKET  */ { list, subscript, subscriptSignature, PREC_CALL, NULL },
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
   /* TOKEN_LEFT_BRACE    */ UNUSED,
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
