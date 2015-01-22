@@ -44,6 +44,13 @@
 #define WREN_USE_LIB_IO 1
 #endif
 
+// If true, loads the "Math" class in the standard library.
+//
+// Defaults to on.
+#ifndef WREN_USE_LIB_MATH
+#define WREN_USE_LIB_MATH 1
+#endif
+
 // These flags are useful for debugging and hacking on Wren itself. They are not
 // intended to be used for production code. They default to off.
 
