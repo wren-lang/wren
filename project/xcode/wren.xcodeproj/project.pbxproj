@@ -74,20 +74,20 @@
 			children = (
 				296C5EDC1A6F345600106DAC /* main.c */,
 				296C5EDD1A6F345600106DAC /* wren_common.h */,
-				296C5EDE1A6F345600106DAC /* wren_compiler.c */,
 				296C5EDF1A6F345600106DAC /* wren_compiler.h */,
-				296C5EE01A6F345600106DAC /* wren_core.c */,
+				296C5EDE1A6F345600106DAC /* wren_compiler.c */,
 				296C5EE11A6F345600106DAC /* wren_core.h */,
-				296C5EE21A6F345600106DAC /* wren_debug.c */,
+				296C5EE01A6F345600106DAC /* wren_core.c */,
 				296C5EE31A6F345600106DAC /* wren_debug.h */,
-				296C5EE41A6F345600106DAC /* wren_io.c */,
+				296C5EE21A6F345600106DAC /* wren_debug.c */,
 				296C5EE51A6F345600106DAC /* wren_io.h */,
-				296C5EE61A6F345600106DAC /* wren_utils.c */,
+				296C5EE41A6F345600106DAC /* wren_io.c */,
 				296C5EE71A6F345600106DAC /* wren_utils.h */,
-				296C5EE81A6F345600106DAC /* wren_value.c */,
+				296C5EE61A6F345600106DAC /* wren_utils.c */,
 				296C5EE91A6F345600106DAC /* wren_value.h */,
-				296C5EEA1A6F345600106DAC /* wren_vm.c */,
+				296C5EE81A6F345600106DAC /* wren_value.c */,
 				296C5EEB1A6F345600106DAC /* wren_vm.h */,
+				296C5EEA1A6F345600106DAC /* wren_vm.c */,
 			);
 			name = src;
 			sourceTree = "<group>";
