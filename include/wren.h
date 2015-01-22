@@ -115,43 +115,58 @@ void wrenDefineStaticMethod(WrenVM* vm, const char* className,
                             const char* methodName, int numParams,
                             WrenForeignMethodFn method);
 
-// Reads a boolean argument for a foreign call. This must only be called within
-// a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
-// which ranges from 0 to the number of parameters the method expects - 1.
+// The following functions read one of the arguments passed to a foreign call.
+// They may only be called while within a function provided to
+// [wrenDefineMethod] or [wrenDefineStaticMethod] that Wren has invoked.
+//
+// They retreive the argument at a given index which ranges from 0 to the number
+// of parameters the method expects. The zeroth parameter is used for the
+// receiver of the method. For example, given a foreign method "foo" on String
+// invoked like:
+//
+//     "receiver".foo("one", "two", "three")
+//
+// The foreign function will be able to access the arguments like so:
+//
+//     0: "receiver"
+//     1: "one"
+//     2: "two"
+//     3: "three"
+//
+// It is an error to pass an invalid argument index.
+
+// Reads a boolean argument for a foreign call. Returns false if the argument
+// is not a boolean.
 bool wrenGetArgumentBool(WrenVM* vm, int index);
 
-// Reads a numeric argument for a foreign call. This must only be called within
-// a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
-// which ranges from 0 to the number of parameters the method expects - 1.
+// Reads a numeric argument for a foreign call. Returns 0 if the argument is not
+// a number.
 double wrenGetArgumentDouble(WrenVM* vm, int index);
 
-// Reads an string argument for a foreign call. This must only be called within
-// a function provided to [wrenDefineMethod]. Retrieves the argument at [index]
-// which ranges from 0 to the number of parameters the method expects - 1.
+// Reads an string argument for a foreign call. Returns NULL if the argument is
+// not a string.
 //
 // The memory for the returned string is owned by Wren. You can inspect it
 // while in your foreign function, but cannot keep a pointer to it after the
 // function returns, since the garbage collector may reclaim it.
 const char* wrenGetArgumentString(WrenVM* vm, int index);
 
-// Provides a boolean return value for a foreign call. This must only be called
-// within a function provided to [wrenDefineMethod]. Once this is called, the
-// foreign call is done, and no more arguments can be read or return calls made.
+// The following functions provide the return value for a foreign method back
+// to Wren. Like above, they may only be called during a foreign call invoked
+// by Wren.
+//
+// If none of these is called by the time the foreign function returns, the
+// method implicitly returns `null`. Within a given foreign call, you may only
+// call one of these once. It is an error to access any of the foreign calls
+// arguments after one of these has been called.
+
+// Provides a boolean return value for a foreign call.
 void wrenReturnBool(WrenVM* vm, bool value);
 
-// Provides a numeric return value for a foreign call. This must only be called
-// within a function provided to [wrenDefineMethod]. Once this is called, the
-// foreign call is done, and no more arguments can be read or return calls made.
+// Provides a numeric return value for a foreign call.
 void wrenReturnDouble(WrenVM* vm, double value);
 
-// Provides a null return value for a foreign call. This must only be called
-// within a function provided to [wrenDefineMethod]. Once this is called, the
-// foreign call is done, and no more arguments can be read or return calls made.
-void wrenReturnNull(WrenVM* vm);
-
-// Provides a string return value for a foreign call. This must only be called
-// within a function provided to [wrenDefineMethod]. Once this is called, the
-// foreign call is done, and no more arguments can be read or return calls made.
+// Provides a string return value for a foreign call.
 //
 // The [text] will be copied to a new string within Wren's heap, so you can
 // free memory used by it after this is called. If [length] is non-zero, Wren
