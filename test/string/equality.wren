@@ -17,3 +17,7 @@ IO.print("" != "abcd")      // expect: true
 // Not equal to other types.
 IO.print("1" != 1)        // expect: true
 IO.print("true" != true)  // expect: true
+
+// Non-ASCII.
+IO.print("vålue" == "value") // expect: false
+IO.print("vålue" == "vålue") // expect: true
