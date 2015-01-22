@@ -557,43 +557,10 @@ static void readName(Parser* parser, TokenType type)
   makeToken(parser, type);
 }
 
-// Adds [c] to the current string literal being tokenized. If [c] is outside of
-// ASCII range, it will emit the UTF-8 encoded byte sequence for it.
-static void addStringChar(Parser* parser, uint32_t c)
+// Adds [c] to the current string literal being tokenized.
+static void addStringChar(Parser* parser, char c)
 {
-  ByteBuffer* buffer = &parser->string;
-
-  if (c <= 0x7f)
-  {
-    // Single byte (i.e. fits in ASCII).
-    wrenByteBufferWrite(parser->vm, buffer, c);
-  }
-  else if (c <= 0x7ff)
-  {
-    // Two byte sequence: 110xxxxx	 10xxxxxx.
-    wrenByteBufferWrite(parser->vm, buffer, 0xc0 | ((c & 0x7c0) >> 6));
-    wrenByteBufferWrite(parser->vm, buffer, 0x80 | (c & 0x3f));
-  }
-  else if (c <= 0xffff)
-  {
-    // Three byte sequence: 1110xxxx	 10xxxxxx 10xxxxxx.
-    wrenByteBufferWrite(parser->vm, buffer, 0xe0 | ((c & 0xf000) >> 12));
-    wrenByteBufferWrite(parser->vm, buffer, 0x80 | ((c & 0xfc0) >> 6));
-    wrenByteBufferWrite(parser->vm, buffer, 0x80 | (c & 0x3f));
-  }
-  else if (c <= 0x10ffff)
-  {
-    // Four byte sequence: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx.
-    wrenByteBufferWrite(parser->vm, buffer, 0xf0 | ((c & 0x1c0000) >> 18));
-    wrenByteBufferWrite(parser->vm, buffer, 0x80 | ((c & 0x3f000) >> 12));
-    wrenByteBufferWrite(parser->vm, buffer, 0x80 | ((c & 0xfc0) >> 6));
-    wrenByteBufferWrite(parser->vm, buffer, 0x80 | (c & 0x3f));
-  }
-  else
-  {
-    // Invalid Unicode value. See: http://tools.ietf.org/html/rfc3629
-    // TODO: Error.
-  }
+  wrenByteBufferWrite(parser->vm, &parser->string, c);
 }
 
 // Reads the next character, which should be a hex digit (0-9, a-f, or A-F) and
@@ -637,7 +604,40 @@ static void readUnicodeEscape(Parser* parser)
     value = (value * 16) | digit;
   }
 
-  addStringChar(parser, value);
+  ByteBuffer* buffer = &parser->string;
+
+  // UTF-8 encode the value.
+  if (value <= 0x7f)
+  {
+    // Single byte (i.e. fits in ASCII).
+    wrenByteBufferWrite(parser->vm, buffer, value);
+  }
+  else if (value <= 0x7ff)
+  {
+    // Two byte sequence: 110xxxxx	 10xxxxxx.
+    wrenByteBufferWrite(parser->vm, buffer, 0xc0 | ((value & 0x7c0) >> 6));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | (value & 0x3f));
+  }
+  else if (value <= 0xffff)
+  {
+    // Three byte sequence: 1110xxxx	 10xxxxxx 10xxxxxx.
+    wrenByteBufferWrite(parser->vm, buffer, 0xe0 | ((value & 0xf000) >> 12));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | ((value & 0xfc0) >> 6));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | (value & 0x3f));
+  }
+  else if (value <= 0x10ffff)
+  {
+    // Four byte sequence: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx.
+    wrenByteBufferWrite(parser->vm, buffer, 0xf0 | ((value & 0x1c0000) >> 18));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | ((value & 0x3f000) >> 12));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | ((value & 0xfc0) >> 6));
+    wrenByteBufferWrite(parser->vm, buffer, 0x80 | (value & 0x3f));
+  }
+  else
+  {
+    // Invalid Unicode value. See: http://tools.ietf.org/html/rfc3629
+    // TODO: Error.
+  }
 }
 
 // Finishes lexing a string literal.
