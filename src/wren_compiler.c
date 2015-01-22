@@ -1257,7 +1257,7 @@ static ObjFn* endCompiler(Compiler* compiler,
                               compiler->parser->sourcePath,
                               debugName, debugNameLength,
                               compiler->debugSourceLines.data);
-  WREN_PIN(compiler->parser->vm, fn);
+  wrenPushRoot(compiler->parser->vm, (Obj*)fn);
 
   // In the function that contains this one, load the resulting function object.
   if (compiler->parent != NULL)
@@ -1289,7 +1289,7 @@ static ObjFn* endCompiler(Compiler* compiler,
   // Pop this compiler off the stack.
   wrenSetCompiler(compiler->parser->vm, compiler->parent);
 
-  WREN_UNPIN(compiler->parser->vm);
+  wrenPopRoot(compiler->parser->vm);
 
   #if WREN_DEBUG_DUMP_COMPILED_CODE
     wrenDebugPrintCode(compiler->parser->vm, fn);
@@ -2182,7 +2182,7 @@ GrammarRule rules[] =
   /* TOKEN_COMMA         */ UNUSED,
   /* TOKEN_STAR          */ INFIX_OPERATOR(PREC_FACTOR, "* "),
   /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/ "),
-  /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_TERM, "% "),
+  /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_FACTOR, "% "),
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
   /* TOKEN_MINUS         */ OPERATOR("- "),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE, "| "),
@@ -2821,7 +2821,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 {
   ObjString* sourcePathObj = AS_STRING(wrenNewString(vm, sourcePath,
                                                      strlen(sourcePath)));
-  WREN_PIN(vm, sourcePathObj);
+  wrenPushRoot(vm, (Obj*)sourcePathObj);
 
   Parser parser;
   parser.vm = vm;
@@ -2852,7 +2852,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
   initCompiler(&compiler, &parser, NULL, true);
   ignoreNewlines(&compiler);
 
-  WREN_UNPIN(vm);
+  wrenPopRoot(vm);
 
   while (!match(&compiler, TOKEN_EOF))
   {
