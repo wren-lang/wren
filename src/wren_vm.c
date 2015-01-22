@@ -7,6 +7,9 @@
 #if WREN_USE_LIB_IO
   #include "wren_io.h"
 #endif
+#if WREN_USE_LIB_MATH
+  #include "wren_math.h"
+#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -71,6 +74,9 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   wrenInitializeCore(vm);
   #if WREN_USE_LIB_IO
     wrenLoadIOLibrary(vm);
+  #endif
+  #if WREN_USE_LIB_IO
+    wrenLoadMathLibrary(vm);
   #endif
 
   return vm;

@@ -30,7 +30,7 @@
 // Defaults to on.
 #ifndef WREN_COMPUTED_GOTO
   #ifdef _MSC_VER
-  // No computed gotos in Visual Studio.
+    // No computed gotos in Visual Studio.
     #define WREN_COMPUTED_GOTO 0
   #else
     #define WREN_COMPUTED_GOTO 1

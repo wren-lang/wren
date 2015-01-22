@@ -15,57 +15,63 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\wren_compiler.c">
+    <ClCompile Include="..\..\..\src\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wren_core.c">
+    <ClCompile Include="..\..\..\src\wren_compiler.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wren_debug.c">
+    <ClCompile Include="..\..\..\src\wren_core.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wren_io.c">
+    <ClCompile Include="..\..\..\src\wren_debug.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wren_utils.c">
+    <ClCompile Include="..\..\..\src\wren_io.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wren_value.c">
+    <ClCompile Include="..\..\..\src\wren_utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wren_vm.c">
+    <ClCompile Include="..\..\..\src\wren_value.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\main.c">
+    <ClCompile Include="..\..\..\src\wren_vm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\wren_math.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\wren_common.h">
+    <ClInclude Include="..\..\..\include\wren.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wren_compiler.h">
+    <ClInclude Include="..\..\..\src\wren_common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wren_core.h">
+    <ClInclude Include="..\..\..\src\wren_compiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wren_debug.h">
+    <ClInclude Include="..\..\..\src\wren_core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wren_io.h">
+    <ClInclude Include="..\..\..\src\wren_debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wren_utils.h">
+    <ClInclude Include="..\..\..\src\wren_io.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wren_value.h">
+    <ClInclude Include="..\..\..\src\wren_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wren_vm.h">
+    <ClInclude Include="..\..\..\src\wren_value.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\wren.h">
+    <ClInclude Include="..\..\..\src\wren_vm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\wren_math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

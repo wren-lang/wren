@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -83,6 +83,7 @@
     <ClCompile Include="..\..\..\src\wren_core.c" />
     <ClCompile Include="..\..\..\src\wren_debug.c" />
     <ClCompile Include="..\..\..\src\wren_io.c" />
+    <ClCompile Include="..\..\..\src\wren_math.c" />
     <ClCompile Include="..\..\..\src\wren_utils.c" />
     <ClCompile Include="..\..\..\src\wren_value.c" />
     <ClCompile Include="..\..\..\src\wren_vm.c" />
@@ -94,6 +95,7 @@
     <ClInclude Include="..\..\..\src\wren_core.h" />
     <ClInclude Include="..\..\..\src\wren_debug.h" />
     <ClInclude Include="..\..\..\src\wren_io.h" />
+    <ClInclude Include="..\..\..\src\wren_math.h" />
     <ClInclude Include="..\..\..\src\wren_utils.h" />
     <ClInclude Include="..\..\..\src\wren_value.h" />
     <ClInclude Include="..\..\..\src\wren_vm.h" />
