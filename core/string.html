@@ -42,33 +42,83 @@
   </nav>
   <main>
     <h1>String Class</h1>
-    <p>A string of Unicode code points stored in UTF-8.</p>
-<h3><strong>contains</strong>(other) <a href="#**contains**(other)" name="**contains**(other)" class="header-anchor">#</a></h3>
+    <p>Strings are immutable chunks of text. More formally, a string is a sequence of
+Unicode code points encoded in UTF-8.</p>
+<p>If you never work with any characters outside of the ASCII range, you can treat
+strings like a directly indexable array of characters. Once other characters
+get involved, it's important to understand the distinction.</p>
+<p>In UTF-8, a single Unicode code point (very roughly a single "character") may
+be encoded as one or more bytes. This means you can't directly index by code
+point. There's no way to find, say, the fifth code unit in a string without
+walking the string from the beginning and counting them as you go.</p>
+<p>Because counting code units is relatively slow, string methods generally index
+by <em>byte</em>, not <em>code unit</em>. When you do:</p>
+<div class="codehilite"><pre><span class="n">someString</span><span class="p">[</span><span class="m">3</span><span class="p">]</span>
+</pre></div>
+
+
+<p>That means "get the code unit starting at <em>byte</em> three", not "get the third
+code unit in the string". This sounds scary, but keep in mind that the methods
+on string <em>return</em> byte indices too. So, for example, this does what you want:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">metalBand</span> <span class="o">=</span> <span class="s2">&quot;Fäcëhämmër&quot;</span>
+<span class="kd">var</span> <span class="n">hPosition</span> <span class="o">=</span> <span class="n">metalBand</span><span class="p">.</span><span class="n">indexOf</span><span class="p">(</span><span class="s2">&quot;h&quot;</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">metalBand</span><span class="p">[</span><span class="n">hPosition</span><span class="p">])</span> <span class="c1">// &quot;h&quot;</span>
+</pre></div>
+
+
+<p>In general, methods on strings will work in terms of code units if they can do
+so efficiently, and will otherwise deal in bytes.</p>
+<h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
+<h3><strong>contains</strong>(other) <a href="#contains(other)" name="contains(other)" class="header-anchor">#</a></h3>
 <p>Checks if <code>other</code> is a substring of the string.</p>
 <p>It is a runtime error if <code>other</code> is not a string.</p>
-<h3><strong>count</strong> <a href="#**count**" name="**count**" class="header-anchor">#</a></h3>
+<h3><strong>count</strong> <a href="#count" name="count" class="header-anchor">#</a></h3>
 <p>Returns the length of the string.</p>
-<h3><strong>endsWith(suffix)</strong> <a href="#**endswith(suffix)**" name="**endswith(suffix)**" class="header-anchor">#</a></h3>
+<h3><strong>endsWith</strong>(suffix) <a href="#endswith(suffix)" name="endswith(suffix)" class="header-anchor">#</a></h3>
 <p>Checks if the string ends with <code>suffix</code>.</p>
 <p>It is a runtime error if <code>suffix</code> is not a string.</p>
-<h3><strong>indexOf(search)</strong> <a href="#**indexof(search)**" name="**indexof(search)**" class="header-anchor">#</a></h3>
-<p>Returns the index of <code>search</code> in the string or -1 if <code>search</code> is not a
-substring of the string.</p>
+<h3><strong>indexOf</strong>(search) <a href="#indexof(search)" name="indexof(search)" class="header-anchor">#</a></h3>
+<p>Returns the index of the first byte matching <code>search</code> in the string or <code>-1</code> if
+<code>search</code> was not found.</p>
 <p>It is a runtime error if <code>search</code> is not a string.</p>
-<h3><strong>startsWith(prefix)</strong> <a href="#**startswith(prefix)**" name="**startswith(prefix)**" class="header-anchor">#</a></h3>
+<h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
+<p>Implements the <a href="../control-flow.html#the-iterator-protocol">iterator protocol</a>
+for iterating over the <em>code points</em> in the string:</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">codePoints</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">c</span> <span class="k">in</span> <span class="s2">&quot;(ᵔᴥᵔ)&quot;</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">codePoints</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">codePoints</span><span class="p">)</span> <span class="c1">// [&quot;(&quot;, &quot;ᵔ&quot;, &quot;ᴥ&quot;, &quot;ᵔ&quot;, &quot;)&quot;].</span>
+</pre></div>
+
+
+<h3><strong>startsWith</strong>(prefix) <a href="#startswith(prefix)" name="startswith(prefix)" class="header-anchor">#</a></h3>
 <p>Checks if the string starts with <code>prefix</code>.</p>
 <p>It is a runtime error if <code>prefix</code> is not a string.</p>
-<h3><strong>+</strong>(other) operator <a href="#**+**(other)-operator" name="**+**(other)-operator" class="header-anchor">#</a></h3>
+<h3><strong>+</strong>(other) operator <a href="#+(other)-operator" name="+(other)-operator" class="header-anchor">#</a></h3>
 <p>Returns a new string that concatenates this string and <code>other</code>.</p>
 <p>It is a runtime error if <code>other</code> is not a string.</p>
-<h3><strong>==</strong>(other) operator <a href="#**==**(other)-operator" name="**==**(other)-operator" class="header-anchor">#</a></h3>
+<h3><strong>==</strong>(other) operator <a href="#==(other)-operator" name="==(other)-operator" class="header-anchor">#</a></h3>
 <p>Checks if the string is equal to <code>other</code>.</p>
-<h3><strong>!=</strong>(other) operator <a href="#**=**(other)-operator" name="**=**(other)-operator" class="header-anchor">#</a></h3>
+<h3><strong>!=</strong>(other) operator <a href="#=(other)-operator" name="=(other)-operator" class="header-anchor">#</a></h3>
 <p>Check if the string is not equal to <code>other</code>.</p>
-<h3><strong>[</strong>index<strong>]</strong> operator <a href="#**[**index**]**-operator" name="**[**index**]**-operator" class="header-anchor">#</a></h3>
-<p>Returns a one character string of the value at <code>index</code>.</p>
-<p>It is a runtime error if <code>index</code> is greater than the length of the string.</p>
-<p><em>Note: This does not currently handle UTF-8 characters correctly.</em></p>
+<h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
+<p>Returns a string containing the code unit starting at byte <code>index</code>.</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;ʕ•ᴥ•ʔ&quot;</span><span class="p">[</span><span class="m">5</span><span class="p">])</span> <span class="c1">// &quot;ᴥ&quot;.</span>
+</pre></div>
+
+
+<p>Since <code>ʕ</code> is two bytes in UTF-8 and <code>•</code> is three, the fifth byte points to the
+bear's nose.</p>
+<p>If <code>index</code> points into the middle of a UTF-8 sequence, this returns an empty
+string:</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;I ♥ NY&quot;</span><span class="p">[</span><span class="m">3</span><span class="p">])</span> <span class="c1">// &quot;&quot;.</span>
+</pre></div>
+
+
+<p>It is a runtime error if <code>index</code> is greater than the number of bytes in the
+string.</p>
   </main>
 </div>
 <footer>

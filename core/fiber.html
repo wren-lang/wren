@@ -43,7 +43,7 @@
   <main>
     <h1>Fiber Class</h1>
     <p>A lightweight coroutine. <a href="../fibers.html">Here</a> is a gentle introduction.</p>
-<h3>new <strong>Fiber</strong>(function) <a href="#new-**fiber**(function)" name="new-**fiber**(function)" class="header-anchor">#</a></h3>
+<h3>new <strong>Fiber</strong>(function) <a href="#new-fiber(function)" name="new-fiber(function)" class="header-anchor">#</a></h3>
 <p>Creates a new fiber that executes <code>function</code> in a separate coroutine when the
 fiber is run. Does not immediately start running the fiber.</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
@@ -52,7 +52,7 @@ fiber is run. Does not immediately start running the fiber.</p>
 </pre></div>
 
 
-<h3>Fiber.<strong>yield</strong> <a href="#fiber**yield**" name="fiber**yield**" class="header-anchor">#</a></h3>
+<h3>Fiber.<strong>yield</strong> <a href="#fiberyield" name="fiberyield" class="header-anchor">#</a></h3>
 <p>Pauses the current fiber and transfers control to the parent fiber. "Parent"
 here means the last fiber that was started using <code>call</code> and not <code>run</code>.</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
@@ -89,7 +89,7 @@ here means the last fiber that was started using <code>call</code> and not <code
 </pre></div>
 
 
-<h3>Fiber.<strong>yield</strong>(value) <a href="#fiber**yield**(value)" name="fiber**yield**(value)" class="header-anchor">#</a></h3>
+<h3>Fiber.<strong>yield</strong>(value) <a href="#fiberyield(value)" name="fiberyield(value)" class="header-anchor">#</a></h3>
 <p>Similar to <code>Fiber.yield</code> but provides a value to return to the parent fiber's
 <code>call</code>.</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
@@ -100,16 +100,16 @@ here means the last fiber that was started using <code>call</code> and not <code
 </pre></div>
 
 
-<h3><strong>call</strong> <a href="#**call**" name="**call**" class="header-anchor">#</a></h3>
+<h3><strong>call</strong> <a href="#call" name="call" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
-<h3><strong>call</strong>(value) <a href="#**call**(value)" name="**call**(value)" class="header-anchor">#</a></h3>
+<h3><strong>call</strong>(value) <a href="#call(value)" name="call(value)" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
-<h3><strong>isDone</strong> <a href="#**isdone**" name="**isdone**" class="header-anchor">#</a></h3>
+<h3><strong>isDone</strong> <a href="#isdone" name="isdone" class="header-anchor">#</a></h3>
 <p>Whether the fiber's main function has completed and the fiber can no longer be
 run. This returns <code>false</code> if the fiber is currently running or has yielded.</p>
-<h3><strong>run</strong> <a href="#**run**" name="**run**" class="header-anchor">#</a></h3>
+<h3><strong>run</strong> <a href="#run" name="run" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
-<h3><strong>run</strong>(value) <a href="#**run**(value)" name="**run**(value)" class="header-anchor">#</a></h3>
+<h3><strong>run</strong>(value) <a href="#run(value)" name="run(value)" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
   </main>
 </div>

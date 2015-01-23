@@ -42,14 +42,39 @@
   </nav>
   <main>
     <h1>Sequence Class</h1>
-    <p>An abstract base class for any iterable object. It provides a number of methods for working with sequences based on the core <a href="../control-flow.html#the-iterator-protocol">iterator protocol</a>.</p>
-<h3><strong>all</strong>(predicate) <a href="#**all**(predicate)" name="**all**(predicate)" class="header-anchor">#</a></h3>
-<p>Tests whether all the elements in the list pass the <code>predicate</code>.</p>
-<h3><strong>reduce</strong>(function) <a href="#**reduce**(function)" name="**reduce**(function)" class="header-anchor">#</a></h3>
+    <p>An abstract base class for any iterable object. Any class that implements the
+core <a href="../control-flow.html#the-iterator-protocol">iterator protocol</a> can extend this to get a number of helpful methods.</p>
+<h3><strong>all</strong>(predicate) <a href="#all(predicate)" name="all(predicate)" class="header-anchor">#</a></h3>
+<p>Tests whether all the elements in the sequence pass the <code>predicate</code>.</p>
+<p>Iterates over the sequence, passing each element to the function <code>predicate</code>.
+If it returns <code>false</code>, stops iterating and returns <code>false</code>. Otherwise, returns
+<code>true</code>.</p>
+<div class="codehilite"><pre><span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">all</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="m">2</span><span class="p">}</span> <span class="c1">// False.</span>
+<span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">all</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="m">4</span><span class="p">}</span> <span class="c1">// True.</span>
+</pre></div>
+
+
+<h3><strong>map</strong>(transformation) <a href="#map(transformation)" name="map(transformation)" class="header-anchor">#</a></h3>
+<p>Creates a new list by applying <code>transformation</code> to each element in the
+sequence.</p>
+<p>Iterates over the sequence, passing each element to the function
+<code>transformation</code>. Generates a new list from the result of each of those calls.</p>
+<div class="codehilite"><pre><span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">*</span> <span class="m">2</span><span class="p">}</span> <span class="c1">// [2, 4, 6].</span>
+</pre></div>
+
+
+<h3><strong>reduce</strong>(function) <a href="#reduce(function)" name="reduce(function)" class="header-anchor">#</a></h3>
 <p>Reduces the sequence down to a single value. <code>function</code> is a function that takes two arguments, the accumulator and sequence item and returns the new accumulator value. The accumulator is initialized from the first item in the sequence. Then, the function is invoked on each remaining item in the sequence, iteratively updating the accumulator.</p>
 <p>It is a runtime error to call this on an empty sequence.</p>
-<h3><strong>reduce</strong>(seed, function) <a href="#**reduce**(seed,-function)" name="**reduce**(seed,-function)" class="header-anchor">#</a></h3>
+<h3><strong>reduce</strong>(seed, function) <a href="#reduce(seed,-function)" name="reduce(seed,-function)" class="header-anchor">#</a></h3>
 <p>Similar to above, but uses <code>seed</code> for the initial value of the accumulator. If the sequence is empty, returns <code>seed</code>.</p>
+<h3><strong>where</strong>(predicate) <a href="#where(predicate)" name="where(predicate)" class="header-anchor">#</a></h3>
+<p>Produces a new list containing only the elements in the sequence that pass the
+<code>predicate</code>.</p>
+<p>Iterates over the sequence, passing each element to the function <code>predicate</code>.
+If it returns <code>true</code>, adds the element to the result list.</p>
+<div class="codehilite"><pre><span class="p">(</span><span class="mf">1..10</span><span class="p">).</span><span class="n">where</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">}</span> <span class="c1">// [1, 3, 5, 7, 9].</span>
+</pre></div>
   </main>
 </div>
 <footer>
