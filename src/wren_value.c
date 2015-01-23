@@ -1,10 +1,9 @@
-#include "wren_common.h"
-#include "wren_value.h"
-#include "wren.h"
-#include "wren_vm.h"
-
 #include <stdio.h>
 #include <string.h>
+
+#include "wren.h"
+#include "wren_value.h"
+#include "wren_vm.h"
 
 // TODO: Tune these.
 // The initial (and minimum) capacity of a non-empty list object.

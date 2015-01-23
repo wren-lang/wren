@@ -1,11 +1,10 @@
-#include "wren_common.h"
-#include "wren_core.h"
-#include "wren_value.h"
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "wren_core.h"
+#include "wren_value.h"
 
 // Binds a native method named [name] (in Wren) implemented using C function
 // [fn] to `ObjClass` [cls].

@@ -1,7 +1,6 @@
-#include "wren_common.h"
-#include "wren_debug.h"
-
 #include <stdio.h>
+
+#include "wren_debug.h"
 
 void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
 {
