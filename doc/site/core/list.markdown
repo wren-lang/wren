@@ -1,9 +1,9 @@
 ^title List Class
 ^category core
 
-**TODO**
-
 Extends [Sequence](sequence.html).
+
+An indexable contiguous collection of elements. More details [here](../lists.html).
 
 ### **add**(item)
 
@@ -23,7 +23,8 @@ The number of items in the list.
 
 ### **iterate**(iterator), **iteratorValue**(iterator)
 
-**TODO**
+Implements the [iterator protocol](../control-flow.html#the-iterator-protocol)
+for iterating over the elements in the list.
 
 ### **removeAt**(index)
 

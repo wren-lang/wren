@@ -87,6 +87,8 @@ static const char* libSource =
 "\n"
 "}\n"
 "\n"
+"class String is Sequence {}\n"
+"\n"
 "class List is Sequence {\n"
 "  addAll(other) {\n"
 "    for (element in other) {\n"
@@ -1027,6 +1029,42 @@ DEF_NATIVE(string_indexOf)
   RETURN_NUM(firstOccurrence ? firstOccurrence - string->value : -1);
 }
 
+DEF_NATIVE(string_iterate)
+{
+  ObjString* string = AS_STRING(args[0]);
+
+  // If we're starting the iteration, return the first index.
+  if (IS_NULL(args[1]))
+  {
+    if (string->length == 0) RETURN_FALSE;
+    RETURN_NUM(0);
+  }
+
+  if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
+
+  int index = (int)AS_NUM(args[1]);
+  if (index < 0) RETURN_FALSE;
+
+  // Advance to the beginning of the next UTF-8 sequence.
+  do
+  {
+    index++;
+    if (index >= string->length) RETURN_FALSE;
+  } while ((string->value[index] & 0xc0) == 0x80);
+
+  RETURN_NUM(index);
+}
+
+DEF_NATIVE(string_iteratorValue)
+{
+  ObjString* string = AS_STRING(args[0]);
+  int index = validateIndex(vm, args, string->length, 1, "Iterator");
+  // TODO: Test.
+  if (index == -1) return PRIM_ERROR;
+
+  RETURN_VAL(wrenStringCodePointAt(vm, string, index));
+}
+
 DEF_NATIVE(string_startsWith)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
@@ -1261,7 +1299,9 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, "== ", num_eqeq);
   NATIVE(vm->numClass, "!= ", num_bangeq);
 
-  vm->stringClass = defineClass(vm, "String");
+  wrenInterpret(vm, "", libSource);
+
+  vm->stringClass = AS_CLASS(findGlobal(vm, "String"));
   NATIVE(vm->stringClass, "+ ", string_plus);
   NATIVE(vm->stringClass, "== ", string_eqeq);
   NATIVE(vm->stringClass, "!= ", string_bangeq);
@@ -1270,23 +1310,10 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->stringClass, "count", string_count);
   NATIVE(vm->stringClass, "endsWith ", string_endsWith);
   NATIVE(vm->stringClass, "indexOf ", string_indexOf);
+  NATIVE(vm->stringClass, "iterate ", string_iterate);
+  NATIVE(vm->stringClass, "iteratorValue ", string_iteratorValue);
   NATIVE(vm->stringClass, "startsWith ", string_startsWith);
   NATIVE(vm->stringClass, "toString", string_toString);
-
-  // When the base classes are defined, we allocate string objects for their
-  // names. However, we haven't created the string class itself yet, so those
-  // all have NULL class pointers. Now that we have a string class, go back and
-  // fix them up.
-  vm->objectClass->name->obj.classObj = vm->stringClass;
-  vm->classClass->name->obj.classObj = vm->stringClass;
-  vm->boolClass->name->obj.classObj = vm->stringClass;
-  vm->fiberClass->name->obj.classObj = vm->stringClass;
-  vm->fnClass->name->obj.classObj = vm->stringClass;
-  vm->nullClass->name->obj.classObj = vm->stringClass;
-  vm->numClass->name->obj.classObj = vm->stringClass;
-  vm->stringClass->name->obj.classObj = vm->stringClass;
-
-  wrenInterpret(vm, "", libSource);
 
   vm->listClass = AS_CLASS(findGlobal(vm, "List"));
   NATIVE(vm->listClass->obj.classObj, " instantiate", list_instantiate);
@@ -1309,4 +1336,17 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->rangeClass, "iterate ", range_iterate);
   NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
   NATIVE(vm->rangeClass, "toString", range_toString);
+
+  // While bootstrapping the core types and running the core library, a number
+  // string objects have been created, many of which were instantiated before
+  // stringClass was stored in the VM. Some of them *must* be created first:
+  // the ObjClass for string itself has a reference to the ObjString for its
+  // name.
+  //
+  // These all currently a NULL classObj pointer, so go back and assign them
+  // now that the string class is known.
+  for (Obj* obj = vm->first; obj != NULL; obj = obj->next)
+  {
+    if (obj->type == OBJ_STRING) obj->classObj = vm->stringClass;
+  }
 }

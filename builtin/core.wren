@@ -44,6 +44,8 @@ class Sequence {
 
 }
 
+class String is Sequence {}
+
 class List is Sequence {
   addAll(other) {
     for (element in other) {

@@ -56,6 +56,19 @@ Returns the index of the first byte matching `search` in the string or `-1` if
 
 It is a runtime error if `search` is not a string.
 
+### **iterate**(iterator), **iteratorValue**(iterator)
+
+Implements the [iterator protocol](../control-flow.html#the-iterator-protocol)
+for iterating over the *code points* in the string:
+
+    :::dart
+    var codePoints = []
+    for (c in "(ᵔᴥᵔ)") {
+      codePoints.add(c)
+    }
+
+    IO.print(codePoints) // ["(", "ᵔ", "ᴥ", "ᵔ", ")"].
+
 ### **startsWith**(prefix)
 
 Checks if the string starts with `prefix`.
