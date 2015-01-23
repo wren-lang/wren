@@ -10,14 +10,10 @@ Mac and you can rock a command line, it's just:
     $ make
     $ ./wren
 
-For Mac users, there is also an XCode project in the repo that you can use to
-hack on Wren. That's what I develop in. It builds fine from there but *may* not
-have the exact same build settings. The Makefile is the canonical way to
-compile it.
-
-For our Windows brethren, there's still a little work to be done. Ideally, the
-repo would include a Visual Studio solution for building Wren. I don't have a
-Windows machine, but if you do, I would be delighted to take a patch for this.
+For Mac users, there is also an XCode project under `project/xcode`. For
+Windows brethren, `project/msvc2013` contains a Visual Studio solution. Note
+that these may not have the exact same build settings as the makefile. The
+makefile is the "official" way to compile Wren.
 
 ## Interactive mode
 
