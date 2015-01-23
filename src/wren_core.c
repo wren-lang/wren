@@ -1078,13 +1078,7 @@ DEF_NATIVE(string_subscript)
     int index = validateIndex(vm, args, string->length, 1, "Subscript");
     if (index == -1) return PRIM_ERROR;
 
-    // The result is a one-character string.
-    // TODO: Handle UTF-8.
-    Value value = wrenNewUninitializedString(vm, 1);
-    ObjString* result = AS_STRING(value);
-    result->value[0] = AS_CSTRING(args[0])[index];
-    result->value[1] = '\0';
-    RETURN_VAL(value);
+    RETURN_VAL(wrenStringCodePointAt(vm, string, index));
   }
 
   if (!IS_RANGE(args[1]))
@@ -1092,6 +1086,7 @@ DEF_NATIVE(string_subscript)
     RETURN_ERROR("Subscript must be a number or a range.");
   }
 
+  // TODO: Handle UTF-8 here.
   int step;
   int count = string->length;
   int start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);

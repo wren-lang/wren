@@ -362,6 +362,30 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
   return string;
 }
 
+Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
+{
+  ASSERT(index >= 0, "Index out of bounds.");
+  ASSERT(index < string->length, "Index out of bounds.");
+
+  char first = string->value[index];
+
+  // The first byte's high bits tell us how many bytes are in the UTF-8
+  // sequence. If the byte starts with 10xxxxx, it's the middle of a UTF-8
+  // sequence, so return an empty string.
+  int numBytes;
+  if      ((first & 0xc0) == 0x80) numBytes = 0;
+  else if ((first & 0xf8) == 0xf0) numBytes = 4;
+  else if ((first & 0xf0) == 0xe0) numBytes = 3;
+  else if ((first & 0xe0) == 0xc0) numBytes = 2;
+  else numBytes = 1;
+
+  Value value = wrenNewUninitializedString(vm, numBytes);
+  ObjString* result = AS_STRING(value);
+  memcpy(result->value, string->value + index, numBytes);
+  result->value[numBytes] = '\0';
+  return value;
+}
+
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 {
   Upvalue* upvalue = ALLOCATE(vm, Upvalue);

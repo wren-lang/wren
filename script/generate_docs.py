@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import codecs
 import glob
 import fnmatch
 import os
@@ -12,10 +13,12 @@ from datetime import datetime
 
 import markdown
 
-with open("doc/site/template.html") as f:
+
+with codecs.open("doc/site/template.html", encoding="utf-8") as f:
   template = f.read()
 
-with open("doc/site/template-core.html") as f:
+
+with codecs.open("doc/site/template-core.html", encoding="utf-8") as f:
   template_core = f.read()
 
 
@@ -50,7 +53,7 @@ def format_file(path, skip_up_to_date):
 
   # Read the markdown file and preprocess it.
   contents = ""
-  with open(in_path, "r") as input:
+  with codecs.open(in_path, "r", encoding="utf-8") as input:
     # Read each line, preprocessing the special codes.
     for line in input:
       stripped = line.lstrip()
@@ -73,7 +76,7 @@ def format_file(path, skip_up_to_date):
         headertype = stripped[:index]
         header = stripped[index:].strip()
         anchor = header.lower().replace(' ', '-')
-        anchor = re.compile('\.|\?|!|:|/').sub('', anchor)
+        anchor = re.compile(r'\.|\?|!|:|/|\*').sub('', anchor)
 
         contents += indentation + headertype
         contents += '{1} <a href="#{0}" name="{0}" class="header-anchor">#</a>\n'.format(anchor, header)
@@ -100,7 +103,7 @@ def format_file(path, skip_up_to_date):
   # Write the html output.
   ensure_dir(os.path.dirname(out_path))
 
-  with open(out_path, 'w') as out:
+  with codecs.open(out_path, "w", encoding="utf-8") as out:
     out.write(page_template.format(**fields))
 
   print("converted " + path)
