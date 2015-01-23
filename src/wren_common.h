@@ -29,7 +29,12 @@
 //
 // Defaults to on.
 #ifndef WREN_COMPUTED_GOTO
-#define WREN_COMPUTED_GOTO 1
+  #ifdef _MSC_VER
+    // No computed gotos in Visual Studio.
+    #define WREN_COMPUTED_GOTO 0
+  #else
+    #define WREN_COMPUTED_GOTO 1
+  #endif
 #endif
 
 // If true, loads the "IO" class in the standard library.
@@ -125,6 +130,12 @@
 #define ASSERT(condition, message) do { } while (0)
 #define UNREACHABLE() do { } while (0)
 
+#endif
+
+// The Microsoft compiler does not sport the "inline" modifier when
+// compiling in plain-C
+#if defined( _MSC_VER ) && !defined(__cplusplus)
+  #define inline _inline
 #endif
 
 #endif
