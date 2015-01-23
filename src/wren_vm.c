@@ -74,9 +74,6 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   #if WREN_USE_LIB_IO
     wrenLoadIOLibrary(vm);
   #endif
-  #if WREN_USE_LIB_IO
-    wrenLoadMathLibrary(vm);
-  #endif
 
   return vm;
 }
