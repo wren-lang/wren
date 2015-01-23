@@ -27,7 +27,7 @@
 // Enabling this speeds up the main dispatch loop a bit, but requires compiler
 // support.
 //
-// Defaults to on.
+// Defaults to on on supported compilers.
 #ifndef WREN_COMPUTED_GOTO
   #ifdef _MSC_VER
     // No computed gotos in Visual Studio.
@@ -94,6 +94,23 @@
 // field index*.
 #define MAX_FIELDS 255
 
+// The Microsoft compiler does not support the "inline" modifier when compiling
+// as plain C.
+#if defined( _MSC_VER ) && !defined(__cplusplus)
+#define inline _inline
+#endif
+
+// This is used to clearly mark flexible-sized arrays that appear at the end of
+// some dynamically-allocated structs, known as the "struct hack".
+#if __STDC_VERSION__ >= 199901L
+// In C99, a flexible array member is just "[]".
+#define FLEXIBLE_ARRAY
+#else
+// Elsewhere, use a zero-sized array. It's technically undefined behavior, but
+// works reliably in most known compilers.
+#define FLEXIBLE_ARRAY 0
+#endif
+
 // Assertions are used to validate program invariants. They indicate things the
 // program expects to be true about its internal state during execution. If an
 // assertion fails, there is a bug in Wren.
@@ -104,38 +121,32 @@
 #include <stdio.h>
 
 #define ASSERT(condition, message) \
-  do \
-  { \
-    if (!(condition)) \
+    do \
     { \
-      fprintf(stderr, "[%s:%d] Assert failed in %s(): %s\n", \
-          __FILE__, __LINE__, __func__, message); \
-      abort(); \
+      if (!(condition)) \
+      { \
+        fprintf(stderr, "[%s:%d] Assert failed in %s(): %s\n", \
+            __FILE__, __LINE__, __func__, message); \
+        abort(); \
+      } \
     } \
-  } \
-  while(0)
+    while(0)
 
 // Assertion to indicate that the given point in the code should never be
 // reached.
 #define UNREACHABLE() \
-  do \
-  { \
-    fprintf(stderr, "This line should not be reached.\n"); \
-    abort(); \
-  } \
-  while (0)
+    do \
+    { \
+      fprintf(stderr, "This line should not be reached.\n"); \
+      abort(); \
+    } \
+    while (0)
 
 #else
 
 #define ASSERT(condition, message) do { } while (0)
 #define UNREACHABLE() do { } while (0)
 
-#endif
-
-// The Microsoft compiler does not sport the "inline" modifier when
-// compiling in plain-C
-#if defined( _MSC_VER ) && !defined(__cplusplus)
-  #define inline _inline
 #endif
 
 #endif

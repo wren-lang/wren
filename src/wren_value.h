@@ -112,7 +112,7 @@ typedef struct
   Obj obj;
   // Does not include the null terminator.
   int length;
-  char value[0];
+  char value[FLEXIBLE_ARRAY];
 } ObjString;
 
 // The dynamically allocated data structure for a variable that has been used
@@ -260,7 +260,7 @@ typedef struct
   ObjFn* fn;
 
   // The upvalues this function has closed over.
-  Upvalue* upvalues[0];
+  Upvalue* upvalues[FLEXIBLE_ARRAY];
 } ObjClosure;
 
 typedef enum
@@ -323,7 +323,7 @@ struct sObjClass
 typedef struct
 {
   Obj obj;
-  Value fields[0];
+  Value fields[FLEXIBLE_ARRAY];
 } ObjInstance;
 
 typedef struct

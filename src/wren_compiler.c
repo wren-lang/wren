@@ -2808,6 +2808,7 @@ void definition(Compiler* compiler)
     classDefinition(compiler);
     return;
   }
+  
   if (match(compiler, TOKEN_VAR)) {
     variableDefinition(compiler);
     return;
