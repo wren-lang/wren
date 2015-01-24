@@ -18,6 +18,17 @@ If it returns `false`, stops iterating and returns `false`. Otherwise, returns
     [1, 2, 3].all {|n| n > 2} // False.
     [1, 2, 3].all {|n| n < 4} // True.
 
+### **join**(sep)
+
+Returns a string representation of the list. The string representations of the
+elements in the list is concatenated with intervening occurrences of `sep`.
+
+It is a runtime error if `sep` is not a string.
+
+### **join**
+
+Calls `join` with the empty string as the separator.
+
 ### **map**(transformation)
 
 Creates a new list by applying `transformation` to each element in the

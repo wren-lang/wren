@@ -42,6 +42,20 @@ class Sequence {
     return result
   }
 
+  join { join("") }
+
+  join(sep) {
+    var first = true
+    var result = ""
+
+    for (element in this) {
+      if (!first) result = result + sep
+      first = false
+      result = result + element.toString
+    }
+
+    return result
+  }
 }
 
 class String is Sequence {}
@@ -54,15 +68,7 @@ class List is Sequence {
     return other
   }
 
-  toString {
-    var result = "["
-    for (i in 0...count) {
-      if (i > 0) result = result + ", "
-      result = result + this[i].toString
-    }
-    result = result + "]"
-    return result
-  }
+  toString { "[" + join(", ") + "]" }
 
   +(other) {
     var result = this[0..-1]
