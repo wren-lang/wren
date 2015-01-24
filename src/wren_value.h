@@ -246,7 +246,7 @@ typedef struct
   // The number of parameters this function expects. Used to ensure that .call
   // handles a mismatch between number of parameters and arguments. This will
   // only be set for fns, and not ObjFns that represent methods or scripts.
-  int numParams;
+  int arity;
   FnDebug* debug;
 } ObjFn;
 
@@ -571,7 +571,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 // function will take over ownership of [bytecode] and [sourceLines]. It will
 // copy [constants] into its own array.
 ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
-                       int numUpvalues, int numParams,
+                       int numUpvalues, int arity,
                        uint8_t* bytecode, int bytecodeLength,
                        ObjString* debugSourcePath,
                        const char* debugName, int debugNameLength,

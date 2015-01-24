@@ -97,11 +97,11 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
 // global class named [className] to bind the method to. If not found, it will
 // be created automatically.
 //
-// Defines a method on that class named [methodName] accepting [numParams]
+// Defines a method on that class named [methodName] accepting [arity]
 // parameters. If a method already exists with that name and arity, it will be
 // replaced. When invoked, the method will call [method].
 void wrenDefineMethod(WrenVM* vm, const char* className,
-                      const char* methodName, int numParams,
+                      const char* methodName, int arity,
                       WrenForeignMethodFn method);
 
 // Defines a static foreign method implemented by the host application. Looks
@@ -109,10 +109,10 @@ void wrenDefineMethod(WrenVM* vm, const char* className,
 // will be created automatically.
 //
 // Defines a static method on that class named [methodName] accepting
-// [numParams] parameters. If a method already exists with that name and arity,
+// [arity] parameters. If a method already exists with that name and arity,
 // it will be replaced. When invoked, the method will call [method].
 void wrenDefineStaticMethod(WrenVM* vm, const char* className,
-                            const char* methodName, int numParams,
+                            const char* methodName, int arity,
                             WrenForeignMethodFn method);
 
 // The following functions read one of the arguments passed to a foreign call.

@@ -18,6 +18,14 @@ you create a "bare" function when you don't want to immediately pass it as a
 
 It is a runtime error if `block` is not a function.
 
+### **arity**
+
+The number of arguments the function requires.
+
+    :::dart
+    IO.print(new Fn {}.arity)             // 0.
+    IO.print(new Fn {|a, b, c| a }.arity) // 3.
+
 ### **call**(args...)
 
 **TODO**

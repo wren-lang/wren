@@ -115,8 +115,8 @@ Here we're passing a function to `greet` that takes two parameters, `first` and
       }
     }
 
-It's an error to call a function with fewer or more arguments than its
-parameter list expects.
+It's an error to call a function with fewer arguments than its parameter list
+expects. If you pass too *many* arguments, the extras are ignored.
 
 ## Returning values
 

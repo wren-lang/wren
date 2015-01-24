@@ -489,23 +489,6 @@ DEF_NATIVE(fiber_yield1)
   return PRIM_RUN_FIBER;
 }
 
-static PrimitiveResult callFunction(WrenVM* vm, Value* args, int numArgs)
-{
-  ObjFn* fn;
-  if (IS_CLOSURE(args[0]))
-  {
-    fn = AS_CLOSURE(args[0])->fn;
-  }
-  else
-  {
-    fn = AS_FN(args[0]);
-  }
-
-  if (numArgs < fn->numParams) RETURN_ERROR("Function expects more arguments.");
-
-  return PRIM_CALL;
-}
-
 DEF_NATIVE(fn_instantiate)
 {
   // Return the Fn class itself. When we then call "new" on it, it will
@@ -519,6 +502,28 @@ DEF_NATIVE(fn_new)
 
   // The block argument is already a function, so just return it.
   RETURN_VAL(args[1]);
+}
+
+DEF_NATIVE(fn_arity)
+{
+  RETURN_NUM(AS_FN(args[0])->arity);
+}
+
+static PrimitiveResult callFunction(WrenVM* vm, Value* args, int numArgs)
+{
+  ObjFn* fn;
+  if (IS_CLOSURE(args[0]))
+  {
+    fn = AS_CLOSURE(args[0])->fn;
+  }
+  else
+  {
+    fn = AS_FN(args[0]);
+  }
+
+  if (numArgs < fn->arity) RETURN_ERROR("Function expects more arguments.");
+
+  return PRIM_CALL;
 }
 
 DEF_NATIVE(fn_call0) { return callFunction(vm, args, 0); }
@@ -1245,6 +1250,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->fnClass->obj.classObj, " instantiate", fn_instantiate);
   NATIVE(vm->fnClass->obj.classObj, "new ", fn_new);
 
+  NATIVE(vm->fnClass, "arity", fn_arity);
   NATIVE(vm->fnClass, "call", fn_call0);
   NATIVE(vm->fnClass, "call ", fn_call1);
   NATIVE(vm->fnClass, "call  ", fn_call2);
@@ -1262,7 +1268,6 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->fnClass, "call              ", fn_call14);
   NATIVE(vm->fnClass, "call               ", fn_call15);
   NATIVE(vm->fnClass, "call                ", fn_call16);
-  // TODO: "arity" getter.
   NATIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = defineClass(vm, "Null");
