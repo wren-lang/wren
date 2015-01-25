@@ -10,7 +10,7 @@ character array modified in place.
 ## Booleans
 
 A boolean value represents truth or falsehood. There are two boolean literals,
-`true` and `false`. Their class is `Bool`.
+`true` and `false`. Their class is [Bool](core/bool.html).
 
 ## Numbers
 
@@ -26,12 +26,12 @@ from other languages:
     1.0
     -12.34
 
-Numbers are instances of the `Num` class.
+Numbers are instances of the [Num](core/num.html) class.
 
 ## Strings
 
-Strings are chunks of text stored as UTF-8. Their class is `String`. String
-literals are surrounded in double quotes:
+Strings are chunks of text stored as UTF-8. Their class is
+[String](core/string.html). String literals are surrounded in double quotes:
 
     :::dart
     "hi there"
@@ -78,9 +78,12 @@ example:
     var slice = list[1..3]
     IO.print(slice) // ["b", "c", "d"]
 
+Their class is [Range](core/range.html)
+
 ## Null
 
 Wren has a special value `null`, which is the only instance of the class
-`Null`. (Note the difference in case.) It functions a bit like `void` in some
-languages: it indicates the absence of a value. If you call a method that
-doesn't return anything and get its returned value, you get `null` back.
+[Null](core/null.html). (Note the difference in case.) It functions a bit like
+`void` in some languages: it indicates the absence of a value. If you call a
+method that doesn't return anything and get its returned value, you get `null`
+back.
