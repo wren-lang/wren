@@ -89,6 +89,7 @@ typedef enum
   TOKEN_STATIC_FIELD,
   TOKEN_NAME,
   TOKEN_NUMBER,
+  TOKEN_HEXADECIMAL,
   TOKEN_STRING,
 
   TOKEN_LINE,
@@ -408,6 +409,12 @@ static bool isDigit(char c)
   return c >= '0' && c <= '9';
 }
 
+// Returns true if [c] is a hexidecimal digit.
+static bool isHexDigit(char c)
+{
+  return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
 // Returns the current character the parser is sitting on.
 static char peekChar(Parser* parser)
 {
@@ -514,18 +521,27 @@ static bool isKeyword(Parser* parser, const char* keyword)
 // Finishes lexing a number literal.
 static void readNumber(Parser* parser)
 {
-  // TODO: Hex, scientific, etc.
-  while (isDigit(peekChar(parser))) nextChar(parser);
-
-  // See if it has a floating point. Make sure there is a digit after the "."
-  // so we don't get confused by method calls on number literals.
-  if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
+  if (peekChar(parser) == 'x') // Match a hexadecimal number literal.
   {
     nextChar(parser);
-    while (isDigit(peekChar(parser))) nextChar(parser);
-  }
 
-  makeToken(parser, TOKEN_NUMBER);
+    while (isHexDigit(peekChar(parser))) nextChar(parser);
+
+    makeToken(parser, TOKEN_HEXADECIMAL);
+  } else {
+    // TODO: scientific, etc.
+    while (isDigit(peekChar(parser))) nextChar(parser);
+
+    // See if it has a floating point. Make sure there is a digit after the "."
+    // so we don't get confused by method calls on number literals.
+    if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
+    {
+      nextChar(parser);
+      while (isDigit(peekChar(parser))) nextChar(parser);
+    }
+
+    makeToken(parser, TOKEN_NUMBER);
+  }
 }
 
 // Finishes lexing an identifier. Handles reserved words.
@@ -1846,6 +1862,14 @@ static void null(Compiler* compiler, bool allowAssignment)
   emit(compiler, CODE_NULL);
 }
 
+static void emitNumericConstant(Compiler* compiler, double value)
+{
+  int constant = addConstant(compiler, NUM_VAL(value));
+
+  // Compile the code to load the constant.
+  emitShortArg(compiler, CODE_CONSTANT, constant);
+}
+
 static void number(Compiler* compiler, bool allowAssignment)
 {
   Token* token = &compiler->parser->previous;
@@ -1859,11 +1883,23 @@ static void number(Compiler* compiler, bool allowAssignment)
     value = 0;
   }
 
-  // Define a constant for the literal.
-  int constant = addConstant(compiler, NUM_VAL(value));
+  emitNumericConstant(compiler, value);
+}
 
-  // Compile the code to load the constant.
-  emitShortArg(compiler, CODE_CONSTANT, constant);
+static void hexadecimal(Compiler* compiler, bool allowAssignment)
+{
+  Token* token = &compiler->parser->previous;
+  char* end;
+
+  double value = strtol(token->start, &end, 16);
+  // TODO: Check errno == ERANGE here.
+  if (end == token->start)
+  {
+    error(compiler, "Invalid number literal.");
+    value = 0;
+  }
+
+  emitNumericConstant(compiler, value);
 }
 
 static void string(Compiler* compiler, bool allowAssignment)
@@ -2221,6 +2257,7 @@ GrammarRule rules[] =
   /* TOKEN_STATIC_FIELD  */ PREFIX(staticField),
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(number),
+  /* TOKEN_HEXADECIMAL   */ PREFIX(hexadecimal),
   /* TOKEN_STRING        */ PREFIX(string),
   /* TOKEN_LINE          */ UNUSED,
   /* TOKEN_ERROR         */ UNUSED,
@@ -2808,7 +2845,7 @@ void definition(Compiler* compiler)
     classDefinition(compiler);
     return;
   }
-  
+
   if (match(compiler, TOKEN_VAR)) {
     variableDefinition(compiler);
     return;
