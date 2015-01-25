@@ -188,6 +188,7 @@ struct WrenVM
   ObjClass* fiberClass;
   ObjClass* fnClass;
   ObjClass* listClass;
+  ObjClass* mapClass;
   ObjClass* nullClass;
   ObjClass* numClass;
   ObjClass* objectClass;

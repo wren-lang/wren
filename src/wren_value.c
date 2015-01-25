@@ -6,14 +6,26 @@
 #include "wren_vm.h"
 
 // TODO: Tune these.
-// The initial (and minimum) capacity of a non-empty list object.
-#define LIST_MIN_CAPACITY (16)
+// The initial (and minimum) capacity of a non-empty list or map object.
+#define MIN_CAPACITY 16
 
-// The rate at which a list's capacity grows when the size exceeds the current
-// capacity. The new capacity will be determined by *multiplying* the old
-// capacity by this. Growing geometrically is necessary to ensure that adding
-// to a list has O(1) amortized complexity.
-#define LIST_GROW_FACTOR (2)
+// The rate at which a collection's capacity grows when the size exceeds the
+// current capacity. The new capacity will be determined by *multiplying* the
+// old capacity by this. Growing geometrically is necessary to ensure that
+// adding to a collection has O(1) amortized complexity.
+#define GROW_FACTOR 2
+
+// The maximum percentage of map entries that can be filled before the map is
+// grown. A lower load takes more memory but reduces collisions which makes
+// lookup faster.
+#define MAP_LOAD_PERCENT 75
+
+// Hash codes for singleton values.
+// TODO: Tune these.
+#define HASH_FALSE 1
+#define HASH_NAN   2
+#define HASH_NULL  3
+#define HASH_TRUE  4
 
 DEFINE_BUFFER(Value, Value);
 DEFINE_BUFFER(Method, Method);
@@ -240,15 +252,15 @@ ObjList* wrenNewList(WrenVM* vm, int numElements)
   return list;
 }
 
-// Grows [list] if needed to ensure it can hold [count] elements.
-static void ensureListCapacity(WrenVM* vm, ObjList* list, int count)
+// Grows [list] if needed to ensure it can hold one more element.
+static void ensureListCapacity(WrenVM* vm, ObjList* list)
 {
-  if (list->capacity >= count) return;
+  if (list->capacity >= list->count + 1) return;
 
-  int capacity = list->capacity * LIST_GROW_FACTOR;
-  if (capacity < LIST_MIN_CAPACITY) capacity = LIST_MIN_CAPACITY;
+  int capacity = list->capacity * GROW_FACTOR;
+  if (capacity < MIN_CAPACITY) capacity = MIN_CAPACITY;
 
-  list->capacity *= 2;
+  list->capacity = capacity;
   list->elements = (Value*)wrenReallocate(vm, list->elements,
       list->capacity * sizeof(Value), capacity * sizeof(Value));
   // TODO: Handle allocation failure.
@@ -259,7 +271,7 @@ void wrenListAdd(WrenVM* vm, ObjList* list, Value value)
 {
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
-  ensureListCapacity(vm, list, list->count + 1);
+  ensureListCapacity(vm, list);
 
   if (IS_OBJ(value)) wrenPopRoot(vm);
 
@@ -270,7 +282,7 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
 {
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
-  ensureListCapacity(vm, list, list->count + 1);
+  ensureListCapacity(vm, list);
 
   if (IS_OBJ(value)) wrenPopRoot(vm);
 
@@ -297,18 +309,217 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
   }
 
   // If we have too much excess capacity, shrink it.
-  if (list->capacity / LIST_GROW_FACTOR >= list->count)
+  if (list->capacity / GROW_FACTOR >= list->count)
   {
     list->elements = (Value*)wrenReallocate(vm, list->elements,
         sizeof(Value) * list->capacity,
-        sizeof(Value) * (list->capacity / LIST_GROW_FACTOR));
-    list->capacity /= LIST_GROW_FACTOR;
+        sizeof(Value) * (list->capacity / GROW_FACTOR));
+    list->capacity /= GROW_FACTOR;
   }
 
   if (IS_OBJ(removed)) wrenPopRoot(vm);
 
   list->count--;
   return removed;
+}
+
+ObjMap* wrenNewMap(WrenVM* vm)
+{
+  ObjMap* map = ALLOCATE(vm, ObjMap);
+  initObj(vm, &map->obj, OBJ_MAP, vm->mapClass);
+  map->capacity = 0;
+  map->count = 0;
+  map->entries = NULL;
+  return map;
+}
+
+// Generates a hash code for [num].
+static uint32_t hashNumber(double num)
+{
+  // Hash the raw bits of the value.
+  DoubleBits data;
+  data.num = num;
+  return data.bits32[0] ^ data.bits32[1];
+}
+
+// Generates a hash code for [object].
+static uint32_t hashObject(Obj* object)
+{
+  switch (object->type)
+  {
+    case OBJ_CLASS:
+      // Classes just use their name.
+      return hashObject((Obj*)((ObjClass*)object)->name);
+
+    case OBJ_RANGE:
+    {
+      ObjRange* range = (ObjRange*)object;
+      return hashNumber(range->from) ^ hashNumber(range->to);
+    }
+
+    case OBJ_STRING:
+    {
+      ObjString* string = (ObjString*)object;
+
+      // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
+      uint32_t hash = 2166136261;
+
+      // We want the contents of the string to affect the hash, but we also
+      // want to ensure it runs in constant time. We also don't want to bias
+      // towards the prefix or suffix of the string. So sample up to eight
+      // characters spread throughout the string.
+      // TODO: Tune this.
+      uint32_t step = 1 + 7 / string->length;
+      for (uint32_t i = 0; i < string->length; i += step)
+      {
+        hash ^= string->value[i];
+        hash *= 16777619;
+      }
+
+      return hash;
+    }
+
+    default:
+      ASSERT(false, "Only immutable objects can be hashed.");
+      return 0;
+  }
+}
+
+// Generates a hash code for [value], which must be one of the built-in
+// immutable types: null, bool, class, num, range, or string.
+static uint32_t hashValue(Value value)
+{
+  // TODO: We'll probably want to randomize this at some point.
+
+#if WREN_NAN_TAGGING
+  if (IS_NUM(value)) return hashNumber(AS_NUM(value));
+  if (IS_OBJ(value)) return hashObject(AS_OBJ(value));
+
+  switch (GET_TAG(value))
+  {
+    case TAG_FALSE: return HASH_FALSE;
+    case TAG_NAN: return HASH_NAN;
+    case TAG_NULL: return HASH_NULL;
+    case TAG_TRUE: return HASH_TRUE;
+  }
+#else
+  switch (value.type)
+  {
+    case VAL_FALSE: return HASH_FALSE;
+    case VAL_NULL: return HASH_NULL;
+    case VAL_NUM: return hashNumber(AS_NUM(value));
+    case VAL_TRUE: return HASH_TRUE;
+    case VAL_OBJ: return hashObject(AS_OBJ(value));
+  }
+#endif
+  UNREACHABLE();
+  return 0;
+}
+
+// Inserts [key] and [value] in the array of [entries] with the given
+// [capacity].
+//
+// Returns `true` if this is the first time [key] was added to the map.
+static bool addEntry(MapEntry* entries, uint32_t capacity,
+                     Value key, Value value)
+{
+  // Figure out where to insert it in the table. Use open addressing and
+  // basic linear probing.
+  uint32_t index = hashValue(key) % capacity;
+
+  // We don't worry about an infinite loop here because ensureMapCapacity()
+  // ensures there are open spaces in the table.
+  while (true)
+  {
+    MapEntry* entry = &entries[index];
+
+    // If we found an empty slot, the key is not in the table.
+    if (IS_UNDEFINED(entry->key))
+    {
+      entry->key = key;
+      entry->value = value;
+      return true;
+    }
+
+    // If the key already exists, just replace the value.
+    if (wrenValuesEqual(entry->key, key))
+    {
+      entry->value = value;
+      return false;
+    }
+
+    // Try the next slot.
+    index = (index + 1) % capacity;
+  }
+}
+
+// Ensures there is enough capacity in the entry array to store at least one
+// more entry.
+static void ensureMapCapacity(WrenVM* vm, ObjMap* map)
+{
+  // Only resize if we're too full.
+  if (map->count + 1 <= map->capacity * MAP_LOAD_PERCENT / 100) return;
+
+  // Figure out the new hash table size.
+  uint32_t newCapacity = map->capacity * GROW_FACTOR;
+  if (newCapacity < MIN_CAPACITY) newCapacity = MIN_CAPACITY;
+
+  // Create the new empty hash table.
+  MapEntry* newEntries = ALLOCATE_ARRAY(vm, MapEntry, newCapacity);
+  for (uint32_t i = 0; i < newCapacity; i++)
+  {
+    newEntries[i].key = UNDEFINED_VAL;
+  }
+
+  // Re-add the existing entries.
+  if (map->capacity > 0)
+  {
+    for (uint32_t i = 0; i < map->capacity; i++)
+    {
+      MapEntry* entry = &map->entries[i];
+      if (IS_UNDEFINED(entry->key)) continue;
+
+      addEntry(newEntries, newCapacity, entry->key, entry->value);
+    }
+  }
+
+  // Replace the array.
+  wrenReallocate(vm, map->entries, 0, 0);
+  map->entries = newEntries;
+  map->capacity = newCapacity;
+}
+
+Value wrenMapGet(ObjMap* map, Value key)
+{
+  // Figure out where to insert it in the table. Use open addressing and
+  // basic linear probing.
+  uint32_t index = hashValue(key) % map->capacity;
+
+  // We don't worry about an infinite loop here because ensureMapCapacity()
+  // ensures there are empty (i.e. UNDEFINED) spaces in the table.
+  while (true)
+  {
+    MapEntry* entry = &map->entries[index];
+
+    // If we found an empty slot, the key is not in the table.
+    if (IS_UNDEFINED(entry->key)) return NULL_VAL;
+
+    // If the key matches, we found it.
+    if (wrenValuesEqual(entry->key, key)) return entry->value;
+
+    // Try the next slot.
+    index = (index + 1) % map->capacity;
+  }
+}
+
+void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value)
+{
+  ensureMapCapacity(vm, map);
+  if (addEntry(map->entries, map->capacity, key, value))
+  {
+    // A new key was added.
+    map->count++;
+  }
 }
 
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
@@ -496,10 +707,26 @@ static void markList(WrenVM* vm, ObjList* list)
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjList);
-  if (list->elements != NULL)
+  vm->bytesAllocated += sizeof(Value) * list->capacity;
+}
+
+static void markMap(WrenVM* vm, ObjMap* map)
+{
+  if (setMarkedFlag(&map->obj)) return;
+
+  // Mark the entries.
+  for (int i = 0; i < map->capacity; i++)
   {
-    vm->bytesAllocated += sizeof(Value) * list->capacity;
+    MapEntry* entry = &map->entries[i];
+    if (IS_UNDEFINED(entry->key)) continue;
+
+    wrenMarkValue(vm, entry->key);
+    wrenMarkValue(vm, entry->value);
   }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjMap);
+  vm->bytesAllocated += sizeof(MapEntry) * map->capacity;
 }
 
 static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
@@ -590,6 +817,7 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
     case OBJ_FN:       markFn(      vm, (ObjFn*)      obj); break;
     case OBJ_INSTANCE: markInstance(vm, (ObjInstance*)obj); break;
     case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
+    case OBJ_MAP:      markMap(     vm, (ObjMap*)     obj); break;
     case OBJ_RANGE:    setMarkedFlag(obj); break;
     case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
     case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
@@ -635,6 +863,10 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       wrenReallocate(vm, ((ObjList*)obj)->elements, 0, 0);
       break;
 
+    case OBJ_MAP:
+      wrenReallocate(vm, ((ObjMap*)obj)->entries, 0, 0);
+      break;
+
     case OBJ_STRING:
     case OBJ_CLOSURE:
     case OBJ_FIBER:
@@ -652,15 +884,44 @@ ObjClass* wrenGetClass(WrenVM* vm, Value value)
   return wrenGetClassInline(vm, value);
 }
 
-static void printList(ObjList* list)
+bool wrenValuesEqual(Value a, Value b)
 {
-  printf("[");
-  for (int i = 0; i < list->count; i++)
+  if (wrenValuesSame(a, b)) return true;
+
+  // If we get here, it's only possible for two heap-allocated immutable objects
+  // to be equal.
+  if (!IS_OBJ(a) || !IS_OBJ(b)) return false;
+
+  Obj* aObj = AS_OBJ(a);
+  Obj* bObj = AS_OBJ(b);
+
+  // Must be the same type.
+  if (aObj->type != bObj->type) return false;
+
+  switch (aObj->type)
   {
-    if (i > 0) printf(", ");
-    wrenPrintValue(list->elements[i]);
+    case OBJ_RANGE:
+    {
+      ObjRange* aRange = (ObjRange*)aObj;
+      ObjRange* bRange = (ObjRange*)bObj;
+      return aRange->from == bRange->from &&
+             aRange->to == bRange->to &&
+             aRange->isInclusive == bRange->isInclusive;
+    }
+
+    case OBJ_STRING:
+    {
+      ObjString* aString = (ObjString*)aObj;
+      ObjString* bString = (ObjString*)bObj;
+      return aString->length == bString->length &&
+             strncmp(aString->value, bString->value, aString->length) == 0;
+    }
+
+    default:
+      // All other types are only equal if they are same, which they aren't if
+      // we get here.
+      return false;
   }
-  printf("]");
 }
 
 static void printObject(Obj* obj)
@@ -672,7 +933,8 @@ static void printObject(Obj* obj)
     case OBJ_FIBER: printf("[fiber %p]", obj); break;
     case OBJ_FN: printf("[fn %p]", obj); break;
     case OBJ_INSTANCE: printf("[instance %p]", obj); break;
-    case OBJ_LIST: printList((ObjList*)obj); break;
+    case OBJ_LIST: printf("[list %p]", obj); break;
+    case OBJ_MAP: printf("[map %p]", obj); break;
     case OBJ_RANGE: printf("[fn %p]", obj); break;
     case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
     case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;

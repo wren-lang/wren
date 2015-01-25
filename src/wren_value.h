@@ -24,10 +24,14 @@
 // Wren implementation calls these "Obj", or objects, though to a user, all
 // values are objects.
 //
-// There is also a special singleton value "undefined". It is used to identify
-// globals that have been implicitly declared by use in a forward reference but
-// not yet explicitly declared. They only exist during compilation and do not
-// appear at runtime.
+// There is also a special singleton value "undefined". It is used internally
+// but never appears as a real value to a user. It has two uses:
+//
+// - It is used to identify globals that have been implicitly declared by use
+//   in a forward reference but not yet explicitly declared. These only exist
+//   during compilation and do not appear at runtime.
+//
+// - It is used to represent unused map entries in an ObjMap.
 //
 // There are two supported Value representations. The main one uses a technique
 // called "NaN tagging" (explained in detail below) to store a number, any of
@@ -52,6 +56,7 @@ typedef enum {
   OBJ_FN,
   OBJ_INSTANCE,
   OBJ_LIST,
+  OBJ_MAP,
   OBJ_RANGE,
   OBJ_STRING,
   OBJ_UPVALUE
@@ -330,6 +335,8 @@ typedef struct
 {
   Obj obj;
 
+  // TODO: Make these uint32_t to match ObjMap, or vice versa.
+  
   // The number of elements allocated.
   int capacity;
 
@@ -339,6 +346,30 @@ typedef struct
   // Pointer to a contiguous array of [capacity] elements.
   Value* elements;
 } ObjList;
+
+typedef struct
+{
+  // The entry's key, or UNDEFINED if the entry is not in use.
+  Value key;
+
+  // The value associated with the key.
+  Value value;
+} MapEntry;
+
+// A hash table mapping keys to values.
+typedef struct
+{
+  Obj obj;
+
+  // The number of entries allocated.
+  uint32_t capacity;
+
+  // The number of entries in the map.
+  uint32_t count;
+
+  // Pointer to a contiguous array of [capacity] entries.
+  MapEntry* entries;
+} ObjMap;
 
 typedef struct
 {
@@ -372,6 +403,9 @@ typedef struct
 
 // Value -> ObjList*.
 #define AS_LIST(value) ((ObjList*)AS_OBJ(value))
+
+// Value -> ObjMap*.
+#define AS_MAP(value) ((ObjMap*)AS_OBJ(value))
 
 // Value -> double.
 #define AS_NUM(value) (wrenValueToNum(value))
@@ -542,6 +576,14 @@ typedef struct
 
 #endif
 
+// A union to let us reinterpret a double as raw bits and back.
+typedef union
+{
+  uint64_t bits64;
+  uint32_t bits32[2];
+  double num;
+} DoubleBits;
+
 // Creates a new "raw" class. It has no metaclass or superclass whatsoever.
 // This is only used for bootstrapping the initial Object and Class classes,
 // which are a little special.
@@ -593,6 +635,16 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index);
 // Removes and returns the item at [index] from [list].
 Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
 
+// Creates a new empty map.
+ObjMap* wrenNewMap(WrenVM* vm);
+
+// Returns the value in [map] associated with [key] or `NULL_VALUE` if it wasn't
+// found.
+Value wrenMapGet(ObjMap* map, Value key);
+
+// Associates [key] with [value] in [map].
+void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value);
+
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 
@@ -637,9 +689,9 @@ void wrenFreeObj(WrenVM* vm, Obj* obj);
 // benchmarks.
 ObjClass* wrenGetClass(WrenVM* vm, Value value);
 
-// Returns true if [a] and [b] are strictly equal using built-in equality
-// semantics. This is identity for object values, and value equality for others.
-static inline bool wrenValuesEqual(Value a, Value b)
+// Returns true if [a] and [b] are strictly the same value. This is identity
+// for object values, and value equality for unboxed values.
+static inline bool wrenValuesSame(Value a, Value b)
 {
 #if WREN_NAN_TAGGING
   // Value types have unique bit representations and we compare object types
@@ -651,6 +703,11 @@ static inline bool wrenValuesEqual(Value a, Value b)
   return a.obj == b.obj;
 #endif
 }
+
+// Returns true if [a] and [b] are equivalent. Immutable values (null, bools,
+// numbers, ranges, and strings) are equal if they have the same data. All
+// other values are equal if they are identical objects.
+bool wrenValuesEqual(Value a, Value b);
 
 // TODO: Need to decide if this is for user output of values, or for debug
 // tracing.
@@ -696,15 +753,8 @@ static inline Value wrenObjectToValue(Obj* obj)
 static inline double wrenValueToNum(Value value)
 {
 #if WREN_NAN_TAGGING
-  // Use a union to let us reinterpret the uint64_t bits back to the double
-  // value it actually stores.
-  union
-  {
-    uint64_t bits;
-    double num;
-  } data;
-
-  data.bits = value;
+  DoubleBits data;
+  data.bits64 = value;
   return data.num;
 #else
   return value.num;
@@ -715,16 +765,9 @@ static inline double wrenValueToNum(Value value)
 static inline Value wrenNumToValue(double num)
 {
 #if WREN_NAN_TAGGING
-  // Use a union to let us reinterpret the bits making up the double as an
-  // opaque blob of bits.
-  union
-  {
-    uint64_t bits;
-    double num;
-  } data;
-
+  DoubleBits data;
   data.num = num;
-  return data.bits;
+  return data.bits64;
 #else
   return (Value){ VAL_NUM, n, NULL };
 #endif

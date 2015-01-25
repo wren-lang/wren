@@ -52,6 +52,7 @@ DECLARE_BUFFER(Byte, uint8_t);
 DECLARE_BUFFER(Int, int);
 DECLARE_BUFFER(String, char*);
 
+// TODO: Change this to use a map.
 typedef StringBuffer SymbolTable;
 
 // Initializes the symbol table.

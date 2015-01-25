@@ -131,6 +131,11 @@ static const char* libSource =
 "  }\n"
 "}\n"
 "\n"
+"class Map {\n"
+"  // TODO: Implement this.\n"
+"  toString { \"{}\" }\n"
+"}\n"
+"\n"
 "class Range is Sequence {}\n";
 
 // Validates that the given argument in [args] is a function. Returns true if
@@ -676,6 +681,29 @@ DEF_NATIVE(list_subscriptSetter)
   RETURN_VAL(args[2]);
 }
 
+DEF_NATIVE(map_instantiate)
+{
+  RETURN_OBJ(wrenNewMap(vm));
+}
+
+DEF_NATIVE(map_subscript)
+{
+  // TODO: Validate key type.
+  RETURN_VAL(wrenMapGet(AS_MAP(args[0]), args[1]));
+}
+
+DEF_NATIVE(map_subscriptSetter)
+{
+  // TODO: Validate key type.
+  wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
+  RETURN_VAL(args[2]);
+}
+
+DEF_NATIVE(map_count)
+{
+  RETURN_NUM(AS_MAP(args[0])->count);
+}
+
 DEF_NATIVE(null_not)
 {
   RETURN_VAL(TRUE_VAL);
@@ -876,12 +904,12 @@ DEF_NATIVE(object_not)
 
 DEF_NATIVE(object_eqeq)
 {
-  RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
+  RETURN_BOOL(wrenValuesSame(args[0], args[1]));
 }
 
 DEF_NATIVE(object_bangeq)
 {
-  RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
+  RETURN_BOOL(!wrenValuesSame(args[0], args[1]));
 }
 
 DEF_NATIVE(object_new)
@@ -1338,7 +1366,15 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "iteratorValue ", list_iteratorValue);
   NATIVE(vm->listClass, "removeAt ", list_removeAt);
 
+  vm->mapClass = AS_CLASS(findGlobal(vm, "Map"));
+  NATIVE(vm->mapClass->obj.classObj, " instantiate", map_instantiate);
+  NATIVE(vm->mapClass, "[ ]", map_subscript);
+  NATIVE(vm->mapClass, "[ ]=", map_subscriptSetter);
+  NATIVE(vm->mapClass, "count", map_count);
+  // TODO: More map methods.
+
   vm->rangeClass = AS_CLASS(findGlobal(vm, "Range"));
+  // TODO: == operator.
   NATIVE(vm->rangeClass, "from", range_from);
   NATIVE(vm->rangeClass, "to", range_to);
   NATIVE(vm->rangeClass, "min", range_min);
