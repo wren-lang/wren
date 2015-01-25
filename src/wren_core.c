@@ -132,8 +132,39 @@ static const char* libSource =
 "}\n"
 "\n"
 "class Map {\n"
-"  // TODO: Implement this.\n"
-"  toString { \"{}\" }\n"
+"  keys { new MapKeySequence(this) }\n"
+"  values { new MapValueSequence(this) }\n"
+"\n"
+"  toString {\n"
+"    var first = true\n"
+"    var result = \"{\"\n"
+"\n"
+"    for (key in keys) {\n"
+"      if (!first) result = result + \", \"\n"
+"      first = false\n"
+"      result = result + key.toString + \": \" + this[key].toString\n"
+"    }\n"
+"\n"
+"    return result + \"}\"\n"
+"  }\n"
+"}\n"
+"\n"
+"class MapKeySequence is Sequence {\n"
+"  new(map) {\n"
+"    _map = map\n"
+"  }\n"
+"\n"
+"  iterate(n) { _map.iterate_(n) }\n"
+"  iteratorValue(iterator) { _map.keyIteratorValue_(iterator) }\n"
+"}\n"
+"\n"
+"class MapValueSequence is Sequence {\n"
+"  new(map) {\n"
+"    _map = map\n"
+"  }\n"
+"\n"
+"  iterate(n) { _map.iterate_(n) }\n"
+"  iteratorValue(iterator) { _map.valueIteratorValue_(iterator) }\n"
 "}\n"
 "\n"
 "class Range is Sequence {}\n";
@@ -712,6 +743,62 @@ DEF_NATIVE(map_clear)
 DEF_NATIVE(map_count)
 {
   RETURN_NUM(AS_MAP(args[0])->count);
+}
+
+DEF_NATIVE(map_iterate)
+{
+  ObjMap* map = AS_MAP(args[0]);
+
+  if (map->count == 0) RETURN_FALSE;
+
+  // If we're starting the iteration, return the first entry.
+  int index = -1;
+  if (!IS_NULL(args[1]))
+  {
+    if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
+    index = (int)AS_NUM(args[1]);
+
+    if (index < 0 || index >= map->capacity) RETURN_FALSE;
+  }
+
+  // Find the next used entry, if any.
+  for (index++; index < map->capacity; index++)
+  {
+    if (!IS_UNDEFINED(map->entries[index].key)) RETURN_NUM(index);
+  }
+
+  // If we get here, walked all of the entries.
+  RETURN_FALSE;
+}
+
+DEF_NATIVE(map_keyIteratorValue)
+{
+  ObjMap* map = AS_MAP(args[0]);
+  int index = validateIndex(vm, args, map->capacity, 1, "Iterator");
+  if (index == -1) return PRIM_ERROR;
+
+  MapEntry* entry = &map->entries[index];
+  if (IS_UNDEFINED(entry->key))
+  {
+    RETURN_ERROR("Invalid map iterator value.");
+  }
+
+  RETURN_VAL(entry->key);
+}
+
+DEF_NATIVE(map_valueIteratorValue)
+{
+  ObjMap* map = AS_MAP(args[0]);
+  int index = validateIndex(vm, args, map->capacity, 1, "Iterator");
+  if (index == -1) return PRIM_ERROR;
+
+  MapEntry* entry = &map->entries[index];
+  if (IS_UNDEFINED(entry->key))
+  {
+    RETURN_ERROR("Invalid map iterator value.");
+  }
+
+  RETURN_VAL(entry->value);
 }
 
 DEF_NATIVE(null_not)
@@ -1382,6 +1469,9 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->mapClass, "[ ]=", map_subscriptSetter);
   NATIVE(vm->mapClass, "clear", map_clear);
   NATIVE(vm->mapClass, "count", map_count);
+  NATIVE(vm->mapClass, "iterate_ ", map_iterate);
+  NATIVE(vm->mapClass, "keyIteratorValue_ ", map_keyIteratorValue);
+  NATIVE(vm->mapClass, "valueIteratorValue_ ", map_valueIteratorValue);
   // TODO: More map methods.
 
   vm->rangeClass = AS_CLASS(findGlobal(vm, "Range"));

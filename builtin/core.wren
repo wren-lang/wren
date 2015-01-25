@@ -89,8 +89,39 @@ class List is Sequence {
 }
 
 class Map {
-  // TODO: Implement this.
-  toString { "{}" }
+  keys { new MapKeySequence(this) }
+  values { new MapValueSequence(this) }
+
+  toString {
+    var first = true
+    var result = "{"
+
+    for (key in keys) {
+      if (!first) result = result + ", "
+      first = false
+      result = result + key.toString + ": " + this[key].toString
+    }
+
+    return result + "}"
+  }
+}
+
+class MapKeySequence is Sequence {
+  new(map) {
+    _map = map
+  }
+
+  iterate(n) { _map.iterate_(n) }
+  iteratorValue(iterator) { _map.keyIteratorValue_(iterator) }
+}
+
+class MapValueSequence is Sequence {
+  new(map) {
+    _map = map
+  }
+
+  iterate(n) { _map.iterate_(n) }
+  iteratorValue(iterator) { _map.valueIteratorValue_(iterator) }
 }
 
 class Range is Sequence {}
