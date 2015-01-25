@@ -489,7 +489,7 @@ static void ensureMapCapacity(WrenVM* vm, ObjMap* map)
   map->capacity = newCapacity;
 }
 
-Value wrenMapGet(ObjMap* map, Value key)
+bool wrenMapGet(ObjMap* map, Value key, Value* value)
 {
   // Figure out where to insert it in the table. Use open addressing and
   // basic linear probing.
@@ -502,10 +502,14 @@ Value wrenMapGet(ObjMap* map, Value key)
     MapEntry* entry = &map->entries[index];
 
     // If we found an empty slot, the key is not in the table.
-    if (IS_UNDEFINED(entry->key)) return NULL_VAL;
+    if (IS_UNDEFINED(entry->key)) return false;
 
     // If the key matches, we found it.
-    if (wrenValuesEqual(entry->key, key)) return entry->value;
+    if (wrenValuesEqual(entry->key, key))
+    {
+      *value = entry->value;
+      return true;
+    }
 
     // Try the next slot.
     index = (index + 1) % map->capacity;

@@ -638,12 +638,15 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
 // Creates a new empty map.
 ObjMap* wrenNewMap(WrenVM* vm);
 
-// Returns the value in [map] associated with [key] or `NULL_VALUE` if it wasn't
-// found.
-Value wrenMapGet(ObjMap* map, Value key);
+// Looks up [key] in [map]. If found, stores its value in [value] and returns
+// `true`. Otherwise, returns `false`.
+bool wrenMapGet(ObjMap* map, Value key, Value* value);
 
 // Associates [key] with [value] in [map].
 void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value);
+
+// Returns `true` if [map] contains [key].
+bool wrenMapContainsKey(WrenVM* vm, ObjMap* map, Value key);
 
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);

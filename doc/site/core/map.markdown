@@ -5,7 +5,11 @@ An associative collection that maps keys to values. More details [here](../maps.
 
 ### **clear**
 
-Removes all entries
+Removes all entries from the map.
+
+### **containsKey**(key)
+
+Returns `true` if the map contains `key` or `false` otherwise.
 
 ### **count**
 

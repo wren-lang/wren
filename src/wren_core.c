@@ -230,6 +230,21 @@ static int validateIndexValue(WrenVM* vm, Value* args, int count, double value,
   return -1;
 }
 
+// Validates that [key] is a valid object for use as a map key. Returns true if
+// it is. If not, reports an error and returns false.
+static bool validateKey(WrenVM* vm, Value* args, int index)
+{
+  Value arg = args[index];
+  if (IS_BOOL(arg) || IS_CLASS(arg) || IS_NULL(arg) ||
+      IS_NUM(arg) || IS_RANGE(arg) || IS_STRING(arg))
+  {
+    return true;
+  }
+
+  args[0] = OBJ_VAL(wrenNewString(vm, "Key must be a value type.", 25));
+  return false;
+}
+
 // Validates that the argument at [argIndex] is an integer within `[0, count)`.
 // Also allows negative indices which map backwards from the end. Returns the
 // valid positive index value. If invalid, reports an error and returns -1.
@@ -719,13 +734,19 @@ DEF_NATIVE(map_instantiate)
 
 DEF_NATIVE(map_subscript)
 {
-  // TODO: Validate key type.
-  RETURN_VAL(wrenMapGet(AS_MAP(args[0]), args[1]));
+  if (!validateKey(vm, args, 1)) return PRIM_ERROR;
+
+  Value value;
+  if (wrenMapGet(AS_MAP(args[0]), args[1], &value)) RETURN_VAL(value);
+
+  // Not found.
+  RETURN_NULL;
 }
 
 DEF_NATIVE(map_subscriptSetter)
 {
-  // TODO: Validate key type.
+  if (!validateKey(vm, args, 1)) return PRIM_ERROR;
+
   wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
   RETURN_VAL(args[2]);
 }
@@ -738,6 +759,14 @@ DEF_NATIVE(map_clear)
   map->capacity = 0;
   map->count = 0;
   RETURN_NULL;
+}
+
+DEF_NATIVE(map_containsKey)
+{
+  if (!validateKey(vm, args, 1)) return PRIM_ERROR;
+
+  Value dummy;
+  RETURN_BOOL(wrenMapGet(AS_MAP(args[0]), args[1], &dummy));
 }
 
 DEF_NATIVE(map_count)
@@ -1468,6 +1497,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->mapClass, "[ ]", map_subscript);
   NATIVE(vm->mapClass, "[ ]=", map_subscriptSetter);
   NATIVE(vm->mapClass, "clear", map_clear);
+  NATIVE(vm->mapClass, "containsKey ", map_containsKey);
   NATIVE(vm->mapClass, "count", map_count);
   NATIVE(vm->mapClass, "iterate_ ", map_iterate);
   NATIVE(vm->mapClass, "keyIteratorValue_ ", map_keyIteratorValue);
