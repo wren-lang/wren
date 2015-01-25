@@ -89,7 +89,6 @@ typedef enum
   TOKEN_STATIC_FIELD,
   TOKEN_NAME,
   TOKEN_NUMBER,
-  TOKEN_HEXADECIMAL,
   TOKEN_STRING,
 
   TOKEN_LINE,
@@ -148,6 +147,9 @@ typedef struct
   // literal. Unlike the raw token, this will have escape sequences translated
   // to their literal equivalent.
   ByteBuffer string;
+
+  // If a number literal is currently being parsed this will hold its value.
+  double number;
 } Parser;
 
 typedef struct
@@ -409,12 +411,6 @@ static bool isDigit(char c)
   return c >= '0' && c <= '9';
 }
 
-// Returns true if [c] is a hexidecimal digit.
-static bool isHexDigit(char c)
-{
-  return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-}
-
 // Returns the current character the parser is sitting on.
 static char peekChar(Parser* parser)
 {
@@ -518,30 +514,66 @@ static bool isKeyword(Parser* parser, const char* keyword)
       strncmp(parser->tokenStart, keyword, length) == 0;
 }
 
+// Reads the next character, which should be a hex digit (0-9, a-f, or A-F) and
+// returns its numeric value. If the character isn't a hex digit, returns -1.
+static int readHexDigit(Parser* parser)
+{
+  char c = nextChar(parser);
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+
+  // Don't consume it if it isn't expected. Keeps us from reading past the end
+  // of an unterminated string.
+  parser->currentChar--;
+  return -1;
+}
+
+// Finishes lexing a hexadecimal number literal.
+static void readHexNumber(Parser* parser)
+{
+  // Skip past the `x` used to denote a hexadecimal literal.
+  nextChar(parser);
+
+  // Iterate over all the valid hexadecimal digits found.
+  while (readHexDigit(parser) != -1) continue;
+
+  char* end;
+  parser->number = strtol(parser->tokenStart, &end, 16);
+  // TODO: Check errno == ERANGE here.
+  if (end == parser->tokenStart)
+  {
+    lexError(parser, "Invalid number literal.");
+    parser->number = 0;
+  }
+
+  makeToken(parser, TOKEN_NUMBER);
+}
+
 // Finishes lexing a number literal.
 static void readNumber(Parser* parser)
 {
-  if (peekChar(parser) == 'x') // Match a hexadecimal number literal.
+  // TODO: scientific, etc.
+  while (isDigit(peekChar(parser))) nextChar(parser);
+
+  // See if it has a floating point. Make sure there is a digit after the "."
+  // so we don't get confused by method calls on number literals.
+  if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
   {
     nextChar(parser);
-
-    while (isHexDigit(peekChar(parser))) nextChar(parser);
-
-    makeToken(parser, TOKEN_HEXADECIMAL);
-  } else {
-    // TODO: scientific, etc.
     while (isDigit(peekChar(parser))) nextChar(parser);
-
-    // See if it has a floating point. Make sure there is a digit after the "."
-    // so we don't get confused by method calls on number literals.
-    if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
-    {
-      nextChar(parser);
-      while (isDigit(peekChar(parser))) nextChar(parser);
-    }
-
-    makeToken(parser, TOKEN_NUMBER);
   }
+
+  char* end;
+  parser->number = strtod(parser->tokenStart, &end);
+  // TODO: Check errno == ERANGE here.
+  if (end == parser->tokenStart)
+  {
+    lexError(parser, "Invalid number literal.");
+    parser->number = 0;
+  }
+
+  makeToken(parser, TOKEN_NUMBER);
 }
 
 // Finishes lexing an identifier. Handles reserved words.
@@ -577,21 +609,6 @@ static void readName(Parser* parser, TokenType type)
 static void addStringChar(Parser* parser, char c)
 {
   wrenByteBufferWrite(parser->vm, &parser->string, c);
-}
-
-// Reads the next character, which should be a hex digit (0-9, a-f, or A-F) and
-// returns its numeric value. If the character isn't a hex digit, returns -1.
-static int readHexDigit(Parser* parser)
-{
-  char c = nextChar(parser);
-  if (c >= '0' && c <= '9') return c - '0';
-  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-
-  // Don't consume it if it isn't expected. Keeps us from reading past the end
-  // of an unterminated string.
-  parser->currentChar--;
-  return -1;
 }
 
 // Reads a four hex digit Unicode escape sequence in a string literal.
@@ -830,6 +847,13 @@ static void nextToken(Parser* parser)
 
         lexError(parser, "Invalid character '%c'.", c);
         return;
+
+      case '0':
+        if (peekChar(parser) == 'x')
+        {
+          readHexNumber(parser);
+          return;
+        }
 
       default:
         if (isName(c))
@@ -1862,44 +1886,12 @@ static void null(Compiler* compiler, bool allowAssignment)
   emit(compiler, CODE_NULL);
 }
 
-static void emitNumericConstant(Compiler* compiler, double value)
+static void number(Compiler* compiler, bool allowAssignment)
 {
-  int constant = addConstant(compiler, NUM_VAL(value));
+  int constant = addConstant(compiler, NUM_VAL(compiler->parser->number));
 
   // Compile the code to load the constant.
   emitShortArg(compiler, CODE_CONSTANT, constant);
-}
-
-static void number(Compiler* compiler, bool allowAssignment)
-{
-  Token* token = &compiler->parser->previous;
-  char* end;
-
-  double value = strtod(token->start, &end);
-  // TODO: Check errno == ERANGE here.
-  if (end == token->start)
-  {
-    error(compiler, "Invalid number literal.");
-    value = 0;
-  }
-
-  emitNumericConstant(compiler, value);
-}
-
-static void hexadecimal(Compiler* compiler, bool allowAssignment)
-{
-  Token* token = &compiler->parser->previous;
-  char* end;
-
-  double value = strtol(token->start, &end, 16);
-  // TODO: Check errno == ERANGE here.
-  if (end == token->start)
-  {
-    error(compiler, "Invalid number literal.");
-    value = 0;
-  }
-
-  emitNumericConstant(compiler, value);
 }
 
 static void string(Compiler* compiler, bool allowAssignment)
@@ -2257,7 +2249,6 @@ GrammarRule rules[] =
   /* TOKEN_STATIC_FIELD  */ PREFIX(staticField),
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(number),
-  /* TOKEN_HEXADECIMAL   */ PREFIX(hexadecimal),
   /* TOKEN_STRING        */ PREFIX(string),
   /* TOKEN_LINE          */ UNUSED,
   /* TOKEN_ERROR         */ UNUSED,
