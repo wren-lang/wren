@@ -1315,7 +1315,8 @@ typedef enum
   PREC_TERM,       // + -
   PREC_FACTOR,     // * / %
   PREC_UNARY,      // unary - ! ~
-  PREC_CALL        // . () []
+  PREC_CALL,       // . () []
+  PREC_PRIMARY
 } Precedence;
 
 typedef void (*GrammarFn)(Compiler*, bool allowAssignment);
@@ -1574,12 +1575,14 @@ static void loadThis(Compiler* compiler)
   }
 }
 
+// A parenthesized expression.
 static void grouping(Compiler* compiler, bool allowAssignment)
 {
   expression(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
+// A list literal.
 static void list(Compiler* compiler, bool allowAssignment)
 {
   // Compile the list elements.
@@ -1601,6 +1604,54 @@ static void list(Compiler* compiler, bool allowAssignment)
   // Create the list.
   // TODO: Handle lists >255 elements.
   emitByteArg(compiler, CODE_LIST, numElements);
+}
+
+// A map literal.
+static void map(Compiler* compiler, bool allowAssignment)
+{
+  // TODO: Do we want to do the same thing for list literals and remove the
+  // bytecodes for them?
+
+  // Load the Map class.
+  int mapClassSymbol = wrenSymbolTableFind(&compiler->parser->vm->globalNames,
+                                           "Map", 3);
+  ASSERT(mapClassSymbol != -1, "Should have already defined 'Map' global.");
+  emitShortArg(compiler, CODE_LOAD_GLOBAL, mapClassSymbol);
+
+  // Instantiate a new map.
+  emitShortArg(compiler, CODE_CALL_0,
+               methodSymbol(compiler, " instantiate", 12));
+
+  int subscriptSetSymbol = methodSymbol(compiler, "[ ]=", 4);
+
+  // Compile the map elements. Each one is compiled to just invoke the
+  // subscript setter on the map.
+  if (peek(compiler) != TOKEN_RIGHT_BRACE)
+  {
+    do
+    {
+      ignoreNewlines(compiler);
+
+      // Push a copy of the map since the subscript call will consume it.
+      emit(compiler, CODE_DUP);
+
+      // The key.
+      parsePrecedence(compiler, false, PREC_PRIMARY);
+      consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
+
+      // The value.
+      expression(compiler);
+
+      emitShortArg(compiler, CODE_CALL_2, subscriptSetSymbol);
+
+      // Discard the result of the setter call.
+      emit(compiler, CODE_POP);
+    } while (match(compiler, TOKEN_COMMA));
+  }
+
+  // Allow newlines before the closing '}'.
+  ignoreNewlines(compiler);
+  consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' after map entries.");
 }
 
 // Unary operators like `-foo`.
@@ -2174,7 +2225,7 @@ GrammarRule rules[] =
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
   /* TOKEN_LEFT_BRACKET  */ { list, subscript, subscriptSignature, PREC_CALL, NULL },
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
-  /* TOKEN_LEFT_BRACE    */ UNUSED,
+  /* TOKEN_LEFT_BRACE    */ PREFIX(map),
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
   /* TOKEN_COLON         */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
@@ -2297,6 +2348,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_FALSE:
     case CODE_TRUE:
     case CODE_POP:
+    case CODE_DUP:
     case CODE_IS:
     case CODE_CLOSE_UPVALUE:
     case CODE_RETURN:

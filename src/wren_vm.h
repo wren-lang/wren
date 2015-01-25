@@ -77,6 +77,9 @@ typedef enum
   // Pop and discard the top of stack.
   CODE_POP,
 
+  // Push a copy of the value currently on the top of the stack.
+  CODE_DUP,
+
   // Invoke the method with symbol [arg]. The number indicates the number of
   // arguments (not including the receiver).
   CODE_CALL_0,

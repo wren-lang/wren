@@ -450,6 +450,7 @@ static bool runInterpreter(WrenVM* vm)
     &&code_LOAD_FIELD,
     &&code_STORE_FIELD,
     &&code_POP,
+    &&code_DUP,
     &&code_CALL_0,
     &&code_CALL_1,
     &&code_CALL_2,
@@ -559,6 +560,8 @@ static bool runInterpreter(WrenVM* vm)
     }
 
     CASE_CODE(POP):   DROP(); DISPATCH();
+    CASE_CODE(DUP):   PUSH(PEEK()); DISPATCH();
+
     CASE_CODE(NULL):  PUSH(NULL_VAL); DISPATCH();
     CASE_CODE(FALSE): PUSH(FALSE_VAL); DISPATCH();
     CASE_CODE(TRUE):  PUSH(TRUE_VAL); DISPATCH();

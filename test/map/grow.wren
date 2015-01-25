@@ -58,7 +58,7 @@ var fishes = [
   "Cutlassfish", "Cutthroat eel", "Cutthroat trout"
 ]
 
-var map = new Map
+var map = {}
 for (fish in fishes) {
   map[fish] = fish.count
 }

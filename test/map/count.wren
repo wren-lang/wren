@@ -1,4 +1,4 @@
-var map = new Map
+var map = {}
 IO.print(map.count) // expect: 0
 map["one"] = "value"
 IO.print(map.count) // expect: 1
