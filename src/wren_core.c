@@ -699,6 +699,16 @@ DEF_NATIVE(map_subscriptSetter)
   RETURN_VAL(args[2]);
 }
 
+DEF_NATIVE(map_clear)
+{
+  ObjMap* map = AS_MAP(args[0]);
+  wrenReallocate(vm, map->entries, 0, 0);
+  map->entries = NULL;
+  map->capacity = 0;
+  map->count = 0;
+  RETURN_NULL;
+}
+
 DEF_NATIVE(map_count)
 {
   RETURN_NUM(AS_MAP(args[0])->count);
@@ -1370,6 +1380,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->mapClass->obj.classObj, " instantiate", map_instantiate);
   NATIVE(vm->mapClass, "[ ]", map_subscript);
   NATIVE(vm->mapClass, "[ ]=", map_subscriptSetter);
+  NATIVE(vm->mapClass, "clear", map_clear);
   NATIVE(vm->mapClass, "count", map_count);
   // TODO: More map methods.
 
