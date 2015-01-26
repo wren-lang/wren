@@ -636,9 +636,8 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
   return string;
 }
 
-Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
+Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, size_t index)
 {
-  ASSERT(index >= 0, "Index out of bounds.");
   ASSERT(index < string->length, "Index out of bounds.");
 
   char first = string->value[index];

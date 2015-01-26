@@ -669,7 +669,7 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right);
 // Creates a new string containing the code point in [string] starting at byte
 // [index]. If [index] points into the middle of a UTF-8 sequence, returns an
 // empty string.
-Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index);
+Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, size_t index);
 
 // Creates a new open upvalue pointing to [value] on the stack.
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
