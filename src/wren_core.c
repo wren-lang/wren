@@ -798,7 +798,7 @@ DEF_NATIVE(map_iterate)
 DEF_NATIVE(map_remove)
 {
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
-  
+
   RETURN_VAL(wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1]));
 }
 
@@ -1071,6 +1071,16 @@ DEF_NATIVE(object_type)
 DEF_NATIVE(object_instantiate)
 {
   RETURN_ERROR("Must provide a class to 'new' to construct.");
+}
+
+DEF_NATIVE(range_eqeq)
+{
+  RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
+}
+
+DEF_NATIVE(range_bangeq)
+{
+  RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_NATIVE(range_from)
@@ -1508,7 +1518,8 @@ void wrenInitializeCore(WrenVM* vm)
   // TODO: More map methods.
 
   vm->rangeClass = AS_CLASS(findGlobal(vm, "Range"));
-  // TODO: == operator.
+  NATIVE(vm->rangeClass, "== ", range_eqeq);
+  NATIVE(vm->rangeClass, "!= ", range_bangeq);
   NATIVE(vm->rangeClass, "from", range_from);
   NATIVE(vm->rangeClass, "to", range_to);
   NATIVE(vm->rangeClass, "min", range_min);
