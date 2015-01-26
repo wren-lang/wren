@@ -776,13 +776,13 @@ DEF_NATIVE(map_iterate)
   if (map->count == 0) RETURN_FALSE;
 
   // If we're starting the iteration, return the first entry.
-  int index = -1;
+  uint32_t index = UINT32_MAX;
   if (!IS_NULL(args[1]))
   {
     if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
-    index = (int)AS_NUM(args[1]);
+    index = (uint32_t)AS_NUM(args[1]);
 
-    if (index < 0 || index >= map->capacity) RETURN_FALSE;
+    if (index >= map->capacity) RETURN_FALSE;
   }
 
   // Find the next used entry, if any.
