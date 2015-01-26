@@ -1032,12 +1032,12 @@ DEF_NATIVE(object_not)
 
 DEF_NATIVE(object_eqeq)
 {
-  RETURN_BOOL(wrenValuesSame(args[0], args[1]));
+  RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_NATIVE(object_bangeq)
 {
-  RETURN_BOOL(!wrenValuesSame(args[0], args[1]));
+  RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_NATIVE(object_new)
@@ -1071,16 +1071,6 @@ DEF_NATIVE(object_type)
 DEF_NATIVE(object_instantiate)
 {
   RETURN_ERROR("Must provide a class to 'new' to construct.");
-}
-
-DEF_NATIVE(range_eqeq)
-{
-  RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
-}
-
-DEF_NATIVE(range_bangeq)
-{
-  RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_NATIVE(range_from)
@@ -1264,24 +1254,6 @@ DEF_NATIVE(string_plus)
 {
   if (!validateString(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_OBJ(wrenStringConcat(vm, AS_CSTRING(args[0]), AS_CSTRING(args[1])));
-}
-
-DEF_NATIVE(string_eqeq)
-{
-  if (!IS_STRING(args[1])) RETURN_FALSE;
-  ObjString* a = AS_STRING(args[0]);
-  ObjString* b = AS_STRING(args[1]);
-  RETURN_BOOL(a->length == b->length &&
-      memcmp(a->value, b->value, a->length) == 0);
-}
-
-DEF_NATIVE(string_bangeq)
-{
-  if (!IS_STRING(args[1])) RETURN_TRUE;
-  ObjString* a = AS_STRING(args[0]);
-  ObjString* b = AS_STRING(args[1]);
-  RETURN_BOOL(a->length != b->length ||
-      memcmp(a->value, b->value, a->length) != 0);
 }
 
 DEF_NATIVE(string_subscript)
@@ -1480,8 +1452,6 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->stringClass = AS_CLASS(findGlobal(vm, "String"));
   NATIVE(vm->stringClass, "+ ", string_plus);
-  NATIVE(vm->stringClass, "== ", string_eqeq);
-  NATIVE(vm->stringClass, "!= ", string_bangeq);
   NATIVE(vm->stringClass, "[ ]", string_subscript);
   NATIVE(vm->stringClass, "contains ", string_contains);
   NATIVE(vm->stringClass, "count", string_count);
@@ -1518,8 +1488,6 @@ void wrenInitializeCore(WrenVM* vm)
   // TODO: More map methods.
 
   vm->rangeClass = AS_CLASS(findGlobal(vm, "Range"));
-  NATIVE(vm->rangeClass, "== ", range_eqeq);
-  NATIVE(vm->rangeClass, "!= ", range_bangeq);
   NATIVE(vm->rangeClass, "from", range_from);
   NATIVE(vm->rangeClass, "to", range_to);
   NATIVE(vm->rangeClass, "min", range_min);

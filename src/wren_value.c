@@ -977,7 +977,7 @@ bool wrenValuesEqual(Value a, Value b)
       ObjString* aString = (ObjString*)aObj;
       ObjString* bString = (ObjString*)bObj;
       return aString->length == bString->length &&
-             strncmp(aString->value, bString->value, aString->length) == 0;
+             memcmp(aString->value, bString->value, aString->length) == 0;
     }
 
     default:
