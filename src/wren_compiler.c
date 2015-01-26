@@ -147,6 +147,9 @@ typedef struct
   // literal. Unlike the raw token, this will have escape sequences translated
   // to their literal equivalent.
   ByteBuffer string;
+
+  // If a number literal is currently being parsed this will hold its value.
+  double number;
 } Parser;
 
 typedef struct
@@ -511,10 +514,46 @@ static bool isKeyword(Parser* parser, const char* keyword)
       strncmp(parser->tokenStart, keyword, length) == 0;
 }
 
+// Reads the next character, which should be a hex digit (0-9, a-f, or A-F) and
+// returns its numeric value. If the character isn't a hex digit, returns -1.
+static int readHexDigit(Parser* parser)
+{
+  char c = nextChar(parser);
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+
+  // Don't consume it if it isn't expected. Keeps us from reading past the end
+  // of an unterminated string.
+  parser->currentChar--;
+  return -1;
+}
+
+// Finishes lexing a hexadecimal number literal.
+static void readHexNumber(Parser* parser)
+{
+  // Skip past the `x` used to denote a hexadecimal literal.
+  nextChar(parser);
+
+  // Iterate over all the valid hexadecimal digits found.
+  while (readHexDigit(parser) != -1) continue;
+
+  char* end;
+  parser->number = strtol(parser->tokenStart, &end, 16);
+  // TODO: Check errno == ERANGE here.
+  if (end == parser->tokenStart)
+  {
+    lexError(parser, "Invalid number literal.");
+    parser->number = 0;
+  }
+
+  makeToken(parser, TOKEN_NUMBER);
+}
+
 // Finishes lexing a number literal.
 static void readNumber(Parser* parser)
 {
-  // TODO: Hex, scientific, etc.
+  // TODO: scientific, etc.
   while (isDigit(peekChar(parser))) nextChar(parser);
 
   // See if it has a floating point. Make sure there is a digit after the "."
@@ -523,6 +562,15 @@ static void readNumber(Parser* parser)
   {
     nextChar(parser);
     while (isDigit(peekChar(parser))) nextChar(parser);
+  }
+
+  char* end;
+  parser->number = strtod(parser->tokenStart, &end);
+  // TODO: Check errno == ERANGE here.
+  if (end == parser->tokenStart)
+  {
+    lexError(parser, "Invalid number literal.");
+    parser->number = 0;
   }
 
   makeToken(parser, TOKEN_NUMBER);
@@ -561,21 +609,6 @@ static void readName(Parser* parser, TokenType type)
 static void addStringChar(Parser* parser, char c)
 {
   wrenByteBufferWrite(parser->vm, &parser->string, c);
-}
-
-// Reads the next character, which should be a hex digit (0-9, a-f, or A-F) and
-// returns its numeric value. If the character isn't a hex digit, returns -1.
-static int readHexDigit(Parser* parser)
-{
-  char c = nextChar(parser);
-  if (c >= '0' && c <= '9') return c - '0';
-  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-
-  // Don't consume it if it isn't expected. Keeps us from reading past the end
-  // of an unterminated string.
-  parser->currentChar--;
-  return -1;
 }
 
 // Reads a four hex digit Unicode escape sequence in a string literal.
@@ -814,6 +847,13 @@ static void nextToken(Parser* parser)
 
         lexError(parser, "Invalid character '%c'.", c);
         return;
+
+      case '0':
+        if (peekChar(parser) == 'x')
+        {
+          readHexNumber(parser);
+          return;
+        }
 
       default:
         if (isName(c))
@@ -1899,19 +1939,7 @@ static void null(Compiler* compiler, bool allowAssignment)
 
 static void number(Compiler* compiler, bool allowAssignment)
 {
-  Token* token = &compiler->parser->previous;
-  char* end;
-
-  double value = strtod(token->start, &end);
-  // TODO: Check errno == ERANGE here.
-  if (end == token->start)
-  {
-    error(compiler, "Invalid number literal.");
-    value = 0;
-  }
-
-  // Define a constant for the literal.
-  int constant = addConstant(compiler, NUM_VAL(value));
+  int constant = addConstant(compiler, NUM_VAL(compiler->parser->number));
 
   // Compile the code to load the constant.
   emitShortArg(compiler, CODE_CONSTANT, constant);
@@ -2860,7 +2888,7 @@ void definition(Compiler* compiler)
     classDefinition(compiler);
     return;
   }
-  
+
   if (match(compiler, TOKEN_VAR)) {
     variableDefinition(compiler);
     return;
