@@ -369,8 +369,8 @@ static uint32_t hashObject(Obj* object)
       // towards the prefix or suffix of the string. So sample up to eight
       // characters spread throughout the string.
       // TODO: Tune this.
-      uint32_t step = 1 + 7 / string->length;
-      for (uint32_t i = 0; i < string->length; i += step)
+      size_t step = 1 + 7 / string->length;
+      for (size_t i = 0; i < string->length; i += step)
       {
         hash ^= string->value[i];
         hash *= 16777619;

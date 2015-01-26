@@ -1209,8 +1209,8 @@ DEF_NATIVE(string_iterate)
 
   if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
 
-  int index = (int)AS_NUM(args[1]);
-  if (index < 0) RETURN_FALSE;
+  size_t index = (uint32_t)AS_NUM(args[1]);
+  if (index >= string->length) RETURN_FALSE;
 
   // Advance to the beginning of the next UTF-8 sequence.
   do

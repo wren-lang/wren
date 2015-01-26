@@ -116,7 +116,7 @@ typedef struct
 {
   Obj obj;
   // Does not include the null terminator.
-  int length;
+  size_t length;
   char value[FLEXIBLE_ARRAY];
 } ObjString;
 
