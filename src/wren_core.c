@@ -1308,7 +1308,7 @@ static ObjClass* defineClass(WrenVM* vm, const char* name)
   ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
   wrenPushRoot(vm, (Obj*)nameString);
 
-  ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
+  ObjClass* classObj = wrenNewClass(vm, vm->types[TYPE_OBJECT], 0, nameString);
   wrenDefineGlobal(vm, name, length, OBJ_VAL(classObj));
 
   wrenPopRoot(vm);
@@ -1326,28 +1326,28 @@ void wrenInitializeCore(WrenVM* vm)
 {
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass and an unusual metaclass (Class).
-  vm->objectClass = defineSingleClass(vm, "Object");
-  NATIVE(vm->objectClass, "!", object_not);
-  NATIVE(vm->objectClass, "== ", object_eqeq);
-  NATIVE(vm->objectClass, "!= ", object_bangeq);
-  NATIVE(vm->objectClass, "new", object_new);
-  NATIVE(vm->objectClass, "toString", object_toString);
-  NATIVE(vm->objectClass, "type", object_type);
-  NATIVE(vm->objectClass, " instantiate", object_instantiate);
+  vm->types[TYPE_OBJECT] = defineSingleClass(vm, "Object");
+  NATIVE(vm->types[TYPE_OBJECT], "!", object_not);
+  NATIVE(vm->types[TYPE_OBJECT], "== ", object_eqeq);
+  NATIVE(vm->types[TYPE_OBJECT], "!= ", object_bangeq);
+  NATIVE(vm->types[TYPE_OBJECT], "new", object_new);
+  NATIVE(vm->types[TYPE_OBJECT], "toString", object_toString);
+  NATIVE(vm->types[TYPE_OBJECT], "type", object_type);
+  NATIVE(vm->types[TYPE_OBJECT], " instantiate", object_instantiate);
 
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
-  vm->classClass = defineSingleClass(vm, "Class");
+  vm->types[TYPE_CLASS] = defineSingleClass(vm, "Class");
 
   // Now that Object and Class are defined, we can wire them up to each other.
-  wrenBindSuperclass(vm, vm->classClass, vm->objectClass);
-  vm->objectClass->obj.classObj = vm->classClass;
-  vm->classClass->obj.classObj = vm->classClass;
+  wrenBindSuperclass(vm, vm->types[TYPE_CLASS], vm->types[TYPE_OBJECT]);
+  vm->types[TYPE_OBJECT]->obj.classObj = vm->types[TYPE_CLASS];
+  vm->types[TYPE_CLASS]->obj.classObj = vm->types[TYPE_CLASS];
 
   // Define the methods specific to Class after wiring up its superclass to
   // prevent the inherited ones from overwriting them.
-  NATIVE(vm->classClass, " instantiate", class_instantiate);
-  NATIVE(vm->classClass, "name", class_name);
+  NATIVE(vm->types[TYPE_CLASS], " instantiate", class_instantiate);
+  NATIVE(vm->types[TYPE_CLASS], "name", class_name);
 
   // The core class diagram ends up looking like this, where single lines point
   // to a class's superclass, and double lines point to its metaclass:
@@ -1370,132 +1370,136 @@ void wrenInitializeCore(WrenVM* vm)
   //     '---------'   '--------------'   -'
 
   // The rest of the classes can not be defined normally.
-  vm->boolClass = defineClass(vm, "Bool");
-  NATIVE(vm->boolClass, "toString", bool_toString);
-  NATIVE(vm->boolClass, "!", bool_not);
+  vm->types[TYPE_BOOL] = defineClass(vm, "Bool");
+  NATIVE(vm->types[TYPE_BOOL], "toString", bool_toString);
+  NATIVE(vm->types[TYPE_BOOL], "!", bool_not);
 
   // TODO: Make fibers inherit Sequence and be iterable.
-  vm->fiberClass = defineClass(vm, "Fiber");
-  NATIVE(vm->fiberClass->obj.classObj, " instantiate", fiber_instantiate);
-  NATIVE(vm->fiberClass->obj.classObj, "new ", fiber_new);
-  NATIVE(vm->fiberClass->obj.classObj, "abort ", fiber_abort);
-  NATIVE(vm->fiberClass->obj.classObj, "yield", fiber_yield);
-  NATIVE(vm->fiberClass->obj.classObj, "yield ", fiber_yield1);
-  NATIVE(vm->fiberClass, "call", fiber_call);
-  NATIVE(vm->fiberClass, "call ", fiber_call1);
-  NATIVE(vm->fiberClass, "error", fiber_error);
-  NATIVE(vm->fiberClass, "isDone", fiber_isDone);
-  NATIVE(vm->fiberClass, "run", fiber_run);
-  NATIVE(vm->fiberClass, "run ", fiber_run1);
-  NATIVE(vm->fiberClass, "try", fiber_try);
+  vm->types[TYPE_FIBER] = defineClass(vm, "Fiber");
+  NATIVE(vm->types[TYPE_FIBER]->obj.classObj, " instantiate", fiber_instantiate);
+  NATIVE(vm->types[TYPE_FIBER]->obj.classObj, "new ", fiber_new);
+  NATIVE(vm->types[TYPE_FIBER]->obj.classObj, "abort ", fiber_abort);
+  NATIVE(vm->types[TYPE_FIBER]->obj.classObj, "yield", fiber_yield);
+  NATIVE(vm->types[TYPE_FIBER]->obj.classObj, "yield ", fiber_yield1);
+  NATIVE(vm->types[TYPE_FIBER], "call", fiber_call);
+  NATIVE(vm->types[TYPE_FIBER], "call ", fiber_call1);
+  NATIVE(vm->types[TYPE_FIBER], "error", fiber_error);
+  NATIVE(vm->types[TYPE_FIBER], "isDone", fiber_isDone);
+  NATIVE(vm->types[TYPE_FIBER], "run", fiber_run);
+  NATIVE(vm->types[TYPE_FIBER], "run ", fiber_run1);
+  NATIVE(vm->types[TYPE_FIBER], "try", fiber_try);
 
-  vm->fnClass = defineClass(vm, "Fn");
+  vm->types[TYPE_FN] = defineClass(vm, "Fn");
+  NATIVE(vm->types[TYPE_FN]->obj.classObj, " instantiate", fn_instantiate);
+  NATIVE(vm->types[TYPE_FN]->obj.classObj, "new ", fn_new);
+  NATIVE(vm->types[TYPE_FN], "call", fn_call0);
+  NATIVE(vm->types[TYPE_FN], "call ", fn_call1);
+  NATIVE(vm->types[TYPE_FN], "call  ", fn_call2);
+  NATIVE(vm->types[TYPE_FN], "call   ", fn_call3);
+  NATIVE(vm->types[TYPE_FN], "call    ", fn_call4);
+  NATIVE(vm->types[TYPE_FN], "call     ", fn_call5);
+  NATIVE(vm->types[TYPE_FN], "call      ", fn_call6);
+  NATIVE(vm->types[TYPE_FN], "call       ", fn_call7);
+  NATIVE(vm->types[TYPE_FN], "call        ", fn_call8);
+  NATIVE(vm->types[TYPE_FN], "call         ", fn_call9);
+  NATIVE(vm->types[TYPE_FN], "call          ", fn_call10);
+  NATIVE(vm->types[TYPE_FN], "call           ", fn_call11);
+  NATIVE(vm->types[TYPE_FN], "call            ", fn_call12);
+  NATIVE(vm->types[TYPE_FN], "call             ", fn_call13);
+  NATIVE(vm->types[TYPE_FN], "call              ", fn_call14);
+  NATIVE(vm->types[TYPE_FN], "call               ", fn_call15);
+  NATIVE(vm->types[TYPE_FN], "call                ", fn_call16);
+  NATIVE(vm->types[TYPE_FN], "toString", fn_toString);
 
-  NATIVE(vm->fnClass->obj.classObj, " instantiate", fn_instantiate);
-  NATIVE(vm->fnClass->obj.classObj, "new ", fn_new);
+  vm->types[TYPE_NULL] = defineClass(vm, "Null");
+  NATIVE(vm->types[TYPE_NULL], "!", null_not);
+  NATIVE(vm->types[TYPE_NULL], "toString", null_toString);
 
-  NATIVE(vm->fnClass, "arity", fn_arity);
-  NATIVE(vm->fnClass, "call", fn_call0);
-  NATIVE(vm->fnClass, "call ", fn_call1);
-  NATIVE(vm->fnClass, "call  ", fn_call2);
-  NATIVE(vm->fnClass, "call   ", fn_call3);
-  NATIVE(vm->fnClass, "call    ", fn_call4);
-  NATIVE(vm->fnClass, "call     ", fn_call5);
-  NATIVE(vm->fnClass, "call      ", fn_call6);
-  NATIVE(vm->fnClass, "call       ", fn_call7);
-  NATIVE(vm->fnClass, "call        ", fn_call8);
-  NATIVE(vm->fnClass, "call         ", fn_call9);
-  NATIVE(vm->fnClass, "call          ", fn_call10);
-  NATIVE(vm->fnClass, "call           ", fn_call11);
-  NATIVE(vm->fnClass, "call            ", fn_call12);
-  NATIVE(vm->fnClass, "call             ", fn_call13);
-  NATIVE(vm->fnClass, "call              ", fn_call14);
-  NATIVE(vm->fnClass, "call               ", fn_call15);
-  NATIVE(vm->fnClass, "call                ", fn_call16);
-  NATIVE(vm->fnClass, "toString", fn_toString);
-
-  vm->nullClass = defineClass(vm, "Null");
-  NATIVE(vm->nullClass, "!", null_not);
-  NATIVE(vm->nullClass, "toString", null_toString);
-
-  vm->numClass = defineClass(vm, "Num");
-  NATIVE(vm->numClass, "-", num_negate);
-  NATIVE(vm->numClass, "- ", num_minus);
-  NATIVE(vm->numClass, "+ ", num_plus);
-  NATIVE(vm->numClass, "* ", num_multiply);
-  NATIVE(vm->numClass, "/ ", num_divide);
-  NATIVE(vm->numClass, "% ", num_mod);
-  NATIVE(vm->numClass, "< ", num_lt);
-  NATIVE(vm->numClass, "> ", num_gt);
-  NATIVE(vm->numClass, "<= ", num_lte);
-  NATIVE(vm->numClass, ">= ", num_gte);
-  NATIVE(vm->numClass, "~", num_bitwiseNot);
-  NATIVE(vm->numClass, "& ", num_bitwiseAnd);
-  NATIVE(vm->numClass, "| ", num_bitwiseOr);
-  NATIVE(vm->numClass, ".. ", num_dotDot);
-  NATIVE(vm->numClass, "... ", num_dotDotDot);
-  NATIVE(vm->numClass, "abs", num_abs);
-  NATIVE(vm->numClass, "ceil", num_ceil);
-  NATIVE(vm->numClass, "cos", num_cos);
-  NATIVE(vm->numClass, "floor", num_floor);
-  NATIVE(vm->numClass, "isNan", num_isNan);
-  NATIVE(vm->numClass, "sin", num_sin);
-  NATIVE(vm->numClass, "sqrt", num_sqrt);
-  NATIVE(vm->numClass, "toString", num_toString)
-
+  vm->types[TYPE_NUM] = defineClass(vm, "Num");
+  NATIVE(vm->types[TYPE_NUM]->obj.classObj, "srand", num_srand0);
+  NATIVE(vm->types[TYPE_NUM]->obj.classObj, "srand ", num_srand1);
+  NATIVE(vm->types[TYPE_NUM]->obj.classObj, "rand", num_rand);
+  NATIVE(vm->types[TYPE_NUM], "-", num_negate);
+  NATIVE(vm->types[TYPE_NUM], "- ", num_minus);
+  NATIVE(vm->types[TYPE_NUM], "+ ", num_plus);
+  NATIVE(vm->types[TYPE_NUM], "* ", num_multiply);
+  NATIVE(vm->types[TYPE_NUM], "/ ", num_divide);
+  NATIVE(vm->types[TYPE_NUM], "% ", num_mod);
+  NATIVE(vm->types[TYPE_NUM], "< ", num_lt);
+  NATIVE(vm->types[TYPE_NUM], "> ", num_gt);
+  NATIVE(vm->types[TYPE_NUM], "<= ", num_lte);
+  NATIVE(vm->types[TYPE_NUM], ">= ", num_gte);
+  NATIVE(vm->types[TYPE_NUM], "~", num_bitwiseNot);
+  NATIVE(vm->types[TYPE_NUM], "& ", num_bitwiseAnd);
+  NATIVE(vm->types[TYPE_NUM], "| ", num_bitwiseOr);
+  NATIVE(vm->types[TYPE_NUM], ".. ", num_dotDot);
+  NATIVE(vm->types[TYPE_NUM], "... ", num_dotDotDot);
+  NATIVE(vm->types[TYPE_NUM], "abs", num_abs);
+  NATIVE(vm->types[TYPE_NUM], "ceil", num_ceil);
+  NATIVE(vm->types[TYPE_NUM], "cos", num_cos);
+  NATIVE(vm->types[TYPE_NUM], "def", num_deg);
+  NATIVE(vm->types[TYPE_NUM], "frac", num_frac);
+  NATIVE(vm->types[TYPE_NUM], "floor", num_floor);
+  NATIVE(vm->types[TYPE_NUM], "isNan", num_isNan);
+  NATIVE(vm->types[TYPE_NUM], "rad", num_rad);
+  NATIVE(vm->types[TYPE_NUM], "round", num_round);
+  NATIVE(vm->types[TYPE_NUM], "sin", num_sin);
+  NATIVE(vm->types[TYPE_NUM], "sqrt", num_sqrt);
+  NATIVE(vm->types[TYPE_NUM], "toString", num_toString)
+  NATIVE(vm->types[TYPE_NUM], "truncate", num_truncate);
   // These are defined just so that 0 and -0 are equal, which is specified by
   // IEEE 754 even though they have different bit representations.
-  NATIVE(vm->numClass, "== ", num_eqeq);
-  NATIVE(vm->numClass, "!= ", num_bangeq);
+  NATIVE(vm->types[TYPE_NUM], "== ", num_eqeq);
+  NATIVE(vm->types[TYPE_NUM], "!= ", num_bangeq);
 
   wrenInterpret(vm, "", libSource);
 
-  vm->stringClass = AS_CLASS(findGlobal(vm, "String"));
-  NATIVE(vm->stringClass, "+ ", string_plus);
-  NATIVE(vm->stringClass, "[ ]", string_subscript);
-  NATIVE(vm->stringClass, "contains ", string_contains);
-  NATIVE(vm->stringClass, "count", string_count);
-  NATIVE(vm->stringClass, "endsWith ", string_endsWith);
-  NATIVE(vm->stringClass, "indexOf ", string_indexOf);
-  NATIVE(vm->stringClass, "iterate ", string_iterate);
-  NATIVE(vm->stringClass, "iteratorValue ", string_iteratorValue);
-  NATIVE(vm->stringClass, "startsWith ", string_startsWith);
-  NATIVE(vm->stringClass, "toString", string_toString);
+  vm->types[TYPE_STRING] = AS_CLASS(findGlobal(vm, "String"));
+  NATIVE(vm->types[TYPE_STRING], "+ ", string_plus);
+  NATIVE(vm->types[TYPE_STRING], "[ ]", string_subscript);
+  NATIVE(vm->types[TYPE_STRING], "contains ", string_contains);
+  NATIVE(vm->types[TYPE_STRING], "count", string_count);
+  NATIVE(vm->types[TYPE_STRING], "endsWith ", string_endsWith);
+  NATIVE(vm->types[TYPE_STRING], "indexOf ", string_indexOf);
+  NATIVE(vm->types[TYPE_STRING], "iterate ", string_iterate);
+  NATIVE(vm->types[TYPE_STRING], "iteratorValue ", string_iteratorValue);
+  NATIVE(vm->types[TYPE_STRING], "startsWith ", string_startsWith);
+  NATIVE(vm->types[TYPE_STRING], "toString", string_toString);
 
-  vm->listClass = AS_CLASS(findGlobal(vm, "List"));
-  NATIVE(vm->listClass->obj.classObj, " instantiate", list_instantiate);
-  NATIVE(vm->listClass, "[ ]", list_subscript);
-  NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
-  NATIVE(vm->listClass, "add ", list_add);
-  NATIVE(vm->listClass, "clear", list_clear);
-  NATIVE(vm->listClass, "count", list_count);
-  NATIVE(vm->listClass, "insert  ", list_insert);
-  NATIVE(vm->listClass, "iterate ", list_iterate);
-  NATIVE(vm->listClass, "iteratorValue ", list_iteratorValue);
-  NATIVE(vm->listClass, "removeAt ", list_removeAt);
+  vm->types[TYPE_LIST] = AS_CLASS(findGlobal(vm, "List"));
+  NATIVE(vm->types[TYPE_LIST]->obj.classObj, " instantiate", list_instantiate);
+  NATIVE(vm->types[TYPE_LIST], "[ ]", list_subscript);
+  NATIVE(vm->types[TYPE_LIST], "[ ]=", list_subscriptSetter);
+  NATIVE(vm->types[TYPE_LIST], "add ", list_add);
+  NATIVE(vm->types[TYPE_LIST], "clear", list_clear);
+  NATIVE(vm->types[TYPE_LIST], "count", list_count);
+  NATIVE(vm->types[TYPE_LIST], "insert  ", list_insert);
+  NATIVE(vm->types[TYPE_LIST], "iterate ", list_iterate);
+  NATIVE(vm->types[TYPE_LIST], "iteratorValue ", list_iteratorValue);
+  NATIVE(vm->types[TYPE_LIST], "removeAt ", list_removeAt);
 
-  vm->mapClass = AS_CLASS(findGlobal(vm, "Map"));
-  NATIVE(vm->mapClass->obj.classObj, " instantiate", map_instantiate);
-  NATIVE(vm->mapClass, "[ ]", map_subscript);
-  NATIVE(vm->mapClass, "[ ]=", map_subscriptSetter);
-  NATIVE(vm->mapClass, "clear", map_clear);
-  NATIVE(vm->mapClass, "containsKey ", map_containsKey);
-  NATIVE(vm->mapClass, "count", map_count);
-  NATIVE(vm->mapClass, "remove ", map_remove);
-  NATIVE(vm->mapClass, "iterate_ ", map_iterate);
-  NATIVE(vm->mapClass, "keyIteratorValue_ ", map_keyIteratorValue);
-  NATIVE(vm->mapClass, "valueIteratorValue_ ", map_valueIteratorValue);
+  vm->types[TYPE_MAP] = AS_CLASS(findGlobal(vm, "Map"));
+  NATIVE(vm->types[TYPE_MAP]->obj.classObj, " instantiate", map_instantiate);
+  NATIVE(vm->types[TYPE_MAP], "[ ]", map_subscript);
+  NATIVE(vm->types[TYPE_MAP], "[ ]=", map_subscriptSetter);
+  NATIVE(vm->types[TYPE_MAP], "clear", map_clear);
+  NATIVE(vm->types[TYPE_MAP], "containsKey ", map_containsKey);
+  NATIVE(vm->types[TYPE_MAP], "count", map_count);
+  NATIVE(vm->types[TYPE_MAP], "remove ", map_remove);
+  NATIVE(vm->types[TYPE_MAP], "iterate_ ", map_iterate);
+  NATIVE(vm->types[TYPE_MAP], "keyIteratorValue_ ", map_keyIteratorValue);
+  NATIVE(vm->types[TYPE_MAP], "valueIteratorValue_ ", map_valueIteratorValue);
   // TODO: More map methods.
 
-  vm->rangeClass = AS_CLASS(findGlobal(vm, "Range"));
-  NATIVE(vm->rangeClass, "from", range_from);
-  NATIVE(vm->rangeClass, "to", range_to);
-  NATIVE(vm->rangeClass, "min", range_min);
-  NATIVE(vm->rangeClass, "max", range_max);
-  NATIVE(vm->rangeClass, "isInclusive", range_isInclusive);
-  NATIVE(vm->rangeClass, "iterate ", range_iterate);
-  NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
-  NATIVE(vm->rangeClass, "toString", range_toString);
+  vm->types[TYPE_RANGE] = AS_CLASS(findGlobal(vm, "Range"));
+  NATIVE(vm->types[TYPE_RANGE], "from", range_from);
+  NATIVE(vm->types[TYPE_RANGE], "to", range_to);
+  NATIVE(vm->types[TYPE_RANGE], "min", range_min);
+  NATIVE(vm->types[TYPE_RANGE], "max", range_max);
+  NATIVE(vm->types[TYPE_RANGE], "isInclusive", range_isInclusive);
+  NATIVE(vm->types[TYPE_RANGE], "iterate ", range_iterate);
+  NATIVE(vm->types[TYPE_RANGE], "iteratorValue ", range_iteratorValue);
+  NATIVE(vm->types[TYPE_RANGE], "toString", range_toString);
 
   // While bootstrapping the core types and running the core library, a number
   // string objects have been created, many of which were instantiated before
@@ -1507,6 +1511,6 @@ void wrenInitializeCore(WrenVM* vm)
   // now that the string class is known.
   for (Obj* obj = vm->first; obj != NULL; obj = obj->next)
   {
-    if (obj->type == OBJ_STRING) obj->classObj = vm->stringClass;
+    if (obj->type == OBJ_STRING) obj->classObj = vm->types[TYPE_STRING];
   }
 }
