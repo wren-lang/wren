@@ -177,21 +177,26 @@ typedef enum
   CODE_END
 } Code;
 
+typedef enum {
+  TYPE_BOOL,
+  TYPE_CLASS,
+  TYPE_FIBER,
+  TYPE_FN,
+  TYPE_LIST,
+  TYPE_MAP,
+  TYPE_NULL,
+  TYPE_NUM,
+  TYPE_OBJECT,
+  TYPE_RANGE,
+  TYPE_STRING,
+  Type_CountOf,
+} Type;
+
 // TODO: Move into wren_vm.c?
 struct WrenVM
 {
-  // TODO: Use an array for some of these.
-  ObjClass* boolClass;
-  ObjClass* classClass;
-  ObjClass* fiberClass;
-  ObjClass* fnClass;
-  ObjClass* listClass;
-  ObjClass* mapClass;
-  ObjClass* nullClass;
-  ObjClass* numClass;
-  ObjClass* objectClass;
-  ObjClass* rangeClass;
-  ObjClass* stringClass;
+  // The array of predefined types.
+  ObjClass* types[Type_CountOf];
 
   // The currently defined global variables.
   ValueBuffer globals;
@@ -308,24 +313,24 @@ void wrenPopRoot(WrenVM* vm);
 static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 {
 #if WREN_NAN_TAGGING
-  if (IS_NUM(value)) return vm->numClass;
+  if (IS_NUM(value)) return vm->types[TYPE_NUM];
   if (IS_OBJ(value)) return AS_OBJ(value)->classObj;
 
   switch (GET_TAG(value))
   {
-    case TAG_FALSE: return vm->boolClass; break;
-    case TAG_NAN: return vm->numClass; break;
-    case TAG_NULL: return vm->nullClass; break;
-    case TAG_TRUE: return vm->boolClass; break;
+    case TAG_FALSE: return vm->types[TYPE_BOOL]; break;
+    case TAG_NAN: return vm->types[TYPE_NUM]; break;
+    case TAG_NULL: return vm->types[TYPE_NULL]; break;
+    case TAG_TRUE: return vm->types[TYPE_BOOL]; break;
     case TAG_UNDEFINED: UNREACHABLE();
   }
 #else
   switch (value.type)
   {
-    case VAL_FALSE: return vm->boolClass;
-    case VAL_NULL: return vm->nullClass;
-    case VAL_NUM: return vm->numClass;
-    case VAL_TRUE: return vm->boolClass;
+    case VAL_FALSE: return vm->types[TYPE_BOOL];
+    case VAL_NULL: return vm->types[TYPE_NULL];
+	case VAL_NUM: return vm->types[TYPE_NUM];
+    case VAL_TRUE: return vm->types[TYPE_BOOL];
     case VAL_OBJ: return AS_OBJ(value)->classObj;
     case VAL_UNDEFINED: UNREACHABLE();
   }

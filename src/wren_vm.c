@@ -967,7 +967,7 @@ static bool runInterpreter(WrenVM* vm)
       if (IS_NULL(PEEK()))
       {
         // Implicit Object superclass.
-        superclass = vm->objectClass;
+        superclass = vm->types[TYPE_OBJECT];
       }
       else
       {
@@ -1131,7 +1131,7 @@ static void defineMethod(WrenVM* vm, const char* className,
     wrenPushRoot(vm, (Obj*)nameString);
 
     // TODO: Allow passing in name for superclass?
-    classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
+    classObj = wrenNewClass(vm, vm->types[TYPE_OBJECT], 0, nameString);
     wrenDefineGlobal(vm, className, length, OBJ_VAL(classObj));
 
     wrenPopRoot(vm);

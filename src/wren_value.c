@@ -87,7 +87,7 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   wrenPushRoot(vm, (Obj*)metaclassName);
 
   ObjClass* metaclass = wrenNewSingleClass(vm, 0, metaclassName);
-  metaclass->obj.classObj = vm->classClass;
+  metaclass->obj.classObj = vm->types[TYPE_CLASS];
 
   wrenPopRoot(vm);
 
@@ -96,7 +96,7 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
 
   // Metaclasses always inherit Class and do not parallel the non-metaclass
   // hierarchy.
-  wrenBindSuperclass(vm, metaclass, vm->classClass);
+  wrenBindSuperclass(vm, metaclass, vm->types[TYPE_CLASS]);
 
   ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
 
@@ -132,7 +132,7 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 {
   ObjClosure* closure = ALLOCATE_FLEX(vm, ObjClosure,
                                       sizeof(Upvalue*) * fn->numUpvalues);
-  initObj(vm, &closure->obj, OBJ_CLOSURE, vm->fnClass);
+  initObj(vm, &closure->obj, OBJ_CLOSURE, vm->types[TYPE_FN]);
 
   closure->fn = fn;
 
@@ -146,7 +146,7 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
 {
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
-  initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
+  initObj(vm, &fiber->obj, OBJ_FIBER, vm->types[TYPE_FIBER]);
 
   // Push the stack frame for the function.
   fiber->stackTop = fiber->stack;
@@ -202,7 +202,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
   debug->sourceLines = sourceLines;
 
   ObjFn* fn = ALLOCATE(vm, ObjFn);
-  initObj(vm, &fn->obj, OBJ_FN, vm->fnClass);
+  initObj(vm, &fn->obj, OBJ_FN, vm->types[TYPE_FN]);
 
   // TODO: Should eventually copy this instead of taking ownership. When the
   // compiler grows this, its capacity will often exceed the actual used size.
@@ -245,7 +245,7 @@ ObjList* wrenNewList(WrenVM* vm, int numElements)
   }
 
   ObjList* list = ALLOCATE(vm, ObjList);
-  initObj(vm, &list->obj, OBJ_LIST, vm->listClass);
+  initObj(vm, &list->obj, OBJ_LIST, vm->types[TYPE_LIST]);
   list->capacity = numElements;
   list->count = numElements;
   list->elements = elements;
@@ -326,7 +326,7 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
 ObjMap* wrenNewMap(WrenVM* vm)
 {
   ObjMap* map = ALLOCATE(vm, ObjMap);
-  initObj(vm, &map->obj, OBJ_MAP, vm->mapClass);
+  initObj(vm, &map->obj, OBJ_MAP, vm->types[TYPE_MAP]);
   map->capacity = 0;
   map->count = 0;
   map->entries = NULL;
@@ -588,7 +588,7 @@ Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
 {
   ObjRange* range = ALLOCATE(vm, ObjRange);
-  initObj(vm, &range->obj, OBJ_RANGE, vm->rangeClass);
+  initObj(vm, &range->obj, OBJ_RANGE, vm->types[TYPE_RANGE]);
   range->from = from;
   range->to = to;
   range->isInclusive = isInclusive;
@@ -616,7 +616,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
 Value wrenNewUninitializedString(WrenVM* vm, size_t length)
 {
   ObjString* string = ALLOCATE_FLEX(vm, ObjString, length + 1);
-  initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
+  initObj(vm, &string->obj, OBJ_STRING, vm->types[TYPE_STRING]);
   string->length = (int)length;
 
   return OBJ_VAL(string);
