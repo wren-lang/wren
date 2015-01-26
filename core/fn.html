@@ -31,6 +31,7 @@
         <li><a href="fiber.html">Fiber</a></li>
         <li><a href="fn.html">Fn</a></li>
         <li><a href="list.html">List</a></li>
+        <li><a href="map.html">Map</a></li>
         <li><a href="null.html">Null</a></li>
         <li><a href="num.html">Num</a></li>
         <li><a href="object.html">Object</a></li>
@@ -56,6 +57,13 @@ you create a "bare" function when you don't want to immediately pass it as a
 
 
 <p>It is a runtime error if <code>block</code> is not a function.</p>
+<h3><strong>arity</strong> <a href="#arity" name="arity" class="header-anchor">#</a></h3>
+<p>The number of arguments the function requires.</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="k">new</span> <span class="n">Fn</span> <span class="p">{}.</span><span class="n">arity</span><span class="p">)</span>             <span class="c1">// 0.</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span><span class="o">|</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">|</span> <span class="n">a</span> <span class="p">}.</span><span class="n">arity</span><span class="p">)</span> <span class="c1">// 3.</span>
+</pre></div>
+
+
 <h3><strong>call</strong>(args...) <a href="#call(args)" name="call(args)" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
   </main>

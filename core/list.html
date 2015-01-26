@@ -31,6 +31,7 @@
         <li><a href="fiber.html">Fiber</a></li>
         <li><a href="fn.html">Fn</a></li>
         <li><a href="list.html">List</a></li>
+        <li><a href="map.html">Map</a></li>
         <li><a href="null.html">Null</a></li>
         <li><a href="num.html">Num</a></li>
         <li><a href="object.html">Object</a></li>
@@ -45,7 +46,7 @@
     <p>Extends <a href="sequence.html">Sequence</a>.</p>
 <p>An indexable contiguous collection of elements. More details <a href="../lists.html">here</a>.</p>
 <h3><strong>add</strong>(item) <a href="#add(item)" name="add(item)" class="header-anchor">#</a></h3>
-<p>Appends <code>item</code> onto the end of the list.</p>
+<p>Appends <code>item</code> to the end of the list.</p>
 <h3><strong>clear</strong> <a href="#clear" name="clear" class="header-anchor">#</a></h3>
 <p>Removes all items from the list.</p>
 <h3><strong>count</strong> <a href="#count" name="count" class="header-anchor">#</a></h3>
@@ -56,11 +57,35 @@
 <p>Implements the <a href="../control-flow.html#the-iterator-protocol">iterator protocol</a>
 for iterating over the elements in the list.</p>
 <h3><strong>removeAt</strong>(index) <a href="#removeat(index)" name="removeat(index)" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Removes the element at <code>index</code>. If <code>index</code> is negative, it counts backwards
+from the end of the list where <code>-1</code> is the last element. All trailing elements
+are shifted up to fill in where the removed element was.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="p">.</span><span class="n">removeAt</span><span class="p">(</span><span class="m">1</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, c, d]&quot;.</span>
+</pre></div>
+
+
+<p>It is a runtime error if the index is not an integer or is out of bounds.</p>
 <h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Gets the element at <code>index</code>. If <code>index</code> is negative, it counts backwards from
+the end of the list where <code>-1</code> is the last element.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">[</span><span class="m">1</span><span class="p">])</span> <span class="c1">// &quot;b&quot;.</span>
+</pre></div>
+
+
+<p>It is a runtime error if the index is not an integer or is out of bounds.</p>
 <h3><strong>[</strong>index<strong>]=</strong>(item) operator <a href="#[index]=(item)-operator" name="[index]=(item)-operator" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Replaces the element at <code>index</code> with <code>item</code>. If <code>index</code> is negative, it counts
+backwards from the end of the list where <code>-1</code> is the last element.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="p">[</span><span class="m">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;new&quot;</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, new, c]&quot;.</span>
+</pre></div>
+
+
+<p>It is a runtime error if the index is not an integer or is out of bounds.</p>
   </main>
 </div>
 <footer>

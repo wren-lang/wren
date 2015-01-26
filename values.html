@@ -64,7 +64,7 @@ All values are <em>immutable</em>&mdash;once created, they do not change. The nu
 character array modified in place.</p>
 <h2>Booleans <a href="#booleans" name="booleans" class="header-anchor">#</a></h2>
 <p>A boolean value represents truth or falsehood. There are two boolean literals,
-<code>true</code> and <code>false</code>. Their class is <code>Bool</code>.</p>
+<code>true</code> and <code>false</code>. Their class is <a href="core/bool.html">Bool</a>.</p>
 <h2>Numbers <a href="#numbers" name="numbers" class="header-anchor">#</a></h2>
 <p>Like other scripting languages, Wren has a single numeric type:
 double-precision floating point. Number literals look like you expect coming
@@ -78,10 +78,10 @@ from other languages:</p>
 </pre></div>
 
 
-<p>Numbers are instances of the <code>Num</code> class.</p>
+<p>Numbers are instances of the <a href="core/num.html">Num</a> class.</p>
 <h2>Strings <a href="#strings" name="strings" class="header-anchor">#</a></h2>
-<p>Strings are chunks of text stored as UTF-8. Their class is <code>String</code>. String
-literals are surrounded in double quotes:</p>
+<p>Strings are chunks of text stored as UTF-8. Their class is
+<a href="core/string.html">String</a>. String literals are surrounded in double quotes:</p>
 <div class="codehilite"><pre><span class="s2">&quot;hi there&quot;</span>
 </pre></div>
 
@@ -126,11 +126,13 @@ example:</p>
 </pre></div>
 
 
+<p>Their class is <a href="core/range.html">Range</a></p>
 <h2>Null <a href="#null" name="null" class="header-anchor">#</a></h2>
 <p>Wren has a special value <code>null</code>, which is the only instance of the class
-<code>Null</code>. (Note the difference in case.) It functions a bit like <code>void</code> in some
-languages: it indicates the absence of a value. If you call a method that
-doesn't return anything and get its returned value, you get <code>null</code> back.</p>
+<a href="core/null.html">Null</a>. (Note the difference in case.) It functions a bit like
+<code>void</code> in some languages: it indicates the absence of a value. If you call a
+method that doesn't return anything and get its returned value, you get <code>null</code>
+back.</p>
   </main>
 </div>
 <footer>

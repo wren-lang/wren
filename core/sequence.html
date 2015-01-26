@@ -31,6 +31,7 @@
         <li><a href="fiber.html">Fiber</a></li>
         <li><a href="fn.html">Fn</a></li>
         <li><a href="list.html">List</a></li>
+        <li><a href="map.html">Map</a></li>
         <li><a href="null.html">Null</a></li>
         <li><a href="num.html">Num</a></li>
         <li><a href="object.html">Object</a></li>
@@ -54,6 +55,12 @@ If it returns <code>false</code>, stops iterating and returns <code>false</code>
 </pre></div>
 
 
+<h3><strong>join</strong>(sep) <a href="#join(sep)" name="join(sep)" class="header-anchor">#</a></h3>
+<p>Returns a string representation of the list. The string representations of the
+elements in the list is concatenated with intervening occurrences of <code>sep</code>.</p>
+<p>It is a runtime error if <code>sep</code> is not a string.</p>
+<h3><strong>join</strong> <a href="#join" name="join" class="header-anchor">#</a></h3>
+<p>Calls <code>join</code> with the empty string as the separator.</p>
 <h3><strong>map</strong>(transformation) <a href="#map(transformation)" name="map(transformation)" class="header-anchor">#</a></h3>
 <p>Creates a new list by applying <code>transformation</code> to each element in the
 sequence.</p>
