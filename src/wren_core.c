@@ -1416,9 +1416,6 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->types[TYPE_NULL], "toString", null_toString);
 
   vm->types[TYPE_NUM] = defineClass(vm, "Num");
-  NATIVE(vm->types[TYPE_NUM]->obj.classObj, "srand", num_srand0);
-  NATIVE(vm->types[TYPE_NUM]->obj.classObj, "srand ", num_srand1);
-  NATIVE(vm->types[TYPE_NUM]->obj.classObj, "rand", num_rand);
   NATIVE(vm->types[TYPE_NUM], "-", num_negate);
   NATIVE(vm->types[TYPE_NUM], "- ", num_minus);
   NATIVE(vm->types[TYPE_NUM], "+ ", num_plus);
@@ -1437,16 +1434,11 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->types[TYPE_NUM], "abs", num_abs);
   NATIVE(vm->types[TYPE_NUM], "ceil", num_ceil);
   NATIVE(vm->types[TYPE_NUM], "cos", num_cos);
-  NATIVE(vm->types[TYPE_NUM], "def", num_deg);
-  NATIVE(vm->types[TYPE_NUM], "frac", num_frac);
   NATIVE(vm->types[TYPE_NUM], "floor", num_floor);
   NATIVE(vm->types[TYPE_NUM], "isNan", num_isNan);
-  NATIVE(vm->types[TYPE_NUM], "rad", num_rad);
-  NATIVE(vm->types[TYPE_NUM], "round", num_round);
   NATIVE(vm->types[TYPE_NUM], "sin", num_sin);
   NATIVE(vm->types[TYPE_NUM], "sqrt", num_sqrt);
   NATIVE(vm->types[TYPE_NUM], "toString", num_toString)
-  NATIVE(vm->types[TYPE_NUM], "truncate", num_truncate);
   // These are defined just so that 0 and -0 are equal, which is specified by
   // IEEE 754 even though they have different bit representations.
   NATIVE(vm->types[TYPE_NUM], "== ", num_eqeq);
