@@ -1392,6 +1392,7 @@ void wrenInitializeCore(WrenVM* vm)
   vm->types[TYPE_FN] = defineClass(vm, "Fn");
   NATIVE(vm->types[TYPE_FN]->obj.classObj, " instantiate", fn_instantiate);
   NATIVE(vm->types[TYPE_FN]->obj.classObj, "new ", fn_new);
+  NATIVE(vm->types[TYPE_FN], "arity", fn_arity);
   NATIVE(vm->types[TYPE_FN], "call", fn_call0);
   NATIVE(vm->types[TYPE_FN], "call ", fn_call1);
   NATIVE(vm->types[TYPE_FN], "call  ", fn_call2);
