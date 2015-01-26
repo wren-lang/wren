@@ -234,7 +234,7 @@ Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
   return OBJ_VAL(instance);
 }
 
-ObjList* wrenNewList(WrenVM* vm, int numElements)
+ObjList* wrenNewList(WrenVM* vm, size_t numElements)
 {
   // Allocate this before the list object in case it triggers a GC which would
   // free the list.
@@ -278,7 +278,7 @@ void wrenListAdd(WrenVM* vm, ObjList* list, Value value)
   list->elements[list->count++] = value;
 }
 
-void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
+void wrenListInsert(WrenVM* vm, ObjList* list, Value value, size_t index)
 {
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
@@ -287,7 +287,7 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
   if (IS_OBJ(value)) wrenPopRoot(vm);
 
   // Shift items down.
-  for (int i = list->count; i > index; i--)
+  for (size_t i = list->count; i > index; i--)
   {
     list->elements[i] = list->elements[i - 1];
   }
@@ -296,14 +296,14 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
   list->count++;
 }
 
-Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
+Value wrenListRemoveAt(WrenVM* vm, ObjList* list, size_t index)
 {
   Value removed = list->elements[index];
 
   if (IS_OBJ(removed)) wrenPushRoot(vm, AS_OBJ(removed));
 
   // Shift items up.
-  for (int i = index; i < list->count - 1; i++)
+  for (size_t i = index; i < list->count - 1; i++)
   {
     list->elements[i] = list->elements[i + 1];
   }
@@ -763,7 +763,7 @@ static void markList(WrenVM* vm, ObjList* list)
 
   // Mark the elements.
   Value* elements = list->elements;
-  for (int i = 0; i < list->count; i++)
+  for (size_t i = 0; i < list->count; i++)
   {
     wrenMarkValue(vm, elements[i]);
   }
