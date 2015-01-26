@@ -148,11 +148,6 @@ typedef enum
   // stack.
   CODE_RETURN,
 
-  // Create a new list with [arg] elements. The top [arg] values on the stack
-  // are the elements in forward order. Removes the elements and then pushes
-  // the new list.
-  CODE_LIST,
-
   // Creates a closure for the function stored at [arg] in the constant table.
   //
   // Following the function argument is a number of arguments, two for each

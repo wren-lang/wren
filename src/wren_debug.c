@@ -201,13 +201,6 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_CLOSE_UPVALUE: printf("CLOSE_UPVALUE\n"); break;
     case CODE_RETURN:        printf("CODE_RETURN\n"); break;
 
-    case CODE_LIST:
-    {
-      int length = READ_BYTE();
-      printf("%-16s %5d length\n", "LIST", length);
-      break;
-    }
-
     case CODE_CLOSURE:
     {
       int constant = READ_SHORT();

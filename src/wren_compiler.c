@@ -1628,33 +1628,46 @@ static void grouping(Compiler* compiler, bool allowAssignment)
 // A list literal.
 static void list(Compiler* compiler, bool allowAssignment)
 {
-  // Compile the list elements.
-  int numElements = 0;
+  // Load the List class.
+  int listClassSymbol = wrenSymbolTableFind(&compiler->parser->vm->globalNames,
+                                            "List", 4);
+  ASSERT(listClassSymbol != -1, "Should have already defined 'List' global.");
+  emitShortArg(compiler, CODE_LOAD_GLOBAL, listClassSymbol);
+
+  // Instantiate a new list.
+  emitShortArg(compiler, CODE_CALL_0,
+               methodSymbol(compiler, " instantiate", 12));
+
+  int addSymbol = methodSymbol(compiler, "add ", 4);
+
+  // Compile the list elements. Each one compiles to a ".add()" call.
   if (peek(compiler) != TOKEN_RIGHT_BRACKET)
   {
     do
     {
       ignoreNewlines(compiler);
-      numElements++;
+
+      // Push a copy of the list since the add() call will consume it.
+      emit(compiler, CODE_DUP);
+
+      // The element.
       expression(compiler);
+
+      emitShortArg(compiler, CODE_CALL_1, addSymbol);
+
+      // Discard the result of the add() call.
+      emit(compiler, CODE_POP);
     } while (match(compiler, TOKEN_COMMA));
   }
 
   // Allow newlines before the closing ']'.
   ignoreNewlines(compiler);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after list elements.");
-
-  // Create the list.
-  // TODO: Handle lists >255 elements.
-  emitByteArg(compiler, CODE_LIST, numElements);
 }
 
 // A map literal.
 static void map(Compiler* compiler, bool allowAssignment)
 {
-  // TODO: Do we want to do the same thing for list literals and remove the
-  // bytecodes for them?
-
   // Load the Map class.
   int mapClassSymbol = wrenSymbolTableFind(&compiler->parser->vm->globalNames,
                                            "Map", 3);
@@ -2403,7 +2416,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_STORE_FIELD_THIS:
     case CODE_LOAD_FIELD:
     case CODE_STORE_FIELD:
-    case CODE_LIST:
     case CODE_CLASS:
       return 1;
 

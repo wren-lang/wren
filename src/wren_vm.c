@@ -493,7 +493,6 @@ static bool runInterpreter(WrenVM* vm)
     &&code_IS,
     &&code_CLOSE_UPVALUE,
     &&code_RETURN,
-    &&code_LIST,
     &&code_CLOSURE,
     &&code_CLASS,
     &&code_METHOD_INSTANCE,
@@ -924,23 +923,6 @@ static bool runInterpreter(WrenVM* vm)
       }
 
       LOAD_FRAME();
-      DISPATCH();
-    }
-
-    CASE_CODE(LIST):
-    {
-      uint8_t numElements = READ_BYTE();
-      ObjList* list = wrenNewList(vm, numElements);
-      // TODO: Do a straight memcopy.
-      for (int i = 0; i < numElements; i++)
-      {
-        list->elements[i] = *(fiber->stackTop - numElements + i);
-      }
-
-      // Discard the elements.
-      fiber->stackTop -= numElements;
-
-      PUSH(OBJ_VAL(list));
       DISPATCH();
     }
 

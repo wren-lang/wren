@@ -43,7 +43,7 @@
 static const char* libSource =
 "class Sequence {\n"
 "  map(f) {\n"
-"    var result = []\n"
+"    var result = new List\n"
 "    for (element in this) {\n"
 "      result.add(f.call(element))\n"
 "    }\n"
@@ -51,7 +51,7 @@ static const char* libSource =
 "  }\n"
 "\n"
 "  where(f) {\n"
-"    var result = []\n"
+"    var result = new List\n"
 "    for (element in this) {\n"
 "      if (f.call(element)) result.add(element)\n"
 "    }\n"
