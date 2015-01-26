@@ -736,11 +736,11 @@ DEF_NATIVE(map_subscript)
 {
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
 
-  Value value;
-  if (wrenMapGet(AS_MAP(args[0]), args[1], &value)) RETURN_VAL(value);
+  ObjMap* map = AS_MAP(args[0]);
+  uint32_t index = wrenMapFind(map, args[1]);
+  if (index == UINT32_MAX) RETURN_NULL;
 
-  // Not found.
-  RETURN_NULL;
+  RETURN_VAL(map->entries[index].value);
 }
 
 DEF_NATIVE(map_subscriptSetter)
@@ -753,11 +753,7 @@ DEF_NATIVE(map_subscriptSetter)
 
 DEF_NATIVE(map_clear)
 {
-  ObjMap* map = AS_MAP(args[0]);
-  wrenReallocate(vm, map->entries, 0, 0);
-  map->entries = NULL;
-  map->capacity = 0;
-  map->count = 0;
+  wrenMapClear(vm, AS_MAP(args[0]));
   RETURN_NULL;
 }
 
@@ -765,8 +761,7 @@ DEF_NATIVE(map_containsKey)
 {
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
 
-  Value dummy;
-  RETURN_BOOL(wrenMapGet(AS_MAP(args[0]), args[1], &dummy));
+  RETURN_BOOL(wrenMapFind(AS_MAP(args[0]), args[1]) != UINT32_MAX);
 }
 
 DEF_NATIVE(map_count)
@@ -798,6 +793,13 @@ DEF_NATIVE(map_iterate)
 
   // If we get here, walked all of the entries.
   RETURN_FALSE;
+}
+
+DEF_NATIVE(map_remove)
+{
+  if (!validateKey(vm, args, 1)) return PRIM_ERROR;
+  
+  RETURN_VAL(wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1]));
 }
 
 DEF_NATIVE(map_keyIteratorValue)
@@ -1499,6 +1501,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->mapClass, "clear", map_clear);
   NATIVE(vm->mapClass, "containsKey ", map_containsKey);
   NATIVE(vm->mapClass, "count", map_count);
+  NATIVE(vm->mapClass, "remove ", map_remove);
   NATIVE(vm->mapClass, "iterate_ ", map_iterate);
   NATIVE(vm->mapClass, "keyIteratorValue_ ", map_keyIteratorValue);
   NATIVE(vm->mapClass, "valueIteratorValue_ ", map_valueIteratorValue);

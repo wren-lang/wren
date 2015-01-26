@@ -1,4 +1,5 @@
-// Make sure it can grow to some size.
+// This brute force test basically validates that the map can grow and shrink
+// its capacity while still behaving correctly.
 
 var fishes = [
   "Aeneus corydoras", "African glass catfish", "African lungfish",
@@ -65,9 +66,16 @@ for (fish in fishes) {
 
 IO.print(map.count) // expect: 249
 
-// Re-add some keys.
-for (n in 20..50) {
-  map[fishes[n]] = n
+for (n in 0...150) {
+  map.remove(fishes[n])
 }
 
-IO.print(map.count) // expect: 249
+IO.print(map.count) // expect: 99
+
+// Make sure we can still find all of the remaining ones.
+var contained = 0
+for (n in 150...249) {
+  if (map.containsKey(fishes[n])) contained = contained + 1
+}
+
+IO.print(contained) // expect: 99

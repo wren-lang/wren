@@ -453,22 +453,14 @@ static bool addEntry(MapEntry* entries, uint32_t capacity,
   }
 }
 
-// Ensures there is enough capacity in the entry array to store at least one
-// more entry.
-static void ensureMapCapacity(WrenVM* vm, ObjMap* map)
+// Updates [map]'s entry array to [capacity].
+static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
 {
-  // Only resize if we're too full.
-  if (map->count + 1 <= map->capacity * MAP_LOAD_PERCENT / 100) return;
-
-  // Figure out the new hash table size.
-  uint32_t newCapacity = map->capacity * GROW_FACTOR;
-  if (newCapacity < MIN_CAPACITY) newCapacity = MIN_CAPACITY;
-
   // Create the new empty hash table.
-  MapEntry* newEntries = ALLOCATE_ARRAY(vm, MapEntry, newCapacity);
-  for (uint32_t i = 0; i < newCapacity; i++)
+  MapEntry* entries = ALLOCATE_ARRAY(vm, MapEntry, capacity);
+  for (uint32_t i = 0; i < capacity; i++)
   {
-    newEntries[i].key = UNDEFINED_VAL;
+    entries[i].key = UNDEFINED_VAL;
   }
 
   // Re-add the existing entries.
@@ -479,17 +471,17 @@ static void ensureMapCapacity(WrenVM* vm, ObjMap* map)
       MapEntry* entry = &map->entries[i];
       if (IS_UNDEFINED(entry->key)) continue;
 
-      addEntry(newEntries, newCapacity, entry->key, entry->value);
+      addEntry(entries, capacity, entry->key, entry->value);
     }
   }
 
   // Replace the array.
   wrenReallocate(vm, map->entries, 0, 0);
-  map->entries = newEntries;
-  map->capacity = newCapacity;
+  map->entries = entries;
+  map->capacity = capacity;
 }
 
-bool wrenMapGet(ObjMap* map, Value key, Value* value)
+uint32_t wrenMapFind(ObjMap* map, Value key)
 {
   // Figure out where to insert it in the table. Use open addressing and
   // basic linear probing.
@@ -502,14 +494,10 @@ bool wrenMapGet(ObjMap* map, Value key, Value* value)
     MapEntry* entry = &map->entries[index];
 
     // If we found an empty slot, the key is not in the table.
-    if (IS_UNDEFINED(entry->key)) return false;
+    if (IS_UNDEFINED(entry->key)) return UINT32_MAX;
 
     // If the key matches, we found it.
-    if (wrenValuesEqual(entry->key, key))
-    {
-      *value = entry->value;
-      return true;
-    }
+    if (wrenValuesEqual(entry->key, key)) return index;
 
     // Try the next slot.
     index = (index + 1) % map->capacity;
@@ -518,12 +506,83 @@ bool wrenMapGet(ObjMap* map, Value key, Value* value)
 
 void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value)
 {
-  ensureMapCapacity(vm, map);
+  // If the map is getting too full, make room first.
+  if (map->count + 1 > map->capacity * MAP_LOAD_PERCENT / 100)
+  {
+    // Figure out the new hash table size.
+    uint32_t capacity = map->capacity * GROW_FACTOR;
+    if (capacity < MIN_CAPACITY) capacity = MIN_CAPACITY;
+
+    resizeMap(vm, map, capacity);
+  }
+
   if (addEntry(map->entries, map->capacity, key, value))
   {
     // A new key was added.
     map->count++;
   }
+}
+
+void wrenMapClear(WrenVM* vm, ObjMap* map)
+{
+  wrenReallocate(vm, map->entries, 0, 0);
+  map->entries = NULL;
+  map->capacity = 0;
+  map->count = 0;
+}
+
+Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
+{
+  uint32_t index = wrenMapFind(map, key);
+  if (index == UINT32_MAX) return NULL_VAL;
+
+  // Remove the entry from the map.
+  Value value = map->entries[index].value;
+  map->entries[index].key = UNDEFINED_VAL;
+
+  if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
+
+  map->count--;
+
+  if (map->count == 0)
+  {
+    // Removed the last item, so free the array.
+    wrenMapClear(vm, map);
+    return value;
+  }
+  else if (map->count < map->capacity / GROW_FACTOR * MAP_LOAD_PERCENT / 100)
+  {
+    uint32_t capacity = map->capacity / GROW_FACTOR;
+    if (capacity < MIN_CAPACITY) capacity = MIN_CAPACITY;
+
+    // The map is getting empty, so shrink the entry array back down.
+    // TODO: Should we do this less aggressively than we grow?
+    resizeMap(vm, map, capacity);
+  }
+  else
+  {
+    // We've removed the entry, but we need to update any subsequent entries
+    // that may have wanted to occupy its slot and got pushed down. Otherwise,
+    // we won't be able to find them later.
+    while (true)
+    {
+      index = (index + 1) % map->capacity;
+
+      // When we hit an empty entry, we know we've handled every entry that may
+      // have been affected by the removal.
+      if (IS_UNDEFINED(map->entries[index].key)) break;
+
+      // Re-add the entry so it gets dropped into the right slot.
+      Value removedKey = map->entries[index].key;
+      Value removedValue = map->entries[index].value;
+      map->entries[index].key = UNDEFINED_VAL;
+
+      addEntry(map->entries, map->capacity, removedKey, removedValue);
+    }
+  }
+
+  if (IS_OBJ(value)) wrenPopRoot(vm);
+  return value;
 }
 
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
