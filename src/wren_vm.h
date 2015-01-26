@@ -50,11 +50,11 @@ typedef enum
   // Stores the top of stack in upvalue [arg]. Does not pop it.
   CODE_STORE_UPVALUE,
 
-  // Pushes the value in global slot [arg].
-  CODE_LOAD_GLOBAL,
+  // Pushes the value of the top-level variable in slot [arg].
+  CODE_LOAD_MODULE_VAR,
 
-  // Stores the top of stack in global slot [arg]. Does not pop it.
-  CODE_STORE_GLOBAL,
+  // Stores the top of stack in top-level variable slot [arg]. Does not pop it.
+  CODE_STORE_MODULE_VAR,
 
   // Pushes the value of the field in slot [arg] of the receiver of the current
   // function. This is used for regular field accesses on "this" directly in
@@ -193,11 +193,12 @@ struct WrenVM
   ObjClass* rangeClass;
   ObjClass* stringClass;
 
-  // The currently defined global variables.
-  ValueBuffer globals;
-
   // The fiber that is currently running.
   ObjFiber* fiber;
+
+  // TODO: Temp.
+  // The main module.
+  Module main;
 
   // Memory management data:
 
@@ -254,10 +255,6 @@ struct WrenVM
   // There is a single global symbol table for all method names on all classes.
   // Method calls are dispatched directly by index in this table.
   SymbolTable methodNames;
-
-  // Symbol table for the names of all global variables. Indexes here directly
-  // correspond to entries in [globals].
-  SymbolTable globalNames;
 };
 
 // A generic allocation function that handles all explicit memory management.
@@ -278,18 +275,20 @@ struct WrenVM
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
-// Adds a new implicitly declared global named [name] to the global namespace.
+// Adds a new implicitly declared top-level variable named [name] to [module].
 //
-// Does not check to see if a global with that name is already declared or
-// defined. Returns the symbol for the new global or -2 if there are too many
-// globals defined.
-int wrenDeclareGlobal(WrenVM* vm, const char* name, size_t length);
+// Does not check to see if a variable with that name is already declared or
+// defined. Returns the symbol for the new variable or -2 if there are too many
+// variables defined.
+int wrenDeclareVariable(WrenVM* vm, Module* module, const char* name,
+                        size_t length);
 
-// Adds a new global named [name] to the global namespace.
+// Adds a new top-level variable named [name] to [module].
 //
-// Returns the symbol for the new global, -1 if a global with the given name
-// is already defined, or -2 if there are too many globals defined.
-int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value);
+// Returns the symbol for the new variable, -1 if a variable with the given name
+// is already defined, or -2 if there are too many variables defined.
+int wrenDefineVariable(WrenVM* vm, Module* module, const char* name,
+                       size_t length, Value value);
 
 // Sets the current Compiler being run to [compiler].
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler);

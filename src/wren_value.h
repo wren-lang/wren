@@ -13,7 +13,7 @@
 // critical for performance.
 //
 // The main type exposed by this is [Value]. A C variable of that type is a
-// storage location that can hold any Wren value. The stack, global variables,
+// storage location that can hold any Wren value. The stack, module variables,
 // and instance fields are all implemented in C as variables of type Value.
 //
 // The built-in types for booleans, numbers, and null are unboxed: their value
@@ -27,9 +27,9 @@
 // There is also a special singleton value "undefined". It is used internally
 // but never appears as a real value to a user. It has two uses:
 //
-// - It is used to identify globals that have been implicitly declared by use
-//   in a forward reference but not yet explicitly declared. These only exist
-//   during compilation and do not appear at runtime.
+// - It is used to identify module variables that have been implicitly declared
+//   by use in a forward reference but not yet explicitly declared. These only
+//   exist during compilation and do not appear at runtime.
 //
 // - It is used to represent unused map entries in an ObjMap.
 //
@@ -231,6 +231,18 @@ typedef struct
   int* sourceLines;
 } FnDebug;
 
+// TODO: Move elsewhere?
+// TODO: Doc.
+typedef struct
+{
+  // The currently defined top-level variables.
+  ValueBuffer variables;
+
+  // Symbol table for the names of all module variables. Indexes here directly
+  // correspond to entries in [variables].
+  SymbolTable variableNames;
+} Module;
+
 // A first-class function object. A raw ObjFn can be used and invoked directly
 // if it has no upvalues (i.e. [numUpvalues] is zero). If it does use upvalues,
 // it must be wrapped in an [ObjClosure] first. The compiler is responsible for
@@ -242,6 +254,10 @@ typedef struct
   // to help perf, but it bears more investigation.
   Value* constants;
   uint8_t* bytecode;
+
+  // The module where this function was defined.
+  Module* module;
+
   int numUpvalues;
   int numConstants;
 

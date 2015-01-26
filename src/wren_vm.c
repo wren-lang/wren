@@ -24,6 +24,27 @@ static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)
   return realloc(memory, newSize);
 }
 
+static void initModule(WrenVM* vm, Module* module)
+{
+  wrenSymbolTableInit(vm, &module->variableNames);
+  wrenValueBufferInit(vm, &module->variables);
+}
+
+static void freeModule(WrenVM* vm, Module* module)
+{
+  wrenSymbolTableClear(vm, &module->variableNames);
+  wrenValueBufferClear(vm, &module->variables);
+}
+
+static void markModule(WrenVM* vm, Module* module)
+{
+  // Top-level variables.
+  for (int i = 0; i < module->variables.count; i++)
+  {
+    wrenMarkValue(vm, module->variables.data[i]);
+  }
+}
+
 WrenVM* wrenNewVM(WrenConfiguration* configuration)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -39,8 +60,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->foreignCallNumArgs = 0;
 
   wrenSymbolTableInit(vm, &vm->methodNames);
-  wrenSymbolTableInit(vm, &vm->globalNames);
-  wrenValueBufferInit(vm, &vm->globals);
+  initModule(vm, &vm->main);
 
   vm->bytesAllocated = 0;
 
@@ -91,8 +111,7 @@ void wrenFreeVM(WrenVM* vm)
   }
 
   wrenSymbolTableClear(vm, &vm->methodNames);
-  wrenSymbolTableClear(vm, &vm->globalNames);
-  wrenValueBufferClear(vm, &vm->globals);
+  freeModule(vm, &vm->main);
 
   wrenReallocate(vm, vm, 0, 0);
 }
@@ -125,11 +144,7 @@ static void collectGarbage(WrenVM* vm)
   // already been freed.
   vm->bytesAllocated = 0;
 
-  // Global variables.
-  for (int i = 0; i < vm->globals.count; i++)
-  {
-    wrenMarkValue(vm, vm->globals.data[i]);
-  }
+  markModule(vm, &vm->main);
 
   // Temporary roots.
   for (int i = 0; i < vm->numTempRoots; i++)
@@ -443,8 +458,8 @@ static bool runInterpreter(WrenVM* vm)
     &&code_STORE_LOCAL,
     &&code_LOAD_UPVALUE,
     &&code_STORE_UPVALUE,
-    &&code_LOAD_GLOBAL,
-    &&code_STORE_GLOBAL,
+    &&code_LOAD_MODULE_VAR,
+    &&code_STORE_MODULE_VAR,
     &&code_LOAD_FIELD_THIS,
     &&code_STORE_FIELD_THIS,
     &&code_LOAD_FIELD,
@@ -754,12 +769,12 @@ static bool runInterpreter(WrenVM* vm)
       DISPATCH();
     }
 
-    CASE_CODE(LOAD_GLOBAL):
-      PUSH(vm->globals.data[READ_SHORT()]);
+    CASE_CODE(LOAD_MODULE_VAR):
+      PUSH(fn->module->variables.data[READ_SHORT()]);
       DISPATCH();
 
-    CASE_CODE(STORE_GLOBAL):
-      vm->globals.data[READ_SHORT()] = PEEK();
+    CASE_CODE(STORE_MODULE_VAR):
+      fn->module->variables.data[READ_SHORT()] = PEEK();
       DISPATCH();
 
     CASE_CODE(STORE_FIELD_THIS):
@@ -1045,33 +1060,35 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   }
 }
 
-int wrenDeclareGlobal(WrenVM* vm, const char* name, size_t length)
+int wrenDeclareVariable(WrenVM* vm, Module* module, const char* name,
+                        size_t length)
 {
-  if (vm->globals.count == MAX_GLOBALS) return -2;
+  if (module->variables.count == MAX_MODULE_VARS) return -2;
 
-  wrenValueBufferWrite(vm, &vm->globals, UNDEFINED_VAL);
-  return wrenSymbolTableAdd(vm, &vm->globalNames, name, length);
+  wrenValueBufferWrite(vm, &module->variables, UNDEFINED_VAL);
+  return wrenSymbolTableAdd(vm, &module->variableNames, name, length);
 }
 
-int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
+int wrenDefineVariable(WrenVM* vm, Module* module, const char* name,
+                       size_t length, Value value)
 {
-  if (vm->globals.count == MAX_GLOBALS) return -2;
+  if (module->variables.count == MAX_MODULE_VARS) return -2;
 
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
-  // See if the global is already explicitly or implicitly declared.
-  int symbol = wrenSymbolTableFind(&vm->globalNames, name, length);
+  // See if the variable is already explicitly or implicitly declared.
+  int symbol = wrenSymbolTableFind(&module->variableNames, name, length);
 
   if (symbol == -1)
   {
-    // Brand new global.
-    symbol = wrenSymbolTableAdd(vm, &vm->globalNames, name, length);
-    wrenValueBufferWrite(vm, &vm->globals, value);
+    // Brand new variable.
+    symbol = wrenSymbolTableAdd(vm, &module->variableNames, name, length);
+    wrenValueBufferWrite(vm, &module->variables, value);
   }
-  else if (IS_UNDEFINED(vm->globals.data[symbol]))
+  else if (IS_UNDEFINED(module->variables.data[symbol]))
   {
     // Explicitly declaring an implicitly declared one. Mark it as defined.
-    vm->globals.data[symbol] = value;
+    module->variables.data[symbol] = value;
   }
   else
   {
@@ -1112,15 +1129,16 @@ static void defineMethod(WrenVM* vm, const char* className,
 
   ASSERT(methodFn != NULL, "Must provide method function.");
 
+  // TODO: Which module do these go in?
   // Find or create the class to bind the method to.
-  int classSymbol = wrenSymbolTableFind(&vm->globalNames,
-                               className, strlen(className));
+  int classSymbol = wrenSymbolTableFind(&vm->main.variableNames,
+                                        className, strlen(className));
   ObjClass* classObj;
 
   if (classSymbol != -1)
   {
     // TODO: Handle name is not class.
-    classObj = AS_CLASS(vm->globals.data[classSymbol]);
+    classObj = AS_CLASS(vm->main.variables.data[classSymbol]);
   }
   else
   {
@@ -1132,7 +1150,7 @@ static void defineMethod(WrenVM* vm, const char* className,
 
     // TODO: Allow passing in name for superclass?
     classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-    wrenDefineGlobal(vm, className, length, OBJ_VAL(classObj));
+    wrenDefineVariable(vm, &vm->main, className, length, OBJ_VAL(classObj));
 
     wrenPopRoot(vm);
   }

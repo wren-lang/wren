@@ -16,9 +16,9 @@
 // parsing/code generation. This minimizes the number of explicit forward
 // declarations needed.
 
-// The maximum number of local (i.e. non-global) variables that can be declared
-// in a single function, method, or chunk of top level code. This is the
-// maximum number of variables in scope at one time, and spans block scopes.
+// The maximum number of local (i.e. not module level) variables that can be
+// declared in a single function, method, or chunk of top level code. This is
+// the maximum number of variables in scope at one time, and spans block scopes.
 //
 // Note that this limitation is also explicit in the bytecode. Since
 // `CODE_LOAD_LOCAL` and `CODE_STORE_LOCAL` use a single argument byte to
@@ -114,6 +114,8 @@ typedef struct
 typedef struct
 {
   WrenVM* vm;
+
+  Module* module;
 
   // Heap-allocated string representing the path to the code being parsed. Used
   // for stack traces.
@@ -246,7 +248,7 @@ struct sCompiler
 
   // The current level of block scope nesting, where zero is no nesting. A -1
   // here means top-level code is being compiled and there is no block scope
-  // in effect at all. Any variables declared will be global.
+  // in effect at all. Any variables declared will be module-level.
   int scopeDepth;
 
   // The current innermost loop being compiled, or NULL if not in a loop.
@@ -364,7 +366,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   {
     compiler->numLocals = 0;
 
-    // Compiling top-level code, so the initial scope is global.
+    // Compiling top-level code, so the initial scope is module-level.
     compiler->scopeDepth = -1;
   }
   else
@@ -1009,19 +1011,20 @@ static int declareVariable(Compiler* compiler)
           MAX_VARIABLE_NAME);
   }
 
-  // Top-level global scope.
+  // Top-level module scope.
   if (compiler->scopeDepth == -1)
   {
-    int symbol = wrenDefineGlobal(compiler->parser->vm,
-                                  token->start, token->length, NULL_VAL);
+    int symbol = wrenDefineVariable(compiler->parser->vm,
+                                    compiler->parser->module,
+                                    token->start, token->length, NULL_VAL);
 
     if (symbol == -1)
     {
-      error(compiler, "Global variable is already defined.");
+      error(compiler, "Module variable is already defined.");
     }
     else if (symbol == -2)
     {
-      error(compiler, "Too many global variables defined.");
+      error(compiler, "Too many module variables defined.");
     }
 
     return symbol;
@@ -1069,9 +1072,9 @@ static void defineVariable(Compiler* compiler, int symbol)
   // in the correct slot on the stack already so we're done.
   if (compiler->scopeDepth >= 0) return;
 
-  // It's a global variable, so store the value in the global slot and then
-  // discard the temporary for the initializer.
-  emitShortArg(compiler, CODE_STORE_GLOBAL, symbol);
+  // It's a module-level variable, so store the value in the module slot and
+  // then discard the temporary for the initializer.
+  emitShortArg(compiler, CODE_STORE_MODULE_VAR, symbol);
   emit(compiler, CODE_POP);
 }
 
@@ -1203,11 +1206,11 @@ static int findUpvalue(Compiler* compiler, const char* name, int length)
 
 // Look up [name] in the current scope to see what name it is bound to. Returns
 // the index of the name either in local scope, or the enclosing function's
-// upvalue list. Does not search the global scope. Returns -1 if not found.
+// upvalue list. Does not search the module scope. Returns -1 if not found.
 //
 // Sets [loadInstruction] to the instruction needed to load the variable. Will
 // be [CODE_LOAD_LOCAL] or [CODE_LOAD_UPVALUE].
-static int resolveNonglobal(Compiler* compiler, const char* name, int length,
+static int resolveNonmodule(Compiler* compiler, const char* name, int length,
                             Code* loadInstruction)
 {
   // Look it up in the local scopes. Look in reverse order so that the most
@@ -1223,19 +1226,20 @@ static int resolveNonglobal(Compiler* compiler, const char* name, int length,
 }
 
 // Look up [name] in the current scope to see what name it is bound to. Returns
-// the index of the name either in global scope, local scope, or the enclosing
+// the index of the name either in module scope, local scope, or the enclosing
 // function's upvalue list. Returns -1 if not found.
 //
 // Sets [loadInstruction] to the instruction needed to load the variable. Will
-// be one of [CODE_LOAD_LOCAL], [CODE_LOAD_UPVALUE], or [CODE_LOAD_GLOBAL].
+// be one of [CODE_LOAD_LOCAL], [CODE_LOAD_UPVALUE], or [CODE_LOAD_MODULE_VAR].
 static int resolveName(Compiler* compiler, const char* name, int length,
                        Code* loadInstruction)
 {
-  int nonglobal = resolveNonglobal(compiler, name, length, loadInstruction);
-  if (nonglobal != -1) return nonglobal;
+  int nonmodule = resolveNonmodule(compiler, name, length, loadInstruction);
+  if (nonmodule != -1) return nonmodule;
 
-  *loadInstruction = CODE_LOAD_GLOBAL;
-  return wrenSymbolTableFind(&compiler->parser->vm->globalNames, name, length);
+  *loadInstruction = CODE_LOAD_MODULE_VAR;
+  return wrenSymbolTableFind(&compiler->parser->module->variableNames,
+                             name, length);
 }
 
 static void loadLocal(Compiler* compiler, int slot)
@@ -1607,7 +1611,7 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
 static void loadThis(Compiler* compiler)
 {
   Code loadInstruction;
-  int index = resolveNonglobal(compiler, "this", 4, &loadInstruction);
+  int index = resolveNonmodule(compiler, "this", 4, &loadInstruction);
   if (loadInstruction == CODE_LOAD_LOCAL)
   {
     loadLocal(compiler, index);
@@ -1629,10 +1633,10 @@ static void grouping(Compiler* compiler, bool allowAssignment)
 static void list(Compiler* compiler, bool allowAssignment)
 {
   // Load the List class.
-  int listClassSymbol = wrenSymbolTableFind(&compiler->parser->vm->globalNames,
-                                            "List", 4);
-  ASSERT(listClassSymbol != -1, "Should have already defined 'List' global.");
-  emitShortArg(compiler, CODE_LOAD_GLOBAL, listClassSymbol);
+  int listClassSymbol = wrenSymbolTableFind(
+      &compiler->parser->module->variableNames, "List", 4);
+  ASSERT(listClassSymbol != -1, "Should have already defined 'List' variable.");
+  emitShortArg(compiler, CODE_LOAD_MODULE_VAR, listClassSymbol);
 
   // Instantiate a new list.
   emitShortArg(compiler, CODE_CALL_0,
@@ -1669,10 +1673,10 @@ static void list(Compiler* compiler, bool allowAssignment)
 static void map(Compiler* compiler, bool allowAssignment)
 {
   // Load the Map class.
-  int mapClassSymbol = wrenSymbolTableFind(&compiler->parser->vm->globalNames,
-                                           "Map", 3);
-  ASSERT(mapClassSymbol != -1, "Should have already defined 'Map' global.");
-  emitShortArg(compiler, CODE_LOAD_GLOBAL, mapClassSymbol);
+  int mapClassSymbol = wrenSymbolTableFind(
+      &compiler->parser->module->variableNames, "Map", 3);
+  ASSERT(mapClassSymbol != -1, "Should have already defined 'Map' variable.");
+  emitShortArg(compiler, CODE_LOAD_MODULE_VAR, mapClassSymbol);
 
   // Instantiate a new map.
   emitShortArg(compiler, CODE_CALL_0,
@@ -1827,14 +1831,14 @@ static void variable(Compiler* compiler, bool allowAssignment, int index,
       case CODE_LOAD_UPVALUE:
         emitByteArg(compiler, CODE_STORE_UPVALUE, index);
         break;
-      case CODE_LOAD_GLOBAL:
-        emitShortArg(compiler, CODE_STORE_GLOBAL, index);
+      case CODE_LOAD_MODULE_VAR:
+        emitShortArg(compiler, CODE_STORE_MODULE_VAR, index);
         break;
       default:
         UNREACHABLE();
     }
   }
-  else if (loadInstruction == CODE_LOAD_GLOBAL)
+  else if (loadInstruction == CODE_LOAD_MODULE_VAR)
   {
     emitShortArg(compiler, loadInstruction, index);
   }
@@ -1898,7 +1902,7 @@ static void name(Compiler* compiler, bool allowAssignment)
   Token* token = &compiler->parser->previous;
 
   Code loadInstruction;
-  int index = resolveNonglobal(compiler, token->start, token->length,
+  int index = resolveNonmodule(compiler, token->start, token->length,
                                &loadInstruction);
   if (index != -1)
   {
@@ -1923,10 +1927,10 @@ static void name(Compiler* compiler, bool allowAssignment)
     return;
   }
 
-  // Otherwise, look for a global variable with the name.
-  int global = wrenSymbolTableFind(&compiler->parser->vm->globalNames,
+  // Otherwise, look for a module-level variable with the name.
+  int module = wrenSymbolTableFind(&compiler->parser->module->variableNames,
                                    token->start, token->length);
-  if (global == -1)
+  if (module == -1)
   {
     if (isLocalName(token->start))
     {
@@ -1934,18 +1938,18 @@ static void name(Compiler* compiler, bool allowAssignment)
       return;
     }
 
-    // If it's a nonlocal name, implicitly define a global in the hopes that
-    // we get a real definition later.
-    global = wrenDeclareGlobal(compiler->parser->vm,
-                               token->start, token->length);
+    // If it's a nonlocal name, implicitly define a module-level variable in
+    // the hopes that we get a real definition later.
+    module = wrenDeclareVariable(compiler->parser->vm, compiler->parser->module,
+                                 token->start, token->length);
 
-    if (global == -2)
+    if (module == -2)
     {
-      error(compiler, "Too many global variables defined.");
+      error(compiler, "Too many module variables defined.");
     }
   }
 
-  variable(compiler, allowAssignment, global, CODE_LOAD_GLOBAL);
+  variable(compiler, allowAssignment, module, CODE_LOAD_MODULE_VAR);
 }
 
 static void null(Compiler* compiler, bool allowAssignment)
@@ -2420,8 +2424,8 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
       return 1;
 
     case CODE_CONSTANT:
-    case CODE_LOAD_GLOBAL:
-    case CODE_STORE_GLOBAL:
+    case CODE_LOAD_MODULE_VAR:
+    case CODE_STORE_MODULE_VAR:
     case CODE_CALL_0:
     case CODE_CALL_1:
     case CODE_CALL_2:
@@ -2768,7 +2772,7 @@ static void classDefinition(Compiler* compiler)
 {
   // Create a variable to store the class in.
   int symbol = declareNamedVariable(compiler);
-  bool isGlobal = compiler->scopeDepth == -1;
+  bool isModule = compiler->scopeDepth == -1;
 
   // Make a string constant for the name.
   int nameConstant = addConstant(compiler, wrenNewString(compiler->parser->vm,
@@ -2848,9 +2852,9 @@ static void classDefinition(Compiler* compiler)
                               signature);
 
     // Load the class.
-    if (isGlobal)
+    if (isModule)
     {
-      emitShortArg(compiler, CODE_LOAD_GLOBAL, symbol);
+      emitShortArg(compiler, CODE_LOAD_MODULE_VAR, symbol);
     }
     else
     {
@@ -2922,6 +2926,9 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 
   Parser parser;
   parser.vm = vm;
+  // TODO: Pass in module. Probably want separate public function that defines
+  // new module (or uses REPL one) and private one here that just passes it in.
+  parser.module = &vm->main;
   parser.sourcePath = sourcePathObj;
   parser.source = source;
 
@@ -2966,15 +2973,15 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
   emit(&compiler, CODE_NULL);
   emit(&compiler, CODE_RETURN);
 
-  // See if there are any implicitly declared globals that never got an explicit
-  // definition.
+  // See if there are any implicitly declared module-level variables that never
+  // got an explicit definition.
   // TODO: It would be nice if the error was on the line where it was used.
-  for (int i = 0; i < vm->globals.count; i++)
+  for (int i = 0; i < parser.module->variables.count; i++)
   {
-    if (IS_UNDEFINED(vm->globals.data[i]))
+    if (IS_UNDEFINED(parser.module->variables.data[i]))
     {
       error(&compiler, "Variable '%s' is used but not defined.",
-            vm->globalNames.data[i]);
+            parser.module->variableNames.data[i]);
     }
   }
 

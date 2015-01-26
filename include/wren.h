@@ -93,6 +93,8 @@ void wrenFreeVM(WrenVM* vm);
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source);
 
+// TODO: Figure out how these interact with modules.
+
 // Defines a foreign method implemented by the host application. Looks for a
 // global class named [className] to bind the method to. If not found, it will
 // be created automatically.

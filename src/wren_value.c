@@ -210,6 +210,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
   // this, but it made the "for" benchmark ~15% slower for some unknown reason.
   fn->bytecode = bytecode;
   fn->constants = copiedConstants;
+  fn->module = &vm->main;
   fn->numUpvalues = numUpvalues;
   fn->numConstants = numConstants;
   fn->arity = arity;

@@ -64,10 +64,10 @@
 // Set this to trace each instruction as it's executed.
 #define WREN_DEBUG_TRACE_INSTRUCTIONS 0
 
-// The maximum number of globals that may be defined at one time. This
-// limitation comes from the 16 bits used for the arguments to
-// `CODE_LOAD_GLOBAL` and `CODE_STORE_GLOBAL`.
-#define MAX_GLOBALS 65536
+// The maximum number of module-level variables that may be defined at one time.
+// This limitation comes from the 16 bits used for the arguments to
+// `CODE_LOAD_MODULE_VAR` and `CODE_STORE_MODULE_VAR`.
+#define MAX_MODULE_VARS 65536
 
 // The maximum number of arguments that can be passed to a method. Note that
 // this limitation is hardcoded in other places in the VM, in particular, the

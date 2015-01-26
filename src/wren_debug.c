@@ -88,19 +88,19 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_LOAD_UPVALUE: BYTE_INSTRUCTION("LOAD_UPVALUE");
     case CODE_STORE_UPVALUE: BYTE_INSTRUCTION("STORE_UPVALUE");
 
-    case CODE_LOAD_GLOBAL:
+    case CODE_LOAD_MODULE_VAR:
     {
-      int global = READ_SHORT();
-      printf("%-16s %5d '%s'\n", "LOAD_GLOBAL", global,
-             vm->globalNames.data[global]);
+      int slot = READ_SHORT();
+      printf("%-16s %5d '%s'\n", "LOAD_MODULE_VAR", slot,
+             fn->module->variableNames.data[slot]);
       break;
     }
 
-    case CODE_STORE_GLOBAL:
+    case CODE_STORE_MODULE_VAR:
     {
-      int global = READ_SHORT();
-      printf("%-16s %5d '%s'\n", "STORE_GLOBAL", global,
-             vm->globalNames.data[global]);
+      int slot = READ_SHORT();
+      printf("%-16s %5d '%s'\n", "STORE_MODULE_VAR", slot,
+             fn->module->variableNames.data[slot]);
       break;
     }
 
