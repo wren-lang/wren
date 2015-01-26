@@ -855,6 +855,9 @@ static void nextToken(Parser* parser)
           return;
         }
 
+        readNumber(parser);
+        return;
+
       default:
         if (isName(c))
         {
