@@ -776,7 +776,7 @@ DEF_NATIVE(map_iterate)
   if (map->count == 0) RETURN_FALSE;
 
   // If we're starting the iteration, return the first entry.
-  uint32_t index = UINT32_MAX;
+  size_t index = SIZE_MAX;
   if (!IS_NULL(args[1]))
   {
     if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;

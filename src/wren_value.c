@@ -778,7 +778,7 @@ static void markMap(WrenVM* vm, ObjMap* map)
   if (setMarkedFlag(&map->obj)) return;
 
   // Mark the entries.
-  for (uint32_t i = 0; i < map->capacity; i++)
+  for (size_t i = 0; i < map->capacity; i++)
   {
     MapEntry* entry = &map->entries[i];
     if (IS_UNDEFINED(entry->key)) continue;
