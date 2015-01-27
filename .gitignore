@@ -8,6 +8,8 @@ wrend
 wren-cpp
 libwren.a
 libwrend.a
+libwren.so
+libwrend.so
 libwren-cpp.a
 
 # XCode user-specific stuff.

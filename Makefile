@@ -24,7 +24,7 @@ SOURCES := $(wildcard src/*.c)
 HEADERS := $(wildcard src/*.h)
 OBJECTS := $(SOURCES:.c=.o)
 
-# Don't include main.c in the shared library.
+# Don't include main.c in the libraries.
 DEBUG_OBJECTS := $(addprefix build/debug/, $(notdir $(OBJECTS)))
 RELEASE_OBJECTS := $(addprefix build/release/, $(notdir $(OBJECTS)))
 RELEASE_CPP_OBJECTS := $(addprefix build/release-cpp/, $(notdir $(OBJECTS)))
@@ -38,17 +38,21 @@ RELEASE_CPP_LIB_OBJECTS := $(subst build/release-cpp/main.o,,$(RELEASE_CPP_OBJEC
 all: release
 
 clean:
-	@rm -rf build wren wrend libwren.a libwrend.a
+	@rm -rf build wren wrend libwren.a libwrend.a libwren.so libwrend.so
 
 prep:
 	@mkdir -p build/debug build/release build/release-cpp
 
 # Debug build.
-debug: prep wrend libwrend.a
+debug: prep wrend libwrend.a libwrend.so
 
-# Debug shared library.
+# Debug static library.
 libwrend.a: $(DEBUG_LIB_OBJECTS)
 	$(AR) $@ $^
+
+# Debug shared library.
+libwrend.so: $(DEBUG_LIB_OBJECTS)
+	$(CC) $(DEBUG_CFLAGS) -shared -Wl,-soname,$@ -o $@ $^
 
 # Debug command-line interpreter.
 wrend: $(DEBUG_OBJECTS)
@@ -59,11 +63,15 @@ build/debug/%.o: src/%.c include/wren.h $(HEADERS)
 	$(CC) -c $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o $@ $<
 
 # Release build.
-release: prep wren libwren.a
+release: prep wren libwren.a libwren.so
 
-# Release shared library.
+# Release static library.
 libwren.a: $(RELEASE_LIB_OBJECTS)
 	$(AR) $@ $^
+
+# Release shared library.
+libwren.so: $(RELEASE_LIB_OBJECTS)
+	$(CC) $(RELEASE_CFLAGS) -shared -Wl,-soname,$@ -o $@ $^
 
 # Release command-line interpreter.
 wren: $(RELEASE_OBJECTS)
@@ -76,7 +84,7 @@ build/release/%.o: src/%.c include/wren.h $(HEADERS)
 # Release C++ build.
 release-cpp: prep wren-cpp libwren-cpp.a
 
-# Release C++ shared lib
+# Release C++ static lib
 libwren-cpp.a: $(RELEASE_CPP_LIB_OBJECTS)
 	$(AR) $@ $^
 
