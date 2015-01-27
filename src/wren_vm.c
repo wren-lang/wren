@@ -559,7 +559,11 @@ static bool runInterpreter(WrenVM* vm)
     }
 
     CASE_CODE(POP):   DROP(); DISPATCH();
-    CASE_CODE(DUP):   PUSH(PEEK()); DISPATCH();
+    CASE_CODE(DUP):
+    {
+      Value value = PEEK();
+      PUSH(value); DISPATCH();
+    }
 
     CASE_CODE(NULL):  PUSH(NULL_VAL); DISPATCH();
     CASE_CODE(FALSE): PUSH(FALSE_VAL); DISPATCH();
