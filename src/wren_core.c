@@ -798,7 +798,7 @@ DEF_NATIVE(map_iterate)
 DEF_NATIVE(map_remove)
 {
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
-  
+
   RETURN_VAL(wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1]));
 }
 
@@ -1032,12 +1032,12 @@ DEF_NATIVE(object_not)
 
 DEF_NATIVE(object_eqeq)
 {
-  RETURN_BOOL(wrenValuesSame(args[0], args[1]));
+  RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_NATIVE(object_bangeq)
 {
-  RETURN_BOOL(!wrenValuesSame(args[0], args[1]));
+  RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_NATIVE(object_new)
@@ -1256,24 +1256,6 @@ DEF_NATIVE(string_plus)
   RETURN_OBJ(wrenStringConcat(vm, AS_CSTRING(args[0]), AS_CSTRING(args[1])));
 }
 
-DEF_NATIVE(string_eqeq)
-{
-  if (!IS_STRING(args[1])) RETURN_FALSE;
-  ObjString* a = AS_STRING(args[0]);
-  ObjString* b = AS_STRING(args[1]);
-  RETURN_BOOL(a->length == b->length &&
-      memcmp(a->value, b->value, a->length) == 0);
-}
-
-DEF_NATIVE(string_bangeq)
-{
-  if (!IS_STRING(args[1])) RETURN_TRUE;
-  ObjString* a = AS_STRING(args[0]);
-  ObjString* b = AS_STRING(args[1]);
-  RETURN_BOOL(a->length != b->length ||
-      memcmp(a->value, b->value, a->length) != 0);
-}
-
 DEF_NATIVE(string_subscript)
 {
   ObjString* string = AS_STRING(args[0]);
@@ -1470,8 +1452,6 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->stringClass = AS_CLASS(findVariable(vm, "String"));
   NATIVE(vm->stringClass, "+ ", string_plus);
-  NATIVE(vm->stringClass, "== ", string_eqeq);
-  NATIVE(vm->stringClass, "!= ", string_bangeq);
   NATIVE(vm->stringClass, "[ ]", string_subscript);
   NATIVE(vm->stringClass, "contains ", string_contains);
   NATIVE(vm->stringClass, "count", string_count);
@@ -1508,7 +1488,6 @@ void wrenInitializeCore(WrenVM* vm)
   // TODO: More map methods.
 
   vm->rangeClass = AS_CLASS(findVariable(vm, "Range"));
-  // TODO: == operator.
   NATIVE(vm->rangeClass, "from", range_from);
   NATIVE(vm->rangeClass, "to", range_to);
   NATIVE(vm->rangeClass, "min", range_min);
