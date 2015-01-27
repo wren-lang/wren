@@ -659,10 +659,10 @@ DEF_NATIVE(list_iterate)
 
   if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
 
-  int index = (int)AS_NUM(args[1]);
+  size_t index = (size_t)AS_NUM(args[1]);
 
   // Stop if we're out of bounds.
-  if (index < 0 || index >= list->count - 1) RETURN_FALSE;
+  if (index >= list->count - 1) RETURN_FALSE;
 
   // Otherwise, move to the next index.
   RETURN_NUM(index + 1);
@@ -776,13 +776,13 @@ DEF_NATIVE(map_iterate)
   if (map->count == 0) RETURN_FALSE;
 
   // If we're starting the iteration, return the first entry.
-  int index = -1;
+  size_t index = SIZE_MAX;
   if (!IS_NULL(args[1]))
   {
     if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
-    index = (int)AS_NUM(args[1]);
+    index = (uint32_t)AS_NUM(args[1]);
 
-    if (index < 0 || index >= map->capacity) RETURN_FALSE;
+    if (index >= map->capacity) RETURN_FALSE;
   }
 
   // Find the next used entry, if any.
@@ -1209,8 +1209,8 @@ DEF_NATIVE(string_iterate)
 
   if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
 
-  int index = (int)AS_NUM(args[1]);
-  if (index < 0) RETURN_FALSE;
+  size_t index = (uint32_t)AS_NUM(args[1]);
+  if (index >= string->length) RETURN_FALSE;
 
   // Advance to the beginning of the next UTF-8 sequence.
   do

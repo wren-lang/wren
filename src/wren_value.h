@@ -116,7 +116,7 @@ typedef struct
 {
   Obj obj;
   // Does not include the null terminator.
-  int length;
+  size_t length;
   char value[FLEXIBLE_ARRAY];
 } ObjString;
 
@@ -335,13 +335,11 @@ typedef struct
 {
   Obj obj;
 
-  // TODO: Make these uint32_t to match ObjMap, or vice versa.
-  
   // The number of elements allocated.
-  int capacity;
+  size_t capacity;
 
   // The number of items in the list.
-  int count;
+  size_t count;
 
   // Pointer to a contiguous array of [capacity] elements.
   Value* elements;
@@ -362,10 +360,10 @@ typedef struct
   Obj obj;
 
   // The number of entries allocated.
-  uint32_t capacity;
+  size_t capacity;
 
   // The number of entries in the map.
-  uint32_t count;
+  size_t count;
 
   // Pointer to a contiguous array of [capacity] entries.
   MapEntry* entries;
@@ -624,16 +622,16 @@ Value wrenNewInstance(WrenVM* vm, ObjClass* classObj);
 
 // Creates a new list with [numElements] elements (which are left
 // uninitialized.)
-ObjList* wrenNewList(WrenVM* vm, int numElements);
+ObjList* wrenNewList(WrenVM* vm, size_t numElements);
 
 // Adds [value] to [list], reallocating and growing its storage if needed.
 void wrenListAdd(WrenVM* vm, ObjList* list, Value value);
 
 // Inserts [value] in [list] at [index], shifting down the other elements.
-void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index);
+void wrenListInsert(WrenVM* vm, ObjList* list, Value value, size_t index);
 
 // Removes and returns the item at [index] from [list].
-Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
+Value wrenListRemoveAt(WrenVM* vm, ObjList* list, size_t index);
 
 // Creates a new empty map.
 ObjMap* wrenNewMap(WrenVM* vm);
@@ -671,7 +669,7 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right);
 // Creates a new string containing the code point in [string] starting at byte
 // [index]. If [index] points into the middle of a UTF-8 sequence, returns an
 // empty string.
-Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index);
+Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, size_t index);
 
 // Creates a new open upvalue pointing to [value] on the stack.
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);

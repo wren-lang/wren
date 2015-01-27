@@ -234,7 +234,7 @@ Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
   return OBJ_VAL(instance);
 }
 
-ObjList* wrenNewList(WrenVM* vm, int numElements)
+ObjList* wrenNewList(WrenVM* vm, size_t numElements)
 {
   // Allocate this before the list object in case it triggers a GC which would
   // free the list.
@@ -278,7 +278,7 @@ void wrenListAdd(WrenVM* vm, ObjList* list, Value value)
   list->elements[list->count++] = value;
 }
 
-void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
+void wrenListInsert(WrenVM* vm, ObjList* list, Value value, size_t index)
 {
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
@@ -287,7 +287,7 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
   if (IS_OBJ(value)) wrenPopRoot(vm);
 
   // Shift items down.
-  for (int i = list->count; i > index; i--)
+  for (size_t i = list->count; i > index; i--)
   {
     list->elements[i] = list->elements[i - 1];
   }
@@ -296,14 +296,14 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index)
   list->count++;
 }
 
-Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
+Value wrenListRemoveAt(WrenVM* vm, ObjList* list, size_t index)
 {
   Value removed = list->elements[index];
 
   if (IS_OBJ(removed)) wrenPushRoot(vm, AS_OBJ(removed));
 
   // Shift items up.
-  for (int i = index; i < list->count - 1; i++)
+  for (size_t i = index; i < list->count - 1; i++)
   {
     list->elements[i] = list->elements[i + 1];
   }
@@ -369,8 +369,8 @@ static uint32_t hashObject(Obj* object)
       // towards the prefix or suffix of the string. So sample up to eight
       // characters spread throughout the string.
       // TODO: Tune this.
-      uint32_t step = 1 + 7 / string->length;
-      for (uint32_t i = 0; i < string->length; i += step)
+      size_t step = 1 + 7 / string->length;
+      for (size_t i = 0; i < string->length; i += step)
       {
         hash ^= string->value[i];
         hash *= 16777619;
@@ -636,9 +636,8 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
   return string;
 }
 
-Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
+Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, size_t index)
 {
-  ASSERT(index >= 0, "Index out of bounds.");
   ASSERT(index < string->length, "Index out of bounds.");
 
   char first = string->value[index];
@@ -763,7 +762,7 @@ static void markList(WrenVM* vm, ObjList* list)
 
   // Mark the elements.
   Value* elements = list->elements;
-  for (int i = 0; i < list->count; i++)
+  for (size_t i = 0; i < list->count; i++)
   {
     wrenMarkValue(vm, elements[i]);
   }
@@ -778,7 +777,7 @@ static void markMap(WrenVM* vm, ObjMap* map)
   if (setMarkedFlag(&map->obj)) return;
 
   // Mark the entries.
-  for (int i = 0; i < map->capacity; i++)
+  for (size_t i = 0; i < map->capacity; i++)
   {
     MapEntry* entry = &map->entries[i];
     if (IS_UNDEFINED(entry->key)) continue;
