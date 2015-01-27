@@ -62,21 +62,13 @@ typedef enum {
   OBJ_UPVALUE
 } ObjType;
 
-typedef enum
-{
-  // The object has been marked during the mark phase of GC.
-  FLAG_MARKED = 0x01,
-} ObjFlags;
-
 typedef struct sObjClass ObjClass;
 
 // Base struct for all heap-allocated objects.
 typedef struct sObj
 {
-  unsigned int type  : 4; // ObjType.
-  // TODO: We could store this bit off to the side, or in the low bit of
-  // classObj to shrink objects a bit. Worth doing?
-  unsigned int flags : 1; // ObjFlags.
+  ObjType type;
+  bool marked;
 
   // The object's class.
   ObjClass* classObj;
