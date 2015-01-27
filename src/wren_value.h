@@ -73,10 +73,8 @@ typedef struct sObjClass ObjClass;
 // Base struct for all heap-allocated objects.
 typedef struct sObj
 {
-  unsigned int type  : 4; // ObjType.
-  // TODO: We could store this bit off to the side, or in the low bit of
-  // classObj to shrink objects a bit. Worth doing?
-  unsigned int flags : 1; // ObjFlags.
+  ObjType type;
+  ObjFlags flags;
 
   // The object's class.
   ObjClass* classObj;
