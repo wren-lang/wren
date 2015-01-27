@@ -115,7 +115,8 @@ typedef struct
 {
   WrenVM* vm;
 
-  Module* module;
+  // The module being parsed.
+  ObjModule* module;
 
   // Heap-allocated string representing the path to the code being parsed. Used
   // for stack traces.
@@ -2928,7 +2929,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
   parser.vm = vm;
   // TODO: Pass in module. Probably want separate public function that defines
   // new module (or uses REPL one) and private one here that just passes it in.
-  parser.module = &vm->main;
+  parser.module = vm->main;
   parser.sourcePath = sourcePathObj;
   parser.source = source;
 

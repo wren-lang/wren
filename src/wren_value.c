@@ -210,7 +210,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
   // this, but it made the "for" benchmark ~15% slower for some unknown reason.
   fn->bytecode = bytecode;
   fn->constants = copiedConstants;
-  fn->module = &vm->main;
+  fn->module = vm->main;
   fn->numUpvalues = numUpvalues;
   fn->numConstants = numConstants;
   fn->arity = arity;
@@ -586,6 +586,22 @@ Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
   return value;
 }
 
+ObjModule* wrenNewModule(WrenVM* vm)
+{
+  ObjModule* module = ALLOCATE(vm, ObjModule);
+
+  // Modules are never used as first-class objects, so don't need a class.
+  initObj(vm, (Obj*)module, OBJ_MODULE, NULL);
+
+  wrenPushRoot(vm, (Obj*)module);
+
+  wrenSymbolTableInit(vm, &module->variableNames);
+  wrenValueBufferInit(vm, &module->variables);
+
+  wrenPopRoot(vm);
+  return module;
+}
+
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
 {
   ObjRange* range = ALLOCATE(vm, ObjRange);
@@ -861,6 +877,21 @@ static void markClosure(WrenVM* vm, ObjClosure* closure)
   vm->bytesAllocated += sizeof(Upvalue*) * closure->fn->numUpvalues;
 }
 
+static void markModule(WrenVM* vm, ObjModule* module)
+{
+  if (setMarkedFlag(&module->obj)) return;
+
+  // Top-level variables.
+  for (int i = 0; i < module->variables.count; i++)
+  {
+    wrenMarkValue(vm, module->variables.data[i]);
+  }
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjModule);
+  // TODO: Track memory for symbol table and buffer.
+}
+
 void wrenMarkObj(WrenVM* vm, Obj* obj)
 {
 #if WREN_DEBUG_TRACE_MEMORY
@@ -882,6 +913,7 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
     case OBJ_INSTANCE: markInstance(vm, (ObjInstance*)obj); break;
     case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
     case OBJ_MAP:      markMap(     vm, (ObjMap*)     obj); break;
+    case OBJ_MODULE:   markModule(  vm, (ObjModule*)  obj); break;
     case OBJ_RANGE:    setMarkedFlag(obj); break;
     case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
     case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
@@ -929,6 +961,11 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
 
     case OBJ_MAP:
       wrenReallocate(vm, ((ObjMap*)obj)->entries, 0, 0);
+      break;
+
+    case OBJ_MODULE:
+      wrenSymbolTableClear(vm, &((ObjModule*)obj)->variableNames);
+      wrenValueBufferClear(vm, &((ObjModule*)obj)->variables);
       break;
 
     case OBJ_STRING:
@@ -999,6 +1036,7 @@ static void printObject(Obj* obj)
     case OBJ_INSTANCE: printf("[instance %p]", obj); break;
     case OBJ_LIST: printf("[list %p]", obj); break;
     case OBJ_MAP: printf("[map %p]", obj); break;
+    case OBJ_MODULE: printf("[module %p]", obj); break;
     case OBJ_RANGE: printf("[fn %p]", obj); break;
     case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
     case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;

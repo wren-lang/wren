@@ -24,27 +24,6 @@ static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)
   return realloc(memory, newSize);
 }
 
-static void initModule(WrenVM* vm, Module* module)
-{
-  wrenSymbolTableInit(vm, &module->variableNames);
-  wrenValueBufferInit(vm, &module->variables);
-}
-
-static void freeModule(WrenVM* vm, Module* module)
-{
-  wrenSymbolTableClear(vm, &module->variableNames);
-  wrenValueBufferClear(vm, &module->variables);
-}
-
-static void markModule(WrenVM* vm, Module* module)
-{
-  // Top-level variables.
-  for (int i = 0; i < module->variables.count; i++)
-  {
-    wrenMarkValue(vm, module->variables.data[i]);
-  }
-}
-
 WrenVM* wrenNewVM(WrenConfiguration* configuration)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -60,7 +39,6 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->foreignCallNumArgs = 0;
 
   wrenSymbolTableInit(vm, &vm->methodNames);
-  initModule(vm, &vm->main);
 
   vm->bytesAllocated = 0;
 
@@ -90,6 +68,8 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->first = NULL;
   vm->numTempRoots = 0;
 
+  vm->main = wrenNewModule(vm);
+
   wrenInitializeCore(vm);
   #if WREN_USE_LIB_IO
     wrenLoadIOLibrary(vm);
@@ -111,8 +91,6 @@ void wrenFreeVM(WrenVM* vm)
   }
 
   wrenSymbolTableClear(vm, &vm->methodNames);
-  freeModule(vm, &vm->main);
-
   wrenReallocate(vm, vm, 0, 0);
 }
 
@@ -144,7 +122,7 @@ static void collectGarbage(WrenVM* vm)
   // already been freed.
   vm->bytesAllocated = 0;
 
-  markModule(vm, &vm->main);
+  if (vm->main != NULL) wrenMarkObj(vm, (Obj*)vm->main);
 
   // Temporary roots.
   for (int i = 0; i < vm->numTempRoots; i++)
@@ -1064,7 +1042,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   }
 }
 
-int wrenDeclareVariable(WrenVM* vm, Module* module, const char* name,
+int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
                         size_t length)
 {
   if (module->variables.count == MAX_MODULE_VARS) return -2;
@@ -1073,7 +1051,7 @@ int wrenDeclareVariable(WrenVM* vm, Module* module, const char* name,
   return wrenSymbolTableAdd(vm, &module->variableNames, name, length);
 }
 
-int wrenDefineVariable(WrenVM* vm, Module* module, const char* name,
+int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
                        size_t length, Value value)
 {
   if (module->variables.count == MAX_MODULE_VARS) return -2;
@@ -1135,14 +1113,14 @@ static void defineMethod(WrenVM* vm, const char* className,
 
   // TODO: Which module do these go in?
   // Find or create the class to bind the method to.
-  int classSymbol = wrenSymbolTableFind(&vm->main.variableNames,
+  int classSymbol = wrenSymbolTableFind(&vm->main->variableNames,
                                         className, strlen(className));
   ObjClass* classObj;
 
   if (classSymbol != -1)
   {
     // TODO: Handle name is not class.
-    classObj = AS_CLASS(vm->main.variables.data[classSymbol]);
+    classObj = AS_CLASS(vm->main->variables.data[classSymbol]);
   }
   else
   {
@@ -1154,7 +1132,7 @@ static void defineMethod(WrenVM* vm, const char* className,
 
     // TODO: Allow passing in name for superclass?
     classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-    wrenDefineVariable(vm, &vm->main, className, length, OBJ_VAL(classObj));
+    wrenDefineVariable(vm, vm->main, className, length, OBJ_VAL(classObj));
 
     wrenPopRoot(vm);
   }

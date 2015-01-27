@@ -198,7 +198,7 @@ struct WrenVM
 
   // TODO: Temp.
   // The main module.
-  Module main;
+  ObjModule* main;
 
   // Memory management data:
 
@@ -280,14 +280,14 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 // Does not check to see if a variable with that name is already declared or
 // defined. Returns the symbol for the new variable or -2 if there are too many
 // variables defined.
-int wrenDeclareVariable(WrenVM* vm, Module* module, const char* name,
+int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
                         size_t length);
 
 // Adds a new top-level variable named [name] to [module].
 //
 // Returns the symbol for the new variable, -1 if a variable with the given name
 // is already defined, or -2 if there are too many variables defined.
-int wrenDefineVariable(WrenVM* vm, Module* module, const char* name,
+int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
                        size_t length, Value value);
 
 // Sets the current Compiler being run to [compiler].

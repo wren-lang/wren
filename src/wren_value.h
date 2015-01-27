@@ -57,6 +57,7 @@ typedef enum {
   OBJ_INSTANCE,
   OBJ_LIST,
   OBJ_MAP,
+  OBJ_MODULE,
   OBJ_RANGE,
   OBJ_STRING,
   OBJ_UPVALUE
@@ -231,17 +232,21 @@ typedef struct
   int* sourceLines;
 } FnDebug;
 
-// TODO: Move elsewhere?
-// TODO: Doc.
+// A loaded module and the top-level variables it defines.
+//
+// While this is an Obj and is managed by the GC, it never appears as a
+// first-class object in Wren.
 typedef struct
 {
+  Obj obj;
+
   // The currently defined top-level variables.
   ValueBuffer variables;
 
   // Symbol table for the names of all module variables. Indexes here directly
   // correspond to entries in [variables].
   SymbolTable variableNames;
-} Module;
+} ObjModule;
 
 // A first-class function object. A raw ObjFn can be used and invoked directly
 // if it has no upvalues (i.e. [numUpvalues] is zero). If it does use upvalues,
@@ -256,7 +261,7 @@ typedef struct
   uint8_t* bytecode;
 
   // The module where this function was defined.
-  Module* module;
+  ObjModule* module;
 
   int numUpvalues;
   int numConstants;
@@ -666,6 +671,9 @@ void wrenMapClear(WrenVM* vm, ObjMap* map);
 // Removes [key] from [map], if present. Returns the value for the key if found
 // or `NULL_VAL` otherwise.
 Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key);
+
+// Creates a new module.
+ObjModule* wrenNewModule(WrenVM* vm);
 
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);

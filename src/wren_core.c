@@ -1296,7 +1296,7 @@ static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
   wrenPushRoot(vm, (Obj*)nameString);
 
   ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
-  wrenDefineVariable(vm, &vm->main, name, length, OBJ_VAL(classObj));
+  wrenDefineVariable(vm, vm->main, name, length, OBJ_VAL(classObj));
 
   wrenPopRoot(vm);
   return classObj;
@@ -1309,7 +1309,7 @@ static ObjClass* defineClass(WrenVM* vm, const char* name)
   wrenPushRoot(vm, (Obj*)nameString);
 
   ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-  wrenDefineVariable(vm, &vm->main, name, length, OBJ_VAL(classObj));
+  wrenDefineVariable(vm, vm->main, name, length, OBJ_VAL(classObj));
 
   wrenPopRoot(vm);
   return classObj;
@@ -1318,8 +1318,9 @@ static ObjClass* defineClass(WrenVM* vm, const char* name)
 // Returns the module-level variable named [name].
 static Value findVariable(WrenVM* vm, const char* name)
 {
-  int symbol = wrenSymbolTableFind(&vm->main.variableNames, name, strlen(name));
-  return vm->main.variables.data[symbol];
+  int symbol = wrenSymbolTableFind(&vm->main->variableNames,
+                                   name, strlen(name));
+  return vm->main->variables.data[symbol];
 }
 
 void wrenInitializeCore(WrenVM* vm)
