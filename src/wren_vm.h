@@ -283,13 +283,13 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 // Does not check to see if a global with that name is already declared or
 // defined. Returns the symbol for the new global or -2 if there are too many
 // globals defined.
-int wrenDeclareGlobal(WrenVM* vm, const char* name, size_t length);
+int wrenDeclareGlobal(WrenVM* vm, const char* name, int length);
 
 // Adds a new global named [name] to the global namespace.
 //
 // Returns the symbol for the new global, -1 if a global with the given name
 // is already defined, or -2 if there are too many globals defined.
-int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value);
+int wrenDefineGlobal(WrenVM* vm, const char* name, int length, Value value);
 
 // Sets the current Compiler being run to [compiler].
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler);

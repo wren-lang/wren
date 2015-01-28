@@ -124,7 +124,7 @@ static void ioRead(WrenVM* vm)
     // TODO: handle error.
   }
 
-  wrenReturnString(vm, buffer, (int)strlen(buffer));
+  wrenReturnString(vm, buffer, strlen(buffer));
 }
 
 static void ioClock(WrenVM* vm)

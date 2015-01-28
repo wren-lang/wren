@@ -1291,7 +1291,7 @@ DEF_NATIVE(string_subscript)
 
 static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 {
-  size_t length = strlen(name);
+  int length = strlen(name);
   ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
   wrenPushRoot(vm, (Obj*)nameString);
 
@@ -1304,7 +1304,7 @@ static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
-  size_t length = strlen(name);
+  int length = strlen(name);
   ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
   wrenPushRoot(vm, (Obj*)nameString);
 

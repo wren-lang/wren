@@ -508,8 +508,8 @@ static void skipBlockComment(Parser* parser)
 // Returns true if the current token's text matches [keyword].
 static bool isKeyword(Parser* parser, const char* keyword)
 {
-  size_t length = parser->currentChar - parser->tokenStart;
-  size_t keywordLength = strlen(keyword);
+  int length = parser->currentChar - parser->tokenStart;
+  int keywordLength = strlen(keyword);
   return length == keywordLength &&
       strncmp(parser->tokenStart, keyword, length) == 0;
 }
@@ -1521,7 +1521,7 @@ static int parameterList(Compiler* compiler, char* name, int* length,
 // from a null-terminated [name].
 static int methodSymbol(Compiler* compiler, const char* name, int length)
 {
-  if (length == 0) length = (int)strlen(name);
+  if (length == 0) length = strlen(name);
   return wrenSymbolTableEnsure(compiler->parser->vm,
       &compiler->parser->vm->methodNames, name, length);
 }

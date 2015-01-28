@@ -332,7 +332,7 @@ static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
   // method expects.
   const char* methodName = vm->methodNames.data[symbol];
 
-  int methodLength = (int)strlen(methodName);
+  int methodLength = strlen(methodName);
   int numParams = 0;
   while (methodName[methodLength - numParams - 1] == ' ') numParams++;
 
@@ -1049,7 +1049,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   }
 }
 
-int wrenDeclareGlobal(WrenVM* vm, const char* name, size_t length)
+int wrenDeclareGlobal(WrenVM* vm, const char* name, int length)
 {
   if (vm->globals.count == MAX_GLOBALS) return -2;
 
@@ -1057,7 +1057,7 @@ int wrenDeclareGlobal(WrenVM* vm, const char* name, size_t length)
   return wrenSymbolTableAdd(vm, &vm->globalNames, name, length);
 }
 
-int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
+int wrenDefineGlobal(WrenVM* vm, const char* name, int length, Value value)
 {
   if (vm->globals.count == MAX_GLOBALS) return -2;
 
@@ -1107,7 +1107,7 @@ static void defineMethod(WrenVM* vm, const char* className,
 {
   ASSERT(className != NULL, "Must provide class name.");
 
-  int length = (int)strlen(methodName);
+  int length = strlen(methodName);
   ASSERT(methodName != NULL, "Must provide method name.");
   ASSERT(strlen(methodName) < MAX_METHOD_NAME, "Method name too long.");
 
@@ -1129,7 +1129,7 @@ static void defineMethod(WrenVM* vm, const char* className,
   else
   {
     // The class doesn't already exist, so create it.
-    size_t length = strlen(className);
+    int length = strlen(className);
     ObjString* nameString = AS_STRING(wrenNewString(vm, className, length));
 
     wrenPushRoot(vm, (Obj*)nameString);
@@ -1229,8 +1229,8 @@ void wrenReturnString(WrenVM* vm, const char* text, int length)
 {
   ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
   ASSERT(text != NULL, "String cannot be NULL.");
-  
-  size_t size = length;
+
+  int size = length;
   if (length == -1) size = strlen(text);
 
   *vm->foreignCallSlot = wrenNewString(vm, text, size);
