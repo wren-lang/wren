@@ -327,8 +327,6 @@ typedef struct
 {
   Obj obj;
 
-  // TODO: Make these uint32_t to match ObjMap, or vice versa.
-  
   // The number of elements allocated.
   int capacity;
 
@@ -354,10 +352,10 @@ typedef struct
   Obj obj;
 
   // The number of entries allocated.
-  uint32_t capacity;
+  int capacity;
 
   // The number of entries in the map.
-  uint32_t count;
+  int count;
 
   // Pointer to a contiguous array of [capacity] entries.
   MapEntry* entries;

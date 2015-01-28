@@ -466,7 +466,7 @@ static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
   // Re-add the existing entries.
   if (map->capacity > 0)
   {
-    for (uint32_t i = 0; i < map->capacity; i++)
+    for (int i = 0; i < map->capacity; i++)
     {
       MapEntry* entry = &map->entries[i];
       if (IS_UNDEFINED(entry->key)) continue;
