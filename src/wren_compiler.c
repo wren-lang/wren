@@ -509,7 +509,7 @@ static void skipBlockComment(Parser* parser)
 static bool isKeyword(Parser* parser, const char* keyword)
 {
   int length = parser->currentChar - parser->tokenStart;
-  int keywordLength = strlen(keyword);
+  int keywordLength = (int)strlen(keyword);
   return length == keywordLength &&
       strncmp(parser->tokenStart, keyword, length) == 0;
 }
@@ -1521,7 +1521,7 @@ static int parameterList(Compiler* compiler, char* name, int* length,
 // from a null-terminated [name].
 static int methodSymbol(Compiler* compiler, const char* name, int length)
 {
-  if (length == 0) length = strlen(name);
+  if (length == 0) length = (int)strlen(name);
   return wrenSymbolTableEnsure(compiler->parser->vm,
       &compiler->parser->vm->methodNames, name, length);
 }
@@ -2917,7 +2917,7 @@ void definition(Compiler* compiler)
 ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 {
   ObjString* sourcePathObj = AS_STRING(wrenNewString(vm, sourcePath,
-                                                     strlen(sourcePath)));
+                                                     (int)strlen(sourcePath)));
   wrenPushRoot(vm, (Obj*)sourcePathObj);
 
   Parser parser;

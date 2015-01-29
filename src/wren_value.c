@@ -624,8 +624,8 @@ Value wrenNewUninitializedString(WrenVM* vm, int length)
 
 ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
 {
-  int leftLength = strlen(left);
-  int rightLength = strlen(right);
+  int leftLength = (int)strlen(left);
+  int rightLength = (int)strlen(right);
 
   Value value = wrenNewUninitializedString(vm, leftLength + rightLength);
   ObjString* string = AS_STRING(value);

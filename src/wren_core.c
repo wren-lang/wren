@@ -11,7 +11,7 @@
 #define NATIVE(cls, name, function) \
     { \
       int symbol = wrenSymbolTableEnsure(vm, \
-          &vm->methodNames, name, strlen(name)); \
+          &vm->methodNames, name, (int)strlen(name)); \
       Method method; \
       method.type = METHOD_PRIMITIVE; \
       method.fn.primitive = native_##function; \
@@ -35,7 +35,7 @@
 
 #define RETURN_ERROR(msg) \
     do { \
-      args[0] = wrenNewString(vm, msg, strlen(msg)); \
+      args[0] = wrenNewString(vm, msg, (int)strlen(msg)); \
       return PRIM_ERROR; \
     } while (0);
 
@@ -1291,7 +1291,7 @@ DEF_NATIVE(string_subscript)
 
 static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 {
-  int length = strlen(name);
+  int length = (int)strlen(name);
   ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
   wrenPushRoot(vm, (Obj*)nameString);
 
@@ -1304,7 +1304,7 @@ static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
-  int length = strlen(name);
+  int length = (int)strlen(name);
   ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
   wrenPushRoot(vm, (Obj*)nameString);
 
@@ -1318,7 +1318,7 @@ static ObjClass* defineClass(WrenVM* vm, const char* name)
 // Returns the global variable named [name].
 static Value findGlobal(WrenVM* vm, const char* name)
 {
-  int symbol = wrenSymbolTableFind(&vm->globalNames, name, strlen(name));
+  int symbol = wrenSymbolTableFind(&vm->globalNames, name, (int)strlen(name));
   return vm->globals.data[symbol];
 }
 
