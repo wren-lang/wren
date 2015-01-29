@@ -483,6 +483,9 @@ static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
 
 uint32_t wrenMapFind(ObjMap* map, Value key)
 {
+  // If there is no entry array (an empty map), we definitely won't find it.
+  if (map->capacity == 0) return UINT32_MAX;
+
   // Figure out where to insert it in the table. Use open addressing and
   // basic linear probing.
   uint32_t index = hashValue(key) % map->capacity;
