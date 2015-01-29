@@ -10,6 +10,8 @@ libwren.a
 libwrend.a
 libwren.so
 libwrend.so
+libwren.dylib
+libwrend.dylib
 libwren-cpp.a
 
 # XCode user-specific stuff.
