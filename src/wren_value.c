@@ -40,7 +40,7 @@ DEFINE_BUFFER(Method, Method);
 static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 {
   obj->type = type;
-  obj->flags = 0;
+  obj->marked = false;
   obj->classObj = classObj;
   obj->next = vm->first;
   vm->first = obj;
@@ -681,8 +681,8 @@ Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 // crash on an object cycle.
 static bool setMarkedFlag(Obj* obj)
 {
-  if (obj->flags & FLAG_MARKED) return true;
-  obj->flags |= FLAG_MARKED;
+  if (obj->marked) return true;
+  obj->marked = true;
   return false;
 }
 
