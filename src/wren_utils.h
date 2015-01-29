@@ -6,6 +6,13 @@
 
 // Reusable data structures and other utility functions.
 
+// A simple structure to keep trace of the string length as long as its data
+// (including the null-terminator)
+typedef struct {
+  char *buffer;
+  int length;
+} String;
+
 // We need buffers of a few different types. To avoid lots of casting between
 // void* and back, we'll use the preprocessor as a poor man's generics and let
 // it generate a few type-specific ones.
@@ -50,7 +57,7 @@
 
 DECLARE_BUFFER(Byte, uint8_t);
 DECLARE_BUFFER(Int, int);
-DECLARE_BUFFER(String, char*);
+DECLARE_BUFFER(String, String);
 
 // TODO: Change this to use a map.
 typedef StringBuffer SymbolTable;

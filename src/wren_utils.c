@@ -5,7 +5,7 @@
 
 DEFINE_BUFFER(Byte, uint8_t);
 DEFINE_BUFFER(Int, int);
-DEFINE_BUFFER(String, char*);
+DEFINE_BUFFER(String, String);
 
 void wrenSymbolTableInit(WrenVM* vm, SymbolTable* symbols)
 {
@@ -16,26 +16,28 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
 {
   for (int i = 0; i < symbols->count; i++)
   {
-    wrenReallocate(vm, symbols->data[i], 0, 0);
+    wrenReallocate(vm, symbols->data[i].buffer, 0, 0);
   }
 
   wrenStringBufferClear(vm, symbols);
 }
 
-int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols, const char* name,
-                       size_t length)
+int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
+                       const char* name, size_t length)
 {
-  char* heapString = (char*)wrenReallocate(vm, NULL, 0,
-                                           sizeof(char) * (length + 1));
-  strncpy(heapString, name, length);
-  heapString[length] = '\0';
+  String symbol;
+  symbol.buffer = (char*)wrenReallocate(vm, NULL, 0,
+                                        sizeof(char) * (length + 1));
+  strncpy(symbol.buffer, name, length);
+  symbol.buffer[length] = '\0';
+  symbol.length = length;
 
-  wrenStringBufferWrite(vm, symbols, heapString);
+  wrenStringBufferWrite(vm, symbols, symbol);
   return symbols->count - 1;
 }
 
 int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
-                 const char* name, size_t length)
+                          const char* name, size_t length)
 {
   // See if the symbol is already defined.
   int existing = wrenSymbolTableFind(symbols, name, length);
@@ -51,9 +53,8 @@ int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length)
   // TODO: O(n). Do something better.
   for (int i = 0; i < symbols->count; i++)
   {
-    // TODO: strlen() here is gross. Symbol table should store lengths.
-    if (strlen(symbols->data[i]) == length &&
-        strncmp(symbols->data[i], name, length) == 0) return i;
+    if (symbols->data[i].length == length &&
+        strncmp(symbols->data[i].buffer, name, length) == 0) return i;
   }
 
   return -1;

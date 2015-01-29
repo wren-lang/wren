@@ -330,7 +330,7 @@ static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
   // Count the number of spaces to determine the number of parameters the
   // method expects.
-  const char* methodName = vm->methodNames.data[symbol];
+  const char* methodName = vm->methodNames.data[symbol].buffer;
 
   int methodLength = (int)strlen(methodName);
   int numParams = 0;
