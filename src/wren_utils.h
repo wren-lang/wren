@@ -9,7 +9,7 @@
 // A simple structure to keep trace of the string length as long as its data
 // (including the null-terminator)
 typedef struct {
-  char *buffer;
+  char* buffer;
   int length;
 } String;
 
