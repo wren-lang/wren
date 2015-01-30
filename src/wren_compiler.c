@@ -508,8 +508,8 @@ static void skipBlockComment(Parser* parser)
 // Returns true if the current token's text matches [keyword].
 static bool isKeyword(Parser* parser, const char* keyword)
 {
-  int length = parser->currentChar - parser->tokenStart;
-  int keywordLength = (int)strlen(keyword);
+  uint32_t length = parser->currentChar - parser->tokenStart;
+  uint32_t keywordLength = (uint32_t)strlen(keyword);
   return length == keywordLength &&
       strncmp(parser->tokenStart, keyword, length) == 0;
 }
@@ -1519,16 +1519,16 @@ static int parameterList(Compiler* compiler, char* name, int* length,
 
 // Gets the symbol for a method [name]. If [length] is 0, it will be calculated
 // from a null-terminated [name].
-static int methodSymbol(Compiler* compiler, const char* name, int length)
+static int methodSymbol(Compiler* compiler, const char* name, uint32_t length)
 {
-  if (length == 0) length = (int)strlen(name);
+  if (length == 0) length = (uint32_t)strlen(name);
   return wrenSymbolTableEnsure(compiler->parser->vm,
       &compiler->parser->vm->methodNames, name, length);
 }
 
 // Compiles an (optional) argument list and then calls it.
 static void methodCall(Compiler* compiler, Code instruction,
-                       char name[MAX_METHOD_SIGNATURE], int length)
+                       char name[MAX_METHOD_SIGNATURE], uint32_t length)
 {
   // Parse the argument list, if any.
   int numArgs = 0;
@@ -2917,7 +2917,7 @@ void definition(Compiler* compiler)
 ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 {
   ObjString* sourcePathObj = AS_STRING(wrenNewString(vm, sourcePath,
-                                                     (int)strlen(sourcePath)));
+                                                     (uint32_t)strlen(sourcePath)));
   wrenPushRoot(vm, (Obj*)sourcePathObj);
 
   Parser parser;

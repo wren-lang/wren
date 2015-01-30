@@ -23,7 +23,7 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
 }
 
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
-                       const char* name, int length)
+                       const char* name, uint32_t length)
 {
   char* heapString = (char*)wrenReallocate(vm, NULL, 0,
                                            sizeof(char) * (length + 1));
@@ -35,7 +35,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
 }
 
 int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
-                          const char* name, int length)
+                          const char* name, uint32_t length)
 {
   // See if the symbol is already defined.
   int existing = wrenSymbolTableFind(symbols, name, length);
@@ -45,14 +45,14 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
   return wrenSymbolTableAdd(vm, symbols, name, length);
 }
 
-int wrenSymbolTableFind(SymbolTable* symbols, const char* name, int length)
+int wrenSymbolTableFind(SymbolTable* symbols, const char* name, uint32_t length)
 {
   // See if the symbol is already defined.
   // TODO: O(n). Do something better.
   for (int i = 0; i < symbols->count; i++)
   {
     // TODO: strlen() here is gross. Symbol table should store lengths.
-    if ((int)strlen(symbols->data[i]) == length &&
+    if ((uint32_t)strlen(symbols->data[i]) == length &&
         strncmp(symbols->data[i], name, length) == 0) return i;
   }
 
