@@ -241,7 +241,7 @@ static bool validateKey(WrenVM* vm, Value* args, int index)
     return true;
   }
 
-  args[0] = OBJ_VAL(wrenNewString(vm, "Key must be a value type.", 25));
+  args[0] = wrenNewString(vm, "Key must be a value type.", 25);
   return false;
 }
 

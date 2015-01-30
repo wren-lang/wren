@@ -40,7 +40,7 @@ DEFINE_BUFFER(Method, Method);
 static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 {
   obj->type = type;
-  obj->flags = 0;
+  obj->marked = false;
   obj->classObj = classObj;
   obj->next = vm->first;
   vm->first = obj;
@@ -484,6 +484,9 @@ static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
 
 uint32_t wrenMapFind(ObjMap* map, Value key)
 {
+  // If there is no entry array (an empty map), we definitely won't find it.
+  if (map->capacity == 0) return UINT32_MAX;
+
   // Figure out where to insert it in the table. Use open addressing and
   // basic linear probing.
   uint32_t index = hashValue(key) % map->capacity;
@@ -695,8 +698,8 @@ Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 // crash on an object cycle.
 static bool setMarkedFlag(Obj* obj)
 {
-  if (obj->flags & FLAG_MARKED) return true;
-  obj->flags |= FLAG_MARKED;
+  if (obj->marked) return true;
+  obj->marked = true;
   return false;
 }
 
