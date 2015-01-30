@@ -659,10 +659,10 @@ DEF_NATIVE(list_iterate)
 
   if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
 
-  int index = (int)AS_NUM(args[1]);
+  uint32_t index = (uint32_t)AS_NUM(args[1]);
 
   // Stop if we're out of bounds.
-  if (index < 0 || index >= list->count - 1) RETURN_FALSE;
+  if (index >= list->count - 1) RETURN_FALSE;
 
   // Otherwise, move to the next index.
   RETURN_NUM(index + 1);
