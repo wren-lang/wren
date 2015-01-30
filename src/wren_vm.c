@@ -332,8 +332,8 @@ static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
   // method expects.
   const char* methodName = vm->methodNames.data[symbol];
 
-  int methodLength = (int)strlen(methodName);
-  int numParams = 0;
+  uint32_t methodLength = (uint32_t)strlen(methodName);
+  uint32_t numParams = 0;
   while (methodName[methodLength - numParams - 1] == ' ') numParams++;
 
   char message[MAX_VARIABLE_NAME + MAX_METHOD_NAME + 49];
@@ -343,7 +343,7 @@ static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
           numParams,
           numParams == 1 ? "" : "s");
 
-  return AS_STRING(wrenNewString(vm, message, strlen(message)));
+  return AS_STRING(wrenNewString(vm, message, (uint32_t)strlen(message)));
 }
 
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
@@ -865,7 +865,7 @@ static bool runInterpreter(WrenVM* vm)
       if (!IS_CLASS(expected))
       {
         const char* message = "Right operand must be a class.";
-        RUNTIME_ERROR(AS_STRING(wrenNewString(vm, message, strlen(message))));
+        RUNTIME_ERROR(AS_STRING(wrenNewString(vm, message, (uint32_t)strlen(message))));
       }
 
       ObjClass* actual = wrenGetClass(vm, POP());
@@ -997,7 +997,7 @@ static bool runInterpreter(WrenVM* vm)
             "Class '%s' may not have more than %d fields, including inherited "
             "ones.", name->value, MAX_FIELDS);
 
-        RUNTIME_ERROR(AS_STRING(wrenNewString(vm, message, strlen(message))));
+		RUNTIME_ERROR(AS_STRING(wrenNewString(vm, message, (uint32_t)strlen(message))));
       }
 
       PUSH(OBJ_VAL(classObj));
@@ -1049,7 +1049,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   }
 }
 
-int wrenDeclareGlobal(WrenVM* vm, const char* name, size_t length)
+int wrenDeclareGlobal(WrenVM* vm, const char* name, int length)
 {
   if (vm->globals.count == MAX_GLOBALS) return -2;
 
@@ -1057,7 +1057,7 @@ int wrenDeclareGlobal(WrenVM* vm, const char* name, size_t length)
   return wrenSymbolTableAdd(vm, &vm->globalNames, name, length);
 }
 
-int wrenDefineGlobal(WrenVM* vm, const char* name, size_t length, Value value)
+int wrenDefineGlobal(WrenVM* vm, const char* name, int length, Value value)
 {
   if (vm->globals.count == MAX_GLOBALS) return -2;
 
@@ -1107,9 +1107,9 @@ static void defineMethod(WrenVM* vm, const char* className,
 {
   ASSERT(className != NULL, "Must provide class name.");
 
-  int length = (int)strlen(methodName);
+  uint32_t length = (uint32_t)strlen(methodName);
   ASSERT(methodName != NULL, "Must provide method name.");
-  ASSERT(strlen(methodName) < MAX_METHOD_NAME, "Method name too long.");
+  ASSERT((uint32_t)strlen(methodName) < MAX_METHOD_NAME, "Method name too long.");
 
   ASSERT(numParams >= 0, "numParams cannot be negative.");
   ASSERT(numParams <= MAX_PARAMETERS, "Too many parameters.");
@@ -1118,7 +1118,7 @@ static void defineMethod(WrenVM* vm, const char* className,
 
   // Find or create the class to bind the method to.
   int classSymbol = wrenSymbolTableFind(&vm->globalNames,
-                               className, strlen(className));
+                                        className, (uint32_t)strlen(className));
   ObjClass* classObj;
 
   if (classSymbol != -1)
@@ -1129,7 +1129,7 @@ static void defineMethod(WrenVM* vm, const char* className,
   else
   {
     // The class doesn't already exist, so create it.
-    size_t length = strlen(className);
+    uint32_t length = (uint32_t)strlen(className);
     ObjString* nameString = AS_STRING(wrenNewString(vm, className, length));
 
     wrenPushRoot(vm, (Obj*)nameString);
@@ -1229,9 +1229,9 @@ void wrenReturnString(WrenVM* vm, const char* text, int length)
 {
   ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
   ASSERT(text != NULL, "String cannot be NULL.");
-  
-  size_t size = length;
-  if (length == -1) size = strlen(text);
+
+  uint32_t size = (uint32_t)length;
+  if (length == -1) size = (uint32_t)strlen(text);
 
   *vm->foreignCallSlot = wrenNewString(vm, text, size);
   vm->foreignCallSlot = NULL;

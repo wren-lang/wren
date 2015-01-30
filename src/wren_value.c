@@ -599,7 +599,7 @@ Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
   return OBJ_VAL(range);
 }
 
-Value wrenNewString(WrenVM* vm, const char* text, size_t length)
+Value wrenNewString(WrenVM* vm, const char* text, uint32_t length)
 {
   // Allow NULL if the string is empty since byte buffers don't allocate any
   // characters for a zero-length string.
@@ -616,19 +616,19 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   return OBJ_VAL(string);
 }
 
-Value wrenNewUninitializedString(WrenVM* vm, size_t length)
+Value wrenNewUninitializedString(WrenVM* vm, uint32_t length)
 {
   ObjString* string = ALLOCATE_FLEX(vm, ObjString, length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
-  string->length = (int)length;
+  string->length = length;
 
   return OBJ_VAL(string);
 }
 
 ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
 {
-  size_t leftLength = strlen(left);
-  size_t rightLength = strlen(right);
+  uint32_t leftLength = (uint32_t)strlen(left);
+  uint32_t rightLength = (uint32_t)strlen(right);
 
   Value value = wrenNewUninitializedString(vm, leftLength + rightLength);
   ObjString* string = AS_STRING(value);
@@ -639,9 +639,8 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
   return string;
 }
 
-Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
+Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
 {
-  ASSERT(index >= 0, "Index out of bounds.");
   ASSERT(index < string->length, "Index out of bounds.");
 
   char first = string->value[index];
