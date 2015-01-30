@@ -352,10 +352,10 @@ typedef struct
   Obj obj;
 
   // The number of entries allocated.
-  int capacity;
+  uint32_t capacity;
 
   // The number of entries in the map.
-  int count;
+  uint32_t count;
 
   // Pointer to a contiguous array of [capacity] entries.
   MapEntry* entries;
