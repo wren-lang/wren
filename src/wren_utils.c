@@ -54,7 +54,7 @@ int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length)
   for (int i = 0; i < symbols->count; i++)
   {
     if (symbols->data[i].length == length &&
-        strncmp(symbols->data[i].buffer, name, length) == 0) return i;
+        memcmp(symbols->data[i].buffer, name, length) == 0) return i;
   }
 
   return -1;
