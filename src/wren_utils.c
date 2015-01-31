@@ -30,7 +30,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
                                         sizeof(char) * (length + 1));
   strncpy(symbol.buffer, name, length);
   symbol.buffer[length] = '\0';
-  symbol.length = length;
+  symbol.length = (int)length;
 
   wrenStringBufferWrite(vm, symbols, symbol);
   return symbols->count - 1;
