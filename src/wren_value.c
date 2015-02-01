@@ -404,6 +404,9 @@ static uint32_t hashValue(Value value)
     case TAG_NAN: return HASH_NAN;
     case TAG_NULL: return HASH_NULL;
     case TAG_TRUE: return HASH_TRUE;
+    default:
+      UNREACHABLE();
+      return 0;
   }
 #else
   switch (value.type)
@@ -413,10 +416,11 @@ static uint32_t hashValue(Value value)
     case VAL_NUM: return hashNumber(AS_NUM(value));
     case VAL_TRUE: return HASH_TRUE;
     case VAL_OBJ: return hashObject(AS_OBJ(value));
+    default:
+      UNREACHABLE();
+      return 0;
   }
 #endif
-  UNREACHABLE();
-  return 0;
 }
 
 // Inserts [key] and [value] in the array of [entries] with the given
