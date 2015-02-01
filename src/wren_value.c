@@ -32,8 +32,11 @@ DEFINE_BUFFER(Method, Method);
 
 #define ALLOCATE(vm, type) \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
-#define ALLOCATE_FLEX(vm, type, extra) \
-    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) + extra))
+
+#define ALLOCATE_FLEX(vm, mainType, arrayType, count) \
+    ((mainType*)wrenReallocate(vm, NULL, 0, \
+        sizeof(mainType) + sizeof(arrayType) * count))
+
 #define ALLOCATE_ARRAY(vm, type, count) \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * count))
 
@@ -131,7 +134,7 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 {
   ObjClosure* closure = ALLOCATE_FLEX(vm, ObjClosure,
-                                      sizeof(Upvalue*) * fn->numUpvalues);
+                                      Upvalue*, fn->numUpvalues);
   initObj(vm, &closure->obj, OBJ_CLOSURE, vm->fnClass);
 
   closure->fn = fn;
@@ -222,7 +225,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
 {
   ObjInstance* instance = ALLOCATE_FLEX(vm, ObjInstance,
-                                        classObj->numFields * sizeof(Value));
+                                        Value, classObj->numFields);
   initObj(vm, &instance->obj, OBJ_INSTANCE, classObj);
 
   // Initialize fields to null.
@@ -618,7 +621,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
 
 Value wrenNewUninitializedString(WrenVM* vm, size_t length)
 {
-  ObjString* string = ALLOCATE_FLEX(vm, ObjString, length + 1);
+  ObjString* string = ALLOCATE_FLEX(vm, ObjString, char, length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
   string->length = (int)length;
 
