@@ -200,7 +200,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
 
   // Copy the function's name.
   debug->name = ALLOCATE_ARRAY(vm, char, debugNameLength + 1);
-  strncpy(debug->name, debugName, debugNameLength);
+  memcpy(debug->name, debugName, debugNameLength);
   debug->name[debugNameLength] = '\0';
 
   debug->sourceLines = sourceLines;
@@ -617,7 +617,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   ObjString* string = AS_STRING(wrenNewUninitializedString(vm, length));
 
   // Copy the string (if given one).
-  if (length > 0) strncpy(string->value, text, length);
+  if (length > 0) memcpy(string->value, text, length);
 
   string->value[length] = '\0';
 

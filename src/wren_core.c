@@ -1180,7 +1180,7 @@ DEF_NATIVE(string_endsWith)
   if (search->length > string->length) RETURN_FALSE;
 
   int result = memcmp(string->value + string->length - search->length,
-                       search->value, search->length);
+                      search->value, search->length);
 
   RETURN_BOOL(result == 0);
 }
