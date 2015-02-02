@@ -86,7 +86,8 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   wrenPushRoot(vm, (Obj*)name);
 
   // Create the metaclass.
-  ObjString* metaclassName = wrenStringConcat(vm, name->value, " metaclass");
+  ObjString* metaclassName = wrenStringConcat(vm, name->value, name->length,
+                                              " metaclass", -1);
   wrenPushRoot(vm, (Obj*)metaclassName);
 
   ObjClass* metaclass = wrenNewSingleClass(vm, 0, metaclassName);
@@ -632,15 +633,16 @@ Value wrenNewUninitializedString(WrenVM* vm, size_t length)
   return OBJ_VAL(string);
 }
 
-ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
+ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
+                            const char* right, int rightLength)
 {
-  size_t leftLength = strlen(left);
-  size_t rightLength = strlen(right);
+  if (leftLength == -1) leftLength = (int)strlen(left);
+  if (rightLength == -1) rightLength = (int)strlen(right);
 
   Value value = wrenNewUninitializedString(vm, leftLength + rightLength);
   ObjString* string = AS_STRING(value);
-  strcpy(string->value, left);
-  strcpy(string->value + leftLength, right);
+  memcpy(string->value, left, leftLength);
+  memcpy(string->value + leftLength, right, rightLength);
   string->value[leftLength + rightLength] = '\0';
 
   return string;
