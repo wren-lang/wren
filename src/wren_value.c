@@ -672,22 +672,15 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
   return value;
 }
 
-// TODO: Naive implementation. Should we switch to Z-algorithm?
+// TODO: Naive implementation. Should we switch to something better, such as
+// Z-algorithm or KMP.
 int wrenStringFind(ObjString* haystack, ObjString* needle)
 {
-  uint32_t i = 0;
-  while (i < haystack->length) {
-    uint32_t j = 0;
-    while (j < needle->length) {
-      if (haystack->value[i + j] != needle->value[j]) {
-        break;
-      }
-      ++j;
+  const char* eod = haystack->value + (haystack->length - needle->length);
+  for (const char* ptr = haystack->value; ptr <= eod; ++ptr) {
+    if (memcmp(ptr, needle->value, needle->length) == 0) {
+      return ptr - haystack->value;
     }
-    if (j == needle->length) {
-      return (int)i;
-    }
-    ++i;
   }
   return -1;
 }
