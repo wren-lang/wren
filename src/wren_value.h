@@ -62,21 +62,13 @@ typedef enum {
   OBJ_UPVALUE
 } ObjType;
 
-typedef enum
-{
-  // The object has been marked during the mark phase of GC.
-  FLAG_MARKED = 0x01,
-} ObjFlags;
-
 typedef struct sObjClass ObjClass;
 
 // Base struct for all heap-allocated objects.
 typedef struct sObj
 {
-  unsigned int type  : 4; // ObjType.
-  // TODO: We could store this bit off to the side, or in the low bit of
-  // classObj to shrink objects a bit. Worth doing?
-  unsigned int flags : 1; // ObjFlags.
+  ObjType type;
+  bool marked;
 
   // The object's class.
   ObjClass* classObj;
@@ -104,8 +96,10 @@ typedef enum
 typedef struct
 {
   ValueType type;
-  double num;
-  Obj* obj;
+  union {
+    double num;
+    Obj* obj;
+  } as;
 } Value;
 
 #endif
@@ -558,7 +552,7 @@ typedef struct
 #define AS_BOOL(value) ((value).type == VAL_TRUE)
 
 // Value -> Obj*.
-#define AS_OBJ(v) ((v).obj)
+#define AS_OBJ(v) ((v).as.obj)
 
 // Determines if [value] is a garbage-collected object or not.
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
@@ -569,10 +563,10 @@ typedef struct
 #define IS_UNDEFINED(value) ((value).type == VAL_UNDEFINED)
 
 // Singleton values.
-#define FALSE_VAL     ((Value){ VAL_FALSE, 0.0, NULL })
-#define NULL_VAL      ((Value){ VAL_NULL, 0.0, NULL })
-#define TRUE_VAL      ((Value){ VAL_TRUE, 0.0, NULL })
-#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, 0.0, NULL })
+#define FALSE_VAL     ((Value){ VAL_FALSE })
+#define NULL_VAL      ((Value){ VAL_NULL })
+#define TRUE_VAL      ((Value){ VAL_TRUE })
+#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED })
 
 #endif
 
@@ -705,8 +699,8 @@ static inline bool wrenValuesSame(Value a, Value b)
   return a == b;
 #else
   if (a.type != b.type) return false;
-  if (a.type == VAL_NUM) return a.num == b.num;
-  return a.obj == b.obj;
+  if (a.type == VAL_NUM) return a.as.num == b.as.num;
+  return a.as.obj == b.as.obj;
 #endif
 }
 
@@ -750,7 +744,7 @@ static inline Value wrenObjectToValue(Obj* obj)
 #else
   Value value;
   value.type = VAL_OBJ;
-  value.obj = obj;
+  value.as.obj = obj;
   return value;
 #endif
 }
@@ -763,7 +757,7 @@ static inline double wrenValueToNum(Value value)
   data.bits64 = value;
   return data.num;
 #else
-  return value.num;
+  return value.as.num;
 #endif
 }
 
@@ -775,7 +769,10 @@ static inline Value wrenNumToValue(double num)
   data.num = num;
   return data.bits64;
 #else
-  return (Value){ VAL_NUM, n, NULL };
+  Value value;
+  value.type = VAL_NUM;
+  value.as.num = num;
+  return value;
 #endif
 }
 

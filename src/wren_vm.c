@@ -147,7 +147,7 @@ static void collectGarbage(WrenVM* vm)
   Obj** obj = &vm->first;
   while (*obj != NULL)
   {
-    if (!((*obj)->flags & FLAG_MARKED))
+    if (!((*obj)->marked))
     {
       // This object wasn't reached, so remove it from the list and free it.
       Obj* unreached = *obj;
@@ -158,7 +158,7 @@ static void collectGarbage(WrenVM* vm)
     {
       // This object was reached, so unmark it (for the next GC) and move on to
       // the next.
-      (*obj)->flags &= ~FLAG_MARKED;
+      (*obj)->marked = false;
       obj = &(*obj)->next;
     }
   }
@@ -330,7 +330,7 @@ static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
   // Count the number of spaces to determine the number of parameters the
   // method expects.
-  const char* methodName = vm->methodNames.data[symbol];
+  const char* methodName = vm->methodNames.data[symbol].buffer;
 
   int methodLength = (int)strlen(methodName);
   int numParams = 0;

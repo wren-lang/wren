@@ -32,15 +32,18 @@ DEFINE_BUFFER(Method, Method);
 
 #define ALLOCATE(vm, type) \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
-#define ALLOCATE_FLEX(vm, type, extra) \
-    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) + extra))
+
+#define ALLOCATE_FLEX(vm, mainType, arrayType, count) \
+    ((mainType*)wrenReallocate(vm, NULL, 0, \
+        sizeof(mainType) + sizeof(arrayType) * count))
+
 #define ALLOCATE_ARRAY(vm, type, count) \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * count))
 
 static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 {
   obj->type = type;
-  obj->flags = 0;
+  obj->marked = false;
   obj->classObj = classObj;
   obj->next = vm->first;
   vm->first = obj;
@@ -131,7 +134,7 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 {
   ObjClosure* closure = ALLOCATE_FLEX(vm, ObjClosure,
-                                      sizeof(Upvalue*) * fn->numUpvalues);
+                                      Upvalue*, fn->numUpvalues);
   initObj(vm, &closure->obj, OBJ_CLOSURE, vm->fnClass);
 
   closure->fn = fn;
@@ -222,7 +225,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
 {
   ObjInstance* instance = ALLOCATE_FLEX(vm, ObjInstance,
-                                        classObj->numFields * sizeof(Value));
+                                        Value, classObj->numFields);
   initObj(vm, &instance->obj, OBJ_INSTANCE, classObj);
 
   // Initialize fields to null.
@@ -401,6 +404,9 @@ static uint32_t hashValue(Value value)
     case TAG_NAN: return HASH_NAN;
     case TAG_NULL: return HASH_NULL;
     case TAG_TRUE: return HASH_TRUE;
+    default:
+      UNREACHABLE();
+      return 0;
   }
 #else
   switch (value.type)
@@ -410,10 +416,11 @@ static uint32_t hashValue(Value value)
     case VAL_NUM: return hashNumber(AS_NUM(value));
     case VAL_TRUE: return HASH_TRUE;
     case VAL_OBJ: return hashObject(AS_OBJ(value));
+    default:
+      UNREACHABLE();
+      return 0;
   }
 #endif
-  UNREACHABLE();
-  return 0;
 }
 
 // Inserts [key] and [value] in the array of [entries] with the given
@@ -483,6 +490,9 @@ static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
 
 uint32_t wrenMapFind(ObjMap* map, Value key)
 {
+  // If there is no entry array (an empty map), we definitely won't find it.
+  if (map->capacity == 0) return UINT32_MAX;
+
   // Figure out where to insert it in the table. Use open addressing and
   // basic linear probing.
   uint32_t index = hashValue(key) % map->capacity;
@@ -615,7 +625,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
 
 Value wrenNewUninitializedString(WrenVM* vm, size_t length)
 {
-  ObjString* string = ALLOCATE_FLEX(vm, ObjString, length + 1);
+  ObjString* string = ALLOCATE_FLEX(vm, ObjString, char, length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
   string->length = (int)length;
 
@@ -678,8 +688,8 @@ Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 // crash on an object cycle.
 static bool setMarkedFlag(Obj* obj)
 {
-  if (obj->flags & FLAG_MARKED) return true;
-  obj->flags |= FLAG_MARKED;
+  if (obj->marked) return true;
+  obj->marked = true;
   return false;
 }
 

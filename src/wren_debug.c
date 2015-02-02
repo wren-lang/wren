@@ -92,7 +92,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int global = READ_SHORT();
       printf("%-16s %5d '%s'\n", "LOAD_GLOBAL", global,
-             vm->globalNames.data[global]);
+             vm->globalNames.data[global].buffer);
       break;
     }
 
@@ -100,7 +100,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int global = READ_SHORT();
       printf("%-16s %5d '%s'\n", "STORE_GLOBAL", global,
-             vm->globalNames.data[global]);
+             vm->globalNames.data[global].buffer);
       break;
     }
 
@@ -133,7 +133,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       int numArgs = bytecode[i - 1] - CODE_CALL_0;
       int symbol = READ_SHORT();
       printf("CALL_%-11d %5d '%s'\n", numArgs, symbol,
-             vm->methodNames.data[symbol]);
+             vm->methodNames.data[symbol].buffer);
       break;
     }
 
@@ -158,7 +158,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       int numArgs = bytecode[i - 1] - CODE_SUPER_0;
       int symbol = READ_SHORT();
       printf("SUPER_%-10d %5d '%s'\n", numArgs, symbol,
-             vm->methodNames.data[symbol]);
+             vm->methodNames.data[symbol].buffer);
       break;
     }
 
@@ -230,7 +230,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int symbol = READ_SHORT();
       printf("%-16s %5d '%s'\n", "METHOD_INSTANCE", symbol,
-             vm->methodNames.data[symbol]);
+             vm->methodNames.data[symbol].buffer);
       break;
     }
 
@@ -238,7 +238,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int symbol = READ_SHORT();
       printf("%-16s %5d '%s'\n", "METHOD_STATIC", symbol,
-             vm->methodNames.data[symbol]);
+             vm->methodNames.data[symbol].buffer);
       break;
     }
 
