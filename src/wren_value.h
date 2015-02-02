@@ -329,13 +329,11 @@ typedef struct
 {
   Obj obj;
 
-  // TODO: Make these uint32_t to match ObjMap, or vice versa.
-  
   // The number of elements allocated.
-  int capacity;
+  uint32_t capacity;
 
   // The number of items in the list.
-  int count;
+  uint32_t count;
 
   // Pointer to a contiguous array of [capacity] elements.
   Value* elements;
@@ -624,10 +622,10 @@ ObjList* wrenNewList(WrenVM* vm, int numElements);
 void wrenListAdd(WrenVM* vm, ObjList* list, Value value);
 
 // Inserts [value] in [list] at [index], shifting down the other elements.
-void wrenListInsert(WrenVM* vm, ObjList* list, Value value, int index);
+void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index);
 
 // Removes and returns the item at [index] from [list].
-Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
+Value wrenListRemoveAt(WrenVM* vm, ObjList* list, uint32_t index);
 
 // Creates a new empty map.
 ObjMap* wrenNewMap(WrenVM* vm);
