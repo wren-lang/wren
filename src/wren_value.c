@@ -676,6 +676,9 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
 // Z-algorithm or KMP.
 int wrenStringFind(ObjString* haystack, ObjString* needle)
 {
+  if (haystack->length < needle->length) {
+    return -1;
+  }
   const char* eod = haystack->value + (haystack->length - needle->length);
   for (const char* ptr = haystack->value; ptr <= eod; ++ptr) {
     if (memcmp(ptr, needle->value, needle->length) == 0) {
