@@ -670,6 +670,26 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
   return value;
 }
 
+// TODO: Naive implementation. Should we switch to Z-algorithm?
+int wrenStringFind(ObjString* haystack, ObjString* needle)
+{
+  uint32_t i = 0;
+  while (i < haystack->length) {
+    uint32_t j = 0;
+    while (j < needle->length) {
+      if (haystack->value[i + j] != needle->value[j]) {
+        break;
+      }
+      ++j;
+    }
+    if (j == needle->length) {
+      return (int)i;
+    }
+    ++i;
+  }
+  return -1;
+}
+
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 {
   Upvalue* upvalue = ALLOCATE(vm, Upvalue);

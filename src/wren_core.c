@@ -1159,7 +1159,7 @@ DEF_NATIVE(string_contains)
   // Corner case, the empty string contains the empty string.
   if (string->length == 0 && search->length == 0) RETURN_TRUE;
 
-  RETURN_BOOL(strstr(string->value, search->value) != NULL);
+  RETURN_BOOL(wrenStringFind(string, search) != -1);
 }
 
 DEF_NATIVE(string_count)
@@ -1191,9 +1191,9 @@ DEF_NATIVE(string_indexOf)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  char* firstOccurrence = strstr(string->value, search->value);
+  int index = wrenStringFind(string, search);
 
-  RETURN_NUM(firstOccurrence ? firstOccurrence - string->value : -1);
+  RETURN_NUM(index);
 }
 
 DEF_NATIVE(string_iterate)

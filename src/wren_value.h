@@ -667,6 +667,10 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right);
 // empty string.
 Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index);
 
+// Search for the first occurence of [needle] within [haystack] and returns its
+// zero-based offset. Returns -1 if [haystack] does not contain [needle].
+int wrenStringFind(ObjString* haystack, ObjString* needle);
+
 // Creates a new open upvalue pointing to [value] on the stack.
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
 
