@@ -1157,10 +1157,10 @@ DEF_NATIVE(string_contains)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  // Corner case, the empty string contains the empty string.
-  if (string->length == 0 && search->length == 0) RETURN_TRUE;
+  // Corner case, the empty string is always contained.
+  if (search->length == 0) RETURN_TRUE;
 
-  RETURN_BOOL(wrenStringFind(string, search) != -1);
+  RETURN_BOOL(wrenStringFind(vm, string, search) != string->length);
 }
 
 DEF_NATIVE(string_count)
@@ -1192,9 +1192,9 @@ DEF_NATIVE(string_indexOf)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  int index = wrenStringFind(string, search);
+  uint32_t index = wrenStringFind(vm, string, search);
 
-  RETURN_NUM(index);
+  RETURN_NUM(index == string->length ? -1 : (int)index);
 }
 
 DEF_NATIVE(string_iterate)
