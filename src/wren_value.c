@@ -86,7 +86,8 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   wrenPushRoot(vm, (Obj*)name);
 
   // Create the metaclass.
-  ObjString* metaclassName = wrenStringConcat(vm, name->value, " metaclass");
+  ObjString* metaclassName = wrenStringConcat(vm, name->value, name->length,
+                                              " metaclass", -1);
   wrenPushRoot(vm, (Obj*)metaclassName);
 
   ObjClass* metaclass = wrenNewSingleClass(vm, 0, metaclassName);
@@ -199,7 +200,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
 
   // Copy the function's name.
   debug->name = ALLOCATE_ARRAY(vm, char, debugNameLength + 1);
-  strncpy(debug->name, debugName, debugNameLength);
+  memcpy(debug->name, debugName, debugNameLength);
   debug->name[debugNameLength] = '\0';
 
   debug->sourceLines = sourceLines;
@@ -365,7 +366,7 @@ static uint32_t hashObject(Obj* object)
       ObjString* string = (ObjString*)object;
 
       // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
-      uint32_t hash = 2166136261;
+      uint32_t hash = 2166136261u;
 
       // We want the contents of the string to affect the hash, but we also
       // want to ensure it runs in constant time. We also don't want to bias
@@ -616,7 +617,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   ObjString* string = AS_STRING(wrenNewUninitializedString(vm, length));
 
   // Copy the string (if given one).
-  if (length > 0) strncpy(string->value, text, length);
+  if (length > 0) memcpy(string->value, text, length);
 
   string->value[length] = '\0';
 
@@ -632,15 +633,16 @@ Value wrenNewUninitializedString(WrenVM* vm, size_t length)
   return OBJ_VAL(string);
 }
 
-ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
+ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
+                            const char* right, int rightLength)
 {
-  size_t leftLength = strlen(left);
-  size_t rightLength = strlen(right);
+  if (leftLength == -1) leftLength = (int)strlen(left);
+  if (rightLength == -1) rightLength = (int)strlen(right);
 
   Value value = wrenNewUninitializedString(vm, leftLength + rightLength);
   ObjString* string = AS_STRING(value);
-  strcpy(string->value, left);
-  strcpy(string->value + leftLength, right);
+  memcpy(string->value, left, leftLength);
+  memcpy(string->value + leftLength, right, rightLength);
   string->value[leftLength + rightLength] = '\0';
 
   return string;
@@ -668,6 +670,59 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
   memcpy(result->value, string->value + index, numBytes);
   result->value[numBytes] = '\0';
   return value;
+}
+
+// Implementing Boyer-Moore-Horspool string matching algorithm.
+uint32_t wrenStringFind(WrenVM* vm, ObjString* haystack, ObjString* needle)
+{
+  uint32_t length, last_index, index;
+  uint32_t shift[256]; // Full 8-bit alphabet
+  char last_char;
+  // We need to convert the 'char' value to 'unsigned char' in order not
+  // to get negative indexes. We use a union as an elegant alternative to
+  // explicit coercion (whose behaviour is not sure across compilers)
+  union {
+    char c;
+    unsigned char uc;
+  } value;
+
+  // If the needle is longer than the haystack it won't be found.
+  if (needle->length > haystack->length)
+  {
+    return haystack->length;
+  }
+
+  // Precalculate shifts.
+  last_index = needle->length - 1;
+
+  for (index = 0; index < 256; index++)
+  {
+    shift[index] = needle->length;
+  }
+  for (index = 0; index < last_index; index++)
+  {
+    value.c = needle->value[index];
+    shift[value.uc] = last_index - index;
+  }
+
+  // Search, left to right.
+  last_char = needle->value[last_index];
+
+  length = haystack->length - needle->length;
+
+  for (index = 0; index <= length; )
+  {
+    value.c = haystack->value[index + last_index];
+    if ((last_char == value.c) &&
+      memcmp(haystack->value + index, needle->value, last_index) == 0)
+    {
+      return index;
+    }
+    index += shift[value.uc]; // Convert, same as above.
+  }
+
+  // Not found.
+  return haystack->length;
 }
 
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)

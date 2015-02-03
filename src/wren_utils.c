@@ -28,7 +28,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
   String symbol;
   symbol.buffer = (char*)wrenReallocate(vm, NULL, 0,
                                         sizeof(char) * (length + 1));
-  strncpy(symbol.buffer, name, length);
+  memcpy(symbol.buffer, name, length);
   symbol.buffer[length] = '\0';
   symbol.length = (int)length;
 

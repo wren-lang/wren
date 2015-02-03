@@ -699,6 +699,7 @@ static void readString(Parser* parser)
       {
         case '"':  addStringChar(parser, '"'); break;
         case '\\': addStringChar(parser, '\\'); break;
+        case '0':  addStringChar(parser, '\0'); break;
         case 'a':  addStringChar(parser, '\a'); break;
         case 'b':  addStringChar(parser, '\b'); break;
         case 'f':  addStringChar(parser, '\f'); break;
@@ -1264,7 +1265,8 @@ static int copyName(Compiler* compiler, char* name)
     length = MAX_METHOD_NAME;
   }
 
-  strncpy(name, token->start, length);
+  memcpy(name, token->start, length);
+  name[length] = '\0';
   return length;
 }
 
@@ -2004,14 +2006,14 @@ static void super_(Compiler* compiler, bool allowAssignment)
     int length;
     if (enclosingClass != NULL) {
       length = enclosingClass->methodLength;
-      strncpy(name, enclosingClass->methodName, length);
+      memcpy(name, enclosingClass->methodName, length);
     } else {
       // We get here if super is used outside of a method. In that case, we
       // have already reported the error, so just stub this out so we can keep
       // going to try to find later errors.
       length = 0;
-      strncpy(name, "", length);
     }
+    name[length] = '\0';
 
     // Call the superclass method with the same name.
     methodCall(compiler, CODE_SUPER_0, name, length);
@@ -2097,8 +2099,7 @@ static void new_(Compiler* compiler, bool allowAssignment)
                methodSymbol(compiler, " instantiate", 12));
 
   // Invoke the constructor on the new instance.
-  char name[MAX_METHOD_SIGNATURE];
-  strcpy(name, "new");
+  char name[MAX_METHOD_SIGNATURE] = "new";
   methodCall(compiler, CODE_CALL_0, name, 3);
 }
 
