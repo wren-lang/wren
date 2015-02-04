@@ -365,7 +365,7 @@ static uint32_t hashObject(Obj* object)
       ObjString* string = (ObjString*)object;
 
       // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
-      uint32_t hash = 2166136261;
+      uint32_t hash = 2166136261u;
 
       // We want the contents of the string to affect the hash, but we also
       // want to ensure it runs in constant time. We also don't want to bias
