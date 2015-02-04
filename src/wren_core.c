@@ -1156,8 +1156,8 @@ DEF_NATIVE(string_contains)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  // Corner case, the empty string contains the empty string.
-  if (string->length == 0 && search->length == 0) RETURN_TRUE;
+  // Corner case, the empty string is always contained.
+  if (search->length == 0) RETURN_TRUE;
 
   RETURN_BOOL(wrenStringFind(vm, string, search) != string->length);
 }
