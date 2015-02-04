@@ -670,6 +670,59 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
   return value;
 }
 
+// Implementing Boyer-Moore-Horspool string matching algorithm.
+uint32_t wrenStringFind(WrenVM* vm, ObjString* haystack, ObjString* needle)
+{
+  uint32_t length, last_index, index;
+  uint32_t shift[256]; // Full 8-bit alphabet
+  char last_char;
+  // We need to convert the 'char' value to 'unsigned char' in order not
+  // to get negative indexes. We use a union as an elegant alternative to
+  // explicit coercion (whose behaviour is not sure across compilers)
+  union {
+    char c;
+    unsigned char uc;
+  } value;
+
+  // If the needle is longer than the haystack it won't be found.
+  if (needle->length > haystack->length)
+  {
+    return haystack->length;
+  }
+
+  // Precalculate shifts.
+  last_index = needle->length - 1;
+
+  for (index = 0; index < 256; index++)
+  {
+    shift[index] = needle->length;
+  }
+  for (index = 0; index < last_index; index++)
+  {
+    value.c = needle->value[index];
+    shift[value.uc] = last_index - index;
+  }
+
+  // Search, left to right.
+  last_char = needle->value[last_index];
+
+  length = haystack->length - needle->length;
+
+  for (index = 0; index <= length; )
+  {
+    value.c = haystack->value[index + last_index];
+    if ((last_char == value.c) &&
+      memcmp(haystack->value + index, needle->value, last_index) == 0)
+    {
+      return index;
+    }
+    index += shift[value.uc]; // Convert, same as above.
+  }
+
+  // Not found.
+  return haystack->length;
+}
+
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 {
   Upvalue* upvalue = ALLOCATE(vm, Upvalue);
