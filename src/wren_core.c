@@ -1216,7 +1216,7 @@ DEF_NATIVE(string_iterate)
   do
   {
     index++;
-    if (index >= string->length) RETURN_FALSE;
+    if ((uint32_t)index >= string->length) RETURN_FALSE;
   } while ((string->value[index] & 0xc0) == 0x80);
 
   RETURN_NUM(index);
