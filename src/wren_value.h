@@ -659,7 +659,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 // The caller is expected to fully initialize the buffer after calling.
 Value wrenNewUninitializedString(WrenVM* vm, size_t length);
 
-// Creates a new string that is the concatenation of [left] and [right] (of
+// Creates a new string that is the concatenation of [left] and [right] (with
 // length [leftLength] and [rightLength], respectively). If -1 is passed
 // the string length is automatically calculated.
 ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,

@@ -175,7 +175,8 @@ static bool validateFn(WrenVM* vm, Value* args, int index, const char* argName)
 {
   if (IS_FN(args[index]) || IS_CLOSURE(args[index])) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1, " must be a function.", -1));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
+                                     " must be a function.", -1));
   return false;
 }
 
@@ -185,7 +186,8 @@ static bool validateNum(WrenVM* vm, Value* args, int index, const char* argName)
 {
   if (IS_NUM(args[index])) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1, " must be a number.", -1));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
+                                     " must be a number.", -1));
   return false;
 }
 
@@ -196,7 +198,8 @@ static bool validateIntValue(WrenVM* vm, Value* args, double value,
 {
   if (trunc(value) == value) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1, " must be an integer.", -1));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
+                                     " must be an integer.", -1));
   return false;
 }
 
@@ -263,7 +266,8 @@ static bool validateString(WrenVM* vm, Value* args, int index,
 {
   if (IS_STRING(args[index])) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1, " must be a string.", -1));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
+                                     " must be a string.", -1));
   return false;
 }
 
