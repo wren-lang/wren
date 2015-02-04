@@ -699,6 +699,7 @@ static void readString(Parser* parser)
       {
         case '"':  addStringChar(parser, '"'); break;
         case '\\': addStringChar(parser, '\\'); break;
+        case '0':  addStringChar(parser, '\0'); break;
         case 'a':  addStringChar(parser, '\a'); break;
         case 'b':  addStringChar(parser, '\b'); break;
         case 'f':  addStringChar(parser, '\f'); break;
