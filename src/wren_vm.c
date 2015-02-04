@@ -1143,7 +1143,7 @@ static void defineMethod(WrenVM* vm, const char* className,
 
   // Create a name for the method, including its arity.
   char name[MAX_METHOD_SIGNATURE];
-  strncpy(name, methodName, length);
+  memcpy(name, methodName, length);
   for (int i = 0; i < numParams; i++)
   {
     name[length++] = ' ';
