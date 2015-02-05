@@ -32,8 +32,11 @@ DEFINE_BUFFER(Method, Method);
 
 #define ALLOCATE(vm, type) \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
-#define ALLOCATE_FLEX(vm, type, extra) \
-    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) + extra))
+
+#define ALLOCATE_FLEX(vm, mainType, arrayType, count) \
+    ((mainType*)wrenReallocate(vm, NULL, 0, \
+        sizeof(mainType) + sizeof(arrayType) * count))
+
 #define ALLOCATE_ARRAY(vm, type, count) \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * count))
 
@@ -83,7 +86,8 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   wrenPushRoot(vm, (Obj*)name);
 
   // Create the metaclass.
-  ObjString* metaclassName = wrenStringConcat(vm, name->value, " metaclass");
+  ObjString* metaclassName = wrenStringConcat(vm, name->value, name->length,
+                                              " metaclass", -1);
   wrenPushRoot(vm, (Obj*)metaclassName);
 
   ObjClass* metaclass = wrenNewSingleClass(vm, 0, metaclassName);
@@ -131,7 +135,7 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 {
   ObjClosure* closure = ALLOCATE_FLEX(vm, ObjClosure,
-                                      sizeof(Upvalue*) * fn->numUpvalues);
+                                      Upvalue*, fn->numUpvalues);
   initObj(vm, &closure->obj, OBJ_CLOSURE, vm->fnClass);
 
   closure->fn = fn;
@@ -197,7 +201,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
 
   // Copy the function's name.
   debug->name = ALLOCATE_ARRAY(vm, char, debugNameLength + 1);
-  strncpy(debug->name, debugName, debugNameLength);
+  memcpy(debug->name, debugName, debugNameLength);
   debug->name[debugNameLength] = '\0';
 
   debug->sourceLines = sourceLines;
@@ -224,7 +228,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
 {
   ObjInstance* instance = ALLOCATE_FLEX(vm, ObjInstance,
-                                        classObj->numFields * sizeof(Value));
+                                        Value, classObj->numFields);
   initObj(vm, &instance->obj, OBJ_INSTANCE, classObj);
 
   // Initialize fields to null.
@@ -364,7 +368,7 @@ static uint32_t hashObject(Obj* object)
       ObjString* string = (ObjString*)object;
 
       // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
-      uint32_t hash = 2166136261;
+      uint32_t hash = 2166136261u;
 
       // We want the contents of the string to affect the hash, but we also
       // want to ensure it runs in constant time. We also don't want to bias
@@ -403,6 +407,9 @@ static uint32_t hashValue(Value value)
     case TAG_NAN: return HASH_NAN;
     case TAG_NULL: return HASH_NULL;
     case TAG_TRUE: return HASH_TRUE;
+    default:
+      UNREACHABLE();
+      return 0;
   }
 #else
   switch (value.type)
@@ -414,10 +421,9 @@ static uint32_t hashValue(Value value)
     case VAL_OBJ: return hashObject(AS_OBJ(value));
     default:
       UNREACHABLE();
+      return 0;
   }
 #endif
-  UNREACHABLE();
-  return 0;
 }
 
 // Inserts [key] and [value] in the array of [entries] with the given
@@ -629,7 +635,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   ObjString* string = AS_STRING(wrenNewUninitializedString(vm, length));
 
   // Copy the string (if given one).
-  if (length > 0) strncpy(string->value, text, length);
+  if (length > 0) memcpy(string->value, text, length);
 
   string->value[length] = '\0';
 
@@ -638,22 +644,23 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
 
 Value wrenNewUninitializedString(WrenVM* vm, size_t length)
 {
-  ObjString* string = ALLOCATE_FLEX(vm, ObjString, length + 1);
+  ObjString* string = ALLOCATE_FLEX(vm, ObjString, char, length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
   string->length = (int)length;
 
   return OBJ_VAL(string);
 }
 
-ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
+ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
+                            const char* right, int rightLength)
 {
-  size_t leftLength = strlen(left);
-  size_t rightLength = strlen(right);
+  if (leftLength == -1) leftLength = (int)strlen(left);
+  if (rightLength == -1) rightLength = (int)strlen(right);
 
   Value value = wrenNewUninitializedString(vm, leftLength + rightLength);
   ObjString* string = AS_STRING(value);
-  strcpy(string->value, left);
-  strcpy(string->value + leftLength, right);
+  memcpy(string->value, left, leftLength);
+  memcpy(string->value + leftLength, right, rightLength);
   string->value[leftLength + rightLength] = '\0';
 
   return string;
@@ -681,6 +688,65 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
   memcpy(result->value, string->value + index, numBytes);
   result->value[numBytes] = '\0';
   return value;
+}
+
+// Uses the Boyer-Moore-Horspool string matching algorithm.
+uint32_t wrenStringFind(WrenVM* vm, ObjString* haystack, ObjString* needle)
+{
+  // Corner case, an empty needle is always found.
+  if (needle->length == 0) return 0;
+
+  // If the needle is longer than the haystack it won't be found.
+  if (needle->length > haystack->length) return UINT32_MAX;
+
+  // Pre-calculate the shift table. For each character (8-bit value), we
+  // determine how far the search window can be advanced if that character is
+  // the last character in the haystack where we are searching for the needle
+  // and the needle doesn't match there.
+  uint32_t shift[UINT8_MAX];
+  uint32_t needleEnd = needle->length - 1;
+
+  // By default, we assume the character is not the needle at all. In that case
+  // case, if a match fails on that character, we can advance one whole needle
+  // width since.
+  for (uint32_t index = 0; index < UINT8_MAX; index++)
+  {
+    shift[index] = needle->length;
+  }
+
+  // Then, for every character in the needle, determine how far it is from the
+  // end. If a match fails on that character, we can advance the window such
+  // that it the last character in it lines up with the last place we could
+  // find it in the needle.
+  for (uint32_t index = 0; index < needleEnd; index++)
+  {
+    char c = needle->value[index];
+    shift[(uint8_t)c] = needleEnd - index;
+  }
+
+  // Slide the needle across the haystack, looking for the first match or
+  // stopping if the needle goes off the end.
+  char lastChar = needle->value[needleEnd];
+  uint32_t range = haystack->length - needle->length;
+
+  for (uint32_t index = 0; index <= range; )
+  {
+    // Compare the last character in the haystack's window to the last character
+    // in the needle. If it matches, see if the whole needle matches.
+    char c = haystack->value[index + needleEnd];
+    if (lastChar == c &&
+        memcmp(haystack->value + index, needle->value, needleEnd) == 0)
+    {
+      // Found a match.
+      return index;
+    }
+
+    // Otherwise, slide the needle forward.
+    index += shift[(uint8_t)c];
+  }
+
+  // Not found.
+  return UINT32_MAX;
 }
 
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)

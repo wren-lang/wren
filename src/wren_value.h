@@ -97,8 +97,10 @@ typedef enum
 typedef struct
 {
   ValueType type;
-  double num;
-  Obj* obj;
+  union {
+    double num;
+    Obj* obj;
+  } as;
 } Value;
 
 #endif
@@ -109,7 +111,7 @@ typedef struct
 {
   Obj obj;
   // Does not include the null terminator.
-  int length;
+  uint32_t length;
   char value[FLEXIBLE_ARRAY];
 } ObjString;
 
@@ -574,7 +576,7 @@ typedef struct
 #define AS_BOOL(value) ((value).type == VAL_TRUE)
 
 // Value -> Obj*.
-#define AS_OBJ(v) ((v).obj)
+#define AS_OBJ(v) ((v).as.obj)
 
 // Determines if [value] is a garbage-collected object or not.
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
@@ -585,10 +587,10 @@ typedef struct
 #define IS_UNDEFINED(value) ((value).type == VAL_UNDEFINED)
 
 // Singleton values.
-#define FALSE_VAL     ((Value){ VAL_FALSE, 0.0, NULL })
-#define NULL_VAL      ((Value){ VAL_NULL, 0.0, NULL })
-#define TRUE_VAL      ((Value){ VAL_TRUE, 0.0, NULL })
-#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, 0.0, NULL })
+#define FALSE_VAL     ((Value){ VAL_FALSE })
+#define NULL_VAL      ((Value){ VAL_NULL })
+#define TRUE_VAL      ((Value){ VAL_TRUE })
+#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED })
 
 #endif
 
@@ -685,13 +687,21 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 // The caller is expected to fully initialize the buffer after calling.
 Value wrenNewUninitializedString(WrenVM* vm, size_t length);
 
-// Creates a new string that is the concatenation of [left] and [right].
-ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right);
+// Creates a new string that is the concatenation of [left] and [right] (with
+// length [leftLength] and [rightLength], respectively). If -1 is passed
+// the string length is automatically calculated.
+ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
+                            const char* right, int rightLength);
 
 // Creates a new string containing the code point in [string] starting at byte
 // [index]. If [index] points into the middle of a UTF-8 sequence, returns an
 // empty string.
 Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index);
+
+// Search for the first occurence of [needle] within [haystack] and returns its
+// zero-based offset. Returns `UINT32_MAX` if [haystack] does not contain
+// [needle].
+uint32_t wrenStringFind(WrenVM* vm, ObjString* haystack, ObjString* needle);
 
 // Creates a new open upvalue pointing to [value] on the stack.
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
@@ -725,8 +735,8 @@ static inline bool wrenValuesSame(Value a, Value b)
   return a == b;
 #else
   if (a.type != b.type) return false;
-  if (a.type == VAL_NUM) return a.num == b.num;
-  return a.obj == b.obj;
+  if (a.type == VAL_NUM) return a.as.num == b.as.num;
+  return a.as.obj == b.as.obj;
 #endif
 }
 
@@ -770,7 +780,7 @@ static inline Value wrenObjectToValue(Obj* obj)
 #else
   Value value;
   value.type = VAL_OBJ;
-  value.obj = obj;
+  value.as.obj = obj;
   return value;
 #endif
 }
@@ -783,7 +793,7 @@ static inline double wrenValueToNum(Value value)
   data.bits64 = value;
   return data.num;
 #else
-  return value.num;
+  return value.as.num;
 #endif
 }
 
@@ -795,7 +805,10 @@ static inline Value wrenNumToValue(double num)
   data.num = num;
   return data.bits64;
 #else
-  return (Value){ VAL_NUM, num, NULL };
+  Value value;
+  value.type = VAL_NUM;
+  value.as.num = num;
+  return value;
 #endif
 }
 

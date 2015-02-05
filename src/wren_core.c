@@ -175,7 +175,8 @@ static bool validateFn(WrenVM* vm, Value* args, int index, const char* argName)
 {
   if (IS_FN(args[index]) || IS_CLOSURE(args[index])) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " must be a function."));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
+                                     " must be a function.", -1));
   return false;
 }
 
@@ -185,7 +186,8 @@ static bool validateNum(WrenVM* vm, Value* args, int index, const char* argName)
 {
   if (IS_NUM(args[index])) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " must be a number."));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
+                                     " must be a number.", -1));
   return false;
 }
 
@@ -196,7 +198,8 @@ static bool validateIntValue(WrenVM* vm, Value* args, double value,
 {
   if (trunc(value) == value) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " must be an integer."));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
+                                     " must be an integer.", -1));
   return false;
 }
 
@@ -226,7 +229,7 @@ static int validateIndexValue(WrenVM* vm, Value* args, int count, double value,
   // Check bounds.
   if (index >= 0 && index < count) return index;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " out of bounds."));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1, " out of bounds.", -1));
   return -1;
 }
 
@@ -263,7 +266,8 @@ static bool validateString(WrenVM* vm, Value* args, int index,
 {
   if (IS_STRING(args[index])) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, " must be a string."));
+  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
+                                     " must be a string.", -1));
   return false;
 }
 
@@ -1056,8 +1060,9 @@ DEF_NATIVE(object_toString)
   else if (IS_INSTANCE(args[0]))
   {
     ObjInstance* instance = AS_INSTANCE(args[0]);
-    RETURN_OBJ(wrenStringConcat(vm, "instance of ",
-                                instance->obj.classObj->name->value));
+    ObjString* name = instance->obj.classObj->name;
+    RETURN_OBJ(wrenStringConcat(vm, "instance of ", -1,
+                                name->value, name->length));
   }
 
   RETURN_VAL(wrenNewString(vm, "<object>", 8));
@@ -1156,10 +1161,7 @@ DEF_NATIVE(string_contains)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  // Corner case, the empty string contains the empty string.
-  if (string->length == 0 && search->length == 0) RETURN_TRUE;
-
-  RETURN_BOOL(strstr(string->value, search->value) != NULL);
+  RETURN_BOOL(wrenStringFind(vm, string, search) != UINT32_MAX);
 }
 
 DEF_NATIVE(string_count)
@@ -1179,7 +1181,7 @@ DEF_NATIVE(string_endsWith)
   if (search->length > string->length) RETURN_FALSE;
 
   int result = memcmp(string->value + string->length - search->length,
-                       search->value, search->length);
+                      search->value, search->length);
 
   RETURN_BOOL(result == 0);
 }
@@ -1191,9 +1193,9 @@ DEF_NATIVE(string_indexOf)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  char* firstOccurrence = strstr(string->value, search->value);
+  uint32_t index = wrenStringFind(vm, string, search);
 
-  RETURN_NUM(firstOccurrence ? firstOccurrence - string->value : -1);
+  RETURN_NUM(index == UINT32_MAX ? -1 : (int)index);
 }
 
 DEF_NATIVE(string_iterate)
@@ -1216,7 +1218,7 @@ DEF_NATIVE(string_iterate)
   do
   {
     index++;
-    if (index >= string->length) RETURN_FALSE;
+    if ((uint32_t)index >= string->length) RETURN_FALSE;
   } while ((string->value[index] & 0xc0) == 0x80);
 
   RETURN_NUM(index);
@@ -1253,7 +1255,10 @@ DEF_NATIVE(string_toString)
 DEF_NATIVE(string_plus)
 {
   if (!validateString(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_OBJ(wrenStringConcat(vm, AS_CSTRING(args[0]), AS_CSTRING(args[1])));
+  ObjString* left = AS_STRING(args[0]);
+  ObjString* right = AS_STRING(args[1]);
+  RETURN_OBJ(wrenStringConcat(vm, left->value, left->length,
+                              right->value, right->length));
 }
 
 DEF_NATIVE(string_subscript)

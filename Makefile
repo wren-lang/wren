@@ -19,12 +19,22 @@ else
 	CPPFLAGS += -fPIC
 endif
 
+# Clang on Mac OS X has different flags and a different extension to build a
+# shared library.
+ifneq (,$(findstring darwin,$(TARGET_OS)))
+	SHARED_LIB_FLAGS =
+	SHARED_EXT = dylib
+else
+	SHARED_LIB_FLAGS = -Wl,-soname,$@.so
+	SHARED_EXT = so
+endif
+
 # Files.
 SOURCES := $(wildcard src/*.c)
 HEADERS := $(wildcard src/*.h)
 OBJECTS := $(SOURCES:.c=.o)
 
-# Don't include main.c in the shared library.
+# Don't include main.c in the libraries.
 DEBUG_OBJECTS := $(addprefix build/debug/, $(notdir $(OBJECTS)))
 RELEASE_OBJECTS := $(addprefix build/release/, $(notdir $(OBJECTS)))
 RELEASE_CPP_OBJECTS := $(addprefix build/release-cpp/, $(notdir $(OBJECTS)))
@@ -38,17 +48,18 @@ RELEASE_CPP_LIB_OBJECTS := $(subst build/release-cpp/main.o,,$(RELEASE_CPP_OBJEC
 all: release
 
 clean:
-	@rm -rf build wren wrend libwren.a libwrend.a
+	@rm -rf build wren wrend libwren libwrend
 
 prep:
 	@mkdir -p build/debug build/release build/release-cpp
 
 # Debug build.
-debug: prep wrend libwrend.a
+debug: prep wrend libwrend
 
-# Debug shared library.
-libwrend.a: $(DEBUG_LIB_OBJECTS)
-	$(AR) $@ $^
+# Debug static and shared libraries.
+libwrend: $(DEBUG_LIB_OBJECTS)
+	$(AR) $@.a $^
+	$(CC) $(DEBUG_CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@.$(SHARED_EXT) $^
 
 # Debug command-line interpreter.
 wrend: $(DEBUG_OBJECTS)
@@ -59,11 +70,12 @@ build/debug/%.o: src/%.c include/wren.h $(HEADERS)
 	$(CC) -c $(CFLAGS) $(DEBUG_CFLAGS) -Iinclude -o $@ $<
 
 # Release build.
-release: prep wren libwren.a
+release: prep wren libwren
 
-# Release shared library.
-libwren.a: $(RELEASE_LIB_OBJECTS)
-	$(AR) $@ $^
+# Release static and shared libraries.
+libwren: $(RELEASE_LIB_OBJECTS)
+	$(AR) $@.a $^
+	$(CC) $(RELEASE_CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@.$(SHARED_EXT) $^
 
 # Release command-line interpreter.
 wren: $(RELEASE_OBJECTS)
@@ -74,11 +86,11 @@ build/release/%.o: src/%.c include/wren.h $(HEADERS)
 	$(CC) -c $(CFLAGS) $(RELEASE_CFLAGS) -Iinclude -o $@ $<
 
 # Release C++ build.
-release-cpp: prep wren-cpp libwren-cpp.a
+release-cpp: prep wren-cpp libwren-cpp
 
-# Release C++ shared lib
-libwren-cpp.a: $(RELEASE_CPP_LIB_OBJECTS)
-	$(AR) $@ $^
+# Release C++ static library.
+libwren-cpp: $(RELEASE_CPP_LIB_OBJECTS)
+	$(AR) $@.a $^
 
 # Release C++ command-line interpreter.
 wren-cpp: $(RELEASE_CPP_OBJECTS)

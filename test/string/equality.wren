@@ -21,3 +21,8 @@ IO.print("true" != true)  // expect: true
 // Non-ASCII.
 IO.print("vålue" == "value") // expect: false
 IO.print("vålue" == "vålue") // expect: true
+
+// 8-bit clean.
+IO.print("a\0b\0c" == "a") // expect: false
+IO.print("a\0b\0c" == "abc") // expect: false
+IO.print("a\0b\0c" == "a\0b\0c") // expect: true
