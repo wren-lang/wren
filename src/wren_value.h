@@ -659,13 +659,21 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 // The caller is expected to fully initialize the buffer after calling.
 Value wrenNewUninitializedString(WrenVM* vm, size_t length);
 
-// Creates a new string that is the concatenation of [left] and [right].
-ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right);
+// Creates a new string that is the concatenation of [left] and [right] (with
+// length [leftLength] and [rightLength], respectively). If -1 is passed
+// the string length is automatically calculated.
+ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
+                            const char* right, int rightLength);
 
 // Creates a new string containing the code point in [string] starting at byte
 // [index]. If [index] points into the middle of a UTF-8 sequence, returns an
 // empty string.
 Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index);
+
+// Search for the first occurence of [needle] within [haystack] and returns its
+// zero-based offset. Returns `UINT32_MAX` if [haystack] does not contain
+// [needle].
+uint32_t wrenStringFind(WrenVM* vm, ObjString* haystack, ObjString* needle);
 
 // Creates a new open upvalue pointing to [value] on the stack.
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);

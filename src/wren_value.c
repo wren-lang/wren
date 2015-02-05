@@ -86,7 +86,8 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   wrenPushRoot(vm, (Obj*)name);
 
   // Create the metaclass.
-  ObjString* metaclassName = wrenStringConcat(vm, name->value, " metaclass");
+  ObjString* metaclassName = wrenStringConcat(vm, name->value, name->length,
+                                              " metaclass", -1);
   wrenPushRoot(vm, (Obj*)metaclassName);
 
   ObjClass* metaclass = wrenNewSingleClass(vm, 0, metaclassName);
@@ -632,10 +633,11 @@ Value wrenNewUninitializedString(WrenVM* vm, size_t length)
   return OBJ_VAL(string);
 }
 
-ObjString* wrenStringConcat(WrenVM* vm, const char* left, const char* right)
+ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
+                            const char* right, int rightLength)
 {
-  size_t leftLength = strlen(left);
-  size_t rightLength = strlen(right);
+  if (leftLength == -1) leftLength = (int)strlen(left);
+  if (rightLength == -1) rightLength = (int)strlen(right);
 
   Value value = wrenNewUninitializedString(vm, leftLength + rightLength);
   ObjString* string = AS_STRING(value);
@@ -668,6 +670,65 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
   memcpy(result->value, string->value + index, numBytes);
   result->value[numBytes] = '\0';
   return value;
+}
+
+// Uses the Boyer-Moore-Horspool string matching algorithm.
+uint32_t wrenStringFind(WrenVM* vm, ObjString* haystack, ObjString* needle)
+{
+  // Corner case, an empty needle is always found.
+  if (needle->length == 0) return 0;
+
+  // If the needle is longer than the haystack it won't be found.
+  if (needle->length > haystack->length) return UINT32_MAX;
+
+  // Pre-calculate the shift table. For each character (8-bit value), we
+  // determine how far the search window can be advanced if that character is
+  // the last character in the haystack where we are searching for the needle
+  // and the needle doesn't match there.
+  uint32_t shift[UINT8_MAX];
+  uint32_t needleEnd = needle->length - 1;
+
+  // By default, we assume the character is not the needle at all. In that case
+  // case, if a match fails on that character, we can advance one whole needle
+  // width since.
+  for (uint32_t index = 0; index < UINT8_MAX; index++)
+  {
+    shift[index] = needle->length;
+  }
+
+  // Then, for every character in the needle, determine how far it is from the
+  // end. If a match fails on that character, we can advance the window such
+  // that it the last character in it lines up with the last place we could
+  // find it in the needle.
+  for (uint32_t index = 0; index < needleEnd; index++)
+  {
+    char c = needle->value[index];
+    shift[(uint8_t)c] = needleEnd - index;
+  }
+
+  // Slide the needle across the haystack, looking for the first match or
+  // stopping if the needle goes off the end.
+  char lastChar = needle->value[needleEnd];
+  uint32_t range = haystack->length - needle->length;
+
+  for (uint32_t index = 0; index <= range; )
+  {
+    // Compare the last character in the haystack's window to the last character
+    // in the needle. If it matches, see if the whole needle matches.
+    char c = haystack->value[index + needleEnd];
+    if (lastChar == c &&
+        memcmp(haystack->value + index, needle->value, needleEnd) == 0)
+    {
+      // Found a match.
+      return index;
+    }
+
+    // Otherwise, slide the needle forward.
+    index += shift[(uint8_t)c];
+  }
+
+  // Not found.
+  return UINT32_MAX;
 }
 
 Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
