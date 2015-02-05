@@ -1161,10 +1161,7 @@ DEF_NATIVE(string_contains)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  // Corner case, the empty string is always contained.
-  if (search->length == 0) RETURN_TRUE;
-
-  RETURN_BOOL(wrenStringFind(vm, string, search) != string->length);
+  RETURN_BOOL(wrenStringFind(vm, string, search) != UINT32_MAX);
 }
 
 DEF_NATIVE(string_count)
@@ -1198,7 +1195,7 @@ DEF_NATIVE(string_indexOf)
 
   uint32_t index = wrenStringFind(vm, string, search);
 
-  RETURN_NUM(index == string->length ? -1 : (int)index);
+  RETURN_NUM(index == UINT32_MAX ? -1 : (int)index);
 }
 
 DEF_NATIVE(string_iterate)
