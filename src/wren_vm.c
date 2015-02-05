@@ -68,7 +68,14 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->first = NULL;
   vm->numTempRoots = 0;
 
-  vm->main = wrenNewModule(vm);
+  // Implicitly create a "main" module for the REPL or entry script.
+  ObjModule* mainModule = wrenNewModule(vm);
+  wrenPushRoot(vm, (Obj*)mainModule);
+
+  vm->modules = wrenNewMap(vm);
+  wrenMapSet(vm, vm->modules, NULL_VAL, OBJ_VAL(mainModule));
+
+  wrenPopRoot(vm);
 
   wrenInitializeCore(vm);
   #if WREN_USE_LIB_IO
@@ -122,7 +129,7 @@ static void collectGarbage(WrenVM* vm)
   // already been freed.
   vm->bytesAllocated = 0;
 
-  if (vm->main != NULL) wrenMarkObj(vm, (Obj*)vm->main);
+  if (vm->modules != NULL) wrenMarkObj(vm, (Obj*)vm->modules);
 
   // Temporary roots.
   for (int i = 0; i < vm->numTempRoots; i++)
@@ -1021,11 +1028,19 @@ static bool runInterpreter(WrenVM* vm)
   return false;
 }
 
+// Looks up the main module in the module map.
+static ObjModule* getMainModule(WrenVM* vm)
+{
+  uint32_t entry = wrenMapFind(vm->modules, NULL_VAL);
+  ASSERT(entry != UINT32_MAX, "Could not find main module.");
+  return AS_MODULE(vm->modules->entries[entry].value);
+}
+
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source)
 {
   // TODO: Check for freed VM.
-  ObjFn* fn = wrenCompile(vm, sourcePath, source);
+  ObjFn* fn = wrenCompile(vm, getMainModule(vm), sourcePath, source);
   if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
 
   wrenPushRoot(vm, (Obj*)fn);
@@ -1042,9 +1057,18 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   }
 }
 
+Value wrenFindVariable(WrenVM* vm, const char* name)
+{
+  ObjModule* mainModule = getMainModule(vm);
+  int symbol = wrenSymbolTableFind(&mainModule->variableNames,
+                                   name, strlen(name));
+  return mainModule->variables.data[symbol];
+}
+
 int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
                         size_t length)
 {
+  if (module == NULL) module = getMainModule(vm);
   if (module->variables.count == MAX_MODULE_VARS) return -2;
 
   wrenValueBufferWrite(vm, &module->variables, UNDEFINED_VAL);
@@ -1054,6 +1078,7 @@ int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
 int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
                        size_t length, Value value)
 {
+  if (module == NULL) module = getMainModule(vm);
   if (module->variables.count == MAX_MODULE_VARS) return -2;
 
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
@@ -1086,7 +1111,9 @@ int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
 // TODO: Inline?
 void wrenPushRoot(WrenVM* vm, Obj* obj)
 {
+  ASSERT(obj != NULL, "Can't root NULL.");
   ASSERT(vm->numTempRoots < WREN_MAX_TEMP_ROOTS, "Too many temporary roots.");
+
   vm->tempRoots[vm->numTempRoots++] = obj;
 }
 
@@ -1113,14 +1140,15 @@ static void defineMethod(WrenVM* vm, const char* className,
 
   // TODO: Which module do these go in?
   // Find or create the class to bind the method to.
-  int classSymbol = wrenSymbolTableFind(&vm->main->variableNames,
+  ObjModule* mainModule = getMainModule(vm);
+  int classSymbol = wrenSymbolTableFind(&mainModule->variableNames,
                                         className, strlen(className));
   ObjClass* classObj;
 
   if (classSymbol != -1)
   {
     // TODO: Handle name is not class.
-    classObj = AS_CLASS(vm->main->variables.data[classSymbol]);
+    classObj = AS_CLASS(mainModule->variables.data[classSymbol]);
   }
   else
   {
@@ -1132,7 +1160,7 @@ static void defineMethod(WrenVM* vm, const char* className,
 
     // TODO: Allow passing in name for superclass?
     classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-    wrenDefineVariable(vm, vm->main, className, length, OBJ_VAL(classObj));
+    wrenDefineVariable(vm, mainModule, className, length, OBJ_VAL(classObj));
 
     wrenPopRoot(vm);
   }

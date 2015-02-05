@@ -1297,6 +1297,7 @@ static ObjFn* endCompiler(Compiler* compiler,
 
   // Create a function object for the code we just compiled.
   ObjFn* fn = wrenNewFunction(compiler->parser->vm,
+                              compiler->parser->module,
                               compiler->constants->elements,
                               compiler->constants->count,
                               compiler->numUpvalues,
@@ -2919,7 +2920,8 @@ void definition(Compiler* compiler)
 
 // Parses [source] to a "function" (a chunk of top-level code) for execution by
 // [vm].
-ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
+ObjFn* wrenCompile(WrenVM* vm, ObjModule* module,
+                   const char* sourcePath, const char* source)
 {
   ObjString* sourcePathObj = AS_STRING(wrenNewString(vm, sourcePath,
                                                      strlen(sourcePath)));
@@ -2927,9 +2929,7 @@ ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source)
 
   Parser parser;
   parser.vm = vm;
-  // TODO: Pass in module. Probably want separate public function that defines
-  // new module (or uses REPL one) and private one here that just passes it in.
-  parser.module = vm->main;
+  parser.module = module;
   parser.sourcePath = sourcePathObj;
   parser.source = source;
 

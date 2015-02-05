@@ -22,9 +22,10 @@ typedef struct sCompiler Compiler;
 // Compilation is also faster since we don't create a bunch of temporary data
 // structures and destroy them after generating code.
 
-// Compiles [source], a string of Wren source code, to an [ObjFn] that will
-// execute that code when invoked.
-ObjFn* wrenCompile(WrenVM* vm, const char* sourcePath, const char* source);
+// Compiles [source], a string of Wren source code located in [module], to an
+// [ObjFn] that will execute that code when invoked.
+ObjFn* wrenCompile(WrenVM* vm, ObjModule* module,
+                   const char* sourcePath, const char* source);
 
 // When a class is defined, its superclass is not known until runtime since
 // class definitions are just imperative statements. Most of the bytecode for a

@@ -420,6 +420,9 @@ typedef struct
 // Value -> ObjMap*.
 #define AS_MAP(value) ((ObjMap*)AS_OBJ(value))
 
+// Value -> ObjModule*.
+#define AS_MODULE(value) ((ObjModule*)AS_OBJ(value))
+
 // Value -> double.
 #define AS_NUM(value) (wrenValueToNum(value))
 
@@ -625,7 +628,8 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 // Creates a new function object with the given code and constants. The new
 // function will take over ownership of [bytecode] and [sourceLines]. It will
 // copy [constants] into its own array.
-ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
+ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
+                       Value* constants, int numConstants,
                        int numUpvalues, int arity,
                        uint8_t* bytecode, int bytecodeLength,
                        ObjString* debugSourcePath,
@@ -791,7 +795,7 @@ static inline Value wrenNumToValue(double num)
   data.num = num;
   return data.bits64;
 #else
-  return (Value){ VAL_NUM, n, NULL };
+  return (Value){ VAL_NUM, num, NULL };
 #endif
 }
 

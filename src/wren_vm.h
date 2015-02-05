@@ -196,9 +196,10 @@ struct WrenVM
   // The fiber that is currently running.
   ObjFiber* fiber;
 
-  // TODO: Temp.
-  // The main module.
-  ObjModule* main;
+  // The loaded modules. Each key is an ObjString (except for the main module,
+  // whose key is null) for the module's name and the value is the ObjModule
+  // for the module.
+  ObjMap* modules;
 
   // Memory management data:
 
@@ -275,7 +276,13 @@ struct WrenVM
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
+// Returns the value of the module-level variable named [name] in the main
+// module.
+Value wrenFindVariable(WrenVM* vm, const char* name);
+
 // Adds a new implicitly declared top-level variable named [name] to [module].
+//
+// If [module] is `NULL`, uses the main module.
 //
 // Does not check to see if a variable with that name is already declared or
 // defined. Returns the symbol for the new variable or -2 if there are too many
@@ -284,6 +291,8 @@ int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
                         size_t length);
 
 // Adds a new top-level variable named [name] to [module].
+//
+// If [module] is `NULL`, uses the main module.
 //
 // Returns the symbol for the new variable, -1 if a variable with the given name
 // is already defined, or -2 if there are too many variables defined.

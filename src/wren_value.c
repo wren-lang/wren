@@ -171,7 +171,8 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   return fiber;
 }
 
-ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
+ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
+                       Value* constants, int numConstants,
                        int numUpvalues, int arity,
                        uint8_t* bytecode, int bytecodeLength,
                        ObjString* debugSourcePath,
@@ -210,7 +211,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, Value* constants, int numConstants,
   // this, but it made the "for" benchmark ~15% slower for some unknown reason.
   fn->bytecode = bytecode;
   fn->constants = copiedConstants;
-  fn->module = vm->main;
+  fn->module = module;
   fn->numUpvalues = numUpvalues;
   fn->numConstants = numConstants;
   fn->arity = arity;
@@ -411,6 +412,8 @@ static uint32_t hashValue(Value value)
     case VAL_NUM: return hashNumber(AS_NUM(value));
     case VAL_TRUE: return HASH_TRUE;
     case VAL_OBJ: return hashObject(AS_OBJ(value));
+    default:
+      UNREACHABLE();
   }
 #endif
   UNREACHABLE();

@@ -1296,7 +1296,7 @@ static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
   wrenPushRoot(vm, (Obj*)nameString);
 
   ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
-  wrenDefineVariable(vm, vm->main, name, length, OBJ_VAL(classObj));
+  wrenDefineVariable(vm, NULL, name, length, OBJ_VAL(classObj));
 
   wrenPopRoot(vm);
   return classObj;
@@ -1309,18 +1309,10 @@ static ObjClass* defineClass(WrenVM* vm, const char* name)
   wrenPushRoot(vm, (Obj*)nameString);
 
   ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-  wrenDefineVariable(vm, vm->main, name, length, OBJ_VAL(classObj));
+  wrenDefineVariable(vm, NULL, name, length, OBJ_VAL(classObj));
 
   wrenPopRoot(vm);
   return classObj;
-}
-
-// Returns the module-level variable named [name].
-static Value findVariable(WrenVM* vm, const char* name)
-{
-  int symbol = wrenSymbolTableFind(&vm->main->variableNames,
-                                   name, strlen(name));
-  return vm->main->variables.data[symbol];
 }
 
 void wrenInitializeCore(WrenVM* vm)
@@ -1451,7 +1443,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   wrenInterpret(vm, "", libSource);
 
-  vm->stringClass = AS_CLASS(findVariable(vm, "String"));
+  vm->stringClass = AS_CLASS(wrenFindVariable(vm, "String"));
   NATIVE(vm->stringClass, "+ ", string_plus);
   NATIVE(vm->stringClass, "[ ]", string_subscript);
   NATIVE(vm->stringClass, "contains ", string_contains);
@@ -1463,7 +1455,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->stringClass, "startsWith ", string_startsWith);
   NATIVE(vm->stringClass, "toString", string_toString);
 
-  vm->listClass = AS_CLASS(findVariable(vm, "List"));
+  vm->listClass = AS_CLASS(wrenFindVariable(vm, "List"));
   NATIVE(vm->listClass->obj.classObj, " instantiate", list_instantiate);
   NATIVE(vm->listClass, "[ ]", list_subscript);
   NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
@@ -1475,7 +1467,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "iteratorValue ", list_iteratorValue);
   NATIVE(vm->listClass, "removeAt ", list_removeAt);
 
-  vm->mapClass = AS_CLASS(findVariable(vm, "Map"));
+  vm->mapClass = AS_CLASS(wrenFindVariable(vm, "Map"));
   NATIVE(vm->mapClass->obj.classObj, " instantiate", map_instantiate);
   NATIVE(vm->mapClass, "[ ]", map_subscript);
   NATIVE(vm->mapClass, "[ ]=", map_subscriptSetter);
@@ -1488,7 +1480,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->mapClass, "valueIteratorValue_ ", map_valueIteratorValue);
   // TODO: More map methods.
 
-  vm->rangeClass = AS_CLASS(findVariable(vm, "Range"));
+  vm->rangeClass = AS_CLASS(wrenFindVariable(vm, "Range"));
   NATIVE(vm->rangeClass, "from", range_from);
   NATIVE(vm->rangeClass, "to", range_to);
   NATIVE(vm->rangeClass, "min", range_min);
