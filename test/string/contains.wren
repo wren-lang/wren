@@ -9,7 +9,7 @@ IO.print("something".contains("math")) // expect: false
 IO.print("søméthîng".contains("méth"))  // expect: true
 IO.print("søméthîng".contains("meth")) // expect: false
 
-// 8-bit clean
+// 8-bit clean.
 IO.print("a\0b\0c".contains("\0")) // expect: true
 IO.print("a\0b\0c".contains("b")) // expect: true
 IO.print("a\0b\0c".contains("b\0c")) // expect: true

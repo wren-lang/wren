@@ -34,7 +34,7 @@ IO.print("søméஃthîng"[8] == "") // expect: true
 IO.print("søméஃ"[-1] == "") // expect: true
 IO.print("søméஃ"[-2] == "") // expect: true
 
-// 8-bit clean
+// 8-bit clean.
 IO.print("a\0b\0c"[0] == "a") // expect: true
 IO.print("a\0b\0c"[1] == "\0") // expect: true
 IO.print("a\0b\0c"[2] == "b") // expect: true

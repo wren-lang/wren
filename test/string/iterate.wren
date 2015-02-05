@@ -15,7 +15,7 @@ IO.print(s.iterate(-1)) // expect: false
 // Nothing to iterate in an empty string.
 IO.print("".iterate(null)) // expect: false
 
-// 8-bit clean
+// 8-bit clean.
 IO.print("a\0b\0c".iterate(null)) // expect: 0
 IO.print("a\0b\0c".iterate(0)) // expect: 1
 IO.print("a\0b\0c".iterate(1)) // expect: 2
