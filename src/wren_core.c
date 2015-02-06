@@ -101,7 +101,18 @@ static const char* libSource =
 "  }\n"
 "}\n"
 "\n"
-"class String is Sequence {}\n"
+"class String is Sequence {\n"
+"  import_(variable) {\n"
+"    var result = loadModule_\n"
+"    if (result == false) {\n"
+"      Fiber.abort(\"Could not find module '\" + this + \"'.\")\n"
+"    } else if (result != true) {\n"
+"      result.call\n"
+"    }\n"
+"\n"
+"    return lookUpVariable_(variable)\n"
+"  }\n"
+"}\n"
 "\n"
 "class List is Sequence {\n"
 "  addAll(other) {\n"
@@ -1294,6 +1305,51 @@ DEF_NATIVE(string_subscript)
   RETURN_OBJ(result);
 }
 
+DEF_NATIVE(string_loadModule)
+{
+  RETURN_VAL(wrenImportModule(vm, AS_CSTRING(args[0])));
+}
+
+DEF_NATIVE(string_lookUpVariable)
+{
+  uint32_t moduleEntry = wrenMapFind(vm->modules, args[0]);
+  ASSERT(moduleEntry != UINT32_MAX, "Should only look up loaded modules.");
+
+  ObjModule* module = AS_MODULE(vm->modules->entries[moduleEntry].value);
+
+  ObjString* variableName = AS_STRING(args[1]);
+  uint32_t variable = wrenSymbolTableFind(&module->variableNames,
+                                          variableName->value,
+                                          variableName->length);
+
+  // It's a runtime error if the imported variable does not exist.
+  if (variable == UINT32_MAX)
+  {
+    // TODO: This is pretty verbose. Do something cleaner?
+    ObjString* moduleName = AS_STRING(args[0]);
+    int length = 48 + variableName->length + moduleName->length;
+    ObjString* error = AS_STRING(wrenNewUninitializedString(vm, length));
+
+    char* start = error->value;
+    memcpy(start, "Could not find a variable named '", 33);
+    start += 33;
+    memcpy(start, variableName->value, variableName->length);
+    start += variableName->length;
+    memcpy(start, "' in module '", 13);
+    start += 13;
+    memcpy(start, moduleName->value, moduleName->length);
+    start += moduleName->length;
+    memcpy(start, "'.", 2);
+    start += 2;
+    *start = '\0';
+
+    args[0] = OBJ_VAL(error);
+    return PRIM_ERROR;
+  }
+
+  RETURN_VAL(module->variables.data[variable]);
+}
+
 static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 {
   size_t length = strlen(name);
@@ -1494,6 +1550,11 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->rangeClass, "iterate ", range_iterate);
   NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
   NATIVE(vm->rangeClass, "toString", range_toString);
+
+  // TODO: Putting these on String is pretty strange. Find a better home for
+  // them.
+  NATIVE(vm->stringClass, "loadModule_", string_loadModule);
+  NATIVE(vm->stringClass, "lookUpVariable_ ", string_lookUpVariable);
 
   // While bootstrapping the core types and running the core library, a number
   // string objects have been created, many of which were instantiated before

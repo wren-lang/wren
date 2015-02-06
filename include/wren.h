@@ -25,7 +25,11 @@ typedef struct WrenVM WrenVM;
 //   [oldSize] will be zero. It should return NULL.
 typedef void* (*WrenReallocateFn)(void* memory, size_t oldSize, size_t newSize);
 
+// A function callable from Wren code, but implemented in C.
 typedef void (*WrenForeignMethodFn)(WrenVM* vm);
+
+// Loads and returns the source code for the module [name].
+typedef char* (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
 
 typedef struct
 {
@@ -33,6 +37,23 @@ typedef struct
   //
   // If `NULL`, defaults to a built-in function that uses `realloc` and `free`.
   WrenReallocateFn reallocateFn;
+
+  // The callback Wren uses to load a module.
+  //
+  // Since Wren does not talk directly to the file system, it relies on the
+  // embedder to phyisically locate and read the source code for a module. The
+  // first time an import appears, Wren will call this and pass in the name of
+  // the module being imported. The VM should return the soure code for that
+  // module. Memory for the source should be allocated using [reallocateFn] and
+  // Wren will take ownership over it.
+  //
+  // This will only be called once for any given module name. Wren caches the
+  // result internally so subsequent imports of the same module will use the
+  // previous source and not call this.
+  //
+  // If a module with the given name could not be found by the embedder, it
+  // should return NULL and Wren will report that as a runtime error.
+  WrenLoadModuleFn loadModuleFn;
 
   // The number of bytes Wren will allocate before triggering the first garbage
   // collection.

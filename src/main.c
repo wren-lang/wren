@@ -11,6 +11,8 @@
 // This is the source file for the standalone command line interpreter. It is
 // not needed if you are embedding Wren in an application.
 
+char* rootDirectory = NULL;
+
 static void failIf(bool condition, int exitCode, const char* format, ...)
 {
   if (!condition) return;
@@ -48,8 +50,66 @@ static char* readFile(const char* path)
   return buffer;
 }
 
+static char* readModule(WrenVM* vm, const char* module)
+{
+  // The module path is relative to the root directory.
+  size_t rootLength = strlen(rootDirectory);
+  size_t moduleLength = strlen(module);
+  size_t pathLength = rootLength + moduleLength;
+  char* path = malloc(pathLength + 1);
+  memcpy(path, rootDirectory, rootLength);
+  memcpy(path + rootLength, module, moduleLength);
+  path[pathLength] = '\0';
+
+  FILE* file = fopen(path, "rb");
+  if (file == NULL)
+  {
+    free(path);
+    return NULL;
+  }
+
+  // Find out how big the file is.
+  fseek(file, 0L, SEEK_END);
+  size_t fileSize = ftell(file);
+  rewind(file);
+
+  // Allocate a buffer for it.
+  char* buffer = (char*)malloc(fileSize + 1);
+  if (buffer == NULL)
+  {
+    fclose(file);
+    free(path);
+    return NULL;
+  }
+
+  // Read the entire file.
+  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+  if (bytesRead < fileSize)
+  {
+    free(buffer);
+    fclose(file);
+    free(path);
+    return NULL;
+  }
+
+  // Terminate the string.
+  buffer[bytesRead] = '\0';
+
+  fclose(file);
+  free(path);
+
+  return buffer;
+}
+
 static int runFile(WrenVM* vm, const char* path)
 {
+  // Use the directory where the file is as the root to resolve imports
+  // relative to.
+  char* lastSlash = strrchr(path, '/');
+  rootDirectory = malloc(lastSlash - path + 2);
+  memcpy(rootDirectory, path, lastSlash - path + 1);
+  rootDirectory[lastSlash - path + 1] = '\0';
+
   char* source = readFile(path);
 
   int result;
@@ -74,6 +134,8 @@ static int runRepl(WrenVM* vm)
 {
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
+
+  // TODO: Set rootDirectory to current working directory so imports work.
 
   char line[MAX_LINE_LENGTH];
 
@@ -108,6 +170,8 @@ int main(int argc, const char* argv[])
   }
 
   WrenConfiguration config;
+
+  config.loadModuleFn = readModule;
 
   // Since we're running in a standalone process, be generous with memory.
   config.initialHeapSize = 1024 * 1024 * 100;

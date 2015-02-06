@@ -37,6 +37,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->reallocate = reallocate;
   vm->foreignCallSlot = NULL;
   vm->foreignCallNumArgs = 0;
+  vm->loadModule = configuration->loadModuleFn;
 
   wrenSymbolTableInit(vm, &vm->methodNames);
 
@@ -1122,6 +1123,57 @@ void wrenPopRoot(WrenVM* vm)
   ASSERT(vm->numTempRoots > 0, "No temporary roots to release.");
   vm->numTempRoots--;
 }
+
+Value wrenImportModule(WrenVM* vm, const char* name)
+{
+  Value nameValue = wrenNewString(vm, name, strlen(name));
+  wrenPushRoot(vm, AS_OBJ(nameValue));
+
+  // If the module is already loaded, we don't need to do anything.
+  uint32_t index = wrenMapFind(vm->modules, nameValue);
+  if (index != UINT32_MAX)
+  {
+    wrenPopRoot(vm); // nameValue.
+    return TRUE_VAL;
+  }
+
+  // Load the module's source code from the embedder.
+  char* source = vm->loadModule(vm, name);
+  if (source == NULL)
+  {
+    wrenPopRoot(vm); // nameValue.
+    return FALSE_VAL;
+  }
+
+  ObjModule* module = wrenNewModule(vm);
+  wrenPushRoot(vm, (Obj*)module);
+
+  // Implicitly import the core libraries.
+  // TODO: Import all implicit names.
+  // TODO: Only import IO if it's loaded.
+  ObjModule* mainModule = getMainModule(vm);
+  int symbol = wrenSymbolTableFind(&mainModule->variableNames, "IO", 2);
+  wrenDefineVariable(vm, module, "IO", 2, mainModule->variables.data[symbol]);
+
+  ObjFn* fn = wrenCompile(vm, module, name, source);
+  // TODO: Handle NULL fn from compilation error.
+
+  wrenPushRoot(vm, (Obj*)fn);
+
+  // Store it in the VM's module registry so we don't load the same module
+  // multiple times.
+  wrenMapSet(vm, vm->modules, nameValue, OBJ_VAL(module));
+
+  ObjFiber* moduleFiber = wrenNewFiber(vm, (Obj*)fn);
+
+  wrenPopRoot(vm); // fn.
+  wrenPopRoot(vm); // module.
+  wrenPopRoot(vm); // nameValue.
+
+  // Return the fiber that executes the module.
+  return OBJ_VAL(moduleFiber);
+}
+
 
 static void defineMethod(WrenVM* vm, const char* className,
                          const char* methodName, int numParams,

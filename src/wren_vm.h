@@ -246,6 +246,9 @@ struct WrenVM
   // to the function.
   int foreignCallNumArgs;
 
+  // The function used to load modules.
+  WrenLoadModuleFn loadModule;
+
   // Compiler and debugger data:
 
   // The compiler that is currently compiling code. This is used so that heap
@@ -307,6 +310,16 @@ void wrenPushRoot(WrenVM* vm, Obj* obj);
 
 // Remove the most recently pushed temporary root.
 void wrenPopRoot(WrenVM* vm);
+
+// Imports the module with [name].
+//
+// If the module has already been imported (or is already in the middle of
+// being imported, in the case of a circular import), returns true. Otherwise,
+// returns a new fiber that will execute the module's code. That fiber should
+// be called before any variables are loaded from the module.
+//
+// If the module could not be found, returns false.
+Value wrenImportModule(WrenVM* vm, const char* name);
 
 // Returns the class of [value].
 //
