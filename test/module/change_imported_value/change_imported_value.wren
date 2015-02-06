@@ -1,5 +1,5 @@
-var Module = "module.wren".import_("Module")
-var Other = "module.wren".import_("Other")
+var Module = "module".import_("Module")
+var Other = "module".import_("Other")
 
 IO.print(Module) // expect: before
 

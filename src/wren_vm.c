@@ -1174,7 +1174,6 @@ Value wrenImportModule(WrenVM* vm, const char* name)
   return OBJ_VAL(moduleFiber);
 }
 
-
 static void defineMethod(WrenVM* vm, const char* className,
                          const char* methodName, int numParams,
                          WrenForeignMethodFn methodFn, bool isStatic)

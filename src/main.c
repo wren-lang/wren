@@ -52,13 +52,14 @@ static char* readFile(const char* path)
 
 static char* readModule(WrenVM* vm, const char* module)
 {
-  // The module path is relative to the root directory.
+  // The module path is relative to the root directory and with ".wren".
   size_t rootLength = strlen(rootDirectory);
   size_t moduleLength = strlen(module);
-  size_t pathLength = rootLength + moduleLength;
+  size_t pathLength = rootLength + moduleLength + 5;
   char* path = malloc(pathLength + 1);
   memcpy(path, rootDirectory, rootLength);
   memcpy(path + rootLength, module, moduleLength);
+  memcpy(path + rootLength + moduleLength, ".wren", 5);
   path[pathLength] = '\0';
 
   FILE* file = fopen(path, "rb");

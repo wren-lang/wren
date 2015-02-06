@@ -1,5 +1,5 @@
-var A = "a.wren".import_("A")
-var B = "b.wren".import_("B")
+var A = "a".import_("A")
+var B = "b".import_("B")
 
 // Shared module should only run once:
 // expect: a

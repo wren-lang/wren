@@ -1,8 +1,8 @@
-var Module1 = "module.wren".import_("Module1")
-var Module2 = "module.wren".import_("Module2")
-var Module3 = "module.wren".import_("Module3")
-var Module4 = "module.wren".import_("Module4")
-var Module5 = "module.wren".import_("Module5")
+var Module1 = "module".import_("Module1")
+var Module2 = "module".import_("Module2")
+var Module3 = "module".import_("Module3")
+var Module4 = "module".import_("Module4")
+var Module5 = "module".import_("Module5")
 
 // Only execute module body once:
 // expect: ran module
