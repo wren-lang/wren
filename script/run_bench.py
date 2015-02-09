@@ -11,8 +11,8 @@ import subprocess
 import sys
 
 # Runs the tests.
-WREN_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-BENCHMARK_DIR = os.path.join(WREN_DIR, 'benchmark')
+HOME_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+BENCHMARK_DIR = os.path.join(HOME_DIR, 'benchmark')
 
 # How many times to run a given benchmark.
 NUM_TRIALS = 10
@@ -45,12 +45,12 @@ BENCHMARK("method_call", r"""true
 false""")
 
 LANGUAGES = [
-  ("wren",           ["../wren"], ".wren"),
-  ("lua",            ["lua"],                   ".lua"),
-  ("luajit (-joff)", ["luajit", "-joff"],       ".lua"),
-  ("python",         ["python"],                ".py"),
-  ("python3",        ["python3"],               ".py"),
-  ("ruby",           ["ruby"],                  ".rb")
+  ("wren",           [os.path.join(HOME_DIR, 'wren')], ".wren"),
+  ("lua",            ["lua"],                          ".lua"),
+  ("luajit (-joff)", ["luajit", "-joff"],              ".lua"),
+  ("python",         ["python"],                       ".py"),
+  ("python3",        ["python3"],                      ".py"),
+  ("ruby",           ["ruby"],                         ".rb")
 ]
 
 results = {}
