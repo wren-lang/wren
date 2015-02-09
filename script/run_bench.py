@@ -44,6 +44,8 @@ BENCHMARK("for", r"""499999500000""")
 BENCHMARK("method_call", r"""true
 false""")
 
+BENCHMARK("maps", r"""5000050000""")
+
 LANGUAGES = [
   ("wren",           [os.path.join(HOME_DIR, 'wren')], ".wren"),
   ("lua",            ["lua"],                          ".lua"),
