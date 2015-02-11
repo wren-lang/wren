@@ -1029,47 +1029,133 @@ static bool runInterpreter(WrenVM* vm)
   return false;
 }
 
-// Looks up the main module in the module map.
-static ObjModule* getMainModule(WrenVM* vm)
+// Looks up the core module in the module map.
+static ObjModule* getCoreModule(WrenVM* vm)
 {
   uint32_t entry = wrenMapFind(vm->modules, NULL_VAL);
-  ASSERT(entry != UINT32_MAX, "Could not find main module.");
+  ASSERT(entry != UINT32_MAX, "Could not find core module.");
   return AS_MODULE(vm->modules->entries[entry].value);
+}
+
+static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
+{
+  ObjModule* module = wrenNewModule(vm);
+  wrenPushRoot(vm, (Obj*)module);
+
+  // Implicitly import the core module.
+  ObjModule* coreModule = getCoreModule(vm);
+  for (int i = 0; i < coreModule->variables.count; i++)
+  {
+    wrenDefineVariable(vm, module,
+                       coreModule->variableNames.data[i].buffer,
+                       coreModule->variableNames.data[i].length,
+                       coreModule->variables.data[i]);
+  }
+
+  ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(name), source);
+  if (fn == NULL)
+  {
+    // TODO: Should we still store the module even if it didn't compile?
+    wrenPopRoot(vm); // module.
+    return NULL;
+  }
+
+  wrenPushRoot(vm, (Obj*)fn);
+
+  // Store it in the VM's module registry so we don't load the same module
+  // multiple times.
+  wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
+
+  ObjFiber* moduleFiber = wrenNewFiber(vm, (Obj*)fn);
+
+  wrenPopRoot(vm); // fn.
+  wrenPopRoot(vm); // module.
+
+  // Return the fiber that executes the module.
+  return moduleFiber;
+}
+
+// Execute [source] in the context of the core module.
+WrenInterpretResult static loadIntoCore(WrenVM* vm, const char* source)
+{
+  ObjModule* coreModule = getCoreModule(vm);
+
+  ObjFn* fn = wrenCompile(vm, coreModule, "", source);
+  if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
+
+  wrenPushRoot(vm, (Obj*)fn);
+  vm->fiber = wrenNewFiber(vm, (Obj*)fn);
+  wrenPopRoot(vm); // fn.
+
+  return runInterpreter(vm) ? WREN_RESULT_SUCCESS : WREN_RESULT_RUNTIME_ERROR;
 }
 
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source)
 {
-  // TODO: Check for freed VM.
-  ObjFn* fn = wrenCompile(vm, getMainModule(vm), sourcePath, source);
-  if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
+  if (strlen(sourcePath) == 0) return loadIntoCore(vm, source);
+  
+  // TODO: Better module name.
+  Value name = wrenNewString(vm, "main", 4);
+  wrenPushRoot(vm, AS_OBJ(name));
 
-  wrenPushRoot(vm, (Obj*)fn);
-  vm->fiber = wrenNewFiber(vm, (Obj*)fn);
-  wrenPopRoot(vm);
+  ObjFiber* fiber = loadModule(vm, name, source);
+  if (fiber == NULL)
+  {
+    wrenPopRoot(vm);
+    return WREN_RESULT_COMPILE_ERROR;
+  }
 
-  if (runInterpreter(vm))
+  vm->fiber = fiber;
+
+  bool succeeded = runInterpreter(vm);
+
+  wrenPopRoot(vm); // name.
+
+  return succeeded ? WREN_RESULT_SUCCESS : WREN_RESULT_RUNTIME_ERROR;
+}
+
+Value wrenImportModule(WrenVM* vm, const char* name)
+{
+  Value nameValue = wrenNewString(vm, name, strlen(name));
+  wrenPushRoot(vm, AS_OBJ(nameValue));
+
+  // If the module is already loaded, we don't need to do anything.
+  uint32_t index = wrenMapFind(vm->modules, nameValue);
+  if (index != UINT32_MAX)
   {
-    return WREN_RESULT_SUCCESS;
+    wrenPopRoot(vm); // nameValue.
+    return TRUE_VAL;
   }
-  else
+
+  // Load the module's source code from the embedder.
+  char* source = vm->loadModule(vm, name);
+  if (source == NULL)
   {
-    return WREN_RESULT_RUNTIME_ERROR;
+    wrenPopRoot(vm); // nameValue.
+    return FALSE_VAL;
   }
+
+  ObjFiber* moduleFiber = loadModule(vm, nameValue, source);
+
+  wrenPopRoot(vm); // nameValue.
+
+  // Return the fiber that executes the module.
+  return OBJ_VAL(moduleFiber);
 }
 
 Value wrenFindVariable(WrenVM* vm, const char* name)
 {
-  ObjModule* mainModule = getMainModule(vm);
-  int symbol = wrenSymbolTableFind(&mainModule->variableNames,
+  ObjModule* coreModule = getCoreModule(vm);
+  int symbol = wrenSymbolTableFind(&coreModule->variableNames,
                                    name, strlen(name));
-  return mainModule->variables.data[symbol];
+  return coreModule->variables.data[symbol];
 }
 
 int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
                         size_t length)
 {
-  if (module == NULL) module = getMainModule(vm);
+  if (module == NULL) module = getCoreModule(vm);
   if (module->variables.count == MAX_MODULE_VARS) return -2;
 
   wrenValueBufferWrite(vm, &module->variables, UNDEFINED_VAL);
@@ -1079,7 +1165,7 @@ int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
 int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
                        size_t length, Value value)
 {
-  if (module == NULL) module = getMainModule(vm);
+  if (module == NULL) module = getCoreModule(vm);
   if (module->variables.count == MAX_MODULE_VARS) return -2;
 
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
@@ -1124,56 +1210,6 @@ void wrenPopRoot(WrenVM* vm)
   vm->numTempRoots--;
 }
 
-Value wrenImportModule(WrenVM* vm, const char* name)
-{
-  Value nameValue = wrenNewString(vm, name, strlen(name));
-  wrenPushRoot(vm, AS_OBJ(nameValue));
-
-  // If the module is already loaded, we don't need to do anything.
-  uint32_t index = wrenMapFind(vm->modules, nameValue);
-  if (index != UINT32_MAX)
-  {
-    wrenPopRoot(vm); // nameValue.
-    return TRUE_VAL;
-  }
-
-  // Load the module's source code from the embedder.
-  char* source = vm->loadModule(vm, name);
-  if (source == NULL)
-  {
-    wrenPopRoot(vm); // nameValue.
-    return FALSE_VAL;
-  }
-
-  ObjModule* module = wrenNewModule(vm);
-  wrenPushRoot(vm, (Obj*)module);
-
-  // Implicitly import the core libraries.
-  // TODO: Import all implicit names.
-  // TODO: Only import IO if it's loaded.
-  ObjModule* mainModule = getMainModule(vm);
-  int symbol = wrenSymbolTableFind(&mainModule->variableNames, "IO", 2);
-  wrenDefineVariable(vm, module, "IO", 2, mainModule->variables.data[symbol]);
-
-  ObjFn* fn = wrenCompile(vm, module, name, source);
-  // TODO: Handle NULL fn from compilation error.
-
-  wrenPushRoot(vm, (Obj*)fn);
-
-  // Store it in the VM's module registry so we don't load the same module
-  // multiple times.
-  wrenMapSet(vm, vm->modules, nameValue, OBJ_VAL(module));
-
-  ObjFiber* moduleFiber = wrenNewFiber(vm, (Obj*)fn);
-
-  wrenPopRoot(vm); // fn.
-  wrenPopRoot(vm); // module.
-  wrenPopRoot(vm); // nameValue.
-
-  // Return the fiber that executes the module.
-  return OBJ_VAL(moduleFiber);
-}
-
 static void defineMethod(WrenVM* vm, const char* className,
                          const char* methodName, int numParams,
                          WrenForeignMethodFn methodFn, bool isStatic)
@@ -1189,17 +1225,19 @@ static void defineMethod(WrenVM* vm, const char* className,
 
   ASSERT(methodFn != NULL, "Must provide method function.");
 
-  // TODO: Which module do these go in?
+  // TODO: Need to be able to define methods in classes outside the core
+  // module.
+  
   // Find or create the class to bind the method to.
-  ObjModule* mainModule = getMainModule(vm);
-  int classSymbol = wrenSymbolTableFind(&mainModule->variableNames,
+  ObjModule* coreModule = getCoreModule(vm);
+  int classSymbol = wrenSymbolTableFind(&coreModule->variableNames,
                                         className, strlen(className));
   ObjClass* classObj;
 
   if (classSymbol != -1)
   {
     // TODO: Handle name is not class.
-    classObj = AS_CLASS(mainModule->variables.data[classSymbol]);
+    classObj = AS_CLASS(coreModule->variables.data[classSymbol]);
   }
   else
   {
@@ -1211,7 +1249,7 @@ static void defineMethod(WrenVM* vm, const char* className,
 
     // TODO: Allow passing in name for superclass?
     classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-    wrenDefineVariable(vm, mainModule, className, length, OBJ_VAL(classObj));
+    wrenDefineVariable(vm, coreModule, className, length, OBJ_VAL(classObj));
 
     wrenPopRoot(vm);
   }

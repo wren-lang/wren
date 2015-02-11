@@ -8,7 +8,7 @@
 
 // The maximum number of temporary objects that can be made visible to the GC
 // at one time.
-#define WREN_MAX_TEMP_ROOTS 4
+#define WREN_MAX_TEMP_ROOTS 5
 
 typedef enum
 {
@@ -279,6 +279,16 @@ struct WrenVM
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
+// Imports the module with [name].
+//
+// If the module has already been imported (or is already in the middle of
+// being imported, in the case of a circular import), returns true. Otherwise,
+// returns a new fiber that will execute the module's code. That fiber should
+// be called before any variables are loaded from the module.
+//
+// If the module could not be found, returns false.
+Value wrenImportModule(WrenVM* vm, const char* name);
+
 // Returns the value of the module-level variable named [name] in the main
 // module.
 Value wrenFindVariable(WrenVM* vm, const char* name);
@@ -310,16 +320,6 @@ void wrenPushRoot(WrenVM* vm, Obj* obj);
 
 // Remove the most recently pushed temporary root.
 void wrenPopRoot(WrenVM* vm);
-
-// Imports the module with [name].
-//
-// If the module has already been imported (or is already in the middle of
-// being imported, in the case of a circular import), returns true. Otherwise,
-// returns a new fiber that will execute the module's code. That fiber should
-// be called before any variables are loaded from the module.
-//
-// If the module could not be found, returns false.
-Value wrenImportModule(WrenVM* vm, const char* name);
 
 // Returns the class of [value].
 //
