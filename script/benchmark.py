@@ -11,8 +11,8 @@ import subprocess
 import sys
 
 # Runs the tests.
-HOME_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-BENCHMARK_DIR = os.path.join(HOME_DIR, 'benchmark')
+WREN_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+BENCHMARK_DIR = os.path.join(WREN_DIR, 'benchmark')
 
 # How many times to run a given benchmark.
 NUM_TRIALS = 10
@@ -47,7 +47,7 @@ false""")
 BENCHMARK("maps", r"""5000050000""")
 
 LANGUAGES = [
-  ("wren",           [os.path.join(HOME_DIR, 'wren')], ".wren"),
+  ("wren",           [os.path.join(WREN_DIR, 'wren')], ".wren"),
   ("lua",            ["lua"],                          ".lua"),
   ("luajit (-joff)", ["luajit", "-joff"],              ".lua"),
   ("python",         ["python"],                       ".py"),
