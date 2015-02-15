@@ -73,6 +73,7 @@ typedef enum
   TOKEN_FALSE,
   TOKEN_FOR,
   TOKEN_IF,
+  TOKEN_IMPORT,
   TOKEN_IN,
   TOKEN_IS,
   TOKEN_NEW,
@@ -593,6 +594,7 @@ static void readName(Parser* parser, TokenType type)
   else if (isKeyword(parser, "false")) type = TOKEN_FALSE;
   else if (isKeyword(parser, "for")) type = TOKEN_FOR;
   else if (isKeyword(parser, "if")) type = TOKEN_IF;
+  else if (isKeyword(parser, "import")) type = TOKEN_IMPORT;
   else if (isKeyword(parser, "in")) type = TOKEN_IN;
   else if (isKeyword(parser, "is")) type = TOKEN_IS;
   else if (isKeyword(parser, "new")) type = TOKEN_NEW;
@@ -1060,10 +1062,10 @@ static int declareVariable(Compiler* compiler)
 }
 
 // Parses a name token and declares a variable in the current scope with that
-// name. Returns its symbol.
+// name. Returns its slot.
 static int declareNamedVariable(Compiler* compiler)
 {
-  consume(compiler, TOKEN_NAME, "Expected variable name.");
+  consume(compiler, TOKEN_NAME, "Expect variable name.");
   return declareVariable(compiler);
 }
 
@@ -1969,13 +1971,21 @@ static void number(Compiler* compiler, bool allowAssignment)
   emitShortArg(compiler, CODE_CONSTANT, constant);
 }
 
-static void string(Compiler* compiler, bool allowAssignment)
+// Parses a string literal and adds it to the constant table.
+static int stringConstant(Compiler* compiler)
 {
   // Define a constant for the literal.
   int constant = addConstant(compiler, wrenNewString(compiler->parser->vm,
       (char*)compiler->parser->string.data, compiler->parser->string.count));
 
   wrenByteBufferClear(compiler->parser->vm, &compiler->parser->string);
+
+  return constant;
+}
+
+static void string(Compiler* compiler, bool allowAssignment)
+{
+  int constant = stringConstant(compiler);
 
   // Compile the code to load the constant.
   emitShortArg(compiler, CODE_CONSTANT, constant);
@@ -2308,6 +2318,7 @@ GrammarRule rules[] =
   /* TOKEN_FALSE         */ PREFIX(boolean),
   /* TOKEN_FOR           */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
+  /* TOKEN_IMPORT        */ UNUSED,
   /* TOKEN_IN            */ UNUSED,
   /* TOKEN_IS            */ INFIX(PREC_IS, is),
   /* TOKEN_NEW           */ { new_, NULL, constructorSignature, PREC_NONE, NULL },
@@ -2774,7 +2785,7 @@ int method(Compiler* compiler, ClassCompiler* classCompiler, bool isConstructor,
 static void classDefinition(Compiler* compiler)
 {
   // Create a variable to store the class in.
-  int symbol = declareNamedVariable(compiler);
+  int slot = declareNamedVariable(compiler);
   bool isModule = compiler->scopeDepth == -1;
 
   // Make a string constant for the name.
@@ -2800,7 +2811,7 @@ static void classDefinition(Compiler* compiler)
   int numFieldsInstruction = emitByteArg(compiler, CODE_CLASS, 255);
 
   // Store it in its name.
-  defineVariable(compiler, symbol);
+  defineVariable(compiler, slot);
 
   // Push a local variable scope. Static fields in a class body are hoisted out
   // into local variables declared in this scope. Methods that use them will
@@ -2855,13 +2866,14 @@ static void classDefinition(Compiler* compiler)
                               signature);
 
     // Load the class.
+    // TODO: Simplify using CODE_DUP.
     if (isModule)
     {
-      emitShortArg(compiler, CODE_LOAD_MODULE_VAR, symbol);
+      emitShortArg(compiler, CODE_LOAD_MODULE_VAR, slot);
     }
     else
     {
-      loadLocal(compiler, symbol);
+      loadLocal(compiler, slot);
     }
 
     // Define the method.
@@ -2880,6 +2892,33 @@ static void classDefinition(Compiler* compiler)
   compiler->enclosingClass = NULL;
 
   popScope(compiler);
+}
+
+static void import(Compiler* compiler)
+{
+  consume(compiler, TOKEN_STRING, "Expect a string after 'import'.");
+  int moduleConstant = stringConstant(compiler);
+
+  consume(compiler, TOKEN_FOR, "Expect 'for' after module string.");
+
+  consume(compiler, TOKEN_NAME, "Expect name of variable to import.");
+  int slot = declareVariable(compiler);
+
+  // TODO: Allow multiple variables.
+
+  // Also define a string constant for the variable name.
+  int variableConstant = addConstant(compiler,
+                                   wrenNewString(compiler->parser->vm,
+      compiler->parser->previous.start, compiler->parser->previous.length));
+
+  emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
+  emitShortArg(compiler, CODE_CONSTANT, variableConstant);
+
+  // Call "module".import_("variable")
+  emitShortArg(compiler, CODE_CALL_1, methodSymbol(compiler, "import_ ", 8));
+
+  // Store the result in the variable here.
+  defineVariable(compiler, slot);
 }
 
 static void variableDefinition(Compiler* compiler)
@@ -2908,6 +2947,11 @@ void definition(Compiler* compiler)
 {
   if (match(compiler, TOKEN_CLASS)) {
     classDefinition(compiler);
+    return;
+  }
+
+  if (match(compiler, TOKEN_IMPORT)) {
+    import(compiler);
     return;
   }
 

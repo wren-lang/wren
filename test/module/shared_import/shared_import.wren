@@ -1,5 +1,5 @@
-var A = "a".import_("A")
-var B = "b".import_("B")
+import "a" for A
+import "b" for B
 
 // Shared module should only run once:
 // expect: a

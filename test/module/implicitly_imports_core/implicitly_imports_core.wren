@@ -1,4 +1,5 @@
-var Module = "module".import_("Module")
+// TODO: Allow omitting "for" clause.
+import "module" for Module
 // expect: Bool
 // expect: Class
 // expect: Fiber

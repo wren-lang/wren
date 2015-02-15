@@ -1,4 +1,4 @@
-var A = "a".import_("A")
+import "a" for A
 
 // Shared module should only run once:
 // expect: start a

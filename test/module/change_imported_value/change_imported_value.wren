@@ -1,5 +1,6 @@
-var Module = "module".import_("Module")
-var Other = "module".import_("Other")
+// TODO: Use comma-separated list.
+import "module" for Module
+import "module" for Other
 
 IO.print(Module) // expect: before
 
@@ -10,5 +11,3 @@ IO.print(Module) // expect: before
 
 // But it does change there.
 Other.show // expect: after
-
-// TODO: Cyclic import.
