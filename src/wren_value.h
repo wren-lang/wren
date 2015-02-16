@@ -455,6 +455,9 @@ typedef struct
 // Returns true if [value] is a closure.
 #define IS_CLOSURE(value) (wrenIsObjType(value, OBJ_CLOSURE))
 
+// Returns true if [value] is a fiber.
+#define IS_FIBER(value) (wrenIsObjType(value, OBJ_FIBER))
+
 // Returns true if [value] is a function object.
 #define IS_FN(value) (wrenIsObjType(value, OBJ_FN))
 

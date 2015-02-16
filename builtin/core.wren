@@ -60,9 +60,7 @@ class Sequence {
 
 class String is Sequence {
   import_(variable) {
-    var result = loadModule_
-    if (result != null) result.call
-
+    loadModule_
     return lookUpVariable_(variable)
   }
 }

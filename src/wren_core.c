@@ -103,9 +103,7 @@ static const char* libSource =
 "\n"
 "class String is Sequence {\n"
 "  import_(variable) {\n"
-"    var result = loadModule_\n"
-"    if (result != null) result.call\n"
-"\n"
+"    loadModule_\n"
 "    return lookUpVariable_(variable)\n"
 "  }\n"
 "}\n"
@@ -1307,6 +1305,13 @@ DEF_NATIVE(string_loadModule)
 
   // If it returned a string, it was an error message.
   if (IS_STRING(args[0])) return PRIM_ERROR;
+
+  // If it returned a fiber, we want to call it.
+  if (IS_FIBER(args[0]))
+  {
+    AS_FIBER(args[0])->caller = fiber;
+    return PRIM_RUN_FIBER;
+  }
 
   return PRIM_VALUE;
 }
