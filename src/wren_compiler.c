@@ -2911,10 +2911,14 @@ static void import(Compiler* compiler)
                                    wrenNewString(compiler->parser->vm,
       compiler->parser->previous.start, compiler->parser->previous.length));
 
+  // Call "module".loadModule_
   emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
-  emitShortArg(compiler, CODE_CONSTANT, variableConstant);
+  emitShortArg(compiler, CODE_CALL_0,
+               methodSymbol(compiler, "loadModule_", 11));
 
   // Call "module".import_("variable")
+  emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
+  emitShortArg(compiler, CODE_CONSTANT, variableConstant);
   emitShortArg(compiler, CODE_CALL_1, methodSymbol(compiler, "import_ ", 8));
 
   // Store the result in the variable here.

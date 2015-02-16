@@ -101,12 +101,7 @@ static const char* libSource =
 "  }\n"
 "}\n"
 "\n"
-"class String is Sequence {\n"
-"  import_(variable) {\n"
-"    loadModule_\n"
-"    return lookUpVariable_(variable)\n"
-"  }\n"
-"}\n"
+"class String is Sequence {}\n"
 "\n"
 "class List is Sequence {\n"
 "  addAll(other) {\n"
@@ -1316,7 +1311,7 @@ DEF_NATIVE(string_loadModule)
   return PRIM_VALUE;
 }
 
-DEF_NATIVE(string_lookUpVariable)
+DEF_NATIVE(string_import)
 {
   uint32_t moduleEntry = wrenMapFind(vm->modules, args[0]);
   ASSERT(moduleEntry != UINT32_MAX, "Should only look up loaded modules.");
@@ -1560,7 +1555,7 @@ void wrenInitializeCore(WrenVM* vm)
   // TODO: Putting these on String is pretty strange. Find a better home for
   // them.
   NATIVE(vm->stringClass, "loadModule_", string_loadModule);
-  NATIVE(vm->stringClass, "lookUpVariable_ ", string_lookUpVariable);
+  NATIVE(vm->stringClass, "import_ ", string_import);
 
   // While bootstrapping the core types and running the core library, a number
   // string objects have been created, many of which were instantiated before
