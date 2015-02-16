@@ -52,8 +52,8 @@ typedef enum
   TOKEN_PERCENT,
   TOKEN_PLUS,
   TOKEN_MINUS,
-  TOKEN_LEFT_SHIFT,
-  TOKEN_RIGHT_SHIFT,
+  TOKEN_LTLT,
+  TOKEN_GTGT,
   TOKEN_PIPE,
   TOKEN_PIPEPIPE,
   TOKEN_CARET,
@@ -815,7 +815,7 @@ static void nextToken(Parser* parser)
         if (peekChar(parser) == '<')
         {
           nextChar(parser);
-          makeToken(parser, TOKEN_LEFT_SHIFT);
+          makeToken(parser, TOKEN_LTLT);
         }
         else
         {
@@ -827,7 +827,7 @@ static void nextToken(Parser* parser)
         if (peekChar(parser) == '>')
         {
           nextChar(parser);
-          makeToken(parser, TOKEN_RIGHT_SHIFT);
+          makeToken(parser, TOKEN_GTGT);
         }
         else
         {
@@ -2305,8 +2305,8 @@ GrammarRule rules[] =
   /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_FACTOR, "% "),
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
   /* TOKEN_MINUS         */ OPERATOR("- "),
-  /* TOKEN_LEFT_SHIFT    */ INFIX_OPERATOR(PREC_BITWISE, "<< "),
-  /* TOKEN_RIGHT_SHIFT   */ INFIX_OPERATOR(PREC_BITWISE, ">> "),
+  /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE, "<< "),
+  /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE, ">> "),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE, "| "),
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGIC, or_),
   /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE, "^ "),
