@@ -104,11 +104,7 @@ static const char* libSource =
 "class String is Sequence {\n"
 "  import_(variable) {\n"
 "    var result = loadModule_\n"
-"    if (result == false) {\n"
-"      Fiber.abort(\"Could not find module '\" + this + \"'.\")\n"
-"    } else if (result != true) {\n"
-"      result.call\n"
-"    }\n"
+"    if (result != null) result.call\n"
 "\n"
 "    return lookUpVariable_(variable)\n"
 "  }\n"
@@ -1307,7 +1303,12 @@ DEF_NATIVE(string_subscript)
 
 DEF_NATIVE(string_loadModule)
 {
-  RETURN_VAL(wrenImportModule(vm, AS_CSTRING(args[0])));
+  args[0] = wrenImportModule(vm, AS_CSTRING(args[0]));
+
+  // If it returned a string, it was an error message.
+  if (IS_STRING(args[0])) return PRIM_ERROR;
+
+  return PRIM_VALUE;
 }
 
 DEF_NATIVE(string_lookUpVariable)

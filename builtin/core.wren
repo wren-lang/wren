@@ -61,11 +61,7 @@ class Sequence {
 class String is Sequence {
   import_(variable) {
     var result = loadModule_
-    if (result == false) {
-      Fiber.abort("Could not find module '" + this + "'.")
-    } else if (result != true) {
-      result.call
-    }
+    if (result != null) result.call
 
     return lookUpVariable_(variable)
   }

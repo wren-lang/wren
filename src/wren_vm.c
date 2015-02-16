@@ -1125,7 +1125,7 @@ Value wrenImportModule(WrenVM* vm, const char* name)
   if (index != UINT32_MAX)
   {
     wrenPopRoot(vm); // nameValue.
-    return TRUE_VAL;
+    return NULL_VAL;
   }
 
   // Load the module's source code from the embedder.
@@ -1133,7 +1133,11 @@ Value wrenImportModule(WrenVM* vm, const char* name)
   if (source == NULL)
   {
     wrenPopRoot(vm); // nameValue.
-    return FALSE_VAL;
+
+    // Couldn't load the module.
+    Value error = wrenNewUninitializedString(vm, 25 + strlen(name));
+    sprintf(AS_STRING(error)->value, "Could not find module '%s'.", name);
+    return error;
   }
 
   ObjFiber* moduleFiber = loadModule(vm, nameValue, source);
