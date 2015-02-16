@@ -1019,7 +1019,7 @@ DEF_NATIVE(num_bitwiseXor)
   RETURN_NUM(left ^ right);
 }
 
-DEF_NATIVE(num_bitwiseLsh)
+DEF_NATIVE(num_bitwiseLeftShift)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
 
@@ -1029,7 +1029,7 @@ DEF_NATIVE(num_bitwiseLsh)
   RETURN_NUM(left << right);
 }
 
-DEF_NATIVE(num_bitwiseRsh)
+DEF_NATIVE(num_bitwiseRightShift)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
 
@@ -1468,8 +1468,8 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, "& ", num_bitwiseAnd);
   NATIVE(vm->numClass, "| ", num_bitwiseOr);
   NATIVE(vm->numClass, "^ ", num_bitwiseXor);
-  NATIVE(vm->numClass, "<< ", num_bitwiseLsh);
-  NATIVE(vm->numClass, ">> ", num_bitwiseRsh);
+  NATIVE(vm->numClass, "<< ", num_bitwiseLeftShift);
+  NATIVE(vm->numClass, ">> ", num_bitwiseRightShift);
   NATIVE(vm->numClass, ".. ", num_dotDot);
   NATIVE(vm->numClass, "... ", num_dotDotDot);
   NATIVE(vm->numClass, "abs", num_abs);
