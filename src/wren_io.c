@@ -132,11 +132,17 @@ static void ioClock(WrenVM* vm)
   wrenReturnDouble(vm, (double)clock() / CLOCKS_PER_SEC);
 }
 
+static void ioTime(WrenVM* vm)
+{
+  wrenReturnDouble(vm, (double)time(NULL));
+}
+
 void wrenLoadIOLibrary(WrenVM* vm)
 {
   wrenInterpret(vm, "", libSource);
   wrenDefineStaticMethod(vm, "IO", "writeString_", 1, ioWriteString);
   wrenDefineStaticMethod(vm, "IO", "clock", 0, ioClock);
+  wrenDefineStaticMethod(vm, "IO", "time", 0, ioTime);
   wrenDefineStaticMethod(vm, "IO", "read", 0, ioRead);
 }
 
