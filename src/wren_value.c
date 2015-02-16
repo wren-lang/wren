@@ -20,13 +20,6 @@
 // lookup faster.
 #define MAP_LOAD_PERCENT 75
 
-// Hash codes for singleton values.
-// TODO: Tune these.
-#define HASH_FALSE 1
-#define HASH_NAN   2
-#define HASH_NULL  3
-#define HASH_TRUE  4
-
 DEFINE_BUFFER(Value, Value);
 DEFINE_BUFFER(Method, Method);
 
@@ -406,10 +399,10 @@ static uint32_t hashValue(Value value)
 #else
   switch (value.type)
   {
-    case VAL_FALSE: return HASH_FALSE;
-    case VAL_NULL: return HASH_NULL;
+    case VAL_FALSE: return 0;
+    case VAL_NULL: return 1;
     case VAL_NUM: return hashNumber(AS_NUM(value));
-    case VAL_TRUE: return HASH_TRUE;
+    case VAL_TRUE: return 2;
     case VAL_OBJ: return hashObject(AS_OBJ(value));
     default:
       UNREACHABLE();
