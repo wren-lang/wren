@@ -2484,6 +2484,9 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_LOAD_MODULE:
       return 2;
 
+    case CODE_IMPORT_VARIABLE:
+      return 4;
+
     case CODE_CLOSURE:
     {
       int constant = (bytecode[ip + 1] << 8) | bytecode[ip + 2];
@@ -2917,10 +2920,9 @@ static void import(Compiler* compiler)
   // Discard the unused result value from calling the module's fiber.
   emit(compiler, CODE_POP);
 
-  // Call "module".import_("variable")
-  emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
-  emitShortArg(compiler, CODE_CONSTANT, variableConstant);
-  emitShortArg(compiler, CODE_CALL_1, methodSymbol(compiler, "import_ ", 8));
+  // Load the variable from the other module.
+  emitShortArg(compiler, CODE_IMPORT_VARIABLE, moduleConstant);
+  emitShort(compiler, variableConstant);
 
   // Store the result in the variable here.
   defineVariable(compiler, slot);

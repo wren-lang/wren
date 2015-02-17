@@ -434,6 +434,50 @@ static Value importModule(WrenVM* vm, Value name)
   return OBJ_VAL(moduleFiber);
 }
 
+
+static bool importVariable(WrenVM* vm, Value moduleName, Value variableName,
+                            Value* result)
+{
+  uint32_t moduleEntry = wrenMapFind(vm->modules, moduleName);
+  ASSERT(moduleEntry != UINT32_MAX, "Should only look up loaded modules.");
+
+  ObjModule* module = AS_MODULE(vm->modules->entries[moduleEntry].value);
+
+  ObjString* variable = AS_STRING(variableName);
+  uint32_t variableEntry = wrenSymbolTableFind(&module->variableNames,
+                                               variable->value,
+                                               variable->length);
+
+  // It's a runtime error if the imported variable does not exist.
+  if (variableEntry != UINT32_MAX)
+  {
+    *result = module->variables.data[variableEntry];
+    return true;
+  }
+
+  // TODO: This is pretty verbose. Do something cleaner?
+  ObjString* moduleString = AS_STRING(moduleName);
+  ObjString* variableString = AS_STRING(variableName);
+  int length = 48 + variableString->length + moduleString->length;
+  ObjString* error = AS_STRING(wrenNewUninitializedString(vm, length));
+
+  char* start = error->value;
+  memcpy(start, "Could not find a variable named '", 33);
+  start += 33;
+  memcpy(start, variableString->value, variableString->length);
+  start += variableString->length;
+  memcpy(start, "' in module '", 13);
+  start += 13;
+  memcpy(start, moduleString->value, moduleString->length);
+  start += moduleString->length;
+  memcpy(start, "'.", 2);
+  start += 2;
+  *start = '\0';
+
+  *result = OBJ_VAL(error);
+  return false;
+}
+
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical. Returns `true` if the
 // fiber completed without error.
@@ -566,6 +610,7 @@ static bool runInterpreter(WrenVM* vm)
     &&code_METHOD_INSTANCE,
     &&code_METHOD_STATIC,
     &&code_LOAD_MODULE,
+    &&code_IMPORT_VARIABLE,
     &&code_END
   };
 
@@ -1113,6 +1158,22 @@ static bool runInterpreter(WrenVM* vm)
         LOAD_FRAME();
       }
 
+      DISPATCH();
+    }
+
+    CASE_CODE(IMPORT_VARIABLE):
+    {
+      Value module = fn->constants[READ_SHORT()];
+      Value variable = fn->constants[READ_SHORT()];
+      Value result;
+      if (importVariable(vm, module, variable, &result))
+      {
+        PUSH(result);
+      }
+      else
+      {
+        RUNTIME_ERROR(AS_STRING(result));
+      }
       DISPATCH();
     }
 

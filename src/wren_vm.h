@@ -178,6 +178,12 @@ typedef enum
   // to that. When that fiber is done, the current one is resumed.
   CODE_LOAD_MODULE,
 
+  // Reads a top-level variable from another module. [arg1] is a string
+  // constant for the name of the module, and [arg2] is a string constant for
+  // the variable name. Pushes the variable if found, or generates a runtime
+  // error otherwise.
+  CODE_IMPORT_VARIABLE,
+
   // This pseudo-instruction indicates the end of the bytecode. It should
   // always be preceded by a `CODE_RETURN`, so is never actually executed.
   CODE_END

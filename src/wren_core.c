@@ -1294,46 +1294,6 @@ DEF_NATIVE(string_subscript)
   RETURN_OBJ(result);
 }
 
-DEF_NATIVE(string_import)
-{
-  uint32_t moduleEntry = wrenMapFind(vm->modules, args[0]);
-  ASSERT(moduleEntry != UINT32_MAX, "Should only look up loaded modules.");
-
-  ObjModule* module = AS_MODULE(vm->modules->entries[moduleEntry].value);
-
-  ObjString* variableName = AS_STRING(args[1]);
-  uint32_t variable = wrenSymbolTableFind(&module->variableNames,
-                                          variableName->value,
-                                          variableName->length);
-
-  // It's a runtime error if the imported variable does not exist.
-  if (variable == UINT32_MAX)
-  {
-    // TODO: This is pretty verbose. Do something cleaner?
-    ObjString* moduleName = AS_STRING(args[0]);
-    int length = 48 + variableName->length + moduleName->length;
-    ObjString* error = AS_STRING(wrenNewUninitializedString(vm, length));
-
-    char* start = error->value;
-    memcpy(start, "Could not find a variable named '", 33);
-    start += 33;
-    memcpy(start, variableName->value, variableName->length);
-    start += variableName->length;
-    memcpy(start, "' in module '", 13);
-    start += 13;
-    memcpy(start, moduleName->value, moduleName->length);
-    start += moduleName->length;
-    memcpy(start, "'.", 2);
-    start += 2;
-    *start = '\0';
-
-    args[0] = OBJ_VAL(error);
-    return PRIM_ERROR;
-  }
-
-  RETURN_VAL(module->variables.data[variable]);
-}
-
 static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 {
   size_t length = strlen(name);
@@ -1535,18 +1495,14 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
   NATIVE(vm->rangeClass, "toString", range_toString);
 
-  // TODO: Putting these on String is pretty strange. Find a better home for
-  // them.
-  NATIVE(vm->stringClass, "import_ ", string_import);
-
   // While bootstrapping the core types and running the core library, a number
-  // string objects have been created, many of which were instantiated before
-  // stringClass was stored in the VM. Some of them *must* be created first:
-  // the ObjClass for string itself has a reference to the ObjString for its
-  // name.
+  // of string objects have been created, many of which were instantiated
+  // before stringClass was stored in the VM. Some of them *must* be created
+  // first -- the ObjClass for string itself has a reference to the ObjString
+  // for its name.
   //
-  // These all currently a NULL classObj pointer, so go back and assign them
-  // now that the string class is known.
+  // These all currently have a NULL classObj pointer, so go back and assign
+  // them now that the string class is known.
   for (Obj* obj = vm->first; obj != NULL; obj = obj->next)
   {
     if (obj->type == OBJ_STRING) obj->classObj = vm->stringClass;
