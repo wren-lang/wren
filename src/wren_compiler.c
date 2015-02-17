@@ -2903,29 +2903,34 @@ static void import(Compiler* compiler)
   consume(compiler, TOKEN_STRING, "Expect a string after 'import'.");
   int moduleConstant = stringConstant(compiler);
 
-  consume(compiler, TOKEN_FOR, "Expect 'for' after module string.");
-  consume(compiler, TOKEN_NAME, "Expect name of variable to import.");
-  int slot = declareVariable(compiler);
-
-  // TODO: Allow multiple variables.
-
-  // Also define a string constant for the variable name.
-  int variableConstant = addConstant(compiler,
-      wrenNewString(compiler->parser->vm,
-      compiler->parser->previous.start, compiler->parser->previous.length));
-
   // Load the module.
   emitShortArg(compiler, CODE_LOAD_MODULE, moduleConstant);
 
   // Discard the unused result value from calling the module's fiber.
   emit(compiler, CODE_POP);
 
-  // Load the variable from the other module.
-  emitShortArg(compiler, CODE_IMPORT_VARIABLE, moduleConstant);
-  emitShort(compiler, variableConstant);
+  // The for clause is optional.
+  if (!match(compiler, TOKEN_FOR)) return;
 
-  // Store the result in the variable here.
-  defineVariable(compiler, slot);
+  // Compile the comma-separated list of variables to import.
+  do
+  {
+    consume(compiler, TOKEN_NAME, "Expect name of variable to import.");
+    int slot = declareVariable(compiler);
+
+    // Define a string constant for the variable name.
+    int variableConstant = addConstant(compiler,
+        wrenNewString(compiler->parser->vm,
+                      compiler->parser->previous.start,
+                      compiler->parser->previous.length));
+
+    // Load the variable from the other module.
+    emitShortArg(compiler, CODE_IMPORT_VARIABLE, moduleConstant);
+    emitShort(compiler, variableConstant);
+    
+    // Store the result in the variable here.
+    defineVariable(compiler, slot);
+  } while (match(compiler, TOKEN_COMMA));
 }
 
 static void variableDefinition(Compiler* compiler)

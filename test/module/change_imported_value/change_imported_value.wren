@@ -1,6 +1,4 @@
-// TODO: Use comma-separated list.
-import "module" for Module
-import "module" for Other
+import "module" for Module, Other
 
 IO.print(Module) // expect: before
 

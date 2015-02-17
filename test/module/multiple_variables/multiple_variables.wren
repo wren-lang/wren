@@ -1,9 +1,4 @@
-// TODO: Comma-separated list.
-import "module" for Module1
-import "module" for Module2
-import "module" for Module3
-import "module" for Module4
-import "module" for Module5
+import "module" for Module1, Module2, Module3, Module4, Module5
 
 // Only execute module body once:
 // expect: ran module

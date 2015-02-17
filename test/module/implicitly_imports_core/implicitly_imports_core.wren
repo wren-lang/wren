@@ -1,5 +1,4 @@
-// TODO: Allow omitting "for" clause.
-import "module" for Module
+import "module"
 // expect: Bool
 // expect: Class
 // expect: Fiber
