@@ -44,13 +44,17 @@ BENCHMARK("for", r"""499999500000""")
 BENCHMARK("method_call", r"""true
 false""")
 
+BENCHMARK("map_numeric", r"""500000500000""")
+
+BENCHMARK("map_string", r"""3645600""")
+
 LANGUAGES = [
-  ("wren",           ["../wren"], ".wren"),
-  ("lua",            ["lua"],                   ".lua"),
-  ("luajit (-joff)", ["luajit", "-joff"],       ".lua"),
-  ("python",         ["python"],                ".py"),
-  ("python3",        ["python3"],               ".py"),
-  ("ruby",           ["ruby"],                  ".rb")
+  ("wren",           [os.path.join(WREN_DIR, 'wren')], ".wren"),
+  ("lua",            ["lua"],                          ".lua"),
+  ("luajit (-joff)", ["luajit", "-joff"],              ".lua"),
+  ("python",         ["python"],                       ".py"),
+  ("python3",        ["python3"],                      ".py"),
+  ("ruby",           ["ruby"],                         ".rb")
 ]
 
 results = {}

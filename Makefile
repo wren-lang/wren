@@ -48,7 +48,9 @@ RELEASE_CPP_LIB_OBJECTS := $(subst build/release-cpp/main.o,,$(RELEASE_CPP_OBJEC
 all: release
 
 clean:
-	@rm -rf build wren wrend libwren libwrend
+	@rm -rf build
+	@rm -rf wren libwren.a libwren.so libwren.dylib
+	@rm -rf wrend libwrend.a libwrend.so libwrend.dylib
 
 prep:
 	@mkdir -p build/debug build/release build/release-cpp
