@@ -102,8 +102,6 @@ void wrenFreeVM(WrenVM* vm)
   wrenReallocate(vm, vm, 0, 0);
 }
 
-static void collectGarbage(WrenVM* vm);
-
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler)
 {
   vm->compiler = compiler;
@@ -367,6 +365,75 @@ static inline void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
   }
 }
 
+// Looks up the core module in the module map.
+static ObjModule* getCoreModule(WrenVM* vm)
+{
+  uint32_t entry = wrenMapFind(vm->modules, NULL_VAL);
+  ASSERT(entry != UINT32_MAX, "Could not find core module.");
+  return AS_MODULE(vm->modules->entries[entry].value);
+}
+
+static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
+{
+  ObjModule* module = wrenNewModule(vm);
+  wrenPushRoot(vm, (Obj*)module);
+
+  // Implicitly import the core module.
+  ObjModule* coreModule = getCoreModule(vm);
+  for (int i = 0; i < coreModule->variables.count; i++)
+  {
+    wrenDefineVariable(vm, module,
+                       coreModule->variableNames.data[i].buffer,
+                       coreModule->variableNames.data[i].length,
+                       coreModule->variables.data[i]);
+  }
+
+  ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(name), source);
+  if (fn == NULL)
+  {
+    // TODO: Should we still store the module even if it didn't compile?
+    wrenPopRoot(vm); // module.
+    return NULL;
+  }
+
+  wrenPushRoot(vm, (Obj*)fn);
+
+  // Store it in the VM's module registry so we don't load the same module
+  // multiple times.
+  wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
+
+  ObjFiber* moduleFiber = wrenNewFiber(vm, (Obj*)fn);
+
+  wrenPopRoot(vm); // fn.
+  wrenPopRoot(vm); // module.
+
+  // Return the fiber that executes the module.
+  return moduleFiber;
+}
+
+static Value importModule(WrenVM* vm, Value name)
+{
+  // If the module is already loaded, we don't need to do anything.
+  uint32_t index = wrenMapFind(vm->modules, name);
+  if (index != UINT32_MAX) return NULL_VAL;
+
+  // Load the module's source code from the embedder.
+  char* source = vm->loadModule(vm, AS_CSTRING(name));
+  if (source == NULL)
+  {
+    // Couldn't load the module.
+    Value error = wrenNewUninitializedString(vm, 25 + AS_STRING(name)->length);
+    sprintf(AS_STRING(error)->value, "Could not find module '%s'.",
+            AS_CSTRING(name));
+    return error;
+  }
+
+  ObjFiber* moduleFiber = loadModule(vm, name, source);
+
+  // Return the fiber that executes the module.
+  return OBJ_VAL(moduleFiber);
+}
+
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical. Returns `true` if the
 // fiber completed without error.
@@ -498,6 +565,7 @@ static bool runInterpreter(WrenVM* vm)
     &&code_CLASS,
     &&code_METHOD_INSTANCE,
     &&code_METHOD_STATIC,
+    &&code_LOAD_MODULE,
     &&code_END
   };
 
@@ -628,6 +696,7 @@ static bool runInterpreter(WrenVM* vm)
             case PRIM_RUN_FIBER:
               STORE_FRAME();
               fiber = AS_FIBER(args[0]);
+              vm->fiber = fiber;
               LOAD_FRAME();
               break;
           }
@@ -722,6 +791,7 @@ static bool runInterpreter(WrenVM* vm)
             case PRIM_RUN_FIBER:
               STORE_FRAME();
               fiber = AS_FIBER(args[0]);
+              vm->fiber = fiber;
               LOAD_FRAME();
               break;
           }
@@ -912,6 +982,7 @@ static bool runInterpreter(WrenVM* vm)
 
         // We have a calling fiber to resume.
         fiber = fiber->caller;
+        vm->fiber = fiber;
 
         // Store the result in the resuming fiber.
         *(fiber->stackTop - 1) = result;
@@ -1017,6 +1088,34 @@ static bool runInterpreter(WrenVM* vm)
       DISPATCH();
     }
 
+    CASE_CODE(LOAD_MODULE):
+    {
+      Value name = fn->constants[READ_SHORT()];
+      Value result = importModule(vm, name);
+
+      // If it returned a string, it was an error message.
+      if (IS_STRING(result)) RUNTIME_ERROR(AS_STRING(result));
+
+      // Make a slot that the module's fiber can use to store its result in.
+      // It ends up getting discarded, but CODE_RETURN expects to be able to
+      // place a value there.
+      PUSH(NULL_VAL);
+
+      // If it returned a fiber to execute the module body, switch to it.
+      if (IS_FIBER(result))
+      {
+        // Return to this module when that one is done.
+        AS_FIBER(result)->caller = fiber;
+
+        STORE_FRAME();
+        fiber = AS_FIBER(result);
+        vm->fiber = fiber;
+        LOAD_FRAME();
+      }
+
+      DISPATCH();
+    }
+
     CASE_CODE(END):
       // A CODE_END should always be preceded by a CODE_RETURN. If we get here,
       // the compiler generated wrong code.
@@ -1027,52 +1126,6 @@ static bool runInterpreter(WrenVM* vm)
   // or a runtime error.
   UNREACHABLE();
   return false;
-}
-
-// Looks up the core module in the module map.
-static ObjModule* getCoreModule(WrenVM* vm)
-{
-  uint32_t entry = wrenMapFind(vm->modules, NULL_VAL);
-  ASSERT(entry != UINT32_MAX, "Could not find core module.");
-  return AS_MODULE(vm->modules->entries[entry].value);
-}
-
-static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
-{
-  ObjModule* module = wrenNewModule(vm);
-  wrenPushRoot(vm, (Obj*)module);
-
-  // Implicitly import the core module.
-  ObjModule* coreModule = getCoreModule(vm);
-  for (int i = 0; i < coreModule->variables.count; i++)
-  {
-    wrenDefineVariable(vm, module,
-                       coreModule->variableNames.data[i].buffer,
-                       coreModule->variableNames.data[i].length,
-                       coreModule->variables.data[i]);
-  }
-
-  ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(name), source);
-  if (fn == NULL)
-  {
-    // TODO: Should we still store the module even if it didn't compile?
-    wrenPopRoot(vm); // module.
-    return NULL;
-  }
-
-  wrenPushRoot(vm, (Obj*)fn);
-
-  // Store it in the VM's module registry so we don't load the same module
-  // multiple times.
-  wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
-
-  ObjFiber* moduleFiber = wrenNewFiber(vm, (Obj*)fn);
-
-  wrenPopRoot(vm); // fn.
-  wrenPopRoot(vm); // module.
-
-  // Return the fiber that executes the module.
-  return moduleFiber;
 }
 
 // Execute [source] in the context of the core module.

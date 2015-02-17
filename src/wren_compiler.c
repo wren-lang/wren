@@ -2481,6 +2481,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_OR:
     case CODE_METHOD_INSTANCE:
     case CODE_METHOD_STATIC:
+    case CODE_LOAD_MODULE:
       return 2;
 
     case CODE_CLOSURE:
@@ -2900,7 +2901,6 @@ static void import(Compiler* compiler)
   int moduleConstant = stringConstant(compiler);
 
   consume(compiler, TOKEN_FOR, "Expect 'for' after module string.");
-
   consume(compiler, TOKEN_NAME, "Expect name of variable to import.");
   int slot = declareVariable(compiler);
 
@@ -2908,13 +2908,14 @@ static void import(Compiler* compiler)
 
   // Also define a string constant for the variable name.
   int variableConstant = addConstant(compiler,
-                                   wrenNewString(compiler->parser->vm,
+      wrenNewString(compiler->parser->vm,
       compiler->parser->previous.start, compiler->parser->previous.length));
 
-  // Call "module".loadModule_
-  emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
-  emitShortArg(compiler, CODE_CALL_0,
-               methodSymbol(compiler, "loadModule_", 11));
+  // Load the module.
+  emitShortArg(compiler, CODE_LOAD_MODULE, moduleConstant);
+
+  // Discard the unused result value from calling the module's fiber.
+  emit(compiler, CODE_POP);
 
   // Call "module".import_("variable")
   emitShortArg(compiler, CODE_CONSTANT, moduleConstant);

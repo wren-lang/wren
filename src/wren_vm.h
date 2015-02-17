@@ -172,6 +172,12 @@ typedef enum
   // popped.
   CODE_METHOD_STATIC,
 
+  // Load the module whose name is stored in string constant [arg]. Pushes
+  // NULL onto the stack. If the module has already been loaded, does nothing
+  // else. Otherwise, it creates a fiber to run the desired module and switches
+  // to that. When that fiber is done, the current one is resumed.
+  CODE_LOAD_MODULE,
+
   // This pseudo-instruction indicates the end of the bytecode. It should
   // always be preceded by a `CODE_RETURN`, so is never actually executed.
   CODE_END

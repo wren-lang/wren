@@ -1294,23 +1294,6 @@ DEF_NATIVE(string_subscript)
   RETURN_OBJ(result);
 }
 
-DEF_NATIVE(string_loadModule)
-{
-  args[0] = wrenImportModule(vm, AS_CSTRING(args[0]));
-
-  // If it returned a string, it was an error message.
-  if (IS_STRING(args[0])) return PRIM_ERROR;
-
-  // If it returned a fiber, we want to call it.
-  if (IS_FIBER(args[0]))
-  {
-    AS_FIBER(args[0])->caller = fiber;
-    return PRIM_RUN_FIBER;
-  }
-
-  return PRIM_VALUE;
-}
-
 DEF_NATIVE(string_import)
 {
   uint32_t moduleEntry = wrenMapFind(vm->modules, args[0]);
@@ -1554,7 +1537,6 @@ void wrenInitializeCore(WrenVM* vm)
 
   // TODO: Putting these on String is pretty strange. Find a better home for
   // them.
-  NATIVE(vm->stringClass, "loadModule_", string_loadModule);
   NATIVE(vm->stringClass, "import_ ", string_import);
 
   // While bootstrapping the core types and running the core library, a number

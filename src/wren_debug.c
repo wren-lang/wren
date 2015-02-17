@@ -242,6 +242,15 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
 
+    case CODE_LOAD_MODULE:
+    {
+      int constant = READ_SHORT();
+      printf("%-16s %5d '", "LOAD_MODULE", constant);
+      wrenPrintValue(fn->constants[constant]);
+      printf("'\n");
+      break;
+    }
+
     case CODE_END:
       printf("CODE_END\n");
       break;
