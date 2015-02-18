@@ -28,10 +28,11 @@ until the end of the [block](syntax.html#blocks) where that definition appears.
     }
     IO.print(a) // ERROR! a doesn't exist anymore.
 
-Variables defined at the top level of a script are *global*. All other
-variables are *local*. Declaring a variable in an inner scope with the same
-name as an outer one is called *shadowing* and is not an error (although it's
-not something you likely intend to do much).
+Variables defined at the top level of a script are *top-level* and are visible
+to the [module](modules.html) system. All other variables are *local*.
+Declaring a variable in an inner scope with the same name as an outer one is
+called *shadowing* and is not an error (although it's not something you likely
+intend to do much).
 
     :::dart
     var a = "outer"

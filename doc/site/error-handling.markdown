@@ -28,7 +28,7 @@ same name in the same scope. So if you do:
 Wren tells you:
 
     :::text
-    [script.wren line 2] Error on 'a': Global variable is already defined.
+    [script.wren line 2] Error on 'a': Top-level variable is already defined.
 
 Note that it does this before it executes *any* code. Unlike some other
 scripting languages, Wren tries to help you find your errors as soon as
