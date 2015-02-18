@@ -52,8 +52,11 @@ typedef enum
   TOKEN_PERCENT,
   TOKEN_PLUS,
   TOKEN_MINUS,
+  TOKEN_LTLT,
+  TOKEN_GTGT,
   TOKEN_PIPE,
   TOKEN_PIPEPIPE,
+  TOKEN_CARET,
   TOKEN_AMP,
   TOKEN_AMPAMP,
   TOKEN_BANG,
@@ -805,16 +808,36 @@ static void nextToken(Parser* parser)
         twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP);
         return;
 
+      case '^':
+        makeToken(parser, TOKEN_CARET);
+        return;
+
       case '=':
         twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ);
         return;
 
       case '<':
-        twoCharToken(parser, '=', TOKEN_LTEQ, TOKEN_LT);
+        if (peekChar(parser) == '<')
+        {
+          nextChar(parser);
+          makeToken(parser, TOKEN_LTLT);
+        }
+        else
+        {
+          twoCharToken(parser, '=', TOKEN_LTEQ, TOKEN_LT);
+        }
         return;
 
       case '>':
-        twoCharToken(parser, '=', TOKEN_GTEQ, TOKEN_GT);
+        if (peekChar(parser) == '>')
+        {
+          nextChar(parser);
+          makeToken(parser, TOKEN_GTGT);
+        }
+        else
+        {
+          twoCharToken(parser, '=', TOKEN_GTEQ, TOKEN_GT);
+        }
         return;
 
       case '!':
@@ -1364,7 +1387,7 @@ typedef enum
   PREC_IS,         // is
   PREC_COMPARISON, // < > <= >=
   PREC_RANGE,      // .. ...
-  PREC_BITWISE,    // | &
+  PREC_BITWISE,    // | ^ & << >>
   PREC_TERM,       // + -
   PREC_FACTOR,     // * / %
   PREC_UNARY,      // unary - ! ~
@@ -2298,8 +2321,11 @@ GrammarRule rules[] =
   /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_FACTOR, "% "),
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
   /* TOKEN_MINUS         */ OPERATOR("- "),
+  /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE, "<< "),
+  /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE, ">> "),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE, "| "),
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGIC, or_),
+  /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE, "^ "),
   /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE, "& "),
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGIC, and_),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),

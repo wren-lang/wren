@@ -1009,6 +1009,36 @@ DEF_NATIVE(num_bitwiseOr)
   RETURN_NUM(left | right);
 }
 
+DEF_NATIVE(num_bitwiseXor)
+{
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
+
+  // Bitwise operators always work on 32-bit unsigned ints.
+  uint32_t left = (uint32_t)AS_NUM(args[0]);
+  uint32_t right = (uint32_t)AS_NUM(args[1]);
+  RETURN_NUM(left ^ right);
+}
+
+DEF_NATIVE(num_bitwiseLeftShift)
+{
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
+
+  // Bitwise operators always work on 32-bit unsigned ints.
+  uint32_t left = (uint32_t)AS_NUM(args[0]);
+  uint32_t right = (uint32_t)AS_NUM(args[1]);
+  RETURN_NUM(left << right);
+}
+
+DEF_NATIVE(num_bitwiseRightShift)
+{
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
+
+  // Bitwise operators always work on 32-bit unsigned ints.
+  uint32_t left = (uint32_t)AS_NUM(args[0]);
+  uint32_t right = (uint32_t)AS_NUM(args[1]);
+  RETURN_NUM(left >> right);
+}
+
 DEF_NATIVE(num_dotDot)
 {
   if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
@@ -1430,6 +1460,9 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, "~", num_bitwiseNot);
   NATIVE(vm->numClass, "& ", num_bitwiseAnd);
   NATIVE(vm->numClass, "| ", num_bitwiseOr);
+  NATIVE(vm->numClass, "^ ", num_bitwiseXor);
+  NATIVE(vm->numClass, "<< ", num_bitwiseLeftShift);
+  NATIVE(vm->numClass, ">> ", num_bitwiseRightShift);
   NATIVE(vm->numClass, ".. ", num_dotDot);
   NATIVE(vm->numClass, "... ", num_dotDotDot);
   NATIVE(vm->numClass, "abs", num_abs);
