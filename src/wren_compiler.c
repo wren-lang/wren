@@ -732,6 +732,59 @@ static void readString(Parser* parser)
   makeToken(parser, TOKEN_STRING);
 }
 
+// Finishes lexing a string literal.
+static void readRawString(Parser* parser)
+{
+  wrenByteBufferClear(parser->vm, &parser->string);
+
+  int nesting = 0;
+
+  if (peekChar(parser) == '\n') {
+    // To behave the same as Lua multiline strings, ignore
+    // the first char if it is a newline.
+    nextChar(parser);
+  }
+
+  for (;;) {
+    char c = nextChar(parser);
+
+    if (c == '[') {
+      char c2 = peekChar(parser);
+      if (c2 == '[') {
+        nesting++;
+      }
+    }
+
+    if (c == ']') {
+      char c2 = peekChar(parser);
+      if (c2 == ']') {
+
+        if (nesting > 0) {
+          nesting--;
+        } else {
+          nextChar(parser);
+          break;
+        }
+      }
+    }
+
+    if (c == '\0')
+    {
+      lexError(parser, "Unterminated string.");
+
+      // Don't consume it if it isn't expected. Keeps us from reading past the
+      // end of an unterminated string.
+      parser->currentChar--;
+      break;
+    }
+
+    addStringChar(parser, c);
+  }
+
+  makeToken(parser, TOKEN_STRING);
+}
+
+
 // Lex the next token and store it in [parser.current].
 static void nextToken(Parser* parser)
 {
@@ -751,7 +804,15 @@ static void nextToken(Parser* parser)
     {
       case '(': makeToken(parser, TOKEN_LEFT_PAREN); return;
       case ')': makeToken(parser, TOKEN_RIGHT_PAREN); return;
-      case '[': makeToken(parser, TOKEN_LEFT_BRACKET); return;
+      case '[': 
+        if (peekChar(parser) == '[') {
+          nextChar(parser);
+          readRawString(parser);
+          return;
+        }
+
+        makeToken(parser, TOKEN_LEFT_BRACKET);
+        return;
       case ']': makeToken(parser, TOKEN_RIGHT_BRACKET); return;
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
