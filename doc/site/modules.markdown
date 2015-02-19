@@ -192,11 +192,22 @@ Instead, we look for a variable named `A` in that module. But it hasn't been def
     import "a"
 
     // a.wren
-    import "b" for B
     var A = "a variable"
+    import "b" for B
 
     // b.wren
-    var B = "b variable"
     import "a" for A
+    var B = "b variable"
 
-This sounds super hairy, but that's because cyclic dependencies are hairy in general. The key point here is that Wren can handle them in the rare cases where you need them.
+Now when we run it, we get:
+
+1. Execute `import "a"` in "main.wren". That suspends "main.wren".
+2. Define `A` in "a.wren".
+2. Execute `import "b"` in "a.wren". That suspends "a.wren".
+3. Execute `import "a"` in "b.wren". Since "a" is already in the module map, this does *not* suspend it. It looks up `A`, which has already been defined, and binds it.
+4. Define `B` in "b.wren".
+5. Complete "b.wren".
+6. Look up `B` in "b.wren" and bind it in "a.wren".
+7. Resume "a.wren".
+
+This sounds super hairy, but that's because cyclic dependencies are hairy in general. The key point here is that Wren *can* handle them in the rare cases where you need them.
