@@ -1,7 +1,8 @@
 ^title Modules
 ^category language
 
-Once you start writing programs that are more than little toys, you quickly run into two problems:
+Once you start writing programs that are more than little toys, you quickly run
+into two problems:
 
 1. You want to break them down into multiple smaller files to make it easier to
    find your way around them.
@@ -10,33 +11,44 @@ Once you start writing programs that are more than little toys, you quickly run 
 
 To address those, Wren has a simple module system. A file containing Wren code
 defines a *module*. A module can use the code defined in another module by
-*importing* it. You can break big programs into smaller modules that you import, and you can reuse code by having multiple programs share the use of
-a single module.
+*importing* it. You can break big programs into smaller modules that you
+import, and you can reuse code by having multiple programs share the use of a
+single module.
 
-Wren does not have a single global scope. Instead, each module has its own top-level scope independent of all other modules. This means, for example, that two modules can define a top-level variable with the same name without causing a name collision. Each module is, well, modular.
+Wren does not have a single global scope. Instead, each module has its own
+top-level scope independent of all other modules. This means, for example, that
+two modules can define a top-level variable with the same name without causing
+a name collision. Each module is, well, modular.
 
 ## Importing, briefly
 
-When you run Wren and give it a file name to execute, the contents of that file define the "main" module that execution starts at. To load and execute other modules, you use an import statement:
+When you run Wren and give it a file name to execute, the contents of that file
+define the "main" module that execution starts at. To load and execute other
+modules, you use an import statement:
 
     :::dart
-    import 'beverages' for Coffee, Tea
+    import "beverages" for Coffee, Tea
 
-This finds a module named "beverages" and executes its source code. Then, it looks up two top-level variables, `Coffee` and `Tea` in *that* module and creates new variables in *this* module with their values.
+This finds a module named "beverages" and executes its source code. Then, it
+looks up two top-level variables, `Coffee` and `Tea` in *that* module and
+creates new variables in *this* module with their values.
 
-This statement can appear anywhere a variable declaration is allowed, even inside blocks:
+This statement can appear anywhere a variable declaration is allowed, even
+inside blocks:
 
     :::dart
     if (thirsty) {
-      import 'beverages' for Coffee, Tea
+      import "beverages" for Coffee, Tea
     }
 
-If you want to load a module, but not bind any variables from it, you can omit the `for` clause:
+If you want to load a module, but not bind any variables from it, you can omit
+the `for` clause:
 
     :::dart
-    import 'some_imperative_code'
+    import "some_imperative_code"
 
-That's the basic idea. Now let's break it down into each of the steps it performs:
+That's the basic idea. Now let's break it down into each of the steps it
+performs:
 
 1. Locate the source code for the module.
 2. Execute the imported module's code.
@@ -46,9 +58,13 @@ We'll go through each step:
 
 ## Locating a module
 
-The first thing you need to do to import a module is actually *find* the code for it. The import specifies a *name*&mdash;some arbitrary string that is used to uniquely identify the module. The embedding application controls how that string is used to locate a blob of source code.
+The first thing you need to do to import a module is actually *find* the code
+for it. The import specifies a *name*&mdash;some arbitrary string that is used
+to uniquely identify the module. The embedding application controls how that
+string is used to locate a blob of source code.
 
-When the host application creates a new Wren VM, it provides a module loader function:
+When the host application creates a new Wren VM, it provides a module loader
+function:
 
     :::c
     WrenConfiguration config;
@@ -63,13 +79,20 @@ That function has this signature:
     :::c
     char* WrenLoadModuleFn(WrenVM* vm, const char* name);
 
-Whenever a module is imported, the VM calls this and passes it the name of the module. The embedder is expected to return the source code contents of the module. When you embed Wren in your app, you can handle this however you want: reach out to the file system, look inside resources bundled into your app, whatever.
+Whenever a module is imported, the VM calls this and passes it the name of the
+module. The embedder is expected to return the source code contents of the
+module. When you embed Wren in your app, you can handle this however you want:
+reach out to the file system, look inside resources bundled into your app,
+whatever.
 
-You can return `NULL` from this function to indicate that a module couldn't be found. When you do this, Wren will report it as a runtime error.
+You can return `NULL` from this function to indicate that a module couldn't be
+found. When you do this, Wren will report it as a runtime error.
 
 ### The command-line loader
 
-The default little command-line VM that comes with Wren has a very simple lookup process. It appends the module name and ".wren" to the directory where the main module was loaded and looks for that file. So, let's say you run:
+The default little command-line VM that comes with Wren has a very simple
+lookup process. It appends the module name and ".wren" to the directory where
+the main module was loaded and looks for that file. So, let's say you run:
 
     :::bash
     $ wren /code/my_program.wren
@@ -79,36 +102,64 @@ And that main module has:
     :::dart
     import "some/module"
 
-Then the command-line VM will try to find `/code/some/module.wren`. By convention, forward slashes should be used as path separators, even on Windows, to help ensure your scripts are platform-independent. (Forward slashes are a valid separator on Windows, but backslashes are not valid on other OSes.)
+Then the command-line VM will try to find `/code/some/module.wren`. By
+convention, forward slashes should be used as path separators, even on Windows,
+to help ensure your scripts are platform-independent. (Forward slashes are a
+valid separator on Windows, but backslashes are not valid on other OSes.)
 
 ## Executing the module
 
-Once we have the source code for a module, we need to run it. First, the VM takes the fiber that is executing the `import` statement in the importing module and pauses it.
+Once we have the source code for a module, we need to run it. First, the VM
+takes the fiber that is executing the `import` statement in the importing
+module and pauses it.
 
-Then it creates a new module object&mdash;a new fresh top-level scope, basically&mdash;and a new fiber. It executes the new module's code in that fiber and scope. The module can run whatever imperative code it wants and define whatever top-level variables it wants.
+Then it creates a new module object&mdash;a new fresh top-level scope,
+basically&mdash;and a new fiber. It executes the new module's code in that
+fiber and scope. The module can run whatever imperative code it wants and
+define whatever top-level variables it wants.
 
-When the module's code is done being executed and its fiber completes, the suspended fiber for the importing module is resumed. This suspending and resuming is recursive. So, if "a" imports "b" which imports "c", both "a" and "b" will be suspended while "c" is running. When "c" is done, "b" is resumed. Then, when "b" completes, "a" is resumed.
+When the module's code is done being executed and its fiber completes, the
+suspended fiber for the importing module is resumed. This suspending and
+resuming is recursive. So, if "a" imports "b" which imports "c", both "a" and
+"b" will be suspended while "c" is running. When "c" is done, "b" is resumed.
+Then, when "b" completes, "a" is resumed.
 
-Think of it like traversing the tree of imports, one node at a time. At any given point in time, only one module's code is running.
+Think of it like traversing the tree of imports, one node at a time. At any
+given point in time, only one module's code is running.
 
 ## Binding variables
 
-Once the module is done executing, the last step is to actually *import* some data from it. Any module can define "top-level" [variables](variables.html). These are simply variables declared outside of any [method](classes.html#methods) or [function](functions.html).
+Once the module is done executing, the last step is to actually *import* some
+data from it. Any module can define "top-level" [variables](variables.html).
+These are simply variables declared outside of any
+[method](classes.html#methods) or [function](functions.html).
 
-These are visible to anything inside the module, but they can also be *exported* and used by other modules. When Wren executes an import like:
+These are visible to anything inside the module, but they can also be
+*exported* and used by other modules. When Wren executes an import like:
 
     :::dart
     import "beverages" for Coffee, Tea
 
-First it runs the "beverages" module. Then it goes through each of the variable names in the `for` clause. For each one, it looks for a top-level variable with that name in the imported module. If a variable with that name can't be found in the imported module, it's a runtime error.
+First it runs the "beverages" module. Then it goes through each of the variable
+names in the `for` clause. For each one, it looks for a top-level variable with
+that name in the imported module. If a variable with that name can't be found
+in the imported module, it's a runtime error.
 
-Otherwise, it gets the current value of the variable and defines a new variable in the importing module with the same name and value. It's worth noting that the importing module gets its *own* variable whose value is a snapshot of the value of the imported variable at the time it was imported. If either module later assigns to that variable, the other won't see it. It's not a "live" connection.
+Otherwise, it gets the current value of the variable and defines a new variable
+in the importing module with the same name and value. It's worth noting that
+the importing module gets its *own* variable whose value is a snapshot of the
+value of the imported variable at the time it was imported. If either module
+later assigns to that variable, the other won't see it. It's not a "live"
+connection.
 
-In practice, most top-level variables are only assigned once anyway, so this rarely makes a difference.
+In practice, most top-level variables are only assigned once anyway, so this
+rarely makes a difference.
 
 ## Shared imports
 
-Earlier, I described a programs set of modules as a tree. Of course, it's only a *tree* of modules if there are no *shared imports*. But consider a program like:
+Earlier, I described a programs set of modules as a tree. Of course, it's only
+a *tree* of modules if there are no *shared imports*. But consider a program
+like:
 
     :::dart
     // main.wren
@@ -124,22 +175,34 @@ Earlier, I described a programs set of modules as a tree. Of course, it's only a
     // shared.wren
     IO.print("Shared!")
 
-Here, "a" and "b" both want to use "shared". If "shared" defines some top-level state, we only want a single copy of that in memory. To handle this, a module's code is only executed the *first* time it is loaded. After that, importing the module again just looks up the previously loaded module.
+Here, "a" and "b" both want to use "shared". If "shared" defines some top-level
+state, we only want a single copy of that in memory. To handle this, a module's
+code is only executed the *first* time it is loaded. After that, importing the
+module again just looks up the previously loaded module.
 
-Internally, Wren maintains a map of every module it has previously loaded. When a module is imported, Wren looks for it in that map first before it calls out to the embedder for its source.
+Internally, Wren maintains a map of every module it has previously loaded. When
+a module is imported, Wren looks for it in that map first before it calls out
+to the embedder for its source.
 
-In other words, in that list of steps above, there's an implicit zeroth step: "See if we already loaded the module and reuse it if we did". That means the above program only prints "Shared!" once.
+In other words, in that list of steps above, there's an implicit zeroth step:
+"See if we already loaded the module and reuse it if we did". That means the
+above program only prints "Shared!" once.
 
 ## Cyclic imports
 
-You can even have cycles in your imports, provided you're a bit careful with them. The loading process, in detail, is:
+You can even have cycles in your imports, provided you're a bit careful with
+them. The loading process, in detail, is:
 
 1. See if we have already created a module with the given name.
 2. If so, use it.
-3. Otherwise, create a new module with the name and store it in the module registry.
+3. Otherwise, create a new module with the name and store it in the module
+   registry.
 4. Create a fiber for it and execute its code.
 
-Note the order of the last two steps. When a module is loaded, it is added to the registry *before* it is executed. This means if an import for that same module is reached while the module itself or one of its imports is executing, it will be found in the registry and the cycle is short-circuited.
+Note the order of the last two steps. When a module is loaded, it is added to
+the registry *before* it is executed. This means if an import for that same
+module is reached while the module itself or one of its imports is executing,
+it will be found in the registry and the cycle is short-circuited.
 
 For example:
 
@@ -179,13 +242,18 @@ Where you have to be careful is binding variables. Consider:
     import "a" for A
     var B = "b variable"
 
-The import of "a" in b.wren will fail here. If you trace the execution, you get:
+The import of "a" in b.wren will fail here. If you trace the execution, you
+get:
 
 1. Execute `import "a"` in "main.wren". That suspends "main.wren".
 2. Execute `import "b"` in "a.wren". That suspends "a.wren".
-3. Execute `import "a"` in "b.wren". Since "a" is already in the module map, this does *not* suspend it.
+3. Execute `import "a"` in "b.wren". Since "a" is already in the module map,
+   this does *not* suspend it.
 
-Instead, we look for a variable named `A` in that module. But it hasn't been defined yet since "a.wren" is still sitting on the `import "b" for B` line before the declaration. To get this to work, you would need to move the variable declaration above the import:
+Instead, we look for a variable named `A` in that module. But it hasn't been
+defined yet since "a.wren" is still sitting on the `import "b" for B` line
+before the declaration. To get this to work, you would need to move the
+variable declaration above the import:
 
     :::dart
     // main.wren
@@ -204,10 +272,14 @@ Now when we run it, we get:
 1. Execute `import "a"` in "main.wren". That suspends "main.wren".
 2. Define `A` in "a.wren".
 2. Execute `import "b"` in "a.wren". That suspends "a.wren".
-3. Execute `import "a"` in "b.wren". Since "a" is already in the module map, this does *not* suspend it. It looks up `A`, which has already been defined, and binds it.
+3. Execute `import "a"` in "b.wren". Since "a" is already in the module map,
+   this does *not* suspend it. It looks up `A`, which has already been defined,
+   and binds it.
 4. Define `B` in "b.wren".
 5. Complete "b.wren".
 6. Look up `B` in "b.wren" and bind it in "a.wren".
 7. Resume "a.wren".
 
-This sounds super hairy, but that's because cyclic dependencies are hairy in general. The key point here is that Wren *can* handle them in the rare cases where you need them.
+This sounds super hairy, but that's because cyclic dependencies are hairy in
+general. The key point here is that Wren *can* handle them in the rare cases
+where you need them.
