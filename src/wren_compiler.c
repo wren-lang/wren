@@ -2851,9 +2851,9 @@ static void classDefinition(Compiler* compiler)
   ClassCompiler classCompiler;
 
   // Set up a symbol table for the class's fields. We'll initially compile
-  // them to slots starting at zero. When the method is bound to the close
-  // the bytecode will be adjusted by [wrenBindMethod] to take inherited
-  // fields into account.
+  // them to slots starting at zero. When the method is bound to the class, the
+  // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
+  // into account.
   SymbolTable fields;
   wrenSymbolTableInit(compiler->parser->vm, &fields);
 
@@ -2895,8 +2895,11 @@ static void classDefinition(Compiler* compiler)
     int methodSymbol = method(compiler, &classCompiler, isConstructor,
                               signature);
 
-    // Load the class.
-    // TODO: Simplify using CODE_DUP.
+    // Load the class. We have to do this for each method because we can't
+    // keep the class on top of the stack. If there are static fields, they
+    // will be locals above the initial variable slot for the class on the
+    // stack. To skip past those, we just load the class each time right before
+    // defining a method.
     if (isModule)
     {
       emitShortArg(compiler, CODE_LOAD_MODULE_VAR, slot);

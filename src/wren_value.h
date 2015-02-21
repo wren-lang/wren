@@ -39,7 +39,7 @@
 // point value. A larger, slower, Value type that uses a struct to store these
 // is also supported, and is useful for debugging the VM.
 //
-// The representation is controlled by the `NAN_TAGGING` define. If that's
+// The representation is controlled by the `WREN_NAN_TAGGING` define. If that's
 // defined, Nan tagging is used.
 
 // TODO: Make these externally controllable.
