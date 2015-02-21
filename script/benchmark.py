@@ -205,8 +205,8 @@ def graph_results(benchmark_result):
 
 
 def read_baseline():
-  if os.path.exists("baseline.txt"):
-    with open("baseline.txt") as f:
+  if os.path.exists("benchmark/baseline.txt"):
+    with open("benchmark/baseline.txt") as f:
       for line in f.readlines():
         name, best = line.split(",")
         for benchmark in BENCHMARKS:
@@ -222,7 +222,7 @@ def generate_baseline():
     baseline_text += ("{},{}\n".format(benchmark[0], best))
 
   # Write them to a file.
-  with open("baseline.txt", 'w') as out:
+  with open("benchmark/baseline.txt", 'w') as out:
     out.write(baseline_text)
 
 
