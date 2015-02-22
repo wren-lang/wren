@@ -1572,8 +1572,7 @@ static int finishArgumentList(Compiler* compiler, char* name, int* length)
     validateNumParameters(compiler, ++numArgs);
     expression(compiler);
 
-    // Add a space in the name for each argument. Lets us overload by
-    // arity.
+    // Add a space in the name for each argument. Lets us overload by arity.
     name[(*length)++] = ' ';
   }
   while (match(compiler, TOKEN_COMMA));
@@ -1582,6 +1581,22 @@ static int finishArgumentList(Compiler* compiler, char* name, int* length)
   ignoreNewlines(compiler);
 
   return numArgs;
+}
+
+// Compiles a method call using [instruction] with [numArgs] for a method with
+// [name] with [length].
+static void callMethodInstruction(Compiler* compiler, Code instruction,
+                                  int numArgs, const char* name, int length)
+{
+  emitShortArg(compiler, (Code)(instruction + numArgs),
+               methodSymbol(compiler, name, length));
+}
+
+// Compiles a method call with [numArgs] for a method with [name] with [length].
+static void callMethod(Compiler* compiler, int numArgs, const char* name,
+                       int length)
+{
+  callMethodInstruction(compiler, CODE_CALL_0, numArgs, name, length);
 }
 
 // Compiles an (optional) argument list and then calls it.
@@ -1599,8 +1614,7 @@ static void methodCall(Compiler* compiler, Code instruction,
   // Parse the block argument, if any.
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
-    // Add a space in the name for each argument. Lets us overload by
-    // arity.
+    // Include the block argument in the arity.
     name[length++] = ' ';
     numArgs++;
 
@@ -1617,8 +1631,7 @@ static void methodCall(Compiler* compiler, Code instruction,
 
   // TODO: Allow Grace-style mixfix methods?
 
-  emitShortArg(compiler, (Code)(instruction + numArgs),
-               methodSymbol(compiler, name, length));
+  callMethodInstruction(compiler, instruction, numArgs, name, length);
 }
 
 // Compiles a call whose name is the previously consumed token. This includes
@@ -1640,8 +1653,7 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
 
     // Compile the assigned value.
     expression(compiler);
-    emitShortArg(compiler, (Code)(instruction + 1),
-                 methodSymbol(compiler, name, length));
+    callMethodInstruction(compiler, instruction, 1, name, length);
   }
   else
   {
@@ -1682,10 +1694,7 @@ static void list(Compiler* compiler, bool allowAssignment)
   emitShortArg(compiler, CODE_LOAD_MODULE_VAR, listClassSymbol);
 
   // Instantiate a new list.
-  emitShortArg(compiler, CODE_CALL_0,
-               methodSymbol(compiler, " instantiate", 12));
-
-  int addSymbol = methodSymbol(compiler, "add ", 4);
+  callMethod(compiler, 0, " instantiate", 12);
 
   // Compile the list elements. Each one compiles to a ".add()" call.
   if (peek(compiler) != TOKEN_RIGHT_BRACKET)
@@ -1699,8 +1708,7 @@ static void list(Compiler* compiler, bool allowAssignment)
 
       // The element.
       expression(compiler);
-
-      emitShortArg(compiler, CODE_CALL_1, addSymbol);
+      callMethod(compiler, 1, "add ", 4);
 
       // Discard the result of the add() call.
       emit(compiler, CODE_POP);
@@ -1722,10 +1730,7 @@ static void map(Compiler* compiler, bool allowAssignment)
   emitShortArg(compiler, CODE_LOAD_MODULE_VAR, mapClassSymbol);
 
   // Instantiate a new map.
-  emitShortArg(compiler, CODE_CALL_0,
-               methodSymbol(compiler, " instantiate", 12));
-
-  int subscriptSetSymbol = methodSymbol(compiler, "[ ]=", 4);
+  callMethod(compiler, 0, " instantiate", 12);
 
   // Compile the map elements. Each one is compiled to just invoke the
   // subscript setter on the map.
@@ -1745,7 +1750,7 @@ static void map(Compiler* compiler, bool allowAssignment)
       // The value.
       expression(compiler);
 
-      emitShortArg(compiler, CODE_CALL_2, subscriptSetSymbol);
+      callMethod(compiler, 2, "[ ]=", 4);
 
       // Discard the result of the setter call.
       emit(compiler, CODE_POP);
@@ -1768,7 +1773,7 @@ static void unaryOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, (Precedence)(PREC_UNARY + 1));
 
   // Call the operator method on the left-hand side.
-  emitShortArg(compiler, CODE_CALL_0, methodSymbol(compiler, rule->name, 1));
+  callMethod(compiler, 0, rule->name, 1);
 }
 
 static void boolean(Compiler* compiler, bool allowAssignment)
@@ -2111,9 +2116,7 @@ static void subscript(Compiler* compiler, bool allowAssignment)
     expression(compiler);
   }
 
-  // Compile the method call.
-  emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs),
-               methodSymbol(compiler, name, length));
+  callMethod(compiler, numArgs, name, length);
 }
 
 static void call(Compiler* compiler, bool allowAssignment)
@@ -2134,8 +2137,7 @@ static void new_(Compiler* compiler, bool allowAssignment)
   }
 
   // The leading space in the name is to ensure users can't call it directly.
-  emitShortArg(compiler, CODE_CALL_0,
-               methodSymbol(compiler, " instantiate", 12));
+  callMethod(compiler, 0, " instantiate", 12);
 
   // Invoke the constructor on the new instance.
   char name[MAX_METHOD_SIGNATURE] = "new";
@@ -2210,7 +2212,7 @@ void infixOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, (Precedence)(rule->precedence + 1));
 
   // Call the operator method on the left-hand side.
-  emitShortArg(compiler, CODE_CALL_1, methodSymbol(compiler, rule->name, 0));
+  callMethod(compiler, 1, rule->name, 0);
 }
 
 // Compiles a method signature for an infix operator.
@@ -2648,7 +2650,7 @@ static void forStatement(Compiler* compiler)
   loadLocal(compiler, seqSlot);
   loadLocal(compiler, iterSlot);
 
-  emitShortArg(compiler, CODE_CALL_1, methodSymbol(compiler, "iterate ", 8));
+  callMethod(compiler, 1, "iterate ", 8);
 
   // Store the iterator back in its local for the next iteration.
   emitByteArg(compiler, CODE_STORE_LOCAL, iterSlot);
@@ -2660,8 +2662,7 @@ static void forStatement(Compiler* compiler)
   loadLocal(compiler, seqSlot);
   loadLocal(compiler, iterSlot);
 
-  emitShortArg(compiler, CODE_CALL_1,
-               methodSymbol(compiler, "iteratorValue ", 14));
+  callMethod(compiler, 1, "iteratorValue ", 14);
 
   // Bind the loop variable in its own scope. This ensures we get a fresh
   // variable each iteration so that closures for it don't all see the same one.
