@@ -1559,6 +1559,31 @@ static int methodSymbol(Compiler* compiler, const char* name, int length)
       &compiler->parser->vm->methodNames, name, length);
 }
 
+// Parses a comma-separated list of arguments. Modifies [name] and [length] to
+// include the arity of the argument list.
+//
+// Returns the number of parsed arguments.
+static int finishArgumentList(Compiler* compiler, char* name, int* length)
+{
+  int numArgs = 0;
+  do
+  {
+    ignoreNewlines(compiler);
+    validateNumParameters(compiler, ++numArgs);
+    expression(compiler);
+
+    // Add a space in the name for each argument. Lets us overload by
+    // arity.
+    name[(*length)++] = ' ';
+  }
+  while (match(compiler, TOKEN_COMMA));
+
+  // Allow a newline before the closing delimiter.
+  ignoreNewlines(compiler);
+
+  return numArgs;
+}
+
 // Compiles an (optional) argument list and then calls it.
 static void methodCall(Compiler* compiler, Code instruction,
                        char name[MAX_METHOD_SIGNATURE], int length)
@@ -1567,18 +1592,7 @@ static void methodCall(Compiler* compiler, Code instruction,
   int numArgs = 0;
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
-    do
-    {
-      ignoreNewlines(compiler);
-      validateNumParameters(compiler, ++numArgs);
-      expression(compiler);
-
-      // Add a space in the name for each argument. Lets us overload by
-      // arity.
-      name[length++] = ' ';
-    }
-    while (match(compiler, TOKEN_COMMA));
-
+    numArgs = finishArgumentList(compiler, name, &length);
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
@@ -2075,27 +2089,13 @@ static void subscript(Compiler* compiler, bool allowAssignment)
 {
   char name[MAX_METHOD_SIGNATURE];
   int length = 1;
-  int numArgs = 0;
 
   // Build the method name. To allow overloading by arity, we add a space to
   // the name for each argument.
   name[0] = '[';
 
   // Parse the argument list.
-  do
-  {
-    ignoreNewlines(compiler);
-    validateNumParameters(compiler, ++numArgs);
-    expression(compiler);
-
-    // Add a space in the name for each argument. Lets us overload by
-    // arity.
-    name[length++] = ' ';
-  }
-  while (match(compiler, TOKEN_COMMA));
-
-  // Allow a newline before the closing ']'.
-  ignoreNewlines(compiler);
+  int numArgs = finishArgumentList(compiler, name, &length);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
 
   name[length++] = ']';
