@@ -11,7 +11,7 @@
 // This is the source file for the standalone command line interpreter. It is
 // not needed if you are embedding Wren in an application.
 
-char* rootDirectory = NULL;
+char* rootDirectory = "";
 
 static void failIf(bool condition, int exitCode, const char* format, ...)
 {
@@ -107,9 +107,12 @@ static int runFile(WrenVM* vm, const char* path)
   // Use the directory where the file is as the root to resolve imports
   // relative to.
   char* lastSlash = strrchr(path, '/');
-  rootDirectory = (char*)malloc(lastSlash - path + 2);
-  memcpy(rootDirectory, path, lastSlash - path + 1);
-  rootDirectory[lastSlash - path + 1] = '\0';
+  if (lastSlash != NULL)
+  {
+    rootDirectory = (char*)malloc(lastSlash - path + 2);
+    memcpy(rootDirectory, path, lastSlash - path + 1);
+    rootDirectory[lastSlash - path + 1] = '\0';
+  }
 
   char* source = readFile(path);
 
