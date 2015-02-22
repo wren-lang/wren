@@ -143,9 +143,14 @@ back. Doing so counts back from the size of the list <em>after</em> it's grown b
 <p>The opposite of <code>insert</code> is <code>removeAt</code>. It removes a single element from a
 given position in the list. All following items are shifted up to fill in the
 gap:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">]</span>
 <span class="n">letters</span><span class="p">.</span><span class="n">removeAt</span><span class="p">(</span><span class="m">1</span><span class="p">)</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span> <span class="c1">// [&quot;a&quot;, &quot;c&quot;]</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span> <span class="c1">// [&quot;a&quot;, &quot;c&quot;, &quot;d&quot;]</span>
+</pre></div>
+
+
+<p>The <code>removeAt</code> method returns the removed item:</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">.</span><span class="n">removeAt</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="c1">// &quot;c&quot;</span>
 </pre></div>
 
 
