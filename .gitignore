@@ -1,18 +1,11 @@
-# Intermediate files directory.
+# Build outputs.
+bin/
+lib/
+wren
+
+# Intermediate files.
 build/
 .sass-cache/
-
-# Built files at the top level.
-wren
-wrend
-wren-cpp
-libwren.a
-libwrend.a
-libwren.so
-libwrend.so
-libwren.dylib
-libwrend.dylib
-libwren-cpp.a
 
 # XCode user-specific stuff.
 xcuserdata/

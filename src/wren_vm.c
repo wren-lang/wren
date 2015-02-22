@@ -1208,7 +1208,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source)
 {
   if (strlen(sourcePath) == 0) return loadIntoCore(vm, source);
-  
+
   // TODO: Better module name.
   Value name = wrenNewString(vm, "main", 4);
   wrenPushRoot(vm, AS_OBJ(name));
@@ -1345,7 +1345,7 @@ static void defineMethod(WrenVM* vm, const char* className,
 
   // TODO: Need to be able to define methods in classes outside the core
   // module.
-  
+
   // Find or create the class to bind the method to.
   ObjModule* coreModule = getCoreModule(vm);
   int classSymbol = wrenSymbolTableFind(&coreModule->variableNames,
@@ -1460,7 +1460,7 @@ void wrenReturnString(WrenVM* vm, const char* text, int length)
 {
   ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
   ASSERT(text != NULL, "String cannot be NULL.");
-  
+
   size_t size = length;
   if (length == -1) size = strlen(text);
 

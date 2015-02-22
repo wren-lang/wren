@@ -56,7 +56,7 @@ static char* readModule(WrenVM* vm, const char* module)
   size_t rootLength = strlen(rootDirectory);
   size_t moduleLength = strlen(module);
   size_t pathLength = rootLength + moduleLength + 5;
-  char* path = malloc(pathLength + 1);
+  char* path = (char*)malloc(pathLength + 1);
   memcpy(path, rootDirectory, rootLength);
   memcpy(path + rootLength, module, moduleLength);
   memcpy(path + rootLength + moduleLength, ".wren", 5);
@@ -107,7 +107,7 @@ static int runFile(WrenVM* vm, const char* path)
   // Use the directory where the file is as the root to resolve imports
   // relative to.
   char* lastSlash = strrchr(path, '/');
-  rootDirectory = malloc(lastSlash - path + 2);
+  rootDirectory = (char*)malloc(lastSlash - path + 2);
   memcpy(rootDirectory, path, lastSlash - path + 1);
   rootDirectory[lastSlash - path + 1] = '\0';
 
