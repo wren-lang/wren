@@ -12,7 +12,7 @@ import sys
 # Runs the tests.
 WREN_DIR = dirname(dirname(realpath(__file__)))
 TEST_DIR = join(WREN_DIR, 'test')
-WREN_APP = join(WREN_DIR, 'wrend')
+WREN_APP = join(WREN_DIR, 'bin', 'wrend')
 
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error')
