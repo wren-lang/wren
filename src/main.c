@@ -3,6 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _MSC_VER
+  #include <direct.h>
+  #define getcwd _getcwd
+#else
+  #include <unistd.h>
+#endif
 
 #include "wren.h"
 
@@ -139,7 +145,7 @@ static int runRepl(WrenVM* vm)
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
 
-  // TODO: Set rootDirectory to current working directory so imports work.
+  rootDirectory = getcwd(buffer, 2048);
 
   char line[MAX_LINE_LENGTH];
 
