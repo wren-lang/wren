@@ -70,6 +70,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->numTempRoots = 0;
 
   // Implicitly create a "main" module for the REPL or entry script.
+  vm->modules = NULL;
   ObjModule* mainModule = wrenNewModule(vm);
   wrenPushRoot(vm, (Obj*)mainModule);
 
@@ -376,36 +377,45 @@ static ObjModule* getCoreModule(WrenVM* vm)
 static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
 {
   ObjModule* module = wrenNewModule(vm);
-  wrenPushRoot(vm, (Obj*)module);
 
-  // Implicitly import the core module.
-  ObjModule* coreModule = getCoreModule(vm);
-  for (int i = 0; i < coreModule->variables.count; i++)
+  // See if the module has already been loaded.
+  uint32_t index = wrenMapFind(vm->modules, name);
+  if (index == UINT32_MAX)
   {
-    wrenDefineVariable(vm, module,
-                       coreModule->variableNames.data[i].buffer,
-                       coreModule->variableNames.data[i].length,
-                       coreModule->variables.data[i]);
+    module = wrenNewModule(vm);
+
+    // Store it in the VM's module registry so we don't load the same module
+    // multiple times.
+    wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
+
+    // Implicitly import the core module.
+    ObjModule* coreModule = getCoreModule(vm);
+    for (int i = 0; i < coreModule->variables.count; i++)
+    {
+      wrenDefineVariable(vm, module,
+                         coreModule->variableNames.data[i].buffer,
+                         coreModule->variableNames.data[i].length,
+                         coreModule->variables.data[i]);
+    }
+  }
+  else
+  {
+    // Execute the new code in the context of the existing module.
+    module = AS_MODULE(vm->modules->entries[index].value);
   }
 
   ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(name), source);
   if (fn == NULL)
   {
     // TODO: Should we still store the module even if it didn't compile?
-    wrenPopRoot(vm); // module.
     return NULL;
   }
 
   wrenPushRoot(vm, (Obj*)fn);
 
-  // Store it in the VM's module registry so we don't load the same module
-  // multiple times.
-  wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
-
   ObjFiber* moduleFiber = wrenNewFiber(vm, (Obj*)fn);
 
   wrenPopRoot(vm); // fn.
-  wrenPopRoot(vm); // module.
 
   // Return the fiber that executes the module.
   return moduleFiber;
