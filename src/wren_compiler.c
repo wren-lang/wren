@@ -1381,17 +1381,20 @@ typedef enum
 {
   PREC_NONE,
   PREC_LOWEST,
-  PREC_ASSIGNMENT, // =
-  PREC_LOGIC,      // && ||
-  PREC_EQUALITY,   // == !=
-  PREC_IS,         // is
-  PREC_COMPARISON, // < > <= >=
-  PREC_RANGE,      // .. ...
-  PREC_BITWISE,    // | ^ & << >>
-  PREC_TERM,       // + -
-  PREC_FACTOR,     // * / %
-  PREC_UNARY,      // unary - ! ~
-  PREC_CALL,       // . () []
+  PREC_ASSIGNMENT,    // =
+  PREC_LOGIC,         // && ||
+  PREC_BITWISE_OR,    // |
+  PREC_BITWISE_XOR,   // ^
+  PREC_BITWISE_AND,   // &
+  PREC_EQUALITY,      // == !=
+  PREC_IS,            // is
+  PREC_COMPARISON,    // < > <= >=
+  PREC_RANGE,         // .. ...
+  PREC_BITWISE_SHIFT, // << >>
+  PREC_TERM,          // + -
+  PREC_FACTOR,        // * / %
+  PREC_UNARY,         // unary - ! ~
+  PREC_CALL,          // . () []
   PREC_PRIMARY
 } Precedence;
 
@@ -2323,12 +2326,12 @@ GrammarRule rules[] =
   /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_FACTOR, "% "),
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
   /* TOKEN_MINUS         */ OPERATOR("- "),
-  /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE, "<< "),
-  /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE, ">> "),
-  /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE, "| "),
+  /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, "<< "),
+  /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">> "),
+  /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "| "),
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGIC, or_),
-  /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE, "^ "),
-  /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE, "& "),
+  /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE_XOR, "^ "),
+  /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE_AND, "& "),
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGIC, and_),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_TILDE         */ PREFIX_OPERATOR("~"),
