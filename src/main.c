@@ -3,22 +3,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef _MSC_VER
-  #include <direct.h>
-  #define getcwd _getcwd
-#else
-  #include <unistd.h>
-#endif
 
 #include "wren.h"
 
 #define MAX_LINE_LENGTH 1024 // TODO: Something less arbitrary.
+#define MAX_PATH_LENGTH 2024 // TODO: Something less arbitrary.
 
 // This is the source file for the standalone command line interpreter. It is
 // not needed if you are embedding Wren in an application.
 
-char buffer[2048] = { '\0' };
-char* rootDirectory = buffer;
+char rootDirectory[MAX_PATH_LENGTH];
 
 static void failIf(bool condition, int exitCode, const char* format, ...)
 {
@@ -145,7 +139,8 @@ static int runRepl(WrenVM* vm)
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
 
-  rootDirectory = getcwd(buffer, 2048);
+  // Import relative to the current directory.
+  rootDirectory[0] = '\0';
 
   char line[MAX_LINE_LENGTH];
 
