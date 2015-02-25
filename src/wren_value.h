@@ -716,7 +716,7 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
 // Creates a new string containing the code point in [string] starting at byte
 // [index]. If [index] points into the middle of a UTF-8 sequence, returns an
 // empty string.
-Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index);
+Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index);
 
 // Search for the first occurence of [needle] within [haystack] and returns its
 // zero-based offset. Returns `UINT32_MAX` if [haystack] does not contain

@@ -646,9 +646,8 @@ ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
   return string;
 }
 
-Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, int index)
+Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
 {
-  ASSERT(index >= 0, "Index out of bounds.");
   ASSERT(index < string->length, "Index out of bounds.");
 
   char first = string->value[index];
@@ -847,7 +846,7 @@ static void markMap(WrenVM* vm, ObjMap* map)
   if (setMarkedFlag(&map->obj)) return;
 
   // Mark the entries.
-  for (int i = 0; i < map->capacity; i++)
+  for (uint32_t i = 0; i < map->capacity; i++)
   {
     MapEntry* entry = &map->entries[i];
     if (IS_UNDEFINED(entry->key)) continue;

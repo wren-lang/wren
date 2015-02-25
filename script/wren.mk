@@ -23,7 +23,7 @@ HEADERS   := include/wren.h $(wildcard src/*.h)
 SOURCES   := $(wildcard src/*.c)
 BUILD_DIR := build
 
-CFLAGS := -Wall -Werror
+CFLAGS := -Wall -Werror -Wsign-compare -Wtype-limits -Wuninitialized
 # TODO: Add -Wextra.
 
 # Mode configuration.

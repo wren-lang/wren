@@ -780,18 +780,25 @@ DEF_NATIVE(map_iterate)
 
   if (map->count == 0) RETURN_FALSE;
 
-  // If we're starting the iteration, return the first entry.
-  int index = -1;
+  // If we're starting the iteration, start at the first used entry.
+  uint32_t index = 0;
+
+  // Otherwise, start one past the last entry we stopped at.
   if (!IS_NULL(args[1]))
   {
     if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
-    index = (int)AS_NUM(args[1]);
 
-    if (index < 0 || index >= map->capacity) RETURN_FALSE;
+    if (AS_NUM(args[1]) < 0) RETURN_FALSE;
+    index = (uint32_t)AS_NUM(args[1]);
+
+    if (index >= map->capacity) RETURN_FALSE;
+
+    // Advance the iterator.
+    index++;
   }
 
-  // Find the next used entry, if any.
-  for (index++; index < map->capacity; index++)
+  // Find a used entry, if any.
+  for (; index < map->capacity; index++)
   {
     if (!IS_UNDEFINED(map->entries[index].key)) RETURN_NUM(index);
   }
@@ -1242,14 +1249,14 @@ DEF_NATIVE(string_iterate)
 
   if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
 
-  int index = (int)AS_NUM(args[1]);
-  if (index < 0) RETURN_FALSE;
+  if (AS_NUM(args[1]) < 0) RETURN_FALSE;
+  uint32_t index = (uint32_t)AS_NUM(args[1]);
 
   // Advance to the beginning of the next UTF-8 sequence.
   do
   {
     index++;
-    if ((uint32_t)index >= string->length) RETURN_FALSE;
+    if (index >= string->length) RETURN_FALSE;
   } while ((string->value[index] & 0xc0) == 0x80);
 
   RETURN_NUM(index);
