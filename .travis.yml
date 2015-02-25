@@ -2,4 +2,10 @@ language: c
 compiler:
   - gcc
   - clang
+before_install:
+  # Travis VMs are 64-bit but we compile both for 32 and 64 bit. To enable the
+  # 32-bit builds to work, we need gcc-multilib.
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq gcc-multilib
+
 script: make all && make test
