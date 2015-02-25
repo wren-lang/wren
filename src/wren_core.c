@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -923,14 +924,21 @@ DEF_NATIVE(num_fromString)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
 
-  ObjString* candidate = AS_STRING(args[1]);
+  ObjString* string = AS_STRING(args[1]);
+
+  // Corner case: Can't parse an empty string.
+  if (string->length == 0) RETURN_NULL;
 
   char* end;
-  double number = strtod(candidate->value, &end);
+  double number = strtod(string->value, &end);
 
-  // Invalid number literal.
+  // Skip past any trailing whitespace.
+  while (*end != '\0' && isspace(*end)) end++;
+
+  // We must have consumed the entire string. Otherwise, it contains non-number
+  // characters and we can't parse it.
   // TODO: Check errno == ERANGE here.
-  if (end == candidate->value) RETURN_NULL;
+  if (end < string->value + string->length) RETURN_NULL;
 
   RETURN_NUM(number);
 }
