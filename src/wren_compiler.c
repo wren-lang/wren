@@ -1382,10 +1382,9 @@ typedef enum
   PREC_NONE,
   PREC_LOWEST,
   PREC_ASSIGNMENT,    // =
-  PREC_LOGIC,         // && ||
-  PREC_BITWISE_OR,    // |
-  PREC_BITWISE_XOR,   // ^
-  PREC_BITWISE_AND,   // &
+  PREC_TERNARY,       // ?:
+  PREC_LOGICAL_OR,    // ||
+  PREC_LOGICAL_AND,   // &&
   PREC_EQUALITY,      // == !=
   PREC_IS,            // is
   PREC_COMPARISON,    // < > <= >=
@@ -2166,7 +2165,7 @@ static void and_(Compiler* compiler, bool allowAssignment)
 
   // Skip the right argument if the left is false.
   int jump = emitJump(compiler, CODE_AND);
-  parsePrecedence(compiler, false, PREC_LOGIC);
+  parsePrecedence(compiler, false, PREC_LOGICAL_AND);
   patchJump(compiler, jump);
 }
 
@@ -2176,7 +2175,7 @@ static void or_(Compiler* compiler, bool allowAssignment)
 
   // Skip the right argument if the left is true.
   int jump = emitJump(compiler, CODE_OR);
-  parsePrecedence(compiler, false, PREC_LOGIC);
+  parsePrecedence(compiler, false, PREC_LOGICAL_OR);
   patchJump(compiler, jump);
 }
 
@@ -2189,7 +2188,7 @@ static void conditional(Compiler* compiler, bool allowAssignment)
   int ifJump = emitJump(compiler, CODE_JUMP_IF);
 
   // Compile the then branch.
-  parsePrecedence(compiler, allowAssignment, PREC_LOGIC);
+  parsePrecedence(compiler, allowAssignment, PREC_TERNARY);
 
   consume(compiler, TOKEN_COLON,
           "Expect ':' after then branch of conditional operator.");
@@ -2332,10 +2331,10 @@ GrammarRule rules[] =
   /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, "<< "),
   /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">> "),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "| "),
-  /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGIC, or_),
+  /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGICAL_OR, or_),
   /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE_XOR, "^ "),
   /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE_AND, "& "),
-  /* TOKEN_AMPAMP        */ INFIX(PREC_LOGIC, and_),
+  /* TOKEN_AMPAMP        */ INFIX(PREC_LOGICAL_AND, and_),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_TILDE         */ PREFIX_OPERATOR("~"),
   /* TOKEN_QUESTION      */ INFIX(PREC_ASSIGNMENT, conditional),
