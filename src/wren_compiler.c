@@ -1389,8 +1389,11 @@ typedef enum
   PREC_EQUALITY,      // == !=
   PREC_IS,            // is
   PREC_COMPARISON,    // < > <= >=
-  PREC_RANGE,         // .. ...
+  PREC_BITWISE_OR,    // |
+  PREC_BITWISE_XOR,   // ^
+  PREC_BITWISE_AND,   // &
   PREC_BITWISE_SHIFT, // << >>
+  PREC_RANGE,         // .. ...
   PREC_TERM,          // + -
   PREC_FACTOR,        // * / %
   PREC_UNARY,         // unary - ! ~
