@@ -2,7 +2,6 @@
 #define wren_h
 
 #include <stdlib.h>
-#include <stdint.h>
 #include <stdbool.h>
 
 typedef struct WrenVM WrenVM;

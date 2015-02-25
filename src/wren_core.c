@@ -1,9 +1,9 @@
 #include <math.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "wren_common.h"
 #include "wren_core.h"
 #include "wren_value.h"
 

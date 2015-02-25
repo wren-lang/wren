@@ -2,7 +2,6 @@
 #define wren_value_h
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #include "wren_common.h"
 #include "wren_utils.h"

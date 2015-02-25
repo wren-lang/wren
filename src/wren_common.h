@@ -8,6 +8,13 @@
 //
 // This header is *not* intended to be included by code outside of Wren itself.
 
+// Wren pervasively uses the C99 integer types (uint16_t, etc.) along with some
+// of the associated limit constants (UINT32_MAX, etc.). The constants are not
+// part of standard C++, so aren't included by default by C++ compilers when you
+// include <stdint> unless __STDC_LIMIT_MACROS is defined.
+#define __STDC_LIMIT_MACROS
+#include <stdint.h>
+
 // These flags let you control some details of the interpreter's implementation.
 // Usually they trade-off a bit of portability for speed. They default to the
 // most efficient behavior.
