@@ -3,6 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _MSC_VER
+  #include <direct.h>
+  #define getcwd _getcwd
+#else
+  #include <unistd.h>
+#endif
 
 #include "wren.h"
 
@@ -11,7 +17,8 @@
 // This is the source file for the standalone command line interpreter. It is
 // not needed if you are embedding Wren in an application.
 
-char* rootDirectory = "";
+char buffer[2048] = { '\0' };
+char* rootDirectory = buffer;
 
 static void failIf(bool condition, int exitCode, const char* format, ...)
 {
@@ -106,10 +113,9 @@ static int runFile(WrenVM* vm, const char* path)
 {
   // Use the directory where the file is as the root to resolve imports
   // relative to.
-  char* lastSlash = strrchr(path, '/');
+  const char* lastSlash = strrchr(path, '/');
   if (lastSlash != NULL)
   {
-    rootDirectory = (char*)malloc(lastSlash - path + 2);
     memcpy(rootDirectory, path, lastSlash - path + 1);
     rootDirectory[lastSlash - path + 1] = '\0';
   }
@@ -139,7 +145,7 @@ static int runRepl(WrenVM* vm)
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
 
-  // TODO: Set rootDirectory to current working directory so imports work.
+  rootDirectory = getcwd(buffer, 2048);
 
   char line[MAX_LINE_LENGTH];
 
