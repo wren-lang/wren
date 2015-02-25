@@ -919,6 +919,22 @@ DEF_NATIVE(num_toString)
   RETURN_VAL(wrenNewString(vm, buffer, length));
 }
 
+DEF_NATIVE(num_fromString)
+{
+  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+
+  ObjString* candidate = AS_STRING(args[1]);
+
+  char* end;
+  double number = strtod(candidate->value, &end);
+
+  // Invalid number literal.
+  // TODO: Check errno == ERANGE here.
+  if (end == candidate->value) RETURN_NULL;
+
+  RETURN_NUM(number);
+}
+
 DEF_NATIVE(num_negate)
 {
   RETURN_NUM(-AS_NUM(args[0]));
@@ -1455,6 +1471,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->nullClass, "toString", null_toString);
 
   vm->numClass = defineClass(vm, "Num");
+  NATIVE(vm->numClass->obj.classObj, "fromString ", num_fromString);
   NATIVE(vm->numClass, "-", num_negate);
   NATIVE(vm->numClass, "- ", num_minus);
   NATIVE(vm->numClass, "+ ", num_plus);
@@ -1480,7 +1497,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->numClass, "isNan", num_isNan);
   NATIVE(vm->numClass, "sin", num_sin);
   NATIVE(vm->numClass, "sqrt", num_sqrt);
-  NATIVE(vm->numClass, "toString", num_toString)
+  NATIVE(vm->numClass, "toString", num_toString);
 
   // These are defined just so that 0 and -0 are equal, which is specified by
   // IEEE 754 even though they have different bit representations.

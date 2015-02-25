@@ -90,3 +90,10 @@ It is a runtime error if `other` is not a number.
 ### **...**(other) operator
 
 **TODO**
+
+### Num.**fromString**(value)
+
+Attempts to parse `value` as a decimal literal and return it as an instance of
+`Num`. If the number cannot be parsed `null` will be returned.
+
+It is a runtime error if `value` is not a string.
