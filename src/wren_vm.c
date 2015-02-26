@@ -1339,17 +1339,14 @@ void wrenPopRoot(WrenVM* vm)
 }
 
 static void defineMethod(WrenVM* vm, const char* className,
-                         const char* methodName, int numParams,
+                         const char* signature,
                          WrenForeignMethodFn methodFn, bool isStatic)
 {
   ASSERT(className != NULL, "Must provide class name.");
 
-  int length = (int)strlen(methodName);
-  ASSERT(methodName != NULL, "Must provide method name.");
-  ASSERT(strlen(methodName) < MAX_METHOD_NAME, "Method name too long.");
-
-  ASSERT(numParams >= 0, "numParams cannot be negative.");
-  ASSERT(numParams <= MAX_PARAMETERS, "Too many parameters.");
+  int length = (int)strlen(signature);
+  ASSERT(signature != NULL, "Must provide signature.");
+  ASSERT(strlen(signature) < MAX_METHOD_SIGNATURE, "Signature too long.");
 
   ASSERT(methodFn != NULL, "Must provide method function.");
 
@@ -1382,17 +1379,9 @@ static void defineMethod(WrenVM* vm, const char* className,
     wrenPopRoot(vm);
   }
 
-  // Create a name for the method, including its arity.
-  char name[MAX_METHOD_SIGNATURE];
-  memcpy(name, methodName, length);
-  for (int i = 0; i < numParams; i++)
-  {
-    name[length++] = ' ';
-  }
-  name[length] = '\0';
-
   // Bind the method.
-  int methodSymbol = wrenSymbolTableEnsure(vm, &vm->methodNames, name, length);
+  int methodSymbol = wrenSymbolTableEnsure(vm, &vm->methodNames,
+                                           signature, length);
 
   Method method;
   method.type = METHOD_FOREIGN;
@@ -1404,17 +1393,17 @@ static void defineMethod(WrenVM* vm, const char* className,
 }
 
 void wrenDefineMethod(WrenVM* vm, const char* className,
-                      const char* methodName, int numParams,
+                      const char* signature,
                       WrenForeignMethodFn methodFn)
 {
-  defineMethod(vm, className, methodName, numParams, methodFn, false);
+  defineMethod(vm, className, signature, methodFn, false);
 }
 
 void wrenDefineStaticMethod(WrenVM* vm, const char* className,
-                            const char* methodName, int numParams,
+                            const char* signature,
                             WrenForeignMethodFn methodFn)
 {
-  defineMethod(vm, className, methodName, numParams, methodFn, true);
+  defineMethod(vm, className, signature, methodFn, true);
 }
 
 bool wrenGetArgumentBool(WrenVM* vm, int index)

@@ -140,10 +140,10 @@ static void ioTime(WrenVM* vm)
 void wrenLoadIOLibrary(WrenVM* vm)
 {
   wrenInterpret(vm, "", libSource);
-  wrenDefineStaticMethod(vm, "IO", "writeString_", 1, ioWriteString);
-  wrenDefineStaticMethod(vm, "IO", "clock", 0, ioClock);
-  wrenDefineStaticMethod(vm, "IO", "time", 0, ioTime);
-  wrenDefineStaticMethod(vm, "IO", "read", 0, ioRead);
+  wrenDefineStaticMethod(vm, "IO", "writeString_ ", ioWriteString);
+  wrenDefineStaticMethod(vm, "IO", "clock", ioClock);
+  wrenDefineStaticMethod(vm, "IO", "time", ioTime);
+  wrenDefineStaticMethod(vm, "IO", "read", ioRead);
 }
 
 #endif
