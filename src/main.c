@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "wren.h"
 
@@ -11,6 +12,7 @@
 // This is the source file for the standalone command line interpreter. It is
 // not needed if you are embedding Wren in an application.
 
+#define MAX_CWD_LENGTH 512 // TODO: Something less arbitrary.
 char* rootDirectory = NULL;
 
 static void failIf(bool condition, int exitCode, const char* format, ...)
@@ -107,9 +109,12 @@ static int runFile(WrenVM* vm, const char* path)
   // Use the directory where the file is as the root to resolve imports
   // relative to.
   char* lastSlash = strrchr(path, '/');
-  rootDirectory = malloc(lastSlash - path + 2);
-  memcpy(rootDirectory, path, lastSlash - path + 1);
-  rootDirectory[lastSlash - path + 1] = '\0';
+  if (lastSlash != NULL)
+  {
+    rootDirectory = malloc(lastSlash - path + 2);
+    memcpy(rootDirectory, path, lastSlash - path + 1);
+    rootDirectory[lastSlash - path + 1] = '\0';
+  }
 
   char* source = readFile(path);
 
@@ -135,8 +140,6 @@ static int runRepl(WrenVM* vm)
 {
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
-
-  // TODO: Set rootDirectory to current working directory so imports work.
 
   char line[MAX_LINE_LENGTH];
 
@@ -169,6 +172,11 @@ int main(int argc, const char* argv[])
     fprintf(stderr, "Usage: wren [file]");
     return 64; // EX_USAGE.
   }
+
+  rootDirectory = malloc(MAX_CWD_LENGTH);
+  getcwd(rootDirectory, MAX_CWD_LENGTH - 1);
+  strcat(rootDirectory, "/");
+  failIf(rootDirectory == NULL, 66, "Could set rootDirectory.\n");
 
   WrenConfiguration config;
 
