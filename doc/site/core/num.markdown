@@ -14,6 +14,7 @@ Rounds the number up to the nearest integer.
 
     :::dart
     1.5.ceil // 2
+    (-3.2).ceil // -3
 
 ### **cos**
 
@@ -21,10 +22,11 @@ The cosine of the number.
 
 ### **floor**
 
-Round the number down to the nearest integer.
+Rounds the number down to the nearest integer.
 
     :::dart
-    1.5.floor // 1
+    1.5.floor    // 1
+    (-3.2).floor // -4
 
 ### **isNan**
 
@@ -89,28 +91,25 @@ It is a runtime error if `other` is not a number.
 
 ### **..**(other) operator
 
-Creates a [Range](core/range.html) representing a consecutive range of integers 
+Creates a [Range](core/range.html) representing a consecutive range of numbers
 from the beginning number to the ending number.
 
     :::dart
-    for (i in 1..3) {
-        IO.print(i)
-    }
-    // 1
-    // 2
-    // 3
+    var range = 1.2..3.4
+    IO.print(range.min)         // 1.2
+    IO.print(range.max)         // 3.4
+    IO.print(range.isInclusive) // true
 
 ### **...**(other) operator
 
-Creates a [Range](core/range.html) representing a consecutive range of integers 
+Creates a [Range](core/range.html) representing a consecutive range of numbers
 from the beginning number to the ending number not including the ending number.
 
     :::dart
-    for (i in 1...3) {
-        IO.print(i)
-    }
-    // 1
-    // 2
+    var range = 1.2...3.4
+    IO.print(range.min)         // 1.2
+    IO.print(range.max)         // 3.4
+    IO.print(range.isInclusive) // false
 
 ### Num.**fromString**(value)
 
