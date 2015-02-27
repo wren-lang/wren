@@ -7,4 +7,4 @@ var f = null
   }
 }
 
-f.call // expect: local
+f.call() // expect: local

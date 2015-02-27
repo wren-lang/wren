@@ -16,7 +16,7 @@ var adjectives = new Fiber {
   ["small", "clean", "fast"].map {|word| Fiber.yield(word) }
 }
 
-while (!adjectives.isDone) IO.print(adjectives.call)
+while (!adjectives.isDone) IO.print(adjectives.call())
 ```
 
  *  **Wren is small.** The codebase is about [5,000 lines][src]. You can

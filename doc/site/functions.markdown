@@ -76,17 +76,17 @@ so by calling a method on it:
     :::dart
     class Blondie {
       callMe(fn) {
-        fn.call
+        fn.call()
       }
     }
 
-Functions expose a `call` method that executes the body of the function. This
+Functions expose a `call()` method that executes the body of the function. This
 method is dynamically-dispatched like any other, so you can define your own
 "function-like" classes and pass them to methods that expect "real" functions.
 
     :::dart
     class FakeFn {
-      call {
+      call() {
         IO.print("I'm feeling functional!")
       }
     }
@@ -157,6 +157,6 @@ to`i`:
 
     :::dart
     var counter = Counter.create
-    IO.print(counter.call) // Prints "1".
-    IO.print(counter.call) // Prints "2".
-    IO.print(counter.call) // Prints "3".
+    IO.print(counter.call()) // Prints "1".
+    IO.print(counter.call()) // Prints "2".
+    IO.print(counter.call()) // Prints "3".

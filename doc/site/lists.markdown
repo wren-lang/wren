@@ -106,5 +106,5 @@ The `removeAt` method returns the removed item:
 If you want to remove everything from the list, you can clear it:
 
     :::dart
-    hirsute.clear
+    hirsute.clear()
     IO.print(hirsute) // []

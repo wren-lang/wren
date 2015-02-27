@@ -4,6 +4,6 @@ var f = new Fn {
   }
 }
 
-var g = f.call
-g.call
+var g = f.call()
+g.call()
 // expect: 1

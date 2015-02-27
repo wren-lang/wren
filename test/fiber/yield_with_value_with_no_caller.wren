@@ -4,6 +4,6 @@ var a = new Fiber {
 
 // Run a chain of fibers. Since none of them are called, they all get discarded
 // and there is no remaining caller.
-var b = new Fiber { a.run }
-var c = new Fiber { b.run }
-c.run
+var b = new Fiber { a.run() }
+var c = new Fiber { b.run() }
+c.run()

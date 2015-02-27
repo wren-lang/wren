@@ -1,2 +1,2 @@
 var f = new Fn {}
-IO.print(f.call) // expect: null
+IO.print(f.call()) // expect: null

@@ -9,7 +9,7 @@ An indexable contiguous collection of elements. More details [here](../lists.htm
 
 Appends `item` to the end of the list.
 
-### **clear**
+### **clear**()
 
 Removes all items from the list.
 

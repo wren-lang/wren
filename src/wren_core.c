@@ -1393,7 +1393,7 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->objectClass, "new", object_new);
   NATIVE(vm->objectClass, "toString", object_toString);
   NATIVE(vm->objectClass, "type", object_type);
-  NATIVE(vm->objectClass, " instantiate", object_instantiate);
+  NATIVE(vm->objectClass, "<instantiate>", object_instantiate);
 
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
@@ -1406,7 +1406,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   // Define the methods specific to Class after wiring up its superclass to
   // prevent the inherited ones from overwriting them.
-  NATIVE(vm->classClass, " instantiate", class_instantiate);
+  NATIVE(vm->classClass, "<instantiate>", class_instantiate);
   NATIVE(vm->classClass, "name", class_name);
 
   // The core class diagram ends up looking like this, where single lines point
@@ -1436,26 +1436,26 @@ void wrenInitializeCore(WrenVM* vm)
 
   // TODO: Make fibers inherit Sequence and be iterable.
   vm->fiberClass = defineClass(vm, "Fiber");
-  NATIVE(vm->fiberClass->obj.classObj, " instantiate", fiber_instantiate);
+  NATIVE(vm->fiberClass->obj.classObj, "<instantiate>", fiber_instantiate);
   NATIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
   NATIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
-  NATIVE(vm->fiberClass->obj.classObj, "yield", fiber_yield);
+  NATIVE(vm->fiberClass->obj.classObj, "yield()", fiber_yield);
   NATIVE(vm->fiberClass->obj.classObj, "yield(_)", fiber_yield1);
-  NATIVE(vm->fiberClass, "call", fiber_call);
+  NATIVE(vm->fiberClass, "call()", fiber_call);
   NATIVE(vm->fiberClass, "call(_)", fiber_call1);
   NATIVE(vm->fiberClass, "error", fiber_error);
   NATIVE(vm->fiberClass, "isDone", fiber_isDone);
-  NATIVE(vm->fiberClass, "run", fiber_run);
+  NATIVE(vm->fiberClass, "run()", fiber_run);
   NATIVE(vm->fiberClass, "run(_)", fiber_run1);
-  NATIVE(vm->fiberClass, "try", fiber_try);
+  NATIVE(vm->fiberClass, "try()", fiber_try);
 
   vm->fnClass = defineClass(vm, "Fn");
 
-  NATIVE(vm->fnClass->obj.classObj, " instantiate", fn_instantiate);
+  NATIVE(vm->fnClass->obj.classObj, "<instantiate>", fn_instantiate);
   NATIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   NATIVE(vm->fnClass, "arity", fn_arity);
-  NATIVE(vm->fnClass, "call", fn_call0);
+  NATIVE(vm->fnClass, "call()", fn_call0);
   NATIVE(vm->fnClass, "call(_)", fn_call1);
   NATIVE(vm->fnClass, "call(_,_)", fn_call2);
   NATIVE(vm->fnClass, "call(_,_,_)", fn_call3);
@@ -1527,12 +1527,11 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->stringClass, "toString", string_toString);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, "List"));
-  NATIVE(vm->listClass->obj.classObj, " instantiate", list_instantiate);
+  NATIVE(vm->listClass->obj.classObj, "<instantiate>", list_instantiate);
   NATIVE(vm->listClass, "[_]", list_subscript);
   NATIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
   NATIVE(vm->listClass, "add(_)", list_add);
-  // TODO: Make ().
-  NATIVE(vm->listClass, "clear", list_clear);
+  NATIVE(vm->listClass, "clear()", list_clear);
   NATIVE(vm->listClass, "count", list_count);
   NATIVE(vm->listClass, "insert(_,_)", list_insert);
   NATIVE(vm->listClass, "iterate(_)", list_iterate);
@@ -1540,11 +1539,10 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->listClass, "removeAt(_)", list_removeAt);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, "Map"));
-  NATIVE(vm->mapClass->obj.classObj, " instantiate", map_instantiate);
+  NATIVE(vm->mapClass->obj.classObj, "<instantiate>", map_instantiate);
   NATIVE(vm->mapClass, "[_]", map_subscript);
   NATIVE(vm->mapClass, "[_]=(_)", map_subscriptSetter);
-  // TODO: Make ().
-  NATIVE(vm->mapClass, "clear", map_clear);
+  NATIVE(vm->mapClass, "clear()", map_clear);
   NATIVE(vm->mapClass, "containsKey(_)", map_containsKey);
   NATIVE(vm->mapClass, "count", map_count);
   NATIVE(vm->mapClass, "remove(_)", map_remove);

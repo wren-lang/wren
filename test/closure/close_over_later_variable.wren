@@ -9,5 +9,5 @@ new Fn {
   new Fn {
     IO.print(b) // expect: b
     IO.print(a) // expect: a
-  }.call
-}.call
+  }.call()
+}.call()

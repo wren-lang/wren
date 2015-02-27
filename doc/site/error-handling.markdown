@@ -107,7 +107,7 @@ For example, if you run this program:
       123.badMethod
     }
 
-    var error = fiber.try
+    var error = fiber.try()
     IO.print("Caught error: ", error)
 
 It prints:
@@ -156,8 +156,9 @@ before its parsed, but validating that a string is a number is pretty much the
 same thing as parsing it.
 
 For cases like this where failure can occur and the program *will* want to
-handle it, fibers and `try` are too coarse-grained to work with. Instead, these
-operations will indicate failure by *returning* some sort of error indication.
+handle it, fibers and `try()` are too coarse-grained to work with. Instead,
+these operations will indicate failure by *returning* some sort of error
+indication.
 
 For example, a method for parsing a number could return a number on success and
 `null` to indicate parsing failed. Since Wren is dynamically typed, it's easy

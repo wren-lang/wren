@@ -3,5 +3,5 @@ var fiber = new Fiber {
   return "result"
 }
 
-var result = fiber.call // expect: fiber
-IO.print(result)        // expect: result
+var result = fiber.call() // expect: fiber
+IO.print(result)          // expect: result

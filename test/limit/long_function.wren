@@ -1009,5 +1009,5 @@ new Fn {
   IO.print(9) // expect: 9
   IO.print(10) // expect: 10
   // 1000
-}.call
+}.call()
 

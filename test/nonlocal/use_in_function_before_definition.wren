@@ -4,4 +4,4 @@ var f = new Fn {
 
 var Global = "global"
 
-f.call // expect: global
+f.call() // expect: global

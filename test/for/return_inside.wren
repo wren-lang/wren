@@ -4,5 +4,5 @@ var f = new Fn {
   }
 }
 
-IO.print(f.call)
+IO.print(f.call())
 // expect: 1

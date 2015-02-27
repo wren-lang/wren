@@ -81,10 +81,10 @@ If the key was found, this returns the value that was associated with it:
 If the key wasn't in the map to begin with, `remove()` just returns `null`.
 
 If you want to remove *everything* from the map, just like with [lists][], you
-can just call `clear`:
+can just call `clear()`:
 
     :::dart
-    capitals.clear
+    capitals.clear()
     IO.print(capitals.count) // "0".
 
 [lists]: lists.html

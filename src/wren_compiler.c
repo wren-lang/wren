@@ -1550,6 +1550,10 @@ static void parameterList(Compiler* compiler, Signature* signature,
   if (!match(compiler, startToken)) return;
 
   signature->type = SIG_METHOD;
+
+  // Allow empty parameter lists for methods.
+  if (endToken == TOKEN_RIGHT_PAREN && match(compiler, endToken)) return;
+
   finishParameterList(compiler, signature, endToken);
 }
 
@@ -1679,8 +1683,12 @@ static void methodCall(Compiler* compiler, Code instruction,
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
     signature.type = SIG_METHOD;
-    // TODO: Allow an empty argument list.
-    finishArgumentList(compiler, &signature);
+
+    // Allow empty an argument list.
+    if (peek(compiler) != TOKEN_RIGHT_PAREN)
+    {
+      finishArgumentList(compiler, &signature);
+    }
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
@@ -1773,7 +1781,7 @@ static void list(Compiler* compiler, bool allowAssignment)
   emitShortArg(compiler, CODE_LOAD_MODULE_VAR, listClassSymbol);
 
   // Instantiate a new list.
-  callMethod(compiler, 0, " instantiate", 12);
+  callMethod(compiler, 0, "<instantiate>", 13);
 
   // Compile the list elements. Each one compiles to a ".add()" call.
   if (peek(compiler) != TOKEN_RIGHT_BRACKET)
@@ -1809,7 +1817,7 @@ static void map(Compiler* compiler, bool allowAssignment)
   emitShortArg(compiler, CODE_LOAD_MODULE_VAR, mapClassSymbol);
 
   // Instantiate a new map.
-  callMethod(compiler, 0, " instantiate", 12);
+  callMethod(compiler, 0, "<instantiate>", 13);
 
   // Compile the map elements. Each one is compiled to just invoke the
   // subscript setter on the map.
@@ -2202,7 +2210,7 @@ static void new_(Compiler* compiler, bool allowAssignment)
   }
 
   // The leading space in the name is to ensure users can't call it directly.
-  callMethod(compiler, 0, " instantiate", 12);
+  callMethod(compiler, 0, "<instantiate>", 13);
 
   // Invoke the constructor on the new instance.
   methodCall(compiler, CODE_CALL_0, "new", 3);
@@ -2477,7 +2485,7 @@ void parsePrecedence(Compiler* compiler, bool allowAssignment,
 
   if (prefix == NULL)
   {
-    error(compiler, "Unexpected token for expression.");
+    error(compiler, "Expected expression.");
     return;
   }
 
