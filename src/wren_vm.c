@@ -478,6 +478,41 @@ static bool importVariable(WrenVM* vm, Value moduleName, Value variableName,
   return false;
 }
 
+// Verifies that [superclass] is a valid object to inherit from. That means it
+// must be a class and cannot be the class of any built-in type.
+//
+// If successful, returns NULL. Otherwise, returns a string for the runtime
+// error message.
+static ObjString* validateSuperclass(WrenVM* vm, ObjString* name,
+                                     Value superclassValue)
+{
+  // Make sure the superclass is a class.
+  if (!IS_CLASS(superclassValue))
+  {
+    return AS_STRING(wrenNewString(vm, "Must inherit from a class.", 26));
+  }
+
+  // Make sure it doesn't inherit from a sealed built-in type. Primitive methods
+  // on these classes assume the instance is one of the other Obj___ types and
+  // will fail horribly if it's actually an ObjInstance.
+  ObjClass* superclass = AS_CLASS(superclassValue);
+  if (superclass == vm->classClass ||
+      superclass == vm->fiberClass ||
+      superclass == vm->fnClass || // Includes OBJ_CLOSURE.
+      superclass == vm->listClass ||
+      superclass == vm->mapClass ||
+      superclass == vm->rangeClass ||
+      superclass == vm->stringClass)
+  {
+    char message[70 + MAX_VARIABLE_NAME];
+    sprintf(message, "%s cannot inherit from %s.",
+            name->value, superclass->name->value);
+    return AS_STRING(wrenNewString(vm, message, strlen(message)));
+  }
+
+  return NULL;
+}
+
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical. Returns `true` if the
 // fiber completed without error.
@@ -1083,30 +1118,14 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(CLASS):
     {
       ObjString* name = AS_STRING(PEEK2());
+      ObjClass* superclass = vm->objectClass;
 
-      ObjClass* superclass;
-      if (IS_NULL(PEEK()))
+      // Use implicit Object superclass if none given.
+      if (!IS_NULL(PEEK()))
       {
-        // Implicit Object superclass.
-        superclass = vm->objectClass;
-      }
-      else
-      {
-        // TODO: Handle the superclass not being a class object!
+        ObjString* error = validateSuperclass(vm, name, PEEK());
+        if (error != NULL) RUNTIME_ERROR(error);
         superclass = AS_CLASS(PEEK());
-        if (superclass == vm->classClass ||
-            superclass == vm->fiberClass ||
-            superclass == vm->fnClass ||
-            superclass == vm->listClass ||  /* This covers also OBJ_CLOSURE */
-            superclass == vm->mapClass ||
-            superclass == vm->rangeClass ||
-            superclass == vm->stringClass )
-        {
-          char message[70 + MAX_VARIABLE_NAME];
-          sprintf(message,
-              "Class '%s' may not subclass a built-in", name->value);
-          RUNTIME_ERROR(AS_STRING(wrenNewString(vm, message, strlen(message))));
-        }
       }
 
       int numFields = READ_BYTE();
