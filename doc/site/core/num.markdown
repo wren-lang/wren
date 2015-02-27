@@ -1,8 +1,6 @@
 ^title Num Class
 ^category core
 
-**TODO**
-
 ### **abs**
 
 The absolute value of the number.
@@ -12,7 +10,10 @@ The absolute value of the number.
 
 ### **ceil**
 
-**TODO**
+Rounds the number up to the nearest integer.
+
+    :::dart
+    1.5.ceil // 2
 
 ### **cos**
 
@@ -20,7 +21,10 @@ The cosine of the number.
 
 ### **floor**
 
-**TODO**
+Round the number down to the nearest integer.
+
+    :::dart
+    1.5.floor // 1
 
 ### **isNan**
 
@@ -85,11 +89,28 @@ It is a runtime error if `other` is not a number.
 
 ### **..**(other) operator
 
-**TODO**
+Creates a [Range](core/range.html) representing a consecutive range of integers 
+from the beginning number to the ending number.
+
+    :::dart
+    for (i in 1..3) {
+        IO.print(i)
+    }
+    // 1
+    // 2
+    // 3
 
 ### **...**(other) operator
 
-**TODO**
+Creates a [Range](core/range.html) representing a consecutive range of integers 
+from the beginning number to the ending number not including the ending number.
+
+    :::dart
+    for (i in 1...3) {
+        IO.print(i)
+    }
+    // 1
+    // 2
 
 ### Num.**fromString**(value)
 
@@ -97,3 +118,4 @@ Attempts to parse `value` as a decimal literal and return it as an instance of
 `Num`. If the number cannot be parsed `null` will be returned.
 
 It is a runtime error if `value` is not a string.
+
