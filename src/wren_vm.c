@@ -328,20 +328,10 @@ static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, ObjString* error)
 // method with [symbol] on [classObj].
 static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
-  // Count the number of spaces to determine the number of parameters the
-  // method expects.
-  const char* methodName = vm->methodNames.data[symbol].buffer;
-
-  int methodLength = (int)strlen(methodName);
-  int numParams = 0;
-  while (methodName[methodLength - numParams - 1] == ' ') numParams++;
-
-  char message[MAX_VARIABLE_NAME + MAX_METHOD_NAME + 49];
-  sprintf(message, "%s does not implement method '%.*s' with %d argument%s.",
+  char message[MAX_VARIABLE_NAME + MAX_METHOD_NAME + 24];
+  sprintf(message, "%s does not implement '%s'.",
           classObj->name->value,
-          methodLength - numParams, methodName,
-          numParams,
-          numParams == 1 ? "" : "s");
+          vm->methodNames.data[symbol].buffer);
 
   return AS_STRING(wrenNewString(vm, message, strlen(message)));
 }

@@ -1280,28 +1280,6 @@ static void loadLocal(Compiler* compiler, int slot)
   emitByteArg(compiler, CODE_LOAD_LOCAL, slot);
 }
 
-// Copies the identifier from the previously consumed `TOKEN_NAME` into [name],
-// which should point to a buffer large enough to contain it. Returns the
-// length of the name.
-static int copyName(Compiler* compiler, char* name)
-{
-  Token* token = &compiler->parser->previous;
-  int length = token->length;
-
-  if (length > MAX_METHOD_NAME)
-  {
-    error(compiler, "Method names cannot be longer than %d characters.",
-          MAX_METHOD_NAME);
-    length = MAX_METHOD_NAME;
-  }
-
-  memcpy(name, token->start, length);
-  name[length] = '\0';
-  return length;
-}
-
-#include "wren_debug.h"
-
 // Finishes [compiler], which is compiling a function, method, or chunk of top
 // level code. If there is a parent compiler, then this emits code in the
 // parent compiler to load the resulting function.
@@ -1402,7 +1380,35 @@ typedef enum
 
 typedef void (*GrammarFn)(Compiler*, bool allowAssignment);
 
-typedef void (*SignatureFn)(Compiler* compiler, char* name, int* length);
+// The different signature syntaxes for different kinds of methods.
+typedef enum
+{
+  // A name followed by a (possibly empty) parenthesized parameter list. Also
+  // used for binary operators.
+  SIG_METHOD,
+
+  // Just a name. Also used for unary operators.
+  SIG_GETTER,
+
+  // A name followed by "=".
+  SIG_SETTER,
+
+  // A square bracketed parameter list.
+  SIG_SUBSCRIPT,
+
+  // A square bracketed parameter list followed by "=".
+  SIG_SUBSCRIPT_SETTER
+} SignatureType;
+
+typedef struct
+{
+  const char* name;
+  int length;
+  SignatureType type;
+  int arity;
+} Signature;
+
+typedef void (*SignatureFn)(Compiler* compiler, Signature* signature);
 
 typedef struct
 {
@@ -1507,23 +1513,17 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
 }
 
 // Parses the rest of a parameter list after the opening delimeter, and closed
-// by [endToken]. If the parameter list is for a method, [name] will be the
-// name of the method and this will modify it to handle arity in the signature.
-// For functions, [name] will be `null`.
-static int finishParameterList(Compiler* compiler, char* name, int* length,
-                               TokenType endToken)
+// by [endToken]. Updates `arity` in [signature] with the number of parameters.
+static void  finishParameterList(Compiler* compiler, Signature* signature,
+                                 TokenType endToken)
 {
-  int numParams = 0;
   do
   {
     ignoreNewlines(compiler);
-    validateNumParameters(compiler, ++numParams);
+    validateNumParameters(compiler, ++signature->arity);
 
     // Define a local variable in the method for the parameter.
     declareNamedVariable(compiler);
-
-    // Add a space in the name for the parameter.
-    if (name != NULL) name[(*length)++] = ' ';
   }
   while (match(compiler, TOKEN_COMMA));
 
@@ -1539,20 +1539,18 @@ static int finishParameterList(Compiler* compiler, char* name, int* length,
   }
 
   consume(compiler, endToken, message);
-
-  return numParams;
 }
 
-// Parses an optional delimited parameter list. If the parameter list is for a
-// method, [name] will be the name of the method and this will modify it to
-// handle arity in the signature. For functions, [name] will be `null`.
-static int parameterList(Compiler* compiler, char* name, int* length,
-                         TokenType startToken, TokenType endToken)
+// Parses an optional delimited parameter list. Updates `type` and `arity` in
+// [signature] to match what was parsed.
+static void parameterList(Compiler* compiler, Signature* signature,
+                          TokenType startToken, TokenType endToken)
 {
   // The parameter list is optional.
-  if (!match(compiler, startToken)) return 0;
+  if (!match(compiler, startToken)) return;
 
-  return finishParameterList(compiler, name, length, endToken);
+  signature->type = SIG_METHOD;
+  finishParameterList(compiler, signature, endToken);
 }
 
 // Gets the symbol for a method [name]. If [length] is 0, it will be calculated
@@ -1564,55 +1562,125 @@ static int methodSymbol(Compiler* compiler, const char* name, int length)
       &compiler->parser->vm->methodNames, name, length);
 }
 
-// Parses a comma-separated list of arguments. Modifies [name] and [length] to
-// include the arity of the argument list.
-//
-// Returns the number of parsed arguments.
-static int finishArgumentList(Compiler* compiler, char* name, int* length)
+// Appends characters to [name] (and updates [length]) for [numParams] "_"
+// surrounded by [leftBracket] and [rightBracket].
+static void signatureParameterList(char name[MAX_METHOD_SIGNATURE], int* length,
+                                   int numParams, char leftBracket, char rightBracket)
 {
-  int numArgs = 0;
+  name[(*length)++] = leftBracket;
+  for (int i = 0; i < numParams; i++)
+  {
+    if (i > 0) name[(*length)++] = ',';
+    name[(*length)++] = '_';
+  }
+  name[(*length)++] = rightBracket;
+}
+
+// Gets the symbol for a method with [signature].
+static int signatureSymbol(Compiler* compiler, Signature* signature)
+{
+  // Build the full name from the signature.
+  char name[MAX_METHOD_SIGNATURE];
+  int length = signature->length;
+  memcpy(name, signature->name, length);
+
+  switch (signature->type)
+  {
+    case SIG_METHOD:
+      signatureParameterList(name, &length, signature->arity, '(', ')');
+      break;
+
+    case SIG_GETTER:
+      // The signature is just the name.
+      break;
+
+    case SIG_SETTER:
+      name[length++] = '=';
+      signatureParameterList(name, &length, 1, '(', ')');
+      break;
+
+    case SIG_SUBSCRIPT:
+      signatureParameterList(name, &length, signature->arity, '[', ']');
+      break;
+
+    case SIG_SUBSCRIPT_SETTER:
+      signatureParameterList(name, &length, signature->arity - 1, '[', ']');
+      name[length++] = '=';
+      signatureParameterList(name, &length, 1, '(', ')');
+      break;
+  }
+
+  name[length] = '\0';
+
+  return methodSymbol(compiler, name, length);
+}
+
+// Initializes [signature] from the last consumed token.
+static void signatureFromToken(Compiler* compiler, Signature* signature)
+{
+  // Get the token for the method name.
+  Token* token = &compiler->parser->previous;
+  signature->type = SIG_GETTER;
+  signature->arity = 0;
+  signature->name = token->start;
+  signature->length = token->length;
+
+  if (signature->length > MAX_METHOD_NAME)
+  {
+    error(compiler, "Method names cannot be longer than %d characters.",
+          MAX_METHOD_NAME);
+    signature->length = MAX_METHOD_NAME;
+  }
+}
+
+// Parses a comma-separated list of arguments. Modifies [signature] to include
+// the arity of the argument list.
+static void finishArgumentList(Compiler* compiler, Signature* signature)
+{
   do
   {
     ignoreNewlines(compiler);
-    validateNumParameters(compiler, ++numArgs);
+    validateNumParameters(compiler, ++signature->arity);
     expression(compiler);
-
-    // Add a space in the name for each argument. Lets us overload by arity.
-    name[(*length)++] = ' ';
   }
   while (match(compiler, TOKEN_COMMA));
 
   // Allow a newline before the closing delimiter.
   ignoreNewlines(compiler);
-
-  return numArgs;
 }
 
-// Compiles a method call using [instruction] with [numArgs] for a method with
-// [name] with [length].
-static void callMethodInstruction(Compiler* compiler, Code instruction,
-                                  int numArgs, const char* name, int length)
+// Compiles a method call with [signature] using [instruction].
+static void callSignature(Compiler* compiler, Code instruction,
+                          Signature* signature)
 {
-  emitShortArg(compiler, (Code)(instruction + numArgs),
-               methodSymbol(compiler, name, length));
+  int symbol = signatureSymbol(compiler, signature);
+  emitShortArg(compiler, (Code)(instruction + signature->arity), symbol);
 }
 
 // Compiles a method call with [numArgs] for a method with [name] with [length].
 static void callMethod(Compiler* compiler, int numArgs, const char* name,
                        int length)
 {
-  callMethodInstruction(compiler, CODE_CALL_0, numArgs, name, length);
+  int symbol = methodSymbol(compiler, name, length);
+  emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs), symbol);
 }
 
 // Compiles an (optional) argument list and then calls it.
 static void methodCall(Compiler* compiler, Code instruction,
-                       char name[MAX_METHOD_SIGNATURE], int length)
+                       const char* name, int length)
 {
+  Signature signature;
+  signature.type = SIG_GETTER;
+  signature.arity = 0;
+  signature.name = name;
+  signature.length = length;
+
   // Parse the argument list, if any.
-  int numArgs = 0;
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
-    numArgs = finishArgumentList(compiler, name, &length);
+    signature.type = SIG_METHOD;
+    // TODO: Allow an empty argument list.
+    finishArgumentList(compiler, &signature);
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
@@ -1620,13 +1688,17 @@ static void methodCall(Compiler* compiler, Code instruction,
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
     // Include the block argument in the arity.
-    name[length++] = ' ';
-    numArgs++;
+    signature.type = SIG_METHOD;
+    signature.arity++;
 
     Compiler fnCompiler;
     initCompiler(&fnCompiler, compiler->parser, compiler, true);
-    fnCompiler.numParams = parameterList(&fnCompiler, NULL, NULL,
-                                         TOKEN_PIPE, TOKEN_PIPE);
+
+    // Make a dummy signature to track the arity.
+    Signature fnSignature;
+    fnSignature.arity = 0;
+    parameterList(&fnCompiler, &fnSignature, TOKEN_PIPE, TOKEN_PIPE);
+    fnCompiler.numParams = fnSignature.arity;
 
     finishBody(&fnCompiler, false);
 
@@ -1636,7 +1708,7 @@ static void methodCall(Compiler* compiler, Code instruction,
 
   // TODO: Allow Grace-style mixfix methods?
 
-  callMethodInstruction(compiler, instruction, numArgs, name, length);
+  callSignature(compiler, instruction, &signature);
 }
 
 // Compiles a call whose name is the previously consumed token. This includes
@@ -1644,9 +1716,9 @@ static void methodCall(Compiler* compiler, Code instruction,
 static void namedCall(Compiler* compiler, bool allowAssignment,
                       Code instruction)
 {
-  // Build the method name.
-  char name[MAX_METHOD_SIGNATURE];
-  int length = copyName(compiler, name);
+  // Get the token for the method name.
+  Signature signature;
+  signatureFromToken(compiler, &signature);
 
   if (match(compiler, TOKEN_EQ))
   {
@@ -1654,15 +1726,17 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
 
     ignoreNewlines(compiler);
 
-    name[length++] = '=';
+    // Build the setter signature.
+    signature.type = SIG_SETTER;
+    signature.arity = 1;
 
     // Compile the assigned value.
     expression(compiler);
-    callMethodInstruction(compiler, instruction, 1, name, length);
+    callSignature(compiler, instruction, &signature);
   }
   else
   {
-    methodCall(compiler, instruction, name, length);
+    methodCall(compiler, instruction, signature.name, signature.length);
   }
 }
 
@@ -1713,7 +1787,7 @@ static void list(Compiler* compiler, bool allowAssignment)
 
       // The element.
       expression(compiler);
-      callMethod(compiler, 1, "add ", 4);
+      callMethod(compiler, 1, "add(_)", 6);
 
       // Discard the result of the add() call.
       emit(compiler, CODE_POP);
@@ -1755,7 +1829,7 @@ static void map(Compiler* compiler, bool allowAssignment)
       // The value.
       expression(compiler);
 
-      callMethod(compiler, 2, "[ ]=", 4);
+      callMethod(compiler, 2, "[_]=(_)", 7);
 
       // Discard the result of the setter call.
       emit(compiler, CODE_POP);
@@ -2062,24 +2136,13 @@ static void super_(Compiler* compiler, bool allowAssignment)
     consume(compiler, TOKEN_NAME, "Expect method name after 'super.'.");
     namedCall(compiler, allowAssignment, CODE_SUPER_0);
   }
-  else
+  else if (enclosingClass != NULL)
   {
-    // No explicit name, so use the name of the enclosing method.
-    char name[MAX_METHOD_SIGNATURE];
-    int length;
-    if (enclosingClass != NULL) {
-      length = enclosingClass->methodLength;
-      memcpy(name, enclosingClass->methodName, length);
-    } else {
-      // We get here if super is used outside of a method. In that case, we
-      // have already reported the error, so just stub this out so we can keep
-      // going to try to find later errors.
-      length = 0;
-    }
-    name[length] = '\0';
-
-    // Call the superclass method with the same name.
-    methodCall(compiler, CODE_SUPER_0, name, length);
+    // No explicit name, so use the name of the enclosing method. Make sure we
+    // check that enclosingClass isn't NULL first. We've already reported the
+    // error, but we don't want to crash here.
+    methodCall(compiler, CODE_SUPER_0, enclosingClass->methodName,
+               enclosingClass->methodLength);
   }
 }
 
@@ -2097,31 +2160,28 @@ static void this_(Compiler* compiler, bool allowAssignment)
 // Subscript or "array indexing" operator like `foo[bar]`.
 static void subscript(Compiler* compiler, bool allowAssignment)
 {
-  char name[MAX_METHOD_SIGNATURE];
-  int length = 1;
-
-  // Build the method name. To allow overloading by arity, we add a space to
-  // the name for each argument.
-  name[0] = '[';
+  Signature signature;
+  signature.name = "";
+  signature.length = 0;
+  signature.type = SIG_SUBSCRIPT;
+  signature.arity = 0;
 
   // Parse the argument list.
-  int numArgs = finishArgumentList(compiler, name, &length);
+  finishArgumentList(compiler, &signature);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
-
-  name[length++] = ']';
 
   if (match(compiler, TOKEN_EQ))
   {
     if (!allowAssignment) error(compiler, "Invalid assignment.");
 
-    name[length++] = '=';
+    signature.type = SIG_SUBSCRIPT_SETTER;
 
     // Compile the assigned value.
-    validateNumParameters(compiler, ++numArgs);
+    validateNumParameters(compiler, ++signature.arity);
     expression(compiler);
   }
 
-  callMethod(compiler, numArgs, name, length);
+  callSignature(compiler, CODE_CALL_0, &signature);
 }
 
 static void call(Compiler* compiler, bool allowAssignment)
@@ -2145,8 +2205,7 @@ static void new_(Compiler* compiler, bool allowAssignment)
   callMethod(compiler, 0, " instantiate", 12);
 
   // Invoke the constructor on the new instance.
-  char name[MAX_METHOD_SIGNATURE] = "new";
-  methodCall(compiler, CODE_CALL_0, name, 3);
+  methodCall(compiler, CODE_CALL_0, "new", 3);
 }
 
 static void is(Compiler* compiler, bool allowAssignment)
@@ -2217,14 +2276,20 @@ void infixOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, (Precedence)(rule->precedence + 1));
 
   // Call the operator method on the left-hand side.
-  callMethod(compiler, 1, rule->name, 0);
+  Signature signature;
+  signature.type = SIG_METHOD;
+  signature.arity = 1;
+  signature.name = rule->name;
+  signature.length = (int)strlen(rule->name);
+  callSignature(compiler, CODE_CALL_0, &signature);
 }
 
 // Compiles a method signature for an infix operator.
-void infixSignature(Compiler* compiler, char* name, int* length)
+void infixSignature(Compiler* compiler, Signature* signature)
 {
-  // Add a space for the RHS parameter.
-  name[(*length)++] = ' ';
+  // Add the RHS parameter.
+  signature->type = SIG_METHOD;
+  signature->arity = 1;
 
   // Parse the parameter name.
   consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after operator name.");
@@ -2233,20 +2298,24 @@ void infixSignature(Compiler* compiler, char* name, int* length)
 }
 
 // Compiles a method signature for an unary operator (i.e. "!").
-void unarySignature(Compiler* compiler, char* name, int* length)
+void unarySignature(Compiler* compiler, Signature* signature)
 {
   // Do nothing. The name is already complete.
+  signature->type = SIG_GETTER;
 }
 
 // Compiles a method signature for an operator that can either be unary or
 // infix (i.e. "-").
-void mixedSignature(Compiler* compiler, char* name, int* length)
+void mixedSignature(Compiler* compiler, Signature* signature)
 {
+  signature->type = SIG_GETTER;
+
   // If there is a parameter, it's an infix operator, otherwise it's unary.
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
-    // Add a space for the RHS parameter.
-    name[(*length)++] = ' ';
+    // Add the RHS parameter.
+    signature->type = SIG_METHOD;
+    signature->arity = 1;
 
     // Parse the parameter name.
     declareNamedVariable(compiler);
@@ -2254,49 +2323,69 @@ void mixedSignature(Compiler* compiler, char* name, int* length)
   }
 }
 
-// Compiles an optional setter parameter in a method signature.
+// Compiles an optional setter parameter in a method [signature].
 //
 // Returns `true` if it was a setter.
-static bool maybeSetter(Compiler* compiler, char* name, int* length)
+static bool maybeSetter(Compiler* compiler, Signature* signature)
 {
   // See if it's a setter.
   if (!match(compiler, TOKEN_EQ)) return false;
 
   // It's a setter.
-  name[(*length)++] = '=';
+  if (signature->type == SIG_SUBSCRIPT)
+  {
+    signature->type = SIG_SUBSCRIPT_SETTER;
+  }
+  else
+  {
+    signature->type = SIG_SETTER;
+  }
 
   // Parse the value parameter.
   consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after '='.");
   declareNamedVariable(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
+
+  signature->arity++;
+  
   return true;
 }
 
 // Compiles a method signature for a subscript operator.
-void subscriptSignature(Compiler* compiler, char* name, int* length)
+void subscriptSignature(Compiler* compiler, Signature* signature)
 {
-  // Parse the parameters inside the subscript.
-  finishParameterList(compiler, name, length, TOKEN_RIGHT_BRACKET);
-  name[(*length)++] = ']';
+  signature->type = SIG_SUBSCRIPT;
 
-  maybeSetter(compiler, name, length);
+  // The signature currently has "[" as its name since that was the token that
+  // matched it. Clear that out.
+  signature->length = 0;
+
+  // Parse the parameters inside the subscript.
+  finishParameterList(compiler, signature, TOKEN_RIGHT_BRACKET);
+
+  maybeSetter(compiler, signature);
 }
 
 // Compiles a method signature for a named method or setter.
-void namedSignature(Compiler* compiler, char* name, int* length)
+void namedSignature(Compiler* compiler, Signature* signature)
 {
+  signature->type = SIG_GETTER;
+
   // If it's a setter, it can't also have a parameter list.
-  if (maybeSetter(compiler, name, length)) return;
+  if (maybeSetter(compiler, signature)) return;
 
   // Regular named method with an optional parameter list.
-  parameterList(compiler, name, length, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
+  parameterList(compiler, signature, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
 }
 
 // Compiles a method signature for a constructor.
-void constructorSignature(Compiler* compiler, char* name, int* length)
+void constructorSignature(Compiler* compiler, Signature* signature)
 {
+  // TODO: How should nullary constructors be handled?
+  signature->type = SIG_GETTER;
+
   // Add the parameters, if there are any.
-  parameterList(compiler, name, length, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
+  parameterList(compiler, signature, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
 }
 
 // This table defines all of the parsing rules for the prefix and infix
@@ -2320,31 +2409,31 @@ GrammarRule rules[] =
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
   /* TOKEN_COLON         */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
-  /* TOKEN_DOTDOT        */ INFIX_OPERATOR(PREC_RANGE, ".. "),
-  /* TOKEN_DOTDOTDOT     */ INFIX_OPERATOR(PREC_RANGE, "... "),
+  /* TOKEN_DOTDOT        */ INFIX_OPERATOR(PREC_RANGE, ".."),
+  /* TOKEN_DOTDOTDOT     */ INFIX_OPERATOR(PREC_RANGE, "..."),
   /* TOKEN_COMMA         */ UNUSED,
-  /* TOKEN_STAR          */ INFIX_OPERATOR(PREC_FACTOR, "* "),
-  /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/ "),
-  /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_FACTOR, "% "),
-  /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+ "),
-  /* TOKEN_MINUS         */ OPERATOR("- "),
-  /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, "<< "),
-  /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">> "),
-  /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "| "),
+  /* TOKEN_STAR          */ INFIX_OPERATOR(PREC_FACTOR, "*"),
+  /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/"),
+  /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_FACTOR, "%"),
+  /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+"),
+  /* TOKEN_MINUS         */ OPERATOR("-"),
+  /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, "<<"),
+  /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">>"),
+  /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "|"),
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGICAL_OR, or_),
-  /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE_XOR, "^ "),
-  /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE_AND, "& "),
+  /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE_XOR, "^"),
+  /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE_AND, "&"),
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGICAL_AND, and_),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_TILDE         */ PREFIX_OPERATOR("~"),
   /* TOKEN_QUESTION      */ INFIX(PREC_ASSIGNMENT, conditional),
   /* TOKEN_EQ            */ UNUSED,
-  /* TOKEN_LT            */ INFIX_OPERATOR(PREC_COMPARISON, "< "),
-  /* TOKEN_GT            */ INFIX_OPERATOR(PREC_COMPARISON, "> "),
-  /* TOKEN_LTEQ          */ INFIX_OPERATOR(PREC_COMPARISON, "<= "),
-  /* TOKEN_GTEQ          */ INFIX_OPERATOR(PREC_COMPARISON, ">= "),
-  /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "== "),
-  /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!= "),
+  /* TOKEN_LT            */ INFIX_OPERATOR(PREC_COMPARISON, "<"),
+  /* TOKEN_GT            */ INFIX_OPERATOR(PREC_COMPARISON, ">"),
+  /* TOKEN_LTEQ          */ INFIX_OPERATOR(PREC_COMPARISON, "<="),
+  /* TOKEN_GTEQ          */ INFIX_OPERATOR(PREC_COMPARISON, ">="),
+  /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "=="),
+  /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!="),
   /* TOKEN_BREAK         */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
   /* TOKEN_ELSE          */ UNUSED,
@@ -2655,7 +2744,7 @@ static void forStatement(Compiler* compiler)
   loadLocal(compiler, seqSlot);
   loadLocal(compiler, iterSlot);
 
-  callMethod(compiler, 1, "iterate ", 8);
+  callMethod(compiler, 1, "iterate(_)", 10);
 
   // Store the iterator back in its local for the next iteration.
   emitByteArg(compiler, CODE_STORE_LOCAL, iterSlot);
@@ -2667,7 +2756,7 @@ static void forStatement(Compiler* compiler)
   loadLocal(compiler, seqSlot);
   loadLocal(compiler, iterSlot);
 
-  callMethod(compiler, 1, "iteratorValue ", 14);
+  callMethod(compiler, 1, "iteratorValue(_)", 16);
 
   // Bind the loop variable in its own scope. This ensures we get a fresh
   // variable each iteration so that closures for it don't all see the same one.
@@ -2794,26 +2883,28 @@ void statement(Compiler* compiler)
 // Compiles a method definition inside a class body. Returns the symbol in the
 // method table for the new method.
 int method(Compiler* compiler, ClassCompiler* classCompiler, bool isConstructor,
-           SignatureFn signature)
+           SignatureFn signatureFn)
 {
-  // Build the method name.
-  char name[MAX_METHOD_SIGNATURE];
-  int length = copyName(compiler, name);
+  // Build the method signature.
+  Signature signature;
+  signatureFromToken(compiler, &signature);
 
-  classCompiler->methodName = name;
-  classCompiler->methodLength = length;
+  classCompiler->methodName = signature.name;
+  classCompiler->methodLength = signature.length;
 
   Compiler methodCompiler;
   initCompiler(&methodCompiler, compiler->parser, compiler, false);
 
   // Compile the method signature.
-  signature(&methodCompiler, name, &length);
+  signatureFn(&methodCompiler, &signature);
 
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
 
   finishBody(&methodCompiler, isConstructor);
-  endCompiler(&methodCompiler, name, length);
-  return methodSymbol(compiler, name, length);
+
+  // TODO: Use full signature in debug name.
+  endCompiler(&methodCompiler, signature.name, signature.length);
+  return signatureSymbol(compiler, &signature);
 }
 
 // Compiles a class definition. Assumes the "class" token has already been

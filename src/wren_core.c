@@ -1388,8 +1388,8 @@ void wrenInitializeCore(WrenVM* vm)
   // because it has no superclass and an unusual metaclass (Class).
   vm->objectClass = defineSingleClass(vm, "Object");
   NATIVE(vm->objectClass, "!", object_not);
-  NATIVE(vm->objectClass, "== ", object_eqeq);
-  NATIVE(vm->objectClass, "!= ", object_bangeq);
+  NATIVE(vm->objectClass, "==(_)", object_eqeq);
+  NATIVE(vm->objectClass, "!=(_)", object_bangeq);
   NATIVE(vm->objectClass, "new", object_new);
   NATIVE(vm->objectClass, "toString", object_toString);
   NATIVE(vm->objectClass, "type", object_type);
@@ -1437,41 +1437,41 @@ void wrenInitializeCore(WrenVM* vm)
   // TODO: Make fibers inherit Sequence and be iterable.
   vm->fiberClass = defineClass(vm, "Fiber");
   NATIVE(vm->fiberClass->obj.classObj, " instantiate", fiber_instantiate);
-  NATIVE(vm->fiberClass->obj.classObj, "new ", fiber_new);
-  NATIVE(vm->fiberClass->obj.classObj, "abort ", fiber_abort);
+  NATIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
+  NATIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
   NATIVE(vm->fiberClass->obj.classObj, "yield", fiber_yield);
-  NATIVE(vm->fiberClass->obj.classObj, "yield ", fiber_yield1);
+  NATIVE(vm->fiberClass->obj.classObj, "yield(_)", fiber_yield1);
   NATIVE(vm->fiberClass, "call", fiber_call);
-  NATIVE(vm->fiberClass, "call ", fiber_call1);
+  NATIVE(vm->fiberClass, "call(_)", fiber_call1);
   NATIVE(vm->fiberClass, "error", fiber_error);
   NATIVE(vm->fiberClass, "isDone", fiber_isDone);
   NATIVE(vm->fiberClass, "run", fiber_run);
-  NATIVE(vm->fiberClass, "run ", fiber_run1);
+  NATIVE(vm->fiberClass, "run(_)", fiber_run1);
   NATIVE(vm->fiberClass, "try", fiber_try);
 
   vm->fnClass = defineClass(vm, "Fn");
 
   NATIVE(vm->fnClass->obj.classObj, " instantiate", fn_instantiate);
-  NATIVE(vm->fnClass->obj.classObj, "new ", fn_new);
+  NATIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   NATIVE(vm->fnClass, "arity", fn_arity);
   NATIVE(vm->fnClass, "call", fn_call0);
-  NATIVE(vm->fnClass, "call ", fn_call1);
-  NATIVE(vm->fnClass, "call  ", fn_call2);
-  NATIVE(vm->fnClass, "call   ", fn_call3);
-  NATIVE(vm->fnClass, "call    ", fn_call4);
-  NATIVE(vm->fnClass, "call     ", fn_call5);
-  NATIVE(vm->fnClass, "call      ", fn_call6);
-  NATIVE(vm->fnClass, "call       ", fn_call7);
-  NATIVE(vm->fnClass, "call        ", fn_call8);
-  NATIVE(vm->fnClass, "call         ", fn_call9);
-  NATIVE(vm->fnClass, "call          ", fn_call10);
-  NATIVE(vm->fnClass, "call           ", fn_call11);
-  NATIVE(vm->fnClass, "call            ", fn_call12);
-  NATIVE(vm->fnClass, "call             ", fn_call13);
-  NATIVE(vm->fnClass, "call              ", fn_call14);
-  NATIVE(vm->fnClass, "call               ", fn_call15);
-  NATIVE(vm->fnClass, "call                ", fn_call16);
+  NATIVE(vm->fnClass, "call(_)", fn_call1);
+  NATIVE(vm->fnClass, "call(_,_)", fn_call2);
+  NATIVE(vm->fnClass, "call(_,_,_)", fn_call3);
+  NATIVE(vm->fnClass, "call(_,_,_,_)", fn_call4);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_)", fn_call5);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_)", fn_call6);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_)", fn_call7);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_)", fn_call8);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_)", fn_call9);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_)", fn_call10);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
+  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
   NATIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = defineClass(vm, "Null");
@@ -1479,25 +1479,25 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->nullClass, "toString", null_toString);
 
   vm->numClass = defineClass(vm, "Num");
-  NATIVE(vm->numClass->obj.classObj, "fromString ", num_fromString);
+  NATIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
   NATIVE(vm->numClass, "-", num_negate);
-  NATIVE(vm->numClass, "- ", num_minus);
-  NATIVE(vm->numClass, "+ ", num_plus);
-  NATIVE(vm->numClass, "* ", num_multiply);
-  NATIVE(vm->numClass, "/ ", num_divide);
-  NATIVE(vm->numClass, "% ", num_mod);
-  NATIVE(vm->numClass, "< ", num_lt);
-  NATIVE(vm->numClass, "> ", num_gt);
-  NATIVE(vm->numClass, "<= ", num_lte);
-  NATIVE(vm->numClass, ">= ", num_gte);
+  NATIVE(vm->numClass, "-(_)", num_minus);
+  NATIVE(vm->numClass, "+(_)", num_plus);
+  NATIVE(vm->numClass, "*(_)", num_multiply);
+  NATIVE(vm->numClass, "/(_)", num_divide);
+  NATIVE(vm->numClass, "%(_)", num_mod);
+  NATIVE(vm->numClass, "<(_)", num_lt);
+  NATIVE(vm->numClass, ">(_)", num_gt);
+  NATIVE(vm->numClass, "<=(_)", num_lte);
+  NATIVE(vm->numClass, ">=(_)", num_gte);
   NATIVE(vm->numClass, "~", num_bitwiseNot);
-  NATIVE(vm->numClass, "& ", num_bitwiseAnd);
-  NATIVE(vm->numClass, "| ", num_bitwiseOr);
-  NATIVE(vm->numClass, "^ ", num_bitwiseXor);
-  NATIVE(vm->numClass, "<< ", num_bitwiseLeftShift);
-  NATIVE(vm->numClass, ">> ", num_bitwiseRightShift);
-  NATIVE(vm->numClass, ".. ", num_dotDot);
-  NATIVE(vm->numClass, "... ", num_dotDotDot);
+  NATIVE(vm->numClass, "&(_)", num_bitwiseAnd);
+  NATIVE(vm->numClass, "|(_)", num_bitwiseOr);
+  NATIVE(vm->numClass, "^(_)", num_bitwiseXor);
+  NATIVE(vm->numClass, "<<(_)", num_bitwiseLeftShift);
+  NATIVE(vm->numClass, ">>(_)", num_bitwiseRightShift);
+  NATIVE(vm->numClass, "..(_)", num_dotDot);
+  NATIVE(vm->numClass, "...(_)", num_dotDotDot);
   NATIVE(vm->numClass, "abs", num_abs);
   NATIVE(vm->numClass, "ceil", num_ceil);
   NATIVE(vm->numClass, "cos", num_cos);
@@ -1509,46 +1509,48 @@ void wrenInitializeCore(WrenVM* vm)
 
   // These are defined just so that 0 and -0 are equal, which is specified by
   // IEEE 754 even though they have different bit representations.
-  NATIVE(vm->numClass, "== ", num_eqeq);
-  NATIVE(vm->numClass, "!= ", num_bangeq);
+  NATIVE(vm->numClass, "==(_)", num_eqeq);
+  NATIVE(vm->numClass, "!=(_)", num_bangeq);
 
   wrenInterpret(vm, "", libSource);
 
   vm->stringClass = AS_CLASS(wrenFindVariable(vm, "String"));
-  NATIVE(vm->stringClass, "+ ", string_plus);
-  NATIVE(vm->stringClass, "[ ]", string_subscript);
-  NATIVE(vm->stringClass, "contains ", string_contains);
+  NATIVE(vm->stringClass, "+(_)", string_plus);
+  NATIVE(vm->stringClass, "[_]", string_subscript);
+  NATIVE(vm->stringClass, "contains(_)", string_contains);
   NATIVE(vm->stringClass, "count", string_count);
-  NATIVE(vm->stringClass, "endsWith ", string_endsWith);
-  NATIVE(vm->stringClass, "indexOf ", string_indexOf);
-  NATIVE(vm->stringClass, "iterate ", string_iterate);
-  NATIVE(vm->stringClass, "iteratorValue ", string_iteratorValue);
-  NATIVE(vm->stringClass, "startsWith ", string_startsWith);
+  NATIVE(vm->stringClass, "endsWith(_)", string_endsWith);
+  NATIVE(vm->stringClass, "indexOf(_)", string_indexOf);
+  NATIVE(vm->stringClass, "iterate(_)", string_iterate);
+  NATIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
+  NATIVE(vm->stringClass, "startsWith(_)", string_startsWith);
   NATIVE(vm->stringClass, "toString", string_toString);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, "List"));
   NATIVE(vm->listClass->obj.classObj, " instantiate", list_instantiate);
-  NATIVE(vm->listClass, "[ ]", list_subscript);
-  NATIVE(vm->listClass, "[ ]=", list_subscriptSetter);
-  NATIVE(vm->listClass, "add ", list_add);
+  NATIVE(vm->listClass, "[_]", list_subscript);
+  NATIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
+  NATIVE(vm->listClass, "add(_)", list_add);
+  // TODO: Make ().
   NATIVE(vm->listClass, "clear", list_clear);
   NATIVE(vm->listClass, "count", list_count);
-  NATIVE(vm->listClass, "insert  ", list_insert);
-  NATIVE(vm->listClass, "iterate ", list_iterate);
-  NATIVE(vm->listClass, "iteratorValue ", list_iteratorValue);
-  NATIVE(vm->listClass, "removeAt ", list_removeAt);
+  NATIVE(vm->listClass, "insert(_,_)", list_insert);
+  NATIVE(vm->listClass, "iterate(_)", list_iterate);
+  NATIVE(vm->listClass, "iteratorValue(_)", list_iteratorValue);
+  NATIVE(vm->listClass, "removeAt(_)", list_removeAt);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, "Map"));
   NATIVE(vm->mapClass->obj.classObj, " instantiate", map_instantiate);
-  NATIVE(vm->mapClass, "[ ]", map_subscript);
-  NATIVE(vm->mapClass, "[ ]=", map_subscriptSetter);
+  NATIVE(vm->mapClass, "[_]", map_subscript);
+  NATIVE(vm->mapClass, "[_]=(_)", map_subscriptSetter);
+  // TODO: Make ().
   NATIVE(vm->mapClass, "clear", map_clear);
-  NATIVE(vm->mapClass, "containsKey ", map_containsKey);
+  NATIVE(vm->mapClass, "containsKey(_)", map_containsKey);
   NATIVE(vm->mapClass, "count", map_count);
-  NATIVE(vm->mapClass, "remove ", map_remove);
-  NATIVE(vm->mapClass, "iterate_ ", map_iterate);
-  NATIVE(vm->mapClass, "keyIteratorValue_ ", map_keyIteratorValue);
-  NATIVE(vm->mapClass, "valueIteratorValue_ ", map_valueIteratorValue);
+  NATIVE(vm->mapClass, "remove(_)", map_remove);
+  NATIVE(vm->mapClass, "iterate_(_)", map_iterate);
+  NATIVE(vm->mapClass, "keyIteratorValue_(_)", map_keyIteratorValue);
+  NATIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
   // TODO: More map methods.
 
   vm->rangeClass = AS_CLASS(wrenFindVariable(vm, "Range"));
@@ -1557,8 +1559,8 @@ void wrenInitializeCore(WrenVM* vm)
   NATIVE(vm->rangeClass, "min", range_min);
   NATIVE(vm->rangeClass, "max", range_max);
   NATIVE(vm->rangeClass, "isInclusive", range_isInclusive);
-  NATIVE(vm->rangeClass, "iterate ", range_iterate);
-  NATIVE(vm->rangeClass, "iteratorValue ", range_iteratorValue);
+  NATIVE(vm->rangeClass, "iterate(_)", range_iterate);
+  NATIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
   NATIVE(vm->rangeClass, "toString", range_toString);
 
   // While bootstrapping the core types and running the core library, a number

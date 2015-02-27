@@ -1,1 +1,1 @@
-[1, 2, 3].all("string") // expect runtime error: String does not implement method 'call' with 1 argument.
+[1, 2, 3].all("string") // expect runtime error: String does not implement 'call(_)'.
