@@ -1550,18 +1550,19 @@ static void signatureParameterList(char name[MAX_METHOD_SIGNATURE], int* length,
   name[(*length)++] = rightBracket;
 }
 
-// Gets the symbol for a method with [signature].
-static int signatureSymbol(Compiler* compiler, Signature* signature)
+// Fills [name] with the stringified version of [signature] and updates
+// [length] to the resulting length.
+static void signatureToString(Signature* signature,
+                              char name[MAX_METHOD_SIGNATURE], int* length)
 {
   // Build the full name from the signature.
-  char name[MAX_METHOD_SIGNATURE];
-  int length = signature->length;
-  memcpy(name, signature->name, length);
+  *length = signature->length;
+  memcpy(name, signature->name, *length);
 
   switch (signature->type)
   {
     case SIG_METHOD:
-      signatureParameterList(name, &length, signature->arity, '(', ')');
+      signatureParameterList(name, length, signature->arity, '(', ')');
       break;
 
     case SIG_GETTER:
@@ -1569,22 +1570,31 @@ static int signatureSymbol(Compiler* compiler, Signature* signature)
       break;
 
     case SIG_SETTER:
-      name[length++] = '=';
-      signatureParameterList(name, &length, 1, '(', ')');
+      name[(*length)++] = '=';
+      signatureParameterList(name, length, 1, '(', ')');
       break;
 
     case SIG_SUBSCRIPT:
-      signatureParameterList(name, &length, signature->arity, '[', ']');
+      signatureParameterList(name, length, signature->arity, '[', ']');
       break;
 
     case SIG_SUBSCRIPT_SETTER:
-      signatureParameterList(name, &length, signature->arity - 1, '[', ']');
-      name[length++] = '=';
-      signatureParameterList(name, &length, 1, '(', ')');
+      signatureParameterList(name, length, signature->arity - 1, '[', ']');
+      name[(*length)++] = '=';
+      signatureParameterList(name, length, 1, '(', ')');
       break;
   }
 
-  name[length] = '\0';
+  name[*length] = '\0';
+}
+
+// Gets the symbol for a method with [signature].
+static int signatureSymbol(Compiler* compiler, Signature* signature)
+{
+  // Build the full name from the signature.
+  char name[MAX_METHOD_SIGNATURE];
+  int length;
+  signatureToString(signature, name, &length);
 
   return methodSymbol(compiler, name, length);
 }
@@ -2904,8 +2914,12 @@ int method(Compiler* compiler, ClassCompiler* classCompiler, bool isConstructor,
 
   finishBody(&methodCompiler, isConstructor);
 
-  // TODO: Use full signature in debug name.
-  endCompiler(&methodCompiler, signature.name, signature.length);
+  // Include the full signature in debug messages in stack traces.
+  char debugName[MAX_METHOD_SIGNATURE];
+  int length;
+  signatureToString(&signature, debugName, &length);
+
+  endCompiler(&methodCompiler, debugName, length);
   return signatureSymbol(compiler, &signature);
 }
 
