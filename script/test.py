@@ -141,13 +141,13 @@ def run_test(path):
       line_num += 1
 
   # If any input is fed to the test in stdin, concatetate it into one string.
-  input_string = None
-  if input_lines > 0:
-    input_string = "".join(input_lines)
+  input_bytes = None
+  if len(input_lines) > 0:
+    input_bytes = "".join(input_lines).encode("utf-8")
 
   # Invoke wren and run the test.
   proc = Popen([WREN_APP, path], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-  (out, err) = proc.communicate(input_string)
+  (out, err) = proc.communicate(input_bytes)
   out = out.decode("utf-8").replace('\r\n', '\n')
   err = err.decode("utf-8").replace('\r\n', '\n')
 
@@ -231,10 +231,10 @@ def run_test(path):
   else:
     failed += 1
     print_line(color.RED + 'FAIL' + color.DEFAULT + ': ' + path)
-    print('\n')
+    print('')
     for fail in fails:
       print('      ' + color.PINK + fail + color.DEFAULT)
-    print('\n')
+    print('')
 
 walk(TEST_DIR, run_test)
 
