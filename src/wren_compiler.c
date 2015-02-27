@@ -1512,10 +1512,9 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
   }
 }
 
-// Parses the rest of a parameter list after the opening delimeter, and closed
-// by [endToken]. Updates `arity` in [signature] with the number of parameters.
-static void  finishParameterList(Compiler* compiler, Signature* signature,
-                                 TokenType endToken)
+// Parses the rest of a comma-separated parameter list after the opening
+// delimeter. Updates `arity` in [signature] with the number of parameters.
+static void  finishParameterList(Compiler* compiler, Signature* signature)
 {
   do
   {
@@ -1526,35 +1525,6 @@ static void  finishParameterList(Compiler* compiler, Signature* signature,
     declareNamedVariable(compiler);
   }
   while (match(compiler, TOKEN_COMMA));
-
-  const char* message;
-  switch (endToken)
-  {
-    case TOKEN_RIGHT_PAREN:   message = "Expect ')' after parameters."; break;
-    case TOKEN_RIGHT_BRACKET: message = "Expect ']' after parameters."; break;
-    case TOKEN_PIPE:          message = "Expect '|' after parameters."; break;
-    default:
-      message = NULL;
-      UNREACHABLE();
-  }
-
-  consume(compiler, endToken, message);
-}
-
-// Parses an optional delimited parameter list. Updates `type` and `arity` in
-// [signature] to match what was parsed.
-static void parameterList(Compiler* compiler, Signature* signature,
-                          TokenType startToken, TokenType endToken)
-{
-  // The parameter list is optional.
-  if (!match(compiler, startToken)) return;
-
-  signature->type = SIG_METHOD;
-
-  // Allow empty parameter lists for methods.
-  if (endToken == TOKEN_RIGHT_PAREN && match(compiler, endToken)) return;
-
-  finishParameterList(compiler, signature, endToken);
 }
 
 // Gets the symbol for a method [name]. If [length] is 0, it will be calculated
@@ -1705,7 +1675,14 @@ static void methodCall(Compiler* compiler, Code instruction,
     // Make a dummy signature to track the arity.
     Signature fnSignature;
     fnSignature.arity = 0;
-    parameterList(&fnCompiler, &fnSignature, TOKEN_PIPE, TOKEN_PIPE);
+
+    // Parse the parameter list, if any.
+    if (match(compiler, TOKEN_PIPE))
+    {
+      finishParameterList(&fnCompiler, &fnSignature);
+      consume(compiler, TOKEN_PIPE, "Expect '|' after function parameters.");
+    }
+
     fnCompiler.numParams = fnSignature.arity;
 
     finishBody(&fnCompiler, false);
@@ -2369,9 +2346,26 @@ void subscriptSignature(Compiler* compiler, Signature* signature)
   signature->length = 0;
 
   // Parse the parameters inside the subscript.
-  finishParameterList(compiler, signature, TOKEN_RIGHT_BRACKET);
+  finishParameterList(compiler, signature);
+  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after parameters.");
 
   maybeSetter(compiler, signature);
+}
+
+// Parses an optional parenthesized parameter list. Updates `type` and `arity`
+// in [signature] to match what was parsed.
+static void parameterList(Compiler* compiler, Signature* signature)
+{
+  // The parameter list is optional.
+  if (!match(compiler, TOKEN_LEFT_PAREN)) return;
+
+  signature->type = SIG_METHOD;
+
+  // Allow an empty parameter list.
+  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
+
+  finishParameterList(compiler, signature);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
 }
 
 // Compiles a method signature for a named method or setter.
@@ -2383,7 +2377,7 @@ void namedSignature(Compiler* compiler, Signature* signature)
   if (maybeSetter(compiler, signature)) return;
 
   // Regular named method with an optional parameter list.
-  parameterList(compiler, signature, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
+  parameterList(compiler, signature);
 }
 
 // Compiles a method signature for a constructor.
@@ -2393,7 +2387,7 @@ void constructorSignature(Compiler* compiler, Signature* signature)
   signature->type = SIG_GETTER;
 
   // Add the parameters, if there are any.
-  parameterList(compiler, signature, TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN);
+  parameterList(compiler, signature);
 }
 
 // This table defines all of the parsing rules for the prefix and infix
