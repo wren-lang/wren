@@ -646,6 +646,9 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 // closure.
 ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 
+// Resets [fiber] back to an initial state where it is ready to invoke [fn].
+void wrenResetFiber(ObjFiber* fiber, Obj* fn);
+
 // TODO: The argument list here is getting a bit gratuitous.
 // Creates a new function object with the given code and constants. The new
 // function will take over ownership of [bytecode] and [sourceLines]. It will

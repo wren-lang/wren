@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -35,6 +36,8 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   WrenVM* vm = (WrenVM*)reallocate(NULL, 0, sizeof(WrenVM));
 
   vm->reallocate = reallocate;
+
+  vm->methodHandles = NULL;
   vm->foreignCallSlot = NULL;
   vm->foreignCallNumArgs = 0;
   vm->loadModule = configuration->loadModuleFn;
@@ -99,7 +102,14 @@ void wrenFreeVM(WrenVM* vm)
     obj = next;
   }
 
+  // Tell the user if they didn't free any method handles. We don't want to
+  // just free them here because the host app may still have pointers to them
+  // that they may try to use. Better to tell them about the bug early.
+  ASSERT(vm->methodHandles == NULL, "All methods have not been released.");
+
   wrenSymbolTableClear(vm, &vm->methodNames);
+
+  // TODO: Make macro for freeing.
   wrenReallocate(vm, vm, 0, 0);
 }
 
@@ -139,6 +149,14 @@ static void collectGarbage(WrenVM* vm)
 
   // The current fiber.
   if (vm->fiber != NULL) wrenMarkObj(vm, (Obj*)vm->fiber);
+
+  // The method handles.
+  for (WrenMethod* handle = vm->methodHandles;
+       handle != NULL;
+       handle = handle->next)
+  {
+    wrenMarkObj(vm, (Obj*)handle->fiber);
+  }
 
   // Any object the compiler is using (if there is one).
   if (vm->compiler != NULL) wrenMarkCompiler(vm, vm->compiler);
@@ -1219,6 +1237,146 @@ static bool runInterpreter(WrenVM* vm)
   // or a runtime error.
   UNREACHABLE();
   return false;
+}
+
+// Creates an [ObjFn] that invokes a method with [signature] when called.
+static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
+{
+  int signatureLength = (int)strlen(signature);
+
+  // Count the number parameters the method expects.
+  int numParams = 0;
+  for (const char* s = signature; *s != '\0'; s++)
+  {
+    if (*s == '_') numParams++;
+  }
+
+  int method =  wrenSymbolTableEnsure(vm, &vm->methodNames,
+                                      signature, signatureLength);
+
+  uint8_t* bytecode = ALLOCATE_ARRAY(vm, uint8_t, 5);
+  bytecode[0] = CODE_CALL_0 + numParams;
+  bytecode[1] = (method >> 8) & 0xff;
+  bytecode[2] = method & 0xff;
+  bytecode[3] = CODE_RETURN;
+  bytecode[4] = CODE_END;
+
+  int* debugLines = ALLOCATE_ARRAY(vm, int, 5);
+  memset(debugLines, 1, 5);
+
+  return wrenNewFunction(vm, module, NULL, 0, 0, 0, bytecode, 5, NULL,
+                         signature, signatureLength, debugLines);
+}
+
+WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
+                          const char* signature)
+{
+  Value moduleName = wrenNewString(vm, module, strlen(module));
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+
+  uint32_t moduleEntry = wrenMapFind(vm->modules, moduleName);
+  // TODO: Handle module not being found.
+  ObjModule* moduleObj = AS_MODULE(vm->modules->entries[moduleEntry].value);
+
+  int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
+                                         variable, strlen(variable));
+  // TODO: Handle the variable not being found.
+
+  ObjFn* fn = makeCallStub(vm, moduleObj, signature);
+  wrenPushRoot(vm, (Obj*)fn);
+
+  // Create a single fiber that we can reuse each time the method is invoked.
+  ObjFiber* fiber = wrenNewFiber(vm, (Obj*)fn);
+  wrenPushRoot(vm, (Obj*)fiber);
+
+  // Create a handle that keeps track of the function that calls the method.
+  WrenMethod* method = ALLOCATE(vm, WrenMethod);
+  method->fiber = fiber;
+
+  // Store the receiver in the fiber's stack so we can use it later in the call.
+  *fiber->stackTop++ = moduleObj->variables.data[variableSlot];
+
+  // Add it to the front of the linked list of handles.
+  if (vm->methodHandles != NULL) vm->methodHandles->prev = method;
+  method->prev = NULL;
+  method->next = vm->methodHandles;
+  vm->methodHandles = method;
+
+  wrenPopRoot(vm); // fiber.
+  wrenPopRoot(vm); // fn.
+  wrenPopRoot(vm); // moduleName.
+
+  return method;
+}
+
+void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
+{
+  // TODO: Validate that the number of arguments matches what the method
+  // expects.
+  
+  // Push the arguments.
+  va_list argList;
+  va_start(argList, argTypes);
+
+  for (const char* argType = argTypes; *argType != '\0'; argType++)
+  {
+    Value value = NULL_VAL;
+    switch (*argType)
+    {
+      case 'b': value = BOOL_VAL(va_arg(argList, int)); break;
+      case 'd': value = NUM_VAL(va_arg(argList, double)); break;
+      case 'i': value = NUM_VAL((double)va_arg(argList, int)); break;
+      case 'n': value = NULL_VAL; va_arg(argList, void*); break;
+      case 's':
+      {
+        const char* text = va_arg(argList, const char*);
+        value = wrenNewString(vm, text, strlen(text));
+        break;
+      }
+        
+      default:
+        ASSERT(false, "Uknown argument type.");
+        break;
+    }
+
+    *method->fiber->stackTop++ = value;
+  }
+
+  va_end(argList);
+
+  vm->fiber = method->fiber;
+
+  Value receiver = method->fiber->stack[0];
+  Obj* fn = method->fiber->frames[0].fn;
+
+  // TODO: How does this handle a runtime error occurring?
+  runInterpreter(vm);
+
+  // Reset the fiber to get ready for the next call.
+  wrenResetFiber(method->fiber, fn);
+
+  // Push the receiver back on the stack.
+  *method->fiber->stackTop++ = receiver;
+}
+
+void wrenReleaseMethod(WrenVM* vm, WrenMethod* method)
+{
+  ASSERT(method != NULL, "NULL method.");
+
+  // Update the VM's head pointer if we're releasing the first handle.
+  if (vm->methodHandles == method) vm->methodHandles = method->next;
+
+  // Unlink it from the list.
+  if (method->prev != NULL) method->prev->next = method->next;
+  if (method->next != NULL) method->next->prev = method->prev;
+
+  // Clear it out. This isn't strictly necessary since we're going to free it,
+  // but it makes for easier debugging.
+  method->prev = NULL;
+  method->next = NULL;
+  method->fiber = NULL;
+
+  wrenReallocate(vm, method, sizeof(WrenMethod), 0);
 }
 
 // Execute [source] in the context of the core module.

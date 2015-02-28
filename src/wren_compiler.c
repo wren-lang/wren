@@ -1527,11 +1527,9 @@ static void  finishParameterList(Compiler* compiler, Signature* signature)
   while (match(compiler, TOKEN_COMMA));
 }
 
-// Gets the symbol for a method [name]. If [length] is 0, it will be calculated
-// from a null-terminated [name].
+// Gets the symbol for a method [name] with [length].
 static int methodSymbol(Compiler* compiler, const char* name, int length)
 {
-  if (length == 0) length = (int)strlen(name);
   return wrenSymbolTableEnsure(compiler->parser->vm,
       &compiler->parser->vm->methodNames, name, length);
 }

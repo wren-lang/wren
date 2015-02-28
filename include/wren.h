@@ -6,6 +6,11 @@
 
 typedef struct WrenVM WrenVM;
 
+// A handle to a method, bound to a receiver.
+//
+// This is used to call a Wren method on some object from C code.
+typedef struct WrenMethod WrenMethod;
+
 // A generic allocation function that handles all explicit memory management
 // used by Wren. It's used like so:
 //
@@ -117,6 +122,34 @@ void wrenFreeVM(WrenVM* vm);
 // implementation details).
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source);
+
+// Creates a handle that can be used to invoke a method with [signature] on the
+// object in [module] currently stored in top-level [variable].
+//
+// This handle can be used repeatedly to directly invoke that method from C
+// code using [wrenCall].
+//
+// When done with this handle, it must be released by calling
+// [wrenReleaseMethod].
+WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
+                          const char* signature);
+
+// Calls [method], passing in a series of arguments whose types must match the
+// specifed [argTypes]. This is a string where each character identifies the
+// type of a single argument, in orde. The allowed types are:
+//
+// - "b" - A C `int` converted to a Wren Bool.
+// - "d" - A C `double` converted to a Wren Num.
+// - "i" - A C `int` converted to a Wren Num.
+// - "s" - A C null-terminated `const char*` converted to a Wren String. Wren
+//         will allocate its own string and copy the characters from this, so
+//         you don't have to worry about the lifetime of the string you pass to
+//         Wren.
+void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...);
+
+// Releases memory associated with [method]. After calling this, [method] can
+// no longer be used.
+void wrenReleaseMethod(WrenVM* vm, WrenMethod* method);
 
 // TODO: Figure out how these interact with modules.
 

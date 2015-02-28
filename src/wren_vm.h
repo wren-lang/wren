@@ -189,6 +189,17 @@ typedef enum
   CODE_END
 } Code;
 
+struct WrenMethod
+{
+  // The fiber that invokes the method. Its stack is pre-populated with the
+  // receiver for the method, and it contains a single callframe whose function
+  // is the bytecode stub to invoke the method.
+  ObjFiber* fiber;
+
+  WrenMethod* prev;
+  WrenMethod* next;
+};
+
 // TODO: Move into wren_vm.c?
 struct WrenVM
 {
@@ -253,6 +264,10 @@ struct WrenVM
   // During a foreign function call, this will point to the first argument (the
   // receiver) of the call on the fiber's stack.
   Value* foreignCallSlot;
+
+  // Pointer to the first node in the linked list of active method handles or
+  // NULL if there are no handles.
+  WrenMethod* methodHandles;
 
   // During a foreign function call, this will contain the number of arguments
   // to the function.

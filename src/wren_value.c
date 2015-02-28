@@ -23,16 +23,6 @@
 DEFINE_BUFFER(Value, Value);
 DEFINE_BUFFER(Method, Method);
 
-#define ALLOCATE(vm, type) \
-    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
-
-#define ALLOCATE_FLEX(vm, mainType, arrayType, count) \
-    ((mainType*)wrenReallocate(vm, NULL, 0, \
-        sizeof(mainType) + sizeof(arrayType) * count))
-
-#define ALLOCATE_ARRAY(vm, type, count) \
-    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * count))
-
 static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 {
   obj->type = type;
@@ -145,6 +135,13 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
 
+  wrenResetFiber(fiber, fn);
+
+  return fiber;
+}
+
+void wrenResetFiber(ObjFiber* fiber, Obj* fn)
+{
   // Push the stack frame for the function.
   fiber->stackTop = fiber->stack;
   fiber->numFrames = 1;
@@ -164,8 +161,6 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   {
     frame->ip = ((ObjClosure*)fn)->fn->bytecode;
   }
-
-  return fiber;
 }
 
 ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
@@ -795,7 +790,10 @@ static void markFn(WrenVM* vm, ObjFn* fn)
     wrenMarkValue(vm, fn->constants[i]);
   }
 
-  wrenMarkObj(vm, (Obj*)fn->debug->sourcePath);
+  if (fn->debug->sourcePath != NULL)
+  {
+    wrenMarkObj(vm, (Obj*)fn->debug->sourcePath);
+  }
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFn);
