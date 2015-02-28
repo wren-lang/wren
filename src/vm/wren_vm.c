@@ -81,7 +81,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
 void wrenFreeVM(WrenVM* vm)
 {
-  // TODO: Check for already freed.
+  if( vm == NULL || vm->methodNames.count == 0 ) return;
   // Free all of the GC objects.
   Obj* obj = vm->first;
   while (obj != NULL)
