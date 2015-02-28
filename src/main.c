@@ -127,16 +127,6 @@ static int runFile(WrenVM* vm, const char* path)
       result = 255;
       break;
   }
-
-  /*
-  WrenMethod* method = wrenGetMethod(vm, "main", "Foo", "bar(_,_,_)");
-  wrenCall(vm, method, "nsd", NULL, "some string", 78.9);
-  wrenCall(vm, method, "iii", 1, 2, 3);
-  wrenCall(vm, method, "nsd", NULL, "another string", 78.9);
-  wrenCall(vm, method, "iii", 4, 5, 6);
-
-  wrenReleaseMethod(vm, method);
-  */
   
   wrenFreeVM(vm);
   free(source);

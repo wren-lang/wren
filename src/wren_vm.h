@@ -355,10 +355,10 @@ void wrenPopRoot(WrenVM* vm);
 // header doesn't have a full definitely of WrenVM yet.
 static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 {
-#if WREN_NAN_TAGGING
   if (IS_NUM(value)) return vm->numClass;
   if (IS_OBJ(value)) return AS_OBJ(value)->classObj;
 
+#if WREN_NAN_TAGGING
   switch (GET_TAG(value))
   {
     case TAG_FALSE: return vm->boolClass; break;

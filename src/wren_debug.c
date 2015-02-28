@@ -19,11 +19,15 @@ void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
       fn = ((ObjClosure*)frame->fn)->fn;
     }
 
-    // Built-in libraries have no source path and are explicitly omitted from
-    // stack traces since we don't want to highlight to a user the
-    // implementation detail of what part of a core library is implemented in
-    // C and what is in Wren.
-    if (fn->debug->sourcePath->length == 0) continue;
+    // Built-in libraries and method call stubs have no source path and are
+    // explicitly omitted from stack traces since we don't want to highlight to
+    // a user the implementation detail of what part of a core library is
+    // implemented in C and what is in Wren.
+    if (fn->debug->sourcePath == NULL ||
+        fn->debug->sourcePath->length == 0)
+    {
+      continue;
+    }
 
     // - 1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines[frame->ip - fn->bytecode - 1];
