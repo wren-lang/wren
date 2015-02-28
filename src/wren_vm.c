@@ -191,7 +191,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   // recurse.
   if (newSize > 0) collectGarbage(vm);
 #else
-  if (vm->bytesAllocated > vm->nextGC) collectGarbage(vm);
+  if (newSize > 0 && vm->bytesAllocated > vm->nextGC) collectGarbage(vm);
 #endif
 
   return vm->reallocate(memory, oldSize, newSize);
