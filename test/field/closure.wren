@@ -11,6 +11,6 @@ class Foo {
 }
 
 var foo = new Foo
-IO.print(foo.closeOverGet.call) // expect: Foo field
-foo.closeOverSet.call
-IO.print(foo.closeOverGet.call) // expect: new value
+IO.print(foo.closeOverGet.call()) // expect: Foo field
+foo.closeOverSet.call()
+IO.print(foo.closeOverGet.call()) // expect: new value

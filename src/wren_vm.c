@@ -70,6 +70,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->numTempRoots = 0;
 
   // Implicitly create a "main" module for the REPL or entry script.
+  vm->modules = NULL;
   ObjModule* mainModule = wrenNewModule(vm);
   wrenPushRoot(vm, (Obj*)mainModule);
 
@@ -88,7 +89,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
 
 void wrenFreeVM(WrenVM* vm)
 {
-  // TODO: Check for already freed.
+  if( vm == NULL || vm->methodNames.count == 0 ) return;
   // Free all of the GC objects.
   Obj* obj = vm->first;
   while (obj != NULL)
@@ -190,7 +191,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   // recurse.
   if (newSize > 0) collectGarbage(vm);
 #else
-  if (vm->bytesAllocated > vm->nextGC) collectGarbage(vm);
+  if (newSize > 0 && vm->bytesAllocated > vm->nextGC) collectGarbage(vm);
 #endif
 
   return vm->reallocate(memory, oldSize, newSize);
@@ -327,20 +328,10 @@ static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, ObjString* error)
 // method with [symbol] on [classObj].
 static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
-  // Count the number of spaces to determine the number of parameters the
-  // method expects.
-  const char* methodName = vm->methodNames.data[symbol].buffer;
-
-  int methodLength = (int)strlen(methodName);
-  int numParams = 0;
-  while (methodName[methodLength - numParams - 1] == ' ') numParams++;
-
-  char message[MAX_VARIABLE_NAME + MAX_METHOD_NAME + 49];
-  sprintf(message, "%s does not implement method '%.*s' with %d argument%s.",
+  char message[MAX_VARIABLE_NAME + MAX_METHOD_NAME + 24];
+  sprintf(message, "%s does not implement '%s'.",
           classObj->name->value,
-          methodLength - numParams, methodName,
-          numParams,
-          numParams == 1 ? "" : "s");
+          vm->methodNames.data[symbol].buffer);
 
   return AS_STRING(wrenNewString(vm, message, strlen(message)));
 }
@@ -376,36 +367,45 @@ static ObjModule* getCoreModule(WrenVM* vm)
 static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
 {
   ObjModule* module = wrenNewModule(vm);
-  wrenPushRoot(vm, (Obj*)module);
 
-  // Implicitly import the core module.
-  ObjModule* coreModule = getCoreModule(vm);
-  for (int i = 0; i < coreModule->variables.count; i++)
+  // See if the module has already been loaded.
+  uint32_t index = wrenMapFind(vm->modules, name);
+  if (index == UINT32_MAX)
   {
-    wrenDefineVariable(vm, module,
-                       coreModule->variableNames.data[i].buffer,
-                       coreModule->variableNames.data[i].length,
-                       coreModule->variables.data[i]);
+    module = wrenNewModule(vm);
+
+    // Store it in the VM's module registry so we don't load the same module
+    // multiple times.
+    wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
+
+    // Implicitly import the core module.
+    ObjModule* coreModule = getCoreModule(vm);
+    for (int i = 0; i < coreModule->variables.count; i++)
+    {
+      wrenDefineVariable(vm, module,
+                         coreModule->variableNames.data[i].buffer,
+                         coreModule->variableNames.data[i].length,
+                         coreModule->variables.data[i]);
+    }
+  }
+  else
+  {
+    // Execute the new code in the context of the existing module.
+    module = AS_MODULE(vm->modules->entries[index].value);
   }
 
   ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(name), source);
   if (fn == NULL)
   {
     // TODO: Should we still store the module even if it didn't compile?
-    wrenPopRoot(vm); // module.
     return NULL;
   }
 
   wrenPushRoot(vm, (Obj*)fn);
 
-  // Store it in the VM's module registry so we don't load the same module
-  // multiple times.
-  wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
-
   ObjFiber* moduleFiber = wrenNewFiber(vm, (Obj*)fn);
 
   wrenPopRoot(vm); // fn.
-  wrenPopRoot(vm); // module.
 
   // Return the fiber that executes the module.
   return moduleFiber;
@@ -476,6 +476,41 @@ static bool importVariable(WrenVM* vm, Value moduleName, Value variableName,
 
   *result = OBJ_VAL(error);
   return false;
+}
+
+// Verifies that [superclass] is a valid object to inherit from. That means it
+// must be a class and cannot be the class of any built-in type.
+//
+// If successful, returns NULL. Otherwise, returns a string for the runtime
+// error message.
+static ObjString* validateSuperclass(WrenVM* vm, ObjString* name,
+                                     Value superclassValue)
+{
+  // Make sure the superclass is a class.
+  if (!IS_CLASS(superclassValue))
+  {
+    return AS_STRING(wrenNewString(vm, "Must inherit from a class.", 26));
+  }
+
+  // Make sure it doesn't inherit from a sealed built-in type. Primitive methods
+  // on these classes assume the instance is one of the other Obj___ types and
+  // will fail horribly if it's actually an ObjInstance.
+  ObjClass* superclass = AS_CLASS(superclassValue);
+  if (superclass == vm->classClass ||
+      superclass == vm->fiberClass ||
+      superclass == vm->fnClass || // Includes OBJ_CLOSURE.
+      superclass == vm->listClass ||
+      superclass == vm->mapClass ||
+      superclass == vm->rangeClass ||
+      superclass == vm->stringClass)
+  {
+    char message[70 + MAX_VARIABLE_NAME];
+    sprintf(message, "%s cannot inherit from %s.",
+            name->value, superclass->name->value);
+    return AS_STRING(wrenNewString(vm, message, strlen(message)));
+  }
+
+  return NULL;
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
@@ -1083,16 +1118,13 @@ static bool runInterpreter(WrenVM* vm)
     CASE_CODE(CLASS):
     {
       ObjString* name = AS_STRING(PEEK2());
+      ObjClass* superclass = vm->objectClass;
 
-      ObjClass* superclass;
-      if (IS_NULL(PEEK()))
+      // Use implicit Object superclass if none given.
+      if (!IS_NULL(PEEK()))
       {
-        // Implicit Object superclass.
-        superclass = vm->objectClass;
-      }
-      else
-      {
-        // TODO: Handle the superclass not being a class object!
+        ObjString* error = validateSuperclass(vm, name, PEEK());
+        if (error != NULL) RUNTIME_ERROR(error);
         superclass = AS_CLASS(PEEK());
       }
 
@@ -1190,7 +1222,7 @@ static bool runInterpreter(WrenVM* vm)
 }
 
 // Execute [source] in the context of the core module.
-WrenInterpretResult static loadIntoCore(WrenVM* vm, const char* source)
+static WrenInterpretResult loadIntoCore(WrenVM* vm, const char* source)
 {
   ObjModule* coreModule = getCoreModule(vm);
 
@@ -1208,7 +1240,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source)
 {
   if (strlen(sourcePath) == 0) return loadIntoCore(vm, source);
-  
+
   // TODO: Better module name.
   Value name = wrenNewString(vm, "main", 4);
   wrenPushRoot(vm, AS_OBJ(name));
@@ -1329,23 +1361,20 @@ void wrenPopRoot(WrenVM* vm)
 }
 
 static void defineMethod(WrenVM* vm, const char* className,
-                         const char* methodName, int numParams,
+                         const char* signature,
                          WrenForeignMethodFn methodFn, bool isStatic)
 {
   ASSERT(className != NULL, "Must provide class name.");
 
-  int length = (int)strlen(methodName);
-  ASSERT(methodName != NULL, "Must provide method name.");
-  ASSERT(strlen(methodName) < MAX_METHOD_NAME, "Method name too long.");
-
-  ASSERT(numParams >= 0, "numParams cannot be negative.");
-  ASSERT(numParams <= MAX_PARAMETERS, "Too many parameters.");
+  int length = (int)strlen(signature);
+  ASSERT(signature != NULL, "Must provide signature.");
+  ASSERT(strlen(signature) < MAX_METHOD_SIGNATURE, "Signature too long.");
 
   ASSERT(methodFn != NULL, "Must provide method function.");
 
   // TODO: Need to be able to define methods in classes outside the core
   // module.
-  
+
   // Find or create the class to bind the method to.
   ObjModule* coreModule = getCoreModule(vm);
   int classSymbol = wrenSymbolTableFind(&coreModule->variableNames,
@@ -1372,17 +1401,9 @@ static void defineMethod(WrenVM* vm, const char* className,
     wrenPopRoot(vm);
   }
 
-  // Create a name for the method, including its arity.
-  char name[MAX_METHOD_SIGNATURE];
-  memcpy(name, methodName, length);
-  for (int i = 0; i < numParams; i++)
-  {
-    name[length++] = ' ';
-  }
-  name[length] = '\0';
-
   // Bind the method.
-  int methodSymbol = wrenSymbolTableEnsure(vm, &vm->methodNames, name, length);
+  int methodSymbol = wrenSymbolTableEnsure(vm, &vm->methodNames,
+                                           signature, length);
 
   Method method;
   method.type = METHOD_FOREIGN;
@@ -1394,17 +1415,17 @@ static void defineMethod(WrenVM* vm, const char* className,
 }
 
 void wrenDefineMethod(WrenVM* vm, const char* className,
-                      const char* methodName, int numParams,
+                      const char* signature,
                       WrenForeignMethodFn methodFn)
 {
-  defineMethod(vm, className, methodName, numParams, methodFn, false);
+  defineMethod(vm, className, signature, methodFn, false);
 }
 
 void wrenDefineStaticMethod(WrenVM* vm, const char* className,
-                            const char* methodName, int numParams,
+                            const char* signature,
                             WrenForeignMethodFn methodFn)
 {
-  defineMethod(vm, className, methodName, numParams, methodFn, true);
+  defineMethod(vm, className, signature, methodFn, true);
 }
 
 bool wrenGetArgumentBool(WrenVM* vm, int index)
@@ -1460,7 +1481,7 @@ void wrenReturnString(WrenVM* vm, const char* text, int length)
 {
   ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
   ASSERT(text != NULL, "String cannot be NULL.");
-  
+
   size_t size = length;
   if (length == -1) size = strlen(text);
 

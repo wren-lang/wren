@@ -14,5 +14,5 @@ IO.print(Nonlocal) // expect: method
 
 new Fn {
   Nonlocal = "fn"
-}.call
+}.call()
 IO.print(Nonlocal) // expect: fn

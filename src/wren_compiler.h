@@ -23,7 +23,8 @@ typedef struct sCompiler Compiler;
 // structures and destroy them after generating code.
 
 // Compiles [source], a string of Wren source code located in [module], to an
-// [ObjFn] that will execute that code when invoked.
+// [ObjFn] that will execute that code when invoked. Returns `NULL` if the
+// source contains any syntax errors.
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module,
                    const char* sourcePath, const char* source);
 

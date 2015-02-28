@@ -9,4 +9,4 @@ class Foo {
 }
 
 (new Foo).method("param")
-F.call // expect: param
+F.call() // expect: param

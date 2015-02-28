@@ -3,17 +3,17 @@ var b
 
 a = new Fiber {
   IO.print(2)
-  b.run
+  b.run()
   IO.print("nope")
 }
 
 b = new Fiber {
   IO.print(1)
-  a.run
+  a.run()
   IO.print(3)
 }
 
-b.call
+b.call()
 // expect: 1
 // expect: 2
 // expect: 3

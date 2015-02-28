@@ -8,6 +8,13 @@
 //
 // This header is *not* intended to be included by code outside of Wren itself.
 
+// Wren pervasively uses the C99 integer types (uint16_t, etc.) along with some
+// of the associated limit constants (UINT32_MAX, etc.). The constants are not
+// part of standard C++, so aren't included by default by C++ compilers when you
+// include <stdint> unless __STDC_LIMIT_MACROS is defined.
+#define __STDC_LIMIT_MACROS
+#include <stdint.h>
+
 // These flags let you control some details of the interpreter's implementation.
 // Usually they trade-off a bit of portability for speed. They default to the
 // most efficient behavior.
@@ -79,9 +86,16 @@
 // strings need to be in the parser.
 #define MAX_METHOD_NAME 64
 
-// The maximum length of a method signature. This includes the name, and the
-// extra spaces added to handle arity, and another byte to terminate the string.
-#define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + MAX_PARAMETERS + 1)
+// The maximum length of a method signature. Signatures look like:
+//
+//     foo     // Getter.
+//     foo()   // No-argument method.
+//     foo(_)  // One-argument method.
+//     foo(_,_) // Two-argument method.
+//
+// The maximum signature length takes into account the longest method name, the
+// maximum number of parameters with separators between them, and "()".
+#define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + (MAX_PARAMETERS * 2) + 1)
 
 // The maximum length of an identifier. The only real reason for this limitation
 // is so that error messages mentioning variables can be stack allocated.

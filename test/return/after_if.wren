@@ -1,3 +1,3 @@
 IO.print(new Fn {
   if (true) return "ok"
-}.call) // expect: ok
+}.call()) // expect: ok

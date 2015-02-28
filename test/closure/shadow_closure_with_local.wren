@@ -7,5 +7,5 @@
       IO.print(foo) // expect: shadow
     }
     IO.print(foo) // expect: closure
-  }.call
+  }.call()
 }

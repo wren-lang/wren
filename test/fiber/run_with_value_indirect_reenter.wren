@@ -13,7 +13,7 @@ b = new Fiber {
   IO.print(3)
 }
 
-b.call
+b.call()
 // expect: 1
 // expect: 2
 // expect: 3

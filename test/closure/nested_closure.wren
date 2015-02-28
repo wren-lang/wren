@@ -11,11 +11,11 @@ new Fn {
         IO.print(b)
         IO.print(c)
       }
-    }.call
-  }.call
-}.call
+    }.call()
+  }.call()
+}.call()
 
-f.call
+f.call()
 // expect: a
 // expect: b
 // expect: c

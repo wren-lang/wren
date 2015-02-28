@@ -8,6 +8,6 @@ var f = null
   }
 }
 
-f.call
+f.call()
 // expect: a
 // expect: a

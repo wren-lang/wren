@@ -35,13 +35,25 @@ look like so:
 
 You have a *receiver* expression followed by a `.`, then a name and an argument
 list in parentheses. Arguments are separated by commas. Methods that do not
-take any arguments omit the `()`:
+take any arguments can omit the `()`:
 
     :::dart
     text.length
 
 These are special "getters" or "accessors" in other languages. In Wren, they're
-just method calls.
+just method calls. You can also define methods that take an empty argument list:
+
+    :::dart
+    list.clear()
+
+An empty argument list is *not* the same as omitting the parentheses
+completely. Wren lets you overload methods by their call signature. This mainly
+means [*arity*](classes.html#signature)&mdash;number of parameters&mdash;but
+also distinguishes between "empty parentheses" and "no parentheses at all".
+
+You can have a class that defines both `foo` and `foo()` as separate methods.
+Think of it like the parentheses and commas between arguments are part of the
+method's *name*.
 
 If the last (or only) argument to a method call is a
 [function](functions.html), it may be passed as a [block

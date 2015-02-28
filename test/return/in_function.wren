@@ -3,4 +3,4 @@ var f = new Fn {
   IO.print("bad")
 }
 
-IO.print(f.call) // expect: ok
+IO.print(f.call()) // expect: ok

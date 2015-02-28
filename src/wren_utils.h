@@ -10,7 +10,7 @@
 // (including the null-terminator)
 typedef struct {
   char* buffer;
-  int length;
+  uint32_t length;
 } String;
 
 // We need buffers of a few different types. To avoid lots of casting between

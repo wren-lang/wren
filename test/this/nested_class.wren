@@ -13,7 +13,7 @@ class Outer {
       }
 
       (new Inner).method
-    }.call
+    }.call()
   }
 
   toString { "Outer" }

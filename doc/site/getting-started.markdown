@@ -10,6 +10,9 @@ Mac and you can rock a command line, it's just:
     $ make
     $ ./wren
 
+Binaries for other configurations are built to `bin/`. Static and shared
+libraries for embedding Wren get built in `lib/`.
+
 For Mac users, there is also an XCode project under `project/xcode`. For
 Windows brethren, `project/msvc2013` contains a Visual Studio solution. Note
 that these may not have the exact same build settings as the makefile. The

@@ -39,12 +39,12 @@ add a parenthesized parameter list after the method's name:
       }
     }
 
-### Arity
+### Signature
 
 Unlike most other dynamically-typed languages, in Wren you can have multiple
-methods in a class with the same name, as long as they take a different number
-of parameters. In technical terms, you can *overload by arity*. So this class
-is fine:
+methods in a class with the same name, as long as they have a different
+parameter *signature*. In technical terms, you can *overload by arity*. So this
+class is fine:
 
     :::dart
     class Unicorn {
@@ -76,6 +76,44 @@ It's often natural to have the same conceptual operation work with different
 sets of arguments. In other languages, you'd define a single method for the
 operation and have to check for "undefined" or missing arguments. Wren just
 treats them as different methods that you can implement separately.
+
+Signature is a bit more than just arity. It also lets you distinguish between a
+method that takes an *empty* argument list (`()`) and no argument list at all:
+
+    :::dart
+    class Confusing {
+      method { "no argument list" }
+      method() { "empty argument list" }
+    }
+
+    var confusing = new Confusing
+    confusing.method // "no argument list".
+    confusing.method() // "empty argument list".
+
+Like the example says, having two methods that differ just by an empty set of
+parentheses is pretty confusing. That's not what this is for. It's mainly so
+you can define methods that don't take any arguments but look "method-like".
+
+Methods that don't need arguments and don't modify the underlying object tend
+to omit the parentheses. These are "getters" and usually access a property of
+an object, or produce a new object from it:
+
+    :::dart
+    "string".count
+    (1..3).min
+    0.123.sin
+
+Other methods do change the object, and it's helpful to draw attention to that:
+
+    :::dart
+    list.clear()
+
+Since the parentheses are part of the method's signature, the callsite and
+definition have to agree. These don't work:
+
+    :::
+    "string".count()
+    list.clear
 
 ### Operators
 
@@ -153,7 +191,7 @@ Values are passed to the constructor like so:
     :::dart
     new Unicorn("Flicker", "purple")
 
-Like other methods, you can overload constructors by [arity](#arity).
+Like other methods, you can overload constructors by [arity](#signature).
 
 ## Fields
 

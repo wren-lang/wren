@@ -6,4 +6,4 @@ new Fn {|param|
   }
 }.call("param")
 
-f.call // expect: param
+f.call() // expect: param

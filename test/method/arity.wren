@@ -1,5 +1,6 @@
 class Foo {
-  method { 0 }
+  method { "getter" }
+  method() { "no args" }
   method(a) { a }
   method(a, b) { a + b }
   method(a, b, c) { a + b + c }
@@ -19,7 +20,8 @@ class Foo {
 }
 
 var foo = new Foo
-IO.print(foo.method) // expect: 0
+IO.print(foo.method) // expect: getter
+IO.print(foo.method()) // expect: no args
 IO.print(foo.method(1)) // expect: 1
 IO.print(foo.method(1, 2)) // expect: 3
 IO.print(foo.method(1, 2, 3)) // expect: 6

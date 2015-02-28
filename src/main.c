@@ -7,11 +7,12 @@
 #include "wren.h"
 
 #define MAX_LINE_LENGTH 1024 // TODO: Something less arbitrary.
+#define MAX_PATH_LENGTH 2024 // TODO: Something less arbitrary.
 
 // This is the source file for the standalone command line interpreter. It is
 // not needed if you are embedding Wren in an application.
 
-char* rootDirectory = NULL;
+char rootDirectory[MAX_PATH_LENGTH];
 
 static void failIf(bool condition, int exitCode, const char* format, ...)
 {
@@ -56,7 +57,7 @@ static char* readModule(WrenVM* vm, const char* module)
   size_t rootLength = strlen(rootDirectory);
   size_t moduleLength = strlen(module);
   size_t pathLength = rootLength + moduleLength + 5;
-  char* path = malloc(pathLength + 1);
+  char* path = (char*)malloc(pathLength + 1);
   memcpy(path, rootDirectory, rootLength);
   memcpy(path + rootLength, module, moduleLength);
   memcpy(path + rootLength + moduleLength, ".wren", 5);
@@ -106,10 +107,12 @@ static int runFile(WrenVM* vm, const char* path)
 {
   // Use the directory where the file is as the root to resolve imports
   // relative to.
-  char* lastSlash = strrchr(path, '/');
-  rootDirectory = malloc(lastSlash - path + 2);
-  memcpy(rootDirectory, path, lastSlash - path + 1);
-  rootDirectory[lastSlash - path + 1] = '\0';
+  const char* lastSlash = strrchr(path, '/');
+  if (lastSlash != NULL)
+  {
+    memcpy(rootDirectory, path, lastSlash - path + 1);
+    rootDirectory[lastSlash - path + 1] = '\0';
+  }
 
   char* source = readFile(path);
 
@@ -136,7 +139,8 @@ static int runRepl(WrenVM* vm)
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
 
-  // TODO: Set rootDirectory to current working directory so imports work.
+  // Import relative to the current directory.
+  rootDirectory[0] = '\0';
 
   char line[MAX_LINE_LENGTH];
 

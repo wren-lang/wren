@@ -5,9 +5,9 @@ var closure
   var a = "before"
   fiber = new Fiber {
     IO.print(a)
-    Fiber.yield
+    Fiber.yield()
     a = "after"
-    Fiber.yield
+    Fiber.yield()
     IO.print(a)
     a = "final"
   }
@@ -17,9 +17,9 @@ var closure
   }
 }
 
-fiber.call   // expect: before
-closure.call // expect: before
-fiber.call
-closure.call // expect: after
-fiber.call   // expect: after
-closure.call // expect: final
+fiber.call()   // expect: before
+closure.call() // expect: before
+fiber.call()
+closure.call() // expect: after
+fiber.call()   // expect: after
+closure.call() // expect: final

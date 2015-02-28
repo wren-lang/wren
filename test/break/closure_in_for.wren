@@ -5,5 +5,5 @@ for (i in [1, 2, 3]) {
   break
 }
 
-f.call
+f.call()
 // expect: 5

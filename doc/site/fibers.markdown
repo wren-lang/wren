@@ -38,10 +38,10 @@ code sitting there waiting to be activated, a bit like a
 ## Invoking fibers
 
 Once you've created a fiber, you can invoke it (which suspends the current
-fiber) by calling its `call` method:
+fiber) by calling its `call()` method:
 
     :::dart
-    fiber.call
+    fiber.call()
 
 The called fiber will execute its code until it reaches the end of its body or
 until it passes control to another fiber. If it reaches the end of its body,
@@ -50,7 +50,7 @@ it's considered *done*:
     :::dart
     var fiber = new Fiber { IO.print("Hi") }
     fiber.isDone // false
-    fiber.call
+    fiber.call()
     fiber.isDone // true
 
 When it finishes, it automatically resumes the fiber that called it. It's a
@@ -67,19 +67,19 @@ Things get interesting when a fiber *yields*. A yielded fiber passes control
 *back* to the fiber that ran it, but *remembers where it is*. The next time the
 fiber is called, it picks up right where it left off and keeps going.
 
-You can make a fiber yield by calling the static `yield` method on `Fiber`:
+You can make a fiber yield by calling the static `yield()` method on `Fiber`:
 
     :::dart
     var fiber = new Fiber {
       IO.print("fiber 1")
-      Fiber.yield
+      Fiber.yield()
       IO.print("fiber 2")
     }
 
     IO.print("main 1")
-    fiber.call
+    fiber.call()
     IO.print("main 2")
-    fiber.call
+    fiber.call()
     IO.print("main 3")
 
 This program prints:
@@ -100,11 +100,11 @@ the mercy of a thread scheduler playing Russian roulette with your code.
 Calling and yielding fibers is used for passing control, but it can also pass
 *data*. When you call a fiber, you can optionally pass a value to it. If the
 fiber has yielded and is waiting to resume, the value becomes the return value
-of the `yield` call:
+of the `yield()` call:
 
     :::dart
     var fiber = new Fiber {
-      var result = Fiber.yield
+      var result = Fiber.yield()
       IO.print(result)
     }
 
@@ -112,11 +112,11 @@ of the `yield` call:
     fiber.call("sent")
 
 This prints "sent". Note that the first value sent to the fiber through call is
-ignored. That's because the fiber isn't waiting on a `yield` call, so there's
+ignored. That's because the fiber isn't waiting on a `yield()` call, so there's
 no where for the sent value to go.
 
 Fibers can also pass values *back* when they yield. If you pass an argument to
-`yield`, that will become the return value of the `call` that was used to
+`yield()`, that will become the return value of the `call` that was used to
 invoke the fiber:
 
     :::dart
@@ -124,7 +124,7 @@ invoke the fiber:
       Fiber.yield("sent")
     }
 
-    IO.print(fiber.call)
+    IO.print(fiber.call())
 
 This also prints "sent".
 
@@ -146,15 +146,15 @@ example:
       }
     }
 
-Here, we're calling `yield` from within a [function](functions.html) being
-passed to the `map` method. This works fine in Wren because that inner `yield`
-call will suspend the call to `map` and the function passed to it as a
-callback.
+Here, we're calling `yield()` from within a [function](functions.html) being
+passed to the `map()` method. This works fine in Wren because that inner
+`yield()` call will suspend the call to `map()` and the function passed to it
+as a callback.
 
 ## Transferring control
 
 Fibers have one more trick up their sleeves. When you execute a fiber using
-`call`, the fiber tracks which fiber it will return to when it yields. This
+`call()`, the fiber tracks which fiber it will return to when it yields. This
 lets you build up a chain of fiber calls that will eventually unwind back to
 the main fiber when all of the called ones yield or finish.
 
@@ -168,7 +168,7 @@ entirely. (This is analogous to [tail call
 elimination](http://en.wikipedia.org/wiki/Tail_call) for regular function
 calls.)
 
-To enable this, fibers also have a `run` method. This begins executing that
+To enable this, fibers also have a `run()` method. This begins executing that
 fiber, and "forgets" the previous one. If the running fiber yields or ends, it
 will transfer control back to the last *called* one. (If there are no called
 fibers, it will end execution.)

@@ -95,12 +95,16 @@ given position in the list. All following items are shifted up to fill in the
 gap:
 
     :::dart
-    var letters = ["a", "b", "c"]
+    var letters = ["a", "b", "c", "d"]
     letters.removeAt(1)
-    IO.print(letters) // ["a", "c"]
+    IO.print(letters) // ["a", "c", "d"]
+
+The `removeAt` method returns the removed item:
+
+    IO.print(letters.removeAt(1)) // "c"
 
 If you want to remove everything from the list, you can clear it:
 
     :::dart
-    hirsute.clear
+    hirsute.clear()
     IO.print(hirsute) // []

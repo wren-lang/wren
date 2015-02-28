@@ -9,7 +9,7 @@ An indexable contiguous collection of elements. More details [here](../lists.htm
 
 Appends `item` to the end of the list.
 
-### **clear**
+### **clear**()
 
 Removes all items from the list.
 
@@ -36,6 +36,10 @@ are shifted up to fill in where the removed element was.
     var list = ["a", "b", "c", "d"]
     list.removeAt(1)
     IO.print(list) // "[a, c, d]".
+
+Returns the removed item.
+
+    IO.print(["a", "b", "c"].removeAt(1)) // "b".
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
