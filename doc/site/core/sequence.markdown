@@ -11,12 +11,24 @@ core [iterator protocol][] can extend this to get a number of helpful methods.
 Tests whether all the elements in the sequence pass the `predicate`.
 
 Iterates over the sequence, passing each element to the function `predicate`.
-If it returns `false`, stops iterating and returns `false`. Otherwise, returns
-`true`.
+If its return value evaluates to `false`, stops iterating and returns `false`.
+Otherwise, returns `true`.
 
     :::dart
     [1, 2, 3].all {|n| n > 2} // False.
     [1, 2, 3].all {|n| n < 4} // True.
+
+### **any**(predicate)
+
+Tests whether any element in the sequence passes the `predicate`.
+
+Iterates over the sequence, passing each element to the function `predicate`.
+If its return value evaluates to `true`, stops iterating and returns `true`.
+Otherwise, returns `false`.
+
+    :::dart
+    [1, 2, 3].any {|n| n < 1} // False.
+    [1, 2, 3].any {|n| n > 2} // True.
 
 ### **join**(sep)
 
