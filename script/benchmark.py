@@ -10,7 +10,34 @@ import re
 import subprocess
 import sys
 
-# Runs the tests.
+# Runs the benchmarks.
+#
+# It runs several benchmarks across several languages. For each
+# benchmark/language pair, it runs a number of trials. Each trial is one run of
+# a single benchmark script. It spawns a process and runs the script. The
+# script itself is expected to output some result which this script validates
+# to ensure the benchmark is running correctly. Then the benchmark prints an
+# elapsed time. The benchmark is expected to do the timing itself and only time
+# the interesting code under test.
+#
+# This script then runs several trials and takes the best score. (It does
+# multiple trials to account for random variance in running time coming from
+# OS, CPU rate-limiting, etc.) It takes the best time on the assumption that
+# that represents the language's ideal performance and any variance coming from
+# the OS will just slow it down.
+#
+# After running a series of trials the benchmark runner will compare all of the
+# language's performance for a given benchmark. It compares by running time
+# and score, which is just the inverse running time.
+#
+# For Wren benchmarks, it can also compare against a "baseline". That's a
+# recorded result of a previous run of the Wren benchmarks. This is useful --
+# critical, actually -- for seeing how Wren performance changes. Generating a
+# set of baselines before a change to the VM and then comparing those to the
+# performance after a change is how we track improvements and regressions.
+#
+# To generate a baseline file, run this script with "--generate-baseline".
+
 WREN_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 BENCHMARK_DIR = os.path.join(WREN_DIR, 'benchmark')
 
