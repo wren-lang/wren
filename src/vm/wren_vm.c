@@ -1363,7 +1363,7 @@ void wrenReleaseMethod(WrenVM* vm, WrenMethod* method)
 }
 
 // Execute [source] in the context of the core module.
-WrenInterpretResult static loadIntoCore(WrenVM* vm, const char* source)
+static WrenInterpretResult loadIntoCore(WrenVM* vm, const char* source)
 {
   ObjModule* coreModule = getCoreModule(vm);
 
