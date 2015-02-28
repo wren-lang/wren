@@ -860,6 +860,14 @@ static void markMap(WrenVM* vm, ObjMap* map)
   vm->bytesAllocated += sizeof(MapEntry) * map->capacity;
 }
 
+static void markRange(WrenVM* vm, ObjRange* range)
+{
+  if (setMarkedFlag(&range->obj)) return;
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjRange);
+}
+
 static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
 {
   // This can happen if a GC is triggered in the middle of initializing the
@@ -965,7 +973,7 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
     case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
     case OBJ_MAP:      markMap(     vm, (ObjMap*)     obj); break;
     case OBJ_MODULE:   markModule(  vm, (ObjModule*)  obj); break;
-    case OBJ_RANGE:    setMarkedFlag(obj); break;
+    case OBJ_RANGE:    markRange(   vm, (ObjRange*)   obj); break;
     case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
     case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
   }
