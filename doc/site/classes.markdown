@@ -262,23 +262,42 @@ not the instance. They can be used in *both* instance and static methods.
 
     :::dart
     class Foo {
-        // set static variable
-        static set(a) {
-            __a = a
-        }
-        // __a is available inside of static method bar and instance method baz
-        static bar {
-            return __a
-        }
-        baz {
-            return __a
-        }
+      // Set the static field.
+      static set(a) {
+        __a = a
+      }
+
+      setFromInstance(a) {
+        __a = a
+      }
+
+      // Can use __a in both static methods...
+      static bar { __a }
+
+      // ...and instance ones.
+      baz { __a }
     }
 
-    IO.print(Foo.bar) // null because __a is initialized to null when class is compiled
+Just like instance fields, static fields are initially `null`:
+
+    :::dart
+    IO.print(Foo.bar) // null.
+
+They can be used from static methods:
+
+    :::dart
     Foo.set("foo")
-    IO.print(Foo.bar) // foo
-    IO.print(Foo.bar == (new Foo).baz) // true
+    IO.print(Foo.bar) // foo.
+
+And also instance methods. When you do so, there is still only one static field
+shared among all instances of the class:
+
+    :::dart
+    var foo1 = new Foo
+    var foo2 = new Foo
+
+    foo1.setFromInstance("updated")
+    IO.print(foo2.baz) // updated.
 
 ## Inheritance
 
