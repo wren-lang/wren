@@ -627,7 +627,7 @@ DEF_PRIMITIVE(list_add)
 DEF_PRIMITIVE(list_clear)
 {
   ObjList* list = AS_LIST(args[0]);
-  wrenReallocate(vm, list->elements, 0, 0);
+  DEALLOCATE(vm, list->elements);
   list->elements = NULL;
   list->capacity = 0;
   list->count = 0;
@@ -1290,7 +1290,6 @@ DEF_PRIMITIVE(string_iteratorValue)
 {
   ObjString* string = AS_STRING(args[0]);
   int index = validateIndex(vm, args, string->length, 1, "Iterator");
-  // TODO: Test.
   if (index == -1) return PRIM_ERROR;
 
   RETURN_VAL(wrenStringCodePointAt(vm, string, index));
@@ -1549,7 +1548,6 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->mapClass, "iterate_(_)", map_iterate);
   PRIMITIVE(vm->mapClass, "keyIteratorValue_(_)", map_keyIteratorValue);
   PRIMITIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
-  // TODO: More map methods.
 
   vm->rangeClass = AS_CLASS(wrenFindVariable(vm, "Range"));
   PRIMITIVE(vm->rangeClass, "from", range_from);
