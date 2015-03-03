@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -929,15 +930,21 @@ DEF_PRIMITIVE(num_fromString)
   // Corner case: Can't parse an empty string.
   if (string->length == 0) RETURN_NULL;
 
+  errno = 0;
   char* end;
   double number = strtod(string->value, &end);
 
   // Skip past any trailing whitespace.
   while (*end != '\0' && isspace(*end)) end++;
 
+  if (errno == ERANGE)
+  {
+    args[0] = OBJ_VAL(wrenNewString(vm, "Number literal is too large.", 28));
+    return PRIM_ERROR;
+  }
+
   // We must have consumed the entire string. Otherwise, it contains non-number
   // characters and we can't parse it.
-  // TODO: Check errno == ERANGE here.
   if (end < string->value + string->length) RETURN_NULL;
 
   RETURN_NUM(number);
