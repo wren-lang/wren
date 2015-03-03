@@ -878,6 +878,11 @@ DEF_PRIMITIVE(num_cos)
   RETURN_NUM(cos(AS_NUM(args[0])));
 }
 
+DEF_PRIMITIVE(num_decimal)
+{
+  RETURN_NUM((uint32_t)(AS_NUM(args[0])));
+}
+
 DEF_PRIMITIVE(num_deg)
 {
   RETURN_NUM(floor(AS_NUM(args[0]) * 57.2957795130823208768));
@@ -936,6 +941,12 @@ DEF_PRIMITIVE(num_toString)
   char buffer[24];
   int length = sprintf(buffer, "%.14g", value);
   RETURN_VAL(wrenNewString(vm, buffer, length));
+}
+
+DEF_PRIMITIVE(num_truncate)
+{
+  double num = AS_NUM(args[0]);
+  RETURN_NUM(num - (uint32_t)num);
 }
 
 DEF_PRIMITIVE(num_fromString)
@@ -1524,6 +1535,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "abs", num_abs);
   PRIMITIVE(vm->numClass, "ceil", num_ceil);
   PRIMITIVE(vm->numClass, "cos", num_cos);
+  PRIMITIVE(vm->numClass, "decimal", num_decimal);
   PRIMITIVE(vm->numClass, "deg", num_deg);
   PRIMITIVE(vm->numClass, "floor", num_floor);
   PRIMITIVE(vm->numClass, "isNan", num_isNan);
@@ -1531,6 +1543,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "sin", num_sin);
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
   PRIMITIVE(vm->numClass, "toString", num_toString);
+  PRIMITIVE(vm->numClass, "truncate", num_truncate);
 
   // These are defined just so that 0 and -0 are equal, which is specified by
   // IEEE 754 even though they have different bit representations.
