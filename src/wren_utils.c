@@ -16,7 +16,7 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
 {
   for (int i = 0; i < symbols->count; i++)
   {
-    wrenReallocate(vm, symbols->data[i].buffer, 0, 0);
+    DEALLOCATE(vm, symbols->data[i].buffer);
   }
 
   wrenStringBufferClear(vm, symbols);
@@ -26,8 +26,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
                        const char* name, size_t length)
 {
   String symbol;
-  symbol.buffer = (char*)wrenReallocate(vm, NULL, 0,
-                                        sizeof(char) * (length + 1));
+  symbol.buffer = ALLOCATE_ARRAY(vm, char, length + 1);
   memcpy(symbol.buffer, name, length);
   symbol.buffer[length] = '\0';
   symbol.length = (int)length;

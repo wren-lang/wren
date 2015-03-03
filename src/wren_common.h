@@ -122,6 +122,9 @@
 #define ALLOCATE_ARRAY(vm, type, count) \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * count))
 
+// Use the VM's allocator to free the previously allocated memory at [pointer].
+#define DEALLOCATE(vm, pointer) wrenReallocate(vm, pointer, 0, 0)
+
 // The Microsoft compiler does not support the "inline" modifier when compiling
 // as plain C.
 #if defined( _MSC_VER ) && !defined(__cplusplus)

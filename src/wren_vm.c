@@ -109,8 +109,7 @@ void wrenFreeVM(WrenVM* vm)
 
   wrenSymbolTableClear(vm, &vm->methodNames);
 
-  // TODO: Make macro for freeing.
-  wrenReallocate(vm, vm, 0, 0);
+  DEALLOCATE(vm, vm);
 }
 
 void wrenSetCompiler(WrenVM* vm, Compiler* compiler)
@@ -1375,8 +1374,7 @@ void wrenReleaseMethod(WrenVM* vm, WrenMethod* method)
   method->prev = NULL;
   method->next = NULL;
   method->fiber = NULL;
-
-  wrenReallocate(vm, method, sizeof(WrenMethod), 0);
+  DEALLOCATE(vm, method);
 }
 
 // Execute [source] in the context of the core module.

@@ -473,7 +473,7 @@ static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
   }
 
   // Replace the array.
-  wrenReallocate(vm, map->entries, 0, 0);
+  DEALLOCATE(vm, map->entries);
   map->entries = entries;
   map->capacity = capacity;
 }
@@ -531,7 +531,7 @@ void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value)
 
 void wrenMapClear(WrenVM* vm, ObjMap* map)
 {
-  wrenReallocate(vm, map->entries, 0, 0);
+  DEALLOCATE(vm, map->entries);
   map->entries = NULL;
   map->capacity = 0;
   map->count = 0;
@@ -1004,20 +1004,20 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
     case OBJ_FN:
     {
       ObjFn* fn = (ObjFn*)obj;
-      wrenReallocate(vm, fn->constants, 0, 0);
-      wrenReallocate(vm, fn->bytecode, 0, 0);
-      wrenReallocate(vm, fn->debug->name, 0, 0);
-      wrenReallocate(vm, fn->debug->sourceLines, 0, 0);
-      wrenReallocate(vm, fn->debug, 0, 0);
+      DEALLOCATE(vm, fn->constants);
+      DEALLOCATE(vm, fn->bytecode);
+      DEALLOCATE(vm, fn->debug->name);
+      DEALLOCATE(vm, fn->debug->sourceLines);
+      DEALLOCATE(vm, fn->debug);
       break;
     }
 
     case OBJ_LIST:
-      wrenReallocate(vm, ((ObjList*)obj)->elements, 0, 0);
+      DEALLOCATE(vm, ((ObjList*)obj)->elements);
       break;
 
     case OBJ_MAP:
-      wrenReallocate(vm, ((ObjMap*)obj)->entries, 0, 0);
+      DEALLOCATE(vm, ((ObjMap*)obj)->entries);
       break;
 
     case OBJ_MODULE:
@@ -1034,7 +1034,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       break;
   }
 
-  wrenReallocate(vm, obj, 0, 0);
+  DEALLOCATE(vm, obj);
 }
 
 ObjClass* wrenGetClass(WrenVM* vm, Value value)
