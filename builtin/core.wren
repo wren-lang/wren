@@ -22,6 +22,13 @@ class Sequence {
     return true
   }
 
+  any(f) {
+    for (element in this) {
+      if (f.call(element)) return true
+    }
+    return false
+  }
+
   reduce(acc, f) {
     for (element in this) {
       acc = f.call(acc, element)
