@@ -939,7 +939,7 @@ DEF_PRIMITIVE(num_fromString)
 
   if (errno == ERANGE)
   {
-    args[0] = OBJ_VAL(wrenNewString(vm, "Number literal is too large.", 28));
+    args[0] = wrenNewString(vm, "Number literal is too large.", 28);
     return PRIM_ERROR;
   }
 

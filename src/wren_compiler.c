@@ -537,6 +537,25 @@ static int readHexDigit(Parser* parser)
   return -1;
 }
 
+// Parses the numeric value of the current token.
+static void makeNumber(Parser* parser, bool isHex)
+{
+  errno = 0;
+
+  // We don't check that the entire token is consumed because we've already
+  // scanned it ourselves and know it's valid.
+  parser->number = isHex ? strtol(parser->tokenStart, NULL, 16)
+                         : strtod(parser->tokenStart, NULL);
+
+  if (errno == ERANGE)
+  {
+    lexError(parser, "Number literal was too large.");
+    parser->number = 0;
+  }
+
+  makeToken(parser, TOKEN_NUMBER);
+}
+
 // Finishes lexing a hexadecimal number literal.
 static void readHexNumber(Parser* parser)
 {
@@ -546,21 +565,7 @@ static void readHexNumber(Parser* parser)
   // Iterate over all the valid hexadecimal digits found.
   while (readHexDigit(parser) != -1) continue;
 
-  errno = 0;
-  char* end;
-  parser->number = strtol(parser->tokenStart, &end, 16);
-  if (errno == ERANGE)
-  {
-    lexError(parser, "Number literal was too large.");
-    parser->number = 0;
-  }
-  else if (end == parser->tokenStart)
-  {
-    lexError(parser, "Invalid number literal.");
-    parser->number = 0;
-  }
-
-  makeToken(parser, TOKEN_NUMBER);
+  makeNumber(parser, true);
 }
 
 // Finishes lexing a number literal.
@@ -577,21 +582,7 @@ static void readNumber(Parser* parser)
     while (isDigit(peekChar(parser))) nextChar(parser);
   }
 
-  errno = 0;
-  char* end;
-  parser->number = strtod(parser->tokenStart, &end);
-  if (errno == ERANGE)
-  {
-    lexError(parser, "Number literal was too large.");
-    parser->number = 0;
-  }
-  else if (end == parser->tokenStart)
-  {
-    lexError(parser, "Invalid number literal.");
-    parser->number = 0;
-  }
-
-  makeToken(parser, TOKEN_NUMBER);
+  makeNumber(parser, false);
 }
 
 // Finishes lexing an identifier. Handles reserved words.
