@@ -880,7 +880,8 @@ DEF_PRIMITIVE(num_cos)
 
 DEF_PRIMITIVE(num_decimal)
 {
-  RETURN_NUM((uint32_t)(AS_NUM(args[0])));
+  double num = AS_NUM(args[0]);
+  RETURN_NUM(num - (int32_t)num);
 }
 
 DEF_PRIMITIVE(num_deg)
@@ -945,8 +946,7 @@ DEF_PRIMITIVE(num_toString)
 
 DEF_PRIMITIVE(num_truncate)
 {
-  double num = AS_NUM(args[0]);
-  RETURN_NUM(num - (uint32_t)num);
+  RETURN_NUM((int32_t)(AS_NUM(args[0])));
 }
 
 DEF_PRIMITIVE(num_fromString)
