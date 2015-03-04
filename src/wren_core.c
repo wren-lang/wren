@@ -969,7 +969,9 @@ DEF_PRIMITIVE(num_toString)
 
 DEF_PRIMITIVE(num_truncate)
 {
-  RETURN_NUM((int32_t)(AS_NUM(args[0])));
+  double integer;
+  modf(AS_NUM(args[0]) , &integer);
+  RETURN_NUM(integer);
 }
 
 DEF_PRIMITIVE(num_fromString)
