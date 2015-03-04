@@ -880,8 +880,8 @@ DEF_PRIMITIVE(num_cos)
 
 DEF_PRIMITIVE(num_decimal)
 {
-  double num = AS_NUM(args[0]);
-  RETURN_NUM(num - (int32_t)num);
+  double value = AS_NUM(args[0]);
+  RETURN_NUM(value - (int32_t)value);
 }
 
 DEF_PRIMITIVE(num_deg)
@@ -906,12 +906,12 @@ DEF_PRIMITIVE(num_rad)
 
 DEF_PRIMITIVE(num_sign)
 {
-  double num = AS_NUM(args[0]);
+  double value = AS_NUM(args[0]);
   double sign;
-  if (num > 0) {
+  if (value > 0) {
     sign = 1;
   } else
-  if (num < 0) {
+  if (value < 0) {
     sign = -1;
   } else {
     sign = 0;
