@@ -488,8 +488,7 @@ class Planner {
     var unsatisfied = removePropagateFrom(out)
     var strength = REQUIRED
     while (true) {
-      for (i in 0...unsatisfied.count) {
-        var u = unsatisfied[i]
+      for (u in unsatisfied) {
         if (u.strength == strength) incrementalAdd(u)
       }
       strength = strength.nextWeaker
@@ -539,8 +538,7 @@ class Planner {
   // given [constraints], usually a set of input constraints.
   extractPlanFromConstraints(constraints) {
     var sources = []
-    for (i in 0...constraints.count) {
-      var constraint = constraints[i]
+    for (constraint in constraints) {
       // if not in plan already and eligible for inclusion.
       if (constraint.isInput && constraint.isSatisfied) sources.add(constraint)
     }
@@ -585,14 +583,12 @@ class Planner {
     var todo = [out]
     while (todo.count > 0) {
       var v = todo.removeAt(-1)
-      for (i in 0...v.constraints.count) {
-        var constraint = v.constraints[i]
+      for (constraint in v.constraints) {
         if (!constraint.isSatisfied) unsatisfied.add(constraint)
       }
 
       var determining = v.determinedBy
-      for (i in 0...v.constraints.count) {
-        var next = v.constraints[i]
+      for (next in v.constraints) {
         if (next != determining && next.isSatisfied) {
           next.recalculate
           todo.add(next.output)
@@ -605,8 +601,7 @@ class Planner {
 
   addConstraintsConsumingTo(v, coll) {
     var determining = v.determinedBy
-    for (i in 0...v.constraints.count) {
-      var constraint = v.constraints[i]
+    for (constraint in v.constraints) {
       if (constraint != determining && constraint.isSatisfied) {
         coll.add(constraint)
       }
