@@ -904,6 +904,11 @@ DEF_PRIMITIVE(num_rad)
   RETURN_NUM(floor(AS_NUM(args[0]) / 57.2957795130823208768));
 }
 
+DEF_PRIMITIVE(num_sign)
+{
+  RETURN_NUM(AS_NUM(args[0]) >= 0.0 ? 1 : -1);
+}
+
 DEF_PRIMITIVE(num_sin)
 {
   RETURN_NUM(sin(AS_NUM(args[0])));
@@ -1540,6 +1545,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "floor", num_floor);
   PRIMITIVE(vm->numClass, "isNan", num_isNan);
   PRIMITIVE(vm->numClass, "rad", num_rad);
+  PRIMITIVE(vm->numClass, "sign", num_sign);
   PRIMITIVE(vm->numClass, "sin", num_sin);
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
   PRIMITIVE(vm->numClass, "toString", num_toString);
