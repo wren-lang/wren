@@ -906,7 +906,17 @@ DEF_PRIMITIVE(num_rad)
 
 DEF_PRIMITIVE(num_sign)
 {
-  RETURN_NUM(AS_NUM(args[0]) >= 0.0 ? 1 : -1);
+  double num = AS_NUM(args[0]);
+  double sign;
+  if (num > 0) {
+    sign = 1;
+  } else
+  if (num < 0) {
+    sign = -1;
+  } else {
+    sign = 0;
+  }
+  RETURN_NUM(sign);
 }
 
 DEF_PRIMITIVE(num_sin)
