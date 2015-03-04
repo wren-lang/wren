@@ -915,16 +915,18 @@ DEF_PRIMITIVE(num_rad)
 DEF_PRIMITIVE(num_sign)
 {
   double value = AS_NUM(args[0]);
-  double sign;
-  if (value > 0) {
-    sign = 1;
-  } else
-  if (value < 0) {
-    sign = -1;
-  } else {
-    sign = 0;
+  if (value > 0)
+  {
+    RETURN_NUM(1);
   }
-  RETURN_NUM(sign);
+  else if (value < 0)
+  {
+    RETURN_NUM(-1);
+  }
+  else
+  {
+    RETURN_NUM(0);
+  }
 }
 
 DEF_PRIMITIVE(num_sin)
