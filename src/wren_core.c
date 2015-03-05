@@ -883,13 +883,6 @@ DEF_PRIMITIVE(num_deg)
   RETURN_NUM(floor(AS_NUM(args[0]) * 57.2957795130823208768));
 }
 
-DEF_PRIMITIVE(num_div)
-{
-  int32_t left = (int32_t)AS_NUM(args[0]);
-  int32_t right = (int32_t)AS_NUM(args[1]);
-  RETURN_NUM(left / right);
-}
-
 DEF_PRIMITIVE(num_floor)
 {
   RETURN_NUM(floor(AS_NUM(args[0])));
@@ -1563,7 +1556,6 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "ceil", num_ceil);
   PRIMITIVE(vm->numClass, "cos", num_cos);
   PRIMITIVE(vm->numClass, "deg", num_deg);
-  PRIMITIVE(vm->numClass, "div(_)", num_div);
   PRIMITIVE(vm->numClass, "floor", num_floor);
   PRIMITIVE(vm->numClass, "fraction", num_fraction);
   PRIMITIVE(vm->numClass, "isNan", num_isNan);
