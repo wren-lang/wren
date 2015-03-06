@@ -45,6 +45,14 @@
 // This string literal is generated automatically from core. Do not edit.
 static const char* libSource =
 "class Sequence {\n"
+"  count {\n"
+"    var result = 0\n"
+"    for (element in this) {\n"
+"      result = result + 1\n"
+"    }\n"
+"    return result\n"
+"  }\n"
+"\n"
 "  map(f) {\n"
 "    var result = new List\n"
 "    for (element in this) {\n"

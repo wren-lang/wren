@@ -1,4 +1,12 @@
 class Sequence {
+  count {
+    var result = 0
+    for (element in this) {
+      result = result + 1
+    }
+    return result
+  }
+
   map(f) {
     var result = new List
     for (element in this) {
