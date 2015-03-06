@@ -264,15 +264,187 @@ When you mix these all together, you need to worry about
 follows C, except that it fixes the bitwise operator mistake. The full
 precedence table, from lowest to highest, is:
 
-    :::dart
-    =           // Assignment.
-    && || ?:    // Logic.
-    is          // Type test.
-    == !=       // Equality.
-    < > <= >=   // Comparison.
-    .. ...      // Range.
-    | &         // Bitwise.
-    + -         // Terms.
-    * / %       // Factors.
-    - ~ !       // Unary.
-    . []        // Call.
+<table class="precedence">
+  <tbody>
+    <tr>
+      <th>Precedence</th>
+      <th>Operator</th>
+      <th>Description</th>
+      <th>Associativity</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>()</td>
+      <td>Call</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>[]</td>
+      <td>Subscript</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>.</td>
+      <td>Selection</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>-</td>
+      <td>Unary minus</td>
+      <td>Right-to-left</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>!</td>
+      <td>Logical not</td>
+      <td>Right-to-left</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>~</td>
+      <td>Bitwise not</td>
+      <td>Right-to-left</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>*</td>
+      <td>Multiplication</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>/</td>
+      <td>Division</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>%</td>
+      <td>Modulo</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>+</td>
+      <td>Addition</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>-</td>
+      <td>Subtraction</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>..</td>
+      <td>Range (inclusive)</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>...</td>
+      <td>Range (half-inclusive)</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>&lt;&lt;</td>
+      <td>Bitwise left shift</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>&gt;&gt;</td>
+      <td>Bitwise right shift</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>&lt;</td>
+      <td>Less than</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>&lt;=</td>
+      <td>Less than or equal to</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>&gt;</td>
+      <td>Greater than</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>&gt;=</td>
+      <td>Greater than or equal to</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>==</td>
+      <td>Equal to</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>!=</td>
+      <td>Not equal to</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>&amp;</td>
+      <td>Bitwise AND</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>^</td>
+      <td>Bitwise XOR</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td>|</td>
+      <td>Bitwise OR</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>is</td>
+      <td>Type test</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td>&amp;&amp;</td>
+      <td>Logical AND</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>||</td>
+      <td>Logical OR</td>
+      <td>Left-to-right</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td>?:</td>
+      <td>Ternary Conditional</td>
+      <td>Right-to-left</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>=</td>
+      <td>Assignment</td>
+      <td>Right-to-left</td>
+    </tr>
+  </tbody>
+</table>

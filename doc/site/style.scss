@@ -323,6 +323,23 @@ table.chart {
   }
 }
 
+// Precedence table on expressions page.
+table.precedence {
+  width: 100%;
+  padding-left: 25px;
+
+  tr {
+    margin: 0;
+    padding: 0;
+  }
+
+  th, td {
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+  }
+}
+
 @media only screen and (max-width: 839px) {
   // 36 pixel columns.
   .page { width: 720px; }
