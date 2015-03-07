@@ -886,11 +886,6 @@ DEF_PRIMITIVE(num_cos)
   RETURN_NUM(cos(AS_NUM(args[0])));
 }
 
-DEF_PRIMITIVE(num_deg)
-{
-  RETURN_NUM(floor(AS_NUM(args[0]) * 57.2957795130823208768));
-}
-
 DEF_PRIMITIVE(num_floor)
 {
   RETURN_NUM(floor(AS_NUM(args[0])));
@@ -898,19 +893,13 @@ DEF_PRIMITIVE(num_floor)
 
 DEF_PRIMITIVE(num_fraction)
 {
-  double integer;
-  double fractional = modf(AS_NUM(args[0]) , &integer);
-  RETURN_NUM(fractional);
+  double dummy;
+  RETURN_NUM(modf(AS_NUM(args[0]) , &dummy));
 }
 
 DEF_PRIMITIVE(num_isNan)
 {
   RETURN_BOOL(isnan(AS_NUM(args[0])));
-}
-
-DEF_PRIMITIVE(num_rad)
-{
-  RETURN_NUM(floor(AS_NUM(args[0]) / 57.2957795130823208768));
 }
 
 DEF_PRIMITIVE(num_sign)
@@ -1563,11 +1552,9 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "abs", num_abs);
   PRIMITIVE(vm->numClass, "ceil", num_ceil);
   PRIMITIVE(vm->numClass, "cos", num_cos);
-  PRIMITIVE(vm->numClass, "deg", num_deg);
   PRIMITIVE(vm->numClass, "floor", num_floor);
   PRIMITIVE(vm->numClass, "fraction", num_fraction);
   PRIMITIVE(vm->numClass, "isNan", num_isNan);
-  PRIMITIVE(vm->numClass, "rad", num_rad);
   PRIMITIVE(vm->numClass, "sign", num_sign);
   PRIMITIVE(vm->numClass, "sin", num_sin);
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
