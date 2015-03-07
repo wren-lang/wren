@@ -478,10 +478,10 @@ static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
   map->capacity = capacity;
 }
 
-uint32_t wrenMapFind(ObjMap* map, Value key)
+static MapEntry *findEntry(ObjMap* map, Value key)
 {
   // If there is no entry array (an empty map), we definitely won't find it.
-  if (map->capacity == 0) return UINT32_MAX;
+  if (map->capacity == 0) return NULL;
 
   // Figure out where to insert it in the table. Use open addressing and
   // basic linear probing.
@@ -497,17 +497,25 @@ uint32_t wrenMapFind(ObjMap* map, Value key)
     {
       // If we found an empty slot, the key is not in the table. If we found a
       // slot that contains a deleted key, we have to keep looking.
-      if (IS_FALSE(entry->value)) return UINT32_MAX;
+      if (IS_FALSE(entry->value)) return NULL;
     }
     else if (wrenValuesEqual(entry->key, key))
     {
       // If the key matches, we found it.
-      return index;
+      return entry;
     }
 
     // Try the next slot.
     index = (index + 1) % map->capacity;
   }
+}
+
+Value wrenMapGet(ObjMap* map, Value key)
+{
+  MapEntry *entry = findEntry(map, key);
+  if (entry != NULL) return entry->value;
+  
+  return UNDEFINED_VAL;
 }
 
 void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value)
@@ -539,15 +547,15 @@ void wrenMapClear(WrenVM* vm, ObjMap* map)
 
 Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
 {
-  uint32_t index = wrenMapFind(map, key);
-  if (index == UINT32_MAX) return NULL_VAL;
+  MapEntry *entry = findEntry(map, key);
+  if (entry == NULL) return NULL_VAL;
 
   // Remove the entry from the map. Set this value to true, which marks it as a
   // deleted slot. When searching for a key, we will stop on empty slots, but
   // continue past deleted slots.
-  Value value = map->entries[index].value;
-  map->entries[index].key = UNDEFINED_VAL;
-  map->entries[index].value = TRUE_VAL;
+  Value value = entry->value;
+  entry->key = UNDEFINED_VAL;
+  entry->value = TRUE_VAL;
 
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 

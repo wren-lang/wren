@@ -376,18 +376,23 @@ static inline void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
 // Looks up the core module in the module map.
 static ObjModule* getCoreModule(WrenVM* vm)
 {
-  uint32_t entry = wrenMapFind(vm->modules, NULL_VAL);
-  ASSERT(entry != UINT32_MAX, "Could not find core module.");
-  return AS_MODULE(vm->modules->entries[entry].value);
+  Value moduleValue = wrenMapGet(vm->modules, NULL_VAL);
+  ASSERT(!IS_UNDEFINED(moduleValue), "Could not find core module.");
+  return AS_MODULE(moduleValue);
 }
 
 static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
 {
-  ObjModule* module = wrenNewModule(vm);
+  ObjModule* module;
+  Value moduleValue = wrenMapGet(vm->modules, name);
 
   // See if the module has already been loaded.
-  uint32_t index = wrenMapFind(vm->modules, name);
-  if (index == UINT32_MAX)
+  if (!IS_UNDEFINED(moduleValue))
+  {
+    // Execute the new code in the context of the existing module.
+    module = AS_MODULE(moduleValue);
+  }
+  else
   {
     module = wrenNewModule(vm);
 
@@ -404,11 +409,6 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
                          coreModule->variableNames.data[i].length,
                          coreModule->variables.data[i]);
     }
-  }
-  else
-  {
-    // Execute the new code in the context of the existing module.
-    module = AS_MODULE(vm->modules->entries[index].value);
   }
 
   ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(name), source);
@@ -431,8 +431,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
 static Value importModule(WrenVM* vm, Value name)
 {
   // If the module is already loaded, we don't need to do anything.
-  uint32_t index = wrenMapFind(vm->modules, name);
-  if (index != UINT32_MAX) return NULL_VAL;
+  if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
 
   // Load the module's source code from the embedder.
   char* source = vm->loadModule(vm, AS_CSTRING(name));
@@ -455,10 +454,10 @@ static Value importModule(WrenVM* vm, Value name)
 static bool importVariable(WrenVM* vm, Value moduleName, Value variableName,
                             Value* result)
 {
-  uint32_t moduleEntry = wrenMapFind(vm->modules, moduleName);
-  ASSERT(moduleEntry != UINT32_MAX, "Should only look up loaded modules.");
+  Value moduleValue = wrenMapGet(vm->modules, moduleName);
+  ASSERT(!IS_UNDEFINED(moduleValue), "Should only look up loaded modules.");
 
-  ObjModule* module = AS_MODULE(vm->modules->entries[moduleEntry].value);
+  ObjModule* module = AS_MODULE(moduleValue);
 
   ObjString* variable = AS_STRING(variableName);
   uint32_t variableEntry = wrenSymbolTableFind(&module->variableNames,
@@ -1281,9 +1280,9 @@ WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
   Value moduleName = wrenNewString(vm, module, strlen(module));
   wrenPushRoot(vm, AS_OBJ(moduleName));
 
-  uint32_t moduleEntry = wrenMapFind(vm->modules, moduleName);
+  Value moduleValue = wrenMapGet(vm->modules, moduleName);
   // TODO: Handle module not being found.
-  ObjModule* moduleObj = AS_MODULE(vm->modules->entries[moduleEntry].value);
+  ObjModule* moduleObj = AS_MODULE(moduleValue);
 
   int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
                                          variable, strlen(variable));
@@ -1431,8 +1430,7 @@ Value wrenImportModule(WrenVM* vm, const char* name)
   wrenPushRoot(vm, AS_OBJ(nameValue));
 
   // If the module is already loaded, we don't need to do anything.
-  uint32_t index = wrenMapFind(vm->modules, nameValue);
-  if (index != UINT32_MAX)
+  if (!IS_UNDEFINED(wrenMapGet(vm->modules, nameValue)))
   {
     wrenPopRoot(vm); // nameValue.
     return NULL_VAL;

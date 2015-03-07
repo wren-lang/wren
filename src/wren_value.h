@@ -350,7 +350,7 @@ typedef struct
   Obj obj;
 
   // TODO: Make these uint32_t to match ObjMap, or vice versa.
-  
+
   // The number of elements allocated.
   int capacity;
 
@@ -680,9 +680,9 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
 // Creates a new empty map.
 ObjMap* wrenNewMap(WrenVM* vm);
 
-// Looks up [key] in [map]. If found, returns the index of its entry. Otherwise,
-// returns `UINT32_MAX`.
-uint32_t wrenMapFind(ObjMap* map, Value key);
+// Looks up [key] in [map]. If found, returns the value. Otherwise, returns
+// `UNDEFINED_VAL`.
+Value wrenMapGet(ObjMap* map, Value key);
 
 // Associates [key] with [value] in [map].
 void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value);

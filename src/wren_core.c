@@ -782,10 +782,10 @@ DEF_PRIMITIVE(map_subscript)
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
 
   ObjMap* map = AS_MAP(args[0]);
-  uint32_t index = wrenMapFind(map, args[1]);
-  if (index == UINT32_MAX) RETURN_NULL;
+  Value value = wrenMapGet(map, args[1]);
+  if (IS_UNDEFINED(value)) RETURN_NULL;
 
-  RETURN_VAL(map->entries[index].value);
+  RETURN_VAL(value);
 }
 
 DEF_PRIMITIVE(map_subscriptSetter)
@@ -806,7 +806,7 @@ DEF_PRIMITIVE(map_containsKey)
 {
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
 
-  RETURN_BOOL(wrenMapFind(AS_MAP(args[0]), args[1]) != UINT32_MAX);
+  RETURN_BOOL(!IS_UNDEFINED(wrenMapGet(AS_MAP(args[0]), args[1])));
 }
 
 DEF_PRIMITIVE(map_count)
