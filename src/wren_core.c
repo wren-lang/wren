@@ -452,6 +452,11 @@ DEF_PRIMITIVE(fiber_call1)
   return PRIM_RUN_FIBER;
 }
 
+DEF_PRIMITIVE(fiber_current)
+{
+  RETURN_OBJ(fiber);
+}
+
 DEF_PRIMITIVE(fiber_error)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
@@ -532,39 +537,57 @@ DEF_PRIMITIVE(fiber_try)
 
 DEF_PRIMITIVE(fiber_yield)
 {
-  if (fiber->caller == NULL) RETURN_ERROR("No fiber to yield to.");
-
+  // Unhook this fiber from the one that called it.
   ObjFiber* caller = fiber->caller;
   fiber->caller = NULL;
   fiber->callerIsTrying = false;
 
-  // Make the caller's run method return null.
-  *(caller->stackTop - 1) = NULL_VAL;
+  // If we don't have any other pending fibers, jump all the way out of the
+  // interpreter.
+  if (caller == NULL)
+  {
+    args[0] = NULL_VAL;
+  }
+  else
+  {
+    // Make the caller's run method return null.
+    *(caller->stackTop - 1) = NULL_VAL;
 
-  // Return the fiber to resume.
-  args[0] = OBJ_VAL(caller);
+    // Return the fiber to resume.
+    args[0] = OBJ_VAL(caller);
+  }
+
   return PRIM_RUN_FIBER;
 }
 
 DEF_PRIMITIVE(fiber_yield1)
 {
-  if (fiber->caller == NULL) RETURN_ERROR("No fiber to yield to.");
-
+  // Unhook this fiber from the one that called it.
   ObjFiber* caller = fiber->caller;
   fiber->caller = NULL;
   fiber->callerIsTrying = false;
 
-  // Make the caller's run method return the argument passed to yield.
-  *(caller->stackTop - 1) = args[1];
+  // If we don't have any other pending fibers, jump all the way out of the
+  // interpreter.
+  if (caller == NULL)
+  {
+    args[0] = NULL_VAL;
+  }
+  else
+  {
+    // Make the caller's run method return the argument passed to yield.
+    *(caller->stackTop - 1) = args[1];
 
-  // When the yielding fiber resumes, we'll store the result of the yield call
-  // in its stack. Since Fiber.yield(value) has two arguments (the Fiber class
-  // and the value) and we only need one slot for the result, discard the other
-  // slot now.
-  fiber->stackTop--;
+    // When the yielding fiber resumes, we'll store the result of the yield call
+    // in its stack. Since Fiber.yield(value) has two arguments (the Fiber class
+    // and the value) and we only need one slot for the result, discard the other
+    // slot now.
+    fiber->stackTop--;
 
-  // Return the fiber to resume.
-  args[0] = OBJ_VAL(caller);
+    // Return the fiber to resume.
+    args[0] = OBJ_VAL(caller);
+  }
+
   return PRIM_RUN_FIBER;
 }
 
@@ -1490,6 +1513,10 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass->obj.classObj, "<instantiate>", fiber_instantiate);
   PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
   PRIMITIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "current", fiber_current);
+  /*
+  PRIMITIVE(vm->fiberClass->obj.classObj, "suspend()", fiber_suspend);
+  */
   PRIMITIVE(vm->fiberClass->obj.classObj, "yield()", fiber_yield);
   PRIMITIVE(vm->fiberClass->obj.classObj, "yield(_)", fiber_yield1);
   PRIMITIVE(vm->fiberClass, "call()", fiber_call);

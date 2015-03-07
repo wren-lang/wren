@@ -792,6 +792,10 @@ static bool runInterpreter(WrenVM* vm)
 
             case PRIM_RUN_FIBER:
               STORE_FRAME();
+
+              // If we don't have a fiber to switch to, stop interpreting.
+              if (IS_NULL(args[0])) return true;
+
               fiber = AS_FIBER(args[0]);
               vm->fiber = fiber;
               LOAD_FRAME();
@@ -887,6 +891,10 @@ static bool runInterpreter(WrenVM* vm)
 
             case PRIM_RUN_FIBER:
               STORE_FRAME();
+
+              // If we don't have a fiber to switch to, stop interpreting.
+              if (IS_NULL(args[0])) return true;
+
               fiber = AS_FIBER(args[0]);
               vm->fiber = fiber;
               LOAD_FRAME();

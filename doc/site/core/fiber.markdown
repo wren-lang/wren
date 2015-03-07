@@ -13,6 +13,10 @@ fiber is run. Does not immediately start running the fiber.
       IO.print("I won't get printed")
     }
 
+### Fiber.**current**
+
+The currently executing fiber.
+
 ### Fiber.**yield**()
 
 Pauses the current fiber and transfers control to the parent fiber. "Parent"
@@ -45,14 +49,13 @@ If a yielded fiber is resumed by calling `call()` or `run()` with an argument,
 If it was resumed by calling `call()` or `run()` with no argument, it returns
 `null`.
 
-It is a runtime error to call this when there is no parent fiber to return to.
+If there is no parent fiber to return to, this exits the interpreter. This can
+be useful to pause execution until the host application wants to resume it
+later.
 
     :::dart
-    Fiber.yield() // ERROR
-
-    new Fiber {
-      Fiber.yield() // ERROR
-    }.run()
+    Fiber.yield()
+    IO.print("this does not get reached")
 
 ### Fiber.**yield**(value)
 
