@@ -45,8 +45,6 @@
 #define STACK_SIZE 1024
 #define MAX_CALL_FRAMES 256
 
-// TODO: Can we eliminate this and use the classObj pointers to tell an object's
-// type instead?
 // Identifies which specific type a heap-allocated object is.
 typedef enum {
   OBJ_CLASS,

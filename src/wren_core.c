@@ -1508,15 +1508,11 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
   PRIMITIVE(vm->boolClass, "!", bool_not);
 
-  // TODO: Make fibers inherit Sequence and be iterable.
   vm->fiberClass = defineClass(vm, "Fiber");
   PRIMITIVE(vm->fiberClass->obj.classObj, "<instantiate>", fiber_instantiate);
   PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
   PRIMITIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
   PRIMITIVE(vm->fiberClass->obj.classObj, "current", fiber_current);
-  /*
-  PRIMITIVE(vm->fiberClass->obj.classObj, "suspend()", fiber_suspend);
-  */
   PRIMITIVE(vm->fiberClass->obj.classObj, "yield()", fiber_yield);
   PRIMITIVE(vm->fiberClass->obj.classObj, "yield(_)", fiber_yield1);
   PRIMITIVE(vm->fiberClass, "call()", fiber_call);

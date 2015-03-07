@@ -2393,7 +2393,6 @@ void namedSignature(Compiler* compiler, Signature* signature)
 // Compiles a method signature for a constructor.
 void constructorSignature(Compiler* compiler, Signature* signature)
 {
-  // TODO: How should nullary constructors be handled?
   signature->type = SIG_GETTER;
 
   // Add the parameters, if there are any.

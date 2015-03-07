@@ -200,10 +200,8 @@ struct WrenMethod
   WrenMethod* next;
 };
 
-// TODO: Move into wren_vm.c?
 struct WrenVM
 {
-  // TODO: Use an array for some of these.
   ObjClass* boolClass;
   ObjClass* classClass;
   ObjClass* fiberClass;
