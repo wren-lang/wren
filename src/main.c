@@ -127,7 +127,7 @@ static int runFile(WrenVM* vm, const char* path)
       result = 255;
       break;
   }
-
+  
   wrenFreeVM(vm);
   free(source);
 

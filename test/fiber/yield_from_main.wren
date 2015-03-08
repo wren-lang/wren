@@ -1,1 +1,3 @@
-Fiber.yield() // expect runtime error: No fiber to yield to.
+IO.print("before") // expect: before
+Fiber.yield()
+IO.print("not reached")

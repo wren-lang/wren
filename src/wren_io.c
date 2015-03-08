@@ -120,11 +120,9 @@ static void ioRead(WrenVM* vm)
   char buffer[MAX_READ_LEN];
   char* result = fgets(buffer, MAX_READ_LEN, stdin);
 
-  if (result == NULL) {
-    // TODO: handle error.
+  if (result != NULL) {
+    wrenReturnString(vm, buffer, (int)strlen(buffer));
   }
-
-  wrenReturnString(vm, buffer, (int)strlen(buffer));
 }
 
 static void ioClock(WrenVM* vm)

@@ -189,10 +189,19 @@ typedef enum
   CODE_END
 } Code;
 
-// TODO: Move into wren_vm.c?
+struct WrenMethod
+{
+  // The fiber that invokes the method. Its stack is pre-populated with the
+  // receiver for the method, and it contains a single callframe whose function
+  // is the bytecode stub to invoke the method.
+  ObjFiber* fiber;
+
+  WrenMethod* prev;
+  WrenMethod* next;
+};
+
 struct WrenVM
 {
-  // TODO: Use an array for some of these.
   ObjClass* boolClass;
   ObjClass* classClass;
   ObjClass* fiberClass;
@@ -253,6 +262,10 @@ struct WrenVM
   // During a foreign function call, this will point to the first argument (the
   // receiver) of the call on the fiber's stack.
   Value* foreignCallSlot;
+
+  // Pointer to the first node in the linked list of active method handles or
+  // NULL if there are no handles.
+  WrenMethod* methodHandles;
 
   // During a foreign function call, this will contain the number of arguments
   // to the function.
@@ -340,10 +353,10 @@ void wrenPopRoot(WrenVM* vm);
 // header doesn't have a full definitely of WrenVM yet.
 static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 {
-#if WREN_NAN_TAGGING
   if (IS_NUM(value)) return vm->numClass;
   if (IS_OBJ(value)) return AS_OBJ(value)->classObj;
 
+#if WREN_NAN_TAGGING
   switch (GET_TAG(value))
   {
     case TAG_FALSE: return vm->boolClass; break;

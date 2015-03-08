@@ -260,8 +260,44 @@ A name that starts with *two* underscores is a *static* field. They work
 similar to [fields](#fields) except the data is stored on the class itself, and
 not the instance. They can be used in *both* instance and static methods.
 
-**TODO: Example.**
+    :::dart
+    class Foo {
+      // Set the static field.
+      static set(a) {
+        __a = a
+      }
 
+      setFromInstance(a) {
+        __a = a
+      }
+
+      // Can use __a in both static methods...
+      static bar { __a }
+
+      // ...and instance ones.
+      baz { __a }
+    }
+
+Just like instance fields, static fields are initially `null`:
+
+    :::dart
+    IO.print(Foo.bar) // null.
+
+They can be used from static methods:
+
+    :::dart
+    Foo.set("foo")
+    IO.print(Foo.bar) // foo.
+
+And also instance methods. When you do so, there is still only one static field
+shared among all instances of the class:
+
+    :::dart
+    var foo1 = new Foo
+    var foo2 = new Foo
+
+    foo1.setFromInstance("updated")
+    IO.print(foo2.baz) // updated.
 
 ## Inheritance
 

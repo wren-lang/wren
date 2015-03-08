@@ -60,14 +60,24 @@ ifeq ($(ARCH),64)
 	BUILD_DIR := $(BUILD_DIR)-64
 endif
 
+# Some platform-specific workarounds. Note that we use "gcc" explicitly in the
+# call to get the machine name because one of these workarounds deals with $(CC)
+# itself not working.
+OS := $(lastword $(subst -, ,$(shell gcc -dumpmachine)))
+
 # Don't add -fPIC on Windows since it generates a warning which gets promoted
 # to an error by -Werror.
-OS := $(lastword $(subst -, ,$(shell $(CC) -dumpmachine)))
 ifeq      ($(OS),mingw32)
 else ifeq ($(OS),cygwin)
 	# Do nothing.
 else
 	CFLAGS += -fPIC
+endif
+
+# MinGW--or at least some versions of it--default CC to "cc" but then don't
+# provide an executable named "cc". Manually point to "gcc" instead.
+ifeq ($(OS),mingw32)
+	CC = GCC
 endif
 
 # Clang on Mac OS X has different flags and a different extension to build a

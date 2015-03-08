@@ -108,6 +108,23 @@
 // field index*.
 #define MAX_FIELDS 255
 
+// Use the VM's allocator to allocate an object of [type].
+#define ALLOCATE(vm, type) \
+    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
+
+// Use the VM's allocator to allocate an object of [mainType] containing a
+// flexible array of [count] objects of [arrayType].
+#define ALLOCATE_FLEX(vm, mainType, arrayType, count) \
+    ((mainType*)wrenReallocate(vm, NULL, 0, \
+    sizeof(mainType) + sizeof(arrayType) * count))
+
+// Use the VM's allocator to allocate an array of [count] elements of [type].
+#define ALLOCATE_ARRAY(vm, type, count) \
+    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * count))
+
+// Use the VM's allocator to free the previously allocated memory at [pointer].
+#define DEALLOCATE(vm, pointer) wrenReallocate(vm, pointer, 0, 0)
+
 // The Microsoft compiler does not support the "inline" modifier when compiling
 // as plain C.
 #if defined( _MSC_VER ) && !defined(__cplusplus)

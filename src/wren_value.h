@@ -45,8 +45,6 @@
 #define STACK_SIZE 1024
 #define MAX_CALL_FRAMES 256
 
-// TODO: Can we eliminate this and use the classObj pointers to tell an object's
-// type instead?
 // Identifies which specific type a heap-allocated object is.
 typedef enum {
   OBJ_CLASS,
@@ -350,7 +348,7 @@ typedef struct
   Obj obj;
 
   // TODO: Make these uint32_t to match ObjMap, or vice versa.
-  
+
   // The number of elements allocated.
   int capacity;
 
@@ -646,6 +644,9 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 // closure.
 ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 
+// Resets [fiber] back to an initial state where it is ready to invoke [fn].
+void wrenResetFiber(ObjFiber* fiber, Obj* fn);
+
 // TODO: The argument list here is getting a bit gratuitous.
 // Creates a new function object with the given code and constants. The new
 // function will take over ownership of [bytecode] and [sourceLines]. It will
@@ -677,9 +678,9 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index);
 // Creates a new empty map.
 ObjMap* wrenNewMap(WrenVM* vm);
 
-// Looks up [key] in [map]. If found, returns the index of its entry. Otherwise,
-// returns `UINT32_MAX`.
-uint32_t wrenMapFind(ObjMap* map, Value key);
+// Looks up [key] in [map]. If found, returns the value. Otherwise, returns
+// `UNDEFINED_VAL`.
+Value wrenMapGet(ObjMap* map, Value key);
 
 // Associates [key] with [value] in [map].
 void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value);

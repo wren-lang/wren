@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,23 +9,23 @@
 #include "wren_core.h"
 #include "wren_value.h"
 
-// Binds a native method named [name] (in Wren) implemented using C function
+// Binds a primitive method named [name] (in Wren) implemented using C function
 // [fn] to `ObjClass` [cls].
-#define NATIVE(cls, name, function) \
+#define PRIMITIVE(cls, name, function) \
     { \
       int symbol = wrenSymbolTableEnsure(vm, \
           &vm->methodNames, name, strlen(name)); \
       Method method; \
       method.type = METHOD_PRIMITIVE; \
-      method.fn.primitive = native_##function; \
+      method.fn.primitive = prim_##function; \
       wrenBindMethod(vm, cls, symbol, method); \
     }
 
-// Defines a native method whose C function name is [native]. This abstracts
-// the actual type signature of a native function and makes it clear which C
-// functions are intended to be invoked as natives.
-#define DEF_NATIVE(native) \
-    static PrimitiveResult native_##native(WrenVM* vm, ObjFiber* fiber, Value* args)
+// Defines a primitive method whose C function name is [name]. This abstracts
+// the actual type signature of a primitive function and makes it clear which C
+// functions are invoked as primitives.
+#define DEF_PRIMITIVE(name) \
+    static PrimitiveResult prim_##name(WrenVM* vm, ObjFiber* fiber, Value* args)
 
 #define RETURN_VAL(value)   do { args[0] = value; return PRIM_VALUE; } while (0)
 
@@ -44,6 +45,14 @@
 // This string literal is generated automatically from core. Do not edit.
 static const char* libSource =
 "class Sequence {\n"
+"  count {\n"
+"    var result = 0\n"
+"    for (element in this) {\n"
+"      result = result + 1\n"
+"    }\n"
+"    return result\n"
+"  }\n"
+"\n"
 "  map(f) {\n"
 "    var result = new List\n"
 "    for (element in this) {\n"
@@ -65,6 +74,13 @@ static const char* libSource =
 "      if (!f.call(element)) return false\n"
 "    }\n"
 "    return true\n"
+"  }\n"
+"\n"
+"  any(f) {\n"
+"    for (element in this) {\n"
+"      if (f.call(element)) return true\n"
+"    }\n"
+"    return false\n"
 "  }\n"
 "\n"
 "  reduce(acc, f) {\n"
@@ -329,12 +345,12 @@ static int calculateRange(WrenVM* vm, Value* args, ObjRange* range,
   return from;
 }
 
-DEF_NATIVE(bool_not)
+DEF_PRIMITIVE(bool_not)
 {
   RETURN_BOOL(!AS_BOOL(args[0]));
 }
 
-DEF_NATIVE(bool_toString)
+DEF_PRIMITIVE(bool_toString)
 {
   if (AS_BOOL(args[0]))
   {
@@ -346,26 +362,26 @@ DEF_NATIVE(bool_toString)
   }
 }
 
-DEF_NATIVE(class_instantiate)
+DEF_PRIMITIVE(class_instantiate)
 {
   ObjClass* classObj = AS_CLASS(args[0]);
   RETURN_VAL(wrenNewInstance(vm, classObj));
 }
 
-DEF_NATIVE(class_name)
+DEF_PRIMITIVE(class_name)
 {
   ObjClass* classObj = AS_CLASS(args[0]);
   RETURN_OBJ(classObj->name);
 }
 
-DEF_NATIVE(fiber_instantiate)
+DEF_PRIMITIVE(fiber_instantiate)
 {
   // Return the Fiber class itself. When we then call "new" on it, it will
   // create the fiber.
   RETURN_VAL(args[0]);
 }
 
-DEF_NATIVE(fiber_new)
+DEF_PRIMITIVE(fiber_new)
 {
   if (!validateFn(vm, args, 1, "Argument")) return PRIM_ERROR;
 
@@ -382,7 +398,7 @@ DEF_NATIVE(fiber_new)
   RETURN_OBJ(newFiber);
 }
 
-DEF_NATIVE(fiber_abort)
+DEF_PRIMITIVE(fiber_abort)
 {
   if (!validateString(vm, args, 1, "Error message")) return PRIM_ERROR;
 
@@ -391,7 +407,7 @@ DEF_NATIVE(fiber_abort)
   return PRIM_ERROR;
 }
 
-DEF_NATIVE(fiber_call)
+DEF_PRIMITIVE(fiber_call)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
 
@@ -410,7 +426,7 @@ DEF_NATIVE(fiber_call)
   return PRIM_RUN_FIBER;
 }
 
-DEF_NATIVE(fiber_call1)
+DEF_PRIMITIVE(fiber_call1)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
 
@@ -436,20 +452,25 @@ DEF_NATIVE(fiber_call1)
   return PRIM_RUN_FIBER;
 }
 
-DEF_NATIVE(fiber_error)
+DEF_PRIMITIVE(fiber_current)
+{
+  RETURN_OBJ(fiber);
+}
+
+DEF_PRIMITIVE(fiber_error)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
   if (runFiber->error == NULL) RETURN_NULL;
   RETURN_OBJ(runFiber->error);
 }
 
-DEF_NATIVE(fiber_isDone)
+DEF_PRIMITIVE(fiber_isDone)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
   RETURN_BOOL(runFiber->numFrames == 0 || runFiber->error != NULL);
 }
 
-DEF_NATIVE(fiber_run)
+DEF_PRIMITIVE(fiber_run)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
 
@@ -471,7 +492,7 @@ DEF_NATIVE(fiber_run)
   return PRIM_RUN_FIBER;
 }
 
-DEF_NATIVE(fiber_run1)
+DEF_PRIMITIVE(fiber_run1)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
 
@@ -494,7 +515,7 @@ DEF_NATIVE(fiber_run1)
   return PRIM_RUN_FIBER;
 }
 
-DEF_NATIVE(fiber_try)
+DEF_PRIMITIVE(fiber_try)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
 
@@ -514,52 +535,70 @@ DEF_NATIVE(fiber_try)
   return PRIM_RUN_FIBER;
 }
 
-DEF_NATIVE(fiber_yield)
+DEF_PRIMITIVE(fiber_yield)
 {
-  if (fiber->caller == NULL) RETURN_ERROR("No fiber to yield to.");
-
+  // Unhook this fiber from the one that called it.
   ObjFiber* caller = fiber->caller;
   fiber->caller = NULL;
   fiber->callerIsTrying = false;
 
-  // Make the caller's run method return null.
-  *(caller->stackTop - 1) = NULL_VAL;
+  // If we don't have any other pending fibers, jump all the way out of the
+  // interpreter.
+  if (caller == NULL)
+  {
+    args[0] = NULL_VAL;
+  }
+  else
+  {
+    // Make the caller's run method return null.
+    *(caller->stackTop - 1) = NULL_VAL;
 
-  // Return the fiber to resume.
-  args[0] = OBJ_VAL(caller);
+    // Return the fiber to resume.
+    args[0] = OBJ_VAL(caller);
+  }
+
   return PRIM_RUN_FIBER;
 }
 
-DEF_NATIVE(fiber_yield1)
+DEF_PRIMITIVE(fiber_yield1)
 {
-  if (fiber->caller == NULL) RETURN_ERROR("No fiber to yield to.");
-
+  // Unhook this fiber from the one that called it.
   ObjFiber* caller = fiber->caller;
   fiber->caller = NULL;
   fiber->callerIsTrying = false;
 
-  // Make the caller's run method return the argument passed to yield.
-  *(caller->stackTop - 1) = args[1];
+  // If we don't have any other pending fibers, jump all the way out of the
+  // interpreter.
+  if (caller == NULL)
+  {
+    args[0] = NULL_VAL;
+  }
+  else
+  {
+    // Make the caller's run method return the argument passed to yield.
+    *(caller->stackTop - 1) = args[1];
 
-  // When the yielding fiber resumes, we'll store the result of the yield call
-  // in its stack. Since Fiber.yield(value) has two arguments (the Fiber class
-  // and the value) and we only need one slot for the result, discard the other
-  // slot now.
-  fiber->stackTop--;
+    // When the yielding fiber resumes, we'll store the result of the yield call
+    // in its stack. Since Fiber.yield(value) has two arguments (the Fiber class
+    // and the value) and we only need one slot for the result, discard the other
+    // slot now.
+    fiber->stackTop--;
 
-  // Return the fiber to resume.
-  args[0] = OBJ_VAL(caller);
+    // Return the fiber to resume.
+    args[0] = OBJ_VAL(caller);
+  }
+
   return PRIM_RUN_FIBER;
 }
 
-DEF_NATIVE(fn_instantiate)
+DEF_PRIMITIVE(fn_instantiate)
 {
   // Return the Fn class itself. When we then call "new" on it, it will
   // return the block.
   RETURN_VAL(args[0]);
 }
 
-DEF_NATIVE(fn_new)
+DEF_PRIMITIVE(fn_new)
 {
   if (!validateFn(vm, args, 1, "Argument")) return PRIM_ERROR;
 
@@ -567,7 +606,7 @@ DEF_NATIVE(fn_new)
   RETURN_VAL(args[1]);
 }
 
-DEF_NATIVE(fn_arity)
+DEF_PRIMITIVE(fn_arity)
 {
   RETURN_NUM(AS_FN(args[0])->arity);
 }
@@ -589,58 +628,58 @@ static PrimitiveResult callFunction(WrenVM* vm, Value* args, int numArgs)
   return PRIM_CALL;
 }
 
-DEF_NATIVE(fn_call0) { return callFunction(vm, args, 0); }
-DEF_NATIVE(fn_call1) { return callFunction(vm, args, 1); }
-DEF_NATIVE(fn_call2) { return callFunction(vm, args, 2); }
-DEF_NATIVE(fn_call3) { return callFunction(vm, args, 3); }
-DEF_NATIVE(fn_call4) { return callFunction(vm, args, 4); }
-DEF_NATIVE(fn_call5) { return callFunction(vm, args, 5); }
-DEF_NATIVE(fn_call6) { return callFunction(vm, args, 6); }
-DEF_NATIVE(fn_call7) { return callFunction(vm, args, 7); }
-DEF_NATIVE(fn_call8) { return callFunction(vm, args, 8); }
-DEF_NATIVE(fn_call9) { return callFunction(vm, args, 9); }
-DEF_NATIVE(fn_call10) { return callFunction(vm, args, 10); }
-DEF_NATIVE(fn_call11) { return callFunction(vm, args, 11); }
-DEF_NATIVE(fn_call12) { return callFunction(vm, args, 12); }
-DEF_NATIVE(fn_call13) { return callFunction(vm, args, 13); }
-DEF_NATIVE(fn_call14) { return callFunction(vm, args, 14); }
-DEF_NATIVE(fn_call15) { return callFunction(vm, args, 15); }
-DEF_NATIVE(fn_call16) { return callFunction(vm, args, 16); }
+DEF_PRIMITIVE(fn_call0) { return callFunction(vm, args, 0); }
+DEF_PRIMITIVE(fn_call1) { return callFunction(vm, args, 1); }
+DEF_PRIMITIVE(fn_call2) { return callFunction(vm, args, 2); }
+DEF_PRIMITIVE(fn_call3) { return callFunction(vm, args, 3); }
+DEF_PRIMITIVE(fn_call4) { return callFunction(vm, args, 4); }
+DEF_PRIMITIVE(fn_call5) { return callFunction(vm, args, 5); }
+DEF_PRIMITIVE(fn_call6) { return callFunction(vm, args, 6); }
+DEF_PRIMITIVE(fn_call7) { return callFunction(vm, args, 7); }
+DEF_PRIMITIVE(fn_call8) { return callFunction(vm, args, 8); }
+DEF_PRIMITIVE(fn_call9) { return callFunction(vm, args, 9); }
+DEF_PRIMITIVE(fn_call10) { return callFunction(vm, args, 10); }
+DEF_PRIMITIVE(fn_call11) { return callFunction(vm, args, 11); }
+DEF_PRIMITIVE(fn_call12) { return callFunction(vm, args, 12); }
+DEF_PRIMITIVE(fn_call13) { return callFunction(vm, args, 13); }
+DEF_PRIMITIVE(fn_call14) { return callFunction(vm, args, 14); }
+DEF_PRIMITIVE(fn_call15) { return callFunction(vm, args, 15); }
+DEF_PRIMITIVE(fn_call16) { return callFunction(vm, args, 16); }
 
-DEF_NATIVE(fn_toString)
+DEF_PRIMITIVE(fn_toString)
 {
   RETURN_VAL(wrenNewString(vm, "<fn>", 4));
 }
 
-DEF_NATIVE(list_instantiate)
+DEF_PRIMITIVE(list_instantiate)
 {
   RETURN_OBJ(wrenNewList(vm, 0));
 }
 
-DEF_NATIVE(list_add)
+DEF_PRIMITIVE(list_add)
 {
   ObjList* list = AS_LIST(args[0]);
   wrenListAdd(vm, list, args[1]);
   RETURN_VAL(args[1]);
 }
 
-DEF_NATIVE(list_clear)
+DEF_PRIMITIVE(list_clear)
 {
   ObjList* list = AS_LIST(args[0]);
-  wrenReallocate(vm, list->elements, 0, 0);
+  DEALLOCATE(vm, list->elements);
   list->elements = NULL;
   list->capacity = 0;
   list->count = 0;
   RETURN_NULL;
 }
 
-DEF_NATIVE(list_count)
+DEF_PRIMITIVE(list_count)
 {
   ObjList* list = AS_LIST(args[0]);
   RETURN_NUM(list->count);
 }
 
-DEF_NATIVE(list_insert)
+DEF_PRIMITIVE(list_insert)
 {
   ObjList* list = AS_LIST(args[0]);
 
@@ -652,7 +691,7 @@ DEF_NATIVE(list_insert)
   RETURN_VAL(args[1]);
 }
 
-DEF_NATIVE(list_iterate)
+DEF_PRIMITIVE(list_iterate)
 {
   ObjList* list = AS_LIST(args[0]);
 
@@ -674,7 +713,7 @@ DEF_NATIVE(list_iterate)
   RETURN_NUM(index + 1);
 }
 
-DEF_NATIVE(list_iteratorValue)
+DEF_PRIMITIVE(list_iteratorValue)
 {
   ObjList* list = AS_LIST(args[0]);
   int index = validateIndex(vm, args, list->count, 1, "Iterator");
@@ -683,7 +722,7 @@ DEF_NATIVE(list_iteratorValue)
   RETURN_VAL(list->elements[index]);
 }
 
-DEF_NATIVE(list_removeAt)
+DEF_PRIMITIVE(list_removeAt)
 {
   ObjList* list = AS_LIST(args[0]);
   int index = validateIndex(vm, args, list->count, 1, "Index");
@@ -692,7 +731,7 @@ DEF_NATIVE(list_removeAt)
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
 }
 
-DEF_NATIVE(list_subscript)
+DEF_PRIMITIVE(list_subscript)
 {
   ObjList* list = AS_LIST(args[0]);
 
@@ -723,7 +762,7 @@ DEF_NATIVE(list_subscript)
   RETURN_OBJ(result);
 }
 
-DEF_NATIVE(list_subscriptSetter)
+DEF_PRIMITIVE(list_subscriptSetter)
 {
   ObjList* list = AS_LIST(args[0]);
   int index = validateIndex(vm, args, list->count, 1, "Subscript");
@@ -733,23 +772,23 @@ DEF_NATIVE(list_subscriptSetter)
   RETURN_VAL(args[2]);
 }
 
-DEF_NATIVE(map_instantiate)
+DEF_PRIMITIVE(map_instantiate)
 {
   RETURN_OBJ(wrenNewMap(vm));
 }
 
-DEF_NATIVE(map_subscript)
+DEF_PRIMITIVE(map_subscript)
 {
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
 
   ObjMap* map = AS_MAP(args[0]);
-  uint32_t index = wrenMapFind(map, args[1]);
-  if (index == UINT32_MAX) RETURN_NULL;
+  Value value = wrenMapGet(map, args[1]);
+  if (IS_UNDEFINED(value)) RETURN_NULL;
 
-  RETURN_VAL(map->entries[index].value);
+  RETURN_VAL(value);
 }
 
-DEF_NATIVE(map_subscriptSetter)
+DEF_PRIMITIVE(map_subscriptSetter)
 {
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
 
@@ -757,25 +796,25 @@ DEF_NATIVE(map_subscriptSetter)
   RETURN_VAL(args[2]);
 }
 
-DEF_NATIVE(map_clear)
+DEF_PRIMITIVE(map_clear)
 {
   wrenMapClear(vm, AS_MAP(args[0]));
   RETURN_NULL;
 }
 
-DEF_NATIVE(map_containsKey)
+DEF_PRIMITIVE(map_containsKey)
 {
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
 
-  RETURN_BOOL(wrenMapFind(AS_MAP(args[0]), args[1]) != UINT32_MAX);
+  RETURN_BOOL(!IS_UNDEFINED(wrenMapGet(AS_MAP(args[0]), args[1])));
 }
 
-DEF_NATIVE(map_count)
+DEF_PRIMITIVE(map_count)
 {
   RETURN_NUM(AS_MAP(args[0])->count);
 }
 
-DEF_NATIVE(map_iterate)
+DEF_PRIMITIVE(map_iterate)
 {
   ObjMap* map = AS_MAP(args[0]);
 
@@ -808,14 +847,14 @@ DEF_NATIVE(map_iterate)
   RETURN_FALSE;
 }
 
-DEF_NATIVE(map_remove)
+DEF_PRIMITIVE(map_remove)
 {
   if (!validateKey(vm, args, 1)) return PRIM_ERROR;
 
   RETURN_VAL(wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1]));
 }
 
-DEF_NATIVE(map_keyIteratorValue)
+DEF_PRIMITIVE(map_keyIteratorValue)
 {
   ObjMap* map = AS_MAP(args[0]);
   int index = validateIndex(vm, args, map->capacity, 1, "Iterator");
@@ -830,7 +869,7 @@ DEF_NATIVE(map_keyIteratorValue)
   RETURN_VAL(entry->key);
 }
 
-DEF_NATIVE(map_valueIteratorValue)
+DEF_PRIMITIVE(map_valueIteratorValue)
 {
   ObjMap* map = AS_MAP(args[0]);
   int index = validateIndex(vm, args, map->capacity, 1, "Iterator");
@@ -845,52 +884,75 @@ DEF_NATIVE(map_valueIteratorValue)
   RETURN_VAL(entry->value);
 }
 
-DEF_NATIVE(null_not)
+DEF_PRIMITIVE(null_not)
 {
   RETURN_VAL(TRUE_VAL);
 }
 
-DEF_NATIVE(null_toString)
+DEF_PRIMITIVE(null_toString)
 {
   RETURN_VAL(wrenNewString(vm, "null", 4));
 }
 
-DEF_NATIVE(num_abs)
+DEF_PRIMITIVE(num_abs)
 {
   RETURN_NUM(fabs(AS_NUM(args[0])));
 }
 
-DEF_NATIVE(num_ceil)
+DEF_PRIMITIVE(num_ceil)
 {
   RETURN_NUM(ceil(AS_NUM(args[0])));
 }
 
-DEF_NATIVE(num_cos)
+DEF_PRIMITIVE(num_cos)
 {
   RETURN_NUM(cos(AS_NUM(args[0])));
 }
 
-DEF_NATIVE(num_floor)
+DEF_PRIMITIVE(num_floor)
 {
   RETURN_NUM(floor(AS_NUM(args[0])));
 }
 
-DEF_NATIVE(num_isNan)
+DEF_PRIMITIVE(num_fraction)
+{
+  double dummy;
+  RETURN_NUM(modf(AS_NUM(args[0]) , &dummy));
+}
+
+DEF_PRIMITIVE(num_isNan)
 {
   RETURN_BOOL(isnan(AS_NUM(args[0])));
 }
 
-DEF_NATIVE(num_sin)
+DEF_PRIMITIVE(num_sign)
+{
+  double value = AS_NUM(args[0]);
+  if (value > 0)
+  {
+    RETURN_NUM(1);
+  }
+  else if (value < 0)
+  {
+    RETURN_NUM(-1);
+  }
+  else
+  {
+    RETURN_NUM(0);
+  }
+}
+
+DEF_PRIMITIVE(num_sin)
 {
   RETURN_NUM(sin(AS_NUM(args[0])));
 }
 
-DEF_NATIVE(num_sqrt)
+DEF_PRIMITIVE(num_sqrt)
 {
   RETURN_NUM(sqrt(AS_NUM(args[0])));
 }
 
-DEF_NATIVE(num_toString)
+DEF_PRIMITIVE(num_toString)
 {
   double value = AS_NUM(args[0]);
 
@@ -920,7 +982,14 @@ DEF_NATIVE(num_toString)
   RETURN_VAL(wrenNewString(vm, buffer, length));
 }
 
-DEF_NATIVE(num_fromString)
+DEF_PRIMITIVE(num_truncate)
+{
+  double integer;
+  modf(AS_NUM(args[0]) , &integer);
+  RETURN_NUM(integer);
+}
+
+DEF_PRIMITIVE(num_fromString)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
 
@@ -929,99 +998,105 @@ DEF_NATIVE(num_fromString)
   // Corner case: Can't parse an empty string.
   if (string->length == 0) RETURN_NULL;
 
+  errno = 0;
   char* end;
   double number = strtod(string->value, &end);
 
   // Skip past any trailing whitespace.
   while (*end != '\0' && isspace(*end)) end++;
 
+  if (errno == ERANGE)
+  {
+    args[0] = wrenNewString(vm, "Number literal is too large.", 28);
+    return PRIM_ERROR;
+  }
+
   // We must have consumed the entire string. Otherwise, it contains non-number
   // characters and we can't parse it.
-  // TODO: Check errno == ERANGE here.
   if (end < string->value + string->length) RETURN_NULL;
 
   RETURN_NUM(number);
 }
 
-DEF_NATIVE(num_negate)
+DEF_PRIMITIVE(num_negate)
 {
   RETURN_NUM(-AS_NUM(args[0]));
 }
 
-DEF_NATIVE(num_minus)
+DEF_PRIMITIVE(num_minus)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_NUM(AS_NUM(args[0]) - AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_plus)
+DEF_PRIMITIVE(num_plus)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_NUM(AS_NUM(args[0]) + AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_multiply)
+DEF_PRIMITIVE(num_multiply)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_NUM(AS_NUM(args[0]) * AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_divide)
+DEF_PRIMITIVE(num_divide)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_NUM(AS_NUM(args[0]) / AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_mod)
+DEF_PRIMITIVE(num_mod)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_NUM(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
-DEF_NATIVE(num_lt)
+DEF_PRIMITIVE(num_lt)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_BOOL(AS_NUM(args[0]) < AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_gt)
+DEF_PRIMITIVE(num_gt)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_BOOL(AS_NUM(args[0]) > AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_lte)
+DEF_PRIMITIVE(num_lte)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_BOOL(AS_NUM(args[0]) <= AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_gte)
+DEF_PRIMITIVE(num_gte)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
   RETURN_BOOL(AS_NUM(args[0]) >= AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_eqeq)
+DEF_PRIMITIVE(num_eqeq)
 {
   if (!IS_NUM(args[1])) RETURN_FALSE;
   RETURN_BOOL(AS_NUM(args[0]) == AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_bangeq)
+DEF_PRIMITIVE(num_bangeq)
 {
   if (!IS_NUM(args[1])) RETURN_TRUE;
   RETURN_BOOL(AS_NUM(args[0]) != AS_NUM(args[1]));
 }
 
-DEF_NATIVE(num_bitwiseNot)
+DEF_PRIMITIVE(num_bitwiseNot)
 {
   // Bitwise operators always work on 32-bit unsigned ints.
   uint32_t value = (uint32_t)AS_NUM(args[0]);
   RETURN_NUM(~value);
 }
 
-DEF_NATIVE(num_bitwiseAnd)
+DEF_PRIMITIVE(num_bitwiseAnd)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
 
@@ -1031,7 +1106,7 @@ DEF_NATIVE(num_bitwiseAnd)
   RETURN_NUM(left & right);
 }
 
-DEF_NATIVE(num_bitwiseOr)
+DEF_PRIMITIVE(num_bitwiseOr)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
 
@@ -1041,7 +1116,7 @@ DEF_NATIVE(num_bitwiseOr)
   RETURN_NUM(left | right);
 }
 
-DEF_NATIVE(num_bitwiseXor)
+DEF_PRIMITIVE(num_bitwiseXor)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
 
@@ -1051,7 +1126,7 @@ DEF_NATIVE(num_bitwiseXor)
   RETURN_NUM(left ^ right);
 }
 
-DEF_NATIVE(num_bitwiseLeftShift)
+DEF_PRIMITIVE(num_bitwiseLeftShift)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
 
@@ -1061,7 +1136,7 @@ DEF_NATIVE(num_bitwiseLeftShift)
   RETURN_NUM(left << right);
 }
 
-DEF_NATIVE(num_bitwiseRightShift)
+DEF_PRIMITIVE(num_bitwiseRightShift)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
 
@@ -1071,7 +1146,7 @@ DEF_NATIVE(num_bitwiseRightShift)
   RETURN_NUM(left >> right);
 }
 
-DEF_NATIVE(num_dotDot)
+DEF_PRIMITIVE(num_dotDot)
 {
   if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
 
@@ -1081,7 +1156,7 @@ DEF_NATIVE(num_dotDot)
   RETURN_VAL(wrenNewRange(vm, from, to, true));
 }
 
-DEF_NATIVE(num_dotDotDot)
+DEF_PRIMITIVE(num_dotDotDot)
 {
   if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
 
@@ -1091,29 +1166,29 @@ DEF_NATIVE(num_dotDotDot)
   RETURN_VAL(wrenNewRange(vm, from, to, false));
 }
 
-DEF_NATIVE(object_not)
+DEF_PRIMITIVE(object_not)
 {
   RETURN_VAL(FALSE_VAL);
 }
 
-DEF_NATIVE(object_eqeq)
+DEF_PRIMITIVE(object_eqeq)
 {
   RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
 }
 
-DEF_NATIVE(object_bangeq)
+DEF_PRIMITIVE(object_bangeq)
 {
   RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
-DEF_NATIVE(object_new)
+DEF_PRIMITIVE(object_new)
 {
   // This is the default argument-less constructor that all objects inherit.
   // It just returns "this".
   RETURN_VAL(args[0]);
 }
 
-DEF_NATIVE(object_toString)
+DEF_PRIMITIVE(object_toString)
 {
   if (IS_CLASS(args[0]))
   {
@@ -1130,47 +1205,47 @@ DEF_NATIVE(object_toString)
   RETURN_VAL(wrenNewString(vm, "<object>", 8));
 }
 
-DEF_NATIVE(object_type)
+DEF_PRIMITIVE(object_type)
 {
   RETURN_OBJ(wrenGetClass(vm, args[0]));
 }
 
-DEF_NATIVE(object_instantiate)
+DEF_PRIMITIVE(object_instantiate)
 {
   RETURN_ERROR("Must provide a class to 'new' to construct.");
 }
 
-DEF_NATIVE(range_from)
+DEF_PRIMITIVE(range_from)
 {
   ObjRange* range = AS_RANGE(args[0]);
   RETURN_NUM(range->from);
 }
 
-DEF_NATIVE(range_to)
+DEF_PRIMITIVE(range_to)
 {
   ObjRange* range = AS_RANGE(args[0]);
   RETURN_NUM(range->to);
 }
 
-DEF_NATIVE(range_min)
+DEF_PRIMITIVE(range_min)
 {
   ObjRange* range = AS_RANGE(args[0]);
   RETURN_NUM(fmin(range->from, range->to));
 }
 
-DEF_NATIVE(range_max)
+DEF_PRIMITIVE(range_max)
 {
   ObjRange* range = AS_RANGE(args[0]);
   RETURN_NUM(fmax(range->from, range->to));
 }
 
-DEF_NATIVE(range_isInclusive)
+DEF_PRIMITIVE(range_isInclusive)
 {
   ObjRange* range = AS_RANGE(args[0]);
   RETURN_BOOL(range->isInclusive);
 }
 
-DEF_NATIVE(range_iterate)
+DEF_PRIMITIVE(range_iterate)
 {
   ObjRange* range = AS_RANGE(args[0]);
 
@@ -1201,13 +1276,13 @@ DEF_NATIVE(range_iterate)
   RETURN_NUM(iterator);
 }
 
-DEF_NATIVE(range_iteratorValue)
+DEF_PRIMITIVE(range_iteratorValue)
 {
   // Assume the iterator is a number so that is the value of the range.
   RETURN_VAL(args[1]);
 }
 
-DEF_NATIVE(range_toString)
+DEF_PRIMITIVE(range_toString)
 {
   char buffer[51];
   ObjRange* range = AS_RANGE(args[0]);
@@ -1216,7 +1291,7 @@ DEF_NATIVE(range_toString)
   RETURN_VAL(wrenNewString(vm, buffer, length));
 }
 
-DEF_NATIVE(string_contains)
+DEF_PRIMITIVE(string_contains)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
 
@@ -1226,13 +1301,13 @@ DEF_NATIVE(string_contains)
   RETURN_BOOL(wrenStringFind(vm, string, search) != UINT32_MAX);
 }
 
-DEF_NATIVE(string_count)
+DEF_PRIMITIVE(string_count)
 {
   double count = AS_STRING(args[0])->length;
   RETURN_NUM(count);
 }
 
-DEF_NATIVE(string_endsWith)
+DEF_PRIMITIVE(string_endsWith)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
 
@@ -1248,7 +1323,7 @@ DEF_NATIVE(string_endsWith)
   RETURN_BOOL(result == 0);
 }
 
-DEF_NATIVE(string_indexOf)
+DEF_PRIMITIVE(string_indexOf)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
 
@@ -1260,7 +1335,7 @@ DEF_NATIVE(string_indexOf)
   RETURN_NUM(index == UINT32_MAX ? -1 : (int)index);
 }
 
-DEF_NATIVE(string_iterate)
+DEF_PRIMITIVE(string_iterate)
 {
   ObjString* string = AS_STRING(args[0]);
 
@@ -1286,17 +1361,16 @@ DEF_NATIVE(string_iterate)
   RETURN_NUM(index);
 }
 
-DEF_NATIVE(string_iteratorValue)
+DEF_PRIMITIVE(string_iteratorValue)
 {
   ObjString* string = AS_STRING(args[0]);
   int index = validateIndex(vm, args, string->length, 1, "Iterator");
-  // TODO: Test.
   if (index == -1) return PRIM_ERROR;
 
   RETURN_VAL(wrenStringCodePointAt(vm, string, index));
 }
 
-DEF_NATIVE(string_startsWith)
+DEF_PRIMITIVE(string_startsWith)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
 
@@ -1309,12 +1383,12 @@ DEF_NATIVE(string_startsWith)
   RETURN_BOOL(memcmp(string->value, search->value, search->length) == 0);
 }
 
-DEF_NATIVE(string_toString)
+DEF_PRIMITIVE(string_toString)
 {
   RETURN_VAL(args[0]);
 }
 
-DEF_NATIVE(string_plus)
+DEF_PRIMITIVE(string_plus)
 {
   if (!validateString(vm, args, 1, "Right operand")) return PRIM_ERROR;
   ObjString* left = AS_STRING(args[0]);
@@ -1323,7 +1397,7 @@ DEF_NATIVE(string_plus)
                               right->value, right->length));
 }
 
-DEF_NATIVE(string_subscript)
+DEF_PRIMITIVE(string_subscript)
 {
   ObjString* string = AS_STRING(args[0]);
 
@@ -1387,13 +1461,13 @@ void wrenInitializeCore(WrenVM* vm)
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass and an unusual metaclass (Class).
   vm->objectClass = defineSingleClass(vm, "Object");
-  NATIVE(vm->objectClass, "!", object_not);
-  NATIVE(vm->objectClass, "==(_)", object_eqeq);
-  NATIVE(vm->objectClass, "!=(_)", object_bangeq);
-  NATIVE(vm->objectClass, "new", object_new);
-  NATIVE(vm->objectClass, "toString", object_toString);
-  NATIVE(vm->objectClass, "type", object_type);
-  NATIVE(vm->objectClass, "<instantiate>", object_instantiate);
+  PRIMITIVE(vm->objectClass, "!", object_not);
+  PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
+  PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
+  PRIMITIVE(vm->objectClass, "new", object_new);
+  PRIMITIVE(vm->objectClass, "toString", object_toString);
+  PRIMITIVE(vm->objectClass, "type", object_type);
+  PRIMITIVE(vm->objectClass, "<instantiate>", object_instantiate);
 
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
@@ -1406,8 +1480,8 @@ void wrenInitializeCore(WrenVM* vm)
 
   // Define the methods specific to Class after wiring up its superclass to
   // prevent the inherited ones from overwriting them.
-  NATIVE(vm->classClass, "<instantiate>", class_instantiate);
-  NATIVE(vm->classClass, "name", class_name);
+  PRIMITIVE(vm->classClass, "<instantiate>", class_instantiate);
+  PRIMITIVE(vm->classClass, "name", class_name);
 
   // The core class diagram ends up looking like this, where single lines point
   // to a class's superclass, and double lines point to its metaclass:
@@ -1431,135 +1505,137 @@ void wrenInitializeCore(WrenVM* vm)
 
   // The rest of the classes can not be defined normally.
   vm->boolClass = defineClass(vm, "Bool");
-  NATIVE(vm->boolClass, "toString", bool_toString);
-  NATIVE(vm->boolClass, "!", bool_not);
+  PRIMITIVE(vm->boolClass, "toString", bool_toString);
+  PRIMITIVE(vm->boolClass, "!", bool_not);
 
-  // TODO: Make fibers inherit Sequence and be iterable.
   vm->fiberClass = defineClass(vm, "Fiber");
-  NATIVE(vm->fiberClass->obj.classObj, "<instantiate>", fiber_instantiate);
-  NATIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
-  NATIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
-  NATIVE(vm->fiberClass->obj.classObj, "yield()", fiber_yield);
-  NATIVE(vm->fiberClass->obj.classObj, "yield(_)", fiber_yield1);
-  NATIVE(vm->fiberClass, "call()", fiber_call);
-  NATIVE(vm->fiberClass, "call(_)", fiber_call1);
-  NATIVE(vm->fiberClass, "error", fiber_error);
-  NATIVE(vm->fiberClass, "isDone", fiber_isDone);
-  NATIVE(vm->fiberClass, "run()", fiber_run);
-  NATIVE(vm->fiberClass, "run(_)", fiber_run1);
-  NATIVE(vm->fiberClass, "try()", fiber_try);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "<instantiate>", fiber_instantiate);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "current", fiber_current);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "yield()", fiber_yield);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "yield(_)", fiber_yield1);
+  PRIMITIVE(vm->fiberClass, "call()", fiber_call);
+  PRIMITIVE(vm->fiberClass, "call(_)", fiber_call1);
+  PRIMITIVE(vm->fiberClass, "error", fiber_error);
+  PRIMITIVE(vm->fiberClass, "isDone", fiber_isDone);
+  PRIMITIVE(vm->fiberClass, "run()", fiber_run);
+  PRIMITIVE(vm->fiberClass, "run(_)", fiber_run1);
+  PRIMITIVE(vm->fiberClass, "try()", fiber_try);
 
   vm->fnClass = defineClass(vm, "Fn");
 
-  NATIVE(vm->fnClass->obj.classObj, "<instantiate>", fn_instantiate);
-  NATIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
+  PRIMITIVE(vm->fnClass->obj.classObj, "<instantiate>", fn_instantiate);
+  PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
-  NATIVE(vm->fnClass, "arity", fn_arity);
-  NATIVE(vm->fnClass, "call()", fn_call0);
-  NATIVE(vm->fnClass, "call(_)", fn_call1);
-  NATIVE(vm->fnClass, "call(_,_)", fn_call2);
-  NATIVE(vm->fnClass, "call(_,_,_)", fn_call3);
-  NATIVE(vm->fnClass, "call(_,_,_,_)", fn_call4);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_)", fn_call5);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_)", fn_call6);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_)", fn_call7);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_)", fn_call8);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_)", fn_call9);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_)", fn_call10);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
-  NATIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
-  NATIVE(vm->fnClass, "toString", fn_toString);
+  PRIMITIVE(vm->fnClass, "arity", fn_arity);
+  PRIMITIVE(vm->fnClass, "call()", fn_call0);
+  PRIMITIVE(vm->fnClass, "call(_)", fn_call1);
+  PRIMITIVE(vm->fnClass, "call(_,_)", fn_call2);
+  PRIMITIVE(vm->fnClass, "call(_,_,_)", fn_call3);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_)", fn_call4);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_)", fn_call5);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_)", fn_call6);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_)", fn_call7);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_)", fn_call8);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_)", fn_call9);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_)", fn_call10);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
+  PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = defineClass(vm, "Null");
-  NATIVE(vm->nullClass, "!", null_not);
-  NATIVE(vm->nullClass, "toString", null_toString);
+  PRIMITIVE(vm->nullClass, "!", null_not);
+  PRIMITIVE(vm->nullClass, "toString", null_toString);
 
   vm->numClass = defineClass(vm, "Num");
-  NATIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
-  NATIVE(vm->numClass, "-", num_negate);
-  NATIVE(vm->numClass, "-(_)", num_minus);
-  NATIVE(vm->numClass, "+(_)", num_plus);
-  NATIVE(vm->numClass, "*(_)", num_multiply);
-  NATIVE(vm->numClass, "/(_)", num_divide);
-  NATIVE(vm->numClass, "%(_)", num_mod);
-  NATIVE(vm->numClass, "<(_)", num_lt);
-  NATIVE(vm->numClass, ">(_)", num_gt);
-  NATIVE(vm->numClass, "<=(_)", num_lte);
-  NATIVE(vm->numClass, ">=(_)", num_gte);
-  NATIVE(vm->numClass, "~", num_bitwiseNot);
-  NATIVE(vm->numClass, "&(_)", num_bitwiseAnd);
-  NATIVE(vm->numClass, "|(_)", num_bitwiseOr);
-  NATIVE(vm->numClass, "^(_)", num_bitwiseXor);
-  NATIVE(vm->numClass, "<<(_)", num_bitwiseLeftShift);
-  NATIVE(vm->numClass, ">>(_)", num_bitwiseRightShift);
-  NATIVE(vm->numClass, "..(_)", num_dotDot);
-  NATIVE(vm->numClass, "...(_)", num_dotDotDot);
-  NATIVE(vm->numClass, "abs", num_abs);
-  NATIVE(vm->numClass, "ceil", num_ceil);
-  NATIVE(vm->numClass, "cos", num_cos);
-  NATIVE(vm->numClass, "floor", num_floor);
-  NATIVE(vm->numClass, "isNan", num_isNan);
-  NATIVE(vm->numClass, "sin", num_sin);
-  NATIVE(vm->numClass, "sqrt", num_sqrt);
-  NATIVE(vm->numClass, "toString", num_toString);
+  PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
+  PRIMITIVE(vm->numClass, "-", num_negate);
+  PRIMITIVE(vm->numClass, "-(_)", num_minus);
+  PRIMITIVE(vm->numClass, "+(_)", num_plus);
+  PRIMITIVE(vm->numClass, "*(_)", num_multiply);
+  PRIMITIVE(vm->numClass, "/(_)", num_divide);
+  PRIMITIVE(vm->numClass, "%(_)", num_mod);
+  PRIMITIVE(vm->numClass, "<(_)", num_lt);
+  PRIMITIVE(vm->numClass, ">(_)", num_gt);
+  PRIMITIVE(vm->numClass, "<=(_)", num_lte);
+  PRIMITIVE(vm->numClass, ">=(_)", num_gte);
+  PRIMITIVE(vm->numClass, "~", num_bitwiseNot);
+  PRIMITIVE(vm->numClass, "&(_)", num_bitwiseAnd);
+  PRIMITIVE(vm->numClass, "|(_)", num_bitwiseOr);
+  PRIMITIVE(vm->numClass, "^(_)", num_bitwiseXor);
+  PRIMITIVE(vm->numClass, "<<(_)", num_bitwiseLeftShift);
+  PRIMITIVE(vm->numClass, ">>(_)", num_bitwiseRightShift);
+  PRIMITIVE(vm->numClass, "..(_)", num_dotDot);
+  PRIMITIVE(vm->numClass, "...(_)", num_dotDotDot);
+  PRIMITIVE(vm->numClass, "abs", num_abs);
+  PRIMITIVE(vm->numClass, "ceil", num_ceil);
+  PRIMITIVE(vm->numClass, "cos", num_cos);
+  PRIMITIVE(vm->numClass, "floor", num_floor);
+  PRIMITIVE(vm->numClass, "fraction", num_fraction);
+  PRIMITIVE(vm->numClass, "isNan", num_isNan);
+  PRIMITIVE(vm->numClass, "sign", num_sign);
+  PRIMITIVE(vm->numClass, "sin", num_sin);
+  PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
+  PRIMITIVE(vm->numClass, "toString", num_toString);
+  PRIMITIVE(vm->numClass, "truncate", num_truncate);
 
   // These are defined just so that 0 and -0 are equal, which is specified by
   // IEEE 754 even though they have different bit representations.
-  NATIVE(vm->numClass, "==(_)", num_eqeq);
-  NATIVE(vm->numClass, "!=(_)", num_bangeq);
+  PRIMITIVE(vm->numClass, "==(_)", num_eqeq);
+  PRIMITIVE(vm->numClass, "!=(_)", num_bangeq);
 
   wrenInterpret(vm, "", libSource);
 
   vm->stringClass = AS_CLASS(wrenFindVariable(vm, "String"));
-  NATIVE(vm->stringClass, "+(_)", string_plus);
-  NATIVE(vm->stringClass, "[_]", string_subscript);
-  NATIVE(vm->stringClass, "contains(_)", string_contains);
-  NATIVE(vm->stringClass, "count", string_count);
-  NATIVE(vm->stringClass, "endsWith(_)", string_endsWith);
-  NATIVE(vm->stringClass, "indexOf(_)", string_indexOf);
-  NATIVE(vm->stringClass, "iterate(_)", string_iterate);
-  NATIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
-  NATIVE(vm->stringClass, "startsWith(_)", string_startsWith);
-  NATIVE(vm->stringClass, "toString", string_toString);
+  PRIMITIVE(vm->stringClass, "+(_)", string_plus);
+  PRIMITIVE(vm->stringClass, "[_]", string_subscript);
+  PRIMITIVE(vm->stringClass, "contains(_)", string_contains);
+  PRIMITIVE(vm->stringClass, "count", string_count);
+  PRIMITIVE(vm->stringClass, "endsWith(_)", string_endsWith);
+  PRIMITIVE(vm->stringClass, "indexOf(_)", string_indexOf);
+  PRIMITIVE(vm->stringClass, "iterate(_)", string_iterate);
+  PRIMITIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
+  PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
+  PRIMITIVE(vm->stringClass, "toString", string_toString);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, "List"));
-  NATIVE(vm->listClass->obj.classObj, "<instantiate>", list_instantiate);
-  NATIVE(vm->listClass, "[_]", list_subscript);
-  NATIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
-  NATIVE(vm->listClass, "add(_)", list_add);
-  NATIVE(vm->listClass, "clear()", list_clear);
-  NATIVE(vm->listClass, "count", list_count);
-  NATIVE(vm->listClass, "insert(_,_)", list_insert);
-  NATIVE(vm->listClass, "iterate(_)", list_iterate);
-  NATIVE(vm->listClass, "iteratorValue(_)", list_iteratorValue);
-  NATIVE(vm->listClass, "removeAt(_)", list_removeAt);
+  PRIMITIVE(vm->listClass->obj.classObj, "<instantiate>", list_instantiate);
+  PRIMITIVE(vm->listClass, "[_]", list_subscript);
+  PRIMITIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
+  PRIMITIVE(vm->listClass, "add(_)", list_add);
+  PRIMITIVE(vm->listClass, "clear()", list_clear);
+  PRIMITIVE(vm->listClass, "count", list_count);
+  PRIMITIVE(vm->listClass, "insert(_,_)", list_insert);
+  PRIMITIVE(vm->listClass, "iterate(_)", list_iterate);
+  PRIMITIVE(vm->listClass, "iteratorValue(_)", list_iteratorValue);
+  PRIMITIVE(vm->listClass, "removeAt(_)", list_removeAt);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, "Map"));
-  NATIVE(vm->mapClass->obj.classObj, "<instantiate>", map_instantiate);
-  NATIVE(vm->mapClass, "[_]", map_subscript);
-  NATIVE(vm->mapClass, "[_]=(_)", map_subscriptSetter);
-  NATIVE(vm->mapClass, "clear()", map_clear);
-  NATIVE(vm->mapClass, "containsKey(_)", map_containsKey);
-  NATIVE(vm->mapClass, "count", map_count);
-  NATIVE(vm->mapClass, "remove(_)", map_remove);
-  NATIVE(vm->mapClass, "iterate_(_)", map_iterate);
-  NATIVE(vm->mapClass, "keyIteratorValue_(_)", map_keyIteratorValue);
-  NATIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
-  // TODO: More map methods.
+  PRIMITIVE(vm->mapClass->obj.classObj, "<instantiate>", map_instantiate);
+  PRIMITIVE(vm->mapClass, "[_]", map_subscript);
+  PRIMITIVE(vm->mapClass, "[_]=(_)", map_subscriptSetter);
+  PRIMITIVE(vm->mapClass, "clear()", map_clear);
+  PRIMITIVE(vm->mapClass, "containsKey(_)", map_containsKey);
+  PRIMITIVE(vm->mapClass, "count", map_count);
+  PRIMITIVE(vm->mapClass, "remove(_)", map_remove);
+  PRIMITIVE(vm->mapClass, "iterate_(_)", map_iterate);
+  PRIMITIVE(vm->mapClass, "keyIteratorValue_(_)", map_keyIteratorValue);
+  PRIMITIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
 
   vm->rangeClass = AS_CLASS(wrenFindVariable(vm, "Range"));
-  NATIVE(vm->rangeClass, "from", range_from);
-  NATIVE(vm->rangeClass, "to", range_to);
-  NATIVE(vm->rangeClass, "min", range_min);
-  NATIVE(vm->rangeClass, "max", range_max);
-  NATIVE(vm->rangeClass, "isInclusive", range_isInclusive);
-  NATIVE(vm->rangeClass, "iterate(_)", range_iterate);
-  NATIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
-  NATIVE(vm->rangeClass, "toString", range_toString);
+  PRIMITIVE(vm->rangeClass, "from", range_from);
+  PRIMITIVE(vm->rangeClass, "to", range_to);
+  PRIMITIVE(vm->rangeClass, "min", range_min);
+  PRIMITIVE(vm->rangeClass, "max", range_max);
+  PRIMITIVE(vm->rangeClass, "isInclusive", range_isInclusive);
+  PRIMITIVE(vm->rangeClass, "iterate(_)", range_iterate);
+  PRIMITIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
+  PRIMITIVE(vm->rangeClass, "toString", range_toString);
 
   // While bootstrapping the core types and running the core library, a number
   // of string objects have been created, many of which were instantiated

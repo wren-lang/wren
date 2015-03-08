@@ -61,12 +61,12 @@ Here's the same example in Wren:
     }
 
     // create and use an Account
-    var acc = new Account(100)
+    var acc = new Account(1000)
     acc.withdraw(100)
 
 Classes have a reputation for complexity because most of the widely used
 languages with them are quite complex: C++, Java, C#, Ruby, and Python. I hope
-to show with Wren that is those languages that are complex, and not classes
+to show with Wren that it is those languages that are complex, and not classes
 themselves.
 
 Smalltalk, the language that inspired most of those languages, is famously

@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -536,6 +537,25 @@ static int readHexDigit(Parser* parser)
   return -1;
 }
 
+// Parses the numeric value of the current token.
+static void makeNumber(Parser* parser, bool isHex)
+{
+  errno = 0;
+
+  // We don't check that the entire token is consumed because we've already
+  // scanned it ourselves and know it's valid.
+  parser->number = isHex ? strtol(parser->tokenStart, NULL, 16)
+                         : strtod(parser->tokenStart, NULL);
+
+  if (errno == ERANGE)
+  {
+    lexError(parser, "Number literal was too large.");
+    parser->number = 0;
+  }
+
+  makeToken(parser, TOKEN_NUMBER);
+}
+
 // Finishes lexing a hexadecimal number literal.
 static void readHexNumber(Parser* parser)
 {
@@ -545,16 +565,7 @@ static void readHexNumber(Parser* parser)
   // Iterate over all the valid hexadecimal digits found.
   while (readHexDigit(parser) != -1) continue;
 
-  char* end;
-  parser->number = strtol(parser->tokenStart, &end, 16);
-  // TODO: Check errno == ERANGE here.
-  if (end == parser->tokenStart)
-  {
-    lexError(parser, "Invalid number literal.");
-    parser->number = 0;
-  }
-
-  makeToken(parser, TOKEN_NUMBER);
+  makeNumber(parser, true);
 }
 
 // Finishes lexing a number literal.
@@ -571,16 +582,7 @@ static void readNumber(Parser* parser)
     while (isDigit(peekChar(parser))) nextChar(parser);
   }
 
-  char* end;
-  parser->number = strtod(parser->tokenStart, &end);
-  // TODO: Check errno == ERANGE here.
-  if (end == parser->tokenStart)
-  {
-    lexError(parser, "Invalid number literal.");
-    parser->number = 0;
-  }
-
-  makeToken(parser, TOKEN_NUMBER);
+  makeNumber(parser, false);
 }
 
 // Finishes lexing an identifier. Handles reserved words.
@@ -1527,11 +1529,9 @@ static void  finishParameterList(Compiler* compiler, Signature* signature)
   while (match(compiler, TOKEN_COMMA));
 }
 
-// Gets the symbol for a method [name]. If [length] is 0, it will be calculated
-// from a null-terminated [name].
+// Gets the symbol for a method [name] with [length].
 static int methodSymbol(Compiler* compiler, const char* name, int length)
 {
-  if (length == 0) length = (int)strlen(name);
   return wrenSymbolTableEnsure(compiler->parser->vm,
       &compiler->parser->vm->methodNames, name, length);
 }
@@ -2342,7 +2342,7 @@ static bool maybeSetter(Compiler* compiler, Signature* signature)
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
 
   signature->arity++;
-  
+
   return true;
 }
 
@@ -2393,7 +2393,6 @@ void namedSignature(Compiler* compiler, Signature* signature)
 // Compiles a method signature for a constructor.
 void constructorSignature(Compiler* compiler, Signature* signature)
 {
-  // TODO: How should nullary constructors be handled?
   signature->type = SIG_GETTER;
 
   // Add the parameters, if there are any.
@@ -3069,7 +3068,7 @@ static void import(Compiler* compiler)
     // Load the variable from the other module.
     emitShortArg(compiler, CODE_IMPORT_VARIABLE, moduleConstant);
     emitShort(compiler, variableConstant);
-    
+
     // Store the result in the variable here.
     defineVariable(compiler, slot);
   } while (match(compiler, TOKEN_COMMA));

@@ -1,4 +1,12 @@
 class Sequence {
+  count {
+    var result = 0
+    for (element in this) {
+      result = result + 1
+    }
+    return result
+  }
+
   map(f) {
     var result = new List
     for (element in this) {
@@ -20,6 +28,13 @@ class Sequence {
       if (!f.call(element)) return false
     }
     return true
+  }
+
+  any(f) {
+    for (element in this) {
+      if (f.call(element)) return true
+    }
+    return false
   }
 
   reduce(acc, f) {
