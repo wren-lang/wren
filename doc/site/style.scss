@@ -156,6 +156,7 @@ a {
 main {
   @extend .main-column;
   padding-top: 12px;
+  float:left;
 }
 
 a:hover {
