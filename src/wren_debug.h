@@ -17,4 +17,6 @@ int wrenDebugPrintInstruction(WrenVM* vm, ObjFn* fn, int i);
 void wrenDebugPrintCode(WrenVM* vm, ObjFn* fn);
 void wrenDebugPrintStack(ObjFiber* fiber);
 
+void wrenLoadDebugger(WrenVM* vm);
+
 #endif

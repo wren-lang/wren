@@ -83,6 +83,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   wrenPopRoot(vm);
 
   wrenInitializeCore(vm);
+  wrenLoadDebugger(vm);
   #if WREN_USE_LIB_IO
     wrenLoadIOLibrary(vm);
   #endif
@@ -1319,7 +1320,7 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
 {
   // TODO: Validate that the number of arguments matches what the method
   // expects.
-  
+
   // Push the arguments.
   va_list argList;
   va_start(argList, argTypes);
@@ -1339,7 +1340,7 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
         value = wrenNewString(vm, text, strlen(text));
         break;
       }
-        
+
       default:
         ASSERT(false, "Uknown argument type.");
         break;
