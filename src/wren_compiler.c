@@ -2196,7 +2196,7 @@ static void new_(Compiler* compiler, bool allowAssignment)
     call(compiler, false);
   }
 
-  // The leading space in the name is to ensure users can't call it directly.
+  // The angle brackets in the name are to ensure users can't call it directly.
   callMethod(compiler, 0, "<instantiate>", 13);
 
   // Invoke the constructor on the new instance.
