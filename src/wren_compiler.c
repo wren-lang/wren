@@ -3180,7 +3180,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module,
     if (IS_UNDEFINED(parser.module->variables.data[i]))
     {
       error(&compiler, "Variable '%s' is used but not defined.",
-            parser.module->variableNames.data[i]);
+            parser.module->variableNames.data[i].buffer);
     }
   }
 
