@@ -1215,6 +1215,19 @@ DEF_PRIMITIVE(object_instantiate)
   RETURN_ERROR("Must provide a class to 'new' to construct.");
 }
 
+DEF_PRIMITIVE(range_count)
+{
+  ObjRange* range = AS_RANGE(args[0]);
+  if (range->isInclusive)
+  {
+    RETURN_NUM(fabs(range->to - range->from) + 1.0);
+  }
+  else
+  {
+    RETURN_NUM(fabs(range->to - range->from));
+  }
+}
+
 DEF_PRIMITIVE(range_from)
 {
   ObjRange* range = AS_RANGE(args[0]);
@@ -1628,6 +1641,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
 
   vm->rangeClass = AS_CLASS(wrenFindVariable(vm, "Range"));
+  PRIMITIVE(vm->rangeClass, "count", range_count);
   PRIMITIVE(vm->rangeClass, "from", range_from);
   PRIMITIVE(vm->rangeClass, "to", range_to);
   PRIMITIVE(vm->rangeClass, "min", range_min);
