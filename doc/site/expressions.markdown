@@ -260,9 +260,10 @@ class (or one of its subclasses).
 ## Precedence
 
 When you mix these all together, you need to worry about
-*precedence*&mdash;which operators bind more tightly than others. Wren mostly
+*precedence*&mdash;which operators bind more tightly than others&mdash;and
+*associativity*&mdash;how a series of the same operator is ordered. Wren mostly
 follows C, except that it fixes the bitwise operator mistake. The full
-precedence table, from lowest to highest, is:
+precedence table, from highest to lowest, is:
 
 <table class="precedence">
   <tbody>
