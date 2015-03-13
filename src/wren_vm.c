@@ -185,8 +185,13 @@ static void collectGarbage(WrenVM* vm)
 
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   double elapsed = ((double)clock() / CLOCKS_PER_SEC) - startTime;
-  printf("GC %ld before, %ld after (%ld collected), next at %ld. Took %.3fs.\n",
-         before, vm->bytesAllocated, before - vm->bytesAllocated, vm->nextGC,
+  // Explicit cast because size_t has different sizes on 32-bit and 64-bit and
+  // we need a consistent type for the format string.
+  printf("GC %lu before, %lu after (%lu collected), next at %lu. Took %.3fs.\n",
+         (unsigned long)before,
+         (unsigned long)vm->bytesAllocated,
+         (unsigned long)(before - vm->bytesAllocated),
+         (unsigned long)vm->nextGC,
          elapsed);
 #endif
 }
@@ -194,7 +199,10 @@ static void collectGarbage(WrenVM* vm)
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 {
 #if WREN_DEBUG_TRACE_MEMORY
-  printf("reallocate %p %ld -> %ld\n", memory, oldSize, newSize);
+  // Explicit cast because size_t has different sizes on 32-bit and 64-bit and
+  // we need a consistent type for the format string.
+  printf("reallocate %p %lu -> %lu\n",
+         memory, (unsigned long)oldSize, (unsigned long)newSize);
 #endif
 
   // If new bytes are being allocated, add them to the total count. If objects
