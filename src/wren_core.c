@@ -960,6 +960,8 @@ DEF_PRIMITIVE(num_toString)
   // different outputs (some will format it signed and some won't). To get
   // reliable output, handle that ourselves.
   if (value != value) RETURN_VAL(wrenNewString(vm, "nan", 3));
+  if (value == INFINITY) RETURN_VAL(wrenNewString(vm, "infinity", 8));
+  if (value == -INFINITY) RETURN_VAL(wrenNewString(vm, "-infinity", 9));
 
   // This is large enough to hold any double converted to a string using
   // "%.14g". Example:
