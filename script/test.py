@@ -82,7 +82,10 @@ def run_test(path):
       return
 
   # Make a nice short path relative to the working directory.
-  path = relpath(path)
+
+  # Normalize it to use "/" since, among other things, wren expects its argument
+  # to use that.
+  path = relpath(path).replace("\\", "/")
 
   # Read the test and parse out the expectations.
   expect_output = []
