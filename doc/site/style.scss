@@ -340,8 +340,18 @@ table.chart {
 
 // Precedence table on expressions page.
 table.precedence {
-  tr {
-    padding: 2px 0;
+  th {
+    font: 500 11px $subheader;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: $gray-60;
+
+    padding: 6px 0;
+    border-bottom: solid 1px $gray-10;
+  }
+
+  td {
+    padding: 3px 0;
     border-bottom: solid 1px $gray-10;
   }
 }
