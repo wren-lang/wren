@@ -178,16 +178,26 @@ body.core footer a {
 body.core footer a:hover {
   color: #1fad66; }
 
-table.chart {
+table {
   width: 100%;
-  padding-left: 25px; }
+  border-collapse: collapse; }
+  table tr {
+    margin: 0;
+    padding: 0;
+    vertical-align: top; }
+  table th, table td {
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left; }
+
+table.chart {
+  padding: 5px 0 5px 25px; }
   table.chart td, table.chart th {
     line-height: 14px;
     margin: 0;
     padding: 0; }
   table.chart th {
     font-size: 14px;
-    text-align: left;
     width: 100px; }
   table.chart .chart-bar {
     display: inline-block;
@@ -200,6 +210,17 @@ table.chart {
   table.chart .chart-bar.wren {
     background: #1d5176;
     border-bottom: solid 1px #143352; }
+
+table.precedence th {
+  font: 500 11px "Lato", helvetica, arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #888c90;
+  padding: 6px 0;
+  border-bottom: solid 1px #ebebec; }
+table.precedence td {
+  padding: 3px 0;
+  border-bottom: solid 1px #ebebec; }
 
 @media only screen and (max-width: 839px) {
   .page {

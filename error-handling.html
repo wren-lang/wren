@@ -150,7 +150,7 @@ error message as a string.</p>
   <span class="m">123.</span><span class="n">badMethod</span>
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="n">error</span> <span class="o">=</span> <span class="n">fiber</span><span class="p">.</span><span class="k">try</span>
+<span class="kd">var</span> <span class="n">error</span> <span class="o">=</span> <span class="n">fiber</span><span class="p">.</span><span class="k">try</span><span class="p">()</span>
 <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Caught error: &quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
 </pre></div>
 
@@ -195,8 +195,9 @@ only way the program could prevent that failure is by validating the string
 before its parsed, but validating that a string is a number is pretty much the
 same thing as parsing it.</p>
 <p>For cases like this where failure can occur and the program <em>will</em> want to
-handle it, fibers and <code>try</code> are too coarse-grained to work with. Instead, these
-operations will indicate failure by <em>returning</em> some sort of error indication.</p>
+handle it, fibers and <code>try()</code> are too coarse-grained to work with. Instead,
+these operations will indicate failure by <em>returning</em> some sort of error
+indication.</p>
 <p>For example, a method for parsing a number could return a number on success and
 <code>null</code> to indicate parsing failed. Since Wren is dynamically typed, it's easy
 and natural for a method to return different types of values.</p>

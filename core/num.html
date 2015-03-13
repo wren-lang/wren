@@ -43,19 +43,28 @@
   </nav>
   <main>
     <h1>Num Class</h1>
-    <p><strong>TODO</strong></p>
-<h3><strong>abs</strong> <a href="#abs" name="abs" class="header-anchor">#</a></h3>
+    <h3><strong>abs</strong> <a href="#abs" name="abs" class="header-anchor">#</a></h3>
 <p>The absolute value of the number.</p>
 <div class="codehilite"><pre><span class="o">-</span><span class="m">123.</span><span class="n">abs</span> <span class="c1">// 123</span>
 </pre></div>
 
 
 <h3><strong>ceil</strong> <a href="#ceil" name="ceil" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Rounds the number up to the nearest integer.</p>
+<div class="codehilite"><pre><span class="m">1.5</span><span class="p">.</span><span class="n">ceil</span> <span class="c1">// 2</span>
+<span class="p">(</span><span class="o">-</span><span class="m">3.2</span><span class="p">).</span><span class="n">ceil</span> <span class="c1">// -3</span>
+</pre></div>
+
+
 <h3><strong>cos</strong> <a href="#cos" name="cos" class="header-anchor">#</a></h3>
 <p>The cosine of the number.</p>
 <h3><strong>floor</strong> <a href="#floor" name="floor" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Rounds the number down to the nearest integer.</p>
+<div class="codehilite"><pre><span class="m">1.5</span><span class="p">.</span><span class="n">floor</span>    <span class="c1">// 1</span>
+<span class="p">(</span><span class="o">-</span><span class="m">3.2</span><span class="p">).</span><span class="n">floor</span> <span class="c1">// -4</span>
+</pre></div>
+
+
 <h3><strong>isNan</strong> <a href="#isnan" name="isnan" class="header-anchor">#</a></h3>
 <p>Whether the number is <a href="http://en.wikipedia.org/wiki/NaN">not a number</a>. This is
 <code>false</code> for normal number values and infinities, and <code>true</code> for the result of
@@ -96,9 +105,29 @@ unsigned values. The result is then a 32-bit unsigned number where each bit is
 <code>true</code> only where the corresponding bits of both inputs were <code>true</code>.</p>
 <p>It is a runtime error if <code>other</code> is not a number.</p>
 <h3><strong>..</strong>(other) operator <a href="#(other)-operator" name="(other)-operator" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Creates a <a href="core/range.html">Range</a> representing a consecutive range of numbers
+from the beginning number to the ending number.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">range</span> <span class="o">=</span> <span class="m">1.2</span><span class="p">..</span><span class="m">3.4</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">min</span><span class="p">)</span>         <span class="c1">// 1.2</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">max</span><span class="p">)</span>         <span class="c1">// 3.4</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="c1">// true</span>
+</pre></div>
+
+
 <h3><strong>...</strong>(other) operator <a href="#(other)-operator" name="(other)-operator" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Creates a <a href="core/range.html">Range</a> representing a consecutive range of numbers
+from the beginning number to the ending number not including the ending number.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">range</span> <span class="o">=</span> <span class="m">1.2</span><span class="p">...</span><span class="m">3.4</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">min</span><span class="p">)</span>         <span class="c1">// 1.2</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">max</span><span class="p">)</span>         <span class="c1">// 3.4</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="c1">// false</span>
+</pre></div>
+
+
+<h3>Num.<strong>fromString</strong>(value) <a href="#numfromstring(value)" name="numfromstring(value)" class="header-anchor">#</a></h3>
+<p>Attempts to parse <code>value</code> as a decimal literal and return it as an instance of
+<code>Num</code>. If the number cannot be parsed <code>null</code> will be returned.</p>
+<p>It is a runtime error if <code>value</code> is not a string.</p>
   </main>
 </div>
 <footer>

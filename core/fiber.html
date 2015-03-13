@@ -53,40 +53,42 @@ fiber is run. Does not immediately start running the fiber.</p>
 </pre></div>
 
 
-<h3>Fiber.<strong>yield</strong> <a href="#fiberyield" name="fiberyield" class="header-anchor">#</a></h3>
+<h3>Fiber.<strong>current</strong> <a href="#fibercurrent" name="fibercurrent" class="header-anchor">#</a></h3>
+<p>The currently executing fiber.</p>
+<h3>Fiber.<strong>yield</strong>() <a href="#fiberyield()" name="fiberyield()" class="header-anchor">#</a></h3>
 <p>Pauses the current fiber and transfers control to the parent fiber. "Parent"
 here means the last fiber that was started using <code>call</code> and not <code>run</code>.</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Before yield&quot;</span><span class="p">)</span>
-  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span>
+  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">()</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;After yield&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="n">fiber</span><span class="p">.</span><span class="n">call</span>              <span class="c1">// &quot;Before yield&quot;</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>            <span class="c1">// &quot;Before yield&quot;</span>
 <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;After call&quot;</span><span class="p">)</span>  <span class="c1">// &quot;After call&quot;</span>
-<span class="n">fiber</span><span class="p">.</span><span class="n">call</span>              <span class="c1">// &quot;After yield&quot;</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>            <span class="c1">// &quot;After yield&quot;</span>
 </pre></div>
 
 
-<p>When resumed, the parent fiber's <code>call</code> method returns <code>null</code>.</p>
+<p>When resumed, the parent fiber's <code>call()</code> method returns <code>null</code>.</p>
 <p>If a yielded fiber is resumed by calling <code>call()</code> or <code>run()</code> with an argument,
-<code>yield</code> returns that value.</p>
+<code>yield()</code> returns that value.</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">)</span> <span class="c1">// &quot;value&quot;</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">())</span> <span class="c1">// &quot;value&quot;</span>
 <span class="p">}</span>
 
-<span class="n">fiber</span><span class="p">.</span><span class="n">call</span>          <span class="c1">// Run until the first yield.</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>        <span class="c1">// Run until the first yield.</span>
 <span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="c1">// Resume the fiber.</span>
 </pre></div>
 
 
-<p>If it was resumed by calling <code>call</code> or <code>run</code> with no argument, returns <code>null</code>.</p>
-<p>It is a runtime error to call this when there is no parent fiber to return to.</p>
-<div class="codehilite"><pre><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span> <span class="c1">// ERROR</span>
-
-<span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
-  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span> <span class="c1">// ERROR</span>
-<span class="p">}.</span><span class="n">run</span>
+<p>If it was resumed by calling <code>call()</code> or <code>run()</code> with no argument, it returns
+<code>null</code>.</p>
+<p>If there is no parent fiber to return to, this exits the interpreter. This can
+be useful to pause execution until the host application wants to resume it
+later.</p>
+<div class="codehilite"><pre><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">()</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;this does not get reached&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -97,18 +99,18 @@ here means the last fiber that was started using <code>call</code> and not <code
   <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">)</span> <span class="c1">// &quot;value&quot;</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">())</span> <span class="c1">// &quot;value&quot;</span>
 </pre></div>
 
 
-<h3><strong>call</strong> <a href="#call" name="call" class="header-anchor">#</a></h3>
+<h3><strong>call</strong>() <a href="#call()" name="call()" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
 <h3><strong>call</strong>(value) <a href="#call(value)" name="call(value)" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
 <h3><strong>isDone</strong> <a href="#isdone" name="isdone" class="header-anchor">#</a></h3>
 <p>Whether the fiber's main function has completed and the fiber can no longer be
 run. This returns <code>false</code> if the fiber is currently running or has yielded.</p>
-<h3><strong>run</strong> <a href="#run" name="run" class="header-anchor">#</a></h3>
+<h3><strong>run</strong>() <a href="#run()" name="run()" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
 <h3><strong>run</strong>(value) <a href="#run(value)" name="run(value)" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>

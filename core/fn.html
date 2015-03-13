@@ -46,17 +46,17 @@
     <p>A first class function&mdash;an object that wraps an executable chunk of code.
 <a href="../functions.html">Here</a> is a friendly introduction.</p>
 <h3>new <strong>Fn</strong>(function) <a href="#new-fn(function)" name="new-fn(function)" class="header-anchor">#</a></h3>
-<p>Creates a new function from... <code>function</code>. Of course, <code>function</code> is already be
-a function, so this really just returns the argument. It exists mainly to let
-you create a "bare" function when you don't want to immediately pass it as a
-<a href="../functions.html#block-arguments">block argument</a> to some other method.</p>
+<p>Creates a new function from... <code>function</code>. Of course, <code>function</code> is already a
+function, so this really just returns the argument. It exists mainly to let you
+create a "bare" function when you don't want to immediately pass it as a <a href="../functions.html#block-arguments">block
+argument</a> to some other method.</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;The body&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
 
-<p>It is a runtime error if <code>block</code> is not a function.</p>
+<p>It is a runtime error if <code>function</code> is not a function.</p>
 <h3><strong>arity</strong> <a href="#arity" name="arity" class="header-anchor">#</a></h3>
 <p>The number of arguments the function requires.</p>
 <div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="k">new</span> <span class="n">Fn</span> <span class="p">{}.</span><span class="n">arity</span><span class="p">)</span>             <span class="c1">// 0.</span>

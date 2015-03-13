@@ -124,17 +124,17 @@ return that, so this exists purely as a convenience method for you.</p>
 so by calling a method on it:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Blondie</span> <span class="p">{</span>
   <span class="n">callMe</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">fn</span><span class="p">.</span><span class="n">call</span>
+    <span class="n">fn</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 
 
-<p>Functions expose a <code>call</code> method that executes the body of the function. This
+<p>Functions expose a <code>call()</code> method that executes the body of the function. This
 method is dynamically-dispatched like any other, so you can define your own
 "function-like" classes and pass them to methods that expect "real" functions.</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">FakeFn</span> <span class="p">{</span>
-  <span class="n">call</span> <span class="p">{</span>
+  <span class="n">call</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;I&#39;m feeling functional!&quot;</span><span class="p">)</span>
   <span class="p">}</span>
 <span class="p">}</span>
@@ -200,9 +200,9 @@ function references a variable <code>i</code> declared outside of the function. 
 the function is returned from <code>create</code>, it is still able to read and assign
 to<code>i</code>:</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">.</span><span class="n">create</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="p">.</span><span class="n">call</span><span class="p">)</span> <span class="c1">// Prints &quot;1&quot;.</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="p">.</span><span class="n">call</span><span class="p">)</span> <span class="c1">// Prints &quot;2&quot;.</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="p">.</span><span class="n">call</span><span class="p">)</span> <span class="c1">// Prints &quot;3&quot;.</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="p">.</span><span class="n">call</span><span class="p">())</span> <span class="c1">// Prints &quot;1&quot;.</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="p">.</span><span class="n">call</span><span class="p">())</span> <span class="c1">// Prints &quot;2&quot;.</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="p">.</span><span class="n">call</span><span class="p">())</span> <span class="c1">// Prints &quot;3&quot;.</span>
 </pre></div>
   </main>
 </div>
