@@ -11,7 +11,6 @@ import sys
 
 # Runs the tests.
 WREN_DIR = dirname(dirname(realpath(__file__)))
-TEST_DIR = join(WREN_DIR, 'test')
 WREN_APP = join(WREN_DIR, 'bin', 'wrend')
 
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
@@ -243,7 +242,9 @@ def run_test(path):
       print('      ' + color.PINK + fail + color.DEFAULT)
     print('')
 
-walk(TEST_DIR, run_test)
+
+for dir in ['core', 'io', 'language', 'limit']:
+  walk(join(WREN_DIR, 'test', dir), run_test)
 
 print_line()
 if failed == 0:

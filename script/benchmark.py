@@ -39,7 +39,7 @@ import sys
 # To generate a baseline file, run this script with "--generate-baseline".
 
 WREN_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-BENCHMARK_DIR = os.path.join(WREN_DIR, 'benchmark')
+BENCHMARK_DIR = os.path.join(WREN_DIR, 'test', 'benchmark')
 
 # How many times to run a given benchmark.
 NUM_TRIALS = 10
