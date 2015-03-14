@@ -72,6 +72,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   wrenPopRoot(vm);
 
   wrenInitializeCore(vm);
+  wrenLoadDebugger(vm);
   #if WREN_USE_LIB_IO
     wrenLoadIOLibrary(vm);
   #endif

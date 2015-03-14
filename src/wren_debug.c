@@ -1,6 +1,10 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "wren_debug.h"
+
+// TODO: This is an arbitrary limi; do something smarter.
+#define MAX_READ_LEN 1024
 
 void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
 {
@@ -311,4 +315,35 @@ void wrenDebugPrintStack(ObjFiber* fiber)
     printf(" | ");
   }
   printf("\n");
+}
+
+static void debugBreakpoint(WrenVM* vm)
+{
+  printf("Entering Wren debugger.\n");
+
+  // Command to exit out of the debugger.
+  const char* continueCommand = "continue;\n";
+
+  char buffer[MAX_READ_LEN];
+  char* line;
+
+  for (;;)
+  {
+    printf("(wdb) > ");
+    line = fgets(buffer, MAX_READ_LEN, stdin);
+
+    if (strcmp(line, continueCommand) == 0)
+    {
+      printf("Exiting debugger.\n");
+      break;
+    }
+
+    wrenInterpret(vm, "Debugger", line);
+  }
+}
+
+void wrenLoadDebugger(WrenVM* vm)
+{
+  wrenInterpret(vm, "", "class Debug {}");
+  wrenDefineStaticMethod(vm, "Debug", "breakpoint", debugBreakpoint);
 }
