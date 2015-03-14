@@ -34,6 +34,24 @@ Otherwise, returns `false`.
 
 Returns whether the sequence contains any element equal to the given element.
 
+### **count**
+
+The number of elements in the sequence.
+
+Unless a more efficient override is available, this will iterate over the
+sequence in order to determine how many elements it contains.
+
+### **count**(predicate)
+
+Returns the number of elements in the sequence that pass the `predicate`.
+
+Iterates over the sequence, passing each element to the function `predicate`
+and counting the number of times the returned value evaluates to `true`.
+
+    :::dart
+    [1, 2, 3].count {|n| n > 2} // 1.
+    [1, 2, 3].count {|n| n < 4} // 3.
+
 ### **join**(sep)
 
 Returns a string representation of the list. The string representations of the
