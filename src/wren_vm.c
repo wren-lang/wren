@@ -583,7 +583,8 @@ static bool runInterpreter(WrenVM* vm)
   // fiber is willing to catch the error, transfers control to it, otherwise
   // exits the interpreter.
   #define RUNTIME_ERROR(error)                         \
-      do {                                             \
+      do                                               \
+      {                                                \
         STORE_FRAME();                                 \
         fiber = runtimeError(vm, fiber, error);        \
         if (fiber == NULL) return false;               \
@@ -591,6 +592,19 @@ static bool runInterpreter(WrenVM* vm)
         DISPATCH();                                    \
       }                                                \
       while (false)
+
+  #if WREN_DEBUG_TRACE_INSTRUCTIONS
+    // Prints the stack and instruction before each instruction is executed.
+    #define DEBUG_TRACE_INSTRUCTIONS()                                  \
+        do                                                              \
+        {                                                               \
+          wrenDebugPrintStack(fiber);                                   \
+          wrenDebugPrintInstruction(vm, fn, (int)(ip - fn->bytecode));  \
+        }                                                               \
+        while (false)
+  #else
+    #define DEBUG_TRACE_INSTRUCTIONS() do { } while (false)
+  #endif
 
   #if WREN_COMPUTED_GOTO
 
@@ -676,24 +690,21 @@ static bool runInterpreter(WrenVM* vm)
   #define INTERPRET_LOOP    DISPATCH();
   #define CASE_CODE(name)   code_##name
 
-  #if WREN_DEBUG_TRACE_INSTRUCTIONS
-    // Prints the stack and instruction before each instruction is executed.
-    #define DISPATCH() \
-        { \
-          wrenDebugPrintStack(fiber); \
-          wrenDebugPrintInstruction(vm, fn, (int)(ip - fn->bytecode)); \
-          instruction = *ip++; \
-          goto *dispatchTable[instruction]; \
-        }
-  #else
-
-    #define DISPATCH()  goto *dispatchTable[instruction = (Code)READ_BYTE()];
-
-  #endif
+  #define DISPATCH()                                            \
+      do                                                        \
+      {                                                         \
+        DEBUG_TRACE_INSTRUCTIONS();                             \
+        goto *dispatchTable[instruction = (Code)READ_BYTE()];   \
+      }                                                         \
+      while (false)
 
   #else
 
-  #define INTERPRET_LOOP   loop: switch (instruction = (Code)READ_BYTE())
+  #define INTERPRET_LOOP                                        \
+      loop:                                                     \
+        DEBUG_TRACE_INSTRUCTIONS();                             \
+        switch (instruction = (Code)READ_BYTE())
+
   #define CASE_CODE(name)  case CODE_##name
   #define DISPATCH()       goto loop
 
