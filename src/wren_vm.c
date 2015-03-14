@@ -33,18 +33,13 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
     reallocate = configuration->reallocateFn;
   }
 
-  WrenVM* vm = (WrenVM*)reallocate(NULL, 0, sizeof(WrenVM));
+  WrenVM* vm = (WrenVM*)reallocate(NULL, 0, sizeof(*vm));
+  memset(vm, 0, sizeof(WrenVM));
 
   vm->reallocate = reallocate;
-
-  vm->methodHandles = NULL;
-  vm->foreignCallSlot = NULL;
-  vm->foreignCallNumArgs = 0;
   vm->loadModule = configuration->loadModuleFn;
 
   wrenSymbolTableInit(vm, &vm->methodNames);
-
-  vm->bytesAllocated = 0;
 
   vm->nextGC = 1024 * 1024 * 10;
   if (configuration->initialHeapSize != 0)
@@ -67,13 +62,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
     vm->heapScalePercent = 100 + configuration->heapGrowthPercent;
   }
 
-  vm->compiler = NULL;
-  vm->fiber = NULL;
-  vm->first = NULL;
-  vm->numTempRoots = 0;
-
   // Implicitly create a "main" module for the REPL or entry script.
-  vm->modules = NULL;
   ObjModule* mainModule = wrenNewModule(vm);
   wrenPushRoot(vm, (Obj*)mainModule);
 
