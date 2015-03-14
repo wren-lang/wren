@@ -42,6 +42,10 @@ The sine of the number.
 
 The square root of the number. Returns `nan` if the number is negative.
 
+### **tan**
+
+The tangent of the number.
+
 ### **-** operator
 
 Negates the number.

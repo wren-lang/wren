@@ -962,6 +962,11 @@ DEF_PRIMITIVE(num_sqrt)
   RETURN_NUM(sqrt(AS_NUM(args[0])));
 }
 
+DEF_PRIMITIVE(num_tan)
+{
+  RETURN_NUM(tan(AS_NUM(args[0])));
+}
+
 DEF_PRIMITIVE(num_toString)
 {
   double value = AS_NUM(args[0]);
@@ -1594,6 +1599,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "sign", num_sign);
   PRIMITIVE(vm->numClass, "sin", num_sin);
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
+  PRIMITIVE(vm->numClass, "tan", num_tan);
   PRIMITIVE(vm->numClass, "toString", num_toString);
   PRIMITIVE(vm->numClass, "truncate", num_truncate);
 
