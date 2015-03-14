@@ -909,6 +909,21 @@ DEF_PRIMITIVE(num_abs)
   RETURN_NUM(fabs(AS_NUM(args[0])));
 }
 
+DEF_PRIMITIVE(num_acos)
+{
+  RETURN_NUM(acos(AS_NUM(args[0])));
+}
+
+DEF_PRIMITIVE(num_asin)
+{
+  RETURN_NUM(asin(AS_NUM(args[0])));
+}
+
+DEF_PRIMITIVE(num_atan)
+{
+  RETURN_NUM(atan(AS_NUM(args[0])));
+}
+
 DEF_PRIMITIVE(num_ceil)
 {
   RETURN_NUM(ceil(AS_NUM(args[0])));
@@ -1591,6 +1606,9 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "..(_)", num_dotDot);
   PRIMITIVE(vm->numClass, "...(_)", num_dotDotDot);
   PRIMITIVE(vm->numClass, "abs", num_abs);
+  PRIMITIVE(vm->numClass, "acos", num_acos);
+  PRIMITIVE(vm->numClass, "asin", num_asin);
+  PRIMITIVE(vm->numClass, "atan", num_atan);
   PRIMITIVE(vm->numClass, "ceil", num_ceil);
   PRIMITIVE(vm->numClass, "cos", num_cos);
   PRIMITIVE(vm->numClass, "floor", num_floor);

@@ -8,6 +8,18 @@ The absolute value of the number.
     :::dart
     -123.abs // 123
 
+### **acos**
+
+The arc cosine of the number.
+
+### **asin**
+
+The arc sine of the number.
+
+### **atan**
+
+The arc tangent of the number.
+
 ### **ceil**
 
 Rounds the number up to the nearest integer.
