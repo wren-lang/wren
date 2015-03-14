@@ -19,8 +19,10 @@
 # Then, for the libraries, the correct extension is added.
 
 # Files.
-HEADERS   := include/wren.h $(wildcard src/*.h)
-SOURCES   := $(wildcard src/*.c)
+CLI_HEADERS  := $(wildcard src/cli/*.h)
+VM_HEADERS   := $(wildcard src/vm/*.h)
+CLI_SOURCES  := $(wildcard src/cli/*.c)
+VM_SOURCES   := $(wildcard src/vm/*.c)
 BUILD_DIR := build
 
 CFLAGS := -Wall -Werror -Wsign-compare -Wtype-limits -Wuninitialized
@@ -89,30 +91,32 @@ else
 	SHARED_EXT := so
 endif
 
-# TODO: Simplify this if we mode main.c to a different directory.
-OBJECTS := $(addprefix $(BUILD_DIR)/, $(notdir $(SOURCES:.c=.o)))
-# Don't include main.c in the libraries.
-LIB_OBJECTS := $(subst $(BUILD_DIR)/main.o,,$(OBJECTS))
+CLI_OBJECTS := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
+VM_OBJECTS := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
 
 # Targets ---------------------------------------------------------------------
 
 all: prep bin/$(WREN) lib/lib$(WREN).a lib/lib$(WREN).$(SHARED_EXT)
 
 prep:
-	@mkdir -p bin lib $(BUILD_DIR)
+	@mkdir -p bin lib $(BUILD_DIR)/cli $(BUILD_DIR)/vm
 
 # Command-line interpreter.
-bin/$(WREN): $(OBJECTS)
-	$(CC) $(CFLAGS) -Iinclude -o $@ $^ -lm
+bin/$(WREN): $(CLI_OBJECTS) $(VM_OBJECTS)
+	$(CC) $(CFLAGS) -Isrc/include -o $@ $^ -lm
 
 # Static library.
-lib/lib$(WREN).a: $(LIB_OBJECTS)
+lib/lib$(WREN).a: $(VM_OBJECTS)
 	$(AR) rcu $@ $^
 
 # Shared library.
-lib/lib$(WREN).$(SHARED_EXT): $(LIB_OBJECTS)
+lib/lib$(WREN).$(SHARED_EXT): $(VM_OBJECTS)
 	$(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
 
-# Object files.
-$(BUILD_DIR)/%.o: src/%.c $(HEADERS)
-	$(CC) -c $(CFLAGS) -Iinclude -o $@ $(FILE_FLAG) $<
+# CLI object files.
+$(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(VM_HEADERS)
+	$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
+
+# VM object files.
+$(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
+	$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
