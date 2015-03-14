@@ -374,6 +374,16 @@ DEF_PRIMITIVE(class_name)
   RETURN_OBJ(classObj->name);
 }
 
+DEF_PRIMITIVE(class_supertype)
+{
+  ObjClass* classObj = AS_CLASS(args[0]);
+
+  // Object has no superclass.
+  if (classObj->superclass == NULL) RETURN_NULL;
+  
+  RETURN_OBJ(classObj->superclass);
+}
+
 DEF_PRIMITIVE(fiber_instantiate)
 {
   // Return the Fiber class itself. When we then call "new" on it, it will
@@ -1484,6 +1494,7 @@ void wrenInitializeCore(WrenVM* vm)
   // prevent the inherited ones from overwriting them.
   PRIMITIVE(vm->classClass, "<instantiate>", class_instantiate);
   PRIMITIVE(vm->classClass, "name", class_name);
+  PRIMITIVE(vm->classClass, "supertype", class_supertype);
 
   // The core class diagram ends up looking like this, where single lines point
   // to a class's superclass, and double lines point to its metaclass:
