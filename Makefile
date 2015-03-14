@@ -51,6 +51,6 @@ watchdocs:
 
 # Build the docs and copy them to a local "gh-pages" directory.
 gh-pages: docs
-	@ cp -r build/docs/. gh-pages
+	@ cp -r build/docs/. build/gh-pages
 
 .PHONY: debug release all clean test builtin docs watchdocs gh-pages
