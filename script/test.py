@@ -152,13 +152,13 @@ def run_test(path):
   proc = Popen([WREN_APP, path], stdin=PIPE, stdout=PIPE, stderr=PIPE)
   (out, err) = proc.communicate(input_bytes)
 
+  fails = []
+
   try:
     out = out.decode("utf-8").replace('\r\n', '\n')
     err = err.decode("utf-8").replace('\r\n', '\n')
   except:
     fails.append('Error decoding output.')
-
-  fails = []
 
   # Validate that no unexpected errors occurred.
   if expect_return != 0 and err != '':
