@@ -9,27 +9,17 @@
 #define MAX_LINE_LENGTH 1024 // TODO: Something less arbitrary.
 #define MAX_PATH_LENGTH 2024 // TODO: Something less arbitrary.
 
-// This is the source file for the standalone command line interpreter. It is
-// not needed if you are embedding Wren in an application.
-
 char rootDirectory[MAX_PATH_LENGTH];
 
-static void failIf(bool condition, int exitCode, const char* format, ...)
-{
-  if (!condition) return;
-
-  va_list args;
-  va_start(args, format);
-  vfprintf(stderr, format, args);
-  va_end(args);
-
-  exit(exitCode);
-}
-
+// Reads the contents of the file at [path] and returns it as a heap allocated
+// string.
+//
+// Returns `NULL` if the path could not be found. Exits if it was found but
+// could not be read.
 static char* readFile(const char* path)
 {
   FILE* file = fopen(path, "rb");
-  failIf(file == NULL, 66, "Could not open file \"%s\".\n", path);
+  if (file == NULL) return NULL;
 
   // Find out how big the file is.
   fseek(file, 0L, SEEK_END);
@@ -38,11 +28,19 @@ static char* readFile(const char* path)
 
   // Allocate a buffer for it.
   char* buffer = (char*)malloc(fileSize + 1);
-  failIf(buffer == NULL, 74, "Could not read file \"%s\".\n", path);
+  if (buffer == NULL)
+  {
+    fprintf(stderr, "Could not read file \"%s\".\n", path);
+    exit(74);
+  }
 
   // Read the entire file.
   size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
-  failIf(bytesRead < fileSize, 74, "Could not read file \"%s\".\n", path);
+  if (bytesRead < fileSize)
+  {
+    fprintf(stderr, "Could not read file \"%s\".\n", path);
+    exit(74);
+  }
 
   // Terminate the string.
   buffer[bytesRead] = '\0';
@@ -63,44 +61,14 @@ static char* readModule(WrenVM* vm, const char* module)
   memcpy(path + rootLength + moduleLength, ".wren", 5);
   path[pathLength] = '\0';
 
-  FILE* file = fopen(path, "rb");
+  char* file = readFile(path);
   if (file == NULL)
   {
     free(path);
     return NULL;
   }
 
-  // Find out how big the file is.
-  fseek(file, 0L, SEEK_END);
-  size_t fileSize = ftell(file);
-  rewind(file);
-
-  // Allocate a buffer for it.
-  char* buffer = (char*)malloc(fileSize + 1);
-  if (buffer == NULL)
-  {
-    fclose(file);
-    free(path);
-    return NULL;
-  }
-
-  // Read the entire file.
-  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
-  if (bytesRead < fileSize)
-  {
-    free(buffer);
-    fclose(file);
-    free(path);
-    return NULL;
-  }
-
-  // Terminate the string.
-  buffer[bytesRead] = '\0';
-
-  fclose(file);
-  free(path);
-
-  return buffer;
+  return file;
 }
 
 static int runFile(WrenVM* vm, const char* path)
@@ -115,6 +83,11 @@ static int runFile(WrenVM* vm, const char* path)
   }
 
   char* source = readFile(path);
+  if (source == NULL)
+  {
+    fprintf(stderr, "Could not find file \"%s\".\n", path);
+    exit(66);
+  }
 
   int result;
   switch (wrenInterpret(vm, path, source))
