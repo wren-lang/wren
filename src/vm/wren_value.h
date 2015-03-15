@@ -766,10 +766,6 @@ static inline bool wrenValuesSame(Value a, Value b)
 // other values are equal if they are identical objects.
 bool wrenValuesEqual(Value a, Value b);
 
-// TODO: Need to decide if this is for user output of values, or for debug
-// tracing.
-void wrenPrintValue(Value value);
-
 // Returns true if [value] is a bool. Do not call this directly, instead use
 // [IS_BOOL].
 static inline bool wrenIsBool(Value value)

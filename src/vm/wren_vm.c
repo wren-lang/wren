@@ -584,12 +584,12 @@ static bool runInterpreter(WrenVM* vm)
 
   #if WREN_DEBUG_TRACE_INSTRUCTIONS
     // Prints the stack and instruction before each instruction is executed.
-    #define DEBUG_TRACE_INSTRUCTIONS()                                  \
-        do                                                              \
-        {                                                               \
-          wrenDebugPrintStack(fiber);                                   \
-          wrenDebugPrintInstruction(vm, fn, (int)(ip - fn->bytecode));  \
-        }                                                               \
+    #define DEBUG_TRACE_INSTRUCTIONS()                            \
+        do                                                        \
+        {                                                         \
+          wrenDumpStack(fiber);                                   \
+          wrenDumpInstruction(vm, fn, (int)(ip - fn->bytecode));  \
+        }                                                         \
         while (false)
   #else
     #define DEBUG_TRACE_INSTRUCTIONS() do { } while (false)

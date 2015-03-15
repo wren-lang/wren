@@ -5,6 +5,10 @@
 #include "wren_value.h"
 #include "wren_vm.h"
 
+#if WREN_DEBUG_TRACE_MEMORY
+  #include "wren_debug.h"
+#endif
+
 // TODO: Tune these.
 // The initial (and minimum) capacity of a non-empty list or map object.
 #define MIN_CAPACITY 16
@@ -932,7 +936,7 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
   indent++;
   for (int i = 0; i < indent; i++) printf("  ");
   printf("mark ");
-  wrenPrintValue(OBJ_VAL(obj));
+  wrenDumpValue(OBJ_VAL(obj));
   printf(" @ %p\n", obj);
 #endif
 
@@ -967,7 +971,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
 {
 #if WREN_DEBUG_TRACE_MEMORY
   printf("free ");
-  wrenPrintValue(OBJ_VAL(obj));
+  wrenDumpValue(OBJ_VAL(obj));
   printf(" @ %p\n", obj);
 #endif
 
@@ -1056,58 +1060,4 @@ bool wrenValuesEqual(Value a, Value b)
       // we get here.
       return false;
   }
-}
-
-static void printObject(Obj* obj)
-{
-  switch (obj->type)
-  {
-    case OBJ_CLASS: printf("[class %p]", obj); break;
-    case OBJ_CLOSURE: printf("[closure %p]", obj); break;
-    case OBJ_FIBER: printf("[fiber %p]", obj); break;
-    case OBJ_FN: printf("[fn %p]", obj); break;
-    case OBJ_INSTANCE: printf("[instance %p]", obj); break;
-    case OBJ_LIST: printf("[list %p]", obj); break;
-    case OBJ_MAP: printf("[map %p]", obj); break;
-    case OBJ_MODULE: printf("[module %p]", obj); break;
-    case OBJ_RANGE: printf("[fn %p]", obj); break;
-    case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
-    case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
-    default: printf("[unknown object]"); break;
-  }
-}
-
-void wrenPrintValue(Value value)
-{
-  #if WREN_NAN_TAGGING
-  if (IS_NUM(value))
-  {
-    printf("%.14g", AS_NUM(value));
-  }
-  else if (IS_OBJ(value))
-  {
-    printObject(AS_OBJ(value));
-  }
-  else
-  {
-    switch (GET_TAG(value))
-    {
-      case TAG_FALSE: printf("false"); break;
-      case TAG_NAN: printf("NaN"); break;
-      case TAG_NULL: printf("null"); break;
-      case TAG_TRUE: printf("true"); break;
-      case TAG_UNDEFINED: UNREACHABLE();
-    }
-  }
-  #else
-  switch (value.type)
-  {
-    case VAL_FALSE: printf("false"); break;
-    case VAL_NULL: printf("null"); break;
-    case VAL_NUM: printf("%.14g", AS_NUM(value)); break;
-    case VAL_TRUE: printf("true"); break;
-    case VAL_OBJ: printObject(AS_OBJ(value)); break;
-    case VAL_UNDEFINED: UNREACHABLE();
-  }
-  #endif
 }

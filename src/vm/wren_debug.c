@@ -29,14 +29,68 @@ void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
       continue;
     }
 
-    // - 1 because IP has advanced past the instruction that it just executed.
+    // -1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines[frame->ip - fn->bytecode - 1];
     fprintf(stderr, "[%s line %d] in %s\n",
             fn->debug->sourcePath->value, line, fn->debug->name);
   }
 }
 
-static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
+static void dumpObject(Obj* obj)
+{
+  switch (obj->type)
+  {
+    case OBJ_CLASS: printf("[class %p]", obj); break;
+    case OBJ_CLOSURE: printf("[closure %p]", obj); break;
+    case OBJ_FIBER: printf("[fiber %p]", obj); break;
+    case OBJ_FN: printf("[fn %p]", obj); break;
+    case OBJ_INSTANCE: printf("[instance %p]", obj); break;
+    case OBJ_LIST: printf("[list %p]", obj); break;
+    case OBJ_MAP: printf("[map %p]", obj); break;
+    case OBJ_MODULE: printf("[module %p]", obj); break;
+    case OBJ_RANGE: printf("[fn %p]", obj); break;
+    case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
+    case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
+    default: printf("[unknown object]"); break;
+  }
+}
+
+void wrenDumpValue(Value value)
+{
+#if WREN_NAN_TAGGING
+  if (IS_NUM(value))
+  {
+    printf("%.14g", AS_NUM(value));
+  }
+  else if (IS_OBJ(value))
+  {
+    dumpObject(AS_OBJ(value));
+  }
+  else
+  {
+    switch (GET_TAG(value))
+    {
+      case TAG_FALSE: printf("false"); break;
+      case TAG_NAN: printf("NaN"); break;
+      case TAG_NULL: printf("null"); break;
+      case TAG_TRUE: printf("true"); break;
+      case TAG_UNDEFINED: UNREACHABLE();
+    }
+  }
+#else
+  switch (value.type)
+  {
+    case VAL_FALSE: printf("false"); break;
+    case VAL_NULL: printf("null"); break;
+    case VAL_NUM: printf("%.14g", AS_NUM(value)); break;
+    case VAL_TRUE: printf("true"); break;
+    case VAL_OBJ: printObject(AS_OBJ(value)); break;
+    case VAL_UNDEFINED: UNREACHABLE();
+  }
+#endif
+}
+
+static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 {
   int start = i;
   uint8_t* bytecode = fn->bytecode;
@@ -68,7 +122,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int constant = READ_SHORT();
       printf("%-16s %5d '", "CONSTANT", constant);
-      wrenPrintValue(fn->constants[constant]);
+      wrenDumpValue(fn->constants[constant]);
       printf("'\n");
       break;
     }
@@ -209,7 +263,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int constant = READ_SHORT();
       printf("%-16s %5d ", "CLOSURE", constant);
-      wrenPrintValue(fn->constants[constant]);
+      wrenDumpValue(fn->constants[constant]);
       printf(" ");
       ObjFn* loadedFn = AS_FN(fn->constants[constant]);
       for (int j = 0; j < loadedFn->numUpvalues; j++)
@@ -250,7 +304,7 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int constant = READ_SHORT();
       printf("%-16s %5d '", "LOAD_MODULE", constant);
-      wrenPrintValue(fn->constants[constant]);
+      wrenDumpValue(fn->constants[constant]);
       printf("'\n");
       break;
     }
@@ -260,9 +314,9 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       int module = READ_SHORT();
       int variable = READ_SHORT();
       printf("%-16s %5d '", "IMPORT_VARIABLE", module);
-      wrenPrintValue(fn->constants[module]);
+      wrenDumpValue(fn->constants[module]);
       printf("' '");
-      wrenPrintValue(fn->constants[variable]);
+      wrenDumpValue(fn->constants[variable]);
       printf("'\n");
       break;
     }
@@ -281,12 +335,12 @@ static int debugPrintInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
   return i - start;
 }
 
-int wrenDebugPrintInstruction(WrenVM* vm, ObjFn* fn, int i)
+int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 {
-  return debugPrintInstruction(vm, fn, i, NULL);
+  return dumpInstruction(vm, fn, i, NULL);
 }
 
-void wrenDebugPrintCode(WrenVM* vm, ObjFn* fn)
+void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 {
   printf("%s: %s\n", fn->debug->sourcePath->value, fn->debug->name);
 
@@ -294,7 +348,7 @@ void wrenDebugPrintCode(WrenVM* vm, ObjFn* fn)
   int lastLine = -1;
   for (;;)
   {
-    int offset = debugPrintInstruction(vm, fn, i, &lastLine);
+    int offset = dumpInstruction(vm, fn, i, &lastLine);
     if (offset == -1) break;
     i += offset;
   }
@@ -302,12 +356,12 @@ void wrenDebugPrintCode(WrenVM* vm, ObjFn* fn)
   printf("\n");
 }
 
-void wrenDebugPrintStack(ObjFiber* fiber)
+void wrenDumpStack(ObjFiber* fiber)
 {
   printf("(fiber %p) ", fiber);
   for (Value* slot = fiber->stack; slot < fiber->stackTop; slot++)
   {
-    wrenPrintValue(*slot);
+    wrenDumpValue(*slot);
     printf(" | ");
   }
   printf("\n");
