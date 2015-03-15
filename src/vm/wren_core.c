@@ -380,7 +380,7 @@ DEF_PRIMITIVE(class_supertype)
 
   // Object has no superclass.
   if (classObj->superclass == NULL) RETURN_NULL;
-  
+
   RETURN_OBJ(classObj->superclass);
 }
 
@@ -922,6 +922,11 @@ DEF_PRIMITIVE(num_asin)
 DEF_PRIMITIVE(num_atan)
 {
   RETURN_NUM(atan(AS_NUM(args[0])));
+}
+
+DEF_PRIMITIVE(num_atan2)
+{
+  RETURN_NUM(atan2(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_ceil)
@@ -1609,6 +1614,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "acos", num_acos);
   PRIMITIVE(vm->numClass, "asin", num_asin);
   PRIMITIVE(vm->numClass, "atan", num_atan);
+  PRIMITIVE(vm->numClass, "atan(_)", num_atan2);
   PRIMITIVE(vm->numClass, "ceil", num_ceil);
   PRIMITIVE(vm->numClass, "cos", num_cos);
   PRIMITIVE(vm->numClass, "floor", num_floor);

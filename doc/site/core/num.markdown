@@ -20,6 +20,11 @@ The arc sine of the number.
 
 The arc tangent of the number.
 
+### **atan**(x)
+
+The arc tangent of the number when divided by `x`, using the signs of the two
+numbers to determine the quadrant of the result.
+
 ### **ceil**
 
 Rounds the number up to the nearest integer.
