@@ -1,4 +1,13 @@
 class Sequence {
+  contains(element) {
+    for (item in this) {
+      if (element == item) {
+        return true
+      }
+    }
+    return false
+  }
+
   count {
     var result = 0
     for (element in this) {
@@ -91,15 +100,6 @@ class List is Sequence {
       result.add(element)
     }
     return result
-  }
-
-  contains(element) {
-    for (item in this) {
-      if (element == item) {
-        return true
-      }
-    }
-    return false
   }
 }
 

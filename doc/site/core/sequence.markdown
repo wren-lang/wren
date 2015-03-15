@@ -30,6 +30,10 @@ Otherwise, returns `false`.
     [1, 2, 3].any {|n| n < 1} // False.
     [1, 2, 3].any {|n| n > 2} // True.
 
+### **contains**(element)
+
+Returns whether the sequence contains any element equal to the given element.
+
 ### **join**(sep)
 
 Returns a string representation of the list. The string representations of the
