@@ -380,7 +380,7 @@ DEF_PRIMITIVE(class_supertype)
 
   // Object has no superclass.
   if (classObj->superclass == NULL) RETURN_NULL;
-  
+
   RETURN_OBJ(classObj->superclass);
 }
 
@@ -694,11 +694,11 @@ DEF_PRIMITIVE(list_insert)
   ObjList* list = AS_LIST(args[0]);
 
   // count + 1 here so you can "insert" at the very end.
-  int index = validateIndex(vm, args, list->count + 1, 2, "Index");
+  int index = validateIndex(vm, args, list->count + 1, 1, "Index");
   if (index == -1) return PRIM_ERROR;
 
-  wrenListInsert(vm, list, args[1], index);
-  RETURN_VAL(args[1]);
+  wrenListInsert(vm, list, args[2], index);
+  RETURN_VAL(args[2]);
 }
 
 DEF_PRIMITIVE(list_iterate)
