@@ -17,3 +17,17 @@ scratch.wren
 
 # The baseline file is machine-specific, so doesn't get checked in.
 test/benchmark/baseline.txt
+
+# Visual Studio cache files
+ipch/
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.cachefile
+
+# Visual Studio User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
