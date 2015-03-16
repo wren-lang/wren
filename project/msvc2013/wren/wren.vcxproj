@@ -41,9 +41,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)..\..\src\include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)..\..\src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -78,25 +80,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\main.c" />
-    <ClCompile Include="..\..\..\src\wren_compiler.c" />
-    <ClCompile Include="..\..\..\src\wren_core.c" />
-    <ClCompile Include="..\..\..\src\wren_debug.c" />
-    <ClCompile Include="..\..\..\src\wren_io.c" />
-    <ClCompile Include="..\..\..\src\wren_utils.c" />
-    <ClCompile Include="..\..\..\src\wren_value.c" />
-    <ClCompile Include="..\..\..\src\wren_vm.c" />
+    <ClCompile Include="..\..\..\src\cli\main.c" />
+    <ClCompile Include="..\..\..\src\vm\wren_compiler.c" />
+    <ClCompile Include="..\..\..\src\vm\wren_core.c" />
+    <ClCompile Include="..\..\..\src\vm\wren_debug.c" />
+    <ClCompile Include="..\..\..\src\vm\wren_io.c" />
+    <ClCompile Include="..\..\..\src\vm\wren_utils.c" />
+    <ClCompile Include="..\..\..\src\vm\wren_value.c" />
+    <ClCompile Include="..\..\..\src\vm\wren_vm.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\include\wren.h" />
-    <ClInclude Include="..\..\..\src\wren_common.h" />
-    <ClInclude Include="..\..\..\src\wren_compiler.h" />
-    <ClInclude Include="..\..\..\src\wren_core.h" />
-    <ClInclude Include="..\..\..\src\wren_debug.h" />
-    <ClInclude Include="..\..\..\src\wren_io.h" />
-    <ClInclude Include="..\..\..\src\wren_utils.h" />
-    <ClInclude Include="..\..\..\src\wren_value.h" />
-    <ClInclude Include="..\..\..\src\wren_vm.h" />
+    <ClInclude Include="..\..\..\src\include\wren.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_common.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_compiler.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_core.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_debug.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_io.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_utils.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_value.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_vm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
