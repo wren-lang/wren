@@ -1,3 +1,5 @@
+#include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -73,11 +75,10 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   wrenPushRoot(vm, (Obj*)name);
 
   // Create the metaclass.
-  ObjString* metaclassName = wrenStringConcat(vm, name->value, name->length,
-                                              " metaclass", -1);
-  wrenPushRoot(vm, (Obj*)metaclassName);
+  Value metaclassName = wrenStringFormat(vm, "@ metaclass", OBJ_VAL(name));
+  wrenPushRoot(vm, AS_OBJ(metaclassName));
 
-  ObjClass* metaclass = wrenNewSingleClass(vm, 0, metaclassName);
+  ObjClass* metaclass = wrenNewSingleClass(vm, 0, AS_STRING(metaclassName));
   metaclass->obj.classObj = vm->classClass;
 
   wrenPopRoot(vm);
@@ -619,7 +620,7 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   ASSERT(length == 0 || text != NULL, "Unexpected NULL string.");
 
   // TODO: Don't allocate a heap string at all for zero-length strings.
-  ObjString* string = AS_STRING(wrenNewUninitializedString(vm, length));
+  ObjString* string = wrenNewUninitializedString(vm, length);
 
   // Copy the string (if given one).
   if (length > 0) memcpy(string->value, text, length);
@@ -629,28 +630,108 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   return OBJ_VAL(string);
 }
 
-Value wrenNewUninitializedString(WrenVM* vm, size_t length)
+ObjString* wrenNewUninitializedString(WrenVM* vm, size_t length)
 {
   ObjString* string = ALLOCATE_FLEX(vm, ObjString, char, length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
   string->length = (int)length;
 
-  return OBJ_VAL(string);
+  return string;
 }
 
-ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
-                            const char* right, int rightLength)
+Value wrenNumToString(WrenVM* vm, double value)
 {
-  if (leftLength == -1) leftLength = (int)strlen(left);
-  if (rightLength == -1) rightLength = (int)strlen(right);
+  // Corner case: If the value is NaN, different versions of libc produce
+  // different outputs (some will format it signed and some won't). To get
+  // reliable output, handle that ourselves.
+  if (value != value) return CONST_STRING(vm, "nan");
+  if (value == INFINITY) return CONST_STRING(vm, "infinity");
+  if (value == -INFINITY) return CONST_STRING(vm, "-infinity");
 
-  Value value = wrenNewUninitializedString(vm, leftLength + rightLength);
-  ObjString* string = AS_STRING(value);
-  memcpy(string->value, left, leftLength);
-  memcpy(string->value + leftLength, right, rightLength);
-  string->value[leftLength + rightLength] = '\0';
+  // This is large enough to hold any double converted to a string using
+  // "%.14g". Example:
+  //
+  //     -1.12345678901234e-1022
+  //
+  // So we have:
+  //
+  // + 1 char for sign
+  // + 1 char for digit
+  // + 1 char for "."
+  // + 14 chars for decimal digits
+  // + 1 char for "e"
+  // + 1 char for "-" or "+"
+  // + 4 chars for exponent
+  // + 1 char for "\0"
+  // = 24
+  char buffer[24];
+  int length = sprintf(buffer, "%.14g", value);
+  return wrenNewString(vm, buffer, length);
+}
 
-  return string;
+Value wrenStringFormat(WrenVM* vm, const char* format, ...)
+{
+  va_list argList;
+
+  // Calculate the length of the result string. Do this up front so we can
+  // create the final string with a single allocation.
+  va_start(argList, format);
+  size_t totalLength = 0;
+  for (const char* c = format; *c != '\0'; c++)
+  {
+    switch (*c)
+    {
+      case '$':
+        totalLength += strlen(va_arg(argList, const char*));
+        break;
+
+      case '@':
+        totalLength += AS_STRING(va_arg(argList, Value))->length;
+        break;
+
+      default:
+        // Any other character is interpreted literally.
+        totalLength++;
+    }
+  }
+  va_end(argList);
+
+  // Concatenate the string.
+  ObjString* result = wrenNewUninitializedString(vm, totalLength);
+
+  va_start(argList, format);
+  char* start = result->value;
+  for (const char* c = format; *c != '\0'; c++)
+  {
+    switch (*c)
+    {
+      case '$':
+      {
+        const char* string = va_arg(argList, const char*);
+        size_t length = strlen(string);
+        memcpy(start, string, length);
+        start += length;
+        break;
+      }
+
+      case '@':
+      {
+        ObjString* string = AS_STRING(va_arg(argList, Value));
+        memcpy(start, string->value, string->length);
+        start += string->length;
+        break;
+      }
+
+      default:
+        // Any other character is interpreted literally.
+        *start++ = *c;
+    }
+  }
+  va_end(argList);
+
+  *start = '\0';
+
+  return OBJ_VAL(result);
 }
 
 Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
@@ -669,11 +750,10 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
   else if ((first & 0xe0) == 0xc0) numBytes = 2;
   else numBytes = 1;
 
-  Value value = wrenNewUninitializedString(vm, numBytes);
-  ObjString* result = AS_STRING(value);
+  ObjString* result = wrenNewUninitializedString(vm, numBytes);
   memcpy(result->value, string->value + index, numBytes);
   result->value[numBytes] = '\0';
-  return value;
+  return OBJ_VAL(result);
 }
 
 // Uses the Boyer-Moore-Horspool string matching algorithm.

@@ -38,7 +38,7 @@
 
 #define RETURN_ERROR(msg) \
     do { \
-      args[0] = wrenNewString(vm, msg, strlen(msg)); \
+      args[0] = wrenStringFormat(vm, "$", msg); \
       return PRIM_ERROR; \
     } while (0);
 
@@ -193,8 +193,7 @@ static bool validateFn(WrenVM* vm, Value* args, int index, const char* argName)
 {
   if (IS_FN(args[index]) || IS_CLOSURE(args[index])) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
-                                     " must be a function.", -1));
+  args[0] = wrenStringFormat(vm, "$ must be a function.", argName);
   return false;
 }
 
@@ -204,8 +203,7 @@ static bool validateNum(WrenVM* vm, Value* args, int index, const char* argName)
 {
   if (IS_NUM(args[index])) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
-                                     " must be a number.", -1));
+  args[0] = wrenStringFormat(vm, "$ must be a number.", argName);
   return false;
 }
 
@@ -216,8 +214,7 @@ static bool validateIntValue(WrenVM* vm, Value* args, double value,
 {
   if (trunc(value) == value) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
-                                     " must be an integer.", -1));
+  args[0] = wrenStringFormat(vm, "$ must be an integer.");
   return false;
 }
 
@@ -247,7 +244,7 @@ static int validateIndexValue(WrenVM* vm, Value* args, int count, double value,
   // Check bounds.
   if (index >= 0 && index < count) return index;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1, " out of bounds.", -1));
+  args[0] = wrenStringFormat(vm, "$ out of bounds.");
   return -1;
 }
 
@@ -262,7 +259,7 @@ static bool validateKey(WrenVM* vm, Value* args, int index)
     return true;
   }
 
-  args[0] = wrenNewString(vm, "Key must be a value type.", 25);
+  args[0] = CONST_STRING(vm, "Key must be a value type.");
   return false;
 }
 
@@ -284,8 +281,7 @@ static bool validateString(WrenVM* vm, Value* args, int index,
 {
   if (IS_STRING(args[index])) return true;
 
-  args[0] = OBJ_VAL(wrenStringConcat(vm, argName, -1,
-                                     " must be a string.", -1));
+  args[0] = wrenStringFormat(vm, "$ must be a string.", argName);
   return false;
 }
 
@@ -334,7 +330,7 @@ static int calculateRange(WrenVM* vm, Value* args, ObjRange* range,
 
     if (to < -1 || to > *length)
     {
-      args[0] = wrenNewString(vm, "Range end out of bounds.", 24);
+      args[0] = CONST_STRING(vm, "Range end out of bounds.");
       return -1;
     }
 
@@ -354,11 +350,11 @@ DEF_PRIMITIVE(bool_toString)
 {
   if (AS_BOOL(args[0]))
   {
-    RETURN_VAL(wrenNewString(vm, "true", 4));
+    RETURN_VAL(CONST_STRING(vm, "true"));
   }
   else
   {
-    RETURN_VAL(wrenNewString(vm, "false", 5));
+    RETURN_VAL(CONST_STRING(vm, "false"));
   }
 }
 
@@ -658,7 +654,7 @@ DEF_PRIMITIVE(fn_call16) { return callFunction(vm, args, 16); }
 
 DEF_PRIMITIVE(fn_toString)
 {
-  RETURN_VAL(wrenNewString(vm, "<fn>", 4));
+  RETURN_VAL(CONST_STRING(vm, "<fn>"));
 }
 
 DEF_PRIMITIVE(list_instantiate)
@@ -901,7 +897,7 @@ DEF_PRIMITIVE(null_not)
 
 DEF_PRIMITIVE(null_toString)
 {
-  RETURN_VAL(wrenNewString(vm, "null", 4));
+  RETURN_VAL(CONST_STRING(vm, "null"));
 }
 
 DEF_PRIMITIVE(num_abs)
@@ -964,34 +960,7 @@ DEF_PRIMITIVE(num_sqrt)
 
 DEF_PRIMITIVE(num_toString)
 {
-  double value = AS_NUM(args[0]);
-
-  // Corner case: If the value is NaN, different versions of libc produce
-  // different outputs (some will format it signed and some won't). To get
-  // reliable output, handle that ourselves.
-  if (value != value) RETURN_VAL(wrenNewString(vm, "nan", 3));
-  if (value == INFINITY) RETURN_VAL(wrenNewString(vm, "infinity", 8));
-  if (value == -INFINITY) RETURN_VAL(wrenNewString(vm, "-infinity", 9));
-
-  // This is large enough to hold any double converted to a string using
-  // "%.14g". Example:
-  //
-  //     -1.12345678901234e-1022
-  //
-  // So we have:
-  //
-  // + 1 char for sign
-  // + 1 char for digit
-  // + 1 char for "."
-  // + 14 chars for decimal digits
-  // + 1 char for "e"
-  // + 1 char for "-" or "+"
-  // + 4 chars for exponent
-  // + 1 char for "\0"
-  // = 24
-  char buffer[24];
-  int length = sprintf(buffer, "%.14g", value);
-  RETURN_VAL(wrenNewString(vm, buffer, length));
+  RETURN_VAL(wrenNumToString(vm, AS_NUM(args[0])));
 }
 
 DEF_PRIMITIVE(num_truncate)
@@ -1019,7 +988,7 @@ DEF_PRIMITIVE(num_fromString)
 
   if (errno == ERANGE)
   {
-    args[0] = wrenNewString(vm, "Number literal is too large.", 28);
+    args[0] = CONST_STRING(vm, "Number literal is too large.");
     return PRIM_ERROR;
   }
 
@@ -1209,12 +1178,11 @@ DEF_PRIMITIVE(object_toString)
   else if (IS_INSTANCE(args[0]))
   {
     ObjInstance* instance = AS_INSTANCE(args[0]);
-    ObjString* name = instance->obj.classObj->name;
-    RETURN_OBJ(wrenStringConcat(vm, "instance of ", -1,
-                                name->value, name->length));
+    Value name = OBJ_VAL(instance->obj.classObj->name);
+    RETURN_VAL(wrenStringFormat(vm, "instance of @", name));
   }
 
-  RETURN_VAL(wrenNewString(vm, "<object>", 8));
+  RETURN_VAL(CONST_STRING(vm, "<object>"));
 }
 
 DEF_PRIMITIVE(object_type)
@@ -1296,11 +1264,20 @@ DEF_PRIMITIVE(range_iteratorValue)
 
 DEF_PRIMITIVE(range_toString)
 {
-  char buffer[51];
   ObjRange* range = AS_RANGE(args[0]);
-  int length = sprintf(buffer, "%.14g%s%.14g", range->from,
-                       range->isInclusive ? ".." : "...", range->to);
-  RETURN_VAL(wrenNewString(vm, buffer, length));
+
+  Value from = wrenNumToString(vm, range->from);
+  wrenPushRoot(vm, AS_OBJ(from));
+
+  Value to = wrenNumToString(vm, range->to);
+  wrenPushRoot(vm, AS_OBJ(to));
+
+  Value result = wrenStringFormat(vm, "@$@", from,
+                                  range->isInclusive ? ".." : "...", to);
+
+  wrenPopRoot(vm);
+  wrenPopRoot(vm);
+  RETURN_VAL(result);
 }
 
 DEF_PRIMITIVE(string_contains)
@@ -1403,10 +1380,7 @@ DEF_PRIMITIVE(string_toString)
 DEF_PRIMITIVE(string_plus)
 {
   if (!validateString(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  ObjString* left = AS_STRING(args[0]);
-  ObjString* right = AS_STRING(args[1]);
-  RETURN_OBJ(wrenStringConcat(vm, left->value, left->length,
-                              right->value, right->length));
+  RETURN_VAL(wrenStringFormat(vm, "@@", args[0], args[1]));
 }
 
 DEF_PRIMITIVE(string_subscript)
@@ -1432,7 +1406,7 @@ DEF_PRIMITIVE(string_subscript)
   int start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);
   if (start == -1) return PRIM_ERROR;
 
-  ObjString* result = AS_STRING(wrenNewUninitializedString(vm, count));
+  ObjString* result = wrenNewUninitializedString(vm, count);
   for (int i = 0; i < count; i++)
   {
     result->value[i] = string->value[start + (i * step)];
@@ -1444,12 +1418,11 @@ DEF_PRIMITIVE(string_subscript)
 
 static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 {
-  size_t length = strlen(name);
-  ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
+  ObjString* nameString = AS_STRING(wrenStringFormat(vm, "$", name));
   wrenPushRoot(vm, (Obj*)nameString);
 
   ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
-  wrenDefineVariable(vm, NULL, name, length, OBJ_VAL(classObj));
+  wrenDefineVariable(vm, NULL, name, nameString->length, OBJ_VAL(classObj));
 
   wrenPopRoot(vm);
   return classObj;
@@ -1457,12 +1430,11 @@ static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
 
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
-  size_t length = strlen(name);
-  ObjString* nameString = AS_STRING(wrenNewString(vm, name, length));
+  ObjString* nameString = AS_STRING(wrenStringFormat(vm, "$", name));
   wrenPushRoot(vm, (Obj*)nameString);
 
   ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-  wrenDefineVariable(vm, NULL, name, length, OBJ_VAL(classObj));
+  wrenDefineVariable(vm, NULL, name, nameString->length, OBJ_VAL(classObj));
 
   wrenPopRoot(vm);
   return classObj;

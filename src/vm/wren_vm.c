@@ -316,12 +316,12 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
 //
 // Returns the fiber that should receive the error or `NULL` if no fiber
 // caught it.
-static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, ObjString* error)
+static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, Value error)
 {
   ASSERT(fiber->error == NULL, "Can only fail once.");
 
   // Store the error in the fiber so it can be accessed later.
-  fiber->error = error;
+  fiber->error = AS_STRING(error);
 
   // If the caller ran this fiber using "try", give it the error.
   if (fiber->callerIsTrying)
@@ -340,14 +340,10 @@ static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, ObjString* error)
 
 // Creates a string containing an appropriate method not found error for a
 // method with [symbol] on [classObj].
-static ObjString* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
+static Value methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
-  char message[MAX_VARIABLE_NAME + MAX_METHOD_NAME + 24];
-  sprintf(message, "%s does not implement '%s'.",
-          classObj->name->value,
-          vm->methodNames.data[symbol].buffer);
-
-  return AS_STRING(wrenNewString(vm, message, strlen(message)));
+  return wrenStringFormat(vm, "@ does not implement '$'.",
+      OBJ_VAL(classObj->name), vm->methodNames.data[symbol].buffer);
 }
 
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
@@ -435,10 +431,7 @@ static Value importModule(WrenVM* vm, Value name)
   if (source == NULL)
   {
     // Couldn't load the module.
-    Value error = wrenNewUninitializedString(vm, 25 + AS_STRING(name)->length);
-    sprintf(AS_STRING(error)->value, "Could not find module '%s'.",
-            AS_CSTRING(name));
-    return error;
+    return wrenStringFormat(vm, "Could not find module '@'.", name);
   }
 
   ObjFiber* moduleFiber = loadModule(vm, name, source);
@@ -468,41 +461,24 @@ static bool importVariable(WrenVM* vm, Value moduleName, Value variableName,
     return true;
   }
 
-  // TODO: This is pretty verbose. Do something cleaner?
-  ObjString* moduleString = AS_STRING(moduleName);
-  ObjString* variableString = AS_STRING(variableName);
-  int length = 48 + variableString->length + moduleString->length;
-  ObjString* error = AS_STRING(wrenNewUninitializedString(vm, length));
-
-  char* start = error->value;
-  memcpy(start, "Could not find a variable named '", 33);
-  start += 33;
-  memcpy(start, variableString->value, variableString->length);
-  start += variableString->length;
-  memcpy(start, "' in module '", 13);
-  start += 13;
-  memcpy(start, moduleString->value, moduleString->length);
-  start += moduleString->length;
-  memcpy(start, "'.", 2);
-  start += 2;
-  *start = '\0';
-
-  *result = OBJ_VAL(error);
+  *result = wrenStringFormat(vm,
+      "Could not find a variable named '@' in module '@'.",
+      variableName, moduleName);
   return false;
 }
 
 // Verifies that [superclass] is a valid object to inherit from. That means it
 // must be a class and cannot be the class of any built-in type.
 //
-// If successful, returns NULL. Otherwise, returns a string for the runtime
+// If successful, returns null. Otherwise, returns a string for the runtime
 // error message.
-static ObjString* validateSuperclass(WrenVM* vm, ObjString* name,
+static Value validateSuperclass(WrenVM* vm, Value name,
                                      Value superclassValue)
 {
   // Make sure the superclass is a class.
   if (!IS_CLASS(superclassValue))
   {
-    return AS_STRING(wrenNewString(vm, "Must inherit from a class.", 26));
+    return CONST_STRING(vm, "Must inherit from a class.");
   }
 
   // Make sure it doesn't inherit from a sealed built-in type. Primitive methods
@@ -517,13 +493,11 @@ static ObjString* validateSuperclass(WrenVM* vm, ObjString* name,
       superclass == vm->rangeClass ||
       superclass == vm->stringClass)
   {
-    char message[70 + MAX_VARIABLE_NAME];
-    sprintf(message, "%s cannot inherit from %s.",
-            name->value, superclass->name->value);
-    return AS_STRING(wrenNewString(vm, message, strlen(message)));
+    return wrenStringFormat(vm, "@ cannot inherit from @.",
+        name, OBJ_VAL(superclass->name));
   }
 
-  return NULL;
+  return NULL_VAL;
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
@@ -789,7 +763,7 @@ static bool runInterpreter(WrenVM* vm)
               break;
 
             case PRIM_ERROR:
-              RUNTIME_ERROR(AS_STRING(args[0]));
+              RUNTIME_ERROR(args[0]);
 
             case PRIM_CALL:
               STORE_FRAME();
@@ -888,7 +862,7 @@ static bool runInterpreter(WrenVM* vm)
               break;
 
             case PRIM_ERROR:
-              RUNTIME_ERROR(AS_STRING(args[0]));
+              RUNTIME_ERROR(args[0]);
 
             case PRIM_CALL:
               STORE_FRAME();
@@ -1047,8 +1021,7 @@ static bool runInterpreter(WrenVM* vm)
       Value expected = POP();
       if (!IS_CLASS(expected))
       {
-        const char* message = "Right operand must be a class.";
-        RUNTIME_ERROR(AS_STRING(wrenNewString(vm, message, strlen(message))));
+        RUNTIME_ERROR(CONST_STRING(vm, "Right operand must be a class."));
       }
 
       ObjClass* actual = wrenGetClass(vm, POP());
@@ -1149,20 +1122,21 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(CLASS):
     {
-      ObjString* name = AS_STRING(PEEK2());
+      Value name = PEEK2();
       ObjClass* superclass = vm->objectClass;
 
       // Use implicit Object superclass if none given.
       if (!IS_NULL(PEEK()))
       {
-        ObjString* error = validateSuperclass(vm, name, PEEK());
-        if (error != NULL) RUNTIME_ERROR(error);
+        Value error = validateSuperclass(vm, name, PEEK());
+        if (!IS_NULL(error)) RUNTIME_ERROR(error);
         superclass = AS_CLASS(PEEK());
       }
 
       int numFields = READ_BYTE();
 
-      ObjClass* classObj = wrenNewClass(vm, superclass, numFields, name);
+      ObjClass* classObj = wrenNewClass(vm, superclass, numFields,
+                                        AS_STRING(name));
 
       // Don't pop the superclass and name off the stack until the subclass is
       // done being created, to make sure it doesn't get collected.
@@ -1173,12 +1147,9 @@ static bool runInterpreter(WrenVM* vm)
       // overflow.
       if (superclass->numFields + numFields > MAX_FIELDS)
       {
-        char message[70 + MAX_VARIABLE_NAME];
-        sprintf(message,
-            "Class '%s' may not have more than %d fields, including inherited "
-            "ones.", name->value, MAX_FIELDS);
-
-        RUNTIME_ERROR(AS_STRING(wrenNewString(vm, message, strlen(message))));
+        RUNTIME_ERROR(wrenStringFormat(vm,
+            "Class '@' may not have more than 255 fields, including inherited "
+            "ones.", name));
       }
 
       PUSH(OBJ_VAL(classObj));
@@ -1203,7 +1174,7 @@ static bool runInterpreter(WrenVM* vm)
       Value result = importModule(vm, name);
 
       // If it returned a string, it was an error message.
-      if (IS_STRING(result)) RUNTIME_ERROR(AS_STRING(result));
+      if (IS_STRING(result)) RUNTIME_ERROR(result);
 
       // Make a slot that the module's fiber can use to store its result in.
       // It ends up getting discarded, but CODE_RETURN expects to be able to
@@ -1236,7 +1207,7 @@ static bool runInterpreter(WrenVM* vm)
       }
       else
       {
-        RUNTIME_ERROR(AS_STRING(result));
+        RUNTIME_ERROR(result);
       }
       DISPATCH();
     }
@@ -1285,7 +1256,7 @@ static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
 WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
                           const char* signature)
 {
-  Value moduleName = wrenNewString(vm, module, strlen(module));
+  Value moduleName = wrenStringFormat(vm, "$", module);
   wrenPushRoot(vm, AS_OBJ(moduleName));
 
   Value moduleValue = wrenMapGet(vm->modules, moduleName);
@@ -1343,8 +1314,7 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
       case 'n': value = NULL_VAL; va_arg(argList, void*); break;
       case 's':
       {
-        const char* text = va_arg(argList, const char*);
-        value = wrenNewString(vm, text, strlen(text));
+        value = wrenStringFormat(vm, "$", va_arg(argList, const char*));
         break;
       }
 
@@ -1413,7 +1383,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   if (strlen(sourcePath) == 0) return loadIntoCore(vm, source);
 
   // TODO: Better module name.
-  Value name = wrenNewString(vm, "main", 4);
+  Value name = CONST_STRING(vm, "main");
   wrenPushRoot(vm, AS_OBJ(name));
 
   ObjFiber* fiber = loadModule(vm, name, source);
@@ -1434,7 +1404,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
 
 Value wrenImportModule(WrenVM* vm, const char* name)
 {
-  Value nameValue = wrenNewString(vm, name, strlen(name));
+  Value nameValue = wrenStringFormat(vm, "$", name);
   wrenPushRoot(vm, AS_OBJ(nameValue));
 
   // If the module is already loaded, we don't need to do anything.
@@ -1451,9 +1421,7 @@ Value wrenImportModule(WrenVM* vm, const char* name)
     wrenPopRoot(vm); // nameValue.
 
     // Couldn't load the module.
-    Value error = wrenNewUninitializedString(vm, 25 + strlen(name));
-    sprintf(AS_STRING(error)->value, "Could not find module '%s'.", name);
-    return error;
+    return wrenStringFormat(vm, "Could not find module '$'.", name);
   }
 
   ObjFiber* moduleFiber = loadModule(vm, nameValue, source);
@@ -1559,14 +1527,14 @@ static void defineMethod(WrenVM* vm, const char* className,
   else
   {
     // The class doesn't already exist, so create it.
-    size_t length = strlen(className);
-    ObjString* nameString = AS_STRING(wrenNewString(vm, className, length));
+    ObjString* nameString = AS_STRING(wrenStringFormat(vm, "$", className));
 
     wrenPushRoot(vm, (Obj*)nameString);
 
     // TODO: Allow passing in name for superclass?
     classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-    wrenDefineVariable(vm, coreModule, className, length, OBJ_VAL(classObj));
+    wrenDefineVariable(vm, coreModule, className, nameString->length,
+                       OBJ_VAL(classObj));
 
     wrenPopRoot(vm);
   }

@@ -3121,14 +3121,13 @@ void definition(Compiler* compiler)
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module,
                    const char* sourcePath, const char* source)
 {
-  ObjString* sourcePathObj = AS_STRING(wrenNewString(vm, sourcePath,
-                                                     strlen(sourcePath)));
-  wrenPushRoot(vm, (Obj*)sourcePathObj);
+  Value sourcePathValue = wrenStringFormat(vm, "$", sourcePath);
+  wrenPushRoot(vm, AS_OBJ(sourcePathValue));
 
   Parser parser;
   parser.vm = vm;
   parser.module = module;
-  parser.sourcePath = sourcePathObj;
+  parser.sourcePath = AS_STRING(sourcePathValue);
   parser.source = source;
 
   parser.tokenStart = source;

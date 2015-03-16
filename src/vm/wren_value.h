@@ -697,6 +697,11 @@ ObjModule* wrenNewModule(WrenVM* vm);
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 
+// Creates a new string object from [text], which should be a bare C string
+// literal. This determines the length of the string automatically at compile
+// time based on the size of the character array -1 for the terminating '\0'.
+#define CONST_STRING(vm, text) wrenNewString((vm), (text), sizeof(text) - 1)
+
 // Creates a new string object of [length] and copies [text] into it.
 //
 // [text] may be NULL if [length] is zero.
@@ -706,13 +711,21 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 // [length] but does no initialization of the buffer.
 //
 // The caller is expected to fully initialize the buffer after calling.
-Value wrenNewUninitializedString(WrenVM* vm, size_t length);
+ObjString* wrenNewUninitializedString(WrenVM* vm, size_t length);
 
-// Creates a new string that is the concatenation of [left] and [right] (with
-// length [leftLength] and [rightLength], respectively). If -1 is passed
-// the string length is automatically calculated.
-ObjString* wrenStringConcat(WrenVM* vm, const char* left, int leftLength,
-                            const char* right, int rightLength);
+// Produces a string representation of [value].
+Value wrenNumToString(WrenVM* vm, double value);
+
+// Creates a new formatted string from [format] and any additional arguments
+// used in the format string.
+//
+// This is a very restricted flavor of formatting, intended only for internal
+// use by the VM. Two formatting characters are supported, each of which reads
+// the next argument as a certain type:
+//
+// $ - A C string.
+// @ - A Wren string object.
+Value wrenStringFormat(WrenVM* vm, const char* format, ...);
 
 // Creates a new string containing the code point in [string] starting at byte
 // [index]. If [index] points into the middle of a UTF-8 sequence, returns an
