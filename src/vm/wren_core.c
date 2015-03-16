@@ -214,7 +214,7 @@ static bool validateIntValue(WrenVM* vm, Value* args, double value,
 {
   if (trunc(value) == value) return true;
 
-  args[0] = wrenStringFormat(vm, "$ must be an integer.");
+  args[0] = wrenStringFormat(vm, "$ must be an integer.", argName);
   return false;
 }
 
@@ -244,7 +244,7 @@ static int validateIndexValue(WrenVM* vm, Value* args, int count, double value,
   // Check bounds.
   if (index >= 0 && index < count) return index;
 
-  args[0] = wrenStringFormat(vm, "$ out of bounds.");
+  args[0] = wrenStringFormat(vm, "$ out of bounds.", argName);
   return -1;
 }
 
