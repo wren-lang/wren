@@ -7,21 +7,11 @@ class Sequence {
     return result
   }
 
-  map(f) {
-    var result = new List
-    for (element in this) {
-      result.add(f.call(element))
-    }
-    return result
-  }
+  map(f) { new MapSequence(this, f) }
+  where(predicate) { new WhereSequence(this, predicate) }
 
-  where(f) {
-    var result = new List
-    for (element in this) {
-      if (f.call(element)) result.add(element)
-    }
-    return result
-  }
+  skip(count) { new SkipSequence(this, count) }
+  take(count) { new TakeSequence(this, count) }
 
   all(f) {
     for (element in this) {
@@ -71,6 +61,14 @@ class Sequence {
 
     return result
   }
+
+  toList() {
+    var result = new List
+    for (element in this) {
+      result.add(element)
+    }
+    return result
+  }
 }
 
 class String is Sequence {}
@@ -101,6 +99,67 @@ class List is Sequence {
     }
     return false
   }
+}
+
+class MapSequence is Sequence {
+  new(seq, f) {
+    _seq = seq
+    _f = f
+  }
+
+  iterate(n) { _seq.iterate(n) }
+  iteratorValue(iterator) { _f.call(_seq.iteratorValue(iterator)) }
+}
+
+class WhereSequence is Sequence {
+  new(seq, f) {
+    _seq = seq
+    _f = f
+  }
+
+  iterate(n) {
+    n = _seq.iterate(n)
+    while (n && !_f.call(_seq.iteratorValue(n))) {
+      n = _seq.iterate(n)
+    }
+    return n
+  }
+  iteratorValue(iterator) { _seq.iteratorValue(iterator) }
+}
+
+class SkipSequence is Sequence {
+  new(seq, count) {
+    _seq = seq
+    _count = count
+  }
+
+  iterate(n) {
+    if (n) {
+      return _seq.iterate(n)
+    } else {
+      n = _seq.iterate(n)
+      var count = _count
+      while (count > 0 && n) {
+        n = _seq.iterate(n)
+        count = count - 1
+      }
+      return n
+    }
+  }
+  iteratorValue(iterator) { _seq.iteratorValue(iterator) }
+}
+
+class TakeSequence is Sequence {
+  new(seq, count) {
+    _seq = seq
+    _count = count
+  }
+
+  iterate(n) {
+    if (!n) _taken = 1 else _taken = _taken + 1
+    return _taken > _count ? null : _seq.iterate(n)
+  }
+  iteratorValue(iterator) { _seq.iteratorValue(iterator) }
 }
 
 class Map {
