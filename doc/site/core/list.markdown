@@ -17,7 +17,7 @@ Removes all items from the list.
 
 The number of items in the list.
 
-### **insert**(item, index)
+### **insert**(index, item)
 
 **TODO**
 
