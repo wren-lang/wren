@@ -698,9 +698,9 @@ ObjModule* wrenNewModule(WrenVM* vm);
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 
 // Creates a new string object from [text], which should be a bare C string
-// literal. This determines the length of the string automatically at compile
-// time based on the size of the character array -1 for the terminating '\0'.
-#define CONST_STRING(vm, text) wrenNewString((vm), (text), sizeof(text) - 1)
+// literal. Calling strlen() in the macro and passing in a string literal
+// enables most compilers to evaluate the string length at compile time.
+#define CONST_STRING(vm, text) wrenNewString((vm), (text), strlen(text))
 
 // Creates a new string object of [length] and copies [text] into it.
 //
