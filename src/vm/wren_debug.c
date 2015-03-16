@@ -48,7 +48,7 @@ static void dumpObject(Obj* obj)
     case OBJ_LIST: printf("[list %p]", obj); break;
     case OBJ_MAP: printf("[map %p]", obj); break;
     case OBJ_MODULE: printf("[module %p]", obj); break;
-    case OBJ_RANGE: printf("[fn %p]", obj); break;
+    case OBJ_RANGE: printf("[range %p]", obj); break;
     case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
     case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
     default: printf("[unknown object]"); break;
