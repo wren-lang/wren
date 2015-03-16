@@ -4,72 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "io.h"
 #include "wren.h"
 
 #define MAX_LINE_LENGTH 1024 // TODO: Something less arbitrary.
-#define MAX_PATH_LENGTH 2024 // TODO: Something less arbitrary.
-
-char rootDirectory[MAX_PATH_LENGTH];
-
-// Reads the contents of the file at [path] and returns it as a heap allocated
-// string.
-//
-// Returns `NULL` if the path could not be found. Exits if it was found but
-// could not be read.
-static char* readFile(const char* path)
-{
-  FILE* file = fopen(path, "rb");
-  if (file == NULL) return NULL;
-
-  // Find out how big the file is.
-  fseek(file, 0L, SEEK_END);
-  size_t fileSize = ftell(file);
-  rewind(file);
-
-  // Allocate a buffer for it.
-  char* buffer = (char*)malloc(fileSize + 1);
-  if (buffer == NULL)
-  {
-    fprintf(stderr, "Could not read file \"%s\".\n", path);
-    exit(74);
-  }
-
-  // Read the entire file.
-  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
-  if (bytesRead < fileSize)
-  {
-    fprintf(stderr, "Could not read file \"%s\".\n", path);
-    exit(74);
-  }
-
-  // Terminate the string.
-  buffer[bytesRead] = '\0';
-
-  fclose(file);
-  return buffer;
-}
-
-static char* readModule(WrenVM* vm, const char* module)
-{
-  // The module path is relative to the root directory and with ".wren".
-  size_t rootLength = strlen(rootDirectory);
-  size_t moduleLength = strlen(module);
-  size_t pathLength = rootLength + moduleLength + 5;
-  char* path = (char*)malloc(pathLength + 1);
-  memcpy(path, rootDirectory, rootLength);
-  memcpy(path + rootLength, module, moduleLength);
-  memcpy(path + rootLength + moduleLength, ".wren", 5);
-  path[pathLength] = '\0';
-
-  char* file = readFile(path);
-  if (file == NULL)
-  {
-    free(path);
-    return NULL;
-  }
-
-  return file;
-}
 
 static int runFile(WrenVM* vm, const char* path)
 {
@@ -78,8 +16,10 @@ static int runFile(WrenVM* vm, const char* path)
   const char* lastSlash = strrchr(path, '/');
   if (lastSlash != NULL)
   {
-    memcpy(rootDirectory, path, lastSlash - path + 1);
-    rootDirectory[lastSlash - path + 1] = '\0';
+    char* root = (char*)malloc(lastSlash - path + 2);
+    memcpy(root, path, lastSlash - path + 1);
+    root[lastSlash - path + 1] = '\0';
+    setRootDirectory(root);
   }
 
   char* source = readFile(path);
@@ -111,9 +51,6 @@ static int runRepl(WrenVM* vm)
 {
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
-
-  // Import relative to the current directory.
-  rootDirectory[0] = '\0';
 
   char line[MAX_LINE_LENGTH];
 
