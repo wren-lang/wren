@@ -1,3 +1,4 @@
+// skip: Range subscripts for strings don't handle UTF-8.
 var string = "abcde"
 IO.print(string[0..0]) // expect: a
 IO.print(string[1...1] == "") // expect: true

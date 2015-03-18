@@ -1401,6 +1401,7 @@ DEF_PRIMITIVE(string_subscript)
   }
 
   // TODO: Handle UTF-8 here.
+  /*
   int step;
   int count = string->length;
   int start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);
@@ -1414,6 +1415,8 @@ DEF_PRIMITIVE(string_subscript)
   result->value[count] = '\0';
 
   RETURN_OBJ(result);
+  */
+  RETURN_ERROR("Subscript ranges for strings are not implemented yet.");
 }
 
 static ObjClass* defineSingleClass(WrenVM* vm, const char* name)

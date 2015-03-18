@@ -75,6 +75,8 @@ BENCHMARK("map_numeric", r"""500000500000""")
 
 BENCHMARK("map_string", r"""3645600""")
 
+BENCHMARK("string_equals", r"""3000000""")
+
 LANGUAGES = [
   ("wren",           [os.path.join(WREN_DIR, 'wren')], ".wren"),
   ("lua",            ["lua"],                          ".lua"),

@@ -357,29 +357,7 @@ static uint32_t hashObject(Obj* object)
     }
 
     case OBJ_STRING:
-    {
-      ObjString* string = (ObjString*)object;
-
-      // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
-      uint32_t hash = 2166136261u;
-
-      // We want the contents of the string to affect the hash, but we also
-      // want to ensure it runs in constant time. We also don't want to bias
-      // towards the prefix or suffix of the string. So sample up to eight
-      // characters spread throughout the string.
-      // TODO: Tune this.
-      if (string->length > 0)
-      {
-        uint32_t step = 1 + 7 / string->length;
-        for (uint32_t i = 0; i < string->length; i += step)
-        {
-          hash ^= string->value[i];
-          hash *= 16777619;
-        }
-      }
-
-      return hash;
-    }
+      return ((ObjString*)object)->hash;
 
     default:
       ASSERT(false, "Only immutable objects can be hashed.");
@@ -616,30 +594,59 @@ Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
   return OBJ_VAL(range);
 }
 
+// Creates a new string object with a null-terminated buffer large enough to
+// hold a string of [length] but does not fill in the bytes.
+//
+// The caller is expected to fill in the buffer and then calculate the string's
+// hash.
+static ObjString* allocateString(WrenVM* vm, size_t length)
+{
+  ObjString* string = ALLOCATE_FLEX(vm, ObjString, char, length + 1);
+  initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
+  string->length = (int)length;
+  string->value[length] = '\0';
+
+  return string;
+}
+
+// Calculates and stores the hash code for [string].
+static void hashString(ObjString* string)
+{
+  // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
+  uint32_t hash = 2166136261u;
+
+  // We want the contents of the string to affect the hash, but we also
+  // want to ensure it runs in constant time. We also don't want to bias
+  // towards the prefix or suffix of the string. So sample up to eight
+  // characters spread throughout the string.
+  // TODO: Tune this.
+  if (string->length > 0)
+  {
+    uint32_t step = 1 + 7 / string->length;
+    for (uint32_t i = 0; i < string->length; i += step)
+    {
+      hash ^= string->value[i];
+      hash *= 16777619;
+    }
+  }
+
+  string->hash = hash;
+}
+
 Value wrenNewString(WrenVM* vm, const char* text, size_t length)
 {
   // Allow NULL if the string is empty since byte buffers don't allocate any
   // characters for a zero-length string.
   ASSERT(length == 0 || text != NULL, "Unexpected NULL string.");
 
-  // TODO: Don't allocate a heap string at all for zero-length strings.
-  ObjString* string = wrenNewUninitializedString(vm, length);
+  ObjString* string = allocateString(vm, length);
 
   // Copy the string (if given one).
   if (length > 0) memcpy(string->value, text, length);
 
-  string->value[length] = '\0';
+  hashString(string);
 
   return OBJ_VAL(string);
-}
-
-ObjString* wrenNewUninitializedString(WrenVM* vm, size_t length)
-{
-  ObjString* string = ALLOCATE_FLEX(vm, ObjString, char, length + 1);
-  initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
-  string->length = (int)length;
-
-  return string;
 }
 
 Value wrenNumToString(WrenVM* vm, double value)
@@ -700,7 +707,7 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...)
   va_end(argList);
 
   // Concatenate the string.
-  ObjString* result = wrenNewUninitializedString(vm, totalLength);
+  ObjString* result = allocateString(vm, totalLength);
 
   va_start(argList, format);
   char* start = result->value;
@@ -732,7 +739,7 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...)
   }
   va_end(argList);
 
-  *start = '\0';
+  hashString(result);
 
   return OBJ_VAL(result);
 }
@@ -753,10 +760,7 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
   else if ((first & 0xe0) == 0xc0) numBytes = 2;
   else numBytes = 1;
 
-  ObjString* result = wrenNewUninitializedString(vm, numBytes);
-  memcpy(result->value, string->value + index, numBytes);
-  result->value[numBytes] = '\0';
-  return OBJ_VAL(result);
+  return wrenNewString(vm, string->value + index, numBytes);
 }
 
 // Uses the Boyer-Moore-Horspool string matching algorithm.
@@ -1135,6 +1139,7 @@ bool wrenValuesEqual(Value a, Value b)
       ObjString* aString = (ObjString*)aObj;
       ObjString* bString = (ObjString*)bObj;
       return aString->length == bString->length &&
+             aString->hash == bString->hash &&
              memcmp(aString->value, bString->value, aString->length) == 0;
     }
 

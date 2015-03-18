@@ -109,6 +109,7 @@ typedef struct
   Obj obj;
   // Does not include the null terminator.
   uint32_t length;
+  uint32_t hash;
   char value[FLEXIBLE_ARRAY];
 } ObjString;
 
@@ -485,6 +486,10 @@ typedef struct
 // Returns true if [value] is a string object.
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))
 
+// Creates a new string object from [text], which should be a bare C string
+// literal. This determines the length of the string automatically at compile
+// time based on the size of the character array -1 for the terminating '\0'.
+#define CONST_STRING(vm, text) wrenNewString((vm), (text), sizeof(text) - 1)
 
 // An IEEE 754 double-precision float is a 64-bit value with bits laid out like:
 //
@@ -697,21 +702,10 @@ ObjModule* wrenNewModule(WrenVM* vm);
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 
-// Creates a new string object from [text], which should be a bare C string
-// literal. This determines the length of the string automatically at compile
-// time based on the size of the character array -1 for the terminating '\0'.
-#define CONST_STRING(vm, text) wrenNewString((vm), (text), sizeof(text) - 1)
-
 // Creates a new string object of [length] and copies [text] into it.
 //
 // [text] may be NULL if [length] is zero.
 Value wrenNewString(WrenVM* vm, const char* text, size_t length);
-
-// Creates a new string object with a buffer large enough to hold a string of
-// [length] but does no initialization of the buffer.
-//
-// The caller is expected to fully initialize the buffer after calling.
-ObjString* wrenNewUninitializedString(WrenVM* vm, size_t length);
 
 // Produces a string representation of [value].
 Value wrenNumToString(WrenVM* vm, double value);
