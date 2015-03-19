@@ -42,12 +42,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)..\..\src\include</IncludePath>
-    <LibraryPath>$(OutDir);$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
+    <LibraryPath>$(SolutionDir)..\..\build\vs\$(Configuration)\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <OutDir>$(SolutionDir)..\..\build\vs\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(SolutionDir)..\..\src\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..\..\build\vs\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)..\..\build\vs\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
