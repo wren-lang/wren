@@ -139,3 +139,6 @@ Attempts to parse `value` as a decimal literal and return it as an instance of
 
 It is a runtime error if `value` is not a string.
 
+### Num.**pi**
+
+The value of π.

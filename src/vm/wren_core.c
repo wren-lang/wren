@@ -1060,6 +1060,11 @@ DEF_PRIMITIVE(num_negate)
   RETURN_NUM(-AS_NUM(args[0]));
 }
 
+DEF_PRIMITIVE(num_pi)
+{
+  RETURN_NUM(3.14159265358979323846);
+}
+
 DEF_PRIMITIVE(num_minus)
 {
   if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
@@ -1592,6 +1597,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->numClass = defineClass(vm, "Num");
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
+  PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
   PRIMITIVE(vm->numClass, "-", num_negate);
   PRIMITIVE(vm->numClass, "-(_)", num_minus);
   PRIMITIVE(vm->numClass, "+(_)", num_plus);
