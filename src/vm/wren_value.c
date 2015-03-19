@@ -615,19 +615,13 @@ static void hashString(ObjString* string)
   // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
   uint32_t hash = 2166136261u;
 
-  // We want the contents of the string to affect the hash, but we also
-  // want to ensure it runs in constant time. We also don't want to bias
-  // towards the prefix or suffix of the string. So sample up to eight
-  // characters spread throughout the string.
-  // TODO: Tune this.
-  if (string->length > 0)
+  // This is O(n) on the length of the string, but we only call this when a new
+  // string is created. Since the creation is also O(n) (to copy/initialize all
+  // the bytes), we allow this here.
+  for (uint32_t i = 0; i < string->length; i++)
   {
-    uint32_t step = 1 + 7 / string->length;
-    for (uint32_t i = 0; i < string->length; i += step)
-    {
-      hash ^= string->value[i];
-      hash *= 16777619;
-    }
+    hash ^= string->value[i];
+    hash *= 16777619;
   }
 
   string->hash = hash;
