@@ -45,6 +45,45 @@
 #define STACK_SIZE 1024
 #define MAX_CALL_FRAMES 256
 
+// These macros cast a Value to one of the specific value types. These do *not*
+// perform any validation, so must only be used after the Value has been
+// ensured to be the right type.
+#define AS_CLASS(value)     ((ObjClass*)AS_OBJ(value))          // ObjClass*
+#define AS_CLOSURE(value)   ((ObjClosure*)AS_OBJ(value))        // ObjClosure*
+#define AS_FIBER(v)         ((ObjFiber*)AS_OBJ(v))              // ObjFiber*
+#define AS_FN(value)        ((ObjFn*)AS_OBJ(value))             // ObjFn*
+#define AS_INSTANCE(value)  ((ObjInstance*)AS_OBJ(value))       // ObjInstance*
+#define AS_LIST(value)      ((ObjList*)AS_OBJ(value))           // ObjList*
+#define AS_MAP(value)       ((ObjMap*)AS_OBJ(value))            // ObjMap*
+#define AS_MODULE(value)    ((ObjModule*)AS_OBJ(value))         // ObjModule*
+#define AS_NUM(value)       (wrenValueToNum(value))             // double
+#define AS_RANGE(v)         ((ObjRange*)AS_OBJ(v))              // ObjRange*
+#define AS_STRING(v)        ((ObjString*)AS_OBJ(v))             // ObjString*
+#define AS_CSTRING(v)       (AS_STRING(v)->value)               // const char*
+
+// These macros promote a primitive C value to a full Wren Value. There are
+// more defined below that are specific to the Nan tagged or other
+// representation.
+#define BOOL_VAL(boolean) (boolean ? TRUE_VAL : FALSE_VAL)      // boolean
+#define NUM_VAL(num) (wrenNumToValue(num))                      // double
+#define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))           // Any Obj___*
+
+// These perform type tests on a Value, returning `true` if the Value is of the
+// given type.
+#define IS_BOOL(value) (wrenIsBool(value))                      // Bool
+#define IS_CLASS(value) (wrenIsObjType(value, OBJ_CLASS))       // ObjClass
+#define IS_CLOSURE(value) (wrenIsObjType(value, OBJ_CLOSURE))   // ObjClosure
+#define IS_FIBER(value) (wrenIsObjType(value, OBJ_FIBER))       // ObjFiber
+#define IS_FN(value) (wrenIsObjType(value, OBJ_FN))             // ObjFn
+#define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
+#define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
+#define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
+
+// Creates a new string object from [text], which should be a bare C string
+// literal. This determines the length of the string automatically at compile
+// time based on the size of the character array (-1 for the terminating '\0').
+#define CONST_STRING(vm, text) wrenNewString((vm), (text), sizeof(text) - 1)
+
 // Identifies which specific type a heap-allocated object is.
 typedef enum {
   OBJ_CLASS,
@@ -104,12 +143,18 @@ typedef struct
 
 DECLARE_BUFFER(Value, Value);
 
+// A heap-allocated string object.
 typedef struct
 {
   Obj obj;
-  // Does not include the null terminator.
+
+  // Number of bytes in the string, not including the null terminator.
   uint32_t length;
+
+  // The hash value of the string's contents.
   uint32_t hash;
+
+  // Inline array of the string's bytes followed by a null terminator.
   char value[FLEXIBLE_ARRAY];
 } ObjString;
 
@@ -415,81 +460,6 @@ typedef struct
   // True if [to] is included in the range.
   bool isInclusive;
 } ObjRange;
-
-
-// Value -> ObjClass*.
-#define AS_CLASS(value) ((ObjClass*)AS_OBJ(value))
-
-// Value -> ObjClosure*.
-#define AS_CLOSURE(value) ((ObjClosure*)AS_OBJ(value))
-
-// Value -> ObjFiber*.
-#define AS_FIBER(v) ((ObjFiber*)AS_OBJ(v))
-
-// Value -> ObjFn*.
-#define AS_FN(value) ((ObjFn*)AS_OBJ(value))
-
-// Value -> ObjInstance*.
-#define AS_INSTANCE(value) ((ObjInstance*)AS_OBJ(value))
-
-// Value -> ObjList*.
-#define AS_LIST(value) ((ObjList*)AS_OBJ(value))
-
-// Value -> ObjMap*.
-#define AS_MAP(value) ((ObjMap*)AS_OBJ(value))
-
-// Value -> ObjModule*.
-#define AS_MODULE(value) ((ObjModule*)AS_OBJ(value))
-
-// Value -> double.
-#define AS_NUM(value) (wrenValueToNum(value))
-
-// Value -> ObjRange*.
-#define AS_RANGE(v) ((ObjRange*)AS_OBJ(v))
-
-// Value -> ObjString*.
-#define AS_STRING(v) ((ObjString*)AS_OBJ(v))
-
-// Value -> const char*.
-#define AS_CSTRING(v) (AS_STRING(v)->value)
-
-// Convert [boolean] to a boolean [Value].
-#define BOOL_VAL(boolean) (boolean ? TRUE_VAL : FALSE_VAL)
-
-// double -> Value.
-#define NUM_VAL(num) (wrenNumToValue(num))
-
-// Convert [obj], an `Obj*`, to a [Value].
-#define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))
-
-// Returns true if [value] is a bool.
-#define IS_BOOL(value) (wrenIsBool(value))
-
-// Returns true if [value] is a class.
-#define IS_CLASS(value) (wrenIsObjType(value, OBJ_CLASS))
-
-// Returns true if [value] is a closure.
-#define IS_CLOSURE(value) (wrenIsObjType(value, OBJ_CLOSURE))
-
-// Returns true if [value] is a fiber.
-#define IS_FIBER(value) (wrenIsObjType(value, OBJ_FIBER))
-
-// Returns true if [value] is a function object.
-#define IS_FN(value) (wrenIsObjType(value, OBJ_FN))
-
-// Returns true if [value] is an instance.
-#define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE))
-
-// Returns true if [value] is a range object.
-#define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))
-
-// Returns true if [value] is a string object.
-#define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))
-
-// Creates a new string object from [text], which should be a bare C string
-// literal. This determines the length of the string automatically at compile
-// time based on the size of the character array -1 for the terminating '\0'.
-#define CONST_STRING(vm, text) wrenNewString((vm), (text), sizeof(text) - 1)
 
 // An IEEE 754 double-precision float is a 64-bit value with bits laid out like:
 //
