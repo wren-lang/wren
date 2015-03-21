@@ -601,8 +601,8 @@ DEF_PRIMITIVE(fiber_yield1)
 
 DEF_PRIMITIVE(fn_instantiate)
 {
-  // Return the Fn class itself. When we then call "new" on it, it will
-  // return the block.
+  // Return the Fn class itself. When we then call "new" on it, it will return
+  // the block.
   RETURN_VAL(args[0]);
 }
 
@@ -666,8 +666,7 @@ DEF_PRIMITIVE(list_instantiate)
 
 DEF_PRIMITIVE(list_add)
 {
-  ObjList* list = AS_LIST(args[0]);
-  wrenListAdd(vm, list, args[1]);
+  wrenListAdd(vm, AS_LIST(args[0]), args[1]);
   RETURN_VAL(args[1]);
 }
 
@@ -683,8 +682,7 @@ DEF_PRIMITIVE(list_clear)
 
 DEF_PRIMITIVE(list_count)
 {
-  ObjList* list = AS_LIST(args[0]);
-  RETURN_NUM(list->count);
+  RETURN_NUM(AS_LIST(args[0])->count);
 }
 
 DEF_PRIMITIVE(list_insert)
@@ -712,9 +710,8 @@ DEF_PRIMITIVE(list_iterate)
 
   if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
 
-  double index = AS_NUM(args[1]);
-
   // Stop if we're out of bounds.
+  double index = AS_NUM(args[1]);
   if (index < 0 || index >= list->count - 1) RETURN_FALSE;
 
   // Otherwise, move to the next index.
@@ -902,44 +899,137 @@ DEF_PRIMITIVE(null_toString)
   RETURN_VAL(CONST_STRING(vm, "null"));
 }
 
-DEF_PRIMITIVE(num_abs)
+DEF_PRIMITIVE(num_fromString)
 {
-  RETURN_NUM(fabs(AS_NUM(args[0])));
+  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+
+  ObjString* string = AS_STRING(args[1]);
+
+  // Corner case: Can't parse an empty string.
+  if (string->length == 0) RETURN_NULL;
+
+  errno = 0;
+  char* end;
+  double number = strtod(string->value, &end);
+
+  // Skip past any trailing whitespace.
+  while (*end != '\0' && isspace(*end)) end++;
+
+  if (errno == ERANGE)
+  {
+    args[0] = CONST_STRING(vm, "Number literal is too large.");
+    return PRIM_ERROR;
+  }
+
+  // We must have consumed the entire string. Otherwise, it contains non-number
+  // characters and we can't parse it.
+  if (end < string->value + string->length) RETURN_NULL;
+
+  RETURN_NUM(number);
 }
 
-DEF_PRIMITIVE(num_acos)
+DEF_PRIMITIVE(num_pi)
 {
-  RETURN_NUM(acos(AS_NUM(args[0])));
+  RETURN_NUM(3.14159265358979323846);
 }
 
-DEF_PRIMITIVE(num_asin)
+// Defines a primitive on Num that calls infix [op] and returns [type].
+#define DEF_NUM_INFIX(name, op, type) \
+    DEF_PRIMITIVE(num_##name) \
+    { \
+      if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR; \
+      RETURN_##type(AS_NUM(args[0]) op AS_NUM(args[1])); \
+    }
+
+DEF_NUM_INFIX(minus,    -,  NUM)
+DEF_NUM_INFIX(plus,     +,  NUM)
+DEF_NUM_INFIX(multiply, *,  NUM)
+DEF_NUM_INFIX(divide,   /,  NUM)
+DEF_NUM_INFIX(lt,       <,  BOOL)
+DEF_NUM_INFIX(gt,       >,  BOOL)
+DEF_NUM_INFIX(lte,      <=, BOOL)
+DEF_NUM_INFIX(gte,      >=, BOOL)
+
+// Defines a primitive on Num that call infix bitwise [op].
+#define DEF_NUM_BITWISE(name, op) \
+    DEF_PRIMITIVE(num_bitwise##name) \
+    { \
+      if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR; \
+      uint32_t left = (uint32_t)AS_NUM(args[0]); \
+      uint32_t right = (uint32_t)AS_NUM(args[1]); \
+      RETURN_NUM(left op right); \
+    }
+
+DEF_NUM_BITWISE(And,        &)
+DEF_NUM_BITWISE(Or,         |)
+DEF_NUM_BITWISE(Xor,        ^)
+DEF_NUM_BITWISE(LeftShift,  <<)
+DEF_NUM_BITWISE(RightShift, >>)
+
+// Defines a primitive method on Num that returns the result of [fn].
+#define DEF_NUM_FN(name, fn) \
+    DEF_PRIMITIVE(num_##name) \
+    { \
+      RETURN_NUM(fn(AS_NUM(args[0]))); \
+    }
+
+DEF_NUM_FN(abs,     fabs)
+DEF_NUM_FN(acos,    acos)
+DEF_NUM_FN(asin,    asin)
+DEF_NUM_FN(atan,    atan)
+DEF_NUM_FN(ceil,    ceil)
+DEF_NUM_FN(cos,     cos)
+DEF_NUM_FN(floor,   floor)
+DEF_NUM_FN(negate,  -)
+DEF_NUM_FN(sin,     sin)
+DEF_NUM_FN(sqrt,    sqrt)
+DEF_NUM_FN(tan,     tan)
+
+DEF_PRIMITIVE(num_mod)
 {
-  RETURN_NUM(asin(AS_NUM(args[0])));
+  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
+  RETURN_NUM(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
-DEF_PRIMITIVE(num_atan)
+DEF_PRIMITIVE(num_eqeq)
 {
-  RETURN_NUM(atan(AS_NUM(args[0])));
+  if (!IS_NUM(args[1])) RETURN_FALSE;
+  RETURN_BOOL(AS_NUM(args[0]) == AS_NUM(args[1]));
+}
+
+DEF_PRIMITIVE(num_bangeq)
+{
+  if (!IS_NUM(args[1])) RETURN_TRUE;
+  RETURN_BOOL(AS_NUM(args[0]) != AS_NUM(args[1]));
+}
+
+DEF_PRIMITIVE(num_bitwiseNot)
+{
+  // Bitwise operators always work on 32-bit unsigned ints.
+  RETURN_NUM(~(uint32_t)AS_NUM(args[0]));
+}
+
+DEF_PRIMITIVE(num_dotDot)
+{
+  if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
+
+  double from = AS_NUM(args[0]);
+  double to = AS_NUM(args[1]);
+  RETURN_VAL(wrenNewRange(vm, from, to, true));
+}
+
+DEF_PRIMITIVE(num_dotDotDot)
+{
+  if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
+
+  double from = AS_NUM(args[0]);
+  double to = AS_NUM(args[1]);
+  RETURN_VAL(wrenNewRange(vm, from, to, false));
 }
 
 DEF_PRIMITIVE(num_atan2)
 {
   RETURN_NUM(atan2(AS_NUM(args[0]), AS_NUM(args[1])));
-}
-
-DEF_PRIMITIVE(num_ceil)
-{
-  RETURN_NUM(ceil(AS_NUM(args[0])));
-}
-
-DEF_PRIMITIVE(num_cos)
-{
-  RETURN_NUM(cos(AS_NUM(args[0])));
-}
-
-DEF_PRIMITIVE(num_floor)
-{
-  RETURN_NUM(floor(AS_NUM(args[0])));
 }
 
 DEF_PRIMITIVE(num_fraction)
@@ -970,21 +1060,6 @@ DEF_PRIMITIVE(num_sign)
   }
 }
 
-DEF_PRIMITIVE(num_sin)
-{
-  RETURN_NUM(sin(AS_NUM(args[0])));
-}
-
-DEF_PRIMITIVE(num_sqrt)
-{
-  RETURN_NUM(sqrt(AS_NUM(args[0])));
-}
-
-DEF_PRIMITIVE(num_tan)
-{
-  RETURN_NUM(tan(AS_NUM(args[0])));
-}
-
 DEF_PRIMITIVE(num_toString)
 {
   RETURN_VAL(wrenNumToString(vm, AS_NUM(args[0])));
@@ -995,188 +1070,6 @@ DEF_PRIMITIVE(num_truncate)
   double integer;
   modf(AS_NUM(args[0]) , &integer);
   RETURN_NUM(integer);
-}
-
-DEF_PRIMITIVE(num_fromString)
-{
-  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
-
-  ObjString* string = AS_STRING(args[1]);
-
-  // Corner case: Can't parse an empty string.
-  if (string->length == 0) RETURN_NULL;
-
-  errno = 0;
-  char* end;
-  double number = strtod(string->value, &end);
-
-  // Skip past any trailing whitespace.
-  while (*end != '\0' && isspace(*end)) end++;
-
-  if (errno == ERANGE)
-  {
-    args[0] = CONST_STRING(vm, "Number literal is too large.");
-    return PRIM_ERROR;
-  }
-
-  // We must have consumed the entire string. Otherwise, it contains non-number
-  // characters and we can't parse it.
-  if (end < string->value + string->length) RETURN_NULL;
-
-  RETURN_NUM(number);
-}
-
-DEF_PRIMITIVE(num_negate)
-{
-  RETURN_NUM(-AS_NUM(args[0]));
-}
-
-DEF_PRIMITIVE(num_pi)
-{
-  RETURN_NUM(3.14159265358979323846);
-}
-
-DEF_PRIMITIVE(num_minus)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_NUM(AS_NUM(args[0]) - AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_plus)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_NUM(AS_NUM(args[0]) + AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_multiply)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_NUM(AS_NUM(args[0]) * AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_divide)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_NUM(AS_NUM(args[0]) / AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_mod)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_NUM(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
-}
-
-DEF_PRIMITIVE(num_lt)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_BOOL(AS_NUM(args[0]) < AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_gt)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_BOOL(AS_NUM(args[0]) > AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_lte)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_BOOL(AS_NUM(args[0]) <= AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_gte)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-  RETURN_BOOL(AS_NUM(args[0]) >= AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_eqeq)
-{
-  if (!IS_NUM(args[1])) RETURN_FALSE;
-  RETURN_BOOL(AS_NUM(args[0]) == AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_bangeq)
-{
-  if (!IS_NUM(args[1])) RETURN_TRUE;
-  RETURN_BOOL(AS_NUM(args[0]) != AS_NUM(args[1]));
-}
-
-DEF_PRIMITIVE(num_bitwiseNot)
-{
-  // Bitwise operators always work on 32-bit unsigned ints.
-  uint32_t value = (uint32_t)AS_NUM(args[0]);
-  RETURN_NUM(~value);
-}
-
-DEF_PRIMITIVE(num_bitwiseAnd)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-
-  // Bitwise operators always work on 32-bit unsigned ints.
-  uint32_t left = (uint32_t)AS_NUM(args[0]);
-  uint32_t right = (uint32_t)AS_NUM(args[1]);
-  RETURN_NUM(left & right);
-}
-
-DEF_PRIMITIVE(num_bitwiseOr)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-
-  // Bitwise operators always work on 32-bit unsigned ints.
-  uint32_t left = (uint32_t)AS_NUM(args[0]);
-  uint32_t right = (uint32_t)AS_NUM(args[1]);
-  RETURN_NUM(left | right);
-}
-
-DEF_PRIMITIVE(num_bitwiseXor)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-
-  // Bitwise operators always work on 32-bit unsigned ints.
-  uint32_t left = (uint32_t)AS_NUM(args[0]);
-  uint32_t right = (uint32_t)AS_NUM(args[1]);
-  RETURN_NUM(left ^ right);
-}
-
-DEF_PRIMITIVE(num_bitwiseLeftShift)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-
-  // Bitwise operators always work on 32-bit unsigned ints.
-  uint32_t left = (uint32_t)AS_NUM(args[0]);
-  uint32_t right = (uint32_t)AS_NUM(args[1]);
-  RETURN_NUM(left << right);
-}
-
-DEF_PRIMITIVE(num_bitwiseRightShift)
-{
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
-
-  // Bitwise operators always work on 32-bit unsigned ints.
-  uint32_t left = (uint32_t)AS_NUM(args[0]);
-  uint32_t right = (uint32_t)AS_NUM(args[1]);
-  RETURN_NUM(left >> right);
-}
-
-DEF_PRIMITIVE(num_dotDot)
-{
-  if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
-
-  double from = AS_NUM(args[0]);
-  double to = AS_NUM(args[1]);
-
-  RETURN_VAL(wrenNewRange(vm, from, to, true));
-}
-
-DEF_PRIMITIVE(num_dotDotDot)
-{
-  if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
-
-  double from = AS_NUM(args[0]);
-  double to = AS_NUM(args[1]);
-
-  RETURN_VAL(wrenNewRange(vm, from, to, false));
 }
 
 DEF_PRIMITIVE(object_not)
@@ -1229,14 +1122,12 @@ DEF_PRIMITIVE(object_instantiate)
 
 DEF_PRIMITIVE(range_from)
 {
-  ObjRange* range = AS_RANGE(args[0]);
-  RETURN_NUM(range->from);
+  RETURN_NUM(AS_RANGE(args[0])->from);
 }
 
 DEF_PRIMITIVE(range_to)
 {
-  ObjRange* range = AS_RANGE(args[0]);
-  RETURN_NUM(range->to);
+  RETURN_NUM(AS_RANGE(args[0])->to);
 }
 
 DEF_PRIMITIVE(range_min)
@@ -1253,8 +1144,7 @@ DEF_PRIMITIVE(range_max)
 
 DEF_PRIMITIVE(range_isInclusive)
 {
-  ObjRange* range = AS_RANGE(args[0]);
-  RETURN_BOOL(range->isInclusive);
+  RETURN_BOOL(AS_RANGE(args[0])->isInclusive);
 }
 
 DEF_PRIMITIVE(range_iterate)
@@ -1324,8 +1214,7 @@ DEF_PRIMITIVE(string_contains)
 
 DEF_PRIMITIVE(string_count)
 {
-  double count = AS_STRING(args[0])->length;
-  RETURN_NUM(count);
+  RETURN_NUM(AS_STRING(args[0])->length);
 }
 
 DEF_PRIMITIVE(string_endsWith)
@@ -1338,10 +1227,8 @@ DEF_PRIMITIVE(string_endsWith)
   // Corner case, if the search string is longer than return false right away.
   if (search->length > string->length) RETURN_FALSE;
 
-  int result = memcmp(string->value + string->length - search->length,
-                      search->value, search->length);
-
-  RETURN_BOOL(result == 0);
+  RETURN_BOOL(memcmp(string->value + string->length - search->length,
+                     search->value, search->length) == 0);
 }
 
 DEF_PRIMITIVE(string_indexOf)
@@ -1352,7 +1239,6 @@ DEF_PRIMITIVE(string_indexOf)
   ObjString* search = AS_STRING(args[1]);
 
   uint32_t index = wrenStringFind(vm, string, search);
-
   RETURN_NUM(index == UINT32_MAX ? -1 : (int)index);
 }
 
@@ -1575,38 +1461,38 @@ void wrenInitializeCore(WrenVM* vm)
   vm->numClass = defineClass(vm, "Num");
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
   PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
-  PRIMITIVE(vm->numClass, "-", num_negate);
   PRIMITIVE(vm->numClass, "-(_)", num_minus);
   PRIMITIVE(vm->numClass, "+(_)", num_plus);
   PRIMITIVE(vm->numClass, "*(_)", num_multiply);
   PRIMITIVE(vm->numClass, "/(_)", num_divide);
-  PRIMITIVE(vm->numClass, "%(_)", num_mod);
   PRIMITIVE(vm->numClass, "<(_)", num_lt);
   PRIMITIVE(vm->numClass, ">(_)", num_gt);
   PRIMITIVE(vm->numClass, "<=(_)", num_lte);
   PRIMITIVE(vm->numClass, ">=(_)", num_gte);
-  PRIMITIVE(vm->numClass, "~", num_bitwiseNot);
   PRIMITIVE(vm->numClass, "&(_)", num_bitwiseAnd);
   PRIMITIVE(vm->numClass, "|(_)", num_bitwiseOr);
   PRIMITIVE(vm->numClass, "^(_)", num_bitwiseXor);
   PRIMITIVE(vm->numClass, "<<(_)", num_bitwiseLeftShift);
   PRIMITIVE(vm->numClass, ">>(_)", num_bitwiseRightShift);
-  PRIMITIVE(vm->numClass, "..(_)", num_dotDot);
-  PRIMITIVE(vm->numClass, "...(_)", num_dotDotDot);
   PRIMITIVE(vm->numClass, "abs", num_abs);
   PRIMITIVE(vm->numClass, "acos", num_acos);
   PRIMITIVE(vm->numClass, "asin", num_asin);
   PRIMITIVE(vm->numClass, "atan", num_atan);
-  PRIMITIVE(vm->numClass, "atan(_)", num_atan2);
   PRIMITIVE(vm->numClass, "ceil", num_ceil);
   PRIMITIVE(vm->numClass, "cos", num_cos);
   PRIMITIVE(vm->numClass, "floor", num_floor);
-  PRIMITIVE(vm->numClass, "fraction", num_fraction);
-  PRIMITIVE(vm->numClass, "isNan", num_isNan);
-  PRIMITIVE(vm->numClass, "sign", num_sign);
+  PRIMITIVE(vm->numClass, "-", num_negate);
   PRIMITIVE(vm->numClass, "sin", num_sin);
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
   PRIMITIVE(vm->numClass, "tan", num_tan);
+  PRIMITIVE(vm->numClass, "%(_)", num_mod);
+  PRIMITIVE(vm->numClass, "~", num_bitwiseNot);
+  PRIMITIVE(vm->numClass, "..(_)", num_dotDot);
+  PRIMITIVE(vm->numClass, "...(_)", num_dotDotDot);
+  PRIMITIVE(vm->numClass, "atan(_)", num_atan2);
+  PRIMITIVE(vm->numClass, "fraction", num_fraction);
+  PRIMITIVE(vm->numClass, "isNan", num_isNan);
+  PRIMITIVE(vm->numClass, "sign", num_sign);
   PRIMITIVE(vm->numClass, "toString", num_toString);
   PRIMITIVE(vm->numClass, "truncate", num_truncate);
 
