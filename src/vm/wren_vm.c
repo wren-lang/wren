@@ -501,6 +501,24 @@ static Value validateSuperclass(WrenVM* vm, Value name,
   return NULL_VAL;
 }
 
+// Returns `true` if [value] is an instance of [baseClass] or any of its
+// superclasses.
+static bool isInstanceOf(WrenVM* vm, Value value, ObjClass *baseClass)
+{
+  ObjClass* classObj = wrenGetClass(vm, value);
+
+  // Walk the superclass chain looking for the class.
+  do
+  {
+    if (classObj == baseClass) return true;
+
+    classObj = classObj->superclass;
+  }
+  while (classObj != NULL);
+
+  return false;
+}
+
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical. Returns `true` if the
 // fiber completed without error.
@@ -1025,20 +1043,8 @@ static bool runInterpreter(WrenVM* vm)
         RUNTIME_ERROR(CONST_STRING(vm, "Right operand must be a class."));
       }
 
-      ObjClass* actual = wrenGetClass(vm, POP());
-      bool isInstance = false;
-
-      // Walk the superclass chain looking for the class.
-      while (actual != NULL)
-      {
-        if (actual == AS_CLASS(expected))
-        {
-          isInstance = true;
-          break;
-        }
-        actual = actual->superclass;
-      }
-      PUSH(BOOL_VAL(isInstance));
+      Value instance = POP();
+      PUSH(BOOL_VAL(isInstanceOf(vm, instance, AS_CLASS(expected))));
       DISPATCH();
     }
 
