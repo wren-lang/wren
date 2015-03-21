@@ -296,12 +296,13 @@ static bool validateString(WrenVM* vm, Value* args, int index,
 static uint32_t calculateRange(WrenVM* vm, Value* args, ObjRange* range,
                                uint32_t* length, int* step)
 {
+  *step = 0;
+  
   // Corner case: an empty range at zero is allowed on an empty sequence.
   // This way, list[0..-1] and list[0...list.count] can be used to copy a list
   // even when empty.
   if (*length == 0 && range->from == 0 &&
       range->to == (range->isInclusive ? -1 : 0)) {
-    *step = 0;
     return 0;
   }
 
