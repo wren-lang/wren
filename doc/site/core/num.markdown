@@ -8,6 +8,23 @@ The absolute value of the number.
     :::dart
     -123.abs // 123
 
+### **acos**
+
+The arc cosine of the number.
+
+### **asin**
+
+The arc sine of the number.
+
+### **atan**
+
+The arc tangent of the number.
+
+### **atan**(x)
+
+The arc tangent of the number when divided by `x`, using the signs of the two
+numbers to determine the quadrant of the result.
+
 ### **ceil**
 
 Rounds the number up to the nearest integer.
@@ -41,6 +58,10 @@ The sine of the number.
 ### **sqrt**
 
 The square root of the number. Returns `nan` if the number is negative.
+
+### **tan**
+
+The tangent of the number.
 
 ### **-** operator
 
@@ -118,3 +139,6 @@ Attempts to parse `value` as a decimal literal and return it as an instance of
 
 It is a runtime error if `value` is not a string.
 
+### Num.**pi**
+
+The value of π.

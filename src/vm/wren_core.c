@@ -907,6 +907,26 @@ DEF_PRIMITIVE(num_abs)
   RETURN_NUM(fabs(AS_NUM(args[0])));
 }
 
+DEF_PRIMITIVE(num_acos)
+{
+  RETURN_NUM(acos(AS_NUM(args[0])));
+}
+
+DEF_PRIMITIVE(num_asin)
+{
+  RETURN_NUM(asin(AS_NUM(args[0])));
+}
+
+DEF_PRIMITIVE(num_atan)
+{
+  RETURN_NUM(atan(AS_NUM(args[0])));
+}
+
+DEF_PRIMITIVE(num_atan2)
+{
+  RETURN_NUM(atan2(AS_NUM(args[0]), AS_NUM(args[1])));
+}
+
 DEF_PRIMITIVE(num_ceil)
 {
   RETURN_NUM(ceil(AS_NUM(args[0])));
@@ -960,6 +980,11 @@ DEF_PRIMITIVE(num_sqrt)
   RETURN_NUM(sqrt(AS_NUM(args[0])));
 }
 
+DEF_PRIMITIVE(num_tan)
+{
+  RETURN_NUM(tan(AS_NUM(args[0])));
+}
+
 DEF_PRIMITIVE(num_toString)
 {
   RETURN_VAL(wrenNumToString(vm, AS_NUM(args[0])));
@@ -1004,6 +1029,11 @@ DEF_PRIMITIVE(num_fromString)
 DEF_PRIMITIVE(num_negate)
 {
   RETURN_NUM(-AS_NUM(args[0]));
+}
+
+DEF_PRIMITIVE(num_pi)
+{
+  RETURN_NUM(3.14159265358979323846);
 }
 
 DEF_PRIMITIVE(num_minus)
@@ -1544,6 +1574,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->numClass = defineClass(vm, "Num");
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
+  PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
   PRIMITIVE(vm->numClass, "-", num_negate);
   PRIMITIVE(vm->numClass, "-(_)", num_minus);
   PRIMITIVE(vm->numClass, "+(_)", num_plus);
@@ -1563,6 +1594,10 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "..(_)", num_dotDot);
   PRIMITIVE(vm->numClass, "...(_)", num_dotDotDot);
   PRIMITIVE(vm->numClass, "abs", num_abs);
+  PRIMITIVE(vm->numClass, "acos", num_acos);
+  PRIMITIVE(vm->numClass, "asin", num_asin);
+  PRIMITIVE(vm->numClass, "atan", num_atan);
+  PRIMITIVE(vm->numClass, "atan(_)", num_atan2);
   PRIMITIVE(vm->numClass, "ceil", num_ceil);
   PRIMITIVE(vm->numClass, "cos", num_cos);
   PRIMITIVE(vm->numClass, "floor", num_floor);
@@ -1571,6 +1606,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "sign", num_sign);
   PRIMITIVE(vm->numClass, "sin", num_sin);
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
+  PRIMITIVE(vm->numClass, "tan", num_tan);
   PRIMITIVE(vm->numClass, "toString", num_toString);
   PRIMITIVE(vm->numClass, "truncate", num_truncate);
 
