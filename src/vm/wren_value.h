@@ -396,10 +396,10 @@ typedef struct
   // TODO: Make these uint32_t to match ObjMap, or vice versa.
 
   // The number of elements allocated.
-  int capacity;
+  uint32_t capacity;
 
   // The number of items in the list.
-  int count;
+  uint32_t count;
 
   // Pointer to a contiguous array of [capacity] elements.
   Value* elements;

@@ -302,7 +302,7 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, int index)
   if (IS_OBJ(removed)) wrenPushRoot(vm, AS_OBJ(removed));
 
   // Shift items up.
-  for (int i = index; i < list->count - 1; i++)
+  for (uint32_t i = index; i < list->count - 1; i++)
   {
     list->elements[i] = list->elements[i + 1];
   }
@@ -941,7 +941,7 @@ static void markList(WrenVM* vm, ObjList* list)
 {
   // Mark the elements.
   Value* elements = list->elements;
-  for (int i = 0; i < list->count; i++)
+  for (uint32_t i = 0; i < list->count; i++)
   {
     wrenMarkValue(vm, elements[i]);
   }
