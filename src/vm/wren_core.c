@@ -230,22 +230,20 @@ static bool validateInt(WrenVM* vm, Value* args, int index, const char* argName)
 
 // Validates that [value] is an integer within `[0, count)`. Also allows
 // negative indices which map backwards from the end. Returns the valid positive
-// index value. If invalid, reports an error and returns -1.
-static int validateIndexValue(WrenVM* vm, Value* args, int count, double value,
-                              const char* argName)
+// index value. If invalid, reports an error and returns `UINT32_MAX`.
+static uint32_t validateIndexValue(WrenVM* vm, Value* args, uint32_t count,
+                                    double value, const char* argName)
 {
-  if (!validateIntValue(vm, args, value, argName)) return -1;
-
-  int index = (int)value;
+  if (!validateIntValue(vm, args, value, argName)) return UINT32_MAX;
 
   // Negative indices count from the end.
-  if (index < 0) index = count + index;
+  if (value < 0) value = count + value;
 
   // Check bounds.
-  if (index >= 0 && index < count) return index;
+  if (value >= 0 && value < count) return (uint32_t)value;
 
   args[0] = wrenStringFormat(vm, "$ out of bounds.", argName);
-  return -1;
+  return UINT32_MAX;
 }
 
 // Validates that [key] is a valid object for use as a map key. Returns true if
@@ -265,13 +263,14 @@ static bool validateKey(WrenVM* vm, Value* args, int index)
 
 // Validates that the argument at [argIndex] is an integer within `[0, count)`.
 // Also allows negative indices which map backwards from the end. Returns the
-// valid positive index value. If invalid, reports an error and returns -1.
-static int validateIndex(WrenVM* vm, Value* args, int count, int argIndex,
-                         const char* argName)
+// valid positive index value. If invalid, reports an error and returns
+// `UINT32_MAX`.
+static uint32_t validateIndex(WrenVM* vm, Value* args, uint32_t count,
+                              int arg, const char* argName)
 {
-  if (!validateNum(vm, args, argIndex, argName)) return -1;
+  if (!validateNum(vm, args, arg, argName)) return UINT32_MAX;
 
-  return validateIndexValue(vm, args, count, AS_NUM(args[argIndex]), argName);
+  return validateIndexValue(vm, args, count, AS_NUM(args[arg]), argName);
 }
 
 // Validates that the given argument in [args] is a String. Returns true if it
@@ -289,13 +288,13 @@ static bool validateString(WrenVM* vm, Value* args, int index,
 // the series of elements that should be chosen from the underlying object.
 // Handles ranges that count backwards from the end as well as negative ranges.
 //
-// Returns the index from which the range should start or -1 if the range is
-// invalid. After calling, [length] will be updated with the number of elements
-// in the resulting sequence. [step] will be direction that the range is going:
-// `1` if the range is increasing from the start index or `-1` if the range is
-// decreasing.
-static int calculateRange(WrenVM* vm, Value* args, ObjRange* range,
-                                      int* length, int* step)
+// Returns the index from which the range should start or `UINT32_MAX` if the
+// range is invalid. After calling, [length] will be updated with the number of
+// elements in the resulting sequence. [step] will be direction that the range
+// is going: `1` if the range is increasing from the start index or `-1` if the
+// range is decreasing.
+static uint32_t calculateRange(WrenVM* vm, Value* args, ObjRange* range,
+                               uint32_t* length, int* step)
 {
   // Corner case: an empty range at zero is allowed on an empty sequence.
   // This way, list[0..-1] and list[0...list.count] can be used to copy a list
@@ -306,37 +305,41 @@ static int calculateRange(WrenVM* vm, Value* args, ObjRange* range,
     return 0;
   }
 
-  int from = validateIndexValue(vm, args, *length, range->from,
-                                "Range start");
-  if (from == -1) return -1;
+  uint32_t from = validateIndexValue(vm, args, *length, range->from,
+                                     "Range start");
+  if (from == UINT32_MAX) return UINT32_MAX;
 
-  int to;
+  // Bounds check the end manually to handle exclusive ranges.
+  double value = range->to;
+  if (!validateIntValue(vm, args, value, "Range end")) return UINT32_MAX;
 
-  if (range->isInclusive)
+  // Negative indices count from the end.
+  if (value < 0) value = *length + value;
+
+  // Convert the exclusive range to an inclusive one.
+  if (!range->isInclusive)
   {
-    to = validateIndexValue(vm, args, *length, range->to, "Range end");
-    if (to == -1) return -1;
-
-    *length = abs(from - to) + 1;
-  }
-  else
-  {
-    if (!validateIntValue(vm, args, range->to, "Range end")) return -1;
-
-    // Bounds check it manually here since the excusive range can hang over
-    // the edge.
-    to = (int)range->to;
-    if (to < 0) to = *length + to;
-
-    if (to < -1 || to > *length)
+    // An exclusive range with the same start and end points is empty.
+    if (value == from)
     {
-      args[0] = CONST_STRING(vm, "Range end out of bounds.");
-      return -1;
+      *length = 0;
+      return from;
     }
 
-    *length = abs(from - to);
+    // Shift the endpoint to make it inclusive, handling both increasing and
+    // decreasing ranges.
+    value += value >= from ? -1 : 1;
   }
 
+  // Check bounds.
+  if (value < 0 || value >= *length)
+  {
+    args[0] = CONST_STRING(vm, "Range end out of bounds.");
+    return UINT32_MAX;
+  }
+
+  uint32_t to = (uint32_t)value;
+  *length = abs(from - to) + 1;
   *step = from < to ? 1 : -1;
   return from;
 }
@@ -360,14 +363,12 @@ DEF_PRIMITIVE(bool_toString)
 
 DEF_PRIMITIVE(class_instantiate)
 {
-  ObjClass* classObj = AS_CLASS(args[0]);
-  RETURN_VAL(wrenNewInstance(vm, classObj));
+  RETURN_VAL(wrenNewInstance(vm, AS_CLASS(args[0])));
 }
 
 DEF_PRIMITIVE(class_name)
 {
-  ObjClass* classObj = AS_CLASS(args[0]);
-  RETURN_OBJ(classObj->name);
+  RETURN_OBJ(AS_CLASS(args[0])->name);
 }
 
 DEF_PRIMITIVE(class_supertype)
@@ -690,8 +691,8 @@ DEF_PRIMITIVE(list_insert)
   ObjList* list = AS_LIST(args[0]);
 
   // count + 1 here so you can "insert" at the very end.
-  int index = validateIndex(vm, args, list->count + 1, 1, "Index");
-  if (index == -1) return PRIM_ERROR;
+  uint32_t index = validateIndex(vm, args, list->count + 1, 1, "Index");
+  if (index == UINT32_MAX) return PRIM_ERROR;
 
   wrenListInsert(vm, list, args[2], index);
   RETURN_VAL(args[2]);
@@ -710,10 +711,10 @@ DEF_PRIMITIVE(list_iterate)
 
   if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
 
-  uint32_t index = AS_NUM(args[1]);
+  double index = AS_NUM(args[1]);
 
   // Stop if we're out of bounds.
-  if ( index >= list->count - 1) RETURN_FALSE;
+  if (index < 0 || index >= list->count - 1) RETURN_FALSE;
 
   // Otherwise, move to the next index.
   RETURN_NUM(index + 1);
@@ -722,8 +723,8 @@ DEF_PRIMITIVE(list_iterate)
 DEF_PRIMITIVE(list_iteratorValue)
 {
   ObjList* list = AS_LIST(args[0]);
-  int index = validateIndex(vm, args, list->count, 1, "Iterator");
-  if (index == -1) return PRIM_ERROR;
+  uint32_t index = validateIndex(vm, args, list->count, 1, "Iterator");
+  if (index == UINT32_MAX) return PRIM_ERROR;
 
   RETURN_VAL(list->elements[index]);
 }
@@ -731,8 +732,8 @@ DEF_PRIMITIVE(list_iteratorValue)
 DEF_PRIMITIVE(list_removeAt)
 {
   ObjList* list = AS_LIST(args[0]);
-  int index = validateIndex(vm, args, list->count, 1, "Index");
-  if (index == -1) return PRIM_ERROR;
+  uint32_t index = validateIndex(vm, args, list->count, 1, "Index");
+  if (index == UINT32_MAX) return PRIM_ERROR;
 
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
 }
@@ -743,8 +744,8 @@ DEF_PRIMITIVE(list_subscript)
 
   if (IS_NUM(args[1]))
   {
-    int index = validateIndex(vm, args, list->count, 1, "Subscript");
-    if (index == -1) return PRIM_ERROR;
+    uint32_t index = validateIndex(vm, args, list->count, 1, "Subscript");
+    if (index == UINT32_MAX) return PRIM_ERROR;
 
     RETURN_VAL(list->elements[index]);
   }
@@ -755,12 +756,12 @@ DEF_PRIMITIVE(list_subscript)
   }
 
   int step;
-  int count = list->count;
-  int start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);
-  if (start == -1) return PRIM_ERROR;
+  uint32_t count = list->count;
+  uint32_t start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);
+  if (start == UINT32_MAX) return PRIM_ERROR;
 
   ObjList* result = wrenNewList(vm, count);
-  for (int i = 0; i < count; i++)
+  for (uint32_t i = 0; i < count; i++)
   {
     result->elements[i] = list->elements[start + (i * step)];
   }
@@ -771,8 +772,8 @@ DEF_PRIMITIVE(list_subscript)
 DEF_PRIMITIVE(list_subscriptSetter)
 {
   ObjList* list = AS_LIST(args[0]);
-  int index = validateIndex(vm, args, list->count, 1, "Subscript");
-  if (index == -1) return PRIM_ERROR;
+  uint32_t index = validateIndex(vm, args, list->count, 1, "Subscript");
+  if (index == UINT32_MAX) return PRIM_ERROR;
 
   list->elements[index] = args[2];
   RETURN_VAL(args[2]);
@@ -863,8 +864,8 @@ DEF_PRIMITIVE(map_remove)
 DEF_PRIMITIVE(map_keyIteratorValue)
 {
   ObjMap* map = AS_MAP(args[0]);
-  int index = validateIndex(vm, args, map->capacity, 1, "Iterator");
-  if (index == -1) return PRIM_ERROR;
+  uint32_t index = validateIndex(vm, args, map->capacity, 1, "Iterator");
+  if (index == UINT32_MAX) return PRIM_ERROR;
 
   MapEntry* entry = &map->entries[index];
   if (IS_UNDEFINED(entry->key))
@@ -878,8 +879,8 @@ DEF_PRIMITIVE(map_keyIteratorValue)
 DEF_PRIMITIVE(map_valueIteratorValue)
 {
   ObjMap* map = AS_MAP(args[0]);
-  int index = validateIndex(vm, args, map->capacity, 1, "Iterator");
-  if (index == -1) return PRIM_ERROR;
+  uint32_t index = validateIndex(vm, args, map->capacity, 1, "Iterator");
+  if (index == UINT32_MAX) return PRIM_ERROR;
 
   MapEntry* entry = &map->entries[index];
   if (IS_UNDEFINED(entry->key))
@@ -1353,8 +1354,8 @@ DEF_PRIMITIVE(string_iterate)
 DEF_PRIMITIVE(string_iteratorValue)
 {
   ObjString* string = AS_STRING(args[0]);
-  int index = validateIndex(vm, args, string->length, 1, "Iterator");
-  if (index == -1) return PRIM_ERROR;
+  uint32_t index = validateIndex(vm, args, string->length, 1, "Iterator");
+  if (index == UINT32_MAX) return PRIM_ERROR;
 
   RETURN_VAL(wrenStringCodePointAt(vm, string, index));
 }
