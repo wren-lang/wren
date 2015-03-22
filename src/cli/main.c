@@ -20,18 +20,16 @@ static int runRepl()
   {
     printf("> ");
 
-    if (fgets(line, MAX_LINE_LENGTH, stdin))
-    {
-      // TODO: Handle failure.
-      wrenInterpret(vm, "Prompt", line);
-
-      // TODO: Automatically print the result of expressions.
-    }
-    else
+    if (!fgets(line, MAX_LINE_LENGTH, stdin))
     {
       printf("\n");
-      return 0;
+      break;
     }
+
+    // TODO: Handle failure.
+    wrenInterpret(vm, "Prompt", line);
+
+    // TODO: Automatically print the result of expressions.
   }
 
   wrenFreeVM(vm);
