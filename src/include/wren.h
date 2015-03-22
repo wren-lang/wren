@@ -98,6 +98,12 @@ typedef enum {
   WREN_RESULT_SUCCESS,
   WREN_RESULT_COMPILE_ERROR,
   WREN_RESULT_RUNTIME_ERROR
+} WrenInterpretResultStatus;
+
+typedef struct
+{
+  WrenInterpretResultStatus status;
+  char *value;
 } WrenInterpretResult;
 
 // Creates a new Wren virtual machine using the given [configuration]. Wren
