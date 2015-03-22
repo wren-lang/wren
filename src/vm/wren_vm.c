@@ -540,7 +540,7 @@ static bool runInterpreter(WrenVM* vm)
   #define PEEK()       (*(fiber->stackTop - 1))
   #define PEEK2()      (*(fiber->stackTop - 2))
   #define READ_BYTE()  (*ip++)
-  #define READ_SHORT() (ip += 2, (ip[-2] << 8) | ip[-1])
+  #define READ_SHORT() (ip += 2, (uint16_t)((ip[-2] << 8) | ip[-1]))
 
   // Use this before a CallFrame is pushed to store the local variables back
   // into the current one.
@@ -1247,7 +1247,7 @@ static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
                                       signature, signatureLength);
 
   uint8_t* bytecode = ALLOCATE_ARRAY(vm, uint8_t, 5);
-  bytecode[0] = CODE_CALL_0 + numParams;
+  bytecode[0] = (uint8_t)(CODE_CALL_0 + numParams);
   bytecode[1] = (method >> 8) & 0xff;
   bytecode[2] = method & 0xff;
   bytecode[3] = CODE_RETURN;

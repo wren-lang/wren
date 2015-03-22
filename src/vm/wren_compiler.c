@@ -653,7 +653,7 @@ static void readUnicodeEscape(Parser* parser)
   if (value <= 0x7f)
   {
     // Single byte (i.e. fits in ASCII).
-    wrenByteBufferWrite(parser->vm, buffer, value);
+    wrenByteBufferWrite(parser->vm, buffer, value & 0x7f);
   }
   else if (value <= 0x7ff)
   {
@@ -972,9 +972,9 @@ static void consumeLine(Compiler* compiler, const char* errorMessage)
 // Variables and scopes --------------------------------------------------------
 
 // Emits one bytecode instruction or single-byte argument. Returns its index.
-static int emit(Compiler* compiler, uint8_t byte)
+static int emit(Compiler* compiler, int byte)
 {
-  wrenByteBufferWrite(compiler->parser->vm, &compiler->bytecode, byte);
+  wrenByteBufferWrite(compiler->parser->vm, &compiler->bytecode, (uint8_t)byte);
 
   // Assume the instruction is associated with the most recently consumed token.
   wrenIntBufferWrite(compiler->parser->vm, &compiler->debugSourceLines,
@@ -984,7 +984,7 @@ static int emit(Compiler* compiler, uint8_t byte)
 }
 
 // Emits one 16-bit argument, which will be written big endian.
-static void emitShort(Compiler* compiler, uint16_t arg)
+static void emitShort(Compiler* compiler, int arg)
 {
   emit(compiler, (arg >> 8) & 0xff);
   emit(compiler, arg & 0xff);
@@ -992,7 +992,7 @@ static void emitShort(Compiler* compiler, uint16_t arg)
 
 // Emits one bytecode instruction followed by a 8-bit argument. Returns the
 // index of the argument in the bytecode.
-static int emitByteArg(Compiler* compiler, Code instruction, uint8_t arg)
+static int emitByteArg(Compiler* compiler, Code instruction, int arg)
 {
   emit(compiler, instruction);
   return emit(compiler, arg);
@@ -1000,7 +1000,7 @@ static int emitByteArg(Compiler* compiler, Code instruction, uint8_t arg)
 
 // Emits one bytecode instruction followed by a 16-bit argument, which will be
 // written big endian.
-static void emitShortArg(Compiler* compiler, Code instruction, uint16_t arg)
+static void emitShortArg(Compiler* compiler, Code instruction, int arg)
 {
   emit(compiler, instruction);
   emitShort(compiler, arg);
@@ -3031,7 +3031,7 @@ static void classDefinition(Compiler* compiler)
   }
 
   // Update the class with the number of fields.
-  compiler->bytecode.data[numFieldsInstruction] = fields.count;
+  compiler->bytecode.data[numFieldsInstruction] = (uint8_t)fields.count;
   wrenSymbolTableClear(compiler->parser->vm, &fields);
 
   compiler->enclosingClass = NULL;
