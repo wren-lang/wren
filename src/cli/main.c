@@ -23,9 +23,10 @@ static int runRepl()
     if (fgets(line, MAX_LINE_LENGTH, stdin))
     {
       // TODO: Handle failure.
-      wrenInterpret(vm, "Prompt", line);
+      WrenInterpretResult interpretResult = wrenInterpret(vm, "Prompt", line);
 
       // TODO: Automatically print the result of expressions.
+      printf("=> %s\n", interpretResult.value);
     }
     else
     {

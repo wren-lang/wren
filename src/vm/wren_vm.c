@@ -522,8 +522,9 @@ static bool isInstanceOf(WrenVM* vm, Value value, ObjClass *baseClass)
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical. Returns `true` if the
 // fiber completed without error.
-static bool runInterpreter(WrenVM* vm)
+static WrenInterpretResult runInterpreter(WrenVM* vm)
 {
+  WrenInterpretResult interpretResult;
   // Hoist these into local variables. They are accessed frequently in the loop
   // but assigned less frequently. Keeping them in locals and updating them when
   // a call frame has been pushed or popped gives a large speed boost.
@@ -564,15 +565,20 @@ static bool runInterpreter(WrenVM* vm)
   // Terminates the current fiber with error string [error]. If another calling
   // fiber is willing to catch the error, transfers control to it, otherwise
   // exits the interpreter.
-  #define RUNTIME_ERROR(error)                         \
-      do                                               \
-      {                                                \
-        STORE_FRAME();                                 \
-        fiber = runtimeError(vm, fiber, error);        \
-        if (fiber == NULL) return false;               \
-        LOAD_FRAME();                                  \
-        DISPATCH();                                    \
-      }                                                \
+  #define RUNTIME_ERROR(error)                                \
+      do                                                      \
+      {                                                       \
+        STORE_FRAME();                                        \
+        fiber = runtimeError(vm, fiber, error);               \
+        if (fiber == NULL)                                    \
+        {                                                     \
+          WrenInterpretResult interpretResult;                \
+          interpretResult.status = WREN_RESULT_RUNTIME_ERROR; \
+          return interpretResult;                             \
+        }                                                     \
+        LOAD_FRAME();                                         \
+        DISPATCH();                                           \
+      }                                                       \
       while (false)
 
   #if WREN_DEBUG_TRACE_INSTRUCTIONS
@@ -794,7 +800,10 @@ static bool runInterpreter(WrenVM* vm)
               STORE_FRAME();
 
               // If we don't have a fiber to switch to, stop interpreting.
-              if (IS_NULL(args[0])) return true;
+              if (IS_NULL(args[0])) {
+                interpretResult.status = WREN_RESULT_SUCCESS;
+                return interpretResult;
+              }
 
               fiber = AS_FIBER(args[0]);
               vm->fiber = fiber;
@@ -893,7 +902,11 @@ static bool runInterpreter(WrenVM* vm)
               STORE_FRAME();
 
               // If we don't have a fiber to switch to, stop interpreting.
-              if (IS_NULL(args[0])) return true;
+              if (IS_NULL(args[0]))
+              {
+                interpretResult.status = WREN_RESULT_SUCCESS;
+                return interpretResult;
+              }
 
               fiber = AS_FIBER(args[0]);
               vm->fiber = fiber;
@@ -1070,7 +1083,11 @@ static bool runInterpreter(WrenVM* vm)
       if (fiber->numFrames == 0)
       {
         // If this is the main fiber, we're done.
-        if (fiber->caller == NULL) return true;
+        if (fiber->caller == NULL)
+        {
+          interpretResult.status = WREN_RESULT_SUCCESS;
+          return interpretResult;
+        }
 
         // We have a calling fiber to resume.
         fiber = fiber->caller;
@@ -1228,7 +1245,8 @@ static bool runInterpreter(WrenVM* vm)
   // We should only exit this function from an explicit return from CODE_RETURN
   // or a runtime error.
   UNREACHABLE();
-  return false;
+  interpretResult.status = WREN_RESULT_COMPILE_ERROR;
+  return interpretResult;
 }
 
 // Creates an [ObjFn] that invokes a method with [signature] when called.
@@ -1375,18 +1393,25 @@ WrenInterpretResult static loadIntoCore(WrenVM* vm, const char* source)
   ObjModule* coreModule = getCoreModule(vm);
 
   ObjFn* fn = wrenCompile(vm, coreModule, "", source);
-  if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
+  if (fn == NULL)
+  {
+    WrenInterpretResult interpretResult;
+    interpretResult.status = WREN_RESULT_COMPILE_ERROR;
+    return interpretResult;
+  }
 
   wrenPushRoot(vm, (Obj*)fn);
   vm->fiber = wrenNewFiber(vm, (Obj*)fn);
   wrenPopRoot(vm); // fn.
 
-  return runInterpreter(vm) ? WREN_RESULT_SUCCESS : WREN_RESULT_RUNTIME_ERROR;
+  return runInterpreter(vm);
 }
 
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source)
 {
+  WrenInterpretResult interpretResult;
+
   if (strlen(sourcePath) == 0) return loadIntoCore(vm, source);
 
   // TODO: Better module name.
@@ -1397,16 +1422,17 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   if (fiber == NULL)
   {
     wrenPopRoot(vm);
-    return WREN_RESULT_COMPILE_ERROR;
+    interpretResult.status = WREN_RESULT_COMPILE_ERROR;
+    return interpretResult;
   }
 
   vm->fiber = fiber;
 
-  bool succeeded = runInterpreter(vm);
+  interpretResult = runInterpreter(vm);
 
   wrenPopRoot(vm); // name.
 
-  return succeeded ? WREN_RESULT_SUCCESS : WREN_RESULT_RUNTIME_ERROR;
+  return interpretResult;
 }
 
 Value wrenImportModule(WrenVM* vm, const char* name)

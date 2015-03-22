@@ -49,6 +49,6 @@ void runFile(const char* path)
   free(source);
 
   // Exit with an error code if the script failed.
-  if (result == WREN_RESULT_COMPILE_ERROR) exit(65); // EX_DATAERR.
-  if (result == WREN_RESULT_RUNTIME_ERROR) exit(70); // EX_SOFTWARE.
+  if (result.status == WREN_RESULT_COMPILE_ERROR) exit(65); // EX_DATAERR.
+  if (result.status == WREN_RESULT_RUNTIME_ERROR) exit(70); // EX_SOFTWARE.
 }
