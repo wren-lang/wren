@@ -393,14 +393,8 @@ typedef struct
 {
   Obj obj;
 
-  // The number of elements allocated.
-  uint32_t capacity;
-
-  // The number of items in the list.
-  uint32_t count;
-
-  // Pointer to a contiguous array of [capacity] elements.
-  Value* elements;
+  // The elements in the list.
+  ValueBuffer elements;
 } ObjList;
 
 typedef struct
@@ -639,9 +633,6 @@ Value wrenNewInstance(WrenVM* vm, ObjClass* classObj);
 // uninitialized.)
 ObjList* wrenNewList(WrenVM* vm, uint32_t numElements);
 
-// Adds [value] to [list], reallocating and growing its storage if needed.
-void wrenListAdd(WrenVM* vm, ObjList* list, Value value);
-
 // Inserts [value] in [list] at [index], shifting down the other elements.
 void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index);
 
@@ -709,6 +700,10 @@ void wrenMarkValue(WrenVM* vm, Value value);
 // Mark [obj] as reachable and still in use. This should only be called
 // during the sweep phase of a garbage collection.
 void wrenMarkObj(WrenVM* vm, Obj* obj);
+
+// Mark the values in [buffer] as reachable and still in use. This should only
+// be called during the sweep phase of a garbage collection.
+void wrenMarkBuffer(WrenVM* vm, ValueBuffer* buffer);
 
 // Releases all memory owned by [obj], including [obj] itself.
 void wrenFreeObj(WrenVM* vm, Obj* obj);

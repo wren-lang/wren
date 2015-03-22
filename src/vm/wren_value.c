@@ -245,80 +245,55 @@ ObjList* wrenNewList(WrenVM* vm, uint32_t numElements)
 
   ObjList* list = ALLOCATE(vm, ObjList);
   initObj(vm, &list->obj, OBJ_LIST, vm->listClass);
-  list->capacity = numElements;
-  list->count = numElements;
-  list->elements = elements;
+  list->elements.capacity = numElements;
+  list->elements.count = numElements;
+  list->elements.data = elements;
   return list;
-}
-
-// Grows [list] if needed to ensure it can hold one more element.
-static void ensureListCapacity(WrenVM* vm, ObjList* list)
-{
-  if (list->capacity >= list->count + 1) return;
-
-  uint32_t capacity = list->capacity * GROW_FACTOR;
-  if (capacity < MIN_CAPACITY) capacity = MIN_CAPACITY;
-
-  list->capacity = capacity;
-  list->elements = (Value*)wrenReallocate(vm, list->elements,
-      list->capacity * sizeof(Value), capacity * sizeof(Value));
-  // TODO: Handle allocation failure.
-  list->capacity = capacity;
-}
-
-void wrenListAdd(WrenVM* vm, ObjList* list, Value value)
-{
-  if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
-
-  ensureListCapacity(vm, list);
-
-  if (IS_OBJ(value)) wrenPopRoot(vm);
-
-  list->elements[list->count++] = value;
 }
 
 void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index)
 {
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
-  ensureListCapacity(vm, list);
+  // Add a slot at the end of the list.
+  wrenValueBufferWrite(vm, &list->elements, NULL_VAL);
 
   if (IS_OBJ(value)) wrenPopRoot(vm);
 
-  // Shift items down.
-  for (uint32_t i = list->count; i > index; i--)
+  // Shift the existing elements down.
+  for (uint32_t i = list->elements.count - 1; i > index; i--)
   {
-    list->elements[i] = list->elements[i - 1];
+    list->elements.data[i] = list->elements.data[i - 1];
   }
 
-  list->elements[index] = value;
-  list->count++;
+  // Store the new element.
+  list->elements.data[index] = value;
 }
 
 Value wrenListRemoveAt(WrenVM* vm, ObjList* list, uint32_t index)
 {
-  Value removed = list->elements[index];
+  Value removed = list->elements.data[index];
 
   if (IS_OBJ(removed)) wrenPushRoot(vm, AS_OBJ(removed));
 
   // Shift items up.
-  for (uint32_t i = index; i < list->count - 1; i++)
+  for (int i = index; i < list->elements.count - 1; i++)
   {
-    list->elements[i] = list->elements[i + 1];
+    list->elements.data[i] = list->elements.data[i + 1];
   }
 
   // If we have too much excess capacity, shrink it.
-  if (list->capacity / GROW_FACTOR >= list->count)
+  if (list->elements.capacity / GROW_FACTOR >= list->elements.count)
   {
-    list->elements = (Value*)wrenReallocate(vm, list->elements,
-        sizeof(Value) * list->capacity,
-        sizeof(Value) * (list->capacity / GROW_FACTOR));
-    list->capacity /= GROW_FACTOR;
+    list->elements.data = (Value*)wrenReallocate(vm, list->elements.data,
+        sizeof(Value) * list->elements.capacity,
+        sizeof(Value) * (list->elements.capacity / GROW_FACTOR));
+    list->elements.capacity /= GROW_FACTOR;
   }
 
   if (IS_OBJ(removed)) wrenPopRoot(vm);
 
-  list->count--;
+  list->elements.count--;
   return removed;
 }
 
@@ -940,15 +915,11 @@ static void markInstance(WrenVM* vm, ObjInstance* instance)
 static void markList(WrenVM* vm, ObjList* list)
 {
   // Mark the elements.
-  Value* elements = list->elements;
-  for (uint32_t i = 0; i < list->count; i++)
-  {
-    wrenMarkValue(vm, elements[i]);
-  }
+  wrenMarkBuffer(vm, &list->elements);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjList);
-  vm->bytesAllocated += sizeof(Value) * list->capacity;
+  vm->bytesAllocated += sizeof(Value) * list->elements.capacity;
 }
 
 static void markMap(WrenVM* vm, ObjMap* map)
@@ -1048,6 +1019,14 @@ void wrenMarkValue(WrenVM* vm, Value value)
   wrenMarkObj(vm, AS_OBJ(value));
 }
 
+void wrenMarkBuffer(WrenVM* vm, ValueBuffer* buffer)
+{
+  for (int i = 0; i < buffer->count; i++)
+  {
+    wrenMarkValue(vm, buffer->data[i]);
+  }
+}
+
 void wrenFreeObj(WrenVM* vm, Obj* obj)
 {
 #if WREN_DEBUG_TRACE_MEMORY
@@ -1074,7 +1053,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
     }
 
     case OBJ_LIST:
-      DEALLOCATE(vm, ((ObjList*)obj)->elements);
+      wrenValueBufferClear(vm, &((ObjList*)obj)->elements);
       break;
 
     case OBJ_MAP:

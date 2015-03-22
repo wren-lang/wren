@@ -235,7 +235,7 @@ struct sCompiler
   struct sCompiler* parent;
 
   // The constants that have been defined in this function so far.
-  ObjList* constants;
+  ValueBuffer constants;
 
   // The currently in scope local variables.
   Local locals[MAX_LOCALS];
@@ -334,9 +334,11 @@ static void error(Compiler* compiler, const char* format, ...)
 // Adds [constant] to the constant pool and returns its index.
 static int addConstant(Compiler* compiler, Value constant)
 {
-  if (compiler->constants->count < MAX_CONSTANTS)
+  if (compiler->constants.count < MAX_CONSTANTS)
   {
-    wrenListAdd(compiler->parser->vm, compiler->constants, constant);
+    if (IS_OBJ(constant)) wrenPushRoot(compiler->parser->vm, AS_OBJ(constant));
+    wrenValueBufferWrite(compiler->parser->vm, &compiler->constants, constant);
+    if (IS_OBJ(constant)) wrenPopRoot(compiler->parser->vm);
   }
   else
   {
@@ -344,7 +346,7 @@ static int addConstant(Compiler* compiler, Value constant)
           MAX_CONSTANTS);
   }
 
-  return compiler->constants->count - 1;
+  return compiler->constants.count - 1;
 }
 
 // Initializes [compiler].
@@ -356,7 +358,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
   // Initialize this to NULL before allocating in case a GC gets triggered in
   // the middle of initializing the compiler.
-  compiler->constants = NULL;
+  wrenValueBufferInit(parser->vm, &compiler->constants);
 
   compiler->numUpvalues = 0;
   compiler->numParams = 0;
@@ -364,9 +366,6 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->enclosingClass = NULL;
 
   wrenSetCompiler(parser->vm, compiler);
-
-  // Create a growable list for the constants used by this function.
-  compiler->constants = wrenNewList(parser->vm, 0);
 
   if (parent == NULL)
   {
@@ -1305,8 +1304,8 @@ static ObjFn* endCompiler(Compiler* compiler,
   // Create a function object for the code we just compiled.
   ObjFn* fn = wrenNewFunction(compiler->parser->vm,
                               compiler->parser->module,
-                              compiler->constants->elements,
-                              compiler->constants->count,
+                              compiler->constants.data,
+                              compiler->constants.count,
                               compiler->numUpvalues,
                               compiler->numParams,
                               compiler->bytecode.data,
@@ -2686,7 +2685,7 @@ static void endLoop(Compiler* compiler)
     {
       // Skip this instruction and its arguments.
       i += 1 + getNumArguments(compiler->bytecode.data,
-                               compiler->constants->elements, i);
+                               compiler->constants.data, i);
     }
   }
 
@@ -3234,13 +3233,10 @@ void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 
   // Walk up the parent chain to mark the outer compilers too. The VM only
   // tracks the innermost one.
-  while (compiler != NULL)
+  do
   {
-    if (compiler->constants != NULL)
-    {
-      wrenMarkObj(vm, (Obj*)compiler->constants);
-    }
-
+    wrenMarkBuffer(vm, &compiler->constants);
     compiler = compiler->parent;
   }
+  while (compiler != NULL);
 }
