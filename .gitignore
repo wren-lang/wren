@@ -7,10 +7,6 @@ wren
 build/
 .sass-cache/
 
-# XCode user-specific stuff.
-xcuserdata/
-*.xccheckout
-
 # I leave a temporary Wren script at the top level so that I can quickly test
 # stuff.
 scratch.wren
@@ -18,7 +14,11 @@ scratch.wren
 # The baseline file is machine-specific, so doesn't get checked in.
 test/benchmark/baseline.txt
 
-# Visual Studio cache files
+# XCode user-specific stuff.
+xcuserdata/
+*.xccheckout
+
+# Visual Studio cache files.
 ipch/
 *.aps
 *.ncb
@@ -26,12 +26,8 @@ ipch/
 *.sdf
 *.cachefile
 
-# Visual Studio User-specific files
+# Visual Studio User-specific files.
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
-
-# Build results
-[Dd]ebug/
-[Rr]elease/
