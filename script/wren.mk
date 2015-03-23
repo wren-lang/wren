@@ -25,8 +25,8 @@ CLI_SOURCES  := $(wildcard src/cli/*.c)
 VM_SOURCES   := $(wildcard src/vm/*.c)
 BUILD_DIR := build
 
-CFLAGS := -Wall -Werror -Wsign-compare -Wtype-limits -Wuninitialized
-# TODO: Add -Wextra.
+CFLAGS := -Wall -Wextra -Werror -Wsign-compare -Wtype-limits -Wuninitialized -Wno-unused-parameter
+# TODO: dump '-Wno-unused-parameter'   
 
 # Mode configuration.
 ifeq ($(MODE),debug)
