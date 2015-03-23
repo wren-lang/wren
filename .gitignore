@@ -31,3 +31,7 @@ ipch/
 *.user
 *.userosscache
 *.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
