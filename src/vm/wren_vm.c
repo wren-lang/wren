@@ -217,7 +217,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 // ensure that multiple closures closing over the same variable actually see
 // the same variable.) Otherwise, it will create a new open upvalue and add it
 // the fiber's list of upvalues.
-static Upvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
+static ObjUpvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
 {
   // If there are no open upvalues at all, we must need a new one.
   if (fiber->openUpvalues == NULL)
@@ -226,8 +226,8 @@ static Upvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
     return fiber->openUpvalues;
   }
 
-  Upvalue* prevUpvalue = NULL;
-  Upvalue* upvalue = fiber->openUpvalues;
+  ObjUpvalue* prevUpvalue = NULL;
+  ObjUpvalue* upvalue = fiber->openUpvalues;
 
   // Walk towards the bottom of the stack until we find a previously existing
   // upvalue or pass where it should be.
@@ -243,7 +243,7 @@ static Upvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
   // We've walked past this local on the stack, so there must not be an
   // upvalue for it already. Make a new one and link it in in the right
   // place to keep the list sorted.
-  Upvalue* createdUpvalue = wrenNewUpvalue(vm, local);
+  ObjUpvalue* createdUpvalue = wrenNewUpvalue(vm, local);
   if (prevUpvalue == NULL)
   {
     // The new one is the first one in the list.
@@ -260,7 +260,7 @@ static Upvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
 
 static void closeUpvalue(ObjFiber* fiber)
 {
-  Upvalue* upvalue = fiber->openUpvalues;
+  ObjUpvalue* upvalue = fiber->openUpvalues;
 
   // Move the value into the upvalue itself and point the upvalue to it.
   upvalue->closed = *upvalue->value;
@@ -922,14 +922,14 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(LOAD_UPVALUE):
     {
-      Upvalue** upvalues = ((ObjClosure*)frame->fn)->upvalues;
+      ObjUpvalue** upvalues = ((ObjClosure*)frame->fn)->upvalues;
       PUSH(*upvalues[READ_BYTE()]->value);
       DISPATCH();
     }
 
     CASE_CODE(STORE_UPVALUE):
     {
-      Upvalue** upvalues = ((ObjClosure*)frame->fn)->upvalues;
+      ObjUpvalue** upvalues = ((ObjClosure*)frame->fn)->upvalues;
       *upvalues[READ_BYTE()]->value = PEEK();
       DISPATCH();
     }

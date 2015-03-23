@@ -123,7 +123,7 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 {
   ObjClosure* closure = ALLOCATE_FLEX(vm, ObjClosure,
-                                      Upvalue*, fn->numUpvalues);
+                                      ObjUpvalue*, fn->numUpvalues);
   initObj(vm, &closure->obj, OBJ_CLOSURE, vm->fnClass);
 
   closure->fn = fn;
@@ -791,9 +791,9 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle)
   return UINT32_MAX;
 }
 
-Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
+ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 {
-  Upvalue* upvalue = ALLOCATE(vm, Upvalue);
+  ObjUpvalue* upvalue = ALLOCATE(vm, ObjUpvalue);
 
   // Upvalues are never used as first-class objects, so don't need a class.
   initObj(vm, &upvalue->obj, OBJ_UPVALUE, NULL);
@@ -841,7 +841,7 @@ static void markClosure(WrenVM* vm, ObjClosure* closure)
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjClosure);
-  vm->bytesAllocated += sizeof(Upvalue*) * closure->fn->numUpvalues;
+  vm->bytesAllocated += sizeof(ObjUpvalue*) * closure->fn->numUpvalues;
 }
 
 static void markFiber(WrenVM* vm, ObjFiber* fiber)
@@ -859,7 +859,7 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
   }
 
   // Open upvalues.
-  Upvalue* upvalue = fiber->openUpvalues;
+  ObjUpvalue* upvalue = fiber->openUpvalues;
   while (upvalue != NULL)
   {
     wrenMarkObj(vm, (Obj*)upvalue);
@@ -964,13 +964,13 @@ static void markString(WrenVM* vm, ObjString* string)
   vm->bytesAllocated += sizeof(ObjString) + string->length + 1;
 }
 
-static void markUpvalue(WrenVM* vm, Upvalue* upvalue)
+static void markUpvalue(WrenVM* vm, ObjUpvalue* upvalue)
 {
   // Mark the closed-over object (in case it is closed).
   wrenMarkValue(vm, upvalue->closed);
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(Upvalue);
+  vm->bytesAllocated += sizeof(ObjUpvalue);
 }
 
 void wrenMarkObj(WrenVM* vm, Obj* obj)
@@ -1005,7 +1005,7 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
     case OBJ_MODULE:   markModule(  vm, (ObjModule*)  obj); break;
     case OBJ_RANGE:    markRange(   vm, (ObjRange*)   obj); break;
     case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
-    case OBJ_UPVALUE:  markUpvalue( vm, (Upvalue*)    obj); break;
+    case OBJ_UPVALUE:  markUpvalue( vm, (ObjUpvalue*) obj); break;
   }
 
 #if WREN_DEBUG_TRACE_MEMORY

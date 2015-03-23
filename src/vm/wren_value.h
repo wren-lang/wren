@@ -187,7 +187,7 @@ typedef struct sUpvalue
   // Open upvalues are stored in a linked list by the fiber. This points to the
   // next upvalue in that list.
   struct sUpvalue* next;
-} Upvalue;
+} ObjUpvalue;
 
 typedef struct
 {
@@ -216,7 +216,7 @@ typedef struct sObjFiber
   // Pointer to the first node in the linked list of open upvalues that are
   // pointing to values still on the stack. The head of the list will be the
   // upvalue closest to the top of the stack, and then the list works downwards.
-  Upvalue* openUpvalues;
+  ObjUpvalue* openUpvalues;
 
   // The fiber that ran this one. If this fiber is yielded, control will resume
   // to this one. May be `NULL`.
@@ -323,7 +323,7 @@ typedef struct
   ObjFn* fn;
 
   // The upvalues this function has closed over.
-  Upvalue* upvalues[FLEXIBLE_ARRAY];
+  ObjUpvalue* upvalues[FLEXIBLE_ARRAY];
 } ObjClosure;
 
 typedef enum
@@ -691,7 +691,7 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index);
 uint32_t wrenStringFind(ObjString* haystack, ObjString* needle);
 
 // Creates a new open upvalue pointing to [value] on the stack.
-Upvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
+ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
 
 // Mark [value] as reachable and still in use. This should only be called
 // during the sweep phase of a garbage collection.
