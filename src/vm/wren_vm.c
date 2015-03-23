@@ -39,7 +39,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   vm->reallocate = reallocate;
   vm->loadModule = configuration->loadModuleFn;
 
-  wrenSymbolTableInit(vm, &vm->methodNames);
+  wrenSymbolTableInit(&vm->methodNames);
 
   vm->nextGC = 1024 * 1024 * 10;
   if (configuration->initialHeapSize != 0)
@@ -317,7 +317,7 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
 //
 // Returns the fiber that should receive the error or `NULL` if no fiber
 // caught it.
-static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, Value error)
+static ObjFiber* runtimeError(ObjFiber* fiber, Value error)
 {
   ASSERT(fiber->error == NULL, "Can only fail once.");
 
@@ -335,7 +335,7 @@ static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, Value error)
   }
 
   // If we got here, nothing caught the error, so show the stack trace.
-  wrenDebugPrintStackTrace(vm, fiber);
+  wrenDebugPrintStackTrace(fiber);
   return NULL;
 }
 
@@ -568,7 +568,7 @@ static bool runInterpreter(WrenVM* vm)
       do                                               \
       {                                                \
         STORE_FRAME();                                 \
-        fiber = runtimeError(vm, fiber, error);        \
+        fiber = runtimeError(fiber, error);            \
         if (fiber == NULL) return false;               \
         LOAD_FRAME();                                  \
         DISPATCH();                                    \

@@ -358,7 +358,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
   // Initialize this to NULL before allocating in case a GC gets triggered in
   // the middle of initializing the compiler.
-  wrenValueBufferInit(parser->vm, &compiler->constants);
+  wrenValueBufferInit(&compiler->constants);
 
   compiler->numUpvalues = 0;
   compiler->numParams = 0;
@@ -400,8 +400,8 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
     compiler->scopeDepth = 0;
   }
 
-  wrenByteBufferInit(parser->vm, &compiler->bytecode);
-  wrenIntBufferInit(parser->vm, &compiler->debugSourceLines);
+  wrenByteBufferInit(&compiler->bytecode);
+  wrenIntBufferInit(&compiler->debugSourceLines);
 }
 
 // Lexing ----------------------------------------------------------------------
@@ -2966,7 +2966,7 @@ static void classDefinition(Compiler* compiler)
   // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
   // into account.
   SymbolTable fields;
-  wrenSymbolTableInit(compiler->parser->vm, &fields);
+  wrenSymbolTableInit(&fields);
 
   classCompiler.fields = &fields;
 
@@ -3144,7 +3144,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module,
   parser.skipNewlines = true;
   parser.hasError = false;
 
-  wrenByteBufferInit(vm, &parser.string);
+  wrenByteBufferInit(&parser.string);
 
   // Read the first token.
   nextToken(&parser);

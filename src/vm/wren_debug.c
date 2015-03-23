@@ -2,7 +2,7 @@
 
 #include "wren_debug.h"
 
-void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
+void wrenDebugPrintStackTrace(ObjFiber* fiber)
 {
   fprintf(stderr, "%s\n", fiber->error->value);
 

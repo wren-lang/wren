@@ -23,13 +23,13 @@ typedef struct {
       int count; \
       int capacity; \
     } name##Buffer; \
-    void wren##name##BufferInit(WrenVM* vm, name##Buffer* buffer); \
+    void wren##name##BufferInit(name##Buffer* buffer); \
     void wren##name##BufferClear(WrenVM* vm, name##Buffer* buffer); \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
 
 // This should be used once for each type instantiation, somewhere in a .c file.
 #define DEFINE_BUFFER(name, type) \
-    void wren##name##BufferInit(WrenVM* vm, name##Buffer* buffer) \
+    void wren##name##BufferInit(name##Buffer* buffer) \
     { \
       buffer->data = NULL; \
       buffer->capacity = 0; \
@@ -39,7 +39,7 @@ typedef struct {
     void wren##name##BufferClear(WrenVM* vm, name##Buffer* buffer) \
     { \
       wrenReallocate(vm, buffer->data, 0, 0); \
-      wren##name##BufferInit(vm, buffer); \
+      wren##name##BufferInit(buffer); \
     } \
     \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data) \
@@ -63,7 +63,7 @@ DECLARE_BUFFER(String, String);
 typedef StringBuffer SymbolTable;
 
 // Initializes the symbol table.
-void wrenSymbolTableInit(WrenVM* vm, SymbolTable* symbols);
+void wrenSymbolTableInit(SymbolTable* symbols);
 
 // Frees all dynamically allocated memory used by the symbol table, but not the
 // SymbolTable itself.

@@ -7,9 +7,9 @@ DEFINE_BUFFER(Byte, uint8_t);
 DEFINE_BUFFER(Int, int);
 DEFINE_BUFFER(String, String);
 
-void wrenSymbolTableInit(WrenVM* vm, SymbolTable* symbols)
+void wrenSymbolTableInit(SymbolTable* symbols)
 {
-  wrenStringBufferInit(vm, symbols);
+  wrenStringBufferInit(symbols);
 }
 
 void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)

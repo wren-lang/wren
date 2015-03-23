@@ -1208,7 +1208,7 @@ DEF_PRIMITIVE(string_contains)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  RETURN_BOOL(wrenStringFind(vm, string, search) != UINT32_MAX);
+  RETURN_BOOL(wrenStringFind(string, search) != UINT32_MAX);
 }
 
 DEF_PRIMITIVE(string_count)
@@ -1237,7 +1237,7 @@ DEF_PRIMITIVE(string_indexOf)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  uint32_t index = wrenStringFind(vm, string, search);
+  uint32_t index = wrenStringFind(string, search);
   RETURN_NUM(index == UINT32_MAX ? -1 : (int)index);
 }
 

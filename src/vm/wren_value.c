@@ -47,7 +47,7 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
   classObj->name = name;
 
   wrenPushRoot(vm, (Obj*)classObj);
-  wrenMethodBufferInit(vm, &classObj->methods);
+  wrenMethodBufferInit(&classObj->methods);
   wrenPopRoot(vm);
 
   return classObj;
@@ -551,8 +551,8 @@ ObjModule* wrenNewModule(WrenVM* vm)
 
   wrenPushRoot(vm, (Obj*)module);
 
-  wrenSymbolTableInit(vm, &module->variableNames);
-  wrenValueBufferInit(vm, &module->variables);
+  wrenSymbolTableInit(&module->variableNames);
+  wrenValueBufferInit(&module->variables);
 
   wrenPopRoot(vm);
   return module;
@@ -733,7 +733,7 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
 }
 
 // Uses the Boyer-Moore-Horspool string matching algorithm.
-uint32_t wrenStringFind(WrenVM* vm, ObjString* haystack, ObjString* needle)
+uint32_t wrenStringFind(ObjString* haystack, ObjString* needle)
 {
   // Corner case, an empty needle is always found.
   if (needle->length == 0) return 0;
