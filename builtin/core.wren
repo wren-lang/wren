@@ -16,6 +16,16 @@ class Sequence {
     return result
   }
 
+  count(f) {
+    var result = 0
+    for (element in this) {
+      if (f.call(element)) {
+        result = result + 1
+      }
+    }
+    return result
+  }
+
   map(f) {
     var result = new List
     for (element in this) {

@@ -11,11 +11,11 @@ Appends `item` to the end of the list.
 
 ### **clear**()
 
-Removes all items from the list.
+Removes all elements from the list.
 
 ### **count**
 
-The number of items in the list.
+The number of elements in the list.
 
 ### **insert**(index, item)
 
