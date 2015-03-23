@@ -74,29 +74,24 @@ char* readModule(WrenVM* vm, const char* module)
   // First try to load the module with a ".wren" extension.
   char* modulePath = wrenFilePath(module);
   char* moduleContents = readFile(modulePath);
+  free(modulePath);
+
+  if (moduleContents != NULL) return moduleContents;
 
   // If no contents could be loaded treat the module name as specifying a
-  // package and try to load the "module.wren" file in the package.
-  if (moduleContents == NULL)
-  {
-    free(modulePath);
+  // directory and try to load the "module.wren" file in the directory.
+  size_t moduleLength = strlen(module);
+  size_t moduleDirLength = moduleLength + 7;
+  char* moduleDir = (char*)malloc(moduleDirLength + 1);
+  memcpy(moduleDir, module, moduleLength);
+  memcpy(moduleDir + moduleLength, "/module", 7);
+  moduleDir[moduleDirLength] = '\0';
 
-    size_t moduleLength = strlen(module);
-    size_t modulePackageLength = moduleLength + 7;
-    char* packageModule = (char*)malloc(modulePackageLength + 1);
-    memcpy(packageModule, module, moduleLength);
-    memcpy(packageModule + moduleLength, "/module", 7);
-    packageModule[modulePackageLength] = '\0';
+  char* moduleDirPath = wrenFilePath(moduleDir);
+  free(moduleDir);
 
-    char* packageModulePath = wrenFilePath(packageModule);
-    moduleContents = readFile(packageModulePath);
-
-    if (moduleContents == NULL)
-    {
-      free(packageModulePath);
-      return NULL;
-    }
-  }
+  moduleContents = readFile(moduleDirPath);
+  free(moduleDirPath);
 
   return moduleContents;
 }
