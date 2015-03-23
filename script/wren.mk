@@ -25,8 +25,8 @@ CLI_SOURCES  := $(wildcard src/cli/*.c)
 VM_SOURCES   := $(wildcard src/vm/*.c)
 BUILD_DIR := build
 
-CFLAGS := -Wall -Wextra -Werror -Wsign-compare -Wtype-limits -Wuninitialized -Wno-unused-parameter
-# TODO: dump '-Wno-unused-parameter'   
+CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter
+# Wren uses callbacks heavily, so -Wunused-parameter is too painful to enable.
 
 # Mode configuration.
 ifeq ($(MODE),debug)
