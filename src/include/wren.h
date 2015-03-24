@@ -35,6 +35,14 @@ typedef void (*WrenForeignMethodFn)(WrenVM* vm);
 // Loads and returns the source code for the module [name].
 typedef char* (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
 
+// Returns a pointer to a foreign method on [className] in [module] with
+// [signature].
+typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
+                                                       const char* module,
+                                                       const char* className,
+                                                       bool isStatic,
+                                                       const char* signature);
+
 typedef struct
 {
   // The callback Wren will use to allocate, reallocate, and deallocate memory.
@@ -58,6 +66,17 @@ typedef struct
   // If a module with the given name could not be found by the embedder, it
   // should return NULL and Wren will report that as a runtime error.
   WrenLoadModuleFn loadModuleFn;
+
+  // The callback Wren uses to find a foreign method and bind it to a class.
+  //
+  // When a foreign method is declared in a class, this will be called with the
+  // foreign method's module, class, and signature when the class body is
+  // executed. It should return a pointer to the foreign function that will be
+  // bound to that method.
+  //
+  // If the foreign function could not be found, this should return NULL and
+  // Wren will report it as runtime error.
+  WrenBindForeignMethodFn bindForeignMethodFn;
 
   // The number of bytes Wren will allocate before triggering the first garbage
   // collection.
@@ -150,30 +169,6 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...);
 // Releases memory associated with [method]. After calling this, [method] can
 // no longer be used.
 void wrenReleaseMethod(WrenVM* vm, WrenMethod* method);
-
-// TODO: Figure out how these interact with modules.
-
-// Defines a foreign method implemented by the host application. Looks for a
-// global class named [className] to bind the method to. If not found, it will
-// be created automatically.
-//
-// Defines a method on that class with [signature]. If a method already exists
-// with that signature, it will be replaced. When invoked, the method will call
-// [method].
-void wrenDefineMethod(WrenVM* vm, const char* className,
-                      const char* signature,
-                      WrenForeignMethodFn method);
-
-// Defines a static foreign method implemented by the host application. Looks
-// for a global class named [className] to bind the method to. If not found, it
-// will be created automatically.
-//
-// Defines a static method on that class with [signature]. If a method already
-// exists with that signature, it will be replaced. When invoked, the method
-// will call [method].
-void wrenDefineStaticMethod(WrenVM* vm, const char* className,
-                            const char* signature,
-                            WrenForeignMethodFn method);
 
 // The following functions read one of the arguments passed to a foreign call.
 // They may only be called while within a function provided to

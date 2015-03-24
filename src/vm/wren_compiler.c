@@ -76,6 +76,7 @@ typedef enum
   TOKEN_ELSE,
   TOKEN_FALSE,
   TOKEN_FOR,
+  TOKEN_FOREIGN,
   TOKEN_IF,
   TOKEN_IMPORT,
   TOKEN_IN,
@@ -597,6 +598,7 @@ static void readName(Parser* parser, TokenType type)
   else if (isKeyword(parser, "else")) type = TOKEN_ELSE;
   else if (isKeyword(parser, "false")) type = TOKEN_FALSE;
   else if (isKeyword(parser, "for")) type = TOKEN_FOR;
+  else if (isKeyword(parser, "foreign")) type = TOKEN_FOREIGN;
   else if (isKeyword(parser, "if")) type = TOKEN_IF;
   else if (isKeyword(parser, "import")) type = TOKEN_IMPORT;
   else if (isKeyword(parser, "in")) type = TOKEN_IN;
@@ -1281,6 +1283,13 @@ static void loadLocal(Compiler* compiler, int slot)
   emitByteArg(compiler, CODE_LOAD_LOCAL, slot);
 }
 
+// Discards memory owned by [compiler].
+static void freeCompiler(Compiler* compiler)
+{
+  wrenByteBufferClear(compiler->parser->vm, &compiler->bytecode);
+  wrenIntBufferClear(compiler->parser->vm, &compiler->debugSourceLines);
+}
+
 // Finishes [compiler], which is compiling a function, method, or chunk of top
 // level code. If there is a parent compiler, then this emits code in the
 // parent compiler to load the resulting function.
@@ -1292,8 +1301,7 @@ static ObjFn* endCompiler(Compiler* compiler,
   if (compiler->parser->hasError)
   {
     // Free the code since it won't be used.
-    wrenByteBufferClear(compiler->parser->vm, &compiler->bytecode);
-    wrenIntBufferClear(compiler->parser->vm, &compiler->debugSourceLines);
+    freeCompiler(compiler);
     return NULL;
   }
 
@@ -2449,6 +2457,7 @@ GrammarRule rules[] =
   /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
   /* TOKEN_FOR           */ UNUSED,
+  /* TOKEN_FOREIGN       */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IMPORT        */ UNUSED,
   /* TOKEN_IN            */ UNUSED,
@@ -2892,8 +2901,8 @@ void statement(Compiler* compiler)
 
 // Compiles a method definition inside a class body. Returns the symbol in the
 // method table for the new method.
-int method(Compiler* compiler, ClassCompiler* classCompiler, bool isConstructor,
-           SignatureFn signatureFn)
+static int method(Compiler* compiler, ClassCompiler* classCompiler,
+                  bool isConstructor, bool isForeign, SignatureFn signatureFn)
 {
   // Build the method signature.
   Signature signature;
@@ -2908,16 +2917,30 @@ int method(Compiler* compiler, ClassCompiler* classCompiler, bool isConstructor,
   // Compile the method signature.
   signatureFn(&methodCompiler, &signature);
 
-  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
-
-  finishBody(&methodCompiler, isConstructor);
-
   // Include the full signature in debug messages in stack traces.
-  char debugName[MAX_METHOD_SIGNATURE];
+  char fullSignature[MAX_METHOD_SIGNATURE];
   int length;
-  signatureToString(&signature, debugName, &length);
+  signatureToString(&signature, fullSignature, &length);
 
-  endCompiler(&methodCompiler, debugName, length);
+  if (isForeign)
+  {
+    // Define a constant for the signature.
+    int constant = addConstant(compiler, wrenNewString(compiler->parser->vm,
+                                                       fullSignature, length));
+    emitShortArg(compiler, CODE_CONSTANT, constant);
+
+    // We don't need the function we started compiling in the parameter list
+    // any more.
+    freeCompiler(&methodCompiler);
+  }
+  else
+  {
+    consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
+    finishBody(&methodCompiler, isConstructor);
+
+    endCompiler(&methodCompiler, fullSignature, length);
+  }
+
   return signatureSymbol(compiler, &signature);
 }
 
@@ -2980,6 +3003,8 @@ static void classDefinition(Compiler* compiler)
   {
     Code instruction = CODE_METHOD_INSTANCE;
     bool isConstructor = false;
+    // TODO: What about foreign constructors?
+    bool isForeign = match(compiler, TOKEN_FOREIGN);
 
     classCompiler.isStaticMethod = false;
 
@@ -3004,7 +3029,7 @@ static void classDefinition(Compiler* compiler)
     }
 
     int methodSymbol = method(compiler, &classCompiler, isConstructor,
-                              signature);
+                              isForeign, signature);
 
     // Load the class. We have to do this for each method because we can't
     // keep the class on top of the stack. If there are static fields, they

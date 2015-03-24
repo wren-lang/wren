@@ -283,6 +283,9 @@ typedef struct
   // Symbol table for the names of all module variables. Indexes here directly
   // correspond to entries in [variables].
   SymbolTable variableNames;
+
+  // The name of the module.
+  ObjString* name;
 } ObjModule;
 
 // A first-class function object. A raw ObjFn can be used and invoked directly
@@ -656,7 +659,7 @@ void wrenMapClear(WrenVM* vm, ObjMap* map);
 Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key);
 
 // Creates a new module.
-ObjModule* wrenNewModule(WrenVM* vm);
+ObjModule* wrenNewModule(WrenVM* vm, ObjString* name);
 
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);

@@ -37,6 +37,7 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   memset(vm, 0, sizeof(WrenVM));
 
   vm->reallocate = reallocate;
+  vm->bindForeign = configuration->bindForeignMethodFn;
   vm->loadModule = configuration->loadModuleFn;
 
   wrenSymbolTableInit(&vm->methodNames);
@@ -62,14 +63,18 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
     vm->heapScalePercent = 100 + configuration->heapGrowthPercent;
   }
 
+  ObjString* name = AS_STRING(CONST_STRING(vm, "main"));
+  wrenPushRoot(vm, (Obj*)name);
+
   // Implicitly create a "main" module for the REPL or entry script.
-  ObjModule* mainModule = wrenNewModule(vm);
+  ObjModule* mainModule = wrenNewModule(vm, name);
   wrenPushRoot(vm, (Obj*)mainModule);
 
   vm->modules = wrenNewMap(vm);
   wrenMapSet(vm, vm->modules, NULL_VAL, OBJ_VAL(mainModule));
 
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // mainModule.
+  wrenPopRoot(vm); // name.
 
   wrenInitializeCore(vm);
   #if WREN_USE_LIB_IO
@@ -270,26 +275,63 @@ static void closeUpvalue(ObjFiber* fiber)
   fiber->openUpvalues = upvalue->next;
 }
 
-static void bindMethod(WrenVM* vm, int methodType, int symbol,
-                       ObjClass* classObj, Value methodValue)
+// Looks up a foreign method in [moduleName] on [className] with [signature].
+//
+// This will try the host's foreign method binder first. If that fails, it
+// falls back to handling the built-in modules.
+static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
+                                             const char* moduleName,
+                                             const char* className,
+                                             bool isStatic,
+                                             const char* signature)
 {
-  ObjFn* methodFn = IS_FN(methodValue) ? AS_FN(methodValue)
-                                       : AS_CLOSURE(methodValue)->fn;
+  WrenForeignMethodFn fn;
 
-  // Methods are always bound against the class, and not the metaclass, even
-  // for static methods, so that constructors (which are static) get bound like
-  // instance methods.
-  wrenBindMethodCode(classObj, methodFn);
-
-  Method method;
-  method.type = METHOD_BLOCK;
-  method.fn.obj = AS_OBJ(methodValue);
-
-  if (methodType == CODE_METHOD_STATIC)
+  // Let the host try to find it first.
+  if (vm->bindForeign != NULL)
   {
-    classObj = classObj->obj.classObj;
+    fn = vm->bindForeign(vm, moduleName, className, isStatic, signature);
+    if (fn != NULL) return fn;
   }
 
+  // Otherwise, try the built-in libraries.
+  #if WREN_USE_LIB_IO
+  fn = wrenBindIOForeignMethod(vm, className, signature);
+  if (fn != NULL) return fn;
+  #endif
+
+  // TODO: Report a runtime error on failure to find it.
+  return NULL;
+}
+
+static void bindMethod(WrenVM* vm, int methodType, int symbol,
+                       ObjModule* module, ObjClass* classObj, Value methodValue)
+{
+  Method method;
+  if (IS_STRING(methodValue))
+  {
+    const char* name = AS_CSTRING(methodValue);
+    method.type = METHOD_FOREIGN;
+    method.fn.foreign = findForeignMethod(vm, module->name->value,
+                                          classObj->name->value,
+                                          methodType == CODE_METHOD_STATIC,
+                                          name);
+  }
+  else
+  {
+    ObjFn* methodFn = IS_FN(methodValue) ? AS_FN(methodValue)
+                                         : AS_CLOSURE(methodValue)->fn;
+
+    // Methods are always bound against the class, and not the metaclass, even
+    // for static methods, so that constructors (which are static) get bound
+    // like instance methods.
+    wrenBindMethodCode(classObj, methodFn);
+
+    method.type = METHOD_BLOCK;
+    method.fn.obj = AS_OBJ(methodValue);
+  }
+
+  if (methodType == CODE_METHOD_STATIC) classObj = classObj->obj.classObj;
   wrenBindMethod(vm, classObj, symbol, method);
 }
 
@@ -388,7 +430,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
   }
   else
   {
-    module = wrenNewModule(vm);
+    module = wrenNewModule(vm, AS_STRING(name));
 
     // Store it in the VM's module registry so we don't load the same module
     // multiple times.
@@ -1169,7 +1211,7 @@ static bool runInterpreter(WrenVM* vm)
       uint16_t symbol = READ_SHORT();
       ObjClass* classObj = AS_CLASS(PEEK());
       Value method = PEEK2();
-      bindMethod(vm, instruction, symbol, classObj, method);
+      bindMethod(vm, instruction, symbol, fn->module, classObj, method);
       DROP();
       DROP();
       DISPATCH();
@@ -1503,74 +1545,6 @@ void wrenPopRoot(WrenVM* vm)
 {
   ASSERT(vm->numTempRoots > 0, "No temporary roots to release.");
   vm->numTempRoots--;
-}
-
-static void defineMethod(WrenVM* vm, const char* className,
-                         const char* signature,
-                         WrenForeignMethodFn methodFn, bool isStatic)
-{
-  ASSERT(className != NULL, "Must provide class name.");
-
-  int length = (int)strlen(signature);
-  ASSERT(signature != NULL, "Must provide signature.");
-  ASSERT(strlen(signature) < MAX_METHOD_SIGNATURE, "Signature too long.");
-
-  ASSERT(methodFn != NULL, "Must provide method function.");
-
-  // TODO: Need to be able to define methods in classes outside the core
-  // module.
-
-  // Find or create the class to bind the method to.
-  ObjModule* coreModule = getCoreModule(vm);
-  int classSymbol = wrenSymbolTableFind(&coreModule->variableNames,
-                                        className, strlen(className));
-  ObjClass* classObj;
-
-  if (classSymbol != -1)
-  {
-    // TODO: Handle name is not class.
-    classObj = AS_CLASS(coreModule->variables.data[classSymbol]);
-  }
-  else
-  {
-    // The class doesn't already exist, so create it.
-    ObjString* nameString = AS_STRING(wrenStringFormat(vm, "$", className));
-
-    wrenPushRoot(vm, (Obj*)nameString);
-
-    // TODO: Allow passing in name for superclass?
-    classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-    wrenDefineVariable(vm, coreModule, className, nameString->length,
-                       OBJ_VAL(classObj));
-
-    wrenPopRoot(vm);
-  }
-
-  // Bind the method.
-  int methodSymbol = wrenSymbolTableEnsure(vm, &vm->methodNames,
-                                           signature, length);
-
-  Method method;
-  method.type = METHOD_FOREIGN;
-  method.fn.foreign = methodFn;
-
-  if (isStatic) classObj = classObj->obj.classObj;
-
-  wrenBindMethod(vm, classObj, methodSymbol, method);
-}
-
-void wrenDefineMethod(WrenVM* vm, const char* className,
-                      const char* signature,
-                      WrenForeignMethodFn methodFn)
-{
-  defineMethod(vm, className, signature, methodFn, false);
-}
-
-void wrenDefineStaticMethod(WrenVM* vm, const char* className,
-                            const char* signature,
-                            WrenForeignMethodFn methodFn)
-{
-  defineMethod(vm, className, signature, methodFn, true);
 }
 
 bool wrenGetArgumentBool(WrenVM* vm, int index)

@@ -165,11 +165,19 @@ typedef enum
 
   // Define a method for symbol [arg]. The class receiving the method is popped
   // off the stack, then the function defining the body is popped.
+  //
+  // If a foreign method is being defined, the "function" will be a string
+  // identifying the foreign method. Otherwise, it will be a function or
+  // closure.
   CODE_METHOD_INSTANCE,
 
   // Define a method for symbol [arg]. The class whose metaclass will receive
   // the method is popped off the stack, then the function defining the body is
   // popped.
+  //
+  // If a foreign method is being defined, the "function" will be a string
+  // identifying the foreign method. Otherwise, it will be a function or
+  // closure.
   CODE_METHOD_STATIC,
 
   // Load the module whose name is stored in string constant [arg]. Pushes
@@ -270,6 +278,9 @@ struct WrenVM
   // During a foreign function call, this will contain the number of arguments
   // to the function.
   int foreignCallNumArgs;
+
+  // The function used to locate foreign functions.
+  WrenBindForeignMethodFn bindForeign;
 
   // The function used to load modules.
   WrenLoadModuleFn loadModule;

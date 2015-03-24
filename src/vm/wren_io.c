@@ -106,6 +106,11 @@ static const char* libSource =
 "      IO.writeString_(\"[invalid toString]\")\n"
 "    }\n"
 "  }\n"
+"\n"
+"  foreign static writeString_(string)\n"
+"  foreign static clock\n"
+"  foreign static time\n"
+"  foreign static read\n"
 "}\n";
 
 static void ioWriteString(WrenVM* vm)
@@ -138,10 +143,18 @@ static void ioTime(WrenVM* vm)
 void wrenLoadIOLibrary(WrenVM* vm)
 {
   wrenInterpret(vm, "", libSource);
-  wrenDefineStaticMethod(vm, "IO", "writeString_(_)", ioWriteString);
-  wrenDefineStaticMethod(vm, "IO", "clock", ioClock);
-  wrenDefineStaticMethod(vm, "IO", "time", ioTime);
-  wrenDefineStaticMethod(vm, "IO", "read", ioRead);
+}
+
+WrenForeignMethodFn wrenBindIOForeignMethod(WrenVM* vm, const char* className,
+                                            const char* signature)
+{
+  ASSERT(strcmp(className, "IO") == 0, "Should only have IO class.");
+  
+  if (strcmp(signature, "writeString_(_)") == 0) return ioWriteString;
+  if (strcmp(signature, "clock") == 0) return ioClock;
+  if (strcmp(signature, "time") == 0) return ioTime;
+  if (strcmp(signature, "read") == 0) return ioRead;
+  return NULL;
 }
 
 #endif

@@ -8,6 +8,7 @@ WrenVM* createVM()
 {
   WrenConfiguration config;
 
+  config.bindForeignMethodFn = NULL;
   config.loadModuleFn = readModule;
 
   // Since we're running in a standalone process, be generous with memory.

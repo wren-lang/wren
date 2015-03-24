@@ -10,6 +10,9 @@
 
 void wrenLoadIOLibrary(WrenVM* vm);
 
+WrenForeignMethodFn wrenBindIOForeignMethod(WrenVM* vm, const char* className,
+                                            const char* signature);
+
 #endif
 
 #endif
