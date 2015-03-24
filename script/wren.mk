@@ -25,39 +25,39 @@ CLI_SOURCES  := $(wildcard src/cli/*.c)
 VM_SOURCES   := $(wildcard src/vm/*.c)
 BUILD_DIR := build
 
-CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter
+C_WARNINGS := -Wall -Wextra -Werror -Wno-unused-parameter
 # Wren uses callbacks heavily, so -Wunused-parameter is too painful to enable.
 
 # Mode configuration.
 ifeq ($(MODE),debug)
 	WREN := wrend
-	CFLAGS += -O0 -DDEBUG -g
+	C_OPTIONS += -O0 -DDEBUG -g
 	BUILD_DIR := $(BUILD_DIR)/debug
 else
 	WREN += wren
-	CFLAGS += -Os
+	C_OPTIONS += -Os
 	BUILD_DIR := $(BUILD_DIR)/release
 endif
 
 # Language configuration.
 ifeq ($(LANG),cpp)
 	WREN := $(WREN)-cpp
-	CFLAGS += -std=c++98
+	C_OPTIONS += -std=c++98
 	FILE_FLAG := -x c++
 	BUILD_DIR := $(BUILD_DIR)-cpp
 else
-	CFLAGS += -std=c99
+	C_OPTIONS += -std=c99
 endif
 
 # Architecture configuration.
 ifeq ($(ARCH),32)
-	CFLAGS += -m32
+	C_OPTIONS += -m32
 	WREN := $(WREN)-32
 	BUILD_DIR := $(BUILD_DIR)-32
 endif
 
 ifeq ($(ARCH),64)
-	CFLAGS += -m64
+	C_OPTIONS += -m64
 	WREN := $(WREN)-64
 	BUILD_DIR := $(BUILD_DIR)-64
 endif
@@ -73,7 +73,7 @@ ifeq      ($(OS),mingw32)
 else ifeq ($(OS),cygwin)
 	# Do nothing.
 else
-	CFLAGS += -fPIC
+	C_OPTIONS += -fPIC
 endif
 
 # MinGW--or at least some versions of it--default CC to "cc" but then don't
@@ -91,6 +91,8 @@ else
 	SHARED_EXT := so
 endif
 
+CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
+
 CLI_OBJECTS := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
 VM_OBJECTS := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
 
@@ -103,20 +105,25 @@ prep:
 
 # Command-line interpreter.
 bin/$(WREN): $(CLI_OBJECTS) $(VM_OBJECTS)
-	$(CC) $(CFLAGS) -Isrc/include -o $@ $^ -lm
+	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
+	@$(CC) $(CFLAGS) -Isrc/include -o $@ $^ -lm
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
-	$(AR) rcu $@ $^
+	@printf "%10s %-30s %s\n" $(AR) $@ "rcu"
+	@$(AR) rcu $@ $^
 
 # Shared library.
 lib/lib$(WREN).$(SHARED_EXT): $(VM_OBJECTS)
-	$(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
+	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS) $(SHARED_LIB_FLAGS)"
+	@$(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
 
 # CLI object files.
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(VM_HEADERS)
-	$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
+	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
 
 # VM object files.
 $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
-	$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
+	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
