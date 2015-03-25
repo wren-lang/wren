@@ -264,7 +264,7 @@ def read_baseline():
             benchmark[2] = float(best)
 
 
-def generate_baseline(graph):
+def generate_baseline():
   print("generating baseline")
   baseline_text = ""
   for benchmark in BENCHMARKS:
