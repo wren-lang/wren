@@ -333,6 +333,9 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
   // Return how many bytes this instruction takes, or -1 if it's an END.
   if (code == CODE_END) return -1;
   return i - start;
+
+  #undef READ_BYTE
+  #undef READ_SHORT
 }
 
 int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
