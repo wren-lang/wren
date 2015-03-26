@@ -243,7 +243,7 @@ def run_test(path):
     print('')
 
 
-for dir in ['core', 'io', 'language', 'limit']:
+for dir in ['core', 'io', 'language', 'limit', 'meta']:
   walk(join(WREN_DIR, 'test', dir), run_test)
 
 print_line()

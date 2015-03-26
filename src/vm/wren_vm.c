@@ -14,6 +14,10 @@
   #include "wren_io.h"
 #endif
 
+#if WREN_USE_LIB_META
+  #include "wren_meta.h"
+#endif
+
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   #include <time.h>
 #endif
@@ -67,6 +71,9 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   wrenInitializeCore(vm);
   #if WREN_USE_LIB_IO
     wrenLoadIOLibrary(vm);
+  #endif
+  #if WREN_USE_LIB_META
+    wrenLoadMetaLibrary(vm);
   #endif
 
   return vm;
