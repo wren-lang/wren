@@ -8,8 +8,9 @@ static const char* libSource =
 
 void metaEval(WrenVM* vm)
 {
-    const char* source = wrenGetArgumentString(vm, 1);
-    wrenInterpret(vm, "Meta", source);
+  const char* source = wrenGetArgumentString(vm, 1);
+  // TODO: Type check argument.
+  wrenInterpret(vm, "Meta", source);
 }
 
 void wrenLoadMetaLibrary(WrenVM* vm)
