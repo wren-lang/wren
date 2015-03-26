@@ -312,7 +312,14 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
   return NULL;
 }
 
-static void bindMethod(WrenVM* vm, int methodType, int symbol,
+// Defines [methodValue] as a method on [classObj].
+//
+// Handles both foreign methods where [methodValue] is a string containing the
+// method's signature and Wren methods where [methodValue] is a function.
+//
+// Returns an error string if the method is a foreign method that could not be
+// found. Otherwise returns `NULL_VAL`.
+static Value bindMethod(WrenVM* vm, int methodType, int symbol,
                        ObjModule* module, ObjClass* classObj, Value methodValue)
 {
   Method method;
@@ -324,6 +331,13 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
                                           classObj->name->value,
                                           methodType == CODE_METHOD_STATIC,
                                           name);
+
+    if (method.fn.foreign == NULL)
+    {
+      return wrenStringFormat(vm,
+          "Could not find foreign method '@' for class $ in module '$'.",
+          methodValue, classObj->name->value, module->name->value);
+    }
   }
   else
   {
@@ -341,6 +355,7 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
 
   if (methodType == CODE_METHOD_STATIC) classObj = classObj->obj.classObj;
   wrenBindMethod(vm, classObj, symbol, method);
+  return NULL_VAL;
 }
 
 static void callForeign(WrenVM* vm, ObjFiber* fiber,
@@ -1219,7 +1234,9 @@ static bool runInterpreter(WrenVM* vm)
       uint16_t symbol = READ_SHORT();
       ObjClass* classObj = AS_CLASS(PEEK());
       Value method = PEEK2();
-      bindMethod(vm, instruction, symbol, fn->module, classObj, method);
+      Value error = bindMethod(vm, instruction, symbol, fn->module, classObj,
+                               method);
+      if (IS_STRING(error)) RUNTIME_ERROR(error);
       DROP();
       DROP();
       DISPATCH();
