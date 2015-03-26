@@ -60,15 +60,15 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
     vm->heapScalePercent = 100 + configuration->heapGrowthPercent;
   }
 
-  ObjString* name = AS_STRING(CONST_STRING(vm, "main"));
+  ObjString* name = AS_STRING(CONST_STRING(vm, "core"));
   wrenPushRoot(vm, (Obj*)name);
 
-  // Implicitly create a "main" module for the REPL or entry script.
-  ObjModule* mainModule = wrenNewModule(vm, name);
-  wrenPushRoot(vm, (Obj*)mainModule);
+  // Implicitly create a "core" module for the built in libraries.
+  ObjModule* coreModule = wrenNewModule(vm, name);
+  wrenPushRoot(vm, (Obj*)coreModule);
 
   vm->modules = wrenNewMap(vm);
-  wrenMapSet(vm, vm->modules, NULL_VAL, OBJ_VAL(mainModule));
+  wrenMapSet(vm, vm->modules, NULL_VAL, OBJ_VAL(coreModule));
 
   wrenPopRoot(vm); // mainModule.
   wrenPopRoot(vm); // name.
@@ -295,10 +295,18 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
   }
 
   // Otherwise, try the built-in libraries.
-  #if WREN_USE_LIB_IO
-  fn = wrenBindIOForeignMethod(vm, className, signature);
-  if (fn != NULL) return fn;
-  #endif
+  if (strcmp(moduleName, "core") == 0)
+  {
+    #if WREN_USE_LIB_IO
+    fn = wrenBindIOForeignMethod(vm, className, signature);
+    if (fn != NULL) return fn;
+    #endif
+
+    #if WREN_USE_LIB_META
+    fn = wrenBindMetaForeignMethod(vm, className, signature);
+    if (fn != NULL) return fn;
+    #endif
+  }
 
   // TODO: Report a runtime error on failure to find it.
   return NULL;

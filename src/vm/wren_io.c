@@ -148,7 +148,7 @@ void wrenLoadIOLibrary(WrenVM* vm)
 WrenForeignMethodFn wrenBindIOForeignMethod(WrenVM* vm, const char* className,
                                             const char* signature)
 {
-  ASSERT(strcmp(className, "IO") == 0, "Should only have IO class.");
+  if (strcmp(className, "IO") != 0) return NULL;
   
   if (strcmp(signature, "writeString_(_)") == 0) return ioWriteString;
   if (strcmp(signature, "clock") == 0) return ioClock;
