@@ -39,6 +39,7 @@ import sys
 # To generate a baseline file, run this script with "--generate-baseline".
 
 WREN_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+WREN_BIN = os.path.join(WREN_DIR, 'bin')
 BENCHMARK_DIR = os.path.join(WREN_DIR, 'test', 'benchmark')
 
 # How many times to run a given benchmark.
@@ -78,7 +79,7 @@ BENCHMARK("map_string", r"""3645600""")
 BENCHMARK("string_equals", r"""3000000""")
 
 LANGUAGES = [
-  ("wren",           [os.path.join(WREN_DIR, 'wren')], ".wren"),
+  ("wren",           [os.path.join(WREN_BIN, 'wren')], ".wren"),
   ("lua",            ["lua"],                          ".lua"),
   ("luajit (-joff)", ["luajit", "-joff"],              ".lua"),
   ("python",         ["python"],                       ".py"),
@@ -88,20 +89,22 @@ LANGUAGES = [
 
 results = {}
 
+if sys.platform == 'win32':
+  GREEN = NORMAL = RED = YELLOW = ''
+else:
+  GREEN = '\033[32m'
+  NORMAL = '\033[0m'
+  RED = '\033[31m'
+  YELLOW = '\033[33m'
+
 def green(text):
-  if sys.platform == 'win32':
-    return text
-  return '\033[32m' + text + '\033[0m'
+  return GREEN + text + NORMAL
 
 def red(text):
-  if sys.platform == 'win32':
-    return text
-  return '\033[31m' + text + '\033[0m'
+  return RED + text + NORMAL
 
 def yellow(text):
-  if sys.platform == 'win32':
-    return text
-  return '\033[33m' + text + '\033[0m'
+  return YELLOW + text + NORMAL
 
 
 def get_score(time):
@@ -111,6 +114,20 @@ def get_score(time):
   to have benchmark results where faster = bigger number.
   """
   return 1000.0 / time
+
+
+def standard_deviation(times):
+  """
+  Calculates the standard deviation of a list of numbers.
+  """
+  mean = sum(times) / len(times)
+
+  # Sum the squares of the differences from the mean.
+  result = 0
+  for time in times:
+    result += (time - mean) ** 2
+
+  return math.sqrt(result / len(times))
 
 
 def run_trial(benchmark, language):
@@ -180,7 +197,10 @@ def run_benchmark_language(benchmark, language, benchmark_result):
     if ratio < 95:
       comparison = red(comparison)
 
-  print(" {:5.0f}  {:4.2f}s  {:s}".format(score, best, comparison))
+  print(" {:4.2f}s {:4.4f} {:s}".format(
+      best,
+      standard_deviation(times),
+      comparison))
 
   benchmark_result[language[0]] = {
     "desc": name,
@@ -191,7 +211,7 @@ def run_benchmark_language(benchmark, language, benchmark_result):
   return score
 
 
-def run_benchmark(benchmark, languages):
+def run_benchmark(benchmark, languages, graph):
   """Runs one benchmark for the given languages (or all of them)."""
 
   benchmark_result = {}
@@ -203,7 +223,7 @@ def run_benchmark(benchmark, languages):
       num_languages += 1
       run_benchmark_language(benchmark, language, benchmark_result)
 
-  if num_languages > 1:
+  if num_languages > 1 and graph:
     graph_results(benchmark_result)
 
 
@@ -300,6 +320,9 @@ def main():
   parser.add_argument("--generate-baseline",
       action="store_true",
       help="Generate a baseline file")
+  parser.add_argument("--graph",
+      action="store_true",
+      help="Display graph results.")
   parser.add_argument("-l", "--language",
       action="append",
       help="Which language(s) to run benchmarks for")
@@ -318,7 +341,7 @@ def main():
   # Run the benchmarks.
   for benchmark in BENCHMARKS:
     if benchmark[0] == args.benchmark or args.benchmark == "all":
-      run_benchmark(benchmark, args.language)
+      run_benchmark(benchmark, args.language, args.graph)
 
   if args.output_html:
     print_html()

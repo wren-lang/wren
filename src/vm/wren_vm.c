@@ -14,26 +14,23 @@
   #include "wren_io.h"
 #endif
 
+#if WREN_USE_LIB_META
+  #include "wren_meta.h"
+#endif
+
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   #include <time.h>
 #endif
 
-// The built-in reallocation function used when one is not provided by the
-// configuration.
-static void* defaultReallocate(void* memory, size_t oldSize, size_t newSize)
-{
-  return realloc(memory, newSize);
-}
-
 WrenVM* wrenNewVM(WrenConfiguration* configuration)
 {
-  WrenReallocateFn reallocate = defaultReallocate;
+  WrenReallocateFn reallocate = realloc;
   if (configuration->reallocateFn != NULL)
   {
     reallocate = configuration->reallocateFn;
   }
 
-  WrenVM* vm = (WrenVM*)reallocate(NULL, 0, sizeof(*vm));
+  WrenVM* vm = (WrenVM*)reallocate(NULL, sizeof(*vm));
   memset(vm, 0, sizeof(WrenVM));
 
   vm->reallocate = reallocate;
@@ -79,6 +76,9 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   wrenInitializeCore(vm);
   #if WREN_USE_LIB_IO
     wrenLoadIOLibrary(vm);
+  #endif
+  #if WREN_USE_LIB_META
+    wrenLoadMetaLibrary(vm);
   #endif
 
   return vm;
@@ -214,7 +214,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   if (newSize > 0 && vm->bytesAllocated > vm->nextGC) collectGarbage(vm);
 #endif
 
-  return vm->reallocate(memory, oldSize, newSize);
+  return vm->reallocate(memory, newSize);
 }
 
 // Captures the local variable [local] into an [Upvalue]. If that local is
