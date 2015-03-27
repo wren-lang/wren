@@ -221,10 +221,9 @@ value is `null`.
 
 ### Encapsulation
 
-All fields are *protected* in Wren&mdash;an object's fields can only be
-directly accessed from within methods defined on the object's class, or its
-superclasses. You cannot even access fields on another instance of your own
-class, unlike C++ and Java.
+All fields are *private* in Wren&mdash;an object's fields can only be directly
+accessed from within methods defined on the object's class. You cannot even
+access fields on another instance of your own class, unlike C++ and Java.
 
 If you want to make a property of an object visible, you need to define a
 getter to expose it:
