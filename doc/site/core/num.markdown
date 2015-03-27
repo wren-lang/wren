@@ -1,6 +1,21 @@
 ^title Num Class
 ^category core
 
+## Static Methods
+
+### Num.**fromString**(value)
+
+Attempts to parse `value` as a decimal literal and return it as an instance of
+`Num`. If the number cannot be parsed `null` will be returned.
+
+It is a runtime error if `value` is not a string.
+
+### Num.**pi**
+
+The value of π.
+
+## Methods
+
 ### **abs**
 
 The absolute value of the number.
@@ -131,14 +146,3 @@ from the beginning number to the ending number not including the ending number.
     IO.print(range.min)         // 1.2
     IO.print(range.max)         // 3.4
     IO.print(range.isInclusive) // false
-
-### Num.**fromString**(value)
-
-Attempts to parse `value` as a decimal literal and return it as an instance of
-`Num`. If the number cannot be parsed `null` will be returned.
-
-It is a runtime error if `value` is not a string.
-
-### Num.**pi**
-
-The value of π.

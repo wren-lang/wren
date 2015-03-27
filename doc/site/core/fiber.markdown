@@ -13,6 +13,8 @@ fiber is run. Does not immediately start running the fiber.
       IO.print("I won't get printed")
     }
 
+## Static Methods
+
 ### Fiber.**current**
 
 The currently executing fiber.
@@ -68,6 +70,8 @@ Similar to `Fiber.yield` but provides a value to return to the parent fiber's
     }
 
     IO.print(fiber.call()) // "value"
+
+## Methods
 
 ### **call**()
 

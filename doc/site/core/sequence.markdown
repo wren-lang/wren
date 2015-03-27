@@ -6,6 +6,8 @@ core [iterator protocol][] can extend this to get a number of helpful methods.
 
 [iterator protocol]: ../control-flow.html#the-iterator-protocol
 
+## Methods
+
 ### **all**(predicate)
 
 Tests whether all the elements in the sequence pass the `predicate`.

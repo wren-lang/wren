@@ -3,6 +3,8 @@
 
 Boolean values. There are two instances, `true` and `false`.
 
+## Methods
+
 ### **!** operator
 
 Returns the logical complement of the value.

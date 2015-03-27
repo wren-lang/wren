@@ -18,6 +18,8 @@ argument](../functions.html#block-arguments) to some other method.
 
 It is a runtime error if `function` is not a function.
 
+## Methods
+
 ### **arity**
 
 The number of arguments the function requires.

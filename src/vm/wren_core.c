@@ -1211,6 +1211,23 @@ DEF_PRIMITIVE(range_toString)
   RETURN_VAL(result);
 }
 
+DEF_PRIMITIVE(string_fromCodePoint)
+{
+  if (!validateInt(vm, args, 1, "Code point")) return PRIM_ERROR;
+
+  int codePoint = (int)AS_NUM(args[1]);
+  if (codePoint < 0)
+  {
+    RETURN_ERROR("Code point cannot be negative.");
+  }
+  else if (codePoint > 0x10ffff)
+  {
+    RETURN_ERROR("Code point cannot be greater than 0x10ffff.");
+  }
+
+  RETURN_VAL(wrenStringFromCodePoint(vm, (int)AS_NUM(args[1])));
+}
+
 DEF_PRIMITIVE(string_contains)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
@@ -1513,6 +1530,7 @@ void wrenInitializeCore(WrenVM* vm)
   wrenInterpret(vm, "", libSource);
 
   vm->stringClass = AS_CLASS(wrenFindVariable(vm, "String"));
+  PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
   PRIMITIVE(vm->stringClass, "+(_)", string_plus);
   PRIMITIVE(vm->stringClass, "[_]", string_subscript);
   PRIMITIVE(vm->stringClass, "contains(_)", string_contains);

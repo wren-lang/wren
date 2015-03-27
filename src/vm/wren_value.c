@@ -650,6 +650,19 @@ Value wrenNumToString(WrenVM* vm, double value)
   return wrenNewString(vm, buffer, length);
 }
 
+Value wrenStringFromCodePoint(WrenVM* vm, int value)
+{
+  int length = wrenUtf8NumBytes(value);
+  ASSERT(length != 0, "Value out of range.");
+
+  ObjString* string = allocateString(vm, length);
+
+  wrenUtf8Encode(value, (uint8_t*)string->value);
+  hashString(string);
+
+  return OBJ_VAL(string);
+}
+
 Value wrenStringFormat(WrenVM* vm, const char* format, ...)
 {
   va_list argList;

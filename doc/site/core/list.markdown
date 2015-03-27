@@ -5,6 +5,8 @@ Extends [Sequence](sequence.html).
 
 An indexable contiguous collection of elements. More details [here](../lists.html).
 
+## Methods
+
 ### **add**(item)
 
 Appends `item` to the end of the list.

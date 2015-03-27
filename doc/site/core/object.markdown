@@ -1,6 +1,8 @@
 ^title Object Class
 ^category core
 
+## Methods
+
 ### **!** operator
 
 Returns `false`, since most objects are considered [true](control-flow.html#truth).

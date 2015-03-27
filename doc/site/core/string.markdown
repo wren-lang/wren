@@ -31,6 +31,18 @@ on string *return* byte indices too. So, for example, this does what you want:
 In general, methods on strings will work in terms of code units if they can do
 so efficiently, and will otherwise deal in bytes.
 
+## Static Methods
+
+### String.**fromCodePoint**(codePoint)
+
+Creates a new string containing the UTF-8 encoding of `codePoint`.
+
+It is a runtime error if `codePoint` is not an integer between `0` and
+`0x10ffff`, inclusive.
+
+    :::dart
+    String.fromCodePoint(8225) // "‡"
+
 ## Methods
 
 ### **contains**(other)

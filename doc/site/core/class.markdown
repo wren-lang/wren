@@ -1,6 +1,8 @@
 ^title Class Class
 ^category core
 
+## Methods
+
 ### **name**
 
 The name of the class.

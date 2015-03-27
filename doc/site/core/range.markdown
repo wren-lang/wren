@@ -5,6 +5,8 @@
 
 Extends [Sequence](sequence.html).
 
+## Methods
+
 ### **from**
 
 **TODO**
