@@ -65,6 +65,13 @@ It is a runtime error if `sep` is not a string.
 
 Calls `join` with the empty string as the separator.
 
+### **list**
+
+Creates a [list](list.html) containing all the elements in the sequence.
+
+    :::dart
+    (1..3).list  // [1, 2, 3]
+
 ### **map**(transformation)
 
 Creates a new list by applying `transformation` to each element in the
