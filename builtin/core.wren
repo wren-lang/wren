@@ -26,21 +26,9 @@ class Sequence {
     return result
   }
 
-  map(f) {
-    var result = new List
-    for (element in this) {
-      result.add(f.call(element))
-    }
-    return result
-  }
+  map(transformation) { new MapSequence(this, transformation) }
 
-  where(f) {
-    var result = new List
-    for (element in this) {
-      if (f.call(element)) result.add(element)
-    }
-    return result
-  }
+  where(predicate) { new WhereSequence(this, predicate) }
 
   all(f) {
     for (element in this) {
@@ -98,6 +86,32 @@ class Sequence {
     }
     return result
   }
+}
+
+class MapSequence is Sequence {
+  new(seq, f) {
+    _seq = seq
+    _f = f
+  }
+
+  iterate(n) { _seq.iterate(n) }
+  iteratorValue(iterator) { _f.call(_seq.iteratorValue(iterator)) }
+}
+
+class WhereSequence is Sequence {
+  new(seq, f) {
+    _seq = seq
+    _f = f
+  }
+
+  iterate(n) {
+    while (n = _seq.iterate(n)) {
+      if (_f.call(_seq.iteratorValue(n))) break
+    }
+    return n
+  }
+
+  iteratorValue(iterator) { _seq.iteratorValue(iterator) }
 }
 
 class String is Sequence {

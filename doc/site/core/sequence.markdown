@@ -74,14 +74,13 @@ Creates a [list](list.html) containing all the elements in the sequence.
 
 ### **map**(transformation)
 
-Creates a new list by applying `transformation` to each element in the
-sequence.
+Creates a new sequence that applies the `transformation` to each element in the
+original sequence while it is iterated.
 
-Iterates over the sequence, passing each element to the function
-`transformation`. Generates a new list from the result of each of those calls.
+The `list` method can be used to turn the resulting sequence into a list.
 
     :::dart
-    [1, 2, 3].map {|n| n * 2} // [2, 4, 6].
+    [1, 2, 3].map {|n| n * 2}.list // [2, 4, 6].
 
 ### **reduce**(function)
 
@@ -95,10 +94,13 @@ Similar to above, but uses `seed` for the initial value of the accumulator. If t
 
 ### **where**(predicate)
 
-Produces a new list containing only the elements in the sequence that pass the
-`predicate`.
+Creates a new sequence containing only the elements from the original sequence
+that pass the `predicate`.
 
-Iterates over the sequence, passing each element to the function `predicate`.
-If it returns `true`, adds the element to the result list.
+During iteration, each element in the original sequence is passed to the
+function `predicate`. If it returns `false`, the element is skipped.
 
-    (1..10).where {|n| n % 2 == 1} // [1, 3, 5, 7, 9].
+The `list` method can be used to turn the resulting sequence into a list.
+
+    :::dart
+    (1..10).where {|n| n % 2 == 1}.list // [1, 3, 5, 7, 9].
