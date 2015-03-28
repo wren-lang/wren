@@ -81,14 +81,18 @@ from other languages:</p>
 
 <p>Numbers are instances of the <a href="core/num.html">Num</a> class.</p>
 <h2>Strings <a href="#strings" name="strings" class="header-anchor">#</a></h2>
-<p>Strings are chunks of text stored as UTF-8. Their class is
-<a href="core/string.html">String</a>. String literals are surrounded in double quotes:</p>
+<p>A string is an array of bytes. Typically, they store characters encoded in
+UTF-8, but you can put any byte values in there, even zero or invalid UTF-8
+sequences. (You might have some trouble <em>printing</em> the latter to your terminal,
+though.)</p>
+<p>String literals are surrounded in double quotes:</p>
 <div class="codehilite"><pre><span class="s2">&quot;hi there&quot;</span>
 </pre></div>
 
 
 <p>A handful of escape characters are supported:</p>
-<div class="codehilite"><pre><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="c1">// A double quote character.</span>
+<div class="codehilite"><pre><span class="s2">&quot;</span><span class="err">\</span><span class="s2">0&quot;</span> <span class="c1">// The NUL byte: 0.</span>
+<span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="c1">// A double quote character.</span>
 <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="c1">// A backslash.</span>
 <span class="s2">&quot;</span><span class="se">\a</span><span class="s2">&quot;</span> <span class="c1">// Alarm beep. (Who uses this?)</span>
 <span class="s2">&quot;</span><span class="se">\b</span><span class="s2">&quot;</span> <span class="c1">// Backspace.</span>
@@ -100,7 +104,17 @@ from other languages:</p>
 </pre></div>
 
 
-<p>A <code>\u</code> followed by four hex digits can be used to specify a Unicode code point.</p>
+<p>A <code>\u</code> followed by four hex digits can be used to specify a Unicode code point:</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\u0041\u0b83\u00DE</span><span class="s2">&quot;</span><span class="p">)</span> <span class="c1">// &quot;AஃÞ&quot;</span>
+</pre></div>
+
+
+<p>A <code>\x</code> followed by two hex digits specifies a single unencoded byte:</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\x48\x69\x2e</span><span class="s">&quot;</span><span class="p">)</span> <span class="c1">// &quot;Hi.&quot;</span>
+</pre></div>
+
+
+<p>Strings are objects of class <a href="core/string.html">String</a>.</p>
 <h2>Ranges <a href="#ranges" name="ranges" class="header-anchor">#</a></h2>
 <p>A range is a little object that represents a consecutive range of integers.
 They don't have their own dedicated literal syntax. Instead, the number class

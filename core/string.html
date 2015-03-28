@@ -69,7 +69,54 @@ on string <em>return</em> byte indices too. So, for example, this does what you 
 
 <p>In general, methods on strings will work in terms of code units if they can do
 so efficiently, and will otherwise deal in bytes.</p>
+<h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
+<h3>String.<strong>fromCodePoint</strong>(codePoint) <a href="#stringfromcodepoint(codepoint)" name="stringfromcodepoint(codepoint)" class="header-anchor">#</a></h3>
+<p>Creates a new string containing the UTF-8 encoding of <code>codePoint</code>.</p>
+<p>It is a runtime error if <code>codePoint</code> is not an integer between <code>0</code> and
+<code>0x10ffff</code>, inclusive.</p>
+<div class="codehilite"><pre><span class="kt">String</span><span class="p">.</span><span class="n">fromCodePoint</span><span class="p">(</span><span class="m">8225</span><span class="p">)</span> <span class="c1">// &quot;‡&quot;</span>
+</pre></div>
+
+
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
+<h3><strong>byteAt</strong>(index) <a href="#byteat(index)" name="byteat(index)" class="header-anchor">#</a></h3>
+<p>Gets the value of the byte at byte offset <code>index</code> in the string.</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">.</span><span class="n">byteAt</span><span class="p">(</span><span class="m">1</span><span class="p">))</span> <span class="c1">// 101, for &quot;e&quot;.</span>
+</pre></div>
+
+
+<p>If the index is negative, it counts backwards from the end of the string.</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">.</span><span class="n">byteAt</span><span class="p">(</span><span class="o">-</span><span class="m">4</span><span class="p">))</span> <span class="c1">// 101, for &quot;e&quot;.</span>
+</pre></div>
+
+
+<p>It is a runtime error if <code>index</code> is not an integer or is out of bounds.</p>
+<h3><strong>bytes</strong> <a href="#bytes" name="bytes" class="header-anchor">#</a></h3>
+<p>Gets a <a href="sequence.html"><code>Sequence</code></a> that can be used to access the raw bytes of
+the string and ignore any UTF-8 encoding. In addition to the normal sequence
+methods, the returned object also has a subscript operator that can be used to
+directly index bytes.</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">.</span><span class="n">bytes</span><span class="p">[</span><span class="m">1</span><span class="p">])</span> <span class="c1">// 101, for &quot;e&quot;.</span>
+</pre></div>
+
+
+<h3><strong>codePointAt</strong>(index) <a href="#codepointat(index)" name="codepointat(index)" class="header-anchor">#</a></h3>
+<p>Gets the value of the UTF-8 encoded code point starting at byte offset <code>index</code>
+in the string. Unlike the subscript operator, this returns the code point as a
+number.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;(ᵔᴥᵔ)&quot;</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="p">.</span><span class="n">codePointAt</span><span class="p">(</span><span class="m">0</span><span class="p">))</span> <span class="c1">// 40, for &quot;(&quot;.</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="p">.</span><span class="n">codePointAt</span><span class="p">(</span><span class="m">4</span><span class="p">))</span> <span class="c1">// 7461, for &quot;ᴥ&quot;.</span>
+</pre></div>
+
+
+<p>If the byte at <code>index</code> does not begin a valid UTF-8 sequence, or the end of the
+string is reached before the sequence is complete, returns <code>-1</code>.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;(ᵔᴥᵔ)&quot;</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="p">.</span><span class="n">codePointAt</span><span class="p">(</span><span class="m">2</span><span class="p">))</span> <span class="c1">// -1, in the middle of &quot;ᵔ&quot;.</span>
+</pre></div>
+
+
 <h3><strong>contains</strong>(other) <a href="#contains(other)" name="contains(other)" class="header-anchor">#</a></h3>
 <p>Checks if <code>other</code> is a substring of the string.</p>
 <p>It is a runtime error if <code>other</code> is not a string.</p>

@@ -45,6 +45,7 @@
     <h1>Sequence Class</h1>
     <p>An abstract base class for any iterable object. Any class that implements the
 core <a href="../control-flow.html#the-iterator-protocol">iterator protocol</a> can extend this to get a number of helpful methods.</p>
+<h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>all</strong>(predicate) <a href="#all(predicate)" name="all(predicate)" class="header-anchor">#</a></h3>
 <p>Tests whether all the elements in the sequence pass the <code>predicate</code>.</p>
 <p>Iterates over the sequence, passing each element to the function <code>predicate</code>.
@@ -62,6 +63,21 @@ If its return value evaluates to <code>true</code>, stops iterating and returns 
 Otherwise, returns <code>false</code>.</p>
 <div class="codehilite"><pre><span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">any</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="m">1</span><span class="p">}</span> <span class="c1">// False.</span>
 <span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">any</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="m">2</span><span class="p">}</span> <span class="c1">// True.</span>
+</pre></div>
+
+
+<h3><strong>contains</strong>(element) <a href="#contains(element)" name="contains(element)" class="header-anchor">#</a></h3>
+<p>Returns whether the sequence contains any element equal to the given element.</p>
+<h3><strong>count</strong> <a href="#count" name="count" class="header-anchor">#</a></h3>
+<p>The number of elements in the sequence.</p>
+<p>Unless a more efficient override is available, this will iterate over the
+sequence in order to determine how many elements it contains.</p>
+<h3><strong>count</strong>(predicate) <a href="#count(predicate)" name="count(predicate)" class="header-anchor">#</a></h3>
+<p>Returns the number of elements in the sequence that pass the <code>predicate</code>.</p>
+<p>Iterates over the sequence, passing each element to the function <code>predicate</code>
+and counting the number of times the returned value evaluates to <code>true</code>.</p>
+<div class="codehilite"><pre><span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">count</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="m">2</span><span class="p">}</span> <span class="c1">// 1.</span>
+<span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">count</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="m">4</span><span class="p">}</span> <span class="c1">// 3.</span>
 </pre></div>
 
 

@@ -92,7 +92,8 @@ a {
   outline: none; }
 
 main {
-  padding-top: 12px; }
+  padding-top: 12px;
+  float: left; }
 
 a:hover {
   color: #143352; }

@@ -121,20 +121,20 @@ use <code>add</code> to append a single item to the end:</p>
 
 
 <p>You can insert a new element at a specific position using <code>insert</code>:</p>
-<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;soul patch&quot;</span><span class="p">,</span> <span class="m">2</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="m">2</span><span class="p">,</span> <span class="s2">&quot;soul patch&quot;</span><span class="p">)</span>
 </pre></div>
 
 
-<p>The first argument is the value to insert, and the second is the index to
-insert it at. All elements following the inserted one will be pushed down to
+<p>The first argument is the index to insert at, and the second is the value to
+insert. All elements following the inserted one will be pushed down to
 make room for it.</p>
 <p>It's valid to "insert" after the last element in the list, but only <em>right</em>
 after it. Like other methods, you can use a negative index to count from the
 back. Doing so counts back from the size of the list <em>after</em> it's grown by one:</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
-<span class="n">letters</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="m">3</span><span class="p">)</span>   <span class="c1">// OK: inserts at end.</span>
+<span class="n">letters</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="m">3</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">)</span>   <span class="c1">// OK: inserts at end.</span>
 <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>        <span class="c1">// [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;]</span>
-<span class="n">letters</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;e&quot;</span><span class="p">,</span> <span class="o">-</span><span class="m">2</span><span class="p">)</span>  <span class="c1">// Counts back from size after insert.</span>
+<span class="n">letters</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="m">2</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">)</span>  <span class="c1">// Counts back from size after insert.</span>
 <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>        <span class="c1">// [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;e&quot;, &quot;d&quot;]</span>
 </pre></div>
 
