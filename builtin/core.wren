@@ -90,6 +90,14 @@ class Sequence {
 
     return result
   }
+
+  list {
+    var result = new List
+    for (element in this) {
+      result.add(element)
+    }
+    return result
+  }
 }
 
 class String is Sequence {
