@@ -1440,14 +1440,14 @@ static void patchJump(Compiler* compiler, int offset)
 
 // Parses a block body, after the initial "{" has been consumed.
 //
-// Returns true if it was a statement body, false if it was an expression body.
-// (More precisely, returns false if a value was left on the stack. An empty
-// block returns true.)
+// Returns true if it was a expression body, false if it was an statement body.
+// (More precisely, returns true if a value was left on the stack. An empty
+// block returns false.)
 static bool finishBlock(Compiler* compiler)
 {
   // Empty blocks do nothing.
   if (match(compiler, TOKEN_RIGHT_BRACE)) {
-    return true;
+    return false;
   }
 
   // If there's no line after the "{", it's a single-expression body.
@@ -1455,12 +1455,12 @@ static bool finishBlock(Compiler* compiler)
   {
     expression(compiler);
     consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' at end of block.");
-    return false;
+    return true;
   }
 
   // Empty blocks (with just a newline inside) do nothing.
   if (match(compiler, TOKEN_RIGHT_BRACE)) {
-    return true;
+    return false;
   }
 
   // Compile the definition list.
@@ -1474,23 +1474,23 @@ static bool finishBlock(Compiler* compiler)
     consumeLine(compiler, "Expect newline after statement.");
   }
   while (!match(compiler, TOKEN_RIGHT_BRACE));
-  return true;
+  return false;
 }
 
 // Parses a method or function body, after the initial "{" has been consumed.
 static void finishBody(Compiler* compiler, bool isConstructor)
 {
-  bool isStatementBody = finishBlock(compiler);
+  bool isExpressionBody = finishBlock(compiler);
 
   if (isConstructor)
   {
     // If the constructor body evaluates to a value, discard it.
-    if (!isStatementBody) emit(compiler, CODE_POP);
+    if (isExpressionBody) emit(compiler, CODE_POP);
 
     // The receiver is always stored in the first local slot.
     emit(compiler, CODE_LOAD_LOCAL_0);
   }
-  else if (isStatementBody)
+  else if (!isExpressionBody)
   {
     // Implicitly return null in statement bodies.
     emit(compiler, CODE_NULL);
@@ -2517,7 +2517,7 @@ void block(Compiler* compiler)
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
     pushScope(compiler);
-    if (!finishBlock(compiler))
+    if (finishBlock(compiler))
     {
       // Block was an expression, so discard it.
       emit(compiler, CODE_POP);
