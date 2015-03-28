@@ -49,8 +49,8 @@ core <a href="../control-flow.html#the-iterator-protocol">iterator protocol</a> 
 <h3><strong>all</strong>(predicate) <a href="#all(predicate)" name="all(predicate)" class="header-anchor">#</a></h3>
 <p>Tests whether all the elements in the sequence pass the <code>predicate</code>.</p>
 <p>Iterates over the sequence, passing each element to the function <code>predicate</code>.
-If its return value evaluates to <code>false</code>, stops iterating and returns <code>false</code>.
-Otherwise, returns <code>true</code>.</p>
+If it returns something <a href="../control-flow.html#truth">false</a>, stops iterating
+and returns the value. Otherwise, returns <code>true</code>.</p>
 <div class="codehilite"><pre><span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">all</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="m">2</span><span class="p">}</span> <span class="c1">// False.</span>
 <span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">all</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="m">4</span><span class="p">}</span> <span class="c1">// True.</span>
 </pre></div>
@@ -59,8 +59,8 @@ Otherwise, returns <code>true</code>.</p>
 <h3><strong>any</strong>(predicate) <a href="#any(predicate)" name="any(predicate)" class="header-anchor">#</a></h3>
 <p>Tests whether any element in the sequence passes the <code>predicate</code>.</p>
 <p>Iterates over the sequence, passing each element to the function <code>predicate</code>.
-If its return value evaluates to <code>true</code>, stops iterating and returns <code>true</code>.
-Otherwise, returns <code>false</code>.</p>
+If it returns something <a href="../control-flow.html#truth">true</a>, stops iterating and
+returns that value. Otherwise, returns <code>false</code>.</p>
 <div class="codehilite"><pre><span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">any</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="m">1</span><span class="p">}</span> <span class="c1">// False.</span>
 <span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">any</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="m">2</span><span class="p">}</span> <span class="c1">// True.</span>
 </pre></div>
@@ -87,6 +87,12 @@ elements in the list is concatenated with intervening occurrences of <code>sep</
 <p>It is a runtime error if <code>sep</code> is not a string.</p>
 <h3><strong>join</strong> <a href="#join" name="join" class="header-anchor">#</a></h3>
 <p>Calls <code>join</code> with the empty string as the separator.</p>
+<h3><strong>list</strong> <a href="#list" name="list" class="header-anchor">#</a></h3>
+<p>Creates a <a href="list.html">list</a> containing all the elements in the sequence.</p>
+<div class="codehilite"><pre><span class="p">(</span><span class="m">1.</span><span class="p">.</span><span class="m">3</span><span class="p">).</span><span class="n">list</span>  <span class="c1">// [1, 2, 3]</span>
+</pre></div>
+
+
 <h3><strong>map</strong>(transformation) <a href="#map(transformation)" name="map(transformation)" class="header-anchor">#</a></h3>
 <p>Creates a new list by applying <code>transformation</code> to each element in the
 sequence.</p>
