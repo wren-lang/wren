@@ -13,8 +13,8 @@ core [iterator protocol][] can extend this to get a number of helpful methods.
 Tests whether all the elements in the sequence pass the `predicate`.
 
 Iterates over the sequence, passing each element to the function `predicate`.
-If its return value evaluates to `false`, stops iterating and returns `false`.
-Otherwise, returns `true`.
+If it returns something [false](../control-flow.html#truth), stops iterating
+and returns the value. Otherwise, returns `true`.
 
     :::dart
     [1, 2, 3].all {|n| n > 2} // False.
@@ -25,8 +25,8 @@ Otherwise, returns `true`.
 Tests whether any element in the sequence passes the `predicate`.
 
 Iterates over the sequence, passing each element to the function `predicate`.
-If its return value evaluates to `true`, stops iterating and returns `true`.
-Otherwise, returns `false`.
+If it returns something [true](../control-flow.html#truth), stops iterating and
+returns that value. Otherwise, returns `false`.
 
     :::dart
     [1, 2, 3].any {|n| n < 1} // False.
