@@ -50,8 +50,8 @@ strings like a directly indexable array of characters. Once other characters
 get involved, it's important to understand the distinction.</p>
 <p>In UTF-8, a single Unicode code point (very roughly a single "character") may
 be encoded as one or more bytes. This means you can't directly index by code
-point. There's no way to find, say, the fifth code unit in a string without
-walking the string from the beginning and counting them as you go.</p>
+point. There's no way to jump directly to, say, the fifth code unit in a string
+without walking the string from the beginning and counting them as you go.</p>
 <p>Because counting code units is relatively slow, string methods generally index
 by <em>byte</em>, not <em>code unit</em>. When you do:</p>
 <div class="codehilite"><pre><span class="n">someString</span><span class="p">[</span><span class="m">3</span><span class="p">]</span>
@@ -67,17 +67,17 @@ on string <em>return</em> byte indices too. So, for example, this does what you 
 </pre></div>
 
 
-<p>In general, methods on strings will work in terms of code units if they can do
-so efficiently, and will otherwise deal in bytes.</p>
+<p>In general, methods on strings work in terms of code units if they can do so
+efficiently, and otherwise deal in bytes.</p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3>String.<strong>fromCodePoint</strong>(codePoint) <a href="#stringfromcodepoint(codepoint)" name="stringfromcodepoint(codepoint)" class="header-anchor">#</a></h3>
 <p>Creates a new string containing the UTF-8 encoding of <code>codePoint</code>.</p>
-<p>It is a runtime error if <code>codePoint</code> is not an integer between <code>0</code> and
-<code>0x10ffff</code>, inclusive.</p>
 <div class="codehilite"><pre><span class="kt">String</span><span class="p">.</span><span class="n">fromCodePoint</span><span class="p">(</span><span class="m">8225</span><span class="p">)</span> <span class="c1">// &quot;‡&quot;</span>
 </pre></div>
 
 
+<p>It is a runtime error if <code>codePoint</code> is not an integer between <code>0</code> and
+<code>0x10ffff</code>, inclusive.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>byteAt</strong>(index) <a href="#byteat(index)" name="byteat(index)" class="header-anchor">#</a></h3>
 <p>Gets the value of the byte at byte offset <code>index</code> in the string.</p>
