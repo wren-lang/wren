@@ -138,7 +138,19 @@ static const char* libSource =
 "  }\n"
 "}\n"
 "\n"
-"class String is Sequence {}\n"
+"class String is Sequence {\n"
+"  bytes { new StringByteSequence(this) }\n"
+"}\n"
+"\n"
+"class StringByteSequence is Sequence {\n"
+"  new(string) {\n"
+"    _string = string\n"
+"  }\n"
+"\n"
+"  [index] { _string.byteAt(index) }\n"
+"  iterate(iterator) { _string.iterateByte_(iterator) }\n"
+"  iteratorValue(iterator) { _string.byteAt(iterator) }\n"
+"}\n"
 "\n"
 "class List is Sequence {\n"
 "  addAll(other) {\n"
@@ -307,7 +319,7 @@ static uint32_t calculateRange(WrenVM* vm, Value* args, ObjRange* range,
                                uint32_t* length, int* step)
 {
   *step = 0;
-  
+
   // Corner case: an empty range at zero is allowed on an empty sequence.
   // This way, list[0..-1] and list[0...list.count] can be used to copy a list
   // even when empty.
@@ -1225,7 +1237,33 @@ DEF_PRIMITIVE(string_fromCodePoint)
     RETURN_ERROR("Code point cannot be greater than 0x10ffff.");
   }
 
-  RETURN_VAL(wrenStringFromCodePoint(vm, (int)AS_NUM(args[1])));
+  RETURN_VAL(wrenStringFromCodePoint(vm, codePoint));
+}
+
+DEF_PRIMITIVE(string_byteAt)
+{
+  ObjString* string = AS_STRING(args[0]);
+
+  uint32_t index = validateIndex(vm, args, string->length, 1, "Index");
+  if (index == UINT32_MAX) return PRIM_ERROR;
+
+  RETURN_NUM((uint8_t)string->value[index]);
+}
+
+DEF_PRIMITIVE(string_codePointAt)
+{
+  ObjString* string = AS_STRING(args[0]);
+
+  uint32_t index = validateIndex(vm, args, string->length, 1, "Index");
+  if (index == UINT32_MAX) return PRIM_ERROR;
+
+  // If we are in the middle of a UTF-8 sequence, indicate that.
+  const uint8_t* bytes = (uint8_t*)string->value;
+  if ((bytes[index] & 0xc0) == 0x80) RETURN_NUM(-1);
+
+  // Decode the UTF-8 sequence.
+  RETURN_NUM(wrenUtf8Decode((uint8_t*)string->value + index,
+                            string->length - index));
 }
 
 DEF_PRIMITIVE(string_contains)
@@ -1290,6 +1328,29 @@ DEF_PRIMITIVE(string_iterate)
     index++;
     if (index >= string->length) RETURN_FALSE;
   } while ((string->value[index] & 0xc0) == 0x80);
+
+  RETURN_NUM(index);
+}
+
+DEF_PRIMITIVE(string_iterateByte)
+{
+  ObjString* string = AS_STRING(args[0]);
+
+  // If we're starting the iteration, return the first index.
+  if (IS_NULL(args[1]))
+  {
+    if (string->length == 0) RETURN_FALSE;
+    RETURN_NUM(0);
+  }
+
+  if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
+
+  if (AS_NUM(args[1]) < 0) RETURN_FALSE;
+  uint32_t index = (uint32_t)AS_NUM(args[1]);
+
+  // Advance to the next byte.
+  index++;
+  if (index >= string->length) RETURN_FALSE;
 
   RETURN_NUM(index);
 }
@@ -1533,11 +1594,14 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
   PRIMITIVE(vm->stringClass, "+(_)", string_plus);
   PRIMITIVE(vm->stringClass, "[_]", string_subscript);
+  PRIMITIVE(vm->stringClass, "byteAt(_)", string_byteAt);
+  PRIMITIVE(vm->stringClass, "codePointAt(_)", string_codePointAt);
   PRIMITIVE(vm->stringClass, "contains(_)", string_contains);
   PRIMITIVE(vm->stringClass, "count", string_count);
   PRIMITIVE(vm->stringClass, "endsWith(_)", string_endsWith);
   PRIMITIVE(vm->stringClass, "indexOf(_)", string_indexOf);
   PRIMITIVE(vm->stringClass, "iterate(_)", string_iterate);
+  PRIMITIVE(vm->stringClass, "iterateByte_(_)", string_iterateByte);
   PRIMITIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
   PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
   PRIMITIVE(vm->stringClass, "toString", string_toString);

@@ -90,4 +90,8 @@ int wrenUtf8NumBytes(int value);
 // enough to hold the encoded result.
 void wrenUtf8Encode(int value, uint8_t* bytes);
 
+// Decodes the UTF-8 sequence in [bytes] (which has max [length]), returning
+// the code point.
+int wrenUtf8Decode(const uint8_t* bytes, uint32_t length);
+
 #endif

@@ -622,15 +622,15 @@ static void addStringChar(Parser* parser, char c)
   wrenByteBufferWrite(parser->vm, &parser->string, c);
 }
 
-// Reads a four hex digit Unicode escape sequence in a string literal.
-static void readUnicodeEscape(Parser* parser)
+// Reads [digits] hex digits in a string literal and returns their number value.
+static int readHexEscape(Parser* parser, int digits, const char* description)
 {
   int value = 0;
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < digits; i++)
   {
     if (peekChar(parser) == '"' || peekChar(parser) == '\0')
     {
-      lexError(parser, "Incomplete Unicode escape sequence.");
+      lexError(parser, "Incomplete %s escape sequence.", description);
 
       // Don't consume it if it isn't expected. Keeps us from reading past the
       // end of an unterminated string.
@@ -641,12 +641,20 @@ static void readUnicodeEscape(Parser* parser)
     int digit = readHexDigit(parser);
     if (digit == -1)
     {
-      lexError(parser, "Invalid Unicode escape sequence.");
+      lexError(parser, "Invalid %s escape sequence.", description);
       break;
     }
 
     value = (value * 16) | digit;
   }
+
+  return value;
+}
+
+// Reads a four hex digit Unicode escape sequence in a string literal.
+static void readUnicodeEscape(Parser* parser)
+{
+  int value = readHexEscape(parser, 4, "Unicode");
 
   // Grow the buffer enough for the encoded result.
   int numBytes = wrenUtf8NumBytes(value);
@@ -696,9 +704,13 @@ static void readString(Parser* parser)
         case 'n':  addStringChar(parser, '\n'); break;
         case 'r':  addStringChar(parser, '\r'); break;
         case 't':  addStringChar(parser, '\t'); break;
-        case 'v':  addStringChar(parser, '\v'); break;
         case 'u':  readUnicodeEscape(parser); break;
           // TODO: 'U' for 8 octet Unicode escapes.
+        case 'v':  addStringChar(parser, '\v'); break;
+        case 'x':
+          addStringChar(parser, (uint8_t)readHexEscape(parser, 2, "byte"));
+          break;
+
         default:
           lexError(parser, "Invalid escape character '%c'.",
                    *(parser->currentChar - 1));

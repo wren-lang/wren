@@ -30,8 +30,12 @@ Numbers are instances of the [Num](core/num.html) class.
 
 ## Strings
 
-Strings are chunks of text stored as UTF-8. Their class is
-[String](core/string.html). String literals are surrounded in double quotes:
+A string is an array of bytes. Typically, they store characters encoded in
+UTF-8, but you can put any byte values in there, even zero or invalid UTF-8
+sequences. (You might have some trouble *printing* the latter to your terminal,
+though.)
+
+String literals are surrounded in double quotes:
 
     :::dart
     "hi there"
@@ -39,6 +43,7 @@ Strings are chunks of text stored as UTF-8. Their class is
 A handful of escape characters are supported:
 
     :::dart
+    "\0" // The NUL byte: 0.
     "\"" // A double quote character.
     "\\" // A backslash.
     "\a" // Alarm beep. (Who uses this?)
@@ -49,7 +54,16 @@ A handful of escape characters are supported:
     "\t" // Tab.
     "\v" // Vertical tab.
 
-A `\u` followed by four hex digits can be used to specify a Unicode code point.
+A `\u` followed by four hex digits can be used to specify a Unicode code point:
+
+    :::dart
+    IO.print("\u0041\u0b83\u00DE") // "AஃÞ"
+
+A `\x` followed by two hex digits specifies a single unencoded byte:
+
+    IO.print("\x48\x69\x2e") // "Hi."
+
+Strings are objects of class [String](core/string.html).
 
 ## Ranges
 

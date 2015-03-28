@@ -45,6 +45,48 @@ It is a runtime error if `codePoint` is not an integer between `0` and
 
 ## Methods
 
+### **byteAt**(index)
+
+Gets the value of the byte at byte offset `index` in the string.
+
+    :::dart
+    IO.print("hello".byteAt(1)) // 101, for "e".
+
+If the index is negative, it counts backwards from the end of the string.
+
+    :::dart
+    IO.print("hello".byteAt(-4)) // 101, for "e".
+
+It is a runtime error if `index` is not an integer or is out of bounds.
+
+### **bytes**
+
+Gets a [`Sequence`](sequence.html) that can be used to access the raw bytes of
+the string and ignore any UTF-8 encoding. In addition to the normal sequence
+methods, the returned object also has a subscript operator that can be used to
+directly index bytes.
+
+    :::dart
+    IO.print("hello".bytes[1]) // 101, for "e".
+
+### **codePointAt**(index)
+
+Gets the value of the UTF-8 encoded code point starting at byte offset `index`
+in the string. Unlike the subscript operator, this returns the code point as a
+number.
+
+    :::dart
+    var string = "(ᵔᴥᵔ)"
+    IO.print(string.codePointAt(0)) // 40, for "(".
+    IO.print(string.codePointAt(4)) // 7461, for "ᴥ".
+
+If the byte at `index` does not begin a valid UTF-8 sequence, or the end of the
+string is reached before the sequence is complete, returns `-1`.
+
+    :::dart
+    var string = "(ᵔᴥᵔ)"
+    IO.print(string.codePointAt(2)) // -1, in the middle of "ᵔ".
+
 ### **contains**(other)
 
 Checks if `other` is a substring of the string.
