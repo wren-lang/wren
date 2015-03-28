@@ -655,8 +655,6 @@ static bool runInterpreter(WrenVM* vm)
 
   #if WREN_COMPUTED_GOTO
 
-  // Note that the order of instructions here must exacly match the Code enum
-  // in wren_vm.h or horrendously bad things happen.
   static void* dispatchTable[] = {
     #define OPCODE(name) &&code_##name,
     #include "wren_opcodes.h"
