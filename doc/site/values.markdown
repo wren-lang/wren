@@ -63,7 +63,7 @@ A `\x` followed by two hex digits specifies a single unencoded byte:
 
     IO.print("\x48\x69\x2e") // "Hi."
 
-Strings are objects of class [String](core/string.html).
+Strings are instances of class [String](core/string.html).
 
 ## Ranges
 
@@ -92,7 +92,7 @@ example:
     var slice = list[1..3]
     IO.print(slice) // ["b", "c", "d"]
 
-Their class is [Range](core/range.html)
+Their class is [Range](core/range.html).
 
 ## Null
 
