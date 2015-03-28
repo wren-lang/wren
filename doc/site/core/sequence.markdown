@@ -54,6 +54,13 @@ and counting the number of times the returned value evaluates to `true`.
     [1, 2, 3].count {|n| n > 2} // 1.
     [1, 2, 3].count {|n| n < 4} // 3.
 
+### **each**(function)
+
+Iterates over the sequence, passing each element to the given `function`.
+
+    :::dart
+    ["one", "two", "three"].each {|word| IO.print(word) }
+
 ### **join**(sep)
 
 Returns a string representation of the list. The string representations of the

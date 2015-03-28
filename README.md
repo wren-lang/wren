@@ -13,7 +13,7 @@ class Wren {
 }
 
 var adjectives = new Fiber {
-  ["small", "clean", "fast"].map {|word| Fiber.yield(word) }
+  ["small", "clean", "fast"].each {|word| Fiber.yield(word) }
 }
 
 while (!adjectives.isDone) IO.print(adjectives.call())
