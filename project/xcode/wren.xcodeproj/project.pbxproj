@@ -50,6 +50,7 @@
 		29205CA61AB4E65E0073018D /* wren_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_utils.h; path = ../../src/vm/wren_utils.h; sourceTree = "<group>"; };
 		29205CA71AB4E65E0073018D /* wren_value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_value.h; path = ../../src/vm/wren_value.h; sourceTree = "<group>"; };
 		29205CA81AB4E65E0073018D /* wren_vm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_vm.h; path = ../../src/vm/wren_vm.h; sourceTree = "<group>"; };
+		296371B31AC713D000079FDA /* wren_opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_opcodes.h; path = ../../src/vm/wren_opcodes.h; sourceTree = "<group>"; };
 		29AB1F061816E3AD004B501E /* wren */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wren; sourceTree = BUILT_PRODUCTS_DIR; };
 		29C8A92E1AB71C1C00DEC81D /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = io.c; path = ../../src/cli/io.c; sourceTree = "<group>"; };
 		29C8A9301AB71C3300DEC81D /* io.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../../src/cli/io.h; sourceTree = "<group>"; };
@@ -84,6 +85,7 @@
 				29205C951AB4E6430073018D /* wren_io.c */,
 				29DE39521AC3A50A00987D41 /* wren_meta.h */,
 				29DE39511AC3A50A00987D41 /* wren_meta.c */,
+				296371B31AC713D000079FDA /* wren_opcodes.h */,
 				29205CA61AB4E65E0073018D /* wren_utils.h */,
 				29205C961AB4E6430073018D /* wren_utils.c */,
 				29205CA71AB4E65E0073018D /* wren_value.h */,
