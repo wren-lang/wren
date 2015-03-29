@@ -1432,24 +1432,23 @@ DEF_PRIMITIVE(string_subscript)
   RETURN_ERROR("Subscript ranges for strings are not implemented yet.");
 }
 
-static ObjClass* defineSingleClass(WrenVM* vm, const char* name)
-{
-  ObjString* nameString = AS_STRING(wrenStringFormat(vm, "$", name));
-  wrenPushRoot(vm, (Obj*)nameString);
-
-  ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
-  wrenDefineVariable(vm, NULL, name, nameString->length, OBJ_VAL(classObj));
-
-  wrenPopRoot(vm);
-  return classObj;
-}
-
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
   ObjString* nameString = AS_STRING(wrenStringFormat(vm, "$", name));
   wrenPushRoot(vm, (Obj*)nameString);
 
-  ObjClass* classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
+  ObjClass* classObj;
+  // If "Object" and "Class" classes are not defined in the vm yet then define
+  // a "raw" class (a class without class or superclass).
+  if (vm->classClass == NULL)
+  {
+    classObj = wrenNewSingleClass(vm, 0, nameString);
+  }
+  else
+  {
+    classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
+  }
+     
   wrenDefineVariable(vm, NULL, name, nameString->length, OBJ_VAL(classObj));
 
   wrenPopRoot(vm);
@@ -1460,7 +1459,7 @@ void wrenInitializeCore(WrenVM* vm)
 {
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass and an unusual metaclass (Class).
-  vm->objectClass = defineSingleClass(vm, "Object");
+  vm->objectClass = defineClass(vm, "Object");
   PRIMITIVE(vm->objectClass, "!", object_not);
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
@@ -1471,7 +1470,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   // Now we can define Class, which is a subclass of Object, but Object's
   // metaclass.
-  vm->classClass = defineSingleClass(vm, "Class");
+  vm->classClass = defineClass(vm, "Class");
 
   // Now that Object and Class are defined, we can wire them up to each other.
   wrenBindSuperclass(vm, vm->classClass, vm->objectClass);
