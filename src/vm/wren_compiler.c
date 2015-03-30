@@ -1347,7 +1347,7 @@ static ObjFn* endCompiler(Compiler* compiler,
   wrenPopRoot(compiler->parser->vm);
 
   #if WREN_DEBUG_DUMP_COMPILED_CODE
-    wrenDebugPrintCode(compiler->parser->vm, fn);
+    wrenDumpCode(compiler->parser->vm, fn);
   #endif
 
   return fn;
