@@ -167,6 +167,7 @@ def run_benchmark_language(benchmark, language, benchmark_result):
 
   times = []
   for i in range(0, NUM_TRIALS):
+    sys.stdout.flush()
     time = run_trial(benchmark, language)
     if not time:
       return
