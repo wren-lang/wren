@@ -942,7 +942,7 @@ DEF_PRIMITIVE(num_fromString)
   double number = strtod(string->value, &end);
 
   // Skip past any trailing whitespace.
-  while (*end != '\0' && isspace(*end)) end++;
+  while (*((unsigned char*)end) != '\0' && isspace(*((unsigned char*)end))) end++;
 
   if (errno == ERANGE)
   {
