@@ -77,27 +77,51 @@ Calls `join` with the empty string as the separator.
 Creates a [list](list.html) containing all the elements in the sequence.
 
     :::dart
-    (1..3).list  // [1, 2, 3]
+    (1..3).list  // [1, 2, 3].
+
+If the sequence is already a list, this creates a copy of it.
 
 ### **map**(transformation)
 
 Creates a new sequence that applies the `transformation` to each element in the
 original sequence while it is iterated.
 
-The `list` method can be used to turn the resulting sequence into a list.
+    :::dart
+    var doubles = [1, 2, 3].map {|n| n * 2 }
+    for (n in doubles) {
+      IO.print(n) // "2", "4", "6".
+    }
+
+The returned sequence is *lazy*. It only applies the mapping when you iterate
+over the sequence, and it does so by holding a reference to the original
+sequence.
+
+This means you can use `map(_)` for things like infinite sequences or sequences
+that have side effects when you iterate over them. But it also means that
+changes to the original sequence will be reflected in the mapped sequence.
+
+To force eager evaluation, just call `.list` on the result.
 
     :::dart
-    [1, 2, 3].map {|n| n * 2}.list // [2, 4, 6].
+    var numbers = [1, 2, 3]
+    var doubles = numbers.map {|n| n * 2 }.list
+    numbers.add(4)
+    IO.print(doubles) // [2, 4, 6].
 
 ### **reduce**(function)
 
-Reduces the sequence down to a single value. `function` is a function that takes two arguments, the accumulator and sequence item and returns the new accumulator value. The accumulator is initialized from the first item in the sequence. Then, the function is invoked on each remaining item in the sequence, iteratively updating the accumulator.
+Reduces the sequence down to a single value. `function` is a function that takes
+two arguments, the accumulator and sequence item and returns the new accumulator
+value. The accumulator is initialized from the first item in the sequence. Then,
+the function is invoked on each remaining item in the sequence, iteratively
+updating the accumulator.
 
 It is a runtime error to call this on an empty sequence.
 
 ### **reduce**(seed, function)
 
-Similar to above, but uses `seed` for the initial value of the accumulator. If the sequence is empty, returns `seed`.
+Similar to above, but uses `seed` for the initial value of the accumulator. If
+the sequence is empty, returns `seed`.
 
 ### **where**(predicate)
 
@@ -107,7 +131,25 @@ that pass the `predicate`.
 During iteration, each element in the original sequence is passed to the
 function `predicate`. If it returns `false`, the element is skipped.
 
-The `list` method can be used to turn the resulting sequence into a list.
+    :::dart
+    var odds = (1..10).where {|n| n % 2 == 1 }
+    for (n in odds) {
+      IO.print(n) // "1", "3", "5", "7", "9".
+    }
+
+The returned sequence is *lazy*. It only applies the filtering when you iterate
+over the sequence, and it does so by holding a reference to the original
+sequence.
+
+This means you can use `where(_)` for things like infinite sequences or
+sequences that have side effects when you iterate over them. But it also means
+that changes to the original sequence will be reflected in the filtered
+sequence.
+
+To force eager evaluation, just call `.list` on the result.
 
     :::dart
-    (1..10).where {|n| n % 2 == 1}.list // [1, 3, 5, 7, 9].
+    var numbers = [1, 2, 3, 4, 5, 6]
+    var odds = numbers.where {|n| n % 2 == 1 }.list
+    numbers.add(7)
+    IO.print(odds) // [1, 3, 5].
