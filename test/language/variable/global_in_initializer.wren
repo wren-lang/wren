@@ -1,2 +1,1 @@
-var a = a == null
-IO.print(a) // expect: true
+var a = a == null // expect error
