@@ -40,6 +40,12 @@ class Sequence {
     return result
   }
 
+  each(f) {
+    for (element in this) {
+      f.call(element)
+    }
+  }
+
   map(f) {
     var result = new List
     for (element in this) {
