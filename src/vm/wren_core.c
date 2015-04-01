@@ -390,7 +390,7 @@ static uint32_t calculateRange(WrenVM* vm, Value* args, ObjRange* range,
   }
 
   uint32_t to = (uint32_t)value;
-  *length = abs(from - to) + 1;
+  *length = abs((int)(from - to)) + 1;
   *step = from < to ? 1 : -1;
   return from;
 }
