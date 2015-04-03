@@ -91,7 +91,7 @@ class Sequence {
     return result
   }
 
-  list {
+  toList {
     var result = new List
     for (element in this) {
       result.add(element)

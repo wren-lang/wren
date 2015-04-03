@@ -137,7 +137,7 @@ static const char* libSource =
 "    return result\n"
 "  }\n"
 "\n"
-"  list {\n"
+"  toList {\n"
 "    var result = new List\n"
 "    for (element in this) {\n"
 "      result.add(element)\n"

@@ -8,4 +8,4 @@ class TestSequence is Sequence {
   iteratorValue(iterator) { iterator }
 }
 
-IO.print((new TestSequence).list) // expect: [1, 2, 3]
+IO.print((new TestSequence).toList) // expect: [1, 2, 3]
