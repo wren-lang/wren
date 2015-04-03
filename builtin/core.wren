@@ -1,3 +1,9 @@
+class Bool {}
+class Fiber {}
+class Fn {}
+class Null {}
+class Num {}
+
 class Sequence {
   all(f) {
     var result = true

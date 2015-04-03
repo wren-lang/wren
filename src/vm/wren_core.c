@@ -44,6 +44,12 @@
 
 // This string literal is generated automatically from core. Do not edit.
 static const char* libSource =
+"class Bool {}\n"
+"class Fiber {}\n"
+"class Fn {}\n"
+"class Null {}\n"
+"class Num {}\n"
+"\n"
 "class Sequence {\n"
 "  all(f) {\n"
 "    var result = true\n"
@@ -1452,23 +1458,14 @@ DEF_PRIMITIVE(string_subscript)
   RETURN_ERROR("Subscript ranges for strings are not implemented yet.");
 }
 
+// Creates either the Object or Class class in the core library with [name].
 static ObjClass* defineClass(WrenVM* vm, const char* name)
 {
   ObjString* nameString = AS_STRING(wrenStringFormat(vm, "$", name));
   wrenPushRoot(vm, (Obj*)nameString);
 
-  ObjClass* classObj;
-  // If "Object" and "Class" classes are not defined in the vm yet then define
-  // a "raw" class (a class without class or superclass).
-  if (vm->classClass == NULL)
-  {
-    classObj = wrenNewSingleClass(vm, 0, nameString);
-  }
-  else
-  {
-    classObj = wrenNewClass(vm, vm->objectClass, 0, nameString);
-  }
-     
+  ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
+
   wrenDefineVariable(vm, NULL, name, nameString->length, OBJ_VAL(classObj));
 
   wrenPopRoot(vm);
@@ -1523,12 +1520,14 @@ void wrenInitializeCore(WrenVM* vm)
   //     | Derived |==>| Derived.type |    |
   //     '---------'   '--------------'   -'
 
-  // The rest of the classes can not be defined normally.
-  vm->boolClass = defineClass(vm, "Bool");
+  // The rest of the classes can now be defined normally.
+  wrenInterpret(vm, "", libSource);
+
+  vm->boolClass = AS_CLASS(wrenFindVariable(vm, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
   PRIMITIVE(vm->boolClass, "!", bool_not);
 
-  vm->fiberClass = defineClass(vm, "Fiber");
+  vm->fiberClass = AS_CLASS(wrenFindVariable(vm, "Fiber"));
   PRIMITIVE(vm->fiberClass->obj.classObj, "<instantiate>", fiber_instantiate);
   PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
   PRIMITIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
@@ -1543,8 +1542,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "run(_)", fiber_run1);
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
 
-  vm->fnClass = defineClass(vm, "Fn");
-
+  vm->fnClass = AS_CLASS(wrenFindVariable(vm, "Fn"));
   PRIMITIVE(vm->fnClass->obj.classObj, "<instantiate>", fn_instantiate);
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
@@ -1568,11 +1566,11 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
-  vm->nullClass = defineClass(vm, "Null");
+  vm->nullClass = AS_CLASS(wrenFindVariable(vm, "Null"));
   PRIMITIVE(vm->nullClass, "!", null_not);
   PRIMITIVE(vm->nullClass, "toString", null_toString);
 
-  vm->numClass = defineClass(vm, "Num");
+  vm->numClass = AS_CLASS(wrenFindVariable(vm, "Num"));
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
   PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
   PRIMITIVE(vm->numClass, "-(_)", num_minus);
@@ -1614,8 +1612,6 @@ void wrenInitializeCore(WrenVM* vm)
   // IEEE 754 even though they have different bit representations.
   PRIMITIVE(vm->numClass, "==(_)", num_eqeq);
   PRIMITIVE(vm->numClass, "!=(_)", num_bangeq);
-
-  wrenInterpret(vm, "", libSource);
 
   vm->stringClass = AS_CLASS(wrenFindVariable(vm, "String"));
   PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);

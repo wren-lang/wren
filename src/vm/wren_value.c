@@ -72,8 +72,6 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
                        ObjString* name)
 {
-  wrenPushRoot(vm, (Obj*)name);
-
   // Create the metaclass.
   Value metaclassName = wrenStringFormat(vm, "@ metaclass", OBJ_VAL(name));
   wrenPushRoot(vm, AS_OBJ(metaclassName));
@@ -99,7 +97,6 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   classObj->obj.classObj = metaclass;
   wrenBindSuperclass(vm, classObj, superclass);
 
-  wrenPopRoot(vm);
   wrenPopRoot(vm);
   wrenPopRoot(vm);
 

@@ -1134,8 +1134,8 @@ static bool runInterpreter(WrenVM* vm)
 
       int numFields = READ_BYTE();
 
-      ObjClass* classObj = wrenNewClass(vm, superclass, numFields,
-                                        AS_STRING(name));
+      Value classObj = OBJ_VAL(wrenNewClass(vm, superclass, numFields,
+                                            AS_STRING(name)));
 
       // Don't pop the superclass and name off the stack until the subclass is
       // done being created, to make sure it doesn't get collected.
@@ -1151,7 +1151,7 @@ static bool runInterpreter(WrenVM* vm)
             "ones.", name));
       }
 
-      PUSH(OBJ_VAL(classObj));
+      PUSH(classObj);
       DISPATCH();
     }
 
