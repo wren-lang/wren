@@ -30,4 +30,13 @@ The number of arguments the function requires.
 
 ### **call**(args...)
 
-**TODO**
+Invokes the function with the given arguments.
+
+    :::dart
+    var fn = new Fn { |arg|
+      IO.print(arg)
+    }
+    fn.call("Hello world") // Hello world.
+
+It is a runtime error if the number of arguments given does not equal the arity
+of the function.
