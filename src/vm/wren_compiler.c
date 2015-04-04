@@ -1297,6 +1297,8 @@ static ObjFn* endCompiler(Compiler* compiler,
   // anyway.
   if (compiler->parser->hasError)
   {
+    wrenSetCompiler(compiler->parser->vm, compiler->parent);
+
     // Free the code since it won't be used.
     freeCompiler(compiler);
     return NULL;
