@@ -12,4 +12,4 @@ work on this, but it isn't quite there yet. Feedback and contributions are
 definitely welcome!
 
 In the meantime, you can see the current API in
-[`wren.h`](https://github.com/munificent/wren/blob/master/include/wren.h).
+[`wren.h`](https://github.com/munificent/wren/blob/master/src/include/wren.h).
