@@ -21,7 +21,19 @@ The number of elements in the list.
 
 ### **insert**(index, item)
 
-**TODO**
+Inserts the `item` at the `index` in the list.
+
+    :::dart
+    var list = ["a", "b", "c", "d"]
+    list.insert(1, "e")
+    IO.print(list) // "[a, e, c, d]".
+
+Returns the inserted item.
+
+    :::dart
+    IO.print(["a", "c"].insert(1, "b")) // "b".
+
+It is a runtime error if the index is not an integer or is out of bounds.
 
 ### **iterate**(iterator), **iteratorValue**(iterator)
 
