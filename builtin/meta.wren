@@ -1,3 +1,1 @@
-class Meta {
-  foreign static eval(source)
-}
+class Meta {}

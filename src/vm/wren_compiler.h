@@ -25,8 +25,11 @@ typedef struct sCompiler Compiler;
 // Compiles [source], a string of Wren source code located in [module], to an
 // [ObjFn] that will execute that code when invoked. Returns `NULL` if the
 // source contains any syntax errors.
-ObjFn* wrenCompile(WrenVM* vm, ObjModule* module,
-                   const char* sourcePath, const char* source);
+//
+// If [printErrors] is `true`, any compile errors are output to stderr.
+// Otherwise, they are silently discarded.
+ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
+                   const char* source, bool printErrors);
 
 // When a class is defined, its superclass is not known until runtime since
 // class definitions are just imperative statements. Most of the bytecode for a

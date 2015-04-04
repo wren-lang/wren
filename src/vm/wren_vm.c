@@ -301,11 +301,6 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
     fn = wrenBindIOForeignMethod(vm, className, signature);
     if (fn != NULL) return fn;
     #endif
-
-    #if WREN_USE_LIB_META
-    fn = wrenBindMetaForeignMethod(vm, className, signature);
-    if (fn != NULL) return fn;
-    #endif
   }
 
   // TODO: Report a runtime error on failure to find it.
@@ -470,7 +465,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
     }
   }
 
-  ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(name), source);
+  ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(name), source, true);
   if (fn == NULL)
   {
     // TODO: Should we still store the module even if it didn't compile?
@@ -1368,7 +1363,7 @@ static WrenInterpretResult loadIntoCore(WrenVM* vm, const char* source)
 {
   ObjModule* coreModule = getCoreModule(vm);
 
-  ObjFn* fn = wrenCompile(vm, coreModule, "", source);
+  ObjFn* fn = wrenCompile(vm, coreModule, "", source, true);
   if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
 
   wrenPushRoot(vm, (Obj*)fn);

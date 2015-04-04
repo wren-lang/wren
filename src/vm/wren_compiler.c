@@ -149,6 +149,9 @@ typedef struct
   // If subsequent newline tokens should be discarded.
   bool skipNewlines;
 
+  // Whether compile errors should be printed to stderr or discarded.
+  bool printErrors;
+
   // If a syntax or compile error has occurred.
   bool hasError;
 
@@ -278,6 +281,7 @@ struct sCompiler
 static void lexError(Parser* parser, const char* format, ...)
 {
   parser->hasError = true;
+  if (!parser->printErrors) return;
 
   fprintf(stderr, "[%s line %d] Error: ",
           parser->sourcePath->value, parser->currentLine);
@@ -301,6 +305,7 @@ static void lexError(Parser* parser, const char* format, ...)
 static void error(Compiler* compiler, const char* format, ...)
 {
   compiler->parser->hasError = true;
+  if (!compiler->parser->printErrors) return;
 
   Token* token = &compiler->parser->previous;
 
@@ -3135,10 +3140,8 @@ void definition(Compiler* compiler)
   block(compiler);
 }
 
-// Parses [source] to a "function" (a chunk of top-level code) for execution by
-// [vm].
-ObjFn* wrenCompile(WrenVM* vm, ObjModule* module,
-                   const char* sourcePath, const char* source)
+ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
+                   const char* source, bool printErrors)
 {
   Value sourcePathValue = wrenStringFormat(vm, "$", sourcePath);
   wrenPushRoot(vm, AS_OBJ(sourcePathValue));
@@ -3162,6 +3165,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module,
 
   // Ignore leading newlines.
   parser.skipNewlines = true;
+  parser.printErrors = printErrors;
   parser.hasError = false;
 
   wrenByteBufferInit(&parser.string);
