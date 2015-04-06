@@ -1522,7 +1522,7 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
 
 // Parses the rest of a comma-separated parameter list after the opening
 // delimeter. Updates `arity` in [signature] with the number of parameters.
-static void  finishParameterList(Compiler* compiler, Signature* signature)
+static void finishParameterList(Compiler* compiler, Signature* signature)
 {
   do
   {

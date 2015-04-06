@@ -340,8 +340,8 @@ static Value bindMethod(WrenVM* vm, int methodType, int symbol,
                                          : AS_CLOSURE(methodValue)->fn;
 
     // Methods are always bound against the class, and not the metaclass, even
-    // for static methods, so that constructors (which are static) get bound
-    // like instance methods.
+    // for static methods, because static methods don't have instance fields
+    // anyway.
     wrenBindMethodCode(classObj, methodFn);
 
     method.type = METHOD_BLOCK;
