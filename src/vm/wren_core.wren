@@ -56,6 +56,10 @@ class Sequence {
 
   map(transformation) { MapSequence.new(this, transformation) }
 
+  skip(count) { SkipSequence.new(this, count) }
+
+  take(count) { TakeSequence.new(this, count) }
+
   where(predicate) { WhereSequence.new(this, predicate) }
 
   reduce(acc, f) {
@@ -110,6 +114,43 @@ class MapSequence is Sequence {
 
   iterate(iterator) { _sequence.iterate(iterator) }
   iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
+}
+
+class SkipSequence is Sequence {
+  construct new(sequence, count) {
+    _sequence = sequence
+    _count = count
+  }
+
+  iterate(iterator) {
+    if (iterator) {
+      return _sequence.iterate(iterator)
+    } else {
+      iterator = _sequence.iterate(iterator)
+      var count = _count
+      while (count > 0 && iterator) {
+        iterator = _sequence.iterate(iterator)
+        count = count - 1
+      }
+      return iterator
+    }
+  }
+
+  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
+}
+
+class TakeSequence is Sequence {
+  construct new(sequence, count) {
+    _sequence = sequence
+    _count = count
+  }
+
+  iterate(iterator) {
+    if (!iterator) _taken = 1 else _taken = _taken + 1
+    return _taken > _count ? null : _sequence.iterate(iterator)
+  }
+
+  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
 }
 
 class WhereSequence is Sequence {
