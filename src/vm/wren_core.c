@@ -11,7 +11,7 @@
 #include "wren_value.h"
 
 // This string literal is generated automatically from core. Do not edit.
-static const char* libSource =
+static const char* coreLibSource =
 "class Bool {}\n"
 "class Fiber {}\n"
 "class Fn {}\n"
@@ -1331,7 +1331,7 @@ void wrenInitializeCore(WrenVM* vm)
   //     '---------'   '--------------'   -'
 
   // The rest of the classes can now be defined normally.
-  wrenInterpret(vm, "", libSource);
+  wrenInterpret(vm, "", coreLibSource);
 
   vm->boolClass = AS_CLASS(wrenFindVariable(vm, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
