@@ -1,28 +1,31 @@
 #!/usr/bin/env python
 
 import sys
-import os.path
+from os.path import basename, dirname, join
 import re
 
 INCLUDE_PATTERN = re.compile(r'^\s*#include "([\w.]+)"')
 
 seen_files = set()
+out = sys.stdout
 
 def add_file(filename):
-  basename = os.path.basename(filename)
+  bname = basename(filename)
   # Only include each file at most once.
-  if basename in seen_files:
+  if bname in seen_files:
     return
-  seen_files.add(basename)
-  path = os.path.dirname(filename)
+  seen_files.add(bname)
+  path = dirname(filename)
 
+  out.write('// Begin file "{0}"\n'.format(filename))
   with open(filename, 'r') as f:
     for line in f:
       m = INCLUDE_PATTERN.match(line)
       if m:
-        add_file(os.path.join(path, m.group(1)))
+        add_file(join(path, m.group(1)))
       else:
-        sys.stdout.write(line)
+        out.write(line)
+  out.write('// End file "{0}"\n'.format(filename))
 
 for f in sys.argv[1:]:
   add_file(f)
