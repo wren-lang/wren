@@ -5,10 +5,19 @@ from os.path import basename, dirname, join
 import re
 
 INCLUDE_PATTERN = re.compile(r'^\s*#include "([\w.]+)"')
+WREN_DIR = dirname(dirname(realpath(__file__)))
 
 seen_files = set()
 out = sys.stdout
 
+# Prints a plain text file, adding comment markers.
+def add_comment_file(filename):
+  with open(filename, 'r') as f:
+    for line in f:
+      out.write('// ')
+      out.write(line)
+
+# Prints the given C source file, recursively resolving local #includes.
 def add_file(filename):
   bname = basename(filename)
   # Only include each file at most once.
@@ -27,5 +36,9 @@ def add_file(filename):
         out.write(line)
   out.write('// End file "{0}"\n'.format(filename))
 
+# Print license on top.
+add_comment_file(join(WREN_DIR, 'LICENSE'))
+out.write('\n')
+# Source files.
 for f in sys.argv[1:]:
   add_file(f)
