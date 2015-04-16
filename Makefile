@@ -55,7 +55,7 @@ gh-pages: docs
 
 # Build amalgamation of all Wren library files.
 wren.c: src/include/wren.h src/vm/*.h src/vm/*.c
-	./script/generate_amalgamation.py $^ > $@
+	./script/generate_amalgamation.py > $@
 
 .DELETE_ON_ERROR: wren.c
 .PHONY: debug release all clean test builtin docs watchdocs gh-pages
