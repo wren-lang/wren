@@ -154,7 +154,7 @@ WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
 
 // Calls [method], passing in a series of arguments whose types must match the
 // specifed [argTypes]. This is a string where each character identifies the
-// type of a single argument, in orde. The allowed types are:
+// type of a single argument, in order. The allowed types are:
 //
 // - "b" - A C `int` converted to a Wren Bool.
 // - "d" - A C `double` converted to a Wren Num.
