@@ -26,7 +26,7 @@ Inserts the `item` at the `index` in the list.
     :::dart
     var list = ["a", "b", "c", "d"]
     list.insert(1, "e")
-    IO.print(list) // "[a, e, c, d]".
+    IO.print(list) // "[a, e, b, c, d]"
 
 Returns the inserted item.
 

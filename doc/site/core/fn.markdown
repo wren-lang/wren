@@ -38,5 +38,6 @@ Invokes the function with the given arguments.
     }
     fn.call("Hello world") // Hello world.
 
-It is a runtime error if the number of arguments given does not equal the arity
-of the function.
+It is a runtime error if the number of arguments given is less than the arity of
+the function. If more arguments are given than the arity of the function they
+will be discarded.
