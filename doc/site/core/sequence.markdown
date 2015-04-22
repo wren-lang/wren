@@ -63,23 +63,15 @@ Iterates over the sequence, passing each element to the given `function`.
 
 ### **join**(sep)
 
-Returns a string representation of the list. The string representations of the
-elements in the list is concatenated with intervening occurrences of `sep`.
+Returns a string representation of the sequence. The string representations of
+the elements in the sequence is concatenated with intervening occurrences of
+`sep`.
 
 It is a runtime error if `sep` is not a string.
 
 ### **join**
 
 Calls `join` with the empty string as the separator.
-
-### **list**
-
-Creates a [list](list.html) containing all the elements in the sequence.
-
-    :::dart
-    (1..3).list  // [1, 2, 3].
-
-If the sequence is already a list, this creates a copy of it.
 
 ### **map**(transformation)
 
@@ -100,11 +92,11 @@ This means you can use `map(_)` for things like infinite sequences or sequences
 that have side effects when you iterate over them. But it also means that
 changes to the original sequence will be reflected in the mapped sequence.
 
-To force eager evaluation, just call `.list` on the result.
+To force eager evaluation, just call `.toList` on the result.
 
     :::dart
     var numbers = [1, 2, 3]
-    var doubles = numbers.map {|n| n * 2 }.list
+    var doubles = numbers.map {|n| n * 2 }.toList
     numbers.add(4)
     IO.print(doubles) // [2, 4, 6].
 
@@ -122,6 +114,15 @@ It is a runtime error to call this on an empty sequence.
 
 Similar to above, but uses `seed` for the initial value of the accumulator. If
 the sequence is empty, returns `seed`.
+
+### **toList**
+
+Creates a [list](list.html) containing all the elements in the sequence.
+
+    :::dart
+    (1..3).toList  // [1, 2, 3].
+
+If the sequence is already a list, this creates a copy of it.
 
 ### **where**(predicate)
 
@@ -146,10 +147,10 @@ sequences that have side effects when you iterate over them. But it also means
 that changes to the original sequence will be reflected in the filtered
 sequence.
 
-To force eager evaluation, just call `.list` on the result.
+To force eager evaluation, just call `.toList` on the result.
 
     :::dart
     var numbers = [1, 2, 3, 4, 5, 6]
-    var odds = numbers.where {|n| n % 2 == 1 }.list
+    var odds = numbers.where {|n| n % 2 == 1 }.toList
     numbers.add(7)
     IO.print(odds) // [1, 3, 5].
