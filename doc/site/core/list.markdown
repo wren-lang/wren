@@ -21,12 +21,27 @@ The number of elements in the list.
 
 ### **insert**(index, item)
 
-Inserts the `item` at the `index` in the list.
+Inserts the `item` at `index` in the list.
 
     :::dart
     var list = ["a", "b", "c", "d"]
     list.insert(1, "e")
     IO.print(list) // "[a, e, b, c, d]"
+
+The `index` may be one past the last index in the list to append an element.
+
+    :::dart
+    var list = ["a", "b", "c"]
+    list.insert(3, "d")
+    IO.print(list) // "[a, b, c, d]"
+
+If `index` is negative, it counts backwards from the end of the list. It bases this on the length of the list *after* inserted the element, so that `-1` will append the element, not insert it before the last element.
+
+    :::dart
+    var list = ["a", "b"]
+    list.insert(-1, "d")
+    list.insert(-2, "c")
+    IO.print(list) // "[a, b, c, d]"
 
 Returns the inserted item.
 

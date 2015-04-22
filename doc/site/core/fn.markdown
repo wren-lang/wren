@@ -36,8 +36,9 @@ Invokes the function with the given arguments.
     var fn = new Fn { |arg|
       IO.print(arg)
     }
-    fn.call("Hello world") // Hello world.
 
-It is a runtime error if the number of arguments given is less than the arity of
-the function. If more arguments are given than the arity of the function they
-will be discarded.
+    fn.call("Hello world") // Prints "Hello world".
+
+It is a runtime error if the number of arguments given is less than the arity
+of the function. If more arguments are given than the function's arity they are
+ignored.
