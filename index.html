@@ -70,7 +70,7 @@ a familiar, modern <a href="syntax.html">syntax</a>.</p>
 <span class="p">}</span>
 
 <span class="kd">var</span> <span class="n">adjectives</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
-  <span class="p">[</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="s2">&quot;clean&quot;</span><span class="p">,</span> <span class="s2">&quot;fast&quot;</span><span class="p">].</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="n">word</span><span class="o">|</span> <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="p">}</span>
+  <span class="p">[</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="s2">&quot;clean&quot;</span><span class="p">,</span> <span class="s2">&quot;fast&quot;</span><span class="p">].</span><span class="n">each</span> <span class="p">{</span><span class="o">|</span><span class="n">word</span><span class="o">|</span> <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">adjectives</span><span class="p">.</span><span class="n">isDone</span><span class="p">)</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">adjectives</span><span class="p">.</span><span class="n">call</span><span class="p">())</span>

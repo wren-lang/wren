@@ -106,9 +106,43 @@ later.</p>
 
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>call</strong>() <a href="#call()" name="call()" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Starts or resumes the fiber if it is in a paused state.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Fiber called&quot;</span><span class="p">)</span>
+  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">()</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Fiber called again&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span> <span class="c1">// Start it.</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span> <span class="c1">// Resume after the yield() call.</span>
+</pre></div>
+
+
+<p>When the called fiber yields, control is transferred back to the fiber that
+called it.</p>
+<p>If the called fiber is resuming from a yield, the <code>yield()</code> method returns
+<code>null</code> in the called fiber.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">())</span>
+<span class="p">}</span>
+
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span> <span class="c1">// Prints &quot;null&quot;.</span>
+</pre></div>
+
+
 <h3><strong>call</strong>(value) <a href="#call(value)" name="call(value)" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Invokes the fiber or resumes the fiber if it is in a paused state and sets
+<code>value</code> as the returned value of the fiber's call to <code>yield</code>.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">())</span>
+<span class="p">}</span>
+
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>
+<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;value&quot;.</span>
+</pre></div>
+
+
 <h3><strong>isDone</strong> <a href="#isdone" name="isdone" class="header-anchor">#</a></h3>
 <p>Whether the fiber's main function has completed and the fiber can no longer be
 run. This returns <code>false</code> if the fiber is currently running or has yielded.</p>

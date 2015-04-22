@@ -81,38 +81,84 @@ and counting the number of times the returned value evaluates to <code>true</cod
 </pre></div>
 
 
-<h3><strong>join</strong>(sep) <a href="#join(sep)" name="join(sep)" class="header-anchor">#</a></h3>
-<p>Returns a string representation of the list. The string representations of the
-elements in the list is concatenated with intervening occurrences of <code>sep</code>.</p>
-<p>It is a runtime error if <code>sep</code> is not a string.</p>
-<h3><strong>join</strong> <a href="#join" name="join" class="header-anchor">#</a></h3>
-<p>Calls <code>join</code> with the empty string as the separator.</p>
-<h3><strong>list</strong> <a href="#list" name="list" class="header-anchor">#</a></h3>
-<p>Creates a <a href="list.html">list</a> containing all the elements in the sequence.</p>
-<div class="codehilite"><pre><span class="p">(</span><span class="m">1.</span><span class="p">.</span><span class="m">3</span><span class="p">).</span><span class="n">list</span>  <span class="c1">// [1, 2, 3]</span>
+<h3><strong>each</strong>(function) <a href="#each(function)" name="each(function)" class="header-anchor">#</a></h3>
+<p>Iterates over the sequence, passing each element to the given <code>function</code>.</p>
+<div class="codehilite"><pre><span class="p">[</span><span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="s2">&quot;two&quot;</span><span class="p">,</span> <span class="s2">&quot;three&quot;</span><span class="p">].</span><span class="n">each</span> <span class="p">{</span><span class="o">|</span><span class="n">word</span><span class="o">|</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="p">}</span>
 </pre></div>
 
 
+<h3><strong>join</strong>(sep) <a href="#join(sep)" name="join(sep)" class="header-anchor">#</a></h3>
+<p>Returns a string representation of the sequence. The string representations of
+the elements in the sequence is concatenated with intervening occurrences of
+<code>sep</code>.</p>
+<p>It is a runtime error if <code>sep</code> is not a string.</p>
+<h3><strong>join</strong> <a href="#join" name="join" class="header-anchor">#</a></h3>
+<p>Calls <code>join</code> with the empty string as the separator.</p>
 <h3><strong>map</strong>(transformation) <a href="#map(transformation)" name="map(transformation)" class="header-anchor">#</a></h3>
-<p>Creates a new list by applying <code>transformation</code> to each element in the
+<p>Creates a new sequence that applies the <code>transformation</code> to each element in the
+original sequence while it is iterated.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">doubles</span> <span class="o">=</span> <span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">*</span> <span class="m">2</span> <span class="p">}</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">n</span> <span class="k">in</span> <span class="n">doubles</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="c1">// &quot;2&quot;, &quot;4&quot;, &quot;6&quot;.</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>The returned sequence is <em>lazy</em>. It only applies the mapping when you iterate
+over the sequence, and it does so by holding a reference to the original
 sequence.</p>
-<p>Iterates over the sequence, passing each element to the function
-<code>transformation</code>. Generates a new list from the result of each of those calls.</p>
-<div class="codehilite"><pre><span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">].</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">*</span> <span class="m">2</span><span class="p">}</span> <span class="c1">// [2, 4, 6].</span>
+<p>This means you can use <code>map(_)</code> for things like infinite sequences or sequences
+that have side effects when you iterate over them. But it also means that
+changes to the original sequence will be reflected in the mapped sequence.</p>
+<p>To force eager evaluation, just call <code>.toList</code> on the result.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">]</span>
+<span class="kd">var</span> <span class="n">doubles</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">*</span> <span class="m">2</span> <span class="p">}.</span><span class="n">toList</span>
+<span class="n">numbers</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="m">4</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">doubles</span><span class="p">)</span> <span class="c1">// [2, 4, 6].</span>
 </pre></div>
 
 
 <h3><strong>reduce</strong>(function) <a href="#reduce(function)" name="reduce(function)" class="header-anchor">#</a></h3>
-<p>Reduces the sequence down to a single value. <code>function</code> is a function that takes two arguments, the accumulator and sequence item and returns the new accumulator value. The accumulator is initialized from the first item in the sequence. Then, the function is invoked on each remaining item in the sequence, iteratively updating the accumulator.</p>
+<p>Reduces the sequence down to a single value. <code>function</code> is a function that takes
+two arguments, the accumulator and sequence item and returns the new accumulator
+value. The accumulator is initialized from the first item in the sequence. Then,
+the function is invoked on each remaining item in the sequence, iteratively
+updating the accumulator.</p>
 <p>It is a runtime error to call this on an empty sequence.</p>
 <h3><strong>reduce</strong>(seed, function) <a href="#reduce(seed,-function)" name="reduce(seed,-function)" class="header-anchor">#</a></h3>
-<p>Similar to above, but uses <code>seed</code> for the initial value of the accumulator. If the sequence is empty, returns <code>seed</code>.</p>
+<p>Similar to above, but uses <code>seed</code> for the initial value of the accumulator. If
+the sequence is empty, returns <code>seed</code>.</p>
+<h3><strong>toList</strong> <a href="#tolist" name="tolist" class="header-anchor">#</a></h3>
+<p>Creates a <a href="list.html">list</a> containing all the elements in the sequence.</p>
+<div class="codehilite"><pre><span class="p">(</span><span class="m">1.</span><span class="p">.</span><span class="m">3</span><span class="p">).</span><span class="n">toList</span>  <span class="c1">// [1, 2, 3].</span>
+</pre></div>
+
+
+<p>If the sequence is already a list, this creates a copy of it.</p>
 <h3><strong>where</strong>(predicate) <a href="#where(predicate)" name="where(predicate)" class="header-anchor">#</a></h3>
-<p>Produces a new list containing only the elements in the sequence that pass the
-<code>predicate</code>.</p>
-<p>Iterates over the sequence, passing each element to the function <code>predicate</code>.
-If it returns <code>true</code>, adds the element to the result list.</p>
-<div class="codehilite"><pre><span class="p">(</span><span class="mf">1..10</span><span class="p">).</span><span class="n">where</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">}</span> <span class="c1">// [1, 3, 5, 7, 9].</span>
+<p>Creates a new sequence containing only the elements from the original sequence
+that pass the <code>predicate</code>.</p>
+<p>During iteration, each element in the original sequence is passed to the
+function <code>predicate</code>. If it returns <code>false</code>, the element is skipped.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">odds</span> <span class="o">=</span> <span class="p">(</span><span class="m">1.</span><span class="p">.</span><span class="m">10</span><span class="p">).</span><span class="n">where</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">%</span> <span class="m">2</span> <span class="o">==</span> <span class="m">1</span> <span class="p">}</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">n</span> <span class="k">in</span> <span class="n">odds</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="c1">// &quot;1&quot;, &quot;3&quot;, &quot;5&quot;, &quot;7&quot;, &quot;9&quot;.</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>The returned sequence is <em>lazy</em>. It only applies the filtering when you iterate
+over the sequence, and it does so by holding a reference to the original
+sequence.</p>
+<p>This means you can use <code>where(_)</code> for things like infinite sequences or
+sequences that have side effects when you iterate over them. But it also means
+that changes to the original sequence will be reflected in the filtered
+sequence.</p>
+<p>To force eager evaluation, just call <code>.toList</code> on the result.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">6</span><span class="p">]</span>
+<span class="kd">var</span> <span class="n">odds</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">.</span><span class="n">where</span> <span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span> <span class="n">n</span> <span class="o">%</span> <span class="m">2</span> <span class="o">==</span> <span class="m">1</span> <span class="p">}.</span><span class="n">toList</span>
+<span class="n">numbers</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="m">7</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">odds</span><span class="p">)</span> <span class="c1">// [1, 3, 5].</span>
 </pre></div>
   </main>
 </div>

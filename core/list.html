@@ -53,7 +53,34 @@
 <h3><strong>count</strong> <a href="#count" name="count" class="header-anchor">#</a></h3>
 <p>The number of elements in the list.</p>
 <h3><strong>insert</strong>(index, item) <a href="#insert(index,-item)" name="insert(index,-item)" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Inserts the <code>item</code> at <code>index</code> in the list.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, e, b, c, d]&quot;</span>
+</pre></div>
+
+
+<p>The <code>index</code> may be one past the last index in the list to append an element.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="m">3</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, b, c, d]&quot;</span>
+</pre></div>
+
+
+<p>If <code>index</code> is negative, it counts backwards from the end of the list. It bases this on the length of the list <em>after</em> inserted the element, so that <code>-1</code> will append the element, not insert it before the last element.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="m">1</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">)</span>
+<span class="n">list</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="m">2</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">)</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, b, c, d]&quot;</span>
+</pre></div>
+
+
+<p>Returns the inserted item.</p>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">].</span><span class="n">insert</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">))</span> <span class="c1">// &quot;b&quot;.</span>
+</pre></div>
+
+
+<p>It is a runtime error if the index is not an integer or is out of bounds.</p>
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
 <p>Implements the <a href="../control-flow.html#the-iterator-protocol">iterator protocol</a>
 for iterating over the elements in the list.</p>

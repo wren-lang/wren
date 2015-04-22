@@ -66,7 +66,18 @@ argument</a> to some other method.</p>
 
 
 <h3><strong>call</strong>(args...) <a href="#call(args)" name="call(args)" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Invokes the function with the given arguments.</p>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span> <span class="o">|</span><span class="n">arg</span><span class="o">|</span>
+  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">fn</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;Hello world&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;Hello world&quot;.</span>
+</pre></div>
+
+
+<p>It is a runtime error if the number of arguments given is less than the arity
+of the function. If more arguments are given than the function's arity they are
+ignored.</p>
   </main>
 </div>
 <footer>
