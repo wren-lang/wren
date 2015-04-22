@@ -28,8 +28,8 @@ Some people like to see all of the reserved words in a programming language in
 one lump. If you're one of those folks, here you go:
 
     :::dart
-    break class else false for foreign if in is new
-    null return static super this true var while
+    break class else false for foreign if import in is
+    new null return static super this true var while
 
 ## Identifiers
 
