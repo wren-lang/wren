@@ -1219,6 +1219,8 @@ static bool runInterpreter(WrenVM* vm)
   UNREACHABLE();
   return false;
 }
+#undef READ_BYTE
+#undef READ_SHORT
 
 // Creates an [ObjFn] that invokes a method with [signature] when called.
 static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)

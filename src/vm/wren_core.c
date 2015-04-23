@@ -11,7 +11,7 @@
 #include "wren_value.h"
 
 // This string literal is generated automatically from core. Do not edit.
-static const char* libSource =
+static const char* coreLibSource =
 "class Bool {}\n"
 "class Fiber {}\n"
 "class Fn {}\n"
@@ -485,7 +485,7 @@ DEF_PRIMITIVE(fn_arity)
   RETURN_NUM(AS_FN(args[0])->arity);
 }
 
-static PrimitiveResult callFunction(WrenVM* vm, Value* args, int numArgs)
+static PrimitiveResult callFn(WrenVM* vm, Value* args, int numArgs)
 {
   ObjFn* fn;
   if (IS_CLOSURE(args[0]))
@@ -502,23 +502,23 @@ static PrimitiveResult callFunction(WrenVM* vm, Value* args, int numArgs)
   return PRIM_CALL;
 }
 
-DEF_PRIMITIVE(fn_call0) { return callFunction(vm, args, 0); }
-DEF_PRIMITIVE(fn_call1) { return callFunction(vm, args, 1); }
-DEF_PRIMITIVE(fn_call2) { return callFunction(vm, args, 2); }
-DEF_PRIMITIVE(fn_call3) { return callFunction(vm, args, 3); }
-DEF_PRIMITIVE(fn_call4) { return callFunction(vm, args, 4); }
-DEF_PRIMITIVE(fn_call5) { return callFunction(vm, args, 5); }
-DEF_PRIMITIVE(fn_call6) { return callFunction(vm, args, 6); }
-DEF_PRIMITIVE(fn_call7) { return callFunction(vm, args, 7); }
-DEF_PRIMITIVE(fn_call8) { return callFunction(vm, args, 8); }
-DEF_PRIMITIVE(fn_call9) { return callFunction(vm, args, 9); }
-DEF_PRIMITIVE(fn_call10) { return callFunction(vm, args, 10); }
-DEF_PRIMITIVE(fn_call11) { return callFunction(vm, args, 11); }
-DEF_PRIMITIVE(fn_call12) { return callFunction(vm, args, 12); }
-DEF_PRIMITIVE(fn_call13) { return callFunction(vm, args, 13); }
-DEF_PRIMITIVE(fn_call14) { return callFunction(vm, args, 14); }
-DEF_PRIMITIVE(fn_call15) { return callFunction(vm, args, 15); }
-DEF_PRIMITIVE(fn_call16) { return callFunction(vm, args, 16); }
+DEF_PRIMITIVE(fn_call0) { return callFn(vm, args, 0); }
+DEF_PRIMITIVE(fn_call1) { return callFn(vm, args, 1); }
+DEF_PRIMITIVE(fn_call2) { return callFn(vm, args, 2); }
+DEF_PRIMITIVE(fn_call3) { return callFn(vm, args, 3); }
+DEF_PRIMITIVE(fn_call4) { return callFn(vm, args, 4); }
+DEF_PRIMITIVE(fn_call5) { return callFn(vm, args, 5); }
+DEF_PRIMITIVE(fn_call6) { return callFn(vm, args, 6); }
+DEF_PRIMITIVE(fn_call7) { return callFn(vm, args, 7); }
+DEF_PRIMITIVE(fn_call8) { return callFn(vm, args, 8); }
+DEF_PRIMITIVE(fn_call9) { return callFn(vm, args, 9); }
+DEF_PRIMITIVE(fn_call10) { return callFn(vm, args, 10); }
+DEF_PRIMITIVE(fn_call11) { return callFn(vm, args, 11); }
+DEF_PRIMITIVE(fn_call12) { return callFn(vm, args, 12); }
+DEF_PRIMITIVE(fn_call13) { return callFn(vm, args, 13); }
+DEF_PRIMITIVE(fn_call14) { return callFn(vm, args, 14); }
+DEF_PRIMITIVE(fn_call15) { return callFn(vm, args, 15); }
+DEF_PRIMITIVE(fn_call16) { return callFn(vm, args, 16); }
 
 DEF_PRIMITIVE(fn_toString)
 {
@@ -1331,7 +1331,7 @@ void wrenInitializeCore(WrenVM* vm)
   //     '---------'   '--------------'   -'
 
   // The rest of the classes can now be defined normally.
-  wrenInterpret(vm, "", libSource);
+  wrenInterpret(vm, "", coreLibSource);
 
   vm->boolClass = AS_CLASS(wrenFindVariable(vm, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);

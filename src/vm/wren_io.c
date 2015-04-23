@@ -10,7 +10,7 @@
 #define MAX_READ_LEN 1024
 
 // This string literal is generated automatically from io.wren. Do not edit.
-static const char* libSource =
+static const char* ioLibSource =
 "class IO {\n"
 "  static print {\n"
 "    IO.writeString_(\"\n\")\n"
@@ -142,7 +142,7 @@ static void ioTime(WrenVM* vm)
 
 void wrenLoadIOLibrary(WrenVM* vm)
 {
-  wrenInterpret(vm, "", libSource);
+  wrenInterpret(vm, "", ioLibSource);
 }
 
 WrenForeignMethodFn wrenBindIOForeignMethod(WrenVM* vm, const char* className,
