@@ -1,12 +1,12 @@
 ^title Community
 ^category reference
 
-Like the [wren bird](https://en.wikipedia.org/wiki/Wren), Wren's community is
-small. But it exists!
+Like the [bird](https://en.wikipedia.org/wiki/Wren), Wren's community is small,
+but it exists!
 
-## User groups
+## User group
 
-There's only one Wren user group, and it's the [official Wren mailing
+There's one Wren user group, and it's the [official Wren mailing
 list](https://groups.google.com/forum/#!forum/wren-lang). Please join it and
 say hello! There are no strangers to Wren, just friends we haven't met yet.
 
@@ -20,7 +20,7 @@ There are some third-party libraries that are written in Wren. Here's the list:
   messages to the terminal
 - [3D vectors for Wren](https://github.com/EvanHahn/wren-vector3d)
 
-A few people have also added embedding APIs for Wren:
+A few people have also added Wren bindings for other languages:
 
 - [Rust: tilpner/wren-sys](https://github.com/tilpner/wren-sys)
 - [Rust: pwoolcoc/wren-sys](https://github.com/pwoolcoc/wren-sys)
@@ -32,3 +32,7 @@ If you want Wren syntax highlighting in your editor, look no further:
 
 - [Vim](https://github.com/lluchs/vim-wren)
 - [Emacs](https://github.com/v2e4lisp/wren-mode.el)
+
+Do you have anything to add here? Send a [pull request][]!
+
+[pull request]: https://github.com/munificent/wren/pulls
