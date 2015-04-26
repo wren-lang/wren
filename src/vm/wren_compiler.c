@@ -90,6 +90,7 @@ typedef enum
   TOKEN_TRUE,
   TOKEN_VAR,
   TOKEN_WHILE,
+  TOKEN_TYPEOF,
 
   TOKEN_FIELD,
   TOKEN_STATIC_FIELD,
@@ -617,6 +618,7 @@ static void readName(Parser* parser, TokenType type)
   else if (isKeyword(parser, "true")) type = TOKEN_TRUE;
   else if (isKeyword(parser, "var")) type = TOKEN_VAR;
   else if (isKeyword(parser, "while")) type = TOKEN_WHILE;
+  else if (isKeyword(parser, "typeof")) type = TOKEN_TYPEOF;
 
   makeToken(parser, type);
 }
@@ -2016,6 +2018,18 @@ static void staticField(Compiler* compiler, bool allowAssignment)
   variable(compiler, allowAssignment, index, loadInstruction);
 }
 
+static void typeof(Compiler* compiler, bool allowAssignment)
+{
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'typeof'.");
+  ignoreNewlines(compiler);
+
+  expression(compiler);
+  emit(compiler, CODE_TYPEOF);
+
+  ignoreNewlines(compiler);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+}
+
 // Returns `true` if [name] is a local variable name (starts with a lowercase
 // letter).
 static bool isLocalName(const char* name)
@@ -2470,6 +2484,7 @@ GrammarRule rules[] =
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_WHILE         */ UNUSED,
+  /* TOKEN_TYPEOF        */ PREFIX(typeof),
   /* TOKEN_FIELD         */ PREFIX(field),
   /* TOKEN_STATIC_FIELD  */ PREFIX(staticField),
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
@@ -2564,6 +2579,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_LOAD_LOCAL_6:
     case CODE_LOAD_LOCAL_7:
     case CODE_LOAD_LOCAL_8:
+    case CODE_TYPEOF:
       return 0;
 
     case CODE_LOAD_LOCAL:

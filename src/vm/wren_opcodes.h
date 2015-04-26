@@ -187,6 +187,9 @@ OPCODE(LOAD_MODULE)
 // error otherwise.
 OPCODE(IMPORT_VARIABLE)
 
+// Return the type of its argument
+OPCODE(TYPEOF)
+
 // This pseudo-instruction indicates the end of the bytecode. It should
 // always be preceded by a `CODE_RETURN`, so is never actually executed.
 OPCODE(END)

@@ -1208,6 +1208,17 @@ static bool runInterpreter(WrenVM* vm)
       DISPATCH();
     }
 
+    CASE_CODE(TYPEOF):
+    {
+      Value variable = POP();
+
+      ObjClass * tmpClass = wrenGetClass(vm, variable);
+      const char * str = tmpClass->name->value;
+      PUSH(wrenNewString(vm, str, strlen(str)));
+
+      DISPATCH();
+    }
+
     CASE_CODE(END):
       // A CODE_END should always be preceded by a CODE_RETURN. If we get here,
       // the compiler generated wrong code.

@@ -29,7 +29,7 @@ one lump. If you're one of those folks, here you go:
 
     :::dart
     break class else false for foreign if import in is
-    new null return static super this true var while
+    new null return static super this true typeof var while
 
 ## Identifiers
 
