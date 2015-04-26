@@ -1213,8 +1213,7 @@ static bool runInterpreter(WrenVM* vm)
       Value variable = POP();
 
       ObjClass * tmpClass = wrenGetClass(vm, variable);
-      const char * str = tmpClass->name->value;
-      PUSH(wrenNewString(vm, str, strlen(str)));
+      PUSH(wrenObjectToValue((Obj*)tmpClass));
 
       DISPATCH();
     }

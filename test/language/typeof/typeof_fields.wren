@@ -5,7 +5,7 @@ class Test {
   }
 
   check {
-    return typeof(_intField) == "Num" && typeof(__staticField) == "Map"
+    return typeof(_intField) == Num && typeof(__staticField) == Map
   }
 }
 
