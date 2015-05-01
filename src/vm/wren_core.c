@@ -937,6 +937,11 @@ DEF_PRIMITIVE(num_truncate)
   RETURN_NUM(integer);
 }
 
+DEF_PRIMITIVE(object_same)
+{
+  RETURN_BOOL(wrenValuesEqual(args[1], args[2]));
+}
+
 DEF_PRIMITIVE(object_not)
 {
   RETURN_VAL(FALSE_VAL);
@@ -1285,7 +1290,7 @@ static ObjClass* defineClass(WrenVM* vm, const char* name)
 void wrenInitializeCore(WrenVM* vm)
 {
   // Define the root Object class. This has to be done a little specially
-  // because it has no superclass and an unusual metaclass (Class).
+  // because it has no superclass.
   vm->objectClass = defineClass(vm, "Object");
   PRIMITIVE(vm->objectClass, "!", object_not);
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
@@ -1295,40 +1300,48 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->objectClass, "type", object_type);
   PRIMITIVE(vm->objectClass, "<instantiate>", object_instantiate);
 
-  // Now we can define Class, which is a subclass of Object, but Object's
-  // metaclass.
+  // Now we can define Class, which is a subclass of Object.
   vm->classClass = defineClass(vm, "Class");
-
-  // Now that Object and Class are defined, we can wire them up to each other.
   wrenBindSuperclass(vm, vm->classClass, vm->objectClass);
-  vm->objectClass->obj.classObj = vm->classClass;
-  vm->classClass->obj.classObj = vm->classClass;
-
-  // Define the methods specific to Class after wiring up its superclass to
-  // prevent the inherited ones from overwriting them.
   PRIMITIVE(vm->classClass, "<instantiate>", class_instantiate);
   PRIMITIVE(vm->classClass, "name", class_name);
   PRIMITIVE(vm->classClass, "supertype", class_supertype);
 
+  // Finally, we can define Object's metaclass which is a subclass of Class.
+  ObjClass* objectMetaclass = defineClass(vm, "Object metaclass");
+
+  // Wire up the metaclass relationships now that all three classes are built.
+  vm->objectClass->obj.classObj = objectMetaclass;
+  objectMetaclass->obj.classObj = vm->classClass;
+  vm->classClass->obj.classObj = vm->classClass;
+
+  // Do this after wiring up the metaclasses so objectMetaclass doesn't get
+  // collected.
+  wrenBindSuperclass(vm, objectMetaclass, vm->classClass);
+
+  PRIMITIVE(objectMetaclass, "same(_,_)", object_same);
+
   // The core class diagram ends up looking like this, where single lines point
   // to a class's superclass, and double lines point to its metaclass:
   //
-  //           .------------.    .========.
-  //           |            |    ||      ||
-  //           v            |    v       ||
-  //     .---------.   .--------------.  ||
-  //     | Object  |==>|    Class     |==='
-  //     '---------'   '--------------'
-  //          ^               ^
-  //          |               |
-  //     .---------.   .--------------.   -.
-  //     |  Base   |==>|  Base.type   |    |
-  //     '---------'   '--------------'    |
-  //          ^               ^            | Hypothetical example classes
-  //          |               |            |
-  //     .---------.   .--------------.    |
-  //     | Derived |==>| Derived.type |    |
-  //     '---------'   '--------------'   -'
+  //        .------------------------------------. .====.
+  //        |                  .---------------. | #    #
+  //        v                  |               v | v    #
+  //   .---------.   .-------------------.   .-------.  #
+  //   | Object  |==>| Object metaclass  |==>| Class |=="
+  //   '---------'   '-------------------'   '-------'
+  //        ^                                 ^ ^ ^ ^
+  //        |                  .--------------' # | #
+  //        |                  |                # | #
+  //   .---------.   .-------------------.      # | # -.
+  //   |  Base   |==>|  Base metaclass   |======" | #  |
+  //   '---------'   '-------------------'        | #  |
+  //        ^                                     | #  |
+  //        |                  .------------------' #  | Example classes
+  //        |                  |                    #  |
+  //   .---------.   .-------------------.          #  |
+  //   | Derived |==>| Derived metaclass |=========="  |
+  //   '---------'   '-------------------'            -'
 
   // The rest of the classes can now be defined normally.
   wrenInterpret(vm, "", coreLibSource);
