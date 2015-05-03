@@ -133,7 +133,8 @@ typedef enum
 typedef struct
 {
   ValueType type;
-  union {
+  union
+  {
     double num;
     Obj* obj;
   } as;
@@ -225,6 +226,10 @@ typedef struct sObjFiber
   // If the fiber failed because of a runtime error, this will contain the
   // error message. Otherwise, it will be NULL.
   ObjString* error;
+
+  // A unique-ish numeric ID for the fiber. Lets fibers be used as map keys.
+  // Unique-ish since IDs may overflow and wrap around.
+  uint16_t id;
 
   // This will be true if the caller that called this fiber did so using "try".
   // In that case, if this fiber fails with an error, the error will be given

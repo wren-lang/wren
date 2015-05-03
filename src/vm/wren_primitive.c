@@ -53,13 +53,13 @@ uint32_t validateIndexValue(WrenVM* vm, Value* args, uint32_t count,
 bool validateKey(WrenVM* vm, Value* args, int index)
 {
   Value arg = args[index];
-  if (IS_BOOL(arg) || IS_CLASS(arg) || IS_NULL(arg) ||
+  if (IS_BOOL(arg) || IS_CLASS(arg) || IS_FIBER(arg) || IS_NULL(arg) ||
       IS_NUM(arg) || IS_RANGE(arg) || IS_STRING(arg))
   {
     return true;
   }
 
-  args[0] = CONST_STRING(vm, "Key must be a value type.");
+  args[0] = CONST_STRING(vm, "Key must be a value type or fiber.");
   return false;
 }
 

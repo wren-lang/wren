@@ -1,3 +1,5 @@
+var fiber = new Fiber {}
+
 var map = {
   null: "null value",
   true: "true value",
@@ -6,7 +8,8 @@ var map = {
   1.2: "1 point 2",
   List: "list class",
   "null": "string value",
-  (1..3): "1 to 3"
+  (1..3): "1 to 3",
+  fiber: "fiber"
 }
 
 IO.print(map[null]) // expect: null value
@@ -17,8 +20,9 @@ IO.print(map[1.2]) // expect: 1 point 2
 IO.print(map[List]) // expect: list class
 IO.print(map["null"]) // expect: string value
 IO.print(map[1..3]) // expect: 1 to 3
+IO.print(map[fiber]) // expect: fiber
 
-IO.print(map.count) // expect: 8
+IO.print(map.count) // expect: 9
 
 // Use the same keys (but sometimes different objects) to ensure keys have the
 // right equality semantics.
@@ -40,4 +44,4 @@ IO.print(map[List]) // expect: new list class
 IO.print(map["null"]) // expect: new string value
 IO.print(map[1..3]) // expect: new 1 to 3
 
-IO.print(map.count) // expect: 8
+IO.print(map.count) // expect: 9
