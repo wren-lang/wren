@@ -105,13 +105,13 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
 
 void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
 {
-  // Make sure the buffer is big enough to reach the symbol's index.
-  // TODO: Do a single grow instead of a loop.
-  Method noMethod;
-  noMethod.type = METHOD_NONE;
-  while (symbol >= classObj->methods.count)
+  // Make sure the buffer is big enough to contain the symbol's index.
+  if (symbol >= classObj->methods.count)
   {
-    wrenMethodBufferWrite(vm, &classObj->methods, noMethod);
+    Method noMethod;
+    noMethod.type = METHOD_NONE;
+    wrenMethodBufferFill(vm, &classObj->methods, noMethod,
+                         symbol - classObj->methods.count + 1);
   }
 
   classObj->methods.data[symbol] = method;

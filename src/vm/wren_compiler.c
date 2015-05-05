@@ -665,12 +665,7 @@ static void readUnicodeEscape(Parser* parser)
   int numBytes = wrenUtf8NumBytes(value);
   if (numBytes != 0)
   {
-    // TODO: Function to grow buffer in one allocation.
-    for (int i = 0; i < numBytes; i++)
-    {
-      wrenByteBufferWrite(parser->vm, &parser->string, 0);
-    }
-
+    wrenByteBufferFill(parser->vm, &parser->string, 0, numBytes);
     wrenUtf8Encode(value,
                    parser->string.data + parser->string.count - numBytes);
   }

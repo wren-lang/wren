@@ -25,6 +25,8 @@ typedef struct {
     } name##Buffer; \
     void wren##name##BufferInit(name##Buffer* buffer); \
     void wren##name##BufferClear(WrenVM* vm, name##Buffer* buffer); \
+    void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data, \
+                                int count); \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
 
 // This should be used once for each type instantiation, somewhere in a .c file.
@@ -42,17 +44,31 @@ typedef struct {
       wren##name##BufferInit(buffer); \
     } \
     \
-    void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data) \
+    void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data, \
+                                int count) \
     { \
-      if (buffer->capacity < buffer->count + 1) \
+      if (buffer->capacity < buffer->count + count) \
       { \
-        int capacity = buffer->capacity == 0 ? 8 : buffer->capacity * 2; \
+        int capacity = buffer->capacity; \
+        while (capacity < buffer->count + count) \
+        { \
+          capacity = capacity == 0 ? 8 : capacity * 2; \
+        } \
+        \
         buffer->data = (type*)wrenReallocate(vm, buffer->data, \
             buffer->capacity * sizeof(type), capacity * sizeof(type)); \
         buffer->capacity = capacity; \
       } \
-      buffer->data[buffer->count] = data; \
-      buffer->count++; \
+      \
+      for (int i = 0; i < count; i++) \
+      { \
+        buffer->data[buffer->count++] = data; \
+      } \
+    } \
+    \
+    void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data) \
+    { \
+      wren##name##BufferFill(vm, buffer, data, 1); \
     }
 
 DECLARE_BUFFER(Byte, uint8_t);
