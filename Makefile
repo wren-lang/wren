@@ -57,5 +57,4 @@ gh-pages: docs
 amalgamation: src/include/wren.h src/vm/*.h src/vm/*.c
 	./script/generate_amalgamation.py > build/wren.c
 
-.DELETE_ON_ERROR: wren.c
 .PHONY: all amalgamation builtin clean debug docs gh-pages release test watchdocs
