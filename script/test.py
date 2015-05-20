@@ -65,7 +65,7 @@ def print_line(line=None):
     sys.stdout.flush()
 
 
-def run_test(path):
+def run_test(path, example=False):
   global passed
   global failed
   global skipped
@@ -216,7 +216,9 @@ def run_test(path):
     for line in out_lines:
       if sys.version_info < (3, 0):
         line = line.encode('utf-8')
-      if expect_index >= len(expect_output):
+      if example:
+        pass
+      elif expect_index >= len(expect_output):
         fails.append('Got output "{0}" when none was expected.'.format(line))
       elif expect_output[expect_index][0] != line:
         fails.append('Expected output "{0}" on line {1} and got "{2}".'.
@@ -242,9 +244,14 @@ def run_test(path):
       print('      ' + color.PINK + fail + color.DEFAULT)
     print('')
 
+def run_example(path):
+  return run_test(path, example=True)
 
 for dir in ['core', 'io', 'language', 'limit', 'meta']:
   walk(join(WREN_DIR, 'test', dir), run_test)
+
+walk(join(WREN_DIR, 'example'), run_example)
+walk(join(WREN_DIR, 'example', 'import-module'), run_example)
 
 print_line()
 if failed == 0:

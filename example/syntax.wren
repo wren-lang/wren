@@ -90,8 +90,8 @@ class ReservedWords is SyntaxExample {
   }
 
   // `foreign`, `static`
-  foreign static bar
-  foreign baz(string)
+  // foreign static bar
+  // foreign baz(string)
   // (Remove lines above to make this file compile)
 }
 
