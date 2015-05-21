@@ -44,10 +44,17 @@ skipped = defaultdict(int)
 num_skipped = 0
 
 
-def walk(dir, callback):
-  """ Walks [dir], and executes [callback] on each file. """
+def walk(dir, callback, ignored=None):
+  """
+  Walks [dir], and executes [callback] on each file unless it is [ignored].
+  """
+
+  if not ignored:
+    ignored = []
+  ignored += [".",".."]
+
   dir = abspath(dir)
-  for file in [file for file in listdir(dir) if not file in [".",".."]]:
+  for file in [file for file in listdir(dir) if not file in ignored]:
     nfile = join(dir, file)
     if isdir(nfile):
       walk(nfile, callback)
@@ -247,11 +254,8 @@ def run_test(path, example=False):
 def run_example(path):
   return run_test(path, example=True)
 
-for dir in ['core', 'io', 'language', 'limit', 'meta']:
-  walk(join(WREN_DIR, 'test', dir), run_test)
-
+walk(join(WREN_DIR, 'test'), run_test, ignored=['benchmark'])
 walk(join(WREN_DIR, 'example'), run_example)
-walk(join(WREN_DIR, 'example', 'import-module'), run_example)
 
 print_line()
 if failed == 0:
