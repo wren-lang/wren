@@ -5,6 +5,7 @@
 #include "wren_compiler.h"
 #include "wren_value.h"
 #include "wren_utils.h"
+#include "wren_opcodes.h"
 
 // The maximum number of temporary objects that can be made visible to the GC
 // at one time.
@@ -13,7 +14,7 @@
 typedef enum
 {
   #define OPCODE(name) CODE_##name,
-  #include "wren_opcodes.h"
+  PLACE_OPCODES
   #undef OPCODE
 } Code;
 

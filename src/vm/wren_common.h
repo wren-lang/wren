@@ -37,8 +37,8 @@
 // Defaults to on on supported compilers.
 #ifndef WREN_COMPUTED_GOTO
   #ifdef _MSC_VER
-    // No computed gotos in Visual Studio.
-    #define WREN_COMPUTED_GOTO 0
+    // No real computed gotos in Visual Studio. Use the pseudo version.
+    #define WREN_COMPUTED_GOTO 2
   #else
     #define WREN_COMPUTED_GOTO 1
   #endif
@@ -183,7 +183,12 @@
 #else
 
 #define ASSERT(condition, message) do { } while (0)
-#define UNREACHABLE() do { } while (0)
+
+#if defined( _MSC_VER )
+#define UNREACHABLE() __assume(0);
+#else
+#define UNREACHABLE()  __builtin_unreachable();
+#endif
 
 #endif
 
