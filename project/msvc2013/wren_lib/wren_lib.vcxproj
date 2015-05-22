@@ -80,6 +80,8 @@
     <ClCompile Include="..\..\..\src\vm\wren_core.c" />
     <ClCompile Include="..\..\..\src\vm\wren_debug.c" />
     <ClCompile Include="..\..\..\src\vm\wren_io.c" />
+    <ClCompile Include="..\..\..\src\vm\wren_meta.c" />
+    <ClCompile Include="..\..\..\src\vm\wren_primitive.c" />
     <ClCompile Include="..\..\..\src\vm\wren_utils.c" />
     <ClCompile Include="..\..\..\src\vm\wren_value.c" />
     <ClCompile Include="..\..\..\src\vm\wren_vm.c" />
@@ -90,6 +92,8 @@
     <ClInclude Include="..\..\..\src\vm\wren_core.h" />
     <ClInclude Include="..\..\..\src\vm\wren_debug.h" />
     <ClInclude Include="..\..\..\src\vm\wren_io.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_meta.h" />
+    <ClInclude Include="..\..\..\src\vm\wren_primitive.h" />
     <ClInclude Include="..\..\..\src\vm\wren_utils.h" />
     <ClInclude Include="..\..\..\src\vm\wren_value.h" />
     <ClInclude Include="..\..\..\src\vm\wren_vm.h" />

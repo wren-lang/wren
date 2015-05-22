@@ -95,6 +95,11 @@
     <ClInclude Include="..\..\..\src\cli\vm.h" />
     <ClInclude Include="..\..\..\src\include\wren.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\wren_lib\wren_lib.vcxproj">
+      <Project>{89cf2c43-749e-4ec4-a7c3-3f22fba9b874}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
