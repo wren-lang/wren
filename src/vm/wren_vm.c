@@ -653,7 +653,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
   static void* dispatchTable[] = {
     #define OPCODE(name) &&code_##name,
-    PLACE_OPCODES  
+    PLACE_OPCODES
     #undef OPCODE
   };
 
@@ -673,6 +673,12 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #define INTERPRET_LOOP    DISPATCH();
   #define CASE_CODE(name)   code_##name
 
+  // In this pseudo-computed-goto implementation the dispatchTable is replaced
+  // by a switch which contains only goto statements for each case. So instead
+  // of explicitly making a table we let the compiler figure out what to.
+  // Note that OPCODE() can't be undefined right after the DISPATCH() because
+  // it is only actually used by the preprocessor when DISPATCH() is used. So
+  // we undefine it after the end of the function.
   #define OPCODE(name) case CODE_##name: goto code_##name;
   #define DISPATCH()                                            \
       do                                                        \
@@ -688,6 +694,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       while (false)
 
   #else
+
   #define INTERPRET_LOOP                                        \
       loop:                                                     \
         DEBUG_TRACE_INSTRUCTIONS();                             \
@@ -1181,8 +1188,12 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
 #undef READ_BYTE
 #undef READ_SHORT
+// When using the psuedo-goto we have to undef OPCODE here.
+#if WREN_COMPUTED_GOTO == 2
 #undef OPCODE
+#endif
 }
+
 
 // Creates an [ObjFn] that invokes a method with [signature] when called.
 static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)

@@ -184,10 +184,11 @@
 
 #define ASSERT(condition, message) do { } while (0)
 
+// Tell the compiler that this part of the code will never be reached.
 #if defined( _MSC_VER )
-#define UNREACHABLE() __assume(0);
+#define UNREACHABLE() __assume(0)
 #else
-#define UNREACHABLE()  __builtin_unreachable();
+#define UNREACHABLE()  __builtin_unreachable()
 #endif
 
 #endif

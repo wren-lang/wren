@@ -7,6 +7,8 @@
 // affects overall performance. Take care to run benchmarks if you change the
 // order here.
 
+// The whole file is one big macro, because it is later used inside
+// a '#define' where you cannot use an '#include'.
 #define PLACE_OPCODES                                                           \
                                                                                 \
 /* Load the constant at index [arg]. */                                         \
