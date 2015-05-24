@@ -9,7 +9,7 @@
 
 static int runRepl()
 {
-  WrenVM* vm = createVM();
+  WrenVM* vm = createVM(NULL);
 
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
@@ -50,7 +50,7 @@ int main(int argc, const char* argv[])
   }
   else if (argc == 2)
   {
-    runFile(argv[1]);
+    runFile(NULL, argv[1]);
   }
 
   return 0;

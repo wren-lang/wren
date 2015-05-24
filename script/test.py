@@ -4,7 +4,7 @@ from __future__ import print_function
 
 from collections import defaultdict
 from os import listdir
-from os.path import abspath, dirname, isdir, isfile, join, realpath, relpath, splitext
+from os.path import abspath, basename, dirname, isdir, isfile, join, realpath, relpath, splitext
 import re
 from subprocess import Popen, PIPE
 import sys
@@ -12,6 +12,7 @@ import sys
 # Runs the tests.
 WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wrend')
+TEST_APP = join(WREN_DIR, 'build', 'debug', 'test', 'wrend')
 
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error')
@@ -72,7 +73,7 @@ def print_line(line=None):
     sys.stdout.flush()
 
 
-def run_test(path, example=False):
+def run_script(app, path, type):
   global passed
   global failed
   global skipped
@@ -155,7 +156,12 @@ def run_test(path, example=False):
     input_bytes = "".join(input_lines).encode("utf-8")
 
   # Invoke wren and run the test.
-  proc = Popen([WREN_APP, path], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  test_arg = path
+  if type == "api test":
+    # Just pass the suite name to API tests.
+    test_arg = basename(splitext(test_arg)[0])
+
+  proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
   (out, err) = proc.communicate(input_bytes)
 
   fails = []
@@ -223,7 +229,9 @@ def run_test(path, example=False):
     for line in out_lines:
       if sys.version_info < (3, 0):
         line = line.encode('utf-8')
-      if example:
+
+      if type == "example":
+        # Ignore output from examples.
         pass
       elif expect_index >= len(expect_output):
         fails.append('Got output "{0}" when none was expected.'.format(line))
@@ -251,10 +259,21 @@ def run_test(path, example=False):
       print('      ' + color.PINK + fail + color.DEFAULT)
     print('')
 
-def run_example(path):
-  return run_test(path, example=True)
 
-walk(join(WREN_DIR, 'test'), run_test, ignored=['benchmark'])
+def run_test(path, example=False):
+  run_script(WREN_APP, path, "test")
+
+
+def run_api_test(path):
+  run_script(TEST_APP, path, "api test")
+
+
+def run_example(path):
+  run_script(WREN_APP, path, "example")
+
+
+walk(join(WREN_DIR, 'test'), run_test, ignored=['api', 'benchmark'])
+walk(join(WREN_DIR, 'test', 'api'), run_api_test)
 walk(join(WREN_DIR, 'example'), run_example)
 
 print_line()
