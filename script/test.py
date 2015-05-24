@@ -24,25 +24,28 @@ STDIN_PATTERN = re.compile(r'// stdin: (.*)')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
 
-if sys.platform == 'win32':
-  class color:
-    GREEN = ''
-    RED = ''
-    DEFAULT = ''
-    PINK = ''
-    YELLOW = ''
-else:
-  class color:
-    GREEN = '\033[32m'
-    RED = '\033[31m'
-    DEFAULT = '\033[0m'
-    PINK = '\033[91m'
-    YELLOW = '\033[33m'
-
 passed = 0
 failed = 0
 skipped = defaultdict(int)
 num_skipped = 0
+expectations = 0
+
+
+def color_text(text, color):
+  """Converts text to a string and wraps it in the ANSI escape sequence for
+  color, if supported."""
+
+  # No ANSI escapes on Windows.
+  if sys.platform == 'win32':
+    return text
+
+  return color + str(text) + '\033[0m'
+
+
+def green(text):  return color_text(text, '\033[32m')
+def pink(text):   return color_text(text, '\033[91m')
+def red(text):    return color_text(text, '\033[31m')
+def yellow(text): return color_text(text, '\033[33m')
 
 
 def walk(dir, callback, ignored=None):
@@ -78,6 +81,7 @@ def run_script(app, path, type):
   global failed
   global skipped
   global num_skipped
+  global expectations
 
   if (splitext(path)[1] != '.wren'):
     return
@@ -103,9 +107,9 @@ def run_script(app, path, type):
 
   input_lines = []
 
-  print_line('Passed: ' + color.GREEN + str(passed) + color.DEFAULT +
-             ' Failed: ' + color.RED + str(failed) + color.DEFAULT +
-             ' Skipped: ' + color.YELLOW + str(num_skipped) + color.DEFAULT)
+  print_line('Passed: ' + green(passed) +
+             ' Failed: ' + red(failed) +
+             ' Skipped: ' + yellow(num_skipped))
 
   line_num = 1
   with open(path, 'r') as file:
@@ -113,18 +117,21 @@ def run_script(app, path, type):
       match = EXPECT_PATTERN.search(line)
       if match:
         expect_output.append((match.group(1), line_num))
+        expectations += 1
 
       match = EXPECT_ERROR_PATTERN.search(line)
       if match:
         expect_error.append(line_num)
         # If we expect compile errors, it should exit with EX_DATAERR.
         expect_return = 65
+        expectations += 1
 
       match = EXPECT_ERROR_LINE_PATTERN.search(line)
       if match:
         expect_error.append(int(match.group(1)))
         # If we expect compile errors, it should exit with EX_DATAERR.
         expect_return = 65
+        expectations += 1
 
       match = EXPECT_RUNTIME_ERROR_PATTERN.search(line)
       if match:
@@ -132,6 +139,7 @@ def run_script(app, path, type):
         expect_runtime_error = match.group(1)
         # If we expect a runtime error, it should exit with EX_SOFTWARE.
         expect_return = 70
+        expectations += 1
 
       match = STDIN_PATTERN.search(line)
       if match:
@@ -250,13 +258,12 @@ def run_script(app, path, type):
   # Display the results.
   if len(fails) == 0:
     passed += 1
-    #print color.GREEN + 'PASS' + color.DEFAULT + ': ' + path
   else:
     failed += 1
-    print_line(color.RED + 'FAIL' + color.DEFAULT + ': ' + path)
+    print_line(red('FAIL') + ': ' + path)
     print('')
     for fail in fails:
-      print('      ' + color.PINK + fail + color.DEFAULT)
+      print('      ' + pink(fail))
     print('')
 
 
@@ -278,14 +285,13 @@ walk(join(WREN_DIR, 'example'), run_example)
 
 print_line()
 if failed == 0:
-  print('All ' + color.GREEN + str(passed) + color.DEFAULT + ' tests passed.')
+  print('All ' + green(passed) + ' tests passed (' + str(expectations) +
+        ' expectations).')
 else:
-  print(color.GREEN + str(passed) + color.DEFAULT + ' tests passed. ' +
-       color.RED + str(failed) + color.DEFAULT + ' tests failed.')
+  print(green(passed) + ' tests passed. ' + red(failed) + ' tests failed.')
 
 for key in sorted(skipped.keys()):
-  print('Skipped ' + color.YELLOW + str(skipped[key]) + color.DEFAULT +
-       ' tests: ' + key)
+  print('Skipped ' + yellow(skipped[key]) + ' tests: ' + key)
 
 if failed != 0:
   sys.exit(1)
