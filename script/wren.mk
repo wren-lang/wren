@@ -23,6 +23,7 @@ CLI_HEADERS  := $(wildcard src/cli/*.h)
 VM_HEADERS   := $(wildcard src/vm/*.h)
 CLI_SOURCES  := $(wildcard src/cli/*.c)
 VM_SOURCES   := $(wildcard src/vm/*.c)
+TEST_SOURCES := $(shell find test/api -name '*.c')
 BUILD_DIR := build
 
 C_WARNINGS := -Wall -Wextra -Werror -Wno-unused-parameter
@@ -93,37 +94,58 @@ endif
 
 CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
 
-CLI_OBJECTS := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
-VM_OBJECTS := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
+CLI_OBJECTS  := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
+VM_OBJECTS   := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
+TEST_OBJECTS := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES))
 
 # Targets ---------------------------------------------------------------------
 
-all: prep bin/$(WREN) lib/lib$(WREN).a lib/lib$(WREN).$(SHARED_EXT)
+# Builds the VM libraries and CLI interpreter.
+all: bin/$(WREN) lib/lib$(WREN).a lib/lib$(WREN).$(SHARED_EXT)
 
-prep:
-	@mkdir -p bin lib $(BUILD_DIR)/cli $(BUILD_DIR)/vm
+# Builds the API test executable.
+test: $(BUILD_DIR)/test/$(WREN)
 
 # Command-line interpreter.
 bin/$(WREN): $(CLI_OBJECTS) $(VM_OBJECTS)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
-	@$(CC) $(CFLAGS) -Isrc/include -o $@ $^ -lm
+	@mkdir -p bin
+	@$(CC) $(CFLAGS) -o $@ $^ -lm
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
 	@printf "%10s %-30s %s\n" $(AR) $@ "rcu"
+	@mkdir -p lib
 	@$(AR) rcu $@ $^
 
 # Shared library.
 lib/lib$(WREN).$(SHARED_EXT): $(VM_OBJECTS)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS) $(SHARED_LIB_FLAGS)"
+	@mkdir -p lib
 	@$(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
+
+# Test executable.
+$(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(VM_OBJECTS) $(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o
+	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
+	@mkdir -p $(BUILD_DIR)/test
+	@$(CC) $(CFLAGS) -o $@ $^ -lm
 
 # CLI object files.
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(VM_HEADERS)
 	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@mkdir -p $(BUILD_DIR)/cli
 	@$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
 
 # VM object files.
 $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
 	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@mkdir -p $(BUILD_DIR)/vm
 	@$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
+
+# Test object files.
+$(BUILD_DIR)/test/%.o: test/api/%.c $(VM_HEADERS)
+	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@mkdir -p $(dir $@)
+	@$(CC) -c $(CFLAGS) -Isrc/include -Isrc/cli -o $@ $(FILE_FLAG) $<
+
+.PHONY: all test

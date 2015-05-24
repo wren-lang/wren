@@ -34,6 +34,7 @@ clean:
 
 # Run the tests against the debug build of Wren.
 test: debug
+	@ $(MAKE) -f script/wren.mk MODE=debug test
 	@ ./script/test.py $(suite)
 
 # Take the contents of the scripts under builtin/ and copy them into their

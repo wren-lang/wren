@@ -4,11 +4,11 @@
 #include "io.h"
 #include "vm.h"
 
-WrenVM* createVM()
+WrenVM* createVM(WrenBindForeignMethodFn bindForeign)
 {
   WrenConfiguration config;
 
-  config.bindForeignMethodFn = NULL;
+  config.bindForeignMethodFn = bindForeign;
   config.loadModuleFn = readModule;
 
   // Since we're running in a standalone process, be generous with memory.
@@ -22,7 +22,7 @@ WrenVM* createVM()
   return wrenNewVM(&config);
 }
 
-void runFile(const char* path)
+void runFile(WrenBindForeignMethodFn bindForeign, const char* path)
 {
   // Use the directory where the file is as the root to resolve imports
   // relative to.
@@ -42,7 +42,7 @@ void runFile(const char* path)
     exit(66);
   }
 
-  WrenVM* vm = createVM();
+  WrenVM* vm = createVM(bindForeign);
 
   WrenInterpretResult result = wrenInterpret(vm, path, source);
 
