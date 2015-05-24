@@ -1,3 +1,3 @@
 #include "wren.h"
 
-WrenForeignMethodFn returnBoolBindForeign(const char* signature);
+WrenForeignMethodFn return_boolBindForeign(const char* signature);

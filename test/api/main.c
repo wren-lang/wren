@@ -6,6 +6,11 @@
 #include "wren.h"
 
 #include "return_bool/return_bool.h"
+#include "return_double/return_double.h"
+#include "return_null/return_null.h"
+
+#define REGISTER_TEST(name) \
+  if (strcmp(testName, #name) == 0) return name##BindForeign(fullName)
 
 // The name of the currently executing API test.
 const char* testName;
@@ -25,13 +30,13 @@ static WrenForeignMethodFn bindForeign(
   strcat(fullName, ".");
   strcat(fullName, signature);
 
-  if (strcmp(testName, "return_bool") == 0)
-  {
-    return returnBoolBindForeign(fullName);
-  }
+  REGISTER_TEST(return_bool);
+  REGISTER_TEST(return_double);
+  REGISTER_TEST(return_null);
 
   fprintf(stderr,
       "Unknown foreign method '%s' for test '%s'\n", fullName, testName);
+  exit(1);
   return NULL;
 }
 

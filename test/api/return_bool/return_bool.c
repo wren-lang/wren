@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "wren.h"
+#include "return_bool.h"
 
 static void returnTrue(WrenVM* vm)
 {
@@ -12,7 +12,7 @@ static void returnFalse(WrenVM* vm)
   wrenReturnBool(vm, false);
 }
 
-WrenForeignMethodFn returnBoolBindForeign(const char* signature)
+WrenForeignMethodFn return_boolBindForeign(const char* signature)
 {
   if (strcmp(signature, "static Api.returnTrue") == 0) return returnTrue;
   if (strcmp(signature, "static Api.returnFalse") == 0) return returnFalse;
