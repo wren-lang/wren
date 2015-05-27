@@ -4,7 +4,7 @@ from __future__ import print_function
 
 from collections import defaultdict
 from os import listdir
-from os.path import abspath, dirname, isdir, isfile, join, realpath, relpath, splitext
+from os.path import abspath, basename, dirname, isdir, isfile, join, realpath, relpath, splitext
 import re
 from subprocess import Popen, PIPE
 import sys
@@ -12,6 +12,7 @@ import sys
 # Runs the tests.
 WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wrend')
+TEST_APP = join(WREN_DIR, 'build', 'debug', 'test', 'wrend')
 
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error')
@@ -23,31 +24,41 @@ STDIN_PATTERN = re.compile(r'// stdin: (.*)')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
 
-if sys.platform == 'win32':
-  class color:
-    GREEN = ''
-    RED = ''
-    DEFAULT = ''
-    PINK = ''
-    YELLOW = ''
-else:
-  class color:
-    GREEN = '\033[32m'
-    RED = '\033[31m'
-    DEFAULT = '\033[0m'
-    PINK = '\033[91m'
-    YELLOW = '\033[33m'
-
 passed = 0
 failed = 0
 skipped = defaultdict(int)
 num_skipped = 0
+expectations = 0
 
 
-def walk(dir, callback):
-  """ Walks [dir], and executes [callback] on each file. """
+def color_text(text, color):
+  """Converts text to a string and wraps it in the ANSI escape sequence for
+  color, if supported."""
+
+  # No ANSI escapes on Windows.
+  if sys.platform == 'win32':
+    return text
+
+  return color + str(text) + '\033[0m'
+
+
+def green(text):  return color_text(text, '\033[32m')
+def pink(text):   return color_text(text, '\033[91m')
+def red(text):    return color_text(text, '\033[31m')
+def yellow(text): return color_text(text, '\033[33m')
+
+
+def walk(dir, callback, ignored=None):
+  """
+  Walks [dir], and executes [callback] on each file unless it is [ignored].
+  """
+
+  if not ignored:
+    ignored = []
+  ignored += [".",".."]
+
   dir = abspath(dir)
-  for file in [file for file in listdir(dir) if not file in [".",".."]]:
+  for file in [file for file in listdir(dir) if not file in ignored]:
     nfile = join(dir, file)
     if isdir(nfile):
       walk(nfile, callback)
@@ -65,11 +76,12 @@ def print_line(line=None):
     sys.stdout.flush()
 
 
-def run_test(path):
+def run_script(app, path, type):
   global passed
   global failed
   global skipped
   global num_skipped
+  global expectations
 
   if (splitext(path)[1] != '.wren'):
     return
@@ -95,9 +107,9 @@ def run_test(path):
 
   input_lines = []
 
-  print_line('Passed: ' + color.GREEN + str(passed) + color.DEFAULT +
-             ' Failed: ' + color.RED + str(failed) + color.DEFAULT +
-             ' Skipped: ' + color.YELLOW + str(num_skipped) + color.DEFAULT)
+  print_line('Passed: ' + green(passed) +
+             ' Failed: ' + red(failed) +
+             ' Skipped: ' + yellow(num_skipped))
 
   line_num = 1
   with open(path, 'r') as file:
@@ -105,18 +117,21 @@ def run_test(path):
       match = EXPECT_PATTERN.search(line)
       if match:
         expect_output.append((match.group(1), line_num))
+        expectations += 1
 
       match = EXPECT_ERROR_PATTERN.search(line)
       if match:
         expect_error.append(line_num)
         # If we expect compile errors, it should exit with EX_DATAERR.
         expect_return = 65
+        expectations += 1
 
       match = EXPECT_ERROR_LINE_PATTERN.search(line)
       if match:
         expect_error.append(int(match.group(1)))
         # If we expect compile errors, it should exit with EX_DATAERR.
         expect_return = 65
+        expectations += 1
 
       match = EXPECT_RUNTIME_ERROR_PATTERN.search(line)
       if match:
@@ -124,6 +139,7 @@ def run_test(path):
         expect_runtime_error = match.group(1)
         # If we expect a runtime error, it should exit with EX_SOFTWARE.
         expect_return = 70
+        expectations += 1
 
       match = STDIN_PATTERN.search(line)
       if match:
@@ -148,7 +164,12 @@ def run_test(path):
     input_bytes = "".join(input_lines).encode("utf-8")
 
   # Invoke wren and run the test.
-  proc = Popen([WREN_APP, path], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  test_arg = path
+  if type == "api test":
+    # Just pass the suite name to API tests.
+    test_arg = basename(splitext(test_arg)[0])
+
+  proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
   (out, err) = proc.communicate(input_bytes)
 
   fails = []
@@ -216,7 +237,11 @@ def run_test(path):
     for line in out_lines:
       if sys.version_info < (3, 0):
         line = line.encode('utf-8')
-      if expect_index >= len(expect_output):
+
+      if type == "example":
+        # Ignore output from examples.
+        pass
+      elif expect_index >= len(expect_output):
         fails.append('Got output "{0}" when none was expected.'.format(line))
       elif expect_output[expect_index][0] != line:
         fails.append('Expected output "{0}" on line {1} and got "{2}".'.
@@ -233,29 +258,40 @@ def run_test(path):
   # Display the results.
   if len(fails) == 0:
     passed += 1
-    #print color.GREEN + 'PASS' + color.DEFAULT + ': ' + path
   else:
     failed += 1
-    print_line(color.RED + 'FAIL' + color.DEFAULT + ': ' + path)
+    print_line(red('FAIL') + ': ' + path)
     print('')
     for fail in fails:
-      print('      ' + color.PINK + fail + color.DEFAULT)
+      print('      ' + pink(fail))
     print('')
 
 
-for dir in ['core', 'io', 'language', 'limit', 'meta']:
-  walk(join(WREN_DIR, 'test', dir), run_test)
+def run_test(path, example=False):
+  run_script(WREN_APP, path, "test")
+
+
+def run_api_test(path):
+  run_script(TEST_APP, path, "api test")
+
+
+def run_example(path):
+  run_script(WREN_APP, path, "example")
+
+
+walk(join(WREN_DIR, 'test'), run_test, ignored=['api', 'benchmark'])
+walk(join(WREN_DIR, 'test', 'api'), run_api_test)
+walk(join(WREN_DIR, 'example'), run_example)
 
 print_line()
 if failed == 0:
-  print('All ' + color.GREEN + str(passed) + color.DEFAULT + ' tests passed.')
+  print('All ' + green(passed) + ' tests passed (' + str(expectations) +
+        ' expectations).')
 else:
-  print(color.GREEN + str(passed) + color.DEFAULT + ' tests passed. ' +
-       color.RED + str(failed) + color.DEFAULT + ' tests failed.')
+  print(green(passed) + ' tests passed. ' + red(failed) + ' tests failed.')
 
 for key in sorted(skipped.keys()):
-  print('Skipped ' + color.YELLOW + str(skipped[key]) + color.DEFAULT +
-       ' tests: ' + key)
+  print('Skipped ' + yellow(skipped[key]) + ' tests: ' + key)
 
 if failed != 0:
   sys.exit(1)

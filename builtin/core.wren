@@ -127,34 +127,6 @@ class WhereSequence is Sequence {
 }
 
 class String is Sequence {
-  // Avoids recursively calling [toString] on [object] and overflowing the
-  // stack.
-  //
-  // If we are already within a call to [safeToString_] on [object] in this
-  // fiber, then this returns "...". Otherwise, it returns the result of
-  // calling [ifUnseen].
-  static safeToString_(object, ifUnseen) {
-    if (__seenByFiber == null) __seenByFiber = new Map
-    var seen = __seenByFiber[Fiber.current]
-    if (seen == null) {
-      __seenByFiber[Fiber.current] = seen = new List
-    }
-
-    // See if we are recursing on it.
-    for (outer in seen) {
-      if (Object.same(outer, object)) return "..."
-    }
-
-    seen.add(object)
-
-    var result = ifUnseen.call()
-
-    seen.removeAt(-1)
-    if (seen.count == 0) __seenByFiber.remove(Fiber.current)
-
-    return result
-  }
-
   bytes { new StringByteSequence(this) }
 }
 
@@ -176,7 +148,7 @@ class List is Sequence {
     return other
   }
 
-  toString { String.safeToString_(this) { "[" + join(", ") + "]" } }
+  toString { "[" + join(", ") + "]" }
 
   +(other) {
     var result = this[0..-1]
@@ -192,18 +164,16 @@ class Map {
   values { new MapValueSequence(this) }
 
   toString {
-    return String.safeToString_(this) {
-      var first = true
-      var result = "{"
+    var first = true
+    var result = "{"
 
-      for (key in keys) {
-        if (!first) result = result + ", "
-        first = false
-        result = result + key.toString + ": " + this[key].toString
-      }
-
-      return result + "}"
+    for (key in keys) {
+      if (!first) result = result + ", "
+      first = false
+      result = result + key.toString + ": " + this[key].toString
     }
+
+    return result + "}"
   }
 }
 
