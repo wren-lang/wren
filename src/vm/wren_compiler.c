@@ -1816,6 +1816,9 @@ static void list(Compiler* compiler, bool allowAssignment)
     {
       ignoreNewlines(compiler);
 
+      // List with trailing comma.
+      if (peek(compiler) == TOKEN_RIGHT_BRACKET) break;
+
       // Push a copy of the list since the add() call will consume it.
       emit(compiler, CODE_DUP);
 
