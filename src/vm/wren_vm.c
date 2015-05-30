@@ -964,22 +964,14 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(JUMP):
     {
-      uint16_t offset = READ_SHORT();
+      int16_t offset = READ_SHORT();
       ip += offset;
-      DISPATCH();
-    }
-
-    CASE_CODE(LOOP):
-    {
-      // Jump back to the top of the loop.
-      uint16_t offset = READ_SHORT();
-      ip -= offset;
       DISPATCH();
     }
 
     CASE_CODE(JUMP_IF):
     {
-      uint16_t offset = READ_SHORT();
+      int16_t offset = READ_SHORT();
       Value condition = POP();
 
       if (IS_FALSE(condition) || IS_NULL(condition)) ip += offset;
@@ -988,7 +980,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(AND):
     {
-      uint16_t offset = READ_SHORT();
+      int16_t offset = READ_SHORT();
       Value condition = PEEK();
 
       if (IS_FALSE(condition) || IS_NULL(condition))
@@ -1006,7 +998,7 @@ static bool runInterpreter(WrenVM* vm)
 
     CASE_CODE(OR):
     {
-      uint16_t offset = READ_SHORT();
+      int16_t offset = READ_SHORT();
       Value condition = PEEK();
 
       if (IS_FALSE(condition) || IS_NULL(condition))

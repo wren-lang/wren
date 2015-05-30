@@ -115,22 +115,18 @@ OPCODE(SUPER_14)
 OPCODE(SUPER_15)
 OPCODE(SUPER_16)
 
-// Jump the instruction pointer [arg] forward.
+// Jump the instruction pointer [arg] bytes forward or backward.
 OPCODE(JUMP)
 
-// Jump the instruction pointer [arg] backward. Pop and discard the top of
-// the stack.
-OPCODE(LOOP)
-
-// Pop and if not truthy then jump the instruction pointer [arg] forward.
+// Pop and if not truthy then jump the instruction pointer [arg] bytes forward or backward.
 OPCODE(JUMP_IF)
 
-// If the top of the stack is false, jump [arg] forward. Otherwise, pop and
-// continue.
+// If the top of the stack is false, jump [arg] bytes forward or backward.
+// Otherwise, pop and continue.
 OPCODE(AND)
 
-// If the top of the stack is non-false, jump [arg] forward. Otherwise, pop
-// and continue.
+// If the top of the stack is non-false, jump [arg] bytes forward or backward.
+// Otherwise, pop and continue.
 OPCODE(OR)
 
 // Pop [a] then [b] and push true if [b] is an instance of [a].

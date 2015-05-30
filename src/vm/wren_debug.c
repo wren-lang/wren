@@ -227,13 +227,6 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
 
-    case CODE_LOOP:
-    {
-      int offset = READ_SHORT();
-      printf("%-16s %5d to %d\n", "LOOP", offset, i - offset);
-      break;
-    }
-
     case CODE_JUMP_IF:
     {
       int offset = READ_SHORT();

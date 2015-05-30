@@ -975,11 +975,12 @@ static int emit(Compiler* compiler, int byte)
   return compiler->bytecode.count - 1;
 }
 
+
 // Emits one 16-bit argument, which will be written big endian.
 static void emitShort(Compiler* compiler, int arg)
 {
-  emit(compiler, (arg >> 8) & 0xff);
-  emit(compiler, arg & 0xff);
+  emit(compiler, ((uint16_t)arg >> 8) & 0xff);
+  emit(compiler, (uint16_t)arg & 0xff);
 }
 
 // Emits one bytecode instruction followed by a 8-bit argument. Returns the
@@ -2610,7 +2611,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_SUPER_15:
     case CODE_SUPER_16:
     case CODE_JUMP:
-    case CODE_LOOP:
     case CODE_JUMP_IF:
     case CODE_AND:
     case CODE_OR:
@@ -2669,7 +2669,7 @@ static void endLoop(Compiler* compiler)
 {
   int loopOffset = compiler->bytecode.count - compiler->loop->start + 2;
   // TODO: Check for overflow.
-  emitShortArg(compiler, CODE_LOOP, loopOffset);
+  emitShortArg(compiler, CODE_JUMP, -loopOffset);
 
   patchJump(compiler, compiler->loop->exitJump);
 
