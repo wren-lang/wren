@@ -1815,6 +1815,9 @@ static void map(Compiler* compiler, bool allowAssignment)
     {
       ignoreNewlines(compiler);
 
+      // Map with trailing comma.
+      if (peek(compiler) == TOKEN_RIGHT_BRACE) break;
+
       // Push a copy of the map since the subscript call will consume it.
       emit(compiler, CODE_DUP);
 
