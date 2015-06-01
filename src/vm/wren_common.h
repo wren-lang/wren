@@ -29,6 +29,13 @@
 #define WREN_NAN_TAGGING 1
 #endif
 
+// Generates fater code but increases the code size.
+//
+// Defaults to on.
+#ifndef WREN_PERFORMANCE
+#define WREN_PERFORMANCE 1
+#endif
+
 // If true, the VM's interpreter loop uses computed gotos. See this for more:
 // http://gcc.gnu.org/onlinedocs/gcc-3.1.1/gcc/Labels-as-Values.html
 // Enabling this speeds up the main dispatch loop a bit, but requires compiler
