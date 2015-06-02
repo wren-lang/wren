@@ -465,9 +465,9 @@ typedef struct
 //
 // 1 Sign bit
 // | 11 Exponent bits
-// | |           52 Mantissa (i.e. fraction) bits
-// | |           |
-// S(Exponent--)(Mantissa-----------------------------------------)
+// | |          52 Mantissa (i.e. fraction) bits
+// | |          |
+// S[Exponent-][Mantissa------------------------------------------]
 //
 // The details of how these are used to represent numbers aren't really
 // relevant here as long we don't interfere with them. The important bit is NaN.
@@ -475,8 +475,8 @@ typedef struct
 // An IEEE double can represent a few magical values like NaN ("not a number"),
 // Infinity, and -Infinity. A NaN is any value where all exponent bits are set:
 //
-// v--NaN bits
-// -111111111111---------------------------------------------------
+//  v--NaN bits
+// -11111111111----------------------------------------------------
 //
 // Here, "-" means "doesn't matter". Any bit sequence that matches the above is
 // a NaN. With all of those "-", it obvious there are a *lot* of different
@@ -489,8 +489,8 @@ typedef struct
 // operations silently. We want the latter. Quiet NaNs are indicated by setting
 // the highest mantissa bit:
 //
-// v--Mantissa bit
-// -[NaN       ]1--------------------------------------------------
+//             v--Highest mantissa bit
+// -[NaN      ]1---------------------------------------------------
 //
 // If all of the NaN bits are set, it's not a number. Otherwise, it is.
 // That leaves all of the remaining bits as available for us to play with. We
@@ -500,15 +500,15 @@ typedef struct
 // it's set, it's a pointer.
 //
 // v--Pointer or singleton?
-// S[NaN       ]1--------------------------------------------------
+// S[NaN      ]1---------------------------------------------------
 //
 // For singleton values, we just enumerate the different values. We'll use the
 // low three bits of the mantissa for that, and only need a couple:
 //
-// 3 Type bits--v
-// 0[NaN       ]1-----------------------------------------------[T]
+//                                                 3 Type bits--v
+// 0[NaN      ]1------------------------------------------------[T]
 //
-// For pointers, we are left with 48 bits of mantissa to store an address.
+// For pointers, we are left with 51 bits of mantissa to store an address.
 // That's more than enough room for a 32-bit address. Even 64-bit machines
 // only actually use 48 bits for addresses, so we've got plenty. We just stuff
 // the address right into the mantissa.
