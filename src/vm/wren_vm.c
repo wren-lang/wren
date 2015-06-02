@@ -840,12 +840,10 @@ static bool runInterpreter(WrenVM* vm)
       int numArgs = instruction - CODE_SUPER_0 + 1;
       int symbol = READ_SHORT();
 
-      // The receiver is the first argument.
       Value* args = fiber->stackTop - numArgs;
-      ObjClass* classObj = wrenGetClassInline(vm, args[0]);
-
-      // Ignore methods defined on the receiver's immediate class.
-      classObj = classObj->superclass;
+      
+      // The superclass is stored in a constant.
+      ObjClass* classObj = AS_CLASS(fn->constants[READ_SHORT()]);
 
       // If the class's method table doesn't include the symbol, bail.
       if (symbol >= classObj->methods.count)
@@ -1218,9 +1216,10 @@ static bool runInterpreter(WrenVM* vm)
   // or a runtime error.
   UNREACHABLE();
   return false;
+
+  #undef READ_BYTE
+  #undef READ_SHORT
 }
-#undef READ_BYTE
-#undef READ_SHORT
 
 // Creates an [ObjFn] that invokes a method with [signature] when called.
 static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)

@@ -1640,6 +1640,20 @@ static void callSignature(Compiler* compiler, Code instruction,
 {
   int symbol = signatureSymbol(compiler, signature);
   emitShortArg(compiler, (Code)(instruction + signature->arity), symbol);
+
+  if (instruction == CODE_SUPER_0)
+  {
+    // Super calls need to be statically bound to the class's superclass. This
+    // ensures we call the right method even when a method containing a super
+    // call is inherited by another subclass.
+    //
+    // We bind it at class definition time by storing a reference to the
+    // superclass in a constant. So, here, we create a slot in the constant
+    // table and store NULL in it. When the method is bound, we'll look up the
+    // superclass then and store it in the constant slot.
+    int constant = addConstant(compiler, NULL_VAL);
+    emitShort(compiler, constant);
+  }
 }
 
 // Compiles a method call with [numArgs] for a method with [name] with [length].
@@ -2592,6 +2606,16 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_CALL_14:
     case CODE_CALL_15:
     case CODE_CALL_16:
+    case CODE_JUMP:
+    case CODE_LOOP:
+    case CODE_JUMP_IF:
+    case CODE_AND:
+    case CODE_OR:
+    case CODE_METHOD_INSTANCE:
+    case CODE_METHOD_STATIC:
+    case CODE_LOAD_MODULE:
+      return 2;
+
     case CODE_SUPER_0:
     case CODE_SUPER_1:
     case CODE_SUPER_2:
@@ -2609,16 +2633,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_SUPER_14:
     case CODE_SUPER_15:
     case CODE_SUPER_16:
-    case CODE_JUMP:
-    case CODE_LOOP:
-    case CODE_JUMP_IF:
-    case CODE_AND:
-    case CODE_OR:
-    case CODE_METHOD_INSTANCE:
-    case CODE_METHOD_STATIC:
-    case CODE_LOAD_MODULE:
-      return 2;
-
     case CODE_IMPORT_VARIABLE:
       return 4;
 
@@ -3223,6 +3237,33 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
         // overflows when the subclass is created.
         fn->bytecode[ip++] += classObj->superclass->numFields;
         break;
+
+      case CODE_SUPER_0:
+      case CODE_SUPER_1:
+      case CODE_SUPER_2:
+      case CODE_SUPER_3:
+      case CODE_SUPER_4:
+      case CODE_SUPER_5:
+      case CODE_SUPER_6:
+      case CODE_SUPER_7:
+      case CODE_SUPER_8:
+      case CODE_SUPER_9:
+      case CODE_SUPER_10:
+      case CODE_SUPER_11:
+      case CODE_SUPER_12:
+      case CODE_SUPER_13:
+      case CODE_SUPER_14:
+      case CODE_SUPER_15:
+      case CODE_SUPER_16:
+      {
+        // Skip over the symbol.
+        ip += 2;
+        
+        // Fill in the constant slot with a reference to the superclass.
+        int constant = (fn->bytecode[ip] << 8) | fn->bytecode[ip + 1];
+        fn->constants[constant] = OBJ_VAL(classObj->superclass);
+        break;
+      }
 
       case CODE_CLOSURE:
       {
