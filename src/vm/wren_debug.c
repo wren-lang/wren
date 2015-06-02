@@ -215,8 +215,9 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int numArgs = bytecode[i - 1] - CODE_SUPER_0;
       int symbol = READ_SHORT();
-      printf("SUPER_%-10d %5d '%s'\n", numArgs, symbol,
-             vm->methodNames.data[symbol].buffer);
+      int superclass = READ_SHORT();
+      printf("SUPER_%-10d %5d '%s' %5d\n", numArgs, symbol,
+             vm->methodNames.data[symbol].buffer, superclass);
       break;
     }
 
