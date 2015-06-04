@@ -774,9 +774,6 @@ static bool runInterpreter(WrenVM* vm)
       }                                                                        \
       while (false)
 
-  #define LOAD_LOCAL_CODE(slot) \
-      PUSH(stackStart[(slot)])
-
   #define LOAD_STORE_FIELD_CODE(is_load, use_this)                             \
       do                                                                       \
       {                                                                        \
@@ -803,63 +800,19 @@ static bool runInterpreter(WrenVM* vm)
   INTERPRET_LOOP
   {
     CASE_CODE(LOAD_LOCAL_0):
-    #if WREN_PERFORMANCE
-      LOAD_LOCAL_CODE(0);
-      DISPATCH();
-    #endif
-
     CASE_CODE(LOAD_LOCAL_1):
-    #if WREN_PERFORMANCE
-      LOAD_LOCAL_CODE(1);
-      DISPATCH();
-    #endif
-
     CASE_CODE(LOAD_LOCAL_2):
-    #if WREN_PERFORMANCE
-      LOAD_LOCAL_CODE(2);
-      DISPATCH();
-    #endif
-
     CASE_CODE(LOAD_LOCAL_3):
-    #if WREN_PERFORMANCE
-      LOAD_LOCAL_CODE(3);
-      DISPATCH();
-    #endif
-
     CASE_CODE(LOAD_LOCAL_4):
-    #if WREN_PERFORMANCE
-      LOAD_LOCAL_CODE(4);
-      DISPATCH();
-    #endif
-
     CASE_CODE(LOAD_LOCAL_5):
-    #if WREN_PERFORMANCE
-      LOAD_LOCAL_CODE(5);
-      DISPATCH();
-    #endif
-
     CASE_CODE(LOAD_LOCAL_6):
-    #if WREN_PERFORMANCE
-      LOAD_LOCAL_CODE(6);
-      DISPATCH();
-    #endif
-
     CASE_CODE(LOAD_LOCAL_7):
-    #if WREN_PERFORMANCE
-      LOAD_LOCAL_CODE(7);
-      DISPATCH();
-    #endif
-
     CASE_CODE(LOAD_LOCAL_8):
-    #if WREN_PERFORMANCE
-      LOAD_LOCAL_CODE(8);
-    #else
-      LOAD_LOCAL_CODE(instruction - CODE_LOAD_LOCAL_0);
-    #endif
+      PUSH(stackStart[instruction - CODE_LOAD_LOCAL_0]);
       DISPATCH();
 
     CASE_CODE(LOAD_LOCAL):
-      LOAD_LOCAL_CODE(READ_BYTE());
+      PUSH(stackStart[READ_BYTE()]);
       DISPATCH();
 
     CASE_CODE(LOAD_FIELD_THIS):
@@ -1327,17 +1280,8 @@ static bool runInterpreter(WrenVM* vm)
     }
 
     CASE_CODE(METHOD_INSTANCE):
-    #if WREN_PERFORMANCE
-      METHOD_CODE(CODE_METHOD_INSTANCE);
-      DISPATCH();
-    #endif
-
     CASE_CODE(METHOD_STATIC):
-    #if WREN_PERFORMANCE
-      METHOD_CODE(CODE_METHOD_STATIC);
-    #else
       METHOD_CODE(instruction);
-    #endif
       DISPATCH();
 
     CASE_CODE(LOAD_MODULE):
