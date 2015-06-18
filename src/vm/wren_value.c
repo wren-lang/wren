@@ -898,10 +898,7 @@ static void markFn(WrenVM* vm, ObjFn* fn)
     wrenMarkValue(vm, fn->constants[i]);
   }
 
-  if (fn->debug->sourcePath != NULL)
-  {
-    wrenMarkObj(vm, (Obj*)fn->debug->sourcePath);
-  }
+  wrenMarkObj(vm, (Obj*)fn->debug->sourcePath);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFn);

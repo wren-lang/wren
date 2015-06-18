@@ -133,7 +133,7 @@ static void collectGarbage(WrenVM* vm)
   // already been freed.
   vm->bytesAllocated = 0;
 
-  if (vm->modules != NULL) wrenMarkObj(vm, (Obj*)vm->modules);
+  wrenMarkObj(vm, (Obj*)vm->modules);
 
   // Temporary roots.
   for (int i = 0; i < vm->numTempRoots; i++)
@@ -142,7 +142,7 @@ static void collectGarbage(WrenVM* vm)
   }
 
   // The current fiber.
-  if (vm->fiber != NULL) wrenMarkObj(vm, (Obj*)vm->fiber);
+  wrenMarkObj(vm, (Obj*)vm->fiber);
 
   // The method handles.
   for (WrenMethod* handle = vm->methodHandles;

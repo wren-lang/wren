@@ -3288,10 +3288,7 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 
 void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 {
-  if (compiler->parser->sourcePath != NULL)
-  {
-    wrenMarkObj(vm, (Obj*)compiler->parser->sourcePath);
-  }
+  wrenMarkObj(vm, (Obj*)compiler->parser->sourcePath);
 
   // Walk up the parent chain to mark the outer compilers too. The VM only
   // tracks the innermost one.
