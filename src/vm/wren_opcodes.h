@@ -133,9 +133,6 @@ OPCODE(AND)
 // and continue.
 OPCODE(OR)
 
-// Pop [a] then [b] and push true if [b] is an instance of [a].
-OPCODE(IS)
-
 // Close the upvalue for the local on the top of the stack, then pop it.
 OPCODE(CLOSE_UPVALUE)
 

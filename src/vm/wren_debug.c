@@ -256,7 +256,6 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
 
-    case CODE_IS:            printf("CODE_IS\n"); break;
     case CODE_CLOSE_UPVALUE: printf("CLOSE_UPVALUE\n"); break;
     case CODE_RETURN:        printf("CODE_RETURN\n"); break;
 

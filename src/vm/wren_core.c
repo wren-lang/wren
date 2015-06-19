@@ -957,6 +957,28 @@ DEF_PRIMITIVE(object_bangeq)
   RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
+DEF_PRIMITIVE(object_is)
+{
+  if (!IS_CLASS(args[1]))
+  {
+    RETURN_ERROR("Right operand must be a class.");
+  }
+
+  ObjClass *classObj = wrenGetClass(vm, args[0]);
+  ObjClass *baseClassObj = AS_CLASS(args[1]);
+
+  // Walk the superclass chain looking for the class.
+  do
+  {
+    if (baseClassObj == classObj) RETURN_BOOL(true);
+
+    classObj = classObj->superclass;
+  }
+  while (classObj != NULL);
+
+  RETURN_BOOL(false);
+}
+
 DEF_PRIMITIVE(object_new)
 {
   // This is the default argument-less constructor that all objects inherit.
@@ -1296,6 +1318,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
   PRIMITIVE(vm->objectClass, "new", object_new);
+  PRIMITIVE(vm->objectClass, "is(_)", object_is);
   PRIMITIVE(vm->objectClass, "toString", object_toString);
   PRIMITIVE(vm->objectClass, "type", object_type);
   PRIMITIVE(vm->objectClass, "<instantiate>", object_instantiate);

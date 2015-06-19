@@ -2218,16 +2218,6 @@ static void new_(Compiler* compiler, bool allowAssignment)
   methodCall(compiler, CODE_CALL_0, "new", 3);
 }
 
-static void is(Compiler* compiler, bool allowAssignment)
-{
-  ignoreNewlines(compiler);
-
-  // Compile the right-hand side.
-  parsePrecedence(compiler, false, PREC_CALL);
-
-  emit(compiler, CODE_IS);
-}
-
 static void and_(Compiler* compiler, bool allowAssignment)
 {
   ignoreNewlines(compiler);
@@ -2469,7 +2459,7 @@ GrammarRule rules[] =
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IMPORT        */ UNUSED,
   /* TOKEN_IN            */ UNUSED,
-  /* TOKEN_IS            */ INFIX(PREC_IS, is),
+  /* TOKEN_IS            */ INFIX_OPERATOR(PREC_IS, "is"),
   /* TOKEN_NEW           */ { new_, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_NULL          */ PREFIX(null),
   /* TOKEN_RETURN        */ UNUSED,
@@ -2560,7 +2550,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_TRUE:
     case CODE_POP:
     case CODE_DUP:
-    case CODE_IS:
     case CODE_CLOSE_UPVALUE:
     case CODE_RETURN:
     case CODE_END:
