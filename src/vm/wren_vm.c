@@ -427,26 +427,29 @@ static inline void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
   }
 }
 
+// Looks up the previously loaded module with [name].
+//
+// Returns `NULL` if no module with that name has been loaded.
+static ObjModule* getModule(WrenVM* vm, Value name)
+{
+  Value moduleValue = wrenMapGet(vm->modules, name);
+  return !IS_UNDEFINED(moduleValue) ? AS_MODULE(moduleValue) : NULL;
+}
+
 // Looks up the core module in the module map.
 static ObjModule* getCoreModule(WrenVM* vm)
 {
-  Value moduleValue = wrenMapGet(vm->modules, NULL_VAL);
-  ASSERT(!IS_UNDEFINED(moduleValue), "Could not find core module.");
-  return AS_MODULE(moduleValue);
+  ObjModule* module = getModule(vm, NULL_VAL);
+  ASSERT(module != NULL, "Could not find core module.");
+  return module;
 }
 
 static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
 {
-  ObjModule* module;
-  Value moduleValue = wrenMapGet(vm->modules, name);
+  ObjModule* module = getModule(vm, name);
 
   // See if the module has already been loaded.
-  if (!IS_UNDEFINED(moduleValue))
-  {
-    // Execute the new code in the context of the existing module.
-    module = AS_MODULE(moduleValue);
-  }
-  else
+  if (module == NULL)
   {
     module = wrenNewModule(vm, AS_STRING(name));
 
@@ -505,10 +508,8 @@ static Value importModule(WrenVM* vm, Value name)
 static bool importVariable(WrenVM* vm, Value moduleName, Value variableName,
                             Value* result)
 {
-  Value moduleValue = wrenMapGet(vm->modules, moduleName);
-  ASSERT(!IS_UNDEFINED(moduleValue), "Should only look up loaded modules.");
-
-  ObjModule* module = AS_MODULE(moduleValue);
+  ObjModule* module = getModule(vm, moduleName);
+  ASSERT(module != NULL, "Should only look up loaded modules.");
 
   ObjString* variable = AS_STRING(variableName);
   uint32_t variableEntry = wrenSymbolTableFind(&module->variableNames,
@@ -1225,9 +1226,8 @@ WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
   Value moduleName = wrenStringFormat(vm, "$", module);
   wrenPushRoot(vm, AS_OBJ(moduleName));
 
-  Value moduleValue = wrenMapGet(vm->modules, moduleName);
+  ObjModule* moduleObj = getModule(vm, moduleName);
   // TODO: Handle module not being found.
-  ObjModule* moduleObj = AS_MODULE(moduleValue);
 
   int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
                                          variable, strlen(variable));
