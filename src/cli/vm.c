@@ -26,10 +26,11 @@ void runFile(WrenBindForeignMethodFn bindForeign, const char* path)
 {
   // Use the directory where the file is as the root to resolve imports
   // relative to.
+  char* root = NULL;
   const char* lastSlash = strrchr(path, '/');
   if (lastSlash != NULL)
   {
-    char* root = (char*)malloc(lastSlash - path + 2);
+    root = (char*)malloc(lastSlash - path + 2);
     memcpy(root, path, lastSlash - path + 1);
     root[lastSlash - path + 1] = '\0';
     setRootDirectory(root);
@@ -48,7 +49,7 @@ void runFile(WrenBindForeignMethodFn bindForeign, const char* path)
 
   wrenFreeVM(vm);
   free(source);
-  setRootDirectory(NULL);
+  free(root);
 
   // Exit with an error code if the script failed.
   if (result == WREN_RESULT_COMPILE_ERROR) exit(65); // EX_DATAERR.

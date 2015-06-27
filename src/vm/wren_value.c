@@ -167,7 +167,7 @@ void wrenResetFiber(ObjFiber* fiber, Obj* fn)
 }
 
 ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
-                       Value* constants, int numConstants,
+                       const Value* constants, int numConstants,
                        int numUpvalues, int arity,
                        uint8_t* bytecode, int bytecodeLength,
                        ObjString* debugSourcePath,

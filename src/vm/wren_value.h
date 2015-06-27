@@ -627,7 +627,7 @@ void wrenResetFiber(ObjFiber* fiber, Obj* fn);
 // function will take over ownership of [bytecode] and [sourceLines]. It will
 // copy [constants] into its own array.
 ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
-                       Value* constants, int numConstants,
+                       const Value* constants, int numConstants,
                        int numUpvalues, int arity,
                        uint8_t* bytecode, int bytecodeLength,
                        ObjString* debugSourcePath,

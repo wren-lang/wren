@@ -1295,7 +1295,7 @@ static ObjFn* endCompiler(Compiler* compiler,
   {
     wrenSetCompiler(compiler->parser->vm, compiler->parent);
 
-    // Free the code since it won't be used.
+    // Free the code and constants since they won't be used.
     freeCompiler(compiler);
     return NULL;
   }
