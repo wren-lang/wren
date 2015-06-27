@@ -143,7 +143,6 @@ int wrenUtf8Decode(const uint8_t* bytes, uint32_t length)
   }
 
   // Don't read past the end of the buffer on truncated UTF-8.
-  // TODO: Test this.
   if (remainingBytes > length - 1) return -1;
 
   while (remainingBytes > 0)
