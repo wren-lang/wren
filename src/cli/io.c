@@ -46,6 +46,10 @@ char* readFile(const char* path)
 
 void setRootDirectory(const char* path)
 {
+  if (rootDirectory != NULL)
+  {
+    free((void*)rootDirectory);
+  }
   rootDirectory = path;
 }
 

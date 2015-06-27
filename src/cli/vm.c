@@ -48,6 +48,7 @@ void runFile(WrenBindForeignMethodFn bindForeign, const char* path)
 
   wrenFreeVM(vm);
   free(source);
+  setRootDirectory(NULL);
 
   // Exit with an error code if the script failed.
   if (result == WREN_RESULT_COMPILE_ERROR) exit(65); // EX_DATAERR.

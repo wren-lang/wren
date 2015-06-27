@@ -22,9 +22,25 @@
   #include <time.h>
 #endif
 
+static void* defaultReallocate(void* ptr, size_t new_size)
+{
+  // The behavior of realloc for size == 0 is implementation defined.
+  // It can return a non NULL pointer which must not be dereferenced but nether
+  // the less must be freed. When calling the wren reallocation function with
+  // size == 0 the memory pointed to ptr must be freed and NULL returned.
+  if (ptr == NULL && new_size == 0) return NULL;
+  if (ptr != NULL && new_size == 0)
+  {
+    free(ptr);
+    return NULL;
+  }
+
+  return realloc(ptr, new_size);
+}
+
 WrenVM* wrenNewVM(WrenConfiguration* configuration)
 {
-  WrenReallocateFn reallocate = realloc;
+  WrenReallocateFn reallocate = defaultReallocate;
   if (configuration->reallocateFn != NULL)
   {
     reallocate = configuration->reallocateFn;

@@ -1280,6 +1280,7 @@ static void freeCompiler(Compiler* compiler)
 {
   wrenByteBufferClear(compiler->parser->vm, &compiler->bytecode);
   wrenIntBufferClear(compiler->parser->vm, &compiler->debugSourceLines);
+  wrenValueBufferClear(compiler->parser->vm, &compiler->constants);
 }
 
 // Finishes [compiler], which is compiling a function, method, or chunk of top
@@ -1316,6 +1317,9 @@ static ObjFn* endCompiler(Compiler* compiler,
                               debugName, debugNameLength,
                               compiler->debugSourceLines.data);
   wrenPushRoot(compiler->parser->vm, (Obj*)fn);
+
+  // Clear constants. The constants are copied by wrenNewFunction
+  wrenValueBufferClear(compiler->parser->vm, &compiler->constants);
 
   // In the function that contains this one, load the resulting function object.
   if (compiler->parent != NULL)
