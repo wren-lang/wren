@@ -1339,7 +1339,6 @@ static ObjFn* endCompiler(Compiler* compiler,
 
       // Emit arguments for each upvalue to know whether to capture a local or
       // an upvalue.
-      // TODO: Do something more efficient here?
       for (int i = 0; i < compiler->numUpvalues; i++)
       {
         emit(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0);
@@ -1716,8 +1715,13 @@ static void methodCall(Compiler* compiler, Code instruction,
 
     finishBody(&fnCompiler, false);
 
-    // TODO: Use the name of the method the block is being provided to.
-    endCompiler(&fnCompiler, "(fn)", 4);
+    // Name the function based on the method its passed to.
+    char blockName[MAX_METHOD_SIGNATURE + 15];
+    int blockLength;
+    signatureToString(&signature, blockName, &blockLength);
+    memmove(blockName + blockLength, " block argument", 16);
+
+    endCompiler(&fnCompiler, blockName, blockLength + 15);
   }
 
   // TODO: Allow Grace-style mixfix methods?
