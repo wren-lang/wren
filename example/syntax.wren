@@ -8,12 +8,20 @@
 class SyntaxExample {
   // Constructor
   new {
-    // toplevel name `IO`
+    // Top-level name `IO`
     IO.print("I am a constructor!")
-    // method calls
+
+    // Method calls
     variables
     fields()
-    // static method call
+
+    // Block arguments
+    fields { block }
+    fields {|a, b| block }
+    fields(argument) { block }
+    fields(argument) {|a, b| block }
+
+    // Static method call
     SyntaxExample.fields(1)
   }
 
@@ -46,11 +54,30 @@ class SyntaxExample {
     __a = a
   }
 
-  // setter
+  // Setter
   field=(value) { _field = value }
 
   // Method with arguments
   print(a, b) { IO.print(a + b) }
+
+  // Operators
+  +(other) { "infix + " + other }
+  -(other) { "infix - " + other }
+  *(other) { "infix * " + other }
+  /(other) { "infix / " + other }
+  %(other) { "infix % " + other }
+  <(other) { "infix < " + other }
+  >(other) { "infix > " + other }
+  <=(other) { "infix <= " + other }
+  >=(other) { "infix >= " + other }
+  ==(other) { "infix == " + other }
+  !=(other) { "infix != " + other }
+  &(other) { "infix & " + other }
+  |(other) { "infix | " + other }
+
+  ! { "prefix !" }
+  ~ { "prefix ~" }
+  - { "prefix -" }
 }
 
 // `class`, `is`
@@ -95,8 +122,9 @@ class ReservedWords is SyntaxExample {
   // (Remove lines above to make this file compile)
 }
 
-class literals is SyntaxExample {
+class Literals is SyntaxExample {
   booleans { true || false }
+
   numbers {
     0
     1234
@@ -107,6 +135,7 @@ class literals is SyntaxExample {
     0xdeadbeef
     0x1234567890ABCDEF
   }
+
   strings {
     "hi there"
     // Escapes:
@@ -121,14 +150,16 @@ class literals is SyntaxExample {
     "\t" // Tab.
     "\v" // Vertical tab.
     // Unicode code points
-    IO.print("\u0041\u0b83\u00DE") // "AஃÞ"
+    IO.print("\u0041fgdg\u0b83\u00DE") // "AஃÞ"
     // Unencoded bytes
     IO.print("\x48\x69\x2e") // "Hi."
   }
+
   ranges {
     3..8  // inclusive
     4...6 // half-inclusive
   }
+
   nothing { null }
 
   lists {
@@ -136,6 +167,7 @@ class literals is SyntaxExample {
     list[0] = 5
     list[1..2]
   }
+
   maps {
     var stringMap = {
       "George": "Harrison",
