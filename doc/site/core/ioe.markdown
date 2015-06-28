@@ -1,4 +1,4 @@
-^title io Class
+^title IO Class
 ^category core
 
 The IO class can be used to read and write to and from the console.
