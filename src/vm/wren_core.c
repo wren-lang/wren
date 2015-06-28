@@ -248,6 +248,11 @@ DEF_PRIMITIVE(class_supertype)
   RETURN_OBJ(classObj->superclass);
 }
 
+DEF_PRIMITIVE(class_toString)
+{
+  RETURN_OBJ(AS_CLASS(args[0])->name);
+}
+
 DEF_PRIMITIVE(fiber_instantiate)
 {
   // Return the Fiber class itself. When we then call "new" on it, it will
@@ -988,18 +993,9 @@ DEF_PRIMITIVE(object_new)
 
 DEF_PRIMITIVE(object_toString)
 {
-  if (IS_CLASS(args[0]))
-  {
-    RETURN_OBJ(AS_CLASS(args[0])->name);
-  }
-  else if (IS_INSTANCE(args[0]))
-  {
-    ObjInstance* instance = AS_INSTANCE(args[0]);
-    Value name = OBJ_VAL(instance->obj.classObj->name);
-    RETURN_VAL(wrenStringFormat(vm, "instance of @", name));
-  }
-
-  RETURN_VAL(CONST_STRING(vm, "<object>"));
+  Obj* obj = AS_OBJ(args[0]);
+  Value name = OBJ_VAL(obj->classObj->name);
+  RETURN_VAL(wrenStringFormat(vm, "instance of @", name));
 }
 
 DEF_PRIMITIVE(object_type)
@@ -1329,6 +1325,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->classClass, "<instantiate>", class_instantiate);
   PRIMITIVE(vm->classClass, "name", class_name);
   PRIMITIVE(vm->classClass, "supertype", class_supertype);
+  PRIMITIVE(vm->classClass, "toString", class_toString);
 
   // Finally, we can define Object's metaclass which is a subclass of Class.
   ObjClass* objectMetaclass = defineClass(vm, "Object metaclass");
