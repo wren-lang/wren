@@ -33,7 +33,7 @@ static void* defaultReallocate(void* ptr, size_t newSize)
     free(ptr);
     return NULL;
   }
-  
+
   return realloc(ptr, newSize);
 }
 
@@ -584,7 +584,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 {
   // Remember the current fiber so we can find it if a GC happens.
   vm->fiber = fiber;
-  
+
   // Hoist these into local variables. They are accessed frequently in the loop
   // but assigned less frequently. Keeping them in locals and updating them when
   // a call frame has been pushed or popped gives a large speed boost.
@@ -722,6 +722,31 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     CASE_CODE(FALSE): PUSH(FALSE_VAL); DISPATCH();
     CASE_CODE(TRUE):  PUSH(TRUE_VAL); DISPATCH();
 
+    CASE_CODE(STORE_LOCAL):
+      stackStart[READ_BYTE()] = PEEK();
+      DISPATCH();
+
+    CASE_CODE(CONSTANT):
+      PUSH(fn->constants[READ_SHORT()]);
+      DISPATCH();
+
+    {
+      // The opcodes for doing method and superclass calls share a lot of code.
+      // However, doing an if() test in the middle of the instruction sequence
+      // to handle the bit that is special to super calls makes the non-super
+      // call path noticeably slower.
+      //
+      // Instead, we do this old school using an explicit goto to share code for
+      // everything at the tail end of the call-handling code that is the same
+      // between normal and superclass calls.
+      int numArgs;
+      int symbol;
+
+      Value* args;
+      ObjClass* classObj;
+
+      Method* method;
+
     CASE_CODE(CALL_0):
     CASE_CODE(CALL_1):
     CASE_CODE(CALL_2):
@@ -739,82 +764,14 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     CASE_CODE(CALL_14):
     CASE_CODE(CALL_15):
     CASE_CODE(CALL_16):
-    {
       // Add one for the implicit receiver argument.
-      int numArgs = instruction - CODE_CALL_0 + 1;
-      int symbol = READ_SHORT();
+      numArgs = instruction - CODE_CALL_0 + 1;
+      symbol = READ_SHORT();
 
       // The receiver is the first argument.
-      Value* args = fiber->stackTop - numArgs;
-      ObjClass* classObj = wrenGetClassInline(vm, args[0]);
-
-      // If the class's method table doesn't include the symbol, bail.
-      if (symbol >= classObj->methods.count)
-      {
-        RUNTIME_ERROR(methodNotFound(vm, classObj, symbol));
-      }
-
-      Method* method = &classObj->methods.data[symbol];
-      switch (method->type)
-      {
-        case METHOD_PRIMITIVE:
-        {
-          // After calling this, the result will be in the first arg slot.
-          switch (method->fn.primitive(vm, fiber, args))
-          {
-            case PRIM_VALUE:
-              // The result is now in the first arg slot. Discard the other
-              // stack slots.
-              fiber->stackTop -= numArgs - 1;
-              break;
-
-            case PRIM_ERROR:
-              RUNTIME_ERROR(args[0]);
-
-            case PRIM_CALL:
-              STORE_FRAME();
-              callFunction(fiber, AS_OBJ(args[0]), numArgs);
-              LOAD_FRAME();
-              break;
-
-            case PRIM_RUN_FIBER:
-              STORE_FRAME();
-
-              // If we don't have a fiber to switch to, stop interpreting.
-              if (IS_NULL(args[0])) return WREN_RESULT_SUCCESS;
-
-              fiber = AS_FIBER(args[0]);
-              vm->fiber = fiber;
-              LOAD_FRAME();
-              break;
-          }
-          break;
-        }
-
-        case METHOD_FOREIGN:
-          callForeign(vm, fiber, method->fn.foreign, numArgs);
-          break;
-
-        case METHOD_BLOCK:
-          STORE_FRAME();
-          callFunction(fiber, method->fn.obj, numArgs);
-          LOAD_FRAME();
-          break;
-
-        case METHOD_NONE:
-          RUNTIME_ERROR(methodNotFound(vm, classObj, symbol));
-          break;
-      }
-      DISPATCH();
-    }
-
-    CASE_CODE(STORE_LOCAL):
-      stackStart[READ_BYTE()] = PEEK();
-      DISPATCH();
-
-    CASE_CODE(CONSTANT):
-      PUSH(fn->constants[READ_SHORT()]);
-      DISPATCH();
+      args = fiber->stackTop - numArgs;
+      classObj = wrenGetClassInline(vm, args[0]);
+      goto completeCall;
 
     CASE_CODE(SUPER_0):
     CASE_CODE(SUPER_1):
@@ -833,25 +790,25 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     CASE_CODE(SUPER_14):
     CASE_CODE(SUPER_15):
     CASE_CODE(SUPER_16):
-    {
-      // TODO: Almost completely copied from CALL. Unify somehow.
-
       // Add one for the implicit receiver argument.
-      int numArgs = instruction - CODE_SUPER_0 + 1;
-      int symbol = READ_SHORT();
+      numArgs = instruction - CODE_SUPER_0 + 1;
+      symbol = READ_SHORT();
 
-      Value* args = fiber->stackTop - numArgs;
-      
+      // The receiver is the first argument.
+      args = fiber->stackTop - numArgs;
+
       // The superclass is stored in a constant.
-      ObjClass* classObj = AS_CLASS(fn->constants[READ_SHORT()]);
+      classObj = AS_CLASS(fn->constants[READ_SHORT()]);
+      goto completeCall;
 
+    completeCall:
       // If the class's method table doesn't include the symbol, bail.
-      if (symbol >= classObj->methods.count)
+      if (symbol >= classObj->methods.count ||
+          (method = &classObj->methods.data[symbol])->type == METHOD_NONE)
       {
         RUNTIME_ERROR(methodNotFound(vm, classObj, symbol));
       }
 
-      Method* method = &classObj->methods.data[symbol];
       switch (method->type)
       {
         case METHOD_PRIMITIVE:
@@ -899,8 +856,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           break;
 
         case METHOD_NONE:
-          RUNTIME_ERROR(methodNotFound(vm, classObj, symbol));
-          break;
+          UNREACHABLE();
       }
       DISPATCH();
     }
@@ -1373,7 +1329,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
     wrenPopRoot(vm);
     return WREN_RESULT_COMPILE_ERROR;
   }
-  
+
   wrenPopRoot(vm); // name.
 
   WrenInterpretResult result = runInterpreter(vm, fiber);
