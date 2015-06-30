@@ -66,6 +66,8 @@ static const char* coreLibSource =
 "    }\n"
 "  }\n"
 "\n"
+"  isEmpty { iterate(null) ? false : true }\n"
+"\n"
 "  map(transformation) { new MapSequence(this, transformation) }\n"
 "\n"
 "  where(predicate) { new WhereSequence(this, predicate) }\n"

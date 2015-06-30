@@ -52,6 +52,8 @@ class Sequence {
     }
   }
 
+  isEmpty { iterate(null) ? false : true }
+
   map(transformation) { new MapSequence(this, transformation) }
 
   where(predicate) { new WhereSequence(this, predicate) }

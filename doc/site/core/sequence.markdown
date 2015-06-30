@@ -61,6 +61,13 @@ Iterates over the sequence, passing each element to the given `function`.
     :::dart
     ["one", "two", "three"].each {|word| IO.print(word) }
 
+### **isEmpty**
+
+Returns whether the sequence contains any elements.
+
+This can be more efficient that `count == 0` because this does not iterate over
+the entire sequence.
+
 ### **join**(sep)
 
 Returns a string representation of the sequence. The string representations of
