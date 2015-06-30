@@ -213,6 +213,20 @@ static const char* coreLibSource =
 "\n"
 "class Range is Sequence {}\n";
 
+// A simple primitive that just returns "this". Used in a few different places:
+//
+// * The default constructor on Object needs no initialization so just uses
+//   this.
+// * String's toString method obviously can use this.
+// * Fiber's instantiate method just returns the Fiber class. The new() method
+//   is responsible for creating the new fiber.
+// * Fn's "constructor" is given the actual function as an argument, so the
+//   instantiate method just returns the Fn class.
+DEF_PRIMITIVE(return_this)
+{
+  RETURN_VAL(args[0]);
+}
+
 DEF_PRIMITIVE(bool_not)
 {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -253,13 +267,6 @@ DEF_PRIMITIVE(class_supertype)
 DEF_PRIMITIVE(class_toString)
 {
   RETURN_OBJ(AS_CLASS(args[0])->name);
-}
-
-DEF_PRIMITIVE(fiber_instantiate)
-{
-  // Return the Fiber class itself. When we then call "new" on it, it will
-  // create the fiber.
-  RETURN_VAL(args[0]);
 }
 
 DEF_PRIMITIVE(fiber_new)
@@ -470,13 +477,6 @@ DEF_PRIMITIVE(fiber_yield1)
   }
 
   return PRIM_RUN_FIBER;
-}
-
-DEF_PRIMITIVE(fn_instantiate)
-{
-  // Return the Fn class itself. When we then call "new" on it, it will return
-  // the block.
-  RETURN_VAL(args[0]);
 }
 
 DEF_PRIMITIVE(fn_new)
@@ -986,13 +986,6 @@ DEF_PRIMITIVE(object_is)
   RETURN_BOOL(false);
 }
 
-DEF_PRIMITIVE(object_new)
-{
-  // This is the default argument-less constructor that all objects inherit.
-  // It just returns "this".
-  RETURN_VAL(args[0]);
-}
-
 DEF_PRIMITIVE(object_toString)
 {
   Obj* obj = AS_OBJ(args[0]);
@@ -1246,11 +1239,6 @@ DEF_PRIMITIVE(string_startsWith)
   RETURN_BOOL(memcmp(string->value, search->value, search->length) == 0);
 }
 
-DEF_PRIMITIVE(string_toString)
-{
-  RETURN_VAL(args[0]);
-}
-
 DEF_PRIMITIVE(string_plus)
 {
   if (!validateString(vm, args, 1, "Right operand")) return PRIM_ERROR;
@@ -1315,7 +1303,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->objectClass, "!", object_not);
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
-  PRIMITIVE(vm->objectClass, "new", object_new);
+  PRIMITIVE(vm->objectClass, "new", return_this);
   PRIMITIVE(vm->objectClass, "is(_)", object_is);
   PRIMITIVE(vm->objectClass, "toString", object_toString);
   PRIMITIVE(vm->objectClass, "type", object_type);
@@ -1373,7 +1361,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->boolClass, "!", bool_not);
 
   vm->fiberClass = AS_CLASS(wrenFindVariable(vm, "Fiber"));
-  PRIMITIVE(vm->fiberClass->obj.classObj, "<instantiate>", fiber_instantiate);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "<instantiate>", return_this);
   PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
   PRIMITIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
   PRIMITIVE(vm->fiberClass->obj.classObj, "current", fiber_current);
@@ -1388,7 +1376,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
 
   vm->fnClass = AS_CLASS(wrenFindVariable(vm, "Fn"));
-  PRIMITIVE(vm->fnClass->obj.classObj, "<instantiate>", fn_instantiate);
+  PRIMITIVE(vm->fnClass->obj.classObj, "<instantiate>", return_this);
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
@@ -1472,7 +1460,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "iterateByte_(_)", string_iterateByte);
   PRIMITIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
   PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
-  PRIMITIVE(vm->stringClass, "toString", string_toString);
+  PRIMITIVE(vm->stringClass, "toString", return_this);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "<instantiate>", list_instantiate);
