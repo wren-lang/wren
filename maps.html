@@ -74,13 +74,22 @@ curly braces. Each entry is a key and a value separated by a colon:</p>
 
 
 <p>This creates a map that maps the first names of the Beatles to their last
-names. Syntactically, in a map literal, keys can be any literal, a variable name, or a parenthesized expression. Values can be any expression. Here, we're using string literals for both keys and values.</p>
+names. Syntactically, in a map literal, keys can be any literal, a variable
+name, or a parenthesized expression. Values can be any expression. Here, we're
+using string literals for both keys and values.</p>
 <p><em>Semantically</em>, values can be any object, and multiple keys may map to the
 same value. Keys have a few limitations. They must be one of the immutable
 built-in <a href="values.html">value types</a> in Wren. That means a number, string,
 range, bool, or <code>null</code>. You can also use a <a href="classes.html">class object</a> as a
 key.</p>
-<p>The reason for this limitation&mdash;and the reason maps are called "<em>hash</em> tables" in other languages&mdash;is that each key is used to generate a numeric <em>hash code</em>. This lets a map locate the value associated with a key in constant time, even in very large maps. Since Wren only knows how to hash certain built-in types, only those can be used as keys.</p>
+<p>In addition, even though they aren't strictly immutable, <a href="fibers.html">fibers</a>
+can be used as map keys. This is handy for storing data that's roughly
+"thread-local" by using the current fiber as a map key.</p>
+<p>The reason for this limitation&mdash;and the reason maps are called "<em>hash</em>
+tables" in other languages&mdash;is that each key is used to generate a numeric
+<em>hash code</em>. This lets a map locate the value associated with a key in constant
+time, even in very large maps. Since Wren only knows how to hash certain
+built-in types, only those can be used as keys.</p>
 <h2>Adding entries <a href="#adding-entries" name="adding-entries" class="header-anchor">#</a></h2>
 <p>You add new key-value pairs to the map by using the <a href="expressions.html#subscript-operators">subscript operator</a>:</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">capitals</span> <span class="o">=</span> <span class="p">{}</span>
@@ -90,14 +99,18 @@ key.</p>
 </pre></div>
 
 
-<p>If the key isn't already present, this adds it and associates it with the given value. If the key is already there, this just replaces its value.</p>
+<p>If the key isn't already present, this adds it and associates it with the given
+value. If the key is already there, this just replaces its value.</p>
 <h2>Looking up values <a href="#looking-up-values" name="looking-up-values" class="header-anchor">#</a></h2>
-<p>To find the value associated with some key, again you use your friend the subscript operator:</p>
+<p>To find the value associated with some key, again you use your friend the
+subscript operator:</p>
 <div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="p">[</span><span class="s2">&quot;Idaho&quot;</span><span class="p">])</span> <span class="c1">// &quot;Boise&quot;.</span>
 </pre></div>
 
 
-<p>If the key is present, this returns its value. Otherwise, it returns <code>null</code>. Of course, <code>null</code> itself can also be used as a value, so seeing <code>null</code> here doesn't necessarily mean the key wasn't found.</p>
+<p>If the key is present, this returns its value. Otherwise, it returns <code>null</code>. Of
+course, <code>null</code> itself can also be used as a value, so seeing <code>null</code> here
+doesn't necessarily mean the key wasn't found.</p>
 <p>To tell definitively if a key exists, you can call <code>containsKey()</code>:</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">belief</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;nihilism&quot;</span><span class="o">:</span> <span class="kc">null</span><span class="p">}</span>
 
@@ -114,7 +127,8 @@ key.</p>
 
 
 <h2>Removing entries <a href="#removing-entries" name="removing-entries" class="header-anchor">#</a></h2>
-<p>To remove an entry from a map, call <code>remove()</code> and pass in the key for the entry you want to delete:</p>
+<p>To remove an entry from a map, call <code>remove()</code> and pass in the key for the
+entry you want to delete:</p>
 <div class="codehilite"><pre><span class="n">capitals</span><span class="p">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;Maine&quot;</span><span class="p">)</span>
 <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="p">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s2">&quot;Maine&quot;</span><span class="p">))</span> <span class="c1">// &quot;false&quot;.</span>
 </pre></div>
@@ -134,9 +148,13 @@ can just call <code>clear()</code>:</p>
 
 
 <h2>Iterating over the contents <a href="#iterating-over-the-contents" name="iterating-over-the-contents" class="header-anchor">#</a></h2>
-<p>The subscript operator works well for finding values when you know the key you're looking for, but sometimes you want to see everything that's in the map. For that, map exposes two methods: <code>keys</code> and <code>values</code>.</p>
-<p>The first returns a <a href="core/sequence.html">Sequence</a> that <a href="control-flow.html#the-iterator-protocol">iterates</a> over all of the keys in the map, and the second returns one that iterates over the values.</p>
-<p>If you want to see all of the key-value pairs in a map, the easiest way is to iterate over the keys and use each to look up its value:</p>
+<p>The subscript operator works well for finding values when you know the key
+you're looking for, but sometimes you want to see everything that's in the map.
+For that, map exposes two methods: <code>keys</code> and <code>values</code>.</p>
+<p>The first returns a <a href="core/sequence.html">Sequence</a> that <a href="control-flow.html#the-iterator-protocol">iterates</a> over all of the keys in the
+map, and the second returns one that iterates over the values.</p>
+<p>If you want to see all of the key-value pairs in a map, the easiest way is to
+iterate over the keys and use each to look up its value:</p>
 <div class="codehilite"><pre><span class="kd">var</span> <span class="n">stateBirds</span> <span class="o">=</span> <span class="p">{</span>
   <span class="s2">&quot;Arizona&quot;</span><span class="o">:</span> <span class="s2">&quot;Cactus wren&quot;</span><span class="p">,</span>
   <span class="s2">&quot;Hawaii&quot;</span><span class="o">:</span> <span class="s2">&quot;Nēnē&quot;</span><span class="p">,</span>
@@ -149,7 +167,10 @@ can just call <code>clear()</code>:</p>
 </pre></div>
 
 
-<p>This program will print the three states and their birds. However, the <em>order</em> that they are printed isn't defined. Wren makes no promises about what order keys and values will be iterated in when you use these methods. All it promises is that every entry will appear exactly once.</p>
+<p>This program will print the three states and their birds. However, the <em>order</em>
+that they are printed isn't defined. Wren makes no promises about what order
+keys and values will be iterated in when you use these methods. All it promises
+is that every entry will appear exactly once.</p>
   </main>
 </div>
 <footer>

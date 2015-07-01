@@ -38,6 +38,7 @@
         <li><a href="range.html">Range</a></li>
         <li><a href="sequence.html">Sequence</a></li>
         <li><a href="string.html">String</a></li>
+        <li><a href="io.html">IO</a></li>
       </ul>
     </section>
   </nav>
@@ -87,6 +88,10 @@ and counting the number of times the returned value evaluates to <code>true</cod
 </pre></div>
 
 
+<h3><strong>isEmpty</strong> <a href="#isempty" name="isempty" class="header-anchor">#</a></h3>
+<p>Returns whether the sequence contains any elements.</p>
+<p>This can be more efficient that <code>count == 0</code> because this does not iterate over
+the entire sequence.</p>
 <h3><strong>join</strong>(sep) <a href="#join(sep)" name="join(sep)" class="header-anchor">#</a></h3>
 <p>Returns a string representation of the sequence. The string representations of
 the elements in the sequence is concatenated with intervening occurrences of
@@ -165,7 +170,7 @@ sequence.</p>
 <footer>
   <div class="page">
     <div class="main-column">
-    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a>.</p>
+    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.</p>
     <div class="main-column">
   </div>
 </footer>
