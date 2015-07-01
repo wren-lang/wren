@@ -67,6 +67,8 @@ BENCHMARK("fib", r"""317811
 317811
 317811""")
 
+BENCHMARK("fibers", r"""4999950000""")
+
 BENCHMARK("for", r"""499999500000""")
 
 BENCHMARK("method_call", r"""true

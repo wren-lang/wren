@@ -41,9 +41,8 @@
 // The representation is controlled by the `WREN_NAN_TAGGING` define. If that's
 // defined, Nan tagging is used.
 
-// TODO: Make these externally controllable.
+// TODO: Make this externally controllable.
 #define STACK_SIZE 1024
-#define MAX_CALL_FRAMES 256
 
 // These macros cast a Value to one of the specific value types. These do *not*
 // perform any validation, so must only be used after the Value has been
@@ -211,8 +210,15 @@ typedef struct sObjFiber
   Value stack[STACK_SIZE];
   Value* stackTop;
 
-  CallFrame frames[MAX_CALL_FRAMES];
+  // The stack of call frames. This is a dynamic array that grows as needed but
+  // never shrinks.
+  CallFrame* frames;
+  
+  // The number of frames currently in use in [frames].
   int numFrames;
+  
+  // The number of [frames] allocated.
+  int frameCapacity;
 
   // Pointer to the first node in the linked list of open upvalues that are
   // pointing to values still on the stack. The head of the list will be the
@@ -620,7 +626,28 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 
 // Resets [fiber] back to an initial state where it is ready to invoke [fn].
-void wrenResetFiber(ObjFiber* fiber, Obj* fn);
+void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn);
+
+// Adds a new [CallFrame] to [fiber] invoking [function] whose stack starts at
+// [stackStart].
+static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
+                                       Obj* function, Value* stackStart)
+{
+  // The caller should have ensured we already have enough capacity.
+  ASSERT(fiber->frameCapacity > fiber->numFrames, "No memory for call frame.");
+  
+  CallFrame* frame = &fiber->frames[fiber->numFrames++];
+  frame->stackStart = stackStart;
+  frame->fn = function;
+  if (function->type == OBJ_FN)
+  {
+    frame->ip = ((ObjFn*)function)->bytecode;
+  }
+  else
+  {
+    frame->ip = ((ObjClosure*)function)->fn->bytecode;
+  }
+}
 
 // TODO: The argument list here is getting a bit gratuitous.
 // Creates a new function object with the given code and constants. The new

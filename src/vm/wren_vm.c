@@ -425,21 +425,22 @@ static Value methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
 // [function] can be an `ObjFn` or `ObjClosure`.
-static inline void callFunction(ObjFiber* fiber, Obj* function, int numArgs)
+static inline void callFunction(
+    WrenVM* vm, ObjFiber* fiber, Obj* function, int numArgs)
 {
-  // TODO: Check for stack overflow.
-  CallFrame* frame = &fiber->frames[fiber->numFrames++];
-  frame->fn = function;
-  frame->stackStart = fiber->stackTop - numArgs;
+  if (fiber->numFrames + 1 > fiber->frameCapacity)
+  {
+    int max = fiber->frameCapacity * 2;
+    fiber->frames = (CallFrame*)wrenReallocate(vm, fiber->frames,
+        sizeof(CallFrame) * fiber->frameCapacity,
+        sizeof(CallFrame) * max);
+    fiber->frameCapacity = max;
+  }
+  
+  // TODO: Check for stack overflow. We handle the call frame array growing,
+  // but not the stack itself.
 
-  if (function->type == OBJ_FN)
-  {
-    frame->ip = ((ObjFn*)function)->bytecode;
-  }
-  else
-  {
-    frame->ip = ((ObjClosure*)function)->fn->bytecode;
-  }
+  wrenAppendCallFrame(vm, fiber, function, fiber->stackTop - numArgs);
 }
 
 // Looks up the previously loaded module with [name].
@@ -827,7 +828,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
             case PRIM_CALL:
               STORE_FRAME();
-              callFunction(fiber, AS_OBJ(args[0]), numArgs);
+              callFunction(vm, fiber, AS_OBJ(args[0]), numArgs);
               LOAD_FRAME();
               break;
 
@@ -851,7 +852,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
         case METHOD_BLOCK:
           STORE_FRAME();
-          callFunction(fiber, method->fn.obj, numArgs);
+          callFunction(vm, fiber, method->fn.obj, numArgs);
           LOAD_FRAME();
           break;
 
@@ -1274,7 +1275,7 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
   runInterpreter(vm, method->fiber);
 
   // Reset the fiber to get ready for the next call.
-  wrenResetFiber(method->fiber, fn);
+  wrenResetFiber(vm, method->fiber, fn);
 
   // Push the receiver back on the stack.
   *method->fiber->stackTop++ = receiver;

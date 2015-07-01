@@ -26,6 +26,11 @@
 // lookup faster.
 #define MAP_LOAD_PERCENT 75
 
+// The number of call frames initially allocated when a fiber is created. Making
+// this smaller makes fibers use less memory (at first) but spends more time
+// reallocating when the call stack grows.
+#define INITIAL_CALL_FRAMES 4
+
 DEFINE_BUFFER(Value, Value);
 DEFINE_BUFFER(Method, Method);
 
@@ -134,36 +139,31 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 
 ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
 {
+  // Allocate the call frames before the fiber in case it triggers a GC.
+  CallFrame* frames = ALLOCATE_ARRAY(vm, CallFrame, INITIAL_CALL_FRAMES);
+  
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
   fiber->id = vm->nextFiberId++;
-
-  wrenResetFiber(fiber, fn);
-
+  fiber->frames = frames;
+  fiber->frameCapacity = INITIAL_CALL_FRAMES;
+  wrenResetFiber(vm, fiber, fn);
+  
   return fiber;
 }
 
-void wrenResetFiber(ObjFiber* fiber, Obj* fn)
+void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn)
 {
   // Push the stack frame for the function.
   fiber->stackTop = fiber->stack;
-  fiber->numFrames = 1;
   fiber->openUpvalues = NULL;
   fiber->caller = NULL;
   fiber->error = NULL;
   fiber->callerIsTrying = false;
 
-  CallFrame* frame = &fiber->frames[0];
-  frame->fn = fn;
-  frame->stackStart = fiber->stack;
-  if (fn->type == OBJ_FN)
-  {
-    frame->ip = ((ObjFn*)fn)->bytecode;
-  }
-  else
-  {
-    frame->ip = ((ObjClosure*)fn)->fn->bytecode;
-  }
+  // Initialize the first call frame.
+  fiber->numFrames = 0;
+  wrenAppendCallFrame(vm, fiber, fn, fiber->stack);
 }
 
 ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
