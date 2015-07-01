@@ -101,6 +101,7 @@ gap:
 
 The `removeAt` method returns the removed item:
 
+    :::dart
     IO.print(letters.removeAt(1)) // "c"
 
 If you want to remove everything from the list, you can clear it:
