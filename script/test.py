@@ -15,7 +15,7 @@ WREN_APP = join(WREN_DIR, 'bin', 'wrend')
 TEST_APP = join(WREN_DIR, 'build', 'debug', 'test', 'wrend')
 
 EXPECT_PATTERN = re.compile(r'// expect: (.*)')
-EXPECT_ERROR_PATTERN = re.compile(r'// expect error')
+EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect runtime error: (.+)')
 ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
@@ -26,9 +26,205 @@ NONTEST_PATTERN = re.compile(r'// nontest')
 
 passed = 0
 failed = 0
-skipped = defaultdict(int)
 num_skipped = 0
+skipped = defaultdict(int)
 expectations = 0
+
+
+class Test:
+  def __init__(self, path):
+    self.path = path
+    self.output = []
+    self.compile_errors = set()
+    self.runtime_error_line = 0
+    self.runtime_error_message = None
+    self.exit_code = 0
+    self.input_bytes = None
+    self.failures = []
+
+
+  def parse(self):
+    global num_skipped
+    global skipped
+    global expectations
+
+    input_lines = []
+    line_num = 1
+    with open(self.path, 'r') as file:
+      for line in file:
+        match = EXPECT_PATTERN.search(line)
+        if match:
+          self.output.append((match.group(1), line_num))
+          expectations += 1
+
+        match = EXPECT_ERROR_PATTERN.search(line)
+        if match:
+          self.compile_errors.add(line_num)
+
+          # If we expect a compile error, it should exit with EX_DATAERR.
+          self.exit_code = 65
+          expectations += 1
+
+        match = EXPECT_ERROR_LINE_PATTERN.search(line)
+        if match:
+          self.compile_errors.add(int(match.group(1)))
+
+          # If we expect a compile error, it should exit with EX_DATAERR.
+          self.exit_code = 65
+          expectations += 1
+
+        match = EXPECT_RUNTIME_ERROR_PATTERN.search(line)
+        if match:
+          self.runtime_error_line = line_num
+          self.runtime_error_message = match.group(1)
+          # If we expect a runtime error, it should exit with EX_SOFTWARE.
+          self.exit_code = 70
+          expectations += 1
+
+        match = STDIN_PATTERN.search(line)
+        if match:
+          input_lines.append(match.group(1) + '\n')
+
+        match = SKIP_PATTERN.search(line)
+        if match:
+          num_skipped += 1
+          skipped[match.group(1)] += 1
+          return False
+
+        match = NONTEST_PATTERN.search(line)
+        if match:
+          # Not a test file at all, so ignore it.
+          return False
+
+        line_num += 1
+
+
+    # If any input is fed to the test in stdin, concatetate it into one string.
+    if input_lines:
+      self.input_bytes = "".join(input_lines).encode("utf-8")
+
+    # If we got here, it's a valid test.
+    return True
+
+
+  def run(self, app, type):
+    # Invoke wren and run the test.
+    test_arg = self.path
+    if type == "api test":
+      # Just pass the suite name to API tests.
+      test_arg = basename(splitext(test_arg)[0])
+
+    proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    (out, err) = proc.communicate(self.input_bytes)
+
+    self.validate(type == "example", proc.returncode, out, err)
+
+
+  def validate(self, is_example, exit_code, out, err):
+    if self.compile_errors and self.runtime_error_message:
+      self.fail("Test error: Cannot expect both compile and runtime errors.")
+      return
+
+    try:
+      out = out.decode("utf-8").replace('\r\n', '\n')
+      err = err.decode("utf-8").replace('\r\n', '\n')
+    except:
+      self.fail('Error decoding output.')
+
+    error_lines = err.split('\n')
+
+    # Validate that an expected runtime error occurred.
+    if self.runtime_error_message:
+      self.validate_runtime_error(error_lines)
+    else:
+      self.validate_compile_errors(error_lines)
+
+    self.validate_exit_code(exit_code, error_lines)
+
+    # Ignore output from examples.
+    if is_example: return
+
+    self.validate_output(out)
+
+
+  def validate_runtime_error(self, error_lines):
+    if not error_lines:
+      self.fail('Expected runtime error "{0} and got none.',
+          runtime_error_message)
+      return
+
+    # Make sure we got the right error.
+    if error_lines[0] != self.runtime_error_message:
+      self.fail('Expected runtime error "{0}" and got:', runtime_error_message)
+      self.fail(error_lines[0])
+
+    # Make sure the stack trace has the right line.
+    match = STACK_TRACE_PATTERN.search(error_lines[1])
+    if not match:
+      self.fail('Expected stack trace and got:')
+      self.fail(error_lines[1])
+    else:
+      stack_line = int(match.group(1))
+      if stack_line != self.runtime_error_line:
+        self.fail('Expected runtime error on line {0} but was on line {1}.',
+            self.runtime_error_line, stack_line)
+
+
+  def validate_compile_errors(self, error_lines):
+    # Validate that every compile error was expected.
+    found_errors = set()
+    for line in error_lines:
+      match = ERROR_PATTERN.search(line)
+      if match:
+        error_line = float(match.group(1))
+        if error_line in self.compile_errors:
+          found_errors.add(error_line)
+        else:
+          self.fail('Unexpected error:')
+          self.fail(line)
+      elif line != '':
+        self.fail('Unexpected output on stderr:')
+        self.fail(line)
+
+    # Validate that every expected error occurred.
+    for line in self.compile_errors - found_errors:
+      self.fail('Missing expected error on line {0}.', line)
+
+
+  def validate_exit_code(self, exit_code, error_lines):
+    if exit_code == self.exit_code: return
+
+    self.fail('Expected return code {0} and got {1}. Stderr:',
+        self.exit_code, exit_code)
+    self.failures += error_lines
+
+
+  def validate_output(self, out):
+    # Remove the trailing last empty line.
+    out_lines = out.split('\n')
+    if out_lines[-1] == '':
+      del out_lines[-1]
+
+    index = 0
+    for line in out_lines:
+      if sys.version_info < (3, 0):
+        line = line.encode('utf-8')
+
+      if index >= len(self.output):
+        self.fail('Got output "{0}" when none was expected.', line)
+      elif self.output[index][0] != line:
+        self.fail('Expected output "{0}" on line {1} and got "{2}".',
+            self.output[index][0], self.output[index][1], line)
+      index += 1
+
+    while index < len(self.output):
+      self.fail('Missing expected output "{0}" on line {1}.',
+          self.output[index][0], self.output[index][1])
+      index += 1
+
+
+  def fail(self, message, *args, **kwargs):
+    self.failures.append(message.format(*args, **kwargs))
 
 
 def color_text(text, color):
@@ -79,9 +275,7 @@ def print_line(line=None):
 def run_script(app, path, type):
   global passed
   global failed
-  global skipped
   global num_skipped
-  global expectations
 
   if (splitext(path)[1] != '.wren'):
     return
@@ -92,6 +286,11 @@ def run_script(app, path, type):
     if not this_test.startswith(sys.argv[1]):
       return
 
+  # Update the status line.
+  print_line('Passed: ' + green(passed) +
+             ' Failed: ' + red(failed) +
+             ' Skipped: ' + yellow(num_skipped))
+
   # Make a nice short path relative to the working directory.
 
   # Normalize it to use "/" since, among other things, wren expects its argument
@@ -99,171 +298,23 @@ def run_script(app, path, type):
   path = relpath(path).replace("\\", "/")
 
   # Read the test and parse out the expectations.
-  expect_output = []
-  expect_error = []
-  expect_runtime_error_line = 0
-  expect_runtime_error = None
-  expect_return = 0
+  test = Test(path)
 
-  input_lines = []
+  if not test.parse():
+    # It's a skipped or non-test file.
+    return
 
-  print_line('Passed: ' + green(passed) +
-             ' Failed: ' + red(failed) +
-             ' Skipped: ' + yellow(num_skipped))
-
-  line_num = 1
-  with open(path, 'r') as file:
-    for line in file:
-      match = EXPECT_PATTERN.search(line)
-      if match:
-        expect_output.append((match.group(1), line_num))
-        expectations += 1
-
-      match = EXPECT_ERROR_PATTERN.search(line)
-      if match:
-        expect_error.append(line_num)
-        # If we expect compile errors, it should exit with EX_DATAERR.
-        expect_return = 65
-        expectations += 1
-
-      match = EXPECT_ERROR_LINE_PATTERN.search(line)
-      if match:
-        expect_error.append(int(match.group(1)))
-        # If we expect compile errors, it should exit with EX_DATAERR.
-        expect_return = 65
-        expectations += 1
-
-      match = EXPECT_RUNTIME_ERROR_PATTERN.search(line)
-      if match:
-        expect_runtime_error_line = line_num
-        expect_runtime_error = match.group(1)
-        # If we expect a runtime error, it should exit with EX_SOFTWARE.
-        expect_return = 70
-        expectations += 1
-
-      match = STDIN_PATTERN.search(line)
-      if match:
-        input_lines.append(match.group(1) + '\n')
-
-      match = SKIP_PATTERN.search(line)
-      if match:
-        num_skipped += 1
-        skipped[match.group(1)] += 1
-        return
-
-      match = NONTEST_PATTERN.search(line)
-      if match:
-        # Not a test file at all, so ignore it.
-        return
-
-      line_num += 1
-
-  # If any input is fed to the test in stdin, concatetate it into one string.
-  input_bytes = None
-  if len(input_lines) > 0:
-    input_bytes = "".join(input_lines).encode("utf-8")
-
-  # Invoke wren and run the test.
-  test_arg = path
-  if type == "api test":
-    # Just pass the suite name to API tests.
-    test_arg = basename(splitext(test_arg)[0])
-
-  proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-  (out, err) = proc.communicate(input_bytes)
-
-  fails = []
-
-  try:
-    out = out.decode("utf-8").replace('\r\n', '\n')
-    err = err.decode("utf-8").replace('\r\n', '\n')
-  except:
-    fails.append('Error decoding output.')
-
-  # Validate that no unexpected errors occurred.
-  if expect_return != 0 and err != '':
-    lines = err.split('\n')
-    if expect_runtime_error:
-      # Make sure we got the right error.
-      if lines[0] != expect_runtime_error:
-        fails.append('Expected runtime error "' + expect_runtime_error +
-          '" and got:')
-        fails.append(lines[0])
-
-      # Make sure the stack trace has the right line.
-      match = STACK_TRACE_PATTERN.search(lines[1])
-      if not match:
-        fails.append('Expected stack trace and got:')
-        fails.append(lines[1])
-      else:
-        stack_line = int(match.group(1))
-        if stack_line != expect_runtime_error_line:
-          fails.append('Expected runtime error on line ' +
-              str(expect_runtime_error_line) + ' but was on line ' +
-              str(stack_line))
-    else:
-      lines = err.split('\n')
-      while len(lines) > 0:
-        line = lines.pop(0)
-        match = ERROR_PATTERN.search(line)
-        if match:
-          if float(match.group(1)) not in expect_error:
-            fails.append('Unexpected error:')
-            fails.append(line)
-        elif line != '':
-          fails.append('Unexpected output on stderr:')
-          fails.append(line)
-  else:
-    for line in expect_error:
-      fails.append('Expected error on line ' + str(line) + ' and got none.')
-    if expect_runtime_error:
-      fails.append('Expected runtime error "' + expect_runtime_error +
-          '" and got none.')
-
-  # Validate the exit code.
-  if proc.returncode != expect_return:
-    fails.append('Expected return code {0} and got {1}. Stderr:'
-        .format(expect_return, proc.returncode))
-    fails += err.split('\n')
-  else:
-    # Validate the output.
-    expect_index = 0
-
-    # Remove the trailing last empty line.
-    out_lines = out.split('\n')
-    if out_lines[-1] == '':
-      del out_lines[-1]
-
-    for line in out_lines:
-      if sys.version_info < (3, 0):
-        line = line.encode('utf-8')
-
-      if type == "example":
-        # Ignore output from examples.
-        pass
-      elif expect_index >= len(expect_output):
-        fails.append('Got output "{0}" when none was expected.'.format(line))
-      elif expect_output[expect_index][0] != line:
-        fails.append('Expected output "{0}" on line {1} and got "{2}".'.
-            format(expect_output[expect_index][0],
-                   expect_output[expect_index][1], line))
-      expect_index += 1
-
-    while expect_index < len(expect_output):
-      fails.append('Missing expected output "{0}" on line {1}.'.
-          format(expect_output[expect_index][0],
-                 expect_output[expect_index][1]))
-      expect_index += 1
+  test.run(app, type)
 
   # Display the results.
-  if len(fails) == 0:
+  if len(test.failures) == 0:
     passed += 1
   else:
     failed += 1
     print_line(red('FAIL') + ': ' + path)
     print('')
-    for fail in fails:
-      print('      ' + pink(fail))
+    for failure in test.failures:
+      print('      ' + pink(failure))
     print('')
 
 
