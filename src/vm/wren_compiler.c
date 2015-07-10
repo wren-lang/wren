@@ -2956,7 +2956,7 @@ static void createConstructor(Compiler* compiler, Signature* signature,
   emit(&methodCompiler, CODE_CONSTRUCT);
   
   // Run its initializer.
-  emitShortArg(&methodCompiler, CODE_CALL_0 + signature->arity,
+  emitShortArg(&methodCompiler, (Code)(CODE_CALL_0 + signature->arity),
                initializerSymbol);
   
   // Return the instance.
