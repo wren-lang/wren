@@ -2319,6 +2319,7 @@ void infixSignature(Compiler* compiler, Signature* signature)
 void unarySignature(Compiler* compiler, Signature* signature)
 {
   // Do nothing. The name is already complete.
+  signature->type = SIG_GETTER;
 }
 
 // Compiles a method signature for an operator that can either be unary or
