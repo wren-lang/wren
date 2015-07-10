@@ -148,14 +148,15 @@ class Test:
 
 
   def validate_runtime_error(self, error_lines):
-    if not error_lines:
+    if len(error_lines) < 2:
       self.fail('Expected runtime error "{0} and got none.',
-          runtime_error_message)
+          self.runtime_error_message)
       return
 
     # Make sure we got the right error.
     if error_lines[0] != self.runtime_error_message:
-      self.fail('Expected runtime error "{0}" and got:', runtime_error_message)
+      self.fail('Expected runtime error "{0}" and got:',
+          self.runtime_error_message)
       self.fail(error_lines[0])
 
     # Make sure the stack trace has the right line.

@@ -12,7 +12,7 @@ class Foo {
   toString { "Foo.toString" }
 }
 
-IO.print({1: new Foo}) // expect: {1: Foo.toString}
+IO.print({1: Foo.new()}) // expect: {1: Foo.toString}
 
 // Since iteration order is unspecified, we don't know what order the results
 // will be.

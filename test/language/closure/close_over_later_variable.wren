@@ -3,10 +3,10 @@
 // would crash because it walked to the end of the upvalue list (correct), but
 // then didn't handle not finding the variable.
 
-new Fn {
+Fn.new {
   var a = "a"
   var b = "b"
-  new Fn {
+  Fn.new {
     IO.print(b) // expect: b
     IO.print(a) // expect: a
   }.call()

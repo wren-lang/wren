@@ -2,4 +2,4 @@ class Foo {
   bar {}
 }
 
-IO.print((new Foo).bar) // expect: null
+IO.print(Foo.new().bar) // expect: null

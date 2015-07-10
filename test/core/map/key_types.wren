@@ -1,4 +1,4 @@
-var fiber = new Fiber {}
+var fiber = Fiber.new {}
 
 var map = {
   null: "null value",

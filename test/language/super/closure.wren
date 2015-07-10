@@ -3,9 +3,9 @@ class Base {
 }
 
 class Derived is Base {
-  getClosure { new Fn { super.toString } }
+  getClosure { Fn.new { super.toString } }
   toString { "Derived" }
 }
 
-var closure = (new Derived).getClosure
+var closure = Derived.new().getClosure
 IO.print(closure.call()) // expect: Base

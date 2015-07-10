@@ -1,6 +1,6 @@
-var f = new Fn {
+var f = Fn.new {
   for (i in [1, 2, 3]) {
-    return new Fn { IO.print(i) }
+    return Fn.new { IO.print(i) }
   }
 }
 

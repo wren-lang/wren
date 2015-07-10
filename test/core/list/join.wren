@@ -18,6 +18,6 @@ class Foo {
   toString { "Foo.toString" }
 }
 
-IO.print([1, new Foo, 2].join(", ")) // expect: 1, Foo.toString, 2
+IO.print([1, Foo.new(), 2].join(", ")) // expect: 1, Foo.toString, 2
 
 // TODO: Handle lists that contain themselves.

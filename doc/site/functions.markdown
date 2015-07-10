@@ -61,7 +61,7 @@ but *don't* need to pass it to a method. For that, you can call the `Fn`
 class's constructor:
 
     :::dart
-    var someFn = new Fn {
+    var someFn = Fn.new {
       IO.print("Hi!")
     }
 
@@ -91,7 +91,7 @@ method is dynamically-dispatched like any other, so you can define your own
       }
     }
 
-    blondie.callMe(new FakeFn)
+    blondie.callMe(FakeFn.new())
 
 ## Function parameters
 
@@ -130,9 +130,9 @@ value using a `return` statement. In other words, these two functions do the
 same thing:
 
     :::dart
-    new Fn { "return value" }
+    Fn.new { "return value" }
 
-    new Fn {
+    Fn.new {
       return "return value"
     }
 
@@ -146,7 +146,7 @@ leaving the scope where the function is defined:
     class Counter {
       static create {
         var i = 0
-        return new Fn { i = i + 1 }
+        return Fn.new { i = i + 1 }
       }
     }
 

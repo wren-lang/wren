@@ -11,4 +11,4 @@ class Foo {
 }
 
 Foo.sayName // expect: Foo!
-(new Foo).sayName // expect: Foo!
+Foo.new().sayName // expect: Foo!

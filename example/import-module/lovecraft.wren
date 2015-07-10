@@ -1,7 +1,7 @@
 import "cthulu" for Cthulu
 
 class Lovecraft {
-  say { (new Cthulu).message }
+  say() { Cthulu.new().message }
 }
 
-IO.print((new Lovecraft).say)
+IO.print(Lovecraft.new().say())

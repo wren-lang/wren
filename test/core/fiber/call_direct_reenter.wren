@@ -1,6 +1,6 @@
 var fiber
 
-fiber = new Fiber {
+fiber = Fiber.new {
   fiber.call() // expect runtime error: Fiber has already been called.
 }
 

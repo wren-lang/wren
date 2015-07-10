@@ -18,7 +18,7 @@ class Foo {
   - { "prefix -" }
 }
 
-var foo = new Foo
+var foo = Foo.new()
 IO.print(foo + "a") // expect: infix + a
 IO.print(foo - "a") // expect: infix - a
 IO.print(foo * "a") // expect: infix * a

@@ -1010,7 +1010,7 @@ class Foo {
   method999 { 1 }
 }
 
-var foo = new Foo
+var foo = Foo.new()
 var result = 0
 result = result + foo.method000
 result = result + foo.method001

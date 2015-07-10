@@ -1,13 +1,13 @@
 var a
 var b
 
-a = new Fiber {
+a = Fiber.new {
   IO.print(2)
   b.run()
   IO.print("nope")
 }
 
-b = new Fiber {
+b = Fiber.new {
   IO.print(1)
   a.run()
   IO.print(3)

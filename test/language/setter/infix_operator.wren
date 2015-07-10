@@ -2,5 +2,5 @@ class Foo {
   bar=(value) { value }
 }
 
-var foo = new Foo
+var foo = Foo.new()
 "a" + foo.bar = "value" // expect error

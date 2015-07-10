@@ -18,6 +18,6 @@ class Foo {
   }
 }
 
-(new Foo).test
+Foo.new().test
 
 // TODO: Need to decide how these interact with globals.

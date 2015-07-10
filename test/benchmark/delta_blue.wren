@@ -50,7 +50,7 @@ var ORDERED = null
 // disrupting current constraints.  Strengths cannot be created outside
 // this class, so == can be used for value comparison.
 class Strength {
-  new(value, name) {
+  this new(value, name) {
     _value = value
     _name = name
   }
@@ -67,13 +67,13 @@ class Strength {
 }
 
 // Compile time computed constants.
-REQUIRED        = new Strength(0, "required")
-STRONG_REFERRED = new Strength(1, "strongPreferred")
-PREFERRED       = new Strength(2, "preferred")
-STRONG_DEFAULT  = new Strength(3, "strongDefault")
-NORMAL          = new Strength(4, "normal")
-WEAK_DEFAULT    = new Strength(5, "weakDefault")
-WEAKEST         = new Strength(6, "weakest")
+REQUIRED        = Strength.new(0, "required")
+STRONG_REFERRED = Strength.new(1, "strongPreferred")
+PREFERRED       = Strength.new(2, "preferred")
+STRONG_DEFAULT  = Strength.new(3, "strongDefault")
+NORMAL          = Strength.new(4, "normal")
+WEAK_DEFAULT    = Strength.new(5, "weakDefault")
+WEAKEST         = Strength.new(6, "weakest")
 
 ORDERED = [
   WEAKEST, WEAK_DEFAULT, NORMAL, STRONG_DEFAULT, PREFERRED, STRONG_REFERRED
@@ -82,7 +82,7 @@ ORDERED = [
 var ThePlanner
 
 class Constraint {
-  new(strength) {
+  this new(strength) {
     _strength = strength
   }
 
@@ -131,7 +131,7 @@ class Constraint {
 
 // Abstract superclass for constraints having a single possible output variable.
 class UnaryConstraint is Constraint {
-  new(myOutput, strength) {
+  this new(myOutput, strength) {
     super(strength)
     _satisfied = false
     _myOutput = myOutput
@@ -187,7 +187,7 @@ class UnaryConstraint is Constraint {
 // change their output during plan execution.  This is called "stay
 // optimization".
 class StayConstraint is UnaryConstraint {
-  new(variable, strength) {
+  this new(variable, strength) {
     super(variable, strength)
   }
 
@@ -199,7 +199,7 @@ class StayConstraint is UnaryConstraint {
 // A unary input constraint used to mark a variable that the client
 // wishes to change.
 class EditConstraint is UnaryConstraint {
-  EditConstraint(variable, strength) {
+  this new(variable, strength) {
     super(variable, strength)
   }
 
@@ -219,7 +219,7 @@ var BACKWARD = 0
 // Abstract superclass for constraints having two possible output
 // variables.
 class BinaryConstraint is Constraint {
-  new(v1, v2, strength) {
+  this new(v1, v2, strength) {
     super(strength)
     _v1 = v1
     _v2 = v2
@@ -328,7 +328,7 @@ class BinaryConstraint is Constraint {
 // this relationship but the scale factor and offset are considered
 // read-only.
 class ScaleConstraint is BinaryConstraint {
-  new(src, scale, offset, dest, strength) {
+  this new(src, scale, offset, dest, strength) {
     _scale = scale
     _offset = offset
     super(src, dest, strength)
@@ -376,7 +376,7 @@ class ScaleConstraint is BinaryConstraint {
 
 // Constrains two variables to have the same value.
 class EqualityConstraint is BinaryConstraint {
-  new(v1, v2, strength) {
+  this new(v1, v2, strength) {
     super(v1, v2, strength)
   }
 
@@ -391,7 +391,7 @@ class EqualityConstraint is BinaryConstraint {
 // various parameters of interest to the DeltaBlue incremental
 // constraint solver.
 class Variable {
-  new(name, value) {
+  this new(name, value) {
     _constraints = []
     _determinedBy = null
     _mark = 0
@@ -430,7 +430,7 @@ class Variable {
 // to resatisfy all currently satisfiable constraints in the face of
 // one or more changing inputs.
 class Plan {
-  new {
+  this new() {
     _list = []
   }
 
@@ -448,7 +448,7 @@ class Plan {
 }
 
 class Planner {
-  new {
+  this new() {
     _currentMark = 0
   }
 
@@ -521,7 +521,7 @@ class Planner {
   // Assume: [sources] are all satisfied.
   makePlan(sources) {
     var mark = newMark
-    var plan = new Plan
+    var plan = Plan.new()
     var todo = sources
     while (todo.count > 0) {
       var constraint = todo.removeAt(-1)
@@ -622,23 +622,23 @@ var total = 0
 // constraint so it cannot be accomodated. The cost in this case is,
 // of course, very low. Typical situations lie somewhere between these
 // two extremes.
-var chainTest = new Fn {|n|
-  ThePlanner = new Planner
+var chainTest = Fn.new {|n|
+  ThePlanner = Planner.new()
   var prev = null
   var first = null
   var last = null
 
   // Build chain of n equality constraints.
   for (i in 0..n) {
-    var v = new Variable("v", 0)
-    if (prev != null) new EqualityConstraint(prev, v, REQUIRED)
+    var v = Variable.new("v", 0)
+    if (prev != null) EqualityConstraint.new(prev, v, REQUIRED)
     if (i == 0) first = v
     if (i == n) last = v
     prev = v
   }
 
-  new StayConstraint(last, STRONG_DEFAULT)
-  var edit = new EditConstraint(first, PREFERRED)
+  StayConstraint.new(last, STRONG_DEFAULT)
+  var edit = EditConstraint.new(first, PREFERRED)
   var plan = ThePlanner.extractPlanFromConstraints([edit])
   for (i in 0...100) {
     first.value = i
@@ -647,8 +647,8 @@ var chainTest = new Fn {|n|
   }
 }
 
-var change = new Fn {|v, newValue|
-  var edit = new EditConstraint(v, PREFERRED)
+var change = Fn.new {|v, newValue|
+  var edit = EditConstraint.new(v, PREFERRED)
   var plan = ThePlanner.extractPlanFromConstraints([edit])
   for (i in 0...10) {
     v.value = newValue
@@ -662,20 +662,20 @@ var change = new Fn {|v, newValue|
 // other by a simple linear transformation (scale and offset). The
 // time is measured to change a variable on either side of the
 // mapping and to change the scale and offset factors.
-var projectionTest = new Fn {|n|
-  ThePlanner = new Planner
-  var scale = new Variable("scale", 10)
-  var offset = new Variable("offset", 1000)
+var projectionTest = Fn.new {|n|
+  ThePlanner = Planner.new()
+  var scale = Variable.new("scale", 10)
+  var offset = Variable.new("offset", 1000)
   var src = null
   var dst = null
 
   var dests = []
   for (i in 0...n) {
-    src = new Variable("src", i)
-    dst = new Variable("dst", i)
+    src = Variable.new("src", i)
+    dst = Variable.new("dst", i)
     dests.add(dst)
-    new StayConstraint(src, NORMAL)
-    new ScaleConstraint(src, scale, offset, dst, REQUIRED)
+    StayConstraint.new(src, NORMAL)
+    ScaleConstraint.new(src, scale, offset, dst, REQUIRED)
   }
 
   change.call(src, 17)

@@ -1,4 +1,4 @@
-new Fn {
+Fn.new {
   IO.print(1) // expect: 1
   IO.print(2) // expect: 2
   IO.print(3) // expect: 3

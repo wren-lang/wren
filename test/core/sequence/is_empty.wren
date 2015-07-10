@@ -7,4 +7,4 @@ class InfiniteSequence is Sequence {
 }
 
 // Should not try to iterate the whole sequence.
-IO.print((new InfiniteSequence).isEmpty) // expect: false
+IO.print(InfiniteSequence.new().isEmpty) // expect: false

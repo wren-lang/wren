@@ -1,5 +1,5 @@
 class Foo {
-  new {
+  this new() {
     _field1 = 1
     _field2 = 2
     _field3 = 3
@@ -259,4 +259,4 @@ class Foo {
   }
 }
 
-var foo = new Foo
+var foo = Foo.new()

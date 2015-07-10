@@ -1,12 +1,12 @@
 var f = null
 
-new Fn {
+Fn.new {
   var a = "a"
-  new Fn {
+  Fn.new {
     var b = "b"
-    new Fn {
+    Fn.new {
       var c = "c"
-      f = new Fn {
+      f = Fn.new {
         IO.print(a)
         IO.print(b)
         IO.print(c)

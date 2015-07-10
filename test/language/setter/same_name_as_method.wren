@@ -3,6 +3,6 @@ class Foo {
   bar { IO.print("get") }
 }
 
-var foo = new Foo
+var foo = Foo.new()
 foo.bar = "value" // expect: set
 foo.bar // expect: get

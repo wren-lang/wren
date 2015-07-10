@@ -10,9 +10,9 @@ class Outer {
       }
     }
 
-    (new Inner).method
+    Inner.new().method
     IO.print(_field) // expect: outer
   }
 }
 
-(new Outer).method
+Outer.new().method

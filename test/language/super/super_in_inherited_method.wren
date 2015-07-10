@@ -6,4 +6,4 @@ class A {
 
 class B is A {}
 
-IO.print((new B).callSuperToString) // expect: instance of B
+IO.print(B.new().callSuperToString) // expect: instance of B

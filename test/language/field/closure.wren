@@ -1,16 +1,16 @@
 class Foo {
-  new { _field = "Foo field" }
+  this new() { _field = "Foo field" }
 
   closeOverGet {
-    return new Fn { _field }
+    return Fn.new { _field }
   }
 
   closeOverSet {
-    return new Fn { _field = "new value" }
+    return Fn.new { _field = "new value" }
   }
 }
 
-var foo = new Foo
+var foo = Foo.new()
 IO.print(foo.closeOverGet.call()) // expect: Foo field
 foo.closeOverSet.call()
 IO.print(foo.closeOverGet.call()) // expect: new value

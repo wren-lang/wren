@@ -1,5 +1,5 @@
 class Foo {
-  new {
+  this new() {
     _field1 = 1
     _field2 = 2
     _field3 = 3
@@ -137,8 +137,8 @@ class Foo {
 }
 
 class Bar is Foo { // expect runtime error: Class 'Bar' may not have more than 255 fields, including inherited ones.
-  new {
-    super
+  this new() {
+    super()
     _field129 = 129
     _field130 = 130
     _field131 = 131
@@ -275,6 +275,6 @@ class Bar is Foo { // expect runtime error: Class 'Bar' may not have more than 2
   }
 }
 
-var bar = new Bar
+var bar = Bar.new()
 bar.foo
 bar.bar

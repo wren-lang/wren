@@ -64,7 +64,7 @@ class is fine:
 And you can call each of the methods like so:
 
     :::dart
-    var unicorn = new Unicorn
+    var unicorn = Unicorn.new()
     unicorn.prance
     unicorn.prance("Antwerp")
     unicorn.prance("Brussels", "high noon")
@@ -86,7 +86,7 @@ method that takes an *empty* argument list (`()`) and no argument list at all:
       method() { "empty argument list" }
     }
 
-    var confusing = new Confusing
+    var confusing = Confusing.new()
     confusing.method // "no argument list".
     confusing.method() // "empty argument list".
 
@@ -159,39 +159,50 @@ overloading by arity, it's no problem for a class to define both.
 
 ## Constructors
 
-To create a new instance of a class, you use the `new` keyword. We can make a
-unicorn like so:
+To create a new instance of a class, call a *constructor method* on its class.
+By default, if you don't define any constructors yourself, you get a free one
+named `new()`:
 
     :::dart
-    new Unicorn
+    Unicorn.new()
 
-You almost always want to define some state or do some other initialization on
-a new object. For that, you'll want to define a constructor, like so:
-
-    :::dart
-    class Unicorn {
-      new {
-        IO.print("I am a constructor!")
-      }
-    }
-
-When you create an instance with `new`, its constructor will be invoked. It's
-just a method with a special name. Like methods, you can pass arguments to the
-constructor by adding a parenthesized parameter list after `new`:
+However, you almost always want to define some state or do some other
+initialization on a new object. For that, you'll want to define your own
+constructor, like so:
 
     :::dart
     class Unicorn {
-      new(name, color) {
+      this new(name, color) {
         IO.print("My name is " + name + " and I am " + color + ".")
       }
     }
 
-Values are passed to the constructor like so:
+The `this` before the method name makes it a constructor. The `new` isn't
+special. Constructors can have any name you like, which lets you clarify how it
+creates the instance:
 
     :::dart
-    new Unicorn("Flicker", "purple")
+    class Unicorn {
+      this brown(name) {
+        IO.print("My name is " + name + " and I am brown.")
+      }
+    }
 
-Like other methods, you can overload constructors by [arity](#signature).
+Constructors can obviously have arguments, and can be overloaded by
+[arity](#signature). A constructor *must* be a named method with a (possibly
+empty) argument list. Operators, getters, and setters cannot be constructors.
+
+A constructor is actually a pair of methods. You get a method on the class:
+
+    :::dart
+    Unicorn.brown("Fred")
+
+That creates the new instance, then it invokes the *initializer* on that
+instance. This is where the constructor body you defined gets run.
+
+This distinction is important because it means inside the body of the
+constructor, you can access `this`, assign [fields](#fields), call superclass
+constructors, etc.
 
 ## Fields
 
@@ -292,8 +303,8 @@ And also instance methods. When you do so, there is still only one static field
 shared among all instances of the class:
 
     :::dart
-    var foo1 = new Foo
-    var foo2 = new Foo
+    var foo1 = Foo.new()
+    var foo2 = Foo.new()
 
     foo1.setFromInstance("updated")
     IO.print(foo2.baz) // updated.
@@ -330,17 +341,36 @@ are not inherited.
 
     Pegasus.canFly // ERROR: Static methods are not inherited.
 
-Constructors, however, initialize the instance *after* it has been created.
-They are defined as instance methods on the class and not on the metaclass.
-That means that constructors *are* inherited.
+This also means constructors are not inherited:
 
     :::dart
     class Unicorn {
-      new(name) {
+      this new(name) {
         IO.print("My name is " + name + ".")
       }
     }
 
     class Pegasus is Unicorn {}
 
-    new Pegasus("Fred") // Prints "My name is Fred.".
+    Pegasus.new("Fred") // Error!
+
+Each class gets to control how it may be constructed independently of its base
+classes. However, constructor *initializers* are inherited since those are
+instance methods on the new object.
+
+This means you can do `super` calls inside a constructor:
+
+    :::dart
+    class Unicorn {
+      this new(name) {
+        IO.print("My name is " + name + ".")
+      }
+    }
+
+    class Pegasus is Unicorn {
+      this new(name) {
+        super(name)
+      }
+    }
+
+    Pegasus.new("Fred") // Prints "My name is Fred.".

@@ -4,5 +4,5 @@ class Foo {
   }
 }
 
-var foo = new Foo
+var foo = Foo.new()
 foo.bar = "value" // expect: value

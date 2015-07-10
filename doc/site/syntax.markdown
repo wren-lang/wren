@@ -28,8 +28,8 @@ Some people like to see all of the reserved words in a programming language in
 one lump. If you're one of those folks, here you go:
 
     :::dart
-    break class else false for foreign if import in is
-    new null return static super this true var while
+    break class else false for foreign if import in
+    is null return static super this true var while
 
 ## Identifiers
 
@@ -102,12 +102,12 @@ compact notation:
     :::dart
     { "single expression" }
 
-If there is no newline after the `{` (or after the parameter list in a of
+If there is no newline after the `{` (or after the parameter list in a
 [function](functions.html)), then the block may only contain a single
 expression, and it automatically returns the result of it. It's exactly the
 same as doing:
 
     :::dart
     {
-        return "single expression"
+      return "single expression"
     }

@@ -1,5 +1,5 @@
 class Foo {
-  new(value) { _value = value }
+  this new(value) { _value = value }
   toString { _value }
   bar=(value) {
     _value = value
@@ -7,9 +7,9 @@ class Foo {
   }
 }
 
-var a = new Foo("a")
-var b = new Foo("b")
-var c = new Foo("c")
+var a = Foo.new("a")
+var b = Foo.new("b")
+var c = Foo.new("c")
 
 // Assignment is right-associative.
 a.bar = b.bar = c.bar = "d"

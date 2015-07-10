@@ -10,5 +10,5 @@ class Foo {
   }
 }
 
-(new Foo).method // expect: global
+Foo.new().method // expect: global
 Foo.classMethod // expect: global

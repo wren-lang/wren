@@ -7,7 +7,7 @@ class Foo {
   [a, b, c]=(value) { "3-subscript setter " + a + " " + b + " " + c + " = " + value }
 }
 
-var foo = new Foo
+var foo = Foo.new()
 IO.print(foo["a"]) // expect: 1-subscript a
 IO.print(foo["a", "b"]) // expect: 2-subscript a b
 IO.print(foo["a", "b", "c"]) // expect: 3-subscript a b c

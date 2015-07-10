@@ -1,3 +1,3 @@
-new Fn {
+Fn.new {
   super.foo // expect error
 }

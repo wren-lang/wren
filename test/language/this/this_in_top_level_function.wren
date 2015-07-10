@@ -1,3 +1,3 @@
-new Fn {
+Fn.new {
   this // expect error
 }

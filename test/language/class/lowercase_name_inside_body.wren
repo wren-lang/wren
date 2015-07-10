@@ -12,4 +12,4 @@ class foo {
 }
 
 foo.callFoo // expect: static foo method
-(new foo).callFoo // expect: instance foo method
+foo.new().callFoo // expect: instance foo method

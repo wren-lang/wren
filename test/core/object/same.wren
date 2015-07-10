@@ -26,15 +26,15 @@ IO.print(Object.same(Bool, Bool)) // expect: true
 // Other types compare by identity.
 class Foo {}
 
-var foo = new Foo
+var foo = Foo.new()
 IO.print(Object.same(foo, foo)) // expect: true
-IO.print(Object.same(foo, new Foo)) // expect: false
+IO.print(Object.same(foo, Foo.new())) // expect: false
 
 // Ignores == operators.
 class Bar {
   ==(other) { true }
 }
 
-var bar = new Bar
+var bar = Bar.new()
 IO.print(Object.same(bar, bar)) // expect: true
-IO.print(Object.same(bar, new Bar)) // expect: false
+IO.print(Object.same(bar, Bar.new())) // expect: false

@@ -19,7 +19,7 @@ class Foo {
   method(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) { a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p}
 }
 
-var foo = new Foo
+var foo = Foo.new()
 IO.print(foo.method) // expect: getter
 IO.print(foo.method()) // expect: no args
 IO.print(foo.method(1)) // expect: 1

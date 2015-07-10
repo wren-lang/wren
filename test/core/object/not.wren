@@ -1,2 +1,2 @@
 class Foo {}
-IO.print(!(new Foo)) // expect: false
+IO.print(!Foo.new()) // expect: false

@@ -3,13 +3,13 @@
 
 A lightweight coroutine. [Here](../fibers.html) is a gentle introduction.
 
-### new **Fiber**(function)
+### Fiber.**new**(function)
 
 Creates a new fiber that executes `function` in a separate coroutine when the
 fiber is run. Does not immediately start running the fiber.
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       IO.print("I won't get printed")
     }
 
@@ -25,7 +25,7 @@ Pauses the current fiber and transfers control to the parent fiber. "Parent"
 here means the last fiber that was started using `call` and not `run`.
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       IO.print("Before yield")
       Fiber.yield()
       IO.print("After yield")
@@ -41,7 +41,7 @@ If a yielded fiber is resumed by calling `call()` or `run()` with an argument,
 `yield()` returns that value.
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       IO.print(Fiber.yield()) // "value"
     }
 
@@ -65,7 +65,7 @@ Similar to `Fiber.yield` but provides a value to return to the parent fiber's
 `call`.
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       Fiber.yield("value")
     }
 
@@ -78,7 +78,7 @@ Similar to `Fiber.yield` but provides a value to return to the parent fiber's
 Starts or resumes the fiber if it is in a paused state.
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       IO.print("Fiber called")
       Fiber.yield()
       IO.print("Fiber called again")
@@ -94,7 +94,7 @@ If the called fiber is resuming from a yield, the `yield()` method returns
 `null` in the called fiber.
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       IO.print(Fiber.yield())
     }
 
@@ -107,7 +107,7 @@ Invokes the fiber or resumes the fiber if it is in a paused state and sets
 `value` as the returned value of the fiber's call to `yield`.
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       IO.print(Fiber.yield())
     }
 

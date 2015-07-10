@@ -1023,6 +1023,11 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       DISPATCH();
     }
 
+    CASE_CODE(CONSTRUCT):
+      ASSERT(IS_CLASS(stackStart[0]), "'this' should be a class.");
+      stackStart[0] = wrenNewInstance(vm, AS_CLASS(stackStart[0]));
+      DISPATCH();
+    
     CASE_CODE(CLOSURE):
     {
       ObjFn* prototype = AS_FN(fn->constants[READ_SHORT()]);

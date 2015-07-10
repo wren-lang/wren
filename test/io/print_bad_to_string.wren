@@ -2,4 +2,4 @@ class BadToString {
   toString { 3 }
 }
 
-IO.print(new BadToString) // expect: [invalid toString]
+IO.print(BadToString.new()) // expect: [invalid toString]

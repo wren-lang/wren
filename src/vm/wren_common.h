@@ -95,14 +95,15 @@
 
 // The maximum length of a method signature. Signatures look like:
 //
-//     foo     // Getter.
-//     foo()   // No-argument method.
-//     foo(_)  // One-argument method.
-//     foo(_,_) // Two-argument method.
+//     foo        // Getter.
+//     foo()      // No-argument method.
+//     foo(_)     // One-argument method.
+//     foo(_,_)   // Two-argument method.
+//     this foo() // Constructor initializer.
 //
 // The maximum signature length takes into account the longest method name, the
-// maximum number of parameters with separators between them, and "()".
-#define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + (MAX_PARAMETERS * 2) + 1)
+// maximum number of parameters with separators between them, "this ", and "()".
+#define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + (MAX_PARAMETERS * 2) + 6)
 
 // The maximum length of an identifier. The only real reason for this limitation
 // is so that error messages mentioning variables can be stack allocated.

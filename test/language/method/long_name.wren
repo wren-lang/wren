@@ -4,4 +4,4 @@ class Foo {
   }
 }
 
-IO.print((new Foo).thisHasAMethodNameThatIsExactly64CharactersLongWhichIsTheMaximum) // expect: result
+IO.print(Foo.new().thisHasAMethodNameThatIsExactly64CharactersLongWhichIsTheMaximum) // expect: result

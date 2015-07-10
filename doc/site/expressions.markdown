@@ -113,13 +113,13 @@ base class constructor:
 
     :::dart
     class Base {
-      new(arg) {
+      this new(arg) {
         IO.print("base constructor got ", arg)
       }
     }
 
     class Derived is Base {
-      new {
+      this new() {
         super("value") // Prints "base constructor got value".
       }
     }

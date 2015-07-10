@@ -1,3 +1,3 @@
-IO.print(new Fn {
+IO.print(Fn.new {
   if (false) "no" else return "ok"
 }.call()) // expect: ok

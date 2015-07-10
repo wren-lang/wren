@@ -2,11 +2,11 @@ var F = null
 
 class Foo {
   method(param) {
-    F = new Fn {
+    F = Fn.new {
       IO.print(param)
     }
   }
 }
 
-(new Foo).method("param")
+Foo.new().method("param")
 F.call() // expect: param

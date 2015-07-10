@@ -1,4 +1,4 @@
-var f = new Fn {
+var f = Fn.new {
   while (true) {
     var i = "i"
     return i

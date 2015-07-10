@@ -3,4 +3,4 @@ class Foo {
   baz { "baz" }
 }
 
-IO.print((new Foo).bar.baz) // expect: baz
+IO.print(Foo.new().bar.baz) // expect: baz

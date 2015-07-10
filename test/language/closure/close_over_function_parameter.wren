@@ -1,7 +1,7 @@
 var f = null
 
-new Fn {|param|
-  f = new Fn {
+Fn.new {|param|
+  f = Fn.new {
     IO.print(param)
   }
 }.call("param")

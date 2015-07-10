@@ -68,9 +68,9 @@ static const char* coreLibSource =
 "\n"
 "  isEmpty { iterate(null) ? false : true }\n"
 "\n"
-"  map(transformation) { new MapSequence(this, transformation) }\n"
+"  map(transformation) { MapSequence.new(this, transformation) }\n"
 "\n"
-"  where(predicate) { new WhereSequence(this, predicate) }\n"
+"  where(predicate) { WhereSequence.new(this, predicate) }\n"
 "\n"
 "  reduce(acc, f) {\n"
 "    for (element in this) {\n"
@@ -108,7 +108,7 @@ static const char* coreLibSource =
 "  }\n"
 "\n"
 "  toList {\n"
-"    var result = new List\n"
+"    var result = List.new()\n"
 "    for (element in this) {\n"
 "      result.add(element)\n"
 "    }\n"
@@ -117,7 +117,7 @@ static const char* coreLibSource =
 "}\n"
 "\n"
 "class MapSequence is Sequence {\n"
-"  new(sequence, fn) {\n"
+"  this new(sequence, fn) {\n"
 "    _sequence = sequence\n"
 "    _fn = fn\n"
 "  }\n"
@@ -127,7 +127,7 @@ static const char* coreLibSource =
 "}\n"
 "\n"
 "class WhereSequence is Sequence {\n"
-"  new(sequence, fn) {\n"
+"  this new(sequence, fn) {\n"
 "    _sequence = sequence\n"
 "    _fn = fn\n"
 "  }\n"
@@ -143,11 +143,11 @@ static const char* coreLibSource =
 "}\n"
 "\n"
 "class String is Sequence {\n"
-"  bytes { new StringByteSequence(this) }\n"
+"  bytes { StringByteSequence.new(this) }\n"
 "}\n"
 "\n"
 "class StringByteSequence is Sequence {\n"
-"  new(string) {\n"
+"  this new(string) {\n"
 "    _string = string\n"
 "  }\n"
 "\n"
@@ -176,8 +176,8 @@ static const char* coreLibSource =
 "}\n"
 "\n"
 "class Map {\n"
-"  keys { new MapKeySequence(this) }\n"
-"  values { new MapValueSequence(this) }\n"
+"  keys { MapKeySequence.new(this) }\n"
+"  values { MapValueSequence.new(this) }\n"
 "\n"
 "  toString {\n"
 "    var first = true\n"
@@ -194,7 +194,7 @@ static const char* coreLibSource =
 "}\n"
 "\n"
 "class MapKeySequence is Sequence {\n"
-"  new(map) {\n"
+"  this new(map) {\n"
 "    _map = map\n"
 "  }\n"
 "\n"
@@ -203,7 +203,7 @@ static const char* coreLibSource =
 "}\n"
 "\n"
 "class MapValueSequence is Sequence {\n"
-"  new(map) {\n"
+"  this new(map) {\n"
 "    _map = map\n"
 "  }\n"
 "\n"
@@ -215,13 +215,9 @@ static const char* coreLibSource =
 
 // A simple primitive that just returns "this". Used in a few different places:
 //
-// * The default constructor on Object needs no initialization so just uses
-//   this.
+// * The default new() initializer on Object needs no initialization so just
+//   uses this.
 // * String's toString method obviously can use this.
-// * Fiber's instantiate method just returns the Fiber class. The new() method
-//   is responsible for creating the new fiber.
-// * Fn's "constructor" is given the actual function as an argument, so the
-//   instantiate method just returns the Fn class.
 DEF_PRIMITIVE(return_this)
 {
   RETURN_VAL(args[0]);
@@ -242,11 +238,6 @@ DEF_PRIMITIVE(bool_toString)
   {
     RETURN_VAL(CONST_STRING(vm, "false"));
   }
-}
-
-DEF_PRIMITIVE(class_instantiate)
-{
-  RETURN_VAL(wrenNewInstance(vm, AS_CLASS(args[0])));
 }
 
 DEF_PRIMITIVE(class_name)
@@ -532,7 +523,7 @@ DEF_PRIMITIVE(fn_toString)
   RETURN_VAL(CONST_STRING(vm, "<fn>"));
 }
 
-DEF_PRIMITIVE(list_instantiate)
+DEF_PRIMITIVE(list_new)
 {
   RETURN_OBJ(wrenNewList(vm, 0));
 }
@@ -649,7 +640,7 @@ DEF_PRIMITIVE(list_subscriptSetter)
   RETURN_VAL(args[2]);
 }
 
-DEF_PRIMITIVE(map_instantiate)
+DEF_PRIMITIVE(map_new)
 {
   RETURN_OBJ(wrenNewMap(vm));
 }
@@ -998,11 +989,6 @@ DEF_PRIMITIVE(object_type)
   RETURN_OBJ(wrenGetClass(vm, args[0]));
 }
 
-DEF_PRIMITIVE(object_instantiate)
-{
-  RETURN_ERROR("Must provide a class to 'new' to construct.");
-}
-
 DEF_PRIMITIVE(range_from)
 {
   RETURN_NUM(AS_RANGE(args[0])->from);
@@ -1303,16 +1289,14 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->objectClass, "!", object_not);
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
-  PRIMITIVE(vm->objectClass, "new", return_this);
+  PRIMITIVE(vm->objectClass, "this new()", return_this);
   PRIMITIVE(vm->objectClass, "is(_)", object_is);
   PRIMITIVE(vm->objectClass, "toString", object_toString);
   PRIMITIVE(vm->objectClass, "type", object_type);
-  PRIMITIVE(vm->objectClass, "<instantiate>", object_instantiate);
 
   // Now we can define Class, which is a subclass of Object.
   vm->classClass = defineClass(vm, "Class");
   wrenBindSuperclass(vm, vm->classClass, vm->objectClass);
-  PRIMITIVE(vm->classClass, "<instantiate>", class_instantiate);
   PRIMITIVE(vm->classClass, "name", class_name);
   PRIMITIVE(vm->classClass, "supertype", class_supertype);
   PRIMITIVE(vm->classClass, "toString", class_toString);
@@ -1361,7 +1345,6 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->boolClass, "!", bool_not);
 
   vm->fiberClass = AS_CLASS(wrenFindVariable(vm, "Fiber"));
-  PRIMITIVE(vm->fiberClass->obj.classObj, "<instantiate>", return_this);
   PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
   PRIMITIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
   PRIMITIVE(vm->fiberClass->obj.classObj, "current", fiber_current);
@@ -1376,7 +1359,6 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
 
   vm->fnClass = AS_CLASS(wrenFindVariable(vm, "Fn"));
-  PRIMITIVE(vm->fnClass->obj.classObj, "<instantiate>", return_this);
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
@@ -1463,7 +1445,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "toString", return_this);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, "List"));
-  PRIMITIVE(vm->listClass->obj.classObj, "<instantiate>", list_instantiate);
+  PRIMITIVE(vm->listClass->obj.classObj, "new()", list_new);
   PRIMITIVE(vm->listClass, "[_]", list_subscript);
   PRIMITIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
   PRIMITIVE(vm->listClass, "add(_)", list_add);
@@ -1475,7 +1457,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "removeAt(_)", list_removeAt);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, "Map"));
-  PRIMITIVE(vm->mapClass->obj.classObj, "<instantiate>", map_instantiate);
+  PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);
   PRIMITIVE(vm->mapClass, "[_]", map_subscript);
   PRIMITIVE(vm->mapClass, "[_]=(_)", map_subscriptSetter);
   PRIMITIVE(vm->mapClass, "clear()", map_clear);

@@ -1,3 +1,4 @@
+// TODO: Is this right? Shouldn't it resolve to this.local?
 {
   var local = "local"
   class Foo {
@@ -6,5 +7,5 @@
     }
   }
 
-  (new Foo).method // expect: local
+  Foo.new().method // expect: local
 }

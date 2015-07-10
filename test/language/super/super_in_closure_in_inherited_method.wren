@@ -1,6 +1,6 @@
 class A {
   callSuperToString {
-    return new Fn { super.toString }.call()
+    return Fn.new { super.toString }.call()
   }
 
   toString { "A.toString" }
@@ -8,4 +8,4 @@ class A {
 
 class B is A {}
 
-IO.print((new B).callSuperToString) // expect: instance of B
+IO.print(B.new().callSuperToString) // expect: instance of B

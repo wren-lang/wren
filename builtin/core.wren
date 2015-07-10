@@ -54,9 +54,9 @@ class Sequence {
 
   isEmpty { iterate(null) ? false : true }
 
-  map(transformation) { new MapSequence(this, transformation) }
+  map(transformation) { MapSequence.new(this, transformation) }
 
-  where(predicate) { new WhereSequence(this, predicate) }
+  where(predicate) { WhereSequence.new(this, predicate) }
 
   reduce(acc, f) {
     for (element in this) {
@@ -94,7 +94,7 @@ class Sequence {
   }
 
   toList {
-    var result = new List
+    var result = List.new()
     for (element in this) {
       result.add(element)
     }
@@ -103,7 +103,7 @@ class Sequence {
 }
 
 class MapSequence is Sequence {
-  new(sequence, fn) {
+  this new(sequence, fn) {
     _sequence = sequence
     _fn = fn
   }
@@ -113,7 +113,7 @@ class MapSequence is Sequence {
 }
 
 class WhereSequence is Sequence {
-  new(sequence, fn) {
+  this new(sequence, fn) {
     _sequence = sequence
     _fn = fn
   }
@@ -129,11 +129,11 @@ class WhereSequence is Sequence {
 }
 
 class String is Sequence {
-  bytes { new StringByteSequence(this) }
+  bytes { StringByteSequence.new(this) }
 }
 
 class StringByteSequence is Sequence {
-  new(string) {
+  this new(string) {
     _string = string
   }
 
@@ -162,8 +162,8 @@ class List is Sequence {
 }
 
 class Map {
-  keys { new MapKeySequence(this) }
-  values { new MapValueSequence(this) }
+  keys { MapKeySequence.new(this) }
+  values { MapValueSequence.new(this) }
 
   toString {
     var first = true
@@ -180,7 +180,7 @@ class Map {
 }
 
 class MapKeySequence is Sequence {
-  new(map) {
+  this new(map) {
     _map = map
   }
 
@@ -189,7 +189,7 @@ class MapKeySequence is Sequence {
 }
 
 class MapValueSequence is Sequence {
-  new(map) {
+  this new(map) {
     _map = map
   }
 

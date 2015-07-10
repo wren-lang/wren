@@ -36,7 +36,7 @@ class Outer {
       }
     }
 
-    (new Inner).test
+    Inner.new().test
 
     getter            // expect: outer getter
     setter = "value"  // expect: outer setter
@@ -44,4 +44,4 @@ class Outer {
   }
 }
 
-(new Outer).test
+Outer.new().test

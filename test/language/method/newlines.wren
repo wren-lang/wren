@@ -3,7 +3,7 @@ class Foo {
   [a, b] { "subscript " + a + " " + b }
 }
 
-var foo = new Foo
+var foo = Foo.new()
 
 // Allow newlines after commas and before ")".
 IO.print(foo.method("a",

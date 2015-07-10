@@ -1,4 +1,4 @@
-var fiber = new Fiber {
+var fiber = Fiber.new {
   "s".unknown
 }
 

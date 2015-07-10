@@ -25,10 +25,10 @@ class Outer {
       }
     }
 
-    (new Inner).instanceMethod
+    Inner.new().instanceMethod
     IO.print(__field) // expect: outer
   }
 }
 
 Outer.staticMethod
-(new Outer).instanceMethod
+Outer.new().instanceMethod

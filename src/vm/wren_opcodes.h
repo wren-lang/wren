@@ -150,6 +150,13 @@ OPCODE(RETURN)
 // Pushes the created closure.
 OPCODE(CLOSURE)
 
+// Creates a new instance of a class.
+//
+// Assumes the class object is in slot zero, and replaces it with the new
+// uninitialized instance of that class. This opcode is only emitted by the
+// compiler-generated constructor metaclass methods.
+OPCODE(CONSTRUCT)
+
 // Creates a class. Top of stack is the superclass, or `null` if the class
 // inherits Object. Below that is a string for the name of the class. Byte
 // [arg] is the number of fields in the class.

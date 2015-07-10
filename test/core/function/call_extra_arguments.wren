@@ -1,7 +1,7 @@
-var f0 = new Fn { IO.print("zero") }
-var f1 = new Fn {|a| IO.print("one ", a) }
-var f2 = new Fn {|a, b| IO.print("two ", a, " ", b) }
-var f3 = new Fn {|a, b, c| IO.print("three ", a, " ", b, " ", c) }
+var f0 = Fn.new { IO.print("zero") }
+var f1 = Fn.new {|a| IO.print("one ", a) }
+var f2 = Fn.new {|a, b| IO.print("two ", a, " ", b) }
+var f3 = Fn.new {|a, b, c| IO.print("three ", a, " ", b, " ", c) }
 
 f0.call("a") // expect: zero
 f0.call("a", "b") // expect: zero

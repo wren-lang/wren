@@ -52,7 +52,7 @@ superclasses) don't define that method, there's nothing Wren can do:
     :::dart
     class Foo {}
 
-    var foo = new Foo
+    var foo = Foo.new()
     foo.someRandomMethod
 
 If you run this, Wren will print:
@@ -103,7 +103,7 @@ error message as a string.
 For example, if you run this program:
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       123.badMethod
     }
 

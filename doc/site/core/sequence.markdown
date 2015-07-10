@@ -109,11 +109,11 @@ To force eager evaluation, just call `.toList` on the result.
 
 ### **reduce**(function)
 
-Reduces the sequence down to a single value. `function` is a function that takes
-two arguments, the accumulator and sequence item and returns the new accumulator
-value. The accumulator is initialized from the first item in the sequence. Then,
-the function is invoked on each remaining item in the sequence, iteratively
-updating the accumulator.
+Reduces the sequence down to a single value. `function` is a function that
+takes two arguments, the accumulator and sequence item and returns the new
+accumulator value. The accumulator is initialized from the first item in the
+sequence. Then, the function is invoked on each remaining item in the sequence,
+iteratively updating the accumulator.
 
 It is a runtime error to call this on an empty sequence.
 

@@ -5,4 +5,4 @@ class Foo {
   }
 }
 
-IO.print((new Foo).method) // expect: ok
+IO.print(Foo.new().method) // expect: ok

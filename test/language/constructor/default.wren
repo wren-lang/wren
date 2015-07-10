@@ -2,7 +2,7 @@ class Foo {
   toString { "Foo" }
 }
 
-// Classes inherit the argument-less "new" one by default.
-var foo = new Foo
+// Classes get an argument-less "new()" by default.
+var foo = Foo.new()
 IO.print(foo is Foo) // expect: true
 IO.print(foo.toString) // expect: Foo

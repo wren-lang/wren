@@ -3,7 +3,7 @@ class Foo {
   init { _field = "value" }  // ...before an assignment to it.
 }
 
-var foo = new Foo
+var foo = Foo.new()
 // But invoke them in the right order.
 foo.init
 foo.write // expect: value

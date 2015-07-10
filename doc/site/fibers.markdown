@@ -27,7 +27,7 @@ script, a main fiber is created for you automatically. You can spawn new fibers
 using the `Fiber` class's constructor:
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       IO.print("This runs in a separate fiber.")
     }
 
@@ -48,7 +48,7 @@ until it passes control to another fiber. If it reaches the end of its body,
 it's considered *done*:
 
     :::dart
-    var fiber = new Fiber { IO.print("Hi") }
+    var fiber = Fiber.new { IO.print("Hi") }
     fiber.isDone // false
     fiber.call()
     fiber.isDone // true
@@ -70,7 +70,7 @@ fiber is called, it picks up right where it left off and keeps going.
 You can make a fiber yield by calling the static `yield()` method on `Fiber`:
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       IO.print("fiber 1")
       Fiber.yield()
       IO.print("fiber 2")
@@ -103,7 +103,7 @@ fiber has yielded and is waiting to resume, the value becomes the return value
 of the `yield()` call:
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       var result = Fiber.yield()
       IO.print(result)
     }
@@ -120,7 +120,7 @@ Fibers can also pass values *back* when they yield. If you pass an argument to
 invoke the fiber:
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       Fiber.yield("sent")
     }
 
@@ -140,7 +140,7 @@ Wren's fibers can do that, but they can do much more. Like Lua, they are full
 example:
 
     :::dart
-    var fiber = new Fiber {
+    var fiber = Fiber.new {
       (1..10).map {|i|
         Fiber.yield(i)
       }

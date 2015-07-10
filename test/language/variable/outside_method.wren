@@ -14,5 +14,5 @@ class Foo {
   }
 }
 
-(new Foo).method // expect: method
+Foo.new().method // expect: method
 Foo.classMethod  // expect: class method

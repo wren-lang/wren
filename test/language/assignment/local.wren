@@ -1,4 +1,4 @@
-new Fn {
+Fn.new {
   var a = "before"
   IO.print(a) // expect: before
 

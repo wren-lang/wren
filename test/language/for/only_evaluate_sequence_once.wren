@@ -1,4 +1,4 @@
-var f = new Fn {
+var f = Fn.new {
   IO.print("evaluate sequence")
   return [1, 2, 3]
 }

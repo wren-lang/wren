@@ -56,12 +56,12 @@ Here's the same example in Wren:
 
     :::dart
     class Account {
-      new(balance) { _balance = balance }
+      this new(balance) { _balance = balance }
       withdraw(amount) { _balance = _balance - amount }
     }
 
     // create and use an Account
-    var acc = new Account(1000)
+    var acc = Account.new(1000)
     acc.withdraw(100)
 
 Classes have a reputation for complexity because most of the widely used

@@ -1,9 +1,9 @@
 class A {}
 class B is A {}
 class C is B {}
-var a = new A
-var b = new B
-var c = new C
+var a = A.new()
+var b = B.new()
+var c = C.new()
 
 IO.print(a is A) // expect: true
 IO.print(a is B) // expect: false

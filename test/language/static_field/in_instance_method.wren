@@ -7,7 +7,7 @@ class Foo {
     __e = e
   }
 
-  write {
+  write() {
     IO.print(__a)
     IO.print(__b)
     IO.print(__c)
@@ -16,8 +16,8 @@ class Foo {
   }
 }
 
-(new Foo).set(1, 2, 3, 4, 5)
-(new Foo).write
+Foo.new().set(1, 2, 3, 4, 5)
+Foo.new().write()
 // expect: 1
 // expect: 2
 // expect: 3

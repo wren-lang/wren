@@ -7,7 +7,7 @@
 // Class definition with a toplevel name.
 class SyntaxExample {
   // Constructor
-  new {
+  this new() {
     // Top-level name `IO`
     IO.print("I am a constructor!")
 
@@ -26,7 +26,7 @@ class SyntaxExample {
   }
 
   // Constructor with arguments
-  new(a, b) {
+  this constructor(a, b) {
     print(a, b)
     field = a
   }
@@ -82,14 +82,11 @@ class SyntaxExample {
 
 // `class`, `is`
 class ReservedWords is SyntaxExample {
-  // `new`
-  new {
+  reserved {
     // `super`, `true`, `false`
     super(true, false)
     // `this`
     this.foo
-    // `new`
-    new SyntaxExample
   }
 
   foo {

@@ -1,7 +1,7 @@
 var list = []
 
 for (i in [1, 2, 3]) {
-  list.add(new Fn { IO.print(i) })
+  list.add(Fn.new { IO.print(i) })
 }
 
 for (f in list) f.call()
