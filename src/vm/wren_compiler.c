@@ -608,7 +608,6 @@ static void readHexNumber(Parser* parser)
 // Finishes lexing a number literal.
 static void readNumber(Parser* parser)
 {
-  // TODO: scientific, etc.
   while (isDigit(peekChar(parser))) nextChar(parser);
 
   // See if it has a floating point. Make sure there is a digit after the "."
@@ -616,6 +615,22 @@ static void readNumber(Parser* parser)
   if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
   {
     nextChar(parser);
+    while (isDigit(peekChar(parser))) nextChar(parser);
+  }
+  
+  // See if the number is in scientific notation
+  if (peekChar(parser) == 'e' || peekChar(parser) == 'E')
+  {
+    nextChar(parser);
+    
+    // if the exponant is negative
+    if(peekChar(parser) == '-') nextChar(parser);
+    
+    if(!isDigit(peekChar(parser)))
+    {
+      lexError(parser, "Unterminated scientific notation.");
+    }
+    
     while (isDigit(peekChar(parser))) nextChar(parser);
   }
 

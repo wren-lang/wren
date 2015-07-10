@@ -1,0 +1,1 @@
+var x = 1.e // expect runtime error: Num does not implement 'e'.
