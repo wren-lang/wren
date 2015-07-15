@@ -25,6 +25,7 @@ A few people have also added Wren bindings for other languages:
 - [Rust: tilpner/wren-sys](https://github.com/tilpner/wren-sys)
 - [Rust: pwoolcoc/wren-sys](https://github.com/pwoolcoc/wren-sys)
 - [Rust: pwoolcoc/wren-rs](https://github.com/pwoolcoc/wren-rs)
+- [JavaScript: ppvk/wrenjs](https://github.com/ppvk/wrenjs)
 
 ## Editor integrations
 
@@ -32,6 +33,14 @@ If you want Wren syntax highlighting in your editor, look no further:
 
 - [Vim](https://github.com/lluchs/vim-wren)
 - [Emacs](https://github.com/v2e4lisp/wren-mode.el)
+
+## Tools and Utilities
+
+Things that make life easier:
+
+- [the Wren nest](http://ppvk.github.io/wren-nest/), run and share Wren in
+your browser
+
 
 Do you have anything to add here? Send a [pull request][]!
 
