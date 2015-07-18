@@ -40,8 +40,9 @@ while (!adjectives.isDone) IO.print(adjectives.call())
     and [an easy-to-use C API][embedding]. It compiles cleanly as C99, C++98
     or anything later.
 
-If you like the sound of this, [give it a try][try]! Even better, you can
-[contribute to Wren itself][contribute].
+If you like the sound of this, [let's get started][started]. You can even try
+it [in your browser][browser]! Excited? Well, come on and [get
+involved][contribute]!
 
 [![Build Status](https://travis-ci.org/munificent/wren.svg)](https://travis-ci.org/munificent/wren)
 
@@ -52,5 +53,6 @@ If you like the sound of this, [give it a try][try]! Even better, you can
 [classes]: http://munificent.github.io/wren/classes.html
 [fibers]: http://munificent.github.io/wren/fibers.html
 [embedding]: http://munificent.github.io/wren/embedding-api.html
-[try]: http://munificent.github.io/wren/getting-started.html
-[contribute]: http://munificent.github.io/wren/contributing.html
+[started]: getting-started.html
+[browser]: http://ppvk.github.io/wren-nest/
+[contribute]: contributing.html

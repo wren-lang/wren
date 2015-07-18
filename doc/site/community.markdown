@@ -10,37 +10,39 @@ There's one Wren user group, and it's the [official Wren mailing
 list](https://groups.google.com/forum/#!forum/wren-lang). Please join it and
 say hello! There are no strangers to Wren, just friends we haven't met yet.
 
-## Third-party libraries
+## Libraries
 
 There are some third-party libraries that are written in Wren. Here's the list:
 
-- [wren-test](https://github.com/gsmaverick/wren-test), a testing framework
-- [Please](https://github.com/EvanHahn/wren-please), an assertion library
-- [wren-colors](https://github.com/gsmaverick/wren-colors) for printing colored
-  messages to the terminal
-- [3D vectors for Wren](https://github.com/EvanHahn/wren-vector3d)
+- [Please](https://github.com/EvanHahn/wren-please): An assertion library.
+- [wren-colors](https://github.com/gsmaverick/wren-colors): Print colored
+  messages to the terminal.
+- [wren-test](https://github.com/gsmaverick/wren-test): A testing framework.
+- [wren-vector3d](https://github.com/EvanHahn/wren-vector3d): 3D vectors.
 
-A few people have also added Wren bindings for other languages:
+## Language bindings
 
+Want to host a Wren VM within another language. Try these:
+
+- [JavaScript: ppvk/wrenjs](https://github.com/ppvk/wrenjs)
 - [Rust: tilpner/wren-sys](https://github.com/tilpner/wren-sys)
 - [Rust: pwoolcoc/wren-sys](https://github.com/pwoolcoc/wren-sys)
 - [Rust: pwoolcoc/wren-rs](https://github.com/pwoolcoc/wren-rs)
-- [JavaScript: ppvk/wrenjs](https://github.com/ppvk/wrenjs)
 
 ## Editor integrations
 
 If you want Wren syntax highlighting in your editor, look no further:
 
-- [Vim](https://github.com/lluchs/vim-wren)
 - [Emacs](https://github.com/v2e4lisp/wren-mode.el)
+- [Sublime Text](https://github.com/munificent/wren-sublime)
+- [Vim](https://github.com/lluchs/vim-wren)
 
 ## Tools and Utilities
 
 Things that make life easier:
 
-- [the Wren nest](http://ppvk.github.io/wren-nest/), run and share Wren in
-your browser
-
+- [The Wren Nest](http://ppvk.github.io/wren-nest/): Run and share Wren in your
+  browser.
 
 Do you have anything to add here? Send a [pull request][]!
 
