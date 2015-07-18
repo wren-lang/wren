@@ -6,7 +6,7 @@
 #include <string.h>
 #include <time.h>
 
-// TODO: This is an arbitrary limit Do something smarter.
+// TODO: This is an arbitrary limit. Do something smarter.
 #define MAX_READ_LEN 1024
 
 // This string literal is generated automatically from io.wren. Do not edit.
@@ -125,7 +125,8 @@ static void ioRead(WrenVM* vm)
   char buffer[MAX_READ_LEN];
   char* result = fgets(buffer, MAX_READ_LEN, stdin);
 
-  if (result != NULL) {
+  if (result != NULL)
+  {
     wrenReturnString(vm, buffer, (int)strlen(buffer));
   }
 }
