@@ -150,7 +150,7 @@ class Test:
   def validate_runtime_error(self, error_lines):
     if not error_lines:
       self.fail('Expected runtime error "{0} and got none.',
-          runtime_error_message)
+          self.runtime_error_message)
       return
 
     # Make sure we got the right error.
@@ -234,7 +234,7 @@ def color_text(text, color):
 
   # No ANSI escapes on Windows.
   if sys.platform == 'win32':
-    return text
+    return str(text)
 
   return color + str(text) + '\033[0m'
 
