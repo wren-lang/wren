@@ -2644,7 +2644,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
 
     default:
       UNREACHABLE();
-      return 0;
   }
 }
 

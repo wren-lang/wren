@@ -586,10 +586,10 @@ typedef struct
 #define IS_UNDEFINED(value) ((value).type == VAL_UNDEFINED)
 
 // Singleton values.
-#define FALSE_VAL     ((Value){ VAL_FALSE })
-#define NULL_VAL      ((Value){ VAL_NULL })
-#define TRUE_VAL      ((Value){ VAL_TRUE })
-#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED })
+#define FALSE_VAL     ((Value){ VAL_FALSE, { 0 } })
+#define NULL_VAL      ((Value){ VAL_NULL, { 0 } })
+#define TRUE_VAL      ((Value){ VAL_TRUE, { 0 } })
+#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, { 0 } })
 
 #endif
 
