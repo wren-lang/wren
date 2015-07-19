@@ -155,7 +155,8 @@ class Test:
 
     # Make sure we got the right error.
     if error_lines[0] != self.runtime_error_message:
-      self.fail('Expected runtime error "{0}" and got:', runtime_error_message)
+      self.fail('Expected runtime error "{0}" and got:',
+          self.runtime_error_message)
       self.fail(error_lines[0])
 
     # Make sure the stack trace has the right line.
