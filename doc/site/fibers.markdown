@@ -113,7 +113,7 @@ of the `yield()` call:
 
 This prints "sent". Note that the first value sent to the fiber through call is
 ignored. That's because the fiber isn't waiting on a `yield()` call, so there's
-no where for the sent value to go.
+nowhere for the sent value to go.
 
 Fibers can also pass values *back* when they yield. If you pass an argument to
 `yield()`, that will become the return value of the `call` that was used to

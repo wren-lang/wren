@@ -41,8 +41,9 @@ a familiar, modern [syntax][].
     and [an easy-to-use C API][embedding]. It compiles cleanly as C99, C++98
     or anything later.
 
-If you like the sound of this, [give it a try][try]! Even better, you can
-[contribute to Wren itself][contribute].
+If you like the sound of this, [let's get started][started]. You can even try
+it [in your browser][browser]! Excited? Well, come on and [get
+involved][contribute]!
 
 [syntax]: syntax.html
 [src]: https://github.com/munificent/wren/tree/master/src
@@ -51,5 +52,6 @@ If you like the sound of this, [give it a try][try]! Even better, you can
 [classes]: classes.html
 [fibers]: fibers.html
 [embedding]: embedding-api.html
-[try]: getting-started.html
+[started]: getting-started.html
+[browser]: http://ppvk.github.io/wren-nest/
 [contribute]: contributing.html

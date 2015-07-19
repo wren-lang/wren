@@ -26,7 +26,7 @@
 //
 // Defaults to on.
 #ifndef WREN_NAN_TAGGING
-#define WREN_NAN_TAGGING 1
+  #define WREN_NAN_TAGGING 1
 #endif
 
 // If true, the VM's interpreter loop uses computed gotos. See this for more:
@@ -48,14 +48,14 @@
 //
 // Defaults to on.
 #ifndef WREN_USE_LIB_IO
-#define WREN_USE_LIB_IO 1
+  #define WREN_USE_LIB_IO 1
 #endif
 
 // If true, loads the "Meta" class in the standard library.
 //
 // Defaults to on.
 #ifndef WREN_USE_LIB_META
-#define WREN_USE_LIB_META 1
+  #define WREN_USE_LIB_META 1
 #endif
 
 // These flags are useful for debugging and hacking on Wren itself. They are not
@@ -136,18 +136,18 @@
 // The Microsoft compiler does not support the "inline" modifier when compiling
 // as plain C.
 #if defined( _MSC_VER ) && !defined(__cplusplus)
-#define inline _inline
+  #define inline _inline
 #endif
 
 // This is used to clearly mark flexible-sized arrays that appear at the end of
 // some dynamically-allocated structs, known as the "struct hack".
 #if __STDC_VERSION__ >= 199901L
-// In C99, a flexible array member is just "[]".
-#define FLEXIBLE_ARRAY
+  // In C99, a flexible array member is just "[]".
+  #define FLEXIBLE_ARRAY
 #else
-// Elsewhere, use a zero-sized array. It's technically undefined behavior, but
-// works reliably in most known compilers.
-#define FLEXIBLE_ARRAY 0
+  // Elsewhere, use a zero-sized array. It's technically undefined behavior,
+  // but works reliably in most known compilers.
+  #define FLEXIBLE_ARRAY 0
 #endif
 
 // Assertions are used to validate program invariants. They indicate things the
@@ -157,34 +157,46 @@
 // Assertions add significant overhead, so are only enabled in debug builds.
 #ifdef DEBUG
 
-#include <stdio.h>
+  #include <stdio.h>
 
-#define ASSERT(condition, message) \
-    do \
-    { \
-      if (!(condition)) \
+  #define ASSERT(condition, message) \
+      do \
       { \
-        fprintf(stderr, "[%s:%d] Assert failed in %s(): %s\n", \
-            __FILE__, __LINE__, __func__, message); \
+        if (!(condition)) \
+        { \
+          fprintf(stderr, "[%s:%d] Assert failed in %s(): %s\n", \
+              __FILE__, __LINE__, __func__, message); \
+          abort(); \
+        } \
+      } \
+      while(0)
+
+  // Indicates that we know execution should never reach this point in the
+  // program. In debug mode, we assert this fact because it's a bug to get here.
+  //
+  // In release mode, we use compiler-specific built in functions to tell the
+  // compiler the code can't be reached. This avoids "missing return" warnings
+  // in some cases and also lets it perform some optimizations by assuming the
+  // code is never reached.
+  #define UNREACHABLE() \
+      do \
+      { \
+        fprintf(stderr, "[%s:%d] This code should not be reached in %s()\n", \
+            __FILE__, __LINE__, __func__); \
         abort(); \
       } \
-    } \
-    while(0)
-
-// Assertion to indicate that the given point in the code should never be
-// reached.
-#define UNREACHABLE() \
-    do \
-    { \
-      fprintf(stderr, "This line should not be reached.\n"); \
-      abort(); \
-    } \
-    while (0)
+      while (0)
 
 #else
 
-#define ASSERT(condition, message) do { } while (0)
-#define UNREACHABLE() do { } while (0)
+  #define ASSERT(condition, message) do {} while (0)
+
+  // Tell the compiler that this part of the code will never be reached.
+  #if defined( _MSC_VER )
+    #define UNREACHABLE() __assume(0)
+  #else
+    #define UNREACHABLE() __builtin_unreachable()
+  #endif
 
 #endif
 

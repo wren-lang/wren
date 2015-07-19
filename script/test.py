@@ -234,7 +234,7 @@ def color_text(text, color):
 
   # No ANSI escapes on Windows.
   if sys.platform == 'win32':
-    return text
+    return str(text)
 
   return color + str(text) + '\033[0m'
 

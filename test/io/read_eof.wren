@@ -1,1 +1,1 @@
-IO.write(IO.read) // expect: null
+IO.write(IO.read()) // expect: null

@@ -586,10 +586,10 @@ typedef struct
 #define IS_UNDEFINED(value) ((value).type == VAL_UNDEFINED)
 
 // Singleton values.
-#define FALSE_VAL     ((Value){ VAL_FALSE })
-#define NULL_VAL      ((Value){ VAL_NULL })
-#define TRUE_VAL      ((Value){ VAL_TRUE })
-#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED })
+#define FALSE_VAL     ((Value){ VAL_FALSE, { 0 } })
+#define NULL_VAL      ((Value){ VAL_NULL, { 0 } })
+#define TRUE_VAL      ((Value){ VAL_TRUE, { 0 } })
+#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, { 0 } })
 
 #endif
 
@@ -628,6 +628,16 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 // Resets [fiber] back to an initial state where it is ready to invoke [fn].
 void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn);
 
+static inline ObjFn* wrenGetFrameFunction(CallFrame* frame)
+{
+  switch (frame->fn->type)
+  {
+    case OBJ_FN:      return (ObjFn*)frame->fn;
+    case OBJ_CLOSURE: return ((ObjClosure*)frame->fn)->fn;
+    default:          UNREACHABLE();
+  }
+}
+
 // Adds a new [CallFrame] to [fiber] invoking [function] whose stack starts at
 // [stackStart].
 static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
@@ -639,14 +649,7 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
   CallFrame* frame = &fiber->frames[fiber->numFrames++];
   frame->stackStart = stackStart;
   frame->fn = function;
-  if (function->type == OBJ_FN)
-  {
-    frame->ip = ((ObjFn*)function)->bytecode;
-  }
-  else
-  {
-    frame->ip = ((ObjClosure*)function)->fn->bytecode;
-  }
+  frame->ip = wrenGetFrameFunction(frame)->bytecode;
 }
 
 // TODO: The argument list here is getting a bit gratuitous.

@@ -359,13 +359,11 @@ static uint32_t hashValue(Value value)
   switch (value.type)
   {
     case VAL_FALSE: return 0;
-    case VAL_NULL: return 1;
-    case VAL_NUM: return hashNumber(AS_NUM(value));
-    case VAL_TRUE: return 2;
-    case VAL_OBJ: return hashObject(AS_OBJ(value));
-    default:
-      UNREACHABLE();
-      return 0;
+    case VAL_NULL:  return 1;
+    case VAL_NUM:   return hashNumber(AS_NUM(value));
+    case VAL_TRUE:  return 2;
+    case VAL_OBJ:   return hashObject(AS_OBJ(value));
+    default:        UNREACHABLE();
   }
 #endif
 }
