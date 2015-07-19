@@ -613,14 +613,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       frame = &fiber->frames[fiber->numFrames - 1];    \
       stackStart = frame->stackStart;                  \
       ip = frame->ip;                                  \
-      if (frame->fn->type == OBJ_FN)                   \
-      {                                                \
-        fn = (ObjFn*)frame->fn;                        \
-      }                                                \
-      else                                             \
-      {                                                \
-        fn = ((ObjClosure*)frame->fn)->fn;             \
-      }
+      fn = wrenGetFrameFunction(frame);
 
   // Terminates the current fiber with error string [error]. If another calling
   // fiber is willing to catch the error, transfers control to it, otherwise

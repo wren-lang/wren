@@ -9,15 +9,7 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
   for (int i = fiber->numFrames - 1; i >= 0; i--)
   {
     CallFrame* frame = &fiber->frames[i];
-    ObjFn* fn;
-    if (frame->fn->type == OBJ_FN)
-    {
-      fn = (ObjFn*)frame->fn;
-    }
-    else
-    {
-      fn = ((ObjClosure*)frame->fn)->fn;
-    }
+    ObjFn* fn = wrenGetFrameFunction(frame);
 
     // Built-in libraries and method call stubs have no source path and are
     // explicitly omitted from stack traces since we don't want to highlight to

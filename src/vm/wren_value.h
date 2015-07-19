@@ -628,6 +628,16 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 // Resets [fiber] back to an initial state where it is ready to invoke [fn].
 void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn);
 
+static inline ObjFn* wrenGetFrameFunction(CallFrame* frame)
+{
+  switch (frame->fn->type)
+  {
+    case OBJ_FN:      return (ObjFn*)frame->fn;
+    case OBJ_CLOSURE: return ((ObjClosure*)frame->fn)->fn;
+    default:          UNREACHABLE();
+  }
+}
+
 // Adds a new [CallFrame] to [fiber] invoking [function] whose stack starts at
 // [stackStart].
 static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
@@ -639,14 +649,7 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
   CallFrame* frame = &fiber->frames[fiber->numFrames++];
   frame->stackStart = stackStart;
   frame->fn = function;
-  if (function->type == OBJ_FN)
-  {
-    frame->ip = ((ObjFn*)function)->bytecode;
-  }
-  else
-  {
-    frame->ip = ((ObjClosure*)function)->fn->bytecode;
-  }
+  frame->ip = wrenGetFrameFunction(frame)->bytecode;
 }
 
 // TODO: The argument list here is getting a bit gratuitous.
