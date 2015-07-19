@@ -447,10 +447,10 @@ static inline void callFunction(
 //
 // Returns `NULL` if no module with that name has been loaded.
 static ObjModule* getModule(WrenVM* vm, Value name)
-{
+  {
   Value moduleValue = wrenMapGet(vm->modules, name);
   return !IS_UNDEFINED(moduleValue) ? AS_MODULE(moduleValue) : NULL;
-}
+  }
 
 // Looks up the core module in the module map.
 static ObjModule* getCoreModule(WrenVM* vm)
@@ -625,15 +625,15 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   // Terminates the current fiber with error string [error]. If another calling
   // fiber is willing to catch the error, transfers control to it, otherwise
   // exits the interpreter.
-  #define RUNTIME_ERROR(error)                                \
-      do                                                      \
-      {                                                       \
-        STORE_FRAME();                                        \
-        fiber = runtimeError(fiber, error);                   \
+  #define RUNTIME_ERROR(error)                         \
+      do                                               \
+      {                                                \
+        STORE_FRAME();                                 \
+        fiber = runtimeError(fiber, error);            \
         if (fiber == NULL) return WREN_RESULT_RUNTIME_ERROR;  \
-        LOAD_FRAME();                                         \
-        DISPATCH();                                           \
-      }                                                       \
+        LOAD_FRAME();                                  \
+        DISPATCH();                                    \
+      }                                                \
       while (false)
 
   #if WREN_DEBUG_TRACE_INSTRUCTIONS
@@ -649,11 +649,11 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     #define DEBUG_TRACE_INSTRUCTIONS() do { } while (false)
   #endif
 
-  #if WREN_COMPUTED_GOTO
+  #if WREN_COMPUTED_GOTO == 1
 
   static void* dispatchTable[] = {
     #define OPCODE(name) &&code_##name,
-    #include "wren_opcodes.h"
+    PLACE_OPCODES
     #undef OPCODE
   };
 
@@ -665,6 +665,31 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       {                                                         \
         DEBUG_TRACE_INSTRUCTIONS();                             \
         goto *dispatchTable[instruction = (Code)READ_BYTE()];   \
+      }                                                         \
+      while (false)
+
+  #elif WREN_COMPUTED_GOTO == 2
+
+  #define INTERPRET_LOOP    DISPATCH();
+  #define CASE_CODE(name)   code_##name
+
+  // In this pseudo-computed-goto implementation the dispatchTable is replaced
+  // by a switch which contains only goto statements for each case. So instead
+  // of explicitly making a table we let the compiler figure out what to.
+  // Note that OPCODE() can't be undefined right after the DISPATCH() because
+  // it is only actually used by the preprocessor when DISPATCH() is used. So
+  // we undefine it after the end of the function.
+  #define OPCODE(name) case CODE_##name: goto code_##name;
+  #define DISPATCH()                                            \
+      do                                                        \
+      {                                                         \
+        DEBUG_TRACE_INSTRUCTIONS();                             \
+        switch (instruction = (Code)READ_BYTE())                \
+        {                                                       \
+          PLACE_OPCODES                                         \
+          default:                                              \
+              UNREACHABLE();                                    \
+        }                                                       \
       }                                                         \
       while (false)
 
@@ -1161,9 +1186,14 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   UNREACHABLE();
   return WREN_RESULT_RUNTIME_ERROR;
 
-  #undef READ_BYTE
-  #undef READ_SHORT
+#undef READ_BYTE
+#undef READ_SHORT
+// When using the psuedo-goto we have to undef OPCODE here.
+#if WREN_COMPUTED_GOTO == 2
+#undef OPCODE
+#endif
 }
+
 
 // Creates an [ObjFn] that invokes a method with [signature] when called.
 static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
