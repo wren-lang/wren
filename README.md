@@ -12,7 +12,7 @@ class Wren {
   }
 }
 
-var adjectives = new Fiber {
+var adjectives = Fiber.new {
   ["small", "clean", "fast"].each {|word| Fiber.yield(word) }
 }
 
