@@ -73,6 +73,7 @@ typedef enum
 
   TOKEN_BREAK,
   TOKEN_CLASS,
+  TOKEN_CONSTRUCT,
   TOKEN_ELSE,
   TOKEN_FALSE,
   TOKEN_FOR,
@@ -628,6 +629,7 @@ static void readName(Parser* parser, TokenType type)
 
   if (isKeyword(parser, "break")) type = TOKEN_BREAK;
   else if (isKeyword(parser, "class")) type = TOKEN_CLASS;
+  else if (isKeyword(parser, "construct")) type = TOKEN_CONSTRUCT;
   else if (isKeyword(parser, "else")) type = TOKEN_ELSE;
   else if (isKeyword(parser, "false")) type = TOKEN_FALSE;
   else if (isKeyword(parser, "for")) type = TOKEN_FOR;
@@ -2489,6 +2491,7 @@ GrammarRule rules[] =
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!="),
   /* TOKEN_BREAK         */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
+  /* TOKEN_CONSTRUCT     */ { NULL, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
   /* TOKEN_FOR           */ UNUSED,
@@ -2501,7 +2504,7 @@ GrammarRule rules[] =
   /* TOKEN_RETURN        */ UNUSED,
   /* TOKEN_STATIC        */ UNUSED,
   /* TOKEN_SUPER         */ PREFIX(super_),
-  /* TOKEN_THIS          */ { this_, NULL, constructorSignature, PREC_NONE, NULL },
+  /* TOKEN_THIS          */ PREFIX(this_),
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_WHILE         */ UNUSED,
@@ -3239,17 +3242,20 @@ static void variableDefinition(Compiler* compiler)
 // like the non-curly body of an if or while.
 void definition(Compiler* compiler)
 {
-  if (match(compiler, TOKEN_CLASS)) {
+  if (match(compiler, TOKEN_CLASS))
+  {
     classDefinition(compiler);
     return;
   }
 
-  if (match(compiler, TOKEN_IMPORT)) {
+  if (match(compiler, TOKEN_IMPORT))
+  {
     import(compiler);
     return;
   }
 
-  if (match(compiler, TOKEN_VAR)) {
+  if (match(compiler, TOKEN_VAR))
+  {
     variableDefinition(compiler);
     return;
   }

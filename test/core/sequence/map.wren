@@ -1,6 +1,6 @@
 // Infinite iterator demonstrating that Sequence.map is not eager
 class FibIterator {
-  this new() {
+  construct new() {
     _current = 0
     _next = 1
   }

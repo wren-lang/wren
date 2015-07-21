@@ -1,5 +1,5 @@
 class Foo {
-  this new(value) { _value = value }
+  construct new(value) { _value = value }
   toString { _value }
   bar=(value) {
     _value = value

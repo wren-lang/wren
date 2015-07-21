@@ -172,18 +172,18 @@ constructor, like so:
 
     :::dart
     class Unicorn {
-      this new(name, color) {
+      construct new(name, color) {
         IO.print("My name is " + name + " and I am " + color + ".")
       }
     }
 
-The `this` before the method name makes it a constructor. The `new` isn't
+The `construct` before the method name makes it a constructor. The `new` isn't
 special. Constructors can have any name you like, which lets you clarify how it
 creates the instance:
 
     :::dart
     class Unicorn {
-      this brown(name) {
+      construct brown(name) {
         IO.print("My name is " + name + " and I am brown.")
       }
     }

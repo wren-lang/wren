@@ -1,5 +1,5 @@
 class Foo {
-  this real() {}
+  construct real() {}
 }
 
 // Classes do not get an argument-less "new()" if they define a constructor.

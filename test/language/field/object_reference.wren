@@ -1,6 +1,6 @@
 // This test exists mainly to make sure the GC traces instance fields.
 class Node {
-  this new(left, value, right) {
+  construct new(left, value, right) {
     _left = left
     _value = value
     _right = right

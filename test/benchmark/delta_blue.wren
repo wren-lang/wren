@@ -50,7 +50,7 @@ var ORDERED = null
 // disrupting current constraints.  Strengths cannot be created outside
 // this class, so == can be used for value comparison.
 class Strength {
-  this new(value, name) {
+  construct new(value, name) {
     _value = value
     _name = name
   }
@@ -82,7 +82,7 @@ ORDERED = [
 var ThePlanner
 
 class Constraint {
-  this new(strength) {
+  construct new(strength) {
     _strength = strength
   }
 
@@ -131,7 +131,7 @@ class Constraint {
 
 // Abstract superclass for constraints having a single possible output variable.
 class UnaryConstraint is Constraint {
-  this new(myOutput, strength) {
+  construct new(myOutput, strength) {
     super(strength)
     _satisfied = false
     _myOutput = myOutput
@@ -187,7 +187,7 @@ class UnaryConstraint is Constraint {
 // change their output during plan execution.  This is called "stay
 // optimization".
 class StayConstraint is UnaryConstraint {
-  this new(variable, strength) {
+  construct new(variable, strength) {
     super(variable, strength)
   }
 
@@ -199,7 +199,7 @@ class StayConstraint is UnaryConstraint {
 // A unary input constraint used to mark a variable that the client
 // wishes to change.
 class EditConstraint is UnaryConstraint {
-  this new(variable, strength) {
+  construct new(variable, strength) {
     super(variable, strength)
   }
 
@@ -219,7 +219,7 @@ var BACKWARD = 0
 // Abstract superclass for constraints having two possible output
 // variables.
 class BinaryConstraint is Constraint {
-  this new(v1, v2, strength) {
+  construct new(v1, v2, strength) {
     super(strength)
     _v1 = v1
     _v2 = v2
@@ -328,7 +328,7 @@ class BinaryConstraint is Constraint {
 // this relationship but the scale factor and offset are considered
 // read-only.
 class ScaleConstraint is BinaryConstraint {
-  this new(src, scale, offset, dest, strength) {
+  construct new(src, scale, offset, dest, strength) {
     _scale = scale
     _offset = offset
     super(src, dest, strength)
@@ -376,7 +376,7 @@ class ScaleConstraint is BinaryConstraint {
 
 // Constrains two variables to have the same value.
 class EqualityConstraint is BinaryConstraint {
-  this new(v1, v2, strength) {
+  construct new(v1, v2, strength) {
     super(v1, v2, strength)
   }
 
@@ -391,7 +391,7 @@ class EqualityConstraint is BinaryConstraint {
 // various parameters of interest to the DeltaBlue incremental
 // constraint solver.
 class Variable {
-  this new(name, value) {
+  construct new(name, value) {
     _constraints = []
     _determinedBy = null
     _mark = 0
@@ -430,7 +430,7 @@ class Variable {
 // to resatisfy all currently satisfiable constraints in the face of
 // one or more changing inputs.
 class Plan {
-  this new() {
+  construct new() {
     _list = []
   }
 
@@ -448,7 +448,7 @@ class Plan {
 }
 
 class Planner {
-  this new() {
+  construct new() {
     _currentMark = 0
   }
 

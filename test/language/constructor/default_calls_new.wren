@@ -1,5 +1,5 @@
 class Foo {
-  this new() {
+  construct new() {
     IO.print("Foo.new()")
   }
 }
