@@ -45,10 +45,10 @@
   <main>
     <h1>Fiber Class</h1>
     <p>A lightweight coroutine. <a href="../fibers.html">Here</a> is a gentle introduction.</p>
-<h3>new <strong>Fiber</strong>(function) <a href="#new-fiber(function)" name="new-fiber(function)" class="header-anchor">#</a></h3>
+<h3>Fiber.<strong>new</strong>(function) <a href="#fibernew(function)" name="fibernew(function)" class="header-anchor">#</a></h3>
 <p>Creates a new fiber that executes <code>function</code> in a separate coroutine when the
 fiber is run. Does not immediately start running the fiber.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;I won&#39;t get printed&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
@@ -60,7 +60,7 @@ fiber is run. Does not immediately start running the fiber.</p>
 <h3>Fiber.<strong>yield</strong>() <a href="#fiberyield()" name="fiberyield()" class="header-anchor">#</a></h3>
 <p>Pauses the current fiber and transfers control to the parent fiber. "Parent"
 here means the last fiber that was started using <code>call</code> and not <code>run</code>.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Before yield&quot;</span><span class="p">)</span>
   <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">()</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;After yield&quot;</span><span class="p">)</span>
@@ -75,7 +75,7 @@ here means the last fiber that was started using <code>call</code> and not <code
 <p>When resumed, the parent fiber's <code>call()</code> method returns <code>null</code>.</p>
 <p>If a yielded fiber is resumed by calling <code>call()</code> or <code>run()</code> with an argument,
 <code>yield()</code> returns that value.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">())</span> <span class="c1">// &quot;value&quot;</span>
 <span class="p">}</span>
 
@@ -97,7 +97,7 @@ later.</p>
 <h3>Fiber.<strong>yield</strong>(value) <a href="#fiberyield(value)" name="fiberyield(value)" class="header-anchor">#</a></h3>
 <p>Similar to <code>Fiber.yield</code> but provides a value to return to the parent fiber's
 <code>call</code>.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 
@@ -108,7 +108,7 @@ later.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>call</strong>() <a href="#call()" name="call()" class="header-anchor">#</a></h3>
 <p>Starts or resumes the fiber if it is in a paused state.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Fiber called&quot;</span><span class="p">)</span>
   <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">()</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Fiber called again&quot;</span><span class="p">)</span>
@@ -123,7 +123,7 @@ later.</p>
 called it.</p>
 <p>If the called fiber is resuming from a yield, the <code>yield()</code> method returns
 <code>null</code> in the called fiber.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">())</span>
 <span class="p">}</span>
 
@@ -135,7 +135,7 @@ called it.</p>
 <h3><strong>call</strong>(value) <a href="#call(value)" name="call(value)" class="header-anchor">#</a></h3>
 <p>Invokes the fiber or resumes the fiber if it is in a paused state and sets
 <code>value</code> as the returned value of the fiber's call to <code>yield</code>.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">())</span>
 <span class="p">}</span>
 

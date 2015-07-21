@@ -124,11 +124,11 @@ changes to the original sequence will be reflected in the mapped sequence.</p>
 
 
 <h3><strong>reduce</strong>(function) <a href="#reduce(function)" name="reduce(function)" class="header-anchor">#</a></h3>
-<p>Reduces the sequence down to a single value. <code>function</code> is a function that takes
-two arguments, the accumulator and sequence item and returns the new accumulator
-value. The accumulator is initialized from the first item in the sequence. Then,
-the function is invoked on each remaining item in the sequence, iteratively
-updating the accumulator.</p>
+<p>Reduces the sequence down to a single value. <code>function</code> is a function that
+takes two arguments, the accumulator and sequence item and returns the new
+accumulator value. The accumulator is initialized from the first item in the
+sequence. Then, the function is invoked on each remaining item in the sequence,
+iteratively updating the accumulator.</p>
 <p>It is a runtime error to call this on an empty sequence.</p>
 <h3><strong>reduce</strong>(seed, function) <a href="#reduce(seed,-function)" name="reduce(seed,-function)" class="header-anchor">#</a></h3>
 <p>Similar to above, but uses <code>seed</code> for the initial value of the accumulator. If

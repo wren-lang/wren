@@ -46,12 +46,12 @@
     <h1>Fn Class</h1>
     <p>A first class function&mdash;an object that wraps an executable chunk of code.
 <a href="../functions.html">Here</a> is a friendly introduction.</p>
-<h3>new <strong>Fn</strong>(function) <a href="#new-fn(function)" name="new-fn(function)" class="header-anchor">#</a></h3>
+<h3>Fn.<strong>new</strong>(function) <a href="#fnnew(function)" name="fnnew(function)" class="header-anchor">#</a></h3>
 <p>Creates a new function from... <code>function</code>. Of course, <code>function</code> is already a
 function, so this really just returns the argument. It exists mainly to let you
 create a "bare" function when you don't want to immediately pass it as a <a href="../functions.html#block-arguments">block
 argument</a> to some other method.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;The body&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
@@ -61,14 +61,14 @@ argument</a> to some other method.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>arity</strong> <a href="#arity" name="arity" class="header-anchor">#</a></h3>
 <p>The number of arguments the function requires.</p>
-<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="k">new</span> <span class="n">Fn</span> <span class="p">{}.</span><span class="n">arity</span><span class="p">)</span>             <span class="c1">// 0.</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span><span class="o">|</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">|</span> <span class="n">a</span> <span class="p">}.</span><span class="n">arity</span><span class="p">)</span> <span class="c1">// 3.</span>
+<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{}.</span><span class="n">arity</span><span class="p">)</span>             <span class="c1">// 0.</span>
+<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span><span class="o">|</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">|</span> <span class="n">a</span> <span class="p">}.</span><span class="n">arity</span><span class="p">)</span> <span class="c1">// 3.</span>
 </pre></div>
 
 
 <h3><strong>call</strong>(args...) <a href="#call(args)" name="call(args)" class="header-anchor">#</a></h3>
 <p>Invokes the function with the given arguments.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span> <span class="o">|</span><span class="n">arg</span><span class="o">|</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span> <span class="o">|</span><span class="n">arg</span><span class="o">|</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
 <span class="p">}</span>
 

@@ -154,13 +154,13 @@ call:</p>
 <p>You can also use <code>super</code> without a method name inside a constructor to invoke a
 base class constructor:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Base</span> <span class="p">{</span>
-  <span class="k">new</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span> <span class="k">new</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;base constructor got &quot;</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kd">class</span> <span class="nc">Derived</span> <span class="k">is</span> <span class="n">Base</span> <span class="p">{</span>
-  <span class="k">new</span> <span class="p">{</span>
+  <span class="k">this</span> <span class="k">new</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">super</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;base constructor got value&quot;.</span>
   <span class="p">}</span>
 <span class="p">}</span>

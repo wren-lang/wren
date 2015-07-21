@@ -114,7 +114,7 @@ class is fine:</p>
 
 
 <p>And you can call each of the methods like so:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">unicorn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Unicorn</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">unicorn</span> <span class="o">=</span> <span class="n">Unicorn</span><span class="p">.</span><span class="k">new</span><span class="p">()</span>
 <span class="n">unicorn</span><span class="p">.</span><span class="n">prance</span>
 <span class="n">unicorn</span><span class="p">.</span><span class="n">prance</span><span class="p">(</span><span class="s2">&quot;Antwerp&quot;</span><span class="p">)</span>
 <span class="n">unicorn</span><span class="p">.</span><span class="n">prance</span><span class="p">(</span><span class="s2">&quot;Brussels&quot;</span><span class="p">,</span> <span class="s2">&quot;high noon&quot;</span><span class="p">)</span>
@@ -134,7 +134,7 @@ method that takes an <em>empty</em> argument list (<code>()</code>) and no argum
   <span class="n">method</span><span class="p">()</span> <span class="p">{</span> <span class="s2">&quot;empty argument list&quot;</span> <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="n">confusing</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Confusing</span>
+<span class="kd">var</span> <span class="n">confusing</span> <span class="o">=</span> <span class="n">Confusing</span><span class="p">.</span><span class="k">new</span><span class="p">()</span>
 <span class="n">confusing</span><span class="p">.</span><span class="n">method</span> <span class="c1">// &quot;no argument list&quot;.</span>
 <span class="n">confusing</span><span class="p">.</span><span class="n">method</span><span class="p">()</span> <span class="c1">// &quot;empty argument list&quot;.</span>
 </pre></div>
@@ -200,39 +200,48 @@ overloading by arity, it's no problem for a class to define both.</p>
 <h3>Setters <a href="#setters" name="setters" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
 <h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
-<p>To create a new instance of a class, you use the <code>new</code> keyword. We can make a
-unicorn like so:</p>
-<div class="codehilite"><pre><span class="k">new</span> <span class="n">Unicorn</span>
+<p>To create a new instance of a class, call a <em>constructor method</em> on its class.
+By default, if you don't define any constructors yourself, you get a free one
+named <code>new()</code>:</p>
+<div class="codehilite"><pre><span class="n">Unicorn</span><span class="p">.</span><span class="k">new</span><span class="p">()</span>
 </pre></div>
 
 
-<p>You almost always want to define some state or do some other initialization on
-a new object. For that, you'll want to define a constructor, like so:</p>
+<p>However, you almost always want to define some state or do some other
+initialization on a new object. For that, you'll want to define your own
+constructor, like so:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
-  <span class="k">new</span> <span class="p">{</span>
-    <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;I am a constructor!&quot;</span><span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
-<p>When you create an instance with <code>new</code>, its constructor will be invoked. It's
-just a method with a special name. Like methods, you can pass arguments to the
-constructor by adding a parenthesized parameter list after <code>new</code>:</p>
-<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
-  <span class="k">new</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">construct</span> <span class="k">new</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; and I am &quot;</span> <span class="o">+</span> <span class="n">color</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 
 
-<p>Values are passed to the constructor like so:</p>
-<div class="codehilite"><pre><span class="k">new</span> <span class="n">Unicorn</span><span class="p">(</span><span class="s2">&quot;Flicker&quot;</span><span class="p">,</span> <span class="s2">&quot;purple&quot;</span><span class="p">)</span>
+<p>The <code>construct</code> before the method name makes it a constructor. The <code>new</code> isn't
+special. Constructors can have any name you like, which lets you clarify how it
+creates the instance:</p>
+<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
+  <span class="n">construct</span> <span class="n">brown</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; and I am brown.&quot;</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
-<p>Like other methods, you can overload constructors by <a href="#signature">arity</a>.</p>
+<p>Constructors can obviously have arguments, and can be overloaded by
+<a href="#signature">arity</a>. A constructor <em>must</em> be a named method with a (possibly
+empty) argument list. Operators, getters, and setters cannot be constructors.</p>
+<p>A constructor is actually a pair of methods. You get a method on the class:</p>
+<div class="codehilite"><pre><span class="n">Unicorn</span><span class="p">.</span><span class="n">brown</span><span class="p">(</span><span class="s2">&quot;Fred&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>That creates the new instance, then it invokes the <em>initializer</em> on that
+instance. This is where the constructor body you defined gets run.</p>
+<p>This distinction is important because it means inside the body of the
+constructor, you can access <code>this</code>, assign <a href="#fields">fields</a>, call superclass
+constructors, etc.</p>
 <h2>Fields <a href="#fields" name="fields" class="header-anchor">#</a></h2>
 <p>All state stored in instances is stored in <em>fields</em>. Each field has a named
 that starts with an underscore.</p>
@@ -320,8 +329,8 @@ not the instance. They can be used in <em>both</em> instance and static methods.
 
 <p>And also instance methods. When you do so, there is still only one static field
 shared among all instances of the class:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">foo1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Foo</span>
-<span class="kd">var</span> <span class="n">foo2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Foo</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">foo1</span> <span class="o">=</span> <span class="n">Foo</span><span class="p">.</span><span class="k">new</span><span class="p">()</span>
+<span class="kd">var</span> <span class="n">foo2</span> <span class="o">=</span> <span class="n">Foo</span><span class="p">.</span><span class="k">new</span><span class="p">()</span>
 
 <span class="n">foo1</span><span class="p">.</span><span class="n">setFromInstance</span><span class="p">(</span><span class="s2">&quot;updated&quot;</span><span class="p">)</span>
 <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">foo2</span><span class="p">.</span><span class="n">baz</span><span class="p">)</span> <span class="c1">// updated.</span>
@@ -356,18 +365,36 @@ are not inherited.</p>
 </pre></div>
 
 
-<p>Constructors, however, initialize the instance <em>after</em> it has been created.
-They are defined as instance methods on the class and not on the metaclass.
-That means that constructors <em>are</em> inherited.</p>
+<p>This also means constructors are not inherited:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
-  <span class="k">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span> <span class="k">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kd">class</span> <span class="nc">Pegasus</span> <span class="k">is</span> <span class="n">Unicorn</span> <span class="p">{}</span>
 
-<span class="k">new</span> <span class="n">Pegasus</span><span class="p">(</span><span class="s2">&quot;Fred&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;My name is Fred.&quot;.</span>
+<span class="n">Pegasus</span><span class="p">.</span><span class="k">new</span><span class="p">(</span><span class="s2">&quot;Fred&quot;</span><span class="p">)</span> <span class="c1">// Error!</span>
+</pre></div>
+
+
+<p>Each class gets to control how it may be constructed independently of its base
+classes. However, constructor <em>initializers</em> are inherited since those are
+instance methods on the new object.</p>
+<p>This means you can do <code>super</code> calls inside a constructor:</p>
+<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Unicorn</span> <span class="p">{</span>
+  <span class="k">this</span> <span class="k">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">class</span> <span class="nc">Pegasus</span> <span class="k">is</span> <span class="n">Unicorn</span> <span class="p">{</span>
+  <span class="k">this</span> <span class="k">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">super</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">Pegasus</span><span class="p">.</span><span class="k">new</span><span class="p">(</span><span class="s2">&quot;Fred&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;My name is Fred.&quot;.</span>
 </pre></div>
   </main>
 </div>

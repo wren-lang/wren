@@ -102,7 +102,7 @@ not found" one. If you call a method on an object and its class (and all of its
 superclasses) don't define that method, there's nothing Wren can do:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Foo</span> <span class="p">{}</span>
 
-<span class="kd">var</span> <span class="n">foo</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Foo</span>
+<span class="kd">var</span> <span class="n">foo</span> <span class="o">=</span> <span class="n">Foo</span><span class="p">.</span><span class="k">new</span><span class="p">()</span>
 <span class="n">foo</span><span class="p">.</span><span class="n">someRandomMethod</span>
 </pre></div>
 
@@ -147,7 +147,7 @@ VM.</p>
 in the called fiber, the error is captured and the <code>try</code> method returns the
 error message as a string.</p>
 <p>For example, if you run this program:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fiber</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="m">123.</span><span class="n">badMethod</span>
 <span class="p">}</span>
 

@@ -103,12 +103,12 @@ prototypes) that classes are more usable.</p>
 
 <p>Here's the same example in Wren:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Account</span> <span class="p">{</span>
-  <span class="k">new</span><span class="p">(</span><span class="n">balance</span><span class="p">)</span> <span class="p">{</span> <span class="n">_balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="p">}</span>
+  <span class="k">this</span> <span class="k">new</span><span class="p">(</span><span class="n">balance</span><span class="p">)</span> <span class="p">{</span> <span class="n">_balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="p">}</span>
   <span class="n">withdraw</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span> <span class="p">{</span> <span class="n">_balance</span> <span class="o">=</span> <span class="n">_balance</span> <span class="o">-</span> <span class="n">amount</span> <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="c1">// create and use an Account</span>
-<span class="kd">var</span> <span class="n">acc</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Account</span><span class="p">(</span><span class="m">1000</span><span class="p">)</span>
+<span class="kd">var</span> <span class="n">acc</span> <span class="o">=</span> <span class="n">Account</span><span class="p">.</span><span class="k">new</span><span class="p">(</span><span class="m">1000</span><span class="p">)</span>
 <span class="n">acc</span><span class="p">.</span><span class="n">withdraw</span><span class="p">(</span><span class="m">100</span><span class="p">)</span>
 </pre></div>
 

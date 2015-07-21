@@ -112,7 +112,7 @@ argument:</p>
 little blob of syntax. There are some times when you want to create a function
 but <em>don't</em> need to pass it to a method. For that, you can call the <code>Fn</code>
 class's constructor:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">someFn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span>
+<div class="codehilite"><pre><span class="kd">var</span> <span class="n">someFn</span> <span class="o">=</span> <span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Hi!&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
@@ -140,7 +140,7 @@ method is dynamically-dispatched like any other, so you can define your own
   <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="n">blondie</span><span class="p">.</span><span class="n">callMe</span><span class="p">(</span><span class="k">new</span> <span class="n">FakeFn</span><span class="p">)</span>
+<span class="n">blondie</span><span class="p">.</span><span class="n">callMe</span><span class="p">(</span><span class="n">FakeFn</span><span class="p">.</span><span class="k">new</span><span class="p">())</span>
 </pre></div>
 
 
@@ -175,9 +175,9 @@ expression.</p>
 <p>Otherwise, the body returns <code>null</code> by default. You can explicitly return a
 value using a <code>return</code> statement. In other words, these two functions do the
 same thing:</p>
-<div class="codehilite"><pre><span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span> <span class="s2">&quot;return value&quot;</span> <span class="p">}</span>
+<div class="codehilite"><pre><span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span> <span class="s2">&quot;return value&quot;</span> <span class="p">}</span>
 
-<span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span>
+<span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
   <span class="k">return</span> <span class="s2">&quot;return value&quot;</span>
 <span class="p">}</span>
 </pre></div>
@@ -190,7 +190,7 @@ leaving the scope where the function is defined:</p>
 <div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Counter</span> <span class="p">{</span>
   <span class="kd">static</span> <span class="n">create</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="n">i</span> <span class="o">=</span> <span class="m">0</span>
-    <span class="k">return</span> <span class="k">new</span> <span class="n">Fn</span> <span class="p">{</span> <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="m">1</span> <span class="p">}</span>
+    <span class="k">return</span> <span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span> <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="m">1</span> <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
