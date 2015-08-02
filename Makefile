@@ -4,14 +4,20 @@
 
 # Executables are built to bin/. Libraries are built to lib/.
 
+LIB_UV := build/libuv/build/Release/libuv.a
+
 # A normal, optimized release build for the current CPU architecture.
-release:
+release: $(LIB_UV)
 	@ $(MAKE) -f script/wren.mk
 	@ cp bin/wren wren # For convenience, copy the interpreter to the top level.
 
 # A debug build for the current architecture.
-debug:
+debug: $(LIB_UV)
 	@ $(MAKE) -f script/wren.mk MODE=debug
+
+# A release build of just the VM. Does not require libuv.
+vm:
+	@ $(MAKE) -f script/wren.mk vm
 
 # Build all configurations.
 all: debug release
@@ -25,6 +31,10 @@ all: debug release
 	@ $(MAKE) -f script/wren.mk LANG=cpp ARCH=64
 	@ $(MAKE) -f script/wren.mk MODE=debug ARCH=64
 	@ $(MAKE) -f script/wren.mk MODE=debug LANG=cpp ARCH=64
+
+# Download and build libuv to a static library.
+$(LIB_UV): script/libuv.py
+	@ ./script/libuv.py
 
 # Remove all build outputs and intermediate files.
 clean:
@@ -58,4 +68,4 @@ gh-pages: docs
 amalgamation: src/include/wren.h src/vm/*.h src/vm/*.c
 	./script/generate_amalgamation.py > build/wren.c
 
-.PHONY: all amalgamation builtin clean debug docs gh-pages release test watchdocs
+.PHONY: all amalgamation builtin clean debug docs gh-pages release test vm watchdocs

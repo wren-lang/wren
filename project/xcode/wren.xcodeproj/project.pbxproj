@@ -16,6 +16,7 @@
 		29205C9E1AB4E6430073018D /* wren_value.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C971AB4E6430073018D /* wren_value.c */; };
 		29205C9F1AB4E6430073018D /* wren_vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C981AB4E6430073018D /* wren_vm.c */; };
 		2986F6D71ACF93BA00BCE26C /* wren_primitive.c in Sources */ = {isa = PBXBuildFile; fileRef = 2986F6D51ACF93BA00BCE26C /* wren_primitive.c */; };
+		29C0888F1B6E7F0100B00CFD /* libuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29C0888E1B6E7F0100B00CFD /* libuv.a */; };
 		29C8A92F1AB71C1C00DEC81D /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A92E1AB71C1C00DEC81D /* io.c */; };
 		29C8A9331AB71FFF00DEC81D /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
 		29DE39531AC3A50A00987D41 /* wren_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29DE39511AC3A50A00987D41 /* wren_meta.c */; };
@@ -55,6 +56,7 @@
 		2986F6D51ACF93BA00BCE26C /* wren_primitive.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_primitive.c; path = ../../src/vm/wren_primitive.c; sourceTree = "<group>"; };
 		2986F6D61ACF93BA00BCE26C /* wren_primitive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_primitive.h; path = ../../src/vm/wren_primitive.h; sourceTree = "<group>"; };
 		29AB1F061816E3AD004B501E /* wren */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wren; sourceTree = BUILT_PRODUCTS_DIR; };
+		29C0888E1B6E7F0100B00CFD /* libuv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libuv.a; path = ../../build/libuv/build/Release/libuv.a; sourceTree = "<group>"; };
 		29C8A92E1AB71C1C00DEC81D /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = io.c; path = ../../src/cli/io.c; sourceTree = "<group>"; };
 		29C8A9301AB71C3300DEC81D /* io.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../../src/cli/io.h; sourceTree = "<group>"; };
 		29C8A9311AB71FFF00DEC81D /* vm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vm.c; path = ../../src/cli/vm.c; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29C0888F1B6E7F0100B00CFD /* libuv.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,6 +127,7 @@
 		29AB1EFD1816E3AD004B501E = {
 			isa = PBXGroup;
 			children = (
+				29C0888E1B6E7F0100B00CFD /* libuv.a */,
 				29205CA91AB4E67B0073018D /* cli */,
 				29205CAA1AB4E6840073018D /* include */,
 				29205CA01AB4E6470073018D /* vm */,
@@ -287,7 +291,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_PEDANTIC = NO;
+				LIBRARY_SEARCH_PATHS = ../../build/libuv/build/Release;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = ../../build/libuv/include;
 			};
 			name = Debug;
 		};
@@ -298,7 +304,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_PEDANTIC = NO;
+				LIBRARY_SEARCH_PATHS = ../../build/libuv/build/Release;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = ../../build/libuv/include;
 			};
 			name = Release;
 		};

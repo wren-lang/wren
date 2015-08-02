@@ -98,19 +98,27 @@ CLI_OBJECTS  := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
 VM_OBJECTS   := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
 TEST_OBJECTS := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES))
 
+LIB_UV_DIR := build/libuv
+
 # Targets ---------------------------------------------------------------------
 
 # Builds the VM libraries and CLI interpreter.
-all: bin/$(WREN) lib/lib$(WREN).a lib/lib$(WREN).$(SHARED_EXT)
+all: vm cli
+
+# Builds just the VM libraries.
+vm: lib/lib$(WREN).a lib/lib$(WREN).$(SHARED_EXT)
+
+# Builds just the CLI interpreter.
+cli: bin/$(WREN)
 
 # Builds the API test executable.
 test: $(BUILD_DIR)/test/$(WREN)
 
 # Command-line interpreter.
-bin/$(WREN): $(CLI_OBJECTS) $(VM_OBJECTS)
+bin/$(WREN): $(CLI_OBJECTS) $(VM_OBJECTS) $(LIB_UV_DIR)/build/Release/libuv.a
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p bin
-	@$(CC) $(CFLAGS) -o $@ $^ -lm
+	@$(CC) $(CFLAGS) -L$(LIB_UV_DIR)/build/Release -l uv -o $@ $^ -lm
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
@@ -134,7 +142,7 @@ $(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(VM_OBJECTS) $(BUILD_DIR)/cli/io.o $
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(VM_HEADERS)
 	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/cli
-	@$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
+	@$(CC) -c $(CFLAGS) -Isrc/include -I$(LIB_UV_DIR)/include -o $@ $(FILE_FLAG) $<
 
 # VM object files.
 $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
@@ -148,4 +156,4 @@ $(BUILD_DIR)/test/%.o: test/api/%.c $(VM_HEADERS)
 	@mkdir -p $(dir $@)
 	@$(CC) -c $(CFLAGS) -Isrc/include -Isrc/cli -o $@ $(FILE_FLAG) $<
 
-.PHONY: all test
+.PHONY: all cli test vm
