@@ -80,7 +80,7 @@ def build_libuv_mac():
 
 def build_libuv_linux():
   run(["python", LIB_UV_DIR + "/gyp_uv.py", "-f", "make"])
-  run(["make", "-C", "out"])
+  run(["make", "-C", "out"], cwd=LIB_UV_DIR)
 
 
 def build_libuv_windows():
