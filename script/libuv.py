@@ -79,9 +79,8 @@ def build_libuv_mac():
 
 
 def build_libuv_linux():
-  # TODO: Implement me!
-  print("Building for Linux not implemented yet.")
-  sys.exit(1)
+  run(["python", LIB_UV_DIR + "/gyp_uv.py", "-f", "make"])
+  run(["make", "-C", "out"])
 
 
 def build_libuv_windows():
