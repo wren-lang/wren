@@ -140,6 +140,9 @@ struct WrenVM
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
+// Looks up the core module in the module map.
+ObjModule* wrenGetCoreModule(WrenVM* vm);
+
 // Imports the module with [name].
 //
 // If the module has already been imported (or is already in the middle of
@@ -152,11 +155,9 @@ Value wrenImportModule(WrenVM* vm, const char* name);
 
 // Returns the value of the module-level variable named [name] in the main
 // module.
-Value wrenFindVariable(WrenVM* vm, const char* name);
+Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name);
 
 // Adds a new implicitly declared top-level variable named [name] to [module].
-//
-// If [module] is `NULL`, uses the main module.
 //
 // Does not check to see if a variable with that name is already declared or
 // defined. Returns the symbol for the new variable or -2 if there are too many
@@ -165,8 +166,6 @@ int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
                         size_t length);
 
 // Adds a new top-level variable named [name] to [module].
-//
-// If [module] is `NULL`, uses the main module.
 //
 // Returns the symbol for the new variable, -1 if a variable with the given name
 // is already defined, or -2 if there are too many variables defined.

@@ -452,14 +452,6 @@ static ObjModule* getModule(WrenVM* vm, Value name)
   return !IS_UNDEFINED(moduleValue) ? AS_MODULE(moduleValue) : NULL;
 }
 
-// Looks up the core module in the module map.
-static ObjModule* getCoreModule(WrenVM* vm)
-{
-  ObjModule* module = getModule(vm, NULL_VAL);
-  ASSERT(module != NULL, "Could not find core module.");
-  return module;
-}
-
 static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
 {
   ObjModule* module = getModule(vm, name);
@@ -474,7 +466,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
     wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
 
     // Implicitly import the core module.
-    ObjModule* coreModule = getCoreModule(vm);
+    ObjModule* coreModule = wrenGetCoreModule(vm);
     for (int i = 0; i < coreModule->variables.count; i++)
     {
       wrenDefineVariable(vm, module,
@@ -1300,7 +1292,7 @@ void wrenReleaseMethod(WrenVM* vm, WrenMethod* method)
 // Execute [source] in the context of the core module.
 static WrenInterpretResult loadIntoCore(WrenVM* vm, const char* source)
 {
-  ObjModule* coreModule = getCoreModule(vm);
+  ObjModule* coreModule = wrenGetCoreModule(vm);
 
   ObjFn* fn = wrenCompile(vm, coreModule, "", source, true);
   if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
@@ -1335,6 +1327,13 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
   return result;
 }
 
+ObjModule* wrenGetCoreModule(WrenVM* vm)
+{
+  ObjModule* module = getModule(vm, NULL_VAL);
+  ASSERT(module != NULL, "Could not find core module.");
+  return module;
+}
+
 Value wrenImportModule(WrenVM* vm, const char* name)
 {
   Value nameValue = wrenStringFormat(vm, "$", name);
@@ -1365,18 +1364,15 @@ Value wrenImportModule(WrenVM* vm, const char* name)
   return OBJ_VAL(moduleFiber);
 }
 
-Value wrenFindVariable(WrenVM* vm, const char* name)
+Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name)
 {
-  ObjModule* coreModule = getCoreModule(vm);
-  int symbol = wrenSymbolTableFind(&coreModule->variableNames,
-                                   name, strlen(name));
-  return coreModule->variables.data[symbol];
+  int symbol = wrenSymbolTableFind(&module->variableNames, name, strlen(name));
+  return module->variables.data[symbol];
 }
 
 int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
                         size_t length)
 {
-  if (module == NULL) module = getCoreModule(vm);
   if (module->variables.count == MAX_MODULE_VARS) return -2;
 
   wrenValueBufferWrite(vm, &module->variables, UNDEFINED_VAL);
@@ -1386,7 +1382,6 @@ int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
 int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
                        size_t length, Value value)
 {
-  if (module == NULL) module = getCoreModule(vm);
   if (module->variables.count == MAX_MODULE_VARS) return -2;
 
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
