@@ -45,9 +45,11 @@ void wrenLoadMetaLibrary(WrenVM* vm)
 {
   wrenInterpret(vm, "", metaLibSource);
 
+  ObjModule* coreModule = wrenGetCoreModule(vm);
+  
   // The methods on "Meta" are static, so get the metaclass for the Meta class.
-  ObjClass* meta = AS_CLASS(wrenFindVariable(vm, "Meta"))->obj.classObj;
-  PRIMITIVE(meta, "eval(_)", meta_eval);
+  ObjClass* meta = AS_CLASS(wrenFindVariable(vm, coreModule, "Meta"));
+  PRIMITIVE(meta->obj.classObj, "eval(_)", meta_eval);
 }
 
 #endif

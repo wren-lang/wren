@@ -388,14 +388,9 @@ static bool addEntry(MapEntry* entries, uint32_t capacity,
     // If we found an open slot, the key is not in the table.
     if (IS_UNDEFINED(entry->key))
     {
-      // Don't stop at a tombstone, though, because the key may be found after
-      // it.
-      if (IS_FALSE(entry->value))
-      {
-        entry->key = key;
-        entry->value = value;
-        return true;
-      }
+      entry->key = key;
+      entry->value = value;
+      return true;
     }
     else if (wrenValuesEqual(entry->key, key))
     {

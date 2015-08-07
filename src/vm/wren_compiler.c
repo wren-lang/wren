@@ -1616,21 +1616,26 @@ static int signatureSymbol(Compiler* compiler, Signature* signature)
   return methodSymbol(compiler, name, length);
 }
 
-// Initializes [signature] from the last consumed token.
-static void signatureFromToken(Compiler* compiler, Signature* signature)
+// Returns a signature with [type] whose name is from the last consumed token.
+static Signature signatureFromToken(Compiler* compiler, SignatureType type)
 {
+  Signature signature;
+  
   // Get the token for the method name.
   Token* token = &compiler->parser->previous;
-  signature->arity = 0;
-  signature->name = token->start;
-  signature->length = token->length;
+  signature.name = token->start;
+  signature.length = token->length;
+  signature.type = type;
+  signature.arity = 0;
 
-  if (signature->length > MAX_METHOD_NAME)
+  if (signature.length > MAX_METHOD_NAME)
   {
     error(compiler, "Method names cannot be longer than %d characters.",
           MAX_METHOD_NAME);
-    signature->length = MAX_METHOD_NAME;
+    signature.length = MAX_METHOD_NAME;
   }
+  
+  return signature;
 }
 
 // Parses a comma-separated list of arguments. Modifies [signature] to include
@@ -1682,25 +1687,21 @@ static void callMethod(Compiler* compiler, int numArgs, const char* name,
 // Compiles an (optional) argument list for a method call with [methodSignature]
 // and then calls it.
 static void methodCall(Compiler* compiler, Code instruction,
-                       Signature* methodSignature)
+                       Signature* signature)
 {
   // Make a new signature that contains the updated arity and type based on
   // the arguments we find.
-  Signature signature;
-  signature.type = SIG_GETTER;
-  signature.arity = 0;
-  signature.name = methodSignature->name;
-  signature.length = methodSignature->length;
+  Signature called = { signature->name, signature->length, SIG_GETTER, 0 };
 
   // Parse the argument list, if any.
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
-    signature.type = SIG_METHOD;
+    called.type = SIG_METHOD;
 
     // Allow empty an argument list.
     if (peek(compiler) != TOKEN_RIGHT_PAREN)
     {
-      finishArgumentList(compiler, &signature);
+      finishArgumentList(compiler, &called);
     }
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
@@ -1709,15 +1710,14 @@ static void methodCall(Compiler* compiler, Code instruction,
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
     // Include the block argument in the arity.
-    signature.type = SIG_METHOD;
-    signature.arity++;
+    called.type = SIG_METHOD;
+    called.arity++;
 
     Compiler fnCompiler;
     initCompiler(&fnCompiler, compiler->parser, compiler, true);
 
     // Make a dummy signature to track the arity.
-    Signature fnSignature;
-    fnSignature.arity = 0;
+    Signature fnSignature = { "", 0, SIG_METHOD, 0 };
 
     // Parse the parameter list, if any.
     if (match(compiler, TOKEN_PIPE))
@@ -1733,7 +1733,7 @@ static void methodCall(Compiler* compiler, Code instruction,
     // Name the function based on the method its passed to.
     char blockName[MAX_METHOD_SIGNATURE + 15];
     int blockLength;
-    signatureToString(&signature, blockName, &blockLength);
+    signatureToString(&called, blockName, &blockLength);
     memmove(blockName + blockLength, " block argument", 16);
 
     endCompiler(&fnCompiler, blockName, blockLength + 15);
@@ -1743,17 +1743,17 @@ static void methodCall(Compiler* compiler, Code instruction,
 
   // If this is a super() call for an initializer, make sure we got an actual
   // argument list.
-  if (methodSignature->type == SIG_INITIALIZER)
+  if (signature->type == SIG_INITIALIZER)
   {
-    if (signature.type != SIG_METHOD)
+    if (called.type != SIG_METHOD)
     {
       error(compiler, "A superclass constructor must have an argument list.");
     }
     
-    signature.type = SIG_INITIALIZER;
+    called.type = SIG_INITIALIZER;
   }
   
-  callSignature(compiler, instruction, &signature);
+  callSignature(compiler, instruction, &called);
 }
 
 // Compiles a call whose name is the previously consumed token. This includes
@@ -1762,8 +1762,7 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
                       Code instruction)
 {
   // Get the token for the method name.
-  Signature signature;
-  signatureFromToken(compiler, &signature);
+  Signature signature = signatureFromToken(compiler, SIG_GETTER);
 
   if (match(compiler, TOKEN_EQ))
   {
@@ -2207,11 +2206,7 @@ static void this_(Compiler* compiler, bool allowAssignment)
 // Subscript or "array indexing" operator like `foo[bar]`.
 static void subscript(Compiler* compiler, bool allowAssignment)
 {
-  Signature signature;
-  signature.name = "";
-  signature.length = 0;
-  signature.type = SIG_SUBSCRIPT;
-  signature.arity = 0;
+  Signature signature = { "", 0, SIG_SUBSCRIPT, 0 };
 
   // Parse the argument list.
   finishArgumentList(compiler, &signature);
@@ -2296,11 +2291,7 @@ void infixOp(Compiler* compiler, bool allowAssignment)
   parsePrecedence(compiler, false, (Precedence)(rule->precedence + 1));
 
   // Call the operator method on the left-hand side.
-  Signature signature;
-  signature.type = SIG_METHOD;
-  signature.arity = 1;
-  signature.name = rule->name;
-  signature.length = (int)strlen(rule->name);
+  Signature signature = { rule->name, (int)strlen(rule->name), SIG_METHOD, 1 };
   callSignature(compiler, CODE_CALL_0, &signature);
 }
 
@@ -2418,12 +2409,10 @@ void namedSignature(Compiler* compiler, Signature* signature)
 // Compiles a method signature for a constructor.
 void constructorSignature(Compiler* compiler, Signature* signature)
 {
-  signature->type = SIG_INITIALIZER;
-  
   consume(compiler, TOKEN_NAME, "Expect constructor name after 'this'.");
   
   // Capture the name.
-  signatureFromToken(compiler, signature);
+  *signature = signatureFromToken(compiler, SIG_INITIALIZER);
   
   if (match(compiler, TOKEN_EQ))
   {
@@ -3002,9 +2991,6 @@ static void defineMethod(Compiler* compiler, int classSlot, bool isStatic,
 static bool method(Compiler* compiler, ClassCompiler* classCompiler,
                    int classSlot, bool* hasConstructor)
 {
-  Signature signature;
-  classCompiler->signature = &signature;
-  
   // TODO: What about foreign constructors?
   bool isForeign = match(compiler, TOKEN_FOREIGN);
   classCompiler->inStatic = match(compiler, TOKEN_STATIC);
@@ -3019,7 +3005,8 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   }
   
   // Build the method signature.
-  signatureFromToken(compiler, &signature);
+  Signature signature = signatureFromToken(compiler, SIG_GETTER);
+  classCompiler->signature = &signature;
 
   Compiler methodCompiler;
   initCompiler(&methodCompiler, compiler->parser, compiler, false);
@@ -3084,11 +3071,7 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
 // does nothing.
 static void createDefaultConstructor(Compiler* compiler, int classSlot)
 {
-  Signature signature;
-  signature.name = "new";
-  signature.length = 3;
-  signature.type = SIG_INITIALIZER;
-  signature.arity = 0;
+  Signature signature = { "new", 3, SIG_INITIALIZER, 0 };
   
   int initializerSymbol = signatureSymbol(compiler, &signature);
   
