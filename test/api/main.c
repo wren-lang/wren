@@ -60,6 +60,6 @@ int main(int argc, const char* argv[])
   strcat(testPath, testName);
   strcat(testPath, ".wren");
 
-  runFile(bindForeign, testPath);
+  runFile(testPath, bindForeign);
   return 0;
 }

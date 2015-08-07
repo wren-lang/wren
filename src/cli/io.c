@@ -4,6 +4,8 @@
 
 #include "io.h"
 
+#include "timer.h"
+
 char const* rootDirectory = NULL;
 
 // Reads the contents of the file at [path] and returns it as a heap allocated
@@ -71,6 +73,8 @@ char* wrenFilePath(const char* name)
 
 char* readModule(WrenVM* vm, const char* module)
 {
+  if (strcmp(module, "timer") == 0) return timerGetSource();
+  
   // First try to load the module with a ".wren" extension.
   char* modulePath = wrenFilePath(module);
   char* moduleContents = readFile(modulePath);

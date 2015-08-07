@@ -4,15 +4,15 @@
 
 # Executables are built to bin/. Libraries are built to lib/.
 
-LIB_UV := build/libuv/build/Release/libuv.a
+LIBUV := build/libuv/build/Release/libuv.a
 
 # A normal, optimized release build for the current CPU architecture.
-release: $(LIB_UV)
+release: $(LIBUV)
 	@ $(MAKE) -f script/wren.mk
 	@ cp bin/wren wren # For convenience, copy the interpreter to the top level.
 
 # A debug build for the current architecture.
-debug: $(LIB_UV)
+debug: $(LIBUV)
 	@ $(MAKE) -f script/wren.mk MODE=debug
 
 # A release build of just the VM. Does not require libuv.
@@ -33,7 +33,7 @@ all: debug release
 	@ $(MAKE) -f script/wren.mk MODE=debug LANG=cpp ARCH=64
 
 # Download and build libuv to a static library.
-$(LIB_UV): script/libuv.py
+$(LIBUV): script/libuv.py
 	@ ./script/libuv.py
 
 # Remove all build outputs and intermediate files.

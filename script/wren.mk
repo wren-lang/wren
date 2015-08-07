@@ -20,9 +20,14 @@
 
 # Files.
 CLI_HEADERS  := $(wildcard src/cli/*.h)
-VM_HEADERS   := $(wildcard src/vm/*.h)
 CLI_SOURCES  := $(wildcard src/cli/*.c)
+
+MODULE_HEADERS   := $(wildcard src/module/*.h)
+MODULE_SOURCES   := $(wildcard src/module/*.c)
+
+VM_HEADERS   := $(wildcard src/vm/*.h)
 VM_SOURCES   := $(wildcard src/vm/*.c)
+
 TEST_SOURCES := $(shell find test/api -name '*.c')
 BUILD_DIR := build
 
@@ -94,11 +99,13 @@ endif
 
 CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
 
-CLI_OBJECTS  := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
-VM_OBJECTS   := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
-TEST_OBJECTS := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES))
+CLI_OBJECTS    := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
+MODULE_OBJECTS := $(addprefix $(BUILD_DIR)/module/, $(notdir $(MODULE_SOURCES:.c=.o)))
+VM_OBJECTS     := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
+TEST_OBJECTS   := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES))
 
-LIB_UV_DIR := build/libuv
+LIBUV_DIR := build/libuv
+LIBUV     := $(LIBUV_DIR)/build/Release/libuv.a
 
 # Targets ---------------------------------------------------------------------
 
@@ -115,10 +122,10 @@ cli: bin/$(WREN)
 test: $(BUILD_DIR)/test/$(WREN)
 
 # Command-line interpreter.
-bin/$(WREN): $(CLI_OBJECTS) $(VM_OBJECTS) $(LIB_UV_DIR)/build/Release/libuv.a
+bin/$(WREN): $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p bin
-	@$(CC) $(CFLAGS) -L$(LIB_UV_DIR)/build/Release -l uv -o $@ $^ -lm
+	@$(CC) $(CFLAGS) -L$(LIBUV_DIR)/build/Release -l uv -o $@ $^ -lm
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
@@ -133,16 +140,23 @@ lib/lib$(WREN).$(SHARED_EXT): $(VM_OBJECTS)
 	@$(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
 
 # Test executable.
-$(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(VM_OBJECTS) $(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o
+$(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
+		$(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/test
-	@$(CC) $(CFLAGS) -o $@ $^ -lm
+	@$(CC) $(CFLAGS) -L$(LIBUV_DIR)/build/Release -l uv -o $@ $^ -lm
 
 # CLI object files.
-$(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(VM_HEADERS)
+$(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
 	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/cli
-	@$(CC) -c $(CFLAGS) -Isrc/include -I$(LIB_UV_DIR)/include -o $@ $(FILE_FLAG) $<
+	@$(CC) -c $(CFLAGS) -Isrc/include -Isrc/module -I$(LIBUV_DIR)/include -o $@ $(FILE_FLAG) $<
+
+# Module object files.
+$(BUILD_DIR)/module/%.o: src/module/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
+	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@mkdir -p $(BUILD_DIR)/module
+	@$(CC) -c $(CFLAGS) -Isrc/include -Isrc/cli -I$(LIBUV_DIR)/include -o $@ $(FILE_FLAG) $<
 
 # VM object files.
 $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
@@ -151,9 +165,9 @@ $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
 	@$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
 
 # Test object files.
-$(BUILD_DIR)/test/%.o: test/api/%.c $(VM_HEADERS)
+$(BUILD_DIR)/test/%.o: test/api/%.c $(MODULE_HEADERS) $(VM_HEADERS)
 	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	@mkdir -p $(dir $@)
-	@$(CC) -c $(CFLAGS) -Isrc/include -Isrc/cli -o $@ $(FILE_FLAG) $<
+	@$(CC) -c $(CFLAGS) -Isrc/include -I$(LIBUV_DIR)/include -Isrc/cli -o $@ $(FILE_FLAG) $<
 
 .PHONY: all cli test vm

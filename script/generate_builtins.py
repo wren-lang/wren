@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding: utf-8
 
 import glob
 import os.path
@@ -6,7 +7,7 @@ import re
 
 PATTERN = re.compile(r'LibSource =\n("(.|[\n])*?);')
 
-def copy_builtin(filename):
+def copy_builtin(filename, out_prefix):
   name = os.path.basename(filename)
   name = name.split('.')[0]
 
@@ -26,16 +27,19 @@ def copy_builtin(filename):
 
   constant = "LibSource =\n" + wren_source + ";"
 
-  with open("src/vm/wren_" + name + ".c", "r") as f:
+  with open(out_prefix + name + ".c", "r") as f:
     c_source = f.read()
 
   c_source = PATTERN.sub(constant, c_source)
 
-  with open("src/vm/wren_" + name + ".c", "w") as f:
+  with open(out_prefix + name + ".c", "w") as f:
     f.write(c_source)
 
-  print(name)
+  print(filename.ljust(25) + " → " + out_prefix + name + ".c")
 
 
 for f in glob.iglob("builtin/*.wren"):
-  copy_builtin(f)
+  copy_builtin(f, "src/vm/wren_")
+
+for f in glob.iglob("src/module/*.wren"):
+  copy_builtin(f, "src/module/")
