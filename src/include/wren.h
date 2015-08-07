@@ -4,12 +4,23 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+// A single virtual machine for executing Wren code.
+//
+// Wren has no global state, so all state stored by a running interpreter lives
+// here.
 typedef struct WrenVM WrenVM;
 
 // A handle to a method, bound to a receiver.
 //
 // This is used to call a Wren method on some object from C code.
 typedef struct WrenMethod WrenMethod;
+
+// A handle to a Wren object.
+//
+// This lets code outside of the VM hold a persistent reference to an object.
+// After a value is acquired, and until it is released, this ensures the
+// garbage collector will not reclaim it.
+typedef struct WrenValue WrenValue;
 
 // A generic allocation function that handles all explicit memory management
 // used by Wren. It's used like so:
@@ -169,6 +180,10 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...);
 // no longer be used.
 void wrenReleaseMethod(WrenVM* vm, WrenMethod* method);
 
+// Releases the reference stored in [value]. After calling this, [value] can no
+// longer be used.
+void wrenReleaseValue(WrenVM* vm, WrenValue* value);
+
 // The following functions read one of the arguments passed to a foreign call.
 // They may only be called while within a function provided to
 // [wrenDefineMethod] or [wrenDefineStaticMethod] that Wren has invoked.
@@ -205,6 +220,12 @@ double wrenGetArgumentDouble(WrenVM* vm, int index);
 // function returns, since the garbage collector may reclaim it.
 const char* wrenGetArgumentString(WrenVM* vm, int index);
 
+// Creates a handle for the value passed as an argument to a foreign call.
+//
+// This will prevent the object that is referred to from being garbage collected
+// until the handle is released by calling [wrenReleaseValue()].
+WrenValue* wrenGetArgumentValue(WrenVM* vm, int index);
+
 // The following functions provide the return value for a foreign method back
 // to Wren. Like above, they may only be called during a foreign call invoked
 // by Wren.
@@ -227,5 +248,11 @@ void wrenReturnDouble(WrenVM* vm, double value);
 // will copy that many bytes from [text]. If it is -1, then the length of
 // [text] will be calculated using `strlen()`.
 void wrenReturnString(WrenVM* vm, const char* text, int length);
+
+// Provides the return value for a foreign call.
+//
+// This uses the value referred to by the handle as the return value, but it
+// does not release the handle.
+void wrenReturnValue(WrenVM* vm, WrenValue* value);
 
 #endif

@@ -112,11 +112,12 @@ void wrenFreeVM(WrenVM* vm)
     obj = next;
   }
 
-  // Tell the user if they didn't free any method handles. We don't want to
-  // just free them here because the host app may still have pointers to them
-  // that they may try to use. Better to tell them about the bug early.
+  // Tell the user if they didn't free any handles. We don't want to just free
+  // them here because the host app may still have pointers to them that they
+  // may try to use. Better to tell them about the bug early.
   ASSERT(vm->methodHandles == NULL, "All methods have not been released.");
-
+  ASSERT(vm->valueHandles == NULL, "All values have not been released.");
+  
   wrenSymbolTableClear(vm, &vm->methodNames);
 
   DEALLOCATE(vm, vm);
@@ -165,6 +166,14 @@ static void collectGarbage(WrenVM* vm)
        handle = handle->next)
   {
     wrenMarkObj(vm, (Obj*)handle->fiber);
+  }
+  
+  // The value handles.
+  for (WrenValue* value = vm->valueHandles;
+       value != NULL;
+       value = value->next)
+  {
+    wrenMarkValue(vm, value->value);
   }
 
   // Any object the compiler is using (if there is one).
@@ -1289,6 +1298,25 @@ void wrenReleaseMethod(WrenVM* vm, WrenMethod* method)
   DEALLOCATE(vm, method);
 }
 
+void wrenReleaseValue(WrenVM* vm, WrenValue* value)
+{
+  ASSERT(value != NULL, "NULL value.");
+  
+  // Update the VM's head pointer if we're releasing the first handle.
+  if (vm->valueHandles == value) vm->valueHandles = value->next;
+  
+  // Unlink it from the list.
+  if (value->prev != NULL) value->prev->next = value->next;
+  if (value->next != NULL) value->next->prev = value->prev;
+  
+  // Clear it out. This isn't strictly necessary since we're going to free it,
+  // but it makes for easier debugging.
+  value->prev = NULL;
+  value->next = NULL;
+  value->value = NULL_VAL;
+  DEALLOCATE(vm, value);
+}
+
 // Execute [source] in the context of the core module.
 static WrenInterpretResult loadIntoCore(WrenVM* vm, const char* source)
 {
@@ -1426,11 +1454,16 @@ void wrenPopRoot(WrenVM* vm)
   vm->numTempRoots--;
 }
 
-bool wrenGetArgumentBool(WrenVM* vm, int index)
+static void validateForeignArgument(WrenVM* vm, int index)
 {
   ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
   ASSERT(index >= 0, "index cannot be negative.");
   ASSERT(index < vm->foreignCallNumArgs, "Not that many arguments.");
+}
+
+bool wrenGetArgumentBool(WrenVM* vm, int index)
+{
+  validateForeignArgument(vm, index);
 
   if (!IS_BOOL(*(vm->foreignCallSlot + index))) return false;
 
@@ -1439,9 +1472,7 @@ bool wrenGetArgumentBool(WrenVM* vm, int index)
 
 double wrenGetArgumentDouble(WrenVM* vm, int index)
 {
-  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
-  ASSERT(index >= 0, "index cannot be negative.");
-  ASSERT(index < vm->foreignCallNumArgs, "Not that many arguments.");
+  validateForeignArgument(vm, index);
 
   if (!IS_NUM(*(vm->foreignCallSlot + index))) return 0.0;
 
@@ -1450,13 +1481,28 @@ double wrenGetArgumentDouble(WrenVM* vm, int index)
 
 const char* wrenGetArgumentString(WrenVM* vm, int index)
 {
-  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
-  ASSERT(index >= 0, "index cannot be negative.");
-  ASSERT(index < vm->foreignCallNumArgs, "Not that many arguments.");
+  validateForeignArgument(vm, index);
 
   if (!IS_STRING(*(vm->foreignCallSlot + index))) return NULL;
 
   return AS_CSTRING(*(vm->foreignCallSlot + index));
+}
+
+WrenValue* wrenGetArgumentValue(WrenVM* vm, int index)
+{
+  validateForeignArgument(vm, index);
+  
+  // Make a handle for it.
+  WrenValue* value = ALLOCATE(vm, WrenValue);
+  value->value = *(vm->foreignCallSlot + index);
+
+  // Add it to the front of the linked list of handles.
+  if (vm->valueHandles != NULL) vm->valueHandles->prev = value;
+  value->prev = NULL;
+  value->next = vm->valueHandles;
+  vm->valueHandles = value;
+
+  return value;
 }
 
 void wrenReturnBool(WrenVM* vm, bool value)
@@ -1484,5 +1530,14 @@ void wrenReturnString(WrenVM* vm, const char* text, int length)
   if (length == -1) size = strlen(text);
 
   *vm->foreignCallSlot = wrenNewString(vm, text, size);
+  vm->foreignCallSlot = NULL;
+}
+
+void wrenReturnValue(WrenVM* vm, WrenValue* value)
+{
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
+  ASSERT(value != NULL, "Value cannot be NULL.");
+  
+  *vm->foreignCallSlot = value->value;
   vm->foreignCallSlot = NULL;
 }
