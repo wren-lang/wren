@@ -1170,9 +1170,13 @@ static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
 
   // Count the number parameters the method expects.
   int numParams = 0;
-  for (const char* s = signature; *s != '\0'; s++)
+  if (signature[signatureLength - 1] == ')')
   {
-    if (*s == '_') numParams++;
+    for (const char* s = signature + signatureLength - 2;
+         s > signature && *s != '('; s--)
+    {
+      if (*s == '_') numParams++;
+    }
   }
 
   int method =  wrenSymbolTableEnsure(vm, &vm->methodNames,
@@ -1255,6 +1259,8 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
         value = wrenStringFormat(vm, "$", va_arg(argList, const char*));
         break;
       }
+        
+      case 'v': value = va_arg(argList, WrenValue*)->value; break;
 
       default:
         ASSERT(false, "Unknown argument type.");
@@ -1266,15 +1272,15 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
 
   va_end(argList);
 
-  Value receiver = method->fiber->stack[0];
+  Value receiver = method->fiber->stack[0];  
   Obj* fn = method->fiber->frames[0].fn;
-
+  
   // TODO: How does this handle a runtime error occurring?
   runInterpreter(vm, method->fiber);
 
   // Reset the fiber to get ready for the next call.
   wrenResetFiber(vm, method->fiber, fn);
-
+  
   // Push the receiver back on the stack.
   *method->fiber->stackTop++ = receiver;
 }
