@@ -174,6 +174,8 @@ WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
 //         will allocate its own string and copy the characters from this, so
 //         you don't have to worry about the lifetime of the string you pass to
 //         Wren.
+// - "v" - A previously acquired WrenValue*. Passing this in does not implicitly
+//         release the value.
 void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...);
 
 // Releases memory associated with [method]. After calling this, [method] can
