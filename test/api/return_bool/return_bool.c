@@ -12,7 +12,7 @@ static void returnFalse(WrenVM* vm)
   wrenReturnBool(vm, false);
 }
 
-WrenForeignMethodFn return_boolBindForeign(const char* signature)
+WrenForeignMethodFn returnBoolBindForeign(const char* signature)
 {
   if (strcmp(signature, "static Api.returnTrue") == 0) return returnTrue;
   if (strcmp(signature, "static Api.returnFalse") == 0) return returnFalse;

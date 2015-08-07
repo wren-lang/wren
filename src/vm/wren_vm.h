@@ -17,6 +17,11 @@ typedef enum
   #undef OPCODE
 } Code;
 
+// A handle to a method.
+//
+// It is a node in the doubly-linked list of currently allocate method handles.
+// Each node has a reference to the fiber containing the method stub to call
+// the method.
 struct WrenMethod
 {
   // The fiber that invokes the method. Its stack is pre-populated with the
@@ -26,6 +31,17 @@ struct WrenMethod
 
   WrenMethod* prev;
   WrenMethod* next;
+};
+
+// A handle to a value, basically just a linked list of extra GC roots.
+//
+// Note that even non-heap-allocated values can be stored here.
+struct WrenValue
+{
+  Value value;
+  
+  WrenValue* prev;
+  WrenValue* next;
 };
 
 struct WrenVM
@@ -99,6 +115,10 @@ struct WrenVM
   // Pointer to the first node in the linked list of active method handles or
   // NULL if there are no handles.
   WrenMethod* methodHandles;
+  
+  // Pointer to the first node in the linked list of active value handles or
+  // NULL if there are no handles.
+  WrenValue* valueHandles;
 
   // During a foreign function call, this will contain the number of arguments
   // to the function.
