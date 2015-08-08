@@ -109,6 +109,11 @@ TEST_OBJECTS   := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES
 LIBUV_DIR := build/libuv
 LIBUV     := $(LIBUV_DIR)/$(LIBUV_BUILD)/Release/libuv.a
 
+# Flags needed to compile source files for the CLI, including the modules and
+# API tests.
+CLI_FLAGS := -D_XOPEN_SOURCE=500 -Isrc/include -I$(LIBUV_DIR)/include \
+             -Isrc/cli -Isrc/module
+
 # Targets ---------------------------------------------------------------------
 
 # Builds the VM libraries and CLI interpreter.
@@ -152,13 +157,13 @@ $(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
 	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/cli
-	@$(CC) -c $(CFLAGS) -Isrc/include -Isrc/module -I$(LIBUV_DIR)/include -o $@ $(FILE_FLAG) $<
+	@$(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
 # Module object files.
 $(BUILD_DIR)/module/%.o: src/module/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
 	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/module
-	@$(CC) -c $(CFLAGS) -Isrc/include -Isrc/cli -I$(LIBUV_DIR)/include -o $@ $(FILE_FLAG) $<
+	@$(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
 # VM object files.
 $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
@@ -170,6 +175,6 @@ $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
 $(BUILD_DIR)/test/%.o: test/api/%.c $(MODULE_HEADERS) $(VM_HEADERS)
 	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	@mkdir -p $(dir $@)
-	@$(CC) -c $(CFLAGS) -Isrc/include -I$(LIBUV_DIR)/include -Isrc/cli -o $@ $(FILE_FLAG) $<
+	@$(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
 .PHONY: all cli test vm
