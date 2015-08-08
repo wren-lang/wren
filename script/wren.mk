@@ -92,9 +92,11 @@ endif
 # shared library.
 ifneq (,$(findstring darwin,$(OS)))
 	SHARED_EXT := dylib
+	LIBUV_BUILD := build
 else
 	SHARED_LIB_FLAGS := -Wl,-soname,$@.so
 	SHARED_EXT := so
+	LIBUV_BUILD := out
 endif
 
 CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
@@ -105,7 +107,7 @@ VM_OBJECTS     := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
 TEST_OBJECTS   := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES))
 
 LIBUV_DIR := build/libuv
-LIBUV     := $(LIBUV_DIR)/build/Release/libuv.a
+LIBUV     := $(LIBUV_DIR)/$(LIBUV_BUILD)/Release/libuv.a
 
 # Targets ---------------------------------------------------------------------
 
@@ -125,7 +127,7 @@ test: $(BUILD_DIR)/test/$(WREN)
 bin/$(WREN): $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p bin
-	@$(CC) $(CFLAGS) -L$(LIBUV_DIR)/build/Release -l uv -o $@ $^ -lm
+	@$(CC) $(CFLAGS) -L$(LIBUV_DIR)/$(LIBUV_BUILD)/Release -l uv -o $@ $^ -lm
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
@@ -144,7 +146,7 @@ $(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
 		$(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/test
-	@$(CC) $(CFLAGS) -L$(LIBUV_DIR)/build/Release -l uv -o $@ $^ -lm
+	@$(CC) $(CFLAGS) -L$(LIBUV_DIR)/$(LIBUV_BUILD)/Release -l uv -o $@ $^ -lm
 
 # CLI object files.
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
