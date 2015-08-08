@@ -97,6 +97,9 @@ else
 	SHARED_LIB_FLAGS := -Wl,-soname,$@.so
 	SHARED_EXT := so
 	LIBUV_BUILD := out
+
+	# Enable pthread on gcc, since it isn't on by default.
+	CFLAGS += -pthread
 endif
 
 CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
