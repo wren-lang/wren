@@ -3,7 +3,6 @@
 
 #include "wren.h"
 
-// TODO: Coherent naming scheme.
 char* timerGetSource();
 
 WrenForeignMethodFn timerBindForeign(

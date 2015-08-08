@@ -19,7 +19,7 @@ EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect runtime error: (.+)')
 ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
-STACK_TRACE_PATTERN = re.compile(r'\[.* line (\d+)\] in')
+STACK_TRACE_PATTERN = re.compile(r'\[main line (\d+)\] in')
 STDIN_PATTERN = re.compile(r'// stdin: (.*)')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
@@ -159,11 +159,17 @@ class Test:
           self.runtime_error_message)
       self.fail(error_lines[0])
 
-    # Make sure the stack trace has the right line.
-    match = STACK_TRACE_PATTERN.search(error_lines[1])
+    # Make sure the stack trace has the right line. Skip over any lines that
+    # come from builtin libraries.
+    stack_lines = error_lines[1:]
+    for stack_line in stack_lines:
+      match = STACK_TRACE_PATTERN.search(stack_line)
+      if match: break
+
     if not match:
       self.fail('Expected stack trace and got:')
-      self.fail(error_lines[1])
+      for stack_line in stack_lines:
+        self.fail(stack_line)
     else:
       stack_line = int(match.group(1))
       if stack_line != self.runtime_error_line:
