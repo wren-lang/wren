@@ -28,11 +28,19 @@ static const char* timerLibSource =
 // The Wren method to call when a timer has completed.
 static WrenMethod* resumeTimer;
 
+// Called by libuv when the timer finished closing.
+static void timerCloseCallback(uv_handle_t* handle)
+{
+  free(handle);
+}
+
 // Called by libuv when the timer has completed.
 static void timerCallback(uv_timer_t* handle)
 {
   WrenValue* fiber = (WrenValue*)handle->data;
-  free(handle);
+  
+  // Tell libuv that we don't need the timer anymore.
+  uv_close((uv_handle_t*)handle, timerCloseCallback);
 
   // Run the fiber that was sleeping.
   wrenCall(getVM(), resumeTimer, "v", fiber);
