@@ -21,9 +21,10 @@
 # Files.
 CLI_HEADERS  := $(wildcard src/cli/*.h)
 VM_HEADERS   := $(wildcard src/vm/*.h)
+TEST_HEADERS := $(wildcard test/api/*.h)
 CLI_SOURCES  := $(wildcard src/cli/*.c)
 VM_SOURCES   := $(wildcard src/vm/*.c)
-TEST_SOURCES := $(shell find test/api -name '*.c')
+TEST_SOURCES := $(wildcard test/api/*.c)
 BUILD_DIR := build
 
 C_WARNINGS := -Wall -Wextra -Werror -Wno-unused-parameter
@@ -143,7 +144,7 @@ $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
 	@$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
 
 # Test object files.
-$(BUILD_DIR)/test/%.o: test/api/%.c $(VM_HEADERS)
+$(BUILD_DIR)/test/%.o: test/api/%.c $(CLI_HEADERS) $(TEST_HEADERS) $(VM_HEADERS)
 	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	@mkdir -p $(dir $@)
 	@$(CC) -c $(CFLAGS) -Isrc/include -Isrc/cli -o $@ $(FILE_FLAG) $<

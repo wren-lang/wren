@@ -5,10 +5,8 @@
 #include "vm.h"
 #include "wren.h"
 
-#include "get_value/get_value.h"
-#include "return_bool/return_bool.h"
-#include "return_double/return_double.h"
-#include "return_null/return_null.h"
+#include "value.h"
+#include "returns.h"
 
 #define REGISTER_TEST(name, camelCase) \
   if (strcmp(testName, #name) == 0) return camelCase##BindForeign(fullName)
@@ -31,10 +29,8 @@ static WrenForeignMethodFn bindForeign(
   strcat(fullName, ".");
   strcat(fullName, signature);
 
-  REGISTER_TEST(get_value, getValue);
-  REGISTER_TEST(return_bool, returnBool);
-  REGISTER_TEST(return_double, returnDouble);
-  REGISTER_TEST(return_null, returnNull);
+  REGISTER_TEST(returns, returns);
+  REGISTER_TEST(value, value);
 
   fprintf(stderr,
       "Unknown foreign method '%s' for test '%s'\n", fullName, testName);
@@ -52,11 +48,9 @@ int main(int argc, const char* argv[])
 
   testName = argv[1];
 
-  // The test script is at "test/api/<test>/<test>.wren".
+  // The test script is at "test/api/<test>.wren".
   char testPath[256];
   strcpy(testPath, "test/api/");
-  strcat(testPath, testName);
-  strcat(testPath, "/");
   strcat(testPath, testName);
   strcat(testPath, ".wren");
 
