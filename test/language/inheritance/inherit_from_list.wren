@@ -1,1 +1,1 @@
-class Subclass is List {} // expect runtime error: Subclass cannot inherit from List.
+class Subclass is List {} // expect runtime error: Class 'Subclass' cannot inherit from built-in class 'List'.

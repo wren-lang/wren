@@ -32,10 +32,13 @@ static void dumpObject(Obj* obj)
 {
   switch (obj->type)
   {
-    case OBJ_CLASS: printf("[class %p]", obj); break;
+    case OBJ_CLASS:
+      printf("[class %s %p]", ((ObjClass*)obj)->name->value, obj);
+      break;
     case OBJ_CLOSURE: printf("[closure %p]", obj); break;
     case OBJ_FIBER: printf("[fiber %p]", obj); break;
     case OBJ_FN: printf("[fn %p]", obj); break;
+    case OBJ_FOREIGN: printf("[foreign %p]", obj); break;
     case OBJ_INSTANCE: printf("[instance %p]", obj); break;
     case OBJ_LIST: printf("[list %p]", obj); break;
     case OBJ_MAP: printf("[map %p]", obj); break;
@@ -269,7 +272,8 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
 
-    case CODE_CONSTRUCT: printf("CODE_CONSTRUCT\n"); break;
+    case CODE_CONSTRUCT:         printf("CODE_CONSTRUCT\n"); break;
+    case CODE_FOREIGN_CONSTRUCT: printf("CODE_FOREIGN_CONSTRUCT\n"); break;
       
     case CODE_CLASS:
     {
@@ -277,6 +281,8 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       printf("%-16s %5d fields\n", "CLASS", numFields);
       break;
     }
+
+    case CODE_FOREIGN_CLASS: printf("FOREIGN_CLASS\n"); break;
 
     case CODE_METHOD_INSTANCE:
     {

@@ -1,1 +1,1 @@
-class Subclass is Fiber {} // expect runtime error: Subclass cannot inherit from Fiber.
+class Subclass is Fiber {} // expect runtime error: Class 'Subclass' cannot inherit from built-in class 'Fiber'.

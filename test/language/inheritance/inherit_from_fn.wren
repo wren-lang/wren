@@ -1,1 +1,1 @@
-class Subclass is Fn {} // expect runtime error: Subclass cannot inherit from Fn.
+class Subclass is Fn {} // expect runtime error: Class 'Subclass' cannot inherit from built-in class 'Fn'.

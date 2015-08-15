@@ -55,6 +55,26 @@ typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
 
 typedef struct
 {
+  // The callback invoked when the foreign object is created.
+  //
+  // This must be provided. Inside the body of this, it must call
+  // [wrenAllocateForeign] exactly once.
+  WrenForeignMethodFn allocate;
+
+  // The callback invoked when the garbage collector is about to collecto a
+  // foreign object's memory.
+  //
+  // This may be `NULL` if the foreign class does not need to finalize.
+  WrenForeignMethodFn finalize;
+} WrenForeignClassMethods;
+
+// Returns a pair of pointers to the foreign methods used to allocate and
+// finalize the data for instances of [className] in [module].
+typedef WrenForeignClassMethods (*WrenBindForeignClassFn)(
+    WrenVM* vm, const char* module, const char* className);
+
+typedef struct
+{
   // The callback Wren will use to allocate, reallocate, and deallocate memory.
   //
   // If `NULL`, defaults to a built-in function that uses `realloc` and `free`.
@@ -87,6 +107,14 @@ typedef struct
   // If the foreign function could not be found, this should return NULL and
   // Wren will report it as runtime error.
   WrenBindForeignMethodFn bindForeignMethodFn;
+
+  // The callback Wren uses to find a foreign class and get its foreign methods.
+  //
+  // When a foreign class is declared, this will be called with the class's
+  // module and name when the class body is executed. It should return the
+  // foreign functions uses to allocate and (optionally) finalize the bytes
+  // stored in the foreign object when an instance is created.
+  WrenBindForeignClassFn bindForeignClassFn;
 
   // The number of bytes Wren will allocate before triggering the first garbage
   // collection.
@@ -128,6 +156,11 @@ typedef enum {
   WREN_RESULT_COMPILE_ERROR,
   WREN_RESULT_RUNTIME_ERROR
 } WrenInterpretResult;
+
+// Initializes [configuration] with all of its default values.
+//
+// Call this before setting the particular fields you care about.
+void wrenInitConfiguration(WrenConfiguration* configuration);
 
 // Creates a new Wren virtual machine using the given [configuration]. Wren
 // will copy the configuration data, so the argument passed to this can be
@@ -186,6 +219,16 @@ void wrenReleaseMethod(WrenVM* vm, WrenMethod* method);
 // longer be used.
 void wrenReleaseValue(WrenVM* vm, WrenValue* value);
 
+// This must be called once inside a foreign class's allocator function.
+//
+// It tells Wren how many bytes of raw data need to be stored in the foreign
+// object and creates the new object with that size. It returns a pointer to
+// the foreign object's data.
+void* wrenAllocateForeign(WrenVM* vm, size_t size);
+
+// Returns the number of arguments available to the current foreign method.
+int wrenGetArgumentCount(WrenVM* vm);
+
 // The following functions read one of the arguments passed to a foreign call.
 // They may only be called while within a function provided to
 // [wrenDefineMethod] or [wrenDefineStaticMethod] that Wren has invoked.
@@ -213,6 +256,11 @@ bool wrenGetArgumentBool(WrenVM* vm, int index);
 // Reads a numeric argument for a foreign call. Returns 0 if the argument is not
 // a number.
 double wrenGetArgumentDouble(WrenVM* vm, int index);
+
+// Reads a foreign object argument for a foreign call and returns a pointer to
+// the foreign data stored with it. Returns NULL if the argument is not a
+// foreign object.
+void* wrenGetArgumentForeign(WrenVM* vm, int index);
 
 // Reads an string argument for a foreign call. Returns NULL if the argument is
 // not a string.

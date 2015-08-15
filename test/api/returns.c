@@ -27,7 +27,7 @@ static void returnFalse(WrenVM* vm)
   wrenReturnBool(vm, false);
 }
 
-WrenForeignMethodFn returnsBindForeign(const char* signature)
+WrenForeignMethodFn returnsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Api.implicitNull") == 0) return implicitNull;
   if (strcmp(signature, "static Api.returnInt") == 0) return returnInt;

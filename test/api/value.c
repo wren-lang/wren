@@ -15,7 +15,7 @@ static void getValue(WrenVM* vm)
   wrenReleaseValue(vm, value);
 }
 
-WrenForeignMethodFn valueBindForeign(const char* signature)
+WrenForeignMethodFn valueBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Api.value=(_)") == 0) return setValue;
   if (strcmp(signature, "static Api.value") == 0) return getValue;

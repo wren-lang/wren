@@ -18,11 +18,35 @@
 		2986F6D71ACF93BA00BCE26C /* wren_primitive.c in Sources */ = {isa = PBXBuildFile; fileRef = 2986F6D51ACF93BA00BCE26C /* wren_primitive.c */; };
 		29C8A92F1AB71C1C00DEC81D /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A92E1AB71C1C00DEC81D /* io.c */; };
 		29C8A9331AB71FFF00DEC81D /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
+		29D009A71B7E3993000CE58C /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009A61B7E3993000CE58C /* main.c */; };
+		29D009AE1B7E39A8000CE58C /* foreign_class.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009A81B7E39A8000CE58C /* foreign_class.c */; };
+		29D009AF1B7E39A8000CE58C /* returns.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AA1B7E39A8000CE58C /* returns.c */; };
+		29D009B01B7E39A8000CE58C /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AC1B7E39A8000CE58C /* value.c */; };
+		29D009B11B7E39FE000CE58C /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A92E1AB71C1C00DEC81D /* io.c */; };
+		29D009B21B7E39FE000CE58C /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
+		29D009B31B7E39FE000CE58C /* wren_compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C921AB4E6430073018D /* wren_compiler.c */; };
+		29D009B41B7E39FE000CE58C /* wren_core.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C931AB4E6430073018D /* wren_core.c */; };
+		29D009B51B7E39FE000CE58C /* wren_debug.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C941AB4E6430073018D /* wren_debug.c */; };
+		29D009B61B7E39FE000CE58C /* wren_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C951AB4E6430073018D /* wren_io.c */; };
+		29D009B71B7E39FE000CE58C /* wren_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29DE39511AC3A50A00987D41 /* wren_meta.c */; };
+		29D009B81B7E39FE000CE58C /* wren_primitive.c in Sources */ = {isa = PBXBuildFile; fileRef = 2986F6D51ACF93BA00BCE26C /* wren_primitive.c */; };
+		29D009B91B7E39FE000CE58C /* wren_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C961AB4E6430073018D /* wren_utils.c */; };
+		29D009BA1B7E39FE000CE58C /* wren_value.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C971AB4E6430073018D /* wren_value.c */; };
+		29D009BB1B7E39FE000CE58C /* wren_vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C981AB4E6430073018D /* wren_vm.c */; };
 		29DE39531AC3A50A00987D41 /* wren_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29DE39511AC3A50A00987D41 /* wren_meta.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		29AB1F041816E3AD004B501E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		29D0099D1B7E397D000CE58C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -59,12 +83,27 @@
 		29C8A9301AB71C3300DEC81D /* io.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../../src/cli/io.h; sourceTree = "<group>"; };
 		29C8A9311AB71FFF00DEC81D /* vm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vm.c; path = ../../src/cli/vm.c; sourceTree = "<group>"; };
 		29C8A9321AB71FFF00DEC81D /* vm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vm.h; path = ../../src/cli/vm.h; sourceTree = "<group>"; };
+		29D0099F1B7E397D000CE58C /* api_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = api_test; sourceTree = BUILT_PRODUCTS_DIR; };
+		29D009A61B7E3993000CE58C /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = ../../test/api/main.c; sourceTree = "<group>"; };
+		29D009A81B7E39A8000CE58C /* foreign_class.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = foreign_class.c; path = ../../test/api/foreign_class.c; sourceTree = "<group>"; };
+		29D009A91B7E39A8000CE58C /* foreign_class.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = foreign_class.h; path = ../../test/api/foreign_class.h; sourceTree = "<group>"; };
+		29D009AA1B7E39A8000CE58C /* returns.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = returns.c; path = ../../test/api/returns.c; sourceTree = "<group>"; };
+		29D009AB1B7E39A8000CE58C /* returns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = returns.h; path = ../../test/api/returns.h; sourceTree = "<group>"; };
+		29D009AC1B7E39A8000CE58C /* value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = value.c; path = ../../test/api/value.c; sourceTree = "<group>"; };
+		29D009AD1B7E39A8000CE58C /* value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = value.h; path = ../../test/api/value.h; sourceTree = "<group>"; };
 		29DE39511AC3A50A00987D41 /* wren_meta.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_meta.c; path = ../../src/vm/wren_meta.c; sourceTree = "<group>"; };
 		29DE39521AC3A50A00987D41 /* wren_meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_meta.h; path = ../../src/vm/wren_meta.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		29AB1F031816E3AD004B501E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		29D0099C1B7E397D000CE58C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -127,6 +166,7 @@
 				29205CA91AB4E67B0073018D /* cli */,
 				29205CAA1AB4E6840073018D /* include */,
 				29205CA01AB4E6470073018D /* vm */,
+				29D0099A1B7E394F000CE58C /* api_test */,
 				29AB1F071816E3AD004B501E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -135,8 +175,23 @@
 			isa = PBXGroup;
 			children = (
 				29AB1F061816E3AD004B501E /* wren */,
+				29D0099F1B7E397D000CE58C /* api_test */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		29D0099A1B7E394F000CE58C /* api_test */ = {
+			isa = PBXGroup;
+			children = (
+				29D009A61B7E3993000CE58C /* main.c */,
+				29D009A81B7E39A8000CE58C /* foreign_class.c */,
+				29D009A91B7E39A8000CE58C /* foreign_class.h */,
+				29D009AA1B7E39A8000CE58C /* returns.c */,
+				29D009AB1B7E39A8000CE58C /* returns.h */,
+				29D009AC1B7E39A8000CE58C /* value.c */,
+				29D009AD1B7E39A8000CE58C /* value.h */,
+			);
+			name = api_test;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -159,6 +214,23 @@
 			productReference = 29AB1F061816E3AD004B501E /* wren */;
 			productType = "com.apple.product-type.tool";
 		};
+		29D0099E1B7E397D000CE58C /* api_test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 29D009A31B7E397D000CE58C /* Build configuration list for PBXNativeTarget "api_test" */;
+			buildPhases = (
+				29D0099B1B7E397D000CE58C /* Sources */,
+				29D0099C1B7E397D000CE58C /* Frameworks */,
+				29D0099D1B7E397D000CE58C /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = api_test;
+			productName = api_test;
+			productReference = 29D0099F1B7E397D000CE58C /* api_test */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -167,6 +239,11 @@
 			attributes = {
 				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = "Bob Nystrom";
+				TargetAttributes = {
+					29D0099E1B7E397D000CE58C = {
+						CreatedOnToolsVersion = 6.3.2;
+					};
+				};
 			};
 			buildConfigurationList = 29AB1F011816E3AD004B501E /* Build configuration list for PBXProject "wren" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -181,6 +258,7 @@
 			projectRoot = "";
 			targets = (
 				29AB1F051816E3AD004B501E /* wren */,
+				29D0099E1B7E397D000CE58C /* api_test */,
 			);
 		};
 /* End PBXProject section */
@@ -202,6 +280,28 @@
 				29C8A92F1AB71C1C00DEC81D /* io.c in Sources */,
 				29DE39531AC3A50A00987D41 /* wren_meta.c in Sources */,
 				29205C8F1AB4E5C90073018D /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		29D0099B1B7E397D000CE58C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				29D009B11B7E39FE000CE58C /* io.c in Sources */,
+				29D009B21B7E39FE000CE58C /* vm.c in Sources */,
+				29D009B31B7E39FE000CE58C /* wren_compiler.c in Sources */,
+				29D009B41B7E39FE000CE58C /* wren_core.c in Sources */,
+				29D009B51B7E39FE000CE58C /* wren_debug.c in Sources */,
+				29D009B61B7E39FE000CE58C /* wren_io.c in Sources */,
+				29D009B71B7E39FE000CE58C /* wren_meta.c in Sources */,
+				29D009B81B7E39FE000CE58C /* wren_primitive.c in Sources */,
+				29D009B91B7E39FE000CE58C /* wren_utils.c in Sources */,
+				29D009BA1B7E39FE000CE58C /* wren_value.c in Sources */,
+				29D009BB1B7E39FE000CE58C /* wren_vm.c in Sources */,
+				29D009A71B7E3993000CE58C /* main.c in Sources */,
+				29D009B01B7E39A8000CE58C /* value.c in Sources */,
+				29D009AF1B7E39A8000CE58C /* returns.c in Sources */,
+				29D009AE1B7E39A8000CE58C /* foreign_class.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -302,6 +402,46 @@
 			};
 			name = Release;
 		};
+		29D009A41B7E397D000CE58C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_PEDANTIC = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		29D009A51B7E397D000CE58C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_PEDANTIC = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -322,6 +462,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		29D009A31B7E397D000CE58C /* Build configuration list for PBXNativeTarget "api_test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				29D009A41B7E397D000CE58C /* Debug */,
+				29D009A51B7E397D000CE58C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};

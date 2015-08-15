@@ -125,7 +125,10 @@ struct WrenVM
   int foreignCallNumArgs;
 
   // The function used to locate foreign functions.
-  WrenBindForeignMethodFn bindForeign;
+  WrenBindForeignMethodFn bindForeignMethod;
+  
+  // The function used to locate foreign classes.
+  WrenBindForeignClassFn bindForeignClass;
 
   // The function used to load modules.
   WrenLoadModuleFn loadModule;

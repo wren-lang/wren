@@ -252,6 +252,9 @@ typedef struct
   // Symbol table for the fields of the class.
   SymbolTable* fields;
 
+  // True if the class being compiled is a foreign class.
+  bool isForeign;
+  
   // True if the current method being compiled is static.
   bool inStatic;
 
@@ -1938,6 +1941,10 @@ static void field(Compiler* compiler, bool allowAssignment)
   {
     error(compiler, "Cannot reference a field outside of a class definition.");
   }
+  else if (enclosingClass->isForeign)
+  {
+    error(compiler, "Cannot define fields in a foreign class.");
+  }
   else if (enclosingClass->inStatic)
   {
     error(compiler, "Cannot use an instance field in a static method.");
@@ -2591,6 +2598,8 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_LOAD_LOCAL_7:
     case CODE_LOAD_LOCAL_8:
     case CODE_CONSTRUCT:
+    case CODE_FOREIGN_CONSTRUCT:
+    case CODE_FOREIGN_CLASS:
       return 0;
 
     case CODE_LOAD_LOCAL:
@@ -2945,7 +2954,8 @@ static void createConstructor(Compiler* compiler, Signature* signature,
   initCompiler(&methodCompiler, compiler->parser, compiler, false);
   
   // Allocate the instance.
-  emit(&methodCompiler, CODE_CONSTRUCT);
+  emit(&methodCompiler, compiler->enclosingClass->isForeign
+       ? CODE_FOREIGN_CONSTRUCT : CODE_CONSTRUCT);
   
   // Run its initializer.
   emitShortArg(&methodCompiler, (Code)(CODE_CALL_0 + signature->arity),
@@ -3072,7 +3082,6 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
 static void createDefaultConstructor(Compiler* compiler, int classSlot)
 {
   Signature signature = { "new", 3, SIG_INITIALIZER, 0 };
-  
   int initializerSymbol = signatureSymbol(compiler, &signature);
   
   signature.type = SIG_METHOD;
@@ -3083,8 +3092,8 @@ static void createDefaultConstructor(Compiler* compiler, int classSlot)
 }
 
 // Compiles a class definition. Assumes the "class" token has already been
-// consumed.
-static void classDefinition(Compiler* compiler)
+// consumed (along with a possibly preceding "foreign" token).
+static void classDefinition(Compiler* compiler, bool isForeign)
 {
   // Create a variable to store the class in.
   int slot = declareNamedVariable(compiler);
@@ -3109,7 +3118,15 @@ static void classDefinition(Compiler* compiler)
   // Store a placeholder for the number of fields argument. We don't know
   // the value until we've compiled all the methods to see which fields are
   // used.
-  int numFieldsInstruction = emitByteArg(compiler, CODE_CLASS, 255);
+  int numFieldsInstruction = -1;
+  if (isForeign)
+  {
+    emit(compiler, CODE_FOREIGN_CLASS);
+  }
+  else
+  {
+    numFieldsInstruction = emitByteArg(compiler, CODE_CLASS, 255);
+  }
 
   // Store it in its name.
   defineVariable(compiler, slot);
@@ -3120,6 +3137,7 @@ static void classDefinition(Compiler* compiler)
   pushScope(compiler);
 
   ClassCompiler classCompiler;
+  classCompiler.isForeign = isForeign;
 
   // Set up a symbol table for the class's fields. We'll initially compile
   // them to slots starting at zero. When the method is bound to the class, the
@@ -3155,7 +3173,11 @@ static void classDefinition(Compiler* compiler)
   }
 
   // Update the class with the number of fields.
-  compiler->bytecode.data[numFieldsInstruction] = (uint8_t)fields.count;
+  if (!isForeign)
+  {
+    compiler->bytecode.data[numFieldsInstruction] = (uint8_t)fields.count;
+  }
+  
   wrenSymbolTableClear(compiler->parser->vm, &fields);
 
   compiler->enclosingClass = NULL;
@@ -3227,7 +3249,14 @@ void definition(Compiler* compiler)
 {
   if (match(compiler, TOKEN_CLASS))
   {
-    classDefinition(compiler);
+    classDefinition(compiler, false);
+    return;
+  }
+  
+  if (match(compiler, TOKEN_FOREIGN))
+  {
+    consume(compiler, TOKEN_CLASS, "Expect 'class' after 'foreign'.");
+    classDefinition(compiler, true);
     return;
   }
 
