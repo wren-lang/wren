@@ -22,25 +22,15 @@ def ensure_dir(dir):
 
   os.makedirs(dir)
 
-def rmtree_onerror(func, path, exc_info):
-  """
-  Error handler for ``shutil.rmtree``.
-
-  If the error is due to an access error (read only file)
-  it attempts to add write permission and then retries.
-
-  If the error is for another reason it re-raises the error.
-
-  Usage : ``shutil.rmtree(path, onerror=rmtree_onerror)``
-  """
-  import stat
-  if not os.access(path, os.W_OK):
-    # Is the error an access error?
-    os.chmod(path, stat.S_IWUSR)
-    func(path)
+def remove_dir(dir):
+  """Recursively removes dir."""
+  
+  if platform.system() == "Windows":
+    # rmtree gives up on readonly files on Windows
+    # rd doesn't like paths with forward slashes
+    subprocess.check_call(['cmd', '/c', 'rd', '/s', '/q', dir.replace('/', '\\')])
   else:
-    raise
-
+    shutil.rmtree(LIB_UV_DIR)
 
 def download_libuv():
   """Clones libuv into build/libuv and checks out the right version."""
@@ -49,7 +39,7 @@ def download_libuv():
   # version number in this script changes.
   if os.path.isdir(LIB_UV_DIR):
     print("Cleaning output directory...")
-    shutil.rmtree(LIB_UV_DIR, onerror=rmtree_onerror)
+    remove_dir(LIB_UV_DIR)
 
   ensure_dir("build")
 
