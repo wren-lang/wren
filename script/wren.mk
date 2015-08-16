@@ -97,9 +97,6 @@ else
 	SHARED_LIB_FLAGS := -Wl,-soname,$@.so
 	SHARED_EXT := so
 	LIBUV_BUILD := out
-
-	# Enable pthread on gcc, since it isn't on by default.
-	CFLAGS += -pthread
 endif
 
 CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
@@ -111,6 +108,9 @@ TEST_OBJECTS   := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES
 
 LIBUV_DIR := build/libuv
 LIBUV     := $(LIBUV_DIR)/$(LIBUV_BUILD)/Release/libuv.a
+
+# Additional settings for executables that link to libuv.
+LIB_UV_LINK := -L$(LIBUV_DIR)/$(LIBUV_BUILD)/Release -lpthread -luv
 
 # Flags needed to compile source files for the CLI, including the modules and
 # API tests.
@@ -135,7 +135,7 @@ test: $(BUILD_DIR)/test/$(WREN)
 bin/$(WREN): $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p bin
-	@$(CC) $(CFLAGS) -L$(LIBUV_DIR)/$(LIBUV_BUILD)/Release -l uv -o $@ $^ -lm
+	@$(CC) $(CFLAGS) $(LIB_UV_LINK) -o $@ $^ -lm
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
@@ -154,7 +154,7 @@ $(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
 		$(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/test
-	@$(CC) $(CFLAGS) -L$(LIBUV_DIR)/$(LIBUV_BUILD)/Release -l uv -o $@ $^ -lm
+	@$(CC) $(CFLAGS) $(LIB_UV_LINK) -o $@ $^ -lm
 
 # CLI object files.
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
