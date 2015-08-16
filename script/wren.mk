@@ -109,9 +109,6 @@ TEST_OBJECTS   := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES
 LIBUV_DIR := build/libuv
 LIBUV     := $(LIBUV_DIR)/$(LIBUV_BUILD)/Release/libuv.a
 
-# Additional settings for executables that link to libuv.
-LIB_UV_LINK := -L$(LIBUV_DIR)/$(LIBUV_BUILD)/Release -luv -lpthread
-
 # Flags needed to compile source files for the CLI, including the modules and
 # API tests.
 CLI_FLAGS := -D_XOPEN_SOURCE=600 -Isrc/include -I$(LIBUV_DIR)/include \
@@ -135,7 +132,7 @@ test: $(BUILD_DIR)/test/$(WREN)
 bin/$(WREN): $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p bin
-	$(CC) $(CFLAGS) $(LIB_UV_LINK) -o $@ $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) -lm
+	$(CC) $(CFLAGS) -lpthread -o $@ $^ -lm
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
@@ -154,7 +151,7 @@ $(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
 		$(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/test
-	$(CC) $(CFLAGS) $(LIB_UV_LINK) -o $@ $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) $(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o -lm
+	$(CC) $(CFLAGS) -lpthread -o $@ $^ -lm
 
 # CLI object files.
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
