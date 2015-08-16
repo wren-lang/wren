@@ -52,7 +52,7 @@ ifeq ($(LANG),cpp)
 	FILE_FLAG := -x c++
 	BUILD_DIR := $(BUILD_DIR)-cpp
 else
-	C_OPTIONS += -std=gnu99 # Temp.
+	C_OPTIONS += -std=c99
 endif
 
 # Architecture configuration.
@@ -132,7 +132,7 @@ test: $(BUILD_DIR)/test/$(WREN)
 bin/$(WREN): $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p bin
-	$(CC) $(CFLAGS) -lm -lpthread $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ -lm -lpthread
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
@@ -151,7 +151,7 @@ $(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
 		$(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/test
-	$(CC) $(CFLAGS) -lm -lpthread $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ -lm -lpthread
 
 # CLI object files.
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
