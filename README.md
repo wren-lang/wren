@@ -53,6 +53,6 @@ involved][contribute]!
 [classes]: http://munificent.github.io/wren/classes.html
 [fibers]: http://munificent.github.io/wren/fibers.html
 [embedding]: http://munificent.github.io/wren/embedding-api.html
-[started]: getting-started.html
+[started]: http://munificent.github.io/wren/getting-started.html
 [browser]: http://ppvk.github.io/wren-nest/
-[contribute]: contributing.html
+[contribute]: http://munificent.github.io/wren/contributing.html
