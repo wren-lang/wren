@@ -97,6 +97,9 @@ else
 	SHARED_LIB_FLAGS := -Wl,-soname,$@.so
 	SHARED_EXT := so
 	LIBUV_BUILD := out
+
+	# On Linux we need to explicitly link to these for libuv.
+	LIBUV_LIBS := -lpthread -lrt
 endif
 
 CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
@@ -132,7 +135,7 @@ test: $(BUILD_DIR)/test/$(WREN)
 bin/$(WREN): $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p bin
-	@$(CC) $(CFLAGS) $^ -o $@ -lm -lpthread -lrt
+	@$(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
@@ -151,7 +154,7 @@ $(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
 		$(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
 	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@mkdir -p $(BUILD_DIR)/test
-	@$(CC) $(CFLAGS) $^ -o $@ -lm -lpthread -lrt
+	@$(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
 
 # CLI object files.
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)

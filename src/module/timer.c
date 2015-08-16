@@ -61,7 +61,7 @@ static void startTimer(WrenVM* vm)
 char* timerGetSource()
 {
   size_t length = strlen(timerLibSource);
-  char* copy = malloc(length + 1);
+  char* copy = (char*)malloc(length + 1);
   strncpy(copy, timerLibSource, length);
   
   return copy;

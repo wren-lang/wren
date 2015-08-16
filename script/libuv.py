@@ -71,7 +71,8 @@ def build_libuv_mac():
   # TODO: Support debug builds too.
   run([
     "xcodebuild",
-    "-ARCHS=\"x86_64\"",
+    # Build a 32-bit + 64-bit universal binary:
+    "ARCHS=i386 x86_64", "ONLY_ACTIVE_ARCH=NO",
     "-project", LIB_UV_DIR + "/uv.xcodeproj",
     "-configuration", "Release",
     "-target", "All"
