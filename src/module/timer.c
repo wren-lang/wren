@@ -70,8 +70,7 @@ char* timerGetSource()
 {
   size_t length = strlen(timerLibSource);
   char* copy = (char*)malloc(length + 1);
-  strncpy(copy, timerLibSource, length);
-  copy[length] = '\0';
+  strncpy(copy, timerLibSource, length + 1);
   
   return copy;
 }
