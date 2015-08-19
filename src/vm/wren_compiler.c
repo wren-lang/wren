@@ -2416,7 +2416,7 @@ void namedSignature(Compiler* compiler, Signature* signature)
 // Compiles a method signature for a constructor.
 void constructorSignature(Compiler* compiler, Signature* signature)
 {
-  consume(compiler, TOKEN_NAME, "Expect constructor name after 'this'.");
+  consume(compiler, TOKEN_NAME, "Expect constructor name after 'construct'.");
   
   // Capture the name.
   *signature = signatureFromToken(compiler, SIG_INITIALIZER);
@@ -3076,7 +3076,7 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
 
 // Defines a default "new()" constructor on the current class.
 //
-// It just invokes "this new()" on the instance. If a base class defines that,
+// It just invokes "construct new()" on the instance. If a base class defines that,
 // it will get invoked. Otherwise, it falls to the default one in Object which
 // does nothing.
 static void createDefaultConstructor(Compiler* compiler, int classSlot)
