@@ -1613,7 +1613,7 @@ static void signatureToString(Signature* signature,
       break;
       
     case SIG_INITIALIZER:
-      memcpy(name, "this ", 5);
+      memcpy(name, "init ", 5);
       memcpy(name + 5, signature->name, signature->length);
       *length = 5 + signature->length;
       signatureParameterList(name, length, signature->arity, '(', ')');
@@ -3091,7 +3091,7 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
 
 // Defines a default "new()" constructor on the current class.
 //
-// It just invokes "construct new()" on the instance. If a base class defines that,
+// It just invokes "init new()" on the instance. If a base class defines that,
 // it will get invoked. Otherwise, it falls to the default one in Object which
 // does nothing.
 static void createDefaultConstructor(Compiler* compiler, int classSlot)

@@ -1291,7 +1291,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->objectClass, "!", object_not);
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
-  PRIMITIVE(vm->objectClass, "this new()", return_this);
+  PRIMITIVE(vm->objectClass, "init new()", return_this);
   PRIMITIVE(vm->objectClass, "is(_)", object_is);
   PRIMITIVE(vm->objectClass, "toString", object_toString);
   PRIMITIVE(vm->objectClass, "type", object_type);
