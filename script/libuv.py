@@ -22,6 +22,15 @@ def ensure_dir(dir):
 
   os.makedirs(dir)
 
+def remove_dir(dir):
+  """Recursively removes dir."""
+  
+  if platform.system() == "Windows":
+    # rmtree gives up on readonly files on Windows
+    # rd doesn't like paths with forward slashes
+    subprocess.check_call(['cmd', '/c', 'rd', '/s', '/q', dir.replace('/', '\\')])
+  else:
+    shutil.rmtree(LIB_UV_DIR)
 
 def download_libuv():
   """Clones libuv into build/libuv and checks out the right version."""
@@ -30,7 +39,7 @@ def download_libuv():
   # version number in this script changes.
   if os.path.isdir(LIB_UV_DIR):
     print("Cleaning output directory...")
-    shutil.rmtree(LIB_UV_DIR)
+    remove_dir(LIB_UV_DIR)
 
   ensure_dir("build")
 
@@ -85,9 +94,7 @@ def build_libuv_linux():
 
 
 def build_libuv_windows():
-  # TODO: Implement me!
-  print("Building for Windows not implemented yet.")
-  sys.exit(1)
+  run(["cmd", "/c", "vcbuild.bat", "release"], cwd=LIB_UV_DIR)
 
 
 def build_libuv():
