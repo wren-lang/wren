@@ -24,11 +24,12 @@ def ensure_dir(dir):
 
 def remove_dir(dir):
   """Recursively removes dir."""
-  
+
   if platform.system() == "Windows":
     # rmtree gives up on readonly files on Windows
     # rd doesn't like paths with forward slashes
-    subprocess.check_call(['cmd', '/c', 'rd', '/s', '/q', dir.replace('/', '\\')])
+    subprocess.check_call(
+        ['cmd', '/c', 'rd', '/s', '/q', dir.replace('/', '\\')])
   else:
     shutil.rmtree(LIB_UV_DIR)
 
