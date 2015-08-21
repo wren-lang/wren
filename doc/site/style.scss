@@ -242,6 +242,9 @@ footer {
   // Strings.
   span.s, span.s2  { color: hsl(40, 80%, 50%); }
   span.se          { color: hsl(30, 80%, 50%); }
+
+  // Preprocessor directives.
+  span.cp          { color: hsl(270, 40%, 60%); }
 }
 
 // Have a different primary color for the core library docs.
