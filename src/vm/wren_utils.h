@@ -6,8 +6,8 @@
 
 // Reusable data structures and other utility functions.
 
-// A simple structure to keep trace of the string length as long as its data
-// (including the null-terminator)
+// A simple structure to keep track of a string and its length (including the
+// null-terminator).
 typedef struct {
   char* buffer;
   uint32_t length;

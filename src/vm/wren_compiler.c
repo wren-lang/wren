@@ -788,22 +788,30 @@ static void nextToken(Parser* parser)
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
       case ':': makeToken(parser, TOKEN_COLON); return;
+      case ',': makeToken(parser, TOKEN_COMMA); return;
+      case '*': makeToken(parser, TOKEN_STAR); return;
+      case '%': makeToken(parser, TOKEN_PERCENT); return;
+      case '^': makeToken(parser, TOKEN_CARET); return;
+      case '+': makeToken(parser, TOKEN_PLUS); return;
+      case '-': makeToken(parser, TOKEN_MINUS); return;
+      case '~': makeToken(parser, TOKEN_TILDE); return;
+      case '?': makeToken(parser, TOKEN_QUESTION); return;
+        
+      case '|': twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE); return;
+      case '&': twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP); return;
+      case '=': twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ); return;
+      case '!': twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG); return;
+        
       case '.':
         if (matchChar(parser, '.'))
         {
           twoCharToken(parser, '.', TOKEN_DOTDOTDOT, TOKEN_DOTDOT);
           return;
         }
-
+        
         makeToken(parser, TOKEN_DOT);
         return;
-
-      case ',': makeToken(parser, TOKEN_COMMA); return;
-      case '*': makeToken(parser, TOKEN_STAR); return;
-      case '%': makeToken(parser, TOKEN_PERCENT); return;
-      case '+': makeToken(parser, TOKEN_PLUS); return;
-      case '~': makeToken(parser, TOKEN_TILDE); return;
-      case '?': makeToken(parser, TOKEN_QUESTION); return;
+        
       case '/':
         if (matchChar(parser, '/'))
         {
@@ -818,26 +826,6 @@ static void nextToken(Parser* parser)
         }
 
         makeToken(parser, TOKEN_SLASH);
-        return;
-
-      case '-':
-        makeToken(parser, TOKEN_MINUS);
-        return;
-
-      case '|':
-        twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE);
-        return;
-
-      case '&':
-        twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP);
-        return;
-
-      case '^':
-        makeToken(parser, TOKEN_CARET);
-        return;
-
-      case '=':
-        twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ);
         return;
 
       case '<':
@@ -860,10 +848,6 @@ static void nextToken(Parser* parser)
         {
           twoCharToken(parser, '=', TOKEN_GTEQ, TOKEN_GT);
         }
-        return;
-
-      case '!':
-        twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG);
         return;
 
       case '\n':
@@ -973,9 +957,7 @@ static bool matchLine(Compiler* compiler)
   return true;
 }
 
-// Consumes the current token if its type is [expected]. Returns true if a
-// token was consumed. Since [expected] is known to be in the middle of an
-// expression, any newlines following it are consumed and discarded.
+// Discards any newlines starting at the current token.
 static void ignoreNewlines(Compiler* compiler)
 {
   matchLine(compiler);
@@ -1048,7 +1030,7 @@ static void emitConstant(Compiler* compiler)
 
 // Create a new local variable with [name]. Assumes the current scope is local
 // and the name is unique.
-static int defineLocal(Compiler* compiler, const char* name, int length)
+static int addLocal(Compiler* compiler, const char* name, int length)
 {
   Local* local = &compiler->locals[compiler->numLocals];
   local->name = name;
@@ -1114,7 +1096,7 @@ static int declareVariable(Compiler* compiler, Token* token)
     return -1;
   }
 
-  return defineLocal(compiler, token->start, token->length);
+  return addLocal(compiler, token->start, token->length);
 }
 
 // Parses a name token and declares a variable in the current scope with that
@@ -2765,11 +2747,11 @@ static void forStatement(Compiler* compiler)
   // The space in the variable name ensures it won't collide with a user-defined
   // variable.
   expression(compiler);
-  int seqSlot = defineLocal(compiler, "seq ", 4);
+  int seqSlot = addLocal(compiler, "seq ", 4);
 
   // Create another hidden local for the iterator object.
   null(compiler, false);
-  int iterSlot = defineLocal(compiler, "iter ", 5);
+  int iterSlot = addLocal(compiler, "iter ", 5);
 
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
 
@@ -2797,7 +2779,7 @@ static void forStatement(Compiler* compiler)
   // Bind the loop variable in its own scope. This ensures we get a fresh
   // variable each iteration so that closures for it don't all see the same one.
   pushScope(compiler);
-  defineLocal(compiler, name, length);
+  addLocal(compiler, name, length);
 
   loopBody(compiler);
 
@@ -3166,6 +3148,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   popScope(compiler);
 }
 
+// Compiles an "import" statement.
 static void import(Compiler* compiler)
 {
   consume(compiler, TOKEN_STRING, "Expect a string after 'import'.");
@@ -3200,6 +3183,7 @@ static void import(Compiler* compiler)
   } while (match(compiler, TOKEN_COMMA));
 }
 
+// Compiles a "var" variable definition statement.
 static void variableDefinition(Compiler* compiler)
 {
   // Grab its name, but don't declare it yet. A (local) variable shouldn't be
@@ -3231,29 +3215,24 @@ void definition(Compiler* compiler)
   if (match(compiler, TOKEN_CLASS))
   {
     classDefinition(compiler, false);
-    return;
   }
-  
-  if (match(compiler, TOKEN_FOREIGN))
+  else if (match(compiler, TOKEN_FOREIGN))
   {
     consume(compiler, TOKEN_CLASS, "Expect 'class' after 'foreign'.");
     classDefinition(compiler, true);
-    return;
   }
-
-  if (match(compiler, TOKEN_IMPORT))
+  else if (match(compiler, TOKEN_IMPORT))
   {
     import(compiler);
-    return;
   }
-
-  if (match(compiler, TOKEN_VAR))
+  else if (match(compiler, TOKEN_VAR))
   {
     variableDefinition(compiler);
-    return;
   }
-
-  block(compiler);
+  else
+  {
+    block(compiler);
+  }
 }
 
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
