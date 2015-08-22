@@ -476,6 +476,14 @@ static char nextChar(Parser* parser)
   return c;
 }
 
+// If the current character is [c], consumes it and returns `true`.
+static bool matchChar(Parser* parser, char c)
+{
+  if (peekChar(parser) != c) return false;
+  nextChar(parser);
+  return true;
+}
+
 // Sets the parser's current token to the given [type] and current character
 // range.
 static void makeToken(Parser* parser, TokenType type)
@@ -493,14 +501,7 @@ static void makeToken(Parser* parser, TokenType type)
 // [two]. Otherwise makes a token of type [one].
 static void twoCharToken(Parser* parser, char c, TokenType two, TokenType one)
 {
-  if (peekChar(parser) == c)
-  {
-    nextChar(parser);
-    makeToken(parser, two);
-    return;
-  }
-
-  makeToken(parser, one);
+  makeToken(parser, matchChar(parser, c) ? two : one);
 }
 
 // Skips the rest of the current line.
@@ -515,8 +516,6 @@ static void skipLineComment(Parser* parser)
 // Skips the rest of a block comment.
 static void skipBlockComment(Parser* parser)
 {
-  nextChar(parser); // The opening "*".
-
   int nesting = 1;
   while (nesting > 0)
   {
@@ -616,12 +615,10 @@ static void readNumber(Parser* parser)
   }
   
   // See if the number is in scientific notation.
-  if (peekChar(parser) == 'e' || peekChar(parser) == 'E')
+  if (matchChar(parser, 'e') || matchChar(parser, 'E'))
   {
-    nextChar(parser);
-    
-    // If the exponent is negative.
-    if (peekChar(parser) == '-') nextChar(parser);
+    // Allow a negative exponent.
+    matchChar(parser, '-');
     
     if (!isDigit(peekChar(parser)))
     {
@@ -792,17 +789,9 @@ static void nextToken(Parser* parser)
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
       case ':': makeToken(parser, TOKEN_COLON); return;
       case '.':
-        if (peekChar(parser) == '.')
+        if (matchChar(parser, '.'))
         {
-          nextChar(parser);
-          if (peekChar(parser) == '.')
-          {
-            nextChar(parser);
-            makeToken(parser, TOKEN_DOTDOTDOT);
-            return;
-          }
-
-          makeToken(parser, TOKEN_DOTDOT);
+          twoCharToken(parser, '.', TOKEN_DOTDOTDOT, TOKEN_DOTDOT);
           return;
         }
 
@@ -816,13 +805,13 @@ static void nextToken(Parser* parser)
       case '~': makeToken(parser, TOKEN_TILDE); return;
       case '?': makeToken(parser, TOKEN_QUESTION); return;
       case '/':
-        if (peekChar(parser) == '/')
+        if (matchChar(parser, '/'))
         {
           skipLineComment(parser);
           break;
         }
 
-        if (peekChar(parser) == '*')
+        if (matchChar(parser, '*'))
         {
           skipBlockComment(parser);
           break;
@@ -852,9 +841,8 @@ static void nextToken(Parser* parser)
         return;
 
       case '<':
-        if (peekChar(parser) == '<')
+        if (matchChar(parser, '<'))
         {
-          nextChar(parser);
           makeToken(parser, TOKEN_LTLT);
         }
         else
@@ -864,9 +852,8 @@ static void nextToken(Parser* parser)
         return;
 
       case '>':
-        if (peekChar(parser) == '>')
+        if (matchChar(parser, '>'))
         {
-          nextChar(parser);
           makeToken(parser, TOKEN_GTGT);
         }
         else
