@@ -154,14 +154,9 @@ typedef struct
 
   // If a syntax or compile error has occurred.
   bool hasError;
-
-  // A buffer for the unescaped text of the current token if it's a string
-  // literal. Unlike the raw token, this will have escape sequences translated
-  // to their literal equivalent.
-  ByteBuffer string;
-
-  // If a number literal is currently being parsed this will hold its value.
-  double number;
+  
+  // The parsed value if the current token is a literal.
+  Value value;
 } Parser;
 
 typedef struct
@@ -372,6 +367,8 @@ static void error(Compiler* compiler, const char* format, ...)
 // Adds [constant] to the constant pool and returns its index.
 static int addConstant(Compiler* compiler, Value constant)
 {
+  if (compiler->parser->hasError) return -1;
+  
   if (compiler->constants.count < MAX_CONSTANTS)
   {
     if (IS_OBJ(constant)) wrenPushRoot(compiler->parser->vm, AS_OBJ(constant));
@@ -581,13 +578,13 @@ static void makeNumber(Parser* parser, bool isHex)
 
   // We don't check that the entire token is consumed because we've already
   // scanned it ourselves and know it's valid.
-  parser->number = isHex ? strtol(parser->tokenStart, NULL, 16)
-                         : strtod(parser->tokenStart, NULL);
+  parser->value = NUM_VAL(isHex ? strtol(parser->tokenStart, NULL, 16)
+                                : strtod(parser->tokenStart, NULL));
 
   if (errno == ERANGE)
   {
     lexError(parser, "Number literal was too large.");
-    parser->number = 0;
+    parser->value = NUM_VAL(0);
   }
 
   makeToken(parser, TOKEN_NUMBER);
@@ -618,15 +615,15 @@ static void readNumber(Parser* parser)
     while (isDigit(peekChar(parser))) nextChar(parser);
   }
   
-  // See if the number is in scientific notation
+  // See if the number is in scientific notation.
   if (peekChar(parser) == 'e' || peekChar(parser) == 'E')
   {
     nextChar(parser);
     
-    // if the exponant is negative
-    if(peekChar(parser) == '-') nextChar(parser);
+    // If the exponent is negative.
+    if (peekChar(parser) == '-') nextChar(parser);
     
-    if(!isDigit(peekChar(parser)))
+    if (!isDigit(peekChar(parser)))
     {
       lexError(parser, "Unterminated scientific notation.");
     }
@@ -668,12 +665,6 @@ static void readName(Parser* parser, TokenType type)
   makeToken(parser, type);
 }
 
-// Adds [c] to the current string literal being tokenized.
-static void addStringChar(Parser* parser, char c)
-{
-  wrenByteBufferWrite(parser->vm, &parser->string, c);
-}
-
 // Reads [digits] hex digits in a string literal and returns their number value.
 static int readHexEscape(Parser* parser, int digits, const char* description)
 {
@@ -704,7 +695,7 @@ static int readHexEscape(Parser* parser, int digits, const char* description)
 }
 
 // Reads a four hex digit Unicode escape sequence in a string literal.
-static void readUnicodeEscape(Parser* parser)
+static void readUnicodeEscape(Parser* parser, ByteBuffer* string)
 {
   int value = readHexEscape(parser, 4, "Unicode");
 
@@ -712,16 +703,16 @@ static void readUnicodeEscape(Parser* parser)
   int numBytes = wrenUtf8NumBytes(value);
   if (numBytes != 0)
   {
-    wrenByteBufferFill(parser->vm, &parser->string, 0, numBytes);
-    wrenUtf8Encode(value,
-                   parser->string.data + parser->string.count - numBytes);
+    wrenByteBufferFill(parser->vm, string, 0, numBytes);
+    wrenUtf8Encode(value, string->data + string->count - numBytes);
   }
 }
 
 // Finishes lexing a string literal.
 static void readString(Parser* parser)
 {
-  wrenByteBufferClear(parser->vm, &parser->string);
+  ByteBuffer string;
+  wrenByteBufferInit(&string);
 
   for (;;)
   {
@@ -742,20 +733,21 @@ static void readString(Parser* parser)
     {
       switch (nextChar(parser))
       {
-        case '"':  addStringChar(parser, '"'); break;
-        case '\\': addStringChar(parser, '\\'); break;
-        case '0':  addStringChar(parser, '\0'); break;
-        case 'a':  addStringChar(parser, '\a'); break;
-        case 'b':  addStringChar(parser, '\b'); break;
-        case 'f':  addStringChar(parser, '\f'); break;
-        case 'n':  addStringChar(parser, '\n'); break;
-        case 'r':  addStringChar(parser, '\r'); break;
-        case 't':  addStringChar(parser, '\t'); break;
-        case 'u':  readUnicodeEscape(parser); break;
+        case '"':  wrenByteBufferWrite(parser->vm, &string, '"'); break;
+        case '\\': wrenByteBufferWrite(parser->vm, &string, '\\'); break;
+        case '0':  wrenByteBufferWrite(parser->vm, &string, '\0'); break;
+        case 'a':  wrenByteBufferWrite(parser->vm, &string, '\a'); break;
+        case 'b':  wrenByteBufferWrite(parser->vm, &string, '\b'); break;
+        case 'f':  wrenByteBufferWrite(parser->vm, &string, '\f'); break;
+        case 'n':  wrenByteBufferWrite(parser->vm, &string, '\n'); break;
+        case 'r':  wrenByteBufferWrite(parser->vm, &string, '\r'); break;
+        case 't':  wrenByteBufferWrite(parser->vm, &string, '\t'); break;
+        case 'u':  readUnicodeEscape(parser, &string); break;
           // TODO: 'U' for 8 octet Unicode escapes.
-        case 'v':  addStringChar(parser, '\v'); break;
+        case 'v':  wrenByteBufferWrite(parser->vm, &string, '\v'); break;
         case 'x':
-          addStringChar(parser, (uint8_t)readHexEscape(parser, 2, "byte"));
+          wrenByteBufferWrite(parser->vm, &string,
+                              (uint8_t)readHexEscape(parser, 2, "byte"));
           break;
 
         default:
@@ -766,10 +758,12 @@ static void readString(Parser* parser)
     }
     else
     {
-      addStringChar(parser, c);
+      wrenByteBufferWrite(parser->vm, &string, c);
     }
   }
 
+  parser->value = wrenNewString(parser->vm, (char*)string.data, string.count);
+  wrenByteBufferClear(parser->vm, &string);
   makeToken(parser, TOKEN_STRING);
 }
 
@@ -1053,6 +1047,16 @@ static int emitJump(Compiler* compiler, Code instruction)
   emit(compiler, instruction);
   emit(compiler, 0xff);
   return emit(compiler, 0xff) - 1;
+}
+
+// Creates a new constant for the current value and emits the bytecode to load
+// it from the constant table.
+static void emitConstant(Compiler* compiler)
+{
+  int constant = addConstant(compiler, compiler->parser->value);
+  
+  // Compile the code to load the constant.
+  emitShortArg(compiler, CODE_CONSTANT, constant);
 }
 
 // Create a new local variable with [name]. Assumes the current scope is local
@@ -1689,8 +1693,7 @@ static void callSignature(Compiler* compiler, Code instruction,
     // superclass in a constant. So, here, we create a slot in the constant
     // table and store NULL in it. When the method is bound, we'll look up the
     // superclass then and store it in the constant slot.
-    int constant = addConstant(compiler, NULL_VAL);
-    emitShort(compiler, constant);
+    emitShort(compiler, addConstant(compiler, NULL_VAL));
   }
 }
 
@@ -2150,32 +2153,10 @@ static void null(Compiler* compiler, bool allowAssignment)
   emit(compiler, CODE_NULL);
 }
 
-static void number(Compiler* compiler, bool allowAssignment)
+// A number or string literal.
+static void literal(Compiler* compiler, bool allowAssignment)
 {
-  int constant = addConstant(compiler, NUM_VAL(compiler->parser->number));
-
-  // Compile the code to load the constant.
-  emitShortArg(compiler, CODE_CONSTANT, constant);
-}
-
-// Parses a string literal and adds it to the constant table.
-static int stringConstant(Compiler* compiler)
-{
-  // Define a constant for the literal.
-  int constant = addConstant(compiler, wrenNewString(compiler->parser->vm,
-      (char*)compiler->parser->string.data, compiler->parser->string.count));
-
-  wrenByteBufferClear(compiler->parser->vm, &compiler->parser->string);
-
-  return constant;
-}
-
-static void string(Compiler* compiler, bool allowAssignment)
-{
-  int constant = stringConstant(compiler);
-
-  // Compile the code to load the constant.
-  emitShortArg(compiler, CODE_CONSTANT, constant);
+  emitConstant(compiler);
 }
 
 static void super_(Compiler* compiler, bool allowAssignment)
@@ -2522,8 +2503,8 @@ GrammarRule rules[] =
   /* TOKEN_FIELD         */ PREFIX(field),
   /* TOKEN_STATIC_FIELD  */ PREFIX(staticField),
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
-  /* TOKEN_NUMBER        */ PREFIX(number),
-  /* TOKEN_STRING        */ PREFIX(string),
+  /* TOKEN_NUMBER        */ PREFIX(literal),
+  /* TOKEN_STRING        */ PREFIX(literal),
   /* TOKEN_LINE          */ UNUSED,
   /* TOKEN_ERROR         */ UNUSED,
   /* TOKEN_EOF           */ UNUSED
@@ -3052,9 +3033,9 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   if (isForeign)
   {
     // Define a constant for the signature.
-    int constant = addConstant(compiler, wrenNewString(compiler->parser->vm,
-                                                       fullSignature, length));
-    emitShortArg(compiler, CODE_CONSTANT, constant);
+    compiler->parser->value = wrenNewString(compiler->parser->vm,
+                                            fullSignature, length);
+    emitConstant(compiler);
 
     // We don't need the function we started compiling in the parameter list
     // any more.
@@ -3064,7 +3045,6 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   {
     consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
     finishBody(&methodCompiler, signature.type == SIG_INITIALIZER);
-
     endCompiler(&methodCompiler, fullSignature, length);
   }
   
@@ -3114,10 +3094,9 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   int slot = declareNamedVariable(compiler);
 
   // Make a string constant for the name.
-  int nameConstant = addConstant(compiler, wrenNewString(compiler->parser->vm,
-      compiler->parser->previous.start, compiler->parser->previous.length));
-
-  emitShortArg(compiler, CODE_CONSTANT, nameConstant);
+  compiler->parser->value = wrenNewString(compiler->parser->vm,
+      compiler->parser->previous.start, compiler->parser->previous.length);
+  emitConstant(compiler);
 
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
@@ -3203,7 +3182,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 static void import(Compiler* compiler)
 {
   consume(compiler, TOKEN_STRING, "Expect a string after 'import'.");
-  int moduleConstant = stringConstant(compiler);
+  int moduleConstant = addConstant(compiler, compiler->parser->value);
 
   // Load the module.
   emitShortArg(compiler, CODE_LOAD_MODULE, moduleConstant);
@@ -3301,6 +3280,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
   parser.module = module;
   parser.sourcePath = AS_STRING(sourcePathValue);
   parser.source = source;
+  parser.value = UNDEFINED_VAL;
 
   parser.tokenStart = source;
   parser.currentChar = source;
@@ -3317,8 +3297,6 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
   parser.skipNewlines = true;
   parser.printErrors = printErrors;
   parser.hasError = false;
-
-  wrenByteBufferInit(&parser.string);
 
   // Read the first token.
   nextToken(&parser);
@@ -3428,6 +3406,7 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 {
   wrenMarkObj(vm, (Obj*)compiler->parser->sourcePath);
+  wrenMarkValue(vm, compiler->parser->value);
 
   // Walk up the parent chain to mark the outer compilers too. The VM only
   // tracks the innermost one.
