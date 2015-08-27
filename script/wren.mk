@@ -92,11 +92,9 @@ endif
 # shared library.
 ifneq (,$(findstring darwin,$(OS)))
 	SHARED_EXT := dylib
-	LIBUV_BUILD := build
 else
 	SHARED_LIB_FLAGS := -Wl,-soname,$@.so
 	SHARED_EXT := so
-	LIBUV_BUILD := out
 
 	# On Linux we need to explicitly link to these for libuv.
 	LIBUV_LIBS := -lpthread -lrt
@@ -110,7 +108,7 @@ VM_OBJECTS     := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
 TEST_OBJECTS   := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES))
 
 LIBUV_DIR := build/libuv
-LIBUV     := $(LIBUV_DIR)/$(LIBUV_BUILD)/Release/libuv.a
+LIBUV     := $(LIBUV_DIR)/out/Release/libuv.a
 
 # Flags needed to compile source files for the CLI, including the modules and
 # API tests.

@@ -4,7 +4,7 @@
 
 # Executables are built to bin/. Libraries are built to lib/.
 
-LIBUV := build/libuv/build/Release/libuv.a
+LIBUV := build/libuv/out/Release/libuv.a
 
 # A normal, optimized release build for the current CPU architecture.
 release: $(LIBUV)

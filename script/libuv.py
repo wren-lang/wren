@@ -83,6 +83,7 @@ def build_libuv_mac():
     "xcodebuild",
     # Build a 32-bit + 64-bit universal binary:
     "ARCHS=i386 x86_64", "ONLY_ACTIVE_ARCH=NO",
+    "BUILD_DIR=out",
     "-project", LIB_UV_DIR + "/uv.xcodeproj",
     "-configuration", "Release",
     "-target", "All"
