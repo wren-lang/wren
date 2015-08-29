@@ -1,1 +1,1 @@
-class Subclass is Class {} // expect runtime error: Subclass cannot inherit from Class.
+class Subclass is Class {} // expect runtime error: Class 'Subclass' cannot inherit from built-in class 'Class'.

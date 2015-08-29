@@ -5,18 +5,23 @@
 #include "vm.h"
 #include "wren.h"
 
-#include "get_value/get_value.h"
-#include "return_bool/return_bool.h"
-#include "return_double/return_double.h"
-#include "return_null/return_null.h"
+#include "foreign_class.h"
+#include "returns.h"
+#include "value.h"
 
-#define REGISTER_TEST(name, camelCase) \
-  if (strcmp(testName, #name) == 0) return camelCase##BindForeign(fullName)
+#define REGISTER_METHOD(name, camelCase) \
+  if (strcmp(testName, #name) == 0) return camelCase##BindMethod(fullName)
+
+#define REGISTER_CLASS(name, camelCase) \
+    if (strcmp(testName, #name) == 0) \
+    { \
+      camelCase##BindClass(className, &methods); \
+    }
 
 // The name of the currently executing API test.
 const char* testName;
 
-static WrenForeignMethodFn bindForeign(
+static WrenForeignMethodFn bindForeignMethod(
     WrenVM* vm, const char* module, const char* className,
     bool isStatic, const char* signature)
 {
@@ -31,16 +36,27 @@ static WrenForeignMethodFn bindForeign(
   strcat(fullName, ".");
   strcat(fullName, signature);
 
-  REGISTER_TEST(get_value, getValue);
-  REGISTER_TEST(return_bool, returnBool);
-  REGISTER_TEST(return_double, returnDouble);
-  REGISTER_TEST(return_null, returnNull);
+  REGISTER_METHOD(foreign_class, foreignClass);
+  REGISTER_METHOD(returns, returns);
+  REGISTER_METHOD(value, value);
 
   fprintf(stderr,
       "Unknown foreign method '%s' for test '%s'\n", fullName, testName);
   exit(1);
   return NULL;
 }
+
+static WrenForeignClassMethods bindForeignClass(
+    WrenVM* vm, const char* module, const char* className)
+{
+  WrenForeignClassMethods methods = { NULL, NULL };
+  if (strcmp(module, "main") != 0) return methods;
+
+  REGISTER_CLASS(foreign_class, foreignClass);
+
+  return methods;
+}
+
 
 int main(int argc, const char* argv[])
 {
@@ -52,14 +68,13 @@ int main(int argc, const char* argv[])
 
   testName = argv[1];
 
-  // The test script is at "test/api/<test>/<test>.wren".
+  // The test script is at "test/api/<test>.wren".
   char testPath[256];
   strcpy(testPath, "test/api/");
   strcat(testPath, testName);
-  strcat(testPath, "/");
-  strcat(testPath, testName);
   strcat(testPath, ".wren");
 
-  runFile(testPath, bindForeign);
+  setForeignCallbacks(bindForeignMethod, bindForeignClass);
+  runFile(testPath);
   return 0;
 }

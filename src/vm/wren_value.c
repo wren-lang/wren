@@ -65,7 +65,15 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
   subclass->superclass = superclass;
 
   // Include the superclass in the total number of fields.
-  subclass->numFields += superclass->numFields;
+  if (subclass->numFields != -1)
+  {
+    subclass->numFields += superclass->numFields;
+  }
+  else
+  {
+    ASSERT(superclass->numFields == 0,
+           "A foreign class cannot inherit from a class with fields.");
+  }
 
   // Inherit methods from its superclass.
   for (int i = 0; i < superclass->methods.count; i++)
@@ -164,6 +172,16 @@ void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn)
   // Initialize the first call frame.
   fiber->numFrames = 0;
   wrenAppendCallFrame(vm, fiber, fn, fiber->stack);
+}
+
+ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
+{
+  ObjForeign* object = ALLOCATE_FLEX(vm, ObjForeign, uint8_t, size);
+  initObj(vm, &object->obj, OBJ_FOREIGN, classObj);
+  
+  // Zero out the bytes.
+  memset(object->data, 0, size);
+  return object;
 }
 
 ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
@@ -903,6 +921,15 @@ static void markFn(WrenVM* vm, ObjFn* fn)
   // TODO: What about the function name?
 }
 
+static void markForeign(WrenVM* vm, ObjForeign* foreign)
+{
+  // TODO: Keep track of how much memory the foreign object uses. We can store
+  // this in each foreign object, but it will balloon the size. We may not want
+  // that much overhead. One option would be to let the foreign class register
+  // a C function that returns a size for the object. That way the VM doesn't
+  // always have to explicitly store it.
+}
+
 static void markInstance(WrenVM* vm, ObjInstance* instance)
 {
   wrenMarkObj(vm, (Obj*)instance->obj.classObj);
@@ -1007,6 +1034,7 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
     case OBJ_CLOSURE:  markClosure( vm, (ObjClosure*) obj); break;
     case OBJ_FIBER:    markFiber(   vm, (ObjFiber*)   obj); break;
     case OBJ_FN:       markFn(      vm, (ObjFn*)      obj); break;
+    case OBJ_FOREIGN:  markForeign( vm, (ObjForeign*) obj); break;
     case OBJ_INSTANCE: markInstance(vm, (ObjInstance*)obj); break;
     case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
     case OBJ_MAP:      markMap(     vm, (ObjMap*)     obj); break;
@@ -1059,6 +1087,10 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       DEALLOCATE(vm, fn->debug);
       break;
     }
+      
+    case OBJ_FOREIGN:
+      // TODO: Call finalizer.
+      break;
 
     case OBJ_LIST:
       wrenValueBufferClear(vm, &((ObjList*)obj)->elements);

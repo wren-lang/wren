@@ -34,17 +34,6 @@
 // I've kept it this way to avoid deviating too much from the original
 // implementation.
 
-// TODO: Support forward declarations of globals.
-var REQUIRED        = null
-var STRONG_REFERRED = null
-var PREFERRED       = null
-var STRONG_DEFAULT  = null
-var NORMAL          = null
-var WEAK_DEFAULT    = null
-var WEAKEST         = null
-
-var ORDERED = null
-
 // Strengths are used to measure the relative importance of constraints.
 // New strengths may be inserted in the strength hierarchy without
 // disrupting current constraints.  Strengths cannot be created outside
@@ -67,15 +56,15 @@ class Strength {
 }
 
 // Compile time computed constants.
-REQUIRED        = Strength.new(0, "required")
-STRONG_REFERRED = Strength.new(1, "strongPreferred")
-PREFERRED       = Strength.new(2, "preferred")
-STRONG_DEFAULT  = Strength.new(3, "strongDefault")
-NORMAL          = Strength.new(4, "normal")
-WEAK_DEFAULT    = Strength.new(5, "weakDefault")
-WEAKEST         = Strength.new(6, "weakest")
+var REQUIRED        = Strength.new(0, "required")
+var STRONG_REFERRED = Strength.new(1, "strongPreferred")
+var PREFERRED       = Strength.new(2, "preferred")
+var STRONG_DEFAULT  = Strength.new(3, "strongDefault")
+var NORMAL          = Strength.new(4, "normal")
+var WEAK_DEFAULT    = Strength.new(5, "weakDefault")
+var WEAKEST         = Strength.new(6, "weakest")
 
-ORDERED = [
+var ORDERED = [
   WEAKEST, WEAK_DEFAULT, NORMAL, STRONG_DEFAULT, PREFERRED, STRONG_REFERRED
 ]
 
@@ -701,7 +690,7 @@ var projectionTest = Fn.new {|n|
 }
 
 var start = IO.clock
-for (i in 0...20) {
+for (i in 0...40) {
   chainTest.call(100)
   projectionTest.call(100)
 }

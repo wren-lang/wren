@@ -19,7 +19,7 @@ var adjectives = Fiber.new {
 while (!adjectives.isDone) IO.print(adjectives.call())
 ```
 
- *  **Wren is small.** The codebase is about [5,000 lines][src]. You can
+ *  **Wren is small.** The codebase is about [7,000 lines][src]. You can
     skim the whole thing in an afternoon. It's *small*, but not *dense*. It
     is readable and [lovingly-commented][nan].
 
@@ -53,6 +53,6 @@ involved][contribute]!
 [classes]: http://munificent.github.io/wren/classes.html
 [fibers]: http://munificent.github.io/wren/fibers.html
 [embedding]: http://munificent.github.io/wren/embedding-api.html
-[started]: getting-started.html
+[started]: http://munificent.github.io/wren/getting-started.html
 [browser]: http://ppvk.github.io/wren-nest/
-[contribute]: contributing.html
+[contribute]: http://munificent.github.io/wren/contributing.html

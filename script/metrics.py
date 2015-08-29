@@ -43,7 +43,11 @@ for source_path in files:
         num_docs += 1
         continue
 
-      if (line.strip() == ""):
+      stripped = line.strip()
+      # Don't count { or } lines since Wren's coding style puts them on their
+      # own lines but they don't add anything meaningful to the length of the
+      # program.
+      if (stripped == "" or stripped == "{" or stripped == "}"):
         num_empty += 1
         continue
 

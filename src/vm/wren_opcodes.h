@@ -157,10 +157,21 @@ OPCODE(CLOSURE)
 // compiler-generated constructor metaclass methods.
 OPCODE(CONSTRUCT)
 
+// Creates a new instance of a foreign class.
+//
+// Assumes the class object is in slot zero, and replaces it with the new
+// uninitialized instance of that class. This opcode is only emitted by the
+// compiler-generated constructor metaclass methods.
+OPCODE(FOREIGN_CONSTRUCT)
+
 // Creates a class. Top of stack is the superclass, or `null` if the class
 // inherits Object. Below that is a string for the name of the class. Byte
 // [arg] is the number of fields in the class.
 OPCODE(CLASS)
+
+// Creates a foreign class. Top of stack is the superclass, or `null` if the
+// class inherits Object. Below that is a string for the name of the class.
+OPCODE(FOREIGN_CLASS)
 
 // Define a method for symbol [arg]. The class receiving the method is popped
 // off the stack, then the function defining the body is popped.

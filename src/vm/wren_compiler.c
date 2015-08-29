@@ -154,14 +154,9 @@ typedef struct
 
   // If a syntax or compile error has occurred.
   bool hasError;
-
-  // A buffer for the unescaped text of the current token if it's a string
-  // literal. Unlike the raw token, this will have escape sequences translated
-  // to their literal equivalent.
-  ByteBuffer string;
-
-  // If a number literal is currently being parsed this will hold its value.
-  double number;
+  
+  // The parsed value if the current token is a literal.
+  Value value;
 } Parser;
 
 typedef struct
@@ -252,6 +247,9 @@ typedef struct
   // Symbol table for the fields of the class.
   SymbolTable* fields;
 
+  // True if the class being compiled is a foreign class.
+  bool isForeign;
+  
   // True if the current method being compiled is static.
   bool inStatic;
 
@@ -369,6 +367,8 @@ static void error(Compiler* compiler, const char* format, ...)
 // Adds [constant] to the constant pool and returns its index.
 static int addConstant(Compiler* compiler, Value constant)
 {
+  if (compiler->parser->hasError) return -1;
+  
   if (compiler->constants.count < MAX_CONSTANTS)
   {
     if (IS_OBJ(constant)) wrenPushRoot(compiler->parser->vm, AS_OBJ(constant));
@@ -476,6 +476,14 @@ static char nextChar(Parser* parser)
   return c;
 }
 
+// If the current character is [c], consumes it and returns `true`.
+static bool matchChar(Parser* parser, char c)
+{
+  if (peekChar(parser) != c) return false;
+  nextChar(parser);
+  return true;
+}
+
 // Sets the parser's current token to the given [type] and current character
 // range.
 static void makeToken(Parser* parser, TokenType type)
@@ -493,14 +501,7 @@ static void makeToken(Parser* parser, TokenType type)
 // [two]. Otherwise makes a token of type [one].
 static void twoCharToken(Parser* parser, char c, TokenType two, TokenType one)
 {
-  if (peekChar(parser) == c)
-  {
-    nextChar(parser);
-    makeToken(parser, two);
-    return;
-  }
-
-  makeToken(parser, one);
+  makeToken(parser, matchChar(parser, c) ? two : one);
 }
 
 // Skips the rest of the current line.
@@ -515,8 +516,6 @@ static void skipLineComment(Parser* parser)
 // Skips the rest of a block comment.
 static void skipBlockComment(Parser* parser)
 {
-  nextChar(parser); // The opening "*".
-
   int nesting = 1;
   while (nesting > 0)
   {
@@ -578,13 +577,13 @@ static void makeNumber(Parser* parser, bool isHex)
 
   // We don't check that the entire token is consumed because we've already
   // scanned it ourselves and know it's valid.
-  parser->number = isHex ? strtol(parser->tokenStart, NULL, 16)
-                         : strtod(parser->tokenStart, NULL);
+  parser->value = NUM_VAL(isHex ? strtol(parser->tokenStart, NULL, 16)
+                                : strtod(parser->tokenStart, NULL));
 
   if (errno == ERANGE)
   {
     lexError(parser, "Number literal was too large.");
-    parser->number = 0;
+    parser->value = NUM_VAL(0);
   }
 
   makeToken(parser, TOKEN_NUMBER);
@@ -605,7 +604,6 @@ static void readHexNumber(Parser* parser)
 // Finishes lexing a number literal.
 static void readNumber(Parser* parser)
 {
-  // TODO: scientific, etc.
   while (isDigit(peekChar(parser))) nextChar(parser);
 
   // See if it has a floating point. Make sure there is a digit after the "."
@@ -613,6 +611,20 @@ static void readNumber(Parser* parser)
   if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
   {
     nextChar(parser);
+    while (isDigit(peekChar(parser))) nextChar(parser);
+  }
+  
+  // See if the number is in scientific notation.
+  if (matchChar(parser, 'e') || matchChar(parser, 'E'))
+  {
+    // Allow a negative exponent.
+    matchChar(parser, '-');
+    
+    if (!isDigit(peekChar(parser)))
+    {
+      lexError(parser, "Unterminated scientific notation.");
+    }
+    
     while (isDigit(peekChar(parser))) nextChar(parser);
   }
 
@@ -650,12 +662,6 @@ static void readName(Parser* parser, TokenType type)
   makeToken(parser, type);
 }
 
-// Adds [c] to the current string literal being tokenized.
-static void addStringChar(Parser* parser, char c)
-{
-  wrenByteBufferWrite(parser->vm, &parser->string, c);
-}
-
 // Reads [digits] hex digits in a string literal and returns their number value.
 static int readHexEscape(Parser* parser, int digits, const char* description)
 {
@@ -686,7 +692,7 @@ static int readHexEscape(Parser* parser, int digits, const char* description)
 }
 
 // Reads a four hex digit Unicode escape sequence in a string literal.
-static void readUnicodeEscape(Parser* parser)
+static void readUnicodeEscape(Parser* parser, ByteBuffer* string)
 {
   int value = readHexEscape(parser, 4, "Unicode");
 
@@ -694,16 +700,16 @@ static void readUnicodeEscape(Parser* parser)
   int numBytes = wrenUtf8NumBytes(value);
   if (numBytes != 0)
   {
-    wrenByteBufferFill(parser->vm, &parser->string, 0, numBytes);
-    wrenUtf8Encode(value,
-                   parser->string.data + parser->string.count - numBytes);
+    wrenByteBufferFill(parser->vm, string, 0, numBytes);
+    wrenUtf8Encode(value, string->data + string->count - numBytes);
   }
 }
 
 // Finishes lexing a string literal.
 static void readString(Parser* parser)
 {
-  wrenByteBufferClear(parser->vm, &parser->string);
+  ByteBuffer string;
+  wrenByteBufferInit(&string);
 
   for (;;)
   {
@@ -724,20 +730,21 @@ static void readString(Parser* parser)
     {
       switch (nextChar(parser))
       {
-        case '"':  addStringChar(parser, '"'); break;
-        case '\\': addStringChar(parser, '\\'); break;
-        case '0':  addStringChar(parser, '\0'); break;
-        case 'a':  addStringChar(parser, '\a'); break;
-        case 'b':  addStringChar(parser, '\b'); break;
-        case 'f':  addStringChar(parser, '\f'); break;
-        case 'n':  addStringChar(parser, '\n'); break;
-        case 'r':  addStringChar(parser, '\r'); break;
-        case 't':  addStringChar(parser, '\t'); break;
-        case 'u':  readUnicodeEscape(parser); break;
+        case '"':  wrenByteBufferWrite(parser->vm, &string, '"'); break;
+        case '\\': wrenByteBufferWrite(parser->vm, &string, '\\'); break;
+        case '0':  wrenByteBufferWrite(parser->vm, &string, '\0'); break;
+        case 'a':  wrenByteBufferWrite(parser->vm, &string, '\a'); break;
+        case 'b':  wrenByteBufferWrite(parser->vm, &string, '\b'); break;
+        case 'f':  wrenByteBufferWrite(parser->vm, &string, '\f'); break;
+        case 'n':  wrenByteBufferWrite(parser->vm, &string, '\n'); break;
+        case 'r':  wrenByteBufferWrite(parser->vm, &string, '\r'); break;
+        case 't':  wrenByteBufferWrite(parser->vm, &string, '\t'); break;
+        case 'u':  readUnicodeEscape(parser, &string); break;
           // TODO: 'U' for 8 octet Unicode escapes.
-        case 'v':  addStringChar(parser, '\v'); break;
+        case 'v':  wrenByteBufferWrite(parser->vm, &string, '\v'); break;
         case 'x':
-          addStringChar(parser, (uint8_t)readHexEscape(parser, 2, "byte"));
+          wrenByteBufferWrite(parser->vm, &string,
+                              (uint8_t)readHexEscape(parser, 2, "byte"));
           break;
 
         default:
@@ -748,10 +755,12 @@ static void readString(Parser* parser)
     }
     else
     {
-      addStringChar(parser, c);
+      wrenByteBufferWrite(parser->vm, &string, c);
     }
   }
 
+  parser->value = wrenNewString(parser->vm, (char*)string.data, string.count);
+  wrenByteBufferClear(parser->vm, &string);
   makeToken(parser, TOKEN_STRING);
 }
 
@@ -779,38 +788,38 @@ static void nextToken(Parser* parser)
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
       case ':': makeToken(parser, TOKEN_COLON); return;
-      case '.':
-        if (peekChar(parser) == '.')
-        {
-          nextChar(parser);
-          if (peekChar(parser) == '.')
-          {
-            nextChar(parser);
-            makeToken(parser, TOKEN_DOTDOTDOT);
-            return;
-          }
-
-          makeToken(parser, TOKEN_DOTDOT);
-          return;
-        }
-
-        makeToken(parser, TOKEN_DOT);
-        return;
-
       case ',': makeToken(parser, TOKEN_COMMA); return;
       case '*': makeToken(parser, TOKEN_STAR); return;
       case '%': makeToken(parser, TOKEN_PERCENT); return;
+      case '^': makeToken(parser, TOKEN_CARET); return;
       case '+': makeToken(parser, TOKEN_PLUS); return;
+      case '-': makeToken(parser, TOKEN_MINUS); return;
       case '~': makeToken(parser, TOKEN_TILDE); return;
       case '?': makeToken(parser, TOKEN_QUESTION); return;
+        
+      case '|': twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE); return;
+      case '&': twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP); return;
+      case '=': twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ); return;
+      case '!': twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG); return;
+        
+      case '.':
+        if (matchChar(parser, '.'))
+        {
+          twoCharToken(parser, '.', TOKEN_DOTDOTDOT, TOKEN_DOTDOT);
+          return;
+        }
+        
+        makeToken(parser, TOKEN_DOT);
+        return;
+        
       case '/':
-        if (peekChar(parser) == '/')
+        if (matchChar(parser, '/'))
         {
           skipLineComment(parser);
           break;
         }
 
-        if (peekChar(parser) == '*')
+        if (matchChar(parser, '*'))
         {
           skipBlockComment(parser);
           break;
@@ -819,30 +828,9 @@ static void nextToken(Parser* parser)
         makeToken(parser, TOKEN_SLASH);
         return;
 
-      case '-':
-        makeToken(parser, TOKEN_MINUS);
-        return;
-
-      case '|':
-        twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE);
-        return;
-
-      case '&':
-        twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP);
-        return;
-
-      case '^':
-        makeToken(parser, TOKEN_CARET);
-        return;
-
-      case '=':
-        twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ);
-        return;
-
       case '<':
-        if (peekChar(parser) == '<')
+        if (matchChar(parser, '<'))
         {
-          nextChar(parser);
           makeToken(parser, TOKEN_LTLT);
         }
         else
@@ -852,19 +840,14 @@ static void nextToken(Parser* parser)
         return;
 
       case '>':
-        if (peekChar(parser) == '>')
+        if (matchChar(parser, '>'))
         {
-          nextChar(parser);
           makeToken(parser, TOKEN_GTGT);
         }
         else
         {
           twoCharToken(parser, '=', TOKEN_GTEQ, TOKEN_GT);
         }
-        return;
-
-      case '!':
-        twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG);
         return;
 
       case '\n':
@@ -974,9 +957,7 @@ static bool matchLine(Compiler* compiler)
   return true;
 }
 
-// Consumes the current token if its type is [expected]. Returns true if a
-// token was consumed. Since [expected] is known to be in the middle of an
-// expression, any newlines following it are consumed and discarded.
+// Discards any newlines starting at the current token.
 static void ignoreNewlines(Compiler* compiler)
 {
   matchLine(compiler);
@@ -1037,9 +1018,19 @@ static int emitJump(Compiler* compiler, Code instruction)
   return emit(compiler, 0xff) - 1;
 }
 
+// Creates a new constant for the current value and emits the bytecode to load
+// it from the constant table.
+static void emitConstant(Compiler* compiler)
+{
+  int constant = addConstant(compiler, compiler->parser->value);
+  
+  // Compile the code to load the constant.
+  emitShortArg(compiler, CODE_CONSTANT, constant);
+}
+
 // Create a new local variable with [name]. Assumes the current scope is local
 // and the name is unique.
-static int defineLocal(Compiler* compiler, const char* name, int length)
+static int addLocal(Compiler* compiler, const char* name, int length)
 {
   Local* local = &compiler->locals[compiler->numLocals];
   local->name = name;
@@ -1105,7 +1096,7 @@ static int declareVariable(Compiler* compiler, Token* token)
     return -1;
   }
 
-  return defineLocal(compiler, token->start, token->length);
+  return addLocal(compiler, token->start, token->length);
 }
 
 // Parses a name token and declares a variable in the current scope with that
@@ -1595,7 +1586,7 @@ static void signatureToString(Signature* signature,
       break;
       
     case SIG_INITIALIZER:
-      memcpy(name, "this ", 5);
+      memcpy(name, "init ", 5);
       memcpy(name + 5, signature->name, signature->length);
       *length = 5 + signature->length;
       signatureParameterList(name, length, signature->arity, '(', ')');
@@ -1671,8 +1662,7 @@ static void callSignature(Compiler* compiler, Code instruction,
     // superclass in a constant. So, here, we create a slot in the constant
     // table and store NULL in it. When the method is bound, we'll look up the
     // superclass then and store it in the constant slot.
-    int constant = addConstant(compiler, NULL_VAL);
-    emitShort(compiler, constant);
+    emitShort(compiler, addConstant(compiler, NULL_VAL));
   }
 }
 
@@ -1938,6 +1928,10 @@ static void field(Compiler* compiler, bool allowAssignment)
   {
     error(compiler, "Cannot reference a field outside of a class definition.");
   }
+  else if (enclosingClass->isForeign)
+  {
+    error(compiler, "Cannot define fields in a foreign class.");
+  }
   else if (enclosingClass->inStatic)
   {
     error(compiler, "Cannot use an instance field in a static method.");
@@ -2128,32 +2122,10 @@ static void null(Compiler* compiler, bool allowAssignment)
   emit(compiler, CODE_NULL);
 }
 
-static void number(Compiler* compiler, bool allowAssignment)
+// A number or string literal.
+static void literal(Compiler* compiler, bool allowAssignment)
 {
-  int constant = addConstant(compiler, NUM_VAL(compiler->parser->number));
-
-  // Compile the code to load the constant.
-  emitShortArg(compiler, CODE_CONSTANT, constant);
-}
-
-// Parses a string literal and adds it to the constant table.
-static int stringConstant(Compiler* compiler)
-{
-  // Define a constant for the literal.
-  int constant = addConstant(compiler, wrenNewString(compiler->parser->vm,
-      (char*)compiler->parser->string.data, compiler->parser->string.count));
-
-  wrenByteBufferClear(compiler->parser->vm, &compiler->parser->string);
-
-  return constant;
-}
-
-static void string(Compiler* compiler, bool allowAssignment)
-{
-  int constant = stringConstant(compiler);
-
-  // Compile the code to load the constant.
-  emitShortArg(compiler, CODE_CONSTANT, constant);
+  emitConstant(compiler);
 }
 
 static void super_(Compiler* compiler, bool allowAssignment)
@@ -2409,7 +2381,7 @@ void namedSignature(Compiler* compiler, Signature* signature)
 // Compiles a method signature for a constructor.
 void constructorSignature(Compiler* compiler, Signature* signature)
 {
-  consume(compiler, TOKEN_NAME, "Expect constructor name after 'this'.");
+  consume(compiler, TOKEN_NAME, "Expect constructor name after 'construct'.");
   
   // Capture the name.
   *signature = signatureFromToken(compiler, SIG_INITIALIZER);
@@ -2500,8 +2472,8 @@ GrammarRule rules[] =
   /* TOKEN_FIELD         */ PREFIX(field),
   /* TOKEN_STATIC_FIELD  */ PREFIX(staticField),
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
-  /* TOKEN_NUMBER        */ PREFIX(number),
-  /* TOKEN_STRING        */ PREFIX(string),
+  /* TOKEN_NUMBER        */ PREFIX(literal),
+  /* TOKEN_STRING        */ PREFIX(literal),
   /* TOKEN_LINE          */ UNUSED,
   /* TOKEN_ERROR         */ UNUSED,
   /* TOKEN_EOF           */ UNUSED
@@ -2591,6 +2563,8 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_LOAD_LOCAL_7:
     case CODE_LOAD_LOCAL_8:
     case CODE_CONSTRUCT:
+    case CODE_FOREIGN_CONSTRUCT:
+    case CODE_FOREIGN_CLASS:
       return 0;
 
     case CODE_LOAD_LOCAL:
@@ -2773,11 +2747,11 @@ static void forStatement(Compiler* compiler)
   // The space in the variable name ensures it won't collide with a user-defined
   // variable.
   expression(compiler);
-  int seqSlot = defineLocal(compiler, "seq ", 4);
+  int seqSlot = addLocal(compiler, "seq ", 4);
 
   // Create another hidden local for the iterator object.
   null(compiler, false);
-  int iterSlot = defineLocal(compiler, "iter ", 5);
+  int iterSlot = addLocal(compiler, "iter ", 5);
 
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
 
@@ -2805,7 +2779,7 @@ static void forStatement(Compiler* compiler)
   // Bind the loop variable in its own scope. This ensures we get a fresh
   // variable each iteration so that closures for it don't all see the same one.
   pushScope(compiler);
-  defineLocal(compiler, name, length);
+  addLocal(compiler, name, length);
 
   loopBody(compiler);
 
@@ -2945,7 +2919,8 @@ static void createConstructor(Compiler* compiler, Signature* signature,
   initCompiler(&methodCompiler, compiler->parser, compiler, false);
   
   // Allocate the instance.
-  emit(&methodCompiler, CODE_CONSTRUCT);
+  emit(&methodCompiler, compiler->enclosingClass->isForeign
+       ? CODE_FOREIGN_CONSTRUCT : CODE_CONSTRUCT);
   
   // Run its initializer.
   emitShortArg(&methodCompiler, (Code)(CODE_CALL_0 + signature->arity),
@@ -3027,9 +3002,9 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   if (isForeign)
   {
     // Define a constant for the signature.
-    int constant = addConstant(compiler, wrenNewString(compiler->parser->vm,
-                                                       fullSignature, length));
-    emitShortArg(compiler, CODE_CONSTANT, constant);
+    compiler->parser->value = wrenNewString(compiler->parser->vm,
+                                            fullSignature, length);
+    emitConstant(compiler);
 
     // We don't need the function we started compiling in the parameter list
     // any more.
@@ -3039,7 +3014,6 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   {
     consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
     finishBody(&methodCompiler, signature.type == SIG_INITIALIZER);
-
     endCompiler(&methodCompiler, fullSignature, length);
   }
   
@@ -3066,13 +3040,12 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
 
 // Defines a default "new()" constructor on the current class.
 //
-// It just invokes "this new()" on the instance. If a base class defines that,
+// It just invokes "init new()" on the instance. If a base class defines that,
 // it will get invoked. Otherwise, it falls to the default one in Object which
 // does nothing.
 static void createDefaultConstructor(Compiler* compiler, int classSlot)
 {
   Signature signature = { "new", 3, SIG_INITIALIZER, 0 };
-  
   int initializerSymbol = signatureSymbol(compiler, &signature);
   
   signature.type = SIG_METHOD;
@@ -3083,17 +3056,16 @@ static void createDefaultConstructor(Compiler* compiler, int classSlot)
 }
 
 // Compiles a class definition. Assumes the "class" token has already been
-// consumed.
-static void classDefinition(Compiler* compiler)
+// consumed (along with a possibly preceding "foreign" token).
+static void classDefinition(Compiler* compiler, bool isForeign)
 {
   // Create a variable to store the class in.
   int slot = declareNamedVariable(compiler);
 
   // Make a string constant for the name.
-  int nameConstant = addConstant(compiler, wrenNewString(compiler->parser->vm,
-      compiler->parser->previous.start, compiler->parser->previous.length));
-
-  emitShortArg(compiler, CODE_CONSTANT, nameConstant);
+  compiler->parser->value = wrenNewString(compiler->parser->vm,
+      compiler->parser->previous.start, compiler->parser->previous.length);
+  emitConstant(compiler);
 
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
@@ -3109,7 +3081,15 @@ static void classDefinition(Compiler* compiler)
   // Store a placeholder for the number of fields argument. We don't know
   // the value until we've compiled all the methods to see which fields are
   // used.
-  int numFieldsInstruction = emitByteArg(compiler, CODE_CLASS, 255);
+  int numFieldsInstruction = -1;
+  if (isForeign)
+  {
+    emit(compiler, CODE_FOREIGN_CLASS);
+  }
+  else
+  {
+    numFieldsInstruction = emitByteArg(compiler, CODE_CLASS, 255);
+  }
 
   // Store it in its name.
   defineVariable(compiler, slot);
@@ -3120,6 +3100,7 @@ static void classDefinition(Compiler* compiler)
   pushScope(compiler);
 
   ClassCompiler classCompiler;
+  classCompiler.isForeign = isForeign;
 
   // Set up a symbol table for the class's fields. We'll initially compile
   // them to slots starting at zero. When the method is bound to the class, the
@@ -3155,7 +3136,11 @@ static void classDefinition(Compiler* compiler)
   }
 
   // Update the class with the number of fields.
-  compiler->bytecode.data[numFieldsInstruction] = (uint8_t)fields.count;
+  if (!isForeign)
+  {
+    compiler->bytecode.data[numFieldsInstruction] = (uint8_t)fields.count;
+  }
+  
   wrenSymbolTableClear(compiler->parser->vm, &fields);
 
   compiler->enclosingClass = NULL;
@@ -3163,10 +3148,11 @@ static void classDefinition(Compiler* compiler)
   popScope(compiler);
 }
 
+// Compiles an "import" statement.
 static void import(Compiler* compiler)
 {
   consume(compiler, TOKEN_STRING, "Expect a string after 'import'.");
-  int moduleConstant = stringConstant(compiler);
+  int moduleConstant = addConstant(compiler, compiler->parser->value);
 
   // Load the module.
   emitShortArg(compiler, CODE_LOAD_MODULE, moduleConstant);
@@ -3197,6 +3183,7 @@ static void import(Compiler* compiler)
   } while (match(compiler, TOKEN_COMMA));
 }
 
+// Compiles a "var" variable definition statement.
 static void variableDefinition(Compiler* compiler)
 {
   // Grab its name, but don't declare it yet. A (local) variable shouldn't be
@@ -3227,23 +3214,25 @@ void definition(Compiler* compiler)
 {
   if (match(compiler, TOKEN_CLASS))
   {
-    classDefinition(compiler);
-    return;
+    classDefinition(compiler, false);
   }
-
-  if (match(compiler, TOKEN_IMPORT))
+  else if (match(compiler, TOKEN_FOREIGN))
+  {
+    consume(compiler, TOKEN_CLASS, "Expect 'class' after 'foreign'.");
+    classDefinition(compiler, true);
+  }
+  else if (match(compiler, TOKEN_IMPORT))
   {
     import(compiler);
-    return;
   }
-
-  if (match(compiler, TOKEN_VAR))
+  else if (match(compiler, TOKEN_VAR))
   {
     variableDefinition(compiler);
-    return;
   }
-
-  block(compiler);
+  else
+  {
+    block(compiler);
+  }
 }
 
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
@@ -3257,6 +3246,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
   parser.module = module;
   parser.sourcePath = AS_STRING(sourcePathValue);
   parser.source = source;
+  parser.value = UNDEFINED_VAL;
 
   parser.tokenStart = source;
   parser.currentChar = source;
@@ -3273,8 +3263,6 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
   parser.skipNewlines = true;
   parser.printErrors = printErrors;
   parser.hasError = false;
-
-  wrenByteBufferInit(&parser.string);
 
   // Read the first token.
   nextToken(&parser);
@@ -3384,6 +3372,7 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 {
   wrenMarkObj(vm, (Obj*)compiler->parser->sourcePath);
+  wrenMarkValue(vm, compiler->parser->value);
 
   // Walk up the parent chain to mark the outer compilers too. The VM only
   // tracks the innermost one.

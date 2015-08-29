@@ -10,46 +10,59 @@
 // The single VM instance that the CLI uses.
 WrenVM* vm;
 
-WrenBindForeignMethodFn externalBindForeign;
+static WrenBindForeignMethodFn bindMethodFn = NULL;
+static WrenBindForeignClassFn bindClassFn = NULL;
 
 uv_loop_t* loop;
 
-static WrenForeignMethodFn bindForeignMethod(WrenVM* vm,
-                                             const char* module,
-                                             const char* className,
-                                             bool isStatic,
-                                             const char* signature)
+/// Binds foreign methods declared in either built in modules, or the injected
+/// API test modules.
+static WrenForeignMethodFn bindForeignMethod(WrenVM* vm, const char* module,
+    const char* className, bool isStatic, const char* signature)
 {
   if (strcmp(module, "timer") == 0)
   {
     return timerBindForeign(vm, className, isStatic, signature);
   }
-  
-  if (externalBindForeign != NULL)
+
+  if (bindMethodFn != NULL)
   {
-    return externalBindForeign(vm, module, className, isStatic, signature);
+    return bindMethodFn(vm, module, className, isStatic, signature);
   }
-  
+
   return NULL;
+}
+
+/// Binds foreign classes declared in either built in modules, or the injected
+/// API test modules.
+static WrenForeignClassMethods bindForeignClass(
+    WrenVM* vm, const char* module, const char* className)
+{
+  WrenForeignClassMethods methods = { NULL, NULL };
+
+  // TODO: Bind classes for built-in modules here.
+
+  if (bindClassFn != NULL)
+  {
+    return bindClassFn(vm, module, className);
+  }
+
+  return methods;
 }
 
 static void initVM()
 {
   WrenConfiguration config;
+  wrenInitConfiguration(&config);
 
   config.bindForeignMethodFn = bindForeignMethod;
+  config.bindForeignClassFn = bindForeignClass;
   config.loadModuleFn = readModule;
 
   // Since we're running in a standalone process, be generous with memory.
   config.initialHeapSize = 1024 * 1024 * 100;
-
-  // Use defaults for these.
-  config.reallocateFn = NULL;
-  config.minHeapSize = 0;
-  config.heapGrowthPercent = 0;
-  
   vm = wrenNewVM(&config);
-  
+
   // Initialize the event loop.
   loop = (uv_loop_t*)malloc(sizeof(uv_loop_t));
   uv_loop_init(loop);
@@ -58,17 +71,15 @@ static void initVM()
 static void freeVM()
 {
   timerReleaseMethods();
-  
+
   uv_loop_close(loop);
   free(loop);
 
   wrenFreeVM(vm);
 }
 
-void runFile(const char* path, WrenBindForeignMethodFn bindForeign)
+void runFile(const char* path)
 {
-  externalBindForeign = bindForeign;
-  
   // Use the directory where the file is as the root to resolve imports
   // relative to.
   char* root = NULL;
@@ -87,18 +98,18 @@ void runFile(const char* path, WrenBindForeignMethodFn bindForeign)
     fprintf(stderr, "Could not find file \"%s\".\n", path);
     exit(66);
   }
-  
+
   initVM();
-  
+
   WrenInterpretResult result = wrenInterpret(vm, path, source);
-  
+
   if (result == WREN_RESULT_SUCCESS)
   {
     uv_run(loop, UV_RUN_DEFAULT);
   }
 
   freeVM();
-  
+
   free(source);
   free(root);
 
@@ -110,30 +121,30 @@ void runFile(const char* path, WrenBindForeignMethodFn bindForeign)
 int runRepl()
 {
   initVM();
-  
+
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v0.0.0\n");
-  
+
   char line[MAX_LINE_LENGTH];
-  
+
   for (;;)
   {
     printf("> ");
-    
+
     if (!fgets(line, MAX_LINE_LENGTH, stdin))
     {
       printf("\n");
       break;
     }
-    
+
     // TODO: Handle failure.
     wrenInterpret(vm, "Prompt", line);
-    
+
     // TODO: Automatically print the result of expressions.
   }
-  
+
   freeVM();
-  
+
   return 0;
 }
 
@@ -145,4 +156,11 @@ WrenVM* getVM()
 uv_loop_t* getLoop()
 {
   return loop;
+}
+
+void setForeignCallbacks(
+    WrenBindForeignMethodFn bindMethod, WrenBindForeignClassFn bindClass)
+{
+  bindMethodFn = bindMethod;
+  bindClassFn = bindClass;
 }

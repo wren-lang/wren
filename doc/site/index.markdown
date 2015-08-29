@@ -20,7 +20,7 @@ a familiar, modern [syntax][].
 
     while (!adjectives.isDone) IO.print(adjectives.call())
 
- *  **Wren is small.** The codebase is about [5,000 lines][src]. You can
+ *  **Wren is small.** The codebase is about [7,000 lines][src]. You can
     skim the whole thing in an afternoon. It's *small*, but not *dense*. It
     is readable and [lovingly-commented][nan].
 

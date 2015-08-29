@@ -51,6 +51,7 @@
 #define AS_CLOSURE(value)   ((ObjClosure*)AS_OBJ(value))        // ObjClosure*
 #define AS_FIBER(v)         ((ObjFiber*)AS_OBJ(v))              // ObjFiber*
 #define AS_FN(value)        ((ObjFn*)AS_OBJ(value))             // ObjFn*
+#define AS_FOREIGN(v)       ((ObjForeign*)AS_OBJ(v))            // ObjForeign*
 #define AS_INSTANCE(value)  ((ObjInstance*)AS_OBJ(value))       // ObjInstance*
 #define AS_LIST(value)      ((ObjList*)AS_OBJ(value))           // ObjList*
 #define AS_MAP(value)       ((ObjMap*)AS_OBJ(value))            // ObjMap*
@@ -74,6 +75,7 @@
 #define IS_CLOSURE(value) (wrenIsObjType(value, OBJ_CLOSURE))   // ObjClosure
 #define IS_FIBER(value) (wrenIsObjType(value, OBJ_FIBER))       // ObjFiber
 #define IS_FN(value) (wrenIsObjType(value, OBJ_FN))             // ObjFn
+#define IS_FOREIGN(value) (wrenIsObjType(value, OBJ_FOREIGN))   // ObjForeign
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
@@ -89,6 +91,7 @@ typedef enum {
   OBJ_CLOSURE,
   OBJ_FIBER,
   OBJ_FN,
+  OBJ_FOREIGN,
   OBJ_INSTANCE,
   OBJ_LIST,
   OBJ_MAP,
@@ -400,6 +403,12 @@ struct sObjClass
 typedef struct
 {
   Obj obj;
+  uint8_t data[FLEXIBLE_ARRAY];
+} ObjForeign;
+
+typedef struct
+{
+  Obj obj;
   Value fields[FLEXIBLE_ARRAY];
 } ObjInstance;
 
@@ -651,6 +660,8 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
   frame->fn = function;
   frame->ip = wrenGetFrameFunction(frame)->bytecode;
 }
+
+ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
 // TODO: The argument list here is getting a bit gratuitous.
 // Creates a new function object with the given code and constants. The new

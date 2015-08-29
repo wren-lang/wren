@@ -37,6 +37,17 @@ static void* defaultReallocate(void* ptr, size_t newSize)
   return realloc(ptr, newSize);
 }
 
+void wrenInitConfiguration(WrenConfiguration* configuration)
+{
+  configuration->reallocateFn = NULL;
+  configuration->loadModuleFn = NULL;
+  configuration->bindForeignMethodFn = NULL;
+  configuration->bindForeignClassFn = NULL;
+  configuration->initialHeapSize = 1024 * 1024 * 10;
+  configuration->minHeapSize = 1024 * 1024;
+  configuration->heapGrowthPercent = 50;
+}
+
 WrenVM* wrenNewVM(WrenConfiguration* configuration)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -49,31 +60,18 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration)
   memset(vm, 0, sizeof(WrenVM));
 
   vm->reallocate = reallocate;
-  vm->bindForeign = configuration->bindForeignMethodFn;
+  vm->bindForeignMethod = configuration->bindForeignMethodFn;
+  vm->bindForeignClass = configuration->bindForeignClassFn;
   vm->loadModule = configuration->loadModuleFn;
+  vm->nextGC = configuration->initialHeapSize;
+  vm->minNextGC = configuration->minHeapSize;
 
+  // +100 here because the configuration gives us the *additional* size of
+  // the heap relative to the in-use memory, while heapScalePercent is the
+  // *total* size of the heap relative to in-use.
+  vm->heapScalePercent = 100 + configuration->heapGrowthPercent;
+  
   wrenSymbolTableInit(&vm->methodNames);
-
-  vm->nextGC = 1024 * 1024 * 10;
-  if (configuration->initialHeapSize != 0)
-  {
-    vm->nextGC = configuration->initialHeapSize;
-  }
-
-  vm->minNextGC = 1024 * 1024;
-  if (configuration->minHeapSize != 0)
-  {
-    vm->minNextGC = configuration->minHeapSize;
-  }
-
-  vm->heapScalePercent = 150;
-  if (configuration->heapGrowthPercent != 0)
-  {
-    // +100 here because the configuration gives us the *additional* size of
-    // the heap relative to the in-use memory, while heapScalePercent is the
-    // *total* size of the heap relative to in-use.
-    vm->heapScalePercent = 100 + configuration->heapGrowthPercent;
-  }
 
   ObjString* name = AS_STRING(CONST_STRING(vm, "core"));
   wrenPushRoot(vm, (Obj*)name);
@@ -311,24 +309,21 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
 {
   WrenForeignMethodFn fn;
 
-  // Let the host try to find it first.
-  if (vm->bindForeign != NULL)
-  {
-    fn = vm->bindForeign(vm, moduleName, className, isStatic, signature);
-    if (fn != NULL) return fn;
-  }
-
-  // Otherwise, try the built-in libraries.
+  // Bind foreign methods in the core module.
   if (strcmp(moduleName, "core") == 0)
   {
     #if WREN_USE_LIB_IO
     fn = wrenBindIOForeignMethod(vm, className, signature);
-    if (fn != NULL) return fn;
     #endif
+    
+    ASSERT(fn != NULL, "Failed to bind core module foreign method.");
+    return fn;
   }
 
-  // TODO: Report a runtime error on failure to find it.
-  return NULL;
+  // For other modules, let the host bind it.
+  if (vm->bindForeignMethod == NULL) return NULL;
+
+  return vm->bindForeignMethod(vm, moduleName, className, isStatic, signature);
 }
 
 // Defines [methodValue] as a method on [classObj].
@@ -546,18 +541,23 @@ static bool importVariable(WrenVM* vm, Value moduleName, Value variableName,
   return false;
 }
 
-// Verifies that [superclass] is a valid object to inherit from. That means it
-// must be a class and cannot be the class of any built-in type.
+// Verifies that [superclassValue] is a valid object to inherit from. That
+// means it must be a class and cannot be the class of any built-in type.
 //
-// If successful, returns null. Otherwise, returns a string for the runtime
+// Also validates that it doesn't result in a class with too many fields and
+// the other limitations foreign classes have.
+//
+// If successful, returns `null`. Otherwise, returns a string for the runtime
 // error message.
-static Value validateSuperclass(WrenVM* vm, Value name,
-                                     Value superclassValue)
+static Value validateSuperclass(WrenVM* vm, Value name, Value superclassValue,
+                                int numFields)
 {
   // Make sure the superclass is a class.
   if (!IS_CLASS(superclassValue))
   {
-    return CONST_STRING(vm, "Must inherit from a class.");
+    return wrenStringFormat(vm,
+        "Class '@' cannot inherit from a non-class object.",
+        name);
   }
 
   // Make sure it doesn't inherit from a sealed built-in type. Primitive methods
@@ -572,11 +572,123 @@ static Value validateSuperclass(WrenVM* vm, Value name,
       superclass == vm->rangeClass ||
       superclass == vm->stringClass)
   {
-    return wrenStringFormat(vm, "@ cannot inherit from @.",
+    return wrenStringFormat(vm,
+        "Class '@' cannot inherit from built-in class '@'.",
+        name, OBJ_VAL(superclass->name));
+  }
+  
+  if (superclass->numFields == -1)
+  {
+    return wrenStringFormat(vm,
+        "Class '@' cannot inherit from foreign class '@'.",
         name, OBJ_VAL(superclass->name));
   }
 
+  if (numFields == -1 && superclass->numFields > 0)
+  {
+    return wrenStringFormat(vm,
+        "Foreign class '@' may not inherit from a class with fields.",
+        name);
+  }
+  
+  if (superclass->numFields + numFields > MAX_FIELDS)
+  {
+    return wrenStringFormat(vm,
+        "Class '@' may not have more than 255 fields, including inherited "
+        "ones.", name);
+  }
+
   return NULL_VAL;
+}
+
+static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
+{
+  // TODO: Make this a runtime error?
+  ASSERT(vm->bindForeignClass != NULL,
+      "Cannot declare foreign classes without a bindForeignClassFn.");
+  
+  WrenForeignClassMethods methods = vm->bindForeignClass(
+      vm, module->name->value, classObj->name->value);
+  
+  Method method;
+  method.type = METHOD_FOREIGN;
+  method.fn.foreign = methods.allocate;
+  
+  ASSERT(method.fn.foreign != NULL,
+      "A foreign class must provide an allocate function.");
+  
+  int symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<allocate>", 10);
+  wrenBindMethod(vm, classObj, symbol, method);
+  
+  if (methods.finalize != NULL)
+  {
+    method.fn.foreign = methods.finalize;
+    symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<finalize>", 10);
+    wrenBindMethod(vm, classObj, symbol, method);
+  }
+}
+
+// Creates a new class.
+//
+// If [numFields] is -1, the class is a foreign class. The name and superclass
+// should be on top of the fiber's stack. After calling this, the top of the
+// stack will contain either the new class or a string if a runtime error
+// occurred.
+//
+// Returns false if the result is an error.
+static bool defineClass(WrenVM* vm, ObjFiber* fiber, int numFields,
+                        ObjModule* module)
+{
+  // Pull the name and superclass off the stack.
+  Value name = fiber->stackTop[-2];
+  Value superclassValue = fiber->stackTop[-1];
+  
+  // We have two values on the stack and we are going to leave one, so discard
+  // the other slot.
+  fiber->stackTop--;
+
+  // Use implicit Object superclass if none given.
+  ObjClass* superclass = vm->objectClass;
+  
+  if (!IS_NULL(superclassValue))
+  {
+    Value error = validateSuperclass(vm, name, superclassValue, numFields);
+    if (!IS_NULL(error))
+    {
+      fiber->stackTop[-1] = error;
+      return false;
+    }
+    superclass = AS_CLASS(superclassValue);
+  }
+  
+  ObjClass* classObj = wrenNewClass(vm, superclass, numFields, AS_STRING(name));
+  fiber->stackTop[-1] = OBJ_VAL(classObj);
+  
+  if (numFields == -1) bindForeignClass(vm, classObj, module);
+  
+  return true;
+}
+
+static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
+{
+  ObjClass* classObj = AS_CLASS(stack[0]);
+  ASSERT(classObj->numFields == -1, "Class must be a foreign class.");
+  
+  // TODO: Don't look up every time.
+  int symbol = wrenSymbolTableFind(&vm->methodNames, "<allocate>", 10);
+  ASSERT(symbol != -1, "Should have defined <allocate> symbol.");
+  
+  ASSERT(classObj->methods.count > symbol, "Class should have allocator.");
+  Method* method = &classObj->methods.data[symbol];
+  ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
+  
+  // Pass the constructor arguments to the allocator as well.
+  vm->foreignCallSlot = stack;
+  vm->foreignCallNumArgs = (int)(fiber->stackTop - stack);
+  
+  method->fn.foreign(vm);
+  
+  // TODO: Check that allocateForeign was called.
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
@@ -1022,6 +1134,11 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       stackStart[0] = wrenNewInstance(vm, AS_CLASS(stackStart[0]));
       DISPATCH();
     
+    CASE_CODE(FOREIGN_CONSTRUCT):
+      ASSERT(IS_CLASS(stackStart[0]), "'this' should be a class.");
+      createForeign(vm, fiber, stackStart);
+      DISPATCH();
+
     CASE_CODE(CLOSURE):
     {
       ObjFn* prototype = AS_FN(fn->constants[READ_SHORT()]);
@@ -1057,40 +1174,16 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(CLASS):
     {
-      Value name = PEEK2();
-      ObjClass* superclass = vm->objectClass;
-
-      // Use implicit Object superclass if none given.
-      if (!IS_NULL(PEEK()))
-      {
-        Value error = validateSuperclass(vm, name, PEEK());
-        if (!IS_NULL(error)) RUNTIME_ERROR(error);
-        superclass = AS_CLASS(PEEK());
-      }
-
-      int numFields = READ_BYTE();
-
-      Value classObj = OBJ_VAL(wrenNewClass(vm, superclass, numFields,
-                                            AS_STRING(name)));
-
-      // Don't pop the superclass and name off the stack until the subclass is
-      // done being created, to make sure it doesn't get collected.
-      DROP();
-      DROP();
-
-      // Now that we know the total number of fields, make sure we don't
-      // overflow.
-      if (superclass->numFields + numFields > MAX_FIELDS)
-      {
-        RUNTIME_ERROR(wrenStringFormat(vm,
-            "Class '@' may not have more than 255 fields, including inherited "
-            "ones.", name));
-      }
-
-      PUSH(classObj);
+      if (!defineClass(vm, fiber, READ_BYTE(), NULL)) RUNTIME_ERROR(PEEK());
       DISPATCH();
     }
-
+    
+    CASE_CODE(FOREIGN_CLASS):
+    {
+      if (!defineClass(vm, fiber, -1, fn->module)) RUNTIME_ERROR(PEEK());
+      DISPATCH();
+    }
+    
     CASE_CODE(METHOD_INSTANCE):
     CASE_CODE(METHOD_STATIC):
     {
@@ -1323,6 +1416,20 @@ void wrenReleaseValue(WrenVM* vm, WrenValue* value)
   DEALLOCATE(vm, value);
 }
 
+void* wrenAllocateForeign(WrenVM* vm, size_t size)
+{
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
+
+  // TODO: Validate this. It can fail if the user calls this inside another
+  // foreign method, or calls one of the return functions.
+  ObjClass* classObj = AS_CLASS(vm->foreignCallSlot[0]);
+
+  ObjForeign* foreign = wrenNewForeign(vm, classObj, size);
+  vm->foreignCallSlot[0] = OBJ_VAL(foreign);
+  
+  return (void*)foreign->data;
+}
+
 // Execute [source] in the context of the core module.
 static WrenInterpretResult loadIntoCore(WrenVM* vm, const char* source)
 {
@@ -1460,6 +1567,12 @@ void wrenPopRoot(WrenVM* vm)
   vm->numTempRoots--;
 }
 
+int wrenGetArgumentCount(WrenVM* vm)
+{
+  ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
+  return vm->foreignCallNumArgs;
+}
+
 static void validateForeignArgument(WrenVM* vm, int index)
 {
   ASSERT(vm->foreignCallSlot != NULL, "Must be in foreign call.");
@@ -1483,6 +1596,15 @@ double wrenGetArgumentDouble(WrenVM* vm, int index)
   if (!IS_NUM(*(vm->foreignCallSlot + index))) return 0.0;
 
   return AS_NUM(*(vm->foreignCallSlot + index));
+}
+
+void* wrenGetArgumentForeign(WrenVM* vm, int index)
+{
+  validateForeignArgument(vm, index);
+  
+  if (!IS_FOREIGN(*(vm->foreignCallSlot + index))) return NULL;
+  
+  return AS_FOREIGN(*(vm->foreignCallSlot + index))->data;
 }
 
 const char* wrenGetArgumentString(WrenVM* vm, int index)

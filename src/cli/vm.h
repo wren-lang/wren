@@ -6,9 +6,8 @@
 
 // Executes the Wren script at [path] in a new VM.
 //
-// If [bindForeign] is not `NULL`, it will be called to register any foreign
-// methods that the CLI itself doesn't handle.
-void runFile(const char* path, WrenBindForeignMethodFn bindForeign);
+// Exits if the script failed or could not be loaded.
+void runFile(const char* path);
 
 // Runs the Wren interactive REPL.
 int runRepl();
@@ -18,5 +17,12 @@ WrenVM* getVM();
 
 // Gets the event loop the VM is using.
 uv_loop_t* getLoop();
+
+// Adds additional callbacks to use when binding foreign members from Wren.
+//
+// Used by the API test executable to let it wire up its own foreign functions.
+// This must be called before calling [createVM()].
+void setForeignCallbacks(WrenBindForeignMethodFn bindMethod,
+                         WrenBindForeignClassFn bindClass);
 
 #endif

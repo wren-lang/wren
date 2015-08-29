@@ -12,14 +12,14 @@ int main(int argc, const char* argv[])
     fprintf(stderr, "Usage: wren [file]\n");
     return 64; // EX_USAGE.
   }
-  
+
   if (argc == 1)
   {
     runRepl();
   }
   else if (argc == 2)
   {
-    runFile(argv[1], NULL);
+    runFile(argv[1]);
   }
 
   return 0;

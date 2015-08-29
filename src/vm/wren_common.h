@@ -99,10 +99,10 @@
 //     foo()      // No-argument method.
 //     foo(_)     // One-argument method.
 //     foo(_,_)   // Two-argument method.
-//     this foo() // Constructor initializer.
+//     init foo() // Constructor initializer.
 //
 // The maximum signature length takes into account the longest method name, the
-// maximum number of parameters with separators between them, "this ", and "()".
+// maximum number of parameters with separators between them, "init ", and "()".
 #define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + (MAX_PARAMETERS * 2) + 6)
 
 // The maximum length of an identifier. The only real reason for this limitation

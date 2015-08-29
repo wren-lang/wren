@@ -14,6 +14,13 @@ from datetime import datetime
 import markdown
 
 
+# Match a "## " style header. We require a space after "#" to avoid
+# accidentally matching "#include" in code samples.
+MARKDOWN_HEADER = re.compile(r'#+ ')
+
+# Clean up a header to be a valid URL.
+FORMAT_ANCHOR = re.compile(r'\.|\?|!|:|/|\*')
+
 with codecs.open("doc/site/template.html", encoding="utf-8") as f:
   template = f.read()
 
@@ -70,13 +77,13 @@ def format_file(path, skip_up_to_date):
         else:
           print(' '.join(["UNKNOWN COMMAND:", command, args]))
 
-      elif stripped.startswith('#'):
+      elif MARKDOWN_HEADER.match(stripped):
         # Add anchors to the headers.
         index = stripped.find(" ")
         headertype = stripped[:index]
         header = stripped[index:].strip()
         anchor = header.lower().replace(' ', '-')
-        anchor = re.compile(r'\.|\?|!|:|/|\*').sub('', anchor)
+        anchor = FORMAT_ANCHOR.sub('', anchor)
 
         contents += indentation + headertype
         contents += '{1} <a href="#{0}" name="{0}" class="header-anchor">#</a>\n'.format(anchor, header)
