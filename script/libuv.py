@@ -93,7 +93,14 @@ def build_libuv_mac():
 
 
 def build_libuv_linux(arch):
-  run(["python", "gyp_uv.py", "-f", "make"], cwd=LIB_UV_DIR)
+  # Set up the Makefile to build for the right architecture.
+  args = ["python", "gyp_uv.py", "-f", "make"]
+  if arch == "-32":
+    args.append("-Dtarget_arch=ia32")
+  elif arch == "-64":
+    args.append("-Dtarget_arch=x64")
+
+  run(args, cwd=LIB_UV_DIR)
   run(["make", "-C", "out", "BUILDTYPE=Release"], cwd=LIB_UV_DIR)
 
 
