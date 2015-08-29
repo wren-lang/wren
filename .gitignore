@@ -5,6 +5,7 @@ wren
 
 # Intermediate files.
 build/
+deps/
 .sass-cache/
 
 # I leave a temporary Wren script at the top level so that I can quickly test

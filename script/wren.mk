@@ -60,12 +60,14 @@ ifeq ($(ARCH),32)
 	C_OPTIONS += -m32
 	WREN := $(WREN)-32
 	BUILD_DIR := $(BUILD_DIR)-32
+	LIBUV_ARCH := -32
 endif
 
 ifeq ($(ARCH),64)
 	C_OPTIONS += -m64
 	WREN := $(WREN)-64
 	BUILD_DIR := $(BUILD_DIR)-64
+	LIBUV_ARCH := -64
 endif
 
 # Some platform-specific workarounds. Note that we use "gcc" explicitly in the
@@ -107,8 +109,8 @@ MODULE_OBJECTS := $(addprefix $(BUILD_DIR)/module/, $(notdir $(MODULE_SOURCES:.c
 VM_OBJECTS     := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
 TEST_OBJECTS   := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES))
 
-LIBUV_DIR := build/libuv
-LIBUV     := $(LIBUV_DIR)/out/Release/libuv.a
+LIBUV_DIR := deps/libuv
+LIBUV     := build/libuv$(LIBUV_ARCH).a
 
 # Flags needed to compile source files for the CLI, including the modules and
 # API tests.
@@ -131,51 +133,61 @@ test: $(BUILD_DIR)/test/$(WREN)
 
 # Command-line interpreter.
 bin/$(WREN): $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) $(LIBUV)
-	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
-	@mkdir -p bin
-	@$(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
+	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
+	@ mkdir -p bin
+	@ $(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
 
 # Static library.
 lib/lib$(WREN).a: $(VM_OBJECTS)
-	@printf "%10s %-30s %s\n" $(AR) $@ "rcu"
-	@mkdir -p lib
-	@$(AR) rcu $@ $^
+	@ printf "%10s %-30s %s\n" $(AR) $@ "rcu"
+	@ mkdir -p lib
+	@ $(AR) rcu $@ $^
 
 # Shared library.
 lib/lib$(WREN).$(SHARED_EXT): $(VM_OBJECTS)
-	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS) $(SHARED_LIB_FLAGS)"
-	@mkdir -p lib
-	@$(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
+	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS) $(SHARED_LIB_FLAGS)"
+	@ mkdir -p lib
+	@ $(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
 
 # Test executable.
 $(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
 		$(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
-	@printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
-	@mkdir -p $(BUILD_DIR)/test
-	@$(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
+	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
+	@ mkdir -p $(BUILD_DIR)/test
+	@ $(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
 
 # CLI object files.
-$(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
-	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
-	@mkdir -p $(BUILD_DIR)/cli
-	@$(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
+$(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) \
+		$(VM_HEADERS) $(LIBUV)
+	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@ mkdir -p $(BUILD_DIR)/cli
+	@ $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
 # Module object files.
-$(BUILD_DIR)/module/%.o: src/module/%.c $(CLI_HEADERS) $(MODULE_HEADERS) $(VM_HEADERS)
-	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
-	@mkdir -p $(BUILD_DIR)/module
-	@$(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
+$(BUILD_DIR)/module/%.o: src/module/%.c $(CLI_HEADERS) $(MODULE_HEADERS) \
+		$(VM_HEADERS) $(LIBUV)
+	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@ mkdir -p $(BUILD_DIR)/module
+	@ $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
 # VM object files.
 $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
-	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
-	@mkdir -p $(BUILD_DIR)/vm
-	@$(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
+	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@ mkdir -p $(BUILD_DIR)/vm
+	@ $(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
 
 # Test object files.
-$(BUILD_DIR)/test/%.o: test/api/%.c $(MODULE_HEADERS) $(VM_HEADERS)
-	@printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
-	@mkdir -p $(dir $@)
-	@$(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
+$(BUILD_DIR)/test/%.o: test/api/%.c $(MODULE_HEADERS) $(VM_HEADERS) $(LIBUV)
+	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@ mkdir -p $(dir $@)
+	@ $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
+
+# Download libuv.
+$(LIBUV_DIR)/build/gyp/gyp: script/libuv.py
+	@ ./script/libuv.py download
+
+# Build libuv to a static library.
+$(LIBUV): $(LIBUV_DIR)/build/gyp/gyp script/libuv.py
+	@ ./script/libuv.py build $(LIBUV_ARCH)
 
 .PHONY: all cli test vm

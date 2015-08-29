@@ -708,4 +708,3 @@ for (i in 0...20) {
 
 IO.print(total)
 IO.print("elapsed: ", IO.clock - start)
-

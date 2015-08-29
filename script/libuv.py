@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 LIB_UV_VERSION = "v1.6.1"
-LIB_UV_DIR = "build/libuv"
+LIB_UV_DIR = "deps/libuv"
 
 def ensure_dir(dir):
   """Creates dir if not already there."""
@@ -21,6 +21,7 @@ def ensure_dir(dir):
     return
 
   os.makedirs(dir)
+
 
 def remove_dir(dir):
   """Recursively removes dir."""
@@ -31,10 +32,11 @@ def remove_dir(dir):
     subprocess.check_call(
         ['cmd', '/c', 'rd', '/s', '/q', dir.replace('/', '\\')])
   else:
-    shutil.rmtree(LIB_UV_DIR)
+    shutil.rmtree(dir)
+
 
 def download_libuv():
-  """Clones libuv into build/libuv and checks out the right version."""
+  """Clones libuv into deps/libuv and checks out the right version."""
 
   # Delete it if already there so we ensure we get the correct version if the
   # version number in this script changes.
@@ -42,7 +44,7 @@ def download_libuv():
     print("Cleaning output directory...")
     remove_dir(LIB_UV_DIR)
 
-  ensure_dir("build")
+  ensure_dir("deps")
 
   print("Cloning libuv...")
   run([
@@ -90,7 +92,7 @@ def build_libuv_mac():
   ])
 
 
-def build_libuv_linux():
+def build_libuv_linux(arch):
   run(["python", "gyp_uv.py", "-f", "make"], cwd=LIB_UV_DIR)
   run(["make", "-C", "out", "BUILDTYPE=Release"], cwd=LIB_UV_DIR)
 
@@ -99,16 +101,23 @@ def build_libuv_windows():
   run(["cmd", "/c", "vcbuild.bat", "release"], cwd=LIB_UV_DIR)
 
 
-def build_libuv():
+def build_libuv(arch, out):
   if platform.system() == "Darwin":
     build_libuv_mac()
   elif platform.system() == "Linux":
-    build_libuv_linux()
-  elif platform.system() == "Windows":
+    build_libuv_linux(arch)
+  elif platform.system(arch) == "Windows":
     build_libuv_windows()
   else:
     print("Unsupported platform: " + platform.system())
     sys.exit(1)
+
+  # Copy the build library to the build directory for Mac and Linux where we
+  # support building for multiple architectures.
+  if platform.system() != "Windows":
+    ensure_dir(os.path.dirname(out))
+    shutil.copyfile(
+      os.path.join(LIB_UV_DIR, "out", "Release", "libuv.a"), out)
 
 
 def run(args, cwd=None):
@@ -117,8 +126,29 @@ def run(args, cwd=None):
 
 
 def main():
-  download_libuv()
-  build_libuv()
+  expect_usage(len(sys.argv) >= 2)
+
+  if sys.argv[1] == "download":
+    download_libuv()
+  elif sys.argv[1] == "build":
+    expect_usage(len(sys.argv) <= 3)
+    arch = ""
+    if len(sys.argv) == 3:
+      arch = sys.argv[2]
+
+    out = os.path.join("build", "libuv" + arch + ".a")
+
+    build_libuv(arch, out)
+  else:
+    expect_usage(false)
+
+
+def expect_usage(condition):
+  if (condition): return
+
+  print("Usage: libuv.py download")
+  print("       libuv.py build [-32|-64]")
+  sys.exit(1)
 
 
 main()

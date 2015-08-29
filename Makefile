@@ -4,18 +4,16 @@
 
 # Executables are built to bin/. Libraries are built to lib/.
 
-LIBUV := build/libuv/out/Release/libuv.a
-
 # A normal, optimized release build for the current CPU architecture.
-release: $(LIBUV)
+release:
 	@ $(MAKE) -f script/wren.mk
 	@ cp bin/wren wren # For convenience, copy the interpreter to the top level.
 
 # A debug build for the current architecture.
-debug: $(LIBUV)
+debug:
 	@ $(MAKE) -f script/wren.mk MODE=debug
 
-# A release build of just the VM. Does not require libuv.
+# A release build of just the VM.
 vm:
 	@ $(MAKE) -f script/wren.mk vm
 
@@ -32,15 +30,16 @@ all: debug release
 	@ $(MAKE) -f script/wren.mk MODE=debug ARCH=64
 	@ $(MAKE) -f script/wren.mk MODE=debug LANG=cpp ARCH=64
 
-# Download and build libuv to a static library.
-$(LIBUV): script/libuv.py
-	@ ./script/libuv.py
-
-# Remove all build outputs and intermediate files.
+# Remove all build outputs and intermediate files. Does not remove downloaded
+# dependencies. Use cleanall for that.
 clean:
 	@ rm -rf bin
 	@ rm -rf build
 	@ rm -rf lib
+
+# Remove all build outputs, intermediate files, and downloaded dependencies.
+cleanall: clean
+	@ rm -rf deps
 
 # Run the tests against the debug build of Wren.
 test: debug
