@@ -129,7 +129,11 @@ def build_libuv(arch, out):
 
 def run(args, cwd=None):
   """Spawn a process to invoke [args] and mute its output."""
-  subprocess.check_output(args, cwd=cwd, stderr=subprocess.STDOUT)
+  try:
+    subprocess.check_output(args, cwd=cwd, stderr=subprocess.STDOUT)
+  except subprocess.CalledProcessError as error:
+    print(error.output)
+    sys.exit(error.returncode)
 
 
 def main():
