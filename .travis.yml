@@ -8,5 +8,6 @@ addons:
   apt:
     packages:
     - gcc-multilib
+    - g++-multilib
 sudo: false # Enable container-based builds.
 script: make all && make test
