@@ -1808,8 +1808,6 @@ static void list(Compiler* compiler, bool allowAssignment)
 
   // Instantiate a new list.
   callMethod(compiler, 0, "new()", 5);
-
-  ignoreNewlines(compiler);
   
   // Compile the list elements. Each one compiles to a ".add()" call.
   do
