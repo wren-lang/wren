@@ -10,11 +10,6 @@
 // here.
 typedef struct WrenVM WrenVM;
 
-// A handle to a method, bound to a receiver.
-//
-// This is used to call a Wren method on some object from C code.
-typedef struct WrenMethod WrenMethod;
-
 // A handle to a Wren object.
 //
 // This lets code outside of the VM hold a persistent reference to an object.
@@ -191,10 +186,9 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
 // This handle can be used repeatedly to directly invoke that method from C
 // code using [wrenCall].
 //
-// When done with this handle, it must be released by calling
-// [wrenReleaseMethod].
-WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
-                          const char* signature);
+// When done with this handle, it must be released using [wrenReleaseValue].
+WrenValue* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
+                         const char* signature);
 
 // Calls [method], passing in a series of arguments whose types must match the
 // specifed [argTypes]. This is a string where each character identifies the
@@ -209,11 +203,13 @@ WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
 //         Wren.
 // - "v" - A previously acquired WrenValue*. Passing this in does not implicitly
 //         release the value.
-void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...);
-
-// Releases memory associated with [method]. After calling this, [method] can
-// no longer be used.
-void wrenReleaseMethod(WrenVM* vm, WrenMethod* method);
+//
+// [method] must have been created by a call to [wrenGetMethod]. If [result] is
+// not `NULL`, the return value of the method will be stored in a new
+// [WrenValue] that [result] will point to. Don't forget to release it, when
+// done with it.
+WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method, WrenValue** result,
+                             const char* argTypes, ...);
 
 // Releases the reference stored in [value]. After calling this, [value] can no
 // longer be used.

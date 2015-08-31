@@ -113,7 +113,6 @@ void wrenFreeVM(WrenVM* vm)
   // Tell the user if they didn't free any handles. We don't want to just free
   // them here because the host app may still have pointers to them that they
   // may try to use. Better to tell them about the bug early.
-  ASSERT(vm->methodHandles == NULL, "All methods have not been released.");
   ASSERT(vm->valueHandles == NULL, "All values have not been released.");
   
   wrenSymbolTableClear(vm, &vm->methodNames);
@@ -158,14 +157,6 @@ static void collectGarbage(WrenVM* vm)
   // The current fiber.
   wrenMarkObj(vm, (Obj*)vm->fiber);
 
-  // The method handles.
-  for (WrenMethod* handle = vm->methodHandles;
-       handle != NULL;
-       handle = handle->next)
-  {
-    wrenMarkObj(vm, (Obj*)handle->fiber);
-  }
-  
   // The value handles.
   for (WrenValue* value = vm->valueHandles;
        value != NULL;
@@ -1296,8 +1287,8 @@ static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
                          signature, signatureLength, debugLines);
 }
 
-WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
-                          const char* signature)
+WrenValue* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
+                         const char* signature)
 {
   Value moduleName = wrenStringFormat(vm, "$", module);
   wrenPushRoot(vm, AS_OBJ(moduleName));
@@ -1317,17 +1308,10 @@ WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
   wrenPushRoot(vm, (Obj*)fiber);
 
   // Create a handle that keeps track of the function that calls the method.
-  WrenMethod* method = ALLOCATE(vm, WrenMethod);
-  method->fiber = fiber;
+  WrenValue* method = wrenCaptureValue(vm, OBJ_VAL(fiber));
 
   // Store the receiver in the fiber's stack so we can use it later in the call.
   *fiber->stackTop++ = moduleObj->variables.data[variableSlot];
-
-  // Add it to the front of the linked list of handles.
-  if (vm->methodHandles != NULL) vm->methodHandles->prev = method;
-  method->prev = NULL;
-  method->next = vm->methodHandles;
-  vm->methodHandles = method;
 
   wrenPopRoot(vm); // fiber.
   wrenPopRoot(vm); // fn.
@@ -1336,10 +1320,14 @@ WrenMethod* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
   return method;
 }
 
-void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
+WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method, WrenValue** result,
+                             const char* argTypes, ...)
 {
   // TODO: Validate that the number of arguments matches what the method
   // expects.
+
+  ASSERT(IS_FIBER(method->value), "Value must come from wrenGetMethod().");
+  ObjFiber* fiber = AS_FIBER(method->value);
 
   // Push the arguments.
   va_list argList;
@@ -1359,7 +1347,7 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
         value = wrenStringFormat(vm, "$", va_arg(argList, const char*));
         break;
       }
-        
+
       case 'v': value = va_arg(argList, WrenValue*)->value; break;
 
       default:
@@ -1367,41 +1355,41 @@ void wrenCall(WrenVM* vm, WrenMethod* method, const char* argTypes, ...)
         break;
     }
 
-    *method->fiber->stackTop++ = value;
+    *fiber->stackTop++ = value;
   }
 
   va_end(argList);
 
-  Value receiver = method->fiber->stack[0];  
-  Obj* fn = method->fiber->frames[0].fn;
-  
+  Value receiver = fiber->stack[0];
+  Obj* fn = fiber->frames[0].fn;
+
   // TODO: How does this handle a runtime error occurring?
-  runInterpreter(vm, method->fiber);
+  runInterpreter(vm, fiber);
+
+  if (result != NULL) *result = wrenCaptureValue(vm, fiber->stack[0]);
 
   // Reset the fiber to get ready for the next call.
-  wrenResetFiber(vm, method->fiber, fn);
-  
+  wrenResetFiber(vm, fiber, fn);
+
   // Push the receiver back on the stack.
-  *method->fiber->stackTop++ = receiver;
+  *fiber->stackTop++ = receiver;
+
+  return WREN_RESULT_SUCCESS;
 }
 
-void wrenReleaseMethod(WrenVM* vm, WrenMethod* method)
+WrenValue* wrenCaptureValue(WrenVM* vm, Value value)
 {
-  ASSERT(method != NULL, "NULL method.");
+  // Make a handle for it.
+  WrenValue* wrappedValue = ALLOCATE(vm, WrenValue);
+  wrappedValue->value = value;
 
-  // Update the VM's head pointer if we're releasing the first handle.
-  if (vm->methodHandles == method) vm->methodHandles = method->next;
+  // Add it to the front of the linked list of handles.
+  if (vm->valueHandles != NULL) vm->valueHandles->prev = wrappedValue;
+  wrappedValue->prev = NULL;
+  wrappedValue->next = vm->valueHandles;
+  vm->valueHandles = wrappedValue;
 
-  // Unlink it from the list.
-  if (method->prev != NULL) method->prev->next = method->next;
-  if (method->next != NULL) method->next->prev = method->prev;
-
-  // Clear it out. This isn't strictly necessary since we're going to free it,
-  // but it makes for easier debugging.
-  method->prev = NULL;
-  method->next = NULL;
-  method->fiber = NULL;
-  DEALLOCATE(vm, method);
+  return wrappedValue;
 }
 
 void wrenReleaseValue(WrenVM* vm, WrenValue* value)
@@ -1626,18 +1614,8 @@ const char* wrenGetArgumentString(WrenVM* vm, int index)
 WrenValue* wrenGetArgumentValue(WrenVM* vm, int index)
 {
   validateForeignArgument(vm, index);
-  
-  // Make a handle for it.
-  WrenValue* value = ALLOCATE(vm, WrenValue);
-  value->value = *(vm->foreignCallSlot + index);
 
-  // Add it to the front of the linked list of handles.
-  if (vm->valueHandles != NULL) vm->valueHandles->prev = value;
-  value->prev = NULL;
-  value->next = vm->valueHandles;
-  vm->valueHandles = value;
-
-  return value;
+  return wrenCaptureValue(vm, *(vm->foreignCallSlot + index));
 }
 
 void wrenReturnBool(WrenVM* vm, bool value)

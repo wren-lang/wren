@@ -17,29 +17,13 @@ typedef enum
   #undef OPCODE
 } Code;
 
-// A handle to a method.
-//
-// It is a node in the doubly-linked list of currently allocate method handles.
-// Each node has a reference to the fiber containing the method stub to call
-// the method.
-struct WrenMethod
-{
-  // The fiber that invokes the method. Its stack is pre-populated with the
-  // receiver for the method, and it contains a single callframe whose function
-  // is the bytecode stub to invoke the method.
-  ObjFiber* fiber;
-
-  WrenMethod* prev;
-  WrenMethod* next;
-};
-
 // A handle to a value, basically just a linked list of extra GC roots.
 //
 // Note that even non-heap-allocated values can be stored here.
 struct WrenValue
 {
   Value value;
-  
+
   WrenValue* prev;
   WrenValue* next;
 };
@@ -112,10 +96,6 @@ struct WrenVM
   // receiver) of the call on the fiber's stack.
   Value* foreignCallSlot;
 
-  // Pointer to the first node in the linked list of active method handles or
-  // NULL if there are no handles.
-  WrenMethod* methodHandles;
-  
   // Pointer to the first node in the linked list of active value handles or
   // NULL if there are no handles.
   WrenValue* valueHandles;
@@ -162,6 +142,9 @@ struct WrenVM
 // - To free memory, [memory] will be the memory to free and [newSize] and
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
+
+// Creates a new [WrenValue] for [value].
+WrenValue* wrenCaptureValue(WrenVM* vm, Value value);
 
 // Looks up the core module in the module map.
 ObjModule* wrenGetCoreModule(WrenVM* vm);

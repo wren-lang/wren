@@ -46,7 +46,7 @@ static const char* timerLibSource =
 "\n";
 
 // The Wren method to call when a timer has completed.
-static WrenMethod* resumeTimer;
+static WrenValue* resumeTimer;
 
 // Called by libuv when the timer finished closing.
 static void timerCloseCallback(uv_handle_t* handle)
@@ -63,7 +63,7 @@ static void timerCallback(uv_timer_t* handle)
   uv_close((uv_handle_t*)handle, timerCloseCallback);
 
   // Run the fiber that was sleeping.
-  wrenCall(getVM(), resumeTimer, "v", fiber);
+  wrenCall(getVM(), resumeTimer, NULL, "v", fiber);
   wrenReleaseValue(getVM(), fiber);
 }
 
@@ -107,5 +107,5 @@ WrenForeignMethodFn timerBindForeign(
 
 void timerReleaseMethods()
 {
-  if (resumeTimer != NULL) wrenReleaseMethod(getVM(), resumeTimer);
+  if (resumeTimer != NULL) wrenReleaseValue(getVM(), resumeTimer);
 }
