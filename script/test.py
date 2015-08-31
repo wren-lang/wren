@@ -230,8 +230,10 @@ class Test:
       index += 1
 
 
-  def fail(self, message, *args, **kwargs):
-    self.failures.append(message.format(*args, **kwargs))
+  def fail(self, message, *args):
+    if args:
+      message = message.format(*args)
+    self.failures.append(message)
 
 
 def color_text(text, color):

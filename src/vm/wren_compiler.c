@@ -1809,27 +1809,26 @@ static void list(Compiler* compiler, bool allowAssignment)
   // Instantiate a new list.
   callMethod(compiler, 0, "new()", 5);
 
+  ignoreNewlines(compiler);
+  
   // Compile the list elements. Each one compiles to a ".add()" call.
-  if (peek(compiler) != TOKEN_RIGHT_BRACKET)
+  do
   {
-    do
-    {
-      ignoreNewlines(compiler);
+    ignoreNewlines(compiler);
 
-      // List with trailing comma.
-      if (peek(compiler) == TOKEN_RIGHT_BRACKET) break;
+    // Stop if we hit the end of the list.
+    if (peek(compiler) == TOKEN_RIGHT_BRACKET) break;
 
-      // Push a copy of the list since the add() call will consume it.
-      emit(compiler, CODE_DUP);
+    // Push a copy of the list since the add() call will consume it.
+    emit(compiler, CODE_DUP);
 
-      // The element.
-      expression(compiler);
-      callMethod(compiler, 1, "add(_)", 6);
+    // The element.
+    expression(compiler);
+    callMethod(compiler, 1, "add(_)", 6);
 
-      // Discard the result of the add() call.
-      emit(compiler, CODE_POP);
-    } while (match(compiler, TOKEN_COMMA));
-  }
+    // Discard the result of the add() call.
+    emit(compiler, CODE_POP);
+  } while (match(compiler, TOKEN_COMMA));
 
   // Allow newlines before the closing ']'.
   ignoreNewlines(compiler);
@@ -1850,31 +1849,28 @@ static void map(Compiler* compiler, bool allowAssignment)
 
   // Compile the map elements. Each one is compiled to just invoke the
   // subscript setter on the map.
-  if (peek(compiler) != TOKEN_RIGHT_BRACE)
+  do
   {
-    do
-    {
-      ignoreNewlines(compiler);
+    ignoreNewlines(compiler);
 
-      // Map with trailing comma.
-      if (peek(compiler) == TOKEN_RIGHT_BRACE) break;
+    // Stop if we hit the end of the map.
+    if (peek(compiler) == TOKEN_RIGHT_BRACE) break;
 
-      // Push a copy of the map since the subscript call will consume it.
-      emit(compiler, CODE_DUP);
+    // Push a copy of the map since the subscript call will consume it.
+    emit(compiler, CODE_DUP);
 
-      // The key.
-      parsePrecedence(compiler, false, PREC_PRIMARY);
-      consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
+    // The key.
+    parsePrecedence(compiler, false, PREC_PRIMARY);
+    consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
+    ignoreNewlines(compiler);
 
-      // The value.
-      expression(compiler);
+    // The value.
+    expression(compiler);
+    callMethod(compiler, 2, "[_]=(_)", 7);
 
-      callMethod(compiler, 2, "[_]=(_)", 7);
-
-      // Discard the result of the setter call.
-      emit(compiler, CODE_POP);
-    } while (match(compiler, TOKEN_COMMA));
-  }
+    // Discard the result of the setter call.
+    emit(compiler, CODE_POP);
+  } while (match(compiler, TOKEN_COMMA));
 
   // Allow newlines before the closing '}'.
   ignoreNewlines(compiler);
