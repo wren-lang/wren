@@ -49,7 +49,7 @@ The basic process is simple:
     If there are no failures, you're good to go.
 
 2. **[Fork the repo][fork] so you can change it locally.** Please make your
-   changes in a separate [feature branches][] to make things a little easier on
+   changes in separate [feature branches][] to make things a little easier on
    me.
 
 3. **Change the code.** Please follow the style of the surrounding code. That
@@ -69,8 +69,9 @@ The basic process is simple:
    fun open source project! I'll take it from here and hopefully we'll get it
    landed smoothly.
 
-If at any point you have questions, feel free to [file an issue][issue] or
-email me (`robert` at `stuffwithstuff.com`). *Thank you!*
+If at any point you have questions, feel free to [file an issue][issue] or ask
+on the [mailing list][list]. You can also email me directly (`robert` at
+`stuffwithstuff.com`) if you want something less public. *Thank you!*
 
 [mit]: http://opensource.org/licenses/MIT
 [github]: https://github.com/munificent/wren

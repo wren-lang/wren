@@ -19,9 +19,9 @@ var adjectives = Fiber.new {
 while (!adjectives.isDone) IO.print(adjectives.call())
 ```
 
- *  **Wren is small.** The codebase is about [7,000 lines][src]. You can
-    skim the whole thing in an afternoon. It's *small*, but not *dense*. It
-    is readable and [lovingly-commented][nan].
+ *  **Wren is small.** The VM implementation is under [4,000 semicolons][src].
+    You can skim the whole thing in an afternoon. It's *small*, but not
+    *dense*. It is readable and [lovingly-commented][nan].
 
  *  **Wren is fast.** A fast single-pass compiler to tight bytecode, and a
     compact object representation help Wren [compete with other dynamic
