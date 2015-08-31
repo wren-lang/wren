@@ -1,9 +1,7 @@
 var fiber = Fiber.new {
   IO.print("fiber 1")
-  var result = Fiber.yield()
-  IO.print(result)
-  result = Fiber.yield()
-  IO.print(result)
+  IO.print(Fiber.yield())
+  IO.print(Fiber.yield())
 }
 
 fiber.call() // expect: fiber 1

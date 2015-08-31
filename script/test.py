@@ -149,7 +149,7 @@ class Test:
 
   def validate_runtime_error(self, error_lines):
     if len(error_lines) < 2:
-      self.fail('Expected runtime error "{0} and got none.',
+      self.fail('Expected runtime error "{0}" and got none.',
           self.runtime_error_message)
       return
 

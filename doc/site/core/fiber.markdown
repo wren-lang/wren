@@ -19,6 +19,14 @@ fiber is run. Does not immediately start running the fiber.
 
 The currently executing fiber.
 
+### Fiber.**suspend**()
+
+Pauses the current fiber, and stops the interpreter. Control returns to the
+host application.
+
+To resume execution, the host application will need to invoke the interpreter
+again. If there is still a reference to the suspended fiber, it can be resumed.
+
 ### Fiber.**yield**()
 
 Pauses the current fiber and transfers control to the parent fiber. "Parent"
@@ -119,10 +127,10 @@ Invokes the fiber or resumes the fiber if it is in a paused state and sets
 Whether the fiber's main function has completed and the fiber can no longer be
 run. This returns `false` if the fiber is currently running or has yielded.
 
-### **run**()
+### **transfer**()
 
 **TODO**
 
-### **run**(value)
+### **transfer**(value)
 
 **TODO**

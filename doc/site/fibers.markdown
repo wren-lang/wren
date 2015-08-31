@@ -158,17 +158,12 @@ Fibers have one more trick up their sleeves. When you execute a fiber using
 lets you build up a chain of fiber calls that will eventually unwind back to
 the main fiber when all of the called ones yield or finish.
 
-This works fine for most uses, but sometimes you want something a little more
-freeform. For example, you may be creating a [state
-machine](http://en.wikipedia.org/wiki/Finite-state_machine) where each state is
-a fiber. When you switch from one state to the next, you *don't* want to build
-an implicit stack of fibers to return to. There is no "returning" in this case.
-You just want to *transfer* to the next fiber and forget about the previous one
-entirely. (This is analogous to [tail call
-elimination](http://en.wikipedia.org/wiki/Tail_call) for regular function
-calls.)
+This is almost always what you want. But if you're doing something really low
+level, like writing your own scheduler to manage a pool of fibers, you may not
+want to treat them explicitly like a stack.
 
-To enable this, fibers also have a `run()` method. This begins executing that
-fiber, and "forgets" the previous one. If the running fiber yields or ends, it
-will transfer control back to the last *called* one. (If there are no called
-fibers, it will end execution.)
+For rare cases like that, fibers also have a `transfer()` method. This switches
+execution immediately to the transferred fiber. The previous one is suspended,
+leaving it in whatever state it was in. You can resume the previous fiber by
+transferring back to it, or even calling it. If you don't, execution stops when
+the last transferred fiber returns.

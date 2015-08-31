@@ -396,20 +396,24 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
 //
 // Returns the fiber that should receive the error or `NULL` if no fiber
 // caught it.
-static ObjFiber* runtimeError(ObjFiber* fiber, Value error)
+static ObjFiber* runtimeError(WrenVM* vm, ObjFiber* fiber, Value error)
 {
   ASSERT(fiber->error == NULL, "Can only fail once.");
 
   // Store the error in the fiber so it can be accessed later.
   fiber->error = AS_STRING(error);
 
+  // Unhook the caller since we will never resume and return to it.
+  ObjFiber* caller = fiber->caller;
+  fiber->caller = NULL;
+
   // If the caller ran this fiber using "try", give it the error.
   if (fiber->callerIsTrying)
   {
-    ObjFiber* caller = fiber->caller;
-
     // Make the caller's try method return the error message.
     *(caller->stackTop - 1) = OBJ_VAL(fiber->error);
+    
+    vm->fiber = caller;
     return caller;
   }
 
@@ -735,7 +739,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       do                                                      \
       {                                                       \
         STORE_FRAME();                                        \
-        fiber = runtimeError(fiber, error);                   \
+        fiber = runtimeError(vm, fiber, error);               \
         if (fiber == NULL) return WREN_RESULT_RUNTIME_ERROR;  \
         LOAD_FRAME();                                         \
         DISPATCH();                                           \
@@ -1108,7 +1112,10 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         if (fiber->caller == NULL) return WREN_RESULT_SUCCESS;
 
         // We have a calling fiber to resume.
-        fiber = fiber->caller;
+        ObjFiber* callingFiber = fiber->caller;
+        fiber->caller = NULL;
+        
+        fiber = callingFiber;
         vm->fiber = fiber;
 
         // Store the result in the resuming fiber.

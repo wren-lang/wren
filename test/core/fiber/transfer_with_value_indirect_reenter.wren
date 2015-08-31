@@ -1,19 +1,16 @@
-var a
-var b
-
-a = Fiber.new {
+var A = Fiber.new {
   IO.print(2)
-  b.run()
+  B.transfer("ignored")
   IO.print("nope")
 }
 
-b = Fiber.new {
+var B = Fiber.new {
   IO.print(1)
-  a.run()
+  A.transfer("ignored")
   IO.print(3)
 }
 
-b.call()
+B.call()
 // expect: 1
 // expect: 2
 // expect: 3
