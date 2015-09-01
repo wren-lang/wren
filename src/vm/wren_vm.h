@@ -89,16 +89,16 @@ struct WrenVM
   Obj* tempRoots[WREN_MAX_TEMP_ROOTS];
 
   int numTempRoots;
-
+  
+  // Pointer to the first node in the linked list of active value handles or
+  // NULL if there are no handles.
+  WrenValue* valueHandles;
+  
   // Foreign function data:
 
   // During a foreign function call, this will point to the first argument (the
   // receiver) of the call on the fiber's stack.
   Value* foreignCallSlot;
-
-  // Pointer to the first node in the linked list of active value handles or
-  // NULL if there are no handles.
-  WrenValue* valueHandles;
 
   // During a foreign function call, this will contain the number of arguments
   // to the function.
@@ -142,6 +142,9 @@ struct WrenVM
 // - To free memory, [memory] will be the memory to free and [newSize] and
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
+
+// Invoke the finalizer for the foreign object referenced by [foreign].
+void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 
 // Creates a new [WrenValue] for [value].
 WrenValue* wrenCaptureValue(WrenVM* vm, Value value);

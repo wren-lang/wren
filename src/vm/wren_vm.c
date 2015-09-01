@@ -125,7 +125,7 @@ void wrenSetCompiler(WrenVM* vm, Compiler* compiler)
   vm->compiler = compiler;
 }
 
-static void collectGarbage(WrenVM* vm)
+void wrenCollectGarbage(WrenVM* vm)
 {
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   printf("-- gc --\n");
@@ -222,9 +222,9 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 #if WREN_DEBUG_GC_STRESS
   // Since collecting calls this function to free things, make sure we don't
   // recurse.
-  if (newSize > 0) collectGarbage(vm);
+  if (newSize > 0) wrenCollectGarbage(vm);
 #else
-  if (newSize > 0 && vm->bytesAllocated > vm->nextGC) collectGarbage(vm);
+  if (newSize > 0 && vm->bytesAllocated > vm->nextGC) wrenCollectGarbage(vm);
 #endif
 
   return vm->reallocate(memory, newSize);
@@ -615,10 +615,13 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   int symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<allocate>", 10);
   wrenBindMethod(vm, classObj, symbol, method);
   
+  // Add the symbol even if there is no finalizer so we can ensure that the
+  // symbol itself is always in the symbol table.
+  symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<finalize>", 10);
+  
   if (methods.finalize != NULL)
   {
     method.fn.foreign = methods.finalize;
-    symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<finalize>", 10);
     wrenBindMethod(vm, classObj, symbol, method);
   }
 }
@@ -684,6 +687,32 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   method->fn.foreign(vm);
   
   // TODO: Check that allocateForeign was called.
+}
+
+void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
+{
+  // TODO: Don't look up every time.
+  int symbol = wrenSymbolTableFind(&vm->methodNames, "<finalize>", 10);
+  ASSERT(symbol != -1, "Should have defined <finalize> symbol.");
+  
+  // If there are no finalizers, don't finalize it.
+  if (symbol == -1) return;
+  
+  // If the class doesn't have a finalizer, bail out.
+  ObjClass* classObj = foreign->obj.classObj;
+  if (symbol >= classObj->methods.count) return;
+  
+  Method* method = &classObj->methods.data[symbol];
+  if (method->type == METHOD_NONE) return;
+  
+  ASSERT(method->type == METHOD_FOREIGN, "Finalizer should be foreign.");
+  
+  // Pass the constructor arguments to the allocator as well.
+  Value slot = OBJ_VAL(foreign);
+  vm->foreignCallSlot = &slot;
+  vm->foreignCallNumArgs = 1;
+  
+  method->fn.foreign(vm);
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is

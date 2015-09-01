@@ -167,6 +167,9 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration);
 // call to [wrenNewVM].
 void wrenFreeVM(WrenVM* vm);
 
+// Immediately run the garbage collector to free unused memory.
+void wrenCollectGarbage(WrenVM* vm);
+
 // Runs [source], a string of Wren source code in a new fiber in [vm].
 //
 // [sourcePath] is a string describing where [source] was located, for use in

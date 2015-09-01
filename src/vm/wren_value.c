@@ -1089,7 +1089,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
     }
       
     case OBJ_FOREIGN:
-      // TODO: Call finalizer.
+      wrenFinalizeForeign(vm, (ObjForeign*)obj);
       break;
 
     case OBJ_LIST:

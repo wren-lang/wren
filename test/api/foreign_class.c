@@ -3,6 +3,18 @@
 
 #include "foreign_class.h"
 
+static int finalized = 0;
+
+static void apiGC(WrenVM* vm)
+{
+  wrenCollectGarbage(vm);
+}
+
+static void apiFinalized(WrenVM* vm)
+{
+  wrenReturnDouble(vm, finalized);
+}
+
 static void counterAllocate(WrenVM* vm)
 {
   double* value = (double*)wrenAllocateForeign(vm, sizeof(double));
@@ -60,8 +72,20 @@ static void pointToString(WrenVM* vm)
   wrenReturnString(vm, result, (int)strlen(result));
 }
 
+static void resourceAllocate(WrenVM* vm)
+{
+  wrenAllocateForeign(vm, 0);
+}
+
+static void resourceFinalize(WrenVM* vm)
+{
+  finalized++;
+}
+
 WrenForeignMethodFn foreignClassBindMethod(const char* signature)
 {
+  if (strcmp(signature, "static Api.gc()") == 0) return apiGC;
+  if (strcmp(signature, "static Api.finalized") == 0) return apiFinalized;
   if (strcmp(signature, "Counter.increment(_)") == 0) return counterIncrement;
   if (strcmp(signature, "Counter.value") == 0) return counterValue;
   if (strcmp(signature, "Point.translate(_,_,_)") == 0) return pointTranslate;
@@ -82,6 +106,13 @@ void foreignClassBindClass(
   if (strcmp(className, "Point") == 0)
   {
     methods->allocate = pointAllocate;
+    return;
+  }
+
+  if (strcmp(className, "Resource") == 0)
+  {
+    methods->allocate = resourceAllocate;
+    methods->finalize = resourceFinalize;
     return;
   }
 }

@@ -1,3 +1,8 @@
+class Api {
+  foreign static gc()
+  foreign static finalized
+}
+
 // Class with a default constructor.
 foreign class Counter {
   foreign increment(amount)
@@ -46,3 +51,25 @@ var error = Fiber.new {
   class Subclass is Point {}
 }.try()
 IO.print(error) // expect: Class 'Subclass' cannot inherit from foreign class 'Point'.
+
+// Class with a finalizer.
+foreign class Resource {}
+
+var resources = [
+  Resource.new(),
+  Resource.new(),
+  Resource.new()
+]
+
+Api.gc()
+IO.print(Api.finalized) // expect: 0
+
+resources.removeAt(-1)
+
+Api.gc()
+IO.print(Api.finalized) // expect: 1
+
+resources.clear()
+
+Api.gc()
+IO.print(Api.finalized) // expect: 3
