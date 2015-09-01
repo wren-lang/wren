@@ -223,6 +223,11 @@ DEF_PRIMITIVE(return_this)
   RETURN_VAL(args[0]);
 }
 
+DEF_PRIMITIVE(bool_new)
+{
+  RETURN_ERROR("Bool metaclass does not implement 'new()'.");
+}
+
 DEF_PRIMITIVE(bool_not)
 {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -261,6 +266,11 @@ DEF_PRIMITIVE(class_toString)
 }
 
 DEF_PRIMITIVE(fiber_new)
+{
+  RETURN_ERROR("Fiber metaclass does not implement 'new()'.");
+}
+
+DEF_PRIMITIVE(fiber_new1)
 {
   if (!validateFn(vm, args, 1, "Argument")) return PRIM_ERROR;
 
@@ -462,6 +472,11 @@ DEF_PRIMITIVE(fiber_yield1)
 }
 
 DEF_PRIMITIVE(fn_new)
+{
+  RETURN_ERROR("Fn metaclass does not implement 'new()'.");
+}
+
+DEF_PRIMITIVE(fn_new1)
 {
   if (!validateFn(vm, args, 1, "Argument")) return PRIM_ERROR;
 
@@ -743,6 +758,11 @@ DEF_PRIMITIVE(map_valueIteratorValue)
   RETURN_VAL(entry->value);
 }
 
+DEF_PRIMITIVE(null_new)
+{
+  RETURN_ERROR("Null metaclass does not implement 'new()'.");
+}
+
 DEF_PRIMITIVE(null_not)
 {
   RETURN_VAL(TRUE_VAL);
@@ -751,6 +771,11 @@ DEF_PRIMITIVE(null_not)
 DEF_PRIMITIVE(null_toString)
 {
   RETURN_VAL(CONST_STRING(vm, "null"));
+}
+
+DEF_PRIMITIVE(num_new)
+{
+  RETURN_ERROR("Num metaclass does not implement 'new()'.");
 }
 
 DEF_PRIMITIVE(num_fromString)
@@ -980,6 +1005,11 @@ DEF_PRIMITIVE(object_type)
   RETURN_OBJ(wrenGetClass(vm, args[0]));
 }
 
+DEF_PRIMITIVE(range_new)
+{
+  RETURN_ERROR("Range metaclass does not implement 'new()'.");
+}
+
 DEF_PRIMITIVE(range_from)
 {
   RETURN_NUM(AS_RANGE(args[0])->from);
@@ -1060,6 +1090,11 @@ DEF_PRIMITIVE(range_toString)
   wrenPopRoot(vm);
   wrenPopRoot(vm);
   RETURN_VAL(result);
+}
+
+DEF_PRIMITIVE(string_new)
+{
+  RETURN_ERROR("String metaclass does not implement 'new()'.");
 }
 
 DEF_PRIMITIVE(string_fromCodePoint)
@@ -1334,11 +1369,13 @@ void wrenInitializeCore(WrenVM* vm)
   wrenInterpret(vm, "", coreLibSource);
 
   vm->boolClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Bool"));
+  PRIMITIVE(vm->boolClass->obj.classObj, "new()", bool_new);
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
   PRIMITIVE(vm->boolClass, "!", bool_not);
 
   vm->fiberClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fiber"));
-  PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "new()", fiber_new);
+  PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new1);
   PRIMITIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
   PRIMITIVE(vm->fiberClass->obj.classObj, "current", fiber_current);
   PRIMITIVE(vm->fiberClass->obj.classObj, "suspend()", fiber_suspend);
@@ -1353,7 +1390,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
 
   vm->fnClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fn"));
-  PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
+  PRIMITIVE(vm->fnClass->obj.classObj, "new()", fn_new);
+  PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new1);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
   PRIMITIVE(vm->fnClass, "call()", fn_call0);
@@ -1376,10 +1414,12 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Null"));
+  PRIMITIVE(vm->nullClass->obj.classObj, "new()", null_new);
   PRIMITIVE(vm->nullClass, "!", null_not);
   PRIMITIVE(vm->nullClass, "toString", null_toString);
 
   vm->numClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Num"));
+  PRIMITIVE(vm->numClass->obj.classObj, "new()", num_new);
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
   PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
   PRIMITIVE(vm->numClass, "-(_)", num_minus);
@@ -1423,6 +1463,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "!=(_)", num_bangeq);
 
   vm->stringClass = AS_CLASS(wrenFindVariable(vm, coreModule, "String"));
+  PRIMITIVE(vm->stringClass->obj.classObj, "new()", string_new);
   PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
   PRIMITIVE(vm->stringClass, "+(_)", string_plus);
   PRIMITIVE(vm->stringClass, "[_]", string_subscript);
@@ -1463,6 +1504,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
 
   vm->rangeClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Range"));
+  PRIMITIVE(vm->rangeClass->obj.classObj, "new()", range_new);
   PRIMITIVE(vm->rangeClass, "from", range_from);
   PRIMITIVE(vm->rangeClass, "to", range_to);
   PRIMITIVE(vm->rangeClass, "min", range_min);
