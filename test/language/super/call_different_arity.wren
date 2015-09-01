@@ -5,6 +5,8 @@ class Base {
 }
 
 class Derived is Base {
+  construct new() {}
+
   foo(a) {
     IO.print("Derived.bar(a)")
     super

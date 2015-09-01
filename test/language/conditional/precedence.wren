@@ -1,4 +1,5 @@
 class Foo {
+  construct new() {}
   static bar { true }
   static baz { 1 }
 }

@@ -1,6 +1,4 @@
-class Foo {
-  construct real() {}
-}
+class Foo {}
 
-// Classes do not get an argument-less "new()" if they define a constructor.
+// Classes do not get a constructor by default.
 var foo = Foo.new() // expect runtime error: Foo metaclass does not implement 'new()'.

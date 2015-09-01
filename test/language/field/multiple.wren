@@ -1,4 +1,6 @@
 class Foo {
+  construct new() {}
+
   set(a, b, c, d, e) {
     _a = a
     _b = b

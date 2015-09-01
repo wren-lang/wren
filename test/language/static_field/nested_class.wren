@@ -1,9 +1,13 @@
 class Outer {
+  construct new() {}
+
   static staticMethod {
     __field = "outer"
     IO.print(__field) // expect: outer
 
     class Inner {
+      construct new() {}
+
       static staticMethod {
         __field = "inner"
         IO.print(__field) // expect: inner
@@ -19,6 +23,8 @@ class Outer {
     IO.print(__field) // expect: outer
 
     class Inner {
+      construct new() {}
+
       instanceMethod {
         __field = "inner"
         IO.print(__field) // expect: inner

@@ -1,4 +1,6 @@
 class Foo {
+  construct new() {}
+
   +(other) { "infix + " + other }
   -(other) { "infix - " + other }
   *(other) { "infix * " + other }

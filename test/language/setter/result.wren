@@ -1,4 +1,5 @@
 class Foo {
+  construct new() {}
   bar=(value) { "result" }
 }
 

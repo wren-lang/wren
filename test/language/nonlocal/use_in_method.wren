@@ -1,6 +1,8 @@
 var Global = "global"
 
 class Foo {
+  construct new() {}
+
   method {
     IO.print(Global)
   }

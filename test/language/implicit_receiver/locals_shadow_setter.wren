@@ -1,4 +1,6 @@
 class Foo {
+  construct new() {}
+
   bar=(value) {
     IO.print("setter")
     return value

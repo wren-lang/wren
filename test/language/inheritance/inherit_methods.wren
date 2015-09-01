@@ -6,6 +6,7 @@ class Foo {
 }
 
 class Bar is Foo {
+  construct new() {}
   methodOnBar { IO.print("bar") }
   method(a, b) { IO.print("bar") }
   method(a, b, c, d) { IO.print("bar") }

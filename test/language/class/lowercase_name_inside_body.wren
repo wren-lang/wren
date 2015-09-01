@@ -1,4 +1,6 @@
 class foo {
+  construct new() {}
+
   static callFoo {
     IO.print(foo)
   }

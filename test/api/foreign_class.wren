@@ -5,6 +5,7 @@ class Api {
 
 // Class with a default constructor.
 foreign class Counter {
+  construct new() {}
   foreign increment(amount)
   foreign value
 }
@@ -53,7 +54,9 @@ var error = Fiber.new {
 IO.print(error) // expect: Class 'Subclass' cannot inherit from foreign class 'Point'.
 
 // Class with a finalizer.
-foreign class Resource {}
+foreign class Resource {
+  construct new() {}
+}
 
 var resources = [
   Resource.new(),

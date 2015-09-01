@@ -9,6 +9,7 @@ IO.print([1, [2, [3], 4], 5]) // expect: [1, [2, [3], 4], 5]
 
 // Calls toString on elements.
 class Foo {
+  construct new() {}
   toString { "Foo.toString" }
 }
 

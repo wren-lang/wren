@@ -1,4 +1,5 @@
 class Foo {
+  construct new() {}
   method000 { 1 }
   method001 { 1 }
   method002 { 1 }

@@ -1,4 +1,5 @@
 class Foo {
+  construct new() {}
   method(a, b) { "method " + a + " " + b }
   [a, b] { "subscript " + a + " " + b }
 }

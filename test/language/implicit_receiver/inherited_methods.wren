@@ -1,4 +1,6 @@
 class Foo {
+  construct new() {}
+
   getter {
     IO.print("getter")
   }
@@ -13,6 +15,8 @@ class Foo {
 }
 
 class Bar is Foo {
+  construct new() {}
+
   test {
     getter            // expect: getter
     setter = "value"  // expect: setter

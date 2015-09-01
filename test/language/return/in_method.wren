@@ -1,4 +1,6 @@
 class Foo {
+  construct new() {}
+
   method {
     return "ok"
     IO.print("bad")

@@ -2964,7 +2964,7 @@ static void defineMethod(Compiler* compiler, int classSlot, bool isStatic,
 // Returns `true` if it compiled successfully, or `false` if the method couldn't
 // be parsed.
 static bool method(Compiler* compiler, ClassCompiler* classCompiler,
-                   int classSlot, bool* hasConstructor)
+                   int classSlot)
 {
   // TODO: What about foreign constructors?
   bool isForeign = match(compiler, TOKEN_FOREIGN);
@@ -3030,29 +3030,9 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
     
     createConstructor(compiler, &signature, methodSymbol);
     defineMethod(compiler, classSlot, true, constructorSymbol);
-    
-    // We don't need a default constructor anymore.
-    *hasConstructor = true;
   }
 
   return true;
-}
-
-// Defines a default "new()" constructor on the current class.
-//
-// It just invokes "init new()" on the instance. If a base class defines that,
-// it will get invoked. Otherwise, it falls to the default one in Object which
-// does nothing.
-static void createDefaultConstructor(Compiler* compiler, int classSlot)
-{
-  Signature signature = { "new", 3, SIG_INITIALIZER, 0 };
-  int initializerSymbol = signatureSymbol(compiler, &signature);
-  
-  signature.type = SIG_METHOD;
-  int constructorSymbol = signatureSymbol(compiler, &signature);
-  
-  createConstructor(compiler, &signature, initializerSymbol);
-  defineMethod(compiler, classSlot, true, constructorSymbol);
 }
 
 // Compiles a class definition. Assumes the "class" token has already been
@@ -3117,11 +3097,9 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class declaration.");
   matchLine(compiler);
 
-  bool hasConstructor = false;
-  
   while (!match(compiler, TOKEN_RIGHT_BRACE))
   {
-    if (!method(compiler, &classCompiler, slot, &hasConstructor)) break;
+    if (!method(compiler, &classCompiler, slot)) break;
     
     // Don't require a newline after the last definition.
     if (match(compiler, TOKEN_RIGHT_BRACE)) break;
@@ -3129,12 +3107,6 @@ static void classDefinition(Compiler* compiler, bool isForeign)
     consumeLine(compiler, "Expect newline after definition in class.");
   }
   
-  // If no constructor was defined, create a default new() one.
-  if (!hasConstructor)
-  {
-    createDefaultConstructor(compiler, slot);
-  }
-
   // Update the class with the number of fields.
   if (!isForeign)
   {

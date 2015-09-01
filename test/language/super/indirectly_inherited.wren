@@ -7,6 +7,8 @@ class A {
 class B is A {}
 
 class C is B {
+  construct new() {}
+
   foo {
     IO.print("C.foo")
     super.foo

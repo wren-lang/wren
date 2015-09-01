@@ -1,4 +1,5 @@
 class BadToString {
+  construct new() {}
   toString { 3 }
 }
 

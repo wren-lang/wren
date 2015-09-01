@@ -2,8 +2,8 @@
 ^category types
 
 Every value in Wren is an object, and every object is an instance of a class.
-Even `true` and `false` are full-featured objects&mdash;instances of the `Bool`
-class.
+Even `true` and `false` are full-featured objects&mdash;instances of the
+[`Bool`](core/bool.html) class.
 
 Classes contain both *behavior* and *state*. Behavior is defined in *methods*
 which are stored in the class. State is defined in *fields*, whose values are
@@ -24,13 +24,13 @@ To let our unicorn do stuff, we need to give it methods.
 
     :::dart
     class Unicorn {
-      prance {
+      prance() {
         IO.print("The unicorn prances in a fancy manner!")
       }
     }
 
-This defines a `prance` method that takes no arguments. To support parameters,
-add a parenthesized parameter list after the method's name:
+This defines a `prance()` method that takes no arguments. To support
+parameters, put their names inside the parentheses:
 
     :::dart
     class Unicorn {
@@ -43,12 +43,12 @@ add a parenthesized parameter list after the method's name:
 
 Unlike most other dynamically-typed languages, in Wren you can have multiple
 methods in a class with the same name, as long as they have a different
-parameter *signature*. In technical terms, you can *overload by arity*. So this
-class is fine:
+*signature*. In technical terms, you can *overload by arity*. So this class is
+fine:
 
     :::dart
     class Unicorn {
-      prance {
+      prance() {
         IO.print("The unicorn prances in a fancy manner!")
       }
 
@@ -65,7 +65,7 @@ And you can call each of the methods like so:
 
     :::dart
     var unicorn = Unicorn.new()
-    unicorn.prance
+    unicorn.prance()
     unicorn.prance("Antwerp")
     unicorn.prance("Brussels", "high noon")
 
@@ -77,8 +77,25 @@ sets of arguments. In other languages, you'd define a single method for the
 operation and have to check for "undefined" or missing arguments. Wren just
 treats them as different methods that you can implement separately.
 
-Signature is a bit more than just arity. It also lets you distinguish between a
-method that takes an *empty* argument list (`()`) and no argument list at all:
+### Getters
+
+Many methods on a class exist to expose or compute some property of the object.
+For example:
+
+    :::dart
+    IO.print("string".count) // "6".
+
+These *getters* are just another kind of method&mdash;one without a parameter
+list. You can define them like so:
+
+    :::dart
+    class Unicorn {
+      isFancy { true } // Unicorns are always fancy.
+    }
+
+Whether or not a method name has parentheses is also part of its signature.
+This lets you distinguish between a method that takes an *empty* argument list
+(`()`) and no argument list at all:
 
     :::dart
     class Confusing {
@@ -91,29 +108,37 @@ method that takes an *empty* argument list (`()`) and no argument list at all:
     confusing.method() // "empty argument list".
 
 Like the example says, having two methods that differ just by an empty set of
-parentheses is pretty confusing. That's not what this is for. It's mainly so
-you can define methods that don't take any arguments but look "method-like".
+parentheses is pretty confusing. That's not what this is for. Instead, it
+ensures that the way you *declare* the method is the way you *call* it.
 
-Methods that don't need arguments and don't modify the underlying object tend
-to omit the parentheses. These are "getters" and usually access a property of
-an object, or produce a new object from it:
-
-    :::dart
-    "string".count
-    (1..3).min
-    0.123.sin
-
-Other methods do change the object, and it's helpful to draw attention to that:
-
-    :::dart
-    list.clear()
-
-Since the parentheses are part of the method's signature, the callsite and
-definition have to agree. These don't work:
+Unlike other languages with "optional parentheses", Wren wants to make sure you
+call a getter like a getter and a `()` method like a `()` method. These don't
+work:
 
     :::dart
     "string".count()
     list.clear
+
+Methods that don't need arguments and don't modify the underlying object are
+usually getters:
+
+    :::dart
+    "string".count
+    (1..10).min
+    1.23.sin
+    [1, 2, 3].isEmpty
+
+When a method doesn't need any parameters, but does modify the object, it's
+helpful to draw attention to that by requiring an empty set of parentheses:
+
+    :::dart
+    list.clear()
+
+Also, when a method supports multiple arities, it's typical to include the `()`
+in the zero-argument case to be consistent with the other versions:
+
+    Fn.new { "a function" }.call()
+    Fiber.yield()
 
 ### Operators
 
@@ -159,16 +184,9 @@ overloading by arity, it's no problem for a class to define both.
 
 ## Constructors
 
-To create a new instance of a class, call a *constructor method* on its class.
-By default, if you don't define any constructors yourself, you get a free one
-named `new()`:
-
-    :::dart
-    Unicorn.new()
-
-However, you almost always want to define some state or do some other
-initialization on a new object. For that, you'll want to define your own
-constructor, like so:
+Unicorns can prance around now, but we don't actually *have* any unicorns to do
+it. To create instances of a class, we need a *constructor*. You can define one
+like so:
 
     :::dart
     class Unicorn {
@@ -177,9 +195,17 @@ constructor, like so:
       }
     }
 
-The `construct` before the method name makes it a constructor. The `new` isn't
-special. Constructors can have any name you like, which lets you clarify how it
-creates the instance:
+The `construct` keyword says we're defining a constructor, and `new` is its
+name. In Wren, all constructors have names, just like [methods][#methods]. The
+word "new" isn't special to Wren, it's just a common constructor name.
+
+To make a unicorn now, we just call the constructor method on the class itself:
+
+    :::dart
+    var fred = Unicorn.new("Fred", "palomino")
+
+Giving constructors names is handy because it means you can have more than one,
+and each can clarify how it creates the instance:
 
     :::dart
     class Unicorn {
@@ -188,14 +214,23 @@ creates the instance:
       }
     }
 
-Constructors can obviously have arguments, and can be overloaded by
-[arity](#signature). A constructor *must* be a named method with a (possibly
-empty) argument list. Operators, getters, and setters cannot be constructors.
+    var dave = Unicorn.brown("Dave")
+
+Note that we have to declare a constructor because, unlike some other
+languages, Wren doesn't give you a default one. This is useful because some
+classes aren't designed to be constructed. If you have an abstract base class
+that just contains methods to be inherited by other classes, it doesn't need
+and won't have a constructor.
+
+Like other methods, constructors can obviously have arguments, and can be
+overloaded by [arity](#signature). A constructor *must* be a named method with
+a (possibly empty) argument list. Operators, getters, and setters cannot be
+constructors.
 
 A constructor is actually a pair of methods. You get a method on the class:
 
     :::dart
-    Unicorn.brown("Fred")
+    Unicorn.brown("Dave")
 
 That creates the new instance, then it invokes the *initializer* on that
 instance. This is where the constructor body you defined gets run.

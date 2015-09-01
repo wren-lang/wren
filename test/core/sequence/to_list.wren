@@ -1,4 +1,6 @@
 class TestSequence is Sequence {
+  construct new() {}
+
   iterate(iterator) {
     if (iterator == null) return 1
     if (iterator == 3) return false

@@ -6,6 +6,8 @@ class A {
   toString { "A.toString" }
 }
 
-class B is A {}
+class B is A {
+  construct new() {}
+}
 
 IO.print(B.new().callSuperToString) // expect: instance of B

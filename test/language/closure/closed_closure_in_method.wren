@@ -4,6 +4,8 @@ var foo = null
 {
   var local = "local"
   class Foo {
+    construct new() {}
+
     method {
       IO.print(local)
     }

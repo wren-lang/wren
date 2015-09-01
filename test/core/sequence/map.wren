@@ -15,6 +15,8 @@ class FibIterator {
 }
 
 class Fib is Sequence {
+  construct new() {}
+
   iterate(iterator) {
     if (iterator == null) return FibIterator.new()
     iterator.iterate

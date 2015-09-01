@@ -213,16 +213,6 @@ static const char* coreLibSource =
 "\n"
 "class Range is Sequence {}\n";
 
-// A simple primitive that just returns "this". Used in a few different places:
-//
-// * The default new() initializer on Object needs no initialization so just
-//   uses this.
-// * String's toString method obviously can use this.
-DEF_PRIMITIVE(return_this)
-{
-  RETURN_VAL(args[0]);
-}
-
 DEF_PRIMITIVE(bool_not)
 {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -1258,6 +1248,11 @@ DEF_PRIMITIVE(string_subscript)
   RETURN_ERROR("Subscript ranges for strings are not implemented yet.");
 }
 
+DEF_PRIMITIVE(string_toString)
+{
+  RETURN_VAL(args[0]);
+}
+
 // Creates either the Object or Class class in the core library with [name].
 static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 {
@@ -1282,7 +1277,6 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->objectClass, "!", object_not);
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
-  PRIMITIVE(vm->objectClass, "init new()", return_this);
   PRIMITIVE(vm->objectClass, "is(_)", object_is);
   PRIMITIVE(vm->objectClass, "toString", object_toString);
   PRIMITIVE(vm->objectClass, "type", object_type);
@@ -1436,7 +1430,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "iterateByte_(_)", string_iterateByte);
   PRIMITIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
   PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
-  PRIMITIVE(vm->stringClass, "toString", return_this);
+  PRIMITIVE(vm->stringClass, "toString", string_toString);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "new()", list_new);
