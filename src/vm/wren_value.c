@@ -625,11 +625,39 @@ Value wrenNewString(WrenVM* vm, const char* text, size_t length)
   ObjString* string = allocateString(vm, length);
 
   // Copy the string (if given one).
-  if (length > 0) memcpy(string->value, text, length);
+  if (length > 0 && text != NULL) memcpy(string->value, text, length);
 
   hashString(string);
-
   return OBJ_VAL(string);
+}
+
+Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
+                             uint32_t count, int step)
+{
+  uint8_t* from = (uint8_t*)source->value;
+  int length = 0;
+  for (uint32_t i = 0; i < count; i++)
+  {
+    length += wrenUtf8EncodeNumBytes(from[start + i * step]);
+  }
+  
+  ObjString* result = allocateString(vm, length);
+  result->value[length] = '\0';
+  
+  uint8_t* to = (uint8_t*)result->value;
+  for (uint32_t i = 0; i < count; i++)
+  {
+    int index = start + i * step;
+    int codePoint = wrenUtf8Decode(from + index, source->length - index);
+    
+    if (codePoint != -1)
+    {
+      to += wrenUtf8Encode(codePoint, to);
+    }
+  }
+
+  hashString(result);
+  return OBJ_VAL(result);
 }
 
 Value wrenNumToString(WrenVM* vm, double value)
@@ -664,7 +692,7 @@ Value wrenNumToString(WrenVM* vm, double value)
 
 Value wrenStringFromCodePoint(WrenVM* vm, int value)
 {
-  int length = wrenUtf8NumBytes(value);
+  int length = wrenUtf8EncodeNumBytes(value);
   ASSERT(length != 0, "Value out of range.");
 
   ObjString* string = allocateString(vm, length);
@@ -743,19 +771,8 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...)
 Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
 {
   ASSERT(index < string->length, "Index out of bounds.");
-
-  char first = string->value[index];
-
-  // The first byte's high bits tell us how many bytes are in the UTF-8
-  // sequence. If the byte starts with 10xxxxx, it's the middle of a UTF-8
-  // sequence, so return an empty string.
-  int numBytes;
-  if      ((first & 0xc0) == 0x80) numBytes = 0;
-  else if ((first & 0xf8) == 0xf0) numBytes = 4;
-  else if ((first & 0xf0) == 0xe0) numBytes = 3;
-  else if ((first & 0xe0) == 0xc0) numBytes = 2;
-  else numBytes = 1;
-
+  
+  int numBytes = wrenUtf8DecodeNumBytes(string->value, index);
   return wrenNewString(vm, string->value + index, numBytes);
 }
 

@@ -59,7 +59,7 @@ int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length)
   return -1;
 }
 
-int wrenUtf8NumBytes(int value)
+int wrenUtf8EncodeNumBytes(int value)
 {
   ASSERT(value >= 0, "Cannot encode a negative value.");
   
@@ -70,12 +70,13 @@ int wrenUtf8NumBytes(int value)
   return 0;
 }
 
-void wrenUtf8Encode(int value, uint8_t* bytes)
+int wrenUtf8Encode(int value, uint8_t* bytes)
 {
   if (value <= 0x7f)
   {
     // Single byte (i.e. fits in ASCII).
     *bytes = value & 0x7f;
+    return 1;
   }
   else if (value <= 0x7ff)
   {
@@ -83,6 +84,7 @@ void wrenUtf8Encode(int value, uint8_t* bytes)
     *bytes = 0xc0 | ((value & 0x7c0) >> 6);
     bytes++;
     *bytes = 0x80 | (value & 0x3f);
+    return 2;
   }
   else if (value <= 0xffff)
   {
@@ -92,6 +94,7 @@ void wrenUtf8Encode(int value, uint8_t* bytes)
     *bytes = 0x80 | ((value & 0xfc0) >> 6);
     bytes++;
     *bytes = 0x80 | (value & 0x3f);
+    return 3;
   }
   else if (value <= 0x10ffff)
   {
@@ -103,12 +106,11 @@ void wrenUtf8Encode(int value, uint8_t* bytes)
     *bytes = 0x80 | ((value & 0xfc0) >> 6);
     bytes++;
     *bytes = 0x80 | (value & 0x3f);
+    return 4;
   }
-  else
-  {
-    // Invalid Unicode value. See: http://tools.ietf.org/html/rfc3629
-    ASSERT(false, "Invalid UTF-8 value.");
-  }
+
+  // Invalid Unicode value. See: http://tools.ietf.org/html/rfc3629
+  UNREACHABLE();
 }
 
 int wrenUtf8Decode(const uint8_t* bytes, uint32_t length)
@@ -157,4 +159,20 @@ int wrenUtf8Decode(const uint8_t* bytes, uint32_t length)
   }
 
   return value;
+}
+
+int wrenUtf8DecodeNumBytes(const char* string, uint32_t index)
+{
+  char first = string[index];
+  
+  // If the byte starts with 10xxxxx, it's the middle of a UTF-8 sequence, so
+  // don't count it at all.
+  if ((first & 0xc0) == 0x80) return 0;
+  
+  // The first byte's high bits tell us how many bytes are in the UTF-8
+  // sequence.
+  if ((first & 0xf8) == 0xf0) return 4;
+  if ((first & 0xf0) == 0xe0) return 3;
+  if ((first & 0xe0) == 0xc0) return 2;
+  return 1;
 }

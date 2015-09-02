@@ -604,7 +604,7 @@ DEF_PRIMITIVE(list_subscript)
   ObjList* result = wrenNewList(vm, count);
   for (uint32_t i = 0; i < count; i++)
   {
-    result->elements.data[i] = list->elements.data[start + (i * step)];
+    result->elements.data[i] = list->elements.data[start + i * step];
   }
 
   RETURN_OBJ(result);
@@ -1229,23 +1229,12 @@ DEF_PRIMITIVE(string_subscript)
     RETURN_ERROR("Subscript must be a number or a range.");
   }
 
-  // TODO: Handle UTF-8 here.
-  /*
   int step;
-  int count = string->length;
+  uint32_t count = string->length;
   int start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);
   if (start == -1) return PRIM_ERROR;
 
-  ObjString* result = wrenNewUninitializedString(vm, count);
-  for (int i = 0; i < count; i++)
-  {
-    result->value[i] = string->value[start + (i * step)];
-  }
-  result->value[count] = '\0';
-
-  RETURN_OBJ(result);
-  */
-  RETURN_ERROR("Subscript ranges for strings are not implemented yet.");
+  RETURN_VAL(wrenNewStringFromRange(vm, string, start, count, step));
 }
 
 DEF_PRIMITIVE(string_toString)

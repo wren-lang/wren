@@ -697,7 +697,7 @@ static void readUnicodeEscape(Parser* parser, ByteBuffer* string)
   int value = readHexEscape(parser, 4, "Unicode");
 
   // Grow the buffer enough for the encoded result.
-  int numBytes = wrenUtf8NumBytes(value);
+  int numBytes = wrenUtf8EncodeNumBytes(value);
   if (numBytes != 0)
   {
     wrenByteBufferFill(parser->vm, string, 0, numBytes);

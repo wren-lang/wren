@@ -1,4 +1,3 @@
-// skip: Range subscripts for strings don't handle UTF-8.
 var string = "abcde"
 IO.print(string[0..0]) // expect: a
 IO.print(string[1...1] == "") // expect: true
@@ -33,3 +32,16 @@ IO.print(string[3...-6]) // expect: dcba
 // An empty range at zero is allowed on an empty string.
 IO.print(""[0...0] == "") // expect: true
 IO.print(""[0..-1] == "") // expect: true
+
+// Indexes by byte, not code point.
+//
+// Bytes:           11111
+//        012345678901234
+// Chars: sø mé ஃ  thî ng
+IO.print("søméஃthîng"[0..3]) // expect: søm
+IO.print("søméஃthîng"[3...10]) // expect: méஃt
+
+// Only includes sequences whose first byte is in the range.
+IO.print("søméஃthîng"[2..6]) // expect: méஃ
+IO.print("søméஃthîng"[2...6]) // expect: mé
+IO.print("søméஃthîng"[2...7]) // expect: méஃ

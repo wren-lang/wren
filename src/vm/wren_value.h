@@ -715,6 +715,12 @@ Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 // [text] may be NULL if [length] is zero.
 Value wrenNewString(WrenVM* vm, const char* text, size_t length);
 
+// Creates a new string object by taking a range of characters from [source].
+// The range starts at [start], contains [count] bytes, and increments by
+// [step].
+Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
+                             uint32_t count, int step);
+
 // Produces a string representation of [value].
 Value wrenNumToString(WrenVM* vm, double value);
 

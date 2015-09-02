@@ -100,14 +100,25 @@ int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length);
 // Returns the number of bytes needed to encode [value] in UTF-8.
 //
 // Returns 0 if [value] is too large to encode.
-int wrenUtf8NumBytes(int value);
+int wrenUtf8EncodeNumBytes(int value);
 
 // Encodes value as a series of bytes in [bytes], which is assumed to be large
 // enough to hold the encoded result.
-void wrenUtf8Encode(int value, uint8_t* bytes);
+//
+// Returns the number of written bytes.
+int wrenUtf8Encode(int value, uint8_t* bytes);
 
-// Decodes the UTF-8 sequence in [bytes] (which has max [length]), returning
-// the code point.
+// Decodes the UTF-8 sequence starting at [bytes] (which has max [length]),
+// returning the code point.
+//
+// Returns -1 if the bytes are not a valid UTF-8 sequence.
 int wrenUtf8Decode(const uint8_t* bytes, uint32_t length);
+
+// Returns the number of bytes in the UTF-8 sequence starting at [index] in
+// [string].
+//
+// If the character at that index is not the beginning of a UTF-8 sequence,
+// returns 0.
+int wrenUtf8DecodeNumBytes(const char* string, uint32_t index);
 
 #endif
