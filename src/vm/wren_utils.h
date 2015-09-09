@@ -114,11 +114,10 @@ int wrenUtf8Encode(int value, uint8_t* bytes);
 // Returns -1 if the bytes are not a valid UTF-8 sequence.
 int wrenUtf8Decode(const uint8_t* bytes, uint32_t length);
 
-// Returns the number of bytes in the UTF-8 sequence starting at [index] in
-// [string].
+// Returns the number of bytes in the UTF-8 sequence starting with [byte].
 //
 // If the character at that index is not the beginning of a UTF-8 sequence,
 // returns 0.
-int wrenUtf8DecodeNumBytes(const char* string, uint32_t index);
+int wrenUtf8DecodeNumBytes(uint8_t byte);
 
 #endif

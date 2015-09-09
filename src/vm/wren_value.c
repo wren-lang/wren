@@ -638,7 +638,7 @@ Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
   int length = 0;
   for (uint32_t i = 0; i < count; i++)
   {
-    length += wrenUtf8EncodeNumBytes(from[start + i * step]);
+    length += wrenUtf8DecodeNumBytes(from[start + i * step]);
   }
   
   ObjString* result = allocateString(vm, length);
@@ -655,7 +655,7 @@ Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
       to += wrenUtf8Encode(codePoint, to);
     }
   }
-
+  
   hashString(result);
   return OBJ_VAL(result);
 }
@@ -772,7 +772,7 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
 {
   ASSERT(index < string->length, "Index out of bounds.");
   
-  int numBytes = wrenUtf8DecodeNumBytes(string->value, index);
+  int numBytes = wrenUtf8DecodeNumBytes(string->value[index]);
   return wrenNewString(vm, string->value + index, numBytes);
 }
 

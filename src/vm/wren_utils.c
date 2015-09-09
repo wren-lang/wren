@@ -161,18 +161,16 @@ int wrenUtf8Decode(const uint8_t* bytes, uint32_t length)
   return value;
 }
 
-int wrenUtf8DecodeNumBytes(const char* string, uint32_t index)
+int wrenUtf8DecodeNumBytes(uint8_t byte)
 {
-  char first = string[index];
-  
   // If the byte starts with 10xxxxx, it's the middle of a UTF-8 sequence, so
   // don't count it at all.
-  if ((first & 0xc0) == 0x80) return 0;
+  if ((byte & 0xc0) == 0x80) return 0;
   
   // The first byte's high bits tell us how many bytes are in the UTF-8
   // sequence.
-  if ((first & 0xf8) == 0xf0) return 4;
-  if ((first & 0xf0) == 0xe0) return 3;
-  if ((first & 0xe0) == 0xc0) return 2;
+  if ((byte & 0xf8) == 0xf0) return 4;
+  if ((byte & 0xf0) == 0xe0) return 3;
+  if ((byte & 0xe0) == 0xc0) return 2;
   return 1;
 }
