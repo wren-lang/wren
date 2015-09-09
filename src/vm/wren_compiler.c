@@ -1020,9 +1020,9 @@ static int emitJump(Compiler* compiler, Code instruction)
 
 // Creates a new constant for the current value and emits the bytecode to load
 // it from the constant table.
-static void emitConstant(Compiler* compiler)
+static void emitConstant(Compiler* compiler, Value value)
 {
-  int constant = addConstant(compiler, compiler->parser->value);
+  int constant = addConstant(compiler, value);
   
   // Compile the code to load the constant.
   emitShortArg(compiler, CODE_CONSTANT, constant);
@@ -2125,7 +2125,7 @@ static void null(Compiler* compiler, bool allowAssignment)
 // A number or string literal.
 static void literal(Compiler* compiler, bool allowAssignment)
 {
-  emitConstant(compiler);
+  emitConstant(compiler, compiler->parser->value);
 }
 
 static void super_(Compiler* compiler, bool allowAssignment)
@@ -3002,9 +3002,8 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   if (isForeign)
   {
     // Define a constant for the signature.
-    compiler->parser->value = wrenNewString(compiler->parser->vm,
-                                            fullSignature, length);
-    emitConstant(compiler);
+    emitConstant(compiler, wrenNewString(compiler->parser->vm,
+                                         fullSignature, length));
 
     // We don't need the function we started compiling in the parameter list
     // any more.
@@ -3043,9 +3042,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   int slot = declareNamedVariable(compiler);
 
   // Make a string constant for the name.
-  compiler->parser->value = wrenNewString(compiler->parser->vm,
-      compiler->parser->previous.start, compiler->parser->previous.length);
-  emitConstant(compiler);
+  emitConstant(compiler, wrenNewString(compiler->parser->vm,
+      compiler->parser->previous.start, compiler->parser->previous.length));
 
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
