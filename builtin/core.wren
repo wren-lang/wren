@@ -137,9 +137,11 @@ class StringByteSequence is Sequence {
     _string = string
   }
 
-  [index] { _string.byteAt(index) }
+  [index] { _string.byteAt_(index) }
   iterate(iterator) { _string.iterateByte_(iterator) }
-  iteratorValue(iterator) { _string.byteAt(iterator) }
+  iteratorValue(iterator) { _string.byteAt_(iterator) }
+
+  count { _string.byteCount_ }
 }
 
 class List is Sequence {

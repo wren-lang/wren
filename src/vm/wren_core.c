@@ -151,9 +151,11 @@ static const char* coreLibSource =
 "    _string = string\n"
 "  }\n"
 "\n"
-"  [index] { _string.byteAt(index) }\n"
+"  [index] { _string.byteAt_(index) }\n"
 "  iterate(iterator) { _string.iterateByte_(iterator) }\n"
-"  iteratorValue(iterator) { _string.byteAt(iterator) }\n"
+"  iteratorValue(iterator) { _string.byteAt_(iterator) }\n"
+"\n"
+"  count { _string.byteCount_ }\n"
 "}\n"
 "\n"
 "class List is Sequence {\n"
@@ -1079,6 +1081,11 @@ DEF_PRIMITIVE(string_byteAt)
   RETURN_NUM((uint8_t)string->value[index]);
 }
 
+DEF_PRIMITIVE(string_byteCount)
+{
+  RETURN_NUM(AS_STRING(args[0])->length);
+}
+
 DEF_PRIMITIVE(string_codePointAt)
 {
   ObjString* string = AS_STRING(args[0]);
@@ -1409,7 +1416,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
   PRIMITIVE(vm->stringClass, "+(_)", string_plus);
   PRIMITIVE(vm->stringClass, "[_]", string_subscript);
-  PRIMITIVE(vm->stringClass, "byteAt(_)", string_byteAt);
+  PRIMITIVE(vm->stringClass, "byteAt_(_)", string_byteAt);
+  PRIMITIVE(vm->stringClass, "byteCount_", string_byteCount);
   PRIMITIVE(vm->stringClass, "codePointAt(_)", string_codePointAt);
   PRIMITIVE(vm->stringClass, "contains(_)", string_contains);
   PRIMITIVE(vm->stringClass, "count", string_count);
