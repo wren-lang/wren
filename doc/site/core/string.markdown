@@ -45,20 +45,6 @@ It is a runtime error if `codePoint` is not an integer between `0` and
 
 ## Methods
 
-### **byteAt**(index)
-
-Gets the value of the byte at byte offset `index` in the string.
-
-    :::dart
-    IO.print("hello".byteAt(1)) // 101, for "e".
-
-If the index is negative, it counts backwards from the end of the string.
-
-    :::dart
-    IO.print("hello".byteAt(-4)) // 101, for "e".
-
-It is a runtime error if `index` is not an integer or is out of bounds.
-
 ### **bytes**
 
 Gets a [`Sequence`](sequence.html) that can be used to access the raw bytes of

@@ -27,12 +27,12 @@ IO.print("søméஃthîng"[-1]) // expect: g
 IO.print("søméஃthîng"[-2]) // expect: n
 IO.print("søméஃthîng"[-4]) // expect: î
 
-// If the subscript is in the middle of a UTF-8 sequence, yield an empty string.
-IO.print("søméஃthîng"[2] == "") // expect: true
-IO.print("søméஃthîng"[7] == "") // expect: true
-IO.print("søméஃthîng"[8] == "") // expect: true
-IO.print("søméஃ"[-1] == "") // expect: true
-IO.print("søméஃ"[-2] == "") // expect: true
+// If the subscript is in the middle of a UTF-8 sequence, return the raw byte.
+IO.print("søméஃthîng"[2] == "\xb8") // expect: true
+IO.print("søméஃthîng"[7] == "\xae") // expect: true
+IO.print("søméஃthîng"[8] == "\x83") // expect: true
+IO.print("søméஃ"[-1] == "\x83") // expect: true
+IO.print("søméஃ"[-2] == "\xae") // expect: true
 
 // 8-bit clean.
 IO.print("a\0b\0c"[0] == "a") // expect: true
@@ -40,3 +40,7 @@ IO.print("a\0b\0c"[1] == "\0") // expect: true
 IO.print("a\0b\0c"[2] == "b") // expect: true
 IO.print("a\0b\0c"[3] == "\0") // expect: true
 IO.print("a\0b\0c"[4] == "c") // expect: true
+
+// Returns single byte strings for invalid UTF-8 sequences.
+IO.print("\xef\xf7"[0] == "\xef") // expect: true
+IO.print("\xef\xf7"[1] == "\xf7") // expect: true

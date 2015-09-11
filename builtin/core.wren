@@ -130,6 +130,7 @@ class WhereSequence is Sequence {
 
 class String is Sequence {
   bytes { StringByteSequence.new(this) }
+  codePoints { StringCodePointSequence.new(this) }
 }
 
 class StringByteSequence is Sequence {
@@ -142,6 +143,18 @@ class StringByteSequence is Sequence {
   iteratorValue(iterator) { _string.byteAt_(iterator) }
 
   count { _string.byteCount_ }
+}
+
+class StringCodePointSequence is Sequence {
+  construct new(string) {
+    _string = string
+  }
+
+  [index] { _string.codePointAt_(index) }
+  iterate(iterator) { _string.iterate(iterator) }
+  iteratorValue(iterator) { _string.codePointAt_(iterator) }
+
+  count { _string.count }
 }
 
 class List is Sequence {

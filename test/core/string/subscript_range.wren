@@ -45,3 +45,5 @@ IO.print("søméஃthîng"[3...10]) // expect: méஃt
 IO.print("søméஃthîng"[2..6]) // expect: méஃ
 IO.print("søméஃthîng"[2...6]) // expect: mé
 IO.print("søméஃthîng"[2...7]) // expect: méஃ
+
+// TODO: Strings including invalid UTF-8.

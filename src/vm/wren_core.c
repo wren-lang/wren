@@ -144,6 +144,7 @@ static const char* coreLibSource =
 "\n"
 "class String is Sequence {\n"
 "  bytes { StringByteSequence.new(this) }\n"
+"  codePoints { StringCodePointSequence.new(this) }\n"
 "}\n"
 "\n"
 "class StringByteSequence is Sequence {\n"
@@ -156,6 +157,18 @@ static const char* coreLibSource =
 "  iteratorValue(iterator) { _string.byteAt_(iterator) }\n"
 "\n"
 "  count { _string.byteCount_ }\n"
+"}\n"
+"\n"
+"class StringCodePointSequence is Sequence {\n"
+"  construct new(string) {\n"
+"    _string = string\n"
+"  }\n"
+"\n"
+"  [index] { _string.codePointAt_(index) }\n"
+"  iterate(iterator) { _string.iterate(iterator) }\n"
+"  iteratorValue(iterator) { _string.codePointAt_(iterator) }\n"
+"\n"
+"  count { _string.count }\n"
 "}\n"
 "\n"
 "class List is Sequence {\n"
@@ -1418,7 +1431,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "[_]", string_subscript);
   PRIMITIVE(vm->stringClass, "byteAt_(_)", string_byteAt);
   PRIMITIVE(vm->stringClass, "byteCount_", string_byteCount);
-  PRIMITIVE(vm->stringClass, "codePointAt(_)", string_codePointAt);
+  PRIMITIVE(vm->stringClass, "codePointAt_(_)", string_codePointAt);
   PRIMITIVE(vm->stringClass, "contains(_)", string_contains);
   PRIMITIVE(vm->stringClass, "count", string_count);
   PRIMITIVE(vm->stringClass, "endsWith(_)", string_endsWith);

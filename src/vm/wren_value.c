@@ -772,8 +772,18 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
 {
   ASSERT(index < string->length, "Index out of bounds.");
   
-  int numBytes = wrenUtf8DecodeNumBytes(string->value[index]);
-  return wrenNewString(vm, string->value + index, numBytes);
+  int codePoint = wrenUtf8Decode((uint8_t*)string->value + index,
+                                 string->length - index);
+  if (codePoint == -1)
+  {
+    // If it isn't a valid UTF-8 sequence, treat it as a single raw byte.
+    char bytes[2];
+    bytes[0] = string->value[index];
+    bytes[1] = '\0';
+    return wrenNewString(vm, bytes, 1);
+  }
+  
+  return wrenStringFromCodePoint(vm, codePoint);
 }
 
 // Uses the Boyer-Moore-Horspool string matching algorithm.

@@ -12,4 +12,4 @@ IO.print("søméஃ".bytes.count) // expect: 9
 IO.print("\0\0\0".bytes.count) // expect: 3
 
 // Invalid UTF-8.
-IO.print("\xef\x00".bytes.count) // expect: 2
+IO.print("\xef\xf7".bytes.count) // expect: 2

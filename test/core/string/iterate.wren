@@ -22,3 +22,8 @@ IO.print("a\0b\0c".iterate(1)) // expect: 2
 IO.print("a\0b\0c".iterate(2)) // expect: 3
 IO.print("a\0b\0c".iterate(3)) // expect: 4
 IO.print("a\0b\0c".iterate(4)) // expect: false
+
+// Iterates over invalid UTF-8 one byte at a time.
+IO.print("\xef\xf7".iterate(null)) // expect: 0
+IO.print("\xef\xf7".iterate(0)) // expect: 1
+IO.print("\xef\xf7".iterate(1)) // expect: false
