@@ -1125,11 +1125,6 @@ DEF_PRIMITIVE(string_contains)
   RETURN_BOOL(wrenStringFind(string, search) != UINT32_MAX);
 }
 
-DEF_PRIMITIVE(string_count)
-{
-  RETURN_NUM(AS_STRING(args[0])->length);
-}
-
 DEF_PRIMITIVE(string_endsWith)
 {
   if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
@@ -1433,7 +1428,6 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "byteCount_", string_byteCount);
   PRIMITIVE(vm->stringClass, "codePointAt_(_)", string_codePointAt);
   PRIMITIVE(vm->stringClass, "contains(_)", string_contains);
-  PRIMITIVE(vm->stringClass, "count", string_count);
   PRIMITIVE(vm->stringClass, "endsWith(_)", string_endsWith);
   PRIMITIVE(vm->stringClass, "indexOf(_)", string_indexOf);
   PRIMITIVE(vm->stringClass, "iterate(_)", string_iterate);

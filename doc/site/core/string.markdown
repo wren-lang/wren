@@ -1,20 +1,31 @@
 ^title String Class
 ^category core
 
-Strings are immutable chunks of text. More formally, a string is a sequence of
-Unicode code points encoded in UTF-8.
+A string is an immutable array of bytes. Strings usually store text, in which
+case it will be the UTF-8 encoding of the text's code points. But you can put
+any kind of byte values in there you want, including null bytes or invalid UTF-8
+sequences.
 
-If you never work with any characters outside of the ASCII range, you can treat
-strings like a directly indexable array of characters. Once other characters
-get involved, it's important to understand the distinction.
+There are a few ways to think of a string:
 
-In UTF-8, a single Unicode code point (very roughly a single "character") may
-be encoded as one or more bytes. This means you can't directly index by code
-point. There's no way to jump directly to, say, the fifth code unit in a string
-without walking the string from the beginning and counting them as you go.
+* As a searchable chunk of text composed of a sequence of textual code points.
 
-Because counting code units is relatively slow, string methods generally index
-by *byte*, not *code unit*. When you do:
+* As an iterable sequence of numeric code points.
+
+* As a flat array of directly indexable bytes.
+
+All of those are useful for some problems, so the string API supports all three.
+The first one is the most common, so that's what most methods directly on the
+string class cater towards.
+
+In UTF-8, a single Unicode code point&mdash;very roughly a single
+"character"&mdash; may be encoded as one or more bytes. This means you can't
+efficiently index by code point. There's no way to jump directly to, say, the
+fifth code unit in a string without walking the string from the beginning and
+counting them as you go.
+
+Because counting code units is relatively slow, the indexes passed to string
+methods are *byte* offsets, not *code point* offsets. When you do:
 
     :::dart
     someString[3]
@@ -28,8 +39,9 @@ on string *return* byte indices too. So, for example, this does what you want:
     var hPosition = metalBand.indexOf("h")
     IO.print(metalBand[hPosition]) // "h"
 
-In general, methods on strings work in terms of code units if they can do so
-efficiently, and otherwise deal in bytes.
+If you want to work with a string as a sequence numeric code points, call the `codePoints` getter. It returns a [Sequence](sequence.html) that will decide UTF-8 and iterate over the code points, returning each as a number.
+
+If you want to get at the raw bytes, call `bytes`. This returns a Sequence that ignores any UTF-8 encoding and works directly at the byte level.
 
 ## Static Methods
 
@@ -55,23 +67,28 @@ directly index bytes.
     :::dart
     IO.print("hello".bytes[1]) // 101, for "e".
 
-### **codePointAt**(index)
+The `count` method on the returned sequence returns the number of bytes in the
+string. Unlike `count` on the string itself, it does not have to iterate over
+the string, and runs in constant time instead.
 
-Gets the value of the UTF-8 encoded code point starting at byte offset `index`
-in the string. Unlike the subscript operator, this returns the code point as a
-number.
+### **codePoints**
+
+Gets a [`Sequence`](sequence.html) that can be used to access the UTF-8 decode
+code points of the string *as numbers*. Iteration and subscripting work similar
+to the string itself. The difference is that instead of returning
+single-character strings, this returns the numeric code point values.
 
     :::dart
     var string = "(ᵔᴥᵔ)"
-    IO.print(string.codePointAt(0)) // 40, for "(".
-    IO.print(string.codePointAt(4)) // 7461, for "ᴥ".
+    IO.print(string.codePoints[0]) // 40, for "(".
+    IO.print(string.codePoints[4]) // 7461, for "ᴥ".
 
 If the byte at `index` does not begin a valid UTF-8 sequence, or the end of the
 string is reached before the sequence is complete, returns `-1`.
 
     :::dart
     var string = "(ᵔᴥᵔ)"
-    IO.print(string.codePointAt(2)) // -1, in the middle of "ᵔ".
+    IO.print(string.codePoints[2]) // -1, in the middle of "ᵔ".
 
 ### **contains**(other)
 
@@ -81,7 +98,12 @@ It is a runtime error if `other` is not a string.
 
 ### **count**
 
-Returns the length of the string.
+Returns the number of code points in the string. Since UTF-8 is a
+variable-length encoding, this requires iterating over the entire string, which
+is relatively slow.
+
+If the string contains bytes that are invalid UTF-8, each byte adds one to the
+count as well.
 
 ### **endsWith**(suffix)
 
@@ -108,6 +130,9 @@ for iterating over the *code points* in the string:
     }
 
     IO.print(codePoints) // ["(", "ᵔ", "ᴥ", "ᵔ", ")"].
+
+If the string contains any bytes that are not valid UTF-8, this iterates over
+those too, one byte at a time.
 
 ### **startsWith**(prefix)
 
@@ -139,11 +164,12 @@ Returns a string containing the code unit starting at byte `index`.
 Since `ʕ` is two bytes in UTF-8 and `•` is three, the fifth byte points to the
 bear's nose.
 
-If `index` points into the middle of a UTF-8 sequence, this returns an empty
-string:
+If `index` points into the middle of a UTF-8 sequence or at otherwise invalid
+UTF-8, this returns a one-byte string containing the value of the byte at that
+index:
 
     :::dart
-    IO.print("I ♥ NY"[3]) // "".
+    IO.print("I ♥ NY"[3]) // One-byte string whose value is 153.
 
 It is a runtime error if `index` is greater than the number of bytes in the
 string.
