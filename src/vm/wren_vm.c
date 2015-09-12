@@ -639,27 +639,21 @@ static bool defineClass(WrenVM* vm, ObjFiber* fiber, int numFields,
 {
   // Pull the name and superclass off the stack.
   Value name = fiber->stackTop[-2];
-  Value superclassValue = fiber->stackTop[-1];
+  Value superclass = fiber->stackTop[-1];
   
   // We have two values on the stack and we are going to leave one, so discard
   // the other slot.
   fiber->stackTop--;
 
-  // Use implicit Object superclass if none given.
-  ObjClass* superclass = vm->objectClass;
-  
-  if (!IS_NULL(superclassValue))
+  Value error = validateSuperclass(vm, name, superclass, numFields);
+  if (!IS_NULL(error))
   {
-    Value error = validateSuperclass(vm, name, superclassValue, numFields);
-    if (!IS_NULL(error))
-    {
-      fiber->stackTop[-1] = error;
-      return false;
-    }
-    superclass = AS_CLASS(superclassValue);
+    fiber->stackTop[-1] = error;
+    return false;
   }
   
-  ObjClass* classObj = wrenNewClass(vm, superclass, numFields, AS_STRING(name));
+  ObjClass* classObj = wrenNewClass(vm, AS_CLASS(superclass), numFields,
+                                    AS_STRING(name));
   fiber->stackTop[-1] = OBJ_VAL(classObj);
   
   if (numFields == -1) bindForeignClass(vm, classObj, module);

@@ -1790,6 +1790,15 @@ static void loadThis(Compiler* compiler)
   }
 }
 
+// Pushes the value for a module-level variable implicitly imported from core.
+static void loadCoreVariable(Compiler* compiler, const char* name)
+{
+  int symbol = wrenSymbolTableFind(&compiler->parser->module->variableNames,
+                                   name, strlen(name));
+  ASSERT(symbol != -1, "Should have already defined core name.");
+  emitShortArg(compiler, CODE_LOAD_MODULE_VAR, symbol);
+}
+
 // A parenthesized expression.
 static void grouping(Compiler* compiler, bool allowAssignment)
 {
@@ -1800,13 +1809,8 @@ static void grouping(Compiler* compiler, bool allowAssignment)
 // A list literal.
 static void list(Compiler* compiler, bool allowAssignment)
 {
-  // Load the List class.
-  int listClassSymbol = wrenSymbolTableFind(
-      &compiler->parser->module->variableNames, "List", 4);
-  ASSERT(listClassSymbol != -1, "Should have already defined 'List' variable.");
-  emitShortArg(compiler, CODE_LOAD_MODULE_VAR, listClassSymbol);
-
   // Instantiate a new list.
+  loadCoreVariable(compiler, "List");
   callMethod(compiler, 0, "new()", 5);
   
   // Compile the list elements. Each one compiles to a ".add()" call.
@@ -1836,13 +1840,8 @@ static void list(Compiler* compiler, bool allowAssignment)
 // A map literal.
 static void map(Compiler* compiler, bool allowAssignment)
 {
-  // Load the Map class.
-  int mapClassSymbol = wrenSymbolTableFind(
-      &compiler->parser->module->variableNames, "Map", 3);
-  ASSERT(mapClassSymbol != -1, "Should have already defined 'Map' variable.");
-  emitShortArg(compiler, CODE_LOAD_MODULE_VAR, mapClassSymbol);
-
   // Instantiate a new map.
+  loadCoreVariable(compiler, "Map");
   callMethod(compiler, 0, "new()", 5);
 
   // Compile the map elements. Each one is compiled to just invoke the
@@ -3052,8 +3051,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   }
   else
   {
-    // Create the empty class.
-    emit(compiler, CODE_NULL);
+    // Implicitly inherit from Object.
+    loadCoreVariable(compiler, "Object");
   }
 
   // Store a placeholder for the number of fields argument. We don't know
