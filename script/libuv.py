@@ -113,7 +113,7 @@ def build_libuv(arch, out):
     build_libuv_mac()
   elif platform.system() == "Linux":
     build_libuv_linux(arch)
-  elif platform.system(arch) == "Windows":
+  elif platform.system() == "Windows":
     build_libuv_windows()
   else:
     print("Unsupported platform: " + platform.system())
