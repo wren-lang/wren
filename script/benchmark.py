@@ -76,7 +76,7 @@ false""")
 
 BENCHMARK("map_numeric", r"""500000500000""")
 
-BENCHMARK("map_string", r"""3645600""")
+BENCHMARK("map_string", r"""12799920000""")
 
 BENCHMARK("string_equals", r"""3000000""")
 

@@ -81,8 +81,10 @@ var start = IO.clock
 
 var map = {}
 
+var i = 0
 for (key in keys) {
-  map[key] = key.count
+  map[key] = i
+  i = i + 1
 }
 
 var sum = 0

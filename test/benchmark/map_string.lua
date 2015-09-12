@@ -80,9 +80,10 @@ end
 local start = os.clock()
 
 local map = {}
-
+local i = 0
 for _, key in ipairs(keys) do
-  map[key] = string.len(key)
+  map[key] = i
+  i = i + 1
 end
 
 local sum = 0

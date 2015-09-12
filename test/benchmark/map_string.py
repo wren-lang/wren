@@ -81,9 +81,10 @@ for animal in animals:
 start = time.clock()
 
 map = {}
-
+i = 0
 for key in keys:
-  map[key] = len(key)
+  map[key] = i
+  i += 1
 
 sum = 0
 for key in keys:

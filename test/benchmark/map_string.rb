@@ -80,9 +80,10 @@ end
 start = Time.now
 
 map = Hash.new
-
+i = 0
 for key in keys
-  map[key] = key.length
+  map[key] = i
+  i += 1
 end
 
 sum = 0
