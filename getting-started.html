@@ -60,8 +60,22 @@
   <main>
     <h1>Getting Started</h1>
     <p>Getting Wren up and running on your machine should be pretty straightforward.
-Tiny C programs with no dependencies are nice that way. If you're on a Unix or
-Mac and you can rock a command line, it's just:</p>
+Tiny C programs with few dependencies are nice that way. "Wren" encompasses two
+separate artifacts:</p>
+<ul>
+<li>
+<p><strong>The virtual machine.</strong> This is the core chunk of C that executes Wren
+    source code. It is just a library, not a standalone application. It's
+    designed to be <a href="embedding-api.html">embedded</a> in a larger host application. It has no dependencies beyond the C standard library. You can is use as a static library, shared library, or simply compile the source into your app.</p>
+</li>
+<li>
+<p><strong>The command line executable.</strong> Wren also ships with a CLI wrapper around
+    the VM. This gives you a way to run Wren code from the command-line, and
+    also includes modules for talking to the operating system. It depends on
+    <a href="http://libuv.org/">libuv</a> for that.</p>
+</li>
+</ul>
+<p>If you're on a Unix or Mac and you can rock a command line, it's just:</p>
 <div class="codehilite"><pre><span class="nv">$ </span>git clone https://github.com/munificent/wren.git
 <span class="nv">$ </span><span class="nb">cd </span>wren
 <span class="nv">$ </span>make
@@ -69,12 +83,21 @@ Mac and you can rock a command line, it's just:</p>
 </pre></div>
 
 
-<p>Binaries for other configurations are built to <code>bin/</code>. Static and shared
+<p>This builds both the VM and the CLI. It downloads libuv automatically for you.
+The release build of the CLI goes right into the repo's top level directory.
+Binaries for other configurations are built to <code>bin/</code>. Static and shared
 libraries for embedding Wren get built in <code>lib/</code>.</p>
 <p>For Mac users, there is also an XCode project under <code>project/xcode</code>. For
 Windows brethren, <code>project/msvc2013</code> contains a Visual Studio solution. Note
 that these may not have the exact same build settings as the makefile. The
 makefile is the "official" way to compile Wren.</p>
+<p>If you only want to build the VM, you can do:</p>
+<div class="codehilite"><pre><span class="nv">$ </span>make vm
+</pre></div>
+
+
+<p>This will compile the VM to static and shared libraries. It will not even
+download libuv since it isn't needed.</p>
 <h2>Interactive mode <a href="#interactive-mode" name="interactive-mode" class="header-anchor">#</a></h2>
 <p>The above instructions will drop you into Wren's standalone interpreter in
 interactive mode. You can type in a line of code, and it will immediately

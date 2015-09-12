@@ -157,6 +157,8 @@ footer {
   color: #e6a21a; }
 .codehilite pre span.se {
   color: #e6801a; }
+.codehilite pre span.cp {
+  color: #9970c2; }
 
 body.core header a {
   color: #d7d9da; }
