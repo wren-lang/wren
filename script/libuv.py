@@ -14,6 +14,15 @@ import sys
 LIB_UV_VERSION = "v1.6.1"
 LIB_UV_DIR = "deps/libuv"
 
+def python2_binary():
+    """Tries to find a python 2 executable"""
+
+    if sys.version_info.major == 2:
+        return sys.executable or "python"
+    else:
+        return "python2"
+
+
 def ensure_dir(dir):
   """Creates dir if not already there."""
 
@@ -76,7 +85,7 @@ def download_libuv():
 def build_libuv_mac():
   # Create the XCode project.
   run([
-    "python", LIB_UV_DIR + "/gyp_uv.py", "-f", "xcode"
+    python2_binary(), LIB_UV_DIR + "/gyp_uv.py", "-f", "xcode"
   ])
 
   # Compile it.
@@ -94,7 +103,7 @@ def build_libuv_mac():
 
 def build_libuv_linux(arch):
   # Set up the Makefile to build for the right architecture.
-  args = ["python", "gyp_uv.py", "-f", "make"]
+  args = [python2_binary(), "gyp_uv.py", "-f", "make"]
   if arch == "-32":
     args.append("-Dtarget_arch=ia32")
   elif arch == "-64":
