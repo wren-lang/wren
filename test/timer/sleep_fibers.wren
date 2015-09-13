@@ -1,11 +1,12 @@
+import "scheduler" for Scheduler
 import "timer" for Timer
 
-Timer.schedule {
+Scheduler.add {
   Timer.sleep(2)
   IO.print("a")
 }
 
-Timer.schedule {
+Scheduler.add {
   Timer.sleep(1)
   IO.print("b")
 }

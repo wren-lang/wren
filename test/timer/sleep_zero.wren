@@ -1,12 +1,13 @@
+import "scheduler" for Scheduler
 import "timer" for Timer
 
-Timer.schedule {
+Scheduler.add {
   IO.print("a before")
   Timer.sleep(0)
   IO.print("a after")
 }
 
-Timer.schedule {
+Scheduler.add {
   IO.print("b before")
   Timer.sleep(0)
   IO.print("b after")

@@ -3,8 +3,7 @@
 #include <string.h>
 
 #include "io.h"
-
-#include "timer.h"
+#include "modules.h"
 
 char const* rootDirectory = NULL;
 
@@ -73,7 +72,8 @@ char* wrenFilePath(const char* name)
 
 char* readModule(WrenVM* vm, const char* module)
 {
-  if (strcmp(module, "timer") == 0) return timerGetSource();
+  char* source = readBuiltInModule(module);
+  if (source != NULL) return source;
   
   // First try to load the module with a ".wren" extension.
   char* modulePath = wrenFilePath(module);

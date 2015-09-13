@@ -2,8 +2,9 @@
 #include <string.h>
 
 #include "io.h"
+#include "modules.h"
 #include "vm.h"
-#include "timer.h"
+#include "scheduler.h"
 
 #define MAX_LINE_LENGTH 1024 // TODO: Something less arbitrary.
 
@@ -15,16 +16,15 @@ static WrenBindForeignClassFn bindClassFn = NULL;
 
 uv_loop_t* loop;
 
-/// Binds foreign methods declared in either built in modules, or the injected
-/// API test modules.
+// Binds foreign methods declared in either built in modules, or the injected
+// API test modules.
 static WrenForeignMethodFn bindForeignMethod(WrenVM* vm, const char* module,
     const char* className, bool isStatic, const char* signature)
 {
-  if (strcmp(module, "timer") == 0)
-  {
-    return timerBindForeign(vm, className, isStatic, signature);
-  }
-
+  WrenForeignMethodFn method = bindBuiltInForeignMethod(vm, module, className,
+                                                        isStatic, signature);
+  if (method != NULL) return method;
+  
   if (bindMethodFn != NULL)
   {
     return bindMethodFn(vm, module, className, isStatic, signature);
@@ -33,14 +33,14 @@ static WrenForeignMethodFn bindForeignMethod(WrenVM* vm, const char* module,
   return NULL;
 }
 
-/// Binds foreign classes declared in either built in modules, or the injected
-/// API test modules.
+// Binds foreign classes declared in either built in modules, or the injected
+// API test modules.
 static WrenForeignClassMethods bindForeignClass(
     WrenVM* vm, const char* module, const char* className)
 {
-  WrenForeignClassMethods methods = { NULL, NULL };
-
-  // TODO: Bind classes for built-in modules here.
+  WrenForeignClassMethods methods = bindBuiltInForeignClass(vm, module,
+                                                            className);
+  if (methods.allocate != NULL) return methods;
 
   if (bindClassFn != NULL)
   {
@@ -70,7 +70,7 @@ static void initVM()
 
 static void freeVM()
 {
-  timerReleaseMethods();
+  schedulerReleaseMethods();
 
   uv_loop_close(loop);
   free(loop);

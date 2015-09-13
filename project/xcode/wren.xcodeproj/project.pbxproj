@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		2901D7641B74F4050083A2C8 /* timer.c in Sources */ = {isa = PBXBuildFile; fileRef = 2901D7621B74F4050083A2C8 /* timer.c */; };
+		291647C41BA5EA45006142EE /* scheduler.c in Sources */ = {isa = PBXBuildFile; fileRef = 291647C21BA5EA45006142EE /* scheduler.c */; };
+		291647C71BA5EC5E006142EE /* modules.c in Sources */ = {isa = PBXBuildFile; fileRef = 291647C51BA5EC5E006142EE /* modules.c */; };
+		291647C81BA5EC5E006142EE /* modules.c in Sources */ = {isa = PBXBuildFile; fileRef = 291647C51BA5EC5E006142EE /* modules.c */; };
+		291647D01BA5ED26006142EE /* scheduler.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 291647CD1BA5ED26006142EE /* scheduler.wren.inc */; };
+		291647D21BA5ED26006142EE /* timer.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 291647CE1BA5ED26006142EE /* timer.wren.inc */; };
 		29205C8F1AB4E5C90073018D /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C8E1AB4E5C90073018D /* main.c */; };
 		29205C991AB4E6430073018D /* wren_compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C921AB4E6430073018D /* wren_compiler.c */; };
 		29205C9A1AB4E6430073018D /* wren_core.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C931AB4E6430073018D /* wren_core.c */; };
@@ -48,6 +53,12 @@
 /* Begin PBXFileReference section */
 		2901D7621B74F4050083A2C8 /* timer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = timer.c; path = ../../src/module/timer.c; sourceTree = "<group>"; };
 		2901D7631B74F4050083A2C8 /* timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = timer.h; path = ../../src/module/timer.h; sourceTree = "<group>"; };
+		291647C21BA5EA45006142EE /* scheduler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = scheduler.c; path = ../../src/module/scheduler.c; sourceTree = "<group>"; };
+		291647C31BA5EA45006142EE /* scheduler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scheduler.h; path = ../../src/module/scheduler.h; sourceTree = "<group>"; };
+		291647C51BA5EC5E006142EE /* modules.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = modules.c; path = ../../src/cli/modules.c; sourceTree = "<group>"; };
+		291647C61BA5EC5E006142EE /* modules.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = modules.h; path = ../../src/cli/modules.h; sourceTree = "<group>"; };
+		291647CD1BA5ED26006142EE /* scheduler.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = scheduler.wren.inc; path = ../../src/module/scheduler.wren.inc; sourceTree = "<group>"; };
+		291647CE1BA5ED26006142EE /* timer.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = timer.wren.inc; path = ../../src/module/timer.wren.inc; sourceTree = "<group>"; };
 		29205C8E1AB4E5C90073018D /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = main.c; path = ../../src/cli/main.c; sourceTree = "<group>"; };
 		29205C901AB4E62B0073018D /* wren.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = wren.h; path = ../../src/include/wren.h; sourceTree = "<group>"; };
 		29205C921AB4E6430073018D /* wren_compiler.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = wren_compiler.c; path = ../../src/vm/wren_compiler.c; sourceTree = "<group>"; };
@@ -109,8 +120,12 @@
 		2901D7611B74F3E20083A2C8 /* module */ = {
 			isa = PBXGroup;
 			children = (
+				291647C31BA5EA45006142EE /* scheduler.h */,
+				291647C21BA5EA45006142EE /* scheduler.c */,
+				291647CD1BA5ED26006142EE /* scheduler.wren.inc */,
 				2901D7631B74F4050083A2C8 /* timer.h */,
 				2901D7621B74F4050083A2C8 /* timer.c */,
+				291647CE1BA5ED26006142EE /* timer.wren.inc */,
 			);
 			name = module;
 			sourceTree = "<group>";
@@ -148,6 +163,8 @@
 				29C8A9301AB71C3300DEC81D /* io.h */,
 				29C8A92E1AB71C1C00DEC81D /* io.c */,
 				29205C8E1AB4E5C90073018D /* main.c */,
+				291647C61BA5EC5E006142EE /* modules.h */,
+				291647C51BA5EC5E006142EE /* modules.c */,
 				29C8A9321AB71FFF00DEC81D /* vm.h */,
 				29C8A9311AB71FFF00DEC81D /* vm.c */,
 			);
@@ -274,9 +291,11 @@
 			files = (
 				29205C991AB4E6430073018D /* wren_compiler.c in Sources */,
 				2986F6D71ACF93BA00BCE26C /* wren_primitive.c in Sources */,
+				291647C71BA5EC5E006142EE /* modules.c in Sources */,
 				29205C9A1AB4E6430073018D /* wren_core.c in Sources */,
 				2901D7641B74F4050083A2C8 /* timer.c in Sources */,
 				29C8A9331AB71FFF00DEC81D /* vm.c in Sources */,
+				291647C41BA5EA45006142EE /* scheduler.c in Sources */,
 				29205C9B1AB4E6430073018D /* wren_debug.c in Sources */,
 				29205C9C1AB4E6430073018D /* wren_io.c in Sources */,
 				29205C9D1AB4E6430073018D /* wren_utils.c in Sources */,
@@ -292,6 +311,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				291647C81BA5EC5E006142EE /* modules.c in Sources */,
+				291647D21BA5ED26006142EE /* timer.wren.inc in Sources */,
+				291647D01BA5ED26006142EE /* scheduler.wren.inc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,7 +401,7 @@
 				GCC_WARN_PEDANTIC = NO;
 				LIBRARY_SEARCH_PATHS = ../../build;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = ../../deps/libuv/include;
+				USER_HEADER_SEARCH_PATHS = "../../deps/libuv/include ../../src/module";
 			};
 			name = Debug;
 		};
@@ -392,7 +414,7 @@
 				GCC_WARN_PEDANTIC = NO;
 				LIBRARY_SEARCH_PATHS = ../../build;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = ../../deps/libuv/include;
+				USER_HEADER_SEARCH_PATHS = "../../deps/libuv/include ../../src/module";
 			};
 			name = Release;
 		};
@@ -416,7 +438,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = ../../deps/libuv/include;
+				USER_HEADER_SEARCH_PATHS = "../../deps/libuv/include ../../src/module";
 			};
 			name = Debug;
 		};
@@ -436,7 +458,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = ../../deps/libuv/include;
+				USER_HEADER_SEARCH_PATHS = "../../deps/libuv/include ../../src/module";
 			};
 			name = Release;
 		};

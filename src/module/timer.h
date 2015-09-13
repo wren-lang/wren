@@ -3,11 +3,7 @@
 
 #include "wren.h"
 
-char* timerGetSource();
-
 WrenForeignMethodFn timerBindForeign(
     WrenVM* vm, const char* className, bool isStatic, const char* signature);
-
-void timerReleaseMethods();
 
 #endif

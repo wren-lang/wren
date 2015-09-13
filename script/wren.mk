@@ -153,7 +153,8 @@ lib/lib$(WREN).$(SHARED_EXT): $(VM_OBJECTS)
 
 # Test executable.
 $(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
-		$(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
+		$(BUILD_DIR)/cli/io.o $(BUILD_DIR)/cli/modules.o $(BUILD_DIR)/cli/vm.o \
+		$(LIBUV)
 	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@ mkdir -p $(BUILD_DIR)/test
 	@ $(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
