@@ -634,7 +634,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
 // occurred.
 //
 // Returns false if the result is an error.
-static bool defineClass(WrenVM* vm, ObjFiber* fiber, int numFields,
+static bool createClass(WrenVM* vm, ObjFiber* fiber, int numFields,
                         ObjModule* module)
 {
   // Pull the name and superclass off the stack.
@@ -1195,13 +1195,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(CLASS):
     {
-      if (!defineClass(vm, fiber, READ_BYTE(), NULL)) RUNTIME_ERROR(PEEK());
+      if (!createClass(vm, fiber, READ_BYTE(), NULL)) RUNTIME_ERROR(PEEK());
       DISPATCH();
     }
     
     CASE_CODE(FOREIGN_CLASS):
     {
-      if (!defineClass(vm, fiber, -1, fn->module)) RUNTIME_ERROR(PEEK());
+      if (!createClass(vm, fiber, -1, fn->module)) RUNTIME_ERROR(PEEK());
       DISPATCH();
     }
     

@@ -10,223 +10,7 @@
 #include "wren_primitive.h"
 #include "wren_value.h"
 
-// This string literal is generated automatically from core. Do not edit.
-static const char* coreLibSource =
-"class Bool {}\n"
-"class Fiber {}\n"
-"class Fn {}\n"
-"class Null {}\n"
-"class Num {}\n"
-"\n"
-"class Sequence {\n"
-"  all(f) {\n"
-"    var result = true\n"
-"    for (element in this) {\n"
-"      result = f.call(element)\n"
-"      if (!result) return result\n"
-"    }\n"
-"    return result\n"
-"  }\n"
-"\n"
-"  any(f) {\n"
-"    var result = false\n"
-"    for (element in this) {\n"
-"      result = f.call(element)\n"
-"      if (result) return result\n"
-"    }\n"
-"    return result\n"
-"  }\n"
-"\n"
-"  contains(element) {\n"
-"    for (item in this) {\n"
-"      if (element == item) return true\n"
-"    }\n"
-"    return false\n"
-"  }\n"
-"\n"
-"  count {\n"
-"    var result = 0\n"
-"    for (element in this) {\n"
-"      result = result + 1\n"
-"    }\n"
-"    return result\n"
-"  }\n"
-"\n"
-"  count(f) {\n"
-"    var result = 0\n"
-"    for (element in this) {\n"
-"      if (f.call(element)) result = result + 1\n"
-"    }\n"
-"    return result\n"
-"  }\n"
-"\n"
-"  each(f) {\n"
-"    for (element in this) {\n"
-"      f.call(element)\n"
-"    }\n"
-"  }\n"
-"\n"
-"  isEmpty { iterate(null) ? false : true }\n"
-"\n"
-"  map(transformation) { MapSequence.new(this, transformation) }\n"
-"\n"
-"  where(predicate) { WhereSequence.new(this, predicate) }\n"
-"\n"
-"  reduce(acc, f) {\n"
-"    for (element in this) {\n"
-"      acc = f.call(acc, element)\n"
-"    }\n"
-"    return acc\n"
-"  }\n"
-"\n"
-"  reduce(f) {\n"
-"    var iter = iterate(null)\n"
-"    if (!iter) Fiber.abort(\"Can't reduce an empty sequence.\")\n"
-"\n"
-"    // Seed with the first element.\n"
-"    var result = iteratorValue(iter)\n"
-"    while (iter = iterate(iter)) {\n"
-"      result = f.call(result, iteratorValue(iter))\n"
-"    }\n"
-"\n"
-"    return result\n"
-"  }\n"
-"\n"
-"  join { join(\"\") }\n"
-"\n"
-"  join(sep) {\n"
-"    var first = true\n"
-"    var result = \"\"\n"
-"\n"
-"    for (element in this) {\n"
-"      if (!first) result = result + sep\n"
-"      first = false\n"
-"      result = result + element.toString\n"
-"    }\n"
-"\n"
-"    return result\n"
-"  }\n"
-"\n"
-"  toList {\n"
-"    var result = List.new()\n"
-"    for (element in this) {\n"
-"      result.add(element)\n"
-"    }\n"
-"    return result\n"
-"  }\n"
-"}\n"
-"\n"
-"class MapSequence is Sequence {\n"
-"  construct new(sequence, fn) {\n"
-"    _sequence = sequence\n"
-"    _fn = fn\n"
-"  }\n"
-"\n"
-"  iterate(iterator) { _sequence.iterate(iterator) }\n"
-"  iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }\n"
-"}\n"
-"\n"
-"class WhereSequence is Sequence {\n"
-"  construct new(sequence, fn) {\n"
-"    _sequence = sequence\n"
-"    _fn = fn\n"
-"  }\n"
-"\n"
-"  iterate(iterator) {\n"
-"    while (iterator = _sequence.iterate(iterator)) {\n"
-"      if (_fn.call(_sequence.iteratorValue(iterator))) break\n"
-"    }\n"
-"    return iterator\n"
-"  }\n"
-"\n"
-"  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }\n"
-"}\n"
-"\n"
-"class String is Sequence {\n"
-"  bytes { StringByteSequence.new(this) }\n"
-"  codePoints { StringCodePointSequence.new(this) }\n"
-"}\n"
-"\n"
-"class StringByteSequence is Sequence {\n"
-"  construct new(string) {\n"
-"    _string = string\n"
-"  }\n"
-"\n"
-"  [index] { _string.byteAt_(index) }\n"
-"  iterate(iterator) { _string.iterateByte_(iterator) }\n"
-"  iteratorValue(iterator) { _string.byteAt_(iterator) }\n"
-"\n"
-"  count { _string.byteCount_ }\n"
-"}\n"
-"\n"
-"class StringCodePointSequence is Sequence {\n"
-"  construct new(string) {\n"
-"    _string = string\n"
-"  }\n"
-"\n"
-"  [index] { _string.codePointAt_(index) }\n"
-"  iterate(iterator) { _string.iterate(iterator) }\n"
-"  iteratorValue(iterator) { _string.codePointAt_(iterator) }\n"
-"\n"
-"  count { _string.count }\n"
-"}\n"
-"\n"
-"class List is Sequence {\n"
-"  addAll(other) {\n"
-"    for (element in other) {\n"
-"      add(element)\n"
-"    }\n"
-"    return other\n"
-"  }\n"
-"\n"
-"  toString { \"[\" + join(\", \") + \"]\" }\n"
-"\n"
-"  +(other) {\n"
-"    var result = this[0..-1]\n"
-"    for (element in other) {\n"
-"      result.add(element)\n"
-"    }\n"
-"    return result\n"
-"  }\n"
-"}\n"
-"\n"
-"class Map {\n"
-"  keys { MapKeySequence.new(this) }\n"
-"  values { MapValueSequence.new(this) }\n"
-"\n"
-"  toString {\n"
-"    var first = true\n"
-"    var result = \"{\"\n"
-"\n"
-"    for (key in keys) {\n"
-"      if (!first) result = result + \", \"\n"
-"      first = false\n"
-"      result = result + key.toString + \": \" + this[key].toString\n"
-"    }\n"
-"\n"
-"    return result + \"}\"\n"
-"  }\n"
-"}\n"
-"\n"
-"class MapKeySequence is Sequence {\n"
-"  construct new(map) {\n"
-"    _map = map\n"
-"  }\n"
-"\n"
-"  iterate(n) { _map.iterate_(n) }\n"
-"  iteratorValue(iterator) { _map.keyIteratorValue_(iterator) }\n"
-"}\n"
-"\n"
-"class MapValueSequence is Sequence {\n"
-"  construct new(map) {\n"
-"    _map = map\n"
-"  }\n"
-"\n"
-"  iterate(n) { _map.iterate_(n) }\n"
-"  iteratorValue(iterator) { _map.valueIteratorValue_(iterator) }\n"
-"}\n"
-"\n"
-"class Range is Sequence {}\n";
+#include "wren_core.wren.inc"
 
 DEF_PRIMITIVE(bool_not)
 {
@@ -304,7 +88,7 @@ static PrimitiveResult runFiber(WrenVM* vm, ObjFiber* fiber, Value* args,
   if (isCall)
   {
     if (fiber->caller != NULL) RETURN_ERROR("Fiber has already been called.");
-    
+
     // Remember who ran it.
     fiber->caller = vm->fiber;
   }
@@ -315,21 +99,21 @@ static PrimitiveResult runFiber(WrenVM* vm, ObjFiber* fiber, Value* args,
     // return below, it would overwrite the fiber being transferred to.
     if (fiber == vm->fiber) RETURN_VAL(hasValue ? args[1] : NULL_VAL);
   }
-  
+
   if (fiber->numFrames == 0)
   {
     args[0] = wrenStringFormat(vm, "Cannot $ a finished fiber.",
                                isCall ? "call" : "transfer to");
     return PRIM_ERROR;
   }
-  
+
   if (fiber->error != NULL)
   {
     args[0] = wrenStringFormat(vm, "Cannot $ an aborted fiber.",
                                isCall ? "call" : "transfer to");
     return PRIM_ERROR;
   }
-  
+
   // When the calling fiber resumes, we'll store the result of the call in its
   // stack. If the call has two arguments (the fiber and the value), we only
   // need one slot for the result, so discard the other slot now.
@@ -340,7 +124,7 @@ static PrimitiveResult runFiber(WrenVM* vm, ObjFiber* fiber, Value* args,
   {
     *(fiber->stackTop - 1) = hasValue ? args[1] : NULL_VAL;
   }
-  
+
   return PRIM_RUN_FIBER;
 }
 
@@ -416,7 +200,7 @@ DEF_PRIMITIVE(fiber_yield)
   ObjFiber* caller = fiber->caller;
   fiber->caller = NULL;
   fiber->callerIsTrying = false;
-  
+
   // If we don't have any other pending fibers, jump all the way out of the
   // interpreter.
   if (caller == NULL)
@@ -1274,7 +1058,7 @@ static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 void wrenInitializeCore(WrenVM* vm)
 {
   ObjModule* coreModule = wrenGetCoreModule(vm);
-  
+
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass.
   vm->objectClass = defineClass(vm, coreModule, "Object");
@@ -1329,7 +1113,7 @@ void wrenInitializeCore(WrenVM* vm)
   //   '---------'   '-------------------'            -'
 
   // The rest of the classes can now be defined normally.
-  wrenInterpret(vm, "", coreLibSource);
+  wrenInterpret(vm, "", coreModuleSource);
 
   vm->boolClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);

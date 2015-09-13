@@ -46,11 +46,6 @@ test: debug
 	@ $(MAKE) -f script/wren.mk MODE=debug test
 	@ ./script/test.py $(suite)
 
-# Take the contents of the scripts under builtin/ and copy them into their
-# respective wren_<name>.c source files.
-builtin:
-	@ ./script/generate_builtins.py
-
 # Generate the Wren site.
 docs:
 	@ ./script/generate_docs.py

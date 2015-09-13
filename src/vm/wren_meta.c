@@ -6,9 +6,7 @@
 
 #include "wren_primitive.h"
 
-// This string literal is generated automatically from meta.wren. Do not edit.
-static const char* metaLibSource =
-"class Meta {}\n";
+#include "wren_meta.wren.inc"
 
 DEF_PRIMITIVE(meta_eval)
 {
@@ -43,10 +41,10 @@ DEF_PRIMITIVE(meta_eval)
 
 void wrenLoadMetaLibrary(WrenVM* vm)
 {
-  wrenInterpret(vm, "", metaLibSource);
+  wrenInterpret(vm, "", metaModuleSource);
 
   ObjModule* coreModule = wrenGetCoreModule(vm);
-  
+
   // The methods on "Meta" are static, so get the metaclass for the Meta class.
   ObjClass* meta = AS_CLASS(wrenFindVariable(vm, coreModule, "Meta"));
   PRIMITIVE(meta->obj.classObj, "eval(_)", meta_eval);

@@ -22,10 +22,10 @@
 CLI_HEADERS  := $(wildcard src/cli/*.h)
 CLI_SOURCES  := $(wildcard src/cli/*.c)
 
-MODULE_HEADERS   := $(wildcard src/module/*.h)
+MODULE_HEADERS   := $(wildcard src/module/*.h) $(wildcard src/module/*.wren.inc)
 MODULE_SOURCES   := $(wildcard src/module/*.c)
 
-VM_HEADERS   := $(wildcard src/vm/*.h)
+VM_HEADERS   := $(wildcard src/vm/*.h) $(wildcard src/vm/*.wren.inc)
 VM_SOURCES   := $(wildcard src/vm/*.c)
 
 TEST_HEADERS := $(wildcard test/api/*.h)
@@ -191,5 +191,12 @@ $(LIBUV_DIR)/build/gyp/gyp: script/libuv.py
 # Build libuv to a static library.
 $(LIBUV): $(LIBUV_DIR)/build/gyp/gyp script/libuv.py
 	@ ./script/libuv.py build $(LIBUV_ARCH)
+
+# Wren modules that get compiled into the binary as C strings.
+src/vm/wren_%.wren.inc: builtin/%.wren script/wren_to_c_string.py
+	@ ./script/wren_to_c_string.py $@ $<
+
+src/module/%.wren.inc: src/module/%.wren script/wren_to_c_string.py
+	@ ./script/wren_to_c_string.py $@ $<
 
 .PHONY: all cli test vm
