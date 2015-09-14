@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "io.h"
 #include "vm.h"
 #include "wren.h"
 
