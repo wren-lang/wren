@@ -1,2 +1,2 @@
 // Semicolons are not valid separators.
-var a = "ok"; IO.print(a) // expect error
+var a = "ok"; System.print(a) // expect error

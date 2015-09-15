@@ -2022,4 +2022,4 @@ result = result + foo.method996
 result = result + foo.method997
 result = result + foo.method998
 result = result + foo.method999
-IO.print(result) // expect: 1000
+System.print(result) // expect: 1000

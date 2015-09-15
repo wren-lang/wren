@@ -21,21 +21,21 @@ class Foo {
 }
 
 var foo = Foo.new()
-IO.print(foo.method) // expect: getter
-IO.print(foo.method()) // expect: no args
-IO.print(foo.method(1)) // expect: 1
-IO.print(foo.method(1, 2)) // expect: 3
-IO.print(foo.method(1, 2, 3)) // expect: 6
-IO.print(foo.method(1, 2, 3, 4)) // expect: 10
-IO.print(foo.method(1, 2, 3, 4, 5)) // expect: 15
-IO.print(foo.method(1, 2, 3, 4, 5, 6)) // expect: 21
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7)) // expect: 28
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8)) // expect: 36
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9)) // expect: 45
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) // expect: 55
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) // expect: 66
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) // expect: 78
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) // expect: 91
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)) // expect: 105
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) // expect: 120
-IO.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)) // expect: 136
+System.print(foo.method) // expect: getter
+System.print(foo.method()) // expect: no args
+System.print(foo.method(1)) // expect: 1
+System.print(foo.method(1, 2)) // expect: 3
+System.print(foo.method(1, 2, 3)) // expect: 6
+System.print(foo.method(1, 2, 3, 4)) // expect: 10
+System.print(foo.method(1, 2, 3, 4, 5)) // expect: 15
+System.print(foo.method(1, 2, 3, 4, 5, 6)) // expect: 21
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7)) // expect: 28
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8)) // expect: 36
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9)) // expect: 45
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) // expect: 55
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) // expect: 66
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) // expect: 78
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)) // expect: 91
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)) // expect: 105
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) // expect: 120
+System.print(foo.method(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)) // expect: 136

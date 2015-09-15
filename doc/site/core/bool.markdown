@@ -9,10 +9,9 @@ Boolean values. There are two instances, `true` and `false`.
 
 Returns the logical complement of the value.
 
-    > !true
-    false
-    > !false
-    true
+    :::dart
+    System.print(!true) // "false".
+    System.print(!false) // "true".
 
 ### toString
 

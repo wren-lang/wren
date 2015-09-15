@@ -1,9 +1,9 @@
 // nontest
-IO.print("start b")
+System.print("start b")
 
 var B = "b value"
-IO.print("b defined ", B)
+System.print("b defined " + B)
 import "a" for A
-IO.print("b imported ", A)
+System.print("b imported " + A)
 
-IO.print("end b")
+System.print("end b")

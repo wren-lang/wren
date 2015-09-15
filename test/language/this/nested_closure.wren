@@ -5,4 +5,4 @@ class Foo {
 }
 
 var closure = Foo.new().getClosure
-IO.print(closure.call().call().call()) // expect: Foo
+System.print(closure.call().call().call()) // expect: Foo

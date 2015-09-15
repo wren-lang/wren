@@ -4,16 +4,16 @@ var closure
 {
   var a = "before"
   fiber = Fiber.new {
-    IO.print(a)
+    System.print(a)
     Fiber.yield()
     a = "after"
     Fiber.yield()
-    IO.print(a)
+    System.print(a)
     a = "final"
   }
 
   closure = Fn.new {
-    IO.print(a)
+    System.print(a)
   }
 }
 

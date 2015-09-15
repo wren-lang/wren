@@ -2,22 +2,22 @@ import "scheduler" for Scheduler
 import "timer" for Timer
 
 Scheduler.add {
-  IO.print("a before")
+  System.print("a before")
   Timer.sleep(0)
-  IO.print("a after")
+  System.print("a after")
 }
 
 Scheduler.add {
-  IO.print("b before")
+  System.print("b before")
   Timer.sleep(0)
-  IO.print("b after")
+  System.print("b after")
 }
 
-IO.print("main")
+System.print("main")
 Timer.sleep(0) // This is enough to let the other fibers run to their sleep.
-IO.print("main after")
+System.print("main after")
 Timer.sleep(0) // And now their sleeps complete.
-IO.print("done")
+System.print("done")
 
 // expect: main
 // expect: a before

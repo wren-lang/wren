@@ -2,11 +2,11 @@ class Foo {
   construct new() {}
 
   static sayName {
-    IO.print(Foo)
+    System.print(Foo)
   }
 
   sayName {
-    IO.print(Foo)
+    System.print(Foo)
   }
 
   static toString { "Foo!" }

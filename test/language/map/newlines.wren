@@ -9,19 +9,19 @@ var map = {
 
 }
 
-IO.print(map["a"]) // expect: a value
-IO.print(map["b"]) // expect: b value
+System.print(map["a"]) // expect: a value
+System.print(map["b"]) // expect: b value
 
 // Newline after trailing comma.
 map = {"c": "c value",
 
 }
 
-IO.print(map["c"]) // expect: c value
+System.print(map["c"]) // expect: c value
 
 // Newline in empty map.
 map = {
 
 }
 
-IO.print(map.count) // expect: 0
+System.print(map.count) // expect: 0

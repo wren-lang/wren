@@ -1,4 +1,4 @@
 {
   var a
-  IO.print(a) // expect: null
+  System.print(a) // expect: null
 }

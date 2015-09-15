@@ -20,6 +20,6 @@ All Wren source files automatically have access to the following classes:
 * [Range](range.html)
 * [Sequence](sequence.html)
 * [String](string.html)
-* [IO](io.html)
+* [System](system.html)
 
 [embedding]: ../embedding-api.html

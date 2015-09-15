@@ -4,4 +4,4 @@
 if (true) {}
 if (false) {} else {}
 
-IO.print("ok") // expect: ok
+System.print("ok") // expect: ok

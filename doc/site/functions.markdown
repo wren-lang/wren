@@ -22,7 +22,7 @@ a method. At its simplest, it looks like this:
 
     :::dart
     blondie.callMe {
-      IO.print("This is the body!")
+      System.print("This is the body!")
     }
 
 Here we're invoking the `callMe` method on `blondie`. We're passing one
@@ -44,7 +44,7 @@ the block just like a regular argument list. For example:
 
     :::dart
     blondie.callMeAt(867, 5309) {
-      IO.print("This is the body!")
+      System.print("This is the body!")
     }
 
 Of course, you don't *have* to use a block argument to pass a function to a
@@ -62,7 +62,7 @@ class's constructor:
 
     :::dart
     var someFn = Fn.new {
-      IO.print("Hi!")
+      System.print("Hi!")
     }
 
 As you can see it takes a block argument too! All the constructor does it
@@ -87,7 +87,7 @@ method is dynamically-dispatched like any other, so you can define your own
     :::dart
     class FakeFn {
       call() {
-        IO.print("I'm feeling functional!")
+        System.print("I'm feeling functional!")
       }
     }
 
@@ -102,7 +102,7 @@ of the body, like so:
 
     :::dart
     blondie.callMe {|first, last|
-      IO.print("Hi, " + first + " " + last + "!")
+      System.print("Hi, " + first + " " + last + "!")
     }
 
 Here we're passing a function to `greet` that takes two parameters, `first` and
@@ -157,6 +157,6 @@ to`i`:
 
     :::dart
     var counter = Counter.create
-    IO.print(counter.call()) // Prints "1".
-    IO.print(counter.call()) // Prints "2".
-    IO.print(counter.call()) // Prints "3".
+    System.print(counter.call()) // Prints "1".
+    System.print(counter.call()) // Prints "2".
+    System.print(counter.call()) // Prints "3".

@@ -1,6 +1,6 @@
 var a = Fiber.new {
   Fiber.abort("Error!")
-  IO.print("should not get here")
+  System.print("should not get here")
 }
 
 a.try()

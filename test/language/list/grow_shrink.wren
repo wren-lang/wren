@@ -8,4 +8,4 @@ for (i in 0..195) {
   list.removeAt(-1)
 }
 
-IO.print(list) // expect: [0, 1, 2, 3, 4]
+System.print(list) // expect: [0, 1, 2, 3, 4]

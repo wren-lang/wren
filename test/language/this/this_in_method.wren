@@ -4,4 +4,4 @@ class Foo {
   baz { "baz" }
 }
 
-IO.print(Foo.new().bar.baz) // expect: baz
+System.print(Foo.new().bar.baz) // expect: baz

@@ -1,8 +1,8 @@
 var a = "before"
-IO.print(a) // expect: before
+System.print(a) // expect: before
 
 a = "after"
-IO.print(a) // expect: after
+System.print(a) // expect: after
 
-IO.print(a = "arg") // expect: arg
-IO.print(a) // expect: arg
+System.print(a = "arg") // expect: arg
+System.print(a) // expect: arg

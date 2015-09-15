@@ -1,6 +1,6 @@
 class Foo {
   construct new() {}
-  write { IO.print(_field) } // Compile a use of the field...
+  write { System.print(_field) } // Compile a use of the field...
   init { _field = "value" }  // ...before an assignment to it.
 }
 

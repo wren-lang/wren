@@ -1,5 +1,5 @@
 class Foo {
-  static methodOnFoo { IO.print("foo") }
+  static methodOnFoo { System.print("foo") }
 }
 
 class Bar is Foo {}

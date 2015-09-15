@@ -8,9 +8,6 @@ This contains the automated validation suite for the VM and built-in libraries.
   classes. If a bug is in `wren_core.c` or `wren_value.c`, it will most likely
   break one of these tests.
 
-* `io/` - Tests for the built in IO library. In other words, methods on the
-  `IO` class. If a bug is in `wren_io.c`, it should break one of these tests.
-
 * `language/` - Tests of the language itself, its grammar and runtime
   semantics. If a bug is in `wren_compiler.c` or `wren_vm.c`, it will most
   likely break one of these tests. This includes tests for the syntax for the

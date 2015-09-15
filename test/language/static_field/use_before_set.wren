@@ -1,5 +1,5 @@
 class Foo {
-  static write { IO.print(__field) } // Compile a use of the field...
+  static write { System.print(__field) } // Compile a use of the field...
   static init { __field = "value" }  // ...before an assignment to it.
 }
 

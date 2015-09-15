@@ -1,3 +1,3 @@
 // nontest
-IO.print("shared")
+System.print("shared")
 var Shared = "shared"

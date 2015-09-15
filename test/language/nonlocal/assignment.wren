@@ -1,7 +1,7 @@
 var Nonlocal = "before"
-IO.print(Nonlocal) // expect: before
+System.print(Nonlocal) // expect: before
 Nonlocal = "after"
-IO.print(Nonlocal) // expect: after
+System.print(Nonlocal) // expect: after
 
 class Foo {
   static method {
@@ -10,9 +10,9 @@ class Foo {
 }
 
 Foo.method
-IO.print(Nonlocal) // expect: method
+System.print(Nonlocal) // expect: method
 
 Fn.new {
   Nonlocal = "fn"
 }.call()
-IO.print(Nonlocal) // expect: fn
+System.print(Nonlocal) // expect: fn

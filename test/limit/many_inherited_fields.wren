@@ -131,8 +131,8 @@ class Foo {
   }
 
   foo {
-    IO.print(_field1)
-    IO.print(_field128)
+    System.print(_field1)
+    System.print(_field128)
   }
 }
 
@@ -269,8 +269,8 @@ class Bar is Foo {
   }
 
   bar {
-    IO.print(_field129)
-    IO.print(_field255)
+    System.print(_field129)
+    System.print(_field255)
   }
 }
 

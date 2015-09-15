@@ -4095,7 +4095,7 @@ var global4094 = 4094
 var global4095 = 4095
 var global4096 = 4096
 
-IO.print(global4096) // expect: 4096
+System.print(global4096) // expect: 4096
 
 // Symbol tables currently use O(n) to look up names. This makes this test
 // painfully slow when a large number of names are defined. This is a
@@ -65484,5 +65484,5 @@ var global65472 = 65472
 // Not defining the full 65,536 here because the core library also defines some
 // global names.
 
-IO.print(global65472) // expect 65472
+System.print(global65472) // expect 65472
 */

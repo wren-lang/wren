@@ -1,5 +1,5 @@
 var f = Fn.new {
-  IO.print(Global)
+  System.print(Global)
 }
 
 var Global = "global"

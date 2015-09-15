@@ -1,3 +1,3 @@
 import "something" for Index
 
-IO.print(Index) // expect: index
+System.print(Index) // expect: index

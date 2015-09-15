@@ -1,2 +1,2 @@
 // nontest
-IO.print("ran module")
+System.print("ran module")

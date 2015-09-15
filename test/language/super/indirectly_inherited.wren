@@ -1,6 +1,6 @@
 class A {
   foo {
-    IO.print("A.foo")
+    System.print("A.foo")
   }
 }
 
@@ -10,7 +10,7 @@ class C is B {
   construct new() {}
 
   foo {
-    IO.print("C.foo")
+    System.print("C.foo")
     super.foo
   }
 }

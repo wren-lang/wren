@@ -5,4 +5,4 @@ class Lovecraft {
   say() { Cthulu.new().message }
 }
 
-IO.print(Lovecraft.new().say())
+System.print(Lovecraft.new().say())

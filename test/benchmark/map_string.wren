@@ -77,7 +77,7 @@ for (animal in animals) {
   }
 }
 
-var start = IO.clock
+var start = System.clock
 
 var map = {}
 
@@ -96,5 +96,5 @@ for (key in keys) {
   map.remove(key)
 }
 
-IO.print(sum)
-IO.print("elapsed: ", IO.clock - start)
+System.print(sum)
+System.print("elapsed: " + (System.clock - start).toString)

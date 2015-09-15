@@ -8,4 +8,4 @@ for (i in 0...100) {
   if (i >= 10) map.remove(i - 10)
 }
 
-IO.print(map.count) // expect: 10
+System.print(map.count) // expect: 10

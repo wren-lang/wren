@@ -1,4 +1,4 @@
-var start = IO.clock
+var start = System.clock
 
 var count = 0
 for (i in 1..1000000) {
@@ -20,5 +20,5 @@ for (i in 1..1000000) {
       "another") count = count + 1
 }
 
-IO.print(count)
-IO.print("elapsed: ", IO.clock - start)
+System.print(count)
+System.print("elapsed: " + (System.clock - start).toString)

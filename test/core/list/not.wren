@@ -1,2 +1,2 @@
-IO.print(![1, 2]) // expect: false
-IO.print(![])     // expect: false
+System.print(![1, 2]) // expect: false
+System.print(![])     // expect: false

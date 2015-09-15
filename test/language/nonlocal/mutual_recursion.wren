@@ -8,5 +8,5 @@ class Bar {
   static foo { Foo.new() }
 }
 
-IO.print(Foo.bar) // expect: instance of Bar
-IO.print(Bar.foo) // expect: instance of Foo
+System.print(Foo.bar) // expect: instance of Bar
+System.print(Bar.foo) // expect: instance of Foo

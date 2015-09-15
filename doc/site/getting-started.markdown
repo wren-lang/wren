@@ -49,12 +49,12 @@ interactive mode. You can type in a line of code, and it will immediately
 execute it. Here's something to try:
 
     :::dart
-    IO.print("Hello, world!")
+    System.print("Hello, world!")
 
 Or a little more exciting:
 
     :::dart
-    for (i in 1..10) IO.print("Counting up ", i)
+    for (i in 1..10) System.print("Counting up " + i.toString)
 
 You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw
 your computer to the ground and storm off.
@@ -80,10 +80,10 @@ your favorite text editor and paste this into it:
           y0 = y1
           iter = iter + 1
         }
-        IO.write(" .-:;+=xX$& "[iter])
+        System.write(" .-:;+=xX$& "[iter])
       }
 
-      IO.print("")
+      System.print("")
     }
 
 Now run:

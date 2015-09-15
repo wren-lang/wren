@@ -11,4 +11,4 @@ for (i in 1...10) {
   s = s + " more"
 }
 
-IO.print(Api.value) // expect: [list, of, strings]
+System.print(Api.value) // expect: [list, of, strings]

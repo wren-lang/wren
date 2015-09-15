@@ -173,7 +173,7 @@ like:
     import "shared"
 
     // shared.wren
-    IO.print("Shared!")
+    System.print("Shared!")
 
 Here, "a" and "b" both want to use "shared". If "shared" defines some top-level
 state, we only want a single copy of that in memory. To handle this, a module's
@@ -211,14 +211,14 @@ For example:
     import "a"
 
     // a.wren
-    IO.print("start a")
+    System.print("start a")
     import "b"
-    IO.print("end a")
+    System.print("end a")
 
     // b.wren
-    IO.print("start b")
+    System.print("start b")
     import "a"
-    IO.print("end b")
+    System.print("end b")
 
 This program runs successfully and prints:
 

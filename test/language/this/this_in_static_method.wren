@@ -1,7 +1,7 @@
 class Foo {
   static test {
-    IO.print(this == Foo) // expect: true
-    IO.print(this.bar) // expect: bar
+    System.print(this == Foo) // expect: true
+    System.print(this.bar) // expect: bar
   }
 
   static bar { "bar" }

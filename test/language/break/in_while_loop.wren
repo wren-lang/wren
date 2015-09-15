@@ -1,9 +1,9 @@
 var i = 0
 while (true) {
   i = i + 1
-  IO.print(i)
+  System.print(i)
   if (i > 2) break
-  IO.print(i)
+  System.print(i)
 }
 // expect: 1
 // expect: 1

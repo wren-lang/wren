@@ -4,4 +4,4 @@ class Foo {
 }
 
 var foo = Foo.new()
-IO.print(foo.bar = "value") // expect: result
+System.print(foo.bar = "value") // expect: result

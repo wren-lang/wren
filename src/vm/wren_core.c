@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "wren_common.h"
 #include "wren_core.h"
@@ -1041,6 +1042,17 @@ DEF_PRIMITIVE(string_toString)
   RETURN_VAL(args[0]);
 }
 
+DEF_PRIMITIVE(system_clock)
+{
+  RETURN_NUM((double)clock() / CLOCKS_PER_SEC);
+}
+
+DEF_PRIMITIVE(system_writeString)
+{
+  printf("%s", AS_CSTRING(args[1]));
+  RETURN_VAL(args[1]);
+}
+
 // Creates either the Object or Class class in the core library with [name].
 static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 {
@@ -1254,6 +1266,10 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
   PRIMITIVE(vm->rangeClass, "toString", range_toString);
 
+  ObjClass* systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
+  PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);
+  PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
+  
   // While bootstrapping the core types and running the core library, a number
   // of string objects have been created, many of which were instantiated
   // before stringClass was stored in the VM. Some of them *must* be created

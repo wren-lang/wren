@@ -1,5 +1,5 @@
-IO.print([] is List)      // expect: true
-IO.print([] is Sequence)  // expect: true
-IO.print([] is Object)    // expect: true
-IO.print([] is Bool)      // expect: false
-IO.print([].type == List) // expect: true
+System.print([] is List)      // expect: true
+System.print([] is Sequence)  // expect: true
+System.print([] is Object)    // expect: true
+System.print([] is Bool)      // expect: false
+System.print([].type == List) // expect: true

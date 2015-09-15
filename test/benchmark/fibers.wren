@@ -2,7 +2,7 @@
 var fibers = []
 var sum = 0
 
-var start = IO.clock
+var start = System.clock
 
 for (i in 0...100000) {
   fibers.add(Fiber.new {
@@ -12,5 +12,5 @@ for (i in 0...100000) {
 }
 
 fibers[0].call()
-IO.print(sum)
-IO.print("elapsed: ", IO.clock - start)
+System.print(sum)
+System.print("elapsed: " + (System.clock - start).toString)

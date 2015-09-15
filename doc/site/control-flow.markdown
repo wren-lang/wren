@@ -31,7 +31,7 @@ The simplest branching statement, `if` lets you conditionally skip a chunk of
 code. It looks like this:
 
     :::dart
-    if (ready) IO.print("go!")
+    if (ready) System.print("go!")
 
 That evaluates the parenthesized expression after `if`. If it's true, then the
 statement after the condition is evaluated. Otherwise it is skipped. Instead of
@@ -39,23 +39,23 @@ a statement, you can have a [block](syntax.html#blocks):
 
     :::dart
     if (ready) {
-      IO.print("getSet")
-      IO.print("go!")
+      System.print("getSet")
+      System.print("go!")
     }
 
 You may also provide an `else` branch. It will be executed if the condition is
 false:
 
     :::dart
-    if (ready) IO.print("go!") else IO.print("not ready!")
+    if (ready) System.print("go!") else System.print("not ready!")
 
 And, of course, it can take a block too:
 
     :::dart
     if (ready) {
-      IO.print("go!")
+      System.print("go!")
     } else {
-      IO.print("not ready!")
+      System.print("not ready!")
     }
 
 ## While statements
@@ -100,7 +100,7 @@ That's what `for` is for. It looks like this:
 
     :::dart
     for (beatle in ["george", "john", "paul", "ringo"]) {
-      IO.print(beatle)
+      System.print(beatle)
     }
 
 A `for` loop has three components:
@@ -124,7 +124,7 @@ keyword all by itself. That will immediately exit out of the nearest enclosing
 
     :::dart
     for (i in [1, 2, 3, 4]) {
-      IO.print(i)
+      System.print(i)
       if (i == 3) break
     }
 
@@ -138,7 +138,7 @@ sequence of numbers, or loop a number of times. For that, you can create a
 
     :::dart
     for (i in 1..100) {
-      IO.print(i)
+      System.print(i)
     }
 
 This loops over the numbers from 1 to 100, including 100 itself. If you want to
@@ -146,7 +146,7 @@ leave off the last value, use three dots instead of two:
 
     :::dart
     for (i in 1...100) {
-      IO.print(i)
+      System.print(i)
     }
 
 This looks like some special "range" syntax in the `for` loop, but it's
@@ -168,7 +168,7 @@ When you write a loop like this:
 
     :::dart
     for (i in 1..100) {
-      IO.print(i)
+      System.print(i)
     }
 
 Wren sees it something like this:
@@ -178,7 +178,7 @@ Wren sees it something like this:
     var seq_ = 1..100
     while (iter_ = seq_.iterate(iter_)) {
       var i = seq_.iteratorValue(iter_)
-      IO.print(i)
+      System.print(i)
     }
 
 First, Wren evaluates the sequence expression and stores it in a hidden

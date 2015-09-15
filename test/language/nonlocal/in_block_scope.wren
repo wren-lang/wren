@@ -2,7 +2,7 @@ var Nonlocal = "outer"
 
 {
   var Nonlocal = "inner"
-  IO.print(Nonlocal) // expect: inner
+  System.print(Nonlocal) // expect: inner
 }
 
-IO.print(Nonlocal) // expect: outer
+System.print(Nonlocal) // expect: outer

@@ -10,11 +10,11 @@ class Foo {
   }
 
   write {
-    IO.print(_a)
-    IO.print(_b)
-    IO.print(_c)
-    IO.print(_d)
-    IO.print(_e)
+    System.print(_a)
+    System.print(_b)
+    System.print(_c)
+    System.print(_d)
+    System.print(_e)
   }
 }
 

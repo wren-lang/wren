@@ -1,5 +1,5 @@
-IO.print([].isEmpty) // expect: true
-IO.print([1].isEmpty) // expect: false
+System.print([].isEmpty) // expect: true
+System.print([1].isEmpty) // expect: false
 
 class InfiniteSequence is Sequence {
   construct new() {}
@@ -8,4 +8,4 @@ class InfiniteSequence is Sequence {
 }
 
 // Should not try to iterate the whole sequence.
-IO.print(InfiniteSequence.new().isEmpty) // expect: false
+System.print(InfiniteSequence.new().isEmpty) // expect: false

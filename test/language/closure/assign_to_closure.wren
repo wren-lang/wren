@@ -4,15 +4,15 @@ var g = null
 {
   var local = "local"
   f = Fn.new {
-    IO.print(local)
+    System.print(local)
     local = "after f"
-    IO.print(local)
+    System.print(local)
   }
 
   g = Fn.new {
-    IO.print(local)
+    System.print(local)
     local = "after g"
-    IO.print(local)
+    System.print(local)
   }
 }
 

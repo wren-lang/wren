@@ -1,7 +1,7 @@
 // Newline after '?'.
-IO.print(true ?
+System.print(true ?
   "yes" : "no") // expect: yes
 
 // Newline after ':'.
-IO.print(false ? "yes" :
+System.print(false ? "yes" :
   "no") // expect: no

@@ -1,5 +1,5 @@
 // nontest
-IO.print("b")
+System.print("b")
 import "shared" for Shared
 var B = "b " + Shared
-IO.print("b done")
+System.print("b done")

@@ -1,10 +1,10 @@
 var fiber = Fiber.new {
-  IO.print("before")
+  System.print("before")
   true.unknownMethod
-  IO.print("after")
+  System.print("after")
 }
 
-IO.print(fiber.try())
+System.print(fiber.try())
 // expect: before
 // expect: Bool does not implement 'unknownMethod'.
-IO.print("after try") // expect: after try
+System.print("after try") // expect: after try

@@ -3,4 +3,4 @@ var fiber = Fiber.new {
 }
 
 fiber.try()
-IO.print(fiber.isDone) // expect: true
+System.print(fiber.isDone) // expect: true

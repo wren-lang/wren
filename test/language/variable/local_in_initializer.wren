@@ -1,4 +1,4 @@
 {
   var a = a + 1 // expect error
-  IO.print(a)
+  System.print(a)
 }

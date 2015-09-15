@@ -1,1 +1,1 @@
-IO.print(Fn.new {}) // expect: <fn>
+System.print(Fn.new {}) // expect: <fn>

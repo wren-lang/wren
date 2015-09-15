@@ -59,14 +59,14 @@ existing element in the list using the subscript setter:
 
     :::dart
     hirsute[1] = "muttonchops"
-    IO.print(hirsute[1]) // muttonchops.
+    System.print(hirsute[1]) // muttonchops.
 
 It's an error to set an element that's out of bounds. To grow a list, you can
 use `add` to append a single item to the end:
 
     :::dart
     hirsute.add("goatee")
-    IO.print(hirsute.count) // 4.
+    System.print(hirsute.count) // 4.
 
 You can insert a new element at a specific position using `insert`:
 
@@ -84,9 +84,9 @@ back. Doing so counts back from the size of the list *after* it's grown by one:
     :::dart
     var letters = ["a", "b", "c"]
     letters.insert(3, "d")   // OK: inserts at end.
-    IO.print(letters)        // ["a", "b", "c", "d"]
+    System.print(letters)        // ["a", "b", "c", "d"]
     letters.insert(-2, "e")  // Counts back from size after insert.
-    IO.print(letters)        // ["a", "b", "c", "e", "d"]
+    System.print(letters)        // ["a", "b", "c", "e", "d"]
 
 ## Removing elements
 
@@ -97,15 +97,15 @@ gap:
     :::dart
     var letters = ["a", "b", "c", "d"]
     letters.removeAt(1)
-    IO.print(letters) // ["a", "c", "d"]
+    System.print(letters) // ["a", "c", "d"]
 
 The `removeAt` method returns the removed item:
 
     :::dart
-    IO.print(letters.removeAt(1)) // "c"
+    System.print(letters.removeAt(1)) // "c"
 
 If you want to remove everything from the list, you can clear it:
 
     :::dart
     hirsute.clear()
-    IO.print(hirsute) // []
+    System.print(hirsute) // []

@@ -6,19 +6,19 @@ var list = [
 
 ]
 
-IO.print(list[0]) // expect: a
-IO.print(list[1]) // expect: b
+System.print(list[0]) // expect: a
+System.print(list[1]) // expect: b
 
 // Newline after trailing comma.
 list = ["c",
 
 ]
 
-IO.print(list[0]) // expect: c
+System.print(list[0]) // expect: c
 
 // Newline in empty list.
 list = [
 
 ]
 
-IO.print(list.count) // expect: 0
+System.print(list.count) // expect: 0

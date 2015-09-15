@@ -2,16 +2,16 @@ class Outer {
   construct new() {}
 
   method {
-    IO.print(this) // expect: Outer
+    System.print(this) // expect: Outer
 
     Fn.new {
-      IO.print(this) // expect: Outer
+      System.print(this) // expect: Outer
 
       class Inner {
         construct new() {}
 
         method {
-          IO.print(this) // expect: Inner
+          System.print(this) // expect: Inner
         }
         toString { "Inner" }
       }

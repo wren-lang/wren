@@ -1,6 +1,6 @@
 {
   var local = "local"
   Fn.new {
-    IO.print(local) // expect: local
+    System.print(local) // expect: local
   }.call()
 }

@@ -5,4 +5,4 @@ var Module3 = "from module three"
 var Module4 = "from module four"
 var Module5 = "from module five"
 
-IO.print("ran module")
+System.print("ran module")

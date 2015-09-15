@@ -1,5 +1,5 @@
 for (i in 0..10) {
-  IO.print(i)
+  System.print(i)
 
   {
     var a = "a"

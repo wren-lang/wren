@@ -132,9 +132,9 @@ from the beginning number to the ending number.
 
     :::dart
     var range = 1.2..3.4
-    IO.print(range.min)         // 1.2
-    IO.print(range.max)         // 3.4
-    IO.print(range.isInclusive) // true
+    System.print(range.min)         // 1.2
+    System.print(range.max)         // 3.4
+    System.print(range.isInclusive) // true
 
 ### **...**(other) operator
 
@@ -143,6 +143,6 @@ from the beginning number to the ending number not including the ending number.
 
     :::dart
     var range = 1.2...3.4
-    IO.print(range.min)         // 1.2
-    IO.print(range.max)         // 3.4
-    IO.print(range.isInclusive) // false
+    System.print(range.min)         // 1.2
+    System.print(range.max)         // 3.4
+    System.print(range.isInclusive) // false

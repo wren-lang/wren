@@ -10,4 +10,4 @@ class B is A {
   construct new() {}
 }
 
-IO.print(B.new().callSuperToString) // expect: instance of B
+System.print(B.new().callSuperToString) // expect: instance of B

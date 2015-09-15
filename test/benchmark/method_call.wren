@@ -28,7 +28,7 @@ class NthToggle is Toggle {
   }
 }
 
-var start = IO.clock
+var start = System.clock
 var n = 100000
 var val = true
 var toggle = Toggle.new(val)
@@ -46,7 +46,7 @@ for (i in 0...n) {
   val = toggle.activate.value
 }
 
-IO.print(toggle.value)
+System.print(toggle.value)
 
 val = true
 var ntoggle = NthToggle.new(val, 3)
@@ -64,5 +64,5 @@ for (i in 0...n) {
   val = ntoggle.activate.value
 }
 
-IO.print(ntoggle.value)
-IO.print("elapsed: ", IO.clock - start)
+System.print(ntoggle.value)
+System.print("elapsed: " + (System.clock - start).toString)

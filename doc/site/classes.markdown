@@ -25,7 +25,7 @@ To let our unicorn do stuff, we need to give it methods.
     :::dart
     class Unicorn {
       prance() {
-        IO.print("The unicorn prances in a fancy manner!")
+        System.print("The unicorn prances in a fancy manner!")
       }
     }
 
@@ -35,7 +35,7 @@ parameters, put their names inside the parentheses:
     :::dart
     class Unicorn {
       prance(where, when) {
-        IO.print("The unicorn prances in " + where + " at " + when)
+        System.print("The unicorn prances in " + where + " at " + when)
       }
     }
 
@@ -49,15 +49,15 @@ fine:
     :::dart
     class Unicorn {
       prance() {
-        IO.print("The unicorn prances in a fancy manner!")
+        System.print("The unicorn prances in a fancy manner!")
       }
 
       prance(where) {
-        IO.print("The unicorn prances in " + where)
+        System.print("The unicorn prances in " + where)
       }
 
       prance(where, when) {
-        IO.print("The unicorn prances in " + where + " at " + when)
+        System.print("The unicorn prances in " + where + " at " + when)
       }
     }
 
@@ -83,7 +83,7 @@ Many methods on a class exist to expose or compute some property of the object.
 For example:
 
     :::dart
-    IO.print("string".count) // "6".
+    System.print("string".count) // "6".
 
 These *getters* are just another kind of method&mdash;one without a parameter
 list. You can define them like so:
@@ -152,12 +152,12 @@ You can define operators in your class like so:
     class Unicorn {
       // Infix:
       +(other) {
-        IO.print("Adding to a unicorn?")
+        System.print("Adding to a unicorn?")
       }
 
       // Prefix:
       ! {
-        IO.print("Negating a unicorn?!")
+        System.print("Negating a unicorn?!")
       }
     }
 
@@ -191,7 +191,7 @@ like so:
     :::dart
     class Unicorn {
       construct new(name, color) {
-        IO.print("My name is " + name + " and I am " + color + ".")
+        System.print("My name is " + name + " and I am " + color + ".")
       }
     }
 
@@ -210,7 +210,7 @@ and each can clarify how it creates the instance:
     :::dart
     class Unicorn {
       construct brown(name) {
-        IO.print("My name is " + name + " and I am brown.")
+        System.print("My name is " + name + " and I am brown.")
       }
     }
 
@@ -326,13 +326,13 @@ not the instance. They can be used in *both* instance and static methods.
 Just like instance fields, static fields are initially `null`:
 
     :::dart
-    IO.print(Foo.bar) // null.
+    System.print(Foo.bar) // null.
 
 They can be used from static methods:
 
     :::dart
     Foo.set("foo")
-    IO.print(Foo.bar) // foo.
+    System.print(Foo.bar) // foo.
 
 And also instance methods. When you do so, there is still only one static field
 shared among all instances of the class:
@@ -342,7 +342,7 @@ shared among all instances of the class:
     var foo2 = Foo.new()
 
     foo1.setFromInstance("updated")
-    IO.print(foo2.baz) // updated.
+    System.print(foo2.baz) // updated.
 
 ## Inheritance
 
@@ -381,7 +381,7 @@ This also means constructors are not inherited:
     :::dart
     class Unicorn {
       this new(name) {
-        IO.print("My name is " + name + ".")
+        System.print("My name is " + name + ".")
       }
     }
 
@@ -398,7 +398,7 @@ This means you can do `super` calls inside a constructor:
     :::dart
     class Unicorn {
       this new(name) {
-        IO.print("My name is " + name + ".")
+        System.print("My name is " + name + ".")
       }
     }
 

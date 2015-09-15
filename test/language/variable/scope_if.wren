@@ -3,11 +3,11 @@ var a = "out"
 if (true) {
   var a = "in"
 }
-IO.print(a) // expect: out
+System.print(a) // expect: out
 
 // Create a local scope for the 'else' expression.
 var b = "out"
 if (false) "dummy" else {
   var b = "in"
 }
-IO.print(b) // expect: out
+System.print(b) // expect: out

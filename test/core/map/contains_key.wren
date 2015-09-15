@@ -4,8 +4,8 @@ var map = {
   "three": 3
 }
 
-IO.print(map.containsKey("one")) // expect: true
-IO.print(map.containsKey("two")) // expect: true
-IO.print(map.containsKey("three")) // expect: true
-IO.print(map.containsKey("four")) // expect: false
-IO.print(map.containsKey("five")) // expect: false
+System.print(map.containsKey("one")) // expect: true
+System.print(map.containsKey("two")) // expect: true
+System.print(map.containsKey("three")) // expect: true
+System.print(map.containsKey("four")) // expect: false
+System.print(map.containsKey("five")) // expect: false

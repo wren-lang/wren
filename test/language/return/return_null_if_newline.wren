@@ -1,6 +1,6 @@
 var f = Fn.new {
   return
-  IO.print("bad")
+  System.print("bad")
 }
 
-IO.print(f.call()) // expect: null
+System.print(f.call()) // expect: null

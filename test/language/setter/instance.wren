@@ -2,7 +2,7 @@ class Foo {
   construct new() {}
 
   bar=(value) {
-    IO.print(value)
+    System.print(value)
   }
 }
 

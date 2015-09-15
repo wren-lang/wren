@@ -1,16 +1,16 @@
 var b = Fiber.new {
-  IO.print("fiber b")
+  System.print("fiber b")
 }
 
 var a = Fiber.new {
-  IO.print("begin fiber a")
+  System.print("begin fiber a")
   b.call()
-  IO.print("end fiber a")
+  System.print("end fiber a")
 }
 
-IO.print("begin main")
+System.print("begin main")
 a.call()
-IO.print("end main")
+System.print("end main")
 
 // expect: begin main
 // expect: begin fiber a

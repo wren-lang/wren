@@ -1,13 +1,13 @@
 var main = Fiber.current
 
 var a = Fiber.new {
-  IO.print("a")
-  IO.print(Fiber.yield())
+  System.print("a")
+  System.print(Fiber.yield())
 }
 
 var b = Fiber.new {
-  IO.print("b")
-  IO.print(Fiber.yield())
+  System.print("b")
+  System.print(Fiber.yield())
 
   a.call()
   a.transfer("value")

@@ -1,2 +1,2 @@
-IO.print(true.toString)  // expect: true
-IO.print(false.toString) // expect: false
+System.print(true.toString)  // expect: true
+System.print(false.toString) // expect: false

@@ -29,14 +29,14 @@ class Fib is Sequence {
 var largeFibs = Fib.new().where {|fib| fib > 100 }
 var iterator = null
 
-IO.print(largeFibs is Sequence) // expect: true
-IO.print(largeFibs) // expect: instance of WhereSequence
+System.print(largeFibs is Sequence) // expect: true
+System.print(largeFibs) // expect: instance of WhereSequence
 
 iterator = largeFibs.iterate(iterator)
-IO.print(largeFibs.iteratorValue(iterator)) // expect: 144
+System.print(largeFibs.iteratorValue(iterator)) // expect: 144
 
 iterator = largeFibs.iterate(iterator)
-IO.print(largeFibs.iteratorValue(iterator)) // expect: 233
+System.print(largeFibs.iteratorValue(iterator)) // expect: 233
 
 iterator = largeFibs.iterate(iterator)
-IO.print(largeFibs.iteratorValue(iterator)) // expect: 377
+System.print(largeFibs.iteratorValue(iterator)) // expect: 377

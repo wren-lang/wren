@@ -7,14 +7,14 @@ class Foo {
 var foo = Foo.new()
 
 // Allow newlines after commas and before ")".
-IO.print(foo.method("a",
+System.print(foo.method("a",
 
     "b"
 
     )) // expect: method a b
 
 // Allow newlines after commas and before "]".
-IO.print(foo["a",
+System.print(foo["a",
 
     "b"
 

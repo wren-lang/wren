@@ -4,11 +4,11 @@ Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in
 a familiar, modern [syntax][].
 
 ```dart
-IO.print("Hello, world!")
+System.print("Hello, world!")
 
 class Wren {
   flyTo(city) {
-    IO.print("Flying to ", city)
+    System.print("Flying to ", city)
   }
 }
 
@@ -16,7 +16,7 @@ var adjectives = Fiber.new {
   ["small", "clean", "fast"].each {|word| Fiber.yield(word) }
 }
 
-while (!adjectives.isDone) IO.print(adjectives.call())
+while (!adjectives.isDone) System.print(adjectives.call())
 ```
 
  *  **Wren is small.** The VM implementation is under [4,000 semicolons][src].

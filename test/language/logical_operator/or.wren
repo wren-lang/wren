@@ -1,20 +1,20 @@
 // Note: These tests implicitly depend on ints being truthy.
-//       Also rely on IO.print() returning its argument.
+//       Also rely on System.print() returning its argument.
 
 // Return the first true argument.
-IO.print(1 || true) // expect: 1
-IO.print(false || 1) // expect: 1
-IO.print(false || false || true) // expect: true
+System.print(1 || true) // expect: 1
+System.print(false || 1) // expect: 1
+System.print(false || false || true) // expect: true
 
 // Return the last argument if all are false.
-IO.print(false || false) // expect: false
-IO.print(false || false || false) // expect: false
+System.print(false || false) // expect: false
+System.print(false || false || false) // expect: false
 
 // Short-circuit at the first true argument.
-IO.print(false) || // expect: false
-    IO.print(true) || // expect: true
-    IO.print(true) // should not print
+System.print(false) || // expect: false
+    System.print(true) || // expect: true
+    System.print(true) // should not print
 
 // Swallow a trailing newline.
-IO.print(true ||
+System.print(true ||
     true) // expect: true

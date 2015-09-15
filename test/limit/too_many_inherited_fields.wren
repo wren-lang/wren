@@ -131,8 +131,8 @@ class Foo {
   }
 
   foo {
-    IO.print(_field1)
-    IO.print(_field128)
+    System.print(_field1)
+    System.print(_field128)
   }
 }
 
@@ -270,8 +270,8 @@ class Bar is Foo { // expect runtime error: Class 'Bar' may not have more than 2
   }
 
   bar {
-    IO.print(_field129)
-    IO.print(_field256)
+    System.print(_field129)
+    System.print(_field256)
   }
 }
 

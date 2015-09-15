@@ -1,2 +1,2 @@
-IO.print(!"s") // expect: false
-IO.print(!"") // expect: false
+System.print(!"s") // expect: false
+System.print(!"") // expect: false

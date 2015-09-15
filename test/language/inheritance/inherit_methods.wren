@@ -1,16 +1,16 @@
 class Foo {
-  methodOnFoo { IO.print("foo") }
-  method(a) { IO.print("foo") }
-  method(a, b, c) { IO.print("foo") }
-  override { IO.print("foo") }
+  methodOnFoo { System.print("foo") }
+  method(a) { System.print("foo") }
+  method(a, b, c) { System.print("foo") }
+  override { System.print("foo") }
 }
 
 class Bar is Foo {
   construct new() {}
-  methodOnBar { IO.print("bar") }
-  method(a, b) { IO.print("bar") }
-  method(a, b, c, d) { IO.print("bar") }
-  override { IO.print("bar") }
+  methodOnBar { System.print("bar") }
+  method(a, b) { System.print("bar") }
+  method(a, b, c, d) { System.print("bar") }
+  override { System.print("bar") }
 }
 
 var bar = Bar.new()

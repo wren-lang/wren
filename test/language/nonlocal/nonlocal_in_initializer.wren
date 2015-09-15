@@ -1,2 +1,2 @@
 var A = A == null
-IO.print(A) // expect: true
+System.print(A) // expect: true

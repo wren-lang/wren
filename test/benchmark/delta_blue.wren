@@ -92,7 +92,7 @@ class Constraint {
     chooseMethod(mark)
     if (!isSatisfied) {
       if (_strength == REQUIRED) {
-        IO.print("Could not satisfy a required constraint!")
+        System.print("Could not satisfy a required constraint!")
       }
       return null
     }
@@ -102,7 +102,7 @@ class Constraint {
     var overridden = out.determinedBy
     if (overridden != null) overridden.markUnsatisfied
     out.determinedBy = this
-    if (!ThePlanner.addPropagate(this, mark)) IO.print("Cycle encountered")
+    if (!ThePlanner.addPropagate(this, mark)) System.print("Cycle encountered")
     out.mark = mark
     return overridden
   }
@@ -669,31 +669,31 @@ var projectionTest = Fn.new {|n|
 
   change.call(src, 17)
   total = total + dst.value
-  if (dst.value != 1170) IO.print("Projection 1 failed")
+  if (dst.value != 1170) System.print("Projection 1 failed")
 
   change.call(dst, 1050)
 
   total = total + src.value
-  if (src.value != 5) IO.print("Projection 2 failed")
+  if (src.value != 5) System.print("Projection 2 failed")
 
   change.call(scale, 5)
   for (i in 0...n - 1) {
     total = total + dests[i].value
-    if (dests[i].value != i * 5 + 1000) IO.print("Projection 3 failed")
+    if (dests[i].value != i * 5 + 1000) System.print("Projection 3 failed")
   }
 
   change.call(offset, 2000)
   for (i in 0...n - 1) {
     total = total + dests[i].value
-    if (dests[i].value != i * 5 + 2000) IO.print("Projection 4 failed")
+    if (dests[i].value != i * 5 + 2000) System.print("Projection 4 failed")
   }
 }
 
-var start = IO.clock
+var start = System.clock
 for (i in 0...40) {
   chainTest.call(100)
   projectionTest.call(100)
 }
 
-IO.print(total)
-IO.print("elapsed: ", IO.clock - start)
+System.print(total)
+System.print("elapsed: " + (System.clock - start).toString)

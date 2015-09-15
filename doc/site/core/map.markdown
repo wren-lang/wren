@@ -50,8 +50,8 @@ map, returns `null`.
 
     :::dart
     var map = {"george": "harrison", "ringo": "starr"}
-    IO.print(map["ringo"]) // "starr".
-    IO.print(map["pete"])  // "null".
+    System.print(map["ringo"]) // "starr".
+    System.print(map["pete"])  // "null".
 
 ### **[**key**]=**(value) operator
 

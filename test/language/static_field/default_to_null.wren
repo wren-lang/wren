@@ -1,5 +1,5 @@
 class Foo {
-  static write { IO.print(__field) }
+  static write { System.print(__field) }
 }
 
 Foo.write // expect: null

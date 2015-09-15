@@ -1,3 +1,3 @@
-IO.print("before") // expect: before
+System.print("before") // expect: before
 Fiber.yield(1)
-IO.print("not reached")
+System.print("not reached")

@@ -10,7 +10,7 @@ fiber is run. Does not immediately start running the fiber.
 
     :::dart
     var fiber = Fiber.new {
-      IO.print("I won't get printed")
+      System.print("I won't get printed")
     }
 
 ## Static Methods
@@ -34,14 +34,14 @@ here means the last fiber that was started using `call` and not `run`.
 
     :::dart
     var fiber = Fiber.new {
-      IO.print("Before yield")
+      System.print("Before yield")
       Fiber.yield()
-      IO.print("After yield")
+      System.print("After yield")
     }
 
-    fiber.call()            // "Before yield"
-    IO.print("After call")  // "After call"
-    fiber.call()            // "After yield"
+    fiber.call()                // "Before yield"
+    System.print("After call")  // "After call"
+    fiber.call()                // "After yield"
 
 When resumed, the parent fiber's `call()` method returns `null`.
 
@@ -50,7 +50,7 @@ If a yielded fiber is resumed by calling `call()` or `run()` with an argument,
 
     :::dart
     var fiber = Fiber.new {
-      IO.print(Fiber.yield()) // "value"
+      System.print(Fiber.yield()) // "value"
     }
 
     fiber.call()        // Run until the first yield.
@@ -65,7 +65,7 @@ later.
 
     :::dart
     Fiber.yield()
-    IO.print("this does not get reached")
+    System.print("this does not get reached")
 
 ### Fiber.**yield**(value)
 
@@ -77,7 +77,7 @@ Similar to `Fiber.yield` but provides a value to return to the parent fiber's
       Fiber.yield("value")
     }
 
-    IO.print(fiber.call()) // "value"
+    System.print(fiber.call()) // "value"
 
 ## Methods
 
@@ -87,9 +87,9 @@ Starts or resumes the fiber if it is in a paused state.
 
     :::dart
     var fiber = Fiber.new {
-      IO.print("Fiber called")
+      System.print("Fiber called")
       Fiber.yield()
-      IO.print("Fiber called again")
+      System.print("Fiber called again")
     }
 
     fiber.call() // Start it.
@@ -103,7 +103,7 @@ If the called fiber is resuming from a yield, the `yield()` method returns
 
     :::dart
     var fiber = Fiber.new {
-      IO.print(Fiber.yield())
+      System.print(Fiber.yield())
     }
 
     fiber.call()
@@ -116,7 +116,7 @@ Invokes the fiber or resumes the fiber if it is in a paused state and sets
 
     :::dart
     var fiber = Fiber.new {
-      IO.print(Fiber.yield())
+      System.print(Fiber.yield())
     }
 
     fiber.call()

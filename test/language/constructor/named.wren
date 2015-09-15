@@ -5,10 +5,10 @@ class Foo {
   toString { _field }
 }
 
-IO.print(Foo.named()) // expect: named
-IO.print(Foo.other()) // expect: other
+System.print(Foo.named()) // expect: named
+System.print(Foo.other()) // expect: other
 
 // Returns the new instance.
 var foo = Foo.named()
-IO.print(foo is Foo) // expect: true
-IO.print(foo.toString) // expect: named
+System.print(foo is Foo) // expect: true
+System.print(foo.toString) // expect: named

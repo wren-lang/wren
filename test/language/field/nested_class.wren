@@ -3,19 +3,19 @@ class Outer {
 
   method {
     _field = "outer"
-    IO.print(_field) // expect: outer
+    System.print(_field) // expect: outer
 
     class Inner {
       construct new() {}
 
       method {
         _field = "inner"
-        IO.print(_field) // expect: inner
+        System.print(_field) // expect: inner
       }
     }
 
     Inner.new().method
-    IO.print(_field) // expect: outer
+    System.print(_field) // expect: outer
   }
 }
 

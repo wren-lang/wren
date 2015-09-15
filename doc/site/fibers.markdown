@@ -28,7 +28,7 @@ using the `Fiber` class's constructor:
 
     :::dart
     var fiber = Fiber.new {
-      IO.print("This runs in a separate fiber.")
+      System.print("This runs in a separate fiber.")
     }
 
 Creating a fiber does not immediately run it. It's just a first class bundle of
@@ -48,7 +48,7 @@ until it passes control to another fiber. If it reaches the end of its body,
 it's considered *done*:
 
     :::dart
-    var fiber = Fiber.new { IO.print("Hi") }
+    var fiber = Fiber.new { System.print("Hi") }
     fiber.isDone // false
     fiber.call()
     fiber.isDone // true
@@ -71,16 +71,16 @@ You can make a fiber yield by calling the static `yield()` method on `Fiber`:
 
     :::dart
     var fiber = Fiber.new {
-      IO.print("fiber 1")
+      System.print("fiber 1")
       Fiber.yield()
-      IO.print("fiber 2")
+      System.print("fiber 2")
     }
 
-    IO.print("main 1")
+    System.print("main 1")
     fiber.call()
-    IO.print("main 2")
+    System.print("main 2")
     fiber.call()
-    IO.print("main 3")
+    System.print("main 3")
 
 This program prints:
 
@@ -105,7 +105,7 @@ of the `yield()` call:
     :::dart
     var fiber = Fiber.new {
       var result = Fiber.yield()
-      IO.print(result)
+      System.print(result)
     }
 
     fiber.call("discarded")
@@ -124,7 +124,7 @@ invoke the fiber:
       Fiber.yield("sent")
     }
 
-    IO.print(fiber.call())
+    System.print(fiber.call())
 
 This also prints "sent".
 

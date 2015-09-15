@@ -1,17 +1,17 @@
 // One byte UTF-8 Sequences.
-IO.print("\u0041")     // expect: A
-IO.print("\u007e")     // expect: ~
+System.print("\u0041")     // expect: A
+System.print("\u007e")     // expect: ~
 
 // Two byte sequences.
-IO.print("\u00b6")     // expect: ¶
-IO.print("\u00de")     // expect: Þ
+System.print("\u00b6")     // expect: ¶
+System.print("\u00de")     // expect: Þ
 
 // Three byte sequences.
-IO.print("\u0950")     // expect: ॐ
-IO.print("\u0b83")     // expect: ஃ
+System.print("\u0950")     // expect: ॐ
+System.print("\u0b83")     // expect: ஃ
 
 // Capitalized hex.
-IO.print("\u00B6")     // expect: ¶
-IO.print("\u00DE")     // expect: Þ
+System.print("\u00B6")     // expect: ¶
+System.print("\u00DE")     // expect: Þ
 
 // TODO: Syntax for Unicode escapes > 0xffff?

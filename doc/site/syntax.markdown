@@ -54,15 +54,15 @@ Newlines (`\n`) are meaningful in Wren. They are used to separate statements:
 
     :::dart
     // Two statements:
-    IO.print("hi") // Newline.
-    IO.print("bye")
+    System.print("hi") // Newline.
+    System.print("bye")
 
 Sometimes, though, a statement doesn't fit on a single line and jamming a
 newline in the middle would trip it up. To handle that, Wren has a very simple
 rule: It ignores a newline following any token that can't end a statement.
 
     :::dart
-    IO.print( // Newline here is ignored.
+    System.print( // Newline here is ignored.
         "hi")
 
 In practice, this means you can put each statement on its own line and wrap
@@ -79,16 +79,16 @@ statement for the else:
     :::dart
     if (happy && knowIt) {
       hands.clap
-    } else IO.print("sad")
+    } else System.print("sad")
 
 Blocks have two similar but not identical forms. Typically, blocks contain a
 series of statements like:
 
     :::dart
     {
-      IO.print("one")
-      IO.print("two")
-      IO.print("three")
+      System.print("one")
+      System.print("two")
+      System.print("three")
     }
 
 Blocks of this form when used for method and function bodies automatically

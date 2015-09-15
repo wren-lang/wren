@@ -1,1 +1,1 @@
-IO.print(!null) // expect: true
+System.print(!null) // expect: true

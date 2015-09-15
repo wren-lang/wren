@@ -3,4 +3,4 @@
 // Chars: sø mé ஃ  thî ng
 var s = "søméஃthîng"
 
-IO.print(s.bytes is StringByteSequence) // expect: true
+System.print(s.bytes is StringByteSequence) // expect: true

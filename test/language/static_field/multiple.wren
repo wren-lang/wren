@@ -8,11 +8,11 @@ class Foo {
   }
 
   static write {
-    IO.print(__a)
-    IO.print(__b)
-    IO.print(__c)
-    IO.print(__d)
-    IO.print(__e)
+    System.print(__a)
+    System.print(__b)
+    System.print(__c)
+    System.print(__d)
+    System.print(__e)
   }
 }
 

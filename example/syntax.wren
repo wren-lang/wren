@@ -9,7 +9,7 @@ class SyntaxExample {
   // Constructor
   construct new() {
     // Top-level name `IO`
-    IO.print("I am a constructor!")
+    System.print("I am a constructor!")
 
     // Method calls
     variables
@@ -58,7 +58,7 @@ class SyntaxExample {
   field=(value) { _field = value }
 
   // Method with arguments
-  print(a, b) { IO.print(a + b) }
+  print(a, b) { System.print(a + b) }
 
   // Operators
   +(other) { "infix + " + other }
@@ -97,7 +97,7 @@ class ReservedWords is SyntaxExample {
 
     // `for`, `in`
     for (beatle in ["george", "john", "paul", "ringo"]) {
-      IO.print(beatle)
+      System.print(beatle)
       // `break`
       break
     }
@@ -147,9 +147,9 @@ class Literals is SyntaxExample {
     "\t" // Tab.
     "\v" // Vertical tab.
     // Unicode code points
-    IO.print("\u0041fgdg\u0b83\u00DE") // "AஃÞ"
+    System.print("\u0041fgdg\u0b83\u00DE") // "AஃÞ"
     // Unencoded bytes
-    IO.print("\x48\x69\x2e") // "Hi."
+    System.print("\x48\x69\x2e") // "Hi."
   }
 
   ranges {

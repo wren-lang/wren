@@ -1,9 +1,9 @@
 for (i in 0..2) {
-  IO.print("outer ", i)
+  System.print("outer " + i.toString)
   if (i > 1) break
 
   for (j in 0..2) {
-    IO.print("inner ", j)
+    System.print("inner " + j.toString)
     if (j > 1) break
   }
 }

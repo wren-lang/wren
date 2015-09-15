@@ -26,11 +26,11 @@ class Bar is Foo {
 }
 
 var bar = Bar.new()
-IO.print(bar.closeOverFooGet.call().call()) // expect: Foo field
-IO.print(bar.closeOverBarGet.call().call()) // expect: Bar field
+System.print(bar.closeOverFooGet.call().call()) // expect: Foo field
+System.print(bar.closeOverBarGet.call().call()) // expect: Bar field
 bar.closeOverFooSet.call().call()
-IO.print(bar.closeOverFooGet.call().call()) // expect: new foo value
-IO.print(bar.closeOverBarGet.call().call()) // expect: Bar field
+System.print(bar.closeOverFooGet.call().call()) // expect: new foo value
+System.print(bar.closeOverBarGet.call().call()) // expect: Bar field
 bar.closeOverBarSet.call().call()
-IO.print(bar.closeOverFooGet.call().call()) // expect: new foo value
-IO.print(bar.closeOverBarGet.call().call()) // expect: new bar value
+System.print(bar.closeOverFooGet.call().call()) // expect: new foo value
+System.print(bar.closeOverBarGet.call().call()) // expect: new bar value

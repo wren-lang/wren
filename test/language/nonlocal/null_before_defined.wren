@@ -1,3 +1,3 @@
-IO.print(Foo) // expect: null
+System.print(Foo) // expect: null
 var Foo = "value"
-IO.print(Foo) // expect: value
+System.print(Foo) // expect: value

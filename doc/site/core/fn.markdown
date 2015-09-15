@@ -13,7 +13,7 @@ argument](../functions.html#block-arguments) to some other method.
 
     :::dart
     var fn = Fn.new {
-      IO.print("The body")
+      System.print("The body")
     }
 
 It is a runtime error if `function` is not a function.
@@ -25,8 +25,8 @@ It is a runtime error if `function` is not a function.
 The number of arguments the function requires.
 
     :::dart
-    IO.print(Fn.new {}.arity)             // 0.
-    IO.print(Fn.new {|a, b, c| a }.arity) // 3.
+    System.print(Fn.new {}.arity)             // 0.
+    System.print(Fn.new {|a, b, c| a }.arity) // 3.
 
 ### **call**(args...)
 
@@ -34,7 +34,7 @@ Invokes the function with the given arguments.
 
     :::dart
     var fn = Fn.new { |arg|
-      IO.print(arg)
+      System.print(arg)
     }
 
     fn.call("Hello world") // Prints "Hello world".

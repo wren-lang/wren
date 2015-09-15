@@ -3,7 +3,7 @@ var list = []
 var i = 1
 while (i < 4) {
   var j = i + 1
-  list.add(Fn.new { IO.print(j) })
+  list.add(Fn.new { System.print(j) })
   i = i + 1
 }
 

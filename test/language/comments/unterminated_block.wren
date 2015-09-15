@@ -1,3 +1,3 @@
 // expect error line 3
-IO.print("nope") /*
+System.print("nope") /*
 oops

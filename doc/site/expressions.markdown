@@ -29,7 +29,7 @@ Wren is object-oriented, so most code consists of method calls. Most of them
 look like so:
 
     :::dart
-    IO.print("hello")
+    System.print("hello")
     items.add("another")
     items.insert(1, "value")
 
@@ -61,7 +61,7 @@ argument](functions.html#block-arguments):
 
     :::dart
     blondie.callMeAt(867, 5309) {
-      IO.print("This is the body!")
+      System.print("This is the body!")
     }
 
 Semantically, all method calls work like so:
@@ -98,7 +98,7 @@ call:
     :::dart
     class Base {
       method {
-        IO.print("base method")
+        System.print("base method")
       }
     }
 
@@ -114,7 +114,7 @@ base class constructor:
     :::dart
     class Base {
       this new(arg) {
-        IO.print("base constructor got ", arg)
+        System.print("base constructor got " + arg)
       }
     }
 
@@ -218,16 +218,16 @@ A `&&` ("logical and") expression evaluates the left-hand argument. If it's
 and returns the right-hand argument.
 
     :::dart
-    IO.print(false && 1)  // false
-    IO.print(1 && 2)      // 2
+    System.print(false && 1)  // false
+    System.print(1 && 2)      // 2
 
 An `||` ("logical or") expression is reversed. If the left-hand argument is
 [true](control-flow.html#truth), it's returned, otherwise the right-hand
 argument is evaluated and returned:
 
     :::dart
-    IO.print(false || 1)  // 1
-    IO.print(1 || 2)      // 1
+    System.print(false || 1)  // 1
+    System.print(1 || 2)      // 1
 
 ## The conditional operator `?:`
 
@@ -236,7 +236,7 @@ the little "if statement in the form of an expression" you know and love from C
 and its brethren.
 
     :::dart
-    IO.print(1 != 2 ? "math is sane" : "math is not sane!")
+    System.print(1 != 2 ? "math is sane" : "math is not sane!")
 
 It takes a condition expression, followed by `?`, followed by a then
 expression, a `:`, then an else expression. Just like `if`, it evaluates the

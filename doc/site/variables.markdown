@@ -13,7 +13,7 @@ defined, it can be accessed by name as you would expect.
 
     :::dart
     var animal = "Slow Loris"
-    IO.print(animal) // Prints "Slow Loris".
+    System.print(animal) // Prints "Slow Loris".
 
 ## Scope
 
@@ -22,11 +22,11 @@ until the end of the [block](syntax.html#blocks) where that definition appears.
 
     :::dart
     {
-      IO.print(a) // ERROR! a doesn't exist yet.
+      System.print(a) // ERROR! a doesn't exist yet.
       var a = 123
-      IO.print(a) // "123"
+      System.print(a) // "123"
     }
-    IO.print(a) // ERROR! a doesn't exist anymore.
+    System.print(a) // ERROR! a doesn't exist anymore.
 
 Variables defined at the top level of a script are *top-level* and are visible
 to the [module](modules.html) system. All other variables are *local*.
@@ -38,9 +38,9 @@ intend to do much).
     var a = "outer"
     {
       var a = "inner"
-      IO.print(a) // Prints "inner".
+      System.print(a) // Prints "inner".
     }
-    IO.print(a) // Prints "outer".
+    System.print(a) // Prints "outer".
 
 Declaring a variable with the same name in the *same* scope *is* an error.
 
@@ -65,6 +65,6 @@ assigned value.
 
     :::dart
     var a = "before"
-    IO.print(a = "after") // Prints "after".
+    System.print(a = "after") // Prints "after".
 
 **TODO: Top-level names.**

@@ -10,4 +10,4 @@ class TestSequence is Sequence {
   iteratorValue(iterator) { iterator }
 }
 
-IO.print(TestSequence.new().count) // expect: 10
+System.print(TestSequence.new().count) // expect: 10

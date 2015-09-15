@@ -7,7 +7,7 @@ var foo = null
     construct new() {}
 
     method {
-      IO.print(local)
+      System.print(local)
     }
   }
 

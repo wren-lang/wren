@@ -8,10 +8,10 @@ class Api {
   foreign static returnFalse
 }
 
-IO.print(Api.implicitNull == null) // expect: true
+System.print(Api.implicitNull == null) // expect: true
 
-IO.print(Api.returnInt)  // expect: 123456
-IO.print(Api.returnFloat) // expect: 123.456
+System.print(Api.returnInt)  // expect: 123456
+System.print(Api.returnFloat) // expect: 123.456
 
-IO.print(Api.returnTrue)  // expect: true
-IO.print(Api.returnFalse) // expect: false
+System.print(Api.returnTrue)  // expect: true
+System.print(Api.returnFalse) // expect: false

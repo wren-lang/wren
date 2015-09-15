@@ -17,7 +17,6 @@
 		29205C991AB4E6430073018D /* wren_compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C921AB4E6430073018D /* wren_compiler.c */; };
 		29205C9A1AB4E6430073018D /* wren_core.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C931AB4E6430073018D /* wren_core.c */; };
 		29205C9B1AB4E6430073018D /* wren_debug.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C941AB4E6430073018D /* wren_debug.c */; };
-		29205C9C1AB4E6430073018D /* wren_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C951AB4E6430073018D /* wren_io.c */; };
 		29205C9D1AB4E6430073018D /* wren_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C961AB4E6430073018D /* wren_utils.c */; };
 		29205C9E1AB4E6430073018D /* wren_value.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C971AB4E6430073018D /* wren_value.c */; };
 		29205C9F1AB4E6430073018D /* wren_vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C981AB4E6430073018D /* wren_vm.c */; };
@@ -63,7 +62,6 @@
 		29205C921AB4E6430073018D /* wren_compiler.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = wren_compiler.c; path = ../../src/vm/wren_compiler.c; sourceTree = "<group>"; };
 		29205C931AB4E6430073018D /* wren_core.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = wren_core.c; path = ../../src/vm/wren_core.c; sourceTree = "<group>"; };
 		29205C941AB4E6430073018D /* wren_debug.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = wren_debug.c; path = ../../src/vm/wren_debug.c; sourceTree = "<group>"; };
-		29205C951AB4E6430073018D /* wren_io.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = wren_io.c; path = ../../src/vm/wren_io.c; sourceTree = "<group>"; };
 		29205C961AB4E6430073018D /* wren_utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = wren_utils.c; path = ../../src/vm/wren_utils.c; sourceTree = "<group>"; };
 		29205C971AB4E6430073018D /* wren_value.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = wren_value.c; path = ../../src/vm/wren_value.c; sourceTree = "<group>"; };
 		29205C981AB4E6430073018D /* wren_vm.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = wren_vm.c; path = ../../src/vm/wren_vm.c; sourceTree = "<group>"; };
@@ -71,7 +69,6 @@
 		29205CA21AB4E65E0073018D /* wren_compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_compiler.h; path = ../../src/vm/wren_compiler.h; sourceTree = "<group>"; };
 		29205CA31AB4E65E0073018D /* wren_core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_core.h; path = ../../src/vm/wren_core.h; sourceTree = "<group>"; };
 		29205CA41AB4E65E0073018D /* wren_debug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_debug.h; path = ../../src/vm/wren_debug.h; sourceTree = "<group>"; };
-		29205CA51AB4E65E0073018D /* wren_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_io.h; path = ../../src/vm/wren_io.h; sourceTree = "<group>"; };
 		29205CA61AB4E65E0073018D /* wren_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_utils.h; path = ../../src/vm/wren_utils.h; sourceTree = "<group>"; };
 		29205CA71AB4E65E0073018D /* wren_value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_value.h; path = ../../src/vm/wren_value.h; sourceTree = "<group>"; };
 		29205CA81AB4E65E0073018D /* wren_vm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_vm.h; path = ../../src/vm/wren_vm.h; sourceTree = "<group>"; };
@@ -137,8 +134,6 @@
 				29205C931AB4E6430073018D /* wren_core.c */,
 				29205CA41AB4E65E0073018D /* wren_debug.h */,
 				29205C941AB4E6430073018D /* wren_debug.c */,
-				29205CA51AB4E65E0073018D /* wren_io.h */,
-				29205C951AB4E6430073018D /* wren_io.c */,
 				29DE39521AC3A50A00987D41 /* wren_meta.h */,
 				29DE39511AC3A50A00987D41 /* wren_meta.c */,
 				296371B31AC713D000079FDA /* wren_opcodes.h */,
@@ -292,7 +287,6 @@
 				29C8A9331AB71FFF00DEC81D /* vm.c in Sources */,
 				291647C41BA5EA45006142EE /* scheduler.c in Sources */,
 				29205C9B1AB4E6430073018D /* wren_debug.c in Sources */,
-				29205C9C1AB4E6430073018D /* wren_io.c in Sources */,
 				29205C9D1AB4E6430073018D /* wren_utils.c in Sources */,
 				29205C9E1AB4E6430073018D /* wren_value.c in Sources */,
 				29205C9F1AB4E6430073018D /* wren_vm.c in Sources */,

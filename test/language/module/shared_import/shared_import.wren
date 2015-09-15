@@ -8,5 +8,5 @@ import "b" for B
 // expect: b
 // expect: b done
 
-IO.print(A) // expect: a shared
-IO.print(B) // expect: b shared
+System.print(A) // expect: a shared
+System.print(B) // expect: b shared

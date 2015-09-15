@@ -64,13 +64,13 @@ for (fish in fishes) {
   map[fish] = fish.count
 }
 
-IO.print(map.count) // expect: 249
+System.print(map.count) // expect: 249
 
 for (n in 0...150) {
   map.remove(fishes[n])
 }
 
-IO.print(map.count) // expect: 99
+System.print(map.count) // expect: 99
 
 // Make sure we can still find all of the remaining ones.
 var contained = 0
@@ -78,4 +78,4 @@ for (n in 150...249) {
   if (map.containsKey(fishes[n])) contained = contained + 1
 }
 
-IO.print(contained) // expect: 99
+System.print(contained) // expect: 99

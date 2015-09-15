@@ -7,6 +7,6 @@ class Other {
   }
 
   static show {
-    IO.print(Module)
+    System.print(Module)
   }
 }

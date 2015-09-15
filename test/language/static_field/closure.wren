@@ -11,6 +11,6 @@ class Foo {
 }
 
 Foo.initialize
-IO.print(Foo.closeOverGet.call()) // expect: Foo field
+System.print(Foo.closeOverGet.call()) // expect: Foo field
 Foo.closeOverSet.call()
-IO.print(Foo.closeOverGet.call()) // expect: new value
+System.print(Foo.closeOverGet.call()) // expect: new value

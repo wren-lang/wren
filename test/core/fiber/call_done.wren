@@ -1,5 +1,5 @@
 var fiber = Fiber.new {
-  IO.print("call")
+  System.print("call")
 }
 
 fiber.call() // expect: call

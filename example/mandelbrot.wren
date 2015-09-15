@@ -29,8 +29,8 @@ for (yPixel in 0...24) {
       }
     }
 
-    IO.write(pixel)
+    System.write(pixel)
   }
 
-  IO.print("")
+  System.print()
 }

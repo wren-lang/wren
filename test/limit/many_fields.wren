@@ -255,7 +255,7 @@ class Foo {
     _field253 = 253
     _field254 = 254
     _field255 = 255
-    IO.print(_field255)
+    System.print(_field255)
   }
 }
 

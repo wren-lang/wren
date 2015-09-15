@@ -5,8 +5,8 @@ class Fib {
   }
 }
 
-var start = IO.clock
+var start = System.clock
 for (i in 1..5) {
-  IO.print(Fib.get(28))
+  System.print(Fib.get(28))
 }
-IO.print("elapsed: ", IO.clock - start)
+System.print("elapsed: " + (System.clock - start).toString)

@@ -29,20 +29,20 @@ class Fib is Sequence {
 var squareFib = Fib.new().map {|fib| fib * fib }
 var iterator = null
 
-IO.print(squareFib is Sequence) // expect: true
-IO.print(squareFib) // expect: instance of MapSequence
+System.print(squareFib is Sequence) // expect: true
+System.print(squareFib) // expect: instance of MapSequence
 
 iterator = squareFib.iterate(iterator)
-IO.print(squareFib.iteratorValue(iterator)) // expect: 0
+System.print(squareFib.iteratorValue(iterator)) // expect: 0
 
 iterator = squareFib.iterate(iterator)
-IO.print(squareFib.iteratorValue(iterator)) // expect: 1
+System.print(squareFib.iteratorValue(iterator)) // expect: 1
 
 iterator = squareFib.iterate(iterator)
-IO.print(squareFib.iteratorValue(iterator)) // expect: 1
+System.print(squareFib.iteratorValue(iterator)) // expect: 1
 
 iterator = squareFib.iterate(iterator)
-IO.print(squareFib.iteratorValue(iterator)) // expect: 4
+System.print(squareFib.iteratorValue(iterator)) // expect: 4
 
 iterator = squareFib.iterate(iterator)
-IO.print(squareFib.iteratorValue(iterator)) // expect: 9
+System.print(squareFib.iteratorValue(iterator)) // expect: 9

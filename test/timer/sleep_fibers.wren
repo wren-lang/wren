@@ -3,17 +3,17 @@ import "timer" for Timer
 
 Scheduler.add {
   Timer.sleep(2)
-  IO.print("a")
+  System.print("a")
 }
 
 Scheduler.add {
   Timer.sleep(1)
-  IO.print("b")
+  System.print("b")
 }
 
-IO.print("main")
+System.print("main")
 Timer.sleep(3)
-IO.print("done")
+System.print("done")
 // expect: main
 // expect: b
 // expect: a

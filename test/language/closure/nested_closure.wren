@@ -7,9 +7,9 @@ Fn.new {
     Fn.new {
       var c = "c"
       f = Fn.new {
-        IO.print(a)
-        IO.print(b)
-        IO.print(c)
+        System.print(a)
+        System.print(b)
+        System.print(c)
       }
     }.call()
   }.call()

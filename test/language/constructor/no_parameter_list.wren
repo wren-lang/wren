@@ -1,5 +1,5 @@
 class Foo {
   this new { // expect error
-    IO.print("ok")
+    System.print("ok")
   }
 }

@@ -1,14 +1,14 @@
 class Foo {
   static getter {
-    IO.print("getter")
+    System.print("getter")
   }
 
   static setter=(value) {
-    IO.print("setter")
+    System.print("setter")
   }
 
   static method(a) {
-    IO.print("method")
+    System.print("method")
   }
 
   static test {

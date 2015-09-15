@@ -11,27 +11,27 @@ foreign class Counter {
 }
 
 var counter = Counter.new()
-IO.print(counter.value) // expect: 0
+System.print(counter.value) // expect: 0
 counter.increment(3.1)
-IO.print(counter.value) // expect: 3.1
+System.print(counter.value) // expect: 3.1
 counter.increment(1.2)
-IO.print(counter.value) // expect: 4.3
+System.print(counter.value) // expect: 4.3
 
 // Foreign classes can inherit a class as long as it has no fields.
 class PointBase {
   inherited() {
-    IO.print("inherited method")
+    System.print("inherited method")
   }
 }
 
 // Class with non-default constructor.
 foreign class Point is PointBase {
   construct new() {
-    IO.print("default")
+    System.print("default")
   }
 
   construct new(x, y, z) {
-    IO.print(x, ", ", y, ", ", z)
+    System.print(x.toString + ", " + y.toString + ", " + z.toString)
   }
 
   foreign translate(x, y, z)
@@ -39,19 +39,19 @@ foreign class Point is PointBase {
 }
 
 var p = Point.new(1, 2, 3) // expect: 1, 2, 3
-IO.print(p) // expect: (1, 2, 3)
+System.print(p) // expect: (1, 2, 3)
 p.translate(3, 4, 5)
-IO.print(p) // expect: (4, 6, 8)
+System.print(p) // expect: (4, 6, 8)
 
 p = Point.new() // expect: default
-IO.print(p) // expect: (0, 0, 0)
+System.print(p) // expect: (0, 0, 0)
 
 p.inherited() // expect: inherited method
 
 var error = Fiber.new {
   class Subclass is Point {}
 }.try()
-IO.print(error) // expect: Class 'Subclass' cannot inherit from foreign class 'Point'.
+System.print(error) // expect: Class 'Subclass' cannot inherit from foreign class 'Point'.
 
 // Class with a finalizer.
 foreign class Resource {
@@ -65,14 +65,14 @@ var resources = [
 ]
 
 Api.gc()
-IO.print(Api.finalized) // expect: 0
+System.print(Api.finalized) // expect: 0
 
 resources.removeAt(-1)
 
 Api.gc()
-IO.print(Api.finalized) // expect: 1
+System.print(Api.finalized) // expect: 1
 
 resources.clear()
 
 Api.gc()
-IO.print(Api.finalized) // expect: 3
+System.print(Api.finalized) // expect: 3

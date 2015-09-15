@@ -1,2 +1,2 @@
-true ? IO.print("ok") : IO.print("no") // expect: ok
-false ? IO.print("no") : IO.print("ok") // expect: ok
+true ? System.print("ok") : System.print("no") // expect: ok
+false ? System.print("no") : System.print("ok") // expect: ok

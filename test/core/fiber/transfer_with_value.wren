@@ -1,20 +1,20 @@
 var a = Fiber.new {
-  IO.print("a")
+  System.print("a")
 }
 
 var b = Fiber.new {
-  IO.print("b before")
+  System.print("b before")
   a.transfer("ignored")
-  IO.print("b after")
+  System.print("b after")
 }
 
 var c = Fiber.new {
-  IO.print("c before")
+  System.print("c before")
   b.transfer("ignored")
-  IO.print("c after")
+  System.print("c after")
 }
 
-IO.print("start") // expect: start
+System.print("start") // expect: start
 
 c.transfer("ignored")
 // expect: c before

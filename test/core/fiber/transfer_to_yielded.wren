@@ -1,7 +1,7 @@
 var fiber = Fiber.new {
-  IO.print("called")
-  IO.print(Fiber.yield())
-  IO.print("transferred")
+  System.print("called")
+  System.print(Fiber.yield())
+  System.print("transferred")
 }
 
 fiber.call()     // expect: called

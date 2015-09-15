@@ -1,4 +1,4 @@
-var start = IO.clock
+var start = System.clock
 
 var map = {}
 
@@ -10,10 +10,10 @@ var sum = 0
 for (i in 1..1000000) {
   sum = sum + map[i]
 }
-IO.print(sum)
+System.print(sum)
 
 for (i in 1..1000000) {
   map.remove(i)
 }
 
-IO.print("elapsed: ", IO.clock - start)
+System.print("elapsed: " + (System.clock - start).toString)

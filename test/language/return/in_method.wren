@@ -3,8 +3,8 @@ class Foo {
 
   method {
     return "ok"
-    IO.print("bad")
+    System.print("bad")
   }
 }
 
-IO.print(Foo.new().method) // expect: ok
+System.print(Foo.new().method) // expect: ok

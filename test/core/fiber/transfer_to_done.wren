@@ -1,5 +1,5 @@
 var a = Fiber.new {
-  IO.print("run")
+  System.print("run")
 }
 
 a.call() // expect: run

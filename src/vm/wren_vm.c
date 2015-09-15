@@ -298,20 +298,6 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
                                              bool isStatic,
                                              const char* signature)
 {
-  WrenForeignMethodFn fn;
-
-  // Bind foreign methods in the core module.
-  if (strcmp(moduleName, "core") == 0)
-  {
-    #if WREN_USE_LIB_IO
-    fn = wrenBindIOForeignMethod(vm, className, signature);
-    #endif
-    
-    ASSERT(fn != NULL, "Failed to bind core module foreign method.");
-    return fn;
-  }
-
-  // For other modules, let the host bind it.
   if (vm->bindForeignMethod == NULL) return NULL;
 
   return vm->bindForeignMethod(vm, moduleName, className, isStatic, signature);

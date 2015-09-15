@@ -3,8 +3,8 @@ var f = null
 {
   var a = "a"
   f = Fn.new {
-    IO.print(a)
-    IO.print(a)
+    System.print(a)
+    System.print(a)
   }
 }
 

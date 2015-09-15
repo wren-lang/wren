@@ -2,7 +2,7 @@ var f = null
 
 Fn.new {|param|
   f = Fn.new {
-    IO.print(param)
+    System.print(param)
   }
 }.call("param")
 

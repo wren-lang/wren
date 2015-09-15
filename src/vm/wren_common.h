@@ -44,13 +44,6 @@
   #endif
 #endif
 
-// If true, loads the "IO" class in the standard library.
-//
-// Defaults to on.
-#ifndef WREN_USE_LIB_IO
-  #define WREN_USE_LIB_IO 1
-#endif
-
 // If true, loads the "Meta" class in the standard library.
 //
 // Defaults to on.

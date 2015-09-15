@@ -5,7 +5,7 @@ class Foo {
 
   method(param) {
     F = Fn.new {
-      IO.print(param)
+      System.print(param)
     }
   }
 }

@@ -1,11 +1,11 @@
 var fiber = Fiber.new {
-  IO.print("1")
+  System.print("1")
   Fiber.yield()
-  IO.print("2")
+  System.print("2")
 }
 
-IO.print(fiber.isDone)  // expect: false
+System.print(fiber.isDone)  // expect: false
 fiber.call()            // expect: 1
-IO.print(fiber.isDone)  // expect: false
+System.print(fiber.isDone)  // expect: false
 fiber.call()            // expect: 2
-IO.print(fiber.isDone)  // expect: true
+System.print(fiber.isDone)  // expect: true

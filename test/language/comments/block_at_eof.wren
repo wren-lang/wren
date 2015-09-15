@@ -1,2 +1,2 @@
-IO.print("ok") // expect: ok
+System.print("ok") // expect: ok
 /* comment */

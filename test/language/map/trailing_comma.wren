@@ -3,5 +3,5 @@ var map = {
   "b": 2,
 }
 
-IO.print(map["a"]) // expect: 1
-IO.print(map["b"]) // expect: 2
+System.print(map["a"]) // expect: 1
+System.print(map["b"]) // expect: 2

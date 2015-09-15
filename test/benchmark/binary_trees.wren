@@ -24,10 +24,10 @@ var minDepth = 4
 var maxDepth = 12
 var stretchDepth = maxDepth + 1
 
-var start = IO.clock
+var start = System.clock
 
-IO.print("stretch tree of depth ", stretchDepth, " check: ",
-    Tree.new(0, stretchDepth).check)
+System.print("stretch tree of depth " + stretchDepth.toString + " check: " +
+    Tree.new(0, stretchDepth).check.toString)
 
 var longLivedTree = Tree.new(0, maxDepth)
 
@@ -44,10 +44,12 @@ while (depth < stretchDepth) {
     check = check + Tree.new(i, depth).check + Tree.new(-i, depth).check
   }
 
-  IO.print((iterations * 2), " trees of depth ", depth, " check: ", check)
+  System.print((iterations * 2).toString + " trees of depth " +
+      depth.toString + " check: " + check.toString)
   iterations = iterations / 4
   depth = depth + 2
 }
 
-IO.print("long lived tree of depth ", maxDepth, " check: ", longLivedTree.check)
-IO.print("elapsed: ", (IO.clock - start))
+System.print("long lived tree of depth " + maxDepth.toString + " check: " +
+    longLivedTree.check.toString)
+System.print("elapsed: " + (System.clock - start).toString)

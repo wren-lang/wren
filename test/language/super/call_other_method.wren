@@ -1,6 +1,6 @@
 class Base {
   foo {
-    IO.print("Base.foo")
+    System.print("Base.foo")
   }
 }
 
@@ -8,7 +8,7 @@ class Derived is Base {
   construct new() {}
 
   bar {
-    IO.print("Derived.bar")
+    System.print("Derived.bar")
     super.foo
   }
 }

@@ -1,8 +1,8 @@
 // False and null are false.
-IO.print(false || "ok") // expect: ok
-IO.print(null || "ok") // expect: ok
+System.print(false || "ok") // expect: ok
+System.print(null || "ok") // expect: ok
 
 // Everything else is true.
-IO.print(true || "ok") // expect: true
-IO.print(0 || "ok") // expect: 0
-IO.print("s" || "ok") // expect: s
+System.print(true || "ok") // expect: true
+System.print(0 || "ok") // expect: 0
+System.print("s" || "ok") // expect: s

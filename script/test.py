@@ -14,7 +14,7 @@ WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wrend')
 TEST_APP = join(WREN_DIR, 'build', 'debug', 'test', 'wrend')
 
-EXPECT_PATTERN = re.compile(r'// expect: (.*)')
+EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect runtime error: (.+)')

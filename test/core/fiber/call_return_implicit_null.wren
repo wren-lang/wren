@@ -1,5 +1,5 @@
 var fiber = Fiber.new {
-  IO.print("fiber") // expect: fiber
+  System.print("fiber") // expect: fiber
 }
 
-IO.print(fiber.call()) // expect: null
+System.print(fiber.call()) // expect: null

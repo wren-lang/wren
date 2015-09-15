@@ -10,4 +10,4 @@ class TestSequence is Sequence {
   iteratorValue(iterator) { iterator }
 }
 
-IO.print(TestSequence.new().toList) // expect: [1, 2, 3]
+System.print(TestSequence.new().toList) // expect: [1, 2, 3]

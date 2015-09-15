@@ -108,7 +108,7 @@ For example, if you run this program:
     }
 
     var error = fiber.try()
-    IO.print("Caught error: ", error)
+    System.print("Caught error: " + error)
 
 It prints:
 
@@ -120,7 +120,7 @@ usual. When a fiber has been aborted because of a runtime error, you can also
 get the error from the fiber object. Continuing the above example:
 
     :::dart
-    IO.print(fiber.error)
+    System.print(fiber.error)
 
 This also prints:
 

@@ -1,5 +1,5 @@
 var fiber = Fiber.new {
-  IO.print("try")
+  System.print("try")
 }
 
 fiber.try() // expect: try

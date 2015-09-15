@@ -21,19 +21,19 @@ class Foo {
 }
 
 var foo = Foo.new()
-IO.print(foo + "a") // expect: infix + a
-IO.print(foo - "a") // expect: infix - a
-IO.print(foo * "a") // expect: infix * a
-IO.print(foo / "a") // expect: infix / a
-IO.print(foo % "a") // expect: infix % a
-IO.print(foo < "a") // expect: infix < a
-IO.print(foo > "a") // expect: infix > a
-IO.print(foo <= "a") // expect: infix <= a
-IO.print(foo >= "a") // expect: infix >= a
-IO.print(foo == "a") // expect: infix == a
-IO.print(foo != "a") // expect: infix != a
-IO.print(foo & "a") // expect: infix & a
-IO.print(foo | "a") // expect: infix | a
-IO.print(!foo) // expect: prefix !
-IO.print(~foo) // expect: prefix ~
-IO.print(-foo) // expect: prefix -
+System.print(foo + "a") // expect: infix + a
+System.print(foo - "a") // expect: infix - a
+System.print(foo * "a") // expect: infix * a
+System.print(foo / "a") // expect: infix / a
+System.print(foo % "a") // expect: infix % a
+System.print(foo < "a") // expect: infix < a
+System.print(foo > "a") // expect: infix > a
+System.print(foo <= "a") // expect: infix <= a
+System.print(foo >= "a") // expect: infix >= a
+System.print(foo == "a") // expect: infix == a
+System.print(foo != "a") // expect: infix != a
+System.print(foo & "a") // expect: infix & a
+System.print(foo | "a") // expect: infix | a
+System.print(!foo) // expect: prefix !
+System.print(~foo) // expect: prefix ~
+System.print(-foo) // expect: prefix -

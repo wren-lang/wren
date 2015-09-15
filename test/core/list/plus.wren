@@ -6,13 +6,13 @@ var e = a + []
 var f = [] + a
 var g = [] + []
 
-IO.print(a) // expect: [1, 2, 3]
-IO.print(b) // expect: [4, 5, 6]
-IO.print(c) // expect: [1, 2, 3, 4, 5, 6]
-IO.print(d) // expect: [1, 2, 3, 4, 5, 6]
-IO.print(e) // expect: [1, 2, 3]
-IO.print(f) // expect: [1, 2, 3]
-IO.print(g) // expect: []
+System.print(a) // expect: [1, 2, 3]
+System.print(b) // expect: [4, 5, 6]
+System.print(c) // expect: [1, 2, 3, 4, 5, 6]
+System.print(d) // expect: [1, 2, 3, 4, 5, 6]
+System.print(e) // expect: [1, 2, 3]
+System.print(f) // expect: [1, 2, 3]
+System.print(g) // expect: []
 
 // Doesn't modify original list.
-IO.print(a) // expect: [1, 2, 3]
+System.print(a) // expect: [1, 2, 3]

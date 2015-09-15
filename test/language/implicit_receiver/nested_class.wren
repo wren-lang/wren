@@ -2,15 +2,15 @@ class Outer {
   construct new() {}
 
   getter {
-    IO.print("outer getter")
+    System.print("outer getter")
   }
 
   setter=(value) {
-    IO.print("outer setter")
+    System.print("outer setter")
   }
 
   method(a) {
-    IO.print("outer method")
+    System.print("outer method")
   }
 
   test {
@@ -22,15 +22,15 @@ class Outer {
       construct new() {}
 
       getter {
-        IO.print("inner getter")
+        System.print("inner getter")
       }
 
       setter=(value) {
-        IO.print("inner setter")
+        System.print("inner setter")
       }
 
       method(a) {
-        IO.print("inner method")
+        System.print("inner method")
       }
 
       test {

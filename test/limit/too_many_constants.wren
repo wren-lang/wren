@@ -65535,5 +65535,5 @@ var f = Fn.new {
   65534
   65535
   66536
-  IO.print(65537) // expect error
+  System.print(65537) // expect error
 }
