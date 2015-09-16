@@ -78,7 +78,7 @@ class Sequence {
     return result
   }
 
-  join { join("") }
+  join() { join("") }
 
   join(sep) {
     var first = true

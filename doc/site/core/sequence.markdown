@@ -68,17 +68,17 @@ Returns whether the sequence contains any elements.
 This can be more efficient that `count == 0` because this does not iterate over
 the entire sequence.
 
-### **join**(sep)
+### **join**(separator)
 
-Returns a string representation of the sequence. The string representations of
-the elements in the sequence is concatenated with intervening occurrences of
-`sep`.
+Converts every element in the sequence to a string and then joins the results
+together into a single string, each separated by `separator`.
 
-It is a runtime error if `sep` is not a string.
+It is a runtime error if `separator` is not a string.
 
-### **join**
+### **join**()
 
-Calls `join` with the empty string as the separator.
+Converts every element in the sequence to a string and then joins the results
+together into a single string.
 
 ### **map**(transformation)
 
