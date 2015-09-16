@@ -145,6 +145,11 @@ static WrenForeignClassMethods bindForeignClass(
   return methods;
 }
 
+static void write(WrenVM* vm, const char* text)
+{
+  printf("%s", text);
+}
+
 static void initVM()
 {
   WrenConfiguration config;
@@ -153,6 +158,7 @@ static void initVM()
   config.bindForeignMethodFn = bindForeignMethod;
   config.bindForeignClassFn = bindForeignClass;
   config.loadModuleFn = readModule;
+  config.writeFn = write;
 
   // Since we're running in a standalone process, be generous with memory.
   config.initialHeapSize = 1024 * 1024 * 100;

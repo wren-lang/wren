@@ -1,6 +1,4 @@
 #include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 
 #include "wren.h"
@@ -37,40 +35,26 @@ static void* defaultReallocate(void* ptr, size_t newSize)
   return realloc(ptr, newSize);
 }
 
-void wrenInitConfiguration(WrenConfiguration* configuration)
+void wrenInitConfiguration(WrenConfiguration* config)
 {
-  configuration->reallocateFn = NULL;
-  configuration->loadModuleFn = NULL;
-  configuration->bindForeignMethodFn = NULL;
-  configuration->bindForeignClassFn = NULL;
-  configuration->initialHeapSize = 1024 * 1024 * 10;
-  configuration->minHeapSize = 1024 * 1024;
-  configuration->heapGrowthPercent = 50;
+  config->reallocateFn = defaultReallocate;
+  config->loadModuleFn = NULL;
+  config->bindForeignMethodFn = NULL;
+  config->bindForeignClassFn = NULL;
+  config->writeFn = NULL;
+  config->initialHeapSize = 1024 * 1024 * 10;
+  config->minHeapSize = 1024 * 1024;
+  config->heapGrowthPercent = 50;
 }
 
-WrenVM* wrenNewVM(WrenConfiguration* configuration)
+WrenVM* wrenNewVM(WrenConfiguration* config)
 {
-  WrenReallocateFn reallocate = defaultReallocate;
-  if (configuration->reallocateFn != NULL)
-  {
-    reallocate = configuration->reallocateFn;
-  }
-
-  WrenVM* vm = (WrenVM*)reallocate(NULL, sizeof(*vm));
+  WrenVM* vm = (WrenVM*)config->reallocateFn(NULL, sizeof(*vm));
   memset(vm, 0, sizeof(WrenVM));
+  memcpy(&vm->config, config, sizeof(WrenConfiguration));
 
-  vm->reallocate = reallocate;
-  vm->bindForeignMethod = configuration->bindForeignMethodFn;
-  vm->bindForeignClass = configuration->bindForeignClassFn;
-  vm->loadModule = configuration->loadModuleFn;
-  vm->nextGC = configuration->initialHeapSize;
-  vm->minNextGC = configuration->minHeapSize;
+  vm->nextGC = config->initialHeapSize;
 
-  // +100 here because the configuration gives us the *additional* size of
-  // the heap relative to the in-use memory, while heapScalePercent is the
-  // *total* size of the heap relative to in-use.
-  vm->heapScalePercent = 100 + configuration->heapGrowthPercent;
-  
   wrenSymbolTableInit(&vm->methodNames);
 
   ObjString* name = AS_STRING(CONST_STRING(vm, "core"));
@@ -188,8 +172,11 @@ void wrenCollectGarbage(WrenVM* vm)
     }
   }
 
-  vm->nextGC = vm->bytesAllocated * vm->heapScalePercent / 100;
-  if (vm->nextGC < vm->minNextGC) vm->nextGC = vm->minNextGC;
+  // +100 here because the configuration gives us the *additional* size of
+  // the heap relative to the in-use memory, while heapScalePercent is the
+  // *total* size of the heap relative to in-use.
+  vm->nextGC = vm->bytesAllocated * (100 + vm->config.heapGrowthPercent) / 100;
+  if (vm->nextGC < vm->config.minHeapSize) vm->nextGC = vm->config.minHeapSize;
 
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   double elapsed = ((double)clock() / CLOCKS_PER_SEC) - startTime;
@@ -227,7 +214,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   if (newSize > 0 && vm->bytesAllocated > vm->nextGC) wrenCollectGarbage(vm);
 #endif
 
-  return vm->reallocate(memory, newSize);
+  return vm->config.reallocateFn(memory, newSize);
 }
 
 // Captures the local variable [local] into an [Upvalue]. If that local is
@@ -298,9 +285,9 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
                                              bool isStatic,
                                              const char* signature)
 {
-  if (vm->bindForeignMethod == NULL) return NULL;
+  if (vm->config.bindForeignMethodFn == NULL) return NULL;
 
-  return vm->bindForeignMethod(vm, moduleName, className, isStatic, signature);
+  return vm->config.bindForeignMethodFn(vm, moduleName, className, isStatic, signature);
 }
 
 // Defines [methodValue] as a method on [classObj].
@@ -484,7 +471,7 @@ static Value importModule(WrenVM* vm, Value name)
   if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
 
   // Load the module's source code from the embedder.
-  char* source = vm->loadModule(vm, AS_CSTRING(name));
+  char* source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
   if (source == NULL)
   {
     // Couldn't load the module.
@@ -585,10 +572,10 @@ static Value validateSuperclass(WrenVM* vm, Value name, Value superclassValue,
 static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
 {
   // TODO: Make this a runtime error?
-  ASSERT(vm->bindForeignClass != NULL,
+  ASSERT(vm->config.bindForeignClassFn != NULL,
       "Cannot declare foreign classes without a bindForeignClassFn.");
   
-  WrenForeignClassMethods methods = vm->bindForeignClass(
+  WrenForeignClassMethods methods = vm->config.bindForeignClassFn(
       vm, module->name->value, classObj->name->value);
   
   Method method;
@@ -1492,7 +1479,7 @@ Value wrenImportModule(WrenVM* vm, const char* name)
   }
 
   // Load the module's source code from the embedder.
-  char* source = vm->loadModule(vm, name);
+  char* source = vm->config.loadModuleFn(vm, name);
   if (source == NULL)
   {
     wrenPopRoot(vm); // nameValue.

@@ -57,9 +57,6 @@ struct WrenVM
 
   // Memory management data:
 
-  // The externally-provided function used to allocate memory.
-  WrenReallocateFn reallocate;
-
   // The number of bytes that are known to be currently allocated. Includes all
   // memory that was proven live after the last GC, as well as any new bytes
   // that were allocated since then. Does *not* include bytes for objects that
@@ -68,14 +65,6 @@ struct WrenVM
 
   // The number of total allocated bytes that will trigger the next GC.
   size_t nextGC;
-
-  // The minimum value for [nextGC] when recalculated after a collection.
-  size_t minNextGC;
-
-  // The scale factor used to calculate [nextGC] from the current number of in
-  // use bytes, as a percent. For example, 150 here means that nextGC will be
-  // 50% larger than the current number of in-use bytes.
-  int heapScalePercent;
 
   // The first object in the linked list of all currently allocated objects.
   Obj* first;
@@ -104,15 +93,8 @@ struct WrenVM
   // to the function.
   int foreignCallNumArgs;
 
-  // The function used to locate foreign functions.
-  WrenBindForeignMethodFn bindForeignMethod;
+  WrenConfiguration config;
   
-  // The function used to locate foreign classes.
-  WrenBindForeignClassFn bindForeignClass;
-
-  // The function used to load modules.
-  WrenLoadModuleFn loadModule;
-
   // Compiler and debugger data:
 
   // The compiler that is currently compiling code. This is used so that heap

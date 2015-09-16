@@ -48,6 +48,9 @@ typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
                                                        bool isStatic,
                                                        const char* signature);
 
+// Displays a string of text to the user.
+typedef void (*WrenWriteFn)(WrenVM* vm, const char* text);
+
 typedef struct
 {
   // The callback invoked when the foreign object is created.
@@ -111,6 +114,12 @@ typedef struct
   // stored in the foreign object when an instance is created.
   WrenBindForeignClassFn bindForeignClassFn;
 
+  // The callback Wren uses to display text when `System.print()` or the other
+  // related functions are called.
+  //
+  // If this is `NULL`, Wren discards any printed text.
+  WrenWriteFn writeFn;
+  
   // The number of bytes Wren will allocate before triggering the first garbage
   // collection.
   //

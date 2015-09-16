@@ -1,8 +1,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -1049,7 +1047,11 @@ DEF_PRIMITIVE(system_clock)
 
 DEF_PRIMITIVE(system_writeString)
 {
-  printf("%s", AS_CSTRING(args[1]));
+  if (vm->config.writeFn != NULL)
+  {
+    vm->config.writeFn(vm, AS_CSTRING(args[1]));
+  }
+
   RETURN_VAL(args[1]);
 }
 
