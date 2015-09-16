@@ -7,6 +7,8 @@ WrenForeignMethodFn schedulerBindForeign(
     WrenVM* vm, const char* className, bool isStatic, const char* signature);
 
 void schedulerResume(WrenValue* fiber);
+void schedulerResumeDouble(WrenValue* fiber, double value);
+void schedulerResumeString(WrenValue* fiber, const char* text);
 
 void schedulerReleaseMethods();
 

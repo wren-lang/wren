@@ -3,9 +3,11 @@
 
 #include "modules.h"
 
+#include "io.wren.inc"
 #include "scheduler.wren.inc"
 #include "timer.wren.inc"
 
+#include "io.h"
 #include "scheduler.h"
 #include "timer.h"
 
@@ -30,8 +32,9 @@ typedef struct
 // The array of built-in modules.
 static BuiltInModule modules[] =
 {
+  {"io",        &ioModuleSource,        ioBindForeign,        NULL},
   {"scheduler", &schedulerModuleSource, schedulerBindForeign, NULL},
-  {"timer",     &timerModuleSource, timerBindForeign, NULL},
+  {"timer",     &timerModuleSource,     timerBindForeign,     NULL},
   
   // Sentinel marking the end of the list.
   {NULL, NULL, NULL, NULL}

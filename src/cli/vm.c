@@ -2,8 +2,8 @@
 #include <string.h>
 
 #include "modules.h"
-#include "vm.h"
 #include "scheduler.h"
+#include "vm.h"
 
 #define MAX_LINE_LENGTH 1024 // TODO: Something less arbitrary.
 

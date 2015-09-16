@@ -35,6 +35,18 @@ void schedulerResume(WrenValue* fiber)
   wrenReleaseValue(getVM(), fiber);
 }
 
+void schedulerResumeDouble(WrenValue* fiber, double value)
+{
+  wrenCall(getVM(), resumeWithArg, NULL, "vd", fiber, value);
+  wrenReleaseValue(getVM(), fiber);
+}
+
+void schedulerResumeString(WrenValue* fiber, const char* text)
+{
+  wrenCall(getVM(), resumeWithArg, NULL, "vs", fiber, text);
+  wrenReleaseValue(getVM(), fiber);
+}
+
 void schedulerReleaseMethods()
 {
   if (resume != NULL) wrenReleaseValue(getVM(), resume);

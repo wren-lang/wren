@@ -22,6 +22,10 @@
 		29205C9F1AB4E6430073018D /* wren_vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C981AB4E6430073018D /* wren_vm.c */; };
 		29512C811B91F8EB008C10E6 /* libuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29512C801B91F8EB008C10E6 /* libuv.a */; };
 		29512C821B91F901008C10E6 /* libuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29512C801B91F8EB008C10E6 /* libuv.a */; };
+		29729F311BA70A620099CA20 /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29729F2E1BA70A620099CA20 /* io.c */; };
+		29729F321BA70A620099CA20 /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29729F2E1BA70A620099CA20 /* io.c */; };
+		29729F331BA70A620099CA20 /* io.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29729F301BA70A620099CA20 /* io.wren.inc */; };
+		29729F341BA70A620099CA20 /* io.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29729F301BA70A620099CA20 /* io.wren.inc */; };
 		2986F6D71ACF93BA00BCE26C /* wren_primitive.c in Sources */ = {isa = PBXBuildFile; fileRef = 2986F6D51ACF93BA00BCE26C /* wren_primitive.c */; };
 		29C8A9331AB71FFF00DEC81D /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
 		29DE39531AC3A50A00987D41 /* wren_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29DE39511AC3A50A00987D41 /* wren_meta.c */; };
@@ -75,6 +79,9 @@
 		29512C7F1B91F86E008C10E6 /* api_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = api_test; sourceTree = BUILT_PRODUCTS_DIR; };
 		29512C801B91F8EB008C10E6 /* libuv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libuv.a; path = ../../build/libuv.a; sourceTree = "<group>"; };
 		296371B31AC713D000079FDA /* wren_opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_opcodes.h; path = ../../src/vm/wren_opcodes.h; sourceTree = "<group>"; };
+		29729F2E1BA70A620099CA20 /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = io.c; path = ../../src/module/io.c; sourceTree = "<group>"; };
+		29729F2F1BA70A620099CA20 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../../src/module/io.h; sourceTree = "<group>"; };
+		29729F301BA70A620099CA20 /* io.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = io.wren.inc; path = ../../src/module/io.wren.inc; sourceTree = "<group>"; };
 		2986F6D51ACF93BA00BCE26C /* wren_primitive.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_primitive.c; path = ../../src/vm/wren_primitive.c; sourceTree = "<group>"; };
 		2986F6D61ACF93BA00BCE26C /* wren_primitive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_primitive.h; path = ../../src/vm/wren_primitive.h; sourceTree = "<group>"; };
 		29AB1F061816E3AD004B501E /* wren */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wren; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -114,6 +121,9 @@
 		2901D7611B74F3E20083A2C8 /* module */ = {
 			isa = PBXGroup;
 			children = (
+				29729F2F1BA70A620099CA20 /* io.h */,
+				29729F2E1BA70A620099CA20 /* io.c */,
+				29729F301BA70A620099CA20 /* io.wren.inc */,
 				291647C31BA5EA45006142EE /* scheduler.h */,
 				291647C21BA5EA45006142EE /* scheduler.c */,
 				291647CD1BA5ED26006142EE /* scheduler.wren.inc */,
@@ -284,10 +294,12 @@
 				291647C71BA5EC5E006142EE /* modules.c in Sources */,
 				29205C9A1AB4E6430073018D /* wren_core.c in Sources */,
 				2901D7641B74F4050083A2C8 /* timer.c in Sources */,
+				29729F331BA70A620099CA20 /* io.wren.inc in Sources */,
 				29C8A9331AB71FFF00DEC81D /* vm.c in Sources */,
 				291647C41BA5EA45006142EE /* scheduler.c in Sources */,
 				29205C9B1AB4E6430073018D /* wren_debug.c in Sources */,
 				29205C9D1AB4E6430073018D /* wren_utils.c in Sources */,
+				29729F311BA70A620099CA20 /* io.c in Sources */,
 				29205C9E1AB4E6430073018D /* wren_value.c in Sources */,
 				29205C9F1AB4E6430073018D /* wren_vm.c in Sources */,
 				29DE39531AC3A50A00987D41 /* wren_meta.c in Sources */,
@@ -299,7 +311,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29729F341BA70A620099CA20 /* io.wren.inc in Sources */,
 				291647C81BA5EC5E006142EE /* modules.c in Sources */,
+				29729F321BA70A620099CA20 /* io.c in Sources */,
 				291647D21BA5ED26006142EE /* timer.wren.inc in Sources */,
 				291647D01BA5ED26006142EE /* scheduler.wren.inc in Sources */,
 			);
