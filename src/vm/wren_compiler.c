@@ -441,6 +441,38 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
 // Lexing ----------------------------------------------------------------------
 
+typedef struct
+{
+  const char* identifier;
+  size_t      length;
+  TokenType   tokenType;
+} Keyword;
+
+// The table of reserved words and their associated token types.
+static Keyword keywords[] =
+{
+  {"break",     5, TOKEN_BREAK},
+  {"class",     5, TOKEN_CLASS},
+  {"construct", 9, TOKEN_CONSTRUCT},
+  {"else",      4, TOKEN_ELSE},
+  {"false",     5, TOKEN_FALSE},
+  {"for",       3, TOKEN_FOR},
+  {"foreign",   7, TOKEN_FOREIGN},
+  {"if",        2, TOKEN_IF},
+  {"import",    6, TOKEN_IMPORT},
+  {"in",        2, TOKEN_IN},
+  {"is",        2, TOKEN_IS},
+  {"null",      4, TOKEN_NULL},
+  {"return",    6, TOKEN_RETURN},
+  {"static",    6, TOKEN_STATIC},
+  {"super",     5, TOKEN_SUPER},
+  {"this",      4, TOKEN_THIS},
+  {"true",      4, TOKEN_TRUE},
+  {"var",       3, TOKEN_VAR},
+  {"while",     5, TOKEN_WHILE},
+  {NULL,        0, TOKEN_EOF} // Sentinel to mark the end of the array.
+};
+
 // Returns true if [c] is a valid (non-initial) identifier character.
 static bool isName(char c)
 {
@@ -546,15 +578,6 @@ static void skipBlockComment(Parser* parser)
   }
 }
 
-// Returns true if the current token's text matches [keyword].
-static bool isKeyword(Parser* parser, const char* keyword)
-{
-  size_t length = parser->currentChar - parser->tokenStart;
-  size_t keywordLength = strlen(keyword);
-  return length == keywordLength &&
-      strncmp(parser->tokenStart, keyword, length) == 0;
-}
-
 // Reads the next character, which should be a hex digit (0-9, a-f, or A-F) and
 // returns its numeric value. If the character isn't a hex digit, returns -1.
 static int readHexDigit(Parser* parser)
@@ -639,26 +662,18 @@ static void readName(Parser* parser, TokenType type)
     nextChar(parser);
   }
 
-  if (isKeyword(parser, "break")) type = TOKEN_BREAK;
-  else if (isKeyword(parser, "class")) type = TOKEN_CLASS;
-  else if (isKeyword(parser, "construct")) type = TOKEN_CONSTRUCT;
-  else if (isKeyword(parser, "else")) type = TOKEN_ELSE;
-  else if (isKeyword(parser, "false")) type = TOKEN_FALSE;
-  else if (isKeyword(parser, "for")) type = TOKEN_FOR;
-  else if (isKeyword(parser, "foreign")) type = TOKEN_FOREIGN;
-  else if (isKeyword(parser, "if")) type = TOKEN_IF;
-  else if (isKeyword(parser, "import")) type = TOKEN_IMPORT;
-  else if (isKeyword(parser, "in")) type = TOKEN_IN;
-  else if (isKeyword(parser, "is")) type = TOKEN_IS;
-  else if (isKeyword(parser, "null")) type = TOKEN_NULL;
-  else if (isKeyword(parser, "return")) type = TOKEN_RETURN;
-  else if (isKeyword(parser, "static")) type = TOKEN_STATIC;
-  else if (isKeyword(parser, "super")) type = TOKEN_SUPER;
-  else if (isKeyword(parser, "this")) type = TOKEN_THIS;
-  else if (isKeyword(parser, "true")) type = TOKEN_TRUE;
-  else if (isKeyword(parser, "var")) type = TOKEN_VAR;
-  else if (isKeyword(parser, "while")) type = TOKEN_WHILE;
-
+  // Update the type if it's a keyword.
+  size_t length = parser->currentChar - parser->tokenStart;
+  for (int i = 0; keywords[i].identifier != NULL; i++)
+  {
+    if (length == keywords[i].length &&
+        memcmp(parser->tokenStart, keywords[i].identifier, length) == 0)
+    {
+      type = keywords[i].tokenType;
+      break;
+    }
+  }
+  
   makeToken(parser, type);
 }
 
