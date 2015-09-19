@@ -95,7 +95,23 @@ typedef enum
   TOKEN_STATIC_FIELD,
   TOKEN_NAME,
   TOKEN_NUMBER,
+  
+  // A string literal without any template interpolation, or the last section
+  // of a string following the last template expression.
   TOKEN_STRING,
+  
+  // A portion of a string literal preceding a template expression. This string:
+  //
+  //     "a %(b) c %(d) e"
+  //
+  // is tokenized to:
+  //
+  //     TOKEN_TEMPLATE "a "
+  //     TOKEN_NAME     b
+  //     TOKEN_TEMPLATE " c "
+  //     TOKEN_NAME     d
+  //     TOKEN_STRING   " e"
+  TOKEN_TEMPLATE,
 
   TOKEN_LINE,
 
@@ -115,6 +131,9 @@ typedef struct
 
   // The 1-based line where the token appears.
   int line;
+  
+  // The parsed value if the token is a literal.
+  Value value;
 } Token;
 
 typedef struct
@@ -145,6 +164,21 @@ typedef struct
 
   // The most recently consumed/advanced token.
   Token previous;
+  
+  // Tracks the lexing state when tokenizing template strings.
+  //
+  // Template strings make the lexer not strictly regular: we don't know whether
+  // a ")" should be treated as a LEFT_PAREN token or as delimiting an
+  // interpolated expression unless we know whether we are inside a template
+  // string and how many unmatched "(" there are. This is particularly complex
+  // because templates can nest:
+  //
+  //     " %( " %( inner ) " ) "
+  //
+  // This buffer tracks that state. Each int in the buffer represents one level
+  // of current template nesting. The value of the int is the number of opening
+  // "(" that have not been matched by a closing ")" yet.
+  IntBuffer parens;
 
   // If subsequent newline tokens should be discarded.
   bool skipNewlines;
@@ -154,9 +188,6 @@ typedef struct
 
   // If a syntax or compile error has occurred.
   bool hasError;
-  
-  // The parsed value if the current token is a literal.
-  Value value;
 } Parser;
 
 typedef struct
@@ -524,7 +555,7 @@ static void makeToken(Parser* parser, TokenType type)
   parser->current.start = parser->tokenStart;
   parser->current.length = (int)(parser->currentChar - parser->tokenStart);
   parser->current.line = parser->currentLine;
-
+  
   // Make line tokens appear on the line containing the "\n".
   if (type == TOKEN_LINE) parser->current.line--;
 }
@@ -600,13 +631,13 @@ static void makeNumber(Parser* parser, bool isHex)
 
   // We don't check that the entire token is consumed because we've already
   // scanned it ourselves and know it's valid.
-  parser->value = NUM_VAL(isHex ? strtol(parser->tokenStart, NULL, 16)
-                                : strtod(parser->tokenStart, NULL));
-
+  parser->current.value = NUM_VAL(isHex ? strtol(parser->tokenStart, NULL, 16)
+                                        : strtod(parser->tokenStart, NULL));
+  
   if (errno == ERANGE)
   {
     lexError(parser, "Number literal was too large.");
-    parser->value = NUM_VAL(0);
+    parser->current.value = NUM_VAL(0);
   }
 
   makeToken(parser, TOKEN_NUMBER);
@@ -724,8 +755,9 @@ static void readUnicodeEscape(Parser* parser, ByteBuffer* string)
 static void readString(Parser* parser)
 {
   ByteBuffer string;
+  TokenType type = TOKEN_STRING;
   wrenByteBufferInit(&string);
-
+  
   for (;;)
   {
     char c = nextChar(parser);
@@ -741,12 +773,23 @@ static void readString(Parser* parser)
       break;
     }
 
+    if (c == '%')
+    {
+      // TODO: Allow format string.
+      if (nextChar(parser) != '(') lexError(parser, "Expect '(' after '%'.");
+
+      wrenIntBufferWrite(parser->vm, &parser->parens, 1);
+      type = TOKEN_STRING_TEMPLATE;
+      break;
+    }
+    
     if (c == '\\')
     {
       switch (nextChar(parser))
       {
         case '"':  wrenByteBufferWrite(parser->vm, &string, '"'); break;
         case '\\': wrenByteBufferWrite(parser->vm, &string, '\\'); break;
+        case '%':  wrenByteBufferWrite(parser->vm, &string, '%'); break;
         case '0':  wrenByteBufferWrite(parser->vm, &string, '\0'); break;
         case 'a':  wrenByteBufferWrite(parser->vm, &string, '\a'); break;
         case 'b':  wrenByteBufferWrite(parser->vm, &string, '\b'); break;
@@ -774,9 +817,11 @@ static void readString(Parser* parser)
     }
   }
 
-  parser->value = wrenNewString(parser->vm, (char*)string.data, string.count);
+  parser->current.value = wrenNewString(parser->vm,
+                                        (char*)string.data, string.count);
+  
   wrenByteBufferClear(parser->vm, &string);
-  makeToken(parser, TOKEN_STRING);
+  makeToken(parser, type);
 }
 
 // Lex the next token and store it in [parser.current].
@@ -796,8 +841,32 @@ static void nextToken(Parser* parser)
     char c = nextChar(parser);
     switch (c)
     {
-      case '(': makeToken(parser, TOKEN_LEFT_PAREN); return;
-      case ')': makeToken(parser, TOKEN_RIGHT_PAREN); return;
+      case '(':
+        // If we are inside a template expression, count the unmatched "(".
+        if (parser->parens.count > 0)
+        {
+          parser->parens.data[parser->parens.count - 1]++;
+        }
+        makeToken(parser, TOKEN_LEFT_PAREN);
+        return;
+        
+      case ')':
+        // If we are inside a template expression, count the ")".
+        if (parser->parens.count > 0)
+        {
+          if (--parser->parens.data[parser->parens.count - 1] == 0)
+          {
+            // This is the final ")", so the template expression has ended.
+            // This ")" now begins the next section of the template string.
+            parser->parens.count--;
+            readString(parser);
+            return;
+          }
+        }
+        
+        makeToken(parser, TOKEN_RIGHT_PAREN);
+        return;
+        
       case '[': makeToken(parser, TOKEN_LEFT_BRACKET); return;
       case ']': makeToken(parser, TOKEN_RIGHT_BRACKET); return;
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
@@ -1836,15 +1905,9 @@ static void list(Compiler* compiler, bool allowAssignment)
     // Stop if we hit the end of the list.
     if (peek(compiler) == TOKEN_RIGHT_BRACKET) break;
 
-    // Push a copy of the list since the add() call will consume it.
-    emit(compiler, CODE_DUP);
-
     // The element.
     expression(compiler);
-    callMethod(compiler, 1, "add(_)", 6);
-
-    // Discard the result of the add() call.
-    emit(compiler, CODE_POP);
+    callMethod(compiler, 1, "addCore_(_)", 11);
   } while (match(compiler, TOKEN_COMMA));
 
   // Allow newlines before the closing ']'.
@@ -1868,9 +1931,6 @@ static void map(Compiler* compiler, bool allowAssignment)
     // Stop if we hit the end of the map.
     if (peek(compiler) == TOKEN_RIGHT_BRACE) break;
 
-    // Push a copy of the map since the subscript call will consume it.
-    emit(compiler, CODE_DUP);
-
     // The key.
     parsePrecedence(compiler, false, PREC_PRIMARY);
     consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
@@ -1878,10 +1938,7 @@ static void map(Compiler* compiler, bool allowAssignment)
 
     // The value.
     expression(compiler);
-    callMethod(compiler, 2, "[_]=(_)", 7);
-
-    // Discard the result of the setter call.
-    emit(compiler, CODE_POP);
+    callMethod(compiler, 2, "addCore_(_,_)", 13);
   } while (match(compiler, TOKEN_COMMA));
 
   // Allow newlines before the closing '}'.
@@ -2139,7 +2196,46 @@ static void null(Compiler* compiler, bool allowAssignment)
 // A number or string literal.
 static void literal(Compiler* compiler, bool allowAssignment)
 {
-  emitConstant(compiler, compiler->parser->value);
+  emitConstant(compiler, compiler->parser->previous.value);
+}
+
+static void templateString(Compiler* compiler, bool allowAssignment)
+{
+  // TODO: Allow other expressions here so that user-defined classes can control
+  // template processing like "tagged template strings" in ES6.
+  loadCoreVariable(compiler, "String");
+  
+  // Instantiate a new list.
+  loadCoreVariable(compiler, "List");
+  callMethod(compiler, 0, "new()", 5);
+  
+  do
+  {
+    // The opening string part.
+    literal(compiler, false);
+    callMethod(compiler, 1, "addCore_(_)", 11);
+    
+    ignoreNewlines(compiler);
+    
+    // Compile the interpolated expression part to a function.
+    Compiler fnCompiler;
+    initCompiler(&fnCompiler, compiler->parser, compiler, true);
+    expression(&fnCompiler);
+    emit(&fnCompiler, CODE_RETURN);
+    endCompiler(&fnCompiler, "template", 9);
+    
+    callMethod(compiler, 1, "addCore_(_)", 11);
+    
+    ignoreNewlines(compiler);
+  } while (match(compiler, TOKEN_TEMPLATE));
+  
+  // The trailing string part.
+  consume(compiler, TOKEN_STRING, "Expect end of string template.");
+  literal(compiler, false);
+  callMethod(compiler, 1, "addCore_(_)", 11);
+  
+  // Call .template() with the list.
+  callMethod(compiler, 1, "template(_)", 11);
 }
 
 static void super_(Compiler* compiler, bool allowAssignment)
@@ -2488,6 +2584,7 @@ GrammarRule rules[] =
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(literal),
   /* TOKEN_STRING        */ PREFIX(literal),
+  /* TOKEN_TEMPLATE      */ PREFIX(templateString),
   /* TOKEN_LINE          */ UNUSED,
   /* TOKEN_ERROR         */ UNUSED,
   /* TOKEN_EOF           */ UNUSED
@@ -3136,7 +3233,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 static void import(Compiler* compiler)
 {
   consume(compiler, TOKEN_STRING, "Expect a string after 'import'.");
-  int moduleConstant = addConstant(compiler, compiler->parser->value);
+  int moduleConstant = addConstant(compiler, compiler->parser->previous.value);
 
   // Load the module.
   emitShortArg(compiler, CODE_LOAD_MODULE, moduleConstant);
@@ -3230,11 +3327,11 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
   parser.module = module;
   parser.sourcePath = AS_STRING(sourcePathValue);
   parser.source = source;
-  parser.value = UNDEFINED_VAL;
 
   parser.tokenStart = source;
   parser.currentChar = source;
   parser.currentLine = 1;
+  wrenIntBufferInit(&parser.parens);
 
   // Zero-init the current token. This will get copied to previous when
   // advance() is called below.
@@ -3242,6 +3339,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
   parser.current.start = source;
   parser.current.length = 0;
   parser.current.line = 0;
+  parser.current.value = UNDEFINED_VAL;
 
   // Ignore leading newlines.
   parser.skipNewlines = true;
@@ -3283,6 +3381,8 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
             parser.module->variableNames.data[i].buffer);
     }
   }
+  
+  wrenIntBufferClear(vm, &parser.parens);
 
   return endCompiler(&compiler, "(script)", 8);
 }
@@ -3356,7 +3456,8 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 {
   wrenMarkObj(vm, (Obj*)compiler->parser->sourcePath);
-  wrenMarkValue(vm, compiler->parser->value);
+  wrenMarkValue(vm, compiler->parser->previous.value);
+  wrenMarkValue(vm, compiler->parser->current.value);
 
   // Walk up the parent chain to mark the outer compilers too. The VM only
   // tracks the innermost one.

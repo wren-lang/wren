@@ -13,4 +13,4 @@ for (i in 0...100000) {
 
 fibers[0].call()
 System.print(sum)
-System.print("elapsed: " + (System.clock - start).toString)
+System.print("elapsed: %(System.clock - start)")

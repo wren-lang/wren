@@ -65,7 +65,7 @@ class SyntaxExample {
   -(other) { "infix - " + other }
   *(other) { "infix * " + other }
   /(other) { "infix / " + other }
-  %(other) { "infix % " + other }
+  %(other) { "infix \% " + other }
   <(other) { "infix < " + other }
   >(other) { "infix > " + other }
   <=(other) { "infix <= " + other }

@@ -19,10 +19,10 @@ System.print({1: Foo.new()}) // expect: {1: Foo.toString}
 // will be.
 var s = {1: 2, 3: 4, 5: 6}.toString
 System.print(s == "{1: 2, 3: 4, 5: 6}" ||
-         s == "{1: 2, 5: 6, 3: 4}" ||
-         s == "{3: 4, 1: 2, 5: 6}" ||
-         s == "{3: 4, 5: 6, 1: 2}" ||
-         s == "{5: 6, 1: 2, 3: 4}" ||
-         s == "{5: 6, 3: 4, 1: 2}") // expect: true
+             s == "{1: 2, 5: 6, 3: 4}" ||
+             s == "{3: 4, 1: 2, 5: 6}" ||
+             s == "{3: 4, 5: 6, 1: 2}" ||
+             s == "{5: 6, 1: 2, 3: 4}" ||
+             s == "{5: 6, 3: 4, 1: 2}") // expect: true
 
 // TODO: Handle maps that contain themselves.

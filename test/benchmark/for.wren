@@ -7,4 +7,4 @@ var sum = 0
 for (i in list) sum = sum + i
 
 System.print(sum)
-System.print("elapsed: " + (System.clock - start).toString)
+System.print("elapsed: %(System.clock - start)")
