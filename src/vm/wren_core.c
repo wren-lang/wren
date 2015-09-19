@@ -1140,6 +1140,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass->obj.classObj, "suspend()", fiber_suspend);
   PRIMITIVE(vm->fiberClass->obj.classObj, "yield()", fiber_yield);
   PRIMITIVE(vm->fiberClass->obj.classObj, "yield(_)", fiber_yield1);
+  PRIMITIVE(vm->fiberClass, "()", fiber_call);
+  PRIMITIVE(vm->fiberClass, "(_)", fiber_call1);
   PRIMITIVE(vm->fiberClass, "call()", fiber_call);
   PRIMITIVE(vm->fiberClass, "call(_)", fiber_call1);
   PRIMITIVE(vm->fiberClass, "error", fiber_error);
@@ -1152,6 +1154,23 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
+  PRIMITIVE(vm->fnClass, "()", fn_call0);
+  PRIMITIVE(vm->fnClass, "(_)", fn_call1);
+  PRIMITIVE(vm->fnClass, "(_,_)", fn_call2);
+  PRIMITIVE(vm->fnClass, "(_,_,_)", fn_call3);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_)", fn_call4);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_)", fn_call5);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_)", fn_call6);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_)", fn_call7);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_,_)", fn_call8);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_,_,_)", fn_call9);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_,_,_,_)", fn_call10);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
+  PRIMITIVE(vm->fnClass, "(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
   PRIMITIVE(vm->fnClass, "call()", fn_call0);
   PRIMITIVE(vm->fnClass, "call(_)", fn_call1);
   PRIMITIVE(vm->fnClass, "call(_,_)", fn_call2);

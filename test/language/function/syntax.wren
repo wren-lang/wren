@@ -23,3 +23,14 @@ Fn.new {
 
 
 }.call()
+
+// Without .call
+Fn.new { System.print("ok") }.() // expect: ok
+
+// Function returned by method.
+class test {
+  construct new() {}
+  fn { Fn.new { System.print("ok") } }
+}
+
+test.new().fn.() // expect: ok
