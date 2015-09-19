@@ -1629,8 +1629,17 @@ static Signature signatureFromToken(Compiler* compiler, SignatureType type)
   
   // Get the token for the method name.
   Token* token = &compiler->parser->previous;
-  signature.name = token->start;
-  signature.length = token->length;
+  // fn.() or () {}
+  if (token->type == TOKEN_DOT || token->type == TOKEN_LINE)
+  {
+    signature.name = "";
+    signature.length = 0;
+  }
+  else
+  {
+    signature.name = token->start;
+    signature.length = token->length;
+  }
   signature.type = type;
   signature.arity = 0;
 
@@ -1709,6 +1718,10 @@ static void methodCall(Compiler* compiler, Code instruction,
       finishArgumentList(compiler, &called);
     }
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+  }
+  else if (signature->length == 0)
+  {
+    error(compiler, "An unnamed method call must have an argument list.");
   }
 
   // Parse the block argument, if any.
@@ -2215,7 +2228,11 @@ static void subscript(Compiler* compiler, bool allowAssignment)
 static void call(Compiler* compiler, bool allowAssignment)
 {
   ignoreNewlines(compiler);
-  consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
+  // An empty method name is valid as well.
+  if (peek(compiler) == TOKEN_NAME)
+  {
+    consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
+  }
   namedCall(compiler, allowAssignment, CODE_CALL_0);
 }
 
@@ -2431,7 +2448,7 @@ void constructorSignature(Compiler* compiler, Signature* signature)
 
 GrammarRule rules[] =
 {
-  /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
+  /* TOKEN_LEFT_PAREN    */ { grouping, NULL, parameterList, PREC_NONE, NULL },
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
   /* TOKEN_LEFT_BRACKET  */ { list, subscript, subscriptSignature, PREC_CALL, NULL },
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
@@ -2985,7 +3002,7 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   classCompiler->inStatic = match(compiler, TOKEN_STATIC);
     
   SignatureFn signatureFn = rules[compiler->parser->current.type].method;
-  nextToken(compiler->parser);
+  if (peek(compiler) != TOKEN_LEFT_PAREN) nextToken(compiler->parser);
   
   if (signatureFn == NULL)
   {
