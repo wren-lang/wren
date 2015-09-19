@@ -779,7 +779,7 @@ static void readString(Parser* parser)
       if (nextChar(parser) != '(') lexError(parser, "Expect '(' after '%'.");
 
       wrenIntBufferWrite(parser->vm, &parser->parens, 1);
-      type = TOKEN_STRING_TEMPLATE;
+      type = TOKEN_TEMPLATE;
       break;
     }
     
