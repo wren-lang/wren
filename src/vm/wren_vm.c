@@ -300,13 +300,16 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
 static Value bindMethod(WrenVM* vm, int methodType, int symbol,
                        ObjModule* module, ObjClass* classObj, Value methodValue)
 {
+  const char* className = classObj->name->value;
+  if (methodType == CODE_METHOD_STATIC) classObj = classObj->obj.classObj;
+
   Method method;
   if (IS_STRING(methodValue))
   {
     const char* name = AS_CSTRING(methodValue);
     method.type = METHOD_FOREIGN;
     method.fn.foreign = findForeignMethod(vm, module->name->value,
-                                          classObj->name->value,
+                                          className,
                                           methodType == CODE_METHOD_STATIC,
                                           name);
 
@@ -322,16 +325,13 @@ static Value bindMethod(WrenVM* vm, int methodType, int symbol,
     ObjFn* methodFn = IS_FN(methodValue) ? AS_FN(methodValue)
                                          : AS_CLOSURE(methodValue)->fn;
 
-    // Methods are always bound against the class, and not the metaclass, even
-    // for static methods, because static methods don't have instance fields
-    // anyway.
+    // Patch up the bytecode now that we know the superclass.
     wrenBindMethodCode(classObj, methodFn);
 
     method.type = METHOD_BLOCK;
     method.fn.obj = AS_OBJ(methodValue);
   }
 
-  if (methodType == CODE_METHOD_STATIC) classObj = classObj->obj.classObj;
   wrenBindMethod(vm, classObj, symbol, method);
   return NULL_VAL;
 }
