@@ -13,20 +13,10 @@
 static WrenValue* resume;
 static WrenValue* resumeWithArg;
 
-static void captureMethods(WrenVM* vm)
+void schedulerCaptureMethods(WrenVM* vm)
 {
   resume = wrenGetMethod(vm, "scheduler", "Scheduler", "resume_(_)");
   resumeWithArg = wrenGetMethod(vm, "scheduler", "Scheduler", "resume_(_,_)");
-}
-
-WrenForeignMethodFn schedulerBindForeign(
-    WrenVM* vm, const char* className, bool isStatic, const char* signature)
-{
-  if (strcmp(className, "Scheduler") != 0) return NULL;
-  
-  if (isStatic && strcmp(signature, "captureMethods_()") == 0) return captureMethods;
-  
-  return NULL;
 }
 
 void schedulerResume(WrenValue* fiber)

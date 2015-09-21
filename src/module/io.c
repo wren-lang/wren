@@ -3,7 +3,6 @@
 
 #include "uv.h"
 
-#include "io.h"
 #include "scheduler.h"
 #include "vm.h"
 #include "wren.h"
@@ -28,7 +27,7 @@ static void sizeCallback(uv_fs_t* request)
   schedulerResumeDouble(fiber, size);
 }
 
-static void startSize(WrenVM* vm)
+void fileStartSize(WrenVM* vm)
 {
   const char* path = wrenGetArgumentString(vm, 1);
   WrenValue* fiber = wrenGetArgumentValue(vm, 2);
@@ -38,14 +37,4 @@ static void startSize(WrenVM* vm)
   request->data = fiber;
 
   uv_fs_stat(getLoop(), request, path, sizeCallback);
-}
-
-WrenForeignMethodFn ioBindForeign(
-    WrenVM* vm, const char* className, bool isStatic, const char* signature)
-{
-  if (strcmp(className, "File") != 0) return NULL;
-
-  if (isStatic && strcmp(signature, "startSize_(_,_)") == 0) return startSize;
-
-  return NULL;
 }

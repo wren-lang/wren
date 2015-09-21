@@ -54,7 +54,6 @@
 
 /* Begin PBXFileReference section */
 		2901D7621B74F4050083A2C8 /* timer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = timer.c; path = ../../src/module/timer.c; sourceTree = "<group>"; };
-		2901D7631B74F4050083A2C8 /* timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = timer.h; path = ../../src/module/timer.h; sourceTree = "<group>"; };
 		291647C21BA5EA45006142EE /* scheduler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = scheduler.c; path = ../../src/module/scheduler.c; sourceTree = "<group>"; };
 		291647C31BA5EA45006142EE /* scheduler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scheduler.h; path = ../../src/module/scheduler.h; sourceTree = "<group>"; };
 		291647C51BA5EC5E006142EE /* modules.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = modules.c; path = ../../src/cli/modules.c; sourceTree = "<group>"; };
@@ -80,7 +79,6 @@
 		29512C801B91F8EB008C10E6 /* libuv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libuv.a; path = ../../build/libuv.a; sourceTree = "<group>"; };
 		296371B31AC713D000079FDA /* wren_opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_opcodes.h; path = ../../src/vm/wren_opcodes.h; sourceTree = "<group>"; };
 		29729F2E1BA70A620099CA20 /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = io.c; path = ../../src/module/io.c; sourceTree = "<group>"; };
-		29729F2F1BA70A620099CA20 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../../src/module/io.h; sourceTree = "<group>"; };
 		29729F301BA70A620099CA20 /* io.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = io.wren.inc; path = ../../src/module/io.wren.inc; sourceTree = "<group>"; };
 		2986F6D51ACF93BA00BCE26C /* wren_primitive.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_primitive.c; path = ../../src/vm/wren_primitive.c; sourceTree = "<group>"; };
 		2986F6D61ACF93BA00BCE26C /* wren_primitive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_primitive.h; path = ../../src/vm/wren_primitive.h; sourceTree = "<group>"; };
@@ -121,13 +119,11 @@
 		2901D7611B74F3E20083A2C8 /* module */ = {
 			isa = PBXGroup;
 			children = (
-				29729F2F1BA70A620099CA20 /* io.h */,
 				29729F2E1BA70A620099CA20 /* io.c */,
 				29729F301BA70A620099CA20 /* io.wren.inc */,
 				291647C31BA5EA45006142EE /* scheduler.h */,
 				291647C21BA5EA45006142EE /* scheduler.c */,
 				291647CD1BA5ED26006142EE /* scheduler.wren.inc */,
-				2901D7631B74F4050083A2C8 /* timer.h */,
 				2901D7621B74F4050083A2C8 /* timer.c */,
 				291647CE1BA5ED26006142EE /* timer.wren.inc */,
 			);
