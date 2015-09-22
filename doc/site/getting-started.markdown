@@ -48,12 +48,12 @@ The above instructions will drop you into Wren's standalone interpreter in
 interactive mode. You can type in a line of code, and it will immediately
 execute it. Here's something to try:
 
-    :::dart
+    :::wren
     System.print("Hello, world!")
 
 Or a little more exciting:
 
-    :::dart
+    :::wren
     for (i in 1..10) System.print("Counting up " + i.toString)
 
 You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw
@@ -65,7 +65,7 @@ The standalone interpreter can also load scripts from files and run them. Just
 pass the name of the script to wren. Create a file named "my_script.wren" in
 your favorite text editor and paste this into it:
 
-    :::dart
+    :::wren
     for (yPixel in 0...24) {
       var y = yPixel / 12 - 1
       for (xPixel in 0...80) {

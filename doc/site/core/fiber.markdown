@@ -8,7 +8,7 @@ A lightweight coroutine. [Here](../fibers.html) is a gentle introduction.
 Creates a new fiber that executes `function` in a separate coroutine when the
 fiber is run. Does not immediately start running the fiber.
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       System.print("I won't get printed")
     }
@@ -32,7 +32,7 @@ again. If there is still a reference to the suspended fiber, it can be resumed.
 Pauses the current fiber and transfers control to the parent fiber. "Parent"
 here means the last fiber that was started using `call` and not `run`.
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       System.print("Before yield")
       Fiber.yield()
@@ -48,7 +48,7 @@ When resumed, the parent fiber's `call()` method returns `null`.
 If a yielded fiber is resumed by calling `call()` or `run()` with an argument,
 `yield()` returns that value.
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       System.print(Fiber.yield()) // "value"
     }
@@ -63,7 +63,7 @@ If there is no parent fiber to return to, this exits the interpreter. This can
 be useful to pause execution until the host application wants to resume it
 later.
 
-    :::dart
+    :::wren
     Fiber.yield()
     System.print("this does not get reached")
 
@@ -72,7 +72,7 @@ later.
 Similar to `Fiber.yield` but provides a value to return to the parent fiber's
 `call`.
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       Fiber.yield("value")
     }
@@ -85,7 +85,7 @@ Similar to `Fiber.yield` but provides a value to return to the parent fiber's
 
 Starts or resumes the fiber if it is in a paused state.
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       System.print("Fiber called")
       Fiber.yield()
@@ -101,7 +101,7 @@ called it.
 If the called fiber is resuming from a yield, the `yield()` method returns
 `null` in the called fiber.
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       System.print(Fiber.yield())
     }
@@ -114,7 +114,7 @@ If the called fiber is resuming from a yield, the `yield()` method returns
 Invokes the fiber or resumes the fiber if it is in a paused state and sets
 `value` as the returned value of the fiber's call to `yield`.
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       System.print(Fiber.yield())
     }

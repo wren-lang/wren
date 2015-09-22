@@ -35,7 +35,47 @@ significant change or addition, please file a [proposal][] to discuss it
 before writing lots of code. Wren tries very *very* hard to be minimal which
 means often having to say "no" to language additions, even really cool ones.
 
-## Making a change
+## Hacking on docs
+
+The [documentation][] is one of the easiest&mdash;and most
+important!&mdash;parts of Wren to contribute to. The source for the site is
+written in [Markdown][] (and a little [SASS][]) and lives under `doc/site`. A
+simple Python script, `util/generate_docs.py`, converts that to HTML and CSS.
+
+[documentation]: /
+[markdown]: http://daringfireball.net/projects/markdown/
+[sass]: http://sass-lang.com/
+
+The site uses [Pygments][] for syntax highlighting, with a custom lexer plug-in
+for Wren. To install that, run:
+
+[pygments]: http://pygments.org
+
+    :::sh
+    $ cd util/pygments-lexer
+    $ sudo python setup.py develop
+    $ cd ../.. # Back to the root Wren directory.
+
+Now you can build the docs:
+
+    :::sh
+    $ make docs
+
+This generates the site in `build/docs/`. You can run any simple static web
+server from there. Python includes one:
+
+    :::sh
+    $ cd build/docs
+    $ python -m SimpleHTTPServer
+
+Running `make docs` is a drag every time you change a line of Markdown or SASS,
+so there is also a file watching version that will automatically regenerate the
+docs when you edit a file:
+
+    :::sh
+    $ make watchdocs
+
+## Hacking on the VM
 
 The basic process is simple:
 

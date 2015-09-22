@@ -8,7 +8,7 @@ other languages: hash table, dictionary, association, table, etc.
 You can create a map by placing a series of comma-separated entries inside
 curly braces. Each entry is a key and a value separated by a colon:
 
-    :::dart
+    :::wren
     {
       "George": "Harrison",
       "John": "Lennon",
@@ -41,7 +41,7 @@ built-in types, only those can be used as keys.
 
 You add new key-value pairs to the map by using the [subscript operator][]:
 
-    :::dart
+    :::wren
     var capitals = {}
     capitals["Georgia"] = "Atlanta"
     capitals["Idaho"] = "Boise"
@@ -57,7 +57,7 @@ value. If the key is already there, this just replaces its value.
 To find the value associated with some key, again you use your friend the
 subscript operator:
 
-    :::dart
+    :::wren
     System.print(capitals["Idaho"]) // "Boise".
 
 If the key is present, this returns its value. Otherwise, it returns `null`. Of
@@ -66,7 +66,7 @@ doesn't necessarily mean the key wasn't found.
 
 To tell definitively if a key exists, you can call `containsKey()`:
 
-    :::dart
+    :::wren
     var belief = {"nihilism": null}
 
     System.print(belief["nihilism"]) // "null" though key exists.
@@ -76,7 +76,7 @@ To tell definitively if a key exists, you can call `containsKey()`:
 
 You can see how many entries a map contains using `count`:
 
-    :::dart
+    :::wren
     System.print(capitals.count) // "3".
 
 ## Removing entries
@@ -84,13 +84,13 @@ You can see how many entries a map contains using `count`:
 To remove an entry from a map, call `remove()` and pass in the key for the
 entry you want to delete:
 
-    :::dart
+    :::wren
     capitals.remove("Maine")
     System.print(capitals.containsKey("Maine")) // "false".
 
 If the key was found, this returns the value that was associated with it:
 
-    :::dart
+    :::wren
     System.print(capitals.remove("Georgia")) // "Atlanta".
 
 If the key wasn't in the map to begin with, `remove()` just returns `null`.
@@ -98,7 +98,7 @@ If the key wasn't in the map to begin with, `remove()` just returns `null`.
 If you want to remove *everything* from the map, just like with [lists][], you
 can just call `clear()`:
 
-    :::dart
+    :::wren
     capitals.clear()
     System.print(capitals.count) // "0".
 
@@ -119,7 +119,7 @@ map, and the second returns one that iterates over the values.
 If you want to see all of the key-value pairs in a map, the easiest way is to
 iterate over the keys and use each to look up its value:
 
-    :::dart
+    :::wren
     var birds = {
       "Arizona": "Cactus wren",
       "Hawaii": "Nēnē",

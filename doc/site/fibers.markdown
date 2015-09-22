@@ -26,7 +26,7 @@ All Wren code runs within the context of a fiber. When you first start a Wren
 script, a main fiber is created for you automatically. You can spawn new fibers
 using the `Fiber` class's constructor:
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       System.print("This runs in a separate fiber.")
     }
@@ -40,14 +40,14 @@ code sitting there waiting to be activated, a bit like a
 Once you've created a fiber, you can invoke it (which suspends the current
 fiber) by calling its `call()` method:
 
-    :::dart
+    :::wren
     fiber.call()
 
 The called fiber will execute its code until it reaches the end of its body or
 until it passes control to another fiber. If it reaches the end of its body,
 it's considered *done*:
 
-    :::dart
+    :::wren
     var fiber = Fiber.new { System.print("Hi") }
     fiber.isDone // false
     fiber.call()
@@ -69,7 +69,7 @@ fiber is called, it picks up right where it left off and keeps going.
 
 You can make a fiber yield by calling the static `yield()` method on `Fiber`:
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       System.print("fiber 1")
       Fiber.yield()
@@ -102,7 +102,7 @@ Calling and yielding fibers is used for passing control, but it can also pass
 fiber has yielded and is waiting to resume, the value becomes the return value
 of the `yield()` call:
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       var result = Fiber.yield()
       System.print(result)
@@ -119,7 +119,7 @@ Fibers can also pass values *back* when they yield. If you pass an argument to
 `yield()`, that will become the return value of the `call` that was used to
 invoke the fiber:
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       Fiber.yield("sent")
     }
@@ -139,7 +139,7 @@ Wren's fibers can do that, but they can do much more. Like Lua, they are full
 *coroutines*&mdash;they can suspend from anywhere in the callstack. For
 example:
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       (1..10).map {|i|
         Fiber.yield(i)

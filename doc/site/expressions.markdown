@@ -28,7 +28,7 @@ instance of a [class](classes.html). All other names refer to
 Wren is object-oriented, so most code consists of method calls. Most of them
 look like so:
 
-    :::dart
+    :::wren
     System.print("hello")
     items.add("another")
     items.insert(1, "value")
@@ -37,13 +37,13 @@ You have a *receiver* expression followed by a `.`, then a name and an argument
 list in parentheses. Arguments are separated by commas. Methods that do not
 take any arguments can omit the `()`:
 
-    :::dart
+    :::wren
     text.length
 
 These are special "getters" or "accessors" in other languages. In Wren, they're
 just method calls. You can also define methods that take an empty argument list:
 
-    :::dart
+    :::wren
     list.clear()
 
 An empty argument list is *not* the same as omitting the parentheses
@@ -59,7 +59,7 @@ If the last (or only) argument to a method call is a
 [function](functions.html), it may be passed as a [block
 argument](functions.html#block-arguments):
 
-    :::dart
+    :::wren
     blondie.callMeAt(867, 5309) {
       System.print("This is the body!")
     }
@@ -95,7 +95,7 @@ overridden.
 To do that, you can use the special `super` keyword as the receiver in a method
 call:
 
-    :::dart
+    :::wren
     class Base {
       method {
         System.print("base method")
@@ -111,7 +111,7 @@ call:
 You can also use `super` without a method name inside a constructor to invoke a
 base class constructor:
 
-    :::dart
+    :::wren
     class Base {
       this new(arg) {
         System.print("base constructor got " + arg)
@@ -131,7 +131,7 @@ base class constructor:
 Wren has most of the same operators you know and love with the same precedence
 and associativity. Wren has three prefix operators:
 
-    :::dart
+    :::wren
     ! ~ -
 
 They are just method calls on their operand without any other arguments. An
@@ -140,7 +140,7 @@ expression like `!possible` means "call the `!` method on `possible`".
 We have a few other operators to play with. The remaining ones are
 infix&mdash;they have operators on either side. They are:
 
-    :::dart
+    :::wren
     == != < > <= >= .. ... | & + - * / %
 
 Like prefix operators, they are all funny ways of writing method calls. The
@@ -167,7 +167,7 @@ the referenced [variable](variables.html) or [field](classes.html#fields).
 
 The left-hand side may also be a method call, like:
 
-    :::dart
+    :::wren
     point.x = 123
 
 In this case, the entire expression is a single "setter" method call. The above
@@ -184,7 +184,7 @@ expression will always just store the value there.
 Most languages use square brackets (`[]`) for working with collection-like
 objects. For example:
 
-    :::dart
+    :::wren
     list[0]    // Gets the first item in a list.
     map["key"] // Gets the value associated with "key".
 
@@ -192,12 +192,12 @@ You know the refrain by now. In Wren, these are just method calls that a class
 may define. Subscript operators may take multiple arguments, which is useful
 for things like multi-dimensional arrays:
 
-    :::dart
+    :::wren
     matrix[3, 5]
 
 Subscripts may also be used on the left-hand side of an assignment:
 
-    :::dart
+    :::wren
     list[0] = "item"
     map["key"] = "value"
 
@@ -217,7 +217,7 @@ A `&&` ("logical and") expression evaluates the left-hand argument. If it's
 [false](control-flow.html#truth), it returns that value. Otherwise it evaluates
 and returns the right-hand argument.
 
-    :::dart
+    :::wren
     System.print(false && 1)  // false
     System.print(1 && 2)      // 2
 
@@ -225,7 +225,7 @@ An `||` ("logical or") expression is reversed. If the left-hand argument is
 [true](control-flow.html#truth), it's returned, otherwise the right-hand
 argument is evaluated and returned:
 
-    :::dart
+    :::wren
     System.print(false || 1)  // 1
     System.print(1 || 2)      // 1
 
@@ -235,7 +235,7 @@ Also known as the "ternary" operator since it takes three arguments, Wren has
 the little "if statement in the form of an expression" you know and love from C
 and its brethren.
 
-    :::dart
+    :::wren
     System.print(1 != 2 ? "math is sane" : "math is not sane!")
 
 It takes a condition expression, followed by `?`, followed by a then
@@ -250,7 +250,7 @@ operator. It performs a type test. The left operand is an object and the right
 operand is a class. It evaluates to `true` if the object is an instance of the
 class (or one of its subclasses).
 
-    :::dart
+    :::wren
     123 is Num     // true
     "s" is Num     // false
     null is String // false

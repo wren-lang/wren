@@ -228,20 +228,32 @@ footer {
   }
 }
 
+// link hsl(200, 60%, 50%);
+// hsl(210, 80%, 60%);
+
 // Syntax highlighting.
 .codehilite pre {
   // Comments.
   span.c1, span.cm { color: mix($code-color, $code-bg, 60%); }
 
   // Keywords.
-  span.k, span.kd, span.kc  { color: hsl(210, 80%, 60%); }
+  span.k, span.kd, span.kc, span.nb  { color: hsl(200, 60%, 50%); }
+
+  // Names.
+  span.vg { color: hsl(180, 70%, 35%); }
+  span.vi { color: hsl(90, 80%, 35%); }
+  span.vc { color: hsl(130, 60%, 40%); }
 
   // Numbers.
-  span.m, span.mi { color: hsl(90, 80%, 35%); }
+  span.m, span.mi, span.mf { color: hsl(30, 80%, 45%); }// hsl(90, 80%, 35%)
 
   // Strings.
-  span.s, span.s2  { color: hsl(40, 80%, 50%); }
-  span.se          { color: hsl(30, 80%, 50%); }
+  span.s, span.s2  { color: hsl(40, 80%, 45%); }
+  span.se          { color: hsl(45, 80%, 50%); }
+
+  // Operators and punctuation.
+  span.o           { color: hsl(200, 40%, 50%); }
+  span.p           { color: mix($code-color, $code-bg, 80%); }
 
   // Preprocessor directives.
   span.cp          { color: hsl(270, 40%, 60%); }

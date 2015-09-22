@@ -16,7 +16,7 @@ Iterates over the sequence, passing each element to the function `predicate`.
 If it returns something [false](../control-flow.html#truth), stops iterating
 and returns the value. Otherwise, returns `true`.
 
-    :::dart
+    :::wren
     [1, 2, 3].all {|n| n > 2} // False.
     [1, 2, 3].all {|n| n < 4} // True.
 
@@ -28,7 +28,7 @@ Iterates over the sequence, passing each element to the function `predicate`.
 If it returns something [true](../control-flow.html#truth), stops iterating and
 returns that value. Otherwise, returns `false`.
 
-    :::dart
+    :::wren
     [1, 2, 3].any {|n| n < 1} // False.
     [1, 2, 3].any {|n| n > 2} // True.
 
@@ -50,7 +50,7 @@ Returns the number of elements in the sequence that pass the `predicate`.
 Iterates over the sequence, passing each element to the function `predicate`
 and counting the number of times the returned value evaluates to `true`.
 
-    :::dart
+    :::wren
     [1, 2, 3].count {|n| n > 2} // 1.
     [1, 2, 3].count {|n| n < 4} // 3.
 
@@ -58,7 +58,7 @@ and counting the number of times the returned value evaluates to `true`.
 
 Iterates over the sequence, passing each element to the given `function`.
 
-    :::dart
+    :::wren
     ["one", "two", "three"].each {|word| System.print(word) }
 
 ### **isEmpty**
@@ -85,7 +85,7 @@ together into a single string.
 Creates a new sequence that applies the `transformation` to each element in the
 original sequence while it is iterated.
 
-    :::dart
+    :::wren
     var doubles = [1, 2, 3].map {|n| n * 2 }
     for (n in doubles) {
       System.print(n) // "2", "4", "6".
@@ -101,7 +101,7 @@ changes to the original sequence will be reflected in the mapped sequence.
 
 To force eager evaluation, just call `.toList` on the result.
 
-    :::dart
+    :::wren
     var numbers = [1, 2, 3]
     var doubles = numbers.map {|n| n * 2 }.toList
     numbers.add(4)
@@ -126,7 +126,7 @@ the sequence is empty, returns `seed`.
 
 Creates a [list](list.html) containing all the elements in the sequence.
 
-    :::dart
+    :::wren
     (1..3).toList  // [1, 2, 3].
 
 If the sequence is already a list, this creates a copy of it.
@@ -139,7 +139,7 @@ that pass the `predicate`.
 During iteration, each element in the original sequence is passed to the
 function `predicate`. If it returns `false`, the element is skipped.
 
-    :::dart
+    :::wren
     var odds = (1..10).where {|n| n % 2 == 1 }
     for (n in odds) {
       System.print(n) // "1", "3", "5", "7", "9".
@@ -156,7 +156,7 @@ sequence.
 
 To force eager evaluation, just call `.toList` on the result.
 
-    :::dart
+    :::wren
     var numbers = [1, 2, 3, 4, 5, 6]
     var odds = numbers.where {|n| n % 2 == 1 }.toList
     numbers.add(7)
