@@ -83,7 +83,39 @@ the system and highlight problems and missing features.</p>
 significant change or addition, please file a <a href="https://github.com/munificent/wren/labels/proposal">proposal</a> to discuss it
 before writing lots of code. Wren tries very <em>very</em> hard to be minimal which
 means often having to say "no" to language additions, even really cool ones.</p>
-<h2>Making a change <a href="#making-a-change" name="making-a-change" class="header-anchor">#</a></h2>
+<h2>Hacking on docs <a href="#hacking-on-docs" name="hacking-on-docs" class="header-anchor">#</a></h2>
+<p>The <a href="/">documentation</a> is one of the easiest&mdash;and most
+important!&mdash;parts of Wren to contribute to. The source for the site is
+written in <a href="http://daringfireball.net/projects/markdown/">Markdown</a> (and a little <a href="http://sass-lang.com/">SASS</a>) and lives under <code>doc/site</code>. A
+simple Python script, <code>util/generate_docs.py</code>, converts that to HTML and CSS.</p>
+<p>The site uses <a href="http://pygments.org">Pygments</a> for syntax highlighting, with a custom lexer plug-in
+for Wren. To install that, run:</p>
+<div class="codehilite"><pre><span class="nv">$ </span><span class="nb">cd </span>util/pygments-lexer
+<span class="nv">$ </span>sudo python setup.py develop
+<span class="nv">$ </span><span class="nb">cd</span> ../.. <span class="c"># Back to the root Wren directory.</span>
+</pre></div>
+
+
+<p>Now you can build the docs:</p>
+<div class="codehilite"><pre><span class="nv">$ </span>make docs
+</pre></div>
+
+
+<p>This generates the site in <code>build/docs/</code>. You can run any simple static web
+server from there. Python includes one:</p>
+<div class="codehilite"><pre><span class="nv">$ </span><span class="nb">cd </span>build/docs
+<span class="nv">$ </span>python -m SimpleHTTPServer
+</pre></div>
+
+
+<p>Running <code>make docs</code> is a drag every time you change a line of Markdown or SASS,
+so there is also a file watching version that will automatically regenerate the
+docs when you edit a file:</p>
+<div class="codehilite"><pre><span class="nv">$ </span>make watchdocs
+</pre></div>
+
+
+<h2>Hacking on the VM <a href="#hacking-on-the-vm" name="hacking-on-the-vm" class="header-anchor">#</a></h2>
 <p>The basic process is simple:</p>
 <ol>
 <li>

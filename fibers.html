@@ -78,8 +78,8 @@ fiber for every line of code you type in.</p>
 <p>All Wren code runs within the context of a fiber. When you first start a Wren
 script, a main fiber is created for you automatically. You can spawn new fibers
 using the <code>Fiber</code> class's constructor:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;This runs in a separate fiber.&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;This runs in a separate fiber.&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -90,17 +90,17 @@ code sitting there waiting to be activated, a bit like a
 <h2>Invoking fibers <a href="#invoking-fibers" name="invoking-fibers" class="header-anchor">#</a></h2>
 <p>Once you've created a fiber, you can invoke it (which suspends the current
 fiber) by calling its <code>call()</code> method:</p>
-<div class="codehilite"><pre><span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>
+<div class="codehilite"><pre><span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>
 </pre></div>
 
 
 <p>The called fiber will execute its code until it reaches the end of its body or
 until it passes control to another fiber. If it reaches the end of its body,
 it's considered <em>done</em>:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Hi&quot;</span><span class="p">)</span> <span class="p">}</span>
-<span class="n">fiber</span><span class="p">.</span><span class="n">isDone</span> <span class="c1">// false</span>
-<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>
-<span class="n">fiber</span><span class="p">.</span><span class="n">isDone</span> <span class="c1">// true</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hi&quot;</span><span class="p">)</span> <span class="p">}</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">isDone</span> <span class="c1">// false</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">isDone</span> <span class="c1">// true</span>
 </pre></div>
 
 
@@ -115,17 +115,17 @@ as one function calling another.</p>
 <em>back</em> to the fiber that ran it, but <em>remembers where it is</em>. The next time the
 fiber is called, it picks up right where it left off and keeps going.</p>
 <p>You can make a fiber yield by calling the static <code>yield()</code> method on <code>Fiber</code>:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;fiber 1&quot;</span><span class="p">)</span>
-  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">()</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;fiber 2&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;fiber 1&quot;</span><span class="p">)</span>
+  <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">()</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;fiber 2&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;main 1&quot;</span><span class="p">)</span>
-<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;main 2&quot;</span><span class="p">)</span>
-<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">()</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;main 3&quot;</span><span class="p">)</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;main 1&quot;</span><span class="p">)</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;main 2&quot;</span><span class="p">)</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;main 3&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -146,13 +146,13 @@ the mercy of a thread scheduler playing Russian roulette with your code.</p>
 <em>data</em>. When you call a fiber, you can optionally pass a value to it. If the
 fiber has yielded and is waiting to resume, the value becomes the return value
 of the <code>yield()</code> call:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="n">result</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">()</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span>
+  <span class="k">var</span> <span class="n">result</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">()</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;discarded&quot;</span><span class="p">)</span>
-<span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;sent&quot;</span><span class="p">)</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;discarded&quot;</span><span class="p">)</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;sent&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -162,11 +162,11 @@ nowhere for the sent value to go.</p>
 <p>Fibers can also pass values <em>back</em> when they yield. If you pass an argument to
 <code>yield()</code>, that will become the return value of the <code>call</code> that was used to
 invoke the fiber:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
-  <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="s2">&quot;sent&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span>
+  <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="s">&quot;sent&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="p">.</span><span class="n">call</span><span class="p">())</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">())</span>
 </pre></div>
 
 
@@ -179,9 +179,9 @@ you can iterate over.</p>
 <p>Wren's fibers can do that, but they can do much more. Like Lua, they are full
 <em>coroutines</em>&mdash;they can suspend from anywhere in the callstack. For
 example:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
-  <span class="p">(</span><span class="m">1.</span><span class="p">.</span><span class="m">10</span><span class="p">).</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="n">i</span><span class="o">|</span>
-    <span class="n">Fiber</span><span class="p">.</span><span class="n">yield</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span>
+  <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="err">i</span><span class="o">|</span>
+    <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="err">i</span><span class="p">)</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>

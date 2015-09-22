@@ -82,7 +82,7 @@ values.</p>
 <h2>If statements <a href="#if-statements" name="if-statements" class="header-anchor">#</a></h2>
 <p>The simplest branching statement, <code>if</code> lets you conditionally skip a chunk of
 code. It looks like this:</p>
-<div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;go!&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;go!&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -90,23 +90,23 @@ code. It looks like this:</p>
 statement after the condition is evaluated. Otherwise it is skipped. Instead of
 a statement, you can have a <a href="syntax.html#blocks">block</a>:</p>
 <div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;getSet&quot;</span><span class="p">)</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;go!&quot;</span><span class="p">)</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;getSet&quot;</span><span class="p">)</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;go!&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
 
 <p>You may also provide an <code>else</code> branch. It will be executed if the condition is
 false:</p>
-<div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;go!&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;not ready!&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;go!&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;not ready!&quot;</span><span class="p">)</span>
 </pre></div>
 
 
 <p>And, of course, it can take a block too:</p>
 <div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;go!&quot;</span><span class="p">)</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;go!&quot;</span><span class="p">)</span>
 <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;not ready!&quot;</span><span class="p">)</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;not ready!&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -118,12 +118,12 @@ they should be familiar if you've used other imperative languages.</p>
 <p>The simplest, a <code>while</code> statement executes a chunk of code as long as a
 condition continues to hold. For example:</p>
 <div class="codehilite"><pre><span class="c1">// Hailstone sequence.</span>
-<span class="kd">var</span> <span class="n">n</span> <span class="o">=</span> <span class="m">27</span>
-<span class="k">while</span> <span class="p">(</span><span class="n">n</span> <span class="o">!=</span> <span class="m">1</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">%</span> <span class="m">2</span> <span class="o">==</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="n">n</span> <span class="o">/</span> <span class="m">2</span>
+<span class="k">var</span> <span class="err">n</span> <span class="o">=</span> <span class="mi">27</span>
+<span class="k">while</span> <span class="p">(</span><span class="err">n</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="err">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="err">n</span> <span class="o">=</span> <span class="err">n</span> <span class="o">/</span> <span class="mi">2</span>
   <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="m">3</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="m">1</span>
+    <span class="err">n</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="err">n</span> <span class="o">+</span> <span class="mi">1</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -136,8 +136,8 @@ something true.</p>
 <p>The condition for a while loop can be any expression, and must be surrounded by
 parentheses. The body of the loop is usually a curly block but can also be a
 single statement:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">n</span> <span class="o">=</span> <span class="m">27</span>
-<span class="k">while</span> <span class="p">(</span><span class="n">n</span> <span class="o">!=</span> <span class="m">1</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">%</span> <span class="m">2</span> <span class="o">==</span> <span class="m">0</span><span class="p">)</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span> <span class="o">/</span> <span class="m">2</span> <span class="k">else</span> <span class="n">n</span> <span class="o">=</span> <span class="m">3</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="m">1</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="err">n</span> <span class="o">=</span> <span class="mi">27</span>
+<span class="k">while</span> <span class="p">(</span><span class="err">n</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="err">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="err">n</span> <span class="o">=</span> <span class="err">n</span> <span class="o">/</span> <span class="mi">2</span> <span class="k">else</span> <span class="err">n</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="err">n</span> <span class="o">+</span> <span class="mi">1</span>
 </pre></div>
 
 
@@ -146,8 +146,8 @@ single statement:</p>
 some complex condition. But in most cases, you're looping through a
 <a href="lists.html">list</a>, a series of numbers, or some other "sequence" object.
 That's what <code>for</code> is for. It looks like this:</p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">beatle</span> <span class="k">in</span> <span class="p">[</span><span class="s2">&quot;george&quot;</span><span class="p">,</span> <span class="s2">&quot;john&quot;</span><span class="p">,</span> <span class="s2">&quot;paul&quot;</span><span class="p">,</span> <span class="s2">&quot;ringo&quot;</span><span class="p">])</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">beatle</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">beatle</span> <span class="k">in</span> <span class="p">[</span><span class="s">&quot;george&quot;</span><span class="p">,</span> <span class="s">&quot;john&quot;</span><span class="p">,</span> <span class="s">&quot;paul&quot;</span><span class="p">,</span> <span class="s">&quot;ringo&quot;</span><span class="p">])</span> <span class="p">{</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">beatle</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -173,9 +173,9 @@ That's what <code>for</code> is for. It looks like this:</p>
 and stop. To do that, you can use a <code>break</code> statement. It's just the <code>break</code>
 keyword all by itself. That will immediately exit out of the nearest enclosing
 <code>while</code> or <code>for</code> loop.</p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="k">in</span> <span class="p">[</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">])</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-  <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="m">3</span><span class="p">)</span> <span class="k">break</span>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span> <span class="p">{</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span>
+  <span class="k">if</span> <span class="p">(</span><span class="err">i</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="k">break</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -185,16 +185,16 @@ keyword all by itself. That will immediately exit out of the nearest enclosing
 <p>Lists are one common use for <code>for</code> loops, but sometimes you want to walk over a
 sequence of numbers, or loop a number of times. For that, you can create a
 <a href="values.html#ranges">range</a>, like so:</p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="k">in</span> <span class="m">1.</span><span class="p">.</span><span class="m">100</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">..</span><span class="mi">100</span><span class="p">)</span> <span class="p">{</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
 
 <p>This loops over the numbers from 1 to 100, including 100 itself. If you want to
 leave off the last value, use three dots instead of two:</p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="k">in</span> <span class="m">1.</span><span class="p">..</span><span class="m">100</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">...</span><span class="mi">100</span><span class="p">)</span> <span class="p">{</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -212,18 +212,18 @@ are defined in terms of an "iterator protocol". The loop itself doesn't know
 anything about lists or ranges, it just knows how to call two particular
 methods on the object that resulted from evaluating the sequence expression.</p>
 <p>When you write a loop like this:</p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="k">in</span> <span class="m">1.</span><span class="p">.</span><span class="m">100</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">..</span><span class="mi">100</span><span class="p">)</span> <span class="p">{</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
 
 <p>Wren sees it something like this:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">iter_</span> <span class="o">=</span> <span class="kc">null</span>
-<span class="kd">var</span> <span class="n">seq_</span> <span class="o">=</span> <span class="m">1.</span><span class="p">.</span><span class="m">100</span>
-<span class="k">while</span> <span class="p">(</span><span class="n">iter_</span> <span class="o">=</span> <span class="n">seq_</span><span class="p">.</span><span class="n">iterate</span><span class="p">(</span><span class="n">iter_</span><span class="p">))</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="n">i</span> <span class="o">=</span> <span class="n">seq_</span><span class="p">.</span><span class="n">iteratorValue</span><span class="p">(</span><span class="n">iter_</span><span class="p">)</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">iter_</span> <span class="o">=</span> <span class="kc">null</span>
+<span class="k">var</span> <span class="n">seq_</span> <span class="o">=</span> <span class="mi">1</span><span class="o">..</span><span class="mi">100</span>
+<span class="k">while</span> <span class="p">(</span><span class="n">iter_</span> <span class="o">=</span> <span class="n">seq_</span><span class="o">.</span><span class="n">iterate</span><span class="p">(</span><span class="n">iter_</span><span class="p">))</span> <span class="p">{</span>
+  <span class="k">var</span> <span class="err">i</span> <span class="o">=</span> <span class="n">seq_</span><span class="o">.</span><span class="n">iteratorValue</span><span class="p">(</span><span class="n">iter_</span><span class="p">)</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 

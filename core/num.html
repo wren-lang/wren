@@ -38,7 +38,7 @@
         <li><a href="range.html">Range</a></li>
         <li><a href="sequence.html">Sequence</a></li>
         <li><a href="string.html">String</a></li>
-        <li><a href="io.html">IO</a></li>
+        <li><a href="system.html">System</a></li>
       </ul>
     </section>
   </nav>
@@ -54,7 +54,7 @@
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>abs</strong> <a href="#abs" name="abs" class="header-anchor">#</a></h3>
 <p>The absolute value of the number.</p>
-<div class="codehilite"><pre><span class="o">-</span><span class="m">123.</span><span class="n">abs</span> <span class="c1">// 123</span>
+<div class="codehilite"><pre><span class="o">-</span><span class="mi">123</span><span class="o">.</span><span class="n">abs</span> <span class="c1">// 123</span>
 </pre></div>
 
 
@@ -69,8 +69,8 @@
 numbers to determine the quadrant of the result.</p>
 <h3><strong>ceil</strong> <a href="#ceil" name="ceil" class="header-anchor">#</a></h3>
 <p>Rounds the number up to the nearest integer.</p>
-<div class="codehilite"><pre><span class="m">1.5</span><span class="p">.</span><span class="n">ceil</span> <span class="c1">// 2</span>
-<span class="p">(</span><span class="o">-</span><span class="m">3.2</span><span class="p">).</span><span class="n">ceil</span> <span class="c1">// -3</span>
+<div class="codehilite"><pre><span class="mf">1.5</span><span class="o">.</span><span class="n">ceil</span> <span class="c1">// 2</span>
+<span class="p">(</span><span class="o">-</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">ceil</span> <span class="c1">// -3</span>
 </pre></div>
 
 
@@ -78,8 +78,8 @@ numbers to determine the quadrant of the result.</p>
 <p>The cosine of the number.</p>
 <h3><strong>floor</strong> <a href="#floor" name="floor" class="header-anchor">#</a></h3>
 <p>Rounds the number down to the nearest integer.</p>
-<div class="codehilite"><pre><span class="m">1.5</span><span class="p">.</span><span class="n">floor</span>    <span class="c1">// 1</span>
-<span class="p">(</span><span class="o">-</span><span class="m">3.2</span><span class="p">).</span><span class="n">floor</span> <span class="c1">// -4</span>
+<div class="codehilite"><pre><span class="mf">1.5</span><span class="o">.</span><span class="n">floor</span>    <span class="c1">// 1</span>
+<span class="p">(</span><span class="o">-</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span> <span class="c1">// -4</span>
 </pre></div>
 
 
@@ -95,8 +95,8 @@ numbers to determine the quadrant of the result.</p>
 <p>The tangent of the number.</p>
 <h3><strong>-</strong> operator <a href="#--operator" name="--operator" class="header-anchor">#</a></h3>
 <p>Negates the number.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="m">123</span>
-<span class="o">-</span><span class="n">a</span> <span class="c1">// -123</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="mi">123</span>
+<span class="o">-</span><span class="err">a</span> <span class="c1">// -123</span>
 </pre></div>
 
 
@@ -127,20 +127,20 @@ unsigned values. The result is then a 32-bit unsigned number where each bit is
 <h3><strong>..</strong>(other) operator <a href="#(other)-operator" name="(other)-operator" class="header-anchor">#</a></h3>
 <p>Creates a <a href="core/range.html">Range</a> representing a consecutive range of numbers
 from the beginning number to the ending number.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">range</span> <span class="o">=</span> <span class="m">1.2</span><span class="p">..</span><span class="m">3.4</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">min</span><span class="p">)</span>         <span class="c1">// 1.2</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">max</span><span class="p">)</span>         <span class="c1">// 3.4</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="c1">// true</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">range</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">..</span><span class="mf">3.4</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>         <span class="c1">// 1.2</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>         <span class="c1">// 3.4</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="c1">// true</span>
 </pre></div>
 
 
 <h3><strong>...</strong>(other) operator <a href="#(other)-operator" name="(other)-operator" class="header-anchor">#</a></h3>
 <p>Creates a <a href="core/range.html">Range</a> representing a consecutive range of numbers
 from the beginning number to the ending number not including the ending number.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">range</span> <span class="o">=</span> <span class="m">1.2</span><span class="p">...</span><span class="m">3.4</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">min</span><span class="p">)</span>         <span class="c1">// 1.2</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">max</span><span class="p">)</span>         <span class="c1">// 3.4</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="c1">// false</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">range</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">...</span><span class="mf">3.4</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>         <span class="c1">// 1.2</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>         <span class="c1">// 3.4</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="c1">// false</span>
 </pre></div>
   </main>
 </div>

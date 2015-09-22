@@ -38,57 +38,60 @@
         <li><a href="range.html">Range</a></li>
         <li><a href="sequence.html">Sequence</a></li>
         <li><a href="string.html">String</a></li>
-        <li><a href="io.html">IO</a></li>
+        <li><a href="system.html">System</a></li>
       </ul>
     </section>
   </nav>
   <main>
     <h1>String Class</h1>
     <p>A string is an immutable array of bytes. Strings usually store text, in which
-case it will be the UTF-8 encoding of the text's code points. But you can put
-any kind of byte values in there you want, including null bytes or invalid UTF-8
-sequences.</p>
+case the bytes are the UTF-8 encoding of the text's code points. But you can put
+any kind of byte values in there you want, including null bytes or invalid
+UTF-8.</p>
 <p>There are a few ways to think of a string:</p>
 <ul>
 <li>
 <p>As a searchable chunk of text composed of a sequence of textual code points.</p>
 </li>
 <li>
-<p>As an iterable sequence of numeric code points.</p>
+<p>As an iterable sequence of code point numbers.</p>
 </li>
 <li>
 <p>As a flat array of directly indexable bytes.</p>
 </li>
 </ul>
 <p>All of those are useful for some problems, so the string API supports all three.
-The first one is the most common, so that's what most methods directly on the
-string class cater towards.</p>
+The first one is the most common, so that's what methods directly on the string
+class cater to.</p>
 <p>In UTF-8, a single Unicode code point&mdash;very roughly a single
-"character"&mdash; may be encoded as one or more bytes. This means you can't
+"character"&mdash;may encode to one or more bytes. This means you can't
 efficiently index by code point. There's no way to jump directly to, say, the
-fifth code unit in a string without walking the string from the beginning and
+fifth code point in a string without walking the string from the beginning and
 counting them as you go.</p>
-<p>Because counting code units is relatively slow, the indexes passed to string
+<p>Because counting code points is relatively slow, the indexes passed to string
 methods are <em>byte</em> offsets, not <em>code point</em> offsets. When you do:</p>
-<div class="codehilite"><pre><span class="n">someString</span><span class="p">[</span><span class="m">3</span><span class="p">]</span>
+<div class="codehilite"><pre><span class="n">someString</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
 </pre></div>
 
 
-<p>That means "get the code unit starting at <em>byte</em> three", not "get the third
-code unit in the string". This sounds scary, but keep in mind that the methods
-on string <em>return</em> byte indices too. So, for example, this does what you want:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">metalBand</span> <span class="o">=</span> <span class="s2">&quot;Fäcëhämmër&quot;</span>
-<span class="kd">var</span> <span class="n">hPosition</span> <span class="o">=</span> <span class="n">metalBand</span><span class="p">.</span><span class="n">indexOf</span><span class="p">(</span><span class="s2">&quot;h&quot;</span><span class="p">)</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">metalBand</span><span class="p">[</span><span class="n">hPosition</span><span class="p">])</span> <span class="c1">// &quot;h&quot;</span>
+<p>That means "get the code point starting at <em>byte</em> three", not "get the third
+code point in the string". This sounds scary, but keep in mind that the methods
+on strings <em>return</em> byte indexes too. So, for example, this does what you want:</p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">metalBand</span> <span class="o">=</span> <span class="s">&quot;Fäcëhämmër&quot;</span>
+<span class="k">var</span> <span class="n">hPosition</span> <span class="o">=</span> <span class="n">metalBand</span><span class="o">.</span><span class="n">indexOf</span><span class="p">(</span><span class="s">&quot;h&quot;</span><span class="p">)</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">metalBand</span><span class="p">[</span><span class="n">hPosition</span><span class="p">])</span> <span class="c1">// &quot;h&quot;</span>
 </pre></div>
 
 
-<p>If you want to work with a string as a sequence numeric code points, call the <code>codePoints</code> getter. It returns a <a href="sequence.html">Sequence</a> that will decide UTF-8 and iterate over the code points, returning each as a number.</p>
-<p>If you want to get at the raw bytes, call <code>bytes</code>. This returns a Sequence that ignores any UTF-8 encoding and works directly at the byte level.</p>
+<p>If you want to work with a string as a sequence numeric code points, call the
+<code>codePoints</code> getter. It returns a <a href="sequence.html">Sequence</a> that decodes UTF-8
+and iterates over the code points, returning each as a number.</p>
+<p>If you want to get at the raw bytes, call <code>bytes</code>. This returns a Sequence that
+ignores any UTF-8 encoding and works directly at the byte level.</p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3>String.<strong>fromCodePoint</strong>(codePoint) <a href="#stringfromcodepoint(codepoint)" name="stringfromcodepoint(codepoint)" class="header-anchor">#</a></h3>
 <p>Creates a new string containing the UTF-8 encoding of <code>codePoint</code>.</p>
-<div class="codehilite"><pre><span class="kt">String</span><span class="p">.</span><span class="n">fromCodePoint</span><span class="p">(</span><span class="m">8225</span><span class="p">)</span> <span class="c1">// &quot;‡&quot;</span>
+<div class="codehilite"><pre><span class="vg">String</span><span class="o">.</span><span class="n">fromCodePoint</span><span class="p">(</span><span class="mi">8225</span><span class="p">)</span> <span class="c1">// &quot;‡&quot;</span>
 </pre></div>
 
 
@@ -100,7 +103,7 @@ on string <em>return</em> byte indices too. So, for example, this does what you 
 the string and ignore any UTF-8 encoding. In addition to the normal sequence
 methods, the returned object also has a subscript operator that can be used to
 directly index bytes.</p>
-<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">.</span><span class="n">bytes</span><span class="p">[</span><span class="m">1</span><span class="p">])</span> <span class="c1">// 101, for &quot;e&quot;.</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="o">.</span><span class="n">bytes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1">// 101, for &quot;e&quot;.</span>
 </pre></div>
 
 
@@ -112,16 +115,16 @@ the string, and runs in constant time instead.</p>
 code points of the string <em>as numbers</em>. Iteration and subscripting work similar
 to the string itself. The difference is that instead of returning
 single-character strings, this returns the numeric code point values.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;(ᵔᴥᵔ)&quot;</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="p">.</span><span class="n">codePoints</span><span class="p">[</span><span class="m">0</span><span class="p">])</span> <span class="c1">// 40, for &quot;(&quot;.</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="p">.</span><span class="n">codePoints</span><span class="p">[</span><span class="m">4</span><span class="p">])</span> <span class="c1">// 7461, for &quot;ᴥ&quot;.</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1">// 40, for &quot;(&quot;.</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="c1">// 7461, for &quot;ᴥ&quot;.</span>
 </pre></div>
 
 
 <p>If the byte at <code>index</code> does not begin a valid UTF-8 sequence, or the end of the
 string is reached before the sequence is complete, returns <code>-1</code>.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;(ᵔᴥᵔ)&quot;</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="p">.</span><span class="n">codePoints</span><span class="p">[</span><span class="m">2</span><span class="p">])</span> <span class="c1">// -1, in the middle of &quot;ᵔ&quot;.</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="c1">// -1, in the middle of &quot;ᵔ&quot;.</span>
 </pre></div>
 
 
@@ -144,12 +147,12 @@ count as well.</p>
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
 <p>Implements the <a href="../control-flow.html#the-iterator-protocol">iterator protocol</a>
 for iterating over the <em>code points</em> in the string:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">codePoints</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="p">(</span><span class="n">c</span> <span class="k">in</span> <span class="s2">&quot;(ᵔᴥᵔ)&quot;</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">codePoints</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">codePoints</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="p">(</span><span class="err">c</span> <span class="k">in</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">codePoints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="err">c</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">codePoints</span><span class="p">)</span> <span class="c1">// [&quot;(&quot;, &quot;ᵔ&quot;, &quot;ᴥ&quot;, &quot;ᵔ&quot;, &quot;)&quot;].</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">codePoints</span><span class="p">)</span> <span class="c1">// [&quot;(&quot;, &quot;ᵔ&quot;, &quot;ᴥ&quot;, &quot;ᵔ&quot;, &quot;)&quot;].</span>
 </pre></div>
 
 
@@ -166,17 +169,16 @@ those too, one byte at a time.</p>
 <h3><strong>!=</strong>(other) operator <a href="#=(other)-operator" name="=(other)-operator" class="header-anchor">#</a></h3>
 <p>Check if the string is not equal to <code>other</code>.</p>
 <h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
-<p>Returns a string containing the code unit starting at byte <code>index</code>.</p>
-<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;ʕ•ᴥ•ʔ&quot;</span><span class="p">[</span><span class="m">5</span><span class="p">])</span> <span class="c1">// &quot;ᴥ&quot;.</span>
+<p>Returns a string containing the code point starting at byte <code>index</code>.</p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ʕ•ᴥ•ʔ&quot;</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="c1">// &quot;ᴥ&quot;.</span>
 </pre></div>
 
 
 <p>Since <code>ʕ</code> is two bytes in UTF-8 and <code>•</code> is three, the fifth byte points to the
 bear's nose.</p>
 <p>If <code>index</code> points into the middle of a UTF-8 sequence or at otherwise invalid
-UTF-8, this returns a one-byte string containing the value of the byte at that
-index:</p>
-<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;I ♥ NY&quot;</span><span class="p">[</span><span class="m">3</span><span class="p">])</span> <span class="c1">// One-byte string whose value is 153.</span>
+UTF-8, this returns a one-byte string containing the byte at that index:</p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I ♥ NY&quot;</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="c1">// One-byte string whose value is 153.</span>
 </pre></div>
 
 

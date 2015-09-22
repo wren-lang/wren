@@ -38,7 +38,7 @@
         <li><a href="range.html">Range</a></li>
         <li><a href="sequence.html">Sequence</a></li>
         <li><a href="string.html">String</a></li>
-        <li><a href="io.html">IO</a></li>
+        <li><a href="system.html">System</a></li>
       </ul>
     </section>
   </nav>
@@ -49,20 +49,20 @@
 <p>The name of the class.</p>
 <h3><strong>supertype</strong> <a href="#supertype" name="supertype" class="header-anchor">#</a></h3>
 <p>The superclass of this class.</p>
-<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Crustacean</span> <span class="p">{}</span>
-<span class="kd">class</span> <span class="nc">Crab</span> <span class="k">is</span> <span class="n">Crustacean</span> <span class="p">{}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Crustacean</span> <span class="p">{}</span>
+<span class="k">class</span> <span class="vg">Crab</span> <span class="k">is</span> <span class="vg">Crustacean</span> <span class="p">{}</span>
 
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Crab</span><span class="p">.</span><span class="n">supertype</span><span class="p">)</span>        <span class="c1">// &quot;Crustacean&quot;</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Crab</span><span class="o">.</span><span class="n">supertype</span><span class="p">)</span> <span class="c1">// &quot;Crustacean&quot;.</span>
 </pre></div>
 
 
 <p>A class with no explicit superclass implicitly inherits Object:</p>
-<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Crustacean</span><span class="p">.</span><span class="n">supertype</span><span class="p">)</span>  <span class="c1">// &quot;Object&quot;</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Crustacean</span><span class="o">.</span><span class="n">supertype</span><span class="p">)</span> <span class="c1">// &quot;Object&quot;.</span>
 </pre></div>
 
 
 <p>Object forms the root of the class hierarchy and has no supertype:</p>
-<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="kt">Object</span><span class="p">.</span><span class="n">supertype</span><span class="p">)</span>  <span class="c1">// &quot;null&quot;</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Object</span><span class="o">.</span><span class="n">supertype</span><span class="p">)</span> <span class="c1">// &quot;null&quot;.</span>
 </pre></div>
   </main>
 </div>

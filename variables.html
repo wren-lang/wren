@@ -61,15 +61,15 @@
     <h1>Variables</h1>
     <p>Variables are named slots for storing values. You can define a new variable in
 Wren using a <code>var</code> statement, like so:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="m">1</span> <span class="o">+</span> <span class="m">2</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span>
 </pre></div>
 
 
 <p>This creates a new variable <code>a</code> in the current scope and initializes it with
 the result of the expression following the <code>=</code>. Once a variable has been
 defined, it can be accessed by name as you would expect.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">animal</span> <span class="o">=</span> <span class="s2">&quot;Slow Loris&quot;</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">animal</span><span class="p">)</span> <span class="c1">// Prints &quot;Slow Loris&quot;.</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">animal</span> <span class="o">=</span> <span class="s">&quot;Slow Loris&quot;</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">animal</span><span class="p">)</span> <span class="c1">// Prints &quot;Slow Loris&quot;.</span>
 </pre></div>
 
 
@@ -77,11 +77,11 @@ defined, it can be accessed by name as you would expect.</p>
 <p>Wren has true block scope: a variable exists from the point where it is defined
 until the end of the <a href="syntax.html#blocks">block</a> where that definition appears.</p>
 <div class="codehilite"><pre><span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c1">// ERROR! a doesn&#39;t exist yet.</span>
-  <span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="m">123</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c1">// &quot;123&quot;</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="c1">// ERROR! a doesn&#39;t exist yet.</span>
+  <span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="mi">123</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="c1">// &quot;123&quot;</span>
 <span class="p">}</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c1">// ERROR! a doesn&#39;t exist anymore.</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="c1">// ERROR! a doesn&#39;t exist anymore.</span>
 </pre></div>
 
 
@@ -90,25 +90,25 @@ to the <a href="modules.html">module</a> system. All other variables are <em>loc
 Declaring a variable in an inner scope with the same name as an outer one is
 called <em>shadowing</em> and is not an error (although it's not something you likely
 intend to do much).</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;outer&quot;</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;outer&quot;</span>
 <span class="p">{</span>
-  <span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;inner&quot;</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c1">// Prints &quot;inner&quot;.</span>
+  <span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;inner&quot;</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="c1">// Prints &quot;inner&quot;.</span>
 <span class="p">}</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c1">// Prints &quot;outer&quot;.</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="c1">// Prints &quot;outer&quot;.</span>
 </pre></div>
 
 
 <p>Declaring a variable with the same name in the <em>same</em> scope <em>is</em> an error.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;hi&quot;</span>
-<span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;again&quot;</span> <span class="c1">// ERROR!</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;hi&quot;</span>
+<span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;again&quot;</span> <span class="c1">// ERROR!</span>
 </pre></div>
 
 
 <h2>Assignment <a href="#assignment" name="assignment" class="header-anchor">#</a></h2>
 <p>After a variable has been declared, you can assign to it using <code>=</code>:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="m">123</span>
-<span class="n">a</span> <span class="o">=</span> <span class="m">234</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="mi">123</span>
+<span class="err">a</span> <span class="o">=</span> <span class="mi">234</span>
 </pre></div>
 
 
@@ -117,8 +117,8 @@ declared. It's an error to assign to a variable that isn't defined. Wren
 doesn't roll with implicit variable definition.</p>
 <p>When used in a larger expression, an assignment expression evaluates to the
 assigned value.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;before&quot;</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;after&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;after&quot;.</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;before&quot;</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span> <span class="o">=</span> <span class="s">&quot;after&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;after&quot;.</span>
 </pre></div>
 
 

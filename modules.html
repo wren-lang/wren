@@ -83,7 +83,7 @@ a name collision. Each module is, well, modular.</p>
 <p>When you run Wren and give it a file name to execute, the contents of that file
 define the "main" module that execution starts at. To load and execute other
 modules, you use an import statement:</p>
-<div class="codehilite"><pre><span class="k">import</span> <span class="s2">&quot;beverages&quot;</span> <span class="n">for</span> <span class="n">Coffee</span><span class="p">,</span> <span class="n">Tea</span>
+<div class="codehilite"><pre><span class="k">import</span> <span class="s">&quot;beverages&quot;</span> <span class="k">for</span> <span class="vg">Coffee</span><span class="p">,</span> <span class="vg">Tea</span>
 </pre></div>
 
 
@@ -93,14 +93,14 @@ creates new variables in <em>this</em> module with their values.</p>
 <p>This statement can appear anywhere a variable declaration is allowed, even
 inside blocks:</p>
 <div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">thirsty</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">import</span> <span class="s2">&quot;beverages&quot;</span> <span class="n">for</span> <span class="n">Coffee</span><span class="p">,</span> <span class="n">Tea</span>
-<span class="err">}</span>
+  <span class="k">import</span> <span class="s">&quot;beverages&quot;</span> <span class="k">for</span> <span class="vg">Coffee</span><span class="p">,</span> <span class="vg">Tea</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>If you want to load a module, but not bind any variables from it, you can omit
 the <code>for</code> clause:</p>
-<div class="codehilite"><pre><span class="k">import</span> <span class="s2">&quot;some_imperative_code&quot;</span>
+<div class="codehilite"><pre><span class="k">import</span> <span class="s">&quot;some_imperative_code&quot;</span>
 </pre></div>
 
 
@@ -149,7 +149,7 @@ the main module was loaded and looks for that file. So, let's say you run:</p>
 
 
 <p>And that main module has:</p>
-<div class="codehilite"><pre><span class="k">import</span> <span class="s2">&quot;some/module&quot;</span>
+<div class="codehilite"><pre><span class="k">import</span> <span class="s">&quot;some/module&quot;</span>
 </pre></div>
 
 
@@ -179,7 +179,7 @@ These are simply variables declared outside of any
 <a href="classes.html#methods">method</a> or <a href="functions.html">function</a>.</p>
 <p>These are visible to anything inside the module, but they can also be
 <em>exported</em> and used by other modules. When Wren executes an import like:</p>
-<div class="codehilite"><pre><span class="k">import</span> <span class="s2">&quot;beverages&quot;</span> <span class="n">for</span> <span class="n">Coffee</span><span class="p">,</span> <span class="n">Tea</span>
+<div class="codehilite"><pre><span class="k">import</span> <span class="s">&quot;beverages&quot;</span> <span class="k">for</span> <span class="vg">Coffee</span><span class="p">,</span> <span class="vg">Tea</span>
 </pre></div>
 
 
@@ -200,17 +200,17 @@ rarely makes a difference.</p>
 a <em>tree</em> of modules if there are no <em>shared imports</em>. But consider a program
 like:</p>
 <div class="codehilite"><pre><span class="c1">// main.wren</span>
-<span class="k">import</span> <span class="s2">&quot;a&quot;</span>
-<span class="n">import</span> <span class="s2">&quot;b&quot;</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span>
+<span class="k">import</span> <span class="s">&quot;b&quot;</span>
 
-<span class="err">//</span> <span class="n">a</span><span class="err">.</span><span class="n">wren</span>
-<span class="n">import</span> <span class="s2">&quot;shared&quot;</span>
+<span class="c1">// a.wren</span>
+<span class="k">import</span> <span class="s">&quot;shared&quot;</span>
 
-<span class="err">//</span> <span class="n">b</span><span class="err">.</span><span class="n">wren</span>
-<span class="n">import</span> <span class="s2">&quot;shared&quot;</span>
+<span class="c1">// b.wren</span>
+<span class="k">import</span> <span class="s">&quot;shared&quot;</span>
 
-<span class="err">//</span> <span class="n">shared</span><span class="err">.</span><span class="n">wren</span>
-<span class="n">IO</span><span class="err">.</span><span class="n">print</span><span class="err">(</span><span class="s2">&quot;Shared!&quot;</span><span class="err">)</span>
+<span class="c1">// shared.wren</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Shared!&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -240,17 +240,17 @@ module is reached while the module itself or one of its imports is executing,
 it will be found in the registry and the cycle is short-circuited.</p>
 <p>For example:</p>
 <div class="codehilite"><pre><span class="c1">// main.wren</span>
-<span class="k">import</span> <span class="s2">&quot;a&quot;</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span>
 
-<span class="err">//</span> <span class="n">a</span><span class="err">.</span><span class="n">wren</span>
-<span class="n">IO</span><span class="err">.</span><span class="n">print</span><span class="err">(</span><span class="s2">&quot;start a&quot;</span><span class="err">)</span>
-<span class="n">import</span> <span class="s2">&quot;b&quot;</span>
-<span class="n">IO</span><span class="err">.</span><span class="n">print</span><span class="err">(</span><span class="s2">&quot;end a&quot;</span><span class="err">)</span>
+<span class="c1">// a.wren</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;start a&quot;</span><span class="p">)</span>
+<span class="k">import</span> <span class="s">&quot;b&quot;</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;end a&quot;</span><span class="p">)</span>
 
-<span class="err">//</span> <span class="n">b</span><span class="err">.</span><span class="n">wren</span>
-<span class="n">IO</span><span class="err">.</span><span class="n">print</span><span class="err">(</span><span class="s2">&quot;start b&quot;</span><span class="err">)</span>
-<span class="n">import</span> <span class="s2">&quot;a&quot;</span>
-<span class="n">IO</span><span class="err">.</span><span class="n">print</span><span class="err">(</span><span class="s2">&quot;end b&quot;</span><span class="err">)</span>
+<span class="c1">// b.wren</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;start b&quot;</span><span class="p">)</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;end b&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -264,15 +264,15 @@ end a
 
 <p>Where you have to be careful is binding variables. Consider:</p>
 <div class="codehilite"><pre><span class="c1">// main.wren</span>
-<span class="k">import</span> <span class="s2">&quot;a&quot;</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span>
 
-<span class="err">//</span> <span class="n">a</span><span class="err">.</span><span class="n">wren</span>
-<span class="n">import</span> <span class="s2">&quot;b&quot;</span> <span class="n">for</span> <span class="n">B</span>
-<span class="n">var</span> <span class="n">A</span> <span class="err">=</span> <span class="s2">&quot;a variable&quot;</span>
+<span class="c1">// a.wren</span>
+<span class="k">import</span> <span class="s">&quot;b&quot;</span> <span class="k">for</span> <span class="err">B</span>
+<span class="k">var</span> <span class="err">A</span> <span class="o">=</span> <span class="s">&quot;a variable&quot;</span>
 
-<span class="err">//</span> <span class="n">b</span><span class="err">.</span><span class="n">wren</span>
-<span class="n">import</span> <span class="s2">&quot;a&quot;</span> <span class="n">for</span> <span class="n">A</span>
-<span class="n">var</span> <span class="n">B</span> <span class="err">=</span> <span class="s2">&quot;b variable&quot;</span>
+<span class="c1">// b.wren</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span> <span class="k">for</span> <span class="err">A</span>
+<span class="k">var</span> <span class="err">B</span> <span class="o">=</span> <span class="s">&quot;b variable&quot;</span>
 </pre></div>
 
 
@@ -289,15 +289,15 @@ defined yet since "a.wren" is still sitting on the <code>import "b" for B</code>
 before the declaration. To get this to work, you would need to move the
 variable declaration above the import:</p>
 <div class="codehilite"><pre><span class="c1">// main.wren</span>
-<span class="k">import</span> <span class="s2">&quot;a&quot;</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span>
 
-<span class="err">//</span> <span class="n">a</span><span class="err">.</span><span class="n">wren</span>
-<span class="n">var</span> <span class="n">A</span> <span class="err">=</span> <span class="s2">&quot;a variable&quot;</span>
-<span class="n">import</span> <span class="s2">&quot;b&quot;</span> <span class="n">for</span> <span class="n">B</span>
+<span class="c1">// a.wren</span>
+<span class="k">var</span> <span class="err">A</span> <span class="o">=</span> <span class="s">&quot;a variable&quot;</span>
+<span class="k">import</span> <span class="s">&quot;b&quot;</span> <span class="k">for</span> <span class="err">B</span>
 
-<span class="err">//</span> <span class="n">b</span><span class="err">.</span><span class="n">wren</span>
-<span class="n">import</span> <span class="s2">&quot;a&quot;</span> <span class="n">for</span> <span class="n">A</span>
-<span class="n">var</span> <span class="n">B</span> <span class="err">=</span> <span class="s2">&quot;b variable&quot;</span>
+<span class="c1">// b.wren</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span> <span class="k">for</span> <span class="err">A</span>
+<span class="k">var</span> <span class="err">B</span> <span class="o">=</span> <span class="s">&quot;b variable&quot;</span>
 </pre></div>
 
 

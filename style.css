@@ -149,14 +149,24 @@ footer {
 
 .codehilite pre span.c1, .codehilite pre span.cm {
   color: #95a1ae; }
-.codehilite pre span.k, .codehilite pre span.kd, .codehilite pre span.kc {
-  color: #4799eb; }
-.codehilite pre span.m, .codehilite pre span.mi {
+.codehilite pre span.k, .codehilite pre span.kd, .codehilite pre span.kc, .codehilite pre span.nb {
+  color: #3399cc; }
+.codehilite pre span.vg {
+  color: #1b9898; }
+.codehilite pre span.vi {
   color: #59a112; }
+.codehilite pre span.vc {
+  color: #29a33d; }
+.codehilite pre span.m, .codehilite pre span.mi, .codehilite pre span.mf {
+  color: #cf7317; }
 .codehilite pre span.s, .codehilite pre span.s2 {
-  color: #e6a21a; }
+  color: #cf9117; }
 .codehilite pre span.se {
-  color: #e6801a; }
+  color: #e6b31a; }
+.codehilite pre span.o {
+  color: #4d91b3; }
+.codehilite pre span.p {
+  color: #738494; }
 .codehilite pre span.cp {
   color: #9970c2; }
 

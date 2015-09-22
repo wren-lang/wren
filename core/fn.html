@@ -38,7 +38,7 @@
         <li><a href="range.html">Range</a></li>
         <li><a href="sequence.html">Sequence</a></li>
         <li><a href="string.html">String</a></li>
-        <li><a href="io.html">IO</a></li>
+        <li><a href="system.html">System</a></li>
       </ul>
     </section>
   </nav>
@@ -51,8 +51,8 @@
 function, so this really just returns the argument. It exists mainly to let you
 create a "bare" function when you don't want to immediately pass it as a <a href="../functions.html#block-arguments">block
 argument</a> to some other method.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;The body&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The body&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -61,18 +61,18 @@ argument</a> to some other method.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>arity</strong> <a href="#arity" name="arity" class="header-anchor">#</a></h3>
 <p>The number of arguments the function requires.</p>
-<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{}.</span><span class="n">arity</span><span class="p">)</span>             <span class="c1">// 0.</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span><span class="o">|</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">|</span> <span class="n">a</span> <span class="p">}.</span><span class="n">arity</span><span class="p">)</span> <span class="c1">// 3.</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{}</span><span class="o">.</span><span class="n">arity</span><span class="p">)</span>             <span class="c1">// 0.</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span><span class="o">|</span><span class="err">a</span><span class="p">,</span> <span class="err">b</span><span class="p">,</span> <span class="err">c</span><span class="o">|</span> <span class="err">a</span> <span class="p">}</span><span class="o">.</span><span class="n">arity</span><span class="p">)</span> <span class="c1">// 3.</span>
 </pre></div>
 
 
 <h3><strong>call</strong>(args...) <a href="#call(args)" name="call(args)" class="header-anchor">#</a></h3>
 <p>Invokes the function with the given arguments.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="n">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span> <span class="o">|</span><span class="n">arg</span><span class="o">|</span>
-  <span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="o">|</span><span class="n">arg</span><span class="o">|</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="n">fn</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;Hello world&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;Hello world&quot;.</span>
+<span class="n">fn</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;Hello world&quot;</span><span class="p">)</span> <span class="c1">// Prints &quot;Hello world&quot;.</span>
 </pre></div>
 
 

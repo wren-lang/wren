@@ -63,7 +63,7 @@
 <h2>Syntax errors <a href="#syntax-errors" name="syntax-errors" class="header-anchor">#</a></h2>
 <p>The first errors you're likely to run into are syntax errors. These include
 simple bugs where your code doesn't follow the language's grammar, like:</p>
-<div class="codehilite"><pre><span class="m">1</span> <span class="o">+</span> <span class="o">*</span> <span class="m">2</span>
+<div class="codehilite"><pre><span class="mi">1</span> <span class="o">+</span> <span class="o">*</span> <span class="mi">2</span>
 </pre></div>
 
 
@@ -76,8 +76,8 @@ hits one, you'll get a friendly error message, like:</p>
 <p>Some slightly more "semantic" errors fall into this bucket too. Things like
 using a variable that hasn't been defined, or declaring two variables with the
 same name in the same scope. So if you do:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;once&quot;</span>
-<span class="kd">var</span> <span class="n">a</span> <span class="o">=</span> <span class="s2">&quot;twice&quot;</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;once&quot;</span>
+<span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;twice&quot;</span>
 </pre></div>
 
 
@@ -100,10 +100,10 @@ statically. Since they can't be found until your code is run, they're called
 perform an operation that the VM can't do. The most common error is a "method
 not found" one. If you call a method on an object and its class (and all of its
 superclasses) don't define that method, there's nothing Wren can do:</p>
-<div class="codehilite"><pre><span class="kd">class</span> <span class="nc">Foo</span> <span class="p">{}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Foo</span> <span class="p">{}</span>
 
-<span class="kd">var</span> <span class="n">foo</span> <span class="o">=</span> <span class="n">Foo</span><span class="p">.</span><span class="k">new</span><span class="p">()</span>
-<span class="n">foo</span><span class="p">.</span><span class="n">someRandomMethod</span>
+<span class="k">var</span> <span class="n">foo</span> <span class="o">=</span> <span class="vg">Foo</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="n">foo</span><span class="o">.</span><span class="n">someRandomMethod</span>
 </pre></div>
 
 
@@ -120,8 +120,8 @@ and all of the method calls that led to it.</p>
 <p>Another common runtime error is passing an argument of the wrong type to a
 method. For example, lists are indexed using a number. If you try to pass some
 other type, it's an error:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
-<span class="n">list</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">]</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="p">[</span><span class="s">&quot;1&quot;</span><span class="p">]</span>
 </pre></div>
 
 
@@ -147,12 +147,12 @@ VM.</p>
 in the called fiber, the error is captured and the <code>try</code> method returns the
 error message as a string.</p>
 <p>For example, if you run this program:</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="n">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span>
-  <span class="m">123.</span><span class="n">badMethod</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span>
+  <span class="mi">123</span><span class="o">.</span><span class="n">badMethod</span>
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="n">error</span> <span class="o">=</span> <span class="n">fiber</span><span class="p">.</span><span class="k">try</span><span class="p">()</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Caught error: &quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+<span class="k">var</span> <span class="n">error</span> <span class="o">=</span> <span class="n">fiber</span><span class="o">.</span><span class="n">try</span><span class="p">()</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Caught error: &quot;</span> <span class="o">+</span> <span class="n">error</span><span class="p">)</span>
 </pre></div>
 
 
@@ -164,7 +164,7 @@ error message as a string.</p>
 <p>The called fiber can no longer be used, but any other fibers can proceed as
 usual. When a fiber has been aborted because of a runtime error, you can also
 get the error from the fiber object. Continuing the above example:</p>
-<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="p">.</span><span class="n">error</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>
 </pre></div>
 
 
@@ -180,7 +180,7 @@ errors generated in fibers that are invoked by the one you called <code>try</cod
 <p>Most runtime errors come from within the Wren VM, but you may want to be able
 to cause your own runtime errors to occur. This can be done by calling the
 <code>abort()</code> static method on <code>Fiber</code>:</p>
-<div class="codehilite"><pre><span class="n">Fiber</span><span class="p">.</span><span class="n">abort</span><span class="p">(</span><span class="s2">&quot;Something bad happened&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="vg">Fiber</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="s">&quot;Something bad happened&quot;</span><span class="p">)</span>
 </pre></div>
 
 

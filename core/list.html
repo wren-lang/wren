@@ -38,7 +38,7 @@
         <li><a href="range.html">Range</a></li>
         <li><a href="sequence.html">Sequence</a></li>
         <li><a href="string.html">String</a></li>
-        <li><a href="io.html">IO</a></li>
+        <li><a href="system.html">System</a></li>
       </ul>
     </section>
   </nav>
@@ -55,29 +55,29 @@
 <p>The number of elements in the list.</p>
 <h3><strong>insert</strong>(index, item) <a href="#insert(index,-item)" name="insert(index,-item)" class="header-anchor">#</a></h3>
 <p>Inserts the <code>item</code> at <code>index</code> in the list.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">]</span>
-<span class="n">list</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">)</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, e, b, c, d]&quot;</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;e&quot;</span><span class="p">)</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, e, b, c, d]&quot;.</span>
 </pre></div>
 
 
 <p>The <code>index</code> may be one past the last index in the list to append an element.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
-<span class="n">list</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="m">3</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">)</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, b, c, d]&quot;</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">)</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, b, c, d]&quot;.</span>
 </pre></div>
 
 
 <p>If <code>index</code> is negative, it counts backwards from the end of the list. It bases this on the length of the list <em>after</em> inserted the element, so that <code>-1</code> will append the element, not insert it before the last element.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">]</span>
-<span class="n">list</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="m">1</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">)</span>
-<span class="n">list</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="m">2</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">)</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, b, c, d]&quot;</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">)</span>
+<span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">)</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, b, c, d]&quot;.</span>
 </pre></div>
 
 
 <p>Returns the inserted item.</p>
-<div class="codehilite"><pre><span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">].</span><span class="n">insert</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">))</span> <span class="c1">// &quot;b&quot;.</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">))</span> <span class="c1">// &quot;b&quot;.</span>
 </pre></div>
 
 
@@ -89,14 +89,14 @@ for iterating over the elements in the list.</p>
 <p>Removes the element at <code>index</code>. If <code>index</code> is negative, it counts backwards
 from the end of the list where <code>-1</code> is the last element. All trailing elements
 are shifted up to fill in where the removed element was.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">]</span>
-<span class="n">list</span><span class="p">.</span><span class="n">removeAt</span><span class="p">(</span><span class="m">1</span><span class="p">)</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, c, d]&quot;.</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="o">.</span><span class="n">removeAt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, c, d]&quot;.</span>
 </pre></div>
 
 
 <p>Returns the removed item.</p>
-<div class="codehilite"><pre>IO.print([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].removeAt(1)) // &quot;b&quot;.
+<div class="codehilite"><pre>System.print([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].removeAt(1)) // &quot;b&quot;.
 </pre></div>
 
 
@@ -104,8 +104,8 @@ are shifted up to fill in where the removed element was.</p>
 <h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
 <p>Gets the element at <code>index</code>. If <code>index</code> is negative, it counts backwards from
 the end of the list where <code>-1</code> is the last element.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">[</span><span class="m">1</span><span class="p">])</span> <span class="c1">// &quot;b&quot;.</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1">// &quot;b&quot;.</span>
 </pre></div>
 
 
@@ -113,9 +113,9 @@ the end of the list where <code>-1</code> is the last element.</p>
 <h3><strong>[</strong>index<strong>]=</strong>(item) operator <a href="#[index]=(item)-operator" name="[index]=(item)-operator" class="header-anchor">#</a></h3>
 <p>Replaces the element at <code>index</code> with <code>item</code>. If <code>index</code> is negative, it counts
 backwards from the end of the list where <code>-1</code> is the last element.</p>
-<div class="codehilite"><pre><span class="kd">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span>
-<span class="n">list</span><span class="p">[</span><span class="m">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;new&quot;</span>
-<span class="n">IO</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, new, c]&quot;.</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span>
+<span class="n">list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;new&quot;</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="c1">// &quot;[a, new, c]&quot;.</span>
 </pre></div>
 
 
