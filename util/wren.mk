@@ -185,18 +185,18 @@ $(BUILD_DIR)/test/%.o: test/api/%.c $(MODULE_HEADERS) $(VM_HEADERS) $(TEST_HEADE
 	@ $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
 # Download libuv.
-$(LIBUV_DIR)/build/gyp/gyp: script/libuv.py
-	@ ./script/libuv.py download
+$(LIBUV_DIR)/build/gyp/gyp: util/libuv.py
+	@ ./util/libuv.py download
 
 # Build libuv to a static library.
-$(LIBUV): $(LIBUV_DIR)/build/gyp/gyp script/libuv.py
-	@ ./script/libuv.py build $(LIBUV_ARCH)
+$(LIBUV): $(LIBUV_DIR)/build/gyp/gyp util/libuv.py
+	@ ./util/libuv.py build $(LIBUV_ARCH)
 
 # Wren modules that get compiled into the binary as C strings.
-src/vm/wren_%.wren.inc: builtin/%.wren script/wren_to_c_string.py
-	@ ./script/wren_to_c_string.py $@ $<
+src/vm/wren_%.wren.inc: builtin/%.wren util/wren_to_c_string.py
+	@ ./util/wren_to_c_string.py $@ $<
 
-src/module/%.wren.inc: src/module/%.wren script/wren_to_c_string.py
-	@ ./script/wren_to_c_string.py $@ $<
+src/module/%.wren.inc: src/module/%.wren util/wren_to_c_string.py
+	@ ./util/wren_to_c_string.py $@ $<
 
 .PHONY: all cli test vm
