@@ -7,7 +7,9 @@ while being a bit simpler and more streamlined.
 Scripts are stored in plain text files with a `.wren` file extension. Wren does
 not compile ahead of time: programs are run directly from source, from top to
 bottom like a typical scripting language. (Internally, programs are compiled to
-bytecode for efficiency, but that's an implementation detail.)
+bytecode for [efficiency][], but that's an implementation detail.)
+
+[efficiency]: performance.html
 
 ## Comments
 
@@ -16,11 +18,22 @@ Line comments start with `//` and end at the end of the line:
     :::wren
     // This is a comment.
 
-Block comments start with `/*` and end with `*/`. They can span multiple lines
-or be within a single one. Unlike C, block comments can nest in Wren:
+Block comments start with `/*` and end with `*/`. They can span multiple lines:
+
+    :::wren
+    /* This
+       is
+       a
+       multi-line
+       comment. */
+
+Unlike C, block comments can nest in Wren:
 
     :::wren
     /* This is /* a nested */ comment. */
+
+This is handy because it lets you easily comment out an entire block of code,
+even if the code already contains block comments.
 
 ## Reserved words
 

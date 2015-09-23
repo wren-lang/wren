@@ -1,8 +1,8 @@
 ^title Variables
 ^category language
 
-Variables are named slots for storing values. You can define a new variable in
-Wren using a `var` statement, like so:
+Variables are named slots for storing values. You define a new variable in Wren
+using a `var` statement, like so:
 
     :::wren
     var a = 1 + 2

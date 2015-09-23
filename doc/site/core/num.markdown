@@ -127,7 +127,7 @@ It is a runtime error if `other` is not a number.
 
 ### **..**(other) operator
 
-Creates a [Range](core/range.html) representing a consecutive range of numbers
+Creates a [Range](range.html) representing a consecutive range of numbers
 from the beginning number to the ending number.
 
     :::wren
@@ -138,7 +138,7 @@ from the beginning number to the ending number.
 
 ### **...**(other) operator
 
-Creates a [Range](core/range.html) representing a consecutive range of numbers
+Creates a [Range](range.html) representing a consecutive range of numbers
 from the beginning number to the ending number not including the ending number.
 
     :::wren

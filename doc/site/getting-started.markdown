@@ -1,24 +1,26 @@
 ^title Getting Started
 
-Getting Wren up and running on your machine should be pretty straightforward.
-Tiny C programs with few dependencies are nice that way. "Wren" encompasses two
-separate artifacts:
+Getting Wren running on your machine is straightforward. Tiny C programs with
+few dependencies are nice that way. "Wren" encompasses two separate artifacts:
 
  *  **The virtual machine.** This is the core chunk of C that executes Wren
     source code. It is just a library, not a standalone application. It's
-    designed to be [embedded][] in a larger host application. It has no dependencies beyond the C standard library. You can is use as a static library, shared library, or simply compile the source into your app.
+    designed to be [embedded][] in a larger host application. It has no
+    dependencies beyond the C standard library. You can is use as a static
+    library, shared library, or simply compile the source into your app.
 
  *  **The command line executable.** Wren also ships with a CLI wrapper around
     the VM. This gives you a way to run Wren code from the command-line, and
-    also includes modules for talking to the operating system. It depends on
-    [libuv][] for that.
+    also includes modules for talking to the operating system&mdash;file IO,
+    networking, stuff like that. It depends on [libuv][] for that
+    functionality.
 
 [embedded]: embedding-api.html
 [libuv]: http://libuv.org/
 
 If you're on a Unix or Mac and you can rock a command line, it's just:
 
-    :::bash
+    :::sh
     $ git clone https://github.com/munificent/wren.git
     $ cd wren
     $ make
@@ -29,24 +31,24 @@ The release build of the CLI goes right into the repo's top level directory.
 Binaries for other configurations are built to `bin/`. Static and shared
 libraries for embedding Wren get built in `lib/`.
 
-For Mac users, there is also an XCode project under `project/xcode`. For
-Windows brethren, `project/msvc2013` contains a Visual Studio solution. Note
+For Mac users, there is also an XCode project under `util/xcode`. For
+Windows brethren, `util/msvc2013` contains a Visual Studio solution. Note
 that these may not have the exact same build settings as the makefile. The
 makefile is the "official" way to compile Wren.
 
 If you only want to build the VM, you can do:
 
-    :::bash
+    :::sh
     $ make vm
 
-This will compile the VM to static and shared libraries. It will not even
-download libuv since it isn't needed.
+This compiles the VM to static and shared libraries. It does not even download
+libuv since it isn't needed.
 
 ## Interactive mode
 
-The above instructions will drop you into Wren's standalone interpreter in
-interactive mode. You can type in a line of code, and it will immediately
-execute it. Here's something to try:
+If you just run `wren` without any arguments, it starts the interpreter in
+interactive mode. You can type in a line of code, and it immediately executes
+it. Here's something to try:
 
     :::wren
     System.print("Hello, world!")
@@ -62,7 +64,7 @@ your computer to the ground and storm off.
 ## Running scripts
 
 The standalone interpreter can also load scripts from files and run them. Just
-pass the name of the script to wren. Create a file named "my_script.wren" in
+pass the name of the script to `wren`. Create a file named "my_script.wren" in
 your favorite text editor and paste this into it:
 
     :::wren
@@ -88,7 +90,7 @@ your favorite text editor and paste this into it:
 
 Now run:
 
-    :::bash
+    :::sh
     $ ./wren my_script.wren
 
 Neat, right? You're a Wren programmer now! The next step is to [read more

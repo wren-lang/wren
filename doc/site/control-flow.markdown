@@ -2,7 +2,7 @@
 ^category language
 
 Control flow is used to determine which chunks of code are executed and how
-many times. *Branching* statements deciding whether or not to execute some code
+many times. *Branching* statements decide whether or not to execute some code
 and *looping* ones execute something more than once.
 
 ## Truth
@@ -94,9 +94,9 @@ single statement:
 ## For statements
 
 While statements are useful when you want to loop indefinitely or according to
-some complex condition. But in most cases, you're looping through a
-[list](lists.html), a series of numbers, or some other "sequence" object.
-That's what `for` is for. It looks like this:
+some complex condition. But in most cases, you're looping through
+a [list](lists.html), a series of numbers, or some other "sequence" object.
+That's what `for` is, uh, for. It looks like this:
 
     :::wren
     for (beatle in ["george", "john", "paul", "ringo"]) {
@@ -159,7 +159,7 @@ series of numbers.
 ## The iterator protocol
 
 Lists and ranges cover the two most common kinds of loops, but you should also
-be able to define your own sequences. To enable that, the semantics of a `for`
+be able to define your own sequences. To enable that, the semantics of `for`
 are defined in terms of an "iterator protocol". The loop itself doesn't know
 anything about lists or ranges, it just knows how to call two particular
 methods on the object that resulted from evaluating the sequence expression.

@@ -68,7 +68,7 @@ Strings are instances of class [String](core/string.html).
 
 ## Ranges
 
-A range is a little object that represents a consecutive range of integers.
+A range is a little object that represents a consecutive range of numbers.
 They don't have their own dedicated literal syntax. Instead, the number class
 implements the `..` and `...` [operators](expressions.html#operators) to create
 them:
