@@ -172,7 +172,7 @@ static void initVM()
 static void freeVM()
 {
   schedulerReleaseMethods();
-
+  
   uv_loop_close(loop);
   free(loop);
 
@@ -259,8 +259,8 @@ uv_loop_t* getLoop()
   return loop;
 }
 
-void setForeignCallbacks(
-    WrenBindForeignMethodFn bindMethod, WrenBindForeignClassFn bindClass)
+void setTestCallbacks(WrenBindForeignMethodFn bindMethod,
+                      WrenBindForeignClassFn bindClass)
 {
   bindMethodFn = bindMethod;
   bindClassFn = bindClass;

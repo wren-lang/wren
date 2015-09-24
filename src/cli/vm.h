@@ -22,7 +22,7 @@ uv_loop_t* getLoop();
 //
 // Used by the API test executable to let it wire up its own foreign functions.
 // This must be called before calling [createVM()].
-void setForeignCallbacks(WrenBindForeignMethodFn bindMethod,
-                         WrenBindForeignClassFn bindClass);
+void setTestCallbacks(WrenBindForeignMethodFn bindMethod,
+                      WrenBindForeignClassFn bindClass);
 
 #endif

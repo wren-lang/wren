@@ -1334,17 +1334,29 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method, WrenValue** result,
     Value value = NULL_VAL;
     switch (*argType)
     {
+      case 'a':
+      {
+        const char* bytes = va_arg(argList, const char*);
+        int length = va_arg(argList, int);
+        value = wrenNewString(vm, bytes, (size_t)length);
+        break;
+      }
+        
       case 'b': value = BOOL_VAL(va_arg(argList, int)); break;
       case 'd': value = NUM_VAL(va_arg(argList, double)); break;
       case 'i': value = NUM_VAL((double)va_arg(argList, int)); break;
       case 'n': value = NULL_VAL; va_arg(argList, void*); break;
       case 's':
-      {
         value = wrenStringFormat(vm, "$", va_arg(argList, const char*));
         break;
-      }
 
-      case 'v': value = va_arg(argList, WrenValue*)->value; break;
+      case 'v':
+      {
+        // Allow a NULL value pointer for Wren null.
+        WrenValue* wrenValue = va_arg(argList, WrenValue*);
+        if (wrenValue != NULL) value = wrenValue->value;
+        break;
+      }
 
       default:
         ASSERT(false, "Unknown argument type.");

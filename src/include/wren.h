@@ -213,8 +213,15 @@ WrenValue* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
 //         will allocate its own string and copy the characters from this, so
 //         you don't have to worry about the lifetime of the string you pass to
 //         Wren.
+// - "a" - An array of bytes converted to a Wren String. This requires two
+//         consecutive arguments in the argument list: `const char*` pointing
+//         to the array of bytes, followed by an `int` defining the length of
+//         the array. This is used when the passed string may contain null
+//         bytes, or just to avoid the implicit `strlen()` call of "s" if you
+//         happen to already know the length.
 // - "v" - A previously acquired WrenValue*. Passing this in does not implicitly
-//         release the value.
+//         release the value. If the passed argument is NULL, this becomes a
+//         Wren NULL.
 //
 // [method] must have been created by a call to [wrenGetMethod]. If [result] is
 // not `NULL`, the return value of the method will be stored in a new
@@ -302,9 +309,12 @@ void wrenReturnDouble(WrenVM* vm, double value);
 // Provides a string return value for a foreign call.
 //
 // The [text] will be copied to a new string within Wren's heap, so you can
-// free memory used by it after this is called. If [length] is non-zero, Wren
-// will copy that many bytes from [text]. If it is -1, then the length of
-// [text] will be calculated using `strlen()`.
+// free memory used by it after this is called.
+//
+// If [length] is non-zero, Wren copies that many bytes from [text], including
+// any null bytes. If it is -1, then the length of [text] is calculated using
+// `strlen()`. If the string may contain any null bytes in the middle, then you
+// must pass an explicit length.
 void wrenReturnString(WrenVM* vm, const char* text, int length);
 
 // Provides the return value for a foreign call.
