@@ -17,11 +17,11 @@ LIB_UV_DIR = "deps/libuv"
 def python2_binary():
     """Tries to find a python 2 executable"""
 
-    if sys.version_info.major == 2:
+	# check major version - .major was added in 2.7
+    if sys.version_info[0] == 2:
         return sys.executable or "python"
     else:
         return "python2"
-
 
 def ensure_dir(dir):
   """Creates dir if not already there."""
@@ -138,8 +138,15 @@ def build_libuv(arch, out):
 
 def run(args, cwd=None):
   """Spawn a process to invoke [args] and mute its output."""
+  
+  # check_output() was added in Python 2.7
+  supports_check_output = not (sys.version_info[0] == 2 and sys.version_info[1] < 7)
   try:
-    subprocess.check_output(args, cwd=cwd, stderr=subprocess.STDOUT)
+    if supports_check_output:
+      subprocess.check_output(args, cwd=cwd, stderr=subprocess.STDOUT)
+    else:
+      proc = subprocess.Popen(args, stdout=subprocess.PIPE)
+      proc.communicate()[0].split()
   except subprocess.CalledProcessError as error:
     print(error.output)
     sys.exit(error.returncode)
