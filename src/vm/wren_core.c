@@ -665,6 +665,18 @@ DEF_PRIMITIVE(num_fraction)
   RETURN_NUM(modf(AS_NUM(args[0]) , &dummy));
 }
 
+DEF_PRIMITIVE(num_isInfinity)
+{
+  RETURN_BOOL(isinf(AS_NUM(args[0])));
+}
+
+DEF_PRIMITIVE(num_isInteger)
+{
+  double value = AS_NUM(args[0]);
+  if (isnan(value) || isinf(value)) RETURN_FALSE;
+  RETURN_BOOL(trunc(value) == value);
+}
+
 DEF_PRIMITIVE(num_isNan)
 {
   RETURN_BOOL(isnan(AS_NUM(args[0])));
@@ -1194,6 +1206,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "...(_)", num_dotDotDot);
   PRIMITIVE(vm->numClass, "atan(_)", num_atan2);
   PRIMITIVE(vm->numClass, "fraction", num_fraction);
+  PRIMITIVE(vm->numClass, "isInfinity", num_isInfinity);
+  PRIMITIVE(vm->numClass, "isInteger", num_isInteger);
   PRIMITIVE(vm->numClass, "isNan", num_isNan);
   PRIMITIVE(vm->numClass, "sign", num_sign);
   PRIMITIVE(vm->numClass, "toString", num_toString);

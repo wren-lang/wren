@@ -60,6 +60,22 @@ Rounds the number down to the nearest integer.
     1.5.floor    // 1
     (-3.2).floor // -4
 
+### **isInfinity**
+
+Whether the number is positive or negative infinity or not.
+
+    :::wren
+    99999.isInfinity  // false
+    (1/0).isInfinity  // true
+
+### **isInteger**
+
+Whether the number is an integer or has some fractional component.
+
+    :::wren
+    2.isInteger   // true
+    2.3.isInteger // false
+
 ### **isNan**
 
 Whether the number is [not a number](http://en.wikipedia.org/wiki/NaN). This is
