@@ -905,16 +905,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
               fiber->stackTop -= numArgs - 1;
               break;
 
-            case PRIM_ERROR:
-              RUNTIME_ERROR();
-
             case PRIM_CALL:
               STORE_FRAME();
               callFunction(vm, fiber, AS_OBJ(args[0]), numArgs);
               LOAD_FRAME();
               break;
 
-            case PRIM_RUN_FIBER:
+            case PRIM_FIBER:
               STORE_FRAME();
 
               // If we don't have a fiber to switch to, stop interpreting.

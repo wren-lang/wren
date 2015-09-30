@@ -33,7 +33,7 @@
 #define RETURN_ERROR(msg) \
     do { \
       vm->fiber->error = wrenStringFormat(vm, "$", msg); \
-      return PRIM_ERROR; \
+      return PRIM_FIBER; \
     } while (0);
 
 // Validates that the given [arg] is a function. Returns true if it is. If not,

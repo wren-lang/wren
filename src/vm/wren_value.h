@@ -251,14 +251,12 @@ typedef enum
   // A normal value has been returned.
   PRIM_VALUE,
 
-  // A runtime error occurred.
-  PRIM_ERROR,
-
   // A new callframe has been pushed.
   PRIM_CALL,
 
-  // A fiber is being switched to.
-  PRIM_RUN_FIBER
+  // A fiber is being switched to. Also used for runtime errors (which also
+  // change which fiber is being executed).
+  PRIM_FIBER
 
 } PrimitiveResult;
 
