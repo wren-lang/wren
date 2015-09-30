@@ -50,7 +50,7 @@ DEF_PRIMITIVE(class_toString)
 
 DEF_PRIMITIVE(fiber_new)
 {
-  if (!validateFn(vm, args, 1, "Argument")) return PRIM_ERROR;
+  if (!validateFn(vm, args[1], "Argument")) return PRIM_ERROR;
 
   ObjFiber* newFiber = wrenNewFiber(vm, AS_OBJ(args[1]));
 
@@ -67,11 +67,10 @@ DEF_PRIMITIVE(fiber_new)
 
 DEF_PRIMITIVE(fiber_abort)
 {
-  if (!validateString(vm, args, 1, "Error message")) return PRIM_ERROR;
-
-  // Move the error message to the return position.
-  args[0] = args[1];
-  return PRIM_ERROR;
+  vm->fiber->error = args[1];
+  
+  // If the error is explicitly null, it's not really an abort.
+  return IS_NULL(args[1]) ? PRIM_VALUE : PRIM_ERROR;
 }
 
 // Transfer execution to [fiber] coming from the current fiber whose stack has
@@ -91,24 +90,17 @@ static PrimitiveResult runFiber(WrenVM* vm, ObjFiber* fiber, Value* args,
     // Remember who ran it.
     fiber->caller = vm->fiber;
   }
-  else
-  {
-    // Edge case: If we are transferring to ourself, immediately return the
-    // value. We can't treat this like an actual transfer since when we set the
-    // return below, it would overwrite the fiber being transferred to.
-    if (fiber == vm->fiber) RETURN_VAL(hasValue ? args[1] : NULL_VAL);
-  }
 
   if (fiber->numFrames == 0)
   {
-    args[0] = wrenStringFormat(vm, "Cannot $ a finished fiber.",
+    vm->fiber->error = wrenStringFormat(vm, "Cannot $ a finished fiber.",
                                isCall ? "call" : "transfer to");
     return PRIM_ERROR;
   }
 
-  if (fiber->error != NULL)
+  if (!IS_NULL(fiber->error))
   {
-    args[0] = wrenStringFormat(vm, "Cannot $ an aborted fiber.",
+    vm->fiber->error = wrenStringFormat(vm, "Cannot $ an aborted fiber.",
                                isCall ? "call" : "transfer to");
     return PRIM_ERROR;
   }
@@ -121,9 +113,11 @@ static PrimitiveResult runFiber(WrenVM* vm, ObjFiber* fiber, Value* args,
   // If the fiber was paused, make yield() or transfer() return the result.
   if (fiber->stackTop > fiber->stack)
   {
-    *(fiber->stackTop - 1) = hasValue ? args[1] : NULL_VAL;
+    fiber->stackTop[-1] = hasValue ? args[1] : NULL_VAL;
   }
 
+  vm->fiber = fiber;
+  
   return PRIM_RUN_FIBER;
 }
 
@@ -144,21 +138,19 @@ DEF_PRIMITIVE(fiber_current)
 
 DEF_PRIMITIVE(fiber_error)
 {
-  ObjFiber* runFiber = AS_FIBER(args[0]);
-  if (runFiber->error == NULL) RETURN_NULL;
-  RETURN_OBJ(runFiber->error);
+  RETURN_VAL(AS_FIBER(args[0])->error);
 }
 
 DEF_PRIMITIVE(fiber_isDone)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
-  RETURN_BOOL(runFiber->numFrames == 0 || runFiber->error != NULL);
+  RETURN_BOOL(runFiber->numFrames == 0 || !IS_NULL(runFiber->error));
 }
 
 DEF_PRIMITIVE(fiber_suspend)
 {
   // Switching to a null fiber tells the interpreter to stop and exit.
-  args[0] = NULL_VAL;
+  vm->fiber = NULL;
   return PRIM_RUN_FIBER;
 }
 
@@ -172,78 +164,71 @@ DEF_PRIMITIVE(fiber_transfer1)
   return runFiber(vm, AS_FIBER(args[0]), args, false, true);
 }
 
+DEF_PRIMITIVE(fiber_transferError)
+{
+  PrimitiveResult result = runFiber(vm, AS_FIBER(args[0]), args, false, true);
+  if (result == PRIM_RUN_FIBER) vm->fiber->error = args[1];
+  
+  return result;
+}
+
 DEF_PRIMITIVE(fiber_try)
 {
-  ObjFiber* runFiber = AS_FIBER(args[0]);
-
+  ObjFiber* tried = AS_FIBER(args[0]);
   // TODO: Use runFiber().
-  if (runFiber->numFrames == 0) RETURN_ERROR("Cannot try a finished fiber.");
-  if (runFiber->caller != NULL) RETURN_ERROR("Fiber has already been called.");
+  if (tried->numFrames == 0) RETURN_ERROR("Cannot try a finished fiber.");
+  if (tried->caller != NULL) RETURN_ERROR("Fiber has already been called.");
 
+  vm->fiber = tried;
+  
   // Remember who ran it.
-  runFiber->caller = fiber;
-  runFiber->callerIsTrying = true;
+  vm->fiber->caller = fiber;
+  vm->fiber->callerIsTrying = true;
 
   // If the fiber was yielded, make the yield call return null.
-  if (runFiber->stackTop > runFiber->stack)
+  if (vm->fiber->stackTop > vm->fiber->stack)
   {
-    *(runFiber->stackTop - 1) = NULL_VAL;
+    vm->fiber->stackTop[-1] = NULL_VAL;
   }
-
+  
   return PRIM_RUN_FIBER;
 }
 
 DEF_PRIMITIVE(fiber_yield)
 {
+  vm->fiber = fiber->caller;
+  
   // Unhook this fiber from the one that called it.
-  ObjFiber* caller = fiber->caller;
   fiber->caller = NULL;
   fiber->callerIsTrying = false;
 
-  // If we don't have any other pending fibers, jump all the way out of the
-  // interpreter.
-  if (caller == NULL)
-  {
-    args[0] = NULL_VAL;
-  }
-  else
+  if (vm->fiber != NULL)
   {
     // Make the caller's run method return null.
-    *(caller->stackTop - 1) = NULL_VAL;
-
-    // Return the fiber to resume.
-    args[0] = OBJ_VAL(caller);
+    vm->fiber->stackTop[-1] = NULL_VAL;
   }
-
+  
   return PRIM_RUN_FIBER;
 }
 
 DEF_PRIMITIVE(fiber_yield1)
 {
+  vm->fiber = fiber->caller;
+  
   // Unhook this fiber from the one that called it.
-  ObjFiber* caller = fiber->caller;
   fiber->caller = NULL;
   fiber->callerIsTrying = false;
 
-  // If we don't have any other pending fibers, jump all the way out of the
-  // interpreter.
-  if (caller == NULL)
-  {
-    args[0] = NULL_VAL;
-  }
-  else
+  if (vm->fiber != NULL)
   {
     // Make the caller's run method return the argument passed to yield.
-    *(caller->stackTop - 1) = args[1];
+    vm->fiber->stackTop[-1] = args[1];
 
-    // When the yielding fiber resumes, we'll store the result of the yield call
-    // in its stack. Since Fiber.yield(value) has two arguments (the Fiber class
-    // and the value) and we only need one slot for the result, discard the other
-    // slot now.
+    // When the yielding fiber resumes, we'll store the result of the yield
+    // call in its stack. Since Fiber.yield(value) has two arguments (the Fiber
+    // class and the value) and we only need one slot for the result, discard
+    // the other slot now.
     fiber->stackTop--;
-
-    // Return the fiber to resume.
-    args[0] = OBJ_VAL(caller);
   }
 
   return PRIM_RUN_FIBER;
@@ -251,7 +236,7 @@ DEF_PRIMITIVE(fiber_yield1)
 
 DEF_PRIMITIVE(fn_new)
 {
-  if (!validateFn(vm, args, 1, "Argument")) return PRIM_ERROR;
+  if (!validateFn(vm, args[1], "Argument")) return PRIM_ERROR;
 
   // The block argument is already a function, so just return it.
   RETURN_VAL(args[1]);
@@ -329,7 +314,7 @@ DEF_PRIMITIVE(list_insert)
   ObjList* list = AS_LIST(args[0]);
 
   // count + 1 here so you can "insert" at the very end.
-  uint32_t index = validateIndex(vm, args, list->elements.count + 1, 1,
+  uint32_t index = validateIndex(vm, args[1], list->elements.count + 1,
                                  "Index");
   if (index == UINT32_MAX) return PRIM_ERROR;
 
@@ -348,7 +333,7 @@ DEF_PRIMITIVE(list_iterate)
     RETURN_NUM(0);
   }
 
-  if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
+  if (!validateInt(vm, args[1], "Iterator")) return PRIM_ERROR;
 
   // Stop if we're out of bounds.
   double index = AS_NUM(args[1]);
@@ -361,7 +346,7 @@ DEF_PRIMITIVE(list_iterate)
 DEF_PRIMITIVE(list_iteratorValue)
 {
   ObjList* list = AS_LIST(args[0]);
-  uint32_t index = validateIndex(vm, args, list->elements.count, 1, "Iterator");
+  uint32_t index = validateIndex(vm, args[1], list->elements.count, "Iterator");
   if (index == UINT32_MAX) return PRIM_ERROR;
 
   RETURN_VAL(list->elements.data[index]);
@@ -370,7 +355,7 @@ DEF_PRIMITIVE(list_iteratorValue)
 DEF_PRIMITIVE(list_removeAt)
 {
   ObjList* list = AS_LIST(args[0]);
-  uint32_t index = validateIndex(vm, args, list->elements.count, 1, "Index");
+  uint32_t index = validateIndex(vm, args[1], list->elements.count, "Index");
   if (index == UINT32_MAX) return PRIM_ERROR;
 
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
@@ -382,7 +367,7 @@ DEF_PRIMITIVE(list_subscript)
 
   if (IS_NUM(args[1]))
   {
-    uint32_t index = validateIndex(vm, args, list->elements.count, 1,
+    uint32_t index = validateIndex(vm, args[1], list->elements.count,
                                    "Subscript");
     if (index == UINT32_MAX) return PRIM_ERROR;
 
@@ -396,7 +381,7 @@ DEF_PRIMITIVE(list_subscript)
 
   int step;
   uint32_t count = list->elements.count;
-  uint32_t start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);
+  uint32_t start = calculateRange(vm, AS_RANGE(args[1]), &count, &step);
   if (start == UINT32_MAX) return PRIM_ERROR;
 
   ObjList* result = wrenNewList(vm, count);
@@ -411,7 +396,7 @@ DEF_PRIMITIVE(list_subscript)
 DEF_PRIMITIVE(list_subscriptSetter)
 {
   ObjList* list = AS_LIST(args[0]);
-  uint32_t index = validateIndex(vm, args, list->elements.count, 1,
+  uint32_t index = validateIndex(vm, args[1], list->elements.count,
                                  "Subscript");
   if (index == UINT32_MAX) return PRIM_ERROR;
 
@@ -426,7 +411,7 @@ DEF_PRIMITIVE(map_new)
 
 DEF_PRIMITIVE(map_subscript)
 {
-  if (!validateKey(vm, args, 1)) return PRIM_ERROR;
+  if (!validateKey(vm, args[1])) return PRIM_ERROR;
 
   ObjMap* map = AS_MAP(args[0]);
   Value value = wrenMapGet(map, args[1]);
@@ -437,7 +422,7 @@ DEF_PRIMITIVE(map_subscript)
 
 DEF_PRIMITIVE(map_subscriptSetter)
 {
-  if (!validateKey(vm, args, 1)) return PRIM_ERROR;
+  if (!validateKey(vm, args[1])) return PRIM_ERROR;
 
   wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
   RETURN_VAL(args[2]);
@@ -451,7 +436,7 @@ DEF_PRIMITIVE(map_clear)
 
 DEF_PRIMITIVE(map_containsKey)
 {
-  if (!validateKey(vm, args, 1)) return PRIM_ERROR;
+  if (!validateKey(vm, args[1])) return PRIM_ERROR;
 
   RETURN_BOOL(!IS_UNDEFINED(wrenMapGet(AS_MAP(args[0]), args[1])));
 }
@@ -473,7 +458,7 @@ DEF_PRIMITIVE(map_iterate)
   // Otherwise, start one past the last entry we stopped at.
   if (!IS_NULL(args[1]))
   {
-    if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
+    if (!validateInt(vm, args[1], "Iterator")) return PRIM_ERROR;
 
     if (AS_NUM(args[1]) < 0) RETURN_FALSE;
     index = (uint32_t)AS_NUM(args[1]);
@@ -496,7 +481,7 @@ DEF_PRIMITIVE(map_iterate)
 
 DEF_PRIMITIVE(map_remove)
 {
-  if (!validateKey(vm, args, 1)) return PRIM_ERROR;
+  if (!validateKey(vm, args[1])) return PRIM_ERROR;
 
   RETURN_VAL(wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1]));
 }
@@ -504,7 +489,7 @@ DEF_PRIMITIVE(map_remove)
 DEF_PRIMITIVE(map_keyIteratorValue)
 {
   ObjMap* map = AS_MAP(args[0]);
-  uint32_t index = validateIndex(vm, args, map->capacity, 1, "Iterator");
+  uint32_t index = validateIndex(vm, args[1], map->capacity, "Iterator");
   if (index == UINT32_MAX) return PRIM_ERROR;
 
   MapEntry* entry = &map->entries[index];
@@ -519,7 +504,7 @@ DEF_PRIMITIVE(map_keyIteratorValue)
 DEF_PRIMITIVE(map_valueIteratorValue)
 {
   ObjMap* map = AS_MAP(args[0]);
-  uint32_t index = validateIndex(vm, args, map->capacity, 1, "Iterator");
+  uint32_t index = validateIndex(vm, args[1], map->capacity, "Iterator");
   if (index == UINT32_MAX) return PRIM_ERROR;
 
   MapEntry* entry = &map->entries[index];
@@ -543,7 +528,7 @@ DEF_PRIMITIVE(null_toString)
 
 DEF_PRIMITIVE(num_fromString)
 {
-  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+  if (!validateString(vm, args[1], "Argument")) return PRIM_ERROR;
 
   ObjString* string = AS_STRING(args[1]);
 
@@ -559,7 +544,7 @@ DEF_PRIMITIVE(num_fromString)
 
   if (errno == ERANGE)
   {
-    args[0] = CONST_STRING(vm, "Number literal is too large.");
+    vm->fiber->error = CONST_STRING(vm, "Number literal is too large.");
     return PRIM_ERROR;
   }
 
@@ -579,7 +564,7 @@ DEF_PRIMITIVE(num_pi)
 #define DEF_NUM_INFIX(name, op, type) \
     DEF_PRIMITIVE(num_##name) \
     { \
-      if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR; \
+      if (!validateNum(vm, args[1], "Right operand")) return PRIM_ERROR; \
       RETURN_##type(AS_NUM(args[0]) op AS_NUM(args[1])); \
     }
 
@@ -596,7 +581,7 @@ DEF_NUM_INFIX(gte,      >=, BOOL)
 #define DEF_NUM_BITWISE(name, op) \
     DEF_PRIMITIVE(num_bitwise##name) \
     { \
-      if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR; \
+      if (!validateNum(vm, args[1], "Right operand")) return PRIM_ERROR; \
       uint32_t left = (uint32_t)AS_NUM(args[0]); \
       uint32_t right = (uint32_t)AS_NUM(args[1]); \
       RETURN_NUM(left op right); \
@@ -629,7 +614,7 @@ DEF_NUM_FN(tan,     tan)
 
 DEF_PRIMITIVE(num_mod)
 {
-  if (!validateNum(vm, args, 1, "Right operand")) return PRIM_ERROR;
+  if (!validateNum(vm, args[1], "Right operand")) return PRIM_ERROR;
   RETURN_NUM(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
@@ -653,7 +638,7 @@ DEF_PRIMITIVE(num_bitwiseNot)
 
 DEF_PRIMITIVE(num_dotDot)
 {
-  if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
+  if (!validateNum(vm, args[1], "Right hand side of range")) return PRIM_ERROR;
 
   double from = AS_NUM(args[0]);
   double to = AS_NUM(args[1]);
@@ -662,7 +647,7 @@ DEF_PRIMITIVE(num_dotDot)
 
 DEF_PRIMITIVE(num_dotDotDot)
 {
-  if (!validateNum(vm, args, 1, "Right hand side of range")) return PRIM_ERROR;
+  if (!validateNum(vm, args[1], "Right hand side of range")) return PRIM_ERROR;
 
   double from = AS_NUM(args[0]);
   double to = AS_NUM(args[1]);
@@ -805,7 +790,7 @@ DEF_PRIMITIVE(range_iterate)
   // Start the iteration.
   if (IS_NULL(args[1])) RETURN_NUM(range->from);
 
-  if (!validateNum(vm, args, 1, "Iterator")) return PRIM_ERROR;
+  if (!validateNum(vm, args[1], "Iterator")) return PRIM_ERROR;
 
   double iterator = AS_NUM(args[1]);
 
@@ -852,7 +837,7 @@ DEF_PRIMITIVE(range_toString)
 
 DEF_PRIMITIVE(string_fromCodePoint)
 {
-  if (!validateInt(vm, args, 1, "Code point")) return PRIM_ERROR;
+  if (!validateInt(vm, args[1], "Code point")) return PRIM_ERROR;
 
   int codePoint = (int)AS_NUM(args[1]);
   if (codePoint < 0)
@@ -871,7 +856,7 @@ DEF_PRIMITIVE(string_byteAt)
 {
   ObjString* string = AS_STRING(args[0]);
 
-  uint32_t index = validateIndex(vm, args, string->length, 1, "Index");
+  uint32_t index = validateIndex(vm, args[1], string->length, "Index");
   if (index == UINT32_MAX) return PRIM_ERROR;
 
   RETURN_NUM((uint8_t)string->value[index]);
@@ -886,7 +871,7 @@ DEF_PRIMITIVE(string_codePointAt)
 {
   ObjString* string = AS_STRING(args[0]);
 
-  uint32_t index = validateIndex(vm, args, string->length, 1, "Index");
+  uint32_t index = validateIndex(vm, args[1], string->length, "Index");
   if (index == UINT32_MAX) return PRIM_ERROR;
 
   // If we are in the middle of a UTF-8 sequence, indicate that.
@@ -900,7 +885,7 @@ DEF_PRIMITIVE(string_codePointAt)
 
 DEF_PRIMITIVE(string_contains)
 {
-  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+  if (!validateString(vm, args[1], "Argument")) return PRIM_ERROR;
 
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
@@ -910,7 +895,7 @@ DEF_PRIMITIVE(string_contains)
 
 DEF_PRIMITIVE(string_endsWith)
 {
-  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+  if (!validateString(vm, args[1], "Argument")) return PRIM_ERROR;
 
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
@@ -924,7 +909,7 @@ DEF_PRIMITIVE(string_endsWith)
 
 DEF_PRIMITIVE(string_indexOf)
 {
-  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+  if (!validateString(vm, args[1], "Argument")) return PRIM_ERROR;
 
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
@@ -944,7 +929,7 @@ DEF_PRIMITIVE(string_iterate)
     RETURN_NUM(0);
   }
 
-  if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
+  if (!validateInt(vm, args[1], "Iterator")) return PRIM_ERROR;
 
   if (AS_NUM(args[1]) < 0) RETURN_FALSE;
   uint32_t index = (uint32_t)AS_NUM(args[1]);
@@ -970,7 +955,7 @@ DEF_PRIMITIVE(string_iterateByte)
     RETURN_NUM(0);
   }
 
-  if (!validateInt(vm, args, 1, "Iterator")) return PRIM_ERROR;
+  if (!validateInt(vm, args[1], "Iterator")) return PRIM_ERROR;
 
   if (AS_NUM(args[1]) < 0) RETURN_FALSE;
   uint32_t index = (uint32_t)AS_NUM(args[1]);
@@ -985,7 +970,7 @@ DEF_PRIMITIVE(string_iterateByte)
 DEF_PRIMITIVE(string_iteratorValue)
 {
   ObjString* string = AS_STRING(args[0]);
-  uint32_t index = validateIndex(vm, args, string->length, 1, "Iterator");
+  uint32_t index = validateIndex(vm, args[1], string->length, "Iterator");
   if (index == UINT32_MAX) return PRIM_ERROR;
 
   RETURN_VAL(wrenStringCodePointAt(vm, string, index));
@@ -993,7 +978,7 @@ DEF_PRIMITIVE(string_iteratorValue)
 
 DEF_PRIMITIVE(string_startsWith)
 {
-  if (!validateString(vm, args, 1, "Argument")) return PRIM_ERROR;
+  if (!validateString(vm, args[1], "Argument")) return PRIM_ERROR;
 
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
@@ -1006,7 +991,7 @@ DEF_PRIMITIVE(string_startsWith)
 
 DEF_PRIMITIVE(string_plus)
 {
-  if (!validateString(vm, args, 1, "Right operand")) return PRIM_ERROR;
+  if (!validateString(vm, args[1], "Right operand")) return PRIM_ERROR;
   RETURN_VAL(wrenStringFormat(vm, "@@", args[0], args[1]));
 }
 
@@ -1016,7 +1001,7 @@ DEF_PRIMITIVE(string_subscript)
 
   if (IS_NUM(args[1]))
   {
-    int index = validateIndex(vm, args, string->length, 1, "Subscript");
+    int index = validateIndex(vm, args[1], string->length, "Subscript");
     if (index == -1) return PRIM_ERROR;
 
     RETURN_VAL(wrenStringCodePointAt(vm, string, index));
@@ -1029,7 +1014,7 @@ DEF_PRIMITIVE(string_subscript)
 
   int step;
   uint32_t count = string->length;
-  int start = calculateRange(vm, args, AS_RANGE(args[1]), &count, &step);
+  int start = calculateRange(vm, AS_RANGE(args[1]), &count, &step);
   if (start == -1) return PRIM_ERROR;
 
   RETURN_VAL(wrenNewStringFromRange(vm, string, start, count, step));
@@ -1146,6 +1131,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "isDone", fiber_isDone);
   PRIMITIVE(vm->fiberClass, "transfer()", fiber_transfer);
   PRIMITIVE(vm->fiberClass, "transfer(_)", fiber_transfer1);
+  PRIMITIVE(vm->fiberClass, "transferError(_)", fiber_transferError);
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
 
   vm->fnClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fn"));

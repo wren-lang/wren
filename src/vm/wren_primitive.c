@@ -2,85 +2,86 @@
 
 #include <math.h>
 
-bool validateFn(WrenVM* vm, Value* args, int index, const char* argName)
+// Validates that [value] is an integer within `[0, count)`. Also allows
+// negative indices which map backwards from the end. Returns the valid positive
+// index value. If invalid, reports an error and returns `UINT32_MAX`.
+static uint32_t validateIndexValue(WrenVM* vm, uint32_t count, double value,
+                                   const char* argName)
 {
-  if (IS_FN(args[index]) || IS_CLOSURE(args[index])) return true;
-
-  args[0] = wrenStringFormat(vm, "$ must be a function.", argName);
-  return false;
-}
-
-bool validateNum(WrenVM* vm, Value* args, int index, const char* argName)
-{
-  if (IS_NUM(args[index])) return true;
-
-  args[0] = wrenStringFormat(vm, "$ must be a number.", argName);
-  return false;
-}
-
-bool validateIntValue(WrenVM* vm, Value* args, double value,
-                      const char* argName)
-{
-  if (trunc(value) == value) return true;
-
-  args[0] = wrenStringFormat(vm, "$ must be an integer.", argName);
-  return false;
-}
-
-bool validateInt(WrenVM* vm, Value* args, int index, const char* argName)
-{
-  // Make sure it's a number first.
-  if (!validateNum(vm, args, index, argName)) return false;
-
-  return validateIntValue(vm, args, AS_NUM(args[index]), argName);
-}
-
-uint32_t validateIndexValue(WrenVM* vm, Value* args, uint32_t count,
-                            double value, const char* argName)
-{
-  if (!validateIntValue(vm, args, value, argName)) return UINT32_MAX;
-
+  if (!validateIntValue(vm, value, argName)) return UINT32_MAX;
+  
   // Negative indices count from the end.
   if (value < 0) value = count + value;
-
+  
   // Check bounds.
   if (value >= 0 && value < count) return (uint32_t)value;
-
-  args[0] = wrenStringFormat(vm, "$ out of bounds.", argName);
+  
+  vm->fiber->error = wrenStringFormat(vm, "$ out of bounds.", argName);
   return UINT32_MAX;
 }
 
-bool validateKey(WrenVM* vm, Value* args, int index)
+bool validateFn(WrenVM* vm, Value arg, const char* argName)
 {
-  Value arg = args[index];
+  if (IS_FN(arg) || IS_CLOSURE(arg)) return true;
+
+  vm->fiber->error = wrenStringFormat(vm, "$ must be a function.", argName);
+  return false;
+}
+
+bool validateNum(WrenVM* vm, Value arg, const char* argName)
+{
+  if (IS_NUM(arg)) return true;
+
+  vm->fiber->error = wrenStringFormat(vm, "$ must be a number.", argName);
+  return false;
+}
+
+bool validateIntValue(WrenVM* vm, double value, const char* argName)
+{
+  if (trunc(value) == value) return true;
+
+  vm->fiber->error = wrenStringFormat(vm, "$ must be an integer.", argName);
+  return false;
+}
+
+bool validateInt(WrenVM* vm, Value arg, const char* argName)
+{
+  // Make sure it's a number first.
+  if (!validateNum(vm, arg, argName)) return false;
+
+  return validateIntValue(vm, AS_NUM(arg), argName);
+}
+
+bool validateKey(WrenVM* vm, Value arg)
+{
   if (IS_BOOL(arg) || IS_CLASS(arg) || IS_FIBER(arg) || IS_NULL(arg) ||
       IS_NUM(arg) || IS_RANGE(arg) || IS_STRING(arg))
   {
     return true;
   }
 
-  args[0] = CONST_STRING(vm, "Key must be a value type or fiber.");
+  vm->fiber->error = CONST_STRING(vm, "Key must be a value type or fiber.");
   return false;
 }
 
-uint32_t validateIndex(WrenVM* vm, Value* args, uint32_t count, int arg,
+uint32_t validateIndex(WrenVM* vm, Value arg, uint32_t count,
                        const char* argName)
 {
-  if (!validateNum(vm, args, arg, argName)) return UINT32_MAX;
+  if (!validateNum(vm, arg, argName)) return UINT32_MAX;
 
-  return validateIndexValue(vm, args, count, AS_NUM(args[arg]), argName);
+  return validateIndexValue(vm, count, AS_NUM(arg), argName);
 }
 
-bool validateString(WrenVM* vm, Value* args, int index, const char* argName)
+bool validateString(WrenVM* vm, Value arg, const char* argName)
 {
-  if (IS_STRING(args[index])) return true;
+  if (IS_STRING(arg)) return true;
 
-  args[0] = wrenStringFormat(vm, "$ must be a string.", argName);
+  vm->fiber->error = wrenStringFormat(vm, "$ must be a string.", argName);
   return false;
 }
 
-uint32_t calculateRange(WrenVM* vm, Value* args, ObjRange* range,
-                        uint32_t* length, int* step)
+uint32_t calculateRange(WrenVM* vm, ObjRange* range, uint32_t* length,
+                        int* step)
 {
   *step = 0;
 
@@ -92,13 +93,12 @@ uint32_t calculateRange(WrenVM* vm, Value* args, ObjRange* range,
     return 0;
   }
 
-  uint32_t from = validateIndexValue(vm, args, *length, range->from,
-                                     "Range start");
+  uint32_t from = validateIndexValue(vm, *length, range->from, "Range start");
   if (from == UINT32_MAX) return UINT32_MAX;
 
   // Bounds check the end manually to handle exclusive ranges.
   double value = range->to;
-  if (!validateIntValue(vm, args, value, "Range end")) return UINT32_MAX;
+  if (!validateIntValue(vm, value, "Range end")) return UINT32_MAX;
 
   // Negative indices count from the end.
   if (value < 0) value = *length + value;
@@ -121,7 +121,7 @@ uint32_t calculateRange(WrenVM* vm, Value* args, ObjRange* range,
   // Check bounds.
   if (value < 0 || value >= *length)
   {
-    args[0] = CONST_STRING(vm, "Range end out of bounds.");
+    vm->fiber->error = CONST_STRING(vm, "Range end out of bounds.");
     return UINT32_MAX;
   }
 

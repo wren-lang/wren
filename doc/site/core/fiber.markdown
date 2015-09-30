@@ -134,3 +134,7 @@ run. This returns `false` if the fiber is currently running or has yielded.
 ### **transfer**(value)
 
 **TODO**
+
+### **transferError**(error)
+
+**TODO**

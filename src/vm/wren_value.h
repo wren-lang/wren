@@ -233,8 +233,8 @@ typedef struct sObjFiber
   struct sObjFiber* caller;
 
   // If the fiber failed because of a runtime error, this will contain the
-  // error message. Otherwise, it will be NULL.
-  ObjString* error;
+  // error object. Otherwise, it will be null.
+  Value error;
 
   // A unique-ish numeric ID for the fiber. Lets fibers be used as map keys.
   // Unique-ish since IDs may overflow and wrap around.

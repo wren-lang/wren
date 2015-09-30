@@ -166,7 +166,7 @@ void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn)
   fiber->stackTop = fiber->stack;
   fiber->openUpvalues = NULL;
   fiber->caller = NULL;
-  fiber->error = NULL;
+  fiber->error = NULL_VAL;
   fiber->callerIsTrying = false;
 
   // Initialize the first call frame.
@@ -922,7 +922,7 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
 
   // The caller.
   wrenMarkObj(vm, (Obj*)fiber->caller);
-  wrenMarkObj(vm, (Obj*)fiber->error);
+  wrenMarkValue(vm, fiber->error);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFiber);

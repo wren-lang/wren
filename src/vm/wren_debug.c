@@ -4,7 +4,16 @@
 
 void wrenDebugPrintStackTrace(ObjFiber* fiber)
 {
-  fprintf(stderr, "%s\n", fiber->error->value);
+  if (IS_STRING(fiber->error))
+  {
+    fprintf(stderr, "%s\n", AS_CSTRING(fiber->error));
+  }
+  else
+  {
+    // TODO: Print something a little useful here. Maybe the name of the error's
+    // class?
+    fprintf(stderr, "[error object]\n");
+  }
 
   for (int i = fiber->numFrames - 1; i >= 0; i--)
   {
