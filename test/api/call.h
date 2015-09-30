@@ -1,3 +1,3 @@
 #include "wren.h"
 
-WrenForeignMethodFn callBindMethod(const char* signature);
+void callRunTests(WrenVM* vm);

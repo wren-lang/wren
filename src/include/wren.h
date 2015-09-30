@@ -1,6 +1,7 @@
 #ifndef wren_h
 #define wren_h
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -223,12 +224,17 @@ WrenValue* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
 //         release the value. If the passed argument is NULL, this becomes a
 //         Wren NULL.
 //
-// [method] must have been created by a call to [wrenGetMethod]. If [result] is
-// not `NULL`, the return value of the method will be stored in a new
-// [WrenValue] that [result] will point to. Don't forget to release it, when
-// done with it.
-WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method, WrenValue** result,
+// [method] must have been created by a call to [wrenGetMethod]. If
+// [returnValue] is not `NULL`, the return value of the method will be stored
+// in a new [WrenValue] that [returnValue] will point to. Don't forget to
+// release it, when done with it.
+WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method,
+                             WrenValue** returnValue,
                              const char* argTypes, ...);
+
+WrenInterpretResult wrenCallVarArgs(WrenVM* vm, WrenValue* method,
+                                    WrenValue** returnValue,
+                                    const char* argTypes, va_list args);
 
 // Releases the reference stored in [value]. After calling this, [value] can no
 // longer be used.

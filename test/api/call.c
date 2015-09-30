@@ -3,7 +3,7 @@
 #include "call.h"
 #include "vm.h"
 
-static void runTests(WrenVM* vm)
+void callRunTests(WrenVM* vm)
 {
   WrenValue* noParams = wrenGetMethod(vm, "main", "Api", "noParams");
   WrenValue* zero = wrenGetMethod(vm, "main", "Api", "zero()");
@@ -39,12 +39,3 @@ static void runTests(WrenVM* vm)
   wrenReleaseValue(vm, getValue);
   wrenReleaseValue(vm, value);
 }
-
-
-WrenForeignMethodFn callBindMethod(const char* signature)
-{
-  if (strcmp(signature, "static Api.runTests()") == 0) return runTests;
-
-  return NULL;
-}
-

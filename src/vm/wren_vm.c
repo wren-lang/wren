@@ -71,9 +71,6 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   wrenPopRoot(vm); // name.
 
   wrenInitializeCore(vm);
-  #if WREN_USE_LIB_IO
-    wrenLoadIOLibrary(vm);
-  #endif
   #if WREN_USE_LIB_META
     wrenLoadMetaLibrary(vm);
   #endif
@@ -1316,19 +1313,30 @@ WrenValue* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
   return method;
 }
 
-WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method, WrenValue** result,
+WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method,
+                             WrenValue** returnValue,
                              const char* argTypes, ...)
+{
+  va_list args;
+  va_start(args, argTypes);
+  WrenInterpretResult result = wrenCallVarArgs(vm, method, returnValue,
+                                               argTypes, args);
+  va_end(args);
+  
+  return result;
+}
+
+WrenInterpretResult wrenCallVarArgs(WrenVM* vm, WrenValue* method,
+                                    WrenValue** returnValue,
+                                    const char* argTypes, va_list args)
 {
   // TODO: Validate that the number of arguments matches what the method
   // expects.
-
+  
   ASSERT(IS_FIBER(method->value), "Value must come from wrenGetMethod().");
   ObjFiber* fiber = AS_FIBER(method->value);
-
+  
   // Push the arguments.
-  va_list argList;
-  va_start(argList, argTypes);
-
   for (const char* argType = argTypes; *argType != '\0'; argType++)
   {
     Value value = NULL_VAL;
@@ -1336,53 +1344,65 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method, WrenValue** result,
     {
       case 'a':
       {
-        const char* bytes = va_arg(argList, const char*);
-        int length = va_arg(argList, int);
+        const char* bytes = va_arg(args, const char*);
+        int length = va_arg(args, int);
         value = wrenNewString(vm, bytes, (size_t)length);
         break;
       }
         
-      case 'b': value = BOOL_VAL(va_arg(argList, int)); break;
-      case 'd': value = NUM_VAL(va_arg(argList, double)); break;
-      case 'i': value = NUM_VAL((double)va_arg(argList, int)); break;
-      case 'n': value = NULL_VAL; va_arg(argList, void*); break;
+      case 'b': value = BOOL_VAL(va_arg(args, int)); break;
+      case 'd': value = NUM_VAL(va_arg(args, double)); break;
+      case 'i': value = NUM_VAL((double)va_arg(args, int)); break;
+      case 'n': value = NULL_VAL; va_arg(args, void*); break;
       case 's':
-        value = wrenStringFormat(vm, "$", va_arg(argList, const char*));
+        value = wrenStringFormat(vm, "$", va_arg(args, const char*));
         break;
-
+        
       case 'v':
       {
         // Allow a NULL value pointer for Wren null.
-        WrenValue* wrenValue = va_arg(argList, WrenValue*);
+        WrenValue* wrenValue = va_arg(args, WrenValue*);
         if (wrenValue != NULL) value = wrenValue->value;
         break;
       }
-
+        
       default:
         ASSERT(false, "Unknown argument type.");
         break;
     }
-
+    
     *fiber->stackTop++ = value;
   }
-
-  va_end(argList);
-
+  
   Value receiver = fiber->stack[0];
   Obj* fn = fiber->frames[0].fn;
-
-  // TODO: How does this handle a runtime error occurring?
-  runInterpreter(vm, fiber);
-
-  if (result != NULL) *result = wrenCaptureValue(vm, fiber->stack[0]);
-
-  // Reset the fiber to get ready for the next call.
-  wrenResetFiber(vm, fiber, fn);
-
-  // Push the receiver back on the stack.
-  *fiber->stackTop++ = receiver;
-
-  return WREN_RESULT_SUCCESS;
+  wrenPushRoot(vm, (Obj*)fn);
+  
+  WrenInterpretResult result = runInterpreter(vm, fiber);
+  
+  if (result == WREN_RESULT_SUCCESS)
+  {
+    if (returnValue != NULL)
+    {
+      // Make sure the return value doesn't get collected while capturing it.
+      fiber->stackTop++;
+      *returnValue = wrenCaptureValue(vm, fiber->stack[0]);
+    }
+    
+    // Reset the fiber to get ready for the next call.
+    wrenResetFiber(vm, fiber, fn);
+    
+    // Push the receiver back on the stack.
+    *fiber->stackTop++ = receiver;
+  }
+  else
+  {
+    if (returnValue != NULL) *returnValue = NULL;
+  }
+  
+  wrenPopRoot(vm);
+  
+  return result;
 }
 
 WrenValue* wrenCaptureValue(WrenVM* vm, Value value)

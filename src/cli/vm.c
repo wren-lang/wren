@@ -12,6 +12,7 @@ static WrenVM* vm;
 
 static WrenBindForeignMethodFn bindMethodFn = NULL;
 static WrenBindForeignClassFn bindClassFn = NULL;
+static WrenForeignMethodFn afterLoadFn = NULL;
 
 static uv_loop_t* loop;
 
@@ -204,6 +205,8 @@ void runFile(const char* path)
 
   WrenInterpretResult result = wrenInterpret(vm, path, source);
 
+  if (afterLoadFn != NULL) afterLoadFn(vm);
+  
   if (result == WREN_RESULT_SUCCESS)
   {
     uv_run(loop, UV_RUN_DEFAULT);
@@ -260,8 +263,10 @@ uv_loop_t* getLoop()
 }
 
 void setTestCallbacks(WrenBindForeignMethodFn bindMethod,
-                      WrenBindForeignClassFn bindClass)
+                      WrenBindForeignClassFn bindClass,
+                      WrenForeignMethodFn afterLoad)
 {
   bindMethodFn = bindMethod;
   bindClassFn = bindClass;
+  afterLoadFn = afterLoad;
 }

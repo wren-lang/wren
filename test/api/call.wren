@@ -27,11 +27,8 @@ class Api {
     // Otherwise print it.
     System.print(value)
   }
-
-  foreign static runTests()
 }
 
-Api.runTests()
 // expect: noParams
 // expect: zero
 // expect: one 1
