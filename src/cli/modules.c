@@ -7,7 +7,14 @@
 #include "scheduler.wren.inc"
 #include "timer.wren.inc"
 
-extern void fileStartSize(WrenVM* vm);
+extern void fileAllocate(WrenVM* vm);
+extern void fileFinalize(WrenVM* vm);
+extern void fileOpen(WrenVM* vm);
+extern void fileSizePath(WrenVM* vm);
+extern void fileClose(WrenVM* vm);
+extern void fileDescriptor(WrenVM* vm);
+extern void fileReadBytes(WrenVM* vm);
+extern void fileSize(WrenVM* vm);
 extern void schedulerCaptureMethods(WrenVM* vm);
 extern void timerStartTimer(WrenVM* vm);
 
@@ -19,7 +26,7 @@ extern void timerStartTimer(WrenVM* vm);
 // If you add a new method to the longest class below, make sure to bump this.
 // Note that it also includes an extra slot for the sentinel value indicating
 // the end of the list.
-#define MAX_METHODS_PER_CLASS 2
+#define MAX_METHODS_PER_CLASS 9
 
 // The maximum number of foreign classes a single built-in module defines.
 //
@@ -75,7 +82,14 @@ static ModuleRegistry modules[] =
 {
   MODULE(io)
     CLASS(File)
-      STATIC_METHOD("startSize_(_,_)", fileStartSize)
+      STATIC_METHOD("<allocate>", fileAllocate)
+      STATIC_METHOD("<finalize>", fileFinalize)
+      STATIC_METHOD("open_(_,_)", fileOpen)
+      STATIC_METHOD("sizePath_(_,_)", fileSizePath)
+      METHOD("close_(_)", fileClose)
+      METHOD("descriptor", fileDescriptor)
+      METHOD("readBytes_(_,_)", fileReadBytes)
+      METHOD("size_(_)", fileSize)
     END_CLASS
   END_MODULE
   
