@@ -260,7 +260,7 @@ typedef enum
 
 } PrimitiveResult;
 
-typedef PrimitiveResult (*Primitive)(WrenVM* vm, ObjFiber* fiber, Value* args);
+typedef PrimitiveResult (*Primitive)(WrenVM* vm, Value* args);
 
 // TODO: See if it's actually a perf improvement to have this in a separate
 // struct instead of in ObjFn.

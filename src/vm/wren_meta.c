@@ -13,7 +13,7 @@ DEF_PRIMITIVE(meta_eval)
   if (!validateString(vm, args[1], "Source code")) return PRIM_FIBER;
 
   // Eval the code in the module where the calling function was defined.
-  Value callingFn = OBJ_VAL(fiber->frames[fiber->numFrames - 1].fn);
+  Value callingFn = OBJ_VAL(vm->fiber->frames[vm->fiber->numFrames - 1].fn);
   ObjModule* module = IS_FN(callingFn)
       ? AS_FN(callingFn)->module
       : AS_CLOSURE(callingFn)->fn->module;
@@ -30,7 +30,7 @@ DEF_PRIMITIVE(meta_eval)
   ObjFiber* evalFiber = wrenNewFiber(vm, (Obj*)fn);
 
   // Remember what fiber to return to.
-  evalFiber->caller = fiber;
+  evalFiber->caller = vm->fiber;
 
   // Switch to the fiber.
   vm->fiber = evalFiber;

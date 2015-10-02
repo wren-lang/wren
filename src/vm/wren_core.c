@@ -133,7 +133,7 @@ DEF_PRIMITIVE(fiber_call1)
 
 DEF_PRIMITIVE(fiber_current)
 {
-  RETURN_OBJ(fiber);
+  RETURN_OBJ(vm->fiber);
 }
 
 DEF_PRIMITIVE(fiber_error)
@@ -174,6 +174,7 @@ DEF_PRIMITIVE(fiber_transferError)
 
 DEF_PRIMITIVE(fiber_try)
 {
+  ObjFiber* current = vm->fiber;
   ObjFiber* tried = AS_FIBER(args[0]);
   // TODO: Use runFiber().
   if (tried->numFrames == 0) RETURN_ERROR("Cannot try a finished fiber.");
@@ -182,7 +183,7 @@ DEF_PRIMITIVE(fiber_try)
   vm->fiber = tried;
   
   // Remember who ran it.
-  vm->fiber->caller = fiber;
+  vm->fiber->caller = current;
   vm->fiber->callerIsTrying = true;
 
   // If the fiber was yielded, make the yield call return null.
@@ -196,11 +197,12 @@ DEF_PRIMITIVE(fiber_try)
 
 DEF_PRIMITIVE(fiber_yield)
 {
-  vm->fiber = fiber->caller;
+  ObjFiber* current = vm->fiber;
+  vm->fiber = current->caller;
   
   // Unhook this fiber from the one that called it.
-  fiber->caller = NULL;
-  fiber->callerIsTrying = false;
+  current->caller = NULL;
+  current->callerIsTrying = false;
 
   if (vm->fiber != NULL)
   {
@@ -213,11 +215,12 @@ DEF_PRIMITIVE(fiber_yield)
 
 DEF_PRIMITIVE(fiber_yield1)
 {
-  vm->fiber = fiber->caller;
+  ObjFiber* current = vm->fiber;
+  vm->fiber = current->caller;
   
   // Unhook this fiber from the one that called it.
-  fiber->caller = NULL;
-  fiber->callerIsTrying = false;
+  current->caller = NULL;
+  current->callerIsTrying = false;
 
   if (vm->fiber != NULL)
   {
@@ -228,7 +231,7 @@ DEF_PRIMITIVE(fiber_yield1)
     // call in its stack. Since Fiber.yield(value) has two arguments (the Fiber
     // class and the value) and we only need one slot for the result, discard
     // the other slot now.
-    fiber->stackTop--;
+    current->stackTop--;
   }
 
   return PRIM_FIBER;

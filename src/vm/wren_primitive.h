@@ -19,7 +19,7 @@
 // the actual type signature of a primitive function and makes it clear which C
 // functions are invoked as primitives.
 #define DEF_PRIMITIVE(name) \
-    static PrimitiveResult prim_##name(WrenVM* vm, ObjFiber* fiber, Value* args)
+    static PrimitiveResult prim_##name(WrenVM* vm, Value* args)
 
 #define RETURN_VAL(value)   do { args[0] = value; return PRIM_VALUE; } while (0)
 

@@ -897,7 +897,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         case METHOD_PRIMITIVE:
         {
           // After calling this, the result will be in the first arg slot.
-          switch (method->fn.primitive(vm, fiber, args))
+          switch (method->fn.primitive(vm, args))
           {
             case PRIM_VALUE:
               // The result is now in the first arg slot. Discard the other
