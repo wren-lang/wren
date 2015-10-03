@@ -702,10 +702,10 @@ static int readHexEscape(Parser* parser, int digits, const char* description)
   return value;
 }
 
-// Reads a four hex digit Unicode escape sequence in a string literal.
-static void readUnicodeEscape(Parser* parser, ByteBuffer* string)
+// Reads a hex digit Unicode escape sequence in a string literal.
+static void readUnicodeEscape(Parser* parser, ByteBuffer* string, int length)
 {
-  int value = readHexEscape(parser, 4, "Unicode");
+  int value = readHexEscape(parser, length, "Unicode");
 
   // Grow the buffer enough for the encoded result.
   int numBytes = wrenUtf8EncodeNumBytes(value);
@@ -750,8 +750,8 @@ static void readString(Parser* parser)
         case 'n':  wrenByteBufferWrite(parser->vm, &string, '\n'); break;
         case 'r':  wrenByteBufferWrite(parser->vm, &string, '\r'); break;
         case 't':  wrenByteBufferWrite(parser->vm, &string, '\t'); break;
-        case 'u':  readUnicodeEscape(parser, &string); break;
-          // TODO: 'U' for 8 octet Unicode escapes.
+        case 'u':  readUnicodeEscape(parser, &string, 4); break;
+        case 'U':  readUnicodeEscape(parser, &string, 8); break;
         case 'v':  wrenByteBufferWrite(parser->vm, &string, '\v'); break;
         case 'x':
           wrenByteBufferWrite(parser->vm, &string,

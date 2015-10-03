@@ -14,4 +14,11 @@ System.print("\u0b83")     // expect: ஃ
 System.print("\u00B6")     // expect: ¶
 System.print("\u00DE")     // expect: Þ
 
-// TODO: Syntax for Unicode escapes > 0xffff?
+// Big escapes:
+var smile = "\U0001F603"
+var byteSmile = "\xf0\x9f\x98\x83"
+System.print(byteSmile == smile) // expect: true
+
+System.print("<\U0001F64A>")       // expect: <🙊>
+System.print("<\U0001F680>")       // expect: <🚀>
+System.print("<\U00010318>")       // expect: <𐌘>
