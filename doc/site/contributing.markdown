@@ -2,13 +2,13 @@
 ^category reference
 
 It should be obvious by now that Wren is under active development and there's
-lots left to do. I am delighted to have you participate.
+lots left to do. We'd be delighted to have you participate.
 
 ## Getting acquainted
 
 [Pull requests][pull request] and [bug reports][issue] are always welcome. But,
 if you'd like to dip your toes in the water before diving in, please join
-[the mailing list][list] and say, "Hi". There's no strangers to Wren, just
+ [the mailing list][list] and say, "Hi". There's no strangers to Wren, just
 friends we haven't met yet.
 
 ## The source
