@@ -2,7 +2,7 @@
 ^category language
 
 Control flow is used to determine which chunks of code are executed and how
-many times. *Branching* statements deciding whether or not to execute some code
+many times. *Branching* statements decide whether or not to execute some code
 and *looping* ones execute something more than once.
 
 ## Truth
@@ -30,14 +30,14 @@ values.
 The simplest branching statement, `if` lets you conditionally skip a chunk of
 code. It looks like this:
 
-    :::dart
+    :::wren
     if (ready) System.print("go!")
 
 That evaluates the parenthesized expression after `if`. If it's true, then the
 statement after the condition is evaluated. Otherwise it is skipped. Instead of
 a statement, you can have a [block](syntax.html#blocks):
 
-    :::dart
+    :::wren
     if (ready) {
       System.print("getSet")
       System.print("go!")
@@ -46,12 +46,12 @@ a statement, you can have a [block](syntax.html#blocks):
 You may also provide an `else` branch. It will be executed if the condition is
 false:
 
-    :::dart
+    :::wren
     if (ready) System.print("go!") else System.print("not ready!")
 
 And, of course, it can take a block too:
 
-    :::dart
+    :::wren
     if (ready) {
       System.print("go!")
     } else {
@@ -67,7 +67,7 @@ they should be familiar if you've used other imperative languages.
 The simplest, a `while` statement executes a chunk of code as long as a
 condition continues to hold. For example:
 
-    :::dart
+    :::wren
     // Hailstone sequence.
     var n = 27
     while (n != 1) {
@@ -87,18 +87,18 @@ The condition for a while loop can be any expression, and must be surrounded by
 parentheses. The body of the loop is usually a curly block but can also be a
 single statement:
 
-    :::dart
+    :::wren
     var n = 27
     while (n != 1) if (n % 2 == 0) n = n / 2 else n = 3 * n + 1
 
 ## For statements
 
 While statements are useful when you want to loop indefinitely or according to
-some complex condition. But in most cases, you're looping through a
-[list](lists.html), a series of numbers, or some other "sequence" object.
-That's what `for` is for. It looks like this:
+some complex condition. But in most cases, you're looping through
+a [list](lists.html), a series of numbers, or some other "sequence" object.
+That's what `for` is, uh, for. It looks like this:
 
-    :::dart
+    :::wren
     for (beatle in ["george", "john", "paul", "ringo"]) {
       System.print(beatle)
     }
@@ -122,7 +122,7 @@ and stop. To do that, you can use a `break` statement. It's just the `break`
 keyword all by itself. That will immediately exit out of the nearest enclosing
 `while` or `for` loop.
 
-    :::dart
+    :::wren
     for (i in [1, 2, 3, 4]) {
       System.print(i)
       if (i == 3) break
@@ -136,7 +136,7 @@ Lists are one common use for `for` loops, but sometimes you want to walk over a
 sequence of numbers, or loop a number of times. For that, you can create a
 [range](values.html#ranges), like so:
 
-    :::dart
+    :::wren
     for (i in 1..100) {
       System.print(i)
     }
@@ -144,7 +144,7 @@ sequence of numbers, or loop a number of times. For that, you can create a
 This loops over the numbers from 1 to 100, including 100 itself. If you want to
 leave off the last value, use three dots instead of two:
 
-    :::dart
+    :::wren
     for (i in 1...100) {
       System.print(i)
     }
@@ -159,21 +159,21 @@ series of numbers.
 ## The iterator protocol
 
 Lists and ranges cover the two most common kinds of loops, but you should also
-be able to define your own sequences. To enable that, the semantics of a `for`
+be able to define your own sequences. To enable that, the semantics of `for`
 are defined in terms of an "iterator protocol". The loop itself doesn't know
 anything about lists or ranges, it just knows how to call two particular
 methods on the object that resulted from evaluating the sequence expression.
 
 When you write a loop like this:
 
-    :::dart
+    :::wren
     for (i in 1..100) {
       System.print(i)
     }
 
 Wren sees it something like this:
 
-    :::dart
+    :::wren
     var iter_ = null
     var seq_ = 1..100
     while (iter_ = seq_.iterate(iter_)) {

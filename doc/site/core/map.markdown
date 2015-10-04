@@ -48,7 +48,7 @@ multiple times in the sequence.
 Gets the value associated with `key` in the map. If `key` is not present in the
 map, returns `null`.
 
-    :::dart
+    :::wren
     var map = {"george": "harrison", "ringo": "starr"}
     System.print(map["ringo"]) // "starr".
     System.print(map["pete"])  // "null".

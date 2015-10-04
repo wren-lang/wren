@@ -18,7 +18,7 @@ Like other scripting languages, Wren has a single numeric type:
 double-precision floating point. Number literals look like you expect coming
 from other languages:
 
-    :::dart
+    :::wren
     0
     1234
     -5678
@@ -37,12 +37,12 @@ though.)
 
 String literals are surrounded in double quotes:
 
-    :::dart
+    :::wren
     "hi there"
 
 A handful of escape characters are supported:
 
-    :::dart
+    :::wren
     "\0" // The NUL byte: 0.
     "\"" // A double quote character.
     "\\" // A backslash.
@@ -56,29 +56,30 @@ A handful of escape characters are supported:
 
 A `\u` followed by four hex digits can be used to specify a Unicode code point:
 
-    :::dart
+    :::wren
     System.print("\u0041\u0b83\u00DE") // "AஃÞ"
 
 A `\x` followed by two hex digits specifies a single unencoded byte:
 
+    :::wren
     System.print("\x48\x69\x2e") // "Hi."
 
 Strings are instances of class [String](core/string.html).
 
 ## Ranges
 
-A range is a little object that represents a consecutive range of integers.
+A range is a little object that represents a consecutive range of numbers.
 They don't have their own dedicated literal syntax. Instead, the number class
 implements the `..` and `...` [operators](expressions.html#operators) to create
 them:
 
-    :::dart
+    :::wren
     3..8
 
 This creates a range from three to eight, including eight itself. If you want a
 half-inclusive range, use `...`:
 
-    :::dart
+    :::wren
     4...6
 
 This creates a range from four to six *not* including six itself. Ranges are
@@ -87,7 +88,7 @@ sequences of numbers, but are useful in other places too. You can pass them to
 a [list](lists.html)'s subscript operator to return a subset of the list, for
 example:
 
-    :::dart
+    :::wren
     var list = ["a", "b", "c", "d", "e"]
     var slice = list[1..3]
     System.print(slice) // ["b", "c", "d"]

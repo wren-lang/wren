@@ -2246,11 +2246,6 @@ static void super_(Compiler* compiler, bool allowAssignment)
   {
     error(compiler, "Cannot use 'super' outside of a method.");
   }
-  else if (enclosingClass->inStatic)
-  {
-    // TODO: Why not?
-    error(compiler, "Cannot use 'super' in a static method.");
-  }
 
   loadThis(compiler);
 

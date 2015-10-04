@@ -27,14 +27,14 @@ counting them as you go.
 Because counting code points is relatively slow, the indexes passed to string
 methods are *byte* offsets, not *code point* offsets. When you do:
 
-    :::dart
+    :::wren
     someString[3]
 
 That means "get the code point starting at *byte* three", not "get the third
 code point in the string". This sounds scary, but keep in mind that the methods
 on strings *return* byte indexes too. So, for example, this does what you want:
 
-    :::dart
+    :::wren
     var metalBand = "Fäcëhämmër"
     var hPosition = metalBand.indexOf("h")
     System.print(metalBand[hPosition]) // "h"
@@ -52,7 +52,7 @@ ignores any UTF-8 encoding and works directly at the byte level.
 
 Creates a new string containing the UTF-8 encoding of `codePoint`.
 
-    :::dart
+    :::wren
     String.fromCodePoint(8225) // "‡"
 
 It is a runtime error if `codePoint` is not an integer between `0` and
@@ -67,7 +67,7 @@ the string and ignore any UTF-8 encoding. In addition to the normal sequence
 methods, the returned object also has a subscript operator that can be used to
 directly index bytes.
 
-    :::dart
+    :::wren
     System.print("hello".bytes[1]) // 101, for "e".
 
 The `count` method on the returned sequence returns the number of bytes in the
@@ -81,7 +81,7 @@ code points of the string *as numbers*. Iteration and subscripting work similar
 to the string itself. The difference is that instead of returning
 single-character strings, this returns the numeric code point values.
 
-    :::dart
+    :::wren
     var string = "(ᵔᴥᵔ)"
     System.print(string.codePoints[0]) // 40, for "(".
     System.print(string.codePoints[4]) // 7461, for "ᴥ".
@@ -89,7 +89,7 @@ single-character strings, this returns the numeric code point values.
 If the byte at `index` does not begin a valid UTF-8 sequence, or the end of the
 string is reached before the sequence is complete, returns `-1`.
 
-    :::dart
+    :::wren
     var string = "(ᵔᴥᵔ)"
     System.print(string.codePoints[2]) // -1, in the middle of "ᵔ".
 
@@ -126,7 +126,7 @@ It is a runtime error if `search` is not a string.
 Implements the [iterator protocol](../control-flow.html#the-iterator-protocol)
 for iterating over the *code points* in the string:
 
-    :::dart
+    :::wren
     var codePoints = []
     for (c in "(ᵔᴥᵔ)") {
       codePoints.add(c)
@@ -161,7 +161,7 @@ Check if the string is not equal to `other`.
 
 Returns a string containing the code point starting at byte `index`.
 
-    :::dart
+    :::wren
     System.print("ʕ•ᴥ•ʔ"[5]) // "ᴥ".
 
 Since `ʕ` is two bytes in UTF-8 and `•` is three, the fifth byte points to the
@@ -170,7 +170,7 @@ bear's nose.
 If `index` points into the middle of a UTF-8 sequence or at otherwise invalid
 UTF-8, this returns a one-byte string containing the byte at that index:
 
-    :::dart
+    :::wren
     System.print("I ♥ NY"[3]) // One-byte string whose value is 153.
 
 It is a runtime error if `index` is greater than the number of bytes in the

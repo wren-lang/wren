@@ -91,7 +91,7 @@ def format_file(path, skip_up_to_date):
       else:
         contents = contents + line
 
-  html = markdown.markdown(contents, ['def_list', 'codehilite'])
+  html = markdown.markdown(contents, ['def_list', 'codehilite', 'smarty'])
 
   modified = datetime.fromtimestamp(os.path.getmtime(in_path))
   mod_str = modified.strftime('%B %d, %Y')

@@ -1,0 +1,7 @@
+setup.py
+Wren.egg-info/PKG-INFO
+Wren.egg-info/SOURCES.txt
+Wren.egg-info/dependency_links.txt
+Wren.egg-info/entry_points.txt
+Wren.egg-info/top_level.txt
+wren/__init__.py

@@ -12,10 +12,14 @@ static WrenVM* vm;
 
 static WrenBindForeignMethodFn bindMethodFn = NULL;
 static WrenBindForeignClassFn bindClassFn = NULL;
+static WrenForeignMethodFn afterLoadFn = NULL;
 
 static uv_loop_t* loop;
 
 static char const* rootDirectory = NULL;
+
+// The exit code to use unless some other error overrides it.
+int defaultExitCode = 0;
 
 // Reads the contents of the file at [path] and returns it as a heap allocated
 // string.
@@ -172,7 +176,7 @@ static void initVM()
 static void freeVM()
 {
   schedulerReleaseMethods();
-
+  
   uv_loop_close(loop);
   free(loop);
 
@@ -204,6 +208,8 @@ void runFile(const char* path)
 
   WrenInterpretResult result = wrenInterpret(vm, path, source);
 
+  if (afterLoadFn != NULL) afterLoadFn(vm);
+  
   if (result == WREN_RESULT_SUCCESS)
   {
     uv_run(loop, UV_RUN_DEFAULT);
@@ -217,6 +223,8 @@ void runFile(const char* path)
   // Exit with an error code if the script failed.
   if (result == WREN_RESULT_COMPILE_ERROR) exit(65); // EX_DATAERR.
   if (result == WREN_RESULT_RUNTIME_ERROR) exit(70); // EX_SOFTWARE.
+  
+  if (defaultExitCode != 0) exit(defaultExitCode);
 }
 
 int runRepl()
@@ -259,9 +267,16 @@ uv_loop_t* getLoop()
   return loop;
 }
 
-void setForeignCallbacks(
-    WrenBindForeignMethodFn bindMethod, WrenBindForeignClassFn bindClass)
+void setExitCode(int exitCode)
+{
+  defaultExitCode = exitCode;
+}
+
+void setTestCallbacks(WrenBindForeignMethodFn bindMethod,
+                      WrenBindForeignClassFn bindClass,
+                      WrenForeignMethodFn afterLoad)
 {
   bindMethodFn = bindMethod;
   bindClassFn = bindClass;
+  afterLoadFn = afterLoad;
 }

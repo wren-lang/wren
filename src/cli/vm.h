@@ -18,11 +18,15 @@ WrenVM* getVM();
 // Gets the event loop the VM is using.
 uv_loop_t* getLoop();
 
+// Set the exit code the CLI should exit with when done.
+void setExitCode(int exitCode);
+
 // Adds additional callbacks to use when binding foreign members from Wren.
 //
 // Used by the API test executable to let it wire up its own foreign functions.
 // This must be called before calling [createVM()].
-void setForeignCallbacks(WrenBindForeignMethodFn bindMethod,
-                         WrenBindForeignClassFn bindClass);
+void setTestCallbacks(WrenBindForeignMethodFn bindMethod,
+                      WrenBindForeignClassFn bindClass,
+                      void (*afterLoad)(WrenVM* vm));
 
 #endif

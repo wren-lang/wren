@@ -15,7 +15,7 @@ Prints a single newline to the console.
 Prints [object] to the console followed by a newline. If not already a string,
 the object is converted to a string by calling `toString` on it.
 
-    :::dart
+    :::wren
     System.print("I like bananas") // Prints "I like bananas".
 
 ### System.**printAll**(sequence)
@@ -23,7 +23,7 @@ the object is converted to a string by calling `toString` on it.
 Iterates over [sequence] and prints each element, then prints a single newline
 at the end. Each element is converted to a string by calling `toString` on it.
 
-    :::dart
+    :::wren
     System.printAll([1, [2, 3], 4]) // Prints "1[2, 3]4".
 
 ### System.**write**(object)
@@ -31,7 +31,7 @@ at the end. Each element is converted to a string by calling `toString` on it.
 Prints a single value to the console, but does not print a newline character
 afterwards. Converts the value to a string by calling `toString` on it.
 
-    :::dart
+    :::wren
     System.write(4 + 5) // Prints "9".
 
 In the above example, the result of `4 + 5` is printed, and then the prompt is

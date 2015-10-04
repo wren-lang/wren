@@ -233,8 +233,8 @@ typedef struct sObjFiber
   struct sObjFiber* caller;
 
   // If the fiber failed because of a runtime error, this will contain the
-  // error message. Otherwise, it will be NULL.
-  ObjString* error;
+  // error object. Otherwise, it will be null.
+  Value error;
 
   // A unique-ish numeric ID for the fiber. Lets fibers be used as map keys.
   // Unique-ish since IDs may overflow and wrap around.
@@ -246,23 +246,13 @@ typedef struct sObjFiber
   bool callerIsTrying;
 } ObjFiber;
 
-typedef enum
-{
-  // A normal value has been returned.
-  PRIM_VALUE,
-
-  // A runtime error occurred.
-  PRIM_ERROR,
-
-  // A new callframe has been pushed.
-  PRIM_CALL,
-
-  // A fiber is being switched to.
-  PRIM_RUN_FIBER
-
-} PrimitiveResult;
-
-typedef PrimitiveResult (*Primitive)(WrenVM* vm, ObjFiber* fiber, Value* args);
+// The type of a primitive function.
+//
+// Primitives are similiar to foreign functions, but have more direct access to
+// VM internals. It is passed the arguments in [args]. If it returns a value,
+// it places it in `args[0]` and returns `true`. If it causes a runtime error
+// or modifies the running fiber, it returns `false`.
+typedef bool (*Primitive)(WrenVM* vm, Value* args);
 
 // TODO: See if it's actually a perf improvement to have this in a separate
 // struct instead of in ObjFn.
@@ -354,6 +344,9 @@ typedef enum
 
   // A normal user-defined method.
   METHOD_BLOCK,
+  
+  // The special "call(...)" methods on function.
+  METHOD_FN_CALL,
 
   // No method for the given symbol.
   METHOD_NONE
@@ -369,7 +362,7 @@ typedef struct
   {
     Primitive primitive;
     WrenForeignMethodFn foreign;
-
+    
     // May be a [ObjFn] or [ObjClosure].
     Obj* obj;
   } fn;

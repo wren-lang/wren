@@ -1,8 +1,12 @@
 #ifndef modules_h
 #define modules_h
 
+// This wires up all of the foreign classes and methods defined by the built-in
+// modules bundled with the CLI.
+
 #include "wren.h"
 
+// Returns the source for built-in module [name].
 char* readBuiltInModule(const char* module);
 
 // Looks up a foreign method in a built-in module.

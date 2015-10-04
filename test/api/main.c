@@ -4,6 +4,7 @@
 #include "vm.h"
 #include "wren.h"
 
+#include "call.h"
 #include "foreign_class.h"
 #include "returns.h"
 #include "value.h"
@@ -56,6 +57,9 @@ static WrenForeignClassMethods bindForeignClass(
   return methods;
 }
 
+static void afterLoad(WrenVM* vm) {
+  if (strcmp(testName, "call") == 0) callRunTests(vm);
+}
 
 int main(int argc, const char* argv[])
 {
@@ -73,7 +77,7 @@ int main(int argc, const char* argv[])
   strcat(testPath, testName);
   strcat(testPath, ".wren");
 
-  setForeignCallbacks(bindForeignMethod, bindForeignClass);
+  setTestCallbacks(bindForeignMethod, bindForeignClass, afterLoad);
   runFile(testPath);
   return 0;
 }

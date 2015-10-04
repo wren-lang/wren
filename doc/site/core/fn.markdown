@@ -11,7 +11,7 @@ function, so this really just returns the argument. It exists mainly to let you
 create a "bare" function when you don't want to immediately pass it as a [block
 argument](../functions.html#block-arguments) to some other method.
 
-    :::dart
+    :::wren
     var fn = Fn.new {
       System.print("The body")
     }
@@ -24,7 +24,7 @@ It is a runtime error if `function` is not a function.
 
 The number of arguments the function requires.
 
-    :::dart
+    :::wren
     System.print(Fn.new {}.arity)             // 0.
     System.print(Fn.new {|a, b, c| a }.arity) // 3.
 
@@ -32,7 +32,7 @@ The number of arguments the function requires.
 
 Invokes the function with the given arguments.
 
-    :::dart
+    :::wren
     var fn = Fn.new { |arg|
       System.print(arg)
     }

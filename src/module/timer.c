@@ -4,7 +4,6 @@
 #include "uv.h"
 
 #include "scheduler.h"
-#include "timer.h"
 #include "vm.h"
 #include "wren.h"
 
@@ -26,7 +25,7 @@ static void timerCallback(uv_timer_t* handle)
   schedulerResume(fiber);
 }
 
-static void startTimer(WrenVM* vm)
+void timerStartTimer(WrenVM* vm)
 {
   int milliseconds = (int)wrenGetArgumentDouble(vm, 1);
   WrenValue* fiber = wrenGetArgumentValue(vm, 2);
@@ -37,14 +36,4 @@ static void startTimer(WrenVM* vm)
 
   uv_timer_init(getLoop(), handle);
   uv_timer_start(handle, timerCallback, milliseconds, 0);
-}
-
-WrenForeignMethodFn timerBindForeign(
-    WrenVM* vm, const char* className, bool isStatic, const char* signature)
-{
-  if (strcmp(className, "Timer") != 0) return NULL;
-
-  if (isStatic && strcmp(signature, "startTimer_(_,_)") == 0) return startTimer;
-
-  return NULL;
 }

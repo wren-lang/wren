@@ -13,7 +13,7 @@ stored in each instance.
 
 Classes are created using the `class` keyword, unsurprisingly:
 
-    :::dart
+    :::wren
     class Unicorn {}
 
 This creates a class named `Unicorn` with no methods or fields.
@@ -22,7 +22,7 @@ This creates a class named `Unicorn` with no methods or fields.
 
 To let our unicorn do stuff, we need to give it methods.
 
-    :::dart
+    :::wren
     class Unicorn {
       prance() {
         System.print("The unicorn prances in a fancy manner!")
@@ -32,7 +32,7 @@ To let our unicorn do stuff, we need to give it methods.
 This defines a `prance()` method that takes no arguments. To support
 parameters, put their names inside the parentheses:
 
-    :::dart
+    :::wren
     class Unicorn {
       prance(where, when) {
         System.print("The unicorn prances in " + where + " at " + when)
@@ -46,7 +46,7 @@ methods in a class with the same name, as long as they have a different
 *signature*. In technical terms, you can *overload by arity*. So this class is
 fine:
 
-    :::dart
+    :::wren
     class Unicorn {
       prance() {
         System.print("The unicorn prances in a fancy manner!")
@@ -63,7 +63,7 @@ fine:
 
 And you can call each of the methods like so:
 
-    :::dart
+    :::wren
     var unicorn = Unicorn.new()
     unicorn.prance()
     unicorn.prance("Antwerp")
@@ -82,13 +82,13 @@ treats them as different methods that you can implement separately.
 Many methods on a class exist to expose or compute some property of the object.
 For example:
 
-    :::dart
+    :::wren
     System.print("string".count) // "6".
 
 These *getters* are just another kind of method&mdash;one without a parameter
 list. You can define them like so:
 
-    :::dart
+    :::wren
     class Unicorn {
       isFancy { true } // Unicorns are always fancy.
     }
@@ -97,7 +97,7 @@ Whether or not a method name has parentheses is also part of its signature.
 This lets you distinguish between a method that takes an *empty* argument list
 (`()`) and no argument list at all:
 
-    :::dart
+    :::wren
     class Confusing {
       method { "no argument list" }
       method() { "empty argument list" }
@@ -115,14 +115,14 @@ Unlike other languages with "optional parentheses", Wren wants to make sure you
 call a getter like a getter and a `()` method like a `()` method. These don't
 work:
 
-    :::dart
+    :::wren
     "string".count()
     list.clear
 
 Methods that don't need arguments and don't modify the underlying object are
 usually getters:
 
-    :::dart
+    :::wren
     "string".count
     (1..10).min
     1.23.sin
@@ -131,7 +131,7 @@ usually getters:
 When a method doesn't need any parameters, but does modify the object, it's
 helpful to draw attention to that by requiring an empty set of parentheses:
 
-    :::dart
+    :::wren
     list.clear()
 
 Also, when a method supports multiple arities, it's typical to include the `()`
@@ -148,7 +148,7 @@ words, you can think of `a + b` as meaning `a.+(b)`.
 
 You can define operators in your class like so:
 
-    :::dart
+    :::wren
     class Unicorn {
       // Infix:
       +(other) {
@@ -163,7 +163,7 @@ You can define operators in your class like so:
 
 This can be used to define any of these operators:
 
-    :::dart
+    :::wren
     // Infix:
     +  -  *  /  %  <  >  <=  >=  ==  !=  &  |
 
@@ -188,7 +188,7 @@ Unicorns can prance around now, but we don't actually *have* any unicorns to do
 it. To create instances of a class, we need a *constructor*. You can define one
 like so:
 
-    :::dart
+    :::wren
     class Unicorn {
       construct new(name, color) {
         System.print("My name is " + name + " and I am " + color + ".")
@@ -201,13 +201,13 @@ word "new" isn't special to Wren, it's just a common constructor name.
 
 To make a unicorn now, we just call the constructor method on the class itself:
 
-    :::dart
+    :::wren
     var fred = Unicorn.new("Fred", "palomino")
 
 Giving constructors names is handy because it means you can have more than one,
 and each can clarify how it creates the instance:
 
-    :::dart
+    :::wren
     class Unicorn {
       construct brown(name) {
         System.print("My name is " + name + " and I am brown.")
@@ -229,7 +229,7 @@ constructors.
 
 A constructor is actually a pair of methods. You get a method on the class:
 
-    :::dart
+    :::wren
     Unicorn.brown("Dave")
 
 That creates the new instance, then it invokes the *initializer* on that
@@ -244,7 +244,7 @@ constructors, etc.
 All state stored in instances is stored in *fields*. Each field has a named
 that starts with an underscore.
 
-    :::dart
+    :::wren
     class Rectangle {
       area { _width * _height }
 
@@ -274,7 +274,7 @@ access fields on another instance of your own class, unlike C++ and Java.
 If you want to make a property of an object visible, you need to define a
 getter to expose it:
 
-    :::dart
+    :::wren
     class Rectangle {
       width { _width }
       height { _height }
@@ -284,7 +284,7 @@ getter to expose it:
 
 To allow outside code to modify the field, you'll also need to provide setters:
 
-    :::dart
+    :::wren
     class Rectangle {
       width=(value) { _width = value }
       height=(value) { _height = value }
@@ -305,7 +305,7 @@ A name that starts with *two* underscores is a *static* field. They work
 similar to [fields](#fields) except the data is stored on the class itself, and
 not the instance. They can be used in *both* instance and static methods.
 
-    :::dart
+    :::wren
     class Foo {
       // Set the static field.
       static set(a) {
@@ -325,19 +325,19 @@ not the instance. They can be used in *both* instance and static methods.
 
 Just like instance fields, static fields are initially `null`:
 
-    :::dart
+    :::wren
     System.print(Foo.bar) // null.
 
 They can be used from static methods:
 
-    :::dart
+    :::wren
     Foo.set("foo")
     System.print(Foo.bar) // foo.
 
 And also instance methods. When you do so, there is still only one static field
 shared among all instances of the class:
 
-    :::dart
+    :::wren
     var foo1 = Foo.new()
     var foo2 = Foo.new()
 
@@ -354,7 +354,7 @@ By default, any new class inherits from `Object`, which is the superclass from
 which all other classes ultimately descend. You can specify a different parent
 class using `is` when you declare the class:
 
-    :::dart
+    :::wren
     class Pegasus is Unicorn {}
 
 This declares a new class `Pegasus` that inherits from `Unicorn`.
@@ -366,7 +366,7 @@ The metaclass hierarchy does *not* parallel the regular class hierarchy. So, if
 `Unicorn`'s metaclass. In more prosaic terms, this means that static methods
 are not inherited.
 
-    :::dart
+    :::wren
     class Unicorn {
       // Unicorns cannot fly. :(
       static canFly { false }
@@ -378,7 +378,7 @@ are not inherited.
 
 This also means constructors are not inherited:
 
-    :::dart
+    :::wren
     class Unicorn {
       this new(name) {
         System.print("My name is " + name + ".")
@@ -395,7 +395,7 @@ instance methods on the new object.
 
 This means you can do `super` calls inside a constructor:
 
-    :::dart
+    :::wren
     class Unicorn {
       this new(name) {
         System.print("My name is " + name + ".")

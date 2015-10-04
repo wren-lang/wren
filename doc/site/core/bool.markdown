@@ -9,7 +9,7 @@ Boolean values. There are two instances, `true` and `false`.
 
 Returns the logical complement of the value.
 
-    :::dart
+    :::wren
     System.print(!true) // "false".
     System.print(!false) // "true".
 

@@ -26,7 +26,7 @@ When you run Wren and give it a file name to execute, the contents of that file
 define the "main" module that execution starts at. To load and execute other
 modules, you use an import statement:
 
-    :::dart
+    :::wren
     import "beverages" for Coffee, Tea
 
 This finds a module named "beverages" and executes its source code. Then, it
@@ -36,7 +36,7 @@ creates new variables in *this* module with their values.
 This statement can appear anywhere a variable declaration is allowed, even
 inside blocks:
 
-    :::dart
+    :::wren
     if (thirsty) {
       import "beverages" for Coffee, Tea
     }
@@ -44,7 +44,7 @@ inside blocks:
 If you want to load a module, but not bind any variables from it, you can omit
 the `for` clause:
 
-    :::dart
+    :::wren
     import "some_imperative_code"
 
 That's the basic idea. Now let's break it down into each of the steps it
@@ -99,7 +99,7 @@ the main module was loaded and looks for that file. So, let's say you run:
 
 And that main module has:
 
-    :::dart
+    :::wren
     import "some/module"
 
 Then the command-line VM will try to find `/code/some/module.wren`. By
@@ -137,7 +137,7 @@ These are simply variables declared outside of any
 These are visible to anything inside the module, but they can also be
 *exported* and used by other modules. When Wren executes an import like:
 
-    :::dart
+    :::wren
     import "beverages" for Coffee, Tea
 
 First it runs the "beverages" module. Then it goes through each of the variable
@@ -161,7 +161,7 @@ Earlier, I described a programs set of modules as a tree. Of course, it's only
 a *tree* of modules if there are no *shared imports*. But consider a program
 like:
 
-    :::dart
+    :::wren
     // main.wren
     import "a"
     import "b"
@@ -206,7 +206,7 @@ it will be found in the registry and the cycle is short-circuited.
 
 For example:
 
-    :::dart
+    :::wren
     // main.wren
     import "a"
 
@@ -230,7 +230,7 @@ This program runs successfully and prints:
 
 Where you have to be careful is binding variables. Consider:
 
-    :::dart
+    :::wren
     // main.wren
     import "a"
 
@@ -255,7 +255,7 @@ defined yet since "a.wren" is still sitting on the `import "b" for B` line
 before the declaration. To get this to work, you would need to move the
 variable declaration above the import:
 
-    :::dart
+    :::wren
     // main.wren
     import "a"
 

@@ -1,17 +1,17 @@
 ^title Variables
 ^category language
 
-Variables are named slots for storing values. You can define a new variable in
-Wren using a `var` statement, like so:
+Variables are named slots for storing values. You define a new variable in Wren
+using a `var` statement, like so:
 
-    :::dart
+    :::wren
     var a = 1 + 2
 
 This creates a new variable `a` in the current scope and initializes it with
 the result of the expression following the `=`. Once a variable has been
 defined, it can be accessed by name as you would expect.
 
-    :::dart
+    :::wren
     var animal = "Slow Loris"
     System.print(animal) // Prints "Slow Loris".
 
@@ -20,7 +20,7 @@ defined, it can be accessed by name as you would expect.
 Wren has true block scope: a variable exists from the point where it is defined
 until the end of the [block](syntax.html#blocks) where that definition appears.
 
-    :::dart
+    :::wren
     {
       System.print(a) // ERROR! a doesn't exist yet.
       var a = 123
@@ -34,7 +34,7 @@ Declaring a variable in an inner scope with the same name as an outer one is
 called *shadowing* and is not an error (although it's not something you likely
 intend to do much).
 
-    :::dart
+    :::wren
     var a = "outer"
     {
       var a = "inner"
@@ -44,7 +44,7 @@ intend to do much).
 
 Declaring a variable with the same name in the *same* scope *is* an error.
 
-    :::dart
+    :::wren
     var a = "hi"
     var a = "again" // ERROR!
 
@@ -52,7 +52,7 @@ Declaring a variable with the same name in the *same* scope *is* an error.
 
 After a variable has been declared, you can assign to it using `=`:
 
-    :::dart
+    :::wren
     var a = 123
     a = 234
 
@@ -63,7 +63,7 @@ doesn't roll with implicit variable definition.
 When used in a larger expression, an assignment expression evaluates to the
 assigned value.
 
-    :::dart
+    :::wren
     var a = "before"
     System.print(a = "after") // Prints "after".
 

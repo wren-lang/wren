@@ -12,43 +12,63 @@
 // one.
 static WrenValue* resume;
 static WrenValue* resumeWithArg;
+static WrenValue* resumeError;
 
-static void captureMethods(WrenVM* vm)
+void schedulerCaptureMethods(WrenVM* vm)
 {
   resume = wrenGetMethod(vm, "scheduler", "Scheduler", "resume_(_)");
   resumeWithArg = wrenGetMethod(vm, "scheduler", "Scheduler", "resume_(_,_)");
+  resumeError = wrenGetMethod(vm, "scheduler", "Scheduler", "resumeError_(_,_)");
 }
 
-WrenForeignMethodFn schedulerBindForeign(
-    WrenVM* vm, const char* className, bool isStatic, const char* signature)
+static void callResume(WrenValue* resumeMethod, WrenValue* fiber,
+                       const char* argTypes, ...)
 {
-  if (strcmp(className, "Scheduler") != 0) return NULL;
+  va_list args;
+  va_start(args, argTypes);
+  WrenInterpretResult result = wrenCallVarArgs(getVM(), resumeMethod, NULL,
+                                               argTypes, args);
+  va_end(args);
   
-  if (isStatic && strcmp(signature, "captureMethods_()") == 0) return captureMethods;
+  wrenReleaseValue(getVM(), fiber);
   
-  return NULL;
+  // If a runtime error occurs in response to an async operation and nothing
+  // catches the error in the fiber, then exit the CLI.
+  if (result == WREN_RESULT_RUNTIME_ERROR)
+  {
+    uv_stop(getLoop());
+    setExitCode(70); // EX_SOFTWARE.
+  }
 }
 
 void schedulerResume(WrenValue* fiber)
 {
-  wrenCall(getVM(), resume, NULL, "v", fiber);
-  wrenReleaseValue(getVM(), fiber);
+  callResume(resume, fiber, "v", fiber);
+}
+
+void schedulerResumeBytes(WrenValue* fiber, const char* bytes, size_t length)
+{
+  callResume(resumeWithArg, fiber, "va", fiber, bytes, length);
 }
 
 void schedulerResumeDouble(WrenValue* fiber, double value)
 {
-  wrenCall(getVM(), resumeWithArg, NULL, "vd", fiber, value);
-  wrenReleaseValue(getVM(), fiber);
+  callResume(resumeWithArg, fiber, "vd", fiber, value);
 }
 
 void schedulerResumeString(WrenValue* fiber, const char* text)
 {
-  wrenCall(getVM(), resumeWithArg, NULL, "vs", fiber, text);
-  wrenReleaseValue(getVM(), fiber);
+  callResume(resumeWithArg, fiber, "vs", fiber, text);
+}
+
+void schedulerResumeError(WrenValue* fiber, const char* error)
+{
+  callResume(resumeError, fiber, "vs", fiber, error);
 }
 
 void schedulerReleaseMethods()
 {
   if (resume != NULL) wrenReleaseValue(getVM(), resume);
   if (resumeWithArg != NULL) wrenReleaseValue(getVM(), resumeWithArg);
+  if (resumeError != NULL) wrenReleaseValue(getVM(), resumeError);
 }

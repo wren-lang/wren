@@ -8,7 +8,7 @@ Errors come in a few fun flavors.
 The first errors you're likely to run into are syntax errors. These include
 simple bugs where your code doesn't follow the language's grammar, like:
 
-    :::dart
+    :::wren
     1 + * 2
 
 Wren will detect these errors as soon as it tries to read your code. When it
@@ -21,7 +21,7 @@ Some slightly more "semantic" errors fall into this bucket too. Things like
 using a variable that hasn't been defined, or declaring two variables with the
 same name in the same scope. So if you do:
 
-    :::dart
+    :::wren
     var a = "once"
     var a = "twice"
 
@@ -49,7 +49,7 @@ perform an operation that the VM can't do. The most common error is a "method
 not found" one. If you call a method on an object and its class (and all of its
 superclasses) don't define that method, there's nothing Wren can do:
 
-    :::dart
+    :::wren
     class Foo {}
 
     var foo = Foo.new()
@@ -70,7 +70,7 @@ Another common runtime error is passing an argument of the wrong type to a
 method. For example, lists are indexed using a number. If you try to pass some
 other type, it's an error:
 
-    :::dart
+    :::wren
     var list = ["a", "b", "c"]
     list["1"]
 
@@ -102,7 +102,7 @@ error message as a string.
 
 For example, if you run this program:
 
-    :::dart
+    :::wren
     var fiber = Fiber.new {
       123.badMethod
     }
@@ -119,7 +119,7 @@ The called fiber can no longer be used, but any other fibers can proceed as
 usual. When a fiber has been aborted because of a runtime error, you can also
 get the error from the fiber object. Continuing the above example:
 
-    :::dart
+    :::wren
     System.print(fiber.error)
 
 This also prints:
@@ -137,7 +137,7 @@ Most runtime errors come from within the Wren VM, but you may want to be able
 to cause your own runtime errors to occur. This can be done by calling the
 `abort()` static method on `Fiber`:
 
-    :::dart
+    :::wren
     Fiber.abort("Something bad happened")
 
 You must pass in an error message, and it must be a string.

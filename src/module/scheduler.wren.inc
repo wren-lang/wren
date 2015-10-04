@@ -13,6 +13,7 @@ static const char* schedulerModuleSource =
 "  // Called by native code.\n"
 "  static resume_(fiber) { fiber.transfer() }\n"
 "  static resume_(fiber, arg) { fiber.transfer(arg) }\n"
+"  static resumeError_(fiber, error) { fiber.transferError(error) }\n"
 "\n"
 "  static runNextScheduled_() {\n"
 "    if (__scheduled == null || __scheduled.isEmpty) {\n"

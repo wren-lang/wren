@@ -20,7 +20,7 @@ Since that's the most common usage pattern, Wren's syntax optimizes for that.
 Taking a page from Ruby, a function is created by passing a *block argument* to
 a method. At its simplest, it looks like this:
 
-    :::dart
+    :::wren
     blondie.callMe {
       System.print("This is the body!")
     }
@@ -32,7 +32,7 @@ argument, a function whose body is the following
 Methods that take a block argument receive it as a normal parameter. `callMe`
 could be defined like so:
 
-    :::dart
+    :::wren
     class Blondie {
       callMe(fn) {
         // Call it...
@@ -42,7 +42,7 @@ could be defined like so:
 A method can take other arguments in addition to the block. They appear before
 the block just like a regular argument list. For example:
 
-    :::dart
+    :::wren
     blondie.callMeAt(867, 5309) {
       System.print("This is the body!")
     }
@@ -51,7 +51,7 @@ Of course, you don't *have* to use a block argument to pass a function to a
 method. If you already have a function object, you can pass it like a regular
 argument:
 
-    :::dart
+    :::wren
     var someFn = // Get a function...
     blondie.callMe(someFn)
 
@@ -60,7 +60,7 @@ little blob of syntax. There are some times when you want to create a function
 but *don't* need to pass it to a method. For that, you can call the `Fn`
 class's constructor:
 
-    :::dart
+    :::wren
     var someFn = Fn.new {
       System.print("Hi!")
     }
@@ -73,7 +73,7 @@ return that, so this exists purely as a convenience method for you.
 Once you have a function, how do you invoke it? Like everything in Wren, you do
 so by calling a method on it:
 
-    :::dart
+    :::wren
     class Blondie {
       callMe(fn) {
         fn.call()
@@ -84,7 +84,7 @@ Functions expose a `call()` method that executes the body of the function. This
 method is dynamically-dispatched like any other, so you can define your own
 "function-like" classes and pass them to methods that expect "real" functions.
 
-    :::dart
+    :::wren
     class FakeFn {
       call() {
         System.print("I'm feeling functional!")
@@ -100,7 +100,7 @@ functions that we've seen so far take no arguments. To change that, you can
 provide a parameter list surrounded by `|` immediately after the opening brace
 of the body, like so:
 
-    :::dart
+    :::wren
     blondie.callMe {|first, last|
       System.print("Hi, " + first + " " + last + "!")
     }
@@ -108,7 +108,7 @@ of the body, like so:
 Here we're passing a function to `greet` that takes two parameters, `first` and
 `last`. They are passed to the function when it's called:
 
-    :::dart
+    :::wren
     class Blondie {
       callMe(fn) {
         fn.call("Debbie", "Harry")
@@ -129,7 +129,7 @@ Otherwise, the body returns `null` by default. You can explicitly return a
 value using a `return` statement. In other words, these two functions do the
 same thing:
 
-    :::dart
+    :::wren
     Fn.new { "return value" }
 
     Fn.new {
@@ -142,7 +142,7 @@ As you expect, functions are closures&mdash;they can access variables defined
 outside of their scope. They will hold onto closed-over variables even after
 leaving the scope where the function is defined:
 
-    :::dart
+    :::wren
     class Counter {
       static create {
         var i = 0
@@ -155,7 +155,7 @@ function references a variable `i` declared outside of the function. Even after
 the function is returned from `create`, it is still able to read and assign
 to`i`:
 
-    :::dart
+    :::wren
     var counter = Counter.create
     System.print(counter.call()) // Prints "1".
     System.print(counter.call()) // Prints "2".

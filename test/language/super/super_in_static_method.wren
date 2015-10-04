@@ -1,5 +1,8 @@
 class Foo {
-  static method {
-    super // expect error
+  static name {
+    System.print("Foo.name") // expect: Foo.name
+    System.print(super)      // expect: Foo
   }
 }
+
+Foo.name

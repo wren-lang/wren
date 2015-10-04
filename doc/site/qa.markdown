@@ -54,7 +54,7 @@ Here's an example of that kind of object-oriented programming in Lua:
 
 Here's the same example in Wren:
 
-    :::dart
+    :::wren
     class Account {
       this new(balance) { _balance = balance }
       withdraw(amount) { _balance = _balance - amount }

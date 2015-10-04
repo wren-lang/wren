@@ -1,34 +1,34 @@
 # Top-level Makefile. This has targets for various utility things. To actually
-# compile Wren itself, it invokes script/wren.mk for the various configurations
+# compile Wren itself, it invokes util/wren.mk for the various configurations
 # that Wren can be built with.
 
 # Executables are built to bin/. Libraries are built to lib/.
 
 # A normal, optimized release build for the current CPU architecture.
 release:
-	@ $(MAKE) -f script/wren.mk
+	@ $(MAKE) -f util/wren.mk
 	@ cp bin/wren wren # For convenience, copy the interpreter to the top level.
 
 # A debug build for the current architecture.
 debug:
-	@ $(MAKE) -f script/wren.mk MODE=debug
+	@ $(MAKE) -f util/wren.mk MODE=debug
 
 # A release build of just the VM.
 vm:
-	@ $(MAKE) -f script/wren.mk vm
+	@ $(MAKE) -f util/wren.mk vm
 
 # Build all configurations.
 all: debug release
-	@ $(MAKE) -f script/wren.mk LANG=cpp
-	@ $(MAKE) -f script/wren.mk MODE=debug LANG=cpp
-	@ $(MAKE) -f script/wren.mk ARCH=32
-	@ $(MAKE) -f script/wren.mk LANG=cpp ARCH=32
-	@ $(MAKE) -f script/wren.mk MODE=debug ARCH=32
-	@ $(MAKE) -f script/wren.mk MODE=debug LANG=cpp ARCH=32
-	@ $(MAKE) -f script/wren.mk ARCH=64
-	@ $(MAKE) -f script/wren.mk LANG=cpp ARCH=64
-	@ $(MAKE) -f script/wren.mk MODE=debug ARCH=64
-	@ $(MAKE) -f script/wren.mk MODE=debug LANG=cpp ARCH=64
+	@ $(MAKE) -f util/wren.mk LANG=cpp
+	@ $(MAKE) -f util/wren.mk MODE=debug LANG=cpp
+	@ $(MAKE) -f util/wren.mk ARCH=32
+	@ $(MAKE) -f util/wren.mk LANG=cpp ARCH=32
+	@ $(MAKE) -f util/wren.mk MODE=debug ARCH=32
+	@ $(MAKE) -f util/wren.mk MODE=debug LANG=cpp ARCH=32
+	@ $(MAKE) -f util/wren.mk ARCH=64
+	@ $(MAKE) -f util/wren.mk LANG=cpp ARCH=64
+	@ $(MAKE) -f util/wren.mk MODE=debug ARCH=64
+	@ $(MAKE) -f util/wren.mk MODE=debug LANG=cpp ARCH=64
 
 # Remove all build outputs and intermediate files. Does not remove downloaded
 # dependencies. Use cleanall for that.
@@ -43,16 +43,16 @@ cleanall: clean
 
 # Run the tests against the debug build of Wren.
 test: debug
-	@ $(MAKE) -f script/wren.mk MODE=debug test
-	@ ./script/test.py $(suite)
+	@ $(MAKE) -f util/wren.mk MODE=debug test
+	@ ./util/test.py $(suite)
 
 # Generate the Wren site.
 docs:
-	@ ./script/generate_docs.py
+	@ ./util/generate_docs.py
 
 # Continuously generate the Wren site.
 watchdocs:
-	@ ./script/generate_docs.py --watch
+	@ ./util/generate_docs.py --watch
 
 # Build the docs and copy them to a local "gh-pages" directory.
 gh-pages: docs
@@ -60,6 +60,6 @@ gh-pages: docs
 
 # Build amalgamation of all Wren library files.
 amalgamation: src/include/wren.h src/vm/*.h src/vm/*.c
-	./script/generate_amalgamation.py > build/wren.c
+	./util/generate_amalgamation.py > build/wren.c
 
 .PHONY: all amalgamation builtin clean debug docs gh-pages release test vm watchdocs

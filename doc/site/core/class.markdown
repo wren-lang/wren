@@ -11,7 +11,7 @@ The name of the class.
 
 The superclass of this class.
 
-    :::dart
+    :::wren
     class Crustacean {}
     class Crab is Crustacean {}
 
@@ -19,10 +19,10 @@ The superclass of this class.
 
 A class with no explicit superclass implicitly inherits Object:
 
-    :::dart
+    :::wren
     System.print(Crustacean.supertype) // "Object".
 
 Object forms the root of the class hierarchy and has no supertype:
 
-    :::dart
+    :::wren
     System.print(Object.supertype) // "null".

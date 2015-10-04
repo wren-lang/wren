@@ -20,7 +20,7 @@ The value of π.
 
 The absolute value of the number.
 
-    :::dart
+    :::wren
     -123.abs // 123
 
 ### **acos**
@@ -44,7 +44,7 @@ numbers to determine the quadrant of the result.
 
 Rounds the number up to the nearest integer.
 
-    :::dart
+    :::wren
     1.5.ceil // 2
     (-3.2).ceil // -3
 
@@ -56,9 +56,25 @@ The cosine of the number.
 
 Rounds the number down to the nearest integer.
 
-    :::dart
+    :::wren
     1.5.floor    // 1
     (-3.2).floor // -4
+
+### **isInfinity**
+
+Whether the number is positive or negative infinity or not.
+
+    :::wren
+    99999.isInfinity  // false
+    (1/0).isInfinity  // true
+
+### **isInteger**
+
+Whether the number is an integer or has some fractional component.
+
+    :::wren
+    2.isInteger   // true
+    2.3.isInteger // false
 
 ### **isNan**
 
@@ -82,7 +98,7 @@ The tangent of the number.
 
 Negates the number.
 
-    :::dart
+    :::wren
     var a = 123
     -a // -123
 
@@ -127,10 +143,10 @@ It is a runtime error if `other` is not a number.
 
 ### **..**(other) operator
 
-Creates a [Range](core/range.html) representing a consecutive range of numbers
+Creates a [Range](range.html) representing a consecutive range of numbers
 from the beginning number to the ending number.
 
-    :::dart
+    :::wren
     var range = 1.2..3.4
     System.print(range.min)         // 1.2
     System.print(range.max)         // 3.4
@@ -138,10 +154,10 @@ from the beginning number to the ending number.
 
 ### **...**(other) operator
 
-Creates a [Range](core/range.html) representing a consecutive range of numbers
+Creates a [Range](range.html) representing a consecutive range of numbers
 from the beginning number to the ending number not including the ending number.
 
-    :::dart
+    :::wren
     var range = 1.2...3.4
     System.print(range.min)         // 1.2
     System.print(range.max)         // 3.4

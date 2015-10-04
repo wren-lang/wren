@@ -230,8 +230,8 @@ makes its job harder. Lua also tries very hard to be compatible across a wide
 range of hardware and compilers. If you have a C89 compiler for it, odds are
 very good that you can run Lua on it.
 
-Wren cares about compatibility, but it requires C99 and IEEE double precision
-floats. That may exclude some edge case hardware, but makes things like NaN
-tagging, computed gotos, and some other tricks possible.
+Wren cares about compatibility, but it requires C99 or C++98 and IEEE double
+precision floats. That may exclude some edge case hardware, but makes things
+like NaN tagging, computed gotos, and some other tricks possible.
 
 <script src="script.js"></script>
