@@ -250,10 +250,7 @@ typedef enum
 {
   // A normal value has been returned.
   PRIM_VALUE,
-
-  // A new callframe has been pushed.
-  PRIM_CALL,
-
+  
   // A fiber is being switched to. Also used for runtime errors (which also
   // change which fiber is being executed).
   PRIM_FIBER
@@ -352,6 +349,9 @@ typedef enum
 
   // A normal user-defined method.
   METHOD_BLOCK,
+  
+  // The special "call(...)" methods on function.
+  METHOD_FN_CALL,
 
   // No method for the given symbol.
   METHOD_NONE
@@ -367,7 +367,7 @@ typedef struct
   {
     Primitive primitive;
     WrenForeignMethodFn foreign;
-
+    
     // May be a [ObjFn] or [ObjClosure].
     Obj* obj;
   } fn;

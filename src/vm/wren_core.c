@@ -68,7 +68,7 @@ DEF_PRIMITIVE(fiber_new)
 DEF_PRIMITIVE(fiber_abort)
 {
   vm->fiber->error = args[1];
-  
+
   // If the error is explicitly null, it's not really an abort.
   return IS_NULL(args[1]) ? PRIM_VALUE : PRIM_FIBER;
 }
@@ -117,7 +117,7 @@ static PrimitiveResult runFiber(WrenVM* vm, ObjFiber* fiber, Value* args,
   }
 
   vm->fiber = fiber;
-  
+
   return PRIM_FIBER;
 }
 
@@ -168,7 +168,7 @@ DEF_PRIMITIVE(fiber_transferError)
 {
   PrimitiveResult result = runFiber(vm, AS_FIBER(args[0]), args, false, true);
   if (result == PRIM_FIBER) vm->fiber->error = args[1];
-  
+
   return result;
 }
 
@@ -181,7 +181,7 @@ DEF_PRIMITIVE(fiber_try)
   if (tried->caller != NULL) RETURN_ERROR("Fiber has already been called.");
 
   vm->fiber = tried;
-  
+
   // Remember who ran it.
   vm->fiber->caller = current;
   vm->fiber->callerIsTrying = true;
@@ -191,7 +191,7 @@ DEF_PRIMITIVE(fiber_try)
   {
     vm->fiber->stackTop[-1] = NULL_VAL;
   }
-  
+
   return PRIM_FIBER;
 }
 
@@ -199,7 +199,7 @@ DEF_PRIMITIVE(fiber_yield)
 {
   ObjFiber* current = vm->fiber;
   vm->fiber = current->caller;
-  
+
   // Unhook this fiber from the one that called it.
   current->caller = NULL;
   current->callerIsTrying = false;
@@ -209,7 +209,7 @@ DEF_PRIMITIVE(fiber_yield)
     // Make the caller's run method return null.
     vm->fiber->stackTop[-1] = NULL_VAL;
   }
-  
+
   return PRIM_FIBER;
 }
 
@@ -217,7 +217,7 @@ DEF_PRIMITIVE(fiber_yield1)
 {
   ObjFiber* current = vm->fiber;
   vm->fiber = current->caller;
-  
+
   // Unhook this fiber from the one that called it.
   current->caller = NULL;
   current->callerIsTrying = false;
@@ -249,41 +249,6 @@ DEF_PRIMITIVE(fn_arity)
 {
   RETURN_NUM(AS_FN(args[0])->arity);
 }
-
-static PrimitiveResult callFn(WrenVM* vm, Value* args, int numArgs)
-{
-  ObjFn* fn;
-  if (IS_CLOSURE(args[0]))
-  {
-    fn = AS_CLOSURE(args[0])->fn;
-  }
-  else
-  {
-    fn = AS_FN(args[0]);
-  }
-
-  if (numArgs < fn->arity) RETURN_ERROR("Function expects more arguments.");
-
-  return PRIM_CALL;
-}
-
-DEF_PRIMITIVE(fn_call0) { return callFn(vm, args, 0); }
-DEF_PRIMITIVE(fn_call1) { return callFn(vm, args, 1); }
-DEF_PRIMITIVE(fn_call2) { return callFn(vm, args, 2); }
-DEF_PRIMITIVE(fn_call3) { return callFn(vm, args, 3); }
-DEF_PRIMITIVE(fn_call4) { return callFn(vm, args, 4); }
-DEF_PRIMITIVE(fn_call5) { return callFn(vm, args, 5); }
-DEF_PRIMITIVE(fn_call6) { return callFn(vm, args, 6); }
-DEF_PRIMITIVE(fn_call7) { return callFn(vm, args, 7); }
-DEF_PRIMITIVE(fn_call8) { return callFn(vm, args, 8); }
-DEF_PRIMITIVE(fn_call9) { return callFn(vm, args, 9); }
-DEF_PRIMITIVE(fn_call10) { return callFn(vm, args, 10); }
-DEF_PRIMITIVE(fn_call11) { return callFn(vm, args, 11); }
-DEF_PRIMITIVE(fn_call12) { return callFn(vm, args, 12); }
-DEF_PRIMITIVE(fn_call13) { return callFn(vm, args, 13); }
-DEF_PRIMITIVE(fn_call14) { return callFn(vm, args, 14); }
-DEF_PRIMITIVE(fn_call15) { return callFn(vm, args, 15); }
-DEF_PRIMITIVE(fn_call16) { return callFn(vm, args, 16); }
 
 DEF_PRIMITIVE(fn_toString)
 {
@@ -1069,6 +1034,19 @@ static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
   return classObj;
 }
 
+// Defines one of the overloads of the special "call(...)" method on Fn.
+//
+// These methods have their own unique method type to handle pushing the
+// function onto the callstack and checking its arity.
+static void fnCall(WrenVM* vm, const char* signature)
+{
+  int symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, signature,
+                                     strlen(signature));
+  Method method;
+  method.type = METHOD_FN_CALL;
+  wrenBindMethod(vm, vm->fnClass, symbol, method);
+}
+
 void wrenInitializeCore(WrenVM* vm)
 {
   ObjModule* coreModule = wrenGetCoreModule(vm);
@@ -1153,23 +1131,23 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
-  PRIMITIVE(vm->fnClass, "call()", fn_call0);
-  PRIMITIVE(vm->fnClass, "call(_)", fn_call1);
-  PRIMITIVE(vm->fnClass, "call(_,_)", fn_call2);
-  PRIMITIVE(vm->fnClass, "call(_,_,_)", fn_call3);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_)", fn_call4);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_)", fn_call5);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_)", fn_call6);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_)", fn_call7);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_)", fn_call8);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_)", fn_call9);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_)", fn_call10);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
+  fnCall(vm, "call()");
+  fnCall(vm, "call(_)");
+  fnCall(vm, "call(_,_)");
+  fnCall(vm, "call(_,_,_)");
+  fnCall(vm, "call(_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)");
+  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)");
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Null"));
@@ -1274,7 +1252,7 @@ void wrenInitializeCore(WrenVM* vm)
   ObjClass* systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
   PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
-  
+
   // While bootstrapping the core types and running the core library, a number
   // of string objects have been created, many of which were instantiated
   // before stringClass was stored in the VM. Some of them *must* be created

@@ -387,6 +387,33 @@ static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
       OBJ_VAL(classObj->name), vm->methodNames.data[symbol].buffer);
 }
 
+// Checks that [value], which must be a function or closure, does not require
+// more parameters than are provided by [numArgs].
+//
+// If there are not enough arguments, aborts the current fiber and returns
+// `false`.
+static bool checkArity(WrenVM* vm, Value value, int numArgs)
+{
+  ObjFn* fn;
+  if (IS_CLOSURE(value))
+  {
+    fn = AS_CLOSURE(value)->fn;
+  }
+  else
+  {
+    ASSERT(IS_FN(value), "Receiver must be a function or closure.");
+    fn = AS_FN(value);
+  }
+  
+  // We only care about missing arguments, not extras. The "- 1" is because
+  // numArgs includes the receiver, the function itself, which we don't want to
+  // count.
+  if (numArgs - 1 >= fn->arity) return true;
+  
+  vm->fiber->error = CONST_STRING(vm, "Function expects more arguments.");
+  return false;
+}
+
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
 // [function] can be an `ObjFn` or `ObjClosure`.
@@ -905,12 +932,6 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
               fiber->stackTop -= numArgs - 1;
               break;
 
-            case PRIM_CALL:
-              STORE_FRAME();
-              callFunction(vm, fiber, AS_OBJ(args[0]), numArgs);
-              LOAD_FRAME();
-              break;
-
             case PRIM_FIBER:
               STORE_FRAME();
 
@@ -928,6 +949,14 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
         case METHOD_FOREIGN:
           callForeign(vm, fiber, method->fn.foreign, numArgs);
+          break;
+          
+        case METHOD_FN_CALL:
+          if (!checkArity(vm, args[0], numArgs)) RUNTIME_ERROR();
+
+          STORE_FRAME();
+          callFunction(vm, fiber, AS_OBJ(args[0]), numArgs);
+          LOAD_FRAME();
           break;
 
         case METHOD_BLOCK:
