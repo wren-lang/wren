@@ -410,7 +410,7 @@ DEF_PRIMITIVE(map_subscriptSetter)
 // minimize stack churn.
 DEF_PRIMITIVE(map_addCore)
 {
-  if (!validateKey(vm, args, 1)) return PRIM_ERROR;
+  if (!validateKey(vm, args[1])) return false;
   
   wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
   

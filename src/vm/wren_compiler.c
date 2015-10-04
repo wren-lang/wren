@@ -96,22 +96,23 @@ typedef enum
   TOKEN_NAME,
   TOKEN_NUMBER,
   
-  // A string literal without any template interpolation, or the last section
-  // of a string following the last template expression.
+  // A string literal without any interpolation, or the last section of a
+  // string following the last interpolated expression.
   TOKEN_STRING,
   
-  // A portion of a string literal preceding a template expression. This string:
+  // A portion of a string literal preceding an interpolated expression. This
+  // string:
   //
   //     "a %(b) c %(d) e"
   //
   // is tokenized to:
   //
-  //     TOKEN_TEMPLATE "a "
-  //     TOKEN_NAME     b
-  //     TOKEN_TEMPLATE " c "
-  //     TOKEN_NAME     d
-  //     TOKEN_STRING   " e"
-  TOKEN_TEMPLATE,
+  //     TOKEN_INTERPOLATION "a "
+  //     TOKEN_NAME          b
+  //     TOKEN_INTERPOLATION " c "
+  //     TOKEN_NAME          d
+  //     TOKEN_STRING        " e"
+  TOKEN_INTERPOLATION,
 
   TOKEN_LINE,
 
@@ -165,19 +166,19 @@ typedef struct
   // The most recently consumed/advanced token.
   Token previous;
   
-  // Tracks the lexing state when tokenizing template strings.
+  // Tracks the lexing state when tokenizing interpolated strings.
   //
-  // Template strings make the lexer not strictly regular: we don't know whether
-  // a ")" should be treated as a LEFT_PAREN token or as delimiting an
-  // interpolated expression unless we know whether we are inside a template
-  // string and how many unmatched "(" there are. This is particularly complex
-  // because templates can nest:
+  // Interpolated strings make the lexer not strictly regular: we don't know
+  // whether a ")" should be treated as a LEFT_PAREN token or as delimiting an
+  // interpolated expression unless we know whether we are inside a string
+  // interpolation and how many unmatched "(" there are. This is particularly
+  // complex because interpolation can nest:
   //
   //     " %( " %( inner ) " ) "
   //
   // This buffer tracks that state. Each int in the buffer represents one level
-  // of current template nesting. The value of the int is the number of opening
-  // "(" that have not been matched by a closing ")" yet.
+  // of current interpolation nesting. The value of the int is the number of
+  // opening "(" that have not been matched by a closing ")" yet.
   IntBuffer parens;
 
   // If subsequent newline tokens should be discarded.
@@ -779,7 +780,7 @@ static void readString(Parser* parser)
       if (nextChar(parser) != '(') lexError(parser, "Expect '(' after '%'.");
 
       wrenIntBufferWrite(parser->vm, &parser->parens, 1);
-      type = TOKEN_TEMPLATE;
+      type = TOKEN_INTERPOLATION;
       break;
     }
     
@@ -842,7 +843,7 @@ static void nextToken(Parser* parser)
     switch (c)
     {
       case '(':
-        // If we are inside a template expression, count the unmatched "(".
+        // If we are inside an interpolated expression, count the unmatched "(".
         if (parser->parens.count > 0)
         {
           parser->parens.data[parser->parens.count - 1]++;
@@ -851,13 +852,13 @@ static void nextToken(Parser* parser)
         return;
         
       case ')':
-        // If we are inside a template expression, count the ")".
+        // If we are inside an interpolated expression, count the ")".
         if (parser->parens.count > 0)
         {
           if (--parser->parens.data[parser->parens.count - 1] == 0)
           {
-            // This is the final ")", so the template expression has ended.
-            // This ")" now begins the next section of the template string.
+            // This is the final ")", so the interpolated expression has ended.
+            // This ")" now begins the next section of the string interpolation.
             parser->parens.count--;
             readString(parser);
             return;
@@ -2199,12 +2200,14 @@ static void literal(Compiler* compiler, bool allowAssignment)
   emitConstant(compiler, compiler->parser->previous.value);
 }
 
-static void templateString(Compiler* compiler, bool allowAssignment)
+static void stringInterpolation(Compiler* compiler, bool allowAssignment)
 {
   // TODO: Allow other expressions here so that user-defined classes can control
-  // template processing like "tagged template strings" in ES6.
+  // interpolation processing like "tagged template strings" in ES6.
   loadCoreVariable(compiler, "String");
-  
+
+  loadCoreVariable(compiler, "StringInterpolation");
+
   // Instantiate a new list.
   loadCoreVariable(compiler, "List");
   callMethod(compiler, 0, "new()", 5);
@@ -2222,20 +2225,23 @@ static void templateString(Compiler* compiler, bool allowAssignment)
     initCompiler(&fnCompiler, compiler->parser, compiler, true);
     expression(&fnCompiler);
     emit(&fnCompiler, CODE_RETURN);
-    endCompiler(&fnCompiler, "template", 9);
+    endCompiler(&fnCompiler, "interpolation", 9);
     
     callMethod(compiler, 1, "addCore_(_)", 11);
     
     ignoreNewlines(compiler);
-  } while (match(compiler, TOKEN_TEMPLATE));
+  } while (match(compiler, TOKEN_INTERPOLATION));
   
   // The trailing string part.
-  consume(compiler, TOKEN_STRING, "Expect end of string template.");
+  consume(compiler, TOKEN_STRING, "Expect end of string interpolation.");
   literal(compiler, false);
   callMethod(compiler, 1, "addCore_(_)", 11);
   
-  // Call .template() with the list.
-  callMethod(compiler, 1, "template(_)", 11);
+  // Call StringInterpolation.new_() with the list.
+  callMethod(compiler, 1, "new_(_)", 7);
+  
+  // Call .interpolate() with the interpolation object.
+  callMethod(compiler, 1, "interpolate(_)", 14);
 }
 
 static void super_(Compiler* compiler, bool allowAssignment)
@@ -2579,7 +2585,7 @@ GrammarRule rules[] =
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
   /* TOKEN_NUMBER        */ PREFIX(literal),
   /* TOKEN_STRING        */ PREFIX(literal),
-  /* TOKEN_TEMPLATE      */ PREFIX(templateString),
+  /* TOKEN_INTERPOLATION */ PREFIX(stringInterpolation),
   /* TOKEN_LINE          */ UNUSED,
   /* TOKEN_ERROR         */ UNUSED,
   /* TOKEN_EOF           */ UNUSED

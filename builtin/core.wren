@@ -132,9 +132,9 @@ class String is Sequence {
   bytes { StringByteSequence.new(this) }
   codePoints { StringCodePointSequence.new(this) }
 
-  static template(parts) {
+  static interpolate(interpolation) {
     var result = ""
-    for (part in parts) {
+    for (part in interpolation.parts) {
       if (part is String) {
         result = result + part
       } else {
@@ -168,6 +168,29 @@ class StringCodePointSequence is Sequence {
   iteratorValue(iterator) { _string.codePointAt_(iterator) }
 
   count { _string.count }
+}
+
+class StringInterpolation {
+  parts { _parts }
+
+  construct new_(list) {
+    _parts = [list[0]]
+
+    var i = 1
+    while (i < list.count) {
+      _parts.add(InterpolatedField.new_(list[i]))
+      _parts.add(list[i + 1])
+      i = i + 2
+    }
+  }
+}
+
+class InterpolatedField {
+  call() { _fn.call() }
+
+  construct new_(fn) {
+    _fn = fn
+  }
 }
 
 class List is Sequence {
