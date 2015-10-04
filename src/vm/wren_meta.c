@@ -10,7 +10,7 @@
 
 DEF_PRIMITIVE(meta_eval)
 {
-  if (!validateString(vm, args[1], "Source code")) return PRIM_FIBER;
+  if (!validateString(vm, args[1], "Source code")) return false;
 
   // Eval the code in the module where the calling function was defined.
   Value callingFn = OBJ_VAL(vm->fiber->frames[vm->fiber->numFrames - 1].fn);
@@ -36,7 +36,7 @@ DEF_PRIMITIVE(meta_eval)
   vm->fiber = evalFiber;
   
   wrenPopRoot(vm);
-  return PRIM_FIBER;
+  return false;
 }
 
 void wrenLoadMetaLibrary(WrenVM* vm)

@@ -246,18 +246,13 @@ typedef struct sObjFiber
   bool callerIsTrying;
 } ObjFiber;
 
-typedef enum
-{
-  // A normal value has been returned.
-  PRIM_VALUE,
-  
-  // A fiber is being switched to. Also used for runtime errors (which also
-  // change which fiber is being executed).
-  PRIM_FIBER
-
-} PrimitiveResult;
-
-typedef PrimitiveResult (*Primitive)(WrenVM* vm, Value* args);
+// The type of a primitive function.
+//
+// Primitives are similiar to foreign functions, but have more direct access to
+// VM internals. It is passed the arguments in [args]. If it returns a value,
+// it places it in `args[0]` and returns `true`. If it causes a runtime error
+// or modifies the running fiber, it returns `false`.
+typedef bool (*Primitive)(WrenVM* vm, Value* args);
 
 // TODO: See if it's actually a perf improvement to have this in a separate
 // struct instead of in ObjFn.

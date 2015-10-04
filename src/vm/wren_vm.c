@@ -922,30 +922,22 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       switch (method->type)
       {
         case METHOD_PRIMITIVE:
-        {
-          // After calling this, the result will be in the first arg slot.
-          switch (method->fn.primitive(vm, args))
+          if (method->fn.primitive(vm, args))
           {
-            case PRIM_VALUE:
-              // The result is now in the first arg slot. Discard the other
-              // stack slots.
-              fiber->stackTop -= numArgs - 1;
-              break;
+            // The result is now in the first arg slot. Discard the other
+            // stack slots.
+            fiber->stackTop -= numArgs - 1;
+          } else {
+            // An error or fiber switch occurred.
+            STORE_FRAME();
 
-            case PRIM_FIBER:
-              STORE_FRAME();
-
-              // If we don't have a fiber to switch to, stop interpreting.
-              if (vm->fiber == NULL) return WREN_RESULT_SUCCESS;
-              if (!IS_NULL(vm->fiber->error)) RUNTIME_ERROR();
-
-              fiber = vm->fiber;
-              
-              LOAD_FRAME();
-              break;
+            // If we don't have a fiber to switch to, stop interpreting.
+            fiber = vm->fiber;
+            if (fiber == NULL) return WREN_RESULT_SUCCESS;
+            if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+            LOAD_FRAME();
           }
           break;
-        }
 
         case METHOD_FOREIGN:
           callForeign(vm, fiber, method->fn.foreign, numArgs);

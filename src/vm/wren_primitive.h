@@ -19,9 +19,9 @@
 // the actual type signature of a primitive function and makes it clear which C
 // functions are invoked as primitives.
 #define DEF_PRIMITIVE(name) \
-    static PrimitiveResult prim_##name(WrenVM* vm, Value* args)
+    static bool prim_##name(WrenVM* vm, Value* args)
 
-#define RETURN_VAL(value)   do { args[0] = value; return PRIM_VALUE; } while (0)
+#define RETURN_VAL(value)   do { args[0] = value; return true; } while (0)
 
 #define RETURN_OBJ(obj)     RETURN_VAL(OBJ_VAL(obj))
 #define RETURN_BOOL(value)  RETURN_VAL(BOOL_VAL(value))
@@ -32,8 +32,8 @@
 
 #define RETURN_ERROR(msg) \
     do { \
-      vm->fiber->error = wrenStringFormat(vm, "$", msg); \
-      return PRIM_FIBER; \
+      vm->fiber->error = wrenNewString(vm, msg, sizeof(msg) - 1); \
+      return false; \
     } while (0);
 
 // Validates that the given [arg] is a function. Returns true if it is. If not,
