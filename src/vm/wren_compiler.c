@@ -1300,9 +1300,13 @@ static int addUpvalue(Compiler* compiler, bool isLocal, int index)
 // not close over local variables.
 static int findUpvalue(Compiler* compiler, const char* name, int length)
 {
-  // If we are at a method boundary or the top level, we didn't find it.
-  if (compiler->parent == NULL || compiler->enclosingClass != NULL) return -1;
-
+  // If we are at the top level, we didn't find it.
+  if (compiler->parent == NULL) return -1;
+  
+  // If we hit the method boundary (and the name isn't a static field), then
+  // stop looking for it. We'll instead treat it as a self send.
+  if (name[0] != '_' && compiler->parent->enclosingClass != NULL) return -1;
+  
   // See if it's a local variable in the immediately enclosing function.
   int local = resolveLocal(compiler->parent, name, length);
   if (local != -1)
