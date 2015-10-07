@@ -24,16 +24,22 @@
 // Note that this limitation is also explicit in the bytecode. Since
 // `CODE_LOAD_LOCAL` and `CODE_STORE_LOCAL` use a single argument byte to
 // identify the local, only 256 can be in scope at one time.
-#define MAX_LOCALS (256)
+#define MAX_LOCALS 256
 
 // The maximum number of upvalues (i.e. variables from enclosing functions)
 // that a function can close over.
-#define MAX_UPVALUES (256)
+#define MAX_UPVALUES 256
 
 // The maximum number of distinct constants that a function can contain. This
 // value is explicit in the bytecode since `CODE_CONSTANT` only takes a single
 // two-byte argument.
 #define MAX_CONSTANTS (1 << 16)
+
+// The maximum depth that interpolation can nest. For example, this string has
+// three levels:
+//
+//      "outside %(one + "%(two + "%(three)")")"
+#define MAX_INTERPOLATION_NESTING 8
 
 typedef enum
 {
@@ -137,6 +143,28 @@ typedef struct
   Value value;
 } Token;
 
+// Tracks the lexing state when tokenizing interpolated strings.
+//
+// Interpolated strings make the lexer not strictly regular: we don't know
+// whether a ")" should be treated as a RIGHT_PAREN token or as ending an
+// interpolated expression unless we know whether we are inside a string
+// interpolation and how many unmatched "(" there are. This is particularly
+// complex because interpolation can nest:
+//
+//     " %( " %( inner ) " ) "
+//
+// This tracks that state. The parser maintains a stack of these, one for each
+// level of current interpolation nesting.
+typedef struct
+{
+  // The number of opening "(" that have not been matched by a closing ")" yet.
+  // This will be -1 after the final ")" has been emitted.
+  int parens;
+  
+  // The beginning of the interpolated expression in the source.
+  const char* start;
+} Interpolation;
+
 typedef struct
 {
   WrenVM* vm;
@@ -166,21 +194,10 @@ typedef struct
   // The most recently consumed/advanced token.
   Token previous;
   
-  // Tracks the lexing state when tokenizing interpolated strings.
-  //
-  // Interpolated strings make the lexer not strictly regular: we don't know
-  // whether a ")" should be treated as a LEFT_PAREN token or as delimiting an
-  // interpolated expression unless we know whether we are inside a string
-  // interpolation and how many unmatched "(" there are. This is particularly
-  // complex because interpolation can nest:
-  //
-  //     " %( " %( inner ) " ) "
-  //
-  // This buffer tracks that state. Each int in the buffer represents one level
-  // of current interpolation nesting. The value of the int is the number of
-  // opening "(" that have not been matched by a closing ")" yet.
-  IntBuffer parens;
-
+  // The stack of current interpolation expressions.
+  Interpolation interpolation[MAX_INTERPOLATION_NESTING];
+  int interpolationDepth;
+  
   // If subsequent newline tokens should be discarded.
   bool skipNewlines;
 
@@ -776,12 +793,22 @@ static void readString(Parser* parser)
 
     if (c == '%')
     {
-      // TODO: Allow format string.
-      if (nextChar(parser) != '(') lexError(parser, "Expect '(' after '%'.");
+      if (parser->interpolationDepth < MAX_INTERPOLATION_NESTING)
+      {
+        // TODO: Allow format string.
+        if (peekChar(parser) != '(') lexError(parser, "Expect '(' after '%'.");
+        
+        parser->interpolation[parser->interpolationDepth].parens = 0;
+        parser->interpolation[parser->interpolationDepth].start =
+            parser->currentChar + 1;
+        
+        parser->interpolationDepth++;
+        type = TOKEN_INTERPOLATION;
+        break;
+      }
 
-      wrenIntBufferWrite(parser->vm, &parser->parens, 1);
-      type = TOKEN_INTERPOLATION;
-      break;
+      lexError(parser, "Interpolation may only nest %d levels deep.",
+               MAX_INTERPOLATION_NESTING);
     }
     
     if (c == '\\')
@@ -825,6 +852,14 @@ static void readString(Parser* parser)
   makeToken(parser, type);
 }
 
+// Returns a pointer to the current innermost interpolation expression or `NULL`
+// if we aren't in the middle of an interpolation.
+Interpolation* currentInterpolation(Parser* parser)
+{
+  if (parser->interpolationDepth == 0) return NULL;
+  return &parser->interpolation[parser->interpolationDepth - 1];
+}
+
 // Lex the next token and store it in [parser.current].
 static void nextToken(Parser* parser)
 {
@@ -835,6 +870,16 @@ static void nextToken(Parser* parser)
   // will still work.
   if (parser->current.type == TOKEN_EOF) return;
 
+  // If we just ended an interpolation expression, read the next piece of the
+  // string literal.
+  Interpolation* interpolation = currentInterpolation(parser);
+  if (interpolation != NULL && interpolation->parens == -1)
+  {
+    parser->interpolationDepth--;
+    readString(parser);
+    return;
+  }
+  
   while (peekChar(parser) != '\0')
   {
     parser->tokenStart = parser->currentChar;
@@ -844,25 +889,25 @@ static void nextToken(Parser* parser)
     {
       case '(':
         // If we are inside an interpolated expression, count the unmatched "(".
-        if (parser->parens.count > 0)
-        {
-          parser->parens.data[parser->parens.count - 1]++;
-        }
+        if (interpolation != NULL) interpolation->parens++;
         makeToken(parser, TOKEN_LEFT_PAREN);
         return;
         
       case ')':
         // If we are inside an interpolated expression, count the ")".
-        if (parser->parens.count > 0)
+        if (interpolation != NULL && --interpolation->parens == 0)
         {
-          if (--parser->parens.data[parser->parens.count - 1] == 0)
-          {
-            // This is the final ")", so the interpolated expression has ended.
-            // This ")" now begins the next section of the string interpolation.
-            parser->parens.count--;
-            readString(parser);
-            return;
-          }
+          // This is the final ")", so the interpolated expression has ended.
+          // This ")" now begins the next section of the string interpolation.
+          // Attach the source of the interpolated expression to the ")" as a
+          // string so it's available to a customer interpolator.
+          parser->current.value = wrenNewString(parser->vm,
+              interpolation->start,
+              (int)(parser->currentChar - interpolation->start) - 1);
+
+          // Mark this interpolation as done so that we'll start the string
+          // section on the next token.
+          interpolation->parens = -1;
         }
         
         makeToken(parser, TOKEN_RIGHT_PAREN);
@@ -2222,6 +2267,8 @@ static void stringInterpolation(Compiler* compiler, bool allowAssignment)
     literal(compiler, false);
     callMethod(compiler, 1, "addCore_(_)", 11);
     
+    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after '%'.");
+    
     ignoreNewlines(compiler);
     
     // Compile the interpolated expression part to a function.
@@ -2234,6 +2281,14 @@ static void stringInterpolation(Compiler* compiler, bool allowAssignment)
     callMethod(compiler, 1, "addCore_(_)", 11);
     
     ignoreNewlines(compiler);
+    
+    // The value attached to the ")" is the source text of the interpolated
+    // expression. Include that as a string literal so custom interpolaters
+    // can see the uninterpolated code.
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after interpolation.");
+    literal(compiler, false);
+    callMethod(compiler, 1, "addCore_(_)", 11);
+
   } while (match(compiler, TOKEN_INTERPOLATION));
   
   // The trailing string part.
@@ -3336,7 +3391,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
   parser.tokenStart = source;
   parser.currentChar = source;
   parser.currentLine = 1;
-  wrenIntBufferInit(&parser.parens);
+  parser.interpolationDepth = 0;
 
   // Zero-init the current token. This will get copied to previous when
   // advance() is called below.
@@ -3387,8 +3442,6 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
     }
   }
   
-  wrenIntBufferClear(vm, &parser.parens);
-
   return endCompiler(&compiler, "(script)", 8);
 }
 

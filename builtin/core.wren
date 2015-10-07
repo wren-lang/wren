@@ -178,19 +178,21 @@ class StringInterpolation {
 
     var i = 1
     while (i < list.count) {
-      _parts.add(InterpolatedField.new_(list[i]))
-      _parts.add(list[i + 1])
-      i = i + 2
+      _parts.add(InterpolatedField.new_(list[i], list[i + 1]))
+      _parts.add(list[i + 2])
+      i = i + 3
     }
   }
 }
 
 class InterpolatedField {
-  call() { _fn.call() }
-
-  construct new_(fn) {
+  construct new_(fn, source) {
     _fn = fn
+    _source = source
   }
+
+  call() { _fn.call() }
+  source { _source }
 }
 
 class List is Sequence {
