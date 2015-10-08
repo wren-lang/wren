@@ -260,16 +260,22 @@ static ObjUpvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
   return createdUpvalue;
 }
 
-static void closeUpvalue(ObjFiber* fiber)
+// Closes any open upvates that have been created for stack slots at [last] and
+// above.
+static void closeUpvalues(ObjFiber* fiber, Value* last)
 {
-  ObjUpvalue* upvalue = fiber->openUpvalues;
-
-  // Move the value into the upvalue itself and point the upvalue to it.
-  upvalue->closed = *upvalue->value;
-  upvalue->value = &upvalue->closed;
-
-  // Remove it from the open upvalue list.
-  fiber->openUpvalues = upvalue->next;
+  while (fiber->openUpvalues != NULL &&
+         fiber->openUpvalues->value >= last)
+  {
+    ObjUpvalue* upvalue = fiber->openUpvalues;
+    
+    // Move the value into the upvalue itself and point the upvalue to it.
+    upvalue->closed = *upvalue->value;
+    upvalue->value = &upvalue->closed;
+    
+    // Remove it from the open upvalue list.
+    fiber->openUpvalues = upvalue->next;
+  }
 }
 
 // Looks up a foreign method in [moduleName] on [className] with [signature].
@@ -1079,7 +1085,8 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     }
 
     CASE_CODE(CLOSE_UPVALUE):
-      closeUpvalue(fiber);
+      // Close the upvalue for the local if we have one.
+      closeUpvalues(fiber, fiber->stackTop - 1);
       DROP();
       DISPATCH();
 
@@ -1089,13 +1096,8 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       fiber->numFrames--;
 
       // Close any upvalues still in scope.
-      Value* firstValue = stackStart;
-      while (fiber->openUpvalues != NULL &&
-             fiber->openUpvalues->value >= firstValue)
-      {
-        closeUpvalue(fiber);
-      }
-
+      closeUpvalues(fiber, stackStart);
+      
       // If the fiber is complete, end it.
       if (fiber->numFrames == 0)
       {
