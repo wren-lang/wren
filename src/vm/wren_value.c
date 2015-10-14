@@ -188,7 +188,6 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
                        const Value* constants, int numConstants,
                        int numUpvalues, int arity,
                        uint8_t* bytecode, int bytecodeLength,
-                       ObjString* debugSourcePath,
                        const char* debugName, int debugNameLength,
                        int* sourceLines)
 {
@@ -205,8 +204,6 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
   }
 
   FnDebug* debug = ALLOCATE(vm, FnDebug);
-
-  debug->sourcePath = debugSourcePath;
 
   // Copy the function's name.
   debug->name = ALLOCATE_ARRAY(vm, char, debugNameLength + 1);
@@ -554,7 +551,7 @@ Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
   return value;
 }
 
-ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
+ObjModule* wrenNewModule(WrenVM* vm, ObjString* name, ObjString* path)
 {
   ObjModule* module = ALLOCATE(vm, ObjModule);
 
@@ -567,6 +564,7 @@ ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
   wrenValueBufferInit(&module->variables);
 
   module->name = name;
+  module->sourcePath = path;
 
   wrenPopRoot(vm);
   return module;
@@ -936,8 +934,6 @@ static void markFn(WrenVM* vm, ObjFn* fn)
     wrenMarkValue(vm, fn->constants[i]);
   }
 
-  wrenMarkObj(vm, (Obj*)fn->debug->sourcePath);
-
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFn);
   vm->bytesAllocated += sizeof(uint8_t) * fn->bytecodeLength;
@@ -1008,6 +1004,8 @@ static void markModule(WrenVM* vm, ObjModule* module)
   }
 
   wrenMarkObj(vm, (Obj*)module->name);
+
+  wrenMarkObj(vm, (Obj*)module->sourcePath);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjModule);

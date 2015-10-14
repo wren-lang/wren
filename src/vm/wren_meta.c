@@ -19,7 +19,7 @@ DEF_PRIMITIVE(meta_eval)
       : AS_CLOSURE(callingFn)->fn->module;
 
   // Compile it.
-  ObjFn* fn = wrenCompile(vm, module, "<eval>", AS_CSTRING(args[1]), false);
+  ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(args[1]), false);
   if (fn == NULL) RETURN_ERROR("Could not compile source code.");
 
   // TODO: Include the compile errors in the runtime error message.

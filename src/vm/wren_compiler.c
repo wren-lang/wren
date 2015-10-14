@@ -124,10 +124,6 @@ typedef struct
   // The module being parsed.
   ObjModule* module;
 
-  // Heap-allocated string representing the path to the code being parsed. Used
-  // for stack traces.
-  ObjString* sourcePath;
-
   // The source code being parsed.
   const char* source;
 
@@ -311,7 +307,7 @@ static void lexError(Parser* parser, const char* format, ...)
   if (!parser->printErrors) return;
 
   fprintf(stderr, "[%s line %d] Error: ",
-          parser->sourcePath->value, parser->currentLine);
+          parser->module->sourcePath->value, parser->currentLine);
 
   va_list args;
   va_start(args, format);
@@ -341,7 +337,7 @@ static void error(Compiler* compiler, const char* format, ...)
   if (token->type == TOKEN_ERROR) return;
 
   fprintf(stderr, "[%s line %d] Error at ",
-          compiler->parser->sourcePath->value, token->line);
+          compiler->parser->module->sourcePath->value, token->line);
 
   if (token->type == TOKEN_LINE)
   {
@@ -1352,7 +1348,6 @@ static ObjFn* endCompiler(Compiler* compiler,
                               compiler->numParams,
                               compiler->bytecode.data,
                               compiler->bytecode.count,
-                              compiler->parser->sourcePath,
                               debugName, debugNameLength,
                               compiler->debugSourceLines.data);
   wrenPushRoot(compiler->parser->vm, (Obj*)fn);
@@ -3218,16 +3213,12 @@ void definition(Compiler* compiler)
   }
 }
 
-ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
-                   const char* source, bool printErrors)
+ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
+                   bool printErrors)
 {
-  Value sourcePathValue = wrenStringFormat(vm, "$", sourcePath);
-  wrenPushRoot(vm, AS_OBJ(sourcePathValue));
-
   Parser parser;
   parser.vm = vm;
   parser.module = module;
-  parser.sourcePath = AS_STRING(sourcePathValue);
   parser.source = source;
   parser.value = UNDEFINED_VAL;
 
@@ -3253,8 +3244,6 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* sourcePath,
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, true);
   ignoreNewlines(&compiler);
-
-  wrenPopRoot(vm);
 
   while (!match(&compiler, TOKEN_EOF))
   {
@@ -3354,7 +3343,6 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 
 void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 {
-  wrenMarkObj(vm, (Obj*)compiler->parser->sourcePath);
   wrenMarkValue(vm, compiler->parser->value);
 
   // Walk up the parent chain to mark the outer compilers too. The VM only

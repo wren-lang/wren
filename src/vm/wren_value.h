@@ -260,12 +260,8 @@ typedef bool (*Primitive)(WrenVM* vm, Value* args);
 // traces.
 typedef struct
 {
-  // The name of the function. Heap allocated and owned by the ObjFn.
+  // The name of the function. Heap allocated and owned by the FnDebug.
   char* name;
-
-  // The name of the source file where this function was defined. An [ObjString]
-  // because this will be shared among all functions defined in the same file.
-  ObjString* sourcePath;
 
   // An array of line numbers. There is one element in this array for each
   // bytecode in the function's bytecode array. The value of that element is
@@ -290,6 +286,9 @@ typedef struct
 
   // The name of the module.
   ObjString* name;
+
+  // The path to the source file where this module was loaded.
+  ObjString* sourcePath;
 } ObjModule;
 
 // A first-class function object. A raw ObjFn can be used and invoked directly
@@ -664,7 +663,6 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
                        const Value* constants, int numConstants,
                        int numUpvalues, int arity,
                        uint8_t* bytecode, int bytecodeLength,
-                       ObjString* debugSourcePath,
                        const char* debugName, int debugNameLength,
                        int* sourceLines);
 
@@ -698,7 +696,7 @@ void wrenMapClear(WrenVM* vm, ObjMap* map);
 Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key);
 
 // Creates a new module.
-ObjModule* wrenNewModule(WrenVM* vm, ObjString* name);
+ObjModule* wrenNewModule(WrenVM* vm, ObjString* name, ObjString* path);
 
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);

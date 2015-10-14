@@ -61,7 +61,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   wrenPushRoot(vm, (Obj*)name);
 
   // Implicitly create a "core" module for the built in libraries.
-  ObjModule* coreModule = wrenNewModule(vm, name);
+  ObjModule* coreModule = wrenNewModule(vm, name, NULL);
   wrenPushRoot(vm, (Obj*)coreModule);
 
   vm->modules = wrenNewMap(vm);
@@ -457,7 +457,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
   // See if the module has already been loaded.
   if (module == NULL)
   {
-    module = wrenNewModule(vm, AS_STRING(name));
+    module = wrenNewModule(vm, AS_STRING(name), AS_STRING(name));
 
     // Store it in the VM's module registry so we don't load the same module
     // multiple times.
@@ -474,7 +474,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
     }
   }
 
-  ObjFn* fn = wrenCompile(vm, module, AS_CSTRING(name), source, true);
+  ObjFn* fn = wrenCompile(vm, module, source, true);
   if (fn == NULL)
   {
     // TODO: Should we still store the module even if it didn't compile?
@@ -1280,7 +1280,7 @@ static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
   int* debugLines = ALLOCATE_ARRAY(vm, int, 5);
   memset(debugLines, 1, 5);
 
-  return wrenNewFunction(vm, module, NULL, 0, 0, 0, bytecode, 5, NULL,
+  return wrenNewFunction(vm, module, NULL, 0, 0, 0, bytecode, 5,
                          signature, signatureLength, debugLines);
 }
 
@@ -1462,7 +1462,7 @@ static WrenInterpretResult loadIntoCore(WrenVM* vm, const char* source)
 {
   ObjModule* coreModule = wrenGetCoreModule(vm);
 
-  ObjFn* fn = wrenCompile(vm, coreModule, "", source, true);
+  ObjFn* fn = wrenCompile(vm, coreModule, source, true);
   if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
 
   wrenPushRoot(vm, (Obj*)fn);

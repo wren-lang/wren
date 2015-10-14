@@ -24,8 +24,8 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
     // explicitly omitted from stack traces since we don't want to highlight to
     // a user the implementation detail of what part of a core library is
     // implemented in C and what is in Wren.
-    if (fn->debug->sourcePath == NULL ||
-        fn->debug->sourcePath->length == 0)
+    if (fn->module->sourcePath == NULL ||
+        fn->module->sourcePath->length == 0)
     {
       continue;
     }
@@ -33,7 +33,7 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
     // -1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines[frame->ip - fn->bytecode - 1];
     fprintf(stderr, "[%s line %d] in %s\n",
-            fn->debug->sourcePath->value, line, fn->debug->name);
+            fn->module->sourcePath->value, line, fn->debug->name);
   }
 }
 
@@ -354,7 +354,7 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 
 void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 {
-  printf("%s: %s\n", fn->debug->sourcePath->value, fn->debug->name);
+  printf("%s: %s\n", fn->module->sourcePath->value, fn->debug->name);
 
   int i = 0;
   int lastLine = -1;
