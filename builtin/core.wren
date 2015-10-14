@@ -131,6 +131,19 @@ class WhereSequence is Sequence {
 class String is Sequence {
   bytes { StringByteSequence.new(this) }
   codePoints { StringCodePointSequence.new(this) }
+
+  static interpolate(interpolation) {
+    var result = ""
+    for (part in interpolation.parts) {
+      if (part is String) {
+        result = result + part
+      } else {
+        result = result + part.call().toString
+      }
+    }
+
+    return result
+  }
 }
 
 class StringByteSequence is Sequence {
@@ -155,6 +168,31 @@ class StringCodePointSequence is Sequence {
   iteratorValue(iterator) { _string.codePointAt_(iterator) }
 
   count { _string.count }
+}
+
+class StringInterpolation {
+  parts { _parts }
+
+  construct new_(list) {
+    _parts = [list[0]]
+
+    var i = 1
+    while (i < list.count) {
+      _parts.add(InterpolatedField.new_(list[i], list[i + 1]))
+      _parts.add(list[i + 2])
+      i = i + 3
+    }
+  }
+}
+
+class InterpolatedField {
+  construct new_(fn, source) {
+    _fn = fn
+    _source = source
+  }
+
+  call() { _fn.call() }
+  source { _source }
 }
 
 class List is Sequence {

@@ -1,11 +1,11 @@
 var i = 0
 while (true) {
-  System.print("outer " + i.toString)
+  System.print("outer %(i)")
   if (i > 1) break
 
   var j = 0
   while (true) {
-    System.print("inner " + j.toString)
+    System.print("inner %(j)")
     if (j > 1) break
 
     j = j + 1

@@ -1,0 +1,62 @@
+-- new
+
+- introduction
+  - getting started
+  - tutorial
+  - community
+  - contributing
+- guide
+  - basic syntax
+    scripts, comments, newlines, names
+  - values
+    null, bools, numbers, strings, and ranges
+  - collections
+    lists and maps
+  - expressions
+    calls, this, super, operators, is
+  - control flow
+    if, while, for, sequence protocol, && ||, ?:
+  - variables
+    var, assignment, scope, blocks
+  - functions
+    block arguments, closures
+  - classes
+  - concurrency
+  - error handling
+  - modules
+  - embedding
+- core module
+  ...
+- cli modules
+  - io
+  - scheduler
+  - timer
+  ...
+- reference
+  - performance
+  - faq
+
+-- current
+
+- getting started
+- language
+  - syntax
+  - expressions
+  - variables
+  - control flow
+  - error handling
+  - modules
+- types
+  - values
+  - classes
+  - fibers
+  - functions
+  - lists
+  - maps
+- reference
+  - core
+  - embedding api
+  - performance
+  - community
+  - contributing
+  - qa

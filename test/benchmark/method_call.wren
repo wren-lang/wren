@@ -65,4 +65,4 @@ for (i in 0...n) {
 }
 
 System.print(ntoggle.value)
-System.print("elapsed: " + (System.clock - start).toString)
+System.print("elapsed: %(System.clock - start)")

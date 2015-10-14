@@ -97,4 +97,4 @@ for (key in keys) {
 }
 
 System.print(sum)
-System.print("elapsed: " + (System.clock - start).toString)
+System.print("elapsed: %(System.clock - start)")

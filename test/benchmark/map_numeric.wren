@@ -16,4 +16,4 @@ for (i in 1..1000000) {
   map.remove(i)
 }
 
-System.print("elapsed: " + (System.clock - start).toString)
+System.print("elapsed: %(System.clock - start)")
