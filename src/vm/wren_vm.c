@@ -443,7 +443,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
   // See if the module has already been loaded.
   if (module == NULL)
   {
-    module = wrenNewModule(vm, AS_STRING(name), AS_STRING(name));
+    module = wrenNewModule(vm, AS_STRING(name));
 
     // Store it in the VM's module registry so we don't load the same module
     // multiple times.
@@ -1446,15 +1446,13 @@ void* wrenAllocateForeign(WrenVM* vm, size_t size)
   return (void*)foreign->data;
 }
 
-WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
-                                  const char* source)
+WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source)
 {
-  return wrenInterpretInModule(vm, "main", sourcePath, source);
+  return wrenInterpretInModule(vm, "main", source);
 }
 
 WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
-                                  const char* sourcePath,
-                                  const char* source)
+                                          const char* source)
 {
   Value nameValue = NULL_VAL;
   if (module != NULL)

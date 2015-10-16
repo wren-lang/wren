@@ -20,20 +20,15 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
     CallFrame* frame = &fiber->frames[i];
     ObjFn* fn = wrenGetFrameFunction(frame);
 
-    // Built-in libraries and method call stubs have no source path and are
-    // explicitly omitted from stack traces since we don't want to highlight to
-    // a user the implementation detail of what part of a core library is
-    // implemented in C and what is in Wren.
-    if (fn->module->sourcePath == NULL ||
-        fn->module->sourcePath->length == 0)
-    {
-      continue;
-    }
-
+    // The built-in core module has no name. We explicitly omit it from stack
+    // traces since we don't want to highlight to a user the implementation
+    // detail of what part of the core module is written in C and what is Wren.
+    if (fn->module->name == NULL) continue;
+    
     // -1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines[frame->ip - fn->bytecode - 1];
     fprintf(stderr, "[%s line %d] in %s\n",
-            fn->module->sourcePath->value, line, fn->debug->name);
+            fn->module->name->value, line, fn->debug->name);
   }
 }
 
@@ -354,7 +349,7 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 
 void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 {
-  printf("%s: %s\n", fn->module->sourcePath->value, fn->debug->name);
+  printf("%s: %s\n", fn->module->name->value, fn->debug->name);
 
   int i = 0;
   int lastLine = -1;

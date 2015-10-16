@@ -133,8 +133,7 @@ WrenValue* wrenCaptureValue(WrenVM* vm, Value value);
 
 // Executes [source] in the context of [module].
 WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
-                                   const char* sourcePath,
-                                   const char* source);
+                                          const char* source);
 
 // Imports the module with [name].
 //

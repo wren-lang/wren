@@ -48,7 +48,7 @@ void wrenLoadMetaModule(WrenVM* vm)
   WrenBindForeignMethodFn previousBindFn = vm->config.bindForeignMethodFn;
   vm->config.bindForeignMethodFn = bindMetaForeignMethods;
   
-  wrenInterpretInModule(vm, "meta", "meta", metaModuleSource);
+  wrenInterpretInModule(vm, "meta", metaModuleSource);
 
   vm->config.bindForeignMethodFn = previousBindFn;
 }

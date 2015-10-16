@@ -286,9 +286,6 @@ typedef struct
 
   // The name of the module.
   ObjString* name;
-
-  // The path to the source file where this module was loaded.
-  ObjString* sourcePath;
 } ObjModule;
 
 // A first-class function object. A raw ObjFn can be used and invoked directly
@@ -696,7 +693,7 @@ void wrenMapClear(WrenVM* vm, ObjMap* map);
 Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key);
 
 // Creates a new module.
-ObjModule* wrenNewModule(WrenVM* vm, ObjString* name, ObjString* path);
+ObjModule* wrenNewModule(WrenVM* vm, ObjString* name);
 
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);

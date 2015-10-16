@@ -181,17 +181,7 @@ void wrenFreeVM(WrenVM* vm);
 void wrenCollectGarbage(WrenVM* vm);
 
 // Runs [source], a string of Wren source code in a new fiber in [vm].
-//
-// [sourcePath] is a string describing where [source] was located, for use in
-// debugging stack traces. It must not be `null`.
-//
-// If it's an empty string, then [source] is considered part of the "core"
-// module. Any module-level names defined in it will be implicitly imported by
-// another other modules. This also means runtime errors in its code will be
-// omitted from stack traces (to avoid confusing users with core library
-// implementation details).
-WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
-                                  const char* source);
+WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source);
 
 // Creates a handle that can be used to invoke a method with [signature] on the
 // object in [module] currently stored in top-level [variable].

@@ -206,7 +206,7 @@ void runFile(const char* path)
 
   initVM();
 
-  WrenInterpretResult result = wrenInterpret(vm, path, source);
+  WrenInterpretResult result = wrenInterpret(vm, source);
 
   if (afterLoadFn != NULL) afterLoadFn(vm);
   
@@ -247,7 +247,7 @@ int runRepl()
     }
 
     // TODO: Handle failure.
-    wrenInterpret(vm, "Prompt", line);
+    wrenInterpret(vm, line);
 
     // TODO: Automatically print the result of expressions.
   }

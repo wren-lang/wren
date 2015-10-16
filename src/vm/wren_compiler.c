@@ -307,7 +307,7 @@ static void lexError(Parser* parser, const char* format, ...)
   if (!parser->printErrors) return;
 
   fprintf(stderr, "[%s line %d] Error: ",
-          parser->module->sourcePath->value, parser->currentLine);
+          parser->module->name->value, parser->currentLine);
 
   va_list args;
   va_start(args, format);
@@ -337,7 +337,7 @@ static void error(Compiler* compiler, const char* format, ...)
   if (token->type == TOKEN_ERROR) return;
 
   fprintf(stderr, "[%s line %d] Error at ",
-          compiler->parser->module->sourcePath->value, token->line);
+          compiler->parser->module->name->value, token->line);
 
   if (token->type == TOKEN_LINE)
   {

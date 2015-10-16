@@ -551,7 +551,7 @@ Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
   return value;
 }
 
-ObjModule* wrenNewModule(WrenVM* vm, ObjString* name, ObjString* path)
+ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
 {
   ObjModule* module = ALLOCATE(vm, ObjModule);
 
@@ -564,7 +564,6 @@ ObjModule* wrenNewModule(WrenVM* vm, ObjString* name, ObjString* path)
   wrenValueBufferInit(&module->variables);
 
   module->name = name;
-  module->sourcePath = path;
 
   wrenPopRoot(vm);
   return module;
@@ -1004,8 +1003,6 @@ static void markModule(WrenVM* vm, ObjModule* module)
   }
 
   wrenMarkObj(vm, (Obj*)module->name);
-
-  wrenMarkObj(vm, (Obj*)module->sourcePath);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjModule);

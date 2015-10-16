@@ -1047,11 +1047,7 @@ static void fnCall(WrenVM* vm, const char* signature)
 
 void wrenInitializeCore(WrenVM* vm)
 {
-  ObjString* name = AS_STRING(CONST_STRING(vm, "core"));
-  wrenPushRoot(vm, (Obj*)name);
-  
-  ObjModule* coreModule = wrenNewModule(vm, name, NULL);
-  wrenPopRoot(vm); // name.
+  ObjModule* coreModule = wrenNewModule(vm, NULL);
   wrenPushRoot(vm, (Obj*)coreModule);
   
   // The core module's key is null in the module map.
@@ -1112,7 +1108,7 @@ void wrenInitializeCore(WrenVM* vm)
   //   '---------'   '-------------------'            -'
 
   // The rest of the classes can now be defined normally.
-  wrenInterpretInModule(vm, NULL, "", coreModuleSource);
+  wrenInterpretInModule(vm, NULL, coreModuleSource);
 
   vm->boolClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
