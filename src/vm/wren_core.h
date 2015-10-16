@@ -5,7 +5,7 @@
 
 // This module defines the built-in classes and their primitives methods that
 // are implemented directly in C code. Some languages try to implement as much
-// of the core library itself in the primary language instead of in the host
+// of the core module itself in the primary language instead of in the host
 // language.
 //
 // With Wren, we try to do as much of it in C as possible. Primitive methods

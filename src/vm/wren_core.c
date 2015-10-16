@@ -1018,7 +1018,7 @@ DEF_PRIMITIVE(system_writeString)
   RETURN_VAL(args[1]);
 }
 
-// Creates either the Object or Class class in the core library with [name].
+// Creates either the Object or Class class in the core module with [name].
 static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 {
   ObjString* nameString = AS_STRING(wrenStringFormat(vm, "$", name));
@@ -1256,7 +1256,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
 
-  // While bootstrapping the core types and running the core library, a number
+  // While bootstrapping the core types and running the core module, a number
   // of string objects have been created, many of which were instantiated
   // before stringClass was stored in the VM. Some of them *must* be created
   // first -- the ObjClass for string itself has a reference to the ObjString
