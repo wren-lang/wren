@@ -1,3 +1,5 @@
+import "meta" for Meta
+
 var y
 
 Meta.eval("y = 2")

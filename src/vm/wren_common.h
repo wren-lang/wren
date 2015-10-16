@@ -44,11 +44,11 @@
   #endif
 #endif
 
-// If true, loads the "Meta" class in the standard library.
+// If true, loads the "meta" built in module.
 //
 // Defaults to on.
-#ifndef WREN_USE_LIB_META
-  #define WREN_USE_LIB_META 1
+#ifndef WREN_USE_META_MODULE
+  #define WREN_USE_META_MODULE 1
 #endif
 
 // These flags are useful for debugging and hacking on Wren itself. They are not

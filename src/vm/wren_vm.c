@@ -8,11 +8,7 @@
 #include "wren_debug.h"
 #include "wren_vm.h"
 
-#if WREN_USE_LIB_IO
-  #include "wren_io.h"
-#endif
-
-#if WREN_USE_LIB_META
+#if WREN_USE_META_MODULE
   #include "wren_meta.h"
 #endif
 
@@ -57,22 +53,12 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   wrenSymbolTableInit(&vm->methodNames);
 
-  ObjString* name = AS_STRING(CONST_STRING(vm, "core"));
-  wrenPushRoot(vm, (Obj*)name);
-
-  // Implicitly create a "core" module for the built in libraries.
-  ObjModule* coreModule = wrenNewModule(vm, name, NULL);
-  wrenPushRoot(vm, (Obj*)coreModule);
-
   vm->modules = wrenNewMap(vm);
-  wrenMapSet(vm, vm->modules, NULL_VAL, OBJ_VAL(coreModule));
-
-  wrenPopRoot(vm); // mainModule.
-  wrenPopRoot(vm); // name.
 
   wrenInitializeCore(vm);
-  #if WREN_USE_LIB_META
-    wrenLoadMetaLibrary(vm);
+  
+  #if WREN_USE_META_MODULE
+    wrenLoadMetaModule(vm);
   #endif
 
   return vm;
@@ -463,14 +449,17 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
     // multiple times.
     wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
 
-    // Implicitly import the core module.
-    ObjModule* coreModule = wrenGetCoreModule(vm);
-    for (int i = 0; i < coreModule->variables.count; i++)
+    // Implicitly import the core module (unless we *are* core).
+    if (!IS_NULL(name))
     {
-      wrenDefineVariable(vm, module,
-                         coreModule->variableNames.data[i].buffer,
-                         coreModule->variableNames.data[i].length,
-                         coreModule->variables.data[i]);
+      ObjModule* coreModule = getModule(vm, NULL_VAL);
+      for (int i = 0; i < coreModule->variables.count; i++)
+      {
+        wrenDefineVariable(vm, module,
+                           coreModule->variableNames.data[i].buffer,
+                           coreModule->variableNames.data[i].length,
+                           coreModule->variables.data[i]);
+      }
     }
   }
 
@@ -1457,49 +1446,36 @@ void* wrenAllocateForeign(WrenVM* vm, size_t size)
   return (void*)foreign->data;
 }
 
-// Execute [source] in the context of the core module.
-static WrenInterpretResult loadIntoCore(WrenVM* vm, const char* source)
-{
-  ObjModule* coreModule = wrenGetCoreModule(vm);
-
-  ObjFn* fn = wrenCompile(vm, coreModule, source, true);
-  if (fn == NULL) return WREN_RESULT_COMPILE_ERROR;
-
-  wrenPushRoot(vm, (Obj*)fn);
-  ObjFiber* fiber = wrenNewFiber(vm, (Obj*)fn);
-  wrenPopRoot(vm);
-
-  return runInterpreter(vm, fiber);
-}
-
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* sourcePath,
                                   const char* source)
 {
-  if (strlen(sourcePath) == 0) return loadIntoCore(vm, source);
+  return wrenInterpretInModule(vm, "main", sourcePath, source);
+}
 
-  // TODO: Better module name.
-  Value name = CONST_STRING(vm, "main");
-  wrenPushRoot(vm, AS_OBJ(name));
-
-  ObjFiber* fiber = loadModule(vm, name, source);
+WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
+                                  const char* sourcePath,
+                                  const char* source)
+{
+  Value nameValue = NULL_VAL;
+  if (module != NULL)
+  {
+    nameValue = wrenStringFormat(vm, "$", module);
+    wrenPushRoot(vm, AS_OBJ(nameValue));
+  }
+  
+  ObjFiber* fiber = loadModule(vm, nameValue, source);
   if (fiber == NULL)
   {
     wrenPopRoot(vm);
     return WREN_RESULT_COMPILE_ERROR;
   }
 
-  wrenPopRoot(vm); // name.
+  if (module != NULL)
+  {
+    wrenPopRoot(vm); // nameValue.
+  }
 
-  WrenInterpretResult result = runInterpreter(vm, fiber);
-
-  return result;
-}
-
-ObjModule* wrenGetCoreModule(WrenVM* vm)
-{
-  ObjModule* module = getModule(vm, NULL_VAL);
-  ASSERT(module != NULL, "Could not find core module.");
-  return module;
+  return runInterpreter(vm, fiber);
 }
 
 Value wrenImportModule(WrenVM* vm, const char* name)

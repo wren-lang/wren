@@ -6,9 +6,9 @@
 #include "wren.h"
 
 // This module defines the Meta class and its associated methods.
-#if WREN_USE_LIB_META
+#if WREN_USE_META_MODULE
 
-void wrenLoadMetaLibrary(WrenVM* vm);
+void wrenLoadMetaModule(WrenVM* vm);
 
 #endif
 

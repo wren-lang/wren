@@ -131,8 +131,10 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 // Creates a new [WrenValue] for [value].
 WrenValue* wrenCaptureValue(WrenVM* vm, Value value);
 
-// Looks up the core module in the module map.
-ObjModule* wrenGetCoreModule(WrenVM* vm);
+// Executes [source] in the context of [module].
+WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
+                                   const char* sourcePath,
+                                   const char* source);
 
 // Imports the module with [name].
 //

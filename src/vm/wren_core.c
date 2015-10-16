@@ -1047,7 +1047,16 @@ static void fnCall(WrenVM* vm, const char* signature)
 
 void wrenInitializeCore(WrenVM* vm)
 {
-  ObjModule* coreModule = wrenGetCoreModule(vm);
+  ObjString* name = AS_STRING(CONST_STRING(vm, "core"));
+  wrenPushRoot(vm, (Obj*)name);
+  
+  ObjModule* coreModule = wrenNewModule(vm, name, NULL);
+  wrenPopRoot(vm); // name.
+  wrenPushRoot(vm, (Obj*)coreModule);
+  
+  // The core module's key is null in the module map.
+  wrenMapSet(vm, vm->modules, NULL_VAL, OBJ_VAL(coreModule));
+  wrenPopRoot(vm); // coreModule.
 
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass.
@@ -1103,7 +1112,7 @@ void wrenInitializeCore(WrenVM* vm)
   //   '---------'   '-------------------'            -'
 
   // The rest of the classes can now be defined normally.
-  wrenInterpret(vm, "", coreModuleSource);
+  wrenInterpretInModule(vm, NULL, "", coreModuleSource);
 
   vm->boolClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
