@@ -81,7 +81,7 @@ void randomFloat(WrenVM* vm)
 
   // Now we have a number from 0 - (2^53). Divide be the range to get a double
   // from 0 to 1.0 (half-inclusive).
-  result /= (1UL << 53);
+  result /= 9007199254740992.0;
   
   wrenReturnDouble(vm, result);
 }
