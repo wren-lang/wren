@@ -205,6 +205,7 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 #endif
 
   UNREACHABLE();
+  return NULL;
 }
 
 #endif

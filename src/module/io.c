@@ -212,7 +212,7 @@ static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
                           uv_buf_t* buf)
 {
   // TODO: Handle allocation failure.
-  buf->base = malloc(suggestedSize);
+  buf->base = (char*)malloc(suggestedSize);
   buf->len = suggestedSize;
 }
 

@@ -632,7 +632,9 @@ static inline ObjFn* wrenGetFrameFunction(CallFrame* frame)
   {
     case OBJ_FN:      return (ObjFn*)frame->fn;
     case OBJ_CLOSURE: return ((ObjClosure*)frame->fn)->fn;
-    default:          UNREACHABLE();
+    default:
+      UNREACHABLE();
+      return NULL;
   }
 }
 

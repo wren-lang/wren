@@ -111,6 +111,7 @@ int wrenUtf8Encode(int value, uint8_t* bytes)
 
   // Invalid Unicode value. See: http://tools.ietf.org/html/rfc3629
   UNREACHABLE();
+  return 0;
 }
 
 int wrenUtf8Decode(const uint8_t* bytes, uint32_t length)
