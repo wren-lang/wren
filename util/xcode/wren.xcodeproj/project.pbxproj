@@ -42,6 +42,10 @@
 		29DC14AC1BBA303D008A8274 /* returns.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AA1B7E39A8000CE58C /* returns.c */; };
 		29DC14AD1BBA3040008A8274 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AC1B7E39A8000CE58C /* value.c */; };
 		29DE39531AC3A50A00987D41 /* wren_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29DE39511AC3A50A00987D41 /* wren_meta.c */; };
+		29F384141BD20FF1002F84E0 /* random.c in Sources */ = {isa = PBXBuildFile; fileRef = 29F384121BD20FF1002F84E0 /* random.c */; };
+		29F384151BD20FF1002F84E0 /* random.c in Sources */ = {isa = PBXBuildFile; fileRef = 29F384121BD20FF1002F84E0 /* random.c */; };
+		29F384161BD20FF1002F84E0 /* random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29F384131BD20FF1002F84E0 /* random.wren.inc */; };
+		29F384171BD20FF1002F84E0 /* random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29F384131BD20FF1002F84E0 /* random.wren.inc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -110,6 +114,8 @@
 		29DE39511AC3A50A00987D41 /* wren_meta.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_meta.c; path = ../../src/vm/wren_meta.c; sourceTree = "<group>"; };
 		29DE39521AC3A50A00987D41 /* wren_meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_meta.h; path = ../../src/vm/wren_meta.h; sourceTree = "<group>"; };
 		29F384111BD19706002F84E0 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../../src/module/io.h; sourceTree = "<group>"; };
+		29F384121BD20FF1002F84E0 /* random.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = random.c; path = ../../src/module/random.c; sourceTree = "<group>"; };
+		29F384131BD20FF1002F84E0 /* random.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = random.wren.inc; path = ../../src/module/random.wren.inc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +144,8 @@
 				29F384111BD19706002F84E0 /* io.h */,
 				29729F2E1BA70A620099CA20 /* io.c */,
 				29729F301BA70A620099CA20 /* io.wren.inc */,
+				29F384121BD20FF1002F84E0 /* random.c */,
+				29F384131BD20FF1002F84E0 /* random.wren.inc */,
 				291647C31BA5EA45006142EE /* scheduler.h */,
 				291647C21BA5EA45006142EE /* scheduler.c */,
 				291647CD1BA5ED26006142EE /* scheduler.wren.inc */,
@@ -314,11 +322,13 @@
 				291647C41BA5EA45006142EE /* scheduler.c in Sources */,
 				29205C9B1AB4E6430073018D /* wren_debug.c in Sources */,
 				29205C9D1AB4E6430073018D /* wren_utils.c in Sources */,
+				29F384141BD20FF1002F84E0 /* random.c in Sources */,
 				29729F311BA70A620099CA20 /* io.c in Sources */,
 				29205C9E1AB4E6430073018D /* wren_value.c in Sources */,
 				29205C9F1AB4E6430073018D /* wren_vm.c in Sources */,
 				29DE39531AC3A50A00987D41 /* wren_meta.c in Sources */,
 				29205C8F1AB4E5C90073018D /* main.c in Sources */,
+				29F384161BD20FF1002F84E0 /* random.wren.inc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,6 +342,7 @@
 				29DC14A01BBA2FD6008A8274 /* timer.c in Sources */,
 				29DC149F1BBA2FCC008A8274 /* vm.c in Sources */,
 				29DC14A21BBA300A008A8274 /* wren_compiler.c in Sources */,
+				29F384151BD20FF1002F84E0 /* random.c in Sources */,
 				29DC14A31BBA300D008A8274 /* wren_core.c in Sources */,
 				29DC14A41BBA3010008A8274 /* wren_debug.c in Sources */,
 				29DC14A51BBA3013008A8274 /* wren_meta.c in Sources */,
@@ -339,6 +350,7 @@
 				29DC14A71BBA301A008A8274 /* wren_utils.c in Sources */,
 				29DC14A81BBA301D008A8274 /* wren_value.c in Sources */,
 				29DC14A91BBA302F008A8274 /* wren_vm.c in Sources */,
+				29F384171BD20FF1002F84E0 /* random.wren.inc in Sources */,
 				29DC14AA1BBA3032008A8274 /* main.c in Sources */,
 				293D46961BB43F9900200083 /* call.c in Sources */,
 				29DC14AB1BBA3038008A8274 /* foreign_class.c in Sources */,

@@ -4,6 +4,7 @@
 #include "modules.h"
 
 #include "io.wren.inc"
+#include "random.wren.inc"
 #include "scheduler.wren.inc"
 #include "timer.wren.inc"
 
@@ -15,6 +16,12 @@ extern void fileClose(WrenVM* vm);
 extern void fileDescriptor(WrenVM* vm);
 extern void fileReadBytes(WrenVM* vm);
 extern void fileSize(WrenVM* vm);
+extern void randomAllocate(WrenVM* vm);
+extern void randomSeed0(WrenVM* vm);
+extern void randomSeed1(WrenVM* vm);
+extern void randomSeed16(WrenVM* vm);
+extern void randomFloat(WrenVM* vm);
+extern void randomInt0(WrenVM* vm);
 extern void stdinReadStart(WrenVM* vm);
 extern void stdinReadStop(WrenVM* vm);
 extern void schedulerCaptureMethods(WrenVM* vm);
@@ -96,6 +103,16 @@ static ModuleRegistry modules[] =
     CLASS(Stdin)
       STATIC_METHOD("readStart_()", stdinReadStart)
       STATIC_METHOD("readStop_()", stdinReadStop)
+    END_CLASS
+  END_MODULE
+  MODULE(random)
+    CLASS(Random)
+      STATIC_METHOD("<allocate>", randomAllocate)
+      METHOD("seed_()", randomSeed0)
+      METHOD("seed_(_)", randomSeed1)
+      METHOD("seed_(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", randomSeed16)
+      METHOD("float()", randomFloat)
+      METHOD("int()", randomInt0)
     END_CLASS
   END_MODULE
   MODULE(scheduler)
