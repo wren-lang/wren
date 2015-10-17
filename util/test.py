@@ -83,7 +83,7 @@ class Test:
 
         match = STDIN_PATTERN.search(line)
         if match:
-          input_lines.append(match.group(1) + '\n')
+          input_lines.append(match.group(1))
 
         match = SKIP_PATTERN.search(line)
         if match:
@@ -99,9 +99,9 @@ class Test:
         line_num += 1
 
 
-    # If any input is fed to the test in stdin, concatetate it into one string.
+    # If any input is fed to the test in stdin, concatenate it into one string.
     if input_lines:
-      self.input_bytes = "".join(input_lines).encode("utf-8")
+      self.input_bytes = "\n".join(input_lines).encode("utf-8")
 
     # If we got here, it's a valid test.
     return True

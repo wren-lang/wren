@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "io.h"
 #include "modules.h"
 #include "scheduler.h"
 #include "vm.h"
@@ -152,6 +153,7 @@ static WrenForeignClassMethods bindForeignClass(
 static void write(WrenVM* vm, const char* text)
 {
   printf("%s", text);
+  fflush(stdout);
 }
 
 static void initVM()
@@ -175,12 +177,15 @@ static void initVM()
 
 static void freeVM()
 {
-  schedulerReleaseMethods();
+  ioShutdown();
+  schedulerShutdown();
   
   uv_loop_close(loop);
   free(loop);
-
+  
   wrenFreeVM(vm);
+
+  uv_tty_reset_mode();
 }
 
 void runFile(const char* path)

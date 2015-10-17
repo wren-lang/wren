@@ -9,6 +9,36 @@
 
 #include <stdio.h>
 
+static const int stdinDescriptor = 0;
+
+// Handle to Stdin.onData_(). Called when libuv provides data on stdin.
+static WrenValue* stdinOnData = NULL;
+
+// The stream used to read from stdin. Initialized on the first read.
+static uv_stream_t* stdinStream = NULL;
+
+// Frees all resources related to stdin.
+static void shutdownStdin()
+{
+  if (stdinStream != NULL)
+  {
+    uv_close((uv_handle_t*)stdinStream, NULL);
+    free(stdinStream);
+    stdinStream = NULL;
+  }
+  
+  if (stdinOnData != NULL)
+  {
+    wrenReleaseValue(getVM(), stdinOnData);
+    stdinOnData = NULL;
+  }
+}
+
+void ioShutdown()
+{
+  shutdownStdin();
+}
+
 void fileAllocate(WrenVM* vm)
 {
   // Store the file descriptor in the foreign data, so that we can get to it
@@ -137,7 +167,7 @@ void fileDescriptor(WrenVM* vm)
   wrenReturnDouble(vm, fd);
 }
 
-static void readBytesCallback(uv_fs_t* request)
+static void fileReadBytesCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
 
@@ -165,7 +195,7 @@ void fileReadBytes(WrenVM* vm)
   buffer.base = (char*)malloc(buffer.len);
   
   // TODO: Allow passing in offset.
-  uv_fs_read(getLoop(), request, fd, &buffer, 1, 0, readBytesCallback);
+  uv_fs_read(getLoop(), request, fd, &buffer, 1, 0, fileReadBytesCallback);
 }
 
 void fileSize(WrenVM* vm)
@@ -176,4 +206,69 @@ void fileSize(WrenVM* vm)
   // TODO: Assert fd != -1.
   
   uv_fs_fstat(getLoop(), request, fd, sizeCallback);
+}
+
+static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
+                          uv_buf_t* buf)
+{
+  // TODO: Handle allocation failure.
+  buf->base = malloc(suggestedSize);
+  buf->len = suggestedSize;
+}
+
+static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
+                               const uv_buf_t* buffer)
+{
+  // If stdin was closed, send null to let io.wren know.
+  if (numRead == UV_EOF)
+  {
+    wrenCall(getVM(), stdinOnData, NULL, "v", NULL);
+    shutdownStdin();
+    return;
+  }
+  
+  // TODO: Handle other errors.
+  
+  if (stdinOnData == NULL)
+  {
+    stdinOnData = wrenGetMethod(getVM(), "io", "Stdin", "onData_(_)");
+  }
+
+  // TODO: Having to copy the bytes here is a drag. It would be good if Wren's
+  // embedding API supported a way to *give* it bytes that were previously
+  // allocated using Wren's own allocator.
+  wrenCall(getVM(), stdinOnData, NULL, "a", buffer->base, numRead);
+  
+  // TODO: Likewise, freeing this after we resume is lame.
+  free(buffer->base);
+}
+
+void stdinReadStart(WrenVM* vm)
+{
+  if (stdinStream == NULL)
+  {
+    if (uv_guess_handle(stdinDescriptor) == UV_TTY)
+    {
+      // stdin is connected to a terminal.
+      uv_tty_t* handle = (uv_tty_t*)malloc(sizeof(uv_tty_t));
+      uv_tty_init(getLoop(), handle, stdinDescriptor, true);
+      stdinStream = (uv_stream_t*)handle;
+    }
+    else
+    {
+      // stdin is a pipe or a file.
+      uv_pipe_t* handle = (uv_pipe_t*)malloc(sizeof(uv_pipe_t));
+      uv_pipe_init(getLoop(), handle, false);
+      uv_pipe_open(handle, stdinDescriptor);
+      stdinStream = (uv_stream_t*)handle;
+    }
+  }
+  
+  uv_read_start(stdinStream, allocCallback, stdinReadCallback);
+  // TODO: Check return.
+}
+
+void stdinReadStop(WrenVM* vm)
+{
+  uv_read_stop(stdinStream);
 }

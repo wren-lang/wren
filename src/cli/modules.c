@@ -15,6 +15,8 @@ extern void fileClose(WrenVM* vm);
 extern void fileDescriptor(WrenVM* vm);
 extern void fileReadBytes(WrenVM* vm);
 extern void fileSize(WrenVM* vm);
+extern void stdinReadStart(WrenVM* vm);
+extern void stdinReadStop(WrenVM* vm);
 extern void schedulerCaptureMethods(WrenVM* vm);
 extern void timerStartTimer(WrenVM* vm);
 
@@ -33,7 +35,7 @@ extern void timerStartTimer(WrenVM* vm);
 // If you add a new class to the largest module below, make sure to bump this.
 // Note that it also includes an extra slot for the sentinel value indicating
 // the end of the list.
-#define MAX_CLASSES_PER_MODULE 2
+#define MAX_CLASSES_PER_MODULE 3
 
 // Describes one foreign method in a class.
 typedef struct
@@ -68,11 +70,11 @@ typedef struct
 // To locate foreign classes and modules, we build a big directory for them in
 // static data. The nested collection initializer syntax gets pretty noisy, so
 // define a couple of macros to make it easier.
-#define MODULE(name) { #name, &name##ModuleSource, { {
-#define END_MODULE }, {NULL, {}} } },
+#define MODULE(name) { #name, &name##ModuleSource, {
+#define END_MODULE {NULL, {}} }, },
 
-#define CLASS(name) #name, {
-#define END_CLASS {false, NULL, NULL} }
+#define CLASS(name) { #name, {
+#define END_CLASS {false, NULL, NULL} }, },
 
 #define METHOD(signature, fn) {false, signature, fn},
 #define STATIC_METHOD(signature, fn) {true, signature, fn},
@@ -91,14 +93,16 @@ static ModuleRegistry modules[] =
       METHOD("readBytes_(_,_)", fileReadBytes)
       METHOD("size_(_)", fileSize)
     END_CLASS
+    CLASS(Stdin)
+      STATIC_METHOD("readStart_()", stdinReadStart)
+      STATIC_METHOD("readStop_()", stdinReadStop)
+    END_CLASS
   END_MODULE
-  
   MODULE(scheduler)
     CLASS(Scheduler)
       STATIC_METHOD("captureMethods_()", schedulerCaptureMethods)
     END_CLASS
   END_MODULE
-  
   MODULE(timer)
     CLASS(Timer)
       STATIC_METHOD("startTimer_(_,_)", timerStartTimer)

@@ -66,7 +66,7 @@ void schedulerResumeError(WrenValue* fiber, const char* error)
   callResume(resumeError, fiber, "vs", fiber, error);
 }
 
-void schedulerReleaseMethods()
+void schedulerShutdown()
 {
   if (resume != NULL) wrenReleaseValue(getVM(), resume);
   if (resumeWithArg != NULL) wrenReleaseValue(getVM(), resumeWithArg);

@@ -67,3 +67,58 @@ foreign class File {
   foreign readBytes_(count, fiber)
   foreign size_(fiber)
 }
+
+class Stdin {
+  static readLine() {
+    if (__isClosed == true) {
+      Fiber.abort("Stdin was closed.")
+    }
+
+    // TODO: Error if other fiber is already waiting.
+    readStart_()
+
+    __waitingFiber = Fiber.current
+    var line = Scheduler.runNextScheduled_()
+
+    readStop_()
+    return line
+  }
+
+  static onData_(data) {
+    if (data == null) {
+      __isClosed = true
+      readStop_()
+
+      if (__line != null) {
+        var line = __line
+        __line = null
+        if (__waitingFiber != null) __waitingFiber.transfer(line)
+      } else {
+        __waitingFiber.transferError("Stdin was closed.")
+      }
+    }
+
+    // TODO: Handle Windows line separators.
+    var lineSeparator = data.indexOf("\n")
+
+    if (__line == null) __line = ""
+    if (lineSeparator == -1) {
+      // No end of line yet, so just accumulate it.
+      __line = __line + data
+    } else {
+      // Split the line at the separator.
+      var line = __line + data[0...lineSeparator]
+      if (lineSeparator > 0 && lineSeparator < data.count - 1) {
+        // Buffer up the characters after the separator for the next line.
+        __line = data[lineSeparator + 1..-1]
+      } else {
+        __line = ""
+      }
+
+      if (__waitingFiber != null) __waitingFiber.transfer(line)
+    }
+  }
+
+  foreign static readStart_()
+  foreign static readStop_()
+}

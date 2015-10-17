@@ -9,6 +9,6 @@ void schedulerResumeDouble(WrenValue* fiber, double value);
 void schedulerResumeString(WrenValue* fiber, const char* text);
 void schedulerResumeError(WrenValue* fiber, const char* error);
 
-void schedulerReleaseMethods();
+void schedulerShutdown();
 
 #endif
