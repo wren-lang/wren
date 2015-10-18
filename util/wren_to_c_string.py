@@ -42,6 +42,8 @@ def main():
     wren_source_lines = f.readlines()
 
   module = os.path.splitext(os.path.basename(args.input))[0]
+  module = module.replace("wren_aux_", "")
+
   c_source = wren_to_c_string(args.input, wren_source_lines, module)
 
   with open(args.output, "w") as f:

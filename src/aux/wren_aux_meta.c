@@ -1,12 +1,11 @@
-#include "wren_meta.h"
+#include "wren_aux_meta.h"
 
-#if WREN_USE_META_MODULE
+#if WREN_AUX_META
 
 #include <string.h>
 
-#include "wren_primitive.h"
-
-#include "wren_meta.wren.inc"
+#include "wren_vm.h"
+#include "wren_aux_meta.wren.inc"
 
 void metaCompile(WrenVM* vm)
 {

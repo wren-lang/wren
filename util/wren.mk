@@ -19,6 +19,9 @@
 # Then, for the libraries, the correct extension is added.
 
 # Files.
+AUX_HEADERS := $(wildcard src/aux/*.h) $(wildcard src/aux/*.wren.inc)
+AUX_SOURCES := $(wildcard src/aux/*.c)
+
 CLI_HEADERS  := $(wildcard src/cli/*.h)
 CLI_SOURCES  := $(wildcard src/cli/*.c)
 
@@ -106,6 +109,7 @@ endif
 
 CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
 
+AUX_OBJECTS    := $(addprefix $(BUILD_DIR)/aux/, $(notdir $(AUX_SOURCES:.c=.o)))
 CLI_OBJECTS    := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
 MODULE_OBJECTS := $(addprefix $(BUILD_DIR)/module/, $(notdir $(MODULE_SOURCES:.c=.o)))
 VM_OBJECTS     := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
@@ -134,26 +138,27 @@ cli: bin/$(WREN)
 test: $(BUILD_DIR)/test/$(WREN)
 
 # Command-line interpreter.
-bin/$(WREN): $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) $(LIBUV)
+bin/$(WREN): $(AUX_OBJECTS) $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
+		$(LIBUV)
 	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@ mkdir -p bin
 	@ $(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
 
 # Static library.
-lib/lib$(WREN).a: $(VM_OBJECTS)
+lib/lib$(WREN).a: $(AUX_OBJECTS) $(VM_OBJECTS)
 	@ printf "%10s %-30s %s\n" $(AR) $@ "rcu"
 	@ mkdir -p lib
 	@ $(AR) rcu $@ $^
 
 # Shared library.
-lib/lib$(WREN).$(SHARED_EXT): $(VM_OBJECTS)
+lib/lib$(WREN).$(SHARED_EXT): $(AUX_OBJECTS) $(VM_OBJECTS)
 	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS) $(SHARED_LIB_FLAGS)"
 	@ mkdir -p lib
 	@ $(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
 
 # Test executable.
-$(BUILD_DIR)/test/$(WREN): $(TEST_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
-		$(BUILD_DIR)/cli/modules.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
+$(BUILD_DIR)/test/$(WREN): $(AUX_OBJECTS) $(MODULE_OBJECTS) $(TEST_OBJECTS) \
+		$(VM_OBJECTS) $(BUILD_DIR)/cli/modules.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
 	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@ mkdir -p $(BUILD_DIR)/test
 	@ $(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
@@ -172,14 +177,21 @@ $(BUILD_DIR)/module/%.o: src/module/%.c $(CLI_HEADERS) $(MODULE_HEADERS) \
 	@ mkdir -p $(BUILD_DIR)/module
 	@ $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
+# Aux object files.
+$(BUILD_DIR)/aux/%.o: src/aux/%.c $(VM_HEADERS) $(AUX_HEADERS)
+	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	@ mkdir -p $(BUILD_DIR)/aux
+	@ $(CC) -c $(CFLAGS) -Isrc/include -Isrc/vm -o $@ $(FILE_FLAG) $<
+
 # VM object files.
 $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
 	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	@ mkdir -p $(BUILD_DIR)/vm
-	@ $(CC) -c $(CFLAGS) -Isrc/include -o $@ $(FILE_FLAG) $<
+	@ $(CC) -c $(CFLAGS) -Isrc/include -Isrc/aux -Isrc/vm -o $@ $(FILE_FLAG) $<
 
 # Test object files.
-$(BUILD_DIR)/test/%.o: test/api/%.c $(MODULE_HEADERS) $(VM_HEADERS) $(TEST_HEADERS) $(LIBUV)
+$(BUILD_DIR)/test/%.o: test/api/%.c $(AUX_HEADERS) $(MODULE_HEADERS) \
+		 $(VM_HEADERS) $(TEST_HEADERS) $(LIBUV)
 	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	@ mkdir -p $(dir $@)
 	@ $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
@@ -193,6 +205,9 @@ $(LIBUV): $(LIBUV_DIR)/build/gyp/gyp util/libuv.py
 	@ ./util/libuv.py build $(LIBUV_ARCH)
 
 # Wren modules that get compiled into the binary as C strings.
+src/aux/wren_aux_%.wren.inc: src/aux/wren_aux_%.wren util/wren_to_c_string.py
+	@ ./util/wren_to_c_string.py $@ $<
+
 src/vm/wren_%.wren.inc: builtin/%.wren util/wren_to_c_string.py
 	@ ./util/wren_to_c_string.py $@ $<
 

@@ -8,8 +8,11 @@
 #include "wren_debug.h"
 #include "wren_vm.h"
 
-#if WREN_USE_META_MODULE
-  #include "wren_meta.h"
+#if WREN_AUX_META
+  #include "wren_aux_meta.h"
+#endif
+#if WREN_AUX_RANDOM
+  #include "wren_aux_random.h"
 #endif
 
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
@@ -57,10 +60,14 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   wrenInitializeCore(vm);
   
-  #if WREN_USE_META_MODULE
+  // TODO: Lazy load these.
+  #if WREN_AUX_META
     wrenLoadMetaModule(vm);
   #endif
-
+  #if WREN_AUX_RANDOM
+    wrenLoadRandomModule(vm);
+  #endif
+  
   return vm;
 }
 
@@ -449,17 +456,14 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
     // multiple times.
     wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
 
-    // Implicitly import the core module (unless we *are* core).
-    if (!IS_NULL(name))
+    // Implicitly import the core module.
+    ObjModule* coreModule = getModule(vm, NULL_VAL);
+    for (int i = 0; i < coreModule->variables.count; i++)
     {
-      ObjModule* coreModule = getModule(vm, NULL_VAL);
-      for (int i = 0; i < coreModule->variables.count; i++)
-      {
-        wrenDefineVariable(vm, module,
-                           coreModule->variableNames.data[i].buffer,
-                           coreModule->variableNames.data[i].length,
-                           coreModule->variables.data[i]);
-      }
+      wrenDefineVariable(vm, module,
+                         coreModule->variableNames.data[i].buffer,
+                         coreModule->variableNames.data[i].length,
+                         coreModule->variables.data[i]);
     }
   }
 
