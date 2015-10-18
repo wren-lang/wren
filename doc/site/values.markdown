@@ -57,12 +57,12 @@ A handful of escape characters are supported:
 A `\u` followed by four hex digits can be used to specify a Unicode code point:
 
     :::wren
-    System.print("\u0041\u0b83\u00DE") // "AஃÞ"
+    System.print("\u0041\u0b83\u00DE") //> AஃÞ
 
 A `\x` followed by two hex digits specifies a single unencoded byte:
 
     :::wren
-    System.print("\x48\x69\x2e") // "Hi."
+    System.print("\x48\x69\x2e") //> Hi.
 
 Strings are instances of class [String](core/string.html).
 
@@ -91,7 +91,7 @@ example:
     :::wren
     var list = ["a", "b", "c", "d", "e"]
     var slice = list[1..3]
-    System.print(slice) // ["b", "c", "d"]
+    System.print(slice) //> [b, c, d]
 
 Their class is [Range](core/range.html).
 

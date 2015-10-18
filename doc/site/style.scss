@@ -138,6 +138,13 @@ h2 {
   font: 500 24px $header;
   margin: 24px 0 0 0;
   color: $link;
+
+  code {
+    border: none;
+    background: inherit;
+    color: inherit;
+    font-size: 24px;
+  }
 }
 
 h3 {
@@ -245,7 +252,7 @@ footer {
   span.vc { color: hsl(130, 60%, 40%); }
 
   // Numbers.
-  span.m, span.mi, span.mf { color: hsl(30, 80%, 45%); }// hsl(90, 80%, 35%)
+  span.m, span.mi, span.mf { color: hsl(30, 80%, 45%); }
 
   // Strings.
   span.s, span.s2  { color: hsl(40, 80%, 45%); }
@@ -257,6 +264,29 @@ footer {
 
   // Preprocessor directives.
   span.cp          { color: hsl(270, 40%, 60%); }
+
+  span.output {
+    float: right;
+    color: hsl(150, 50%, 45%);
+
+    &::before, &::after {
+      color: hsl(150, 50%, 80%);
+    }
+
+    // Tall angle brackets.
+    &::before { content: "\276c  "; }
+    &::after { content: ' \276d'; }
+  }
+
+  span.error {
+    float: right;
+    color: hsl(350, 50%, 60%);
+
+    &::before {
+      color: hsl(350, 50%, 75%);
+      content: "Error: ";
+    }
+  }
 }
 
 // Have a different primary color for the core library docs.

@@ -17,8 +17,8 @@ If it returns something [false](../control-flow.html#truth), stops iterating
 and returns the value. Otherwise, returns `true`.
 
     :::wren
-    [1, 2, 3].all {|n| n > 2} // False.
-    [1, 2, 3].all {|n| n < 4} // True.
+    System.print([1, 2, 3].all {|n| n > 2}) //> false
+    System.print([1, 2, 3].all {|n| n < 4}) //> true
 
 ### **any**(predicate)
 
@@ -29,8 +29,8 @@ If it returns something [true](../control-flow.html#truth), stops iterating and
 returns that value. Otherwise, returns `false`.
 
     :::wren
-    [1, 2, 3].any {|n| n < 1} // False.
-    [1, 2, 3].any {|n| n > 2} // True.
+    System.print([1, 2, 3].any {|n| n < 1}) //> false
+    System.print([1, 2, 3].any {|n| n > 2}) //> true
 
 ### **contains**(element)
 
@@ -51,8 +51,8 @@ Iterates over the sequence, passing each element to the function `predicate`
 and counting the number of times the returned value evaluates to `true`.
 
     :::wren
-    [1, 2, 3].count {|n| n > 2} // 1.
-    [1, 2, 3].count {|n| n < 4} // 3.
+    System.print([1, 2, 3].count {|n| n > 2}) //> 1
+    System.print([1, 2, 3].count {|n| n < 4}) //> 3
 
 ### **each**(function)
 
@@ -88,7 +88,9 @@ original sequence while it is iterated.
     :::wren
     var doubles = [1, 2, 3].map {|n| n * 2 }
     for (n in doubles) {
-      System.print(n) // "2", "4", "6".
+      System.print(n) //> 2
+                      //> 4
+                      //> 6
     }
 
 The returned sequence is *lazy*. It only applies the mapping when you iterate
@@ -105,7 +107,7 @@ To force eager evaluation, just call `.toList` on the result.
     var numbers = [1, 2, 3]
     var doubles = numbers.map {|n| n * 2 }.toList
     numbers.add(4)
-    System.print(doubles) // [2, 4, 6].
+    System.print(doubles) //> [2, 4, 6]
 
 ### **reduce**(function)
 
@@ -127,7 +129,7 @@ the sequence is empty, returns `seed`.
 Creates a [list](list.html) containing all the elements in the sequence.
 
     :::wren
-    (1..3).toList  // [1, 2, 3].
+    System.print((1..3).toList)  //> [1, 2, 3]
 
 If the sequence is already a list, this creates a copy of it.
 
@@ -140,9 +142,11 @@ During iteration, each element in the original sequence is passed to the
 function `predicate`. If it returns `false`, the element is skipped.
 
     :::wren
-    var odds = (1..10).where {|n| n % 2 == 1 }
+    var odds = (1..6).where {|n| n % 2 == 1 }
     for (n in odds) {
-      System.print(n) // "1", "3", "5", "7", "9".
+        System.print(n) //> 1
+                        //> 3
+                        //> 5
     }
 
 The returned sequence is *lazy*. It only applies the filtering when you iterate
@@ -160,4 +164,4 @@ To force eager evaluation, just call `.toList` on the result.
     var numbers = [1, 2, 3, 4, 5, 6]
     var odds = numbers.where {|n| n % 2 == 1 }.toList
     numbers.add(7)
-    System.print(odds) // [1, 3, 5].
+    System.print(odds) //> [1, 3, 5]

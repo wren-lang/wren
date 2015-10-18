@@ -50,8 +50,8 @@ map, returns `null`.
 
     :::wren
     var map = {"george": "harrison", "ringo": "starr"}
-    System.print(map["ringo"]) // "starr".
-    System.print(map["pete"])  // "null".
+    System.print(map["ringo"]) //> starr
+    System.print(map["pete"])  //> null
 
 ### **[**key**]=**(value) operator
 

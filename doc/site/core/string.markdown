@@ -37,7 +37,7 @@ on strings *return* byte indexes too. So, for example, this does what you want:
     :::wren
     var metalBand = "Fäcëhämmër"
     var hPosition = metalBand.indexOf("h")
-    System.print(metalBand[hPosition]) // "h"
+    System.print(metalBand[hPosition]) //> h
 
 If you want to work with a string as a sequence numeric code points, call the
 `codePoints` getter. It returns a [Sequence](sequence.html) that decodes UTF-8
@@ -53,7 +53,7 @@ ignores any UTF-8 encoding and works directly at the byte level.
 Creates a new string containing the UTF-8 encoding of `codePoint`.
 
     :::wren
-    String.fromCodePoint(8225) // "‡"
+    String.fromCodePoint(8225) //> ‡
 
 It is a runtime error if `codePoint` is not an integer between `0` and
 `0x10ffff`, inclusive.
@@ -68,7 +68,7 @@ methods, the returned object also has a subscript operator that can be used to
 directly index bytes.
 
     :::wren
-    System.print("hello".bytes[1]) // 101, for "e".
+    System.print("hello".bytes[1]) //> 101 (for "e")
 
 The `count` method on the returned sequence returns the number of bytes in the
 string. Unlike `count` on the string itself, it does not have to iterate over
@@ -83,15 +83,15 @@ single-character strings, this returns the numeric code point values.
 
     :::wren
     var string = "(ᵔᴥᵔ)"
-    System.print(string.codePoints[0]) // 40, for "(".
-    System.print(string.codePoints[4]) // 7461, for "ᴥ".
+    System.print(string.codePoints[0]) //> 40 (for "(")
+    System.print(string.codePoints[4]) //> 7461 (for "ᴥ")
 
 If the byte at `index` does not begin a valid UTF-8 sequence, or the end of the
 string is reached before the sequence is complete, returns `-1`.
 
     :::wren
     var string = "(ᵔᴥᵔ)"
-    System.print(string.codePoints[2]) // -1, in the middle of "ᵔ".
+    System.print(string.codePoints[2]) //> -1 (in the middle of "ᵔ")
 
 ### **contains**(other)
 
@@ -132,7 +132,7 @@ for iterating over the *code points* in the string:
       codePoints.add(c)
     }
 
-    System.print(codePoints) // ["(", "ᵔ", "ᴥ", "ᵔ", ")"].
+    System.print(codePoints) //> [(, ᵔ, ᴥ, ᵔ, )]
 
 If the string contains any bytes that are not valid UTF-8, this iterates over
 those too, one byte at a time.
@@ -162,7 +162,7 @@ Check if the string is not equal to `other`.
 Returns a string containing the code point starting at byte `index`.
 
     :::wren
-    System.print("ʕ•ᴥ•ʔ"[5]) // "ᴥ".
+    System.print("ʕ•ᴥ•ʔ"[5]) //> ᴥ
 
 Since `ʕ` is two bytes in UTF-8 and `•` is three, the fifth byte points to the
 bear's nose.
@@ -171,7 +171,7 @@ If `index` points into the middle of a UTF-8 sequence or at otherwise invalid
 UTF-8, this returns a one-byte string containing the byte at that index:
 
     :::wren
-    System.print("I ♥ NY"[3]) // One-byte string whose value is 153.
+    System.print("I ♥ NY"[3]) //> (one-byte string [153])
 
 It is a runtime error if `index` is greater than the number of bytes in the
 string.

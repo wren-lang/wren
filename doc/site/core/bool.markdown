@@ -10,8 +10,8 @@ Boolean values. There are two instances, `true` and `false`.
 Returns the logical complement of the value.
 
     :::wren
-    System.print(!true) // "false".
-    System.print(!false) // "true".
+    System.print(!true) //> false
+    System.print(!false) //> true
 
 ### toString
 

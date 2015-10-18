@@ -32,8 +32,8 @@ using the `Fiber` class's constructor:
     }
 
 Creating a fiber does not immediately run it. It's just a first class bundle of
-code sitting there waiting to be activated, a bit like a
-[function](functions.html).
+code sitting there waiting to be activated, a bit like
+a [function](functions.html).
 
 ## Invoking fibers
 
@@ -49,9 +49,9 @@ it's considered *done*:
 
     :::wren
     var fiber = Fiber.new { System.print("Hi") }
-    fiber.isDone // false
+    System.print(fiber.isDone) //> false
     fiber.call()
-    fiber.isDone // true
+    System.print(fiber.isDone) //> true
 
 When it finishes, it automatically resumes the fiber that called it. It's a
 runtime error to try to call a fiber that is already done.
@@ -91,9 +91,10 @@ This program prints:
     fiber 2
     main 3
 
-Note that even though this program has *concurrency*, it's still
-*deterministic*. You can reason precisely about what it's doing and aren't at
-the mercy of a thread scheduler playing Russian roulette with your code.
+Note that even though this program has *concurrency*, it's
+still *deterministic*. You can reason precisely about what it's doing and
+aren't at the mercy of a thread scheduler playing Russian roulette with your
+code.
 
 ## Passing values
 
@@ -116,7 +117,7 @@ ignored. That's because the fiber isn't waiting on a `yield()` call, so there's
 nowhere for the sent value to go.
 
 Fibers can also pass values *back* when they yield. If you pass an argument to
-`yield()`, that will become the return value of the `call` that was used to
+`yield()`, that will become the return value of the `call()` that was used to
 invoke the fiber:
 
     :::wren
@@ -135,8 +136,8 @@ Python and C# that have *generators*. Those let you define a function call that
 you can suspend and resume. When using the function, it appears like a sequence
 you can iterate over.
 
-Wren's fibers can do that, but they can do much more. Like Lua, they are full
-*coroutines*&mdash;they can suspend from anywhere in the callstack. For
+Wren's fibers can do that, but they can do much more. Like Lua, they are
+full *coroutines*&mdash;they can suspend from anywhere in the callstack. For
 example:
 
     :::wren

@@ -39,9 +39,9 @@ here means the last fiber that was started using `call` and not `run`.
       System.print("After yield")
     }
 
-    fiber.call()                // "Before yield"
-    System.print("After call")  // "After call"
-    fiber.call()                // "After yield"
+    fiber.call()                //> Before yield
+    System.print("After call")  //> After call
+    fiber.call()                //> After yield
 
 When resumed, the parent fiber's `call()` method returns `null`.
 
@@ -50,7 +50,7 @@ If a yielded fiber is resumed by calling `call()` or `run()` with an argument,
 
     :::wren
     var fiber = Fiber.new {
-      System.print(Fiber.yield()) // "value"
+      System.print(Fiber.yield()) //> value
     }
 
     fiber.call()        // Run until the first yield.
@@ -77,7 +77,7 @@ Similar to `Fiber.yield` but provides a value to return to the parent fiber's
       Fiber.yield("value")
     }
 
-    System.print(fiber.call()) // "value"
+    System.print(fiber.call()) //> value
 
 ## Methods
 
@@ -107,7 +107,7 @@ If the called fiber is resuming from a yield, the `yield()` method returns
     }
 
     fiber.call()
-    fiber.call() // Prints "null".
+    fiber.call() //> null
 
 ### **call**(value)
 
@@ -120,7 +120,7 @@ Invokes the fiber or resumes the fiber if it is in a paused state and sets
     }
 
     fiber.call()
-    fiber.call("value") // Prints "value".
+    fiber.call("value") //> value
 
 ### **isDone**
 

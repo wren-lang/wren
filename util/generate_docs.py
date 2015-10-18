@@ -93,6 +93,10 @@ def format_file(path, skip_up_to_date):
 
   html = markdown.markdown(contents, ['def_list', 'codehilite', 'smarty'])
 
+  # Use special formatting for example output and errors.
+  html = html.replace('<span class="c1">//&gt; ', '<span class="output">')
+  html = html.replace('<span class="c1">//! ', '<span class="error">')
+
   modified = datetime.fromtimestamp(os.path.getmtime(in_path))
   mod_str = modified.strftime('%B %d, %Y')
 

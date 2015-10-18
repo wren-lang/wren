@@ -19,20 +19,20 @@ element you want. Like most languages, indexes start at zero:
 
     :::wren
     var hirsute = ["sideburns", "porkchops", "'stache", "goatee"]
-    hirsute[0] // "sideburns".
-    hirsute[1] // "porkchops".
+    hirsute[0] //> sideburns
+    hirsute[1] //> porkchops
 
 Negative indices counts backwards from the end:
 
     :::wren
-    hirsute[-1] // "goatee".
-    hirsute[-2] // "'stache".
+    hirsute[-1] //> goatee
+    hirsute[-2] //> 'stache
 
 It's a runtime error to pass an index outside of the bounds of the list. If you
 don't know what those bounds are, you can find out using count:
 
     :::wren
-    hirsute.count // 4.
+    hirsute.count //> 4
 
 ## Slices and ranges
 
@@ -40,7 +40,7 @@ Sometimes you want to copy a chunk of elements from a list. You can do that by
 passing a [range](values.html#ranges) to the subscript operator, like so:
 
     :::wren
-    hirsute[1..2] // ["porkchops", "'stache"].
+    hirsute[1..2] //> [porkchops, 'stache]
 
 This returns a new list containing the elements of the original list whose
 indices are within the given range. Both inclusive and exclusive ranges work
@@ -59,14 +59,14 @@ existing element in the list using the subscript setter:
 
     :::wren
     hirsute[1] = "muttonchops"
-    System.print(hirsute[1]) // muttonchops.
+    System.print(hirsute[1]) //> muttonchops
 
 It's an error to set an element that's out of bounds. To grow a list, you can
 use `add` to append a single item to the end:
 
     :::wren
     hirsute.add("goatee")
-    System.print(hirsute.count) // 4.
+    System.print(hirsute.count) //> 4
 
 You can insert a new element at a specific position using `insert`:
 
@@ -84,9 +84,9 @@ back. Doing so counts back from the size of the list *after* it's grown by one:
     :::wren
     var letters = ["a", "b", "c"]
     letters.insert(3, "d")   // OK: inserts at end.
-    System.print(letters)        // ["a", "b", "c", "d"]
+    System.print(letters)        //> [a, b, c, d]
     letters.insert(-2, "e")  // Counts back from size after insert.
-    System.print(letters)        // ["a", "b", "c", "e", "d"]
+    System.print(letters)        //> [a, b, c, e, d]
 
 ## Removing elements
 
@@ -97,15 +97,15 @@ gap:
     :::wren
     var letters = ["a", "b", "c", "d"]
     letters.removeAt(1)
-    System.print(letters) // ["a", "c", "d"]
+    System.print(letters) //> [a, c, d]
 
 The `removeAt` method returns the removed item:
 
     :::wren
-    System.print(letters.removeAt(1)) // "c"
+    System.print(letters.removeAt(1)) //> c
 
 If you want to remove everything from the list, you can clear it:
 
     :::wren
     hirsute.clear()
-    System.print(hirsute) // []
+    System.print(hirsute) //> []

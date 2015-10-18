@@ -26,14 +26,14 @@ Inserts the `item` at `index` in the list.
     :::wren
     var list = ["a", "b", "c", "d"]
     list.insert(1, "e")
-    System.print(list) // "[a, e, b, c, d]".
+    System.print(list) //> [a, e, b, c, d]
 
 The `index` may be one past the last index in the list to append an element.
 
     :::wren
     var list = ["a", "b", "c"]
     list.insert(3, "d")
-    System.print(list) // "[a, b, c, d]".
+    System.print(list) //> [a, b, c, d]
 
 If `index` is negative, it counts backwards from the end of the list. It bases this on the length of the list *after* inserted the element, so that `-1` will append the element, not insert it before the last element.
 
@@ -41,12 +41,12 @@ If `index` is negative, it counts backwards from the end of the list. It bases t
     var list = ["a", "b"]
     list.insert(-1, "d")
     list.insert(-2, "c")
-    System.print(list) // "[a, b, c, d]".
+    System.print(list) //> [a, b, c, d]
 
 Returns the inserted item.
 
     :::wren
-    System.print(["a", "c"].insert(1, "b")) // "b".
+    System.print(["a", "c"].insert(1, "b")) //> b
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
@@ -64,11 +64,11 @@ are shifted up to fill in where the removed element was.
     :::wren
     var list = ["a", "b", "c", "d"]
     list.removeAt(1)
-    System.print(list) // "[a, c, d]".
+    System.print(list) //> [a, c, d]
 
 Returns the removed item.
 
-    System.print(["a", "b", "c"].removeAt(1)) // "b".
+    System.print(["a", "b", "c"].removeAt(1)) //> b
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
@@ -79,7 +79,7 @@ the end of the list where `-1` is the last element.
 
     :::wren
     var list = ["a", "b", "c"]
-    System.print(list[1]) // "b".
+    System.print(list[1]) //> b
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
@@ -91,6 +91,6 @@ backwards from the end of the list where `-1` is the last element.
     :::wren
     var list = ["a", "b", "c"]
     list[1] = "new"
-    System.print(list) // "[a, new, c]".
+    System.print(list) //> [a, new, c]
 
 It is a runtime error if the index is not an integer or is out of bounds.

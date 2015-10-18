@@ -12,7 +12,7 @@ It is a runtime error if `value` is not a string.
 
 ### Num.**pi**
 
-The value of π.
+The value of &pi;.
 
 ## Methods
 
@@ -21,7 +21,7 @@ The value of π.
 The absolute value of the number.
 
     :::wren
-    -123.abs // 123
+    System.print(-123.abs) //> 123
 
 ### **acos**
 
@@ -45,8 +45,8 @@ numbers to determine the quadrant of the result.
 Rounds the number up to the nearest integer.
 
     :::wren
-    1.5.ceil // 2
-    (-3.2).ceil // -3
+    System.print(1.5.ceil)    //> 2
+    System.print((-3.2).ceil) //> -3
 
 ### **cos**
 
@@ -57,24 +57,24 @@ The cosine of the number.
 Rounds the number down to the nearest integer.
 
     :::wren
-    1.5.floor    // 1
-    (-3.2).floor // -4
+    System.print(1.5.floor)    //> 1
+    System.print((-3.2).floor) //> -4
 
 ### **isInfinity**
 
 Whether the number is positive or negative infinity or not.
 
     :::wren
-    99999.isInfinity  // false
-    (1/0).isInfinity  // true
+    System.print(99999.isInfinity)  //> false
+    System.print((1/0).isInfinity)  //> true
 
 ### **isInteger**
 
 Whether the number is an integer or has some fractional component.
 
     :::wren
-    2.isInteger   // true
-    2.3.isInteger // false
+    System.print(2.isInteger)   //> true
+    System.print(2.3.isInteger) //> false
 
 ### **isNan**
 
@@ -100,7 +100,7 @@ Negates the number.
 
     :::wren
     var a = 123
-    -a // -123
+    System.print(-a) //> -123
 
 ### **-**(other), **+**(other), **/**(other), **\***(other) operators
 
@@ -148,9 +148,9 @@ from the beginning number to the ending number.
 
     :::wren
     var range = 1.2..3.4
-    System.print(range.min)         // 1.2
-    System.print(range.max)         // 3.4
-    System.print(range.isInclusive) // true
+    System.print(range.min)         //> 1.2
+    System.print(range.max)         //> 3.4
+    System.print(range.isInclusive) //> true
 
 ### **...**(other) operator
 
@@ -159,6 +159,6 @@ from the beginning number to the ending number not including the ending number.
 
     :::wren
     var range = 1.2...3.4
-    System.print(range.min)         // 1.2
-    System.print(range.max)         // 3.4
-    System.print(range.isInclusive) // false
+    System.print(range.min)         //> 1.2
+    System.print(range.max)         //> 3.4
+    System.print(range.isInclusive) //> false

@@ -58,7 +58,7 @@ To find the value associated with some key, again you use your friend the
 subscript operator:
 
     :::wren
-    System.print(capitals["Idaho"]) // "Boise".
+    System.print(capitals["Idaho"]) //> Boise
 
 If the key is present, this returns its value. Otherwise, it returns `null`. Of
 course, `null` itself can also be used as a value, so seeing `null` here
@@ -69,15 +69,15 @@ To tell definitively if a key exists, you can call `containsKey()`:
     :::wren
     var belief = {"nihilism": null}
 
-    System.print(belief["nihilism"]) // "null" though key exists.
-    System.print(belief["solipsism"]) // Also "null".
-    System.print(belief.containsKey("nihilism")) // "true".
-    System.print(belief.containsKey("solipsism")) // "false".
+    System.print(belief["nihilism"]) //> null (though key exists)
+    System.print(belief["solipsism"]) //> null
+    System.print(belief.containsKey("nihilism")) //> true
+    System.print(belief.containsKey("solipsism")) //> false
 
 You can see how many entries a map contains using `count`:
 
     :::wren
-    System.print(capitals.count) // "3".
+    System.print(capitals.count) //> 3
 
 ## Removing entries
 
@@ -86,12 +86,12 @@ entry you want to delete:
 
     :::wren
     capitals.remove("Maine")
-    System.print(capitals.containsKey("Maine")) // "false".
+    System.print(capitals.containsKey("Maine")) //> false
 
 If the key was found, this returns the value that was associated with it:
 
     :::wren
-    System.print(capitals.remove("Georgia")) // "Atlanta".
+    System.print(capitals.remove("Georgia")) //> Atlanta
 
 If the key wasn't in the map to begin with, `remove()` just returns `null`.
 
@@ -100,7 +100,7 @@ can just call `clear()`:
 
     :::wren
     capitals.clear()
-    System.print(capitals.count) // "0".
+    System.print(capitals.count) //> 0
 
 [lists]: lists.html
 

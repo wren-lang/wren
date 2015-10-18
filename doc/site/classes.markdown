@@ -83,7 +83,7 @@ Many methods on a class exist to expose or compute some property of the object.
 For example:
 
     :::wren
-    System.print("string".count) // "6".
+    System.print("string".count) //> 6
 
 These *getters* are just another kind of method&mdash;one without a parameter
 list. You can define them like so:
@@ -326,13 +326,13 @@ not the instance. They can be used in *both* instance and static methods.
 Just like instance fields, static fields are initially `null`:
 
     :::wren
-    System.print(Foo.bar) // null.
+    System.print(Foo.bar) //> null
 
 They can be used from static methods:
 
     :::wren
     Foo.set("foo")
-    System.print(Foo.bar) // foo.
+    System.print(Foo.bar) //> foo
 
 And also instance methods. When you do so, there is still only one static field
 shared among all instances of the class:
@@ -342,7 +342,7 @@ shared among all instances of the class:
     var foo2 = Foo.new()
 
     foo1.setFromInstance("updated")
-    System.print(foo2.baz) // updated.
+    System.print(foo2.baz) //> updated
 
 ## Inheritance
 
@@ -374,20 +374,20 @@ are not inherited.
 
     class Pegasus is Unicorn {}
 
-    Pegasus.canFly // ERROR: Static methods are not inherited.
+    Pegasus.canFly //! Static methods are not inherited.
 
 This also means constructors are not inherited:
 
     :::wren
     class Unicorn {
-      this new(name) {
+      construct new(name) {
         System.print("My name is " + name + ".")
       }
     }
 
     class Pegasus is Unicorn {}
 
-    Pegasus.new("Fred") // Error!
+    Pegasus.new("Fred") //! Pegasus does not define new().
 
 Each class gets to control how it may be constructed independently of its base
 classes. However, constructor *initializers* are inherited since those are
@@ -397,15 +397,15 @@ This means you can do `super` calls inside a constructor:
 
     :::wren
     class Unicorn {
-      this new(name) {
+      construct new(name) {
         System.print("My name is " + name + ".")
       }
     }
 
     class Pegasus is Unicorn {
-      this new(name) {
+      construct new(name) {
         super(name)
       }
     }
 
-    Pegasus.new("Fred") // Prints "My name is Fred.".
+    Pegasus.new("Fred") //> My name is Fred

@@ -91,7 +91,7 @@ statement for the else:
 
     :::wren
     if (happy && knowIt) {
-      hands.clap
+      hands.clap()
     } else System.print("sad")
 
 Blocks have two similar but not identical forms. Typically, blocks contain a

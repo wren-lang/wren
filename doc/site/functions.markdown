@@ -26,8 +26,9 @@ a method. At its simplest, it looks like this:
     }
 
 Here we're invoking the `callMe` method on `blondie`. We're passing one
-argument, a function whose body is the following
-[block](syntax.html#blocks)&mdash;everything between that pair of curly braces.
+argument, a function whose body is the
+following [block](syntax.html#blocks)&mdash;everything between that pair of
+curly braces.
 
 Methods that take a block argument receive it as a normal parameter. `callMe`
 could be defined like so:
@@ -144,7 +145,7 @@ leaving the scope where the function is defined:
 
     :::wren
     class Counter {
-      static create {
+      static create() {
         var i = 0
         return Fn.new { i = i + 1 }
       }
@@ -156,7 +157,7 @@ the function is returned from `create`, it is still able to read and assign
 to`i`:
 
     :::wren
-    var counter = Counter.create
-    System.print(counter.call()) // Prints "1".
-    System.print(counter.call()) // Prints "2".
-    System.print(counter.call()) // Prints "3".
+    var counter = Counter.create()
+    System.print(counter.call()) //> 1
+    System.print(counter.call()) //> 2
+    System.print(counter.call()) //> 3

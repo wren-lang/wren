@@ -97,14 +97,14 @@ call:
 
     :::wren
     class Base {
-      method {
+      method() {
         System.print("base method")
       }
     }
 
     class Derived is Base {
-      method {
-        super.method // Prints "base method".
+      method() {
+        super.method() //> base method
       }
     }
 
@@ -113,18 +113,16 @@ base class constructor:
 
     :::wren
     class Base {
-      this new(arg) {
-        System.print("base constructor got " + arg)
+      construct new(arg) {
+        System.print("base got " + arg)
       }
     }
 
     class Derived is Base {
-      this new() {
-        super("value") // Prints "base constructor got value".
+      construct new() {
+        super("value") //> base got value
       }
     }
-
-**TODO: constructors**
 
 ## Operators
 
@@ -213,21 +211,20 @@ value of the left-hand side, the right-hand operand expression may or may not
 be evaluated. Because of this, they cannot be overloaded and their behavior is
 fixed.
 
-A `&&` ("logical and") expression evaluates the left-hand argument. If it's
-[false](control-flow.html#truth), it returns that value. Otherwise it evaluates
-and returns the right-hand argument.
+A `&&` ("logical and") expression evaluates the left-hand argument. If
+it's [false](control-flow.html#truth), it returns that value. Otherwise it evaluates and returns the right-hand argument.
 
     :::wren
-    System.print(false && 1)  // false
-    System.print(1 && 2)      // 2
+    System.print(false && 1)  //> false
+    System.print(1 && 2)      //> 2
 
 An `||` ("logical or") expression is reversed. If the left-hand argument is
 [true](control-flow.html#truth), it's returned, otherwise the right-hand
 argument is evaluated and returned:
 
     :::wren
-    System.print(false || 1)  // 1
-    System.print(1 || 2)      // 1
+    System.print(false || 1)  //> 1
+    System.print(1 || 2)      //> 1
 
 ## The conditional operator `?:`
 
@@ -251,11 +248,11 @@ operand is a class. It evaluates to `true` if the object is an instance of the
 class (or one of its subclasses).
 
     :::wren
-    123 is Num     // true
-    "s" is Num     // false
-    null is String // false
-    [] is List     // true
-    [] is Sequence // true
+    System.print(123 is Num)     //> true
+    System.print("s" is Num)     //> false
+    System.print(null is String) //> false
+    System.print([] is List)     //> true
+    System.print([] is Sequence) //> true
 
 ## Precedence
 

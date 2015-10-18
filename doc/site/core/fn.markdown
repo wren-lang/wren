@@ -25,8 +25,8 @@ It is a runtime error if `function` is not a function.
 The number of arguments the function requires.
 
     :::wren
-    System.print(Fn.new {}.arity)             // 0.
-    System.print(Fn.new {|a, b, c| a }.arity) // 3.
+    System.print(Fn.new {}.arity)             //> 0
+    System.print(Fn.new {|a, b, c| a }.arity) //> 3
 
 ### **call**(args...)
 
@@ -34,10 +34,10 @@ Invokes the function with the given arguments.
 
     :::wren
     var fn = Fn.new { |arg|
-      System.print(arg)
+      System.print(arg)     //> Hello world
     }
 
-    fn.call("Hello world") // Prints "Hello world".
+    fn.call("Hello world")
 
 It is a runtime error if the number of arguments given is less than the arity
 of the function. If more arguments are given than the function's arity they are

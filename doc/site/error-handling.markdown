@@ -11,11 +11,11 @@ simple bugs where your code doesn't follow the language's grammar, like:
     :::wren
     1 + * 2
 
-Wren will detect these errors as soon as it tries to read your code. When it
-hits one, you'll get a friendly error message, like:
+Wren detects these errors as soon as it tries to read your code. When it hits
+one, you get a friendly error message, like:
 
     :::text
-    [script.wren line 1] Error on '*': Unexpected token for expression.
+    [main line 1] Error on '*': Unexpected token for expression.
 
 Some slightly more "semantic" errors fall into this bucket too. Things like
 using a variable that hasn't been defined, or declaring two variables with the
@@ -28,7 +28,7 @@ same name in the same scope. So if you do:
 Wren tells you:
 
     :::text
-    [script.wren line 2] Error on 'a': Top-level variable is already defined.
+    [main line 2] Error on 'a': Top-level variable is already defined.
 
 Note that it does this before it executes *any* code. Unlike some other
 scripting languages, Wren tries to help you find your errors as soon as
@@ -78,7 +78,7 @@ This exits with:
 
     :::text
     Subscript must be a number or a range.
-    [script.wren line 2] in (script)
+    [main line 2] in (script)
 
 These are the most two common kinds of runtime errors, but there are others.
 Stuff like out of bounds errors on lists, calling a function with the wrong

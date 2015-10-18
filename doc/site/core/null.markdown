@@ -8,4 +8,4 @@
 Returns `true`, since `null` is considered [false](../control-flow.html#truth).
 
     :::wren
-    System.print(!null) // "true".
+    System.print(!null) //> true
