@@ -208,7 +208,7 @@ $(LIBUV): $(LIBUV_DIR)/build/gyp/gyp util/libuv.py
 src/aux/wren_aux_%.wren.inc: src/aux/wren_aux_%.wren util/wren_to_c_string.py
 	@ ./util/wren_to_c_string.py $@ $<
 
-src/vm/wren_%.wren.inc: builtin/%.wren util/wren_to_c_string.py
+src/vm/wren_%.wren.inc: src/vm/wren_%.wren util/wren_to_c_string.py
 	@ ./util/wren_to_c_string.py $@ $<
 
 src/module/%.wren.inc: src/module/%.wren util/wren_to_c_string.py

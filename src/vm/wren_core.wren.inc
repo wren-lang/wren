@@ -1,4 +1,4 @@
-// Generated automatically from builtin/core.wren. Do not edit.
+// Generated automatically from src/vm/wren_core.wren. Do not edit.
 static const char* coreModuleSource =
 "class Bool {}\n"
 "class Fiber {}\n"
