@@ -107,7 +107,7 @@ typedef struct sObjClass ObjClass;
 typedef struct sObj
 {
   ObjType type;
-  bool marked;
+  bool isDark;
 
   // The object's class.
   ObjClass* classObj;
@@ -747,11 +747,14 @@ void wrenMarkValue(WrenVM* vm, Value value);
 
 // Mark [obj] as reachable and still in use. This should only be called
 // during the sweep phase of a garbage collection.
-void wrenMarkObj(WrenVM* vm, Obj* obj);
+void wrenGrayObj(WrenVM* vm, Obj* obj);
 
 // Mark the values in [buffer] as reachable and still in use. This should only
 // be called during the sweep phase of a garbage collection.
 void wrenMarkBuffer(WrenVM* vm, ValueBuffer* buffer);
+
+// Expand the makred objects to all those reacable from the current state.
+void wrenDarkenObjs(WrenVM* vm);
 
 // Releases all memory owned by [obj], including [obj] itself.
 void wrenFreeObj(WrenVM* vm, Obj* obj);

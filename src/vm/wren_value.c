@@ -37,7 +37,7 @@ DEFINE_BUFFER(Method, Method);
 static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 {
   obj->type = type;
-  obj->marked = false;
+  obj->isDark = false;
   obj->classObj = classObj;
   obj->next = vm->first;
   vm->first = obj;
@@ -858,21 +858,21 @@ ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 static void markClass(WrenVM* vm, ObjClass* classObj)
 {
   // The metaclass.
-  wrenMarkObj(vm, (Obj*)classObj->obj.classObj);
+  wrenGrayObj(vm, (Obj*)classObj->obj.classObj);
 
   // The superclass.
-  wrenMarkObj(vm, (Obj*)classObj->superclass);
+  wrenGrayObj(vm, (Obj*)classObj->superclass);
 
   // Method function objects.
   for (int i = 0; i < classObj->methods.count; i++)
   {
     if (classObj->methods.data[i].type == METHOD_BLOCK)
     {
-      wrenMarkObj(vm, classObj->methods.data[i].fn.obj);
+      wrenGrayObj(vm, classObj->methods.data[i].fn.obj);
     }
   }
 
-  wrenMarkObj(vm, (Obj*)classObj->name);
+  wrenGrayObj(vm, (Obj*)classObj->name);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjClass);
@@ -882,12 +882,12 @@ static void markClass(WrenVM* vm, ObjClass* classObj)
 static void markClosure(WrenVM* vm, ObjClosure* closure)
 {
   // Mark the function.
-  wrenMarkObj(vm, (Obj*)closure->fn);
+  wrenGrayObj(vm, (Obj*)closure->fn);
 
   // Mark the upvalues.
   for (int i = 0; i < closure->fn->numUpvalues; i++)
   {
-    wrenMarkObj(vm, (Obj*)closure->upvalues[i]);
+    wrenGrayObj(vm, (Obj*)closure->upvalues[i]);
   }
 
   // Keep track of how much memory is still in use.
@@ -900,7 +900,7 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
   // Stack functions.
   for (int i = 0; i < fiber->numFrames; i++)
   {
-    wrenMarkObj(vm, fiber->frames[i].fn);
+    wrenGrayObj(vm, fiber->frames[i].fn);
   }
 
   // Stack variables.
@@ -913,12 +913,12 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
   ObjUpvalue* upvalue = fiber->openUpvalues;
   while (upvalue != NULL)
   {
-    wrenMarkObj(vm, (Obj*)upvalue);
+    wrenGrayObj(vm, (Obj*)upvalue);
     upvalue = upvalue->next;
   }
 
   // The caller.
-  wrenMarkObj(vm, (Obj*)fiber->caller);
+  wrenGrayObj(vm, (Obj*)fiber->caller);
   wrenMarkValue(vm, fiber->error);
 
   // Keep track of how much memory is still in use.
@@ -954,7 +954,7 @@ static void markForeign(WrenVM* vm, ObjForeign* foreign)
 
 static void markInstance(WrenVM* vm, ObjInstance* instance)
 {
-  wrenMarkObj(vm, (Obj*)instance->obj.classObj);
+  wrenGrayObj(vm, (Obj*)instance->obj.classObj);
 
   // Mark the fields.
   for (int i = 0; i < instance->obj.classObj->numFields; i++)
@@ -1002,7 +1002,7 @@ static void markModule(WrenVM* vm, ObjModule* module)
     wrenMarkValue(vm, module->variables.data[i]);
   }
 
-  wrenMarkObj(vm, (Obj*)module->name);
+  wrenGrayObj(vm, (Obj*)module->name);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjModule);
@@ -1030,20 +1030,9 @@ static void markUpvalue(WrenVM* vm, ObjUpvalue* upvalue)
   vm->bytesAllocated += sizeof(ObjUpvalue);
 }
 
-void wrenMarkObj(WrenVM* vm, Obj* obj)
+static void darkenObject(WrenVM* vm, Obj* obj)
 {
-  if (obj == NULL) return;
-
-  // Stop if the object is already marked so we don't get stuck in a cycle.
-  if (obj->marked) return;
-
-  // It's been reached.
-  obj->marked = true;
-
 #if WREN_DEBUG_TRACE_MEMORY
-  static int indent = 0;
-  indent++;
-  for (int i = 0; i < indent; i++) printf("  ");
   printf("mark ");
   wrenDumpValue(OBJ_VAL(obj));
   printf(" @ %p\n", obj);
@@ -1065,16 +1054,45 @@ void wrenMarkObj(WrenVM* vm, Obj* obj)
     case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
     case OBJ_UPVALUE:  markUpvalue( vm, (ObjUpvalue*) obj); break;
   }
+}
 
-#if WREN_DEBUG_TRACE_MEMORY
-  indent--;
-#endif
+void wrenDarkenObjs(WrenVM* vm)
+{
+  do
+  {
+    // pop an item from the gray stack
+    Obj* obj = vm->gray[--vm->grayDepth];
+    darkenObject(vm, obj);
+  } while (vm->grayDepth > 0);
+}
+
+void wrenGrayObj(WrenVM* vm, Obj* obj)
+{
+  if (obj == NULL) return;
+
+  // Stop if the object is already marked so we don't get stuck in a cycle.
+  if (obj->isDark) return;
+
+  // It's been reached.
+  obj->isDark = true;
+
+  // Add it to the gray list so it can be recursively explored for
+  // more marks later.
+  if (vm->grayDepth >= vm->maxGray)
+  {
+    size_t oldSize = vm->maxGray * sizeof(Obj*);
+    size_t newSize = vm->grayDepth * 2 * sizeof(Obj*);
+    vm->gray = (Obj**)wrenReallocate(vm, vm->gray, oldSize, newSize);
+    vm->maxGray = vm->grayDepth * 2;
+  }
+
+  vm->gray[vm->grayDepth++] = obj;
 }
 
 void wrenMarkValue(WrenVM* vm, Value value)
 {
   if (!IS_OBJ(value)) return;
-  wrenMarkObj(vm, AS_OBJ(value));
+  wrenGrayObj(vm, AS_OBJ(value));
 }
 
 void wrenMarkBuffer(WrenVM* vm, ValueBuffer* buffer)

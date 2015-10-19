@@ -46,6 +46,13 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->heapGrowthPercent = 50;
 }
 
+static void initializeGC(WrenVM* vm)
+{
+  vm->gray = (Obj**)wrenReallocate(vm, NULL, 0, 5 * sizeof(Obj*));
+  vm->grayDepth = 0;
+  vm->maxGray = 5;
+}
+
 WrenVM* wrenNewVM(WrenConfiguration* config)
 {
   WrenVM* vm = (WrenVM*)config->reallocateFn(NULL, sizeof(*vm));
@@ -59,6 +66,8 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->modules = wrenNewMap(vm);
 
   wrenInitializeCore(vm);
+
+  initializeGC(vm);
 
   // TODO: Lazy load these.
   #if WREN_OPT_META
@@ -83,6 +92,9 @@ void wrenFreeVM(WrenVM* vm)
     wrenFreeObj(vm, obj);
     obj = next;
   }
+
+  // Free up the GC gray set
+  wrenReallocate(vm, vm->gray, vm->maxGray * sizeof(Obj*), 0);
 
   // Tell the user if they didn't free any handles. We don't want to just free
   // them here because the host app may still have pointers to them that they
@@ -120,16 +132,16 @@ void wrenCollectGarbage(WrenVM* vm)
   // already been freed.
   vm->bytesAllocated = 0;
 
-  wrenMarkObj(vm, (Obj*)vm->modules);
+  wrenGrayObj(vm, (Obj*)vm->modules);
 
   // Temporary roots.
   for (int i = 0; i < vm->numTempRoots; i++)
   {
-    wrenMarkObj(vm, vm->tempRoots[i]);
+    wrenGrayObj(vm, vm->tempRoots[i]);
   }
 
   // The current fiber.
-  wrenMarkObj(vm, (Obj*)vm->fiber);
+  wrenGrayObj(vm, (Obj*)vm->fiber);
 
   // The value handles.
   for (WrenValue* value = vm->valueHandles;
@@ -142,11 +154,15 @@ void wrenCollectGarbage(WrenVM* vm)
   // Any object the compiler is using (if there is one).
   if (vm->compiler != NULL) wrenMarkCompiler(vm, vm->compiler);
 
+  // Now we have makred all of the root objects expand the marks out
+  // to all of the live objects.
+  wrenDarkenObjs(vm);
+
   // Collect any unmarked objects.
   Obj** obj = &vm->first;
   while (*obj != NULL)
   {
-    if (!((*obj)->marked))
+    if (!((*obj)->isDark))
     {
       // This object wasn't reached, so remove it from the list and free it.
       Obj* unreached = *obj;
@@ -157,7 +173,7 @@ void wrenCollectGarbage(WrenVM* vm)
     {
       // This object was reached, so unmark it (for the next GC) and move on to
       // the next.
-      (*obj)->marked = false;
+      (*obj)->isDark = false;
       obj = &(*obj)->next;
     }
   }
