@@ -8,6 +8,7 @@ from os.path import abspath, basename, dirname, isdir, isfile, join, realpath, r
 import re
 from subprocess import Popen, PIPE
 import sys
+from threading import Timer
 
 # Runs the tests.
 WREN_DIR = dirname(dirname(realpath(__file__)))
@@ -115,9 +116,28 @@ class Test:
       test_arg = basename(splitext(test_arg)[0])
 
     proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    (out, err) = proc.communicate(self.input_bytes)
 
-    self.validate(type == "example", proc.returncode, out, err)
+    # If a test takes longer than two seconds, kill it.
+    #
+    # This is mainly useful for running the tests while stress testing the GC,
+    # which can make a few pathological tests much slower.
+    timed_out = [False]
+    def kill_process(p):
+      timed_out[0] = True
+      p.kill()
+
+    timer = Timer(2, kill_process, [proc])
+
+    try:
+      timer.start()
+      out, err = proc.communicate(self.input_bytes)
+
+      if timed_out[0]:
+        self.fail("Timed out.")
+      else:
+        self.validate(type == "example", proc.returncode, out, err)
+    finally:
+      timer.cancel()
 
 
   def validate(self, is_example, exit_code, out, err):
