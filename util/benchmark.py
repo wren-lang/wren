@@ -59,6 +59,14 @@ BENCHMARK("binary_trees", """stretch tree of depth 13 check: -1
 32 trees of depth 12 check: -32
 long lived tree of depth 12 check: -1""")
 
+BENCHMARK("binary_trees_gc", """stretch tree of depth 13 check: -1
+8192 trees of depth 4 check: -8192
+2048 trees of depth 6 check: -2048
+512 trees of depth 8 check: -512
+128 trees of depth 10 check: -128
+32 trees of depth 12 check: -32
+long lived tree of depth 12 check: -1""")
+
 BENCHMARK("delta_blue", "14065400")
 
 BENCHMARK("fib", r"""317811
