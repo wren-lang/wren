@@ -1008,6 +1008,12 @@ DEF_PRIMITIVE(system_clock)
   RETURN_NUM((double)clock() / CLOCKS_PER_SEC);
 }
 
+DEF_PRIMITIVE(system_gc)
+{
+  wrenCollectGarbage(vm);
+  RETURN_NULL;
+}
+
 DEF_PRIMITIVE(system_writeString)
 {
   if (vm->config.writeFn != NULL)
@@ -1254,6 +1260,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   ObjClass* systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
   PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);
+  PRIMITIVE(systemClass->obj.classObj, "gc()", system_gc);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
 
   // While bootstrapping the core types and running the core module, a number

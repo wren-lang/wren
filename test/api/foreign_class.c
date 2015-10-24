@@ -5,11 +5,6 @@
 
 static int finalized = 0;
 
-static void apiGC(WrenVM* vm)
-{
-  wrenCollectGarbage(vm);
-}
-
 static void apiFinalized(WrenVM* vm)
 {
   wrenReturnDouble(vm, finalized);
@@ -84,7 +79,6 @@ static void resourceFinalize(WrenVM* vm)
 
 WrenForeignMethodFn foreignClassBindMethod(const char* signature)
 {
-  if (strcmp(signature, "static Api.gc()") == 0) return apiGC;
   if (strcmp(signature, "static Api.finalized") == 0) return apiFinalized;
   if (strcmp(signature, "Counter.increment(_)") == 0) return counterIncrement;
   if (strcmp(signature, "Counter.value") == 0) return counterValue;

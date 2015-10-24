@@ -6,6 +6,16 @@ use during development or debugging.
 
 ## Static Methods
 
+### System.**clock**
+
+Returns the number of seconds (including fractional seconds) since the program
+was started. This is usually used for benchmarking.
+
+### System.**gc**()
+
+Requests that the VM perform an immediate garbage collection to free unused
+memory.
+
 ### System.**print**()
 
 Prints a single newline to the console.
@@ -36,8 +46,3 @@ afterwards. Converts the value to a string by calling `toString` on it.
 
 In the above example, the result of `4 + 5` is printed, and then the prompt is
 printed on the same line because no newline character was printed afterwards.
-
-### System.**clock**
-
-Returns the number of seconds (including fractional seconds) since the program
-was started. This is usually used for benchmarking.
