@@ -44,15 +44,15 @@
   #endif
 #endif
 
-// The VM includes a number of optional "auxiliary" modules. You can choose to
-// include these or not. By default, they are all available. To disable one,
-// set the corresponding `WREN_AUX_<name>` define to `0`.
-#ifndef WREN_AUX_META
-  #define WREN_AUX_META 1
+// The VM includes a number of optional modules. You can choose to include
+// these or not. By default, they are all available. To disable one, set the
+// corresponding `WREN_OPT_<name>` define to `0`.
+#ifndef WREN_OPT_META
+  #define WREN_OPT_META 1
 #endif
 
-#ifndef WREN_AUX_RANDOM
-  #define WREN_AUX_RANDOM 1
+#ifndef WREN_OPT_RANDOM
+  #define WREN_OPT_RANDOM 1
 #endif
 
 // These flags are useful for debugging and hacking on Wren itself. They are not

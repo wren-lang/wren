@@ -1,4 +1,4 @@
-// Generated automatically from src/aux/wren_aux_meta.wren. Do not edit.
+// Generated automatically from src/optional/wren_opt_meta.wren. Do not edit.
 static const char* metaModuleSource =
 "class Meta {\n"
 "  static eval(source) {\n"

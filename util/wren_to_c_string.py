@@ -42,7 +42,7 @@ def main():
     wren_source_lines = f.readlines()
 
   module = os.path.splitext(os.path.basename(args.input))[0]
-  module = module.replace("aux_", "")
+  module = module.replace("opt_", "")
   module = module.replace("wren_", "")
 
   c_source = wren_to_c_string(args.input, wren_source_lines, module)

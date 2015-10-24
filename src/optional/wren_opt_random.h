@@ -1,10 +1,10 @@
-#ifndef wren_aux_random_h
-#define wren_aux_random_h
+#ifndef wren_opt_random_h
+#define wren_opt_random_h
 
 #include "wren_common.h"
 #include "wren.h"
 
-#if WREN_AUX_RANDOM
+#if WREN_OPT_RANDOM
 
 void wrenLoadRandomModule(WrenVM* vm);
 

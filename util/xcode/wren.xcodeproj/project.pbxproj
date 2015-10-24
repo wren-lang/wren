@@ -25,14 +25,14 @@
 		29729F321BA70A620099CA20 /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29729F2E1BA70A620099CA20 /* io.c */; };
 		29729F331BA70A620099CA20 /* io.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29729F301BA70A620099CA20 /* io.wren.inc */; };
 		2986F6D71ACF93BA00BCE26C /* wren_primitive.c in Sources */ = {isa = PBXBuildFile; fileRef = 2986F6D51ACF93BA00BCE26C /* wren_primitive.c */; };
-		29AF31F11BD2E38F00AAD156 /* wren_aux_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AF31EF1BD2E38F00AAD156 /* wren_aux_meta.c */; };
-		29AF31F21BD2E38F00AAD156 /* wren_aux_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AF31EF1BD2E38F00AAD156 /* wren_aux_meta.c */; };
-		29AF31F61BD2E98600AAD156 /* wren_aux_meta.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29AF31F31BD2E98600AAD156 /* wren_aux_meta.wren.inc */; };
-		29AF31F71BD2E98600AAD156 /* wren_aux_meta.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29AF31F31BD2E98600AAD156 /* wren_aux_meta.wren.inc */; };
-		29AF31F81BD2E98600AAD156 /* wren_aux_random.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AF31F41BD2E98600AAD156 /* wren_aux_random.c */; };
-		29AF31F91BD2E98600AAD156 /* wren_aux_random.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AF31F41BD2E98600AAD156 /* wren_aux_random.c */; };
-		29AF31FA1BD2E98600AAD156 /* wren_aux_random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29AF31F51BD2E98600AAD156 /* wren_aux_random.wren.inc */; };
-		29AF31FB1BD2E98600AAD156 /* wren_aux_random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29AF31F51BD2E98600AAD156 /* wren_aux_random.wren.inc */; };
+		29A427341BDBE435001E6E22 /* wren_opt_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */; };
+		29A427351BDBE435001E6E22 /* wren_opt_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */; };
+		29A427361BDBE435001E6E22 /* wren_opt_meta.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427301BDBE435001E6E22 /* wren_opt_meta.wren.inc */; };
+		29A427371BDBE435001E6E22 /* wren_opt_meta.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427301BDBE435001E6E22 /* wren_opt_meta.wren.inc */; };
+		29A427381BDBE435001E6E22 /* wren_opt_random.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A427311BDBE435001E6E22 /* wren_opt_random.c */; };
+		29A427391BDBE435001E6E22 /* wren_opt_random.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A427311BDBE435001E6E22 /* wren_opt_random.c */; };
+		29A4273A1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427331BDBE435001E6E22 /* wren_opt_random.wren.inc */; };
+		29A4273B1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427331BDBE435001E6E22 /* wren_opt_random.wren.inc */; };
 		29C8A9331AB71FFF00DEC81D /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
 		29DC149F1BBA2FCC008A8274 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
 		29DC14A01BBA2FD6008A8274 /* timer.c in Sources */ = {isa = PBXBuildFile; fileRef = 2901D7621B74F4050083A2C8 /* timer.c */; };
@@ -103,13 +103,13 @@
 		29729F301BA70A620099CA20 /* io.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = io.wren.inc; path = ../../src/module/io.wren.inc; sourceTree = "<group>"; };
 		2986F6D51ACF93BA00BCE26C /* wren_primitive.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_primitive.c; path = ../../src/vm/wren_primitive.c; sourceTree = "<group>"; };
 		2986F6D61ACF93BA00BCE26C /* wren_primitive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_primitive.h; path = ../../src/vm/wren_primitive.h; sourceTree = "<group>"; };
+		29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_opt_meta.c; path = ../../src/optional/wren_opt_meta.c; sourceTree = "<group>"; };
+		29A4272F1BDBE435001E6E22 /* wren_opt_meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_opt_meta.h; path = ../../src/optional/wren_opt_meta.h; sourceTree = "<group>"; };
+		29A427301BDBE435001E6E22 /* wren_opt_meta.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = wren_opt_meta.wren.inc; path = ../../src/optional/wren_opt_meta.wren.inc; sourceTree = "<group>"; };
+		29A427311BDBE435001E6E22 /* wren_opt_random.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_opt_random.c; path = ../../src/optional/wren_opt_random.c; sourceTree = "<group>"; };
+		29A427321BDBE435001E6E22 /* wren_opt_random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_opt_random.h; path = ../../src/optional/wren_opt_random.h; sourceTree = "<group>"; };
+		29A427331BDBE435001E6E22 /* wren_opt_random.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = wren_opt_random.wren.inc; path = ../../src/optional/wren_opt_random.wren.inc; sourceTree = "<group>"; };
 		29AB1F061816E3AD004B501E /* wren */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wren; sourceTree = BUILT_PRODUCTS_DIR; };
-		29AF31EF1BD2E38F00AAD156 /* wren_aux_meta.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_aux_meta.c; path = ../../src/aux/wren_aux_meta.c; sourceTree = "<group>"; };
-		29AF31F01BD2E38F00AAD156 /* wren_aux_meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_aux_meta.h; path = ../../src/aux/wren_aux_meta.h; sourceTree = "<group>"; };
-		29AF31F31BD2E98600AAD156 /* wren_aux_meta.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = wren_aux_meta.wren.inc; path = ../../src/aux/wren_aux_meta.wren.inc; sourceTree = "<group>"; };
-		29AF31F41BD2E98600AAD156 /* wren_aux_random.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_aux_random.c; path = ../../src/aux/wren_aux_random.c; sourceTree = "<group>"; };
-		29AF31F51BD2E98600AAD156 /* wren_aux_random.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = wren_aux_random.wren.inc; path = ../../src/aux/wren_aux_random.wren.inc; sourceTree = "<group>"; };
-		29AF31FC1BD2E9B300AAD156 /* wren_aux_random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_aux_random.h; path = ../../src/aux/wren_aux_random.h; sourceTree = "<group>"; };
 		29C8A9311AB71FFF00DEC81D /* vm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vm.c; path = ../../src/cli/vm.c; sourceTree = "<group>"; };
 		29C8A9321AB71FFF00DEC81D /* vm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vm.h; path = ../../src/cli/vm.h; sourceTree = "<group>"; };
 		29D009A61B7E3993000CE58C /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = ../../test/api/main.c; sourceTree = "<group>"; };
@@ -203,10 +203,10 @@
 		29AB1EFD1816E3AD004B501E = {
 			isa = PBXGroup;
 			children = (
-				29AF31EE1BD2E37F00AAD156 /* aux */,
 				29205CA91AB4E67B0073018D /* cli */,
 				29205CAA1AB4E6840073018D /* include */,
 				2901D7611B74F3E20083A2C8 /* module */,
+				29AF31EE1BD2E37F00AAD156 /* optional */,
 				29205CA01AB4E6470073018D /* vm */,
 				29D0099A1B7E394F000CE58C /* api_test */,
 				29512C801B91F8EB008C10E6 /* libuv.a */,
@@ -223,17 +223,17 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		29AF31EE1BD2E37F00AAD156 /* aux */ = {
+		29AF31EE1BD2E37F00AAD156 /* optional */ = {
 			isa = PBXGroup;
 			children = (
-				29AF31F01BD2E38F00AAD156 /* wren_aux_meta.h */,
-				29AF31EF1BD2E38F00AAD156 /* wren_aux_meta.c */,
-				29AF31F31BD2E98600AAD156 /* wren_aux_meta.wren.inc */,
-				29AF31FC1BD2E9B300AAD156 /* wren_aux_random.h */,
-				29AF31F41BD2E98600AAD156 /* wren_aux_random.c */,
-				29AF31F51BD2E98600AAD156 /* wren_aux_random.wren.inc */,
+				29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */,
+				29A4272F1BDBE435001E6E22 /* wren_opt_meta.h */,
+				29A427301BDBE435001E6E22 /* wren_opt_meta.wren.inc */,
+				29A427311BDBE435001E6E22 /* wren_opt_random.c */,
+				29A427321BDBE435001E6E22 /* wren_opt_random.h */,
+				29A427331BDBE435001E6E22 /* wren_opt_random.wren.inc */,
 			);
-			name = aux;
+			name = optional;
 			sourceTree = "<group>";
 		};
 		29D0099A1B7E394F000CE58C /* api_test */ = {
@@ -326,24 +326,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				29AF31F11BD2E38F00AAD156 /* wren_aux_meta.c in Sources */,
+				29A427381BDBE435001E6E22 /* wren_opt_random.c in Sources */,
 				29205C991AB4E6430073018D /* wren_compiler.c in Sources */,
 				2986F6D71ACF93BA00BCE26C /* wren_primitive.c in Sources */,
 				291647C71BA5EC5E006142EE /* modules.c in Sources */,
+				29A4273A1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */,
 				29205C9A1AB4E6430073018D /* wren_core.c in Sources */,
 				2901D7641B74F4050083A2C8 /* timer.c in Sources */,
 				29729F331BA70A620099CA20 /* io.wren.inc in Sources */,
-				29AF31F61BD2E98600AAD156 /* wren_aux_meta.wren.inc in Sources */,
 				29C8A9331AB71FFF00DEC81D /* vm.c in Sources */,
-				29AF31F81BD2E98600AAD156 /* wren_aux_random.c in Sources */,
 				291647C41BA5EA45006142EE /* scheduler.c in Sources */,
+				29A427341BDBE435001E6E22 /* wren_opt_meta.c in Sources */,
 				29205C9B1AB4E6430073018D /* wren_debug.c in Sources */,
 				29205C9D1AB4E6430073018D /* wren_utils.c in Sources */,
 				29729F311BA70A620099CA20 /* io.c in Sources */,
+				29A427361BDBE435001E6E22 /* wren_opt_meta.wren.inc in Sources */,
 				29205C9E1AB4E6430073018D /* wren_value.c in Sources */,
 				29205C9F1AB4E6430073018D /* wren_vm.c in Sources */,
 				29205C8F1AB4E5C90073018D /* main.c in Sources */,
-				29AF31FA1BD2E98600AAD156 /* wren_aux_random.wren.inc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -351,10 +351,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29A427371BDBE435001E6E22 /* wren_opt_meta.wren.inc in Sources */,
 				29729F321BA70A620099CA20 /* io.c in Sources */,
 				291647C81BA5EC5E006142EE /* modules.c in Sources */,
 				29DC14A11BBA2FEC008A8274 /* scheduler.c in Sources */,
-				29AF31F21BD2E38F00AAD156 /* wren_aux_meta.c in Sources */,
+				29A427391BDBE435001E6E22 /* wren_opt_random.c in Sources */,
 				29DC14A01BBA2FD6008A8274 /* timer.c in Sources */,
 				29DC149F1BBA2FCC008A8274 /* vm.c in Sources */,
 				29DC14A21BBA300A008A8274 /* wren_compiler.c in Sources */,
@@ -362,15 +363,14 @@
 				29DC14A41BBA3010008A8274 /* wren_debug.c in Sources */,
 				29DC14A61BBA3017008A8274 /* wren_primitive.c in Sources */,
 				29DC14A71BBA301A008A8274 /* wren_utils.c in Sources */,
-				29AF31FB1BD2E98600AAD156 /* wren_aux_random.wren.inc in Sources */,
-				29AF31F91BD2E98600AAD156 /* wren_aux_random.c in Sources */,
 				29DC14A81BBA301D008A8274 /* wren_value.c in Sources */,
+				29A4273B1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */,
 				29DC14A91BBA302F008A8274 /* wren_vm.c in Sources */,
 				29DC14AA1BBA3032008A8274 /* main.c in Sources */,
 				293D46961BB43F9900200083 /* call.c in Sources */,
+				29A427351BDBE435001E6E22 /* wren_opt_meta.c in Sources */,
 				29DC14AB1BBA3038008A8274 /* foreign_class.c in Sources */,
 				29DC14AC1BBA303D008A8274 /* returns.c in Sources */,
-				29AF31F71BD2E98600AAD156 /* wren_aux_meta.wren.inc in Sources */,
 				29DC14AD1BBA3040008A8274 /* value.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
