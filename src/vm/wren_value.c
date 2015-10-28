@@ -855,7 +855,44 @@ ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
   return upvalue;
 }
 
-static void markClass(WrenVM* vm, ObjClass* classObj)
+void wrenGrayObj(WrenVM* vm, Obj* obj)
+{
+  if (obj == NULL) return;
+  
+  // Stop if the object is already darkened so we don't get stuck in a cycle.
+  if (obj->isDark) return;
+  
+  // It's been reached.
+  obj->isDark = true;
+  
+  // Add it to the gray list so it can be recursively explored for
+  // more marks later.
+  if (vm->grayDepth >= vm->maxGray)
+  {
+    size_t oldSize = vm->maxGray * sizeof(Obj*);
+    size_t newSize = vm->grayDepth * 2 * sizeof(Obj*);
+    vm->gray = (Obj**)wrenReallocate(vm, vm->gray, oldSize, newSize);
+    vm->maxGray = vm->grayDepth * 2;
+  }
+  
+  vm->gray[vm->grayDepth++] = obj;
+}
+
+void wrenGrayValue(WrenVM* vm, Value value)
+{
+  if (!IS_OBJ(value)) return;
+  wrenGrayObj(vm, AS_OBJ(value));
+}
+
+void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer)
+{
+  for (int i = 0; i < buffer->count; i++)
+  {
+    wrenGrayValue(vm, buffer->data[i]);
+  }
+}
+
+static void blackenClass(WrenVM* vm, ObjClass* classObj)
 {
   // The metaclass.
   wrenGrayObj(vm, (Obj*)classObj->obj.classObj);
@@ -879,7 +916,7 @@ static void markClass(WrenVM* vm, ObjClass* classObj)
   vm->bytesAllocated += classObj->methods.capacity * sizeof(Method);
 }
 
-static void markClosure(WrenVM* vm, ObjClosure* closure)
+static void blackenClosure(WrenVM* vm, ObjClosure* closure)
 {
   // Mark the function.
   wrenGrayObj(vm, (Obj*)closure->fn);
@@ -895,7 +932,7 @@ static void markClosure(WrenVM* vm, ObjClosure* closure)
   vm->bytesAllocated += sizeof(ObjUpvalue*) * closure->fn->numUpvalues;
 }
 
-static void markFiber(WrenVM* vm, ObjFiber* fiber)
+static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
 {
   // Stack functions.
   for (int i = 0; i < fiber->numFrames; i++)
@@ -906,7 +943,7 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
   // Stack variables.
   for (Value* slot = fiber->stack; slot < fiber->stackTop; slot++)
   {
-    wrenMarkValue(vm, *slot);
+    wrenGrayValue(vm, *slot);
   }
 
   // Open upvalues.
@@ -919,18 +956,18 @@ static void markFiber(WrenVM* vm, ObjFiber* fiber)
 
   // The caller.
   wrenGrayObj(vm, (Obj*)fiber->caller);
-  wrenMarkValue(vm, fiber->error);
+  wrenGrayValue(vm, fiber->error);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFiber);
 }
 
-static void markFn(WrenVM* vm, ObjFn* fn)
+static void blackenFn(WrenVM* vm, ObjFn* fn)
 {
   // Mark the constants.
   for (int i = 0; i < fn->numConstants; i++)
   {
-    wrenMarkValue(vm, fn->constants[i]);
+    wrenGrayValue(vm, fn->constants[i]);
   }
 
   // Keep track of how much memory is still in use.
@@ -943,7 +980,7 @@ static void markFn(WrenVM* vm, ObjFn* fn)
   // TODO: What about the function name?
 }
 
-static void markForeign(WrenVM* vm, ObjForeign* foreign)
+static void blackenForeign(WrenVM* vm, ObjForeign* foreign)
 {
   // TODO: Keep track of how much memory the foreign object uses. We can store
   // this in each foreign object, but it will balloon the size. We may not want
@@ -952,14 +989,14 @@ static void markForeign(WrenVM* vm, ObjForeign* foreign)
   // always have to explicitly store it.
 }
 
-static void markInstance(WrenVM* vm, ObjInstance* instance)
+static void blackenInstance(WrenVM* vm, ObjInstance* instance)
 {
   wrenGrayObj(vm, (Obj*)instance->obj.classObj);
 
   // Mark the fields.
   for (int i = 0; i < instance->obj.classObj->numFields; i++)
   {
-    wrenMarkValue(vm, instance->fields[i]);
+    wrenGrayValue(vm, instance->fields[i]);
   }
 
   // Keep track of how much memory is still in use.
@@ -967,17 +1004,17 @@ static void markInstance(WrenVM* vm, ObjInstance* instance)
   vm->bytesAllocated += sizeof(Value) * instance->obj.classObj->numFields;
 }
 
-static void markList(WrenVM* vm, ObjList* list)
+static void blackenList(WrenVM* vm, ObjList* list)
 {
   // Mark the elements.
-  wrenMarkBuffer(vm, &list->elements);
+  wrenGrayBuffer(vm, &list->elements);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjList);
   vm->bytesAllocated += sizeof(Value) * list->elements.capacity;
 }
 
-static void markMap(WrenVM* vm, ObjMap* map)
+static void blackenMap(WrenVM* vm, ObjMap* map)
 {
   // Mark the entries.
   for (uint32_t i = 0; i < map->capacity; i++)
@@ -985,8 +1022,8 @@ static void markMap(WrenVM* vm, ObjMap* map)
     MapEntry* entry = &map->entries[i];
     if (IS_UNDEFINED(entry->key)) continue;
 
-    wrenMarkValue(vm, entry->key);
-    wrenMarkValue(vm, entry->value);
+    wrenGrayValue(vm, entry->key);
+    wrenGrayValue(vm, entry->value);
   }
 
   // Keep track of how much memory is still in use.
@@ -994,12 +1031,12 @@ static void markMap(WrenVM* vm, ObjMap* map)
   vm->bytesAllocated += sizeof(MapEntry) * map->capacity;
 }
 
-static void markModule(WrenVM* vm, ObjModule* module)
+static void blackenModule(WrenVM* vm, ObjModule* module)
 {
   // Top-level variables.
   for (int i = 0; i < module->variables.count; i++)
   {
-    wrenMarkValue(vm, module->variables.data[i]);
+    wrenGrayValue(vm, module->variables.data[i]);
   }
 
   wrenGrayObj(vm, (Obj*)module->name);
@@ -1009,28 +1046,28 @@ static void markModule(WrenVM* vm, ObjModule* module)
   // TODO: Track memory for symbol table and buffer.
 }
 
-static void markRange(WrenVM* vm, ObjRange* range)
+static void blackenRange(WrenVM* vm, ObjRange* range)
 {
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjRange);
 }
 
-static void markString(WrenVM* vm, ObjString* string)
+static void blackenString(WrenVM* vm, ObjString* string)
 {
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjString) + string->length + 1;
 }
 
-static void markUpvalue(WrenVM* vm, ObjUpvalue* upvalue)
+static void blackenUpvalue(WrenVM* vm, ObjUpvalue* upvalue)
 {
   // Mark the closed-over object (in case it is closed).
-  wrenMarkValue(vm, upvalue->closed);
+  wrenGrayValue(vm, upvalue->closed);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjUpvalue);
 }
 
-static void darkenObject(WrenVM* vm, Obj* obj)
+static void blackenObject(WrenVM* vm, Obj* obj)
 {
 #if WREN_DEBUG_TRACE_MEMORY
   printf("mark ");
@@ -1041,66 +1078,29 @@ static void darkenObject(WrenVM* vm, Obj* obj)
   // Traverse the object's fields.
   switch (obj->type)
   {
-    case OBJ_CLASS:    markClass(   vm, (ObjClass*)   obj); break;
-    case OBJ_CLOSURE:  markClosure( vm, (ObjClosure*) obj); break;
-    case OBJ_FIBER:    markFiber(   vm, (ObjFiber*)   obj); break;
-    case OBJ_FN:       markFn(      vm, (ObjFn*)      obj); break;
-    case OBJ_FOREIGN:  markForeign( vm, (ObjForeign*) obj); break;
-    case OBJ_INSTANCE: markInstance(vm, (ObjInstance*)obj); break;
-    case OBJ_LIST:     markList(    vm, (ObjList*)    obj); break;
-    case OBJ_MAP:      markMap(     vm, (ObjMap*)     obj); break;
-    case OBJ_MODULE:   markModule(  vm, (ObjModule*)  obj); break;
-    case OBJ_RANGE:    markRange(   vm, (ObjRange*)   obj); break;
-    case OBJ_STRING:   markString(  vm, (ObjString*)  obj); break;
-    case OBJ_UPVALUE:  markUpvalue( vm, (ObjUpvalue*) obj); break;
+    case OBJ_CLASS:    blackenClass(   vm, (ObjClass*)   obj); break;
+    case OBJ_CLOSURE:  blackenClosure( vm, (ObjClosure*) obj); break;
+    case OBJ_FIBER:    blackenFiber(   vm, (ObjFiber*)   obj); break;
+    case OBJ_FN:       blackenFn(      vm, (ObjFn*)      obj); break;
+    case OBJ_FOREIGN:  blackenForeign( vm, (ObjForeign*) obj); break;
+    case OBJ_INSTANCE: blackenInstance(vm, (ObjInstance*)obj); break;
+    case OBJ_LIST:     blackenList(    vm, (ObjList*)    obj); break;
+    case OBJ_MAP:      blackenMap(     vm, (ObjMap*)     obj); break;
+    case OBJ_MODULE:   blackenModule(  vm, (ObjModule*)  obj); break;
+    case OBJ_RANGE:    blackenRange(   vm, (ObjRange*)   obj); break;
+    case OBJ_STRING:   blackenString(  vm, (ObjString*)  obj); break;
+    case OBJ_UPVALUE:  blackenUpvalue( vm, (ObjUpvalue*) obj); break;
   }
 }
 
-void wrenDarkenObjs(WrenVM* vm)
+void wrenBlackenObjects(WrenVM* vm)
 {
   do
   {
-    // pop an item from the gray stack
+    // Pop an item from the gray stack.
     Obj* obj = vm->gray[--vm->grayDepth];
-    darkenObject(vm, obj);
+    blackenObject(vm, obj);
   } while (vm->grayDepth > 0);
-}
-
-void wrenGrayObj(WrenVM* vm, Obj* obj)
-{
-  if (obj == NULL) return;
-
-  // Stop if the object is already marked so we don't get stuck in a cycle.
-  if (obj->isDark) return;
-
-  // It's been reached.
-  obj->isDark = true;
-
-  // Add it to the gray list so it can be recursively explored for
-  // more marks later.
-  if (vm->grayDepth >= vm->maxGray)
-  {
-    size_t oldSize = vm->maxGray * sizeof(Obj*);
-    size_t newSize = vm->grayDepth * 2 * sizeof(Obj*);
-    vm->gray = (Obj**)wrenReallocate(vm, vm->gray, oldSize, newSize);
-    vm->maxGray = vm->grayDepth * 2;
-  }
-
-  vm->gray[vm->grayDepth++] = obj;
-}
-
-void wrenMarkValue(WrenVM* vm, Value value)
-{
-  if (!IS_OBJ(value)) return;
-  wrenGrayObj(vm, AS_OBJ(value));
-}
-
-void wrenMarkBuffer(WrenVM* vm, ValueBuffer* buffer)
-{
-  for (int i = 0; i < buffer->count; i++)
-  {
-    wrenMarkValue(vm, buffer->data[i]);
-  }
 }
 
 void wrenFreeObj(WrenVM* vm, Obj* obj)

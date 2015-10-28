@@ -93,7 +93,7 @@ void wrenFreeVM(WrenVM* vm)
     obj = next;
   }
 
-  // Free up the GC gray set
+  // Free up the GC gray set.
   wrenReallocate(vm, vm->gray, vm->maxGray * sizeof(Obj*), 0);
 
   // Tell the user if they didn't free any handles. We don't want to just free
@@ -148,17 +148,17 @@ void wrenCollectGarbage(WrenVM* vm)
        value != NULL;
        value = value->next)
   {
-    wrenMarkValue(vm, value->value);
+    wrenGrayValue(vm, value->value);
   }
 
   // Any object the compiler is using (if there is one).
   if (vm->compiler != NULL) wrenMarkCompiler(vm, vm->compiler);
 
-  // Now we have makred all of the root objects expand the marks out
-  // to all of the live objects.
-  wrenDarkenObjs(vm);
-
-  // Collect any unmarked objects.
+  // Now that we have grayed the roots, do a depth-first search over all of the
+  // reachable objects.
+  wrenBlackenObjects(vm);
+  
+  // Collect the white objects.
   Obj** obj = &vm->first;
   while (*obj != NULL)
   {

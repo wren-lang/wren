@@ -3344,13 +3344,13 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 
 void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 {
-  wrenMarkValue(vm, compiler->parser->value);
+  wrenGrayValue(vm, compiler->parser->value);
 
   // Walk up the parent chain to mark the outer compilers too. The VM only
   // tracks the innermost one.
   do
   {
-    wrenMarkBuffer(vm, &compiler->constants);
+    wrenGrayBuffer(vm, &compiler->constants);
     compiler = compiler->parent;
   }
   while (compiler != NULL);

@@ -741,20 +741,22 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle);
 // Creates a new open upvalue pointing to [value] on the stack.
 ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
 
-// Mark [value] as reachable and still in use. This should only be called
-// during the sweep phase of a garbage collection.
-void wrenMarkValue(WrenVM* vm, Value value);
-
 // Mark [obj] as reachable and still in use. This should only be called
 // during the sweep phase of a garbage collection.
 void wrenGrayObj(WrenVM* vm, Obj* obj);
 
+// Mark [value] as reachable and still in use. This should only be called
+// during the sweep phase of a garbage collection.
+void wrenGrayValue(WrenVM* vm, Value value);
+
 // Mark the values in [buffer] as reachable and still in use. This should only
 // be called during the sweep phase of a garbage collection.
-void wrenMarkBuffer(WrenVM* vm, ValueBuffer* buffer);
+void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer);
 
-// Expand the makred objects to all those reacable from the current state.
-void wrenDarkenObjs(WrenVM* vm);
+// Processes every object in the gray stack until all reachable objects have
+// been marked. After that, all objects are either white (freeable) or black
+// (in use and fully traversed).
+void wrenBlackenObjects(WrenVM* vm);
 
 // Releases all memory owned by [obj], including [obj] itself.
 void wrenFreeObj(WrenVM* vm, Obj* obj);
