@@ -28,7 +28,7 @@ var start = System.clock
 
 System.print("stretch tree of depth " + stretchDepth.toString + " check: " +
     Tree.new(0, stretchDepth).check.toString)
-System.gc()
+for (i in 1...1000) System.gc()
 
 var longLivedTree = Tree.new(0, maxDepth)
 
@@ -47,7 +47,7 @@ while (depth < stretchDepth) {
 
   System.print((iterations * 2).toString + " trees of depth " +
       depth.toString + " check: " + check.toString)
-  System.gc()
+  for (i in 1...1000) System.gc()
 
   iterations = iterations / 4
   depth = depth + 2
@@ -55,6 +55,6 @@ while (depth < stretchDepth) {
 
 System.print("long lived tree of depth " + maxDepth.toString + " check: " +
     longLivedTree.check.toString)
-System.gc()
+for (i in 1...1000) System.gc()
 
 System.print("elapsed: " + (System.clock - start).toString)
