@@ -867,15 +867,14 @@ void wrenGrayObj(WrenVM* vm, Obj* obj)
   
   // Add it to the gray list so it can be recursively explored for
   // more marks later.
-  if (vm->grayDepth >= vm->maxGray)
+  if (vm->grayCount >= vm->grayCapacity)
   {
-    size_t oldSize = vm->maxGray * sizeof(Obj*);
-    size_t newSize = vm->grayDepth * 2 * sizeof(Obj*);
-    vm->gray = (Obj**)wrenReallocate(vm, vm->gray, oldSize, newSize);
-    vm->maxGray = vm->grayDepth * 2;
+    vm->grayCapacity = vm->grayCount * 2;
+    vm->gray = vm->config.reallocateFn(vm->gray,
+                                       vm->grayCapacity * sizeof(Obj*));
   }
   
-  vm->gray[vm->grayDepth++] = obj;
+  vm->gray[vm->grayCount++] = obj;
 }
 
 void wrenGrayValue(WrenVM* vm, Value value)
@@ -1095,12 +1094,12 @@ static void blackenObject(WrenVM* vm, Obj* obj)
 
 void wrenBlackenObjects(WrenVM* vm)
 {
-  do
+  while (vm->grayCount > 0)
   {
     // Pop an item from the gray stack.
-    Obj* obj = vm->gray[--vm->grayDepth];
+    Obj* obj = vm->gray[--vm->grayCount];
     blackenObject(vm, obj);
-  } while (vm->grayDepth > 0);
+  }
 }
 
 void wrenFreeObj(WrenVM* vm, Obj* obj)

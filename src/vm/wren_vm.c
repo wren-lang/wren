@@ -46,28 +46,24 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->heapGrowthPercent = 50;
 }
 
-static void initializeGC(WrenVM* vm)
-{
-  vm->gray = (Obj**)wrenReallocate(vm, NULL, 0, 5 * sizeof(Obj*));
-  vm->grayDepth = 0;
-  vm->maxGray = 5;
-}
-
 WrenVM* wrenNewVM(WrenConfiguration* config)
 {
   WrenVM* vm = (WrenVM*)config->reallocateFn(NULL, sizeof(*vm));
   memset(vm, 0, sizeof(WrenVM));
   memcpy(&vm->config, config, sizeof(WrenConfiguration));
 
+  // TODO: Should we allocate and free this during a GC?
+  vm->grayCount = 0;
+  // TODO: Tune this.
+  vm->grayCapacity = 4;
+  vm->gray = vm->config.reallocateFn(NULL, vm->grayCapacity * sizeof(Obj*));
   vm->nextGC = config->initialHeapSize;
-
+  
   wrenSymbolTableInit(&vm->methodNames);
 
   vm->modules = wrenNewMap(vm);
 
   wrenInitializeCore(vm);
-
-  initializeGC(vm);
 
   // TODO: Lazy load these.
   #if WREN_OPT_META
@@ -94,7 +90,7 @@ void wrenFreeVM(WrenVM* vm)
   }
 
   // Free up the GC gray set.
-  wrenReallocate(vm, vm->gray, vm->maxGray * sizeof(Obj*), 0);
+  vm->gray = vm->config.reallocateFn(vm->gray, 0);
 
   // Tell the user if they didn't free any handles. We don't want to just free
   // them here because the host app may still have pointers to them that they

@@ -10,5 +10,7 @@ for (i in 1..1000) {
   }
   found.add(bar)
 }
+
+System.gc()
 System.print(found.all {|i| i == 1337}) // expect: true
-System.print("DONE!") // expect: DONE!
+System.print("done") // expect: done

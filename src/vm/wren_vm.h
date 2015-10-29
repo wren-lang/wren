@@ -72,8 +72,8 @@ struct WrenVM
   // The "gray" set for the garbage collector. This is the stack of unprocessed
   // objects while a garbage collection pass is in process.
   Obj** gray;
-  int grayDepth;
-  int maxGray;
+  int grayCount;
+  int grayCapacity;
 
   // The list of temporary roots. This is for temporary or new objects that are
   // not otherwise reachable but should not be collected.
