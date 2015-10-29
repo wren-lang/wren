@@ -70,7 +70,7 @@ struct WrenVM
   Obj* first;
 
   // The 'gray' set for the garbage collector. This is the stack of unprocessed
-  // objects while a garbace collection pass is in process.
+  // objects while a garbage collection pass is in process.
   Obj** gray;
   int grayDepth;
   int maxGray;
