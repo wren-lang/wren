@@ -69,6 +69,12 @@ struct WrenVM
   // The first object in the linked list of all currently allocated objects.
   Obj* first;
 
+  // The 'gray' set for the garbage collector. This is the stack of unprocessed
+  // objects while a garbage collection pass is in process.
+  Obj** gray;
+  int grayDepth;
+  int maxGray;
+
   // The list of temporary roots. This is for temporary or new objects that are
   // not otherwise reachable but should not be collected.
   //
