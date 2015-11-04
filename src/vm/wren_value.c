@@ -149,14 +149,14 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
 {
   // Allocate the call frames before the fiber in case it triggers a GC.
   CallFrame* frames = ALLOCATE_ARRAY(vm, CallFrame, INITIAL_CALL_FRAMES);
-  
+
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
   fiber->id = vm->nextFiberId++;
   fiber->frames = frames;
   fiber->frameCapacity = INITIAL_CALL_FRAMES;
   wrenResetFiber(vm, fiber, fn);
-  
+
   return fiber;
 }
 
@@ -178,7 +178,7 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
 {
   ObjForeign* object = ALLOCATE_FLEX(vm, ObjForeign, uint8_t, size);
   initObj(vm, &object->obj, OBJ_FOREIGN, classObj);
-  
+
   // Zero out the bytes.
   memset(object->data, 0, size);
   return object;
@@ -484,7 +484,7 @@ Value wrenMapGet(ObjMap* map, Value key)
 {
   MapEntry *entry = findEntry(map, key);
   if (entry != NULL) return entry->value;
-  
+
   return UNDEFINED_VAL;
 }
 
@@ -637,22 +637,22 @@ Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
   {
     length += wrenUtf8DecodeNumBytes(from[start + i * step]);
   }
-  
+
   ObjString* result = allocateString(vm, length);
   result->value[length] = '\0';
-  
+
   uint8_t* to = (uint8_t*)result->value;
   for (uint32_t i = 0; i < count; i++)
   {
     int index = start + i * step;
     int codePoint = wrenUtf8Decode(from + index, source->length - index);
-    
+
     if (codePoint != -1)
     {
       to += wrenUtf8Encode(codePoint, to);
     }
   }
-  
+
   hashString(result);
   return OBJ_VAL(result);
 }
@@ -768,7 +768,7 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...)
 Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
 {
   ASSERT(index < string->length, "Index out of bounds.");
-  
+
   int codePoint = wrenUtf8Decode((uint8_t*)string->value + index,
                                  string->length - index);
   if (codePoint == -1)
@@ -779,7 +779,7 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
     bytes[1] = '\0';
     return wrenNewString(vm, bytes, 1);
   }
-  
+
   return wrenStringFromCodePoint(vm, codePoint);
 }
 
@@ -858,22 +858,22 @@ ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 void wrenGrayObj(WrenVM* vm, Obj* obj)
 {
   if (obj == NULL) return;
-  
+
   // Stop if the object is already darkened so we don't get stuck in a cycle.
   if (obj->isDark) return;
-  
+
   // It's been reached.
   obj->isDark = true;
-  
+
   // Add it to the gray list so it can be recursively explored for
   // more marks later.
   if (vm->grayCount >= vm->grayCapacity)
   {
     vm->grayCapacity = vm->grayCount * 2;
-    vm->gray = vm->config.reallocateFn(vm->gray,
-                                       vm->grayCapacity * sizeof(Obj*));
+    vm->gray = (Obj**)vm->config.reallocateFn(vm->gray,
+                                              vm->grayCapacity * sizeof(Obj*));
   }
-  
+
   vm->gray[vm->grayCount++] = obj;
 }
 
@@ -1126,7 +1126,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       DEALLOCATE(vm, fn->debug);
       break;
     }
-      
+
     case OBJ_FOREIGN:
       wrenFinalizeForeign(vm, (ObjForeign*)obj);
       break;

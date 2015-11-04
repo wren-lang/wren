@@ -56,9 +56,10 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->grayCount = 0;
   // TODO: Tune this.
   vm->grayCapacity = 4;
-  vm->gray = vm->config.reallocateFn(NULL, vm->grayCapacity * sizeof(Obj*));
+  vm->gray = (Obj**)vm->config.reallocateFn(NULL,
+                                            vm->grayCapacity * sizeof(Obj*));
   vm->nextGC = config->initialHeapSize;
-  
+
   wrenSymbolTableInit(&vm->methodNames);
 
   vm->modules = wrenNewMap(vm);
@@ -90,7 +91,7 @@ void wrenFreeVM(WrenVM* vm)
   }
 
   // Free up the GC gray set.
-  vm->gray = vm->config.reallocateFn(vm->gray, 0);
+  vm->gray = (Obj**)vm->config.reallocateFn(vm->gray, 0);
 
   // Tell the user if they didn't free any handles. We don't want to just free
   // them here because the host app may still have pointers to them that they
@@ -153,7 +154,7 @@ void wrenCollectGarbage(WrenVM* vm)
   // Now that we have grayed the roots, do a depth-first search over all of the
   // reachable objects.
   wrenBlackenObjects(vm);
-  
+
   // Collect the white objects.
   Obj** obj = &vm->first;
   while (*obj != NULL)
