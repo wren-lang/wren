@@ -93,9 +93,9 @@ Now run:
     :::sh
     $ ./wren my_script.wren
 
-Neat, right? You're a Wren programmer now! The next step is to [read more
-docs](syntax.html) and learn your way around the language. If you run into
-bugs, or have ideas or questions, any of the following work:
+Neat, right? You're a Wren programmer now! The next step is to [learn the
+language](syntax.html). If you run into bugs, or have ideas or questions, any of
+the following work:
 
  *  **Ask on the [Wren mailing list][list].**
  *  Tell me on twitter at [@munificentbob][twitter].

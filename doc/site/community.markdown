@@ -1,5 +1,4 @@
 ^title Community
-^category reference
 
 Like the [bird](https://en.wikipedia.org/wiki/Wren), Wren's community is small,
 but it exists!

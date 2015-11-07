@@ -1,5 +1,5 @@
 ^title Variables
-^category language
+^category guide
 
 Variables are named slots for storing values. You define a new variable in Wren
 using a `var` statement, like so:
@@ -67,4 +67,12 @@ assigned value.
     var a = "before"
     System.print(a = "after") //> after
 
+If the left-hand side is some more complex expression than a bare variable name,
+then it isn't an assignment. Instead, it's calling a [setter method][].
+
+[setter method]: method-calls.html#setters
+
 **TODO: Top-level names.**
+
+<a class="right" href="functions.html">Functions &rarr;</a>
+<a href="control-flow.html">&larr; Control Flow</a>

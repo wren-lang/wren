@@ -105,7 +105,7 @@ header {
 nav {
   float: right;
   width: 160px;
-  padding-top: 110px;
+  padding-top: 109px;
 
   h2 {
     color: $gray-30;
@@ -121,10 +121,35 @@ nav {
   }
 
   li {
-    font: 16px $body;
+    font: 15px $body;
     color: $gray-30;
     list-style-type: none;
     margin: 0 0 4px 0;
+  }
+}
+
+nav.small {
+  // Only show the mobile navigation on small screens.
+  display: none;
+
+  float: none;
+  width: 100%;
+
+  padding: 16px 0 0 0;
+  margin: 0;
+  background: $gray-10;
+
+  table {
+    width: 100%;
+
+    border-collapse: separate;
+    border-spacing: 16px 0;
+  }
+
+  h2 {
+    margin: 16px 0 0 0;
+    padding: 0 0 1px 0;
+    border-bottom: solid 1px $gray-20;
   }
 }
 
@@ -235,8 +260,9 @@ footer {
   }
 }
 
-// link hsl(200, 60%, 50%);
-// hsl(210, 80%, 60%);
+.right {
+  float: right;
+}
 
 // Syntax highlighting.
 .codehilite pre {
@@ -432,21 +458,9 @@ table.precedence {
 @media only screen and (max-width: 639px) {
   .page { width: 100%; }
 
-  nav {
-    float: none;
-    width: 100%;
-    padding: 10px 10px;
-    margin: 0;
-    background: $gray-10;
-    text-align: center;
-
-    section {
-      display: inline-block;
-      vertical-align: top;
-      text-align: left;
-      width: 30%;
-    }
-  }
+  // Switch to the mobile navigation.
+  nav.big { display: none; }
+  nav.small { display: block; }
 
   .main-column {
     padding: 0 20px;

@@ -1,5 +1,5 @@
 ^title Functions
-^category types
+^category guide
 
 No self-respecting language today can get by without functions&mdash;first
 class little bundles of code. Since Wren is object-oriented, most of your code
@@ -161,3 +161,6 @@ to`i`:
     System.print(counter.call()) //> 1
     System.print(counter.call()) //> 2
     System.print(counter.call()) //> 3
+
+<a class="right" href="classes.html">Classes &rarr;</a>
+<a href="variables.html">&larr; Variables</a>

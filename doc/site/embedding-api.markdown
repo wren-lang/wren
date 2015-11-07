@@ -98,7 +98,7 @@ Otherwise, Wren spins up a new [fiber][] and executes the code in that. Your
 code can in turn spawn whatever other fibers it wants. It keeps running fibers
 until they all complete.
 
-[fiber]: fibers.html
+[fiber]: concurrency.html
 
 If a [runtime error][] occurs (and another fiber doesn't catch it), it will
 abort fibers all the way back to the main one and then return

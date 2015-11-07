@@ -1,5 +1,5 @@
 ^title Modules
-^category language
+^category guide
 
 Once you start writing programs that are more than little toys, you quickly run
 into two problems:
@@ -283,3 +283,5 @@ Now when we run it, we get:
 This sounds super hairy, but that's because cyclic dependencies are hairy in
 general. The key point here is that Wren *can* handle them in the rare cases
 where you need them.
+
+<a href="error-handling.html">&larr; Error Handling</a>

@@ -1,5 +1,5 @@
 ^title Error Handling
-^category language
+^category guide
 
 Errors come in a few fun flavors.
 
@@ -90,11 +90,12 @@ Most of the time, runtime errors indicate a bug in your code and the best
 solution is to fix the bug. However, sometimes it's useful to be able to handle
 them at, uh, runtime.
 
-To keep the language simpler, Wren does not have exception handling. Instead,
-it takes advantage of [fibers](fibers.html) for handling errors. When a runtime
-error occurs, the current fiber is aborted. Normally, Wren will also abort any
-fibers that invoked that one, all the way to the main fiber, and then exit the
-VM.
+To keep the language simpler, Wren does not have exception handling. Instead, it
+takes advantage of [fibers][] for handling errors. When a runtime error occurs,
+the current fiber is aborted. Normally, Wren will also abort any fibers that
+invoked that one, all the way to the main fiber, and then exit the VM.
+
+[fibers]: concurrency.html
 
 However, you can run a fiber using the `try` method. If a runtime error occurs
 in the called fiber, the error is captured and the `try` method returns the
@@ -163,3 +164,6 @@ indication.
 For example, a method for parsing a number could return a number on success and
 `null` to indicate parsing failed. Since Wren is dynamically typed, it's easy
 and natural for a method to return different types of values.
+
+<a class="right" href="modules.html">Modules &rarr;</a>
+<a href="concurrency.html">&larr; Concurrency</a>

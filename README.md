@@ -51,7 +51,7 @@ involved][contribute]!
 [nan]: https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
 [perf]: http://munificent.github.io/wren/performance.html
 [classes]: http://munificent.github.io/wren/classes.html
-[fibers]: http://munificent.github.io/wren/fibers.html
+[fibers]: http://munificent.github.io/wren/concurrency.html
 [embedding]: http://munificent.github.io/wren/embedding-api.html
 [started]: http://munificent.github.io/wren/getting-started.html
 [browser]: http://ppvk.github.io/wren-nest/

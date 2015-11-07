@@ -1,5 +1,5 @@
 ^title Syntax
-^category language
+^category guide
 
 Wren's syntax is designed to be familiar to people coming from C-like languages
 while being a bit simpler and more streamlined.
@@ -37,8 +37,8 @@ even if the code already contains block comments.
 
 ## Reserved words
 
-Some people like to see all of the reserved words in a programming language in
-one lump. If you're one of those folks, here you go:
+One way to get a quick feel for a language's style is to see what words it
+reserves. Here's what Wren has:
 
     :::wren
     break class construct else false for foreign if import
@@ -124,3 +124,6 @@ same as doing:
     {
       return "single expression"
     }
+
+<a class="right" href="values.html">Values &rarr;</a>
+<a href="getting-started.html">&larr; Getting Started</a>

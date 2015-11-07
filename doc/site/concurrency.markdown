@@ -1,23 +1,23 @@
-^title Fibers
-^category types
+^title Concurrency
+^category guide
 
-Fibers are a key part of Wren. They form its execution model, its concurrency
-story, and take the place of exceptions in [error
-handling](error-handling.html).
+Lightweight concurrency is a key feature of Wren and it is expressed using
+*fibers*. They control how all code is executed, and take the place of
+exceptions in [error handling](error-handling.html).
 
-They are a bit like threads except they are *cooperatively* scheduled. That
+Fibers are a bit like threads except they are *cooperatively* scheduled. That
 means Wren doesn't pause one fiber and switch to another until you tell it to.
 You don't have to worry about context switches at random times and all of the
 headaches those cause.
 
-Fibers are managed entirely by Wren, so they don't use OS thread resources, or
-require heavyweight context switches. They just need a bit of memory for their
-stacks. A fiber will get garbage collected like any other object when not
-referenced any more, so you can create them freely.
+Wren takes care of all of the fibers in the VM, so they don't use OS thread
+resources, or require heavyweight context switches. Each just needs a bit of
+memory for its stack. A fiber will get garbage collected like any other object
+when not referenced any more, so you can create them freely.
 
-They are lightweight enough that you can, for example, have a separate fiber
-for each entity in a game. Wren can handle thousands of them without any
-trouble. For example, when you run Wren in interactive mode, it creates a new
+They are lightweight enough that you can, for example, have a separate fiber for
+each entity in a game. Wren can handle thousands of them without breaking a
+sweat. For example, when you run Wren in interactive mode, it creates a new
 fiber for every line of code you type in.
 
 ## Creating fibers
@@ -168,3 +168,6 @@ execution immediately to the transferred fiber. The previous one is suspended,
 leaving it in whatever state it was in. You can resume the previous fiber by
 transferring back to it, or even calling it. If you don't, execution stops when
 the last transferred fiber returns.
+
+<a class="right" href="error-handling.html">Error Handling &rarr;</a>
+<a href="classes.html">&larr; Classes</a>

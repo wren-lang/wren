@@ -1,5 +1,5 @@
 ^title Lists
-^category types
+^category guide
 
 A list is a compound object that holds a collection of elements identified by
 integer index. You can create a list by placing a sequence of comma-separated
@@ -14,8 +14,10 @@ have to be the same type.
 ## Accessing elements
 
 You can access an element from a list by calling the [subscript
-operator](expressions.html#subscript-operators) on it with the index of the
+operator][] on it with the index of the
 element you want. Like most languages, indexes start at zero:
+
+[subscript operator]: method-calls.html#subscripts
 
     :::wren
     var hirsute = ["sideburns", "porkchops", "'stache", "goatee"]
@@ -109,3 +111,6 @@ If you want to remove everything from the list, you can clear it:
     :::wren
     hirsute.clear()
     System.print(hirsute) //> []
+
+<a class="right" href="maps.html">Maps &rarr;</a>
+<a href="values.html">&larr; Values</a>

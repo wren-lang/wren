@@ -50,7 +50,7 @@ involved][contribute]!
 [nan]: https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
 [perf]: performance.html
 [classes]: classes.html
-[fibers]: fibers.html
+[fibers]: concurrency.html
 [embedding]: embedding-api.html
 [started]: getting-started.html
 [browser]: http://ppvk.github.io/wren-nest/

@@ -1,8 +1,7 @@
 ^title Contributing
-^category reference
 
-It should be obvious by now that Wren is under active development and there's
-lots left to do. We'd be delighted to have you participate.
+Wren is under active development and there's lots to do. We'd be delighted to
+have you help!
 
 ## Getting acquainted
 

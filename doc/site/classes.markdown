@@ -1,13 +1,16 @@
 ^title Classes
-^category types
+^category guide
 
 Every value in Wren is an object, and every object is an instance of a class.
 Even `true` and `false` are full-featured objects&mdash;instances of the
 [`Bool`](core/bool.html) class.
 
-Classes contain both *behavior* and *state*. Behavior is defined in *methods*
-which are stored in the class. State is defined in *fields*, whose values are
+Classes define an objects *behavior* and *state*. Behavior is defined by
+[*methods*][method calls] which live in the class. Every object of the same
+class supports the same methods. State is defined in *fields*, whose values are
 stored in each instance.
+
+[method calls]: method-calls.html
 
 ## Defining a class
 
@@ -29,8 +32,8 @@ To let our unicorn do stuff, we need to give it methods.
       }
     }
 
-This defines a `prance()` method that takes no arguments. To support
-parameters, put their names inside the parentheses:
+This defines a `prance()` method that takes no arguments. To add parameters, put
+their names inside the parentheses:
 
     :::wren
     class Unicorn {
@@ -39,12 +42,10 @@ parameters, put their names inside the parentheses:
       }
     }
 
-### Signature
+Since the number of parameters is part of a method's [signature][] a class can
+define multiple methods with the same name:
 
-Unlike most other dynamically-typed languages, in Wren you can have multiple
-methods in a class with the same name, as long as they have a different
-*signature*. In technical terms, you can *overload by arity*. So this class is
-fine:
+[signature]: method-calls.html#signature
 
     :::wren
     class Unicorn {
@@ -61,132 +62,105 @@ fine:
       }
     }
 
-And you can call each of the methods like so:
-
-    :::wren
-    var unicorn = Unicorn.new()
-    unicorn.prance()
-    unicorn.prance("Antwerp")
-    unicorn.prance("Brussels", "high noon")
-
-The number of arguments provided at the callsite determines which method is
-chosen.
-
 It's often natural to have the same conceptual operation work with different
 sets of arguments. In other languages, you'd define a single method for the
-operation and have to check for "undefined" or missing arguments. Wren just
-treats them as different methods that you can implement separately.
+operation and have to check for missing optional arguments. In Wren, they are
+different methods that you implement separately.
+
+In addition to named methods with parameter lists, Wren has a bunch of other
+different syntaxes for methods. Your classes can define all of them.
 
 ### Getters
 
-Many methods on a class exist to expose or compute some property of the object.
-For example:
-
-    :::wren
-    System.print("string".count) //> 6
-
-These *getters* are just another kind of method&mdash;one without a parameter
-list. You can define them like so:
+A getter leaves off the parameter list and the parentheses:
 
     :::wren
     class Unicorn {
       isFancy { true } // Unicorns are always fancy.
     }
 
-Whether or not a method name has parentheses is also part of its signature.
-This lets you distinguish between a method that takes an *empty* argument list
-(`()`) and no argument list at all:
+### Setters
 
-    :::wren
-    class Confusing {
-      method { "no argument list" }
-      method() { "empty argument list" }
-    }
-
-    var confusing = Confusing.new()
-    confusing.method // "no argument list".
-    confusing.method() // "empty argument list".
-
-Like the example says, having two methods that differ just by an empty set of
-parentheses is pretty confusing. That's not what this is for. Instead, it
-ensures that the way you *declare* the method is the way you *call* it.
-
-Unlike other languages with "optional parentheses", Wren wants to make sure you
-call a getter like a getter and a `()` method like a `()` method. These don't
-work:
-
-    :::wren
-    "string".count()
-    list.clear
-
-Methods that don't need arguments and don't modify the underlying object are
-usually getters:
-
-    :::wren
-    "string".count
-    (1..10).min
-    1.23.sin
-    [1, 2, 3].isEmpty
-
-When a method doesn't need any parameters, but does modify the object, it's
-helpful to draw attention to that by requiring an empty set of parentheses:
-
-    :::wren
-    list.clear()
-
-Also, when a method supports multiple arities, it's typical to include the `()`
-in the zero-argument case to be consistent with the other versions:
-
-    Fn.new { "a function" }.call()
-    Fiber.yield()
-
-### Operators
-
-Operators are just special syntax for a method call on the left hand operand
-(or only operand in the case of unary operators like `!` and `~`). In other
-words, you can think of `a + b` as meaning `a.+(b)`.
-
-You can define operators in your class like so:
+A setter has `=` after the name, followed by a single parenthesized parameter:
 
     :::wren
     class Unicorn {
-      // Infix:
-      +(other) {
-        System.print("Adding to a unicorn?")
-      }
-
-      // Prefix:
-      ! {
-        System.print("Negating a unicorn?!")
+      rider=(value) {
+        System.print("I am being ridden by " + value)
       }
     }
 
-This can be used to define any of these operators:
+### Operators
+
+Prefix operators, like getters, have no parameter list:
 
     :::wren
-    // Infix:
-    +  -  *  /  %  <  >  <=  >=  ==  !=  &  |
+    class Unicorn {
+      - {
+        System.print("Negating a unicorn is weird")
+      }
+    }
 
-    // Prefix:
-    !  ~  -
+Infix operators, like setters, have a single parenthesized parameter for the
+right-hand operand:
 
-Note that `-` can be both a prefix and infix operator. If there's a parameter
-list, it's the infix one, otherwise, it's prefix. Since Wren supports
-overloading by arity, it's no problem for a class to define both.
+    :::wren
+    class Unicorn {
+      -(other) {
+        System.print("Subtracting " + other + " from a unicorn is weird")
+      }
+    }
 
-### Subscript operators
+A subscript operator puts the parameters inside square brackets and can have
+more than one:
 
-**TODO**
+    :::wren
+    class Unicorn {
+      [index] {
+        System.print("Unicorns are not lists!")
+      }
 
-### Setters
+      [x, y] {
+        System.print("Unicorns are not matrices either!")
+      }
+    }
 
-**TODO**
+Unlike with named methods, you can't define a subscript operator with an empty
+parameter list.
+
+As the name implies, a subscript setter looks like a combination of a subscript
+operator and a setter:
+
+    :::wren
+    class Unicorn {
+      [index]=(value) {
+        System.print("You can't stuff " + value + " into me at " + index)
+      }
+    }
+
+## This
+
+**TODO: Integrate this into the page better.**
+
+The special `this` keyword works sort of like a variable, but has special
+behavior. It always refers to the instance whose method is currently being
+executed. This lets you invoke methods on "yourself".
+
+It's an error to refer to `this` outside of a method. However, it's perfectly
+fine to use it inside a function contained in a method. When you do, `this`
+still refers to the instance whose method is being called.
+
+This is unlike Lua and JavaScript which can "forget" `this` when you create a
+callback inside a method. Wren does what you want here and retains the
+reference to the original object. (In technical terms, a function's closure
+includes `this`.)
 
 ## Constructors
 
-Unicorns can prance around now, but we don't actually *have* any unicorns to do
-it. To create instances of a class, we need a *constructor*. You can define one
-like so:
+Unicorns can prance around now (as well as a bunch of weird operators that don't
+make sense outside of these examples), but we don't actually *have* any unicorns
+to do it. To create instances of a class, we need a *constructor*. You can
+define one like so:
 
     :::wren
     class Unicorn {
@@ -196,10 +170,10 @@ like so:
     }
 
 The `construct` keyword says we're defining a constructor, and `new` is its
-name. In Wren, all constructors have names, just like [methods][#methods]. The
-word "new" isn't special to Wren, it's just a common constructor name.
+name. In Wren, all constructors have names. The word "new" isn't special to
+Wren, it's just a common constructor name.
 
-To make a unicorn now, we just call the constructor method on the class itself:
+To make a unicorn now, we call the constructor method on the class itself:
 
     :::wren
     var fred = Unicorn.new("Fred", "palomino")
@@ -359,7 +333,10 @@ class using `is` when you declare the class:
 
 This declares a new class `Pegasus` that inherits from `Unicorn`.
 
-Note that you should not create classes that inherit from the built-in types (Bool, Num, String, Range, List). The built-in types expect their internal bit representation to be very specific and get horribly confused when you invoke one of the inherited built-in methods on the derived type.
+Note that you should not create classes that inherit from the built-in types
+(Bool, Num, String, Range, List). The built-in types expect their internal bit
+representation to be very specific and get horribly confused when you invoke one
+of the inherited built-in methods on the derived type.
 
 The metaclass hierarchy does *not* parallel the regular class hierarchy. So, if
 `Pegasus` inherits from `Unicorn`, `Pegasus`'s metaclass will not inherit from
@@ -409,3 +386,48 @@ This means you can do `super` calls inside a constructor:
     }
 
     Pegasus.new("Fred") //> My name is Fred
+
+## Super
+
+**TODO: Integrate better into page. Should explain this before mentioning
+super above.**
+
+Sometimes you want to invoke a method on yourself, but only methods defined in
+one of your [superclasses](classes.html#inheritance). You typically do this in
+an overridden method when you want to access the original method being
+overridden.
+
+To do that, you can use the special `super` keyword as the receiver in a method
+call:
+
+    :::wren
+    class Base {
+      method() {
+        System.print("base method")
+      }
+    }
+
+    class Derived is Base {
+      method() {
+        super.method() //> base method
+      }
+    }
+
+You can also use `super` without a method name inside a constructor to invoke a
+base class constructor:
+
+    :::wren
+    class Base {
+      construct new(arg) {
+        System.print("base got " + arg)
+      }
+    }
+
+    class Derived is Base {
+      construct new() {
+        super("value") //> base got value
+      }
+    }
+
+<a class="right" href="concurrency.html">Concurrency &rarr;</a>
+<a href="functions.html">&larr; Functions</a>

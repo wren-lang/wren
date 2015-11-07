@@ -1,5 +1,5 @@
 ^title Maps
-^category types
+^category guide
 
 A map is an *associative* collection. It holds a set of entries, each of which
 maps a *key* to a *value*. The same data structure has a variety of names in
@@ -21,15 +21,19 @@ names. Syntactically, in a map literal, keys can be any literal, a variable
 name, or a parenthesized expression. Values can be any expression. Here, we're
 using string literals for both keys and values.
 
-*Semantically*, values can be any object, and multiple keys may map to the
-same value. Keys have a few limitations. They must be one of the immutable
-built-in [value types](values.html) in Wren. That means a number, string,
-range, bool, or `null`. You can also use a [class object](classes.html) as a
-key.
+*Semantically*, values can be any object, and multiple keys may map to the same
+value. Keys have a few limitations. They must be one of the immutable built-in
+[value types][] in Wren. That means a number, string, range, bool, or `null`.
+You can also use a [class object][] as a key.
 
-In addition, even though they aren't strictly immutable, [fibers](fibers.html)
-can be used as map keys. This is handy for storing data that's roughly
-"thread-local" by using the current fiber as a map key.
+[value types]: values.html
+[class object]: classes.html
+
+In addition, even though they aren't strictly immutable, [fibers][] can be used
+as map keys. This is handy for storing data that's roughly "thread-local" by
+using the current fiber as a map key.
+
+[fibers]: concurrency.html
 
 The reason for this limitation&mdash;and the reason maps are called "*hash*
 tables" in other languages&mdash;is that each key is used to generate a numeric
@@ -41,6 +45,8 @@ built-in types, only those can be used as keys.
 
 You add new key-value pairs to the map by using the [subscript operator][]:
 
+[subscript operator]: method-calls.html#subscripts
+
     :::wren
     var capitals = {}
     capitals["Georgia"] = "Atlanta"
@@ -49,8 +55,6 @@ You add new key-value pairs to the map by using the [subscript operator][]:
 
 If the key isn't already present, this adds it and associates it with the given
 value. If the key is already there, this just replaces its value.
-
-[subscript operator]: expressions.html#subscript-operators
 
 ## Looking up values
 
@@ -98,11 +102,11 @@ If the key wasn't in the map to begin with, `remove()` just returns `null`.
 If you want to remove *everything* from the map, just like with [lists][], you
 can just call `clear()`:
 
+[lists]: lists.html
+
     :::wren
     capitals.clear()
     System.print(capitals.count) //> 0
-
-[lists]: lists.html
 
 ## Iterating over the contents
 
@@ -134,3 +138,6 @@ This program will print the three states and their birds. However, the *order*
 that they are printed isn't defined. Wren makes no promises about what order
 keys and values will be iterated in when you use these methods. All it promises
 is that every entry will appear exactly once.
+
+<a class="right" href="method-calls.html">Method Calls &rarr;</a>
+<a href="lists.html">&larr; Lists</a>

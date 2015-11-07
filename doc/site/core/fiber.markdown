@@ -1,7 +1,9 @@
 ^title Fiber Class
 ^category core
 
-A lightweight coroutine. [Here](../fibers.html) is a gentle introduction.
+A lightweight coroutine. [Here][fibers] is a gentle introduction.
+
+[fibers]: ../concurrency.html
 
 ### Fiber.**new**(function)
 

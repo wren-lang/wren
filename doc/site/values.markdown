@@ -1,10 +1,10 @@
 ^title Values
-^category types
+^category guide
 
-Values are the built-in object types that all other objects are composed of.
-They can be created through *literals*, expressions that evaluate to a value.
-All values are *immutable*&mdash;once created, they do not change. The number
-`3` is always the number `3`. The string `"frozen"` can never have its
+Values are the built-in atomic object types that all other objects are composed
+of. They can be created through *literals*, expressions that evaluate to a
+value. All values are *immutable*&mdash;once created, they do not change. The
+number `3` is always the number `3`. The string `"frozen"` can never have its
 character array modified in place.
 
 ## Booleans
@@ -59,6 +59,12 @@ A `\u` followed by four hex digits can be used to specify a Unicode code point:
     :::wren
     System.print("\u0041\u0b83\u00DE") //> AஃÞ
 
+A capital `\U` followed by *eight* hex digits allows Unicode code points outside
+of the basic multilingual plane, like all-important emoji:
+
+    :::wren
+    System.print("\U0001F64A\U0001F680") //> 🙊🚀
+
 A `\x` followed by two hex digits specifies a single unencoded byte:
 
     :::wren
@@ -68,10 +74,11 @@ Strings are instances of class [String](core/string.html).
 
 ## Ranges
 
-A range is a little object that represents a consecutive range of numbers.
-They don't have their own dedicated literal syntax. Instead, the number class
-implements the `..` and `...` [operators](expressions.html#operators) to create
-them:
+A range is a little object that represents a consecutive range of numbers. They
+don't have their own dedicated literal syntax. Instead, the number class
+implements the `..` and `...` [operators][] to create them:
+
+[operators]: method-calls.html#operators
 
     :::wren
     3..8
@@ -102,3 +109,6 @@ Wren has a special value `null`, which is the only instance of the class
 `void` in some languages: it indicates the absence of a value. If you call a
 method that doesn't return anything and get its returned value, you get `null`
 back.
+
+<a class="right" href="lists.html">Lists &rarr;</a>
+<a href="syntax.html">&larr; Syntax</a>

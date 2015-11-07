@@ -1,17 +1,17 @@
 ^title Control Flow
-^category language
+^category guide
 
-Control flow is used to determine which chunks of code are executed and how
-many times. *Branching* statements decide whether or not to execute some code
-and *looping* ones execute something more than once.
+Control flow is used to determine which chunks of code are executed and how many
+times. *Branching* statements and expressions decide whether or not to execute
+some code and *looping* ones execute something more than once.
 
 ## Truth
 
 All control flow is based on *deciding* whether or not to do something. This
-decision is conditional on the value of some expression. We take the entire
-universe of possible values and divide them into two buckets: some we consider
-"true" and the rest are "false". If the expression results in a value in the
-true bucket, we do one thing. Otherwise, we do something else.
+decision depends on some expression's value. We take the entire universe of
+possible objects and divide them into two buckets: some we consider "true" and
+the rest are "false". If the expression results in a value in the true bucket,
+we do one thing. Otherwise, we do something else.
 
 Obviously, the boolean `true` is in the "true" bucket and `false` is in
 "false", but what about values of other types? The choice is ultimately
@@ -57,6 +57,45 @@ And, of course, it can take a block too:
     } else {
       System.print("not ready!")
     }
+
+## Logical operators
+
+Unlike most other [operators][] in Wren which are just a special syntax for
+[method calls][], the `&&` and `||` operators are special. This is because they
+only conditionally evaluate right operand&mdash;they short-circuit.
+
+[operators]: method-calls.html#operators
+[method calls]: method-calls.html
+
+A `&&` ("logical and") expression evaluates the left-hand argument. If it's
+false, it returns that value. Otherwise it evaluates and returns the right-hand
+argument.
+
+    :::wren
+    System.print(false && 1)  //> false
+    System.print(1 && 2)      //> 2
+
+A `||` ("logical or") expression is reversed. If the left-hand argument is
+*true*, it's returned, otherwise the right-hand argument is evaluated and
+returned:
+
+    :::wren
+    System.print(false || 1)  //> 1
+    System.print(1 || 2)      //> 1
+
+## The conditional operator `?:`
+
+Also known as the "ternary" operator since it takes three arguments, Wren has
+the little "if statement in the form of an expression" you know and love from C
+and its brethren.
+
+    :::wren
+    System.print(1 != 2 ? "math is sane" : "math is not sane!")
+
+It takes a condition expression, followed by `?`, followed by a then
+expression, a `:`, then an else expression. Just like `if`, it evaluates the
+condition. If true, it evaluates and returns the then expression. Otherwise
+it does the else expression.
 
 ## While statements
 
@@ -119,16 +158,14 @@ A `for` loop has three components:
 
 Sometimes, right in the middle of a loop body, you decide you want to bail out
 and stop. To do that, you can use a `break` statement. It's just the `break`
-keyword all by itself. That will immediately exit out of the nearest enclosing
+keyword all by itself. That immediately exits out of the nearest enclosing
 `while` or `for` loop.
 
     :::wren
     for (i in [1, 2, 3, 4]) {
-      System.print(i)
-      if (i == 3) break
-    }
-
-So this program will print the numbers from 1 to 3, but will not print 4.
+      System.print(i)           //> 1
+      if (i == 3) break         //> 2
+    }                           //> 3
 
 ## Numeric ranges
 
@@ -149,12 +186,13 @@ leave off the last value, use three dots instead of two:
       System.print(i)
     }
 
-This looks like some special "range" syntax in the `for` loop, but it's
-actually just a pair of operators. The `..` and `...` syntax are infix "range"
-operators. Like [other operators](expressions.html#operators), they are just
-special syntax for a regular method call. The number type implements them and
-returns a [range object](values.html#ranges) that knows how to iterate over a
-series of numbers.
+This looks like some special "range" syntax in the `for` loop, but it's actually
+just a pair of operators. The `..` and `...` syntax are infix "range" operators.
+Like [other operators][operators], they are special syntax for a regular method
+call. The number type implements them and returns a [range object][] that knows
+how to iterate over a series of numbers.
+
+[range object]: values.html#ranges
 
 ## The iterator protocol
 
@@ -202,3 +240,6 @@ that to look up and return the appropriate element.
 The built-in [List](lists.html) and [Range](values.html#ranges) types implement
 `iterate()` and `iteratorValue()` to walk over their respective sequences. You
 can implement the same methods in your classes to make your own types iterable.
+
+<a class="right" href="variables.html">Variables &rarr;</a>
+<a href="method-calls.html">&larr; Method Calls</a>

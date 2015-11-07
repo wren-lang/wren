@@ -21,12 +21,16 @@ MARKDOWN_HEADER = re.compile(r'#+ ')
 # Clean up a header to be a valid URL.
 FORMAT_ANCHOR = re.compile(r'\.|\?|!|:|/|\*')
 
-with codecs.open("doc/site/template.html", encoding="utf-8") as f:
-  template = f.read()
+def load_template():
+  global template
+  with codecs.open("doc/site/template.html", encoding="utf-8") as f:
+    template = f.read()
 
 
-with codecs.open("doc/site/template-core.html", encoding="utf-8") as f:
-  template_core = f.read()
+def load_core_template():
+  global template_core
+  with codecs.open("doc/site/template-core.html", encoding="utf-8") as f:
+    template_core = f.read()
 
 
 def ensure_dir(path):
@@ -35,14 +39,26 @@ def ensure_dir(path):
 
 
 def is_up_to_date(path, out_path):
-  # See if it's up to date.
-  source_mod = os.path.getmtime(path)
-  source_mod = max(source_mod, os.path.getmtime('doc/site/template.html'))
-
   dest_mod = 0
   if os.path.exists(out_path):
     dest_mod = os.path.getmtime(out_path)
+
+  # See if the templates have changed.
+  source_mod = os.path.getmtime('doc/site/template.html')
+  if source_mod > dest_mod:
+    load_template()
+    return False
+
+  # See if the templates have changed.
+  source_mod = os.path.getmtime('doc/site/template-core.html')
+  if source_mod > dest_mod:
+    load_core_template()
+    return False
+
+  # See if it's up to date.
+  source_mod = os.path.getmtime(path)
   return source_mod < dest_mod
+
 
 def format_file(path, skip_up_to_date):
   basename = os.path.basename(path)
@@ -89,7 +105,16 @@ def format_file(path, skip_up_to_date):
         contents += '{1} <a href="#{0}" name="{0}" class="header-anchor">#</a>\n'.format(anchor, header)
 
       else:
-        contents = contents + line
+        # Forcibly add a space to the end of each line. Works around a bug in
+        # the smartypants extension that removes some newlines that are needed.
+        # https://github.com/waylan/Python-Markdown/issues/439
+        if "//" not in line:
+          contents = contents + line.rstrip() + ' \n'
+        else:
+          # Don't add a trailing space on comment lines since they may be
+          # output lines which have a trailing ">" which makes the extra space
+          # visible.
+          contents += line
 
   html = markdown.markdown(contents, ['def_list', 'codehilite', 'smarty'])
 
@@ -147,6 +172,9 @@ def format_files(skip_up_to_date):
 if os.path.exists("build/docs"):
   shutil.rmtree("build/docs")
 ensure_dir("build/docs")
+
+load_template()
+load_core_template()
 
 # Process each markdown file.
 format_files(False)

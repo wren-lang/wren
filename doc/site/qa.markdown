@@ -83,8 +83,10 @@ is that bytecode is a nice trade-off between performance and simplicity. Also:
  *  Many devices like iPhones and game consoles don't allow executing code
     generated at runtime, which rules out just-in-time compilation.
 
- *  I think [fibers](fibers.html) are a really powerful tool, and implementing
-    them is straightforward in a bytecode VM that doesn't use the native stack.
+ *  I think [fibers][] are a really powerful tool, and implementing them is
+    straightforward in a bytecode VM that doesn't use the native stack.
+
+[fibers]: concurrency.html
 
 ## Why is the VM stack-based instead of register-based?
 
