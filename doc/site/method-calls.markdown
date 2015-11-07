@@ -172,26 +172,5 @@ These are equivalent to method calls whose signature is `[_]=(_)` and whose
 arguments are both the subscript (or subscripts) and the value on the right-hand
 side.
 
-<!--
-
-**TODO: Integrate this into the infix expressions when "is" becomes a normal
-overridable method.**
-
-## The `is` operator
-
-Wren has one last expression form. You can use the `is` keyword like an infix
-operator. It performs a type test. The left operand is an object and the right
-operand is a class. It evaluates to `true` if the object is an instance of the
-class (or one of its subclasses).
-
-    :::wren
-    System.print(123 is Num)     //> true
-    System.print("s" is Num)     //> false
-    System.print(null is String) //> false
-    System.print([] is List)     //> true
-    System.print([] is Sequence) //> true
-
--->
-
 <a class="right" href="control-flow.html">Control Flow &rarr;</a>
 <a href="maps.html">&larr; Maps</a>
