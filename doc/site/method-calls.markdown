@@ -123,7 +123,7 @@ We also have a slew of infix operators&mdash;they have operands on both sides.
 They are:
 
     :::wren
-    == != < > <= >= .. ... | & + - * / %
+    == != < > <= >= .. ... | & + - * / % is
 
 Like prefix operators, they are all funny ways of writing method calls. The left
 operand is the receiver, and the right operand gets passed to it. So `a + b` is
@@ -137,6 +137,13 @@ Most of these are probably familiar already. The `..` and `...` operators are
 objects, but they are method calls like other operators.
 
 [range]: values.html#ranges
+
+The `is` keyword is a "type test" operator. The base [Object][] class implements
+it to tell if an object is an instance of a given class. You'll rarely need to,
+but you can override `is` in your own classes. That can be useful for things
+like mocks or proxies where you want an object to masquerade as a certain class.
+
+[object]: core/object.html
 
 ## Subscripts
 
