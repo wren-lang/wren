@@ -125,5 +125,133 @@ same as doing:
       return "single expression"
     }
 
+
+## Precedence and Associativity
+
+We'll talk about Wren's different expression forms and what they mean in the
+next few pages. But if you want to see how they interact with each other
+grammatically, here's the whole table.
+
+It shows which expressions have higher *precedence*&mdash;which ones bind more
+tightly than others&mdash;and their *associativity*&mdash;how a series of the
+same kind of expression is ordered. Wren mostly follows C, except that it fixes
+[the bitwise operator mistake][mistake]. The full precedence table, from
+tightest to loosest, is:
+
+[mistake]: http://www.lysator.liu.se/c/dmr-on-or.html
+
+<table class="precedence">
+  <tbody>
+    <tr>
+      <th>Prec</th>
+      <th>Operator</th>
+      <th>Description</th>
+      <th>Associates</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td><code>()</code> <code>[]</code> <code>.</code></td>
+      <td>Grouping, <a href="method-calls.html">Subscript, Method call</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code>-</code> <code>!</code> <code>~</code></td>
+      <td><a href="method-calls.html#operators">Negate, Not, Complement</a></td>
+      <td>Right</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><code>*</code> <code>/</code> <code>%</code></td>
+      <td><a href="method-calls.html#operators">Multiply, Divide, Modulo</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><code>+</code> <code>-</code></td>
+      <td><a href="method-calls.html#operators">Add, Subtract</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><code>..</code> <code>...</code></td>
+      <td><a href="method-calls.html#operators">Inclusive range, Exclusive range</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><code>&lt;&lt;</code> <code>&gt;&gt;</code></td>
+      <td><a href="method-calls.html#operators">Left shift, Right shift</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></td>
+      <td><a href="method-calls.html#operators">Comparison</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><code>==</code></td>
+      <td><a href="method-calls.html#operators">Equals</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><code>!=</code></td>
+      <td><a href="method-calls.html#operators">Not equal</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><code>&amp;</code></td>
+      <td><a href="method-calls.html#operators">Bitwise and</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td><code>^</code></td>
+      <td><a href="method-calls.html#operators">Bitwise xor</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td><code>|</code></td>
+      <td><a href="method-calls.html#operators">Bitwise or</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td><code>is</code></td>
+      <td><a href="method-calls.html#operators">Type test</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td><code>&amp;&amp;</code></td>
+      <td><a href="control-flow.html#logical-operators">Logical and</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td><code>||</code></td>
+      <td><a href="control-flow.html#logical-operators">Logical or</a></td>
+      <td>Left</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td><code>?:</code></td>
+      <td><a href="control-flow.html#the-conditional-operator-">Conditional</a></td>
+      <td>Right</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td><code>=</code></td>
+      <td><a href="variables.html#assignment">Assignment</a>, <a href="method-calls.html#setters">Setter</a></td>
+      <td>Right</td>
+    </tr>
+  </tbody>
+</table>
+
 <a class="right" href="values.html">Values &rarr;</a>
 <a href="getting-started.html">&larr; Getting Started</a>

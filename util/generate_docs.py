@@ -19,7 +19,7 @@ import markdown
 MARKDOWN_HEADER = re.compile(r'#+ ')
 
 # Clean up a header to be a valid URL.
-FORMAT_ANCHOR = re.compile(r'\.|\?|!|:|/|\*')
+FORMAT_ANCHOR = re.compile(r'\?|!|:|/|\*|`')
 
 def load_template():
   global template

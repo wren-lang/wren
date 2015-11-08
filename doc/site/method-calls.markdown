@@ -123,7 +123,7 @@ We also have a slew of infix operators&mdash;they have operands on both sides.
 They are:
 
     :::wren
-    == != < > <= >= .. ... | & + - * / % is
+    * / % + - .. ... << >> < <= > >= == != & ^ | is
 
 Like prefix operators, they are all funny ways of writing method calls. The left
 operand is the receiver, and the right operand gets passed to it. So `a + b` is
