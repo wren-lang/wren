@@ -1,5 +1,4 @@
 ^title Num Class
-^category core
 
 ## Static Methods
 

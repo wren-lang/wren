@@ -1,5 +1,4 @@
 ^title Object Class
-^category core
 
 ## Static Methods
 

@@ -1,5 +1,4 @@
 ^title System Class
-^category core
 
 The System class is a grab-bag of functionality exposed by the VM, mostly for
 use during development or debugging.

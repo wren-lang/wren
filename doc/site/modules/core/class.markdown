@@ -1,5 +1,6 @@
 ^title Class Class
-^category core
+
+**TODO**
 
 ## Methods
 

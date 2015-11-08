@@ -1,5 +1,4 @@
-^title Modules
-^category guide
+^title Modularity
 
 Once you start writing programs that are more than little toys, you quickly run
 into two problems:
@@ -52,7 +51,8 @@ performs:
 
 1. Locate the source code for the module.
 2. Execute the imported module's code.
-3. Bind new variables in the importing module to values defined in the imported module.
+3. Bind new variables in the importing module to values defined in the imported
+   module.
 
 We'll go through each step:
 
@@ -110,8 +110,10 @@ valid separator on Windows, but backslashes are not valid on other OSes.)
 ## Executing the module
 
 Once we have the source code for a module, we need to run it. First, the VM
-takes the fiber that is executing the `import` statement in the importing
+takes the [fiber][] that is executing the `import` statement in the importing
 module and pauses it.
+
+[fiber]: concurrency.html
 
 Then it creates a new module object&mdash;a new fresh top-level scope,
 basically&mdash;and a new fiber. It executes the new module's code in that
@@ -157,7 +159,7 @@ rarely makes a difference.
 
 ## Shared imports
 
-Earlier, I described a programs set of modules as a tree. Of course, it's only
+Earlier, I described a program's set of modules as a tree. Of course, it's only
 a *tree* of modules if there are no *shared imports*. But consider a program
 like:
 

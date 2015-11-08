@@ -1,5 +1,4 @@
 ^title Variables
-^category guide
 
 Variables are named slots for storing values. You define a new variable in Wren
 using a `var` statement, like so:

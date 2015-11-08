@@ -1,5 +1,4 @@
 ^title String Class
-^category core
 
 A string is an immutable array of bytes. Strings usually store text, in which
 case the bytes are the UTF-8 encoding of the text's code points. But you can put

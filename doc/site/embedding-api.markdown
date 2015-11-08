@@ -1,5 +1,4 @@
 ^title Embedding API
-^category reference
 
 Wren is designed to be a scripting language, so the embedding API is as
 important as any of its language features. There are two (well, three) ways to

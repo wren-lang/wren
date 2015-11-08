@@ -1,5 +1,4 @@
 ^title Error Handling
-^category guide
 
 Errors come in a few fun flavors.
 
@@ -165,5 +164,5 @@ For example, a method for parsing a number could return a number on success and
 `null` to indicate parsing failed. Since Wren is dynamically typed, it's easy
 and natural for a method to return different types of values.
 
-<a class="right" href="modules.html">Modules &rarr;</a>
+<a class="right" href="modularity.html">Modularity &rarr;</a>
 <a href="concurrency.html">&larr; Concurrency</a>

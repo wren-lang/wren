@@ -1,9 +1,10 @@
 ^title List Class
-^category core
 
 Extends [Sequence](sequence.html).
 
-An indexable contiguous collection of elements. More details [here](../lists.html).
+An indexable contiguous collection of elements. More details [here][lists].
+
+[lists]: ../../lists.html
 
 ## Methods
 
@@ -52,8 +53,10 @@ It is a runtime error if the index is not an integer or is out of bounds.
 
 ### **iterate**(iterator), **iteratorValue**(iterator)
 
-Implements the [iterator protocol](../control-flow.html#the-iterator-protocol)
-for iterating over the elements in the list.
+Implements the [iterator protocol][] for iterating over the elements in the
+list.
+
+[iterator protocol]: ../../control-flow.html#the-iterator-protocol
 
 ### **removeAt**(index)
 

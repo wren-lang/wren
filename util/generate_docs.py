@@ -21,18 +21,6 @@ MARKDOWN_HEADER = re.compile(r'#+ ')
 # Clean up a header to be a valid URL.
 FORMAT_ANCHOR = re.compile(r'\?|!|:|/|\*|`')
 
-def load_template():
-  global template
-  with codecs.open("doc/site/template.html", encoding="utf-8") as f:
-    template = f.read()
-
-
-def load_core_template():
-  global template_core
-  with codecs.open("doc/site/template-core.html", encoding="utf-8") as f:
-    template_core = f.read()
-
-
 def ensure_dir(path):
   if not os.path.exists(path):
     os.mkdir(path)
@@ -43,36 +31,24 @@ def is_up_to_date(path, out_path):
   if os.path.exists(out_path):
     dest_mod = os.path.getmtime(out_path)
 
-  # See if the templates have changed.
-  source_mod = os.path.getmtime('doc/site/template.html')
-  if source_mod > dest_mod:
-    load_template()
-    return False
-
-  # See if the templates have changed.
-  source_mod = os.path.getmtime('doc/site/template-core.html')
-  if source_mod > dest_mod:
-    load_core_template()
-    return False
-
   # See if it's up to date.
   source_mod = os.path.getmtime(path)
   return source_mod < dest_mod
 
 
 def format_file(path, skip_up_to_date):
-  basename = os.path.basename(path)
-  basename = basename.split('.')[0]
-
   in_path = os.path.join('doc/site', path)
   out_path = "build/docs/" + os.path.splitext(path)[0] + ".html"
+  template_path = os.path.join("doc/site", os.path.dirname(path),
+      "template.html")
 
-  if skip_up_to_date and is_up_to_date(in_path, out_path):
+  if (skip_up_to_date and
+      is_up_to_date(in_path, out_path) and
+      is_up_to_date(template_path, out_path)):
     # It's up to date.
     return
 
   title = ""
-  category = ""
 
   # Read the markdown file and preprocess it.
   contents = ""
@@ -88,8 +64,6 @@ def format_file(path, skip_up_to_date):
 
         if command == "title":
           title = args
-        elif command == "category":
-          category = args
         else:
           print(' '.join(["UNKNOWN COMMAND:", command, args]))
 
@@ -125,15 +99,13 @@ def format_file(path, skip_up_to_date):
   modified = datetime.fromtimestamp(os.path.getmtime(in_path))
   mod_str = modified.strftime('%B %d, %Y')
 
-  page_template = template
-  if category == 'core':
-    page_template = template_core
+  with codecs.open(template_path, encoding="utf-8") as f:
+    page_template = f.read()
 
   fields = {
     'title': title,
     'html': html,
-    'mod': mod_str,
-    'category': category
+    'mod': mod_str
   }
 
   # Write the html output.
@@ -172,9 +144,6 @@ def format_files(skip_up_to_date):
 if os.path.exists("build/docs"):
   shutil.rmtree("build/docs")
 ensure_dir("build/docs")
-
-load_template()
-load_core_template()
 
 # Process each markdown file.
 format_files(False)

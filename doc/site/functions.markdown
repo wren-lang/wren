@@ -1,5 +1,4 @@
 ^title Functions
-^category guide
 
 No self-respecting language today can get by without functions&mdash;first
 class little bundles of code. Since Wren is object-oriented, most of your code

@@ -1,5 +1,4 @@
 ^title Null Class
-^category core
 
 ## Methods
 

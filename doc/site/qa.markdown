@@ -1,5 +1,4 @@
 ^title Q & A
-^category reference
 
 ## Why did you create Wren?
 

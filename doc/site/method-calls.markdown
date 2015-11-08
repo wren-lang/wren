@@ -1,5 +1,4 @@
 ^title Method Calls
-^category guide
 
 Wren is deeply object oriented, so most code consists of invoking methods on
 objects, usually something like this:
@@ -34,11 +33,11 @@ methods with the same *name*, as long as they have different *signatures*. The
 signature includes the method's name along with the number of arguments it
 takes. In technical terms, this means you can *overload by arity*.
 
-<!-- TODO: Link to Random. -->
+For example, the [Random][] class has two methods for getting a random integer.
+One takes a minimum and maximum value and returns a value in that range. The
+other only takes a maximum value and uses 0 as the minimum:
 
-For example, the Random class has two methods for getting a random integer. One
-takes a minimum and maximum value and returns a value in that range. The other
-only takes a maximum value and uses 0 as the minimum:
+[random]: modules/random/random.html
 
     :::wren
     var random = Random.new()
@@ -143,7 +142,7 @@ it to tell if an object is an instance of a given class. You'll rarely need to,
 but you can override `is` in your own classes. That can be useful for things
 like mocks or proxies where you want an object to masquerade as a certain class.
 
-[object]: core/object.html
+[object]: modules/core/object.html
 
 ## Subscripts
 

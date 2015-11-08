@@ -1,5 +1,4 @@
 ^title Control Flow
-^category guide
 
 Control flow is used to determine which chunks of code are executed and how many
 times. *Branching* statements and expressions decide whether or not to execute

@@ -1,9 +1,10 @@
 ^title Classes
-^category guide
 
 Every value in Wren is an object, and every object is an instance of a class.
 Even `true` and `false` are full-featured objects&mdash;instances of the
-[`Bool`](core/bool.html) class.
+[Bool][] class.
+
+[bool]: modules/core/bool.html
 
 Classes define an objects *behavior* and *state*. Behavior is defined by
 [*methods*][method calls] which live in the class. Every object of the same

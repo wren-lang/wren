@@ -1,5 +1,4 @@
 ^title Performance
-^category reference
 
 Even though most benchmarks aren't worth the pixels they're printed on, people
 seem to like them, so here's a few:

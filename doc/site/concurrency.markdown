@@ -1,5 +1,4 @@
 ^title Concurrency
-^category guide
 
 Lightweight concurrency is a key feature of Wren and it is expressed using
 *fibers*. They control how all code is executed, and take the place of

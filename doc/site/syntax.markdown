@@ -1,5 +1,4 @@
 ^title Syntax
-^category guide
 
 Wren's syntax is designed to be familiar to people coming from C-like languages
 while being a bit simpler and more streamlined.

@@ -1,5 +1,4 @@
 ^title Lists
-^category guide
 
 A list is a compound object that holds a collection of elements identified by
 integer index. You can create a list by placing a sequence of comma-separated

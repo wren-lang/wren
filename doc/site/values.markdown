@@ -1,5 +1,4 @@
 ^title Values
-^category guide
 
 Values are the built-in atomic object types that all other objects are composed
 of. They can be created through *literals*, expressions that evaluate to a
@@ -10,7 +9,9 @@ character array modified in place.
 ## Booleans
 
 A boolean value represents truth or falsehood. There are two boolean literals,
-`true` and `false`. Their class is [Bool](core/bool.html).
+`true` and `false`. Their class is [Bool][].
+
+[bool]: modules/core/bool.html
 
 ## Numbers
 
@@ -26,7 +27,9 @@ from other languages:
     1.0
     -12.34
 
-Numbers are instances of the [Num](core/num.html) class.
+Numbers are instances of the [Num][] class.
+
+[num]: modules/core/num.html
 
 ## Strings
 
@@ -70,7 +73,9 @@ A `\x` followed by two hex digits specifies a single unencoded byte:
     :::wren
     System.print("\x48\x69\x2e") //> Hi.
 
-Strings are instances of class [String](core/string.html).
+Strings are instances of class [String][].
+
+[string]: modules/core/string.html
 
 ## Ranges
 
@@ -100,15 +105,18 @@ example:
     var slice = list[1..3]
     System.print(slice) //> [b, c, d]
 
-Their class is [Range](core/range.html).
+Their class is [Range][].
+
+[range]: modules/core/range.html
 
 ## Null
 
 Wren has a special value `null`, which is the only instance of the class
-[Null](core/null.html). (Note the difference in case.) It functions a bit like
-`void` in some languages: it indicates the absence of a value. If you call a
-method that doesn't return anything and get its returned value, you get `null`
-back.
+[Null][]. (Note the difference in case.) It functions a bit like `void` in some
+languages: it indicates the absence of a value. If you call a method that
+doesn't return anything and get its returned value, you get `null` back.
+
+[null]: modules/core/null.html
 
 <a class="right" href="lists.html">Lists &rarr;</a>
 <a href="syntax.html">&larr; Syntax</a>

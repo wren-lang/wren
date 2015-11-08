@@ -1,5 +1,4 @@
 ^title Range Class
-^category core
 
 A range defines a bounded range of values from a starting point to a possibly
 exclusive endpoint. [Here](../range.html) is a friendly introduction.

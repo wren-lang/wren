@@ -1,5 +1,4 @@
 ^title Map Class
-^category core
 
 An associative collection that maps keys to values. More details [here](../maps.html).
 

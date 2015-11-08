@@ -1,8 +1,9 @@
 ^title Fn Class
-^category core
 
 A first class function&mdash;an object that wraps an executable chunk of code.
-[Here](../functions.html) is a friendly introduction.
+[Here][functions] is a friendly introduction.
+
+[functions]: ../../functions.html
 
 ### Fn.**new**(function)
 

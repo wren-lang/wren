@@ -1,10 +1,9 @@
 ^title Sequence Class
-^category core
 
 An abstract base class for any iterable object. Any class that implements the
 core [iterator protocol][] can extend this to get a number of helpful methods.
 
-[iterator protocol]: ../control-flow.html#the-iterator-protocol
+[iterator protocol]: ../../control-flow.html#the-iterator-protocol
 
 ## Methods
 
@@ -25,8 +24,10 @@ and returns the value. Otherwise, returns `true`.
 Tests whether any element in the sequence passes the `predicate`.
 
 Iterates over the sequence, passing each element to the function `predicate`.
-If it returns something [true](../control-flow.html#truth), stops iterating and
+If it returns something [true][], stops iterating and
 returns that value. Otherwise, returns `false`.
+
+[true]: ../../control-flow.html#truth
 
     :::wren
     System.print([1, 2, 3].any {|n| n < 1}) //> false
@@ -126,7 +127,9 @@ the sequence is empty, returns `seed`.
 
 ### **toList**
 
-Creates a [list](list.html) containing all the elements in the sequence.
+Creates a [list][] containing all the elements in the sequence.
+
+[list]: list.html
 
     :::wren
     System.print((1..3).toList)  //> [1, 2, 3]

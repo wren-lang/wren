@@ -1,7 +1,8 @@
 ^title Bool Class
-^category core
 
-Boolean values. There are two instances, `true` and `false`.
+Boolean [values][]. There are two instances, `true` and `false`.
+
+[values]: ../../values.html
 
 ## Methods
 
