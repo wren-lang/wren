@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>String Class &ndash; Wren</title>
+<link rel="stylesheet" type="text/css" href="../../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top" class="module">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../../">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <ul>
+      <li><a href="../">Modules</a></li>
+      <li><a href="./">core</a></li>
+    </ul>
+    <section>
+      <h2>core classes</h2>
+      <ul>
+        <li><a href="bool.html">Bool</a></li>
+        <li><a href="class.html">Class</a></li>
+        <li><a href="fiber.html">Fiber</a></li>
+        <li><a href="fn.html">Fn</a></li>
+        <li><a href="list.html">List</a></li>
+        <li><a href="map.html">Map</a></li>
+        <li><a href="null.html">Null</a></li>
+        <li><a href="num.html">Num</a></li>
+        <li><a href="object.html">Object</a></li>
+        <li><a href="range.html">Range</a></li>
+        <li><a href="sequence.html">Sequence</a></li>
+        <li><a href="string.html">String</a></li>
+        <li><a href="system.html">System</a></li>
+      </ul>
+    </section>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="../">Modules</a></td>
+        <td><a href="./">core</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>core classes</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="bool.html">Bool</a></li>
+            <li><a href="class.html">Class</a></li>
+            <li><a href="fiber.html">Fiber</a></li>
+            <li><a href="fn.html">Fn</a></li>
+            <li><a href="list.html">List</a></li>
+            <li><a href="map.html">Map</a></li>
+            <li><a href="null.html">Null</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="num.html">Num</a></li>
+            <li><a href="object.html">Object</a></li>
+            <li><a href="range.html">Range</a></li>
+            <li><a href="sequence.html">Sequence</a></li>
+            <li><a href="string.html">String</a></li>
+            <li><a href="system.html">System</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h1>String Class</h1>
+    <p>A string is an immutable array of bytes. Strings usually store text, in which 
+case the bytes are the UTF-8 encoding of the text&rsquo;s code points. But you can put 
+any kind of byte values in there you want, including null bytes or invalid 
+UTF-8. </p>
+<p>There are a few ways to think of a string: </p>
+<ul>
+<li>
+<p>As a searchable chunk of text composed of a sequence of textual code points. </p>
+</li>
+<li>
+<p>As an iterable sequence of code point numbers. </p>
+</li>
+<li>
+<p>As a flat array of directly indexable bytes. </p>
+</li>
+</ul>
+<p>All of those are useful for some problems, so the string API supports all three. 
+The first one is the most common, so that&rsquo;s what methods directly on the string 
+class cater to. </p>
+<p>In UTF-8, a single Unicode code point&mdash;very roughly a single 
+&ldquo;character&rdquo;&mdash;may encode to one or more bytes. This means you can&rsquo;t 
+efficiently index by code point. There&rsquo;s no way to jump directly to, say, the 
+fifth code point in a string without walking the string from the beginning and 
+counting them as you go. </p>
+<p>Because counting code points is relatively slow, the indexes passed to string 
+methods are <em>byte</em> offsets, not <em>code point</em> offsets. When you do: </p>
+<div class="codehilite"><pre><span class="n">someString</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+</pre></div>
+
+
+<p>That means &ldquo;get the code point starting at <em>byte</em> three&rdquo;, not &ldquo;get the third 
+code point in the string&rdquo;. This sounds scary, but keep in mind that the methods 
+on strings <em>return</em> byte indexes too. So, for example, this does what you want: </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">metalBand</span> <span class="o">=</span> <span class="s">&quot;Fäcëhämmër&quot;</span> 
+<span class="k">var</span> <span class="n">hPosition</span> <span class="o">=</span> <span class="n">metalBand</span><span class="o">.</span><span class="n">indexOf</span><span class="p">(</span><span class="s">&quot;h&quot;</span><span class="p">)</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">metalBand</span><span class="p">[</span><span class="n">hPosition</span><span class="p">])</span> <span class="output">h</span>
+</pre></div>
+
+
+<p>If you want to work with a string as a sequence numeric code points, call the 
+<code>codePoints</code> getter. It returns a <a href="sequence.html">Sequence</a> that decodes UTF-8 
+and iterates over the code points, returning each as a number. </p>
+<p>If you want to get at the raw bytes, call <code>bytes</code>. This returns a Sequence that 
+ignores any UTF-8 encoding and works directly at the byte level. </p>
+<h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
+<h3>String.<strong>fromCodePoint</strong>(codePoint) <a href="#string.fromcodepoint(codepoint)" name="string.fromcodepoint(codepoint)" class="header-anchor">#</a></h3>
+<p>Creates a new string containing the UTF-8 encoding of <code>codePoint</code>. </p>
+<div class="codehilite"><pre><span class="vg">String</span><span class="o">.</span><span class="n">fromCodePoint</span><span class="p">(</span><span class="mi">8225</span><span class="p">)</span> <span class="output">‡</span>
+</pre></div>
+
+
+<p>It is a runtime error if <code>codePoint</code> is not an integer between <code>0</code> and 
+<code>0x10ffff</code>, inclusive. </p>
+<h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
+<h3><strong>bytes</strong> <a href="#bytes" name="bytes" class="header-anchor">#</a></h3>
+<p>Gets a <a href="sequence.html"><code>Sequence</code></a> that can be used to access the raw bytes of 
+the string and ignore any UTF-8 encoding. In addition to the normal sequence 
+methods, the returned object also has a subscript operator that can be used to 
+directly index bytes. </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="o">.</span><span class="n">bytes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="output">101 (for &quot;e&quot;)</span>
+</pre></div>
+
+
+<p>The <code>count</code> method on the returned sequence returns the number of bytes in the 
+string. Unlike <code>count</code> on the string itself, it does not have to iterate over 
+the string, and runs in constant time instead. </p>
+<h3><strong>codePoints</strong> <a href="#codepoints" name="codepoints" class="header-anchor">#</a></h3>
+<p>Gets a <a href="sequence.html"><code>Sequence</code></a> that can be used to access the UTF-8 decode 
+code points of the string <em>as numbers</em>. Iteration and subscripting work similar 
+to the string itself. The difference is that instead of returning 
+single-character strings, this returns the numeric code point values. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="output">40 (for &quot;(&quot;)</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="output">7461 (for &quot;ᴥ&quot;)</span>
+</pre></div>
+
+
+<p>If the byte at <code>index</code> does not begin a valid UTF-8 sequence, or the end of the 
+string is reached before the sequence is complete, returns <code>-1</code>. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="output">-1 (in the middle of &quot;ᵔ&quot;)</span>
+</pre></div>
+
+
+<h3><strong>contains</strong>(other) <a href="#contains(other)" name="contains(other)" class="header-anchor">#</a></h3>
+<p>Checks if <code>other</code> is a substring of the string. </p>
+<p>It is a runtime error if <code>other</code> is not a string. </p>
+<h3><strong>count</strong> <a href="#count" name="count" class="header-anchor">#</a></h3>
+<p>Returns the number of code points in the string. Since UTF-8 is a 
+variable-length encoding, this requires iterating over the entire string, which 
+is relatively slow. </p>
+<p>If the string contains bytes that are invalid UTF-8, each byte adds one to the 
+count as well. </p>
+<h3><strong>endsWith</strong>(suffix) <a href="#endswith(suffix)" name="endswith(suffix)" class="header-anchor">#</a></h3>
+<p>Checks if the string ends with <code>suffix</code>. </p>
+<p>It is a runtime error if <code>suffix</code> is not a string. </p>
+<h3><strong>indexOf</strong>(search) <a href="#indexof(search)" name="indexof(search)" class="header-anchor">#</a></h3>
+<p>Returns the index of the first byte matching <code>search</code> in the string or <code>-1</code> if 
+<code>search</code> was not found. </p>
+<p>It is a runtime error if <code>search</code> is not a string. </p>
+<h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
+<p>Implements the <a href="../control-flow.html#the-iterator-protocol">iterator protocol</a> 
+for iterating over the <em>code points</em> in the string: </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">codePoints</span> <span class="o">=</span> <span class="p">[]</span> 
+<span class="k">for</span> <span class="p">(</span><span class="err">c</span> <span class="k">in</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="n">codePoints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="err">c</span><span class="p">)</span> 
+<span class="p">}</span>
+
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">codePoints</span><span class="p">)</span> <span class="output">[(, ᵔ, ᴥ, ᵔ, )]</span>
+</pre></div>
+
+
+<p>If the string contains any bytes that are not valid UTF-8, this iterates over 
+those too, one byte at a time. </p>
+<h3><strong>startsWith</strong>(prefix) <a href="#startswith(prefix)" name="startswith(prefix)" class="header-anchor">#</a></h3>
+<p>Checks if the string starts with <code>prefix</code>. </p>
+<p>It is a runtime error if <code>prefix</code> is not a string. </p>
+<h3><strong>+</strong>(other) operator <a href="#+(other)-operator" name="+(other)-operator" class="header-anchor">#</a></h3>
+<p>Returns a new string that concatenates this string and <code>other</code>. </p>
+<p>It is a runtime error if <code>other</code> is not a string. </p>
+<h3><strong>==</strong>(other) operator <a href="#==(other)-operator" name="==(other)-operator" class="header-anchor">#</a></h3>
+<p>Checks if the string is equal to <code>other</code>. </p>
+<h3><strong>!=</strong>(other) operator <a href="#=(other)-operator" name="=(other)-operator" class="header-anchor">#</a></h3>
+<p>Check if the string is not equal to <code>other</code>. </p>
+<h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
+<p>Returns a string containing the code point starting at byte <code>index</code>. </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ʕ•ᴥ•ʔ&quot;</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="output">ᴥ</span>
+</pre></div>
+
+
+<p>Since <code>ʕ</code> is two bytes in UTF-8 and <code>•</code> is three, the fifth byte points to the 
+bear&rsquo;s nose. </p>
+<p>If <code>index</code> points into the middle of a UTF-8 sequence or at otherwise invalid 
+UTF-8, this returns a one-byte string containing the byte at that index: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I ♥ NY&quot;</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="output">(one-byte string [153])</span>
+</pre></div>
+
+
+<p>It is a runtime error if <code>index</code> is greater than the number of bytes in the 
+string. </p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

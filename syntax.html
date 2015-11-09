@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Syntax – Wren</title>
+<title>Syntax &ndash; Wren</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -19,151 +19,330 @@
   </div>
 </header>
 <div class="page">
-  <nav>
+  <nav class="big">
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
-      <h2>language</h2>
+      <h2>language guide</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="expressions.html">Expressions</a></li>
-        <li><a href="variables.html">Variables</a></li>
-        <li><a href="control-flow.html">Control Flow</a></li>
-        <li><a href="error-handling.html">Error Handling</a></li>
-        <li><a href="modules.html">Modules</a></li>
-      </ul>
-    </section>
-    <section>
-      <h2>types</h2>
-      <ul>
         <li><a href="values.html">Values</a></li>
-        <li><a href="classes.html">Classes</a></li>
-        <li><a href="fibers.html">Fibers</a></li>
-        <li><a href="functions.html">Functions</a></li>
         <li><a href="lists.html">Lists</a></li>
         <li><a href="maps.html">Maps</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="concurrency.html">Concurrency</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+        <li><a href="modularity.html">Modularity</a></li>
       </ul>
     </section>
     <section>
       <h2>reference</h2>
       <ul>
-        <li><a href="core">Core Library</a></li>
+        <li><a href="modules">Modules</a></li>
         <li><a href="embedding-api.html">Embedding API</a></li>
         <li><a href="performance.html">Performance</a></li>
-        <li><a href="community.html">Community</a></li>
-        <li><a href="contributing.html">Contributing</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
     </section>
   </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+        <td><a href="community.html">Community</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>language guide</h2></td>
+        <td><h2>reference</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="syntax.html">Syntax</a></li>
+            <li><a href="values.html">Values</a></li>
+            <li><a href="lists.html">Lists</a></li>
+            <li><a href="maps.html">Maps</a></li>
+            <li><a href="method-calls.html">Method Calls</a></li>
+            <li><a href="control-flow.html">Control Flow</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="variables.html">Variables</a></li>
+            <li><a href="functions.html">Functions</a></li>
+            <li><a href="classes.html">Classes</a></li>
+            <li><a href="concurrency.html">Concurrency</a></li>
+            <li><a href="error-handling.html">Error Handling</a></li>
+            <li><a href="modularity.html">Modularity</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">Modules</a></li>
+            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="performance.html">Performance</a></li>
+            <li><a href="qa.html">Q &amp; A</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
   <main>
     <h1>Syntax</h1>
-    <p>Wren's syntax is designed to be familiar to people coming from C-like languages
-while being a bit simpler and more streamlined.</p>
-<p>Scripts are stored in plain text files with a <code>.wren</code> file extension. Wren does
-not compile ahead of time: programs are run directly from source, from top to
-bottom like a typical scripting language. (Internally, programs are compiled to
-bytecode for efficiency, but that's an implementation detail.)</p>
+    <p>Wren&rsquo;s syntax is designed to be familiar to people coming from C-like languages 
+while being a bit simpler and more streamlined. </p>
+<p>Scripts are stored in plain text files with a <code>.wren</code> file extension. Wren does 
+not compile ahead of time: programs are run directly from source, from top to 
+bottom like a typical scripting language. (Internally, programs are compiled to 
+bytecode for <a href="performance.html">efficiency</a>, but that&rsquo;s an implementation detail.) </p>
 <h2>Comments <a href="#comments" name="comments" class="header-anchor">#</a></h2>
 <p>Line comments start with <code>//</code> and end at the end of the line:</p>
 <div class="codehilite"><pre><span class="c1">// This is a comment.</span>
 </pre></div>
 
 
-<p>Block comments start with <code>/*</code> and end with <code>*/</code>. They can span multiple lines
-or be within a single one. Unlike C, block comments can nest in Wren:</p>
+<p>Block comments start with <code>/*</code> and end with <code>*/</code>. They can span multiple lines: </p>
+<div class="codehilite"><pre><span class="cm">/* This </span>
+<span class="cm">   is </span>
+<span class="cm">   a </span>
+<span class="cm">   multi-line </span>
+<span class="cm">   comment. */</span>
+</pre></div>
+
+
+<p>Unlike C, block comments can nest in Wren: </p>
 <div class="codehilite"><pre><span class="cm">/* This is /* a nested */ comment. */</span>
 </pre></div>
 
 
+<p>This is handy because it lets you easily comment out an entire block of code, 
+even if the code already contains block comments. </p>
 <h2>Reserved words <a href="#reserved-words" name="reserved-words" class="header-anchor">#</a></h2>
-<p>Some people like to see all of the reserved words in a programming language in
-one lump. If you're one of those folks, here you go:</p>
-<div class="codehilite"><pre><span class="k">break</span> <span class="k">class</span> <span class="k">construct</span> <span class="k">else</span> <span class="kc">false</span> <span class="k">for</span> <span class="k">foreign</span> <span class="k">if</span> <span class="k">import</span>
+<p>One way to get a quick feel for a language&rsquo;s style is to see what words it 
+reserves. Here&rsquo;s what Wren has: </p>
+<div class="codehilite"><pre><span class="k">break</span> <span class="k">class</span> <span class="k">construct</span> <span class="k">else</span> <span class="kc">false</span> <span class="k">for</span> <span class="k">foreign</span> <span class="k">if</span> <span class="k">import</span> 
 <span class="k">in</span> <span class="k">is</span> <span class="kc">null</span> <span class="k">return</span> <span class="k">static</span> <span class="k">super</span> <span class="nb">this</span> <span class="kc">true</span> <span class="k">var</span> <span class="k">while</span>
 </pre></div>
 
 
 <h2>Identifiers <a href="#identifiers" name="identifiers" class="header-anchor">#</a></h2>
-<p>Naming rules are similar to other programming languages. Identifiers start with
-a letter or underscore and may contain letters, digits, and underscores. Case
-is sensitive.</p>
-<div class="codehilite"><pre><span class="n">hi</span>
-<span class="n">camelCase</span>
-<span class="vg">PascalCase</span>
-<span class="vi">_under_score</span>
-<span class="n">abc123</span>
+<p>Naming rules are similar to other programming languages. Identifiers start with 
+a letter or underscore and may contain letters, digits, and underscores. Case 
+is sensitive. </p>
+<div class="codehilite"><pre><span class="n">hi</span> 
+<span class="n">camelCase</span> 
+<span class="vg">PascalCase</span> 
+<span class="vi">_under_score</span> 
+<span class="n">abc123</span> 
 <span class="vg">ALL_CAPS</span>
 </pre></div>
 
 
-<p>Identifiers that start with underscore (<code>_</code>) are special in Wren. They are used
-to indicate <a href="classes.html#fields">fields</a> in classes.</p>
+<p>Identifiers that start with underscore (<code>_</code>) are special in Wren. They are used 
+to indicate <a href="classes.html#fields">fields</a> in classes. </p>
 <h2>Newlines <a href="#newlines" name="newlines" class="header-anchor">#</a></h2>
-<p>Newlines (<code>\n</code>) are meaningful in Wren. They are used to separate statements:</p>
+<p>Newlines (<code>\n</code>) are meaningful in Wren. They are used to separate statements: </p>
 <div class="codehilite"><pre><span class="c1">// Two statements:</span>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;hi&quot;</span><span class="p">)</span> <span class="c1">// Newline.</span>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;bye&quot;</span><span class="p">)</span>
 </pre></div>
 
 
-<p>Sometimes, though, a statement doesn't fit on a single line and jamming a
-newline in the middle would trip it up. To handle that, Wren has a very simple
-rule: It ignores a newline following any token that can't end a statement.</p>
+<p>Sometimes, though, a statement doesn&rsquo;t fit on a single line and jamming a 
+newline in the middle would trip it up. To handle that, Wren has a very simple 
+rule: It ignores a newline following any token that can&rsquo;t end a statement. </p>
 <div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span> <span class="c1">// Newline here is ignored.</span>
     <span class="s">&quot;hi&quot;</span><span class="p">)</span>
 </pre></div>
 
 
-<p>In practice, this means you can put each statement on its own line and wrap
-them across lines as needed without too much trouble.</p>
+<p>In practice, this means you can put each statement on its own line and wrap 
+them across lines as needed without too much trouble. </p>
 <h2>Blocks <a href="#blocks" name="blocks" class="header-anchor">#</a></h2>
-<p>Wren uses curly braces to define <em>blocks</em>. You can use a block anywhere a
-statement is allowed, like in <a href="control-flow.html">control flow</a> statements.
-<a href="classes.html#methods">Method</a> and <a href="functions.html">function</a> bodies are also
-blocks. For example, here we have a block for the then case, and a single
-statement for the else:</p>
-<div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">happy</span> <span class="o">&amp;&amp;</span> <span class="n">knowIt</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">hands</span><span class="o">.</span><span class="n">clap</span>
+<p>Wren uses curly braces to define <em>blocks</em>. You can use a block anywhere a 
+statement is allowed, like in <a href="control-flow.html">control flow</a> statements. 
+<a href="classes.html#methods">Method</a> and <a href="functions.html">function</a> bodies are also 
+blocks. For example, here we have a block for the then case, and a single 
+statement for the else: </p>
+<div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">happy</span> <span class="o">&amp;&amp;</span> <span class="n">knowIt</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="n">hands</span><span class="o">.</span><span class="n">clap</span><span class="p">()</span> 
 <span class="p">}</span> <span class="k">else</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;sad&quot;</span><span class="p">)</span>
 </pre></div>
 
 
-<p>Blocks have two similar but not identical forms. Typically, blocks contain a
-series of statements like:</p>
-<div class="codehilite"><pre><span class="p">{</span>
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;one&quot;</span><span class="p">)</span>
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;two&quot;</span><span class="p">)</span>
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;three&quot;</span><span class="p">)</span>
+<p>Blocks have two similar but not identical forms. Typically, blocks contain a 
+series of statements like: </p>
+<div class="codehilite"><pre><span class="p">{</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;one&quot;</span><span class="p">)</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;two&quot;</span><span class="p">)</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;three&quot;</span><span class="p">)</span> 
 <span class="p">}</span>
 </pre></div>
 
 
-<p>Blocks of this form when used for method and function bodies automatically
-return <code>null</code> after the block has completed. If you want to return a different
-value, you need an explicit <code>return</code> statement.</p>
-<p>However, it's pretty common to have a method or function that just evaluates
-and returns the result of a single expression. For that, Wren has a more
-compact notation:</p>
+<p>Blocks of this form when used for method and function bodies automatically 
+return <code>null</code> after the block has completed. If you want to return a different 
+value, you need an explicit <code>return</code> statement. </p>
+<p>However, it&rsquo;s pretty common to have a method or function that just evaluates 
+and returns the result of a single expression. For that, Wren has a more 
+compact notation: </p>
 <div class="codehilite"><pre><span class="p">{</span> <span class="s">&quot;single expression&quot;</span> <span class="p">}</span>
 </pre></div>
 
 
-<p>If there is no newline after the <code>{</code> (or after the parameter list in a
-<a href="functions.html">function</a>), then the block may only contain a single
-expression, and it automatically returns the result of it. It's exactly the
-same as doing:</p>
-<div class="codehilite"><pre><span class="p">{</span>
-  <span class="k">return</span> <span class="s">&quot;single expression&quot;</span>
+<p>If there is no newline after the <code>{</code> (or after the parameter list in a 
+<a href="functions.html">function</a>), then the block may only contain a single 
+expression, and it automatically returns the result of it. It&rsquo;s exactly the 
+same as doing: </p>
+<div class="codehilite"><pre><span class="p">{</span> 
+  <span class="k">return</span> <span class="s">&quot;single expression&quot;</span> 
 <span class="p">}</span>
 </pre></div>
+
+
+<h2>Precedence and Associativity <a href="#precedence-and-associativity" name="precedence-and-associativity" class="header-anchor">#</a></h2>
+<p>We&rsquo;ll talk about Wren&rsquo;s different expression forms and what they mean in the 
+next few pages. But if you want to see how they interact with each other 
+grammatically, here&rsquo;s the whole table. </p>
+<p>It shows which expressions have higher <em>precedence</em>&mdash;which ones bind more 
+tightly than others&mdash;and their <em>associativity</em>&mdash;how a series of the 
+same kind of expression is ordered. Wren mostly follows C, except that it fixes 
+<a href="http://www.lysator.liu.se/c/dmr-on-or.html">the bitwise operator mistake</a>. The full precedence table, from 
+tightest to loosest, is: </p>
+<table class="precedence"> 
+  <tbody> 
+    <tr> 
+      <th>Prec</th> 
+      <th>Operator</th> 
+      <th>Description</th> 
+      <th>Associates</th> 
+    </tr> 
+    <tr> 
+      <td>1</td> 
+      <td><code>()</code> <code>[]</code> <code>.</code></td> 
+      <td>Grouping, <a href="method-calls.html">Subscript, Method call</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>2</td> 
+      <td><code>-</code> <code>!</code> <code>~</code></td> 
+      <td><a href="method-calls.html#operators">Negate, Not, Complement</a></td> 
+      <td>Right</td> 
+    </tr> 
+    <tr> 
+      <td>3</td> 
+      <td><code>*</code> <code>/</code> <code>%</code></td> 
+      <td><a href="method-calls.html#operators">Multiply, Divide, Modulo</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>4</td> 
+      <td><code>+</code> <code>-</code></td> 
+      <td><a href="method-calls.html#operators">Add, Subtract</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>5</td> 
+      <td><code>..</code> <code>...</code></td> 
+      <td><a href="method-calls.html#operators">Inclusive range, Exclusive range</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>6</td> 
+      <td><code>&lt;&lt;</code> <code>&gt;&gt;</code></td> 
+      <td><a href="method-calls.html#operators">Left shift, Right shift</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>7</td> 
+      <td><code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></td> 
+      <td><a href="method-calls.html#operators">Comparison</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>8</td> 
+      <td><code>==</code></td> 
+      <td><a href="method-calls.html#operators">Equals</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>8</td> 
+      <td><code>!=</code></td> 
+      <td><a href="method-calls.html#operators">Not equal</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>9</td> 
+      <td><code>&amp;</code></td> 
+      <td><a href="method-calls.html#operators">Bitwise and</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>10</td> 
+      <td><code>^</code></td> 
+      <td><a href="method-calls.html#operators">Bitwise xor</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>11</td> 
+      <td><code>|</code></td> 
+      <td><a href="method-calls.html#operators">Bitwise or</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>12</td> 
+      <td><code>is</code></td> 
+      <td><a href="method-calls.html#operators">Type test</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>13</td> 
+      <td><code>&amp;&amp;</code></td> 
+      <td><a href="control-flow.html#logical-operators">Logical and</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>14</td> 
+      <td><code>||</code></td> 
+      <td><a href="control-flow.html#logical-operators">Logical or</a></td> 
+      <td>Left</td> 
+    </tr> 
+    <tr> 
+      <td>15</td> 
+      <td><code>?:</code></td> 
+      <td><a href="control-flow.html#the-conditional-operator-">Conditional</a></td> 
+      <td>Right</td> 
+    </tr> 
+    <tr> 
+      <td>16</td> 
+      <td><code>=</code></td> 
+      <td><a href="variables.html#assignment">Assignment</a>, <a href="method-calls.html#setters">Setter</a></td> 
+      <td>Right</td> 
+    </tr> 
+  </tbody> 
+</table>
+
+<p><a class="right" href="values.html">Values &rarr;</a> 
+<a href="getting-started.html">&larr; Getting Started</a> </p>
   </main>
 </div>
 <footer>
   <div class="page">
     <div class="main-column">
-    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.</p>
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
     <div class="main-column">
   </div>
 </footer>

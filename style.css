@@ -54,7 +54,7 @@ header {
 nav {
   float: right;
   width: 160px;
-  padding-top: 110px; }
+  padding-top: 109px; }
   nav h2 {
     color: #c4c6c8;
     font: 500 11px "Lato", helvetica, arial, sans-serif;
@@ -65,10 +65,26 @@ nav {
     padding: 0;
     margin: 6px 0 20px 0; }
   nav li {
-    font: 16px "Source Sans Pro", georgia, serif;
+    font: 15px "Source Sans Pro", georgia, serif;
     color: #c4c6c8;
     list-style-type: none;
     margin: 0 0 4px 0; }
+
+nav.small {
+  display: none;
+  float: none;
+  width: 100%;
+  padding: 16px 0 0 0;
+  margin: 0;
+  background: #ebeced; }
+  nav.small table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 16px 0; }
+  nav.small h2 {
+    margin: 16px 0 0 0;
+    padding: 0 0 1px 0;
+    border-bottom: solid 1px #d7d9da; }
 
 h1 {
   padding-top: 30px;
@@ -79,6 +95,11 @@ h2 {
   font: 500 24px "Sanchez", helvetica, arial, sans-serif;
   margin: 24px 0 0 0;
   color: #3399cc; }
+  h2 code {
+    border: none;
+    background: inherit;
+    color: inherit;
+    font-size: 24px; }
 
 h3 {
   font: 20px "Source Sans Pro", georgia, serif;
@@ -109,7 +130,7 @@ h2:hover > .header-anchor:hover,
 h3:hover > .header-anchor:hover {
   color: #143352; }
 
-p, li {
+p {
   margin: 10px 0; }
 
 p + p {
@@ -147,6 +168,9 @@ footer {
   footer a:hover {
     color: #3399cc; }
 
+.right {
+  float: right; }
+
 .codehilite pre span.c1, .codehilite pre span.cm {
   color: #95a1ae; }
 .codehilite pre span.k, .codehilite pre span.kd, .codehilite pre span.kc, .codehilite pre span.nb {
@@ -169,26 +193,41 @@ footer {
   color: #738494; }
 .codehilite pre span.cp {
   color: #9970c2; }
+.codehilite pre span.output {
+  float: right;
+  color: #39ac73; }
+  .codehilite pre span.output::before, .codehilite pre span.output::after {
+    color: #b3e6cc; }
+  .codehilite pre span.output::before {
+    content: "\276c  "; }
+  .codehilite pre span.output::after {
+    content: ' \276d'; }
+.codehilite pre span.error {
+  float: right;
+  color: #cc6677; }
+  .codehilite pre span.error::before {
+    color: #df9faa;
+    content: "Error: "; }
 
-body.core header a {
+body.module header a {
   color: #d7d9da; }
-body.core header a:hover {
+body.module header a:hover {
   color: #7de88f;
   text-shadow: 0 0 6px rgba(13, 242, 51, 0.4); }
-body.core a {
+body.module a {
   color: #1fad66; }
-body.core a:hover {
+body.module a:hover {
   color: #1a664d; }
-body.core .header-anchor {
+body.module .header-anchor {
   color: white; }
-body.core main h1, body.core main h2, body.core main h3 {
+body.module main h1, body.module main h2, body.module main h3 {
   color: #1fad66; }
-body.core main h2:hover > .header-anchor:hover,
-body.core main h3:hover > .header-anchor:hover {
+body.module main h2:hover > .header-anchor:hover,
+body.module main h3:hover > .header-anchor:hover {
   color: #1a664d; }
-body.core footer a {
+body.module footer a {
   color: #7de88f; }
-body.core footer a:hover {
+body.module footer a:hover {
   color: #1fad66; }
 
 table {
@@ -204,11 +243,12 @@ table {
     text-align: left; }
 
 table.chart {
+  margin: 4px 0 0 0;
   padding: 5px 0 5px 25px; }
   table.chart td, table.chart th {
     line-height: 14px;
     margin: 0;
-    padding: 0; }
+    padding: 1px 0; }
   table.chart th {
     font-size: 14px;
     width: 100px; }
@@ -270,18 +310,11 @@ table.precedence td {
   .page {
     width: 100%; }
 
-  nav {
-    float: none;
-    width: 100%;
-    padding: 10px 10px;
-    margin: 0;
-    background: #ebeced;
-    text-align: center; }
-    nav section {
-      display: inline-block;
-      vertical-align: top;
-      text-align: left;
-      width: 30%; }
+  nav.big {
+    display: none; }
+
+  nav.small {
+    display: block; }
 
   .main-column, main {
     padding: 0 20px;

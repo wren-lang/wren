@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Welcome – Wren</title>
+<title>Welcome &ndash; Wren</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -19,59 +19,97 @@
   </div>
 </header>
 <div class="page">
-  <nav>
+  <nav class="big">
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
-      <h2>language</h2>
+      <h2>language guide</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="expressions.html">Expressions</a></li>
-        <li><a href="variables.html">Variables</a></li>
-        <li><a href="control-flow.html">Control Flow</a></li>
-        <li><a href="error-handling.html">Error Handling</a></li>
-        <li><a href="modules.html">Modules</a></li>
-      </ul>
-    </section>
-    <section>
-      <h2>types</h2>
-      <ul>
         <li><a href="values.html">Values</a></li>
-        <li><a href="classes.html">Classes</a></li>
-        <li><a href="fibers.html">Fibers</a></li>
-        <li><a href="functions.html">Functions</a></li>
         <li><a href="lists.html">Lists</a></li>
         <li><a href="maps.html">Maps</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="concurrency.html">Concurrency</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+        <li><a href="modularity.html">Modularity</a></li>
       </ul>
     </section>
     <section>
       <h2>reference</h2>
       <ul>
-        <li><a href="core">Core Library</a></li>
+        <li><a href="modules">Modules</a></li>
         <li><a href="embedding-api.html">Embedding API</a></li>
         <li><a href="performance.html">Performance</a></li>
-        <li><a href="community.html">Community</a></li>
-        <li><a href="contributing.html">Contributing</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
     </section>
   </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+        <td><a href="community.html">Community</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>language guide</h2></td>
+        <td><h2>reference</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="syntax.html">Syntax</a></li>
+            <li><a href="values.html">Values</a></li>
+            <li><a href="lists.html">Lists</a></li>
+            <li><a href="maps.html">Maps</a></li>
+            <li><a href="method-calls.html">Method Calls</a></li>
+            <li><a href="control-flow.html">Control Flow</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="variables.html">Variables</a></li>
+            <li><a href="functions.html">Functions</a></li>
+            <li><a href="classes.html">Classes</a></li>
+            <li><a href="concurrency.html">Concurrency</a></li>
+            <li><a href="error-handling.html">Error Handling</a></li>
+            <li><a href="modularity.html">Modularity</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">Modules</a></li>
+            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="performance.html">Performance</a></li>
+            <li><a href="qa.html">Q &amp; A</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
   <main>
     <h1>Welcome</h1>
     <h2>Wren is a small, fast, class-based concurrent scripting language <a href="#wren-is-a-small,-fast,-class-based-concurrent-scripting-language" name="wren-is-a-small,-fast,-class-based-concurrent-scripting-language" class="header-anchor">#</a></h2>
-<p>Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in
-a familiar, modern <a href="syntax.html">syntax</a>.</p>
+<p>Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in 
+a familiar, modern <a href="syntax.html">syntax</a>. </p>
 <div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello, world!&quot;</span><span class="p">)</span>
 
-<span class="k">class</span> <span class="vg">Wren</span> <span class="p">{</span>
-  <span class="n">flyTo</span><span class="p">(</span><span class="n">city</span><span class="p">)</span> <span class="p">{</span>
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Flying to &quot;</span> <span class="o">+</span> <span class="n">city</span><span class="p">)</span>
-  <span class="p">}</span>
+<span class="k">class</span> <span class="vg">Wren</span> <span class="p">{</span> 
+  <span class="n">flyTo</span><span class="p">(</span><span class="n">city</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Flying to &quot;</span> <span class="o">+</span> <span class="n">city</span><span class="p">)</span> 
+  <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="k">var</span> <span class="n">adjectives</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span>
-  <span class="p">[</span><span class="s">&quot;small&quot;</span><span class="p">,</span> <span class="s">&quot;clean&quot;</span><span class="p">,</span> <span class="s">&quot;fast&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span><span class="o">|</span><span class="n">word</span><span class="o">|</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="p">}</span>
+<span class="k">var</span> <span class="n">adjectives</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+  <span class="p">[</span><span class="s">&quot;small&quot;</span><span class="p">,</span> <span class="s">&quot;clean&quot;</span><span class="p">,</span> <span class="s">&quot;fast&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span><span class="o">|</span><span class="n">word</span><span class="o">|</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="p">}</span> 
 <span class="p">}</span>
 
 <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">adjectives</span><span class="o">.</span><span class="n">isDone</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">adjectives</span><span class="o">.</span><span class="n">call</span><span class="p">())</span>
@@ -80,41 +118,46 @@ a familiar, modern <a href="syntax.html">syntax</a>.</p>
 
 <ul>
 <li>
-<p><strong>Wren is small.</strong> The VM implementation is under <a href="https://github.com/munificent/wren/tree/master/src">4,000 semicolons</a>.
-    You can skim the whole thing in an afternoon. It's <em>small</em>, but not
-    <em>dense</em>. It is readable and <a href="https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433">lovingly-commented</a>.</p>
+<p><strong>Wren is small.</strong> The VM implementation is under <a href="https://github.com/munificent/wren/tree/master/src">4,000 semicolons</a>. 
+    You can skim the whole thing in an afternoon. It&rsquo;s <em>small</em>, but not 
+    <em>dense</em>. It is readable and <a href="https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433">lovingly-commented</a>. </p>
 </li>
 <li>
-<p><strong>Wren is fast.</strong> A fast single-pass compiler to tight bytecode, and a
-    compact object representation help Wren <a href="performance.html">compete with other dynamic
-    languages</a>.</p>
+<p><strong>Wren is fast.</strong> A fast single-pass compiler to tight bytecode, and a 
+    compact object representation help Wren <a href="performance.html">compete with other dynamic 
+    languages</a>. </p>
 </li>
 <li>
-<p><strong>Wren is class-based.</strong> There are lots of scripting languages out there,
-    but many have unusual or non-existent object models. Wren places
-    <a href="classes.html">classes</a> front and center.</p>
+<p><strong>Wren is class-based.</strong> There are lots of scripting languages out there, 
+    but many have unusual or non-existent object models. Wren places 
+    <a href="classes.html">classes</a> front and center. </p>
 </li>
 <li>
-<p><strong>Wren is concurrent.</strong> Lightweight <a href="fibers.html">fibers</a> are core to the execution
-    model and let you organize your program into an army of communicating
-    coroutines.</p>
+<p><strong>Wren is concurrent.</strong> Lightweight <a href="concurrency.html">fibers</a> are core to the execution 
+    model and let you organize your program into an army of communicating 
+    coroutines. </p>
 </li>
 <li>
-<p><strong>Wren is a scripting language.</strong> Wren is intended for embedding in
-    applications. It has no dependencies, a small standard library,
-    and <a href="embedding-api.html">an easy-to-use C API</a>. It compiles cleanly as C99, C++98
-    or anything later.</p>
+<p><strong>Wren is a scripting language.</strong> Wren is intended for embedding in 
+    applications. It has no dependencies, a small standard library, 
+    and <a href="embedding-api.html">an easy-to-use C API</a>. It compiles cleanly as C99, C++98 
+    or anything later. </p>
 </li>
 </ul>
-<p>If you like the sound of this, <a href="getting-started.html">let's get started</a>. You can even try
-it <a href="http://ppvk.github.io/wren-nest/">in your browser</a>! Excited? Well, come on and <a href="contributing.html">get
-involved</a>!</p>
+<p>If you like the sound of this, <a href="getting-started.html">let&rsquo;s get started</a>. You can even try 
+it <a href="http://ppvk.github.io/wren-nest/">in your browser</a>! Excited? Well, come on and <a href="contributing.html">get 
+involved</a>! </p>
   </main>
 </div>
 <footer>
   <div class="page">
     <div class="main-column">
-    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.</p>
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
     <div class="main-column">
   </div>
 </footer>

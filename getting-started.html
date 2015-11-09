@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Getting Started – Wren</title>
+<title>Getting Started &ndash; Wren</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -19,147 +19,192 @@
   </div>
 </header>
 <div class="page">
-  <nav>
+  <nav class="big">
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
-      <h2>language</h2>
+      <h2>language guide</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="expressions.html">Expressions</a></li>
-        <li><a href="variables.html">Variables</a></li>
-        <li><a href="control-flow.html">Control Flow</a></li>
-        <li><a href="error-handling.html">Error Handling</a></li>
-        <li><a href="modules.html">Modules</a></li>
-      </ul>
-    </section>
-    <section>
-      <h2>types</h2>
-      <ul>
         <li><a href="values.html">Values</a></li>
-        <li><a href="classes.html">Classes</a></li>
-        <li><a href="fibers.html">Fibers</a></li>
-        <li><a href="functions.html">Functions</a></li>
         <li><a href="lists.html">Lists</a></li>
         <li><a href="maps.html">Maps</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="concurrency.html">Concurrency</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+        <li><a href="modularity.html">Modularity</a></li>
       </ul>
     </section>
     <section>
       <h2>reference</h2>
       <ul>
-        <li><a href="core">Core Library</a></li>
+        <li><a href="modules">Modules</a></li>
         <li><a href="embedding-api.html">Embedding API</a></li>
         <li><a href="performance.html">Performance</a></li>
-        <li><a href="community.html">Community</a></li>
-        <li><a href="contributing.html">Contributing</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
     </section>
   </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+        <td><a href="community.html">Community</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>language guide</h2></td>
+        <td><h2>reference</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="syntax.html">Syntax</a></li>
+            <li><a href="values.html">Values</a></li>
+            <li><a href="lists.html">Lists</a></li>
+            <li><a href="maps.html">Maps</a></li>
+            <li><a href="method-calls.html">Method Calls</a></li>
+            <li><a href="control-flow.html">Control Flow</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="variables.html">Variables</a></li>
+            <li><a href="functions.html">Functions</a></li>
+            <li><a href="classes.html">Classes</a></li>
+            <li><a href="concurrency.html">Concurrency</a></li>
+            <li><a href="error-handling.html">Error Handling</a></li>
+            <li><a href="modularity.html">Modularity</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">Modules</a></li>
+            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="performance.html">Performance</a></li>
+            <li><a href="qa.html">Q &amp; A</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
   <main>
     <h1>Getting Started</h1>
-    <p>Getting Wren up and running on your machine should be pretty straightforward.
-Tiny C programs with few dependencies are nice that way. "Wren" encompasses two
-separate artifacts:</p>
+    <p>Getting Wren running on your machine is straightforward. Tiny C programs with 
+few dependencies are nice that way. &ldquo;Wren&rdquo; encompasses two separate artifacts: </p>
 <ul>
 <li>
-<p><strong>The virtual machine.</strong> This is the core chunk of C that executes Wren
-    source code. It is just a library, not a standalone application. It's
-    designed to be <a href="embedding-api.html">embedded</a> in a larger host application. It has no dependencies beyond the C standard library. You can is use as a static library, shared library, or simply compile the source into your app.</p>
+<p><strong>The virtual machine.</strong> This is the core chunk of C that executes Wren 
+    source code. It is just a library, not a standalone application. It&rsquo;s 
+    designed to be <a href="embedding-api.html">embedded</a> in a larger host application. It has no 
+    dependencies beyond the C standard library. You can is use as a static 
+    library, shared library, or simply compile the source into your app. </p>
 </li>
 <li>
-<p><strong>The command line executable.</strong> Wren also ships with a CLI wrapper around
-    the VM. This gives you a way to run Wren code from the command-line, and
-    also includes modules for talking to the operating system. It depends on
-    <a href="http://libuv.org/">libuv</a> for that.</p>
+<p><strong>The command line executable.</strong> Wren also ships with a CLI wrapper around 
+    the VM. This gives you a way to run Wren code from the command-line, and 
+    also includes modules for talking to the operating system&mdash;file IO, 
+    networking, stuff like that. It depends on <a href="http://libuv.org/">libuv</a> for that 
+    functionality. </p>
 </li>
 </ul>
-<p>If you're on a Unix or Mac and you can rock a command line, it's just:</p>
+<p>If you&rsquo;re on a Unix or Mac and you can rock a command line, it&rsquo;s just: </p>
 <div class="codehilite"><pre><span class="nv">$ </span>git clone https://github.com/munificent/wren.git
-<span class="nv">$ </span><span class="nb">cd </span>wren
-<span class="nv">$ </span>make
+<span class="nv">$ </span><span class="nb">cd </span>wren 
+<span class="nv">$ </span>make 
 <span class="nv">$ </span>./wren
 </pre></div>
 
 
-<p>This builds both the VM and the CLI. It downloads libuv automatically for you.
-The release build of the CLI goes right into the repo's top level directory.
-Binaries for other configurations are built to <code>bin/</code>. Static and shared
-libraries for embedding Wren get built in <code>lib/</code>.</p>
-<p>For Mac users, there is also an XCode project under <code>project/xcode</code>. For
-Windows brethren, <code>project/msvc2013</code> contains a Visual Studio solution. Note
-that these may not have the exact same build settings as the makefile. The
-makefile is the "official" way to compile Wren.</p>
-<p>If you only want to build the VM, you can do:</p>
+<p>This builds both the VM and the CLI. It downloads libuv automatically for you. 
+The release build of the CLI goes right into the repo&rsquo;s top level directory. 
+Binaries for other configurations are built to <code>bin/</code>. Static and shared 
+libraries for embedding Wren get built in <code>lib/</code>. </p>
+<p>For Mac users, there is also an XCode project under <code>util/xcode</code>. For 
+Windows brethren, <code>util/msvc2013</code> contains a Visual Studio solution. Note 
+that these may not have the exact same build settings as the makefile. The 
+makefile is the &ldquo;official&rdquo; way to compile Wren. </p>
+<p>If you only want to build the VM, you can do: </p>
 <div class="codehilite"><pre><span class="nv">$ </span>make vm
 </pre></div>
 
 
-<p>This will compile the VM to static and shared libraries. It will not even
-download libuv since it isn't needed.</p>
+<p>This compiles the VM to static and shared libraries. It does not even download 
+libuv since it isn&rsquo;t needed. </p>
 <h2>Interactive mode <a href="#interactive-mode" name="interactive-mode" class="header-anchor">#</a></h2>
-<p>The above instructions will drop you into Wren's standalone interpreter in
-interactive mode. You can type in a line of code, and it will immediately
-execute it. Here's something to try:</p>
+<p>If you just run <code>wren</code> without any arguments, it starts the interpreter in 
+interactive mode. You can type in a line of code, and it immediately executes 
+it. Here&rsquo;s something to try: </p>
 <div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello, world!&quot;</span><span class="p">)</span>
 </pre></div>
 
 
-<p>Or a little more exciting:</p>
+<p>Or a little more exciting: </p>
 <div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Counting up &quot;</span> <span class="o">+</span> <span class="err">i</span><span class="o">.</span><span class="n">toString</span><span class="p">)</span>
 </pre></div>
 
 
-<p>You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw
-your computer to the ground and storm off.</p>
+<p>You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw 
+your computer to the ground and storm off. </p>
 <h2>Running scripts <a href="#running-scripts" name="running-scripts" class="header-anchor">#</a></h2>
-<p>The standalone interpreter can also load scripts from files and run them. Just
-pass the name of the script to wren. Create a file named "my_script.wren" in
-your favorite text editor and paste this into it:</p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">yPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">24</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">var</span> <span class="err">y</span> <span class="o">=</span> <span class="n">yPixel</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">-</span> <span class="mi">1</span>
-  <span class="k">for</span> <span class="p">(</span><span class="n">xPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">80</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">var</span> <span class="err">x</span> <span class="o">=</span> <span class="n">xPixel</span> <span class="o">/</span> <span class="mi">30</span> <span class="o">-</span> <span class="mi">2</span>
-    <span class="k">var</span> <span class="n">x0</span> <span class="o">=</span> <span class="err">x</span>
-    <span class="k">var</span> <span class="n">y0</span> <span class="o">=</span> <span class="err">y</span>
-    <span class="k">var</span> <span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="p">(</span><span class="n">iter</span> <span class="o">&lt;</span> <span class="mi">11</span> <span class="o">&amp;&amp;</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">var</span> <span class="n">x1</span> <span class="o">=</span> <span class="p">(</span><span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span><span class="p">)</span> <span class="o">+</span> <span class="err">x</span>
-      <span class="k">var</span> <span class="n">y1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">+</span> <span class="err">y</span>
-      <span class="n">x0</span> <span class="o">=</span> <span class="n">x1</span>
-      <span class="n">y0</span> <span class="o">=</span> <span class="n">y1</span>
-      <span class="n">iter</span> <span class="o">=</span> <span class="n">iter</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="p">}</span>
-    <span class="vg">System</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot; .-:;+=xX$&amp; &quot;</span><span class="p">[</span><span class="n">iter</span><span class="p">])</span>
+<p>The standalone interpreter can also load scripts from files and run them. Just 
+pass the name of the script to <code>wren</code>. Create a file named &ldquo;my_script.wren&rdquo; in 
+your favorite text editor and paste this into it: </p>
+<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">yPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">24</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="k">var</span> <span class="err">y</span> <span class="o">=</span> <span class="n">yPixel</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">-</span> <span class="mi">1</span> 
+  <span class="k">for</span> <span class="p">(</span><span class="n">xPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">80</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="k">var</span> <span class="err">x</span> <span class="o">=</span> <span class="n">xPixel</span> <span class="o">/</span> <span class="mi">30</span> <span class="o">-</span> <span class="mi">2</span> 
+    <span class="k">var</span> <span class="n">x0</span> <span class="o">=</span> <span class="err">x</span> 
+    <span class="k">var</span> <span class="n">y0</span> <span class="o">=</span> <span class="err">y</span> 
+    <span class="k">var</span> <span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span> 
+    <span class="k">while</span> <span class="p">(</span><span class="n">iter</span> <span class="o">&lt;</span> <span class="mi">11</span> <span class="o">&amp;&amp;</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span> 
+      <span class="k">var</span> <span class="n">x1</span> <span class="o">=</span> <span class="p">(</span><span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span><span class="p">)</span> <span class="o">+</span> <span class="err">x</span> 
+      <span class="k">var</span> <span class="n">y1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">+</span> <span class="err">y</span> 
+      <span class="n">x0</span> <span class="o">=</span> <span class="n">x1</span> 
+      <span class="n">y0</span> <span class="o">=</span> <span class="n">y1</span> 
+      <span class="n">iter</span> <span class="o">=</span> <span class="n">iter</span> <span class="o">+</span> <span class="mi">1</span> 
+    <span class="p">}</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot; .-:;+=xX$&amp; &quot;</span><span class="p">[</span><span class="n">iter</span><span class="p">])</span> 
   <span class="p">}</span>
 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span> 
 <span class="p">}</span>
 </pre></div>
 
 
-<p>Now run:</p>
+<p>Now run: </p>
 <div class="codehilite"><pre><span class="nv">$ </span>./wren my_script.wren
 </pre></div>
 
 
-<p>Neat, right? You're a Wren programmer now! The next step is to <a href="syntax.html">read more
-docs</a> and learn your way around the language. If you run into
-bugs, or have ideas or questions, any of the following work:</p>
+<p>Neat, right? You&rsquo;re a Wren programmer now! The next step is to <a href="syntax.html">learn the 
+language</a>. If you run into bugs, or have ideas or questions, any of 
+the following work: </p>
 <ul>
-<li><strong>Ask on the <a href="https://groups.google.com/forum/#!forum/wren-lang">Wren mailing list</a>.</strong></li>
-<li>Tell me on twitter at <a href="https://twitter.com/intent/user?screen_name=munificentbob">@munificentbob</a>.</li>
-<li><a href="https://github.com/munificent/wren/issues">File a ticket</a> at <a href="https://github.com/munificent/wren">the GitHub repo</a>.</li>
-<li>Send a pull request.</li>
-<li>Email me at <a href="mailto:robert@stuffwithstuff.com"><code>robert@stuffwithstuff.com</code></a>.</li>
+<li><strong>Ask on the <a href="https://groups.google.com/forum/#!forum/wren-lang">Wren mailing list</a>.</strong> </li>
+<li>Tell me on twitter at <a href="https://twitter.com/intent/user?screen_name=munificentbob">@munificentbob</a>. </li>
+<li><a href="https://github.com/munificent/wren/issues">File a ticket</a> at <a href="https://github.com/munificent/wren">the GitHub repo</a>. </li>
+<li>Send a pull request. </li>
+<li>Email me at <a href="mailto:robert@stuffwithstuff.com"><code>robert@stuffwithstuff.com</code></a>. </li>
 </ul>
   </main>
 </div>
 <footer>
   <div class="page">
     <div class="main-column">
-    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.</p>
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
     <div class="main-column">
   </div>
 </footer>

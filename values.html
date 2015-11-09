@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Values – Wren</title>
+<title>Values &ndash; Wren</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -19,79 +19,117 @@
   </div>
 </header>
 <div class="page">
-  <nav>
+  <nav class="big">
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
-      <h2>language</h2>
+      <h2>language guide</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="expressions.html">Expressions</a></li>
-        <li><a href="variables.html">Variables</a></li>
-        <li><a href="control-flow.html">Control Flow</a></li>
-        <li><a href="error-handling.html">Error Handling</a></li>
-        <li><a href="modules.html">Modules</a></li>
-      </ul>
-    </section>
-    <section>
-      <h2>types</h2>
-      <ul>
         <li><a href="values.html">Values</a></li>
-        <li><a href="classes.html">Classes</a></li>
-        <li><a href="fibers.html">Fibers</a></li>
-        <li><a href="functions.html">Functions</a></li>
         <li><a href="lists.html">Lists</a></li>
         <li><a href="maps.html">Maps</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="concurrency.html">Concurrency</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+        <li><a href="modularity.html">Modularity</a></li>
       </ul>
     </section>
     <section>
       <h2>reference</h2>
       <ul>
-        <li><a href="core">Core Library</a></li>
+        <li><a href="modules">Modules</a></li>
         <li><a href="embedding-api.html">Embedding API</a></li>
         <li><a href="performance.html">Performance</a></li>
-        <li><a href="community.html">Community</a></li>
-        <li><a href="contributing.html">Contributing</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
     </section>
   </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+        <td><a href="community.html">Community</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>language guide</h2></td>
+        <td><h2>reference</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="syntax.html">Syntax</a></li>
+            <li><a href="values.html">Values</a></li>
+            <li><a href="lists.html">Lists</a></li>
+            <li><a href="maps.html">Maps</a></li>
+            <li><a href="method-calls.html">Method Calls</a></li>
+            <li><a href="control-flow.html">Control Flow</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="variables.html">Variables</a></li>
+            <li><a href="functions.html">Functions</a></li>
+            <li><a href="classes.html">Classes</a></li>
+            <li><a href="concurrency.html">Concurrency</a></li>
+            <li><a href="error-handling.html">Error Handling</a></li>
+            <li><a href="modularity.html">Modularity</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">Modules</a></li>
+            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="performance.html">Performance</a></li>
+            <li><a href="qa.html">Q &amp; A</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
   <main>
     <h1>Values</h1>
-    <p>Values are the built-in object types that all other objects are composed of.
-They can be created through <em>literals</em>, expressions that evaluate to a value.
-All values are <em>immutable</em>&mdash;once created, they do not change. The number
-<code>3</code> is always the number <code>3</code>. The string <code>"frozen"</code> can never have its
-character array modified in place.</p>
+    <p>Values are the built-in atomic object types that all other objects are composed 
+of. They can be created through <em>literals</em>, expressions that evaluate to a 
+value. All values are <em>immutable</em>&mdash;once created, they do not change. The 
+number <code>3</code> is always the number <code>3</code>. The string <code>"frozen"</code> can never have its 
+character array modified in place. </p>
 <h2>Booleans <a href="#booleans" name="booleans" class="header-anchor">#</a></h2>
-<p>A boolean value represents truth or falsehood. There are two boolean literals,
-<code>true</code> and <code>false</code>. Their class is <a href="core/bool.html">Bool</a>.</p>
+<p>A boolean value represents truth or falsehood. There are two boolean literals, 
+<code>true</code> and <code>false</code>. Their class is <a href="modules/core/bool.html">Bool</a>. </p>
 <h2>Numbers <a href="#numbers" name="numbers" class="header-anchor">#</a></h2>
-<p>Like other scripting languages, Wren has a single numeric type:
-double-precision floating point. Number literals look like you expect coming
-from other languages:</p>
-<div class="codehilite"><pre><span class="mi">0</span>
-<span class="mi">1234</span>
-<span class="o">-</span><span class="mi">5678</span>
-<span class="mf">3.14159</span>
-<span class="mf">1.0</span>
+<p>Like other scripting languages, Wren has a single numeric type: 
+double-precision floating point. Number literals look like you expect coming 
+from other languages: </p>
+<div class="codehilite"><pre><span class="mi">0</span> 
+<span class="mi">1234</span> 
+<span class="o">-</span><span class="mi">5678</span> 
+<span class="mf">3.14159</span> 
+<span class="mf">1.0</span> 
 <span class="o">-</span><span class="mf">12.34</span>
 </pre></div>
 
 
-<p>Numbers are instances of the <a href="core/num.html">Num</a> class.</p>
+<p>Numbers are instances of the <a href="modules/core/num.html">Num</a> class. </p>
 <h2>Strings <a href="#strings" name="strings" class="header-anchor">#</a></h2>
-<p>A string is an array of bytes. Typically, they store characters encoded in
-UTF-8, but you can put any byte values in there, even zero or invalid UTF-8
-sequences. (You might have some trouble <em>printing</em> the latter to your terminal,
-though.)</p>
-<p>String literals are surrounded in double quotes:</p>
+<p>A string is an array of bytes. Typically, they store characters encoded in 
+UTF-8, but you can put any byte values in there, even zero or invalid UTF-8 
+sequences. (You might have some trouble <em>printing</em> the latter to your terminal, 
+though.) </p>
+<p>String literals are surrounded in double quotes: </p>
 <div class="codehilite"><pre><span class="s">&quot;hi there&quot;</span>
 </pre></div>
 
 
-<p>A handful of escape characters are supported:</p>
+<p>A handful of escape characters are supported: </p>
 <div class="codehilite"><pre><span class="s">&quot;</span><span class="se">\0</span><span class="s">&quot;</span> <span class="c1">// The NUL byte: 0.</span>
 <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="c1">// A double quote character.</span>
 <span class="s">&quot;</span><span class="se">\\</span><span class="s">&quot;</span> <span class="c1">// A backslash.</span>
@@ -105,56 +143,67 @@ though.)</p>
 </pre></div>
 
 
-<p>A <code>\u</code> followed by four hex digits can be used to specify a Unicode code point:</p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\u0041\u0b83\u00DE</span><span class="s">&quot;</span><span class="p">)</span> <span class="c1">// &quot;AஃÞ&quot;</span>
+<p>A <code>\u</code> followed by four hex digits can be used to specify a Unicode code point: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\u0041\u0b83\u00DE</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">AஃÞ</span>
 </pre></div>
 
 
-<p>A <code>\x</code> followed by two hex digits specifies a single unencoded byte:</p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\x48\x69\x2e</span><span class="s">&quot;</span><span class="p">)</span> <span class="c1">// &quot;Hi.&quot;</span>
+<p>A capital <code>\U</code> followed by <em>eight</em> hex digits allows Unicode code points outside 
+of the basic multilingual plane, like all-important emoji: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;\U0001F64A\U0001F680&quot;</span><span class="p">)</span> <span class="output">🙊🚀</span>
 </pre></div>
 
 
-<p>Strings are instances of class <a href="core/string.html">String</a>.</p>
+<p>A <code>\x</code> followed by two hex digits specifies a single unencoded byte: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\x48\x69\x2e</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">Hi.</span>
+</pre></div>
+
+
+<p>Strings are instances of class <a href="modules/core/string.html">String</a>. </p>
 <h2>Ranges <a href="#ranges" name="ranges" class="header-anchor">#</a></h2>
-<p>A range is a little object that represents a consecutive range of integers.
-They don't have their own dedicated literal syntax. Instead, the number class
-implements the <code>..</code> and <code>...</code> <a href="expressions.html#operators">operators</a> to create
-them:</p>
+<p>A range is a little object that represents a consecutive range of numbers. They 
+don&rsquo;t have their own dedicated literal syntax. Instead, the number class 
+implements the <code>..</code> and <code>...</code> <a href="method-calls.html#operators">operators</a> to create them: </p>
 <div class="codehilite"><pre><span class="mi">3</span><span class="o">..</span><span class="mi">8</span>
 </pre></div>
 
 
-<p>This creates a range from three to eight, including eight itself. If you want a
-half-inclusive range, use <code>...</code>:</p>
+<p>This creates a range from three to eight, including eight itself. If you want a 
+half-inclusive range, use <code>...</code>: </p>
 <div class="codehilite"><pre><span class="mi">4</span><span class="o">...</span><span class="mi">6</span>
 </pre></div>
 
 
-<p>This creates a range from four to six <em>not</em> including six itself. Ranges are
-commonly used for <a href="control-flow.html#for-statements">iterating</a> over a
-sequences of numbers, but are useful in other places too. You can pass them to
-a <a href="lists.html">list</a>'s subscript operator to return a subset of the list, for
-example:</p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">,</span> <span class="s">&quot;e&quot;</span><span class="p">]</span>
-<span class="k">var</span> <span class="n">slice</span> <span class="o">=</span> <span class="n">list</span><span class="p">[</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">]</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">slice</span><span class="p">)</span> <span class="c1">// [&quot;b&quot;, &quot;c&quot;, &quot;d&quot;]</span>
+<p>This creates a range from four to six <em>not</em> including six itself. Ranges are 
+commonly used for <a href="control-flow.html#for-statements">iterating</a> over a 
+sequences of numbers, but are useful in other places too. You can pass them to 
+a <a href="lists.html">list</a>&lsquo;s subscript operator to return a subset of the list, for 
+example: </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">,</span> <span class="s">&quot;e&quot;</span><span class="p">]</span> 
+<span class="k">var</span> <span class="n">slice</span> <span class="o">=</span> <span class="n">list</span><span class="p">[</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">]</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">slice</span><span class="p">)</span> <span class="output">[b, c, d]</span>
 </pre></div>
 
 
-<p>Their class is <a href="core/range.html">Range</a>.</p>
+<p>Their class is <a href="modules/core/range.html">Range</a>. </p>
 <h2>Null <a href="#null" name="null" class="header-anchor">#</a></h2>
-<p>Wren has a special value <code>null</code>, which is the only instance of the class
-<a href="core/null.html">Null</a>. (Note the difference in case.) It functions a bit like
-<code>void</code> in some languages: it indicates the absence of a value. If you call a
-method that doesn't return anything and get its returned value, you get <code>null</code>
-back.</p>
+<p>Wren has a special value <code>null</code>, which is the only instance of the class 
+<a href="modules/core/null.html">Null</a>. (Note the difference in case.) It functions a bit like <code>void</code> in some 
+languages: it indicates the absence of a value. If you call a method that 
+doesn&rsquo;t return anything and get its returned value, you get <code>null</code> back. </p>
+<p><a class="right" href="lists.html">Lists &rarr;</a> 
+<a href="syntax.html">&larr; Syntax</a> </p>
   </main>
 </div>
 <footer>
   <div class="page">
     <div class="main-column">
-    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.</p>
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
     <div class="main-column">
   </div>
 </footer>

@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Maps – Wren</title>
+<title>Maps &ndash; Wren</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -19,164 +19,207 @@
   </div>
 </header>
 <div class="page">
-  <nav>
+  <nav class="big">
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
-      <h2>language</h2>
+      <h2>language guide</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="expressions.html">Expressions</a></li>
-        <li><a href="variables.html">Variables</a></li>
-        <li><a href="control-flow.html">Control Flow</a></li>
-        <li><a href="error-handling.html">Error Handling</a></li>
-        <li><a href="modules.html">Modules</a></li>
-      </ul>
-    </section>
-    <section>
-      <h2>types</h2>
-      <ul>
         <li><a href="values.html">Values</a></li>
-        <li><a href="classes.html">Classes</a></li>
-        <li><a href="fibers.html">Fibers</a></li>
-        <li><a href="functions.html">Functions</a></li>
         <li><a href="lists.html">Lists</a></li>
         <li><a href="maps.html">Maps</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="concurrency.html">Concurrency</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+        <li><a href="modularity.html">Modularity</a></li>
       </ul>
     </section>
     <section>
       <h2>reference</h2>
       <ul>
-        <li><a href="core">Core Library</a></li>
+        <li><a href="modules">Modules</a></li>
         <li><a href="embedding-api.html">Embedding API</a></li>
         <li><a href="performance.html">Performance</a></li>
-        <li><a href="community.html">Community</a></li>
-        <li><a href="contributing.html">Contributing</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
     </section>
   </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+        <td><a href="community.html">Community</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>language guide</h2></td>
+        <td><h2>reference</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="syntax.html">Syntax</a></li>
+            <li><a href="values.html">Values</a></li>
+            <li><a href="lists.html">Lists</a></li>
+            <li><a href="maps.html">Maps</a></li>
+            <li><a href="method-calls.html">Method Calls</a></li>
+            <li><a href="control-flow.html">Control Flow</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="variables.html">Variables</a></li>
+            <li><a href="functions.html">Functions</a></li>
+            <li><a href="classes.html">Classes</a></li>
+            <li><a href="concurrency.html">Concurrency</a></li>
+            <li><a href="error-handling.html">Error Handling</a></li>
+            <li><a href="modularity.html">Modularity</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">Modules</a></li>
+            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="performance.html">Performance</a></li>
+            <li><a href="qa.html">Q &amp; A</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
   <main>
     <h1>Maps</h1>
-    <p>A map is an <em>associative</em> collection. It holds a set of entries, each of which
-maps a <em>key</em> to a <em>value</em>. The same data structure has a variety of names in
-other languages: hash table, dictionary, association, table, etc.</p>
-<p>You can create a map by placing a series of comma-separated entries inside
-curly braces. Each entry is a key and a value separated by a colon:</p>
-<div class="codehilite"><pre><span class="p">{</span>
-  <span class="s">&quot;George&quot;</span><span class="o">:</span> <span class="s">&quot;Harrison&quot;</span><span class="p">,</span>
-  <span class="s">&quot;John&quot;</span><span class="o">:</span> <span class="s">&quot;Lennon&quot;</span><span class="p">,</span>
-  <span class="s">&quot;Paul&quot;</span><span class="o">:</span> <span class="s">&quot;McCartney&quot;</span><span class="p">,</span>
-  <span class="s">&quot;Ringo&quot;</span><span class="o">:</span> <span class="s">&quot;Starr&quot;</span>
+    <p>A map is an <em>associative</em> collection. It holds a set of entries, each of which 
+maps a <em>key</em> to a <em>value</em>. The same data structure has a variety of names in 
+other languages: hash table, dictionary, association, table, etc. </p>
+<p>You can create a map by placing a series of comma-separated entries inside 
+curly braces. Each entry is a key and a value separated by a colon: </p>
+<div class="codehilite"><pre><span class="p">{</span> 
+  <span class="s">&quot;George&quot;</span><span class="o">:</span> <span class="s">&quot;Harrison&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;John&quot;</span><span class="o">:</span> <span class="s">&quot;Lennon&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;Paul&quot;</span><span class="o">:</span> <span class="s">&quot;McCartney&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;Ringo&quot;</span><span class="o">:</span> <span class="s">&quot;Starr&quot;</span> 
 <span class="p">}</span>
 </pre></div>
 
 
-<p>This creates a map that maps the first names of the Beatles to their last
-names. Syntactically, in a map literal, keys can be any literal, a variable
-name, or a parenthesized expression. Values can be any expression. Here, we're
-using string literals for both keys and values.</p>
-<p><em>Semantically</em>, values can be any object, and multiple keys may map to the
-same value. Keys have a few limitations. They must be one of the immutable
-built-in <a href="values.html">value types</a> in Wren. That means a number, string,
-range, bool, or <code>null</code>. You can also use a <a href="classes.html">class object</a> as a
-key.</p>
-<p>In addition, even though they aren't strictly immutable, <a href="fibers.html">fibers</a>
-can be used as map keys. This is handy for storing data that's roughly
-"thread-local" by using the current fiber as a map key.</p>
-<p>The reason for this limitation&mdash;and the reason maps are called "<em>hash</em>
-tables" in other languages&mdash;is that each key is used to generate a numeric
-<em>hash code</em>. This lets a map locate the value associated with a key in constant
-time, even in very large maps. Since Wren only knows how to hash certain
-built-in types, only those can be used as keys.</p>
+<p>This creates a map that maps the first names of the Beatles to their last 
+names. Syntactically, in a map literal, keys can be any literal, a variable 
+name, or a parenthesized expression. Values can be any expression. Here, we&rsquo;re 
+using string literals for both keys and values. </p>
+<p><em>Semantically</em>, values can be any object, and multiple keys may map to the same 
+value. Keys have a few limitations. They must be one of the immutable built-in 
+<a href="values.html">value types</a> in Wren. That means a number, string, range, bool, or <code>null</code>. 
+You can also use a <a href="classes.html">class object</a> as a key. </p>
+<p>In addition, even though they aren&rsquo;t strictly immutable, <a href="concurrency.html">fibers</a> can be used 
+as map keys. This is handy for storing data that&rsquo;s roughly &ldquo;thread-local&rdquo; by 
+using the current fiber as a map key. </p>
+<p>The reason for this limitation&mdash;and the reason maps are called &ldquo;<em>hash</em> 
+tables&rdquo; in other languages&mdash;is that each key is used to generate a numeric <em>hash code</em>. This lets a map locate the value associated with a key in constant 
+time, even in very large maps. Since Wren only knows how to hash certain 
+built-in types, only those can be used as keys. </p>
 <h2>Adding entries <a href="#adding-entries" name="adding-entries" class="header-anchor">#</a></h2>
-<p>You add new key-value pairs to the map by using the <a href="expressions.html#subscript-operators">subscript operator</a>:</p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">capitals</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Georgia&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Atlanta&quot;</span>
-<span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Idaho&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Boise&quot;</span>
+<p>You add new key-value pairs to the map by using the <a href="method-calls.html#subscripts">subscript operator</a>: </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">capitals</span> <span class="o">=</span> <span class="p">{}</span> 
+<span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Georgia&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Atlanta&quot;</span> 
+<span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Idaho&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Boise&quot;</span> 
 <span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Maine&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Augusta&quot;</span>
 </pre></div>
 
 
-<p>If the key isn't already present, this adds it and associates it with the given
-value. If the key is already there, this just replaces its value.</p>
+<p>If the key isn&rsquo;t already present, this adds it and associates it with the given 
+value. If the key is already there, this just replaces its value. </p>
 <h2>Looking up values <a href="#looking-up-values" name="looking-up-values" class="header-anchor">#</a></h2>
-<p>To find the value associated with some key, again you use your friend the
-subscript operator:</p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Idaho&quot;</span><span class="p">])</span> <span class="c1">// &quot;Boise&quot;.</span>
+<p>To find the value associated with some key, again you use your friend the 
+subscript operator: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Idaho&quot;</span><span class="p">])</span> <span class="output">Boise</span>
 </pre></div>
 
 
-<p>If the key is present, this returns its value. Otherwise, it returns <code>null</code>. Of
-course, <code>null</code> itself can also be used as a value, so seeing <code>null</code> here
-doesn't necessarily mean the key wasn't found.</p>
-<p>To tell definitively if a key exists, you can call <code>containsKey()</code>:</p>
+<p>If the key is present, this returns its value. Otherwise, it returns <code>null</code>. Of 
+course, <code>null</code> itself can also be used as a value, so seeing <code>null</code> here 
+doesn&rsquo;t necessarily mean the key wasn&rsquo;t found. </p>
+<p>To tell definitively if a key exists, you can call <code>containsKey()</code>: </p>
 <div class="codehilite"><pre><span class="k">var</span> <span class="n">belief</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;nihilism&quot;</span><span class="o">:</span> <span class="kc">null</span><span class="p">}</span>
 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="p">[</span><span class="s">&quot;nihilism&quot;</span><span class="p">])</span> <span class="c1">// &quot;null&quot; though key exists.</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="p">[</span><span class="s">&quot;solipsism&quot;</span><span class="p">])</span> <span class="c1">// Also &quot;null&quot;.</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="o">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s">&quot;nihilism&quot;</span><span class="p">))</span> <span class="c1">// &quot;true&quot;.</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="o">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s">&quot;solipsism&quot;</span><span class="p">))</span> <span class="c1">// &quot;false&quot;.</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="p">[</span><span class="s">&quot;nihilism&quot;</span><span class="p">])</span> <span class="output">null (though key exists)</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="p">[</span><span class="s">&quot;solipsism&quot;</span><span class="p">])</span> <span class="output">null</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="o">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s">&quot;nihilism&quot;</span><span class="p">))</span> <span class="output">true</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="o">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s">&quot;solipsism&quot;</span><span class="p">))</span> <span class="output">false</span>
 </pre></div>
 
 
-<p>You can see how many entries a map contains using <code>count</code>:</p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="c1">// &quot;3&quot;.</span>
+<p>You can see how many entries a map contains using <code>count</code>: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="output">3</span>
 </pre></div>
 
 
 <h2>Removing entries <a href="#removing-entries" name="removing-entries" class="header-anchor">#</a></h2>
-<p>To remove an entry from a map, call <code>remove()</code> and pass in the key for the
-entry you want to delete:</p>
-<div class="codehilite"><pre><span class="n">capitals</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&quot;Maine&quot;</span><span class="p">)</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s">&quot;Maine&quot;</span><span class="p">))</span> <span class="c1">// &quot;false&quot;.</span>
+<p>To remove an entry from a map, call <code>remove()</code> and pass in the key for the 
+entry you want to delete: </p>
+<div class="codehilite"><pre><span class="n">capitals</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&quot;Maine&quot;</span><span class="p">)</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s">&quot;Maine&quot;</span><span class="p">))</span> <span class="output">false</span>
 </pre></div>
 
 
-<p>If the key was found, this returns the value that was associated with it:</p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&quot;Georgia&quot;</span><span class="p">))</span> <span class="c1">// &quot;Atlanta&quot;.</span>
+<p>If the key was found, this returns the value that was associated with it: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&quot;Georgia&quot;</span><span class="p">))</span> <span class="output">Atlanta</span>
 </pre></div>
 
 
-<p>If the key wasn't in the map to begin with, <code>remove()</code> just returns <code>null</code>.</p>
-<p>If you want to remove <em>everything</em> from the map, just like with <a href="lists.html">lists</a>, you
-can just call <code>clear()</code>:</p>
-<div class="codehilite"><pre><span class="n">capitals</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="c1">// &quot;0&quot;.</span>
+<p>If the key wasn&rsquo;t in the map to begin with, <code>remove()</code> just returns <code>null</code>. </p>
+<p>If you want to remove <em>everything</em> from the map, just like with <a href="lists.html">lists</a>, you 
+can just call <code>clear()</code>: </p>
+<div class="codehilite"><pre><span class="n">capitals</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="output">0</span>
 </pre></div>
 
 
 <h2>Iterating over the contents <a href="#iterating-over-the-contents" name="iterating-over-the-contents" class="header-anchor">#</a></h2>
-<p>The subscript operator works well for finding values when you know the key
-you're looking for, but sometimes you want to see everything that's in the map.
-For that, map exposes two methods: <code>keys</code> and <code>values</code>.</p>
-<p>The first returns a <a href="core/sequence.html">Sequence</a> that <a href="control-flow.html#the-iterator-protocol">iterates</a> over all of the keys in the
-map, and the second returns one that iterates over the values.</p>
-<p>If you want to see all of the key-value pairs in a map, the easiest way is to
-iterate over the keys and use each to look up its value:</p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">birds</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s">&quot;Arizona&quot;</span><span class="o">:</span> <span class="s">&quot;Cactus wren&quot;</span><span class="p">,</span>
-  <span class="s">&quot;Hawaii&quot;</span><span class="o">:</span> <span class="s">&quot;Nēnē&quot;</span><span class="p">,</span>
-  <span class="s">&quot;Ohio&quot;</span><span class="o">:</span> <span class="s">&quot;Northern Cardinal&quot;</span>
+<p>The subscript operator works well for finding values when you know the key 
+you&rsquo;re looking for, but sometimes you want to see everything that&rsquo;s in the map. 
+For that, map exposes two methods: <code>keys</code> and <code>values</code>. </p>
+<p>The first returns a <a href="modules/core/sequence.html">Sequence</a> that <a href="control-flow.html#the-iterator-protocol">iterates</a> over all of the keys in the 
+map, and the second returns one that iterates over the values. </p>
+<p>If you want to see all of the key-value pairs in a map, the easiest way is to 
+iterate over the keys and use each to look up its value: </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">birds</span> <span class="o">=</span> <span class="p">{</span> 
+  <span class="s">&quot;Arizona&quot;</span><span class="o">:</span> <span class="s">&quot;Cactus wren&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;Hawaii&quot;</span><span class="o">:</span> <span class="s">&quot;Nēnē&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;Ohio&quot;</span><span class="o">:</span> <span class="s">&quot;Northern Cardinal&quot;</span> 
 <span class="p">}</span>
 
-<span class="k">for</span> <span class="p">(</span><span class="n">state</span> <span class="k">in</span> <span class="n">birds</span><span class="o">.</span><span class="n">keys</span><span class="p">)</span> <span class="p">{</span>
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The state bird of &quot;</span> <span class="o">+</span> <span class="n">state</span> <span class="o">+</span> <span class="s">&quot; is &quot;</span> <span class="o">+</span> <span class="n">birds</span><span class="p">[</span><span class="n">state</span><span class="p">])</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">state</span> <span class="k">in</span> <span class="n">birds</span><span class="o">.</span><span class="n">keys</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The state bird of &quot;</span> <span class="o">+</span> <span class="n">state</span> <span class="o">+</span> <span class="s">&quot; is &quot;</span> <span class="o">+</span> <span class="n">birds</span><span class="p">[</span><span class="n">state</span><span class="p">])</span> 
 <span class="p">}</span>
 </pre></div>
 
 
-<p>This program will print the three states and their birds. However, the <em>order</em>
-that they are printed isn't defined. Wren makes no promises about what order
-keys and values will be iterated in when you use these methods. All it promises
-is that every entry will appear exactly once.</p>
+<p>This program will print the three states and their birds. However, the <em>order</em> 
+that they are printed isn&rsquo;t defined. Wren makes no promises about what order 
+keys and values will be iterated in when you use these methods. All it promises 
+is that every entry will appear exactly once. </p>
+<p><a class="right" href="method-calls.html">Method Calls &rarr;</a> 
+<a href="lists.html">&larr; Lists</a> </p>
   </main>
 </div>
 <footer>
   <div class="page">
     <div class="main-column">
-    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.</p>
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
     <div class="main-column">
   </div>
 </footer>

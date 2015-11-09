@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Modularity &ndash; Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="./">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="community.html">Community</a></li>
+    </ul>
+    <section>
+      <h2>language guide</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="concurrency.html">Concurrency</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+        <li><a href="modularity.html">Modularity</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="modules">Modules</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+        <td><a href="community.html">Community</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>language guide</h2></td>
+        <td><h2>reference</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="syntax.html">Syntax</a></li>
+            <li><a href="values.html">Values</a></li>
+            <li><a href="lists.html">Lists</a></li>
+            <li><a href="maps.html">Maps</a></li>
+            <li><a href="method-calls.html">Method Calls</a></li>
+            <li><a href="control-flow.html">Control Flow</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="variables.html">Variables</a></li>
+            <li><a href="functions.html">Functions</a></li>
+            <li><a href="classes.html">Classes</a></li>
+            <li><a href="concurrency.html">Concurrency</a></li>
+            <li><a href="error-handling.html">Error Handling</a></li>
+            <li><a href="modularity.html">Modularity</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">Modules</a></li>
+            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="performance.html">Performance</a></li>
+            <li><a href="qa.html">Q &amp; A</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h1>Modularity</h1>
+    <p>Once you start writing programs that are more than little toys, you quickly run 
+into two problems: </p>
+<ol>
+<li>
+<p>You want to break them down into multiple smaller files to make it easier to 
+   find your way around them. </p>
+</li>
+<li>
+<p>You want to reuse pieces of them across different programs. </p>
+</li>
+</ol>
+<p>To address those, Wren has a simple module system. A file containing Wren code 
+defines a <em>module</em>. A module can use the code defined in another module by 
+<em>importing</em> it. You can break big programs into smaller modules that you 
+import, and you can reuse code by having multiple programs share the use of a 
+single module. </p>
+<p>Wren does not have a single global scope. Instead, each module has its own 
+top-level scope independent of all other modules. This means, for example, that 
+two modules can define a top-level variable with the same name without causing 
+a name collision. Each module is, well, modular. </p>
+<h2>Importing, briefly <a href="#importing,-briefly" name="importing,-briefly" class="header-anchor">#</a></h2>
+<p>When you run Wren and give it a file name to execute, the contents of that file 
+define the &ldquo;main&rdquo; module that execution starts at. To load and execute other 
+modules, you use an import statement: </p>
+<div class="codehilite"><pre><span class="k">import</span> <span class="s">&quot;beverages&quot;</span> <span class="k">for</span> <span class="vg">Coffee</span><span class="p">,</span> <span class="vg">Tea</span>
+</pre></div>
+
+
+<p>This finds a module named &ldquo;beverages&rdquo; and executes its source code. Then, it 
+looks up two top-level variables, <code>Coffee</code> and <code>Tea</code> in <em>that</em> module and 
+creates new variables in <em>this</em> module with their values. </p>
+<p>This statement can appear anywhere a variable declaration is allowed, even 
+inside blocks: </p>
+<div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">thirsty</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="k">import</span> <span class="s">&quot;beverages&quot;</span> <span class="k">for</span> <span class="vg">Coffee</span><span class="p">,</span> <span class="vg">Tea</span> 
+<span class="p">}</span>
+</pre></div>
+
+
+<p>If you want to load a module, but not bind any variables from it, you can omit 
+the <code>for</code> clause: </p>
+<div class="codehilite"><pre><span class="k">import</span> <span class="s">&quot;some_imperative_code&quot;</span>
+</pre></div>
+
+
+<p>That&rsquo;s the basic idea. Now let&rsquo;s break it down into each of the steps it 
+performs: </p>
+<ol>
+<li>Locate the source code for the module. </li>
+<li>Execute the imported module&rsquo;s code. </li>
+<li>Bind new variables in the importing module to values defined in the imported 
+   module. </li>
+</ol>
+<p>We&rsquo;ll go through each step: </p>
+<h2>Locating a module <a href="#locating-a-module" name="locating-a-module" class="header-anchor">#</a></h2>
+<p>The first thing you need to do to import a module is actually <em>find</em> the code 
+for it. The import specifies a <em>name</em>&mdash;some arbitrary string that is used 
+to uniquely identify the module. The embedding application controls how that 
+string is used to locate a blob of source code. </p>
+<p>When the host application creates a new Wren VM, it provides a module loader 
+function: </p>
+<div class="codehilite"><pre><span class="n">WrenConfiguration</span> <span class="n">config</span><span class="p">;</span> 
+<span class="n">config</span><span class="p">.</span><span class="n">loadModuleFn</span> <span class="o">=</span> <span class="n">loadModule</span><span class="p">;</span>
+
+<span class="c1">// Other configuration...</span>
+
+<span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span> <span class="o">=</span> <span class="n">wrenNewVM</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
+</pre></div>
+
+
+<p>That function has this signature: </p>
+<div class="codehilite"><pre><span class="kt">char</span><span class="o">*</span> <span class="nf">WrenLoadModuleFn</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">name</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Whenever a module is imported, the VM calls this and passes it the name of the 
+module. The embedder is expected to return the source code contents of the 
+module. When you embed Wren in your app, you can handle this however you want: 
+reach out to the file system, look inside resources bundled into your app, 
+whatever. </p>
+<p>You can return <code>NULL</code> from this function to indicate that a module couldn&rsquo;t be 
+found. When you do this, Wren will report it as a runtime error. </p>
+<h3>The command-line loader <a href="#the-command-line-loader" name="the-command-line-loader" class="header-anchor">#</a></h3>
+<p>The default little command-line VM that comes with Wren has a very simple 
+lookup process. It appends the module name and &ldquo;.wren&rdquo; to the directory where 
+the main module was loaded and looks for that file. So, let&rsquo;s say you run: </p>
+<div class="codehilite"><pre><span class="nv">$ </span>wren /code/my_program.wren
+</pre></div>
+
+
+<p>And that main module has: </p>
+<div class="codehilite"><pre><span class="k">import</span> <span class="s">&quot;some/module&quot;</span>
+</pre></div>
+
+
+<p>Then the command-line VM will try to find <code>/code/some/module.wren</code>. By 
+convention, forward slashes should be used as path separators, even on Windows, 
+to help ensure your scripts are platform-independent. (Forward slashes are a 
+valid separator on Windows, but backslashes are not valid on other OSes.) </p>
+<h2>Executing the module <a href="#executing-the-module" name="executing-the-module" class="header-anchor">#</a></h2>
+<p>Once we have the source code for a module, we need to run it. First, the VM 
+takes the <a href="concurrency.html">fiber</a> that is executing the <code>import</code> statement in the importing 
+module and pauses it. </p>
+<p>Then it creates a new module object&mdash;a new fresh top-level scope, 
+basically&mdash;and a new fiber. It executes the new module&rsquo;s code in that 
+fiber and scope. The module can run whatever imperative code it wants and 
+define whatever top-level variables it wants. </p>
+<p>When the module&rsquo;s code is done being executed and its fiber completes, the 
+suspended fiber for the importing module is resumed. This suspending and 
+resuming is recursive. So, if &ldquo;a&rdquo; imports &ldquo;b&rdquo; which imports &ldquo;c&rdquo;, both &ldquo;a&rdquo; and 
+&ldquo;b&rdquo; will be suspended while &ldquo;c&rdquo; is running. When &ldquo;c&rdquo; is done, &ldquo;b&rdquo; is resumed. 
+Then, when &ldquo;b&rdquo; completes, &ldquo;a&rdquo; is resumed. </p>
+<p>Think of it like traversing the tree of imports, one node at a time. At any 
+given point in time, only one module&rsquo;s code is running. </p>
+<h2>Binding variables <a href="#binding-variables" name="binding-variables" class="header-anchor">#</a></h2>
+<p>Once the module is done executing, the last step is to actually <em>import</em> some 
+data from it. Any module can define &ldquo;top-level&rdquo; <a href="variables.html">variables</a>. 
+These are simply variables declared outside of any 
+<a href="classes.html#methods">method</a> or <a href="functions.html">function</a>. </p>
+<p>These are visible to anything inside the module, but they can also be 
+<em>exported</em> and used by other modules. When Wren executes an import like: </p>
+<div class="codehilite"><pre><span class="k">import</span> <span class="s">&quot;beverages&quot;</span> <span class="k">for</span> <span class="vg">Coffee</span><span class="p">,</span> <span class="vg">Tea</span>
+</pre></div>
+
+
+<p>First it runs the &ldquo;beverages&rdquo; module. Then it goes through each of the variable 
+names in the <code>for</code> clause. For each one, it looks for a top-level variable with 
+that name in the imported module. If a variable with that name can&rsquo;t be found 
+in the imported module, it&rsquo;s a runtime error. </p>
+<p>Otherwise, it gets the current value of the variable and defines a new variable 
+in the importing module with the same name and value. It&rsquo;s worth noting that 
+the importing module gets its <em>own</em> variable whose value is a snapshot of the 
+value of the imported variable at the time it was imported. If either module 
+later assigns to that variable, the other won&rsquo;t see it. It&rsquo;s not a &ldquo;live&rdquo; 
+connection. </p>
+<p>In practice, most top-level variables are only assigned once anyway, so this 
+rarely makes a difference. </p>
+<h2>Shared imports <a href="#shared-imports" name="shared-imports" class="header-anchor">#</a></h2>
+<p>Earlier, I described a program&rsquo;s set of modules as a tree. Of course, it&rsquo;s only 
+a <em>tree</em> of modules if there are no <em>shared imports</em>. But consider a program 
+like: </p>
+<div class="codehilite"><pre><span class="c1">// main.wren</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span> 
+<span class="k">import</span> <span class="s">&quot;b&quot;</span>
+
+<span class="c1">// a.wren</span>
+<span class="k">import</span> <span class="s">&quot;shared&quot;</span>
+
+<span class="c1">// b.wren</span>
+<span class="k">import</span> <span class="s">&quot;shared&quot;</span>
+
+<span class="c1">// shared.wren</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Shared!&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Here, &ldquo;a&rdquo; and &ldquo;b&rdquo; both want to use &ldquo;shared&rdquo;. If &ldquo;shared&rdquo; defines some top-level 
+state, we only want a single copy of that in memory. To handle this, a module&rsquo;s 
+code is only executed the <em>first</em> time it is loaded. After that, importing the 
+module again just looks up the previously loaded module. </p>
+<p>Internally, Wren maintains a map of every module it has previously loaded. When 
+a module is imported, Wren looks for it in that map first before it calls out 
+to the embedder for its source. </p>
+<p>In other words, in that list of steps above, there&rsquo;s an implicit zeroth step: 
+&ldquo;See if we already loaded the module and reuse it if we did&rdquo;. That means the 
+above program only prints &ldquo;Shared!&rdquo; once. </p>
+<h2>Cyclic imports <a href="#cyclic-imports" name="cyclic-imports" class="header-anchor">#</a></h2>
+<p>You can even have cycles in your imports, provided you&rsquo;re a bit careful with 
+them. The loading process, in detail, is: </p>
+<ol>
+<li>See if we have already created a module with the given name. </li>
+<li>If so, use it. </li>
+<li>Otherwise, create a new module with the name and store it in the module 
+   registry. </li>
+<li>Create a fiber for it and execute its code. </li>
+</ol>
+<p>Note the order of the last two steps. When a module is loaded, it is added to 
+the registry <em>before</em> it is executed. This means if an import for that same 
+module is reached while the module itself or one of its imports is executing, 
+it will be found in the registry and the cycle is short-circuited. </p>
+<p>For example: </p>
+<div class="codehilite"><pre><span class="c1">// main.wren</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span>
+
+<span class="c1">// a.wren</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;start a&quot;</span><span class="p">)</span> 
+<span class="k">import</span> <span class="s">&quot;b&quot;</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;end a&quot;</span><span class="p">)</span>
+
+<span class="c1">// b.wren</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;start b&quot;</span><span class="p">)</span> 
+<span class="k">import</span> <span class="s">&quot;a&quot;</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;end b&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This program runs successfully and prints: </p>
+<div class="codehilite"><pre>start a 
+start b 
+end b 
+end a
+</pre></div>
+
+
+<p>Where you have to be careful is binding variables. Consider: </p>
+<div class="codehilite"><pre><span class="c1">// main.wren</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span>
+
+<span class="c1">// a.wren</span>
+<span class="k">import</span> <span class="s">&quot;b&quot;</span> <span class="k">for</span> <span class="err">B</span> 
+<span class="k">var</span> <span class="err">A</span> <span class="o">=</span> <span class="s">&quot;a variable&quot;</span>
+
+<span class="c1">// b.wren</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span> <span class="k">for</span> <span class="err">A</span> 
+<span class="k">var</span> <span class="err">B</span> <span class="o">=</span> <span class="s">&quot;b variable&quot;</span>
+</pre></div>
+
+
+<p>The import of &ldquo;a&rdquo; in b.wren will fail here. If you trace the execution, you 
+get: </p>
+<ol>
+<li>Execute <code>import "a"</code> in &ldquo;main.wren&rdquo;. That suspends &ldquo;main.wren&rdquo;. </li>
+<li>Execute <code>import "b"</code> in &ldquo;a.wren&rdquo;. That suspends &ldquo;a.wren&rdquo;. </li>
+<li>Execute <code>import "a"</code> in &ldquo;b.wren&rdquo;. Since &ldquo;a&rdquo; is already in the module map, 
+   this does <em>not</em> suspend it. </li>
+</ol>
+<p>Instead, we look for a variable named <code>A</code> in that module. But it hasn&rsquo;t been 
+defined yet since &ldquo;a.wren&rdquo; is still sitting on the <code>import "b" for B</code> line 
+before the declaration. To get this to work, you would need to move the 
+variable declaration above the import: </p>
+<div class="codehilite"><pre><span class="c1">// main.wren</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span>
+
+<span class="c1">// a.wren</span>
+<span class="k">var</span> <span class="err">A</span> <span class="o">=</span> <span class="s">&quot;a variable&quot;</span> 
+<span class="k">import</span> <span class="s">&quot;b&quot;</span> <span class="k">for</span> <span class="err">B</span>
+
+<span class="c1">// b.wren</span>
+<span class="k">import</span> <span class="s">&quot;a&quot;</span> <span class="k">for</span> <span class="err">A</span> 
+<span class="k">var</span> <span class="err">B</span> <span class="o">=</span> <span class="s">&quot;b variable&quot;</span>
+</pre></div>
+
+
+<p>Now when we run it, we get: </p>
+<ol>
+<li>Execute <code>import "a"</code> in &ldquo;main.wren&rdquo;. That suspends &ldquo;main.wren&rdquo;. </li>
+<li>Define <code>A</code> in &ldquo;a.wren&rdquo;. </li>
+<li>Execute <code>import "b"</code> in &ldquo;a.wren&rdquo;. That suspends &ldquo;a.wren&rdquo;. </li>
+<li>Execute <code>import "a"</code> in &ldquo;b.wren&rdquo;. Since &ldquo;a&rdquo; is already in the module map, 
+   this does <em>not</em> suspend it. It looks up <code>A</code>, which has already been defined, 
+   and binds it. </li>
+<li>Define <code>B</code> in &ldquo;b.wren&rdquo;. </li>
+<li>Complete &ldquo;b.wren&rdquo;. </li>
+<li>Look up <code>B</code> in &ldquo;b.wren&rdquo; and bind it in &ldquo;a.wren&rdquo;. </li>
+<li>Resume &ldquo;a.wren&rdquo;. </li>
+</ol>
+<p>This sounds super hairy, but that&rsquo;s because cyclic dependencies are hairy in 
+general. The key point here is that Wren <em>can</em> handle them in the rare cases 
+where you need them. </p>
+<p><a href="error-handling.html">&larr; Error Handling</a> </p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

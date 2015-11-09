@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Random Class &ndash; Wren</title>
+<link rel="stylesheet" type="text/css" href="../../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top" class="module">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../../">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <ul>
+      <li><a href="../">Modules</a></li>
+      <li><a href="./">random</a></li>
+    </ul>
+    <section>
+      <h2>random classes</h2>
+      <ul>
+        <li><a href="random.html">Random</a></li>
+      </ul>
+    </section>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="../">Modules</a></td>
+        <td><a href="./">random</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>random classes</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="random.html">Random</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h1>Random Class</h1>
+    <p>A simple, fast pseudo-random number generator. Internally, it uses the <a href="https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear">well 
+equidistributed long-period linear PRNG</a> (WELL512a). </p>
+<p>Each instance of the class generates a sequence of randomly distributed numbers 
+based on the internal state of the object. The state is initialized from a 
+<em>seed</em>. Two instances with the same seed generate the exact same sequence of 
+numbers. </p>
+<p>It must be imported from the <a href="../">random</a> module: </p>
+<div class="codehilite"><pre><span class="k">import</span> <span class="s">&quot;random&quot;</span> <span class="k">for</span> <span class="vg">Random</span>
+</pre></div>
+
+
+<h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
+<h3>Random.<strong>new</strong>() <a href="#random.new()" name="random.new()" class="header-anchor">#</a></h3>
+<p>Creates a new generator whose state is seeded based on the current time. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">random</span> <span class="o">=</span> <span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+</pre></div>
+
+
+<h3>Random.<strong>new</strong>(seed) <a href="#random.new(seed)" name="random.new(seed)" class="header-anchor">#</a></h3>
+<p>Creates a new generator initialized with [seed]. The seed can either be a 
+number, or a non-empty sequence of numbers. If the sequnce has more than 16 
+elements, only the first 16 are used. If it has fewer, the elements are cycled 
+to generate 16 seed values. </p>
+<div class="codehilite"><pre><span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span> 
+<span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">&quot;appleseed&quot;</span><span class="o">.</span><span class="n">codePoints</span><span class="p">)</span>
+</pre></div>
+
+
+<h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
+<h3><strong>float</strong>() <a href="#float()" name="float()" class="header-anchor">#</a></h3>
+<p>Returns a floating point value between 0.0 and 1.0, including 0.0, but excluding 
+1.0. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">random</span> <span class="o">=</span> <span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">float</span><span class="p">())</span> <span class="output">0.53178795980617</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">float</span><span class="p">())</span> <span class="output">0.20180515043262</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">float</span><span class="p">())</span> <span class="output">0.43371948658705</span>
+</pre></div>
+
+
+<h3><strong>float</strong>(end) <a href="#float(end)" name="float(end)" class="header-anchor">#</a></h3>
+<p>Returns a floating point value between 0.0 and <code>end</code>, including 0.0 but 
+excluding <code>end</code>. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">random</span> <span class="o">=</span> <span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>     <span class="output">0</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>   <span class="output">20.180515043262</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">))</span>  <span class="output">-43.371948658705</span>
+</pre></div>
+
+
+<h3><strong>float</strong>(start, end) <a href="#float(start,-end)" name="float(start,-end)" class="header-anchor">#</a></h3>
+<p>Returns a floating point value between <code>start</code> and <code>end</code>, including <code>start</code> but 
+excluding <code>end</code>. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">random</span> <span class="o">=</span> <span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>    <span class="output">3.5317879598062</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> <span class="output">-5.9638969913476</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>   <span class="output">-1.3976830804777</span>
+</pre></div>
+
+
+<h3><strong>int</strong>(end) <a href="#int(end)" name="int(end)" class="header-anchor">#</a></h3>
+<p>Returns an integer between 0 and <code>end</code>, including 0 but excluding <code>end</code>. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">random</span> <span class="o">=</span> <span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>    <span class="output">0</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>   <span class="output">2</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">))</span>  <span class="output">-22</span>
+</pre></div>
+
+
+<h3><strong>int</strong>(start, end) <a href="#int(start,-end)" name="int(start,-end)" class="header-anchor">#</a></h3>
+<p>Returns an integer between <code>start</code> and <code>end</code>, including <code>start</code> but excluding 
+<code>end</code>. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">random</span> <span class="o">=</span> <span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>    <span class="output">3</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> <span class="output">-6</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>   <span class="output">-2</span>
+</pre></div>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

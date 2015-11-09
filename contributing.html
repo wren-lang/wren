@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Contributing – Wren</title>
+<title>Contributing &ndash; Wren</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -19,152 +19,195 @@
   </div>
 </header>
 <div class="page">
-  <nav>
+  <nav class="big">
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
-      <h2>language</h2>
+      <h2>language guide</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="expressions.html">Expressions</a></li>
-        <li><a href="variables.html">Variables</a></li>
-        <li><a href="control-flow.html">Control Flow</a></li>
-        <li><a href="error-handling.html">Error Handling</a></li>
-        <li><a href="modules.html">Modules</a></li>
-      </ul>
-    </section>
-    <section>
-      <h2>types</h2>
-      <ul>
         <li><a href="values.html">Values</a></li>
-        <li><a href="classes.html">Classes</a></li>
-        <li><a href="fibers.html">Fibers</a></li>
-        <li><a href="functions.html">Functions</a></li>
         <li><a href="lists.html">Lists</a></li>
         <li><a href="maps.html">Maps</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="concurrency.html">Concurrency</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+        <li><a href="modularity.html">Modularity</a></li>
       </ul>
     </section>
     <section>
       <h2>reference</h2>
       <ul>
-        <li><a href="core">Core Library</a></li>
+        <li><a href="modules">Modules</a></li>
         <li><a href="embedding-api.html">Embedding API</a></li>
         <li><a href="performance.html">Performance</a></li>
-        <li><a href="community.html">Community</a></li>
-        <li><a href="contributing.html">Contributing</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
     </section>
   </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+        <td><a href="community.html">Community</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>language guide</h2></td>
+        <td><h2>reference</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="syntax.html">Syntax</a></li>
+            <li><a href="values.html">Values</a></li>
+            <li><a href="lists.html">Lists</a></li>
+            <li><a href="maps.html">Maps</a></li>
+            <li><a href="method-calls.html">Method Calls</a></li>
+            <li><a href="control-flow.html">Control Flow</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="variables.html">Variables</a></li>
+            <li><a href="functions.html">Functions</a></li>
+            <li><a href="classes.html">Classes</a></li>
+            <li><a href="concurrency.html">Concurrency</a></li>
+            <li><a href="error-handling.html">Error Handling</a></li>
+            <li><a href="modularity.html">Modularity</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">Modules</a></li>
+            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="performance.html">Performance</a></li>
+            <li><a href="qa.html">Q &amp; A</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
   <main>
     <h1>Contributing</h1>
-    <p>It should be obvious by now that Wren is under active development and there's
-lots left to do. I am delighted to have you participate.</p>
+    <p>Wren is under active development and there&rsquo;s lots to do. We&rsquo;d be delighted to 
+have you help! </p>
 <h2>Getting acquainted <a href="#getting-acquainted" name="getting-acquainted" class="header-anchor">#</a></h2>
-<p><a href="https://github.com/munificent/wren/pulls">Pull requests</a> and <a href="https://github.com/munificent/wren/issues">bug reports</a> are always welcome. But,
-if you'd like to dip your toes in the water before diving in, please join
-<a href="https://groups.google.com/forum/#!forum/wren-lang">the mailing list</a> and say, "Hi". There's no strangers to Wren, just
-friends we haven't met yet.</p>
+<p><a href="https://github.com/munificent/wren/pulls">Pull requests</a> and <a href="https://github.com/munificent/wren/issues">bug reports</a> are always welcome. But, 
+if you&rsquo;d like to dip your toes in the water before diving in, please join 
+ <a href="https://groups.google.com/forum/#!forum/wren-lang">the mailing list</a> and say, &ldquo;Hi&rdquo;. There&rsquo;s no strangers to Wren, just 
+friends we haven&rsquo;t met yet. </p>
 <h2>The source <a href="#the-source" name="the-source" class="header-anchor">#</a></h2>
-<p>Wren uses the OSI-approved <a href="http://opensource.org/licenses/MIT">MIT license</a>. I'm not sure exactly what that
-means, but I went with the most permissive license I could find.</p>
-<p>The source is developed <a href="https://github.com/munificent/wren">on GitHub</a>. My hope is that the codebase,
-tests, and <a href="https://github.com/munificent/wren/tree/master/doc/site">documentation</a> are easy to understand and contribute to. If
-they aren't, that's a bug.</p>
+<p>Wren uses the OSI-approved <a href="http://opensource.org/licenses/MIT">MIT license</a>. I&rsquo;m not sure exactly what that 
+means, but I went with the most permissive license I could find. </p>
+<p>The source is developed <a href="https://github.com/munificent/wren">on GitHub</a>. My hope is that the codebase, 
+tests, and <a href="https://github.com/munificent/wren/tree/master/doc/site">documentation</a> are easy to understand and contribute to. If 
+they aren&rsquo;t, that&rsquo;s a bug. </p>
 <h2>Finding something to hack on <a href="#finding-something-to-hack-on" name="finding-something-to-hack-on" class="header-anchor">#</a></h2>
-<p>Eventually, the <a href="https://github.com/munificent/wren/issues">issue tracker</a> will be populated with a more complete
-set of changes and features I have in mind. Until then, one easy way to find
-things that need doing is to look for <code>TODO</code> comments in the code.</p>
-<p>Also, writing code in Wren and seeing what problems you run into is incredibly
-helpful. Embedding Wren in an application will also exercise lots of corners of
-the system and highlight problems and missing features.</p>
-<p>Of course, new ideas are also welcome as well! If you have an idea for a
-significant change or addition, please file a <a href="https://github.com/munificent/wren/labels/proposal">proposal</a> to discuss it
-before writing lots of code. Wren tries very <em>very</em> hard to be minimal which
-means often having to say "no" to language additions, even really cool ones.</p>
+<p>Eventually, the <a href="https://github.com/munificent/wren/issues">issue tracker</a> will be populated with a more complete 
+set of changes and features I have in mind. Until then, one easy way to find 
+things that need doing is to look for <code>TODO</code> comments in the code. </p>
+<p>Also, writing code in Wren and seeing what problems you run into is incredibly 
+helpful. Embedding Wren in an application will also exercise lots of corners of 
+the system and highlight problems and missing features. </p>
+<p>Of course, new ideas are also welcome as well! If you have an idea for a 
+significant change or addition, please file a <a href="https://github.com/munificent/wren/labels/proposal">proposal</a> to discuss it 
+before writing lots of code. Wren tries very <em>very</em> hard to be minimal which 
+means often having to say &ldquo;no&rdquo; to language additions, even really cool ones. </p>
 <h2>Hacking on docs <a href="#hacking-on-docs" name="hacking-on-docs" class="header-anchor">#</a></h2>
-<p>The <a href="/">documentation</a> is one of the easiest&mdash;and most
-important!&mdash;parts of Wren to contribute to. The source for the site is
-written in <a href="http://daringfireball.net/projects/markdown/">Markdown</a> (and a little <a href="http://sass-lang.com/">SASS</a>) and lives under <code>doc/site</code>. A
-simple Python script, <code>util/generate_docs.py</code>, converts that to HTML and CSS.</p>
-<p>The site uses <a href="http://pygments.org">Pygments</a> for syntax highlighting, with a custom lexer plug-in
-for Wren. To install that, run:</p>
-<div class="codehilite"><pre><span class="nv">$ </span><span class="nb">cd </span>util/pygments-lexer
-<span class="nv">$ </span>sudo python setup.py develop
+<p>The <a href="/">documentation</a> is one of the easiest&mdash;and most 
+important!&mdash;parts of Wren to contribute to. The source for the site is 
+written in <a href="http://daringfireball.net/projects/markdown/">Markdown</a> (and a little <a href="http://sass-lang.com/">SASS</a>) and lives under <code>doc/site</code>. A 
+simple Python script, <code>util/generate_docs.py</code>, converts that to HTML and CSS. </p>
+<p>The site uses <a href="http://pygments.org">Pygments</a> for syntax highlighting, with a custom lexer plug-in 
+for Wren. To install that, run: </p>
+<div class="codehilite"><pre><span class="nv">$ </span><span class="nb">cd </span>util/pygments-lexer 
+<span class="nv">$ </span>sudo python setup.py develop 
 <span class="nv">$ </span><span class="nb">cd</span> ../.. <span class="c"># Back to the root Wren directory.</span>
 </pre></div>
 
 
-<p>Now you can build the docs:</p>
+<p>Now you can build the docs: </p>
 <div class="codehilite"><pre><span class="nv">$ </span>make docs
 </pre></div>
 
 
-<p>This generates the site in <code>build/docs/</code>. You can run any simple static web
-server from there. Python includes one:</p>
-<div class="codehilite"><pre><span class="nv">$ </span><span class="nb">cd </span>build/docs
+<p>This generates the site in <code>build/docs/</code>. You can run any simple static web 
+server from there. Python includes one: </p>
+<div class="codehilite"><pre><span class="nv">$ </span><span class="nb">cd </span>build/docs 
 <span class="nv">$ </span>python -m SimpleHTTPServer
 </pre></div>
 
 
-<p>Running <code>make docs</code> is a drag every time you change a line of Markdown or SASS,
-so there is also a file watching version that will automatically regenerate the
-docs when you edit a file:</p>
+<p>Running <code>make docs</code> is a drag every time you change a line of Markdown or SASS, 
+so there is also a file watching version that will automatically regenerate the 
+docs when you edit a file: </p>
 <div class="codehilite"><pre><span class="nv">$ </span>make watchdocs
 </pre></div>
 
 
 <h2>Hacking on the VM <a href="#hacking-on-the-vm" name="hacking-on-the-vm" class="header-anchor">#</a></h2>
-<p>The basic process is simple:</p>
+<p>The basic process is simple: </p>
 <ol>
 <li>
-<p><strong>Make sure you can build and run the tests locally.</strong> It's good to ensure
-   you're starting from a happy place before you poke at the code. Running the
-   tests is as simple as:</p>
+<p><strong>Make sure you can build and run the tests locally.</strong> It&rsquo;s good to ensure 
+   you&rsquo;re starting from a happy place before you poke at the code. Running the 
+   tests is as simple as: </p>
 <div class="codehilite"><pre><span class="nv">$ </span>make <span class="nb">test</span>
 </pre></div>
 
 
-<p>If there are no failures, you're good to go.</p>
+<p>If there are no failures, you&rsquo;re good to go. </p>
 </li>
 <li>
-<p><strong><a href="https://help.github.com/articles/fork-a-repo/">Fork the repo</a> so you can change it locally.</strong> Please make your
-   changes in separate <a href="https://www.atlassian.com/git/tutorials/comparing-workflows/centralized-workflow">feature branches</a> to make things a little easier on
-   me.</p>
+<p><strong><a href="https://help.github.com/articles/fork-a-repo/">Fork the repo</a> so you can change it locally.</strong> Please make your 
+   changes in separate <a href="https://www.atlassian.com/git/tutorials/comparing-workflows/centralized-workflow">feature branches</a> to make things a little easier on 
+   me. </p>
 </li>
 <li>
-<p><strong>Change the code.</strong> Please follow the style of the surrounding code. That
-   basically means <code>camelCase</code> names, <code>{</code> on the next line, keep within 80
-   columns, and two spaces of indentation. If you see places where the existing
-   code is inconsistent, let me know.</p>
+<p><strong>Change the code.</strong> Please follow the style of the surrounding code. That 
+   basically means <code>camelCase</code> names, <code>{</code> on the next line, keep within 80 
+   columns, and two spaces of indentation. If you see places where the existing 
+   code is inconsistent, let me know. </p>
 </li>
 <li>
-<p><strong>Write some tests for your new functionality.</strong> They live under <code>test/</code>.
-   Take a look at some existing tests to get an idea of how to define
-   expectations.</p>
+<p><strong>Write some tests for your new functionality.</strong> They live under <code>test/</code>. 
+   Take a look at some existing tests to get an idea of how to define 
+   expectations. </p>
 </li>
 <li>
-<p><strong>Make sure the tests all pass, both the old ones and your new ones.</strong></p>
+<p><strong>Make sure the tests all pass, both the old ones and your new ones.</strong> </p>
 </li>
 <li>
-<p><strong>Add your name and email to the <a href="https://github.com/munificent/wren/tree/master/AUTHORS">AUTHORS</a> file if you haven't already.</strong></p>
+<p><strong>Add your name and email to the <a href="https://github.com/munificent/wren/tree/master/AUTHORS">AUTHORS</a> file if you haven&rsquo;t already.</strong> </p>
 </li>
 <li>
-<p><strong>Send a <a href="https://github.com/munificent/wren/pulls">pull request</a>.</strong> Pat yourself on the back for contributing to a
-   fun open source project! I'll take it from here and hopefully we'll get it
-   landed smoothly.</p>
+<p><strong>Send a <a href="https://github.com/munificent/wren/pulls">pull request</a>.</strong> Pat yourself on the back for contributing to a 
+   fun open source project! I&rsquo;ll take it from here and hopefully we&rsquo;ll get it 
+   landed smoothly. </p>
 </li>
 </ol>
-<p>If at any point you have questions, feel free to <a href="https://github.com/munificent/wren/issues">file an issue</a> or ask
-on the <a href="https://groups.google.com/forum/#!forum/wren-lang">mailing list</a>. You can also email me directly (<code>robert</code> at
-<code>stuffwithstuff.com</code>) if you want something less public. <em>Thank you!</em></p>
+<p>If at any point you have questions, feel free to <a href="https://github.com/munificent/wren/issues">file an issue</a> or ask 
+on the <a href="https://groups.google.com/forum/#!forum/wren-lang">mailing list</a>. You can also email me directly (<code>robert</code> at 
+<code>stuffwithstuff.com</code>) if you want something less public. <em>Thank you!</em> </p>
   </main>
 </div>
 <footer>
   <div class="page">
     <div class="main-column">
-    <p>Wren lives <a href="https://github.com/munificent/wren">on GitHub</a> &mdash; Made with &#x2764; by <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.</p>
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
     <div class="main-column">
   </div>
 </footer>

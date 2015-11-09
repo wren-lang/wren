@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Method Calls &ndash; Wren</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="./">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="community.html">Community</a></li>
+    </ul>
+    <section>
+      <h2>language guide</h2>
+      <ul>
+        <li><a href="syntax.html">Syntax</a></li>
+        <li><a href="values.html">Values</a></li>
+        <li><a href="lists.html">Lists</a></li>
+        <li><a href="maps.html">Maps</a></li>
+        <li><a href="method-calls.html">Method Calls</a></li>
+        <li><a href="control-flow.html">Control Flow</a></li>
+        <li><a href="variables.html">Variables</a></li>
+        <li><a href="functions.html">Functions</a></li>
+        <li><a href="classes.html">Classes</a></li>
+        <li><a href="concurrency.html">Concurrency</a></li>
+        <li><a href="error-handling.html">Error Handling</a></li>
+        <li><a href="modularity.html">Modularity</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="modules">Modules</a></li>
+        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="performance.html">Performance</a></li>
+        <li><a href="qa.html">Q &amp; A</a></li>
+      </ul>
+    </section>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+        <td><a href="community.html">Community</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>language guide</h2></td>
+        <td><h2>reference</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="syntax.html">Syntax</a></li>
+            <li><a href="values.html">Values</a></li>
+            <li><a href="lists.html">Lists</a></li>
+            <li><a href="maps.html">Maps</a></li>
+            <li><a href="method-calls.html">Method Calls</a></li>
+            <li><a href="control-flow.html">Control Flow</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="variables.html">Variables</a></li>
+            <li><a href="functions.html">Functions</a></li>
+            <li><a href="classes.html">Classes</a></li>
+            <li><a href="concurrency.html">Concurrency</a></li>
+            <li><a href="error-handling.html">Error Handling</a></li>
+            <li><a href="modularity.html">Modularity</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">Modules</a></li>
+            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="performance.html">Performance</a></li>
+            <li><a href="qa.html">Q &amp; A</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h1>Method Calls</h1>
+    <p>Wren is deeply object oriented, so most code consists of invoking methods on 
+objects, usually something like this: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>You have a <em>receiver</em> expression (here <code>System</code>) followed by a <code>.</code>, then a name 
+(<code>print</code>) and an argument list in parentheses (<code>("hello")</code>). Multiple arguments 
+are separated by commas: </p>
+<div class="codehilite"><pre><span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&quot;item&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The argument list can also be empty: </p>
+<div class="codehilite"><pre><span class="n">list</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+
+
+<p>Semantically, all method calls work like this: </p>
+<ol>
+<li>Evaluate the receiver and arguments from left to right. </li>
+<li>Look up the method on the receiver&rsquo;s <a href="classes.html">class</a>. </li>
+<li>Invoke it, passing in the argument values. </li>
+</ol>
+<h2>Signature <a href="#signature" name="signature" class="header-anchor">#</a></h2>
+<p>Unlike most other dynamically-typed languages, in Wren a class can have multiple 
+methods with the same <em>name</em>, as long as they have different <em>signatures</em>. The 
+signature includes the method&rsquo;s name along with the number of arguments it 
+takes. In technical terms, this means you can <em>overload by arity</em>. </p>
+<p>For example, the <a href="modules/random/random.html">Random</a> class has two methods for getting a random integer. 
+One takes a minimum and maximum value and returns a value in that range. The 
+other only takes a maximum value and uses 0 as the minimum: </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">random</span> <span class="o">=</span> <span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">()</span> 
+<span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> 
+<span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+
+
+<p>In a language like Python or JavaScript, these would both call a single <code>int()</code> 
+method, which has some kind of &ldquo;optional&rdquo; parameter. The body of the method 
+figures out how many arguments were passed and uses control flow to handle the 
+two different behaviors. That means first parameter represents &ldquo;max unless 
+another parameter was passed, in which case it&rsquo;s min&rdquo;. Kind of gross. </p>
+<p>In Wren, these are calls to two entirely separate methods, <code>int(_,_)</code> and 
+<code>int(_)</code>. This makes it easier to define &ldquo;overloads&rdquo; like this since you don&rsquo;t 
+need optional parameters or any kind of control flow to handle the different 
+cases. </p>
+<p>It&rsquo;s also faster to execute. Since we know how many arguments are passed at 
+compile time, we can compile this to directly call the right method and avoid 
+any &ldquo;if I got two arguments do this&hellip;&rdquo; logic. </p>
+<h2>Getters <a href="#getters" name="getters" class="header-anchor">#</a></h2>
+<p>Some methods exist to expose some stored or computed property of an object. 
+These are <em>getters</em> and have no parentheses: </p>
+<div class="codehilite"><pre><span class="s">&quot;string&quot;</span><span class="o">.</span><span class="n">count</span>    <span class="output">6</span>
+<span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">min</span>       <span class="output">1</span>
+<span class="mf">1.23</span><span class="o">.</span><span class="n">sin</span>          <span class="output">0.9424888019317</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span> <span class="output">false</span>
+</pre></div>
+
+
+<p>Sometimes you have a method doesn&rsquo;t need any parameters, but modifies the object 
+or has some other side effect. For those, it&rsquo;s better to use empty parentheses: </p>
+<div class="codehilite"><pre><span class="n">list</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+
+
+<p>Also, when a method supports multiple arities, it&rsquo;s typical to include the <code>()</code> 
+in the zero-argument case to be consistent with the other versions: </p>
+<div class="codehilite"><pre>Fiber.yield() 
+Fiber.yield(&quot;value&quot;)
+</pre></div>
+
+
+<p>A getter is <em>not</em> the same as a method with an empty argument list. The <code>()</code> is 
+part of the signature, so <code>count</code> and <code>count()</code> have different signatures. 
+Unlike Ruby&rsquo;s optional parentheses, Wren wants to make sure you call a getter 
+like a getter and a <code>()</code> method like a <code>()</code> method. These don&rsquo;t work: </p>
+<div class="codehilite"><pre><span class="s">&quot;string&quot;</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> 
+<span class="n">list</span><span class="o">.</span><span class="n">clear</span>
+</pre></div>
+
+
+<h2>Setters <a href="#setters" name="setters" class="header-anchor">#</a></h2>
+<p>A getter lets an object expose a public &ldquo;property&rdquo; that you can <em>read</em>. 
+Likewise, a <em>setter</em> let you write to a property: </p>
+<div class="codehilite"><pre><span class="n">person</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="mi">74</span> <span class="c1">// Grew up!</span>
+</pre></div>
+
+
+<p>Despite the <code>=</code>, this is just another syntax for a method call. From the 
+language&rsquo;s perspective, the above line is just a call to the <code>height=(_)</code> 
+method, passing in <code>74</code>. </p>
+<p>Since the <code>=(_)</code> is in the setter&rsquo;s signature, an object can have both a getter 
+and setter with the same name without any collision. This way, you can have 
+read/write properties. </p>
+<h2>Operators <a href="#operators" name="operators" class="header-anchor">#</a></h2>
+<p>Wren has most of the same operators you know and love with the same precedence 
+and associativity. We have three prefix operators: </p>
+<div class="codehilite"><pre><span class="o">!</span> <span class="o">~</span> <span class="o">-</span>
+</pre></div>
+
+
+<p>They are just method calls on their operand without any other arguments. An 
+expression like <code>!possible</code> means &ldquo;call the <code>!</code> method on <code>possible</code>&rdquo;. </p>
+<p>We also have a slew of infix operators&mdash;they have operands on both sides. 
+They are: </p>
+<div class="codehilite"><pre><span class="o">*</span> <span class="o">/</span> <span class="o">%</span> <span class="o">+</span> <span class="o">-</span> <span class="o">..</span> <span class="o">...</span> <span class="o">&lt;&lt;</span> <span class="o">&gt;&gt;</span> <span class="o">&lt;</span> <span class="o">&lt;=</span> <span class="o">&gt;</span> <span class="o">&gt;=</span> <span class="o">==</span> <span class="o">!=</span> <span class="o">&amp;</span> <span class="o">^</span> <span class="o">|</span> <span class="k">is</span>
+</pre></div>
+
+
+<p>Like prefix operators, they are all funny ways of writing method calls. The left 
+operand is the receiver, and the right operand gets passed to it. So <code>a + b</code> is 
+semantically interpreted as &ldquo;invoke the <code>+(_)</code> method on <code>a</code>, passing it <code>b</code>&rdquo;. </p>
+<p>Note that <code>-</code> is both a prefix and an infix operator. Since they have different 
+signatures (<code>-</code> and <code>-(_)</code>), there&rsquo;s no ambiguity between them. </p>
+<p>Most of these are probably familiar already. The <code>..</code> and <code>...</code> operators are 
+&ldquo;range&rdquo; operators. The number type implements those to create <a href="values.html#ranges">range</a> 
+objects, but they are method calls like other operators. </p>
+<p>The <code>is</code> keyword is a &ldquo;type test&rdquo; operator. The base <a href="modules/core/object.html">Object</a> class implements 
+it to tell if an object is an instance of a given class. You&rsquo;ll rarely need to, 
+but you can override <code>is</code> in your own classes. That can be useful for things 
+like mocks or proxies where you want an object to masquerade as a certain class. </p>
+<h2>Subscripts <a href="#subscripts" name="subscripts" class="header-anchor">#</a></h2>
+<p>Another familiar syntax from math class is <em>subscripting</em> using square brackets 
+(<code>[]</code>). It&rsquo;s handy for working with collection-like objects. For example: </p>
+<div class="codehilite"><pre><span class="n">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1">// Get the first item in a list.</span>
+<span class="n">map</span><span class="p">[</span><span class="s">&quot;key&quot;</span><span class="p">]</span> <span class="c1">// Get the value associated with &quot;key&quot;.</span>
+</pre></div>
+
+
+<p>You know the refrain by now. In Wren, these are method calls. In the above 
+examples, the signature is <code>[_]</code>. Subscript operators may also take multiple 
+arguments, which is useful for things like multi-dimensional arrays: </p>
+<div class="codehilite"><pre><span class="n">matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+</pre></div>
+
+
+<p>These examples are subscript &ldquo;getters&rdquo;, and there are also 
+corresponding <em>subscript setters</em>: </p>
+<div class="codehilite"><pre><span class="n">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;item&quot;</span> 
+<span class="n">map</span><span class="p">[</span><span class="s">&quot;key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;value&quot;</span>
+</pre></div>
+
+
+<p>These are equivalent to method calls whose signature is <code>[_]=(_)</code> and whose 
+arguments are both the subscript (or subscripts) and the value on the right-hand 
+side. </p>
+<p><a class="right" href="control-flow.html">Control Flow &rarr;</a> 
+<a href="maps.html">&larr; Maps</a> </p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>
