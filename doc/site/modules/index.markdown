@@ -16,7 +16,7 @@ built directly into the language itself: [numbers][], [strings][], etc.
 
 The core module is always available and can't be removed.
 
-* [Core](core)
+* [core](core)
 
 ## Optional
 
@@ -31,8 +31,8 @@ possible.
 
 There are a couple of optional modules:
 
-* [Meta](meta)
-* [Random](random)
+* [meta](meta)
+* [random](random)
 
 ## CLI
 
@@ -43,6 +43,6 @@ applications that want to embed Wren.
 
 [libuv]: http://libuv.org
 
-* [IO](io)
-* [Scheduler](scheduler)
-* [Timer](timer)
+* [io](io)
+* [scheduler](scheduler)
+* [timer](timer)

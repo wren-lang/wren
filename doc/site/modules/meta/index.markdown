@@ -1,4 +1,4 @@
-^title Meta Module
+^title Module "meta"
 
 **TODO**
 

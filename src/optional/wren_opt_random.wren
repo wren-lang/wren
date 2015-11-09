@@ -40,10 +40,10 @@ foreign class Random {
   foreign seed_(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16)
 
   foreign float()
-  float(max) { float() * max }
-  float(min, max) { float() * (max - min) + min }
+  float(end) { float() * end }
+  float(start, end) { float() * (end - start) + start }
 
   foreign int()
-  int(max) { (float() * max).floor }
-  int(min, max) { (float() * (max - min)).floor + min }
+  int(end) { (float() * end).floor }
+  int(start, end) { (float() * (end - start)).floor + start }
 }

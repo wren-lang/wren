@@ -1,4 +1,4 @@
-^title Core Module
+^title Module "core"
 
 Because Wren is designed for [embedding in applications][embedding], its core
 module is minimal and is focused on working with objects within Wren. For

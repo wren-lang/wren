@@ -1,4 +1,4 @@
-^title Scheduler Module
+^title Module "scheduler"
 
 **TODO**
 

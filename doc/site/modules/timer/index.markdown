@@ -1,4 +1,4 @@
-^title Timer Module
+^title Module "timer"
 
 **TODO**
 
