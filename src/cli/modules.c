@@ -49,7 +49,7 @@ typedef struct
 typedef struct
 {
   const char* name;
-  
+
   MethodRegistry methods[MAX_METHODS_PER_CLASS];
 } ClassRegistry;
 
@@ -58,7 +58,7 @@ typedef struct
 {
   // The name of the module.
   const char* name;
-  
+
   // Pointer to the string containing the source code of the module. We use a
   // pointer here because the string variable itself is not a constant
   // expression so can't be used in the initializer below.
@@ -71,10 +71,10 @@ typedef struct
 // static data. The nested collection initializer syntax gets pretty noisy, so
 // define a couple of macros to make it easier.
 #define MODULE(name) { #name, &name##ModuleSource, {
-#define END_MODULE {NULL, {}} }, },
+#define END_MODULE {NULL, {}} } },
 
 #define CLASS(name) { #name, {
-#define END_CLASS {false, NULL, NULL} }, },
+#define END_CLASS {false, NULL, NULL} } },
 
 #define METHOD(signature, fn) {false, signature, fn},
 #define STATIC_METHOD(signature, fn) {true, signature, fn},
@@ -108,7 +108,7 @@ static ModuleRegistry modules[] =
       STATIC_METHOD("startTimer_(_,_)", timerStartTimer)
     END_CLASS
   END_MODULE
-  
+
   {NULL, NULL, {}} // Sentinel.
 };
 
@@ -128,7 +128,7 @@ static ModuleRegistry* findModule(const char* name)
   {
     if (strcmp(name, modules[i].name) == 0) return &modules[i];
   }
-  
+
   return NULL;
 }
 
@@ -156,7 +156,7 @@ static WrenForeignMethodFn findMethod(ClassRegistry* clas,
       return method->method;
     }
   }
-  
+
   return NULL;
 }
 
@@ -164,7 +164,7 @@ char* readBuiltInModule(const char* name)
 {
   ModuleRegistry* module = findModule(name);
   if (module == NULL) return NULL;
-  
+
   size_t length = strlen(*module->source);
   char* copy = (char*)malloc(length + 1);
   strncpy(copy, *module->source, length + 1);
@@ -178,7 +178,7 @@ WrenForeignMethodFn bindBuiltInForeignMethod(
   // TODO: Assert instead of return NULL?
   ModuleRegistry* module = findModule(moduleName);
   if (module == NULL) return NULL;
-  
+
   ClassRegistry* clas = findClass(module, className);
   if (clas == NULL) return NULL;
 
@@ -189,15 +189,15 @@ WrenForeignClassMethods bindBuiltInForeignClass(
     WrenVM* vm, const char* moduleName, const char* className)
 {
   WrenForeignClassMethods methods = { NULL, NULL };
-  
+
   ModuleRegistry* module = findModule(moduleName);
   if (module == NULL) return methods;
-  
+
   ClassRegistry* clas = findClass(module, className);
   if (clas == NULL) return methods;
-  
+
   methods.allocate = findMethod(clas, true, "<allocate>");
   methods.finalize = findMethod(clas, true, "<finalize>");
-  
+
   return methods;
 }
