@@ -46,7 +46,7 @@ ifeq ($(MODE),debug)
 	BUILD_DIR := $(BUILD_DIR)/debug
 else
 	WREN += wren
-	C_OPTIONS += -Os
+	C_OPTIONS += -O3
 	BUILD_DIR := $(BUILD_DIR)/release
 endif
 
