@@ -696,4 +696,4 @@ for (i in 0...40) {
 }
 
 System.print(total)
-System.print("elapsed: " + (System.clock - start).toString)
+System.print("elapsed: %(System.clock - start)")

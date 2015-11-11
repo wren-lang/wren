@@ -2,6 +2,7 @@
 System.print("\"")     // expect: "
 System.print("\\")     // expect: \
 System.print("(\n)")   // expect: (
-                   // expect: )
+                       // expect: )
+System.print("\%")     // expect: %
 
 // TODO: Non-printing escapes like \t.

@@ -264,6 +264,17 @@ DEF_PRIMITIVE(list_add)
   RETURN_VAL(args[1]);
 }
 
+// Adds an element to the list and then returns the list itself. This is called
+// by the compiler when compiling list literals instead of using add() to
+// minimize stack churn.
+DEF_PRIMITIVE(list_addCore)
+{
+  wrenValueBufferWrite(vm, &AS_LIST(args[0])->elements, args[1]);
+  
+  // Return the list.
+  RETURN_VAL(args[0]);
+}
+
 DEF_PRIMITIVE(list_clear)
 {
   wrenValueBufferClear(vm, &AS_LIST(args[0])->elements);
@@ -392,6 +403,19 @@ DEF_PRIMITIVE(map_subscriptSetter)
 
   wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
   RETURN_VAL(args[2]);
+}
+
+// Adds an entry to the map and then returns the map itself. This is called by
+// the compiler when compiling map literals instead of using [_]=(_) to
+// minimize stack churn.
+DEF_PRIMITIVE(map_addCore)
+{
+  if (!validateKey(vm, args[1])) return false;
+  
+  wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
+  
+  // Return the map itself.
+  RETURN_VAL(args[0]);
 }
 
 DEF_PRIMITIVE(map_clear)
@@ -1229,6 +1253,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "[_]", list_subscript);
   PRIMITIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
   PRIMITIVE(vm->listClass, "add(_)", list_add);
+  PRIMITIVE(vm->listClass, "addCore_(_)", list_addCore);
   PRIMITIVE(vm->listClass, "clear()", list_clear);
   PRIMITIVE(vm->listClass, "count", list_count);
   PRIMITIVE(vm->listClass, "insert(_,_)", list_insert);
@@ -1240,6 +1265,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);
   PRIMITIVE(vm->mapClass, "[_]", map_subscript);
   PRIMITIVE(vm->mapClass, "[_]=(_)", map_subscriptSetter);
+  PRIMITIVE(vm->mapClass, "addCore_(_,_)", map_addCore);
   PRIMITIVE(vm->mapClass, "clear()", map_clear);
   PRIMITIVE(vm->mapClass, "containsKey(_)", map_containsKey);
   PRIMITIVE(vm->mapClass, "count", map_count);

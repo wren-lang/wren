@@ -8,7 +8,7 @@ class Api {
   }
 
   static one(one) {
-    System.print("one " + one.toString)
+    System.print("one %(one)")
   }
 
   static two(one, two) {
@@ -17,7 +17,7 @@ class Api {
       two = two.bytes.toList
     }
 
-    System.print("two " + one.toString + " " + two.toString)
+    System.print("two %(one) %(two)")
   }
 
   static getValue(value) {

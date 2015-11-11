@@ -61,19 +61,19 @@ class SyntaxExample {
   print(a, b) { System.print(a + b) }
 
   // Operators
-  +(other) { "infix + " + other }
-  -(other) { "infix - " + other }
-  *(other) { "infix * " + other }
-  /(other) { "infix / " + other }
-  %(other) { "infix % " + other }
-  <(other) { "infix < " + other }
-  >(other) { "infix > " + other }
-  <=(other) { "infix <= " + other }
-  >=(other) { "infix >= " + other }
-  ==(other) { "infix == " + other }
-  !=(other) { "infix != " + other }
-  &(other) { "infix & " + other }
-  |(other) { "infix | " + other }
+  +(other) { "infix + %(other)" }
+  -(other) { "infix - %(other)" }
+  *(other) { "infix * %(other)" }
+  /(other) { "infix / %(other)" }
+  %(other) { "infix \% %(other)" }
+  <(other) { "infix < %(other)" }
+  >(other) { "infix > %(other)" }
+  <=(other) { "infix <= %(other)" }
+  >=(other) { "infix >= %(other)" }
+  ==(other) { "infix == %(other)" }
+  !=(other) { "infix != %(other)" }
+  &(other) { "infix & %(other)" }
+  |(other) { "infix | %(other)" }
 
   ! { "prefix !" }
   ~ { "prefix ~" }

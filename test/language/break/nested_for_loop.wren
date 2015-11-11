@@ -1,9 +1,9 @@
 for (i in 0..2) {
-  System.print("outer " + i.toString)
+  System.print("outer %(i)")
   if (i > 1) break
 
   for (j in 0..2) {
-    System.print("inner " + j.toString)
+    System.print("inner %(j)")
     if (j > 1) break
   }
 }

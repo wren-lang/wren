@@ -3,8 +3,8 @@ class Foo {
   bar { "on instance" }
   static bar { "on metaclass" }
 
-  bar(arg) { "on instance " + arg }
-  static bar(arg) { "on metaclass " + arg }
+  bar(arg) { "on instance %(arg)" }
+  static bar(arg) { "on metaclass %(arg)" }
 }
 
 System.print(Foo.new().bar)        // expect: on instance

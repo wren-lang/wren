@@ -1,6 +1,6 @@
 class A {
   construct new(arg) {
-    System.print("new A " + arg)
+    System.print("new A %(arg)")
     _field = arg
   }
 
@@ -10,7 +10,7 @@ class A {
 class B is A {
   construct new(arg1, arg2) {
     super(arg2)
-    System.print("new B " + arg1)
+    System.print("new B %(arg1)")
     _field = arg1
   }
 

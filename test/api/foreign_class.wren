@@ -30,7 +30,7 @@ foreign class Point is PointBase {
   }
 
   construct new(x, y, z) {
-    System.print(x.toString + ", " + y.toString + ", " + z.toString)
+    System.print("%(x), %(y), %(z)")
   }
 
   foreign translate(x, y, z)

@@ -131,6 +131,19 @@ class WhereSequence is Sequence {
 class String is Sequence {
   bytes { StringByteSequence.new(this) }
   codePoints { StringCodePointSequence.new(this) }
+
+  static interpolate_(parts) {
+    var result = ""
+    for (part in parts) {
+      if (part is String) {
+        result = result + part
+      } else {
+        result = result + part.call().toString
+      }
+    }
+
+    return result
+  }
 }
 
 class StringByteSequence is Sequence {
@@ -165,7 +178,7 @@ class List is Sequence {
     return other
   }
 
-  toString { "[" + join(", ") + "]" }
+  toString { "[%(join(", "))]" }
 
   +(other) {
     var result = this[0..-1]
@@ -187,7 +200,7 @@ class Map {
     for (key in keys) {
       if (!first) result = result + ", "
       first = false
-      result = result + key.toString + ": " + this[key].toString
+      result = result + "%(key): %(this[key])"
     }
 
     return result + "}"
