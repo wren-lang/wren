@@ -24,9 +24,6 @@
     <ClCompile Include="..\..\..\src\vm\wren_debug.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\vm\wren_io.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\vm\wren_utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -36,10 +33,13 @@
     <ClCompile Include="..\..\..\src\vm\wren_vm.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\vm\wren_meta.c">
+    <ClCompile Include="..\..\..\src\vm\wren_primitive.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\vm\wren_primitive.c">
+    <ClCompile Include="..\..\..\src\optional\wren_opt_meta.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\optional\wren_opt_random.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -56,22 +56,25 @@
     <ClInclude Include="..\..\..\src\vm\wren_debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\vm\wren_io.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\vm\wren_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\vm\wren_value.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\vm\wren_opcodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\src\vm\wren_vm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\vm\wren_meta.h">
+    <ClInclude Include="..\..\..\src\vm\wren_primitive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\vm\wren_primitive.h">
+    <ClInclude Include="..\..\..\src\optional\wren_opt_meta.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\optional\wren_opt_random.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

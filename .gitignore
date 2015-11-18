@@ -19,6 +19,14 @@ test/benchmark/baseline.txt
 xcuserdata/
 *.xccheckout
 
+# Allow Visual Studio project files.
+!wren/
+!wren_lib/
+
+# Visual Studio intermediate files.
+Debug/
+Release/
+
 # Visual Studio cache files.
 ipch/
 *.aps

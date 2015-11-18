@@ -9,6 +9,10 @@
 
 #include <stdio.h>
 
+#ifdef _WIN32
+  #include <fcntl.h>
+#endif
+
 static const int stdinDescriptor = 0;
 
 // Handle to Stdin.onData_(). Called when libuv provides data on stdin.
@@ -111,7 +115,7 @@ void fileOpen(WrenVM* vm)
   uv_fs_t* request = createRequest(wrenGetArgumentValue(vm, 2));
   
   // TODO: Allow controlling flags and modes.
-  uv_fs_open(getLoop(), request, path, O_RDONLY, S_IRUSR, openCallback);
+  uv_fs_open(getLoop(), request, path, O_RDONLY, 0, openCallback);
 }
 
 // Called by libuv when the stat call for size completes.
@@ -171,7 +175,7 @@ static void fileReadBytesCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
 
-  uv_buf_t buffer = request->bufs[0];
+  uv_buf_t buffer = request->fs.info.bufs[0];
   WrenValue* fiber = freeRequest(request);
 
   // TODO: Having to copy the bytes here is a drag. It would be good if Wren's
