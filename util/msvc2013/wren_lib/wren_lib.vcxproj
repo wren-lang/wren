@@ -87,6 +87,7 @@
     <ClCompile Include="..\..\..\src\optional\wren_opt_random.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\include\wren.h" />
     <ClInclude Include="..\..\..\src\vm\wren_common.h" />
     <ClInclude Include="..\..\..\src\vm\wren_compiler.h" />
     <ClInclude Include="..\..\..\src\vm\wren_core.h" />

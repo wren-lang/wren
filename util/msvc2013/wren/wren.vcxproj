@@ -99,7 +99,6 @@
     <ClInclude Include="..\..\..\src\cli\vm.h" />
     <ClInclude Include="..\..\..\src\module\io.h" />
     <ClInclude Include="..\..\..\src\module\scheduler.h" />
-    <ClInclude Include="..\..\..\src\module\timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\wren_lib\wren_lib.vcxproj">
