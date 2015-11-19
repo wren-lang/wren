@@ -77,7 +77,8 @@ static bool handleRequestError(uv_fs_t* request)
 {
   if (request->result >= 0) return false;
   
-  WrenValue* fiber = (WrenValue*)request->data;
+  FileReqData* reqData = (FileReqData*)request->data;
+  WrenValue* fiber = (WrenValue*)reqData->fiber;
   schedulerResumeError(fiber, uv_strerror((int)request->result));
   uv_fs_req_cleanup(request);
   free(request);
