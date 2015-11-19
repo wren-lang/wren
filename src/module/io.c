@@ -13,6 +13,12 @@
   #include <fcntl.h>
 #endif
 
+typedef struct sFileReqData
+{
+  WrenValue* fiber;
+  uv_buf_t buffer;
+} FileReqData;
+
 static const int stdinDescriptor = 0;
 
 // Handle to Stdin.onData_(). Called when libuv provides data on stdin.
@@ -81,8 +87,13 @@ static bool handleRequestError(uv_fs_t* request)
 // Allocates a new request that resumes [fiber] when it completes.
 uv_fs_t* createRequest(WrenValue* fiber)
 {
-  uv_fs_t* request = (uv_fs_t*)malloc(sizeof(uv_fs_t));
-  request->data = fiber;
+  char* buffer = (char*)malloc(sizeof(uv_fs_t) + sizeof(FileReqData));
+  uv_fs_t* request = (uv_fs_t*)buffer;
+
+  FileReqData* reqData = (FileReqData*)(buffer + sizeof(uv_fs_t));
+  reqData->fiber = fiber;
+
+  request->data = reqData;
   return request;
 }
 
@@ -91,7 +102,8 @@ uv_fs_t* createRequest(WrenValue* fiber)
 // Returns the fiber that should be resumed after [request] completes.
 WrenValue* freeRequest(uv_fs_t* request)
 {
-  WrenValue* fiber = (WrenValue*)request->data;
+  FileReqData* reqData = (FileReqData*)request->data;
+  WrenValue* fiber = reqData->fiber;
   
   uv_fs_req_cleanup(request);
   free(request);
@@ -175,7 +187,9 @@ static void fileReadBytesCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
 
-  uv_buf_t buffer = request->fs.info.bufs[0];
+  FileReqData* reqData = (FileReqData*)request->data;
+  uv_buf_t buffer = reqData->buffer;
+
   WrenValue* fiber = freeRequest(request);
 
   // TODO: Having to copy the bytes here is a drag. It would be good if Wren's
@@ -194,12 +208,14 @@ void fileReadBytes(WrenVM* vm)
   int fd = *(int*)wrenGetArgumentForeign(vm, 0);
   // TODO: Assert fd != -1.
 
-  uv_buf_t buffer;
-  buffer.len = (size_t)wrenGetArgumentDouble(vm, 1);
-  buffer.base = (char*)malloc(buffer.len);
+  FileReqData* reqData = (FileReqData*)request->data;
+  size_t length = (size_t)wrenGetArgumentDouble(vm, 1);
+
+  reqData->buffer.len = length;
+  reqData->buffer.base = (char*)malloc(length);
   
   // TODO: Allow passing in offset.
-  uv_fs_read(getLoop(), request, fd, &buffer, 1, 0, fileReadBytesCallback);
+  uv_fs_read(getLoop(), request, fd, &reqData->buffer, 1, 0, fileReadBytesCallback);
 }
 
 void fileSize(WrenVM* vm)
