@@ -91,6 +91,9 @@ A setter has `=` after the name, followed by a single parenthesized parameter:
       }
     }
 
+By convention, the parameter is usually named `value` but you can call it
+whatever makes your heart flutter.
+
 ### Operators
 
 Prefix operators, like getters, have no parameter list:
@@ -139,29 +142,138 @@ operator and a setter:
       }
     }
 
-## This
+## Method Scope
 
-**TODO: Integrate this into the page better.**
+Up to this point, "[scope][]" has been used to talk exclusively about
+[variables][]. In a procedural language like C, or a functional one like Scheme,
+that's the only kind of scope there is. But object-oriented languages like Wren
+introduce another kind of scope: *object scope*. It contains the methods that
+are available on an object. When you write:
 
-The special `this` keyword works sort of like a variable, but has special
-behavior. It always refers to the instance whose method is currently being
-executed. This lets you invoke methods on "yourself".
+[scope]: variables.html#scope
+[variables]: variables.html
+
+    :::wren
+    unicorn.isFancy
+
+You're saying "look up the method `isFancy` in the scope of the object
+`unicorn`". In this case, the fact that you want to look up a *method* `isFancy`
+and not a *variable* `isFancy` is explicit. That's what `.` does and the
+object to the left of the period is the object you want to look up the method on.
+
+### `this`
+
+Things get more interesting when you're inside the body of a method. When the
+method is called on some object and the body is being executed, you often need
+to access that object itself. You can do that using `this`.
+
+    :::wren
+    class Unicorn {
+      name { "Francis" }
+
+      printName() {
+        System.print(this.name) //> Francis
+      }
+    }
+
+The `this` keyword works sort of like a variable, but has special behavior. It
+always refers to the instance whose method is currently being executed. This
+lets you invoke methods on "yourself".
 
 It's an error to refer to `this` outside of a method. However, it's perfectly
-fine to use it inside a function contained in a method. When you do, `this`
-still refers to the instance whose method is being called.
+fine to use it inside a [function][] contained in a method. When you do, `this`
+still refers to the instance whose *method* is being called.
+
+[function]: functions.html
 
 This is unlike Lua and JavaScript which can "forget" `this` when you create a
 callback inside a method. Wren does what you want here and retains the
-reference to the original object. (In technical terms, a function's closure
-includes `this`.)
+reference to the original object.
+
+(In technical terms, a function's closure includes `this`. Wren can do this
+because it makes a distinction between methods and functions.)
+
+### Implicit `this`
+
+Using `this.` every time you want to call a method on yourself works, but it's
+tedious and verbose, which is why some languages don't require it. You can do a
+"self send" by calling a method (or getter or setter) without any explicit
+receiver:
+
+    :::wren
+    class Unicorn {
+      name { "Francis" }
+
+      printName() {
+        System.print(name) //> Francis
+      }
+    }
+
+Code like this gets tricky when you there is also a variable outside of the
+class with the same name. Consider:
+
+    :::wren
+    var name = "variable"
+
+    class Unicorn {
+      name { "Francis" }
+
+      printName() {
+        System.print(name) // ???
+      }
+    }
+
+Should `printName()` print "variable" or "Francis"? A method body has a foot in
+each of two worlds. It is surrounded by the lexical scope where it's defined in
+the program, but it also has the object scope of the methods on `this`.
+
+Which scope wins? Every language has to decide how to handle this and there
+is a surprising plethora of approaches. Wren's approach to resolving a name
+inside a method works like this:
+
+1.  If there is a local variable inside the method with that name, that wins.
+2.  Else, if the name starts with a lowercase letter, treat it like a method on
+    `this`.
+3.  Otherwise, look for a variable with that name in the surrounding scope.
+
+So, in the above example, we hit case #2 and it prints "Francis". Distinguishing
+self sends from outer variables based on the *case* of the first letter in the
+name probably seems crazy but it works surprisingly well. Method names are
+lowercase in Wren. Class names are capitalized.
+
+Most of the time, when you're in a method and want to access a name from outside
+of the class, it's usually the name of some other class. This rule makes that
+work.
+
+Here's an example that shows all three cases:
+
+    :::wren
+    var shadowed = "surrounding"
+    var lowercase = "surrounding"
+    var Capitalized = "surrounding"
+
+    class Scope {
+      shadowed { "object" }
+      lowercase { "object" }
+      Capitalized { "object" }
+
+      test() {
+        var shadowed = "local"
+
+        System.print(shadowed) //> local
+        System.print(lowercase) //> object
+        System.print(Capitalized) //> surrounding
+      }
+    }
+
+It's a bit of a strange rule, but Ruby works more or less the same way.
 
 ## Constructors
 
-Unicorns can prance around now (as well as a bunch of weird operators that don't
-make sense outside of these examples), but we don't actually *have* any unicorns
-to do it. To create instances of a class, we need a *constructor*. You can
-define one like so:
+We've seen how to define kinds of objects and how to declare methods on them.
+Our unicorns can prance around, but we don't actually *have* any unicorns to do
+it. To create *instances* of a class, we need a *constructor*. You define one
+like so:
 
     :::wren
     class Unicorn {
@@ -282,32 +394,30 @@ not the instance. They can be used in *both* instance and static methods.
 
     :::wren
     class Foo {
-      // Set the static field.
-      static set(a) {
-        __a = a
+      construct new() {}
+
+      static setFromStatic(a) { __a = a }
+      setFromInstance(a) { __a = a }
+
+      static printFromStatic() {
+        System.print(__a)
       }
 
-      setFromInstance(a) {
-        __a = a
+      printFromInstance() {
+        System.print(__a)
       }
-
-      // Can use __a in both static methods...
-      static bar { __a }
-
-      // ...and instance ones.
-      baz { __a }
     }
 
 Just like instance fields, static fields are initially `null`:
 
     :::wren
-    System.print(Foo.bar) //> null
+    Foo.printFromStatic() //> null
 
 They can be used from static methods:
 
     :::wren
-    Foo.set("foo")
-    System.print(Foo.bar) //> foo
+    Foo.setFromStatic("first")
+    Foo.bar.printFromStatic() //> first
 
 And also instance methods. When you do so, there is still only one static field
 shared among all instances of the class:
@@ -316,8 +426,8 @@ shared among all instances of the class:
     var foo1 = Foo.new()
     var foo2 = Foo.new()
 
-    foo1.setFromInstance("updated")
-    System.print(foo2.baz) //> updated
+    foo1.setFromInstance("second")
+    foo2.printFromInstance() //> second
 
 ## Inheritance
 

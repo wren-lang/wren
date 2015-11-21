@@ -176,6 +176,13 @@ h3 {
   font: 20px $body;
   margin: 24px 0 0 0;
   color: $link;
+
+  code {
+    border: none;
+    background: inherit;
+    color: inherit;
+    font-size: 20px;
+  }
 }
 
 a {
