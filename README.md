@@ -8,7 +8,7 @@ System.print("Hello, world!")
 
 class Wren {
   flyTo(city) {
-    System.print("Flying to ", city)
+    System.print("Flying to %(city)")
   }
 }
 

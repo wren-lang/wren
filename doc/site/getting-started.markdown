@@ -56,7 +56,7 @@ it. Here's something to try:
 Or a little more exciting:
 
     :::wren
-    for (i in 1..10) System.print("Counting up " + i.toString)
+    for (i in 1..10) System.print("Counting up %(i)")
 
 You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw
 your computer to the ground and storm off.

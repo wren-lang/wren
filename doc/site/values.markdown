@@ -49,6 +49,7 @@ A handful of escape characters are supported:
     "\0" // The NUL byte: 0.
     "\"" // A double quote character.
     "\\" // A backslash.
+    "\%" // A percent sign.
     "\a" // Alarm beep. (Who uses this?)
     "\b" // Backspace.
     "\f" // Formfeed.
@@ -76,6 +77,24 @@ A `\x` followed by two hex digits specifies a single unencoded byte:
 Strings are instances of class [String][].
 
 [string]: modules/core/string.html
+
+### Interpolation
+
+String literals also allow *interpolation*. If you have a percent sign (`%`)
+followed by a parenthesized expression, the expression is evaluated. The
+resulting object's `toString` method is called and the result is inserted in the
+string:
+
+    :::wren
+    System.print("Math %(3 + 4 * 5) is fun!") //> Math 23 is fun!
+
+Arbitrarily complex expressions are allowed inside the parentheses:
+
+    :::wren
+    System.print("wow %((1..3).map {|n| n * n}.join())") //> wow 149
+
+An interpolated expression can even contain a string literal which in turn has
+its own nested intpolations, but doing that gets unreadable pretty quickly.
 
 ## Ranges
 

@@ -10,7 +10,7 @@ a familiar, modern [syntax][].
 
     class Wren {
       flyTo(city) {
-        System.print("Flying to " + city)
+        System.print("Flying to %(city)")
       }
     }
 
