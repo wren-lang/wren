@@ -2208,12 +2208,18 @@ static void literal(Compiler* compiler, bool allowAssignment)
   emitConstant(compiler, compiler->parser->previous.value);
 }
 
+// A string literal that contains interpolated expressions.
+//
+// Interpolation is syntactic sugar for calling ".join()" on a list. So the
+// string:
+//
+//     "a %(b + c) d"
+//
+// is compiled roughly like:
+//
+//     ["a ", b + c, " d"].join()
 static void stringInterpolation(Compiler* compiler, bool allowAssignment)
 {
-  // TODO: Allow other expressions here so that user-defined classes can control
-  // interpolation processing like "tagged template strings" in ES6.
-  loadCoreVariable(compiler, "String");
-
   // Instantiate a new list.
   loadCoreVariable(compiler, "List");
   callMethod(compiler, 0, "new()", 5);
@@ -2224,15 +2230,9 @@ static void stringInterpolation(Compiler* compiler, bool allowAssignment)
     literal(compiler, false);
     callMethod(compiler, 1, "addCore_(_)", 11);
     
+    // The interpolated expression.
     ignoreNewlines(compiler);
-    
-    // Compile the interpolated expression part to a function.
-    Compiler fnCompiler;
-    initCompiler(&fnCompiler, compiler->parser, compiler, true);
-    expression(&fnCompiler);
-    emit(&fnCompiler, CODE_RETURN);
-    endCompiler(&fnCompiler, "interpolation", 9);
-    
+    expression(compiler);
     callMethod(compiler, 1, "addCore_(_)", 11);
     
     ignoreNewlines(compiler);
@@ -2243,8 +2243,8 @@ static void stringInterpolation(Compiler* compiler, bool allowAssignment)
   literal(compiler, false);
   callMethod(compiler, 1, "addCore_(_)", 11);
   
-  // Call .interpolate() with the list of interpolation parts.
-  callMethod(compiler, 1, "interpolate_(_)", 15);
+  // The list of interpolated parts.
+  callMethod(compiler, 0, "join()", 6);
 }
 
 static void super_(Compiler* compiler, bool allowAssignment)

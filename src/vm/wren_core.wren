@@ -131,19 +131,6 @@ class WhereSequence is Sequence {
 class String is Sequence {
   bytes { StringByteSequence.new(this) }
   codePoints { StringCodePointSequence.new(this) }
-
-  static interpolate_(parts) {
-    var result = ""
-    for (part in parts) {
-      if (part is String) {
-        result = result + part
-      } else {
-        result = result + part.call().toString
-      }
-    }
-
-    return result
-  }
 }
 
 class StringByteSequence is Sequence {
