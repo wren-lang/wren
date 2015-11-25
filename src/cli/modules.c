@@ -70,14 +70,18 @@ typedef struct
 // To locate foreign classes and modules, we build a big directory for them in
 // static data. The nested collection initializer syntax gets pretty noisy, so
 // define a couple of macros to make it easier.
+#define SENTINEL_METHOD { false, NULL, NULL }
+#define SENTINEL_CLASS { NULL, { SENTINEL_METHOD } }
+#define SENTINEL_MODULE {NULL, NULL, { SENTINEL_CLASS } }
+
 #define MODULE(name) { #name, &name##ModuleSource, {
-#define END_MODULE {NULL, {}} } },
+#define END_MODULE SENTINEL_CLASS } },
 
 #define CLASS(name) { #name, {
-#define END_CLASS {false, NULL, NULL} } },
+#define END_CLASS SENTINEL_METHOD } },
 
-#define METHOD(signature, fn) {false, signature, fn},
-#define STATIC_METHOD(signature, fn) {true, signature, fn},
+#define METHOD(signature, fn) { false, signature, fn },
+#define STATIC_METHOD(signature, fn) { true, signature, fn },
 
 // The array of built-in modules.
 static ModuleRegistry modules[] =
@@ -109,9 +113,12 @@ static ModuleRegistry modules[] =
     END_CLASS
   END_MODULE
 
-  {NULL, NULL, {}} // Sentinel.
+  SENTINEL_MODULE
 };
 
+#undef SENTINEL_METHOD
+#undef SENTINEL_CLASS
+#undef SENTINEL_MODULE
 #undef MODULE
 #undef END_MODULE
 #undef CLASS
