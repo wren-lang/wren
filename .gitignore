@@ -23,10 +23,6 @@ xcuserdata/
 !wren/
 !wren_lib/
 
-# Visual Studio intermediate files.
-Debug/
-Release/
-
 # Visual Studio cache files.
 ipch/
 *.aps
