@@ -17,7 +17,7 @@ class Outer {
       }
 
       Inner.new().method
-    }.call()
+    }()
   }
 
   toString { "Outer" }

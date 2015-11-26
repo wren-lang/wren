@@ -10,7 +10,7 @@ var B = Fiber.new {
   System.print(3)
 }
 
-B.call()
+B()
 // expect: 1
 // expect: 2
 // expect: 3

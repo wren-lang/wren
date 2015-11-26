@@ -4,12 +4,12 @@ var b = Fiber.new {
 
 var a = Fiber.new {
   System.print("begin fiber a")
-  b.call()
+  b()
   System.print("end fiber a")
 }
 
 System.print("begin main")
-a.call()
+a()
 System.print("end main")
 
 // expect: begin main

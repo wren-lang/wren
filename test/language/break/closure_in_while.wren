@@ -5,5 +5,5 @@ while (true) {
   break
 }
 
-f.call()
+f()
 // expect: i

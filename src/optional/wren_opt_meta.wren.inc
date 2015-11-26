@@ -8,7 +8,7 @@ static const char* metaModuleSource =
 "    // TODO: Include compile errors.\n"
 "    if (fn == null) Fiber.abort(\"Could not compile source code.\")\n"
 "\n"
-"    Fiber.new(fn).call()\n"
+"    Fiber.new(fn)()\n"
 "  }\n"
 "\n"
 "  foreign static compile_(source)\n"

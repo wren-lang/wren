@@ -4,6 +4,6 @@ var F = Fiber.new {
   System.print(2)            // expect: 2
 }
 
-F.call()
+F()
 // F remembers its original caller so transfers back to main.
 System.print(3) // expect: 3

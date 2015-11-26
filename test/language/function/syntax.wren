@@ -1,16 +1,16 @@
 // Single expression body.
-Fn.new { System.print("ok") }.call() // expect: ok
+Fn.new { System.print("ok") }() // expect: ok
 
 // Curly body.
 Fn.new {
   System.print("ok") // expect: ok
-}.call()
+}()
 
 // Multiple statements.
 Fn.new {
   System.print("1") // expect: 1
   System.print("2") // expect: 2
-}.call()
+}()
 
 // Extra newlines.
 Fn.new {
@@ -22,4 +22,4 @@ Fn.new {
   System.print("2") // expect: 2
 
 
-}.call()
+}()

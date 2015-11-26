@@ -15,5 +15,5 @@ var closure
     if (false) Fn.new { b }
   }
 
-  System.print(closure.call()) // expect: a
+  System.print(closure()) // expect: a
 }

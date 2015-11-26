@@ -2,5 +2,5 @@ var fiber = Fiber.new {
   System.print("call")
 }
 
-fiber.call() // expect: call
-fiber.call() // expect runtime error: Cannot call a finished fiber.
+fiber() // expect: call
+fiber() // expect runtime error: Cannot call a finished fiber.

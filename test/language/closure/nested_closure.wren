@@ -11,11 +11,11 @@ Fn.new {
         System.print(b)
         System.print(c)
       }
-    }.call()
-  }.call()
-}.call()
+    }()
+  }()
+}()
 
-f.call()
+f()
 // expect: a
 // expect: b
 // expect: c

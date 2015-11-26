@@ -3,4 +3,4 @@ var f = Fn.new {
   System.print("bad")
 }
 
-System.print(f.call()) // expect: null
+System.print(f()) // expect: null

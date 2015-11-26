@@ -14,5 +14,5 @@ System.print(Nonlocal) // expect: method
 
 Fn.new {
   Nonlocal = "fn"
-}.call()
+}()
 System.print(Nonlocal) // expect: fn

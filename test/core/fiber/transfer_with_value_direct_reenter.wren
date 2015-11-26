@@ -4,5 +4,5 @@ var F = Fiber.new {
   System.print(2) // expect: 2
 }
 
-F.call()
+F()
 System.print(3) // expect: 3

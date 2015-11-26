@@ -3,5 +3,5 @@ var fiber = Fiber.new {
 }
 
 System.print("before") // expect: before
-fiber.call()       // expect: fiber
+fiber()                // expect: fiber
 System.print("after")  // expect: after

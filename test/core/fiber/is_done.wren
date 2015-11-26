@@ -5,7 +5,7 @@ var fiber = Fiber.new {
 }
 
 System.print(fiber.isDone)  // expect: false
-fiber.call()            // expect: 1
+fiber()                     // expect: 1
 System.print(fiber.isDone)  // expect: false
-fiber.call()            // expect: 2
+fiber()                     // expect: 2
 System.print(fiber.isDone)  // expect: true

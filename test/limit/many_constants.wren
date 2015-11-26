@@ -65537,4 +65537,4 @@ var f = Fn.new {
   System.print(65536)
 }
 
-f.call() // expect: 65536
+f() // expect: 65536

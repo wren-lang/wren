@@ -9,11 +9,11 @@ var b = Fiber.new {
   System.print("b")
   System.print(Fiber.yield())
 
-  a.call()
+  a()
   a.transfer("value")
 }
 
-b.call() // expect: b
+b() // expect: b
 b.transfer()
 // expect: null
 // expect: a

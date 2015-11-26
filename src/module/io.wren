@@ -11,7 +11,7 @@ foreign class File {
 
   static open(path, fn) {
     var file = open(path)
-    var fiber = Fiber.new { fn.call(file) }
+    var fiber = Fiber.new { fn(file) }
 
     // Poor man's finally. Can we make this more elegant?
     var result = fiber.try()

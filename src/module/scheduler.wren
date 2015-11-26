@@ -3,7 +3,7 @@ class Scheduler {
     if (__scheduled == null) __scheduled = []
 
     __scheduled.add(Fiber.new {
-      callable.call()
+      callable()
       runNextScheduled_()
     })
   }

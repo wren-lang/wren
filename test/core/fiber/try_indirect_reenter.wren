@@ -6,7 +6,7 @@ a = Fiber.new {
 }
 
 b = Fiber.new {
-  a.call()
+  a()
 }
 
-b.call()
+b()

@@ -1,9 +1,9 @@
 var A = Fiber.new {
-  B.call(3) // expect runtime error: Fiber has already been called.
+  B(3) // expect runtime error: Fiber has already been called.
 }
 
 var B = Fiber.new {
-  A.call(2)
+  A(2)
 }
 
-B.call(1)
+B(1)

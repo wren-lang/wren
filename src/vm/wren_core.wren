@@ -8,7 +8,7 @@ class Sequence {
   all(f) {
     var result = true
     for (element in this) {
-      result = f.call(element)
+      result = f(element)
       if (!result) return result
     }
     return result
@@ -17,7 +17,7 @@ class Sequence {
   any(f) {
     var result = false
     for (element in this) {
-      result = f.call(element)
+      result = f(element)
       if (result) return result
     }
     return result
@@ -41,14 +41,14 @@ class Sequence {
   count(f) {
     var result = 0
     for (element in this) {
-      if (f.call(element)) result = result + 1
+      if (f(element)) result = result + 1
     }
     return result
   }
 
   each(f) {
     for (element in this) {
-      f.call(element)
+      f(element)
     }
   }
 
@@ -60,7 +60,7 @@ class Sequence {
 
   reduce(acc, f) {
     for (element in this) {
-      acc = f.call(acc, element)
+      acc = f(acc, element)
     }
     return acc
   }
@@ -72,7 +72,7 @@ class Sequence {
     // Seed with the first element.
     var result = iteratorValue(iter)
     while (iter = iterate(iter)) {
-      result = f.call(result, iteratorValue(iter))
+      result = f(result, iteratorValue(iter))
     }
 
     return result

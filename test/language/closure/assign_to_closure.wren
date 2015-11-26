@@ -16,10 +16,10 @@ var g = null
   }
 }
 
-f.call()
+f()
 // expect: local
 // expect: after f
 
-g.call()
+g()
 // expect: after f
 // expect: after g

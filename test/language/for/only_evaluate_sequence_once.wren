@@ -3,7 +3,7 @@ var f = Fn.new {
   return [1, 2, 3]
 }
 
-for (i in f.call()) System.print(i)
+for (i in f()) System.print(i)
 // expect: evaluate sequence
 // expect: 1
 // expect: 2

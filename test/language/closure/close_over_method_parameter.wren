@@ -11,4 +11,4 @@ class Foo {
 }
 
 Foo.new().method("param")
-F.call() // expect: param
+F() // expect: param
