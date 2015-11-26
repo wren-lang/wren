@@ -1899,6 +1899,26 @@ static void grouping(Compiler* compiler, bool allowAssignment)
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
+static void call(Compiler* compiler, bool allowAssignment)
+{
+  // An infix parenthesized call is syntax sugar for invoking the "call" method
+  // on the left-hand side.
+  Signature signature = { "call", 4, SIG_METHOD, 0 };
+  
+  // Allow empty an argument list.
+  if (peek(compiler) != TOKEN_RIGHT_PAREN)
+  {
+    // Parse the argument list.
+    finishArgumentList(compiler, &signature);
+  }
+  
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+  
+  // TODO: Allow block argument?
+  
+  callSignature(compiler, CODE_CALL_0, &signature);
+}
+
 // A list literal.
 static void list(Compiler* compiler, bool allowAssignment)
 {
@@ -2312,7 +2332,7 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   callSignature(compiler, CODE_CALL_0, &signature);
 }
 
-static void call(Compiler* compiler, bool allowAssignment)
+static void dot(Compiler* compiler, bool allowAssignment)
 {
   ignoreNewlines(compiler);
   consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
@@ -2531,14 +2551,14 @@ void constructorSignature(Compiler* compiler, Signature* signature)
 
 GrammarRule rules[] =
 {
-  /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
+  /* TOKEN_LEFT_PAREN    */ { grouping, call, NULL, PREC_CALL, NULL },
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
   /* TOKEN_LEFT_BRACKET  */ { list, subscript, subscriptSignature, PREC_CALL, NULL },
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
   /* TOKEN_LEFT_BRACE    */ PREFIX(map),
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
   /* TOKEN_COLON         */ UNUSED,
-  /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
+  /* TOKEN_DOT           */ INFIX(PREC_CALL, dot),
   /* TOKEN_DOTDOT        */ INFIX_OPERATOR(PREC_RANGE, ".."),
   /* TOKEN_DOTDOTDOT     */ INFIX_OPERATOR(PREC_RANGE, "..."),
   /* TOKEN_COMMA         */ UNUSED,
