@@ -1,15 +1,15 @@
-var A = Fiber.new {
-  System.print("transferred to A")
-  B.transferError("error!")
+var a = Fiber.new {
+  System.print("transferred to a")
+  b.transferError("error!")
 }
 
-var B = Fiber.new {
-  System.print("started B")
-  A.transfer()
+var b = Fiber.new {
+  System.print("started b")
+  a.transfer()
   System.print("should not get here")
 }
 
-B.try()
-// expect: started B
-// expect: transferred to A
-System.print(B.error) // expect: error!
+b.try()
+// expect: started b
+// expect: transferred to a
+System.print(b.error) // expect: error!

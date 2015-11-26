@@ -2197,14 +2197,8 @@ static void name(Compiler* compiler, bool allowAssignment)
                                    token->start, token->length);
   if (module == -1)
   {
-    if (isLocalName(token->start))
-    {
-      error(compiler, "Undefined variable.");
-      return;
-    }
-
-    // If it's a nonlocal name, implicitly define a module-level variable in
-    // the hopes that we get a real definition later.
+    // If it's not a self-send or a closure, implicitly define a module-level
+    // variable in the hopes that we get a real definition later.
     module = wrenDeclareVariable(compiler->parser->vm, compiler->parser->module,
                                  token->start, token->length);
 

@@ -68,8 +68,6 @@ var ORDERED = [
   WEAKEST, WEAK_DEFAULT, NORMAL, STRONG_DEFAULT, PREFERRED, STRONG_REFERRED
 ]
 
-var ThePlanner
-
 class Constraint {
   construct new(strength) {
     _strength = strength
@@ -646,6 +644,8 @@ var change = Fn.new {|v, newValue|
 
   edit.destroyConstraint
 }
+
+var ThePlanner
 
 // This test constructs a two sets of variables related to each
 // other by a simple linear transformation (scale and offset). The

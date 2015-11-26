@@ -1,10 +1,10 @@
-var A = Fiber.new {
-  B.transferError(123)
+var a = Fiber.new {
+  b.transferError(123)
 }
 
-var B = Fiber.new {
-  A.transfer()
+var b = Fiber.new {
+  a.transfer()
 }
 
-B.try()
-System.print(B.error) // expect: 123
+b.try()
+System.print(b.error) // expect: 123

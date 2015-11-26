@@ -71,5 +71,7 @@ then it isn't an assignment. Instead, it's calling a [setter method][].
 
 [setter method]: method-calls.html#setters
 
+**TODO: Implicit definition at top level.**
+
 <a class="right" href="functions.html">Functions &rarr;</a>
 <a href="control-flow.html">&larr; Control Flow</a>

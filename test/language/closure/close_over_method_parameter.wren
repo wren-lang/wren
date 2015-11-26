@@ -1,4 +1,4 @@
-var F = null
+var F
 
 class Foo {
   construct new() {}
