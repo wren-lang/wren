@@ -41,12 +41,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)..\..\src\include;$(SolutionDir)..\..\src\vm;$(SolutionDir)..\..\src\optional</IncludePath>
     <TargetName>wren_static_d</TargetName>
-    <OutDir>$(SolutionDir)..\..\build\vs\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\lib\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\build\lib\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)..\..\src\include;$(SolutionDir)..\..\src\vm;$(SolutionDir)..\..\src\optional</IncludePath>
     <TargetName>wren_static</TargetName>
-    <OutDir>$(SolutionDir)..\..\build\vs\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\lib\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\build\lib\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

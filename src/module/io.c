@@ -8,16 +8,13 @@
 #include "wren.h"
 
 #include <stdio.h>
+#include <fcntl.h>
 
-#ifdef _WIN32
-  #include <fcntl.h>
-#endif
-
-typedef struct sFileReqData
+typedef struct sFileRequestData
 {
   WrenValue* fiber;
   uv_buf_t buffer;
-} FileReqData;
+} FileRequestData;
 
 static const int stdinDescriptor = 0;
 
@@ -77,9 +74,12 @@ static bool handleRequestError(uv_fs_t* request)
 {
   if (request->result >= 0) return false;
   
-  FileReqData* reqData = (FileReqData*)request->data;
-  WrenValue* fiber = (WrenValue*)reqData->fiber;
+  FileRequestData* data = (FileRequestData*)request->data;
+  WrenValue* fiber = (WrenValue*)data->fiber;
+
   schedulerResumeError(fiber, uv_strerror((int)request->result));
+
+  free(data);
   uv_fs_req_cleanup(request);
   free(request);
   return true;
@@ -88,13 +88,12 @@ static bool handleRequestError(uv_fs_t* request)
 // Allocates a new request that resumes [fiber] when it completes.
 uv_fs_t* createRequest(WrenValue* fiber)
 {
-  char* buffer = (char*)malloc(sizeof(uv_fs_t) + sizeof(FileReqData));
-  uv_fs_t* request = (uv_fs_t*)buffer;
+  uv_fs_t* request = (uv_fs_t*)malloc(sizeof(uv_fs_t));
 
-  FileReqData* reqData = (FileReqData*)(buffer + sizeof(uv_fs_t));
-  reqData->fiber = fiber;
+  FileRequestData* data = (FileRequestData*)malloc(sizeof(FileRequestData));
+  data->fiber = fiber;
 
-  request->data = reqData;
+  request->data = data;
   return request;
 }
 
@@ -103,9 +102,10 @@ uv_fs_t* createRequest(WrenValue* fiber)
 // Returns the fiber that should be resumed after [request] completes.
 WrenValue* freeRequest(uv_fs_t* request)
 {
-  FileReqData* reqData = (FileReqData*)request->data;
-  WrenValue* fiber = reqData->fiber;
-  
+  FileRequestData* data = (FileRequestData*)request->data;
+  WrenValue* fiber = data->fiber;
+
+  free(data);
   uv_fs_req_cleanup(request);
   free(request);
 
@@ -188,8 +188,8 @@ static void fileReadBytesCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
 
-  FileReqData* reqData = (FileReqData*)request->data;
-  uv_buf_t buffer = reqData->buffer;
+  FileRequestData* data = (FileRequestData*)request->data;
+  uv_buf_t buffer = data->buffer;
 
   WrenValue* fiber = freeRequest(request);
 
@@ -209,14 +209,14 @@ void fileReadBytes(WrenVM* vm)
   int fd = *(int*)wrenGetArgumentForeign(vm, 0);
   // TODO: Assert fd != -1.
 
-  FileReqData* reqData = (FileReqData*)request->data;
+  FileRequestData* data = (FileRequestData*)request->data;
   size_t length = (size_t)wrenGetArgumentDouble(vm, 1);
 
-  reqData->buffer.len = length;
-  reqData->buffer.base = (char*)malloc(length);
+  data->buffer.len = length;
+  data->buffer.base = (char*)malloc(length);
   
   // TODO: Allow passing in offset.
-  uv_fs_read(getLoop(), request, fd, &reqData->buffer, 1, 0, fileReadBytesCallback);
+  uv_fs_read(getLoop(), request, fd, &data->buffer, 1, 0, fileReadBytesCallback);
 }
 
 void fileSize(WrenVM* vm)
