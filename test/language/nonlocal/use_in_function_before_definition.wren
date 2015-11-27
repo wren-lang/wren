@@ -1,4 +1,4 @@
-var f = Fn.new {
+fn f() {
   System.print(Global)
 }
 

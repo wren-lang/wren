@@ -1,4 +1,4 @@
-var f = Fn.new {
+fn f() {
   for (i in [1, 2, 3]) {
     return Fn.new { System.print(i) }
   }

@@ -1,4 +1,4 @@
-var f = Fn.new {
+fn f() {
   // Hi.
 }
 System.print(f()) // expect: null

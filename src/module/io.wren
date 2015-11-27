@@ -9,9 +9,9 @@ foreign class File {
     return new_(fd)
   }
 
-  static open(path, fn) {
+  static open(path, function) {
     var file = open(path)
-    var fiber = Fiber.new { fn(file) }
+    var fiber = Fiber.new { function(file) }
 
     // Poor man's finally. Can we make this more elegant?
     var result = fiber.try()

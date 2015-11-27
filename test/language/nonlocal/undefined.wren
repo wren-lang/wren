@@ -1,4 +1,4 @@
-var fn = Fn.new {
+var function = Fn.new {
   System.print(Foo)
   System.print(Bar)
 }

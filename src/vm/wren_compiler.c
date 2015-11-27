@@ -82,6 +82,7 @@ typedef enum
   TOKEN_CONSTRUCT,
   TOKEN_ELSE,
   TOKEN_FALSE,
+  TOKEN_FN,
   TOKEN_FOR,
   TOKEN_FOREIGN,
   TOKEN_IF,
@@ -491,6 +492,7 @@ static Keyword keywords[] =
   {"construct", 9, TOKEN_CONSTRUCT},
   {"else",      4, TOKEN_ELSE},
   {"false",     5, TOKEN_FALSE},
+  {"fn",        2, TOKEN_FN},
   {"for",       3, TOKEN_FOR},
   {"foreign",   7, TOKEN_FOREIGN},
   {"if",        2, TOKEN_IF},
@@ -2482,8 +2484,7 @@ void subscriptSignature(Compiler* compiler, Signature* signature)
 // in [signature] to match what was parsed.
 static void parameterList(Compiler* compiler, Signature* signature)
 {
-  // The parameter list is optional.
-  if (!match(compiler, TOKEN_LEFT_PAREN)) return;
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' before parameters.");
   
   signature->type = SIG_METHOD;
   
@@ -2503,7 +2504,10 @@ void namedSignature(Compiler* compiler, Signature* signature)
   if (maybeSetter(compiler, signature)) return;
 
   // Regular named method with an optional parameter list.
-  parameterList(compiler, signature);
+  if (peek(compiler) == TOKEN_LEFT_PAREN)
+  {
+    parameterList(compiler, signature);
+  }
 }
 
 // Compiles a method signature for a constructor.
@@ -2583,6 +2587,7 @@ GrammarRule rules[] =
   /* TOKEN_CONSTRUCT     */ { NULL, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
+  /* TOKEN_FN            */ UNUSED,
   /* TOKEN_FOR           */ UNUSED,
   /* TOKEN_FOREIGN       */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
@@ -3248,6 +3253,31 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   popScope(compiler);
 }
 
+static void functionDefinition(Compiler* compiler)
+{
+  // Create a variable to store the function in.
+  int slot = declareNamedVariable(compiler);
+  Token name = compiler->parser->previous;
+
+  Compiler fnCompiler;
+  initCompiler(&fnCompiler, compiler->parser, compiler, true);
+  
+  // Make a dummy signature to track the arity.
+  Signature signature = { "", 0, SIG_METHOD, 0 };
+  
+  parameterList(&fnCompiler, &signature);
+  
+  fnCompiler.numParams = signature.arity;
+  
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin function body.");
+  finishBody(&fnCompiler, false);
+  
+  // Use the function's declared name.
+  endCompiler(&fnCompiler, name.start, name.length);
+  
+  defineVariable(compiler, slot);
+}
+
 // Compiles an "import" statement.
 static void import(Compiler* compiler)
 {
@@ -3315,6 +3345,10 @@ void definition(Compiler* compiler)
   if (match(compiler, TOKEN_CLASS))
   {
     classDefinition(compiler, false);
+  }
+  else if (match(compiler, TOKEN_FN))
+  {
+    functionDefinition(compiler);
   }
   else if (match(compiler, TOKEN_FOREIGN))
   {

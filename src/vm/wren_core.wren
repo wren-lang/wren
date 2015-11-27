@@ -103,24 +103,24 @@ class Sequence {
 }
 
 class MapSequence is Sequence {
-  construct new(sequence, fn) {
+  construct new(sequence, function) {
     _sequence = sequence
-    _fn = fn
+    _function = function
   }
 
   iterate(iterator) { _sequence.iterate(iterator) }
-  iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
+  iteratorValue(iterator) { _function.call(_sequence.iteratorValue(iterator)) }
 }
 
 class WhereSequence is Sequence {
-  construct new(sequence, fn) {
+  construct new(sequence, function) {
     _sequence = sequence
-    _fn = fn
+    _function = function
   }
 
   iterate(iterator) {
     while (iterator = _sequence.iterate(iterator)) {
-      if (_fn.call(_sequence.iteratorValue(iterator))) break
+      if (_function.call(_sequence.iteratorValue(iterator))) break
     }
     return iterator
   }
