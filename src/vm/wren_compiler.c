@@ -2175,13 +2175,13 @@ static void name(Compiler* compiler, bool allowAssignment)
     return;
   }
 
-  // TODO: The fact that we return above here if the variable is known and parse
-  // an optional argument list below if not means that the grammar is not
-  // context-free. A line of code in a method like "someName(foo)" is a parse
-  // error if "someName" is a defined variable in the surrounding scope and not
-  // if it isn't. Fix this. One option is to have "someName(foo)" always
-  // resolve to a self-call if there is an argument list, but that makes
-  // getters a little confusing.
+  // If a parameter list follows a resolved name, then it will be treated as an
+  // infix call operator on it. So "foo(arg)" gets parsed to "foo.call(arg)" if
+  // foo resolves to a variable and "this.foo(arg)" if we're in a class.
+  //
+  // This makes the *semantics* slightly context-sensitive but keeps the syntax
+  // context free: "foo(arg)" is always *meaningful* regardless of how "foo" is
+  // resolved, it just means one of two things.
 
   // If we're inside a method and the name is lowercase, treat it as a method
   // on this.
