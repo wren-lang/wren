@@ -1,1 +1,1 @@
-System.print(Fn.new {}) // expect: <fn>
+System.print(fn () {}) // expect: <fn>

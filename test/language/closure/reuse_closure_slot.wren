@@ -3,7 +3,7 @@
 
   {
     var a = "a"
-    f = Fn.new { System.print(a) }
+    f = fn () { System.print(a) }
   }
 
   {

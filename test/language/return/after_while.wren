@@ -1,3 +1,3 @@
-System.print(Fn.new {
+System.print(fn () {
   while (true) return "ok"
 }()) // expect: ok

@@ -3,10 +3,10 @@
 // would crash because it walked to the end of the upvalue list (correct), but
 // then didn't handle not finding the variable.
 
-Fn.new {
+fn () {
   var a = "a"
   var b = "b"
-  Fn.new {
+  fn () {
     System.print(b) // expect: b
     System.print(a) // expect: a
   }()

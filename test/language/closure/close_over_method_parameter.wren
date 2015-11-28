@@ -4,7 +4,7 @@ class Foo {
   construct new() {}
 
   method(param) {
-    F = Fn.new {
+    F = fn () {
       System.print(param)
     }
   }

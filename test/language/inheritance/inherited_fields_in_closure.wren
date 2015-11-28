@@ -2,11 +2,11 @@ class Foo {
   construct new() { _field = "Foo field" }
 
   closeOverFooGet() {
-    return Fn.new { Fn.new { _field } }
+    return fn () { fn () { _field } }
   }
 
   closeOverFooSet() {
-    return Fn.new { Fn.new { _field = "new foo value" } }
+    return fn () { fn () { _field = "new foo value" } }
   }
 }
 
@@ -17,11 +17,11 @@ class Bar is Foo {
   }
 
   closeOverBarGet() {
-    return Fn.new { Fn.new { _field } }
+    return fn () { fn () { _field } }
   }
 
   closeOverBarSet() {
-    return Fn.new { Fn.new { _field = "new bar value" } }
+    return fn () { fn () { _field = "new bar value" } }
   }
 }
 

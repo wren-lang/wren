@@ -1,5 +1,5 @@
 var Global = "global"
 
-Fn.new {
+fn () {
   System.print(Global) // expect: global
 }()

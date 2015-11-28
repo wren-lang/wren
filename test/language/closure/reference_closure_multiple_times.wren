@@ -2,7 +2,7 @@ var f = null
 
 {
   var a = "a"
-  f = Fn.new {
+  f = fn () {
     System.print(a)
     System.print(a)
   }

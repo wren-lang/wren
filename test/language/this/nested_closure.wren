@@ -1,6 +1,6 @@
 class Foo {
   construct new() {}
-  getClosure { Fn.new { Fn.new { Fn.new { toString } } } }
+  getClosure { fn () { fn () { fn () { toString } } } }
   toString { "Foo" }
 }
 

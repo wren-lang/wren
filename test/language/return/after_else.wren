@@ -1,3 +1,3 @@
-System.print(Fn.new {
+System.print(fn () {
   if (false) "no" else return "ok"
 }()) // expect: ok

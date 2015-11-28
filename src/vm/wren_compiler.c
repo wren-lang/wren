@@ -1495,7 +1495,8 @@ typedef enum
   PREC_TERM,          // + -
   PREC_FACTOR,        // * / %
   PREC_UNARY,         // unary - ! ~
-  PREC_CALL,          // . () []
+  PREC_APPLY,         // () {} []
+  PREC_CALL,          // .
   PREC_PRIMARY
 } Precedence;
 
@@ -1769,6 +1770,39 @@ static void callMethod(Compiler* compiler, int numArgs, const char* name,
   emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs), symbol);
 }
 
+// Parses the rest of a block argument after the "{".
+static void finishBlockArgument(Compiler* compiler, Signature* signature)
+{
+  // Include the block argument in the arity.
+  signature->type = SIG_METHOD;
+  signature->arity++;
+  
+  Compiler fnCompiler;
+  initCompiler(&fnCompiler, compiler->parser, compiler, true);
+  
+  // Make a dummy signature to track the arity.
+  Signature fnSignature = { "", 0, SIG_METHOD, 0 };
+  
+  // Parse the parameter list, if any.
+  if (match(compiler, TOKEN_PIPE))
+  {
+    finishParameterList(&fnCompiler, &fnSignature);
+    consume(compiler, TOKEN_PIPE, "Expect '|' after function parameters.");
+  }
+  
+  fnCompiler.numParams = fnSignature.arity;
+  
+  finishBody(&fnCompiler, false);
+  
+  // Name the function based on the method its passed to.
+  char blockName[MAX_METHOD_SIGNATURE + 15];
+  int blockLength;
+  signatureToString(signature, blockName, &blockLength);
+  memmove(blockName + blockLength, " block argument", 16);
+  
+  endCompiler(&fnCompiler, blockName, blockLength + 15);
+}
+
 // Compiles an (optional) argument list for a method call with [methodSignature]
 // and then calls it.
 static void methodCall(Compiler* compiler, Code instruction,
@@ -1791,37 +1825,10 @@ static void methodCall(Compiler* compiler, Code instruction,
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
-  // Parse the block argument, if any.
+  // Parse an optional block argument.
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
-    // Include the block argument in the arity.
-    called.type = SIG_METHOD;
-    called.arity++;
-
-    Compiler fnCompiler;
-    initCompiler(&fnCompiler, compiler->parser, compiler, true);
-
-    // Make a dummy signature to track the arity.
-    Signature fnSignature = { "", 0, SIG_METHOD, 0 };
-
-    // Parse the parameter list, if any.
-    if (match(compiler, TOKEN_PIPE))
-    {
-      finishParameterList(&fnCompiler, &fnSignature);
-      consume(compiler, TOKEN_PIPE, "Expect '|' after function parameters.");
-    }
-
-    fnCompiler.numParams = fnSignature.arity;
-
-    finishBody(&fnCompiler, false);
-
-    // Name the function based on the method its passed to.
-    char blockName[MAX_METHOD_SIGNATURE + 15];
-    int blockLength;
-    signatureToString(&called, blockName, &blockLength);
-    memmove(blockName + blockLength, " block argument", 16);
-
-    endCompiler(&fnCompiler, blockName, blockLength + 15);
+    finishBlockArgument(compiler, &called);
   }
 
   // TODO: Allow Grace-style mixfix methods?
@@ -1894,6 +1901,21 @@ static void loadCoreVariable(Compiler* compiler, const char* name)
   emitShortArg(compiler, CODE_LOAD_MODULE_VAR, symbol);
 }
 
+// Parses an optional parenthesized parameter list. Updates `type` and `arity`
+// in [signature] to match what was parsed.
+static void parameterList(Compiler* compiler, Signature* signature)
+{
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' before parameters.");
+  
+  signature->type = SIG_METHOD;
+  
+  // Allow an empty parameter list.
+  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
+  
+  finishParameterList(compiler, signature);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+}
+
 // A parenthesized expression.
 static void grouping(Compiler* compiler, bool allowAssignment)
 {
@@ -1916,7 +1938,11 @@ static void call(Compiler* compiler, bool allowAssignment)
   
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   
-  // TODO: Allow block argument?
+  // Parse an optional block argument.
+  if (match(compiler, TOKEN_LEFT_BRACE))
+  {
+    finishBlockArgument(compiler, &signature);
+  }
   
   callSignature(compiler, CODE_CALL_0, &signature);
 }
@@ -1977,6 +2003,16 @@ static void map(Compiler* compiler, bool allowAssignment)
   consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' after map entries.");
 }
 
+// A block argument call on an expression receiver like `fn { block }`.
+static void blockArgument(Compiler* compiler, bool allowAssignment)
+{
+  // An infix block argument call is syntax sugar for invoking the "call"
+  // method on the left-hand side.
+  Signature signature = { "call", 4, SIG_METHOD, 0 };
+  finishBlockArgument(compiler, &signature);
+  callSignature(compiler, CODE_CALL_0, &signature);
+}
+
 // Unary operators like `-foo`.
 static void unaryOp(Compiler* compiler, bool allowAssignment)
 {
@@ -1995,6 +2031,25 @@ static void boolean(Compiler* compiler, bool allowAssignment)
 {
   emit(compiler,
        compiler->parser->previous.type == TOKEN_FALSE ? CODE_FALSE : CODE_TRUE);
+}
+
+// A function literal.
+static void function(Compiler* compiler, bool allowAssignment)
+{
+  Compiler fnCompiler;
+  initCompiler(&fnCompiler, compiler->parser, compiler, true);
+  
+  // Make a dummy signature to track the arity.
+  Signature signature = { "", 0, SIG_METHOD, 0 };
+  
+  parameterList(&fnCompiler, &signature);
+  
+  fnCompiler.numParams = signature.arity;
+  
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin function body.");
+  finishBody(&fnCompiler, false);
+  
+  endCompiler(&fnCompiler, "fn", 2);
 }
 
 // Walks the compiler chain to find the compiler for the nearest class
@@ -2480,21 +2535,6 @@ void subscriptSignature(Compiler* compiler, Signature* signature)
   maybeSetter(compiler, signature);
 }
 
-// Parses an optional parenthesized parameter list. Updates `type` and `arity`
-// in [signature] to match what was parsed.
-static void parameterList(Compiler* compiler, Signature* signature)
-{
-  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' before parameters.");
-  
-  signature->type = SIG_METHOD;
-  
-  // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
-
-  finishParameterList(compiler, signature);
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
-}
-
 // Compiles a method signature for a named method or setter.
 void namedSignature(Compiler* compiler, Signature* signature)
 {
@@ -2549,11 +2589,11 @@ void constructorSignature(Compiler* compiler, Signature* signature)
 
 GrammarRule rules[] =
 {
-  /* TOKEN_LEFT_PAREN    */ { grouping, call, NULL, PREC_CALL, NULL },
+  /* TOKEN_LEFT_PAREN    */ { grouping, call, NULL, PREC_APPLY, NULL },
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
-  /* TOKEN_LEFT_BRACKET  */ { list, subscript, subscriptSignature, PREC_CALL, NULL },
+  /* TOKEN_LEFT_BRACKET  */ { list, subscript, subscriptSignature, PREC_APPLY, NULL },
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
-  /* TOKEN_LEFT_BRACE    */ PREFIX(map),
+  /* TOKEN_LEFT_BRACE    */ { map, blockArgument, NULL, PREC_APPLY, NULL },
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
   /* TOKEN_COLON         */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, dot),
@@ -2587,7 +2627,7 @@ GrammarRule rules[] =
   /* TOKEN_CONSTRUCT     */ { NULL, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
-  /* TOKEN_FN            */ UNUSED,
+  /* TOKEN_FN            */ PREFIX(function),
   /* TOKEN_FOR           */ UNUSED,
   /* TOKEN_FOREIGN       */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
@@ -2619,6 +2659,18 @@ static GrammarRule* getRule(TokenType type)
   return &rules[type];
 }
 
+// TODO: Doc.
+static void parseInfix(Compiler* compiler, bool allowAssignment,
+                       Precedence precedence)
+{
+  while (precedence <= rules[compiler->parser->current.type].precedence)
+  {
+    nextToken(compiler->parser);
+    GrammarFn infix = rules[compiler->parser->previous.type].infix;
+    infix(compiler, allowAssignment);
+  }
+}
+
 // The main entrypoint for the top-down operator precedence parser.
 void parsePrecedence(Compiler* compiler, bool allowAssignment,
                      Precedence precedence)
@@ -2633,13 +2685,7 @@ void parsePrecedence(Compiler* compiler, bool allowAssignment,
   }
 
   prefix(compiler, allowAssignment);
-
-  while (precedence <= rules[compiler->parser->current.type].precedence)
-  {
-    nextToken(compiler->parser);
-    GrammarFn infix = rules[compiler->parser->previous.type].infix;
-    infix(compiler, allowAssignment);
-  }
+  parseInfix(compiler, allowAssignment, precedence);
 }
 
 // Parses an expression. Unlike statements, expressions leave a resulting value
@@ -3255,6 +3301,20 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
 static void functionDefinition(Compiler* compiler)
 {
+  // If we don't have a name after "fn", then this isn't a function declaration,
+  // it's an anonymous function expression appearing in an expressions
+  // statement. In that case, we need to parse it like an expression to allow
+  // other code to follow it, like:
+  //
+  //     fn (param) { param }("call with argument")
+  if (peek(compiler) != TOKEN_NAME)
+  {
+    function(compiler, true);
+    parseInfix(compiler, true, PREC_LOWEST);
+    emit(compiler, CODE_POP);
+    return;
+  }
+  
   // Create a variable to store the function in.
   int slot = declareNamedVariable(compiler);
   Token name = compiler->parser->previous;

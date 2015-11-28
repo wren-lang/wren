@@ -4,7 +4,7 @@
 
 {
   var a = "a"
-  if (false) Fn.new { a }
+  if (false) fn () { a }
 }
 
 // If we get here, we didn't segfault when a went out of scope.

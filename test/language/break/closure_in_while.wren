@@ -1,7 +1,7 @@
 var f
 while (true) {
   var i = "i"
-  f = Fn.new { System.print(i) }
+  f = fn () { System.print(i) }
   break
 }
 

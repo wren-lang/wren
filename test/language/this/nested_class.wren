@@ -4,7 +4,7 @@ class Outer {
   method {
     System.print(this) // expect: Outer
 
-    Fn.new {
+    fn () {
       System.print(this) // expect: Outer
 
       class Inner {

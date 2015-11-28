@@ -1,6 +1,6 @@
 {
   var local = "local"
-  Fn.new {
+  fn () {
     System.print(local) // expect: local
   }()
 }

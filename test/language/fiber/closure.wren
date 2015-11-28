@@ -12,7 +12,7 @@ var closure
     a = "final"
   }
 
-  closure = Fn.new {
+  closure = fn () {
     System.print(a)
   }
 }

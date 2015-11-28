@@ -1,6 +1,6 @@
 var done = false
 while (!done) {
-  Fn.new {
+  fn () {
     break // expect error
   }
   done = true

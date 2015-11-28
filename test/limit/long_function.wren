@@ -1,4 +1,4 @@
-Fn.new {
+fn () {
   System.print(1) // expect: 1
   System.print(2) // expect: 2
   System.print(3) // expect: 3

@@ -1,7 +1,7 @@
 var f = null
 
-Fn.new {|param|
-  f = Fn.new {
+fn (param) {
+  f = fn () {
     System.print(param)
   }
 }("param")

@@ -1,4 +1,4 @@
-Fn.new {
+fn () {
   var a = "before"
   System.print(a) // expect: before
 

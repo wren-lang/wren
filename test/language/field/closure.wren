@@ -2,11 +2,11 @@ class Foo {
   construct new() { _field = "Foo field" }
 
   closeOverGet() {
-    return Fn.new { _field }
+    return fn () { _field }
   }
 
   closeOverSet() {
-    return Fn.new { _field = "new value" }
+    return fn () { _field = "new value" }
   }
 }
 

@@ -1,6 +1,6 @@
 {
   var foo = "closure"
-  Fn.new {
+  fn () {
     {
       System.print(foo) // expect: closure
       var foo = "shadow"

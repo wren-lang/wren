@@ -1,2 +1,2 @@
-Fn.new { System.print("ok") // expect error
+fn () { System.print("ok") // expect error
 }()
