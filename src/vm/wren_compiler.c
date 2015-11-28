@@ -2659,7 +2659,8 @@ static GrammarRule* getRule(TokenType type)
   return &rules[type];
 }
 
-// TODO: Doc.
+// Completes parsing an expression after the prefix part has been parsed.
+// Parses any trailing infix expressions.
 static void parseInfix(Compiler* compiler, bool allowAssignment,
                        Precedence precedence)
 {
