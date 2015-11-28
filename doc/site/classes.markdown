@@ -328,7 +328,7 @@ constructors, etc.
 
 ## Fields
 
-All state stored in instances is stored in *fields*. Each field has a named
+All state stored in instances is stored in *fields*. Each field has a name
 that starts with an underscore.
 
     :::wren
@@ -503,7 +503,7 @@ This means you can do `super` calls inside a constructor:
 **TODO: Integrate better into page. Should explain this before mentioning
 super above.**
 
-Sometimes you want to invoke a method on yourself, but only methods defined in
+Sometimes you want to invoke a method on yourself, but using methods defined in
 one of your [superclasses](classes.html#inheritance). You typically do this in
 an overridden method when you want to access the original method being
 overridden.

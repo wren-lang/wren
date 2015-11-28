@@ -1,23 +1,27 @@
 # Build outputs.
-bin/
-lib/
-wren
+/bin
+/lib
+/wren
 
 # Intermediate files.
-build/
-deps/
-.sass-cache/
+/build
+/deps
+/.sass-cache
+*.pyc
 
 # I leave a temporary Wren script at the top level so that I can quickly test
 # stuff.
-scratch.wren
+/scratch.wren
 
 # The baseline file is machine-specific, so doesn't get checked in.
-test/benchmark/baseline.txt
+/test/benchmark/baseline.txt
 
 # XCode user-specific stuff.
 xcuserdata/
-*.xccheckout
+
+# Allow Visual Studio project files.
+!wren/
+!wren_lib/
 
 # Visual Studio cache files.
 ipch/

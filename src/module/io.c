@@ -8,6 +8,13 @@
 #include "wren.h"
 
 #include <stdio.h>
+#include <fcntl.h>
+
+typedef struct sFileRequestData
+{
+  WrenValue* fiber;
+  uv_buf_t buffer;
+} FileRequestData;
 
 static const int stdinDescriptor = 0;
 
@@ -67,8 +74,12 @@ static bool handleRequestError(uv_fs_t* request)
 {
   if (request->result >= 0) return false;
   
-  WrenValue* fiber = (WrenValue*)request->data;
+  FileRequestData* data = (FileRequestData*)request->data;
+  WrenValue* fiber = (WrenValue*)data->fiber;
+
   schedulerResumeError(fiber, uv_strerror((int)request->result));
+
+  free(data);
   uv_fs_req_cleanup(request);
   free(request);
   return true;
@@ -78,7 +89,11 @@ static bool handleRequestError(uv_fs_t* request)
 uv_fs_t* createRequest(WrenValue* fiber)
 {
   uv_fs_t* request = (uv_fs_t*)malloc(sizeof(uv_fs_t));
-  request->data = fiber;
+
+  FileRequestData* data = (FileRequestData*)malloc(sizeof(FileRequestData));
+  data->fiber = fiber;
+
+  request->data = data;
   return request;
 }
 
@@ -87,8 +102,10 @@ uv_fs_t* createRequest(WrenValue* fiber)
 // Returns the fiber that should be resumed after [request] completes.
 WrenValue* freeRequest(uv_fs_t* request)
 {
-  WrenValue* fiber = (WrenValue*)request->data;
-  
+  FileRequestData* data = (FileRequestData*)request->data;
+  WrenValue* fiber = data->fiber;
+
+  free(data);
   uv_fs_req_cleanup(request);
   free(request);
 
@@ -111,7 +128,7 @@ void fileOpen(WrenVM* vm)
   uv_fs_t* request = createRequest(wrenGetArgumentValue(vm, 2));
   
   // TODO: Allow controlling flags and modes.
-  uv_fs_open(getLoop(), request, path, O_RDONLY, S_IRUSR, openCallback);
+  uv_fs_open(getLoop(), request, path, O_RDONLY, 0, openCallback);
 }
 
 // Called by libuv when the stat call for size completes.
@@ -171,7 +188,9 @@ static void fileReadBytesCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
 
-  uv_buf_t buffer = request->bufs[0];
+  FileRequestData* data = (FileRequestData*)request->data;
+  uv_buf_t buffer = data->buffer;
+
   WrenValue* fiber = freeRequest(request);
 
   // TODO: Having to copy the bytes here is a drag. It would be good if Wren's
@@ -190,12 +209,14 @@ void fileReadBytes(WrenVM* vm)
   int fd = *(int*)wrenGetArgumentForeign(vm, 0);
   // TODO: Assert fd != -1.
 
-  uv_buf_t buffer;
-  buffer.len = (size_t)wrenGetArgumentDouble(vm, 1);
-  buffer.base = (char*)malloc(buffer.len);
+  FileRequestData* data = (FileRequestData*)request->data;
+  size_t length = (size_t)wrenGetArgumentDouble(vm, 1);
+
+  data->buffer.len = length;
+  data->buffer.base = (char*)malloc(length);
   
   // TODO: Allow passing in offset.
-  uv_fs_read(getLoop(), request, fd, &buffer, 1, 0, fileReadBytesCallback);
+  uv_fs_read(getLoop(), request, fd, &data->buffer, 1, 0, fileReadBytesCallback);
 }
 
 void fileSize(WrenVM* vm)
