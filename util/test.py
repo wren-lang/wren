@@ -356,8 +356,10 @@ def run_api_test(path):
 
 
 def run_example(path):
-  # The guess number requires user input.
+  # Don't run examples that require user input.
+  if "animals" in path: return
   if "guess_number" in path: return
+
   run_script(WREN_APP, path, "example")
 
 
