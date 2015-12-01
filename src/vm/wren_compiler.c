@@ -69,6 +69,7 @@ typedef enum
   TOKEN_BANG,
   TOKEN_TILDE,
   TOKEN_QUESTION,
+  TOKEN_AT,
   TOKEN_EQ,
   TOKEN_LT,
   TOKEN_GT,
@@ -886,6 +887,7 @@ static void nextToken(Parser* parser)
       case '-': makeToken(parser, TOKEN_MINUS); return;
       case '~': makeToken(parser, TOKEN_TILDE); return;
       case '?': makeToken(parser, TOKEN_QUESTION); return;
+      case '@': makeToken(parser, TOKEN_AT); return;
         
       case '|': twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE); return;
       case '&': twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP); return;
@@ -1996,6 +1998,17 @@ static ClassCompiler* getEnclosingClass(Compiler* compiler)
   return compiler == NULL ? NULL : compiler->enclosingClass;
 }
 
+// Returns `true` if the compiler is currently inside a class definition.
+//
+// Otherwise, reports an error and returns `false`.
+static bool ensureInsideClass(Compiler* compiler, const char* syntax)
+{
+  if (getEnclosingClass(compiler) != NULL) return true;
+  
+  error(compiler, "Cannot use '%s' outside of a class definition.", syntax);
+  return false;
+}
+
 static void field(Compiler* compiler, bool allowAssignment)
 {
   // Initialize it with a fake value so we can keep parsing and minimize the
@@ -2280,12 +2293,7 @@ static void super_(Compiler* compiler, bool allowAssignment)
 
 static void this_(Compiler* compiler, bool allowAssignment)
 {
-  if (getEnclosingClass(compiler) == NULL)
-  {
-    error(compiler, "Cannot use 'this' outside of a method.");
-    return;
-  }
-
+  if (!ensureInsideClass(compiler, "this")) return;
   loadThis(compiler);
 }
 
@@ -2364,6 +2372,18 @@ static void conditional(Compiler* compiler, bool allowAssignment)
 
   // Patch the jump over the else.
   patchJump(compiler, elseJump);
+}
+
+// A method call on this like "@method()".
+static void thisCall(Compiler* compiler, bool allowAssignment)
+{
+  if (!ensureInsideClass(compiler, "@")) return;
+  
+  loadThis(compiler);
+  consume(compiler, TOKEN_NAME, "Expect method name after '@'.");
+  namedCall(compiler, allowAssignment, CODE_CALL_0);
+  
+  // TODO: Infix and subscript operators?
 }
 
 void infixOp(Compiler* compiler, bool allowAssignment)
@@ -2557,6 +2577,7 @@ GrammarRule rules[] =
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_TILDE         */ PREFIX_OPERATOR("~"),
   /* TOKEN_QUESTION      */ INFIX(PREC_ASSIGNMENT, conditional),
+  /* TOKEN_AT            */ PREFIX(thisCall),
   /* TOKEN_EQ            */ UNUSED,
   /* TOKEN_LT            */ INFIX_OPERATOR(PREC_COMPARISON, "<"),
   /* TOKEN_GT            */ INFIX_OPERATOR(PREC_COMPARISON, ">"),
