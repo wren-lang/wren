@@ -1,4 +1,4 @@
-var fn = Fn.new {
+def fn() {
   System.print(a)
   System.print(b)
 }

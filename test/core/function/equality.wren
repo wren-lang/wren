@@ -11,6 +11,6 @@ System.print(Fn.new { 123 } != false)     // expect: true
 System.print(Fn.new { 123 } != "fn 123")  // expect: true
 
 // Equal by identity.
-var f = Fn.new { 123 }
+def f() { 123 }
 System.print(f == f) // expect: true
 System.print(f != f) // expect: false

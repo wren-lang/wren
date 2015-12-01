@@ -1,4 +1,4 @@
-var f = Fn.new {
+def f() {
   1
   2
   3

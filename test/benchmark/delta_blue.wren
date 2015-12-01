@@ -602,7 +602,7 @@ var total = 0
 // constraint so it cannot be accomodated. The cost in this case is,
 // of course, very low. Typical situations lie somewhere between these
 // two extremes.
-var chainTest = Fn.new {|n|
+def chainTest(n) {
   ThePlanner = Planner.new()
   var prev = null
   var first = null
@@ -627,7 +627,7 @@ var chainTest = Fn.new {|n|
   }
 }
 
-var change = Fn.new {|v, newValue|
+def change(v, newValue) {
   var edit = EditConstraint.new(v, PREFERRED)
   var plan = ThePlanner.extractPlanFromConstraints([edit])
   for (i in 0...10) {
@@ -642,7 +642,7 @@ var change = Fn.new {|v, newValue|
 // other by a simple linear transformation (scale and offset). The
 // time is measured to change a variable on either side of the
 // mapping and to change the scale and offset factors.
-var projectionTest = Fn.new {|n|
+def projectionTest(n) {
   ThePlanner = Planner.new()
   var scale = Variable.new("scale", 10)
   var offset = Variable.new("offset", 1000)

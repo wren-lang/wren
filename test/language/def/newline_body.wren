@@ -1,6 +1,4 @@
 def f() {
-  return
-  System.print("bad")
+  // Hi.
 }
-
 System.print(f()) // expect: null

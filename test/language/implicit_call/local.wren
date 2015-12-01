@@ -1,11 +1,11 @@
 Fn.new {
-  var fn = Fn.new {|arg| System.print(arg) }
+  def f1(arg) { System.print(arg) }
 
-  fn("string") // expect: string
+  f1("string") // expect: string
 
-  fn = Fn.new {|block| System.print(block()) }
-  fn { "block" } // expect: block
+  def f2(block) { System.print(block()) }
+  f2 { "block" } // expect: block
 
-  fn = Fn.new {|a, b, c| System.print("%(a) %(b) %(c())") }
-  fn(1, 2) { 3 } // expect: 1 2 3
+  def f3(a, b, c) { System.print("%(a) %(b) %(c())") }
+  f3(1, 2) { 3 } // expect: 1 2 3
 }()

@@ -1,4 +1,4 @@
-var f = Fn.new {
+def f() {
   for (i in [1, 2, 3]) {
     return i
   }

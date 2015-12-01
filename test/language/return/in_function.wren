@@ -1,4 +1,4 @@
-var f = Fn.new {
+def f() {
   return "ok"
   System.print("bad")
 }

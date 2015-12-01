@@ -1,7 +1,7 @@
-var f0 = Fn.new { System.print("zero") }
-var f1 = Fn.new {|a| System.print("one %(a)") }
-var f2 = Fn.new {|a, b| System.print("two %(a) %(b)") }
-var f3 = Fn.new {|a, b, c| System.print("three %(a) %(b) %(c)") }
+def f0() { System.print("zero") }
+def f1(a) { System.print("one %(a)") }
+def f2(a, b) { System.print("two %(a) %(b)") }
+def f3(a, b, c) { System.print("three %(a) %(b) %(c)") }
 
 f0("a") // expect: zero
 f0("a", "b") // expect: zero

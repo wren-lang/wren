@@ -9,29 +9,27 @@ import "io" for Stdin
 // animals. Internal nodes are yes/no questions that choose which branch to
 // explore.
 
-class Node {
-  // Reads a "yes" or "no" (or something approximating) those and returns true
-  // if yes was entered.
-  promptYesNo(prompt) {
-    while (true) {
-      var line = promptString(prompt)
+// Reads a "yes" or "no" (or something approximating) those and returns true
+// if yes was entered.
+def promptYesNo(prompt) {
+  while (true) {
+    var line = promptString(prompt)
 
-      if (line.startsWith("y") || line.startsWith("Y")) return true
-      if (line.startsWith("n") || line.startsWith("N")) return false
+    if (line.startsWith("y") || line.startsWith("Y")) return true
+    if (line.startsWith("n") || line.startsWith("N")) return false
 
-      // Quit.
-      if (line.startsWith("q") || line.startsWith("Q")) Fiber.yield()
-    }
-  }
-
-  // Writes a prompt and reads a string of input.
-  promptString(prompt) {
-    System.write("%(prompt) ")
-    return Stdin.readLine()
+    // Quit.
+    if (line.startsWith("q") || line.startsWith("Q")) Fiber.yield()
   }
 }
 
-class Animal is Node {
+// Writes a prompt and reads a string of input.
+def promptString(prompt) {
+  System.write("%(prompt) ")
+  return Stdin.readLine()
+}
+
+class Animal {
   construct new(name) {
     _name = name
   }
@@ -56,7 +54,7 @@ class Animal is Node {
   }
 }
 
-class Question is Node {
+class Question {
   construct new(question, ifYes, ifNo) {
     _question = question
     _ifYes = ifYes

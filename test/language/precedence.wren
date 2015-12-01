@@ -1,5 +1,5 @@
 // () has higher precedence than unary.
-var fn = Fn.new { 2 }
+def fn() { 2 }
 System.print(-fn()) // expect: -2
 
 // * has higher precedence than +.

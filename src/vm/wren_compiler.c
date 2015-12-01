@@ -81,6 +81,7 @@ typedef enum
   TOKEN_BREAK,
   TOKEN_CLASS,
   TOKEN_CONSTRUCT,
+  TOKEN_DEF,
   TOKEN_ELSE,
   TOKEN_FALSE,
   TOKEN_FOR,
@@ -490,6 +491,7 @@ static Keyword keywords[] =
   {"break",     5, TOKEN_BREAK},
   {"class",     5, TOKEN_CLASS},
   {"construct", 9, TOKEN_CONSTRUCT},
+  {"def",       3, TOKEN_DEF},
   {"else",      4, TOKEN_ELSE},
   {"false",     5, TOKEN_FALSE},
   {"for",       3, TOKEN_FOR},
@@ -2575,6 +2577,7 @@ GrammarRule rules[] =
   /* TOKEN_BREAK         */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
   /* TOKEN_CONSTRUCT     */ { NULL, NULL, constructorSignature, PREC_NONE, NULL },
+  /* TOKEN_DEF           */ UNUSED,
   /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
   /* TOKEN_FOR           */ UNUSED,
@@ -3277,6 +3280,32 @@ static void import(Compiler* compiler)
   } while (match(compiler, TOKEN_COMMA));
 }
 
+// Compiles a "def" function definition statement.
+static void functionDefinition(Compiler* compiler)
+{
+  // Create a variable to store the function in.
+  int slot = declareNamedVariable(compiler);
+  Token name = compiler->parser->previous;
+  
+  Compiler fnCompiler;
+  initCompiler(&fnCompiler, compiler->parser, compiler, true);
+  
+  // Make a dummy signature to track the arity.
+  Signature signature = { "", 0, SIG_METHOD, 0 };
+  
+  parameterList(&fnCompiler, &signature);
+  
+  fnCompiler.numParams = signature.arity;
+  
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin function body.");
+  finishBody(&fnCompiler, false);
+  
+  // Use the function's declared name.
+  endCompiler(&fnCompiler, name.start, name.length);
+  
+  defineVariable(compiler, slot);
+}
+
 // Compiles a "var" variable definition statement.
 static void variableDefinition(Compiler* compiler)
 {
@@ -3309,6 +3338,10 @@ void definition(Compiler* compiler)
   if (match(compiler, TOKEN_CLASS))
   {
     classDefinition(compiler, false);
+  }
+  else if (match(compiler, TOKEN_DEF))
+  {
+    functionDefinition(compiler);
   }
   else if (match(compiler, TOKEN_FOREIGN))
   {

@@ -1,4 +1,4 @@
-var f = Fn.new {
+def f() {
   System.print(variable)
 }
 
