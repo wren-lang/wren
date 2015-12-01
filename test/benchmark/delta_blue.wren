@@ -78,8 +78,8 @@ class Constraint {
   strength { _strength }
 
   // Activate this constraint and attempt to satisfy it.
-  addConstraint {
-    addToGraph
+  addConstraint() {
+    addToGraph()
     ThePlanner.incrementalAdd(this)
   }
 
@@ -100,16 +100,16 @@ class Constraint {
     markInputs(mark)
     var out = output
     var overridden = out.determinedBy
-    if (overridden != null) overridden.markUnsatisfied
+    if (overridden != null) overridden.markUnsatisfied()
     out.determinedBy = this
     if (!ThePlanner.addPropagate(this, mark)) System.print("Cycle encountered")
     out.mark = mark
     return overridden
   }
 
-  destroyConstraint {
+  destroyConstraint() {
     if (isSatisfied) ThePlanner.incrementalRemove(this)
-    removeFromGraph
+    removeFromGraph()
   }
 
   // Normal constraints are not input constraints.  An input constraint
@@ -124,11 +124,11 @@ class UnaryConstraint is Constraint {
     super(strength)
     _satisfied = false
     _myOutput = myOutput
-    addConstraint
+    addConstraint()
   }
 
   // Adds this constraint to the constraint graph.
-  addToGraph {
+  addToGraph() {
     _myOutput.addConstraint(this)
     _satisfied = false
   }
@@ -152,20 +152,20 @@ class UnaryConstraint is Constraint {
   // Calculate the walkabout strength, the stay flag, and, if it is
   // 'stay', the value for the current output of this constraint. Assume
   // this constraint is satisfied.
-  recalculate {
+  recalculate() {
     _myOutput.walkStrength = strength
     _myOutput.stay = !isInput
-    if (_myOutput.stay) execute // Stay optimization.
+    if (_myOutput.stay) execute() // Stay optimization.
   }
 
   // Records that this constraint is unsatisfied.
-  markUnsatisfied {
+  markUnsatisfied() {
     _satisfied = false
   }
 
   inputsKnown(mark) { true }
 
-  removeFromGraph {
+  removeFromGraph() {
     if (_myOutput != null) _myOutput.removeConstraint(this)
     _satisfied = false
   }
@@ -180,7 +180,7 @@ class StayConstraint is UnaryConstraint {
     super(variable, strength)
   }
 
-  execute {
+  execute() {
     // Stay constraints do nothing.
   }
 }
@@ -195,7 +195,7 @@ class EditConstraint is UnaryConstraint {
   // Edits indicate that a variable is to be changed by imperative code.
   isInput { true }
 
-  execute {
+  execute() {
     // Edit constraints do nothing.
   }
 }
@@ -213,7 +213,7 @@ class BinaryConstraint is Constraint {
     _v1 = v1
     _v2 = v2
     _direction = NONE
-    addConstraint
+    addConstraint()
   }
 
   direction { _direction }
@@ -258,7 +258,7 @@ class BinaryConstraint is Constraint {
   }
 
   // Add this constraint to the constraint graph.
-  addToGraph {
+  addToGraph() {
     _v1.addConstraint(this)
     _v2.addConstraint(this)
     _direction = NONE
@@ -273,30 +273,24 @@ class BinaryConstraint is Constraint {
   }
 
   // Returns the current input variable
-  input {
-    if (_direction == FORWARD) return _v1
-    return _v2
-  }
+  input { _direction == FORWARD ? _v1 : _v2 }
 
   // Returns the current output variable.
-  output {
-    if (_direction == FORWARD) return _v2
-    return _v1
-  }
+  output { _direction == FORWARD ? _v2 : _v1 }
 
   // Calculate the walkabout strength, the stay flag, and, if it is
   // 'stay', the value for the current output of this
   // constraint. Assume this constraint is satisfied.
-  recalculate {
+  recalculate() {
     var ihn = input
     var out = output
     out.walkStrength = Strength.weakest(strength, ihn.walkStrength)
     out.stay = ihn.stay
-    if (out.stay) execute
+    if (out.stay) execute()
   }
 
   // Record the fact that this constraint is unsatisfied.
-  markUnsatisfied {
+  markUnsatisfied() {
     _direction = NONE
   }
 
@@ -305,7 +299,7 @@ class BinaryConstraint is Constraint {
     return i.mark == mark || i.stay || i.determinedBy == null
   }
 
-  removeFromGraph {
+  removeFromGraph() {
     if (_v1 != null) _v1.removeConstraint(this)
     if (_v2 != null) _v2.removeConstraint(this)
     _direction = NONE
@@ -324,14 +318,14 @@ class ScaleConstraint is BinaryConstraint {
   }
 
   // Adds this constraint to the constraint graph.
-  addToGraph {
-    super.addToGraph
+  addToGraph() {
+    super()
     _scale.addConstraint(this)
     _offset.addConstraint(this)
   }
 
-  removeFromGraph {
-    super.removeFromGraph
+  removeFromGraph() {
+    super()
     if (_scale != null) _scale.removeConstraint(this)
     if (_offset != null) _offset.removeConstraint(this)
   }
@@ -342,7 +336,7 @@ class ScaleConstraint is BinaryConstraint {
   }
 
   // Enforce this constraint. Assume that it is satisfied.
-  execute {
+  execute() {
     if (direction == FORWARD) {
       v2.value = v1.value * _scale.value + _offset.value
     } else {
@@ -354,12 +348,12 @@ class ScaleConstraint is BinaryConstraint {
   // Calculate the walkabout strength, the stay flag, and, if it is
   // 'stay', the value for the current output of this constraint. Assume
   // this constraint is satisfied.
-  recalculate {
+  recalculate() {
     var ihn = input
     var out = output
     out.walkStrength = Strength.weakest(strength, ihn.walkStrength)
     out.stay = ihn.stay && _scale.stay && _offset.stay
-    if (out.stay) execute
+    if (out.stay) execute()
   }
 }
 
@@ -370,7 +364,7 @@ class EqualityConstraint is BinaryConstraint {
   }
 
   // Enforce this constraint. Assume that it is satisfied.
-  execute {
+  execute() {
     output.value = input.value
   }
 }
@@ -429,9 +423,9 @@ class Plan {
 
   size { _list.count }
 
-  execute {
+  execute() {
     for (constraint in _list) {
-      constraint.execute
+      constraint.execute()
     }
   }
 }
@@ -454,7 +448,7 @@ class Planner {
   // the algorithm to avoid getting into an infinite loop even if the
   // constraint graph has an inadvertent cycle.
   incrementalAdd(constraint) {
-    var mark = newMark
+    var mark = newMark()
     var overridden = constraint.satisfy(mark)
     while (overridden != null) {
       overridden = overridden.satisfy(mark)
@@ -472,8 +466,8 @@ class Planner {
   // Assume: [c] is satisfied.
   incrementalRemove(constraint) {
     var out = constraint.output
-    constraint.markUnsatisfied
-    constraint.removeFromGraph
+    constraint.markUnsatisfied()
+    constraint.removeFromGraph()
     var unsatisfied = removePropagateFrom(out)
     var strength = REQUIRED
     while (true) {
@@ -486,10 +480,7 @@ class Planner {
   }
 
   // Select a previously unused mark value.
-  newMark {
-    _currentMark = _currentMark + 1
-    return _currentMark
-  }
+  newMark() { _currentMark = _currentMark + 1 }
 
   // Extract a plan for resatisfaction starting from the given source
   // constraints, usually a set of input constraints. This method
@@ -509,7 +500,7 @@ class Planner {
   // any constraint.
   // Assume: [sources] are all satisfied.
   makePlan(sources) {
-    var mark = newMark
+    var mark = newMark()
     var plan = Plan.new()
     var todo = sources
     while (todo.count > 0) {
@@ -554,7 +545,7 @@ class Planner {
         return false
       }
 
-      d.recalculate
+      d.recalculate()
       addConstraintsConsumingTo(d.output, todo)
     }
 
@@ -579,7 +570,7 @@ class Planner {
       var determining = v.determinedBy
       for (next in v.constraints) {
         if (next != determining && next.isSatisfied) {
-          next.recalculate
+          next.recalculate()
           todo.add(next.output)
         }
       }
@@ -631,7 +622,7 @@ var chainTest = Fn.new {|n|
   var plan = ThePlanner.extractPlanFromConstraints([edit])
   for (i in 0...100) {
     first.value = i
-    plan.execute
+    plan.execute()
     total = total + last.value
   }
 }
@@ -641,10 +632,10 @@ var change = Fn.new {|v, newValue|
   var plan = ThePlanner.extractPlanFromConstraints([edit])
   for (i in 0...10) {
     v.value = newValue
-    plan.execute
+    plan.execute()
   }
 
-  edit.destroyConstraint
+  edit.destroyConstraint()
 }
 
 // This test constructs a two sets of variables related to each
