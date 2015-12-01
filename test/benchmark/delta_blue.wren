@@ -658,22 +658,22 @@ var projectionTest = Fn.new {|n|
     ScaleConstraint.new(src, scale, offset, dst, REQUIRED)
   }
 
-  change.call(src, 17)
+  change(src, 17)
   total = total + dst.value
   if (dst.value != 1170) System.print("Projection 1 failed")
 
-  change.call(dst, 1050)
+  change(dst, 1050)
 
   total = total + src.value
   if (src.value != 5) System.print("Projection 2 failed")
 
-  change.call(scale, 5)
+  change(scale, 5)
   for (i in 0...n - 1) {
     total = total + dests[i].value
     if (dests[i].value != i * 5 + 1000) System.print("Projection 3 failed")
   }
 
-  change.call(offset, 2000)
+  change(offset, 2000)
   for (i in 0...n - 1) {
     total = total + dests[i].value
     if (dests[i].value != i * 5 + 2000) System.print("Projection 4 failed")
@@ -682,8 +682,8 @@ var projectionTest = Fn.new {|n|
 
 var start = System.clock
 for (i in 0...40) {
-  chainTest.call(100)
-  projectionTest.call(100)
+  chainTest(100)
+  projectionTest(100)
 }
 
 System.print(total)

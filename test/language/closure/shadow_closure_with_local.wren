@@ -7,5 +7,5 @@
       System.print(foo) // expect: shadow
     }
     System.print(foo) // expect: closure
-  }.call()
+  }()
 }

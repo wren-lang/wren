@@ -1,14 +1,14 @@
-var F = null
+var f
 
 class Foo {
   construct new() {}
 
   method(param) {
-    F = Fn.new {
+    f = Fn.new {
       System.print(param)
     }
   }
 }
 
 Foo.new().method("param")
-F.call() // expect: param
+f() // expect: param

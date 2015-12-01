@@ -83,4 +83,4 @@ var root = Question.new("Does it live in the water?",
 // Play games until the user quits.
 Fiber.new {
   while (true) root.ask()
-}.call()
+}()

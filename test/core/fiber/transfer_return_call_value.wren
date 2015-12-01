@@ -13,11 +13,11 @@ var fiber = Fiber.new {
 
 fiber.transfer() // expect: fiber 1
 System.print("main 1") // expect: main 1
-fiber.call("call 1") // expect: call 1
+fiber("call 1") // expect: call 1
 
 System.print("main 2") // expect: main 2
 // Transfer back into the fiber so it has a NULL caller.
 fiber.transfer()
 
-fiber.call() // expect: null
+fiber() // expect: null
 System.print("main 3") // expect: main 3

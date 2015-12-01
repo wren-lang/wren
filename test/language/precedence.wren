@@ -1,3 +1,7 @@
+// () has higher precedence than unary.
+var fn = Fn.new { 2 }
+System.print(-fn()) // expect: -2
+
 // * has higher precedence than +.
 System.print(2 + 3 * 4) // expect: 14
 

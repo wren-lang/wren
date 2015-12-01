@@ -7,7 +7,7 @@ while (i < 4) {
   i = i + 1
 }
 
-for (f in list) f.call()
+for (f in list) f()
 // expect: 2
 // expect: 3
 // expect: 4

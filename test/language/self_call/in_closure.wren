@@ -10,4 +10,4 @@ class Foo {
   makeClosure() { Fn.new { @method() } }
 }
 
-Foo.new("value").makeClosure().call() // expect: value
+Foo.new("value").makeClosure()() // expect: value

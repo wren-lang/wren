@@ -3,6 +3,6 @@ var fiber = Fiber.new {
   Fiber.yield("result")
 }
 
-System.print("outer %(fiber.call()) string")
+System.print("outer %(fiber()) string")
 // expect: in fiber
 // expect: outer result string

@@ -13,7 +13,7 @@ static const char* ioModuleSource =
 "\n"
 "  static open(path, fn) {\n"
 "    var file = @open(path)\n"
-"    var fiber = Fiber.new { fn.call(file) }\n"
+"    var fiber = Fiber.new { fn(file) }\n"
 "\n"
 "    // Poor man's finally. Can we make this more elegant?\n"
 "    var result = fiber.try()\n"

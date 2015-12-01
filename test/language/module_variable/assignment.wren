@@ -14,5 +14,5 @@ System.print(variable) // expect: method
 
 Fn.new {
   variable = "fn"
-}.call()
+}()
 System.print(variable) // expect: fn

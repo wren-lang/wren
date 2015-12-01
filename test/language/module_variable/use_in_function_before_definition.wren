@@ -4,4 +4,4 @@ var f = Fn.new {
 
 var variable = "module"
 
-f.call() // expect: module
+f() // expect: module

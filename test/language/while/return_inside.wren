@@ -5,5 +5,5 @@ var f = Fn.new {
   }
 }
 
-System.print(f.call())
+System.print(f())
 // expect: i

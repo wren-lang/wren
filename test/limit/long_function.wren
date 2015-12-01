@@ -1009,5 +1009,5 @@ Fn.new {
   System.print(9) // expect: 9
   System.print(10) // expect: 10
   // 1000
-}.call()
+}()
 

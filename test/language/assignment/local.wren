@@ -7,4 +7,4 @@ Fn.new {
 
   System.print(a = "arg") // expect: arg
   System.print(a) // expect: arg
-}.call()
+}()

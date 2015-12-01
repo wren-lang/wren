@@ -5,19 +5,19 @@ class Null {}
 class Num {}
 
 class Sequence {
-  all(f) {
+  all(fn) {
     var result = true
     for (element in this) {
-      result = f.call(element)
+      result = fn(element)
       if (!result) return result
     }
     return result
   }
 
-  any(f) {
+  any(fn) {
     var result = false
     for (element in this) {
-      result = f.call(element)
+      result = fn(element)
       if (result) return result
     }
     return result
@@ -38,17 +38,17 @@ class Sequence {
     return result
   }
 
-  count(f) {
+  count(fn) {
     var result = 0
     for (element in this) {
-      if (f.call(element)) result = result + 1
+      if (fn(element)) result = result + 1
     }
     return result
   }
 
-  each(f) {
+  each(fn) {
     for (element in this) {
-      f.call(element)
+      fn(element)
     }
   }
 
@@ -58,21 +58,21 @@ class Sequence {
 
   where(predicate) { WhereSequence.new(this, predicate) }
 
-  reduce(accumulator, f) {
+  reduce(accumulator, fn) {
     for (element in this) {
-      accumulator = f.call(accumulator, element)
+      accumulator = fn(accumulator, element)
     }
     return accumulator
   }
 
-  reduce(f) {
+  reduce(fn) {
     var iterator = @iterate(null)
     if (!iterator) Fiber.abort("Can't reduce an empty sequence.")
 
     // Seed with the first element.
     var result = @iteratorValue(iterator)
     while (iterator = @iterate(iterator)) {
-      result = f.call(result, @iteratorValue(iterator))
+      result = fn(result, @iteratorValue(iterator))
     }
 
     return result
@@ -109,7 +109,7 @@ class MapSequence is Sequence {
   }
 
   iterate(iterator) { _sequence.iterate(iterator) }
-  iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
+  iteratorValue(iterator) { _fn(_sequence.iteratorValue(iterator)) }
 }
 
 class WhereSequence is Sequence {
@@ -120,7 +120,7 @@ class WhereSequence is Sequence {
 
   iterate(iterator) {
     while (iterator = _sequence.iterate(iterator)) {
-      if (_fn.call(_sequence.iteratorValue(iterator))) break
+      if (_fn(_sequence.iteratorValue(iterator))) break
     }
     return iterator
   }

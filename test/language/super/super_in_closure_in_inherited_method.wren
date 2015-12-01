@@ -1,6 +1,6 @@
 class A {
   callSuperToString {
-    return Fn.new { super.toString }.call()
+    return Fn.new { super.toString }()
   }
 
   toString { "A.toString" }

@@ -6,7 +6,7 @@ class Meta {
     // TODO: Include compile errors.
     if (fn == null) Fiber.abort("Could not compile source code.")
 
-    Fiber.new(fn).call()
+    Fiber.new(fn)()
   }
 
   foreign static compile_(source)

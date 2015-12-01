@@ -1,16 +1,16 @@
-var A = Fiber.new {
+var a = Fiber.new {
   System.print(2)
-  B.transfer("ignored")
+  b.transfer("ignored")
   System.print("nope")
 }
 
-var B = Fiber.new {
+var b = Fiber.new {
   System.print(1)
-  A.transfer("ignored")
+  a.transfer("ignored")
   System.print(3)
 }
 
-B.call()
+b()
 // expect: 1
 // expect: 2
 // expect: 3

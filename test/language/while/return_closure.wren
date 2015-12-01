@@ -5,6 +5,6 @@ var f = Fn.new {
   }
 }
 
-var g = f.call()
-g.call()
+var g = f()
+g()
 // expect: i

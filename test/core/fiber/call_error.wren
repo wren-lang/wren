@@ -4,4 +4,4 @@ var fiber = Fiber.new {
 }
 
 fiber.try()
-fiber.call() // expect runtime error: Cannot call an aborted fiber.
+fiber() // expect runtime error: Cannot call an aborted fiber.

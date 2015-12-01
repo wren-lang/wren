@@ -6,7 +6,7 @@ var fiber = Fiber.new {
   System.print("called")
 }
 
-fiber.transfer() // expect: transferred
-System.print("main") // expect: main
-fiber.call()     // expect: null
-                 // expect: called
+fiber.transfer()      // expect: transferred
+System.print("main")  // expect: main
+fiber()               // expect: null
+                      // expect: called

@@ -5,7 +5,7 @@ static const char* schedulerModuleSource =
 "    if (__scheduled == null) __scheduled = []\n"
 "\n"
 "    __scheduled.add(Fiber.new {\n"
-"      callable.call()\n"
+"      callable()\n"
 "      @runNextScheduled_()\n"
 "    })\n"
 "  }\n"

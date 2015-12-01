@@ -7,10 +7,10 @@ var start = System.clock
 for (i in 0...100000) {
   fibers.add(Fiber.new {
     sum = sum + i
-    if (i < 99999) fibers[i + 1].call()
+    if (i < 99999) fibers[i + 1]()
   })
 }
 
-fibers[0].call()
+fibers[0]()
 System.print(sum)
 System.print("elapsed: %(System.clock - start)")
