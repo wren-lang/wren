@@ -11,15 +11,15 @@ class SyntaxExample {
     // Top-level name `IO`
     System.print("I am a constructor!")
 
-    // Method calls
-    variables
-    fields()
+    // This calls
+    @variables
+    @fields()
 
     // Block arguments
-    fields { block }
-    fields {|a, b| block }
-    fields(argument) { block }
-    fields(argument) {|a, b| block }
+    @fields { "block" }
+    @fields {|a, b| "block" }
+    @fields("argument") { "block" }
+    @fields("argument") {|a, b| "block" }
 
     // Static method call
     SyntaxExample.fields(1)
@@ -27,8 +27,8 @@ class SyntaxExample {
 
   // Constructor with arguments
   construct constructor(a, b) {
-    print(a, b)
-    field = a
+    @print(a, b)
+    @field = a
   }
 
   // Method without arguments

@@ -11,12 +11,9 @@ class Tree {
     }
   }
 
-  check {
-    if (_left == null) {
-      return _item
-    }
-
-    return _item + _left.check - _right.check
+  check() {
+    if (_left == null) return _item
+    return _item + _left.check() - _right.check()
   }
 }
 
@@ -27,7 +24,7 @@ var stretchDepth = maxDepth + 1
 var start = System.clock
 
 System.print("stretch tree of depth %(stretchDepth) check: " +
-    "%(Tree.new(0, stretchDepth).check)")
+    "%(Tree.new(0, stretchDepth).check())")
 
 var longLivedTree = Tree.new(0, maxDepth)
 
@@ -41,7 +38,7 @@ var depth = minDepth
 while (depth < stretchDepth) {
   var check = 0
   for (i in 1..iterations) {
-    check = check + Tree.new(i, depth).check + Tree.new(-i, depth).check
+    check = check + Tree.new(i, depth).check() + Tree.new(-i, depth).check()
   }
 
   System.print("%(iterations * 2) trees of depth %(depth) check: %(check)")
@@ -50,5 +47,5 @@ while (depth < stretchDepth) {
 }
 
 System.print(
-    "long lived tree of depth %(maxDepth) check: %(longLivedTree.check)")
+    "long lived tree of depth %(maxDepth) check: %(longLivedTree.check())")
 System.print("elapsed: %(System.clock - start)")

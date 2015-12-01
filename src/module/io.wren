@@ -4,13 +4,13 @@ foreign class File {
   static open(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
 
-    open_(path, Fiber.current)
+    @open_(path, Fiber.current)
     var fd = Scheduler.runNextScheduled_()
-    return new_(fd)
+    return @new_(fd)
   }
 
   static open(path, fn) {
-    var file = open(path)
+    var file = @open(path)
     var fiber = Fiber.new { fn.call(file) }
 
     // Poor man's finally. Can we make this more elegant?
@@ -29,33 +29,33 @@ foreign class File {
   static size(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
 
-    sizePath_(path, Fiber.current)
+    @sizePath_(path, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
   construct new_(fd) {}
 
   close() {
-    if (close_(Fiber.current)) return
+    if (@close_(Fiber.current)) return
     Scheduler.runNextScheduled_()
   }
 
-  isOpen { descriptor != -1 }
+  isOpen { @descriptor != -1 }
 
   size {
-    if (!isOpen) Fiber.abort("File is not open.")
+    if (!@isOpen) Fiber.abort("File is not open.")
 
-    size_(Fiber.current)
+    @size_(Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
   readBytes(count) {
-    if (!isOpen) Fiber.abort("File is not open.")
+    if (!@isOpen) Fiber.abort("File is not open.")
     if (!(count is Num)) Fiber.abort("Count must be an integer.")
     if (!count.isInteger) Fiber.abort("Count must be an integer.")
     if (count < 0) Fiber.abort("Count cannot be negative.")
 
-    readBytes_(count, Fiber.current)
+    @readBytes_(count, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
@@ -75,19 +75,19 @@ class Stdin {
     }
 
     // TODO: Error if other fiber is already waiting.
-    readStart_()
+    @readStart_()
 
     __waitingFiber = Fiber.current
     var line = Scheduler.runNextScheduled_()
 
-    readStop_()
+    @readStop_()
     return line
   }
 
   static onData_(data) {
     if (data == null) {
       __isClosed = true
-      readStop_()
+      @readStop_()
 
       if (__line != null) {
         var line = __line

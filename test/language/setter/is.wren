@@ -3,4 +3,4 @@ class Foo {
 }
 
 var foo = Foo.new()
-a is foo.bar = "value" // expect error
+foo is foo.bar = "value" // expect error

@@ -7,7 +7,7 @@ static const char* timerModuleSource =
 "    if (!(milliseconds is Num)) Fiber.abort(\"Milliseconds must be a number.\")\n"
 "    if (milliseconds < 0) Fiber.abort(\"Milliseconds cannot be negative.\")\n"
 "\n"
-"    startTimer_(milliseconds, Fiber.current)\n"
+"    @startTimer_(milliseconds, Fiber.current)\n"
 "    Scheduler.runNextScheduled_()\n"
 "  }\n"
 "\n"

@@ -4,7 +4,7 @@ class Scheduler {
 
     __scheduled.add(Fiber.new {
       callable.call()
-      runNextScheduled_()
+      @runNextScheduled_()
     })
   }
 

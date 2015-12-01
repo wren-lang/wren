@@ -79,7 +79,7 @@ class Constraint {
 
   // Activate this constraint and attempt to satisfy it.
   addConstraint() {
-    addToGraph()
+    @addToGraph()
     ThePlanner.incrementalAdd(this)
   }
 
@@ -89,16 +89,16 @@ class Constraint {
   // there is one, or nil, if there isn't.
   // Assume: I am not already satisfied.
   satisfy(mark) {
-    chooseMethod(mark)
-    if (!isSatisfied) {
+    @chooseMethod(mark)
+    if (!@isSatisfied) {
       if (_strength == REQUIRED) {
         System.print("Could not satisfy a required constraint!")
       }
       return null
     }
 
-    markInputs(mark)
-    var out = output
+    @markInputs(mark)
+    var out = @output
     var overridden = out.determinedBy
     if (overridden != null) overridden.markUnsatisfied()
     out.determinedBy = this
@@ -108,8 +108,8 @@ class Constraint {
   }
 
   destroyConstraint() {
-    if (isSatisfied) ThePlanner.incrementalRemove(this)
-    removeFromGraph()
+    if (@isSatisfied) ThePlanner.incrementalRemove(this)
+    @removeFromGraph()
   }
 
   // Normal constraints are not input constraints.  An input constraint
@@ -124,7 +124,7 @@ class UnaryConstraint is Constraint {
     super(strength)
     _satisfied = false
     _myOutput = myOutput
-    addConstraint()
+    @addConstraint()
   }
 
   // Adds this constraint to the constraint graph.
@@ -136,7 +136,7 @@ class UnaryConstraint is Constraint {
   // Decides if this constraint can be satisfied and records that decision.
   chooseMethod(mark) {
     _satisfied = (_myOutput.mark != mark) &&
-        Strength.stronger(strength, _myOutput.walkStrength)
+        Strength.stronger(@strength, _myOutput.walkStrength)
   }
 
   // Returns true if this constraint is satisfied in the current solution.
@@ -153,9 +153,9 @@ class UnaryConstraint is Constraint {
   // 'stay', the value for the current output of this constraint. Assume
   // this constraint is satisfied.
   recalculate() {
-    _myOutput.walkStrength = strength
-    _myOutput.stay = !isInput
-    if (_myOutput.stay) execute() // Stay optimization.
+    _myOutput.walkStrength = @strength
+    _myOutput.stay = !@isInput
+    if (_myOutput.stay) @execute() // Stay optimization.
   }
 
   // Records that this constraint is unsatisfied.
@@ -213,7 +213,7 @@ class BinaryConstraint is Constraint {
     _v1 = v1
     _v2 = v2
     _direction = NONE
-    addConstraint()
+    @addConstraint()
   }
 
   direction { _direction }
@@ -226,7 +226,7 @@ class BinaryConstraint is Constraint {
   chooseMethod(mark) {
     if (_v1.mark == mark) {
       if (_v2.mark != mark &&
-          Strength.stronger(strength, _v2.walkStrength)) {
+          Strength.stronger(@strength, _v2.walkStrength)) {
         _direction = FORWARD
       } else {
         _direction = NONE
@@ -235,7 +235,7 @@ class BinaryConstraint is Constraint {
 
     if (_v2.mark == mark) {
       if (_v1.mark != mark &&
-          Strength.stronger(strength, _v1.walkStrength)) {
+          Strength.stronger(@strength, _v1.walkStrength)) {
         _direction = BACKWARD
       } else {
         _direction = NONE
@@ -243,13 +243,13 @@ class BinaryConstraint is Constraint {
     }
 
     if (Strength.weaker(_v1.walkStrength, _v2.walkStrength)) {
-      if (Strength.stronger(strength, _v1.walkStrength)) {
+      if (Strength.stronger(@strength, _v1.walkStrength)) {
         _direction = BACKWARD
       } else {
         _direction = NONE
       }
     } else {
-      if (Strength.stronger(strength, _v2.walkStrength)) {
+      if (Strength.stronger(@strength, _v2.walkStrength)) {
         _direction = FORWARD
       } else {
         _direction = BACKWARD
@@ -269,7 +269,7 @@ class BinaryConstraint is Constraint {
 
   // Mark the input variable with the given mark.
   markInputs(mark) {
-    input.mark = mark
+    @input.mark = mark
   }
 
   // Returns the current input variable
@@ -282,11 +282,11 @@ class BinaryConstraint is Constraint {
   // 'stay', the value for the current output of this
   // constraint. Assume this constraint is satisfied.
   recalculate() {
-    var ihn = input
-    var out = output
-    out.walkStrength = Strength.weakest(strength, ihn.walkStrength)
+    var ihn = @input
+    var out = @output
+    out.walkStrength = Strength.weakest(@strength, ihn.walkStrength)
     out.stay = ihn.stay
-    if (out.stay) execute()
+    if (out.stay) @execute()
   }
 
   // Record the fact that this constraint is unsatisfied.
@@ -295,7 +295,7 @@ class BinaryConstraint is Constraint {
   }
 
   inputsKnown(mark) {
-    var i = input
+    var i = @input
     return i.mark == mark || i.stay || i.determinedBy == null
   }
 
@@ -337,11 +337,11 @@ class ScaleConstraint is BinaryConstraint {
 
   // Enforce this constraint. Assume that it is satisfied.
   execute() {
-    if (direction == FORWARD) {
-      v2.value = v1.value * _scale.value + _offset.value
+    if (@direction == FORWARD) {
+      @v2.value = @v1.value * _scale.value + _offset.value
     } else {
       // TODO: Is this the same semantics as ~/?
-      v1.value = ((v2.value - _offset.value) / _scale.value).floor
+      @v1.value = ((@v2.value - _offset.value) / _scale.value).floor
     }
   }
 
@@ -349,11 +349,11 @@ class ScaleConstraint is BinaryConstraint {
   // 'stay', the value for the current output of this constraint. Assume
   // this constraint is satisfied.
   recalculate() {
-    var ihn = input
-    var out = output
-    out.walkStrength = Strength.weakest(strength, ihn.walkStrength)
+    var ihn = @input
+    var out = @output
+    out.walkStrength = Strength.weakest(@strength, ihn.walkStrength)
     out.stay = ihn.stay && _scale.stay && _offset.stay
-    if (out.stay) execute()
+    if (out.stay) @execute()
   }
 }
 
@@ -365,7 +365,7 @@ class EqualityConstraint is BinaryConstraint {
 
   // Enforce this constraint. Assume that it is satisfied.
   execute() {
-    output.value = input.value
+    @output.value = @input.value
   }
 }
 
@@ -448,7 +448,7 @@ class Planner {
   // the algorithm to avoid getting into an infinite loop even if the
   // constraint graph has an inadvertent cycle.
   incrementalAdd(constraint) {
-    var mark = newMark()
+    var mark = @newMark()
     var overridden = constraint.satisfy(mark)
     while (overridden != null) {
       overridden = overridden.satisfy(mark)
@@ -468,11 +468,11 @@ class Planner {
     var out = constraint.output
     constraint.markUnsatisfied()
     constraint.removeFromGraph()
-    var unsatisfied = removePropagateFrom(out)
+    var unsatisfied = @removePropagateFrom(out)
     var strength = REQUIRED
     while (true) {
       for (u in unsatisfied) {
-        if (u.strength == strength) incrementalAdd(u)
+        if (u.strength == strength) @incrementalAdd(u)
       }
       strength = strength.nextWeaker
       if (strength == WEAKEST) break
@@ -500,7 +500,7 @@ class Planner {
   // any constraint.
   // Assume: [sources] are all satisfied.
   makePlan(sources) {
-    var mark = newMark()
+    var mark = @newMark()
     var plan = Plan.new()
     var todo = sources
     while (todo.count > 0) {
@@ -508,7 +508,7 @@ class Planner {
       if (constraint.output.mark != mark && constraint.inputsKnown(mark)) {
         plan.addConstraint(constraint)
         constraint.output.mark = mark
-        addConstraintsConsumingTo(constraint.output, todo)
+        @addConstraintsConsumingTo(constraint.output, todo)
       }
     }
     return plan
@@ -522,7 +522,7 @@ class Planner {
       // if not in plan already and eligible for inclusion.
       if (constraint.isInput && constraint.isSatisfied) sources.add(constraint)
     }
-    return makePlan(sources)
+    return @makePlan(sources)
   }
 
   // Recompute the walkabout strengths and stay flags of all variables
@@ -541,12 +541,12 @@ class Planner {
     while (todo.count > 0) {
       var d = todo.removeAt(-1)
       if (d.output.mark == mark) {
-        incrementalRemove(constraint)
+        @incrementalRemove(constraint)
         return false
       }
 
       d.recalculate()
-      addConstraintsConsumingTo(d.output, todo)
+      @addConstraintsConsumingTo(d.output, todo)
     }
 
     return true

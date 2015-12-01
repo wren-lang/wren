@@ -6,17 +6,17 @@
 
     foo { "method" }
 
-    method {
+    test() {
       System.print(foo)
     }
 
     static foo { "class method" }
 
-    static classMethod {
+    static test() {
       System.print(foo)
     }
   }
 
-  Foo.new().method // expect: method
-  Foo.classMethod  // expect: class method
+  Foo.new().test() // expect: variable
+  Foo.test()       // expect: variable
 }

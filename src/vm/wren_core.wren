@@ -52,40 +52,40 @@ class Sequence {
     }
   }
 
-  isEmpty { iterate(null) ? false : true }
+  isEmpty { @iterate(null) ? false : true }
 
   map(transformation) { MapSequence.new(this, transformation) }
 
   where(predicate) { WhereSequence.new(this, predicate) }
 
-  reduce(acc, f) {
+  reduce(accumulator, f) {
     for (element in this) {
-      acc = f.call(acc, element)
+      accumulator = f.call(accumulator, element)
     }
-    return acc
+    return accumulator
   }
 
   reduce(f) {
-    var iter = iterate(null)
-    if (!iter) Fiber.abort("Can't reduce an empty sequence.")
+    var iterator = @iterate(null)
+    if (!iterator) Fiber.abort("Can't reduce an empty sequence.")
 
     // Seed with the first element.
-    var result = iteratorValue(iter)
-    while (iter = iterate(iter)) {
-      result = f.call(result, iteratorValue(iter))
+    var result = @iteratorValue(iterator)
+    while (iterator = @iterate(iterator)) {
+      result = f.call(result, @iteratorValue(iterator))
     }
 
     return result
   }
 
-  join() { join("") }
+  join() { @join("") }
 
-  join(sep) {
+  join(separator) {
     var first = true
     var result = ""
 
     for (element in this) {
-      if (!first) result = result + sep
+      if (!first) result = result + separator
       first = false
       result = result + element.toString
     }
@@ -160,12 +160,12 @@ class StringCodePointSequence is Sequence {
 class List is Sequence {
   addAll(other) {
     for (element in other) {
-      add(element)
+      @add(element)
     }
     return other
   }
 
-  toString { "[%(join(", "))]" }
+  toString { "[%(@join(", "))]" }
 
   +(other) {
     var result = this[0..-1]
@@ -184,7 +184,7 @@ class Map {
     var first = true
     var result = "{"
 
-    for (key in keys) {
+    for (key in @keys) {
       if (!first) result = result + ", "
       first = false
       result = result + "%(key): %(this[key])"
@@ -216,35 +216,35 @@ class Range is Sequence {}
 
 class System {
   static print() {
-    writeString_("\n")
+    @writeString_("\n")
   }
 
-  static print(obj) {
-    writeObject_(obj)
-    writeString_("\n")
-    return obj
+  static print(object) {
+    @writeObject_(object)
+    @writeString_("\n")
+    return object
   }
 
   static printAll(sequence) {
-    for (object in sequence) writeObject_(object)
-    writeString_("\n")
+    for (object in sequence) @writeObject_(object)
+    @writeString_("\n")
   }
 
-  static write(obj) {
-    writeObject_(obj)
-    return obj
+  static write(object) {
+    @writeObject_(object)
+    return object
   }
 
   static writeAll(sequence) {
-    for (object in sequence) writeObject_(object)
+    for (object in sequence) @writeObject_(object)
   }
 
-  static writeObject_(obj) {
-    var string = obj.toString
+  static writeObject_(object) {
+    var string = object.toString
     if (string is String) {
-      writeString_(string)
+      @writeString_(string)
     } else {
-      writeString_("[invalid toString]")
+      @writeString_("[invalid toString]")
     }
   }
 }

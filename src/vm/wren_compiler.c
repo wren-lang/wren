@@ -1294,25 +1294,18 @@ static int addUpvalue(Compiler* compiler, bool isLocal, int index)
   return compiler->numUpvalues++;
 }
 
-// Attempts to look up [name] in the functions enclosing the one being compiled
-// by [compiler]. If found, it adds an upvalue for it to this compiler's list
-// of upvalues (unless it's already in there) and returns its index. If not
-// found, returns -1.
+// Attempts to look up [name] in the local scopes enclosing the current one.
+// If found, it adds an upvalue for it to this compiler's list of upvalues
+// (unless it's already in there) and returns its index. If not found, returns
+// -1.
 //
 // If the name is found outside of the immediately enclosing function, this
 // will flatten the closure and add upvalues to all of the intermediate
 // functions so that it gets walked down to this one.
-//
-// If it reaches a method boundary, this stops and returns -1 since methods do
-// not close over local variables.
 static int findUpvalue(Compiler* compiler, const char* name, int length)
 {
   // If we are at the top level, we didn't find it.
   if (compiler->parent == NULL) return -1;
-  
-  // If we hit the method boundary (and the name isn't a static field), then
-  // stop looking for it. We'll instead treat it as a self send.
-  if (name[0] != '_' && compiler->parent->enclosingClass != NULL) return -1;
   
   // See if it's a local variable in the immediately enclosing function.
   int local = resolveLocal(compiler->parent, name, length);
@@ -1342,42 +1335,48 @@ static int findUpvalue(Compiler* compiler, const char* name, int length)
   return -1;
 }
 
-// Look up [name] in the current scope to see what name it is bound to. Returns
-// the index of the name either in local scope, or the enclosing function's
-// upvalue list. Does not search the module scope. Returns -1 if not found.
+// Look up [name] in the current stack of lexical scopes to see what variable
+// it refers to. Returns the index of the name either the current local scope,
+// the enclosing function's upvalue, or in module scope.
 //
-// Sets [loadInstruction] to the instruction needed to load the variable. Will
-// be [CODE_LOAD_LOCAL] or [CODE_LOAD_UPVALUE].
-static int resolveNonmodule(Compiler* compiler, const char* name, int length,
-                            Code* loadInstruction)
-{
-  // Look it up in the local scopes. Look in reverse order so that the most
-  // nested variable is found first and shadows outer ones.
-  *loadInstruction = CODE_LOAD_LOCAL;
-  int local = resolveLocal(compiler, name, length);
-  if (local != -1) return local;
-
-  // If we got here, it's not a local, so lets see if we are closing over an
-  // outer local.
-  *loadInstruction = CODE_LOAD_UPVALUE;
-  return findUpvalue(compiler, name, length);
-}
-
-// Look up [name] in the current scope to see what name it is bound to. Returns
-// the index of the name either in module scope, local scope, or the enclosing
-// function's upvalue list. Returns -1 if not found.
+// If not found, implicitly declares a new module-level variable with the name,
+// assuming it's a forward reference to a variable that will be explicitly
+// defined later.
 //
 // Sets [loadInstruction] to the instruction needed to load the variable. Will
 // be one of [CODE_LOAD_LOCAL], [CODE_LOAD_UPVALUE], or [CODE_LOAD_MODULE_VAR].
 static int resolveName(Compiler* compiler, const char* name, int length,
                        Code* loadInstruction)
 {
-  int nonmodule = resolveNonmodule(compiler, name, length, loadInstruction);
-  if (nonmodule != -1) return nonmodule;
-
+  // Look it up in the local scopes. Look in reverse order so that the most
+  // nested variable is found first and shadows outer ones.
+  *loadInstruction = CODE_LOAD_LOCAL;
+  int local = resolveLocal(compiler, name, length);
+  if (local != -1) return local;
+  
+  // If we got here, it's not a local, so lets see if we are closing over an
+  // outer local.
+  *loadInstruction = CODE_LOAD_UPVALUE;
+  int upvalue = findUpvalue(compiler, name, length);
+  if (upvalue != -1) return upvalue;
+  
+  // If all else fails, look at the module level.
   *loadInstruction = CODE_LOAD_MODULE_VAR;
-  return wrenSymbolTableFind(&compiler->parser->module->variableNames,
-                             name, length);
+  int module = wrenSymbolTableFind(&compiler->parser->module->variableNames,
+                                   name, length);
+  
+  // If it wasn't found, implicitly define a module-level variable.
+  if (module == -1 && (length != 4 || memcmp(name, "this", 4) != 0))
+  {
+    // If it's a nonlocal name, implicitly define a module-level variable in
+    // the hopes that we get a real definition later.
+    module = wrenDeclareVariable(compiler->parser->vm, compiler->parser->module,
+                                 name, length);
+    
+    if (module == -2) error(compiler, "Too many module variables defined.");
+  }
+  
+  return module;
 }
 
 static void loadLocal(Compiler* compiler, int slot)
@@ -1874,7 +1873,7 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
 static void loadThis(Compiler* compiler)
 {
   Code loadInstruction;
-  int index = resolveNonmodule(compiler, "this", 4, &loadInstruction);
+  int index = resolveName(compiler, "this", 4, &loadInstruction);
   if (loadInstruction == CODE_LOAD_LOCAL)
   {
     loadLocal(compiler, index);
@@ -2146,68 +2145,15 @@ static void staticField(Compiler* compiler, bool allowAssignment)
   variable(compiler, allowAssignment, index, loadInstruction);
 }
 
-// Returns `true` if [name] is a local variable name (starts with a lowercase
-// letter).
-static bool isLocalName(const char* name)
-{
-  return name[0] >= 'a' && name[0] <= 'z';
-}
-
-// Compiles a variable name or method call with an implicit receiver.
+// Compiles a reference to a lexically scoped variable name.
 static void name(Compiler* compiler, bool allowAssignment)
 {
-  // Look for the name in the scope chain up to the nearest enclosing method.
   Token* token = &compiler->parser->previous;
-
   Code loadInstruction;
-  int index = resolveNonmodule(compiler, token->start, token->length,
-                               &loadInstruction);
-  if (index != -1)
-  {
-    variable(compiler, allowAssignment, index, loadInstruction);
-    return;
-  }
+  int index = resolveName(compiler, token->start, token->length,
+                          &loadInstruction);
 
-  // TODO: The fact that we return above here if the variable is known and parse
-  // an optional argument list below if not means that the grammar is not
-  // context-free. A line of code in a method like "someName(foo)" is a parse
-  // error if "someName" is a defined variable in the surrounding scope and not
-  // if it isn't. Fix this. One option is to have "someName(foo)" always
-  // resolve to a self-call if there is an argument list, but that makes
-  // getters a little confusing.
-
-  // If we're inside a method and the name is lowercase, treat it as a method
-  // on this.
-  if (isLocalName(token->start) && getEnclosingClass(compiler) != NULL)
-  {
-    loadThis(compiler);
-    namedCall(compiler, allowAssignment, CODE_CALL_0);
-    return;
-  }
-
-  // Otherwise, look for a module-level variable with the name.
-  int module = wrenSymbolTableFind(&compiler->parser->module->variableNames,
-                                   token->start, token->length);
-  if (module == -1)
-  {
-    if (isLocalName(token->start))
-    {
-      error(compiler, "Undefined variable.");
-      return;
-    }
-
-    // If it's a nonlocal name, implicitly define a module-level variable in
-    // the hopes that we get a real definition later.
-    module = wrenDeclareVariable(compiler->parser->vm, compiler->parser->module,
-                                 token->start, token->length);
-
-    if (module == -2)
-    {
-      error(compiler, "Too many module variables defined.");
-    }
-  }
-
-  variable(compiler, allowAssignment, module, CODE_LOAD_MODULE_VAR);
+  variable(compiler, allowAssignment, index, loadInstruction);
 }
 
 static void null(Compiler* compiler, bool allowAssignment)

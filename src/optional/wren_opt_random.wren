@@ -1,11 +1,11 @@
 foreign class Random {
   construct new() {
-    seed_()
+    @seed_()
   }
 
   construct new(seed) {
     if (seed is Num) {
-      seed_(seed)
+      @seed_(seed)
     } else if (seed is Sequence) {
       if (seed.isEmpty) Fiber.abort("Sequence cannot be empty.")
 
@@ -25,7 +25,7 @@ foreign class Random {
         i = i + 1
       }
 
-      seed_(
+      @seed_(
           seeds[0], seeds[1], seeds[2], seeds[3],
           seeds[4], seeds[5], seeds[6], seeds[7],
           seeds[8], seeds[9], seeds[10], seeds[11],
@@ -40,10 +40,10 @@ foreign class Random {
   foreign seed_(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16)
 
   foreign float()
-  float(end) { float() * end }
-  float(start, end) { float() * (end - start) + start }
+  float(end) { @float() * end }
+  float(start, end) { @float() * (end - start) + start }
 
   foreign int()
-  int(end) { (float() * end).floor }
-  int(start, end) { (float() * (end - start)).floor + start }
+  int(end) { (@float() * end).floor }
+  int(start, end) { (@float() * (end - start)).floor + start }
 }
