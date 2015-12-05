@@ -90,6 +90,7 @@ BENCHMARK("string_equals", r"""3000000""")
 
 LANGUAGES = [
   ("wren",           [os.path.join(WREN_BIN, 'wren')], ".wren"),
+  ("dart",           ["fletch", "run"],                ".dart"),
   ("lua",            ["lua"],                          ".lua"),
   ("luajit (-joff)", ["luajit", "-joff"],              ".lua"),
   ("python",         ["python"],                       ".py"),

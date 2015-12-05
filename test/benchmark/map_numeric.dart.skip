@@ -1,0 +1,24 @@
+// Skipping this for now because it is >10x slower than the other languages (!)
+// and makes the benchmark running annoyingly slow.
+main() {
+  Stopwatch watch = new Stopwatch();
+  watch.start();
+
+  var map = {};
+
+  for (var i = 1; i <= 1000000; i++) {
+    map[i] = i;
+  }
+
+  var sum = 0;
+  for (var i = 1; i <= 1000000; i++) {
+    sum += map[i];
+  }
+  print(sum);
+
+  for (var i = 1; i <= 1000000; i++) {
+    map.remove(i);
+  }
+
+  print("elapsed: ${watch.elapsedMilliseconds / 1000}");
+}
