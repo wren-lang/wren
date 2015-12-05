@@ -782,7 +782,7 @@ static void readString(Parser* parser)
       if (parser->numParens < MAX_INTERPOLATION_NESTING)
       {
         // TODO: Allow format string.
-        if (nextChar(parser) != '(') lexError(parser, "Expect '(' after '%'.");
+        if (nextChar(parser) != '(') lexError(parser, "Expect '(' after '%%'.");
         
         parser->parens[parser->numParens] = 1;
         parser->numParens++;
