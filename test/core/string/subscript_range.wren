@@ -33,6 +33,10 @@ System.print(string[3...-6]) // expect: dcba
 System.print(""[0...0] == "") // expect: true
 System.print(""[0..-1] == "") // expect: true
 
+// An empty range at the end is allowed on a string.
+System.print("abc"[3...3] == "") // expect: true
+System.print("abc"[3..-1] == "") // expect: true
+
 // Indexes by byte, not code point.
 //
 // Bytes:           11111

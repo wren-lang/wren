@@ -33,3 +33,7 @@ System.print(list[3...-6]) // expect: [d, c, b, a]
 // An empty range at zero is allowed on an empty list.
 System.print([][0...0]) // expect: []
 System.print([][0..-1]) // expect: []
+
+// An empty range at the end is allowed on a list.
+System.print([1, 2, 3][3...3]) // expect: []
+System.print([1, 2, 3][3..-1]) // expect: []
