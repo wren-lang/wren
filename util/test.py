@@ -173,15 +173,20 @@ class Test:
           self.runtime_error_message)
       return
 
-    # Make sure we got the right error.
-    if error_lines[0] != self.runtime_error_message:
+    # Skip any compile errors. This can happen if there is a compile error in
+    # a module loaded by the module being tested.
+    line = 0
+    while ERROR_PATTERN.search(error_lines[line]):
+      line += 1
+
+    if error_lines[line] != self.runtime_error_message:
       self.fail('Expected runtime error "{0}" and got:',
           self.runtime_error_message)
-      self.fail(error_lines[0])
+      self.fail(error_lines[line])
 
     # Make sure the stack trace has the right line. Skip over any lines that
     # come from builtin libraries.
-    stack_lines = error_lines[1:]
+    stack_lines = error_lines[line + 1:]
     for stack_line in stack_lines:
       match = STACK_TRACE_PATTERN.search(stack_line)
       if match: break

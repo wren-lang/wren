@@ -506,12 +506,17 @@ static Value importModule(WrenVM* vm, Value name)
   char* source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
   if (source == NULL)
   {
-    // Couldn't load the module.
-    vm->fiber->error = wrenStringFormat(vm, "Could not find module '@'.", name);
+    vm->fiber->error = wrenStringFormat(vm, "Could not load module '@'.", name);
     return NULL_VAL;
   }
 
   ObjFiber* moduleFiber = loadModule(vm, name, source);
+  if (moduleFiber == NULL)
+  {
+    vm->fiber->error = wrenStringFormat(vm,
+                                        "Could not compile module '@'.", name);
+    return NULL_VAL;
+  }
 
   // Return the fiber that executes the module.
   return OBJ_VAL(moduleFiber);
