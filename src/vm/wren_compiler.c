@@ -3237,6 +3237,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 // Compiles an "import" statement.
 static void import(Compiler* compiler)
 {
+  ignoreNewlines(compiler);
   consume(compiler, TOKEN_STRING, "Expect a string after 'import'.");
   int moduleConstant = addConstant(compiler, compiler->parser->previous.value);
 
@@ -3252,6 +3253,7 @@ static void import(Compiler* compiler)
   // Compile the comma-separated list of variables to import.
   do
   {
+    ignoreNewlines(compiler);
     int slot = declareNamedVariable(compiler);
 
     // Define a string constant for the variable name.
