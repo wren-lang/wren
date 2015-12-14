@@ -349,7 +349,9 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 
 void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 {
-  printf("%s: %s\n", fn->module->name->value, fn->debug->name);
+  printf("%s: %s\n",
+         fn->module->name == NULL ? "<core>" : fn->module->name->value,
+         fn->debug->name);
 
   int i = 0;
   int lastLine = -1;

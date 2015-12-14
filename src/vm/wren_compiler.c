@@ -322,6 +322,13 @@ struct sCompiler
   // here means top-level code is being compiled and there is no block scope
   // in effect at all. Any variables declared will be module-level.
   int scopeDepth;
+  
+  // The current number of slots (locals and temporaries) in use.
+  int numSlots;
+  
+  // The maximum number of slots (locals and temporaries) in use at one time in
+  // the function.
+  int maxSlots;
 
   // The current innermost loop being compiled, or NULL if not in a loop.
   Loop* loop;
@@ -334,6 +341,14 @@ struct sCompiler
 
   // The growable buffer of source line mappings.
   IntBuffer debugSourceLines;
+};
+
+// The stack effect of each opcode. The index in the array is the opcode, and
+// the value is the stack effect of that instruction.
+static const int stackEffects[] = {
+  #define OPCODE(_, effect) effect,
+  #include "wren_opcodes.h"
+  #undef OPCODE
 };
 
 // Outputs a compile or syntax error. This also marks the compilation as having
@@ -469,6 +484,9 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
     // The initial scope for function or method is a local scope.
     compiler->scopeDepth = 0;
   }
+  
+  compiler->numSlots = compiler->numLocals;
+  compiler->maxSlots = compiler->numLocals;
 
   wrenByteBufferInit(&compiler->bytecode);
   wrenIntBufferInit(&compiler->debugSourceLines);
@@ -1063,38 +1081,51 @@ static void consumeLine(Compiler* compiler, const char* errorMessage)
 
 // Variables and scopes --------------------------------------------------------
 
-// Emits one bytecode instruction or single-byte argument. Returns its index.
-static int emit(Compiler* compiler, int byte)
+// Emits one single-byte argument. Returns its index.
+static int emitByte(Compiler* compiler, int byte)
 {
   wrenByteBufferWrite(compiler->parser->vm, &compiler->bytecode, (uint8_t)byte);
-
+  
   // Assume the instruction is associated with the most recently consumed token.
   wrenIntBufferWrite(compiler->parser->vm, &compiler->debugSourceLines,
-      compiler->parser->previous.line);
-
+                     compiler->parser->previous.line);
+  
   return compiler->bytecode.count - 1;
+}
+
+// Emits one bytecode instruction.
+static void emitOp(Compiler* compiler, Code instruction)
+{
+  emitByte(compiler, instruction);
+  
+  // Keep track of the stack's high water mark.
+  compiler->numSlots += stackEffects[instruction];
+  if (compiler->numSlots > compiler->maxSlots)
+  {
+    compiler->maxSlots = compiler->numSlots;
+  }
 }
 
 // Emits one 16-bit argument, which will be written big endian.
 static void emitShort(Compiler* compiler, int arg)
 {
-  emit(compiler, (arg >> 8) & 0xff);
-  emit(compiler, arg & 0xff);
+  emitByte(compiler, (arg >> 8) & 0xff);
+  emitByte(compiler, arg & 0xff);
 }
 
 // Emits one bytecode instruction followed by a 8-bit argument. Returns the
 // index of the argument in the bytecode.
 static int emitByteArg(Compiler* compiler, Code instruction, int arg)
 {
-  emit(compiler, instruction);
-  return emit(compiler, arg);
+  emitOp(compiler, instruction);
+  return emitByte(compiler, arg);
 }
 
 // Emits one bytecode instruction followed by a 16-bit argument, which will be
 // written big endian.
 static void emitShortArg(Compiler* compiler, Code instruction, int arg)
 {
-  emit(compiler, instruction);
+  emitOp(compiler, instruction);
   emitShort(compiler, arg);
 }
 
@@ -1103,9 +1134,9 @@ static void emitShortArg(Compiler* compiler, Code instruction, int arg)
 // placeholder.
 static int emitJump(Compiler* compiler, Code instruction)
 {
-  emit(compiler, instruction);
-  emit(compiler, 0xff);
-  return emit(compiler, 0xff) - 1;
+  emitOp(compiler, instruction);
+  emitByte(compiler, 0xff);
+  return emitByte(compiler, 0xff) - 1;
 }
 
 // Creates a new constant for the current value and emits the bytecode to load
@@ -1207,7 +1238,7 @@ static void defineVariable(Compiler* compiler, int symbol)
   // It's a module-level variable, so store the value in the module slot and
   // then discard the temporary for the initializer.
   emitShortArg(compiler, CODE_STORE_MODULE_VAR, symbol);
-  emit(compiler, CODE_POP);
+  emitOp(compiler, CODE_POP);
 }
 
 // Starts a new local block scope.
@@ -1231,15 +1262,18 @@ static int discardLocals(Compiler* compiler, int depth)
   while (local >= 0 && compiler->locals[local].depth >= depth)
   {
     // If the local was closed over, make sure the upvalue gets closed when it
-    // goes out of scope on the stack.
+    // goes out of scope on the stack. We use emitByte() and not emitOp() here
+    // because we don't want to track that stack effect of these pops since the
+    // variables are still in scope after the break.
     if (compiler->locals[local].isUpvalue)
     {
-      emit(compiler, CODE_CLOSE_UPVALUE);
+      emitByte(compiler, CODE_CLOSE_UPVALUE);
     }
     else
     {
-      emit(compiler, CODE_POP);
+      emitByte(compiler, CODE_POP);
     }
+    
 
     local--;
   }
@@ -1252,7 +1286,9 @@ static int discardLocals(Compiler* compiler, int depth)
 // temporaries are still on the stack.
 static void popScope(Compiler* compiler)
 {
-  compiler->numLocals -= discardLocals(compiler, compiler->scopeDepth);
+  int popped = discardLocals(compiler, compiler->scopeDepth);
+  compiler->numLocals -= popped;
+  compiler->numSlots -= popped;
   compiler->scopeDepth--;
 }
 
@@ -1382,7 +1418,7 @@ static void loadLocal(Compiler* compiler, int slot)
 {
   if (slot <= 8)
   {
-    emit(compiler, CODE_LOAD_LOCAL_0 + slot);
+    emitOp(compiler, (Code)(CODE_LOAD_LOCAL_0 + slot));
     return;
   }
 
@@ -1416,7 +1452,7 @@ static ObjFn* endCompiler(Compiler* compiler,
 
   // Mark the end of the bytecode. Since it may contain multiple early returns,
   // we can't rely on CODE_RETURN to tell us we're at the end.
-  emit(compiler, CODE_END);
+  emitOp(compiler, CODE_END);
 
   // Create a function object for the code we just compiled.
   ObjFn* fn = wrenNewFunction(compiler->parser->vm,
@@ -1424,6 +1460,7 @@ static ObjFn* endCompiler(Compiler* compiler,
                               compiler->constants.data,
                               compiler->constants.count,
                               compiler->numUpvalues,
+                              compiler->maxSlots,
                               compiler->numParams,
                               compiler->bytecode.data,
                               compiler->bytecode.count,
@@ -1454,8 +1491,8 @@ static ObjFn* endCompiler(Compiler* compiler,
       // an upvalue.
       for (int i = 0; i < compiler->numUpvalues; i++)
       {
-        emit(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0);
-        emit(compiler->parent, compiler->upvalues[i].index);
+        emitByte(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0);
+        emitByte(compiler->parent, compiler->upvalues[i].index);
       }
     }
   }
@@ -1574,23 +1611,28 @@ static bool finishBlock(Compiler* compiler)
 // In that case, this adds the code to ensure it returns `this`.
 static void finishBody(Compiler* compiler, bool isInitializer)
 {
+  // Now that the parameter list has been compiled, we know how many slots they
+  // use.
+  compiler->numSlots = compiler->numLocals;
+  compiler->maxSlots = compiler->numLocals;
+  
   bool isExpressionBody = finishBlock(compiler);
 
   if (isInitializer)
   {
     // If the initializer body evaluates to a value, discard it.
-    if (isExpressionBody) emit(compiler, CODE_POP);
+    if (isExpressionBody) emitOp(compiler, CODE_POP);
 
     // The receiver is always stored in the first local slot.
-    emit(compiler, CODE_LOAD_LOCAL_0);
+    emitOp(compiler, CODE_LOAD_LOCAL_0);
   }
   else if (!isExpressionBody)
   {
     // Implicitly return null in statement bodies.
-    emit(compiler, CODE_NULL);
+    emitOp(compiler, CODE_NULL);
   }
 
-  emit(compiler, CODE_RETURN);
+  emitOp(compiler, CODE_RETURN);
 }
 
 // The VM can only handle a certain number of parameters, so check that we
@@ -1971,8 +2013,8 @@ static void unaryOp(Compiler* compiler, bool allowAssignment)
 
 static void boolean(Compiler* compiler, bool allowAssignment)
 {
-  emit(compiler,
-       compiler->parser->previous.type == TOKEN_FALSE ? CODE_FALSE : CODE_TRUE);
+  emitOp(compiler,
+      compiler->parser->previous.type == TOKEN_FALSE ? CODE_FALSE : CODE_TRUE);
 }
 
 // Walks the compiler chain to find the compiler for the nearest class
@@ -2119,7 +2161,7 @@ static void staticField(Compiler* compiler, bool allowAssignment)
       int symbol = declareVariable(classCompiler, NULL);
 
       // Implicitly initialize it to null.
-      emit(classCompiler, CODE_NULL);
+      emitOp(classCompiler, CODE_NULL);
       defineVariable(classCompiler, symbol);
     }
 
@@ -2199,7 +2241,7 @@ static void name(Compiler* compiler, bool allowAssignment)
 
 static void null(Compiler* compiler, bool allowAssignment)
 {
-  emit(compiler, CODE_NULL);
+  emitOp(compiler, CODE_NULL);
 }
 
 // A number or string literal.
@@ -2642,7 +2684,7 @@ void block(Compiler* compiler)
     if (finishBlock(compiler))
     {
       // Block was an expression, so discard it.
-      emit(compiler, CODE_POP);
+      emitOp(compiler, CODE_POP);
     }
     popScope(compiler);
     return;
@@ -2993,14 +3035,14 @@ void statement(Compiler* compiler)
     if (peek(compiler) == TOKEN_LINE)
     {
       // Implicitly return null if there is no value.
-      emit(compiler, CODE_NULL);
+      emitOp(compiler, CODE_NULL);
     }
     else
     {
       expression(compiler);
     }
 
-    emit(compiler, CODE_RETURN);
+    emitOp(compiler, CODE_RETURN);
     return;
   }
 
@@ -3011,7 +3053,7 @@ void statement(Compiler* compiler)
 
   // Expression statement.
   expression(compiler);
-  emit(compiler, CODE_POP);
+  emitOp(compiler, CODE_POP);
 }
 
 // Creates a matching constructor method for an initializer with [signature]
@@ -3033,9 +3075,11 @@ static void createConstructor(Compiler* compiler, Signature* signature,
 {
   Compiler methodCompiler;
   initCompiler(&methodCompiler, compiler->parser, compiler, false);
+  methodCompiler.numSlots = signature->arity + 1;
+  methodCompiler.maxSlots = methodCompiler.numSlots;
   
   // Allocate the instance.
-  emit(&methodCompiler, compiler->enclosingClass->isForeign
+  emitOp(&methodCompiler, compiler->enclosingClass->isForeign
        ? CODE_FOREIGN_CONSTRUCT : CODE_CONSTRUCT);
   
   // Run its initializer.
@@ -3043,7 +3087,7 @@ static void createConstructor(Compiler* compiler, Signature* signature,
                initializerSymbol);
   
   // Return the instance.
-  emit(&methodCompiler, CODE_RETURN);
+  emitOp(&methodCompiler, CODE_RETURN);
   
   endCompiler(&methodCompiler, "", 0);
 }
@@ -3178,7 +3222,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   int numFieldsInstruction = -1;
   if (isForeign)
   {
-    emit(compiler, CODE_FOREIGN_CLASS);
+    emitOp(compiler, CODE_FOREIGN_CLASS);
   }
   else
   {
@@ -3245,7 +3289,7 @@ static void import(Compiler* compiler)
   emitShortArg(compiler, CODE_LOAD_MODULE, moduleConstant);
 
   // Discard the unused result value from calling the module's fiber.
-  emit(compiler, CODE_POP);
+  emitOp(compiler, CODE_POP);
 
   // The for clause is optional.
   if (!match(compiler, TOKEN_FOR)) return;
@@ -3368,8 +3412,8 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
     }
   }
 
-  emit(&compiler, CODE_NULL);
-  emit(&compiler, CODE_RETURN);
+  emitOp(&compiler, CODE_NULL);
+  emitOp(&compiler, CODE_RETURN);
 
   // See if there are any implicitly declared module-level variables that never
   // got an explicit definition.

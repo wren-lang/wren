@@ -303,6 +303,9 @@ typedef struct
   // The module where this function was defined.
   ObjModule* module;
 
+  // The maximum number of stack slots this function may use.
+  int maxSlots;
+  
   int numUpvalues;
   int numConstants;
 
@@ -660,7 +663,7 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 // copy [constants] into its own array.
 ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
                        const Value* constants, int numConstants,
-                       int numUpvalues, int arity,
+                       int numUpvalues, int maxSlots, int arity,
                        uint8_t* bytecode, int bytecodeLength,
                        const char* debugName, int debugNameLength,
                        int* sourceLines);

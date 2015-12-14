@@ -186,7 +186,7 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
 
 ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
                        const Value* constants, int numConstants,
-                       int numUpvalues, int arity,
+                       int numUpvalues, int maxSlots, int arity,
                        uint8_t* bytecode, int bytecodeLength,
                        const char* debugName, int debugNameLength,
                        int* sourceLines)
@@ -222,6 +222,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
   fn->bytecode = bytecode;
   fn->constants = copiedConstants;
   fn->module = module;
+  fn->maxSlots = maxSlots;
   fn->numUpvalues = numUpvalues;
   fn->numConstants = numConstants;
   fn->arity = arity;

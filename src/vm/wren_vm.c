@@ -777,7 +777,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #if WREN_COMPUTED_GOTO
 
   static void* dispatchTable[] = {
-    #define OPCODE(name) &&code_##name,
+    #define OPCODE(name, _) &&code_##name,
     #include "wren_opcodes.h"
     #undef OPCODE
   };
@@ -1293,7 +1293,7 @@ static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
   int* debugLines = ALLOCATE_ARRAY(vm, int, 5);
   memset(debugLines, 1, 5);
 
-  return wrenNewFunction(vm, module, NULL, 0, 0, 0, bytecode, 5,
+  return wrenNewFunction(vm, module, NULL, 0, 0, numParams + 1, 0, bytecode, 5,
                          signature, signatureLength, debugLines);
 }
 
