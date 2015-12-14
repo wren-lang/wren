@@ -18,7 +18,7 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
   for (int i = fiber->numFrames - 1; i >= 0; i--)
   {
     CallFrame* frame = &fiber->frames[i];
-    ObjFn* fn = wrenGetFrameFunction(frame);
+    ObjFn* fn = wrenUpwrapClosure(frame->fn);
 
     // The built-in core module has no name. We explicitly omit it from stack
     // traces since we don't want to highlight to a user the implementation

@@ -175,3 +175,17 @@ int wrenUtf8DecodeNumBytes(uint8_t byte)
   if ((byte & 0xe0) == 0xc0) return 2;
   return 1;
 }
+
+// From: http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2Float
+int wrenPowerOf2Ceil(int n)
+{
+  n--;
+  n |= n >> 1;
+  n |= n >> 2;
+  n |= n >> 4;
+  n |= n >> 8;
+  n |= n >> 16;
+  n++;
+  
+  return n;
+}

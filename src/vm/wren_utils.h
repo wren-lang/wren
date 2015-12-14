@@ -49,12 +49,7 @@ typedef struct {
     { \
       if (buffer->capacity < buffer->count + count) \
       { \
-        int capacity = buffer->capacity; \
-        while (capacity < buffer->count + count) \
-        { \
-          capacity = capacity == 0 ? 8 : capacity * 2; \
-        } \
-        \
+        int capacity = wrenPowerOf2Ceil(buffer->count + count); \
         buffer->data = (type*)wrenReallocate(vm, buffer->data, \
             buffer->capacity * sizeof(type), capacity * sizeof(type)); \
         buffer->capacity = capacity; \
@@ -119,5 +114,8 @@ int wrenUtf8Decode(const uint8_t* bytes, uint32_t length);
 // If the character at that index is not the beginning of a UTF-8 sequence,
 // returns 0.
 int wrenUtf8DecodeNumBytes(uint8_t byte);
+
+// Returns the smallest power of two that is equal to or greater than [n].
+int wrenPowerOf2Ceil(int n);
 
 #endif

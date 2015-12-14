@@ -41,9 +41,6 @@
 // The representation is controlled by the `WREN_NAN_TAGGING` define. If that's
 // defined, Nan tagging is used.
 
-// TODO: Make this externally controllable.
-#define STACK_SIZE 1024
-
 // These macros cast a Value to one of the specific value types. These do *not*
 // perform any validation, so must only be used after the Value has been
 // ensured to be the right type.
@@ -210,9 +207,18 @@ typedef struct
 typedef struct sObjFiber
 {
   Obj obj;
-  Value stack[STACK_SIZE];
+  
+  // The stack of value slots. This is used for holding local variables and
+  // temporaries while the fiber is executing. It heap-allocated and grown as
+  // needed.
+  Value* stack;
+  
+  // A pointer to one past the top-most value on the stack.
   Value* stackTop;
 
+  // The number of allocated slots in the stack array.
+  int stackCapacity;
+  
   // The stack of call frames. This is a dynamic array that grows as needed but
   // never shrinks.
   CallFrame* frames;
@@ -629,14 +635,16 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
 // Resets [fiber] back to an initial state where it is ready to invoke [fn].
 void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn);
 
-static inline ObjFn* wrenGetFrameFunction(CallFrame* frame)
+// Returns the base ObjFn backing an ObjClosure, or [function] if it already is
+// a raw ObjFn.
+static inline ObjFn* wrenUpwrapClosure(Obj* function)
 {
-  switch (frame->fn->type)
+  switch (function->type)
   {
-    case OBJ_FN:      return (ObjFn*)frame->fn;
-    case OBJ_CLOSURE: return ((ObjClosure*)frame->fn)->fn;
+    case OBJ_FN:      return (ObjFn*)function;
+    case OBJ_CLOSURE: return ((ObjClosure*)function)->fn;
     default:
-      UNREACHABLE();
+      ASSERT(false, "Function should be an ObjFn or ObjClosure.");
       return NULL;
   }
 }
@@ -652,7 +660,7 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
   CallFrame* frame = &fiber->frames[fiber->numFrames++];
   frame->stackStart = stackStart;
   frame->fn = function;
-  frame->ip = wrenGetFrameFunction(frame)->bytecode;
+  frame->ip = wrenUpwrapClosure(frame->fn)->bytecode;
 }
 
 ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);

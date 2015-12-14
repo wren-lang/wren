@@ -432,6 +432,7 @@ static bool checkArity(WrenVM* vm, Value value, int numArgs)
 static inline void callFunction(
     WrenVM* vm, ObjFiber* fiber, Obj* function, int numArgs)
 {
+  // Grow the call frame array if needed.
   if (fiber->numFrames + 1 > fiber->frameCapacity)
   {
     int max = fiber->frameCapacity * 2;
@@ -440,9 +441,44 @@ static inline void callFunction(
         sizeof(CallFrame) * max);
     fiber->frameCapacity = max;
   }
-
-  // TODO: Check for stack overflow. We handle the call frame array growing,
-  // but not the stack itself.
+  
+  // Grow the stack if needed.
+  int stackSize = (int)(fiber->stackTop - fiber->stack);
+  int needed = stackSize + wrenUpwrapClosure(function)->maxSlots;
+  
+  if (fiber->stackCapacity < needed)
+  {
+    int capacity = wrenPowerOf2Ceil(needed);
+    
+    Value* oldStack = fiber->stack;
+    fiber->stack = (Value*)wrenReallocate(vm, fiber->stack,
+        sizeof(Value) * fiber->stackCapacity,
+        sizeof(Value) * capacity);
+    fiber->stackCapacity = capacity;
+    
+    // If the reallocation moves the stack, then we need to shift every pointer
+    // into the stack to point to its new location.
+    if (fiber->stack != oldStack)
+    {
+      // Top of the stack.
+      long offset = fiber->stack - oldStack;
+      fiber->stackTop += offset;
+      
+      // Stack pointer for each call frame.
+      for (int i = 0; i < fiber->numFrames; i++)
+      {
+        fiber->frames[i].stackStart += offset;
+      }
+      
+      // Open upvalues.
+      for (ObjUpvalue* upvalue = fiber->openUpvalues;
+           upvalue != NULL;
+           upvalue = upvalue->next)
+      {
+        upvalue->value += offset;
+      }
+    }
+  }
 
   wrenAppendCallFrame(vm, fiber, function, fiber->stackTop - numArgs);
 }
@@ -744,7 +780,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       frame = &fiber->frames[fiber->numFrames - 1];    \
       stackStart = frame->stackStart;                  \
       ip = frame->ip;                                  \
-      fn = wrenGetFrameFunction(frame);
+      fn = wrenUpwrapClosure(frame->fn);
 
   // Terminates the current fiber with error string [error]. If another calling
   // fiber is willing to catch the error, transfers control to it, otherwise

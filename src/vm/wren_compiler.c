@@ -324,6 +324,15 @@ struct sCompiler
   int scopeDepth;
   
   // The current number of slots (locals and temporaries) in use.
+  //
+  // We use this and maxSlots to track the maximum number of additional slots
+  // a function may need while executing. When the function is called, the
+  // fiber will check to ensure its stack has enough room to cover that worst
+  // case and grow the stack if needed.
+  //
+  // This value here doesn't include parameters to the function. Since those
+  // are already pushed onto the stack by the caller and tracked there, we
+  // don't need to double count them here.
   int numSlots;
   
   // The maximum number of slots (locals and temporaries) in use at one time in
@@ -1611,11 +1620,6 @@ static bool finishBlock(Compiler* compiler)
 // In that case, this adds the code to ensure it returns `this`.
 static void finishBody(Compiler* compiler, bool isInitializer)
 {
-  // Now that the parameter list has been compiled, we know how many slots they
-  // use.
-  compiler->numSlots = compiler->numLocals;
-  compiler->maxSlots = compiler->numLocals;
-  
   bool isExpressionBody = finishBlock(compiler);
 
   if (isInitializer)
@@ -3075,8 +3079,6 @@ static void createConstructor(Compiler* compiler, Signature* signature,
 {
   Compiler methodCompiler;
   initCompiler(&methodCompiler, compiler->parser, compiler, false);
-  methodCompiler.numSlots = signature->arity + 1;
-  methodCompiler.maxSlots = methodCompiler.numSlots;
   
   // Allocate the instance.
   emitOp(&methodCompiler, compiler->enclosingClass->isForeign

@@ -147,14 +147,19 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 
 ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
 {
-  // Allocate the call frames before the fiber in case it triggers a GC.
+  // Allocate the arrays before the fiber in case it triggers a GC.
   CallFrame* frames = ALLOCATE_ARRAY(vm, CallFrame, INITIAL_CALL_FRAMES);
-
+  
+  int stackCapacity = wrenPowerOf2Ceil(wrenUpwrapClosure(fn)->maxSlots);
+  Value* stack = ALLOCATE_ARRAY(vm, Value, stackCapacity);
+  
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
   fiber->id = vm->nextFiberId++;
   fiber->frames = frames;
   fiber->frameCapacity = INITIAL_CALL_FRAMES;
+  fiber->stack = stack;
+  fiber->stackCapacity = stackCapacity;
   wrenResetFiber(vm, fiber, fn);
 
   return fiber;
@@ -960,6 +965,8 @@ static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFiber);
+  vm->bytesAllocated += fiber->frameCapacity * sizeof(CallFrame);
+  vm->bytesAllocated += fiber->stackCapacity * sizeof(Value);
 }
 
 static void blackenFn(WrenVM* vm, ObjFn* fn)
@@ -1117,6 +1124,14 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       wrenMethodBufferClear(vm, &((ObjClass*)obj)->methods);
       break;
 
+    case OBJ_FIBER:
+    {
+      ObjFiber* fiber = (ObjFiber*)obj;
+      DEALLOCATE(vm, fiber->frames);
+      DEALLOCATE(vm, fiber->stack);
+      break;
+    }
+      
     case OBJ_FN:
     {
       ObjFn* fn = (ObjFn*)obj;
@@ -1147,7 +1162,6 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
 
     case OBJ_STRING:
     case OBJ_CLOSURE:
-    case OBJ_FIBER:
     case OBJ_INSTANCE:
     case OBJ_RANGE:
     case OBJ_UPVALUE:
