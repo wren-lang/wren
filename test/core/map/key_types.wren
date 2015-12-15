@@ -8,8 +8,7 @@ var map = {
   1.2: "1 point 2",
   List: "list class",
   "null": "string value",
-  (1..3): "1 to 3",
-  fiber: "fiber"
+  (1..3): "1 to 3"
 }
 
 System.print(map[null]) // expect: null value
@@ -20,9 +19,8 @@ System.print(map[1.2]) // expect: 1 point 2
 System.print(map[List]) // expect: list class
 System.print(map["null"]) // expect: string value
 System.print(map[1..3]) // expect: 1 to 3
-System.print(map[fiber]) // expect: fiber
 
-System.print(map.count) // expect: 9
+System.print(map.count) // expect: 8
 
 // Use the same keys (but sometimes different objects) to ensure keys have the
 // right equality semantics.
@@ -44,4 +42,4 @@ System.print(map[List]) // expect: new list class
 System.print(map["null"]) // expect: new string value
 System.print(map[1..3]) // expect: new 1 to 3
 
-System.print(map.count) // expect: 9
+System.print(map.count) // expect: 8

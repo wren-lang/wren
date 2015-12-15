@@ -50,11 +50,6 @@ struct WrenVM
   // for the module.
   ObjMap* modules;
 
-  // The ID that will be assigned to the next fiber that is allocated. Fibers
-  // are given unique-ish (not completely unique since this can overflow) IDs
-  // so that they can be used as map keys.
-  uint16_t nextFiberId;
-
   // Memory management data:
 
   // The number of bytes that are known to be currently allocated. Includes all

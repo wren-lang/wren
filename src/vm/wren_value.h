@@ -242,10 +242,6 @@ typedef struct sObjFiber
   // error object. Otherwise, it will be null.
   Value error;
 
-  // A unique-ish numeric ID for the fiber. Lets fibers be used as map keys.
-  // Unique-ish since IDs may overflow and wrap around.
-  uint16_t id;
-
   // This will be true if the caller that called this fiber did so using "try".
   // In that case, if this fiber fails with an error, the error will be given
   // to the caller.

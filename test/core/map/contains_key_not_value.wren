@@ -1,1 +1,1 @@
-var result = {}.containsKey([]) // expect runtime error: Key must be a value type or fiber.
+var result = {}.containsKey([]) // expect runtime error: Key must be a value type.

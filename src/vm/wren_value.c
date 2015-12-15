@@ -155,7 +155,6 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
-  fiber->id = vm->nextFiberId++;
   fiber->frames = frames;
   fiber->frameCapacity = INITIAL_CALL_FRAMES;
   fiber->stack = stack;
@@ -343,9 +342,6 @@ static uint32_t hashObject(Obj* object)
     case OBJ_CLASS:
       // Classes just use their name.
       return hashObject((Obj*)((ObjClass*)object)->name);
-
-    case OBJ_FIBER:
-      return ((ObjFiber*)object)->id;
 
     case OBJ_RANGE:
     {

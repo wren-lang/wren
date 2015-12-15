@@ -54,13 +54,13 @@ bool validateInt(WrenVM* vm, Value arg, const char* argName)
 
 bool validateKey(WrenVM* vm, Value arg)
 {
-  if (IS_BOOL(arg) || IS_CLASS(arg) || IS_FIBER(arg) || IS_NULL(arg) ||
+  if (IS_BOOL(arg) || IS_CLASS(arg) || IS_NULL(arg) ||
       IS_NUM(arg) || IS_RANGE(arg) || IS_STRING(arg))
   {
     return true;
   }
 
-  vm->fiber->error = CONST_STRING(vm, "Key must be a value type or fiber.");
+  vm->fiber->error = CONST_STRING(vm, "Key must be a value type.");
   return false;
 }
 
