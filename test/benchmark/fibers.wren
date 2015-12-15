@@ -1,4 +1,4 @@
-// Creates 10000 fibers. Each one calls the next in a chain until the last.
+// Creates 100000 fibers. Each one calls the next in a chain until the last.
 var fibers = []
 var sum = 0
 
