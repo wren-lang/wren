@@ -280,7 +280,7 @@ typedef struct
 typedef struct
 {
   // Symbol table for the fields of the class.
-  SymbolTable* fields;
+  SymbolTable fields;
 
   // True if the class being compiled is a foreign class.
   bool isForeign;
@@ -2065,7 +2065,7 @@ static void field(Compiler* compiler, bool allowAssignment)
   else
   {
     // Look up the field, or implicitly define it.
-    field = wrenSymbolTableEnsure(compiler->parser->vm, enclosingClass->fields,
+    field = wrenSymbolTableEnsure(compiler->parser->vm, &enclosingClass->fields,
         compiler->parser->previous.start,
         compiler->parser->previous.length);
 
@@ -3125,12 +3125,11 @@ static void defineMethod(Compiler* compiler, int classSlot, bool isStatic,
 //
 // Returns `true` if it compiled successfully, or `false` if the method couldn't
 // be parsed.
-static bool method(Compiler* compiler, ClassCompiler* classCompiler,
-                   int classSlot)
+static bool method(Compiler* compiler, int classSlot)
 {
   // TODO: What about foreign constructors?
   bool isForeign = match(compiler, TOKEN_FOREIGN);
-  classCompiler->inStatic = match(compiler, TOKEN_STATIC);
+  compiler->enclosingClass->inStatic = match(compiler, TOKEN_STATIC);
     
   SignatureFn signatureFn = rules[compiler->parser->current.type].method;
   nextToken(compiler->parser);
@@ -3143,7 +3142,7 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   
   // Build the method signature.
   Signature signature = signatureFromToken(compiler, SIG_GETTER);
-  classCompiler->signature = &signature;
+  compiler->enclosingClass->signature = &signature;
 
   Compiler methodCompiler;
   initCompiler(&methodCompiler, compiler->parser, compiler, false);
@@ -3151,7 +3150,7 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   // Compile the method signature.
   signatureFn(&methodCompiler, &signature);
   
-  if (classCompiler->inStatic && signature.type == SIG_INITIALIZER)
+  if (compiler->enclosingClass->inStatic && signature.type == SIG_INITIALIZER)
   {
     error(compiler, "A constructor cannot be static.");
   }
@@ -3181,7 +3180,8 @@ static bool method(Compiler* compiler, ClassCompiler* classCompiler,
   // Define the method. For a constructor, this defines the instance
   // initializer method.
   int methodSymbol = signatureSymbol(compiler, &signature);
-  defineMethod(compiler, classSlot, classCompiler->inStatic, methodSymbol);
+  defineMethod(compiler, classSlot, compiler->enclosingClass->inStatic,
+               methodSymbol);
 
   if (signature.type == SIG_INITIALIZER)
   {
@@ -3246,10 +3246,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // them to slots starting at zero. When the method is bound to the class, the
   // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
   // into account.
-  SymbolTable fields;
-  wrenSymbolTableInit(&fields);
-
-  classCompiler.fields = &fields;
+  wrenSymbolTableInit(&classCompiler.fields);
 
   compiler->enclosingClass = &classCompiler;
 
@@ -3259,7 +3256,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
   while (!match(compiler, TOKEN_RIGHT_BRACE))
   {
-    if (!method(compiler, &classCompiler, slot)) break;
+    if (!method(compiler, slot)) break;
     
     // Don't require a newline after the last definition.
     if (match(compiler, TOKEN_RIGHT_BRACE)) break;
@@ -3270,10 +3267,11 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // Update the class with the number of fields.
   if (!isForeign)
   {
-    compiler->bytecode.data[numFieldsInstruction] = (uint8_t)fields.count;
+    compiler->bytecode.data[numFieldsInstruction] =
+        (uint8_t)classCompiler.fields.count;
   }
   
-  wrenSymbolTableClear(compiler->parser->vm, &fields);
+  wrenSymbolTableClear(compiler->parser->vm, &classCompiler.fields);
 
   compiler->enclosingClass = NULL;
 

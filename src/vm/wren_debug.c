@@ -256,7 +256,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     }
 
     case CODE_CLOSE_UPVALUE: printf("CLOSE_UPVALUE\n"); break;
-    case CODE_RETURN:        printf("CODE_RETURN\n"); break;
+    case CODE_RETURN:        printf("RETURN\n"); break;
 
     case CODE_CLOSURE:
     {
@@ -276,8 +276,8 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
 
-    case CODE_CONSTRUCT:         printf("CODE_CONSTRUCT\n"); break;
-    case CODE_FOREIGN_CONSTRUCT: printf("CODE_FOREIGN_CONSTRUCT\n"); break;
+    case CODE_CONSTRUCT:         printf("CONSTRUCT\n"); break;
+    case CODE_FOREIGN_CONSTRUCT: printf("FOREIGN_CONSTRUCT\n"); break;
       
     case CODE_CLASS:
     {
@@ -326,7 +326,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     }
 
     case CODE_END:
-      printf("CODE_END\n");
+      printf("END\n");
       break;
 
     default:
