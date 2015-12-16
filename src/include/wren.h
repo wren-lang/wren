@@ -240,6 +240,8 @@ void* wrenAllocateForeign(WrenVM* vm, size_t size);
 // Returns the number of slots available to the current foreign method.
 int wrenGetSlotCount(WrenVM* vm);
 
+// TODO: Update docs.
+
 // The following functions read one of the arguments passed to a foreign call.
 // They may only be called while within a function provided to
 // [wrenDefineMethod] or [wrenDefineStaticMethod] that Wren has invoked.
@@ -264,6 +266,18 @@ int wrenGetSlotCount(WrenVM* vm);
 //
 // It is an error to call this if the slot does not contain a boolean value.
 bool wrenGetSlotBool(WrenVM* vm, int slot);
+
+// Reads a byte array from [slot].
+//
+// The memory for the returned string is owned by Wren. You can inspect it
+// while in your foreign method, but cannot keep a pointer to it after the
+// function returns, since the garbage collector may reclaim it.
+//
+// Returns a pointer to the first byte of the array and fill [length] with the
+// number of bytes in the array.
+//
+// It is an error to call this if the slot does not contain a string.
+const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length);
 
 // Reads a number from [slot].
 //
@@ -301,27 +315,32 @@ WrenValue* wrenGetSlotValue(WrenVM* vm, int slot);
 // call one of these once. It is an error to access any of the foreign calls
 // arguments after one of these has been called.
 
-// Provides a boolean return value for a foreign call.
-void wrenReturnBool(WrenVM* vm, bool value);
+// Stores the boolean [value] in [slot].
+void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
 
-// Provides a numeric return value for a foreign call.
-void wrenReturnDouble(WrenVM* vm, double value);
+// Stores the array [length] of [bytes] in [slot].
+//
+// The bytes are copied to a new string within Wren's heap, so you can free
+// memory used by them after this is called.
+void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, int length);
 
-// Provides a string return value for a foreign call.
-//
-// The [text] will be copied to a new string within Wren's heap, so you can
-// free memory used by it after this is called.
-//
-// If [length] is non-zero, Wren copies that many bytes from [text], including
-// any null bytes. If it is -1, then the length of [text] is calculated using
-// `strlen()`. If the string may contain any null bytes in the middle, then you
-// must pass an explicit length.
-void wrenReturnString(WrenVM* vm, const char* text, int length);
+// Stores the numeric [value] in [slot].
+void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
 
-// Provides the return value for a foreign call.
+// Stores null in [slot].
+void wrenSetSlotNull(WrenVM* vm, int slot);
+
+// Stores the string [text] in [slot].
 //
-// This uses the value referred to by the handle as the return value, but it
-// does not release the handle.
-void wrenReturnValue(WrenVM* vm, WrenValue* value);
+// The [text] is copied to a new string within Wren's heap, so you can free
+// memory used by it after this is called. The length is calculated using
+// [strlen()]. If the string may contain any null bytes in the middle, then you
+// should use [wrenSetSlotBytes()] instead.
+void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
+
+// Stores the value captured in [value] in [slot].
+//
+// This does not release the handle for the value.
+void wrenSetSlotValue(WrenVM* vm, int slot, WrenValue* value);
 
 #endif

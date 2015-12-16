@@ -349,18 +349,14 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
   vm->foreignStackStart = fiber->stackTop - numArgs;
+
   foreign(vm);
 
-  // Discard the stack slots for the arguments (but leave one for
-  // the result).
-  fiber->stackTop -= numArgs - 1;
-
-  // If nothing was returned, implicitly return null.
-  if (vm->foreignStackStart != NULL)
-  {
-    *vm->foreignStackStart = NULL_VAL;
-    vm->foreignStackStart = NULL;
-  }
+  // Discard the stack slots for the arguments and temporaries but leave one
+  // for the result.
+  fiber->stackTop = vm->foreignStackStart + 1;
+  
+  vm->foreignStackStart = NULL;
 }
 
 // Handles the current fiber having aborted because of an error. Switches to
@@ -474,6 +470,11 @@ static inline void callFunction(
            upvalue = upvalue->next)
       {
         upvalue->value += offset;
+      }
+      
+      if (vm->foreignStackStart != NULL)
+      {
+        vm->foreignStackStart += offset;
       }
     }
   }
@@ -734,7 +735,7 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
 
   ASSERT(method->type == METHOD_FOREIGN, "Finalizer should be foreign.");
 
-  // Pass the constructor arguments to the allocator as well.
+  // Pass the foreign object to the finalizer.
   Value slot = OBJ_VAL(foreign);
   vm->foreignStackStart = &slot;
 
@@ -1628,9 +1629,15 @@ int wrenGetSlotCount(WrenVM* vm)
 {
   ASSERT(vm->foreignStackStart != NULL, "Must be in foreign call.");
 
-  // If no fiber is executing, we must be in a finalizer, in which case the
-  // "stack" just has one object, the object being finalized.
-  if (vm->fiber == NULL) return 1;
+  // If no fiber is executing or the foreign stack is not in it, we must be in
+  // a finalizer, in which case the "stack" just has one object, the object
+  // being finalized.
+  if (vm->fiber == NULL ||
+      vm->foreignStackStart < vm->fiber->stack ||
+      vm->foreignStackStart > vm->fiber->stackTop)
+  {
+    return 1;
+  }
 
   return (int)(vm->fiber->stackTop - vm->foreignStackStart);
 }
@@ -1649,6 +1656,16 @@ bool wrenGetSlotBool(WrenVM* vm, int slot)
   ASSERT(IS_BOOL(vm->foreignStackStart[slot]), "Slot must hold a bool.");
 
   return AS_BOOL(vm->foreignStackStart[slot]);
+}
+
+const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length)
+{
+  validateForeignSlot(vm, slot);
+  ASSERT(IS_STRING(vm->foreignStackStart[slot]), "Slot must hold a string.");
+  
+  ObjString* string = AS_STRING(vm->foreignStackStart[slot]);
+  *length = string->length;
+  return string->value;
 }
 
 double wrenGetSlotDouble(WrenVM* vm, int slot)
@@ -1683,39 +1700,43 @@ WrenValue* wrenGetSlotValue(WrenVM* vm, int slot)
   return wrenCaptureValue(vm, vm->foreignStackStart[slot]);
 }
 
-void wrenReturnBool(WrenVM* vm, bool value)
+// Stores [value] in [slot] in the foreign call stack.
+static void setSlot(WrenVM* vm, int slot, Value value)
 {
-  ASSERT(vm->foreignStackStart != NULL, "Must be in foreign call.");
-
-  *vm->foreignStackStart = BOOL_VAL(value);
-  vm->foreignStackStart = NULL;
+  validateForeignSlot(vm, slot);
+  vm->foreignStackStart[slot] = value;
 }
 
-void wrenReturnDouble(WrenVM* vm, double value)
+void wrenSetSlotBool(WrenVM* vm, int slot, bool value)
 {
-  ASSERT(vm->foreignStackStart != NULL, "Must be in foreign call.");
-
-  *vm->foreignStackStart = NUM_VAL(value);
-  vm->foreignStackStart = NULL;
+  setSlot(vm, slot, BOOL_VAL(value));
 }
 
-void wrenReturnString(WrenVM* vm, const char* text, int length)
+void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, int length)
 {
-  ASSERT(vm->foreignStackStart != NULL, "Must be in foreign call.");
+  ASSERT(bytes != NULL, "Byte arraybytes cannot be NULL.");
+  setSlot(vm, slot, wrenNewString(vm, bytes, (size_t)length));
+}
+
+void wrenSetSlotDouble(WrenVM* vm, int slot, double value)
+{
+  setSlot(vm, slot, NUM_VAL(value));
+}
+
+void wrenSetSlotNull(WrenVM* vm, int slot)
+{
+  setSlot(vm, slot, NULL_VAL);
+}
+
+void wrenSetSlotString(WrenVM* vm, int slot, const char* text)
+{
   ASSERT(text != NULL, "String cannot be NULL.");
-
-  size_t size = length;
-  if (length == -1) size = strlen(text);
-
-  *vm->foreignStackStart = wrenNewString(vm, text, size);
-  vm->foreignStackStart = NULL;
+  setSlot(vm, slot, wrenNewString(vm, text, strlen(text)));
 }
 
-void wrenReturnValue(WrenVM* vm, WrenValue* value)
+void wrenSetSlotValue(WrenVM* vm, int slot, WrenValue* value)
 {
-  ASSERT(vm->foreignStackStart != NULL, "Must be in foreign call.");
   ASSERT(value != NULL, "Value cannot be NULL.");
 
-  *vm->foreignStackStart = value->value;
-  vm->foreignStackStart = NULL;
+  setSlot(vm, slot, value->value);
 }

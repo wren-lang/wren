@@ -7,7 +7,7 @@ static int finalized = 0;
 
 static void apiFinalized(WrenVM* vm)
 {
-  wrenReturnDouble(vm, finalized);
+  wrenSetSlotDouble(vm, 0, finalized);
 }
 
 static void counterAllocate(WrenVM* vm)
@@ -27,7 +27,7 @@ static void counterIncrement(WrenVM* vm)
 static void counterValue(WrenVM* vm)
 {
   double value = *(double*)wrenGetSlotForeign(vm, 0);
-  wrenReturnDouble(vm, value);
+  wrenSetSlotDouble(vm, 0, value);
 }
 
 static void pointAllocate(WrenVM* vm)
@@ -64,7 +64,7 @@ static void pointToString(WrenVM* vm)
   char result[100];
   sprintf(result, "(%g, %g, %g)",
       coordinates[0], coordinates[1], coordinates[2]);
-  wrenReturnString(vm, result, (int)strlen(result));
+  wrenSetSlotString(vm, 0, result);
 }
 
 static void resourceAllocate(WrenVM* vm)

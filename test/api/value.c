@@ -11,7 +11,7 @@ static void setValue(WrenVM* vm)
 
 static void getValue(WrenVM* vm)
 {
-  wrenReturnValue(vm, value);
+  wrenSetSlotValue(vm, 0, value);
   wrenReleaseValue(vm, value);
 }
 

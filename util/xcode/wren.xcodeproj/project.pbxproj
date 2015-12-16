@@ -47,7 +47,7 @@
 		29DC14A91BBA302F008A8274 /* wren_vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C981AB4E6430073018D /* wren_vm.c */; };
 		29DC14AA1BBA3032008A8274 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009A61B7E3993000CE58C /* main.c */; };
 		29DC14AB1BBA3038008A8274 /* foreign_class.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009A81B7E39A8000CE58C /* foreign_class.c */; };
-		29DC14AC1BBA303D008A8274 /* returns.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AA1B7E39A8000CE58C /* returns.c */; };
+		29DC14AC1BBA303D008A8274 /* slots.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AA1B7E39A8000CE58C /* slots.c */; };
 		29DC14AD1BBA3040008A8274 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AC1B7E39A8000CE58C /* value.c */; };
 /* End PBXBuildFile section */
 
@@ -118,8 +118,8 @@
 		29D009A61B7E3993000CE58C /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = ../../test/api/main.c; sourceTree = "<group>"; };
 		29D009A81B7E39A8000CE58C /* foreign_class.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = foreign_class.c; path = ../../test/api/foreign_class.c; sourceTree = "<group>"; };
 		29D009A91B7E39A8000CE58C /* foreign_class.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = foreign_class.h; path = ../../test/api/foreign_class.h; sourceTree = "<group>"; };
-		29D009AA1B7E39A8000CE58C /* returns.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = returns.c; path = ../../test/api/returns.c; sourceTree = "<group>"; };
-		29D009AB1B7E39A8000CE58C /* returns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = returns.h; path = ../../test/api/returns.h; sourceTree = "<group>"; };
+		29D009AA1B7E39A8000CE58C /* slots.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = slots.c; path = ../../test/api/slots.c; sourceTree = "<group>"; };
+		29D009AB1B7E39A8000CE58C /* slots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = slots.h; path = ../../test/api/slots.h; sourceTree = "<group>"; };
 		29D009AC1B7E39A8000CE58C /* value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = value.c; path = ../../test/api/value.c; sourceTree = "<group>"; };
 		29D009AD1B7E39A8000CE58C /* value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = value.h; path = ../../test/api/value.h; sourceTree = "<group>"; };
 		29F384111BD19706002F84E0 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../../src/module/io.h; sourceTree = "<group>"; };
@@ -249,8 +249,8 @@
 				293D46951BB43F9900200083 /* call.h */,
 				29D009A81B7E39A8000CE58C /* foreign_class.c */,
 				29D009A91B7E39A8000CE58C /* foreign_class.h */,
-				29D009AA1B7E39A8000CE58C /* returns.c */,
-				29D009AB1B7E39A8000CE58C /* returns.h */,
+				29D009AA1B7E39A8000CE58C /* slots.c */,
+				29D009AB1B7E39A8000CE58C /* slots.h */,
 				29D009AC1B7E39A8000CE58C /* value.c */,
 				29D009AD1B7E39A8000CE58C /* value.h */,
 			);
@@ -376,7 +376,7 @@
 				293D46961BB43F9900200083 /* call.c in Sources */,
 				29A427351BDBE435001E6E22 /* wren_opt_meta.c in Sources */,
 				29DC14AB1BBA3038008A8274 /* foreign_class.c in Sources */,
-				29DC14AC1BBA303D008A8274 /* returns.c in Sources */,
+				29DC14AC1BBA303D008A8274 /* slots.c in Sources */,
 				29DC14AD1BBA3040008A8274 /* value.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

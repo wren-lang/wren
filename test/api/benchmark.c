@@ -11,7 +11,7 @@ static void arguments(WrenVM* vm)
   result += wrenGetSlotDouble(vm, 3);
   result += wrenGetSlotDouble(vm, 4);
 
-  wrenReturnDouble(vm, result);
+  wrenSetSlotDouble(vm, 0, result);
 }
 
 WrenForeignMethodFn benchmarkBindMethod(const char* signature)

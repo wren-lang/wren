@@ -19,12 +19,10 @@ void metaCompile(WrenVM* vm)
 
   // Compile it.
   ObjFn* fn = wrenCompile(vm, module, wrenGetSlotString(vm, 1), false);
-  if (fn == NULL) return;
 
   // Return the result. We can't use the public API for this since we have a
   // bare ObjFn.
-  *vm->foreignStackStart = OBJ_VAL(fn);
-  vm->foreignStackStart = NULL;
+  vm->foreignStackStart[0] = fn != NULL ? OBJ_VAL(fn) : NULL_VAL;
 }
 
 static WrenForeignMethodFn bindMetaForeignMethods(WrenVM* vm,

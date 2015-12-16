@@ -7,7 +7,7 @@
 #include "benchmark.h"
 #include "call.h"
 #include "foreign_class.h"
-#include "returns.h"
+#include "slots.h"
 #include "value.h"
 
 // The name of the currently executing API test.
@@ -36,7 +36,7 @@ static WrenForeignMethodFn bindForeignMethod(
   method = foreignClassBindMethod(fullName);
   if (method != NULL) return method;
   
-  method = returnsBindMethod(fullName);
+  method = slotsBindMethod(fullName);
   if (method != NULL) return method;
   
   method = valueBindMethod(fullName);

@@ -165,7 +165,7 @@ void fileClose(WrenVM* vm)
   // If it's already closed, we're done.
   if (fd == -1)
   {
-    wrenReturnBool(vm, true);
+    wrenSetSlotBool(vm, 0, true);
     return;
   }
 
@@ -174,14 +174,14 @@ void fileClose(WrenVM* vm)
 
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 1));
   uv_fs_close(getLoop(), request, fd, closeCallback);
-  wrenReturnBool(vm, false);
+  wrenSetSlotBool(vm, 0, false);
 }
 
 void fileDescriptor(WrenVM* vm)
 {
   int* foreign = (int*)wrenGetSlotForeign(vm, 0);
   int fd = *foreign;
-  wrenReturnDouble(vm, fd);
+  wrenSetSlotDouble(vm, 0, fd);
 }
 
 static void fileReadBytesCallback(uv_fs_t* request)
