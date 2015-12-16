@@ -33,7 +33,7 @@ static void shutdownStdin()
     free(stdinStream);
     stdinStream = NULL;
   }
-  
+
   if (stdinOnData != NULL)
   {
     wrenReleaseValue(getVM(), stdinOnData);
@@ -51,16 +51,16 @@ void fileAllocate(WrenVM* vm)
   // Store the file descriptor in the foreign data, so that we can get to it
   // in the finalizer.
   int* fd = (int*)wrenAllocateForeign(vm, sizeof(int));
-  *fd = (int)wrenGetArgumentDouble(vm, 1);
+  *fd = (int)wrenGetSlotDouble(vm, 1);
 }
 
 void fileFinalize(WrenVM* vm)
 {
-  int fd = *(int*)wrenGetArgumentForeign(vm, 0);
-  
+  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+
   // Already closed.
   if (fd == -1) return;
-  
+
   uv_fs_t request;
   uv_fs_close(getLoop(), &request, fd, NULL);
   uv_fs_req_cleanup(&request);
@@ -73,7 +73,7 @@ void fileFinalize(WrenVM* vm)
 static bool handleRequestError(uv_fs_t* request)
 {
   if (request->result >= 0) return false;
-  
+
   FileRequestData* data = (FileRequestData*)request->data;
   WrenValue* fiber = (WrenValue*)data->fiber;
 
@@ -115,18 +115,18 @@ WrenValue* freeRequest(uv_fs_t* request)
 static void openCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
-  
+
   double fd = (double)request->result;
   WrenValue* fiber = freeRequest(request);
-  
+
   schedulerResumeDouble(fiber, fd);
 }
 
 void fileOpen(WrenVM* vm)
 {
-  const char* path = wrenGetArgumentString(vm, 1);
-  uv_fs_t* request = createRequest(wrenGetArgumentValue(vm, 2));
-  
+  const char* path = wrenGetSlotString(vm, 1);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
+
   // TODO: Allow controlling flags and modes.
   uv_fs_open(getLoop(), request, path, O_RDONLY, 0, openCallback);
 }
@@ -135,51 +135,51 @@ void fileOpen(WrenVM* vm)
 static void sizeCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
-  
+
   double size = (double)request->statbuf.st_size;
   WrenValue* fiber = freeRequest(request);
-  
+
   schedulerResumeDouble(fiber, size);
 }
 
 void fileSizePath(WrenVM* vm)
 {
-  const char* path = wrenGetArgumentString(vm, 1);
-  uv_fs_t* request = createRequest(wrenGetArgumentValue(vm, 2));
+  const char* path = wrenGetSlotString(vm, 1);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
   uv_fs_stat(getLoop(), request, path, sizeCallback);
 }
 
 static void closeCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
-  
+
   WrenValue* fiber = freeRequest(request);
   schedulerResume(fiber);
 }
 
 void fileClose(WrenVM* vm)
 {
-  int* foreign = (int*)wrenGetArgumentForeign(vm, 0);
+  int* foreign = (int*)wrenGetSlotForeign(vm, 0);
   int fd = *foreign;
-  
+
   // If it's already closed, we're done.
   if (fd == -1)
   {
     wrenReturnBool(vm, true);
     return;
   }
-  
+
   // Mark it closed immediately.
   *foreign = -1;
-  
-  uv_fs_t* request = createRequest(wrenGetArgumentValue(vm, 1));
+
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 1));
   uv_fs_close(getLoop(), request, fd, closeCallback);
   wrenReturnBool(vm, false);
 }
 
 void fileDescriptor(WrenVM* vm)
 {
-  int* foreign = (int*)wrenGetArgumentForeign(vm, 0);
+  int* foreign = (int*)wrenGetSlotForeign(vm, 0);
   int fd = *foreign;
   wrenReturnDouble(vm, fd);
 }
@@ -197,35 +197,35 @@ static void fileReadBytesCallback(uv_fs_t* request)
   // embedding API supported a way to *give* it bytes that were previously
   // allocated using Wren's own allocator.
   schedulerResumeBytes(fiber, buffer.base, buffer.len);
-  
+
   // TODO: Likewise, freeing this after we resume is lame.
   free(buffer.base);
 }
 
 void fileReadBytes(WrenVM* vm)
 {
-  uv_fs_t* request = createRequest(wrenGetArgumentValue(vm, 2));
-  
-  int fd = *(int*)wrenGetArgumentForeign(vm, 0);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
+
+  int fd = *(int*)wrenGetSlotForeign(vm, 0);
   // TODO: Assert fd != -1.
 
   FileRequestData* data = (FileRequestData*)request->data;
-  size_t length = (size_t)wrenGetArgumentDouble(vm, 1);
+  size_t length = (size_t)wrenGetSlotDouble(vm, 1);
 
   data->buffer.len = length;
   data->buffer.base = (char*)malloc(length);
-  
+
   // TODO: Allow passing in offset.
   uv_fs_read(getLoop(), request, fd, &data->buffer, 1, 0, fileReadBytesCallback);
 }
 
 void fileSize(WrenVM* vm)
 {
-  uv_fs_t* request = createRequest(wrenGetArgumentValue(vm, 1));
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 1));
 
-  int fd = *(int*)wrenGetArgumentForeign(vm, 0);
+  int fd = *(int*)wrenGetSlotForeign(vm, 0);
   // TODO: Assert fd != -1.
-  
+
   uv_fs_fstat(getLoop(), request, fd, sizeCallback);
 }
 
@@ -247,9 +247,9 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
     shutdownStdin();
     return;
   }
-  
+
   // TODO: Handle other errors.
-  
+
   if (stdinOnData == NULL)
   {
     stdinOnData = wrenGetMethod(getVM(), "io", "Stdin", "onData_(_)");
@@ -259,7 +259,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   // embedding API supported a way to *give* it bytes that were previously
   // allocated using Wren's own allocator.
   wrenCall(getVM(), stdinOnData, NULL, "a", buffer->base, numRead);
-  
+
   // TODO: Likewise, freeing this after we resume is lame.
   free(buffer->base);
 }
@@ -284,7 +284,7 @@ void stdinReadStart(WrenVM* vm)
       stdinStream = (uv_stream_t*)handle;
     }
   }
-  
+
   uv_read_start(stdinStream, allocCallback, stdinReadCallback);
   // TODO: Check return.
 }

@@ -5,17 +5,18 @@
 static void arguments(WrenVM* vm)
 {
   double result = 0;
-  result += wrenGetArgumentDouble(vm, 1);
-  result += wrenGetArgumentDouble(vm, 2);
-  result += wrenGetArgumentDouble(vm, 3);
-  result += wrenGetArgumentDouble(vm, 4);
-  
+
+  result += wrenGetSlotDouble(vm, 1);
+  result += wrenGetSlotDouble(vm, 2);
+  result += wrenGetSlotDouble(vm, 3);
+  result += wrenGetSlotDouble(vm, 4);
+
   wrenReturnDouble(vm, result);
 }
 
 WrenForeignMethodFn benchmarkBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Benchmark.arguments(_,_,_,_)") == 0) return arguments;
-  
+
   return NULL;
 }

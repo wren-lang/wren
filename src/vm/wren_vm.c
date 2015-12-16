@@ -439,21 +439,21 @@ static inline void callFunction(
         sizeof(CallFrame) * max);
     fiber->frameCapacity = max;
   }
-  
+
   // Grow the stack if needed.
   int stackSize = (int)(fiber->stackTop - fiber->stack);
   int needed = stackSize + wrenUpwrapClosure(function)->maxSlots;
-  
+
   if (fiber->stackCapacity < needed)
   {
     int capacity = wrenPowerOf2Ceil(needed);
-    
+
     Value* oldStack = fiber->stack;
     fiber->stack = (Value*)wrenReallocate(vm, fiber->stack,
         sizeof(Value) * fiber->stackCapacity,
         sizeof(Value) * capacity);
     fiber->stackCapacity = capacity;
-    
+
     // If the reallocation moves the stack, then we need to shift every pointer
     // into the stack to point to its new location.
     if (fiber->stack != oldStack)
@@ -461,13 +461,13 @@ static inline void callFunction(
       // Top of the stack.
       long offset = fiber->stack - oldStack;
       fiber->stackTop += offset;
-      
+
       // Stack pointer for each call frame.
       for (int i = 0; i < fiber->numFrames; i++)
       {
         fiber->frames[i].stackStart += offset;
       }
-      
+
       // Open upvalues.
       for (ObjUpvalue* upvalue = fiber->openUpvalues;
            upvalue != NULL;
@@ -1148,10 +1148,10 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         // See if there's another fiber to return to.
         ObjFiber* callingFiber = fiber->caller;
         fiber->caller = NULL;
-        
+
         fiber = callingFiber;
         vm->fiber = fiber;
-        
+
         // If not, we're done.
         if (fiber == NULL) return WREN_RESULT_SUCCESS;
 
@@ -1624,10 +1624,10 @@ void wrenPopRoot(WrenVM* vm)
   vm->numTempRoots--;
 }
 
-int wrenGetArgumentCount(WrenVM* vm)
+int wrenGetSlotCount(WrenVM* vm)
 {
   ASSERT(vm->foreignStackStart != NULL, "Must be in foreign call.");
-  
+
   // If no fiber is executing, we must be in a finalizer, in which case the
   // "stack" just has one object, the object being finalized.
   if (vm->fiber == NULL) return 1;
@@ -1635,54 +1635,52 @@ int wrenGetArgumentCount(WrenVM* vm)
   return (int)(vm->fiber->stackTop - vm->foreignStackStart);
 }
 
-static void validateForeignArgument(WrenVM* vm, int index)
+// Ensures that [slot] is a valid index into a foreign method's stack of slots.
+static void validateForeignSlot(WrenVM* vm, int slot)
 {
   ASSERT(vm->foreignStackStart != NULL, "Must be in foreign call.");
-  ASSERT(index >= 0, "index cannot be negative.");
-  ASSERT(index < wrenGetArgumentCount(vm), "Not that many arguments.");
+  ASSERT(slot >= 0, "Slot cannot be negative.");
+  ASSERT(slot < wrenGetSlotCount(vm), "Not that many slots.");
 }
 
-bool wrenGetArgumentBool(WrenVM* vm, int index)
+bool wrenGetSlotBool(WrenVM* vm, int slot)
 {
-  validateForeignArgument(vm, index);
+  validateForeignSlot(vm, slot);
+  ASSERT(IS_BOOL(vm->foreignStackStart[slot]), "Slot must hold a bool.");
 
-  if (!IS_BOOL(vm->foreignStackStart[index])) return false;
-
-  return AS_BOOL(vm->foreignStackStart[index]);
+  return AS_BOOL(vm->foreignStackStart[slot]);
 }
 
-double wrenGetArgumentDouble(WrenVM* vm, int index)
+double wrenGetSlotDouble(WrenVM* vm, int slot)
 {
-  validateForeignArgument(vm, index);
+  validateForeignSlot(vm, slot);
+  ASSERT(IS_NUM(vm->foreignStackStart[slot]), "Slot must hold a number.");
 
-  if (!IS_NUM(vm->foreignStackStart[index])) return 0.0;
-
-  return AS_NUM(vm->foreignStackStart[index]);
+  return AS_NUM(vm->foreignStackStart[slot]);
 }
 
-void* wrenGetArgumentForeign(WrenVM* vm, int index)
+void* wrenGetSlotForeign(WrenVM* vm, int slot)
 {
-  validateForeignArgument(vm, index);
+  validateForeignSlot(vm, slot);
+  ASSERT(IS_FOREIGN(vm->foreignStackStart[slot]),
+         "Slot must hold a foreign instance.");
 
-  if (!IS_FOREIGN(vm->foreignStackStart[index])) return NULL;
-
-  return AS_FOREIGN(vm->foreignStackStart[index])->data;
+  return AS_FOREIGN(vm->foreignStackStart[slot])->data;
 }
 
-const char* wrenGetArgumentString(WrenVM* vm, int index)
+const char* wrenGetSlotString(WrenVM* vm, int slot)
 {
-  validateForeignArgument(vm, index);
+  validateForeignSlot(vm, slot);
+  ASSERT(IS_STRING(vm->foreignStackStart[slot]), "Slot must hold a string.");
 
-  if (!IS_STRING(vm->foreignStackStart[index])) return NULL;
-
-  return AS_CSTRING(vm->foreignStackStart[index]);
+  return AS_CSTRING(vm->foreignStackStart[slot]);
 }
 
-WrenValue* wrenGetArgumentValue(WrenVM* vm, int index)
+WrenValue* wrenGetSlotValue(WrenVM* vm, int slot)
 {
-  validateForeignArgument(vm, index);
+  validateForeignSlot(vm, slot);
 
-  return wrenCaptureValue(vm, vm->foreignStackStart[index]);
+  return wrenCaptureValue(vm, vm->foreignStackStart[slot]);
 }
 
 void wrenReturnBool(WrenVM* vm, bool value)

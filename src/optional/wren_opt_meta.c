@@ -18,7 +18,7 @@ void metaCompile(WrenVM* vm)
       : AS_CLOSURE(callingFn)->fn->module;
 
   // Compile it.
-  ObjFn* fn = wrenCompile(vm, module, wrenGetArgumentString(vm, 1), false);
+  ObjFn* fn = wrenCompile(vm, module, wrenGetSlotString(vm, 1), false);
   if (fn == NULL) return;
 
   // Return the result. We can't use the public API for this since we have a

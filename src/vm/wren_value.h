@@ -74,6 +74,7 @@
 #define IS_FN(value) (wrenIsObjType(value, OBJ_FN))             // ObjFn
 #define IS_FOREIGN(value) (wrenIsObjType(value, OBJ_FOREIGN))   // ObjForeign
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
+#define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
 

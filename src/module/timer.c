@@ -27,8 +27,8 @@ static void timerCallback(uv_timer_t* handle)
 
 void timerStartTimer(WrenVM* vm)
 {
-  int milliseconds = (int)wrenGetArgumentDouble(vm, 1);
-  WrenValue* fiber = wrenGetArgumentValue(vm, 2);
+  int milliseconds = (int)wrenGetSlotDouble(vm, 1);
+  WrenValue* fiber = wrenGetSlotValue(vm, 2);
 
   // Store the fiber to resume when the timer completes.
   uv_timer_t* handle = (uv_timer_t*)malloc(sizeof(uv_timer_t));
