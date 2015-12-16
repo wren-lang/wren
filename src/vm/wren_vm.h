@@ -88,11 +88,7 @@ struct WrenVM
 
   // During a foreign function call, this will point to the first argument (the
   // receiver) of the call on the fiber's stack.
-  Value* foreignCallSlot;
-
-  // During a foreign function call, this will contain the number of arguments
-  // to the function.
-  int foreignCallNumArgs;
+  Value* foreignStackStart;
 
   WrenConfiguration config;
   
