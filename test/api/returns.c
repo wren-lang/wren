@@ -39,13 +39,13 @@ static void returnBytes(WrenVM* vm)
 
 WrenForeignMethodFn returnsBindMethod(const char* signature)
 {
-  if (strcmp(signature, "static Api.implicitNull") == 0) return implicitNull;
-  if (strcmp(signature, "static Api.returnInt") == 0) return returnInt;
-  if (strcmp(signature, "static Api.returnFloat") == 0) return returnFloat;
-  if (strcmp(signature, "static Api.returnTrue") == 0) return returnTrue;
-  if (strcmp(signature, "static Api.returnFalse") == 0) return returnFalse;
-  if (strcmp(signature, "static Api.returnString") == 0) return returnString;
-  if (strcmp(signature, "static Api.returnBytes") == 0) return returnBytes;
+  if (strcmp(signature, "static Returns.implicitNull") == 0) return implicitNull;
+  if (strcmp(signature, "static Returns.returnInt") == 0) return returnInt;
+  if (strcmp(signature, "static Returns.returnFloat") == 0) return returnFloat;
+  if (strcmp(signature, "static Returns.returnTrue") == 0) return returnTrue;
+  if (strcmp(signature, "static Returns.returnFalse") == 0) return returnFalse;
+  if (strcmp(signature, "static Returns.returnString") == 0) return returnString;
+  if (strcmp(signature, "static Returns.returnBytes") == 0) return returnBytes;
 
   return NULL;
 }

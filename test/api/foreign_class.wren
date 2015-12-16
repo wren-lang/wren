@@ -1,4 +1,4 @@
-class Api {
+class ForeignClass {
   foreign static finalized
 }
 
@@ -64,14 +64,14 @@ var resources = [
 ]
 
 System.gc()
-System.print(Api.finalized) // expect: 0
+System.print(ForeignClass.finalized) // expect: 0
 
 resources.removeAt(-1)
 
 System.gc()
-System.print(Api.finalized) // expect: 1
+System.print(ForeignClass.finalized) // expect: 1
 
 resources.clear()
 
 System.gc()
-System.print(Api.finalized) // expect: 3
+System.print(ForeignClass.finalized) // expect: 3

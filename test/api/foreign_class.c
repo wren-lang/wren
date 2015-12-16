@@ -79,7 +79,7 @@ static void resourceFinalize(WrenVM* vm)
 
 WrenForeignMethodFn foreignClassBindMethod(const char* signature)
 {
-  if (strcmp(signature, "static Api.finalized") == 0) return apiFinalized;
+  if (strcmp(signature, "static ForeignClass.finalized") == 0) return apiFinalized;
   if (strcmp(signature, "Counter.increment(_)") == 0) return counterIncrement;
   if (strcmp(signature, "Counter.value") == 0) return counterValue;
   if (strcmp(signature, "Point.translate(_,_,_)") == 0) return pointTranslate;

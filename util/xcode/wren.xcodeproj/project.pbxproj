@@ -25,6 +25,7 @@
 		29729F321BA70A620099CA20 /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29729F2E1BA70A620099CA20 /* io.c */; };
 		29729F331BA70A620099CA20 /* io.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29729F301BA70A620099CA20 /* io.wren.inc */; };
 		2986F6D71ACF93BA00BCE26C /* wren_primitive.c in Sources */ = {isa = PBXBuildFile; fileRef = 2986F6D51ACF93BA00BCE26C /* wren_primitive.c */; };
+		29932D511C20D8C900099DEE /* benchmark.c in Sources */ = {isa = PBXBuildFile; fileRef = 29932D4F1C20D8C900099DEE /* benchmark.c */; };
 		29A427341BDBE435001E6E22 /* wren_opt_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */; };
 		29A427351BDBE435001E6E22 /* wren_opt_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */; };
 		29A427361BDBE435001E6E22 /* wren_opt_meta.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427301BDBE435001E6E22 /* wren_opt_meta.wren.inc */; };
@@ -103,6 +104,8 @@
 		29729F301BA70A620099CA20 /* io.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = io.wren.inc; path = ../../src/module/io.wren.inc; sourceTree = "<group>"; };
 		2986F6D51ACF93BA00BCE26C /* wren_primitive.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_primitive.c; path = ../../src/vm/wren_primitive.c; sourceTree = "<group>"; };
 		2986F6D61ACF93BA00BCE26C /* wren_primitive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_primitive.h; path = ../../src/vm/wren_primitive.h; sourceTree = "<group>"; };
+		29932D4F1C20D8C900099DEE /* benchmark.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = benchmark.c; path = ../../test/api/benchmark.c; sourceTree = "<group>"; };
+		29932D501C20D8C900099DEE /* benchmark.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = benchmark.h; path = ../../test/api/benchmark.h; sourceTree = "<group>"; };
 		29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_opt_meta.c; path = ../../src/optional/wren_opt_meta.c; sourceTree = "<group>"; };
 		29A4272F1BDBE435001E6E22 /* wren_opt_meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_opt_meta.h; path = ../../src/optional/wren_opt_meta.h; sourceTree = "<group>"; };
 		29A427301BDBE435001E6E22 /* wren_opt_meta.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = wren_opt_meta.wren.inc; path = ../../src/optional/wren_opt_meta.wren.inc; sourceTree = "<group>"; };
@@ -239,6 +242,8 @@
 		29D0099A1B7E394F000CE58C /* api_test */ = {
 			isa = PBXGroup;
 			children = (
+				29932D4F1C20D8C900099DEE /* benchmark.c */,
+				29932D501C20D8C900099DEE /* benchmark.h */,
 				29D009A61B7E3993000CE58C /* main.c */,
 				293D46941BB43F9900200083 /* call.c */,
 				293D46951BB43F9900200083 /* call.h */,
@@ -356,6 +361,7 @@
 				291647C81BA5EC5E006142EE /* modules.c in Sources */,
 				29DC14A11BBA2FEC008A8274 /* scheduler.c in Sources */,
 				29A427391BDBE435001E6E22 /* wren_opt_random.c in Sources */,
+				29932D511C20D8C900099DEE /* benchmark.c in Sources */,
 				29DC14A01BBA2FD6008A8274 /* timer.c in Sources */,
 				29DC149F1BBA2FCC008A8274 /* vm.c in Sources */,
 				29DC14A21BBA300A008A8274 /* wren_compiler.c in Sources */,

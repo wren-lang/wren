@@ -51,6 +51,8 @@ def BENCHMARK(name, pattern):
   regex = re.compile(pattern + "\n" + r"elapsed: (\d+\.\d+)", re.MULTILINE)
   BENCHMARKS.append([name, regex, None])
 
+BENCHMARK("api_foreign_method", "100000000")
+
 BENCHMARK("binary_trees", """stretch tree of depth 13 check: -1
 8192 trees of depth 4 check: -8192
 2048 trees of depth 6 check: -2048
@@ -143,9 +145,20 @@ def standard_deviation(times):
 
 def run_trial(benchmark, language):
   """Runs one benchmark one time for one language."""
+  executable_args = language[1]
+
+  # Hackish. If the benchmark name starts with "api_", it's testing the Wren
+  # C API, so run the test_api executable which has those test methods instead
+  # of the normal Wren build.
+  if benchmark[0].startswith("api_"):
+    executable_args = [
+      os.path.join(WREN_DIR, "build", "release", "test", "wren")
+    ]
+
   args = []
-  args.extend(language[1])
+  args.extend(executable_args)
   args.append(os.path.join(BENCHMARK_DIR, benchmark[0] + language[2]))
+
   try:
     out = subprocess.check_output(args, universal_newlines=True)
   except OSError:

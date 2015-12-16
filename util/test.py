@@ -111,10 +111,6 @@ class Test:
   def run(self, app, type):
     # Invoke wren and run the test.
     test_arg = self.path
-    if type == "api test":
-      # Just pass the suite name to API tests.
-      test_arg = basename(splitext(test_arg)[0])
-
     proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
     # If a test takes longer than two seconds, kill it.

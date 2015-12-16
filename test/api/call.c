@@ -5,10 +5,10 @@
 
 void callRunTests(WrenVM* vm)
 {
-  WrenValue* noParams = wrenGetMethod(vm, "main", "Api", "noParams");
-  WrenValue* zero = wrenGetMethod(vm, "main", "Api", "zero()");
-  WrenValue* one = wrenGetMethod(vm, "main", "Api", "one(_)");
-  WrenValue* two = wrenGetMethod(vm, "main", "Api", "two(_,_)");
+  WrenValue* noParams = wrenGetMethod(vm, "main", "Call", "noParams");
+  WrenValue* zero = wrenGetMethod(vm, "main", "Call", "zero()");
+  WrenValue* one = wrenGetMethod(vm, "main", "Call", "one(_)");
+  WrenValue* two = wrenGetMethod(vm, "main", "Call", "two(_,_)");
   
   // Different arity.
   wrenCall(vm, noParams, NULL, "");
@@ -16,7 +16,7 @@ void callRunTests(WrenVM* vm)
   wrenCall(vm, one, NULL, "i", 1);
   wrenCall(vm, two, NULL, "ii", 1, 2);
 
-  WrenValue* getValue = wrenGetMethod(vm, "main", "Api", "getValue(_)");
+  WrenValue* getValue = wrenGetMethod(vm, "main", "Call", "getValue(_)");
   
   // Returning a value.
   WrenValue* value = NULL;

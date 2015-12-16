@@ -4,19 +4,11 @@
 #include "vm.h"
 #include "wren.h"
 
+#include "benchmark.h"
 #include "call.h"
 #include "foreign_class.h"
 #include "returns.h"
 #include "value.h"
-
-#define REGISTER_METHOD(name, camelCase) \
-  if (strcmp(testName, #name) == 0) return camelCase##BindMethod(fullName)
-
-#define REGISTER_CLASS(name, camelCase) \
-    if (strcmp(testName, #name) == 0) \
-    { \
-      camelCase##BindClass(className, &methods); \
-    }
 
 // The name of the currently executing API test.
 const char* testName;
@@ -24,7 +16,7 @@ const char* testName;
 static WrenForeignMethodFn bindForeignMethod(
     WrenVM* vm, const char* module, const char* className,
     bool isStatic, const char* signature)
-{
+{  
   if (strcmp(module, "main") != 0) return NULL;
 
   // For convenience, concatenate all of the method qualifiers into a single
@@ -35,10 +27,20 @@ static WrenForeignMethodFn bindForeignMethod(
   strcat(fullName, className);
   strcat(fullName, ".");
   strcat(fullName, signature);
-
-  REGISTER_METHOD(foreign_class, foreignClass);
-  REGISTER_METHOD(returns, returns);
-  REGISTER_METHOD(value, value);
+  
+  WrenForeignMethodFn method = NULL;
+  
+  method = benchmarkBindMethod(fullName);
+  if (method != NULL) return method;
+  
+  method = foreignClassBindMethod(fullName);
+  if (method != NULL) return method;
+  
+  method = returnsBindMethod(fullName);
+  if (method != NULL) return method;
+  
+  method = valueBindMethod(fullName);
+  if (method != NULL) return method;
 
   fprintf(stderr,
       "Unknown foreign method '%s' for test '%s'\n", fullName, testName);
@@ -52,13 +54,13 @@ static WrenForeignClassMethods bindForeignClass(
   WrenForeignClassMethods methods = { NULL, NULL };
   if (strcmp(module, "main") != 0) return methods;
 
-  REGISTER_CLASS(foreign_class, foreignClass);
+  foreignClassBindClass(className, &methods);
 
   return methods;
 }
 
 static void afterLoad(WrenVM* vm) {
-  if (strcmp(testName, "call") == 0) callRunTests(vm);
+  if (strstr(testName, "call.wren") != NULL) callRunTests(vm);
 }
 
 int main(int argc, const char* argv[])
@@ -70,14 +72,7 @@ int main(int argc, const char* argv[])
   }
 
   testName = argv[1];
-
-  // The test script is at "test/api/<test>.wren".
-  char testPath[256];
-  strcpy(testPath, "test/api/");
-  strcat(testPath, testName);
-  strcat(testPath, ".wren");
-
   setTestCallbacks(bindForeignMethod, bindForeignClass, afterLoad);
-  runFile(testPath);
+  runFile(testName);
   return 0;
 }

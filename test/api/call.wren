@@ -1,4 +1,4 @@
-class Api {
+class Call {
   static noParams {
     System.print("noParams")
   }

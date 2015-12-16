@@ -46,6 +46,10 @@ test: debug
 	@ $(MAKE) -f util/wren.mk MODE=debug test
 	@ ./util/test.py $(suite)
 
+benchmark: release
+	@ $(MAKE) -f util/wren.mk test
+	@ ./util/benchmark.py $(suite)
+
 # Generate the Wren site.
 docs:
 	@ ./util/generate_docs.py
