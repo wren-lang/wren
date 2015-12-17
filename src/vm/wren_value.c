@@ -150,7 +150,9 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   // Allocate the arrays before the fiber in case it triggers a GC.
   CallFrame* frames = ALLOCATE_ARRAY(vm, CallFrame, INITIAL_CALL_FRAMES);
   
-  int stackCapacity = wrenPowerOf2Ceil(wrenUpwrapClosure(fn)->maxSlots);
+  // Add one slot for the unused implicit receiver slot that the compiler
+  // assumes all functions have.
+  int stackCapacity = wrenPowerOf2Ceil(wrenUpwrapClosure(fn)->maxSlots + 1);
   Value* stack = ALLOCATE_ARRAY(vm, Value, stackCapacity);
   
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
@@ -382,6 +384,8 @@ static uint32_t hashValue(Value value)
     case VAL_OBJ:   return hashObject(AS_OBJ(value));
     default:        UNREACHABLE();
   }
+  
+  return 0;
 #endif
 }
 
