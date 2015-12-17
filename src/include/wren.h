@@ -240,6 +240,14 @@ void* wrenAllocateForeign(WrenVM* vm, size_t size);
 // Returns the number of slots available to the current foreign method.
 int wrenGetSlotCount(WrenVM* vm);
 
+// Ensures that the foreign method stack has at least [numSlots] available for
+// use, growing the stack if needed.
+//
+// Does not shrink the stack if it has more than enough slots.
+//
+// It is an error to call this from a finalizer.
+void wrenEnsureSlots(WrenVM* vm, int numSlots);
+
 // TODO: Update docs.
 
 // The following functions read one of the arguments passed to a foreign call.
@@ -327,6 +335,9 @@ void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, int length);
 // Stores the numeric [value] in [slot].
 void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
 
+// Stores a new empty list in [slot].
+void wrenSetSlotNewList(WrenVM* vm, int slot);
+
 // Stores null in [slot].
 void wrenSetSlotNull(WrenVM* vm, int slot);
 
@@ -342,5 +353,12 @@ void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
 //
 // This does not release the handle for the value.
 void wrenSetSlotValue(WrenVM* vm, int slot, WrenValue* value);
+
+// Takes the value stored at [elementSlot] and inserts it into the list stored
+// at [listSlot] at [index].
+//
+// As in Wren, negative indexes can be used to insert from the end. To append
+// an element, use `-1` for the index.
+void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
 #endif

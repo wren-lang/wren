@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 
 #include "slots.h"
@@ -73,11 +74,38 @@ static void setSlots(WrenVM* vm)
   }
 }
 
+static void ensure(WrenVM* vm)
+{
+  int before = wrenGetSlotCount(vm);
+  
+  wrenEnsureSlots(vm, 20);
+  
+  int after = wrenGetSlotCount(vm);
+  
+  // Use the slots to make sure they're available.
+  for (int i = 0; i < 20; i++)
+  {
+    wrenSetSlotDouble(vm, i, i);
+  }
+  
+  int sum = 0;
+
+  for (int i = 0; i < 20; i++)
+  {
+    sum += (int)wrenGetSlotDouble(vm, i);
+  }
+  
+  char result[100];
+  sprintf(result, "%d -> %d (%d)", before, after, sum);
+  wrenSetSlotString(vm, 0, result);
+}
+
 WrenForeignMethodFn slotsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Slots.noSet") == 0) return noSet;
   if (strcmp(signature, "static Slots.getSlots(_,_,_,_,_)") == 0) return getSlots;
   if (strcmp(signature, "static Slots.setSlots(_,_,_,_)") == 0) return setSlots;
+  if (strcmp(signature, "static Slots.ensure()") == 0) return ensure;
 
   return NULL;
 }

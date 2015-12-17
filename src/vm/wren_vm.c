@@ -420,6 +420,48 @@ static bool checkArity(WrenVM* vm, Value value, int numArgs)
   return false;
 }
 
+// Ensures [fiber]'s stack has at least [needed] slots.
+static void ensureStack(WrenVM* vm, ObjFiber* fiber, int needed)
+{
+  if (fiber->stackCapacity >= needed) return;
+
+  int capacity = wrenPowerOf2Ceil(needed);
+    
+  Value* oldStack = fiber->stack;
+  fiber->stack = (Value*)wrenReallocate(vm, fiber->stack,
+                                        sizeof(Value) * fiber->stackCapacity,
+                                        sizeof(Value) * capacity);
+  fiber->stackCapacity = capacity;
+  
+  // If the reallocation moves the stack, then we need to shift every pointer
+  // into the stack to point to its new location.
+  if (fiber->stack != oldStack)
+  {
+    // Top of the stack.
+    long offset = fiber->stack - oldStack;
+    fiber->stackTop += offset;
+    
+    // Stack pointer for each call frame.
+    for (int i = 0; i < fiber->numFrames; i++)
+    {
+      fiber->frames[i].stackStart += offset;
+    }
+    
+    // Open upvalues.
+    for (ObjUpvalue* upvalue = fiber->openUpvalues;
+         upvalue != NULL;
+         upvalue = upvalue->next)
+    {
+      upvalue->value += offset;
+    }
+    
+    if (vm->foreignStackStart != NULL)
+    {
+      vm->foreignStackStart += offset;
+    }
+  }
+}
+
 // Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
 // [function] can be an `ObjFn` or `ObjClosure`.
@@ -435,50 +477,12 @@ static inline void callFunction(
         sizeof(CallFrame) * max);
     fiber->frameCapacity = max;
   }
-
+  
   // Grow the stack if needed.
   int stackSize = (int)(fiber->stackTop - fiber->stack);
   int needed = stackSize + wrenUpwrapClosure(function)->maxSlots;
-
-  if (fiber->stackCapacity < needed)
-  {
-    int capacity = wrenPowerOf2Ceil(needed);
-
-    Value* oldStack = fiber->stack;
-    fiber->stack = (Value*)wrenReallocate(vm, fiber->stack,
-        sizeof(Value) * fiber->stackCapacity,
-        sizeof(Value) * capacity);
-    fiber->stackCapacity = capacity;
-
-    // If the reallocation moves the stack, then we need to shift every pointer
-    // into the stack to point to its new location.
-    if (fiber->stack != oldStack)
-    {
-      // Top of the stack.
-      long offset = fiber->stack - oldStack;
-      fiber->stackTop += offset;
-
-      // Stack pointer for each call frame.
-      for (int i = 0; i < fiber->numFrames; i++)
-      {
-        fiber->frames[i].stackStart += offset;
-      }
-
-      // Open upvalues.
-      for (ObjUpvalue* upvalue = fiber->openUpvalues;
-           upvalue != NULL;
-           upvalue = upvalue->next)
-      {
-        upvalue->value += offset;
-      }
-      
-      if (vm->foreignStackStart != NULL)
-      {
-        vm->foreignStackStart += offset;
-      }
-    }
-  }
-
+  ensureStack(vm, fiber, needed);
+  
   wrenAppendCallFrame(vm, fiber, function, fiber->stackTop - numArgs);
 }
 
@@ -1625,21 +1629,37 @@ void wrenPopRoot(WrenVM* vm)
   vm->numTempRoots--;
 }
 
+// Returns true if the VM is in a foreign method that's a finalizer.
+//
+// Finalizers don't run in the context of a fiber and have a single magic stack
+// slot, so need to be handled a little specially.
+static bool isInFinalizer(WrenVM* vm)
+{
+  return vm->fiber == NULL ||
+         vm->foreignStackStart < vm->fiber->stack ||
+         vm->foreignStackStart > vm->fiber->stackTop;
+}
+
 int wrenGetSlotCount(WrenVM* vm)
 {
   ASSERT(vm->foreignStackStart != NULL, "Must be in foreign call.");
 
-  // If no fiber is executing or the foreign stack is not in it, we must be in
-  // a finalizer, in which case the "stack" just has one object, the object
-  // being finalized.
-  if (vm->fiber == NULL ||
-      vm->foreignStackStart < vm->fiber->stack ||
-      vm->foreignStackStart > vm->fiber->stackTop)
-  {
-    return 1;
-  }
-
+  if (isInFinalizer(vm)) return 1;
   return (int)(vm->fiber->stackTop - vm->foreignStackStart);
+}
+
+void wrenEnsureSlots(WrenVM* vm, int numSlots)
+{
+  ASSERT(!isInFinalizer(vm), "Cannot grow the stack in a finalizer.");
+  
+  int currentSize = (int)(vm->fiber->stackTop - vm->foreignStackStart);
+  if (currentSize >= numSlots) return;
+  
+  // Grow the stack if needed.
+  int needed = (int)(vm->foreignStackStart - vm->fiber->stack) + numSlots;
+  ensureStack(vm, vm->fiber, needed);
+  
+  vm->fiber->stackTop = vm->foreignStackStart + numSlots;
 }
 
 // Ensures that [slot] is a valid index into a foreign method's stack of slots.
@@ -1723,6 +1743,11 @@ void wrenSetSlotDouble(WrenVM* vm, int slot, double value)
   setSlot(vm, slot, NUM_VAL(value));
 }
 
+void wrenSetSlotNewList(WrenVM* vm, int slot)
+{
+  setSlot(vm, slot, OBJ_VAL(wrenNewList(vm, 0)));
+}
+
 void wrenSetSlotNull(WrenVM* vm, int slot)
 {
   setSlot(vm, slot, NULL_VAL);
@@ -1739,4 +1764,20 @@ void wrenSetSlotValue(WrenVM* vm, int slot, WrenValue* value)
   ASSERT(value != NULL, "Value cannot be NULL.");
 
   setSlot(vm, slot, value->value);
+}
+
+void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
+{
+  validateForeignSlot(vm, listSlot);
+  validateForeignSlot(vm, elementSlot);
+  ASSERT(IS_LIST(vm->foreignStackStart[listSlot]), "Must insert into a list.");
+  
+  ObjList* list = AS_LIST(vm->foreignStackStart[listSlot]);
+  
+  // Negative indices count from the end.
+  if (index < 0) index = list->elements.count + 1 + index;
+  
+  ASSERT(index <= list->elements.count, "Index out of bounds.");
+  
+  wrenListInsert(vm, list, vm->foreignStackStart[elementSlot], index);
 }

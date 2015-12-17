@@ -7,6 +7,7 @@
 #include "benchmark.h"
 #include "call.h"
 #include "foreign_class.h"
+#include "lists.h"
 #include "slots.h"
 #include "value.h"
 
@@ -34,6 +35,9 @@ static WrenForeignMethodFn bindForeignMethod(
   if (method != NULL) return method;
   
   method = foreignClassBindMethod(fullName);
+  if (method != NULL) return method;
+  
+  method = listsBindMethod(fullName);
   if (method != NULL) return method;
   
   method = slotsBindMethod(fullName);
