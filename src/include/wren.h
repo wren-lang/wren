@@ -230,6 +230,45 @@ WrenInterpretResult wrenCallVarArgs(WrenVM* vm, WrenValue* method,
 // longer be used.
 void wrenReleaseValue(WrenVM* vm, WrenValue* value);
 
+// The following functions are intended to be called from foreign methods or
+// finalizers. The interface Wren provides to a foreign method is like a
+// register machine: you are given a numbered array of slots that values can be
+// read from and written to. Values always live in a slot (unless explicitly
+// captured using wrenGetSlotValue(), which ensures the garbage collector can
+// find them.
+//
+// When your foreign function is called, you are given one slot for the receiver
+// and each argument to the method. The receiver is in slot 0 and the arguments
+// are in increasingly numbered slots after that. You are free to read and
+// write to those slots as you want. If you want more slots to use as scratch
+// space, you can call wrenEnsureSlots() to add more.
+//
+// When your function returns, every slot except slot zero is discarded and the
+// value in slot zero is used as the return value of the method. If you don't
+// store a return value in that slot yourself, it will retain its previous
+// value, the receiver.
+//
+// While Wren is dynamically typed, C is not. This means the C interface has to
+// support the various types of primitive values a Wren variable can hold: bool,
+// double, string, etc. If we supported this for every operation in the C API,
+// there would be a combinatorial explosion of functions, like "get a
+// double-valued element from a list", "insert a string key and double value
+// into a map", etc.
+//
+// To avoid that, the only way to convert to and from a raw C value is by going
+// into and out of a slot. All other functions work with values already in a
+// slot. So, to add an element to a list, you put the list in one slot, and the
+// element in another. Then there is a single API function wrenInsertInList()
+// that takes the element out of that slot and puts it into the list.
+//
+// The goal of this API is to be easy to use while not compromising performance.
+// The latter means it does not do type or bounds checking at runtime except
+// using assertions which are generally removed from release builds. C is an
+// unsafe language, so it's up to you to be careful to use it correctly. In
+// return, you get a very fast FFI.
+
+// TODO: Generalize this to look up a foreign class in any slot and place the
+// object in a desired slot.
 // This must be called once inside a foreign class's allocator function.
 //
 // It tells Wren how many bytes of raw data need to be stored in the foreign
@@ -247,28 +286,6 @@ int wrenGetSlotCount(WrenVM* vm);
 //
 // It is an error to call this from a finalizer.
 void wrenEnsureSlots(WrenVM* vm, int numSlots);
-
-// TODO: Update docs.
-
-// The following functions read one of the arguments passed to a foreign call.
-// They may only be called while within a function provided to
-// [wrenDefineMethod] or [wrenDefineStaticMethod] that Wren has invoked.
-//
-// They retreive the argument at a given index which ranges from 0 to the number
-// of parameters the method expects. The zeroth parameter is used for the
-// receiver of the method. For example, given a foreign method "foo" on String
-// invoked like:
-//
-//     "receiver".foo("one", "two", "three")
-//
-// The foreign function will be able to access the arguments like so:
-//
-//     0: "receiver"
-//     1: "one"
-//     2: "two"
-//     3: "three"
-//
-// It is an error to pass an invalid argument index.
 
 // Reads a boolean value from [slot].
 //
