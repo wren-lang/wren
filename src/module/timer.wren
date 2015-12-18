@@ -1,7 +1,7 @@
 import "scheduler" for Scheduler
 
 class Timer {
-  static sleep(milliseconds) {
+  def static sleep(milliseconds) {
     if (!(milliseconds is Num)) Fiber.abort("Milliseconds must be a number.")
     if (milliseconds < 0) Fiber.abort("Milliseconds cannot be negative.")
 
@@ -9,5 +9,5 @@ class Timer {
     Scheduler.runNextScheduled_()
   }
 
-  foreign static startTimer_(milliseconds, fiber)
+  def foreign static startTimer_(milliseconds, fiber)
 }

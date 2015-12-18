@@ -4,9 +4,9 @@
 // the enclosing instance is closed over.
 
 class Outer {
-  foo {
+  def foo {
     class Inner {
-      static bar {
+      def static bar {
         _field = "nope" // expect error
       }
     }

@@ -1,6 +1,6 @@
 class Foo {
-  construct new() {}
-  thisHasAMethodNameThatIsExactly64CharactersLongWhichIsTheMaximum {
+  def construct new() {}
+  def thisHasAMethodNameThatIsExactly64CharactersLongWhichIsTheMaximum {
     return "result"
   }
 }

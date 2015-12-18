@@ -1,17 +1,17 @@
 var foo = "variable"
 
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  foo { "method" }
+  def foo { "method" }
 
-  method {
+  def method {
     System.print(foo)
   }
 
-  static foo { "class method" }
+  def static foo { "class method" }
 
-  static classMethod {
+  def static classMethod {
     System.print(foo)
   }
 }

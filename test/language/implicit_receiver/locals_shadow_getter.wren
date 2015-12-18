@@ -1,9 +1,9 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  bar { "getter" }
+  def bar { "getter" }
 
-  test {
+  def test {
     System.print(bar) // expect: getter
 
     {

@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  method {
+  def method {
     return "ok"
     System.print("bad")
   }

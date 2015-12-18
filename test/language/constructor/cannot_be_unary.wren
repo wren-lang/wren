@@ -1,5 +1,5 @@
 class Foo {
-  this ! { // expect error
+  def construct ! { // expect error
     System.print("ok")
   }
 }

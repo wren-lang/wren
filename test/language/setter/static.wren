@@ -1,5 +1,5 @@
 class Foo {
-  static bar=(value) {
+  def static bar=(value) {
     System.print(value)
   }
 }

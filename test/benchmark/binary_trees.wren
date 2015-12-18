@@ -1,7 +1,7 @@
 // Ported from the Python version.
 
 class Tree {
-  construct new(item, depth) {
+  def construct new(item, depth) {
     _item = item
     if (depth > 0) {
       var item2 = item + item
@@ -11,7 +11,7 @@ class Tree {
     }
   }
 
-  check {
+  def check {
     if (_left == null) {
       return _item
     }

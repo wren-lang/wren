@@ -1,3 +1,3 @@
 class Foo {
-  foreign someUnknownMethod // expect runtime error: Could not find foreign method 'someUnknownMethod' for class Foo in module 'main'.
+  def foreign someUnknownMethod // expect runtime error: Could not find foreign method 'someUnknownMethod' for class Foo in module 'main'.
 }

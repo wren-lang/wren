@@ -1,4 +1,4 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 }
 System.print(Foo.new().toString == "instance of Foo") // expect: true

@@ -1,7 +1,7 @@
 var done = false
 while (!done) {
   class Foo {
-    method {
+    def method {
       break // expect error
     }
   }

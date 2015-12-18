@@ -1,11 +1,11 @@
 class Base {
-  toString { "Base" }
+  def toString { "Base" }
 }
 
 class Derived is Base {
-  construct new() {}
-  getClosure { Fn.new { super.toString } }
-  toString { "Derived" }
+  def construct new() {}
+  def getClosure { Fn.new { super.toString } }
+  def toString { "Derived" }
 }
 
 var closure = Derived.new().getClosure

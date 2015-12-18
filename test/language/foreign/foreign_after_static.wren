@@ -1,3 +1,3 @@
 class Foo {
-  static foreign method // expect error
+  def static foreign method // expect error
 }

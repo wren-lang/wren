@@ -1,6 +1,6 @@
 class BadToString {
-  construct new() {}
-  toString { 3 }
+  def construct new() {}
+  def toString { 3 }
 }
 
 System.write(BadToString.new())

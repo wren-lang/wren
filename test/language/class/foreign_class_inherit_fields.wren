@@ -1,5 +1,5 @@
 class Foo {
-  method() {
+  def method() {
     _field = "value"
   }
 }

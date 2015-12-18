@@ -1,23 +1,23 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  getter {
+  def getter {
     System.print("getter")
   }
 
-  setter=(value) {
+  def setter=(value) {
     System.print("setter")
   }
 
-  method(a) {
+  def method(a) {
     System.print("method")
   }
 }
 
 class Bar is Foo {
-  construct new() {}
+  def construct new() {}
 
-  test {
+  def test {
     getter            // expect: getter
     setter = "value"  // expect: setter
     method("arg")     // expect: method

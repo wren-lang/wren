@@ -1,3 +1,3 @@
 class Foo {
-  [] { "empty" } // expect error
+  def [] { "empty" } // expect error
 }

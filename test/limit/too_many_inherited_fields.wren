@@ -1,5 +1,5 @@
 class Foo {
-  construct new() {
+  def construct new() {
     _field1 = 1
     _field2 = 2
     _field3 = 3
@@ -130,14 +130,14 @@ class Foo {
     _field128 = 128
   }
 
-  foo {
+  def foo {
     System.print(_field1)
     System.print(_field128)
   }
 }
 
 class Bar is Foo { // expect runtime error: Class 'Bar' may not have more than 255 fields, including inherited ones.
-  construct new() {
+  def construct new() {
     super()
     _field129 = 129
     _field130 = 130
@@ -269,7 +269,7 @@ class Bar is Foo { // expect runtime error: Class 'Bar' may not have more than 2
     _field256 = 256
   }
 
-  bar {
+  def bar {
     System.print(_field129)
     System.print(_field256)
   }

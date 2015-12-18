@@ -1,39 +1,39 @@
 class Outer {
-  construct new() {}
+  def construct new() {}
 
-  getter {
+  def getter {
     System.print("outer getter")
   }
 
-  setter=(value) {
+  def setter=(value) {
     System.print("outer setter")
   }
 
-  method(a) {
+  def method(a) {
     System.print("outer method")
   }
 
-  test {
+  def test {
     getter            // expect: outer getter
     setter = "value"  // expect: outer setter
     method("arg")     // expect: outer method
 
     class Inner {
-      construct new() {}
+      def construct new() {}
 
-      getter {
+      def getter {
         System.print("inner getter")
       }
 
-      setter=(value) {
+      def setter=(value) {
         System.print("inner setter")
       }
 
-      method(a) {
+      def method(a) {
         System.print("inner method")
       }
 
-      test {
+      def test {
         getter            // expect: inner getter
         setter = "value"  // expect: inner setter
         method("arg")     // expect: inner method

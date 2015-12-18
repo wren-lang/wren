@@ -1,26 +1,26 @@
 class Foo {
-  construct new() { _field = "Foo field" }
+  def construct new() { _field = "Foo field" }
 
-  closeOverFooGet {
+  def closeOverFooGet {
     return Fn.new { Fn.new { _field } }
   }
 
-  closeOverFooSet {
+  def closeOverFooSet {
     return Fn.new { Fn.new { _field = "new foo value" } }
   }
 }
 
 class Bar is Foo {
-  construct new() {
+  def construct new() {
     super()
     _field = "Bar field"
   }
 
-  closeOverBarGet {
+  def closeOverBarGet {
     return Fn.new { Fn.new { _field } }
   }
 
-  closeOverBarSet {
+  def closeOverBarSet {
     return Fn.new { Fn.new { _field = "new bar value" } }
   }
 }

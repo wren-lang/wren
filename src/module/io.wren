@@ -1,7 +1,7 @@
 import "scheduler" for Scheduler
 
 foreign class File {
-  static open(path) {
+  def static open(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
 
     open_(path, Fiber.current)
@@ -9,7 +9,7 @@ foreign class File {
     return new_(fd)
   }
 
-  static open(path, fn) {
+  def static open(path, fn) {
     var file = open(path)
     var fiber = Fiber.new { fn.call(file) }
 
@@ -22,34 +22,34 @@ foreign class File {
     return result
   }
 
-  static read(path) {
+  def static read(path) {
     return File.open(path) {|file| file.readBytes(file.size) }
   }
 
-  static size(path) {
+  def static size(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
 
     sizePath_(path, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
-  construct new_(fd) {}
+  def construct new_(fd) {}
 
-  close() {
+  def close() {
     if (close_(Fiber.current)) return
     Scheduler.runNextScheduled_()
   }
 
-  isOpen { descriptor != -1 }
+  def isOpen { descriptor != -1 }
 
-  size {
+  def size {
     if (!isOpen) Fiber.abort("File is not open.")
 
     size_(Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
-  readBytes(count) {
+  def readBytes(count) {
     if (!isOpen) Fiber.abort("File is not open.")
     if (!(count is Num)) Fiber.abort("Count must be an integer.")
     if (!count.isInteger) Fiber.abort("Count must be an integer.")
@@ -59,17 +59,17 @@ foreign class File {
     return Scheduler.runNextScheduled_()
   }
 
-  foreign static open_(path, fiber)
-  foreign static sizePath_(path, fiber)
+  def foreign static open_(path, fiber)
+  def foreign static sizePath_(path, fiber)
 
-  foreign close_(fiber)
-  foreign descriptor
-  foreign readBytes_(count, fiber)
-  foreign size_(fiber)
+  def foreign close_(fiber)
+  def foreign descriptor
+  def foreign readBytes_(count, fiber)
+  def foreign size_(fiber)
 }
 
 class Stdin {
-  static readLine() {
+  def static readLine() {
     if (__isClosed == true) {
       Fiber.abort("Stdin was closed.")
     }
@@ -84,7 +84,7 @@ class Stdin {
     return line
   }
 
-  static onData_(data) {
+  def static onData_(data) {
     if (data == null) {
       __isClosed = true
       readStop_()
@@ -119,6 +119,6 @@ class Stdin {
     }
   }
 
-  foreign static readStart_()
-  foreign static readStop_()
+  def foreign static readStart_()
+  def foreign static readStop_()
 }

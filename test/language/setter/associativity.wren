@@ -1,7 +1,7 @@
 class Foo {
-  construct new(value) { _value = value }
-  toString { _value }
-  bar=(value) {
+  def construct new(value) { _value = value }
+  def toString { _value }
+  def bar=(value) {
     _value = value
     return value
   }

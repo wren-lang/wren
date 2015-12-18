@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  bar {
+  def bar {
     var a = "a"
     System.print(a) // expect: a
     var b = a + " b"

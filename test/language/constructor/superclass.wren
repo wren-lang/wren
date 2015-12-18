@@ -1,30 +1,30 @@
 class A {
-  construct new(arg) {
+  def construct new(arg) {
     System.print("new A %(arg)")
     _field = arg
   }
 
-  aField { _field }
+  def aField { _field }
 }
 
 class B is A {
-  construct new(arg1, arg2) {
+  def construct new(arg1, arg2) {
     super(arg2)
     System.print("new B %(arg1)")
     _field = arg1
   }
 
-  bField { _field }
+  def bField { _field }
 }
 
 class C is B {
-  construct new() {
+  def construct new() {
     super("one", "two")
     System.print("new C")
     _field = "c"
   }
 
-  cField { _field }
+  def cField { _field }
 }
 
 var c = C.new()

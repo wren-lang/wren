@@ -1,23 +1,23 @@
 class Toggle {
-  construct new(startState) {
+  def construct new(startState) {
     _state = startState
   }
 
-  value { _state }
-  activate {
+  def value { _state }
+  def activate {
     _state = !_state
     return this
   }
 }
 
 class NthToggle is Toggle {
-  construct new(startState, maxCounter) {
+  def construct new(startState, maxCounter) {
     super(startState)
     _countMax = maxCounter
     _count = 0
   }
 
-  activate {
+  def activate {
     _count = _count + 1
     if (_count >= _countMax) {
       super.activate

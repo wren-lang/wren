@@ -7,7 +7,7 @@
 // Class definition with a toplevel name.
 class SyntaxExample {
   // Constructor
-  construct new() {
+  def construct new() {
     // Top-level name `IO`
     System.print("I am a constructor!")
 
@@ -26,13 +26,13 @@ class SyntaxExample {
   }
 
   // Constructor with arguments
-  construct constructor(a, b) {
+  def construct constructor(a, b) {
     print(a, b)
     field = a
   }
 
   // Method without arguments
-  variables {
+  def variables {
     // Valid local variable names.
     var hi
     var camelCase
@@ -42,54 +42,54 @@ class SyntaxExample {
   }
 
   // Method with empty argument list
-  fields() {
+  def fields() {
     // Fields
     _under_score = 1
     _field = 2
   }
 
   // Static method with single argument
-  static fields(a) {
+  def static fields(a) {
     // Static field
     __a = a
   }
 
   // Setter
-  field=(value) { _field = value }
+  def field=(value) { _field = value }
 
   // Method with arguments
-  print(a, b) { System.print(a + b) }
+  def print(a, b) { System.print(a + b) }
 
   // Operators
-  +(other) { "infix + %(other)" }
-  -(other) { "infix - %(other)" }
-  *(other) { "infix * %(other)" }
-  /(other) { "infix / %(other)" }
-  %(other) { "infix \% %(other)" }
-  <(other) { "infix < %(other)" }
-  >(other) { "infix > %(other)" }
-  <=(other) { "infix <= %(other)" }
-  >=(other) { "infix >= %(other)" }
-  ==(other) { "infix == %(other)" }
-  !=(other) { "infix != %(other)" }
-  &(other) { "infix & %(other)" }
-  |(other) { "infix | %(other)" }
+  def +(other) { "infix + %(other)" }
+  def -(other) { "infix - %(other)" }
+  def *(other) { "infix * %(other)" }
+  def /(other) { "infix / %(other)" }
+  def %(other) { "infix \% %(other)" }
+  def <(other) { "infix < %(other)" }
+  def >(other) { "infix > %(other)" }
+  def <=(other) { "infix <= %(other)" }
+  def >=(other) { "infix >= %(other)" }
+  def ==(other) { "infix == %(other)" }
+  def !=(other) { "infix != %(other)" }
+  def &(other) { "infix & %(other)" }
+  def |(other) { "infix | %(other)" }
 
-  ! { "prefix !" }
-  ~ { "prefix ~" }
-  - { "prefix -" }
+  def ! { "prefix !" }
+  def ~ { "prefix ~" }
+  def - { "prefix -" }
 }
 
 // `class`, `is`
 class ReservedWords is SyntaxExample {
-  reserved {
+  def reserved {
     // `super`, `true`, `false`
     super(true, false)
     // `this`
     this.foo
   }
 
-  foo {
+  def foo {
     // `var`
     var n = 27
     // `while`, `if`, `else`
@@ -106,7 +106,7 @@ class ReservedWords is SyntaxExample {
     return null
   }
 
-  imports {
+  def imports {
     // `import`
     import "hello"
     // `import`, `for`
@@ -120,9 +120,9 @@ class ReservedWords is SyntaxExample {
 }
 
 class Literals is SyntaxExample {
-  booleans { true || false }
+  def booleans { true || false }
 
-  numbers {
+  def numbers {
     0
     1234
     -5678
@@ -133,7 +133,7 @@ class Literals is SyntaxExample {
     0x1234567890ABCDEF
   }
 
-  strings {
+  def strings {
     "hi there"
     // Escapes:
     "\0" // The NUL byte: 0.
@@ -152,20 +152,20 @@ class Literals is SyntaxExample {
     System.print("\x48\x69\x2e") // "Hi."
   }
 
-  ranges {
+  def ranges {
     3..8  // inclusive
     4...6 // half-inclusive
   }
 
-  nothing { null }
+  def nothing { null }
 
-  lists {
+  def lists {
     var list = [1, "banana", true]
     list[0] = 5
     list[1..2]
   }
 
-  maps {
+  def maps {
     var stringMap = {
       "George": "Harrison",
       "John": "Lennon",

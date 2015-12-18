@@ -1,24 +1,24 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  +(other) { "infix + %(other)" }
-  -(other) { "infix - %(other)" }
-  *(other) { "infix * %(other)" }
-  /(other) { "infix / %(other)" }
-  %(other) { "infix \% %(other)" }
-  <(other) { "infix < %(other)" }
-  >(other) { "infix > %(other)" }
-  <=(other) { "infix <= %(other)" }
-  >=(other) { "infix >= %(other)" }
-  ==(other) { "infix == %(other)" }
-  !=(other) { "infix != %(other)" }
-  &(other) { "infix & %(other)" }
-  |(other) { "infix | %(other)" }
-  is(other) { "infix is %(other)" }
+  def +(other) { "infix + %(other)" }
+  def -(other) { "infix - %(other)" }
+  def *(other) { "infix * %(other)" }
+  def /(other) { "infix / %(other)" }
+  def %(other) { "infix \% %(other)" }
+  def <(other) { "infix < %(other)" }
+  def >(other) { "infix > %(other)" }
+  def <=(other) { "infix <= %(other)" }
+  def >=(other) { "infix >= %(other)" }
+  def ==(other) { "infix == %(other)" }
+  def !=(other) { "infix != %(other)" }
+  def &(other) { "infix & %(other)" }
+  def |(other) { "infix | %(other)" }
+  def is(other) { "infix is %(other)" }
 
-  ! { "prefix !" }
-  ~ { "prefix ~" }
-  - { "prefix -" }
+  def ! { "prefix !" }
+  def ~ { "prefix ~" }
+  def - { "prefix -" }
 }
 
 var foo = Foo.new()

@@ -1,6 +1,6 @@
 class Value {
-  foreign static value=(value)
-  foreign static value
+  def foreign static value=(value)
+  def foreign static value
 }
 
 Value.value = ["list", "of", "strings"]

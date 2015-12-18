@@ -1,5 +1,5 @@
 class Foo {
-  bar(arg,
+  def bar(arg,
       arg) { // expect error
     "body"
   }

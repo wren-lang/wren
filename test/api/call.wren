@@ -1,17 +1,17 @@
 class Call {
-  static noParams {
+  def static noParams {
     System.print("noParams")
   }
 
-  static zero() {
+  def static zero() {
     System.print("zero")
   }
 
-  static one(one) {
+  def static one(one) {
     System.print("one %(one)")
   }
 
-  static two(one, two) {
+  def static two(one, two) {
     // Don't print null bytes.
     if (two is String && two.bytes.contains(0)) {
       two = two.bytes.toList
@@ -20,7 +20,7 @@ class Call {
     System.print("two %(one) %(two)")
   }
 
-  static getValue(value) {
+  def static getValue(value) {
     // Return a new value if we aren't given one.
     if (value == null) return ["a", "b"]
 

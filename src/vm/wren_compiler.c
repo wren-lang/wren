@@ -3130,6 +3130,9 @@ static void defineMethod(Compiler* compiler, int classSlot, bool isStatic,
 // be parsed.
 static bool method(Compiler* compiler, int classSlot)
 {
+  // TODO: Don't require 'def' for constructors.
+  consume(compiler, TOKEN_DEF, "Expect 'def' for method definition.");
+  
   // TODO: What about foreign constructors?
   bool isForeign = match(compiler, TOKEN_FOREIGN);
   compiler->enclosingClass->inStatic = match(compiler, TOKEN_STATIC);

@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
-  method(a, b) { "method %(a) %(b)" }
-  [a, b] { "subscript %(a) %(b)" }
+  def construct new() {}
+  def method(a, b) { "method %(a) %(b)" }
+  def [a, b] { "subscript %(a) %(b)" }
 }
 
 var foo = Foo.new()

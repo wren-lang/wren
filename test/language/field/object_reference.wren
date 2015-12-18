@@ -1,12 +1,12 @@
 // This test exists mainly to make sure the GC traces instance fields.
 class Node {
-  construct new(left, value, right) {
+  def construct new(left, value, right) {
     _left = left
     _value = value
     _right = right
   }
 
-  write() {
+  def write() {
     if (_left is Node) {
       _left.write()
     }

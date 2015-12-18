@@ -1,10 +1,10 @@
 class Foo {
-  construct new() {}
-  bar { "on instance" }
-  static bar { "on metaclass" }
+  def construct new() {}
+  def bar { "on instance" }
+  def static bar { "on metaclass" }
 
-  bar(arg) { "on instance %(arg)" }
-  static bar(arg) { "on metaclass %(arg)" }
+  def bar(arg) { "on instance %(arg)" }
+  def static bar(arg) { "on metaclass %(arg)" }
 }
 
 System.print(Foo.new().bar)        // expect: on instance

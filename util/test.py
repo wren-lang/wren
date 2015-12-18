@@ -183,6 +183,7 @@ class Test:
     # Make sure the stack trace has the right line. Skip over any lines that
     # come from builtin libraries.
     stack_lines = error_lines[line + 1:]
+    match = None
     for stack_line in stack_lines:
       match = STACK_TRACE_PATTERN.search(stack_line)
       if match: break

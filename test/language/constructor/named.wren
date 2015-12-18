@@ -1,8 +1,8 @@
 class Foo {
-  construct named() { _field = "named" }
-  construct other() { _field = "other" }
+  def construct named() { _field = "named" }
+  def construct other() { _field = "other" }
 
-  toString { _field }
+  def toString { _field }
 }
 
 System.print(Foo.named()) // expect: named

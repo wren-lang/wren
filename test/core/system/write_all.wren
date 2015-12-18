@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  toString { "Foo" }
+  def toString { "Foo" }
 }
 
 System.writeAll([]) // expect:

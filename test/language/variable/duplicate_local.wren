@@ -1,5 +1,5 @@
 class Foo {
-  bar {
+  def bar {
     var a = "value"
     var a = "other" // expect error
   }

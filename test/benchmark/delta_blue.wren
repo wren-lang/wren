@@ -39,20 +39,20 @@
 // disrupting current constraints.  Strengths cannot be created outside
 // this class, so == can be used for value comparison.
 class Strength {
-  construct new(value, name) {
+  def construct new(value, name) {
     _value = value
     _name = name
   }
 
-  value { _value }
-  name { _name }
+  def value { _value }
+  def name { _name }
 
-  nextWeaker { ORDERED[_value] }
+  def nextWeaker { ORDERED[_value] }
 
-  static stronger(s1, s2) { s1.value < s2.value }
-  static weaker(s1, s2) { s1.value > s2.value }
-  static weakest(s1, s2) { Strength.weaker(s1, s2) ? s1 : s2 }
-  static strongest(s1, s2) { Strength.stronger(s1, s2) ? s1 : s2 }
+  def static stronger(s1, s2) { s1.value < s2.value }
+  def static weaker(s1, s2) { s1.value > s2.value }
+  def static weakest(s1, s2) { Strength.weaker(s1, s2) ? s1 : s2 }
+  def static strongest(s1, s2) { Strength.stronger(s1, s2) ? s1 : s2 }
 }
 
 // Compile time computed constants.
@@ -71,14 +71,14 @@ var ORDERED = [
 var ThePlanner
 
 class Constraint {
-  construct new(strength) {
+  def construct new(strength) {
     _strength = strength
   }
 
-  strength { _strength }
+  def strength { _strength }
 
   // Activate this constraint and attempt to satisfy it.
-  addConstraint() {
+  def addConstraint() {
     addToGraph()
     ThePlanner.incrementalAdd(this)
   }
@@ -88,7 +88,7 @@ class Constraint {
   // graph. Answer the constraint that this constraint overrides, if
   // there is one, or nil, if there isn't.
   // Assume: I am not already satisfied.
-  satisfy(mark) {
+  def satisfy(mark) {
     chooseMethod(mark)
     if (!isSatisfied) {
       if (_strength == REQUIRED) {
@@ -107,7 +107,7 @@ class Constraint {
     return overridden
   }
 
-  destroyConstraint() {
+  def destroyConstraint() {
     if (isSatisfied) ThePlanner.incrementalRemove(this)
     removeFromGraph()
   }
@@ -115,12 +115,12 @@ class Constraint {
   // Normal constraints are not input constraints.  An input constraint
   // is one that depends on external state, such as the mouse, the
   // keybord, a clock, or some arbitraty piece of imperative code.
-  isInput { false }
+  def isInput { false }
 }
 
 // Abstract superclass for constraints having a single possible output variable.
 class UnaryConstraint is Constraint {
-  construct new(myOutput, strength) {
+  def construct new(myOutput, strength) {
     super(strength)
     _satisfied = false
     _myOutput = myOutput
@@ -128,44 +128,44 @@ class UnaryConstraint is Constraint {
   }
 
   // Adds this constraint to the constraint graph.
-  addToGraph() {
+  def addToGraph() {
     _myOutput.addConstraint(this)
     _satisfied = false
   }
 
   // Decides if this constraint can be satisfied and records that decision.
-  chooseMethod(mark) {
+  def chooseMethod(mark) {
     _satisfied = (_myOutput.mark != mark) &&
         Strength.stronger(strength, _myOutput.walkStrength)
   }
 
   // Returns true if this constraint is satisfied in the current solution.
-  isSatisfied { _satisfied }
+  def isSatisfied { _satisfied }
 
-  markInputs(mark) {
+  def markInputs(mark) {
     // has no inputs.
   }
 
   // Returns the current output variable.
-  output { _myOutput }
+  def output { _myOutput }
 
   // Calculate the walkabout strength, the stay flag, and, if it is
   // 'stay', the value for the current output of this constraint. Assume
   // this constraint is satisfied.
-  recalculate() {
+  def recalculate() {
     _myOutput.walkStrength = strength
     _myOutput.stay = !isInput
     if (_myOutput.stay) execute() // Stay optimization.
   }
 
   // Records that this constraint is unsatisfied.
-  markUnsatisfied() {
+  def markUnsatisfied() {
     _satisfied = false
   }
 
-  inputsKnown(mark) { true }
+  def inputsKnown(mark) { true }
 
-  removeFromGraph() {
+  def removeFromGraph() {
     if (_myOutput != null) _myOutput.removeConstraint(this)
     _satisfied = false
   }
@@ -176,11 +176,11 @@ class UnaryConstraint is Constraint {
 // change their output during plan execution.  This is called "stay
 // optimization".
 class StayConstraint is UnaryConstraint {
-  construct new(variable, strength) {
+  def construct new(variable, strength) {
     super(variable, strength)
   }
 
-  execute() {
+  def execute() {
     // Stay constraints do nothing.
   }
 }
@@ -188,14 +188,14 @@ class StayConstraint is UnaryConstraint {
 // A unary input constraint used to mark a variable that the client
 // wishes to change.
 class EditConstraint is UnaryConstraint {
-  construct new(variable, strength) {
+  def construct new(variable, strength) {
     super(variable, strength)
   }
 
   // Edits indicate that a variable is to be changed by imperative code.
-  isInput { true }
+  def isInput { true }
 
-  execute() {
+  def execute() {
     // Edit constraints do nothing.
   }
 }
@@ -208,7 +208,7 @@ var BACKWARD = 0
 // Abstract superclass for constraints having two possible output
 // variables.
 class BinaryConstraint is Constraint {
-  construct new(v1, v2, strength) {
+  def construct new(v1, v2, strength) {
     super(strength)
     _v1 = v1
     _v2 = v2
@@ -216,14 +216,14 @@ class BinaryConstraint is Constraint {
     addConstraint()
   }
 
-  direction { _direction }
-  v1 { _v1 }
-  v2 { _v2 }
+  def direction { _direction }
+  def v1 { _v1 }
+  def v2 { _v2 }
 
   // Decides if this constraint can be satisfied and which way it
   // should flow based on the relative strength of the variables related,
   // and record that decision.
-  chooseMethod(mark) {
+  def chooseMethod(mark) {
     if (_v1.mark == mark) {
       if (_v2.mark != mark &&
           Strength.stronger(strength, _v2.walkStrength)) {
@@ -258,30 +258,30 @@ class BinaryConstraint is Constraint {
   }
 
   // Add this constraint to the constraint graph.
-  addToGraph() {
+  def addToGraph() {
     _v1.addConstraint(this)
     _v2.addConstraint(this)
     _direction = NONE
   }
 
   // Answer true if this constraint is satisfied in the current solution.
-  isSatisfied { _direction != NONE }
+  def isSatisfied { _direction != NONE }
 
   // Mark the input variable with the given mark.
-  markInputs(mark) {
+  def markInputs(mark) {
     input.mark = mark
   }
 
   // Returns the current input variable
-  input { _direction == FORWARD ? _v1 : _v2 }
+  def input { _direction == FORWARD ? _v1 : _v2 }
 
   // Returns the current output variable.
-  output { _direction == FORWARD ? _v2 : _v1 }
+  def output { _direction == FORWARD ? _v2 : _v1 }
 
   // Calculate the walkabout strength, the stay flag, and, if it is
   // 'stay', the value for the current output of this
   // constraint. Assume this constraint is satisfied.
-  recalculate() {
+  def recalculate() {
     var ihn = input
     var out = output
     out.walkStrength = Strength.weakest(strength, ihn.walkStrength)
@@ -290,16 +290,16 @@ class BinaryConstraint is Constraint {
   }
 
   // Record the fact that this constraint is unsatisfied.
-  markUnsatisfied() {
+  def markUnsatisfied() {
     _direction = NONE
   }
 
-  inputsKnown(mark) {
+  def inputsKnown(mark) {
     var i = input
     return i.mark == mark || i.stay || i.determinedBy == null
   }
 
-  removeFromGraph() {
+  def removeFromGraph() {
     if (_v1 != null) _v1.removeConstraint(this)
     if (_v2 != null) _v2.removeConstraint(this)
     _direction = NONE
@@ -311,32 +311,32 @@ class BinaryConstraint is Constraint {
 // this relationship but the scale factor and offset are considered
 // read-only.
 class ScaleConstraint is BinaryConstraint {
-  construct new(src, scale, offset, dest, strength) {
+  def construct new(src, scale, offset, dest, strength) {
     _scale = scale
     _offset = offset
     super(src, dest, strength)
   }
 
   // Adds this constraint to the constraint graph.
-  addToGraph() {
+  def addToGraph() {
     super()
     _scale.addConstraint(this)
     _offset.addConstraint(this)
   }
 
-  removeFromGraph() {
+  def removeFromGraph() {
     super()
     if (_scale != null) _scale.removeConstraint(this)
     if (_offset != null) _offset.removeConstraint(this)
   }
 
-  markInputs(mark) {
+  def markInputs(mark) {
     super.markInputs(mark)
     _scale.mark = _offset.mark = mark
   }
 
   // Enforce this constraint. Assume that it is satisfied.
-  execute() {
+  def execute() {
     if (direction == FORWARD) {
       v2.value = v1.value * _scale.value + _offset.value
     } else {
@@ -348,7 +348,7 @@ class ScaleConstraint is BinaryConstraint {
   // Calculate the walkabout strength, the stay flag, and, if it is
   // 'stay', the value for the current output of this constraint. Assume
   // this constraint is satisfied.
-  recalculate() {
+  def recalculate() {
     var ihn = input
     var out = output
     out.walkStrength = Strength.weakest(strength, ihn.walkStrength)
@@ -359,12 +359,12 @@ class ScaleConstraint is BinaryConstraint {
 
 // Constrains two variables to have the same value.
 class EqualityConstraint is BinaryConstraint {
-  construct new(v1, v2, strength) {
+  def construct new(v1, v2, strength) {
     super(v1, v2, strength)
   }
 
   // Enforce this constraint. Assume that it is satisfied.
-  execute() {
+  def execute() {
     output.value = input.value
   }
 }
@@ -374,7 +374,7 @@ class EqualityConstraint is BinaryConstraint {
 // various parameters of interest to the DeltaBlue incremental
 // constraint solver.
 class Variable {
-  construct new(name, value) {
+  def construct new(name, value) {
     _constraints = []
     _determinedBy = null
     _mark = 0
@@ -384,26 +384,26 @@ class Variable {
     _value = value
   }
 
-  constraints { _constraints }
-  determinedBy { _determinedBy }
-  determinedBy=(value) { _determinedBy = value }
-  mark { _mark }
-  mark=(value) { _mark = value }
-  walkStrength { _walkStrength }
-  walkStrength=(value) { _walkStrength = value }
-  stay { _stay }
-  stay=(value) { _stay = value }
-  value { _value }
-  value=(newValue) { _value = newValue }
+  def constraints { _constraints }
+  def determinedBy { _determinedBy }
+  def determinedBy=(value) { _determinedBy = value }
+  def mark { _mark }
+  def mark=(value) { _mark = value }
+  def walkStrength { _walkStrength }
+  def walkStrength=(value) { _walkStrength = value }
+  def stay { _stay }
+  def stay=(value) { _stay = value }
+  def value { _value }
+  def value=(newValue) { _value = newValue }
 
   // Add the given constraint to the set of all constraints that refer
   // this variable.
-  addConstraint(constraint) {
+  def addConstraint(constraint) {
     _constraints.add(constraint)
   }
 
   // Removes all traces of c from this variable.
-  removeConstraint(constraint) {
+  def removeConstraint(constraint) {
     _constraints = _constraints.where { |c| c != constraint }
     if (_determinedBy == constraint) _determinedBy = null
   }
@@ -413,17 +413,17 @@ class Variable {
 // to resatisfy all currently satisfiable constraints in the face of
 // one or more changing inputs.
 class Plan {
-  construct new() {
+  def construct new() {
     _list = []
   }
 
-  addConstraint(constraint) {
+  def addConstraint(constraint) {
     _list.add(constraint)
   }
 
-  size { _list.count }
+  def size { _list.count }
 
-  execute() {
+  def execute() {
     for (constraint in _list) {
       constraint.execute()
     }
@@ -431,7 +431,7 @@ class Plan {
 }
 
 class Planner {
-  construct new() {
+  def construct new() {
     _currentMark = 0
   }
 
@@ -447,7 +447,7 @@ class Planner {
   // a unique mark value so that we know where we've been. This allows
   // the algorithm to avoid getting into an infinite loop even if the
   // constraint graph has an inadvertent cycle.
-  incrementalAdd(constraint) {
+  def incrementalAdd(constraint) {
     var mark = newMark()
     var overridden = constraint.satisfy(mark)
     while (overridden != null) {
@@ -464,7 +464,7 @@ class Planner {
   // strength, strongest first, as a heuristic for avoiding
   // unnecessarily adding and then overriding weak constraints.
   // Assume: [c] is satisfied.
-  incrementalRemove(constraint) {
+  def incrementalRemove(constraint) {
     var out = constraint.output
     constraint.markUnsatisfied()
     constraint.removeFromGraph()
@@ -480,7 +480,7 @@ class Planner {
   }
 
   // Select a previously unused mark value.
-  newMark() { _currentMark = _currentMark + 1 }
+  def newMark() { _currentMark = _currentMark + 1 }
 
   // Extract a plan for resatisfaction starting from the given source
   // constraints, usually a set of input constraints. This method
@@ -499,7 +499,7 @@ class Planner {
   // variables, which are not stay but which are also not computed by
   // any constraint.
   // Assume: [sources] are all satisfied.
-  makePlan(sources) {
+  def makePlan(sources) {
     var mark = newMark()
     var plan = Plan.new()
     var todo = sources
@@ -516,7 +516,7 @@ class Planner {
 
   // Extract a plan for resatisfying starting from the output of the
   // given [constraints], usually a set of input constraints.
-  extractPlanFromConstraints(constraints) {
+  def extractPlanFromConstraints(constraints) {
     var sources = []
     for (constraint in constraints) {
       // if not in plan already and eligible for inclusion.
@@ -536,7 +536,7 @@ class Planner {
   // the given mark. Thus, encountering a marked node downstream of
   // the output constraint means that there is a path from the
   // constraint's output to one of its inputs.
-  addPropagate(constraint, mark) {
+  def addPropagate(constraint, mark) {
     var todo = [constraint]
     while (todo.count > 0) {
       var d = todo.removeAt(-1)
@@ -555,7 +555,7 @@ class Planner {
   // Update the walkabout strengths and stay flags of all variables
   // downstream of the given constraint. Answer a collection of
   // unsatisfied constraints sorted in order of decreasing strength.
-  removePropagateFrom(out) {
+  def removePropagateFrom(out) {
     out.determinedBy = null
     out.walkStrength = WEAKEST
     out.stay = true
@@ -579,7 +579,7 @@ class Planner {
     return unsatisfied
   }
 
-  addConstraintsConsumingTo(v, coll) {
+  def addConstraintsConsumingTo(v, coll) {
     var determining = v.determinedBy
     for (constraint in v.constraints) {
       if (constraint != determining && constraint.isSatisfied) {

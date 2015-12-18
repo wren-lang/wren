@@ -1,11 +1,11 @@
 class Foo {
-  construct new() { _field = "Foo field" }
+  def construct new() { _field = "Foo field" }
 
-  closeOverGet {
+  def closeOverGet {
     return Fn.new { _field }
   }
 
-  closeOverSet {
+  def closeOverSet {
     return Fn.new { _field = "new value" }
   }
 }

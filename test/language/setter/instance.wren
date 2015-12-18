@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  bar=(value) {
+  def bar=(value) {
     System.print(value)
   }
 }

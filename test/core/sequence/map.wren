@@ -1,29 +1,29 @@
 // Infinite iterator demonstrating that Sequence.map is not eager
 class FibIterator {
-  construct new() {
+  def construct new() {
     _current = 0
     _next = 1
   }
 
-  iterate {
+  def iterate {
     var sum = _current + _next
     _current = _next
     _next = sum
   }
 
-  value { _current }
+  def value { _current }
 }
 
 class Fib is Sequence {
-  construct new() {}
+  def construct new() {}
 
-  iterate(iterator) {
+  def iterate(iterator) {
     if (iterator == null) return FibIterator.new()
     iterator.iterate
     return iterator
   }
 
-  iteratorValue(iterator) { iterator.value }
+  def iteratorValue(iterator) { iterator.value }
 }
 
 var squareFib = Fib.new().map {|fib| fib * fib }

@@ -1,5 +1,5 @@
 class Fib {
-  static get(n) {
+  def static get(n) {
     if (n < 2) return n
     return get(n - 1) + get(n - 2)
   }

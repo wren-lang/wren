@@ -1,5 +1,5 @@
 class A {
-  foo {
+  def foo {
     System.print("A.foo")
   }
 }
@@ -7,9 +7,9 @@ class A {
 class B is A {}
 
 class C is B {
-  construct new() {}
+  def construct new() {}
 
-  foo {
+  def foo {
     System.print("C.foo")
     super.foo
   }

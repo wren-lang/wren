@@ -1,14 +1,14 @@
 class Returns {
-  foreign static implicitNull
+  def foreign static implicitNull
 
-  foreign static returnInt
-  foreign static returnFloat
+  def foreign static returnInt
+  def foreign static returnFloat
 
-  foreign static returnTrue
-  foreign static returnFalse
+  def foreign static returnTrue
+  def foreign static returnFalse
 
-  foreign static returnString
-  foreign static returnBytes
+  def foreign static returnString
+  def foreign static returnBytes
 }
 
 System.print(Returns.implicitNull == null) // expect: true

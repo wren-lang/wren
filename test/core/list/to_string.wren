@@ -9,8 +9,8 @@ System.print([1, [2, [3], 4], 5]) // expect: [1, [2, [3], 4], 5]
 
 // Calls toString on elements.
 class Foo {
-  construct new() {}
-  toString { "Foo.toString" }
+  def construct new() {}
+  def toString { "Foo.toString" }
 }
 
 System.print([1, Foo.new(), 2]) // expect: [1, Foo.toString, 2]

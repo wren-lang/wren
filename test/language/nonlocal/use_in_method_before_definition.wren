@@ -1,11 +1,11 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  method {
+  def method {
     System.print(Global)
   }
 
-  static classMethod {
+  def static classMethod {
     System.print(Global)
   }
 }

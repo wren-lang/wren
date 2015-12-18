@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  toString { "Foo.toString" }
+  def toString { "Foo.toString" }
 }
 
 // Calls toString on argument.

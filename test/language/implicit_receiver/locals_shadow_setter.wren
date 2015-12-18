@@ -1,12 +1,12 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  bar=(value) {
+  def bar=(value) {
     System.print("setter")
     return value
   }
 
-  test {
+  def test {
     bar = "value" // expect: setter
 
     {

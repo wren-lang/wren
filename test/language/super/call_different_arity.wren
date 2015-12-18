@@ -1,13 +1,13 @@
 class Base {
-  foo { System.print("Base.foo") }
-  foo(a) { System.print("Base.foo(a)") }
-  foo(a, b) { System.print("Base.foo(a, b)") }
+  def foo { System.print("Base.foo") }
+  def foo(a) { System.print("Base.foo(a)") }
+  def foo(a, b) { System.print("Base.foo(a, b)") }
 }
 
 class Derived is Base {
-  construct new() {}
+  def construct new() {}
 
-  foo(a) {
+  def foo(a) {
     System.print("Derived.bar(a)")
     super
     super(1)

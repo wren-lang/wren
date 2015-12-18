@@ -1,5 +1,5 @@
 class Foo {
-  construct new() {
+  def construct new() {
     System.print("ok")
   }
 }

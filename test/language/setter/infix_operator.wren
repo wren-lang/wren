@@ -1,5 +1,5 @@
 class Foo {
-  bar=(value) { value }
+  def bar=(value) { value }
 }
 
 var foo = Foo.new()

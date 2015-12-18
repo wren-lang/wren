@@ -1,13 +1,13 @@
 class Base {
-  foo {
+  def foo {
     System.print("Base.foo")
   }
 }
 
 class Derived is Base {
-  construct new() {}
+  def construct new() {}
 
-  bar {
+  def bar {
     System.print("Derived.bar")
     super.foo
   }

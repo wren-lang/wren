@@ -1,15 +1,15 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  static sayName {
+  def static sayName {
     System.print(Foo)
   }
 
-  sayName {
+  def sayName {
     System.print(Foo)
   }
 
-  static toString { "Foo!" }
+  def static toString { "Foo!" }
 }
 
 Foo.sayName // expect: Foo!

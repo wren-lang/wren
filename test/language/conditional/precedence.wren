@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
-  static bar { true }
-  static baz { 1 }
+  def construct new() {}
+  def static bar { true }
+  def static baz { 1 }
 }
 
 // Condition precedence.

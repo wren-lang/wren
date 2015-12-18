@@ -1,16 +1,16 @@
 class foo {
-  construct new() {}
+  def construct new() {}
 
-  static callFoo {
+  def static callFoo {
     System.print(foo)
   }
 
-  callFoo {
+  def callFoo {
     System.print(foo)
   }
 
-  foo { "instance foo method" }
-  static foo { "static foo method" }
+  def foo { "instance foo method" }
+  def static foo { "static foo method" }
 }
 
 foo.callFoo // expect: static foo method

@@ -1,3 +1,3 @@
 class Foo {
-  foreign method { "body" } // expect error
+  def foreign method { "body" } // expect error
 }

@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
-  write { System.print(_field) } // Compile a use of the field...
-  init { _field = "value" }  // ...before an assignment to it.
+  def construct new() {}
+  def write { System.print(_field) } // Compile a use of the field...
+  def init { _field = "value" }  // ...before an assignment to it.
 }
 
 var foo = Foo.new()

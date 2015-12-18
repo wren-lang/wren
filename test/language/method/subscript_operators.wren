@@ -1,11 +1,11 @@
 class Foo {
-  construct new() {}
-  [a] { "1-subscript %(a)" }
-  [a, b] { "2-subscript %(a) %(b)" }
-  [a, b, c] { "3-subscript %(a) %(b) %(c)" }
-  [a]=(value) { "1-subscript setter %(a) = %(value)" }
-  [a, b]=(value) { "2-subscript setter %(a) %(b) = %(value)" }
-  [a, b, c]=(value) { "3-subscript setter %(a) %(b) %(c) = %(value)" }
+  def construct new() {}
+  def [a] { "1-subscript %(a)" }
+  def [a, b] { "2-subscript %(a) %(b)" }
+  def [a, b, c] { "3-subscript %(a) %(b) %(c)" }
+  def [a]=(value) { "1-subscript setter %(a) = %(value)" }
+  def [a, b]=(value) { "2-subscript setter %(a) %(b) = %(value)" }
+  def [a, b, c]=(value) { "3-subscript setter %(a) %(b) %(c) = %(value)" }
 }
 
 var foo = Foo.new()

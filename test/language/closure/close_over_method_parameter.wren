@@ -1,9 +1,9 @@
 var F = null
 
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  method(param) {
+  def method(param) {
     F = Fn.new {
       System.print(param)
     }

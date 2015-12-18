@@ -1,5 +1,5 @@
 class Foo {
-  static methodOnFoo { System.print("foo") }
+  def static methodOnFoo { System.print("foo") }
 }
 
 class Bar is Foo {}

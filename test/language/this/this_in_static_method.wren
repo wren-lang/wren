@@ -1,10 +1,10 @@
 class Foo {
-  static test {
+  def static test {
     System.print(this == Foo) // expect: true
     System.print(this.bar) // expect: bar
   }
 
-  static bar { "bar" }
+  def static bar { "bar" }
 }
 
 Foo.test

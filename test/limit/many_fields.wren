@@ -1,5 +1,5 @@
 class Foo {
-  construct new() {
+  def construct new() {
     _field1 = 1
     _field2 = 2
     _field3 = 3

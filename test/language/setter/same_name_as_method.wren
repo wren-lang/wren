@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
-  bar=(value) { System.print("set") }
-  bar { System.print("get") }
+  def construct new() {}
+  def bar=(value) { System.print("set") }
+  def bar { System.print("get") }
 }
 
 var foo = Foo.new()

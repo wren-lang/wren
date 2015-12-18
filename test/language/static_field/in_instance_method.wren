@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  set(a, b, c, d, e) {
+  def set(a, b, c, d, e) {
     __a = a
     __b = b
     __c = c
@@ -9,7 +9,7 @@ class Foo {
     __e = e
   }
 
-  write() {
+  def write() {
     System.print(__a)
     System.print(__b)
     System.print(__c)

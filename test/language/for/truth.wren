@@ -1,7 +1,7 @@
 class Iter {
-  construct new(value) { _value = value }
-  iterate(iterator) { _value }
-  iteratorValue(iterator) { "value" }
+  def construct new(value) { _value = value }
+  def iterate(iterator) { _value }
+  def iteratorValue(iterator) { "value" }
 }
 
 // False and null are false.

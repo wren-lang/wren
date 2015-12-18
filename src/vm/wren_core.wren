@@ -5,7 +5,7 @@ class Null {}
 class Num {}
 
 class Sequence {
-  all(f) {
+  def all(f) {
     var result = true
     for (element in this) {
       result = f.call(element)
@@ -14,7 +14,7 @@ class Sequence {
     return result
   }
 
-  any(f) {
+  def any(f) {
     var result = false
     for (element in this) {
       result = f.call(element)
@@ -23,14 +23,14 @@ class Sequence {
     return result
   }
 
-  contains(element) {
+  def contains(element) {
     for (item in this) {
       if (element == item) return true
     }
     return false
   }
 
-  count {
+  def count {
     var result = 0
     for (element in this) {
       result = result + 1
@@ -38,7 +38,7 @@ class Sequence {
     return result
   }
 
-  count(f) {
+  def count(f) {
     var result = 0
     for (element in this) {
       if (f.call(element)) result = result + 1
@@ -46,26 +46,26 @@ class Sequence {
     return result
   }
 
-  each(f) {
+  def each(f) {
     for (element in this) {
       f.call(element)
     }
   }
 
-  isEmpty { iterate(null) ? false : true }
+  def isEmpty { iterate(null) ? false : true }
 
-  map(transformation) { MapSequence.new(this, transformation) }
+  def map(transformation) { MapSequence.new(this, transformation) }
 
-  where(predicate) { WhereSequence.new(this, predicate) }
+  def where(predicate) { WhereSequence.new(this, predicate) }
 
-  reduce(acc, f) {
+  def reduce(acc, f) {
     for (element in this) {
       acc = f.call(acc, element)
     }
     return acc
   }
 
-  reduce(f) {
+  def reduce(f) {
     var iter = iterate(null)
     if (!iter) Fiber.abort("Can't reduce an empty sequence.")
 
@@ -78,9 +78,9 @@ class Sequence {
     return result
   }
 
-  join() { join("") }
+  def join() { join("") }
 
-  join(sep) {
+  def join(sep) {
     var first = true
     var result = ""
 
@@ -93,7 +93,7 @@ class Sequence {
     return result
   }
 
-  toList {
+  def toList {
     var result = List.new()
     for (element in this) {
       result.add(element)
@@ -103,71 +103,71 @@ class Sequence {
 }
 
 class MapSequence is Sequence {
-  construct new(sequence, fn) {
+  def construct new(sequence, fn) {
     _sequence = sequence
     _fn = fn
   }
 
-  iterate(iterator) { _sequence.iterate(iterator) }
-  iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
+  def iterate(iterator) { _sequence.iterate(iterator) }
+  def iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
 }
 
 class WhereSequence is Sequence {
-  construct new(sequence, fn) {
+  def construct new(sequence, fn) {
     _sequence = sequence
     _fn = fn
   }
 
-  iterate(iterator) {
+  def iterate(iterator) {
     while (iterator = _sequence.iterate(iterator)) {
       if (_fn.call(_sequence.iteratorValue(iterator))) break
     }
     return iterator
   }
 
-  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
+  def iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
 }
 
 class String is Sequence {
-  bytes { StringByteSequence.new(this) }
-  codePoints { StringCodePointSequence.new(this) }
+  def bytes { StringByteSequence.new(this) }
+  def codePoints { StringCodePointSequence.new(this) }
 }
 
 class StringByteSequence is Sequence {
-  construct new(string) {
+  def construct new(string) {
     _string = string
   }
 
-  [index] { _string.byteAt_(index) }
-  iterate(iterator) { _string.iterateByte_(iterator) }
-  iteratorValue(iterator) { _string.byteAt_(iterator) }
+  def [index] { _string.byteAt_(index) }
+  def iterate(iterator) { _string.iterateByte_(iterator) }
+  def iteratorValue(iterator) { _string.byteAt_(iterator) }
 
-  count { _string.byteCount_ }
+  def count { _string.byteCount_ }
 }
 
 class StringCodePointSequence is Sequence {
-  construct new(string) {
+  def construct new(string) {
     _string = string
   }
 
-  [index] { _string.codePointAt_(index) }
-  iterate(iterator) { _string.iterate(iterator) }
-  iteratorValue(iterator) { _string.codePointAt_(iterator) }
+  def [index] { _string.codePointAt_(index) }
+  def iterate(iterator) { _string.iterate(iterator) }
+  def iteratorValue(iterator) { _string.codePointAt_(iterator) }
 
-  count { _string.count }
+  def count { _string.count }
 }
 
 class List is Sequence {
-  addAll(other) {
+  def addAll(other) {
     for (element in other) {
       add(element)
     }
     return other
   }
 
-  toString { "[%(join(", "))]" }
+  def toString { "[%(join(", "))]" }
 
-  +(other) {
+  def +(other) {
     var result = this[0..-1]
     for (element in other) {
       result.add(element)
@@ -177,10 +177,10 @@ class List is Sequence {
 }
 
 class Map {
-  keys { MapKeySequence.new(this) }
-  values { MapValueSequence.new(this) }
+  def keys { MapKeySequence.new(this) }
+  def values { MapValueSequence.new(this) }
 
-  toString {
+  def toString {
     var first = true
     var result = "{"
 
@@ -195,51 +195,51 @@ class Map {
 }
 
 class MapKeySequence is Sequence {
-  construct new(map) {
+  def construct new(map) {
     _map = map
   }
 
-  iterate(n) { _map.iterate_(n) }
-  iteratorValue(iterator) { _map.keyIteratorValue_(iterator) }
+  def iterate(n) { _map.iterate_(n) }
+  def iteratorValue(iterator) { _map.keyIteratorValue_(iterator) }
 }
 
 class MapValueSequence is Sequence {
-  construct new(map) {
+  def construct new(map) {
     _map = map
   }
 
-  iterate(n) { _map.iterate_(n) }
-  iteratorValue(iterator) { _map.valueIteratorValue_(iterator) }
+  def iterate(n) { _map.iterate_(n) }
+  def iteratorValue(iterator) { _map.valueIteratorValue_(iterator) }
 }
 
 class Range is Sequence {}
 
 class System {
-  static print() {
+  def static print() {
     writeString_("\n")
   }
 
-  static print(obj) {
+  def static print(obj) {
     writeObject_(obj)
     writeString_("\n")
     return obj
   }
 
-  static printAll(sequence) {
+  def static printAll(sequence) {
     for (object in sequence) writeObject_(object)
     writeString_("\n")
   }
 
-  static write(obj) {
+  def static write(obj) {
     writeObject_(obj)
     return obj
   }
 
-  static writeAll(sequence) {
+  def static writeAll(sequence) {
     for (object in sequence) writeObject_(object)
   }
 
-  static writeObject_(obj) {
+  def static writeObject_(obj) {
     var string = obj.toString
     if (string is String) {
       writeString_(string)

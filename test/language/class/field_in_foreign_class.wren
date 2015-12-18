@@ -1,5 +1,5 @@
 foreign class Foo {
-  bar {
+  def bar {
     // Can't read a field.
     System.print(_bar) // expect error
 

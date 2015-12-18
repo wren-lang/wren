@@ -1,7 +1,7 @@
 class Foo {
-  construct new() {}
-  getClosure { Fn.new { Fn.new { Fn.new { toString } } } }
-  toString { "Foo" }
+  def construct new() {}
+  def getClosure { Fn.new { Fn.new { Fn.new { toString } } } }
+  def toString { "Foo" }
 }
 
 var closure = Foo.new().getClosure

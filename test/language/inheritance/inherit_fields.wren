@@ -1,26 +1,26 @@
 class Foo {
-  construct new() {}
+  def construct new() {}
 
-  foo(a, b) {
+  def foo(a, b) {
     _field1 = a
     _field2 = b
   }
 
-  fooPrint {
+  def fooPrint {
     System.print(_field1)
     System.print(_field2)
   }
 }
 
 class Bar is Foo {
-  construct new() {}
+  def construct new() {}
 
-  bar(a, b) {
+  def bar(a, b) {
     _field1 = a
     _field2 = b
   }
 
-  barPrint {
+  def barPrint {
     System.print(_field1)
     System.print(_field2)
   }

@@ -1,4 +1,4 @@
 class Foo {
-  static construct new() {} // expect error
-  construct static new() {} // expect error
+  def static construct new() {} // expect error
+  def construct static new() {} // expect error
 }

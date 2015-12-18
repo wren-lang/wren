@@ -1,6 +1,6 @@
 class Foo {
-  construct new() {}
-  bar=(value) { "result" }
+  def construct new() {}
+  def bar=(value) { "result" }
 }
 
 var foo = Foo.new()
