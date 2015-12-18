@@ -1,5 +1,5 @@
 class Scheduler {
-  def static add(callable) {
+  static def add(callable) {
     if (__scheduled == null) __scheduled = []
 
     __scheduled.add(Fiber.new {
@@ -9,11 +9,11 @@ class Scheduler {
   }
 
   // Called by native code.
-  def static resume_(fiber) { fiber.transfer() }
-  def static resume_(fiber, arg) { fiber.transfer(arg) }
-  def static resumeError_(fiber, error) { fiber.transferError(error) }
+  static def resume_(fiber) { fiber.transfer() }
+  static def resume_(fiber, arg) { fiber.transfer(arg) }
+  static def resumeError_(fiber, error) { fiber.transferError(error) }
 
-  def static runNextScheduled_() {
+  static def runNextScheduled_() {
     if (__scheduled == null || __scheduled.isEmpty) {
       return Fiber.suspend()
     } else {
@@ -21,7 +21,7 @@ class Scheduler {
     }
   }
 
-  def foreign static captureMethods_()
+  foreign static def captureMethods_()
 }
 
 Scheduler.captureMethods_()

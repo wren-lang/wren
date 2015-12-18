@@ -1,12 +1,12 @@
 class ForeignClass {
-  def foreign static finalized
+  foreign static def finalized
 }
 
 // Class with a default constructor.
 foreign class Counter {
-  def construct new() {}
-  def foreign increment(amount)
-  def foreign value
+  construct new() {}
+  foreign def increment(amount)
+  foreign def value
 }
 
 var counter = Counter.new()
@@ -25,16 +25,16 @@ class PointBase {
 
 // Class with non-default constructor.
 foreign class Point is PointBase {
-  def construct new() {
+  construct new() {
     System.print("default")
   }
 
-  def construct new(x, y, z) {
+  construct new(x, y, z) {
     System.print("%(x), %(y), %(z)")
   }
 
-  def foreign translate(x, y, z)
-  def foreign toString
+  foreign def translate(x, y, z)
+  foreign def toString
 }
 
 var p = Point.new(1, 2, 3) // expect: 1, 2, 3
@@ -54,7 +54,7 @@ System.print(error) // expect: Class 'Subclass' cannot inherit from foreign clas
 
 // Class with a finalizer.
 foreign class Resource {
-  def construct new() {}
+  construct new() {}
 }
 
 var resources = [

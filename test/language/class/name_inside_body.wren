@@ -1,7 +1,7 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
 
-  def static sayName {
+  static def sayName {
     System.print(Foo)
   }
 
@@ -9,7 +9,7 @@ class Foo {
     System.print(Foo)
   }
 
-  def static toString { "Foo!" }
+  static def toString { "Foo!" }
 }
 
 Foo.sayName // expect: Foo!

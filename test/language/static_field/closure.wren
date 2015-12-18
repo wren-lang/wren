@@ -1,11 +1,11 @@
 class Foo {
-  def static initialize { __field = "Foo field" }
+  static def initialize { __field = "Foo field" }
 
-  def static closeOverGet {
+  static def closeOverGet {
     return Fn.new { __field }
   }
 
-  def static closeOverSet {
+  static def closeOverSet {
     return Fn.new { __field = "new value" }
   }
 }

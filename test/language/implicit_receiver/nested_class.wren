@@ -1,5 +1,5 @@
 class Outer {
-  def construct new() {}
+  construct new() {}
 
   def getter {
     System.print("outer getter")
@@ -19,7 +19,7 @@ class Outer {
     method("arg")     // expect: outer method
 
     class Inner {
-      def construct new() {}
+      construct new() {}
 
       def getter {
         System.print("inner getter")

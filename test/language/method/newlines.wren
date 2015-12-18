@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
   def method(a, b) { "method %(a) %(b)" }
   def [a, b] { "subscript %(a) %(b)" }
 }

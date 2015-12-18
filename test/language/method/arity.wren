@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
   def method { "getter" }
   def method() { "no args" }
   def method(a) { a }

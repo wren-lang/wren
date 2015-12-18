@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
   def method000 { 1 }
   def method001 { 1 }
   def method002 { 1 }

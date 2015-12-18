@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {
+  construct new() {
     _field1 = 1
     _field2 = 2
     _field3 = 3
@@ -137,7 +137,7 @@ class Foo {
 }
 
 class Bar is Foo {
-  def construct new() {
+  construct new() {
     super()
     _field129 = 129
     _field130 = 130

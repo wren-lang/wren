@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
 
   def set(a, b, c, d, e) {
     __a = a

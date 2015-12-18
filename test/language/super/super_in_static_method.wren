@@ -1,5 +1,5 @@
 class Foo {
-  def static name {
+  static def name {
     System.print("Foo.name") // expect: Foo.name
     System.print(super)      // expect: Foo
   }

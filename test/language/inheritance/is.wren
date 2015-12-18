@@ -1,11 +1,11 @@
 class A {
-  def construct new() {}
+  construct new() {}
 }
 class B is A {
-  def construct new() {}
+  construct new() {}
 }
 class C is B {
-  def construct new() {}
+  construct new() {}
 }
 var a = A.new()
 var b = B.new()

@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
 
   def bar {
     var a = "a"

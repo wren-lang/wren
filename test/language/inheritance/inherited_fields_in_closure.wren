@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() { _field = "Foo field" }
+  construct new() { _field = "Foo field" }
 
   def closeOverFooGet {
     return Fn.new { Fn.new { _field } }
@@ -11,7 +11,7 @@ class Foo {
 }
 
 class Bar is Foo {
-  def construct new() {
+  construct new() {
     super()
     _field = "Bar field"
   }

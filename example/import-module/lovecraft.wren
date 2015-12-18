@@ -1,7 +1,7 @@
 import "cthulu" for Cthulu
 
 class Lovecraft {
-  def construct new() {}
+  construct new() {}
   def say() { Cthulu.new().message }
 }
 

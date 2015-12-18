@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
   def write { System.print(_field) }
 }
 

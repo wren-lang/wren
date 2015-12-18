@@ -5,7 +5,7 @@ class Base {
 }
 
 class Derived is Base {
-  def construct new() {}
+  construct new() {}
 
   def foo(a) {
     System.print("Derived.bar(a)")

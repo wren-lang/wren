@@ -1,12 +1,12 @@
 class Outer {
-  def construct new() {}
+  construct new() {}
 
   def method {
     _field = "outer"
     System.print(_field) // expect: outer
 
     class Inner {
-      def construct new() {}
+      construct new() {}
 
       def method {
         _field = "inner"

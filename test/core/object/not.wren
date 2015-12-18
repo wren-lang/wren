@@ -1,4 +1,4 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
 }
 System.print(!Foo.new()) // expect: false

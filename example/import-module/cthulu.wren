@@ -1,4 +1,4 @@
 class Cthulu {
-  def construct new() {}
+  construct new() {}
   def message { "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn" }
 }

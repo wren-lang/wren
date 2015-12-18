@@ -7,7 +7,7 @@ class A {
 class B is A {}
 
 class C is B {
-  def construct new() {}
+  construct new() {}
 
   def foo {
     System.print("C.foo")

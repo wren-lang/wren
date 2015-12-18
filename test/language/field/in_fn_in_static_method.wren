@@ -1,5 +1,5 @@
 class Foo {
-  def static bar {
+  static def bar {
     Fn.new { _field = "wat" } // expect error
   }
 }

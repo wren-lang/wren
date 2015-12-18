@@ -1,7 +1,7 @@
 // Generated automatically from src/module/scheduler.wren. Do not edit.
 static const char* schedulerModuleSource =
 "class Scheduler {\n"
-"  def static add(callable) {\n"
+"  static def add(callable) {\n"
 "    if (__scheduled == null) __scheduled = []\n"
 "\n"
 "    __scheduled.add(Fiber.new {\n"
@@ -11,11 +11,11 @@ static const char* schedulerModuleSource =
 "  }\n"
 "\n"
 "  // Called by native code.\n"
-"  def static resume_(fiber) { fiber.transfer() }\n"
-"  def static resume_(fiber, arg) { fiber.transfer(arg) }\n"
-"  def static resumeError_(fiber, error) { fiber.transferError(error) }\n"
+"  static def resume_(fiber) { fiber.transfer() }\n"
+"  static def resume_(fiber, arg) { fiber.transfer(arg) }\n"
+"  static def resumeError_(fiber, error) { fiber.transferError(error) }\n"
 "\n"
-"  def static runNextScheduled_() {\n"
+"  static def runNextScheduled_() {\n"
 "    if (__scheduled == null || __scheduled.isEmpty) {\n"
 "      return Fiber.suspend()\n"
 "    } else {\n"
@@ -23,7 +23,7 @@ static const char* schedulerModuleSource =
 "    }\n"
 "  }\n"
 "\n"
-"  def foreign static captureMethods_()\n"
+"  foreign static def captureMethods_()\n"
 "}\n"
 "\n"
 "Scheduler.captureMethods_()\n";

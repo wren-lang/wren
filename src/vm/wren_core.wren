@@ -103,7 +103,7 @@ class Sequence {
 }
 
 class MapSequence is Sequence {
-  def construct new(sequence, fn) {
+  construct new(sequence, fn) {
     _sequence = sequence
     _fn = fn
   }
@@ -113,7 +113,7 @@ class MapSequence is Sequence {
 }
 
 class WhereSequence is Sequence {
-  def construct new(sequence, fn) {
+  construct new(sequence, fn) {
     _sequence = sequence
     _fn = fn
   }
@@ -134,7 +134,7 @@ class String is Sequence {
 }
 
 class StringByteSequence is Sequence {
-  def construct new(string) {
+  construct new(string) {
     _string = string
   }
 
@@ -146,7 +146,7 @@ class StringByteSequence is Sequence {
 }
 
 class StringCodePointSequence is Sequence {
-  def construct new(string) {
+  construct new(string) {
     _string = string
   }
 
@@ -195,7 +195,7 @@ class Map {
 }
 
 class MapKeySequence is Sequence {
-  def construct new(map) {
+  construct new(map) {
     _map = map
   }
 
@@ -204,7 +204,7 @@ class MapKeySequence is Sequence {
 }
 
 class MapValueSequence is Sequence {
-  def construct new(map) {
+  construct new(map) {
     _map = map
   }
 
@@ -215,31 +215,31 @@ class MapValueSequence is Sequence {
 class Range is Sequence {}
 
 class System {
-  def static print() {
+  static def print() {
     writeString_("\n")
   }
 
-  def static print(obj) {
+  static def print(obj) {
     writeObject_(obj)
     writeString_("\n")
     return obj
   }
 
-  def static printAll(sequence) {
+  static def printAll(sequence) {
     for (object in sequence) writeObject_(object)
     writeString_("\n")
   }
 
-  def static write(obj) {
+  static def write(obj) {
     writeObject_(obj)
     return obj
   }
 
-  def static writeAll(sequence) {
+  static def writeAll(sequence) {
     for (object in sequence) writeObject_(object)
   }
 
-  def static writeObject_(obj) {
+  static def writeObject_(obj) {
     var string = obj.toString
     if (string is String) {
       writeString_(string)

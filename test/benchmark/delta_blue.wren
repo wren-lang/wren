@@ -39,7 +39,7 @@
 // disrupting current constraints.  Strengths cannot be created outside
 // this class, so == can be used for value comparison.
 class Strength {
-  def construct new(value, name) {
+  construct new(value, name) {
     _value = value
     _name = name
   }
@@ -49,10 +49,10 @@ class Strength {
 
   def nextWeaker { ORDERED[_value] }
 
-  def static stronger(s1, s2) { s1.value < s2.value }
-  def static weaker(s1, s2) { s1.value > s2.value }
-  def static weakest(s1, s2) { Strength.weaker(s1, s2) ? s1 : s2 }
-  def static strongest(s1, s2) { Strength.stronger(s1, s2) ? s1 : s2 }
+  static def stronger(s1, s2) { s1.value < s2.value }
+  static def weaker(s1, s2) { s1.value > s2.value }
+  static def weakest(s1, s2) { Strength.weaker(s1, s2) ? s1 : s2 }
+  static def strongest(s1, s2) { Strength.stronger(s1, s2) ? s1 : s2 }
 }
 
 // Compile time computed constants.
@@ -71,7 +71,7 @@ var ORDERED = [
 var ThePlanner
 
 class Constraint {
-  def construct new(strength) {
+  construct new(strength) {
     _strength = strength
   }
 
@@ -120,7 +120,7 @@ class Constraint {
 
 // Abstract superclass for constraints having a single possible output variable.
 class UnaryConstraint is Constraint {
-  def construct new(myOutput, strength) {
+  construct new(myOutput, strength) {
     super(strength)
     _satisfied = false
     _myOutput = myOutput
@@ -176,7 +176,7 @@ class UnaryConstraint is Constraint {
 // change their output during plan execution.  This is called "stay
 // optimization".
 class StayConstraint is UnaryConstraint {
-  def construct new(variable, strength) {
+  construct new(variable, strength) {
     super(variable, strength)
   }
 
@@ -188,7 +188,7 @@ class StayConstraint is UnaryConstraint {
 // A unary input constraint used to mark a variable that the client
 // wishes to change.
 class EditConstraint is UnaryConstraint {
-  def construct new(variable, strength) {
+  construct new(variable, strength) {
     super(variable, strength)
   }
 
@@ -208,7 +208,7 @@ var BACKWARD = 0
 // Abstract superclass for constraints having two possible output
 // variables.
 class BinaryConstraint is Constraint {
-  def construct new(v1, v2, strength) {
+  construct new(v1, v2, strength) {
     super(strength)
     _v1 = v1
     _v2 = v2
@@ -311,7 +311,7 @@ class BinaryConstraint is Constraint {
 // this relationship but the scale factor and offset are considered
 // read-only.
 class ScaleConstraint is BinaryConstraint {
-  def construct new(src, scale, offset, dest, strength) {
+  construct new(src, scale, offset, dest, strength) {
     _scale = scale
     _offset = offset
     super(src, dest, strength)
@@ -359,7 +359,7 @@ class ScaleConstraint is BinaryConstraint {
 
 // Constrains two variables to have the same value.
 class EqualityConstraint is BinaryConstraint {
-  def construct new(v1, v2, strength) {
+  construct new(v1, v2, strength) {
     super(v1, v2, strength)
   }
 
@@ -374,7 +374,7 @@ class EqualityConstraint is BinaryConstraint {
 // various parameters of interest to the DeltaBlue incremental
 // constraint solver.
 class Variable {
-  def construct new(name, value) {
+  construct new(name, value) {
     _constraints = []
     _determinedBy = null
     _mark = 0
@@ -413,7 +413,7 @@ class Variable {
 // to resatisfy all currently satisfiable constraints in the face of
 // one or more changing inputs.
 class Plan {
-  def construct new() {
+  construct new() {
     _list = []
   }
 
@@ -431,7 +431,7 @@ class Plan {
 }
 
 class Planner {
-  def construct new() {
+  construct new() {
     _currentMark = 0
   }
 

@@ -1,5 +1,5 @@
 class BadToString {
-  def construct new() {}
+  construct new() {}
   def toString { 3 }
 }
 

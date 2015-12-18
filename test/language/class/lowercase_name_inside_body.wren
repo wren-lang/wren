@@ -1,7 +1,7 @@
 class foo {
-  def construct new() {}
+  construct new() {}
 
-  def static callFoo {
+  static def callFoo {
     System.print(foo)
   }
 
@@ -10,7 +10,7 @@ class foo {
   }
 
   def foo { "instance foo method" }
-  def static foo { "static foo method" }
+  static def foo { "static foo method" }
 }
 
 foo.callFoo // expect: static foo method

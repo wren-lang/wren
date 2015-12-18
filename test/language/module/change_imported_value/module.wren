@@ -2,11 +2,11 @@
 var Module = "before"
 
 class Other {
-  def static change {
+  static def change {
     Module = "after"
   }
 
-  def static show {
+  static def show {
     System.print(Module)
   }
 }

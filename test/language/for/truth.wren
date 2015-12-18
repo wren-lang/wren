@@ -1,5 +1,5 @@
 class Iter {
-  def construct new(value) { _value = value }
+  construct new(value) { _value = value }
   def iterate(iterator) { _value }
   def iteratorValue(iterator) { "value" }
 }

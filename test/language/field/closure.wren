@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() { _field = "Foo field" }
+  construct new() { _field = "Foo field" }
 
   def closeOverGet {
     return Fn.new { _field }

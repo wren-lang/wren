@@ -1,5 +1,5 @@
 class A {
-  def construct new(arg) {
+  construct new(arg) {
     System.print("new A %(arg)")
     _field = arg
   }
@@ -8,7 +8,7 @@ class A {
 }
 
 class B is A {
-  def construct new(arg1, arg2) {
+  construct new(arg1, arg2) {
     super(arg2)
     System.print("new B %(arg1)")
     _field = arg1
@@ -18,7 +18,7 @@ class B is A {
 }
 
 class C is B {
-  def construct new() {
+  construct new() {
     super("one", "two")
     System.print("new C")
     _field = "c"

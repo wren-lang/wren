@@ -1,5 +1,5 @@
 class Foo {
-  def construct new(value) { _value = value }
+  construct new(value) { _value = value }
   def toString { _value }
   def bar=(value) {
     _value = value

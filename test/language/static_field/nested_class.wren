@@ -1,14 +1,14 @@
 class Outer {
-  def construct new() {}
+  construct new() {}
 
-  def static staticMethod {
+  static def staticMethod {
     __field = "outer"
     System.print(__field) // expect: outer
 
     class Inner {
-      def construct new() {}
+      construct new() {}
 
-      def static staticMethod {
+      static def staticMethod {
         __field = "inner"
         System.print(__field) // expect: inner
       }
@@ -23,7 +23,7 @@ class Outer {
     System.print(__field) // expect: outer
 
     class Inner {
-      def construct new() {}
+      construct new() {}
 
       def instanceMethod {
         __field = "inner"

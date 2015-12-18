@@ -7,7 +7,7 @@
 // Class definition with a toplevel name.
 class SyntaxExample {
   // Constructor
-  def construct new() {
+  construct new() {
     // Top-level name `IO`
     System.print("I am a constructor!")
 
@@ -26,7 +26,7 @@ class SyntaxExample {
   }
 
   // Constructor with arguments
-  def construct constructor(a, b) {
+  construct constructor(a, b) {
     print(a, b)
     field = a
   }
@@ -49,7 +49,7 @@ class SyntaxExample {
   }
 
   // Static method with single argument
-  def static fields(a) {
+  static def fields(a) {
     // Static field
     __a = a
   }

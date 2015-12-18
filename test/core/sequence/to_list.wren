@@ -1,5 +1,5 @@
 class TestSequence is Sequence {
-  def construct new() {}
+  construct new() {}
 
   def iterate(iterator) {
     if (iterator == null) return 1

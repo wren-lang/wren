@@ -1,5 +1,5 @@
 class Outer {
-  def construct new() {}
+  construct new() {}
 
   def method {
     System.print(this) // expect: Outer
@@ -8,7 +8,7 @@ class Outer {
       System.print(this) // expect: Outer
 
       class Inner {
-        def construct new() {}
+        construct new() {}
 
         def method {
           System.print(this) // expect: Inner

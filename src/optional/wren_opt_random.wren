@@ -1,9 +1,9 @@
 foreign class Random {
-  def construct new() {
+  construct new() {
     seed_()
   }
 
-  def construct new(seed) {
+  construct new(seed) {
     if (seed is Num) {
       seed_(seed)
     } else if (seed is Sequence) {
@@ -35,15 +35,15 @@ foreign class Random {
     }
   }
 
-  def foreign seed_()
-  def foreign seed_(seed)
-  def foreign seed_(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16)
+  foreign def seed_()
+  foreign def seed_(seed)
+  foreign def seed_(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16)
 
-  def foreign float()
+  foreign def float()
   def float(end) { float() * end }
   def float(start, end) { float() * (end - start) + start }
 
-  def foreign int()
+  foreign def int()
   def int(end) { (float() * end).floor }
   def int(start, end) { (float() * (end - start)).floor + start }
 }

@@ -1,5 +1,5 @@
 class Benchmark {
-  def foreign static arguments(a, b, c, d)
+  foreign static def arguments(a, b, c, d)
 }
 
 var start = System.clock

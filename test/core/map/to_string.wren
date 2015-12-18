@@ -9,7 +9,7 @@ System.print({1: {2: {}}}) // expect: {1: {2: {}}}
 
 // Calls toString on elements.
 class Foo {
-  def construct new() {}
+  construct new() {}
   def toString { "Foo.toString" }
 }
 

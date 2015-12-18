@@ -25,7 +25,7 @@ System.print(Object.same(Bool, Bool)) // expect: true
 
 // Other types compare by identity.
 class Foo {
-  def construct new() {}
+  construct new() {}
 }
 
 var foo = Foo.new()
@@ -34,7 +34,7 @@ System.print(Object.same(foo, Foo.new())) // expect: false
 
 // Ignores == operators.
 class Bar {
-  def construct new() {}
+  construct new() {}
   def ==(other) { true }
 }
 

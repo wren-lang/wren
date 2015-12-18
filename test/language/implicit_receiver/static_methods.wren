@@ -1,17 +1,17 @@
 class Foo {
-  def static getter {
+  static def getter {
     System.print("getter")
   }
 
-  def static setter=(value) {
+  static def setter=(value) {
     System.print("setter")
   }
 
-  def static method(a) {
+  static def method(a) {
     System.print("method")
   }
 
-  def static test {
+  static def test {
     getter            // expect: getter
     setter = "value"  // expect: setter
     method("arg")     // expect: method

@@ -1,5 +1,5 @@
 class Foo {
-  def construct base() {}
+  construct base() {}
 }
 
 class Bar is Foo {}

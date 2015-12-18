@@ -5,7 +5,7 @@ class A {
 }
 
 class B is A {
-  def construct new() {}
+  construct new() {}
 }
 
 System.print(B.new().callSuperToString) // expect: instance of B

@@ -1,7 +1,7 @@
 import "scheduler" for Scheduler
 
 foreign class File {
-  def static open(path) {
+  static def open(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
 
     open_(path, Fiber.current)
@@ -9,7 +9,7 @@ foreign class File {
     return new_(fd)
   }
 
-  def static open(path, fn) {
+  static def open(path, fn) {
     var file = open(path)
     var fiber = Fiber.new { fn.call(file) }
 
@@ -22,18 +22,18 @@ foreign class File {
     return result
   }
 
-  def static read(path) {
+  static def read(path) {
     return File.open(path) {|file| file.readBytes(file.size) }
   }
 
-  def static size(path) {
+  static def size(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
 
     sizePath_(path, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
-  def construct new_(fd) {}
+  construct new_(fd) {}
 
   def close() {
     if (close_(Fiber.current)) return
@@ -59,17 +59,17 @@ foreign class File {
     return Scheduler.runNextScheduled_()
   }
 
-  def foreign static open_(path, fiber)
-  def foreign static sizePath_(path, fiber)
+  foreign static def open_(path, fiber)
+  foreign static def sizePath_(path, fiber)
 
-  def foreign close_(fiber)
-  def foreign descriptor
-  def foreign readBytes_(count, fiber)
-  def foreign size_(fiber)
+  foreign def close_(fiber)
+  foreign def descriptor
+  foreign def readBytes_(count, fiber)
+  foreign def size_(fiber)
 }
 
 class Stdin {
-  def static readLine() {
+  static def readLine() {
     if (__isClosed == true) {
       Fiber.abort("Stdin was closed.")
     }
@@ -84,7 +84,7 @@ class Stdin {
     return line
   }
 
-  def static onData_(data) {
+  static def onData_(data) {
     if (data == null) {
       __isClosed = true
       readStop_()
@@ -119,6 +119,6 @@ class Stdin {
     }
   }
 
-  def foreign static readStart_()
-  def foreign static readStop_()
+  foreign static def readStart_()
+  foreign static def readStop_()
 }

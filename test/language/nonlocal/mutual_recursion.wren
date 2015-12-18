@@ -1,11 +1,11 @@
 class Foo {
-  def construct new() {}
-  def static bar { Bar.new() }
+  construct new() {}
+  static def bar { Bar.new() }
 }
 
 class Bar {
-  def construct new() {}
-  def static foo { Foo.new() }
+  construct new() {}
+  static def foo { Foo.new() }
 }
 
 System.print(Foo.bar) // expect: instance of Bar

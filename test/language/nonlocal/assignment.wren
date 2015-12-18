@@ -4,7 +4,7 @@ Nonlocal = "after"
 System.print(Nonlocal) // expect: after
 
 class Foo {
-  def static method {
+  static def method {
     Nonlocal = "method"
   }
 }

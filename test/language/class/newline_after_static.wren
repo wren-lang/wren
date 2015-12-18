@@ -1,6 +1,4 @@
 class Foo {
   static // expect error
-  method {} // expect error
+  def method {}
 }
-
-// The second error is cascaded.

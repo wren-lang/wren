@@ -3,7 +3,7 @@ class Base {
 }
 
 class Derived is Base {
-  def construct new() {}
+  construct new() {}
   def getClosure { Fn.new { super.toString } }
   def toString { "Derived" }
 }

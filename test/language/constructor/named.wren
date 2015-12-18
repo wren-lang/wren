@@ -1,6 +1,6 @@
 class Foo {
-  def construct named() { _field = "named" }
-  def construct other() { _field = "other" }
+  construct named() { _field = "named" }
+  construct other() { _field = "other" }
 
   def toString { _field }
 }

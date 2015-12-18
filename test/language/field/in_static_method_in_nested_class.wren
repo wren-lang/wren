@@ -6,7 +6,7 @@
 class Outer {
   def foo {
     class Inner {
-      def static bar {
+      static def bar {
         _field = "nope" // expect error
       }
     }

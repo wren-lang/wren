@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
   def getClosure { Fn.new { Fn.new { Fn.new { toString } } } }
   def toString { "Foo" }
 }

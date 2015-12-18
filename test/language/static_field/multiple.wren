@@ -1,5 +1,5 @@
 class Foo {
-  def static set(a, b, c, d, e) {
+  static def set(a, b, c, d, e) {
     __a = a
     __b = b
     __c = c
@@ -7,7 +7,7 @@ class Foo {
     __e = e
   }
 
-  def static write {
+  static def write {
     System.print(__a)
     System.print(__b)
     System.print(__c)

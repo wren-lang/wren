@@ -1,6 +1,6 @@
 // Infinite iterator demonstrating that Sequence.map is not eager
 class FibIterator {
-  def construct new() {
+  construct new() {
     _current = 0
     _next = 1
   }
@@ -15,7 +15,7 @@ class FibIterator {
 }
 
 class Fib is Sequence {
-  def construct new() {}
+  construct new() {}
 
   def iterate(iterator) {
     if (iterator == null) return FibIterator.new()

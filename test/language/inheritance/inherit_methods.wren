@@ -6,7 +6,7 @@ class Foo {
 }
 
 class Bar is Foo {
-  def construct new() {}
+  construct new() {}
   def methodOnBar { System.print("bar") }
   def method(a, b) { System.print("bar") }
   def method(a, b, c, d) { System.print("bar") }

@@ -1,7 +1,7 @@
 var F = null
 
 class Foo {
-  def construct new() {}
+  construct new() {}
 
   def method(param) {
     F = Fn.new {

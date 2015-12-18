@@ -1,7 +1,7 @@
 class A {}
 
 class B is A {
-  def construct new() {
+  construct new() {
     super // expect error
   }
 }

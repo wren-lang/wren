@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
 
   def foo(a, b) {
     _field1 = a
@@ -13,7 +13,7 @@ class Foo {
 }
 
 class Bar is Foo {
-  def construct new() {}
+  construct new() {}
 
   def bar(a, b) {
     _field1 = a

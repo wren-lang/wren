@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
 
   def getter {
     System.print("getter")
@@ -15,7 +15,7 @@ class Foo {
 }
 
 class Bar is Foo {
-  def construct new() {}
+  construct new() {}
 
   def test {
     getter            // expect: getter

@@ -1,5 +1,5 @@
 class Foo {
-  def construct new() {}
+  construct new() {}
 
   def +(other) { "infix + %(other)" }
   def -(other) { "infix - %(other)" }

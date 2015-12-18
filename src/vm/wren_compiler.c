@@ -2614,7 +2614,7 @@ GrammarRule rules[] =
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!="),
   /* TOKEN_BREAK         */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
-  /* TOKEN_CONSTRUCT     */ { NULL, NULL, constructorSignature, PREC_NONE, NULL },
+  /* TOKEN_CONSTRUCT     */ UNUSED,
   /* TOKEN_DEF           */ UNUSED,
   /* TOKEN_ELSE          */ UNUSED,
   /* TOKEN_FALSE         */ PREFIX(boolean),
@@ -3130,15 +3130,24 @@ static void defineMethod(Compiler* compiler, int classSlot, bool isStatic,
 // be parsed.
 static bool method(Compiler* compiler, int classSlot)
 {
-  // TODO: Don't require 'def' for constructors.
-  consume(compiler, TOKEN_DEF, "Expect 'def' for method definition.");
-  
   // TODO: What about foreign constructors?
   bool isForeign = match(compiler, TOKEN_FOREIGN);
   compiler->enclosingClass->inStatic = match(compiler, TOKEN_STATIC);
     
-  SignatureFn signatureFn = rules[compiler->parser->current.type].method;
-  nextToken(compiler->parser);
+  SignatureFn signatureFn;
+  
+  // Methods are declared using "construct" for constructors or "def" for
+  // everything else.
+  if (match(compiler, TOKEN_CONSTRUCT))
+  {
+    signatureFn = constructorSignature;
+  }
+  else
+  {
+    consume(compiler, TOKEN_DEF, "Expect 'def' before method definition.");
+    signatureFn = rules[compiler->parser->current.type].method;
+    nextToken(compiler->parser);    
+  }
   
   if (signatureFn == NULL)
   {
