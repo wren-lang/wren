@@ -277,21 +277,7 @@ typedef struct
   int arity;
 } Signature;
 
-// Bookkeeping information for compiling a class definition.
-typedef struct
-{
-  // Symbol table for the fields of the class.
-  SymbolTable fields;
-
-  // True if the class being compiled is a foreign class.
-  bool isForeign;
-  
-  // True if the current method being compiled is static.
-  bool inStatic;
-
-  // The signature of the method being compiled.
-  Signature* signature;
-} ClassCompiler;
+typedef struct sClassCompiler ClassCompiler;
 
 struct sCompiler
 {
@@ -351,6 +337,28 @@ struct sCompiler
 
   // The growable buffer of source line mappings.
   IntBuffer debugSourceLines;
+};
+
+// Bookkeeping information for compiling a class definition.
+struct sClassCompiler
+{
+  // Symbol table for the fields of the class.
+  SymbolTable fields;
+  
+  // True if the class being compiled is a foreign class.
+  bool isForeign;
+  
+  // True if the current method being compiled is static.
+  bool inStatic;
+  
+  // The signature of the method being compiled.
+  Signature* signature;
+  
+  // The compiler used for body code.
+  //
+  // Any code inside a class body that is not a method definition will get
+  // compiled into this function which is then called by each constructor.
+  Compiler body;
 };
 
 // The stack effect of each opcode. The index in the array is the opcode, and
@@ -1436,6 +1444,22 @@ static void loadLocal(Compiler* compiler, int slot)
   emitByteArg(compiler, CODE_LOAD_LOCAL, slot);
 }
 
+// Loads the receiver of the currently enclosing method. Correctly handles
+// functions defined inside methods.
+static void loadThis(Compiler* compiler)
+{
+  Code loadInstruction;
+  int index = resolveNonmodule(compiler, "this", 4, &loadInstruction);
+  if (loadInstruction == CODE_LOAD_LOCAL)
+  {
+    loadLocal(compiler, index);
+  }
+  else
+  {
+    emitByteArg(compiler, loadInstruction, index);
+  }
+}
+
 // Discards memory owned by [compiler].
 static void freeCompiler(Compiler* compiler)
 {
@@ -1616,31 +1640,6 @@ static bool finishBlock(Compiler* compiler)
   return false;
 }
 
-// Parses a method or function body, after the initial "{" has been consumed.
-//
-// It [isInitializer] is `true`, this is the body of a constructor initializer.
-// In that case, this adds the code to ensure it returns `this`.
-static void finishBody(Compiler* compiler, bool isInitializer)
-{
-  bool isExpressionBody = finishBlock(compiler);
-
-  if (isInitializer)
-  {
-    // If the initializer body evaluates to a value, discard it.
-    if (isExpressionBody) emitOp(compiler, CODE_POP);
-
-    // The receiver is always stored in the first local slot.
-    emitOp(compiler, CODE_LOAD_LOCAL_0);
-  }
-  else if (!isExpressionBody)
-  {
-    // Implicitly return null in statement bodies.
-    emitOp(compiler, CODE_NULL);
-  }
-
-  emitOp(compiler, CODE_RETURN);
-}
-
 // The VM can only handle a certain number of parameters, so check that we
 // haven't exceeded that and give a usable error.
 static void validateNumParameters(Compiler* compiler, int numArgs)
@@ -1815,6 +1814,43 @@ static void callMethod(Compiler* compiler, int numArgs, const char* name,
   emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs), symbol);
 }
 
+// Parses a method or function body, after the initial "{" has been consumed.
+//
+// It [isInitializer] is `true`, this is the body of a constructor initializer.
+// In that case, this adds the code to execute the code in the class body and
+// make the method return `this`.
+static void finishBody(Compiler* compiler, bool isInitializer)
+{
+  if (isInitializer)
+  {
+    // Execute the class body code before the initializer code.
+    loadThis(compiler);
+    callMethod(compiler, 0, "<body>", 6);
+    emitOp(compiler, CODE_POP);
+    // TODO: This regresses performance on classes that don't have any code in
+    // their body and where calling this is a no-op. See if there's a way we
+    // can elide the call when not needed.
+  }
+  
+  bool isExpressionBody = finishBlock(compiler);
+  
+  if (isInitializer)
+  {
+    // If the initializer body evaluates to a value, discard it.
+    if (isExpressionBody) emitOp(compiler, CODE_POP);
+    
+    // The receiver is always stored in the first local slot.
+    emitOp(compiler, CODE_LOAD_LOCAL_0);
+  }
+  else if (!isExpressionBody)
+  {
+    // Implicitly return null in statement bodies.
+    emitOp(compiler, CODE_NULL);
+  }
+  
+  emitOp(compiler, CODE_RETURN);
+}
+
 // Compiles an (optional) argument list for a method call with [methodSignature]
 // and then calls it.
 static void methodCall(Compiler* compiler, Code instruction,
@@ -1912,22 +1948,6 @@ static void namedCall(Compiler* compiler, bool allowAssignment,
   else
   {
     methodCall(compiler, instruction, &signature);
-  }
-}
-
-// Loads the receiver of the currently enclosing method. Correctly handles
-// functions defined inside methods.
-static void loadThis(Compiler* compiler)
-{
-  Code loadInstruction;
-  int index = resolveNonmodule(compiler, "this", 4, &loadInstruction);
-  if (loadInstruction == CODE_LOAD_LOCAL)
-  {
-    loadLocal(compiler, index);
-  }
-  else
-  {
-    emitByteArg(compiler, loadInstruction, index);
   }
 }
 
@@ -3128,25 +3148,21 @@ static void defineMethod(Compiler* compiler, int classSlot, bool isStatic,
 //
 // Returns `true` if it compiled successfully, or `false` if the method couldn't
 // be parsed.
-static bool method(Compiler* compiler, int classSlot)
+static bool method(Compiler* compiler, int classSlot, bool isForeign,
+                   bool isConstructor)
 {
-  // TODO: What about foreign constructors?
-  bool isForeign = match(compiler, TOKEN_FOREIGN);
-  compiler->enclosingClass->inStatic = match(compiler, TOKEN_STATIC);
-    
   SignatureFn signatureFn;
   
   // Methods are declared using "construct" for constructors or "def" for
   // everything else.
-  if (match(compiler, TOKEN_CONSTRUCT))
+  if (isConstructor)
   {
     signatureFn = constructorSignature;
   }
   else
   {
-    consume(compiler, TOKEN_DEF, "Expect 'def' before method definition.");
     signatureFn = rules[compiler->parser->current.type].method;
-    nextToken(compiler->parser);    
+    nextToken(compiler->parser);
   }
   
   if (signatureFn == NULL)
@@ -3264,6 +3280,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   wrenSymbolTableInit(&classCompiler.fields);
 
   compiler->enclosingClass = &classCompiler;
+  
+  initCompiler(&classCompiler.body, compiler->parser, compiler, false);
 
   // Compile the method definitions.
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class declaration.");
@@ -3271,14 +3289,52 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
   while (!match(compiler, TOKEN_RIGHT_BRACE))
   {
-    if (!method(compiler, slot)) break;
+    // Determine if we're defining a method or executing code in the class body.
+    // Methods can have a couple of different preambles using some combinations
+    // of "foreign", "static", "construct", and "def".
+    compiler->enclosingClass->inStatic = false;
+
+    if (match(compiler, TOKEN_FOREIGN))
+    {
+      compiler->enclosingClass->inStatic = match(compiler, TOKEN_STATIC);
+      consume(compiler, TOKEN_DEF,
+              "Expect 'def' before foreign method declaration.");
+      method(compiler, slot, true, false);
+    }
+    else if (match(compiler, TOKEN_STATIC))
+    {
+      compiler->enclosingClass->inStatic = true;
+      consume(compiler, TOKEN_DEF, "Expect 'def' after 'static'.");
+      method(compiler, slot, false, false);
+    }
+    else if (match(compiler, TOKEN_DEF))
+    {
+      method(compiler, slot, false, false);
+    }
+    else if (match(compiler, TOKEN_CONSTRUCT))
+    {
+      method(compiler, slot, false, true);
+    }
+    else
+    {
+      // Any other code gets compiled into the body method.
+      statement(&classCompiler.body);
+    }
     
-    // Don't require a newline after the last definition.
+    // Don't require a newline after the last definition or statement.
     if (match(compiler, TOKEN_RIGHT_BRACE)) break;
 
     consumeLine(compiler, "Expect newline after definition in class.");
   }
   
+  // Define a method to contain all the code in the class body.
+  // TODO: Better debug name including class name.
+  emitOp(&classCompiler.body, CODE_NULL);
+  emitOp(&classCompiler.body, CODE_RETURN);
+  endCompiler(&classCompiler.body, "<body>", 6);
+  int bodySymbol = methodSymbol(compiler, "<body>", 6);
+  defineMethod(compiler, slot, false, bodySymbol);
+
   // Update the class with the number of fields.
   if (!isForeign)
   {
