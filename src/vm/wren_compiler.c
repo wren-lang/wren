@@ -3262,6 +3262,28 @@ static bool method(Compiler* compiler, int classSlot, bool isForeign,
   return true;
 }
 
+// Defines a synthetic getter method with [getterName] that returns the value
+// of the field with [fieldName].
+static void defineGetter(Compiler* compiler, int classSlot,
+                         const char* getterName, int getterLength,
+                         const char* fieldName, int fieldLength)
+{
+  Compiler getterCompiler;
+  initCompiler(&getterCompiler, compiler->parser, compiler, false);
+  
+  int field = findField(compiler, fieldName, fieldLength);
+
+  // It loads and returns the corresponding field.
+  loadField(&getterCompiler, field);
+  emitOp(&getterCompiler, CODE_RETURN);
+  endCompiler(&getterCompiler, getterName, getterLength);
+  
+  // Define the method for it.
+  int symbol = methodSymbol(compiler, getterName, getterLength);
+  defineMethod(compiler, classSlot, compiler->enclosingClass->inStatic,
+               symbol);
+}
+
 static void property(Compiler* compiler, int classSlot)
 {
   consume(compiler, TOKEN_NAME, "Expect property name after 'var'.");
@@ -3274,27 +3296,16 @@ static void property(Compiler* compiler, int classSlot)
   char fieldName[256];
   fieldName[0] = '_';
   memcpy(&fieldName[1], propertyName, propertyLength);
-  int field = findField(compiler, fieldName, propertyLength + 1);
-
-  // Synthesize the getter.
-  Compiler getterCompiler;
-  initCompiler(&getterCompiler, compiler->parser, compiler, false);
-
-  // It loads and returns the corresponding field.
-  loadField(&getterCompiler, field);
-  emitOp(&getterCompiler, CODE_RETURN);
-  endCompiler(&getterCompiler, propertyName, propertyLength);
-
-  // Define the method for it.
-  int getterSymbol = methodSymbol(compiler, propertyName, propertyLength);
-  defineMethod(compiler, classSlot, compiler->enclosingClass->inStatic,
-               getterSymbol);
-
+  
+  defineGetter(compiler, classSlot, propertyName, propertyLength,
+               fieldName, propertyLength + 1);
+  
   // Synthesize the setter.
   Compiler setterCompiler;
   initCompiler(&setterCompiler, compiler->parser, compiler, false);
   
   // It stores and returns the corresponding field.
+  int field = findField(compiler, fieldName, propertyLength + 1);
   storeField(&setterCompiler, field);
   emitOp(&setterCompiler, CODE_RETURN);
   endCompiler(&setterCompiler, propertyName, propertyLength);
@@ -3316,9 +3327,37 @@ static void property(Compiler* compiler, int classSlot)
   }
 }
 
+static int classDefinition(Compiler* compiler, bool isForeign);
+
+static void nestedClass(Compiler* compiler, int enclosingClassSlot)
+{
+  // Create the class inside the enclosing class's body code.
+  Compiler* bodyCompiler = &compiler->enclosingClass->body;
+  int slot = classDefinition(bodyCompiler, false);
+  
+  // TODO: Once modules are classes and class definitions can only occur inside
+  // other classes (and not inside blocks), then a class will always be stored
+  // in a field, and we can skip storing it in a variable.
+  loadLocal(bodyCompiler, slot);
+
+  // Store the class in a field.
+  // TODO: Should the field name have "_" before it like class variables do?
+  // Do we want to allow methods in the class to assign to it?
+  Local* local = &bodyCompiler->locals[slot];
+  int field = findField(compiler, local->name, local->length);
+  storeField(bodyCompiler, field);
+  emitOp(bodyCompiler, CODE_POP);
+  
+  // Create a getter that returns the class.
+  defineGetter(compiler, enclosingClassSlot, local->name, local->length,
+               local->name, local->length);
+}
+
 // Compiles a class definition. Assumes the "class" token has already been
 // consumed (along with a possibly preceding "foreign" token).
-static void classDefinition(Compiler* compiler, bool isForeign)
+//
+// Returns the slot for the variable that the class is stored in.
+static int classDefinition(Compiler* compiler, bool isForeign)
 {
   // Create a variable to store the class in.
   int slot = declareNamedVariable(compiler);
@@ -3404,6 +3443,10 @@ static void classDefinition(Compiler* compiler, bool isForeign)
     {
       method(compiler, slot, false, true);
     }
+    else if (match(compiler, TOKEN_CLASS))
+    {
+      nestedClass(compiler, slot);
+    }
     else if (match(compiler, TOKEN_VAR))
     {
       // TODO: Static properties.
@@ -3441,6 +3484,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   compiler->enclosingClass = NULL;
 
   popScope(compiler);
+  return slot;
 }
 
 // Compiles an "import" statement.
