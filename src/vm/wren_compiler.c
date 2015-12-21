@@ -2064,14 +2064,19 @@ static ClassCompiler* getEnclosingClass(Compiler* compiler)
   return compiler == NULL ? NULL : compiler->enclosingClass;
 }
 
-static void field(Compiler* compiler, bool allowAssignment)
+// Determines the field index in the current enclosing class for a field with
+// [name].
+//
+// Implicitly defines the field if this is the first time it's used. Reports an
+// error and returns `255` if the field cannot be defined.
+static int findField(Compiler* compiler, const char* name, int length)
 {
   // Initialize it with a fake value so we can keep parsing and minimize the
   // number of cascaded errors.
   int field = 255;
-
+  
   ClassCompiler* enclosingClass = getEnclosingClass(compiler);
-
+  
   if (enclosingClass == NULL)
   {
     error(compiler, "Cannot reference a field outside of a class definition.");
@@ -2088,37 +2093,67 @@ static void field(Compiler* compiler, bool allowAssignment)
   {
     // Look up the field, or implicitly define it.
     field = wrenSymbolTableEnsure(compiler->parser->vm, &enclosingClass->fields,
-        compiler->parser->previous.start,
-        compiler->parser->previous.length);
-
+                                  name, length);
+    
     if (field >= MAX_FIELDS)
     {
       error(compiler, "A class can only have %d fields.", MAX_FIELDS);
     }
   }
 
+  return field;
+}
+
+static void loadField(Compiler* compiler, int field)
+{
+  // TODO: Is != NULL check right here?
+  // If we're directly inside a method, use a more optimal instruction.
+  if (compiler->parent != NULL &&
+      compiler->parent->enclosingClass != NULL)
+  {
+    emitByteArg(compiler, CODE_LOAD_FIELD_THIS, field);
+  }
+  else
+  {
+    loadThis(compiler);
+    emitByteArg(compiler, CODE_LOAD_FIELD, field);
+  }
+}
+
+static void storeField(Compiler* compiler, int field)
+{
+  // TODO: Is != NULL check right here?
+  // If we're directly inside a method, use a more optimal instruction.
+  if (compiler->parent != NULL &&
+      compiler->parent->enclosingClass != NULL)
+  {
+    emitByteArg(compiler, CODE_STORE_FIELD_THIS, field);
+  }
+  else
+  {
+    loadThis(compiler);
+    emitByteArg(compiler, CODE_STORE_FIELD, field);
+  }
+}
+
+static void field(Compiler* compiler, bool allowAssignment)
+{
+  int field = findField(compiler,
+                        compiler->parser->previous.start,
+                        compiler->parser->previous.length);
+
   // If there's an "=" after a field name, it's an assignment.
-  bool isLoad = true;
   if (match(compiler, TOKEN_EQ))
   {
     if (!allowAssignment) error(compiler, "Invalid assignment.");
 
     // Compile the right-hand side.
     expression(compiler);
-    isLoad = false;
-  }
-
-  // If we're directly inside a method, use a more optimal instruction.
-  if (compiler->parent != NULL &&
-      compiler->parent->enclosingClass == enclosingClass)
-  {
-    emitByteArg(compiler, isLoad ? CODE_LOAD_FIELD_THIS : CODE_STORE_FIELD_THIS,
-                field);
+    storeField(compiler, field);
   }
   else
   {
-    loadThis(compiler);
-    emitByteArg(compiler, isLoad ? CODE_LOAD_FIELD : CODE_STORE_FIELD, field);
+    loadField(compiler, field);
   }
 }
 
@@ -3227,6 +3262,60 @@ static bool method(Compiler* compiler, int classSlot, bool isForeign,
   return true;
 }
 
+static void property(Compiler* compiler, int classSlot)
+{
+  consume(compiler, TOKEN_NAME, "Expect property name after 'var'.");
+  
+  const char* propertyName = compiler->parser->previous.start;
+  int propertyLength = compiler->parser->previous.length;
+  
+  // Prepend "_" to make a field corresponding to the property.
+  // TODO: Put limit on field length.
+  char fieldName[256];
+  fieldName[0] = '_';
+  memcpy(&fieldName[1], propertyName, propertyLength);
+  int field = findField(compiler, fieldName, propertyLength + 1);
+
+  // Synthesize the getter.
+  Compiler getterCompiler;
+  initCompiler(&getterCompiler, compiler->parser, compiler, false);
+
+  // It loads and returns the corresponding field.
+  loadField(&getterCompiler, field);
+  emitOp(&getterCompiler, CODE_RETURN);
+  endCompiler(&getterCompiler, propertyName, propertyLength);
+
+  // Define the method for it.
+  int getterSymbol = methodSymbol(compiler, propertyName, propertyLength);
+  defineMethod(compiler, classSlot, compiler->enclosingClass->inStatic,
+               getterSymbol);
+
+  // Synthesize the setter.
+  Compiler setterCompiler;
+  initCompiler(&setterCompiler, compiler->parser, compiler, false);
+  
+  // It stores and returns the corresponding field.
+  storeField(&setterCompiler, field);
+  emitOp(&setterCompiler, CODE_RETURN);
+  endCompiler(&setterCompiler, propertyName, propertyLength);
+  
+  // Define the method for it.
+  Signature setterSignature = { propertyName, propertyLength, SIG_SETTER, 1 };
+  int setterSymbol = signatureSymbol(compiler, &setterSignature);
+  defineMethod(compiler, classSlot, compiler->enclosingClass->inStatic,
+               setterSymbol);
+  
+  // Compile the initializer into the class body if there is one.
+  if (match(compiler, TOKEN_EQ))
+  {
+    ignoreNewlines(compiler);
+    
+    expression(&compiler->enclosingClass->body);
+    storeField(&compiler->enclosingClass->body, field);
+    emitOp(&compiler->enclosingClass->body, CODE_POP);
+  }
+}
+
 // Compiles a class definition. Assumes the "class" token has already been
 // consumed (along with a possibly preceding "foreign" token).
 static void classDefinition(Compiler* compiler, bool isForeign)
@@ -3314,6 +3403,11 @@ static void classDefinition(Compiler* compiler, bool isForeign)
     else if (match(compiler, TOKEN_CONSTRUCT))
     {
       method(compiler, slot, false, true);
+    }
+    else if (match(compiler, TOKEN_VAR))
+    {
+      // TODO: Static properties.
+      property(compiler, slot);
     }
     else
     {

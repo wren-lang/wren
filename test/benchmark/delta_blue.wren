@@ -376,25 +376,17 @@ class EqualityConstraint is BinaryConstraint {
 class Variable {
   construct new(name, value) {
     _constraints = []
-    _determinedBy = null
-    _mark = 0
-    _walkStrength = WEAKEST
-    _stay = true
     _name = name
     _value = value
   }
 
   def constraints { _constraints }
-  def determinedBy { _determinedBy }
-  def determinedBy=(value) { _determinedBy = value }
-  def mark { _mark }
-  def mark=(value) { _mark = value }
-  def walkStrength { _walkStrength }
-  def walkStrength=(value) { _walkStrength = value }
-  def stay { _stay }
-  def stay=(value) { _stay = value }
-  def value { _value }
-  def value=(newValue) { _value = newValue }
+
+  var determinedBy
+  var mark = 0
+  var walkStrength = WEAKEST
+  var stay = true
+  var value
 
   // Add the given constraint to the set of all constraints that refer
   // this variable.
