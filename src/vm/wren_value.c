@@ -48,6 +48,7 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
   ObjClass* classObj = ALLOCATE(vm, ObjClass);
   initObj(vm, &classObj->obj, OBJ_CLASS, NULL);
   classObj->superclass = NULL;
+  classObj->enclosingClass = NULL;
   classObj->numFields = numFields;
   classObj->name = name;
 
@@ -82,7 +83,8 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
   }
 }
 
-ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
+ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass,
+                       ObjClass* enclosingClass, int numFields,
                        ObjString* name)
 {
   // Create the metaclass.
@@ -92,6 +94,9 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   ObjClass* metaclass = wrenNewSingleClass(vm, 0, AS_STRING(metaclassName));
   metaclass->obj.classObj = vm->classClass;
 
+  // TODO: Is this what we want? Test.
+  metaclass->enclosingClass = enclosingClass;
+  
   wrenPopRoot(vm);
 
   // Make sure the metaclass isn't collected when we allocate the class.
@@ -102,6 +107,8 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   wrenBindSuperclass(vm, metaclass, vm->classClass);
 
   ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
+  
+  classObj->enclosingClass = enclosingClass;
 
   // Make sure the class isn't collected while the inherited methods are being
   // bound.

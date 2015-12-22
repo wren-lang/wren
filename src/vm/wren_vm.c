@@ -391,10 +391,36 @@ static void runtimeError(WrenVM* vm)
 
 // Aborts the current fiber with an appropriate method not found error for a
 // method with [symbol] on [classObj].
-static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
+static Method* methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
+  ObjClass* originalClass = classObj;
+  
+  classObj = originalClass->enclosingClass;
+  while (classObj != NULL)
+  {
+    if (symbol < classObj->methods.count)
+    {
+      Method* method = &classObj->methods.data[symbol];
+      if (method->type != METHOD_NONE)
+      {
+        // TODO: Doing this lazily is a drag. The problem is we don't know all
+        // of the enclosing class's methods at the point in time when the inner
+        // class is created. If we change the grammar to only allow inner
+        // classes to appear after all method definitions, we could do this
+        // eagerly. Worth doing?
+        // Copy it down now so we don't have to walk the enclosing classes
+        // every time.
+        originalClass->methods.data[symbol] = *method;
+        return method;
+      }
+    }
+    
+    classObj = classObj->enclosingClass;
+  }
+  
   vm->fiber->error = wrenStringFormat(vm, "@ does not implement '$'.",
-      OBJ_VAL(classObj->name), vm->methodNames.data[symbol].buffer);
+      OBJ_VAL(originalClass->name), vm->methodNames.data[symbol].buffer);
+  return NULL;
 }
 
 // Checks that [value], which must be a function or closure, does not require
@@ -681,15 +707,22 @@ static void createClass(WrenVM* vm, int numFields, ObjModule* module)
   Value name = vm->fiber->stackTop[-2];
   Value superclass = vm->fiber->stackTop[-1];
 
+  // TODO: This does the wrong thing when there is no enclosing method (i.e.
+  // top level code). If we make the top level a class definition then this
+  // should work provided we make sure that class is in the first slot of the
+  // first call frame.
+  ObjClass* enclosingClass = wrenGetClass(vm,
+      vm->fiber->frames[vm->fiber->numFrames - 1].stackStart[0]);
+  
   // We have two values on the stack and we are going to leave one, so discard
   // the other slot.
   vm->fiber->stackTop--;
-
+  
   vm->fiber->error = validateSuperclass(vm, name, superclass, numFields);
   if (!IS_NULL(vm->fiber->error)) return;
 
-  ObjClass* classObj = wrenNewClass(vm, AS_CLASS(superclass), numFields,
-                                    AS_STRING(name));
+  ObjClass* classObj = wrenNewClass(vm, AS_CLASS(superclass), enclosingClass,
+                                    numFields, AS_STRING(name));
   vm->fiber->stackTop[-1] = OBJ_VAL(classObj);
 
   if (numFields == -1) bindForeignClass(vm, classObj, module);
@@ -960,12 +993,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       goto completeCall;
 
     completeCall:
-      // If the class's method table doesn't include the symbol, bail.
+      // If the class's method table doesn't include the symbol, look in the
+      // enclosing classes, or fail if not found there.
       if (symbol >= classObj->methods.count ||
           (method = &classObj->methods.data[symbol])->type == METHOD_NONE)
       {
-        methodNotFound(vm, classObj, symbol);
-        RUNTIME_ERROR();
+        method = methodNotFound(vm, classObj, symbol);
+        if (method == NULL) RUNTIME_ERROR();
       }
 
       switch (method->type)
