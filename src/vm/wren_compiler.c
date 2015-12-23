@@ -1987,7 +1987,7 @@ static void map(Compiler* compiler, bool allowAssignment)
     if (peek(compiler) == TOKEN_RIGHT_BRACE) break;
 
     // The key.
-    parsePrecedence(compiler, false, PREC_PRIMARY);
+    parsePrecedence(compiler, false, PREC_UNARY);
     consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
     ignoreNewlines(compiler);
 
