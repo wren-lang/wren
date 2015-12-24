@@ -7,6 +7,7 @@
 #include "scheduler.wren.inc"
 #include "timer.wren.inc"
 
+extern void directoryList(WrenVM* vm);
 extern void fileAllocate(WrenVM* vm);
 extern void fileFinalize(WrenVM* vm);
 extern void fileOpen(WrenVM* vm);
@@ -35,7 +36,7 @@ extern void timerStartTimer(WrenVM* vm);
 // If you add a new class to the largest module below, make sure to bump this.
 // Note that it also includes an extra slot for the sentinel value indicating
 // the end of the list.
-#define MAX_CLASSES_PER_MODULE 3
+#define MAX_CLASSES_PER_MODULE 4
 
 // Describes one foreign method in a class.
 typedef struct
@@ -87,6 +88,9 @@ typedef struct
 static ModuleRegistry modules[] =
 {
   MODULE(io)
+    CLASS(Directory)
+      STATIC_METHOD("list_(_,_)", directoryList)
+    END_CLASS
     CLASS(File)
       STATIC_METHOD("<allocate>", fileAllocate)
       STATIC_METHOD("<finalize>", fileFinalize)

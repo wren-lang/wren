@@ -1,5 +1,37 @@
 import "scheduler" for Scheduler
 
+class Directory {
+  static list(path) {
+    if (!(path is String)) Fiber.abort("Path must be a string.")
+
+    list_(path, Fiber.current)
+
+    // We get back a byte array containing all of the paths, each terminated by
+    // a zero byte.
+    var entryBuffer = Scheduler.runNextScheduled_()
+
+    // TODO: Add split() to String.
+    // Split it into an array of strings.
+    var entries = []
+    var start = 0
+    var i = 0
+    var bytes = entryBuffer.bytes
+    while (i < bytes.count) {
+      if (bytes[i] == 0) {
+        var entry = entryBuffer[start...i]
+        start = i + 1
+        entries.add(entry)
+      }
+
+      i = i + 1
+    }
+
+    return entries
+  }
+
+  foreign static list_(path, fiber)
+}
+
 foreign class File {
   static open(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
@@ -90,6 +122,7 @@ class Stdin {
       readStop_()
 
       if (__line != null) {
+        // Emit the last line.
         var line = __line
         __line = null
         if (__waitingFiber != null) __waitingFiber.transfer(line)
