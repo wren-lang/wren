@@ -226,6 +226,12 @@ WrenInterpretResult wrenCallVarArgs(WrenVM* vm, WrenValue* method,
                                     WrenValue** returnValue,
                                     const char* argTypes, va_list args);
 
+// Gets the numeric value of [value].
+//
+// It is an error to call this if the value is not a number.
+double wrenGetValueDouble(WrenVM* vm, WrenValue* value);
+// TODO: Functions for other types.
+
 // Releases the reference stored in [value]. After calling this, [value] can no
 // longer be used.
 void wrenReleaseValue(WrenVM* vm, WrenValue* value);

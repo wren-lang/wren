@@ -1474,9 +1474,17 @@ WrenValue* wrenCaptureValue(WrenVM* vm, Value value)
   return wrappedValue;
 }
 
+double wrenGetValueDouble(WrenVM* vm, WrenValue* value)
+{
+  ASSERT(value != NULL, "Value cannot be NULL.");
+  ASSERT(IS_NUM(value->value), "Value must be a number.");
+  
+  return AS_NUM(value->value);
+}
+
 void wrenReleaseValue(WrenVM* vm, WrenValue* value)
 {
-  ASSERT(value != NULL, "NULL value.");
+  ASSERT(value != NULL, "Value cannot be NULL.");
 
   // Update the VM's head pointer if we're releasing the first handle.
   if (vm->valueHandles == value) vm->valueHandles = value->next;
@@ -1734,7 +1742,7 @@ void wrenSetSlotBool(WrenVM* vm, int slot, bool value)
 
 void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, int length)
 {
-  ASSERT(bytes != NULL, "Byte arraybytes cannot be NULL.");
+  ASSERT(bytes != NULL, "Byte array cannot be NULL.");
   setSlot(vm, slot, wrenNewString(vm, bytes, (size_t)length));
 }
 

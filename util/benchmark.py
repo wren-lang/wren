@@ -51,6 +51,8 @@ def BENCHMARK(name, pattern):
   regex = re.compile(pattern + "\n" + r"elapsed: (\d+\.\d+)", re.MULTILINE)
   BENCHMARKS.append([name, regex, None])
 
+BENCHMARK("api_call", "true")
+
 BENCHMARK("api_foreign_method", "100000000")
 
 BENCHMARK("binary_trees", """stretch tree of depth 13 check: -1

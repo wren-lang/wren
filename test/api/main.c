@@ -64,7 +64,7 @@ static WrenForeignClassMethods bindForeignClass(
 }
 
 static void afterLoad(WrenVM* vm) {
-  if (strstr(testName, "call.wren") != NULL) callRunTests(vm);
+  if (strstr(testName, "/call.wren") != NULL) callRunTests(vm);
 }
 
 int main(int argc, const char* argv[])
