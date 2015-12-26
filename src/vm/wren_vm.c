@@ -1789,3 +1789,25 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   
   wrenListInsert(vm, list, vm->foreignStackStart[elementSlot], index);
 }
+
+void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
+                     int slot)
+{
+  ASSERT(module != NULL, "Module cannot be NULL.");
+  ASSERT(module != NULL, "Variable name cannot be NULL.");  
+  validateForeignSlot(vm, slot);
+  
+  Value moduleName = wrenStringFormat(vm, "$", module);
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+  
+  ObjModule* moduleObj = getModule(vm, moduleName);
+  ASSERT(moduleObj != NULL, "Could not find module.");
+  
+  wrenPopRoot(vm); // moduleName.
+
+  int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
+                                         name, strlen(name));
+  ASSERT(variableSlot != -1, "Could not find variable.");
+  
+  setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
+}

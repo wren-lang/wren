@@ -6,6 +6,7 @@
 
 #include "benchmark.h"
 #include "call.h"
+#include "get_variable.h"
 #include "foreign_class.h"
 #include "lists.h"
 #include "slots.h"
@@ -33,7 +34,10 @@ static WrenForeignMethodFn bindForeignMethod(
   
   method = benchmarkBindMethod(fullName);
   if (method != NULL) return method;
-  
+
+  method = getVariableBindMethod(fullName);
+  if (method != NULL) return method;
+
   method = foreignClassBindMethod(fullName);
   if (method != NULL) return method;
   

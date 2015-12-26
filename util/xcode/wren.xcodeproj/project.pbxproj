@@ -19,6 +19,7 @@
 		29205C9E1AB4E6430073018D /* wren_value.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C971AB4E6430073018D /* wren_value.c */; };
 		29205C9F1AB4E6430073018D /* wren_vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29205C981AB4E6430073018D /* wren_vm.c */; };
 		293D46961BB43F9900200083 /* call.c in Sources */ = {isa = PBXBuildFile; fileRef = 293D46941BB43F9900200083 /* call.c */; };
+		2949AA8D1C2F14F000B106BA /* get_variable.c in Sources */ = {isa = PBXBuildFile; fileRef = 2949AA8B1C2F14F000B106BA /* get_variable.c */; };
 		29512C811B91F8EB008C10E6 /* libuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29512C801B91F8EB008C10E6 /* libuv.a */; };
 		29512C821B91F901008C10E6 /* libuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29512C801B91F8EB008C10E6 /* libuv.a */; };
 		29729F311BA70A620099CA20 /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 29729F2E1BA70A620099CA20 /* io.c */; };
@@ -98,6 +99,8 @@
 		29205CA81AB4E65E0073018D /* wren_vm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_vm.h; path = ../../src/vm/wren_vm.h; sourceTree = "<group>"; };
 		293D46941BB43F9900200083 /* call.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = call.c; path = ../../test/api/call.c; sourceTree = "<group>"; };
 		293D46951BB43F9900200083 /* call.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = call.h; path = ../../test/api/call.h; sourceTree = "<group>"; };
+		2949AA8B1C2F14F000B106BA /* get_variable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = get_variable.c; path = ../../test/api/get_variable.c; sourceTree = "<group>"; };
+		2949AA8C1C2F14F000B106BA /* get_variable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = get_variable.h; path = ../../test/api/get_variable.h; sourceTree = "<group>"; };
 		29512C7F1B91F86E008C10E6 /* api_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = api_test; sourceTree = BUILT_PRODUCTS_DIR; };
 		29512C801B91F8EB008C10E6 /* libuv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libuv.a; path = ../../build/libuv.a; sourceTree = "<group>"; };
 		296371B31AC713D000079FDA /* wren_opcodes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_opcodes.h; path = ../../src/vm/wren_opcodes.h; sourceTree = "<group>"; };
@@ -252,6 +255,8 @@
 				293D46951BB43F9900200083 /* call.h */,
 				29D009A81B7E39A8000CE58C /* foreign_class.c */,
 				29D009A91B7E39A8000CE58C /* foreign_class.h */,
+				2949AA8B1C2F14F000B106BA /* get_variable.c */,
+				2949AA8C1C2F14F000B106BA /* get_variable.h */,
 				29932D521C210F8D00099DEE /* lists.c */,
 				29932D531C210F8D00099DEE /* lists.h */,
 				29D009AA1B7E39A8000CE58C /* slots.c */,
@@ -365,6 +370,7 @@
 				29729F321BA70A620099CA20 /* io.c in Sources */,
 				29932D541C210F8D00099DEE /* lists.c in Sources */,
 				291647C81BA5EC5E006142EE /* modules.c in Sources */,
+				2949AA8D1C2F14F000B106BA /* get_variable.c in Sources */,
 				29DC14A11BBA2FEC008A8274 /* scheduler.c in Sources */,
 				29A427391BDBE435001E6E22 /* wren_opt_random.c in Sources */,
 				29932D511C20D8C900099DEE /* benchmark.c in Sources */,
