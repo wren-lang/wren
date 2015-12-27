@@ -1156,10 +1156,10 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       wrenValueBufferClear(vm, &((ObjModule*)obj)->variables);
       break;
 
-    case OBJ_STRING:
     case OBJ_CLOSURE:
     case OBJ_INSTANCE:
     case OBJ_RANGE:
+    case OBJ_STRING:
     case OBJ_UPVALUE:
       break;
   }
