@@ -46,26 +46,6 @@ void ioShutdown()
   shutdownStdin();
 }
 
-void fileAllocate(WrenVM* vm)
-{
-  // Store the file descriptor in the foreign data, so that we can get to it
-  // in the finalizer.
-  int* fd = (int*)wrenAllocateForeign(vm, sizeof(int));
-  *fd = (int)wrenGetSlotDouble(vm, 1);
-}
-
-void fileFinalize(WrenVM* vm)
-{
-  int fd = *(int*)wrenGetSlotForeign(vm, 0);
-
-  // Already closed.
-  if (fd == -1) return;
-
-  uv_fs_t request;
-  uv_fs_close(getLoop(), &request, fd, NULL);
-  uv_fs_req_cleanup(&request);
-}
-
 // If [request] failed with an error, sends the runtime error to the VM and
 // frees the request.
 //
@@ -76,9 +56,9 @@ static bool handleRequestError(uv_fs_t* request)
 
   FileRequestData* data = (FileRequestData*)request->data;
   WrenValue* fiber = (WrenValue*)data->fiber;
-
+  
   schedulerResumeError(fiber, uv_strerror((int)request->result));
-
+  
   free(data);
   uv_fs_req_cleanup(request);
   free(request);
@@ -89,10 +69,10 @@ static bool handleRequestError(uv_fs_t* request)
 uv_fs_t* createRequest(WrenValue* fiber)
 {
   uv_fs_t* request = (uv_fs_t*)malloc(sizeof(uv_fs_t));
-
+  
   FileRequestData* data = (FileRequestData*)malloc(sizeof(FileRequestData));
   data->fiber = fiber;
-
+  
   request->data = data;
   return request;
 }
@@ -104,21 +84,84 @@ WrenValue* freeRequest(uv_fs_t* request)
 {
   FileRequestData* data = (FileRequestData*)request->data;
   WrenValue* fiber = data->fiber;
-
+  
   free(data);
   uv_fs_req_cleanup(request);
   free(request);
-
+  
   return fiber;
 }
 
-static void openCallback(uv_fs_t* request)
+static void directoryListCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
 
+  uv_dirent_t entry;
+
+  // TODO: Right now, there's no way to create a list using the C API, so
+  // create a buffer containing all of the result paths terminated by '\0'.
+  // We'll split that back into a list in Wren.
+  size_t bufferLength = 0;
+  size_t bufferCapacity = 1024;
+  char* buffer = (char*)malloc(bufferCapacity);
+  
+  while (uv_fs_scandir_next(request, &entry) != UV_EOF)
+  {
+    size_t length = strlen(entry.name);
+    
+    // Grow the buffer if needed.
+    while (bufferLength + length + 1 > bufferCapacity)
+    {
+      bufferCapacity *= 2;
+      buffer = (char*)realloc(buffer, bufferCapacity);
+    }
+    
+    // Copy the path, including the null terminator.
+    memcpy(buffer + bufferLength, entry.name, length + 1);
+    bufferLength += length + 1;
+  }
+  
+  WrenValue* fiber = freeRequest(request);
+  schedulerResumeBytes(fiber, buffer, bufferLength);
+  free(buffer);
+}
+
+void directoryList(WrenVM* vm)
+{
+  const char* path = wrenGetSlotString(vm, 1);
+  
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
+  
+  // TODO: Check return.
+  uv_fs_scandir(getLoop(), request, path, 0, directoryListCallback);
+}
+
+void fileAllocate(WrenVM* vm)
+{
+  // Store the file descriptor in the foreign data, so that we can get to it
+  // in the finalizer.
+  int* fd = (int*)wrenAllocateForeign(vm, sizeof(int));
+  *fd = (int)wrenGetSlotDouble(vm, 1);
+}
+
+void fileFinalize(WrenVM* vm)
+{
+  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  
+  // Already closed.
+  if (fd == -1) return;
+  
+  uv_fs_t request;
+  uv_fs_close(getLoop(), &request, fd, NULL);
+  uv_fs_req_cleanup(&request);
+}
+
+static void fileOpenCallback(uv_fs_t* request)
+{
+  if (handleRequestError(request)) return;
+  
   double fd = (double)request->result;
   WrenValue* fiber = freeRequest(request);
-
   schedulerResumeDouble(fiber, fd);
 }
 
@@ -128,17 +171,16 @@ void fileOpen(WrenVM* vm)
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
 
   // TODO: Allow controlling flags and modes.
-  uv_fs_open(getLoop(), request, path, O_RDONLY, 0, openCallback);
+  uv_fs_open(getLoop(), request, path, O_RDONLY, 0, fileOpenCallback);
 }
 
 // Called by libuv when the stat call for size completes.
-static void sizeCallback(uv_fs_t* request)
+static void fileSizeCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
 
   double size = (double)request->statbuf.st_size;
   WrenValue* fiber = freeRequest(request);
-
   schedulerResumeDouble(fiber, size);
 }
 
@@ -146,10 +188,10 @@ void fileSizePath(WrenVM* vm)
 {
   const char* path = wrenGetSlotString(vm, 1);
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
-  uv_fs_stat(getLoop(), request, path, sizeCallback);
+  uv_fs_stat(getLoop(), request, path, fileSizeCallback);
 }
 
-static void closeCallback(uv_fs_t* request)
+static void fileCloseCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
 
@@ -173,7 +215,7 @@ void fileClose(WrenVM* vm)
   *foreign = -1;
 
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 1));
-  uv_fs_close(getLoop(), request, fd, closeCallback);
+  uv_fs_close(getLoop(), request, fd, fileCloseCallback);
   wrenSetSlotBool(vm, 0, false);
 }
 
@@ -226,7 +268,7 @@ void fileSize(WrenVM* vm)
   int fd = *(int*)wrenGetSlotForeign(vm, 0);
   // TODO: Assert fd != -1.
 
-  uv_fs_fstat(getLoop(), request, fd, sizeCallback);
+  uv_fs_fstat(getLoop(), request, fd, fileSizeCallback);
 }
 
 static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
