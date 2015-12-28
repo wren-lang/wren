@@ -94,7 +94,41 @@ static void ensure(WrenVM* vm)
   {
     sum += (int)wrenGetSlotDouble(vm, i);
   }
-  
+
+  char result[100];
+  sprintf(result, "%d -> %d (%d)", before, after, sum);
+  wrenSetSlotString(vm, 0, result);
+}
+
+static void ensureOutsideForeign(WrenVM* vm)
+{
+  // To test the behavior outside of a foreign method (which we're currently
+  // in), create a new separate VM.
+  WrenConfiguration config;
+  wrenInitConfiguration(&config);
+  WrenVM* otherVM = wrenNewVM(&config);
+
+  int before = wrenGetSlotCount(otherVM);
+
+  wrenEnsureSlots(otherVM, 20);
+
+  int after = wrenGetSlotCount(otherVM);
+
+  // Use the slots to make sure they're available.
+  for (int i = 0; i < 20; i++)
+  {
+    wrenSetSlotDouble(otherVM, i, i);
+  }
+
+  int sum = 0;
+
+  for (int i = 0; i < 20; i++)
+  {
+    sum += (int)wrenGetSlotDouble(otherVM, i);
+  }
+
+  wrenFreeVM(otherVM);
+
   char result[100];
   sprintf(result, "%d -> %d (%d)", before, after, sum);
   wrenSetSlotString(vm, 0, result);
@@ -106,6 +140,7 @@ WrenForeignMethodFn slotsBindMethod(const char* signature)
   if (strcmp(signature, "static Slots.getSlots(_,_,_,_,_)") == 0) return getSlots;
   if (strcmp(signature, "static Slots.setSlots(_,_,_,_)") == 0) return setSlots;
   if (strcmp(signature, "static Slots.ensure()") == 0) return ensure;
+  if (strcmp(signature, "static Slots.ensureOutsideForeign()") == 0) return ensureOutsideForeign;
 
   return NULL;
 }

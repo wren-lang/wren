@@ -660,6 +660,9 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
   frame->ip = wrenUpwrapClosure(frame->fn)->bytecode;
 }
 
+// Ensures [fiber]'s stack has at least [needed] slots.
+void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed);
+
 ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
 // TODO: The argument list here is getting a bit gratuitous.

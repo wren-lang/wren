@@ -182,6 +182,48 @@ void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn)
   if (fn != NULL) wrenAppendCallFrame(vm, fiber, fn, fiber->stack);
 }
 
+void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
+{
+  if (fiber->stackCapacity >= needed) return;
+  
+  int capacity = wrenPowerOf2Ceil(needed);
+  
+  Value* oldStack = fiber->stack;
+  fiber->stack = (Value*)wrenReallocate(vm, fiber->stack,
+                                        sizeof(Value) * fiber->stackCapacity,
+                                        sizeof(Value) * capacity);
+  fiber->stackCapacity = capacity;
+  
+  // If the reallocation moves the stack, then we need to shift every pointer
+  // into the stack to point to its new location.
+  if (fiber->stack != oldStack)
+  {
+    // Top of the stack.
+    long offset = fiber->stack - oldStack;
+    
+    if (vm->apiStack >= oldStack && vm->apiStack <= fiber->stackTop)
+    {
+      vm->apiStack += offset;
+    }
+    
+    // Stack pointer for each call frame.
+    for (int i = 0; i < fiber->numFrames; i++)
+    {
+      fiber->frames[i].stackStart += offset;
+    }
+    
+    // Open upvalues.
+    for (ObjUpvalue* upvalue = fiber->openUpvalues;
+         upvalue != NULL;
+         upvalue = upvalue->next)
+    {
+      upvalue->value += offset;
+    }
+    
+    fiber->stackTop += offset;
+  }
+}
+
 ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
 {
   ObjForeign* object = ALLOCATE_FLEX(vm, ObjForeign, uint8_t, size);

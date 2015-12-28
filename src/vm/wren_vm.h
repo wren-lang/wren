@@ -84,11 +84,14 @@ struct WrenVM
   // NULL if there are no handles.
   WrenValue* valueHandles;
   
-  // Foreign function data:
-
-  // During a foreign function call, this will point to the first argument (the
-  // receiver) of the call on the fiber's stack.
-  Value* foreignStackStart;
+  // Pointer to the bottom of the range of stack slots available for use from
+  // the C API. During a foreign method, this will be in the stack of the fiber
+  // that is executing a method.
+  //
+  // If not in a foreign method, this is initially NULL. If the user requests
+  // slots by calling wrenEnsureSlots(), a stack is created and this is
+  // initialized.
+  Value* apiStack;
 
   WrenConfiguration config;
   

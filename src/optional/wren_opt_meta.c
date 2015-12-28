@@ -22,7 +22,7 @@ void metaCompile(WrenVM* vm)
 
   // Return the result. We can't use the public API for this since we have a
   // bare ObjFn.
-  vm->foreignStackStart[0] = fn != NULL ? OBJ_VAL(fn) : NULL_VAL;
+  vm->apiStack[0] = fn != NULL ? OBJ_VAL(fn) : NULL_VAL;
 }
 
 static WrenForeignMethodFn bindMetaForeignMethods(WrenVM* vm,
