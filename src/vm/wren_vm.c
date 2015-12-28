@@ -65,6 +65,8 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->modules = wrenNewMap(vm);
 
   wrenInitializeCore(vm);
+  
+  vm->finalizerFiber = wrenNewFiber(vm, NULL);
 
   // TODO: Lazy load these.
   #if WREN_OPT_META
@@ -137,8 +139,9 @@ void wrenCollectGarbage(WrenVM* vm)
     wrenGrayObj(vm, vm->tempRoots[i]);
   }
 
-  // The current fiber.
+  // The rooted fibers.
   wrenGrayObj(vm, (Obj*)vm->fiber);
+  wrenGrayObj(vm, (Obj*)vm->finalizerFiber);
 
   // The value handles.
   for (WrenValue* value = vm->valueHandles;
@@ -740,10 +743,16 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
   ASSERT(method->type == METHOD_FOREIGN, "Finalizer should be foreign.");
 
   // Pass the foreign object to the finalizer.
-  Value slot = OBJ_VAL(foreign);
-  vm->foreignStackStart = &slot;
+  *vm->finalizerFiber->stackTop++ = OBJ_VAL(foreign);
+  ObjFiber* previousFiber = vm->fiber;
+  vm->fiber = vm->finalizerFiber;
+  vm->foreignStackStart = vm->finalizerFiber->stack;
 
   method->fn.foreign(vm);
+  
+  vm->fiber = previousFiber;
+  vm->foreignStackStart = NULL;
+  wrenResetFiber(vm, vm->finalizerFiber, NULL);
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
@@ -1637,28 +1646,17 @@ void wrenPopRoot(WrenVM* vm)
   vm->numTempRoots--;
 }
 
-// Returns true if the VM is in a foreign method that's a finalizer.
-//
-// Finalizers don't run in the context of a fiber and have a single magic stack
-// slot, so need to be handled a little specially.
-static bool isInFinalizer(WrenVM* vm)
-{
-  return vm->fiber == NULL ||
-         vm->foreignStackStart < vm->fiber->stack ||
-         vm->foreignStackStart > vm->fiber->stackTop;
-}
-
 int wrenGetSlotCount(WrenVM* vm)
 {
   ASSERT(vm->foreignStackStart != NULL, "Must be in foreign call.");
 
-  if (isInFinalizer(vm)) return 1;
   return (int)(vm->fiber->stackTop - vm->foreignStackStart);
 }
 
 void wrenEnsureSlots(WrenVM* vm, int numSlots)
 {
-  ASSERT(!isInFinalizer(vm), "Cannot grow the stack in a finalizer.");
+  ASSERT(vm->fiber != vm->finalizerFiber,
+         "Cannot grow the stack in a finalizer.");
   
   int currentSize = (int)(vm->fiber->stackTop - vm->foreignStackStart);
   if (currentSize >= numSlots) return;

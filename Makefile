@@ -48,7 +48,7 @@ test: debug
 
 benchmark: release
 	@ $(MAKE) -f util/wren.mk test
-	@ ./util/benchmark.py $(suite)
+	@ ./util/benchmark.py -l wren $(suite)
 
 # Generate the Wren site.
 docs:

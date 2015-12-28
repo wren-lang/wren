@@ -152,7 +152,9 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   
   // Add one slot for the unused implicit receiver slot that the compiler
   // assumes all functions have.
-  int stackCapacity = wrenPowerOf2Ceil(wrenUpwrapClosure(fn)->maxSlots + 1);
+  int stackCapacity = fn == NULL
+      ? 1
+      : wrenPowerOf2Ceil(wrenUpwrapClosure(fn)->maxSlots + 1);
   Value* stack = ALLOCATE_ARRAY(vm, Value, stackCapacity);
   
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
@@ -174,10 +176,10 @@ void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn)
   fiber->caller = NULL;
   fiber->error = NULL_VAL;
   fiber->callerIsTrying = false;
+  fiber->numFrames = 0;
 
   // Initialize the first call frame.
-  fiber->numFrames = 0;
-  wrenAppendCallFrame(vm, fiber, fn, fiber->stack);
+  if (fn != NULL) wrenAppendCallFrame(vm, fiber, fn, fiber->stack);
 }
 
 ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)

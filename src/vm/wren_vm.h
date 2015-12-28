@@ -102,6 +102,12 @@ struct WrenVM
   // There is a single global symbol table for all method names on all classes.
   // Method calls are dispatched directly by index in this table.
   SymbolTable methodNames;
+  
+  // A special fiber whose stack is used for communicating with foreign
+  // finalizer methods. Finalizers run during GC, so we don't want to do any
+  // allocation in order to execute one, so we set up this fiber ahead of time
+  // to ensure it's available.
+  ObjFiber* finalizerFiber;
 };
 
 // A generic allocation function that handles all explicit memory management.
