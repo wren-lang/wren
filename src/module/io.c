@@ -144,9 +144,9 @@ void fileAllocate(WrenVM* vm)
   *fd = (int)wrenGetSlotDouble(vm, 1);
 }
 
-void fileFinalize(WrenVM* vm)
+void fileFinalize(void* data)
 {
-  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  int fd = *(int*)data;
   
   // Already closed.
   if (fd == -1) return;

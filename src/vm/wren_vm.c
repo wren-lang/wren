@@ -66,8 +66,6 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   wrenInitializeCore(vm);
   
-  vm->finalizerFiber = wrenNewFiber(vm, NULL);
-
   // TODO: Lazy load these.
   #if WREN_OPT_META
     wrenLoadMetaModule(vm);
@@ -139,9 +137,8 @@ void wrenCollectGarbage(WrenVM* vm)
     wrenGrayObj(vm, vm->tempRoots[i]);
   }
 
-  // The rooted fibers.
+  // The rooted fiber.
   wrenGrayObj(vm, (Obj*)vm->fiber);
-  wrenGrayObj(vm, (Obj*)vm->finalizerFiber);
 
   // The value handles.
   for (WrenValue* value = vm->valueHandles;
@@ -628,7 +625,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
 
   if (methods.finalize != NULL)
   {
-    method.fn.foreign = methods.finalize;
+    method.fn.foreign = (WrenForeignMethodFn)methods.finalize;
     wrenBindMethod(vm, classObj, symbol, method);
   }
 }
@@ -699,23 +696,8 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
 
   ASSERT(method->type == METHOD_FOREIGN, "Finalizer should be foreign.");
 
-  // Pass the foreign object to the finalizer.
-  *vm->finalizerFiber->stackTop++ = OBJ_VAL(foreign);
-  ObjFiber* previousFiber = vm->fiber;
-  vm->fiber = vm->finalizerFiber;
-  
-  // TODO: What if apiStack is not currently NULL? This can happen if a foreign
-  // method causes an allocation which triggers a GC. The simplest solution
-  // might be to make finalizers have a different function type which only
-  // passes in the foreign bytes and not the VM. Then we wouldn't need a fiber
-  // for the finalizer.
-  vm->apiStack = vm->finalizerFiber->stack;
-
-  method->fn.foreign(vm);
-  
-  vm->fiber = previousFiber;
-  vm->apiStack = NULL;
-  wrenResetFiber(vm, vm->finalizerFiber, NULL);
+  WrenFinalizerFn finalizer = (WrenFinalizerFn)method->fn.foreign;
+  finalizer(foreign->data);
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
@@ -1618,9 +1600,6 @@ int wrenGetSlotCount(WrenVM* vm)
 
 void wrenEnsureSlots(WrenVM* vm, int numSlots)
 {
-  ASSERT(vm->fiber != vm->finalizerFiber,
-         "Cannot grow the stack in a finalizer.");
-  
   // If we don't have a fiber accessible, create one for the API to use.
   if (vm->fiber == NULL && vm->apiStack == NULL)
   {

@@ -38,6 +38,12 @@ typedef void* (*WrenReallocateFn)(void* memory, size_t newSize);
 // A function callable from Wren code, but implemented in C.
 typedef void (*WrenForeignMethodFn)(WrenVM* vm);
 
+// A finalizer function for freeing resources owned by an instance of a foreign
+// class. Unlike most foreign methods, finalizers do not have access to the VM
+// and should not interact with it since it's in the middle of a garbage
+// collection.
+typedef void (*WrenFinalizerFn)(void* data);
+
 // Loads and returns the source code for the module [name].
 typedef char* (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
 
@@ -64,7 +70,7 @@ typedef struct
   // foreign object's memory.
   //
   // This may be `NULL` if the foreign class does not need to finalize.
-  WrenForeignMethodFn finalize;
+  WrenFinalizerFn finalize;
 } WrenForeignClassMethods;
 
 // Returns a pair of pointers to the foreign methods used to allocate and

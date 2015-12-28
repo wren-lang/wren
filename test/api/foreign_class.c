@@ -69,11 +69,16 @@ static void pointToString(WrenVM* vm)
 
 static void resourceAllocate(WrenVM* vm)
 {
-  wrenAllocateForeign(vm, 0);
+  int* value = (int*)wrenAllocateForeign(vm, sizeof(int));
+  *value = 123;
 }
 
-static void resourceFinalize(WrenVM* vm)
+static void resourceFinalize(void* data)
 {
+  // Make sure we get the right data back.
+  int* value = (int*)data;
+  if (*value != 123) exit(1);
+  
   finalized++;
 }
 

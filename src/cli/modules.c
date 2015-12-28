@@ -208,7 +208,7 @@ WrenForeignClassMethods bindBuiltInForeignClass(
   if (clas == NULL) return methods;
 
   methods.allocate = findMethod(clas, true, "<allocate>");
-  methods.finalize = findMethod(clas, true, "<finalize>");
+  methods.finalize = (WrenFinalizerFn)findMethod(clas, true, "<finalize>");
 
   return methods;
 }
