@@ -107,33 +107,18 @@ static void directoryListCallback(uv_fs_t* request)
 
   uv_dirent_t entry;
 
-  // TODO: Right now, there's no way to create a list using the C API, so
-  // create a buffer containing all of the result paths terminated by '\0'.
-  // We'll split that back into a list in Wren.
-  size_t bufferLength = 0;
-  size_t bufferCapacity = 1024;
-  char* buffer = (char*)malloc(bufferCapacity);
+  WrenVM* vm = getVM();
+  wrenEnsureSlots(vm, 3);
+  wrenSetSlotNewList(vm, 2);
   
   while (uv_fs_scandir_next(request, &entry) != UV_EOF)
   {
-    size_t length = strlen(entry.name);
-    
-    // Grow the buffer if needed.
-    while (bufferLength + length + 1 > bufferCapacity)
-    {
-      bufferCapacity *= 2;
-      buffer = (char*)realloc(buffer, bufferCapacity);
-    }
-    
-    // Copy the path, including the null terminator.
-    memcpy(buffer + bufferLength, entry.name, length + 1);
-    bufferLength += length + 1;
+    wrenSetSlotString(vm, 1, entry.name);
+    wrenInsertInList(vm, 2, -1, 1);
   }
   
   schedulerResume(freeRequest(request), true);
-  wrenSetSlotBytes(getVM(), 2, buffer, bufferLength);
   schedulerFinishResume();
-  free(buffer);
 }
 
 void directoryList(WrenVM* vm)

@@ -33,3 +33,4 @@ class Call {
 // expect: two string another
 // expect: two null [a, b]
 // expect: two str [98, 0, 121, 0, 116, 0, 101]
+// expect: one 0.1

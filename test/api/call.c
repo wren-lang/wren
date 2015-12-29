@@ -73,6 +73,15 @@ void callRunTests(WrenVM* vm)
   wrenSetSlotBytes(vm, 2, "b\0y\0t\0e", 7);
   wrenCall(vm, two);
   
+  // Call ignores with extra temporary slots on stack.
+  wrenEnsureSlots(vm, 10);
+  wrenSetSlotValue(vm, 0, callClass);
+  for (int i = 1; i < 10; i++)
+  {
+    wrenSetSlotDouble(vm, i, i * 0.1);
+  }
+  wrenCall(vm, one);
+  
   wrenReleaseValue(vm, callClass);
   wrenReleaseValue(vm, noParams);
   wrenReleaseValue(vm, zero);

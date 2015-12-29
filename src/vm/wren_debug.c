@@ -20,6 +20,9 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
     CallFrame* frame = &fiber->frames[i];
     ObjFn* fn = wrenUpwrapClosure(frame->fn);
 
+    // Skip over stub functions for calling methods from the C API.
+    if (fn->module == NULL) continue;
+    
     // The built-in core module has no name. We explicitly omit it from stack
     // traces since we don't want to highlight to a user the implementation
     // detail of what part of the core module is written in C and what is Wren.

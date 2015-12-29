@@ -1311,23 +1311,30 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method)
   ASSERT(vm->fiber->stackTop - vm->fiber->stack >= fn->arity,
          "Stack must have enough arguments for method.");
   
-  callFunction(vm, vm->fiber, (Obj*)fn, fn->arity);
+  // Discard any extra temporary slots. We take for granted that the stub
+  // function has exactly one slot for each arguments.
+  vm->fiber->stackTop = &vm->fiber->stack[fn->maxSlots];
   
+  callFunction(vm, vm->fiber, (Obj*)fn, 0);
   return runInterpreter(vm, vm->fiber);
 }
 
 WrenValue* wrenCaptureValue(WrenVM* vm, Value value)
 {
+  if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
+  
   // Make a handle for it.
   WrenValue* wrappedValue = ALLOCATE(vm, WrenValue);
   wrappedValue->value = value;
+
+  if (IS_OBJ(value)) wrenPopRoot(vm);
 
   // Add it to the front of the linked list of handles.
   if (vm->valueHandles != NULL) vm->valueHandles->prev = wrappedValue;
   wrappedValue->prev = NULL;
   wrappedValue->next = vm->valueHandles;
   vm->valueHandles = wrappedValue;
-
+  
   return wrappedValue;
 }
 
