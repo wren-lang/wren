@@ -18,7 +18,10 @@ typedef struct sFileRequestData
 
 static const int stdinDescriptor = 0;
 
-// Handle to Stdin.onData_(). Called when libuv provides data on stdin.
+// Handle to the Stdin class object.
+static WrenValue* stdinClass = NULL;
+
+// Handle to an onData_() method call. Called when libuv provides data on stdin.
 static WrenValue* stdinOnData = NULL;
 
 // The stream used to read from stdin. Initialized on the first read.
@@ -33,7 +36,13 @@ static void shutdownStdin()
     free(stdinStream);
     stdinStream = NULL;
   }
-
+  
+  if (stdinClass != NULL)
+  {
+    wrenReleaseValue(getVM(), stdinClass);
+    stdinClass = NULL;
+  }
+  
   if (stdinOnData != NULL)
   {
     wrenReleaseValue(getVM(), stdinOnData);
@@ -121,8 +130,9 @@ static void directoryListCallback(uv_fs_t* request)
     bufferLength += length + 1;
   }
   
-  WrenValue* fiber = freeRequest(request);
-  schedulerResumeBytes(fiber, buffer, bufferLength);
+  schedulerResume(freeRequest(request), true);
+  wrenSetSlotBytes(getVM(), 2, buffer, bufferLength);
+  schedulerFinishResume();
   free(buffer);
 }
 
@@ -161,8 +171,9 @@ static void fileOpenCallback(uv_fs_t* request)
   if (handleRequestError(request)) return;
   
   double fd = (double)request->result;
-  WrenValue* fiber = freeRequest(request);
-  schedulerResumeDouble(fiber, fd);
+  schedulerResume(freeRequest(request), true);
+  wrenSetSlotDouble(getVM(), 2, fd);
+  schedulerFinishResume();
 }
 
 void fileOpen(WrenVM* vm)
@@ -180,8 +191,9 @@ static void fileSizeCallback(uv_fs_t* request)
   if (handleRequestError(request)) return;
 
   double size = (double)request->statbuf.st_size;
-  WrenValue* fiber = freeRequest(request);
-  schedulerResumeDouble(fiber, size);
+  schedulerResume(freeRequest(request), true);
+  wrenSetSlotDouble(getVM(), 2, size);
+  schedulerFinishResume();
 }
 
 void fileSizePath(WrenVM* vm)
@@ -195,8 +207,7 @@ static void fileCloseCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
 
-  WrenValue* fiber = freeRequest(request);
-  schedulerResume(fiber);
+  schedulerResume(freeRequest(request), false);
 }
 
 void fileClose(WrenVM* vm)
@@ -233,12 +244,12 @@ static void fileReadBytesCallback(uv_fs_t* request)
   FileRequestData* data = (FileRequestData*)request->data;
   uv_buf_t buffer = data->buffer;
 
-  WrenValue* fiber = freeRequest(request);
-
   // TODO: Having to copy the bytes here is a drag. It would be good if Wren's
   // embedding API supported a way to *give* it bytes that were previously
   // allocated using Wren's own allocator.
-  schedulerResumeBytes(fiber, buffer.base, buffer.len);
+  schedulerResume(freeRequest(request), true);
+  wrenSetSlotBytes(getVM(), 2, buffer.base, buffer.len);
+  schedulerFinishResume();
 
   // TODO: Likewise, freeing this after we resume is lame.
   free(buffer.base);
@@ -282,25 +293,41 @@ static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
 static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
                                const uv_buf_t* buffer)
 {
+  WrenVM* vm = getVM();
+  
+  if (stdinClass == NULL)
+  {
+    wrenEnsureSlots(vm, 1);
+    wrenGetVariable(vm, "io", "Stdin", 0);
+    stdinClass = wrenGetSlotValue(vm, 0);
+  }
+  
+  if (stdinOnData == NULL)
+  {
+    stdinOnData = wrenMakeCallHandle(vm, "onData_(_)");
+  }
+  
   // If stdin was closed, send null to let io.wren know.
   if (numRead == UV_EOF)
   {
-    wrenCall(getVM(), stdinOnData, NULL, "v", NULL);
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotValue(vm, 0, stdinClass);
+    wrenSetSlotNull(vm, 1);
+    wrenCall(vm, stdinOnData);
+    
     shutdownStdin();
     return;
   }
 
   // TODO: Handle other errors.
 
-  if (stdinOnData == NULL)
-  {
-    stdinOnData = wrenGetMethod(getVM(), "io", "Stdin", "onData_(_)");
-  }
-
   // TODO: Having to copy the bytes here is a drag. It would be good if Wren's
   // embedding API supported a way to *give* it bytes that were previously
   // allocated using Wren's own allocator.
-  wrenCall(getVM(), stdinOnData, NULL, "a", buffer->base, numRead);
+  wrenEnsureSlots(vm, 2);
+  wrenSetSlotValue(vm, 0, stdinClass);
+  wrenSetSlotBytes(vm, 1, buffer->base, numRead);
+  wrenCall(vm, stdinOnData);
 
   // TODO: Likewise, freeing this after we resume is lame.
   free(buffer->base);

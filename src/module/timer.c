@@ -22,7 +22,7 @@ static void timerCallback(uv_timer_t* handle)
   uv_close((uv_handle_t*)handle, timerCloseCallback);
 
   // Run the fiber that was sleeping.
-  schedulerResume(fiber);
+  schedulerResume(fiber, false);
 }
 
 void timerStartTimer(WrenVM* vm)

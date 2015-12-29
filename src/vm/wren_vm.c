@@ -1104,18 +1104,23 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       // If the fiber is complete, end it.
       if (fiber->numFrames == 0)
       {
-        // See if there's another fiber to return to.
-        ObjFiber* callingFiber = fiber->caller;
+        // See if there's another fiber to return to. If not, we're done.
+        if (fiber->caller == NULL)
+        {
+          // Store the final result value at the beginning of the stack so the
+          // C API can get it.
+          fiber->stack[0] = result;
+          fiber->stackTop = fiber->stack + 1;
+          return WREN_RESULT_SUCCESS;
+        }
+        
+        ObjFiber* resumingFiber = fiber->caller;
         fiber->caller = NULL;
-
-        fiber = callingFiber;
-        vm->fiber = fiber;
-
-        // If not, we're done.
-        if (fiber == NULL) return WREN_RESULT_SUCCESS;
-
+        fiber = resumingFiber;
+        vm->fiber = resumingFiber;
+        
         // Store the result in the resuming fiber.
-        *(fiber->stackTop - 1) = result;
+        fiber->stackTop[-1] = result;
       }
       else
       {
@@ -1127,7 +1132,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         // result).
         fiber->stackTop = frame->stackStart + 1;
       }
-
+      
       LOAD_FRAME();
       DISPATCH();
     }
@@ -1255,11 +1260,10 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #undef READ_SHORT
 }
 
-// Creates an [ObjFn] that invokes a method with [signature] when called.
-static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
+WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature)
 {
   int signatureLength = (int)strlen(signature);
-
+  
   // Count the number parameters the method expects.
   int numParams = 0;
   if (signature[signatureLength - 1] == ')')
@@ -1270,147 +1274,46 @@ static ObjFn* makeCallStub(WrenVM* vm, ObjModule* module, const char* signature)
       if (*s == '_') numParams++;
     }
   }
-
+  
+  // Add the signatue to the method table.
   int method =  wrenSymbolTableEnsure(vm, &vm->methodNames,
                                       signature, signatureLength);
-
+  
+  // Create a little stub function that assumes the arguments are on the stack
+  // and calls the method.
   uint8_t* bytecode = ALLOCATE_ARRAY(vm, uint8_t, 5);
   bytecode[0] = (uint8_t)(CODE_CALL_0 + numParams);
   bytecode[1] = (method >> 8) & 0xff;
   bytecode[2] = method & 0xff;
   bytecode[3] = CODE_RETURN;
   bytecode[4] = CODE_END;
-
+  
   int* debugLines = ALLOCATE_ARRAY(vm, int, 5);
   memset(debugLines, 1, 5);
+  
+  ObjFn* fn = wrenNewFunction(vm, NULL, NULL, 0, 0, numParams + 1, 0, bytecode,
+                             5, signature, signatureLength, debugLines);
 
-  return wrenNewFunction(vm, module, NULL, 0, 0, numParams + 1, 0, bytecode, 5,
-                         signature, signatureLength, debugLines);
+  // Wrap the function in a handle.
+  return wrenCaptureValue(vm, OBJ_VAL(fn));
 }
 
-WrenValue* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
-                         const char* signature)
+WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method)
 {
-  Value moduleName = wrenStringFormat(vm, "$", module);
-  wrenPushRoot(vm, AS_OBJ(moduleName));
-
-  ObjModule* moduleObj = getModule(vm, moduleName);
-  // TODO: Handle module not being found.
-
-  int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
-                                         variable, strlen(variable));
-  // TODO: Handle the variable not being found.
-
-  ObjFn* fn = makeCallStub(vm, moduleObj, signature);
-  wrenPushRoot(vm, (Obj*)fn);
-
-  // Create a single fiber that we can reuse each time the method is invoked.
-  ObjFiber* fiber = wrenNewFiber(vm, (Obj*)fn);
-  wrenPushRoot(vm, (Obj*)fiber);
-
-  // Create a handle that keeps track of the function that calls the method.
-  WrenValue* method = wrenCaptureValue(vm, OBJ_VAL(fiber));
-
-  // Store the receiver in the fiber's stack so we can use it later in the call.
-  *fiber->stackTop++ = moduleObj->variables.data[variableSlot];
-
-  wrenPopRoot(vm); // fiber.
-  wrenPopRoot(vm); // fn.
-  wrenPopRoot(vm); // moduleName.
-
-  return method;
-}
-
-WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method,
-                             WrenValue** returnValue,
-                             const char* argTypes, ...)
-{
-  va_list args;
-  va_start(args, argTypes);
-  WrenInterpretResult result = wrenCallVarArgs(vm, method, returnValue,
-                                               argTypes, args);
-  va_end(args);
-
-  return result;
-}
-
-WrenInterpretResult wrenCallVarArgs(WrenVM* vm, WrenValue* method,
-                                    WrenValue** returnValue,
-                                    const char* argTypes, va_list args)
-{
-  // TODO: Validate that the number of arguments matches what the method
-  // expects.
-
-  ASSERT(IS_FIBER(method->value), "Value must come from wrenGetMethod().");
-  ObjFiber* fiber = AS_FIBER(method->value);
-
-  // Push the arguments.
-  for (const char* argType = argTypes; *argType != '\0'; argType++)
-  {
-    Value value = NULL_VAL;
-    switch (*argType)
-    {
-      case 'a':
-      {
-        const char* bytes = va_arg(args, const char*);
-        int length = va_arg(args, int);
-        value = wrenNewString(vm, bytes, (size_t)length);
-        break;
-      }
-
-      case 'b': value = BOOL_VAL(va_arg(args, int)); break;
-      case 'd': value = NUM_VAL(va_arg(args, double)); break;
-      case 'i': value = NUM_VAL((double)va_arg(args, int)); break;
-      case 'n': value = NULL_VAL; va_arg(args, void*); break;
-      case 's':
-        value = wrenStringFormat(vm, "$", va_arg(args, const char*));
-        break;
-
-      case 'v':
-      {
-        // Allow a NULL value pointer for Wren null.
-        WrenValue* wrenValue = va_arg(args, WrenValue*);
-        if (wrenValue != NULL) value = wrenValue->value;
-        break;
-      }
-
-      default:
-        ASSERT(false, "Unknown argument type.");
-        break;
-    }
-
-    *fiber->stackTop++ = value;
-  }
-
-  Value receiver = fiber->stack[0];
-  Obj* fn = fiber->frames[0].fn;
-  wrenPushRoot(vm, (Obj*)fn);
-
-  WrenInterpretResult result = runInterpreter(vm, fiber);
-
-  if (result == WREN_RESULT_SUCCESS)
-  {
-    if (returnValue != NULL)
-    {
-      // Make sure the return value doesn't get collected while capturing it.
-      fiber->stackTop++;
-      *returnValue = wrenCaptureValue(vm, fiber->stack[0]);
-    }
-
-    // Reset the fiber to get ready for the next call.
-    wrenResetFiber(vm, fiber, fn);
-
-    // Push the receiver back on the stack.
-    *fiber->stackTop++ = receiver;
-  }
-  else
-  {
-    if (returnValue != NULL) *returnValue = NULL;
-  }
-
-  wrenPopRoot(vm);
-
-  return result;
+  ASSERT(method != NULL, "Method cannot be NULL.");
+  ASSERT(IS_FN(method->value), "Method must be a method handle.");
+  ASSERT(vm->fiber != NULL, "Must set up arguments for call first.");
+  ASSERT(vm->apiStack != NULL, "Must set up arguments for call first.");
+  ASSERT(vm->fiber->numFrames == 0, "Can not call from a foreign method.");
+  
+  ObjFn* fn = AS_FN(method->value);
+  
+  ASSERT(vm->fiber->stackTop - vm->fiber->stack >= fn->arity,
+         "Stack must have enough arguments for method.");
+  
+  callFunction(vm, vm->fiber, (Obj*)fn, fn->arity);
+  
+  return runInterpreter(vm, vm->fiber);
 }
 
 WrenValue* wrenCaptureValue(WrenVM* vm, Value value)
@@ -1426,14 +1329,6 @@ WrenValue* wrenCaptureValue(WrenVM* vm, Value value)
   vm->valueHandles = wrappedValue;
 
   return wrappedValue;
-}
-
-double wrenGetValueDouble(WrenVM* vm, WrenValue* value)
-{
-  ASSERT(value != NULL, "Value cannot be NULL.");
-  ASSERT(IS_NUM(value->value), "Value must be a number.");
-  
-  return AS_NUM(value->value);
 }
 
 void wrenReleaseValue(WrenVM* vm, WrenValue* value)
@@ -1601,7 +1496,7 @@ int wrenGetSlotCount(WrenVM* vm)
 void wrenEnsureSlots(WrenVM* vm, int numSlots)
 {
   // If we don't have a fiber accessible, create one for the API to use.
-  if (vm->fiber == NULL && vm->apiStack == NULL)
+  if (vm->apiStack == NULL)
   {
     vm->fiber = wrenNewFiber(vm, NULL);
     vm->apiStack = vm->fiber->stack;
@@ -1685,10 +1580,10 @@ void wrenSetSlotBool(WrenVM* vm, int slot, bool value)
   setSlot(vm, slot, BOOL_VAL(value));
 }
 
-void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, int length)
+void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length)
 {
   ASSERT(bytes != NULL, "Byte array cannot be NULL.");
-  setSlot(vm, slot, wrenNewString(vm, bytes, (size_t)length));
+  setSlot(vm, slot, wrenNewString(vm, bytes, length));
 }
 
 void wrenSetSlotDouble(WrenVM* vm, int slot, double value)
@@ -1735,6 +1630,8 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
 }
 
+// TODO: Maybe just have this always return a WrenValue* instead of having to
+// deal with slots?
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {

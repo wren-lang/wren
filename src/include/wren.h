@@ -189,54 +189,27 @@ void wrenCollectGarbage(WrenVM* vm);
 // Runs [source], a string of Wren source code in a new fiber in [vm].
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source);
 
-// Creates a handle that can be used to invoke a method with [signature] on the
-// object in [module] currently stored in top-level [variable].
+// Creates a handle that can be used to invoke a method with [signature] on
+// using a receiver and arguments that are set up on the stack.
 //
 // This handle can be used repeatedly to directly invoke that method from C
 // code using [wrenCall].
 //
-// When done with this handle, it must be released using [wrenReleaseValue].
-WrenValue* wrenGetMethod(WrenVM* vm, const char* module, const char* variable,
-                         const char* signature);
+// When you are done with this handle, it must be released using
+// [wrenReleaseValue].
+WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature);
 
-// Calls [method], passing in a series of arguments whose types must match the
-// specifed [argTypes]. This is a string where each character identifies the
-// type of a single argument, in order. The allowed types are:
+// Calls [method], using the receiver and arguments previously set up on the
+// stack.
 //
-// - "b" - A C `int` converted to a Wren Bool.
-// - "d" - A C `double` converted to a Wren Num.
-// - "i" - A C `int` converted to a Wren Num.
-// - "s" - A C null-terminated `const char*` converted to a Wren String. Wren
-//         will allocate its own string and copy the characters from this, so
-//         you don't have to worry about the lifetime of the string you pass to
-//         Wren.
-// - "a" - An array of bytes converted to a Wren String. This requires two
-//         consecutive arguments in the argument list: `const char*` pointing
-//         to the array of bytes, followed by an `int` defining the length of
-//         the array. This is used when the passed string may contain null
-//         bytes, or just to avoid the implicit `strlen()` call of "s" if you
-//         happen to already know the length.
-// - "v" - A previously acquired WrenValue*. Passing this in does not implicitly
-//         release the value. If the passed argument is NULL, this becomes a
-//         Wren NULL.
+// [method] must have been created by a call to [wrenMakeCallHandle]. The
+// arguments to the method must be already on the stack. The receiver should be
+// in slot 0 with the remaining arguments following it, in order. It is an
+// error if the number of arguments provided does not match the method's
+// signature.
 //
-// [method] must have been created by a call to [wrenGetMethod]. If
-// [returnValue] is not `NULL`, the return value of the method will be stored
-// in a new [WrenValue] that [returnValue] will point to. Don't forget to
-// release it, when done with it.
-WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method,
-                             WrenValue** returnValue,
-                             const char* argTypes, ...);
-
-WrenInterpretResult wrenCallVarArgs(WrenVM* vm, WrenValue* method,
-                                    WrenValue** returnValue,
-                                    const char* argTypes, va_list args);
-
-// Gets the numeric value of [value].
-//
-// It is an error to call this if the value is not a number.
-double wrenGetValueDouble(WrenVM* vm, WrenValue* value);
-// TODO: Functions for other types.
+// After this returns, you can access the return value from slot 0 on the stack.
+WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method);
 
 // Releases the reference stored in [value]. After calling this, [value] can no
 // longer be used.
@@ -359,7 +332,7 @@ void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
 //
 // The bytes are copied to a new string within Wren's heap, so you can free
 // memory used by them after this is called.
-void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, int length);
+void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length);
 
 // Stores the numeric [value] in [slot].
 void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
