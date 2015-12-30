@@ -51,6 +51,8 @@ foreign class File {
     Scheduler.runNextScheduled_()
   }
 
+  foreign descriptor
+
   isOpen { descriptor != -1 }
 
   size {
@@ -74,7 +76,6 @@ foreign class File {
   foreign static sizePath_(path, fiber)
 
   foreign close_(fiber)
-  foreign descriptor
   foreign readBytes_(count, fiber)
   foreign size_(fiber)
 }
