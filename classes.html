@@ -173,6 +173,8 @@ different syntaxes for methods. Your classes can define all of them. </p>
 </pre></div>
 
 
+<p>By convention, the parameter is usually named <code>value</code> but you can call it 
+whatever makes your heart flutter. </p>
 <h3>Operators <a href="#operators" name="operators" class="header-anchor">#</a></h3>
 <p>Prefix operators, like getters, have no parameter list: </p>
 <div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
@@ -219,23 +221,119 @@ operator and a setter: </p>
 </pre></div>
 
 
-<h2>This <a href="#this" name="this" class="header-anchor">#</a></h2>
-<p><strong>TODO: Integrate this into the page better.</strong> </p>
-<p>The special <code>this</code> keyword works sort of like a variable, but has special 
-behavior. It always refers to the instance whose method is currently being 
-executed. This lets you invoke methods on &ldquo;yourself&rdquo;. </p>
+<h2>Method Scope <a href="#method-scope" name="method-scope" class="header-anchor">#</a></h2>
+<p>Up to this point, &ldquo;<a href="variables.html#scope">scope</a>&rdquo; has been used to talk exclusively about <a href="variables.html">variables</a>. In a procedural language like C, or a functional one like Scheme, 
+that&rsquo;s the only kind of scope there is. But object-oriented languages like Wren 
+introduce another kind of scope: <em>object scope</em>. It contains the methods that 
+are available on an object. When you write: </p>
+<div class="codehilite"><pre><span class="n">unicorn</span><span class="o">.</span><span class="n">isFancy</span>
+</pre></div>
+
+
+<p>You&rsquo;re saying &ldquo;look up the method <code>isFancy</code> in the scope of the object 
+<code>unicorn</code>&rdquo;. In this case, the fact that you want to look up a <em>method</em> <code>isFancy</code> 
+and not a <em>variable</em> <code>isFancy</code> is explicit. That&rsquo;s what <code>.</code> does and the 
+object to the left of the period is the object you want to look up the method on. </p>
+<h3><code>this</code> <a href="#this" name="this" class="header-anchor">#</a></h3>
+<p>Things get more interesting when you&rsquo;re inside the body of a method. When the 
+method is called on some object and the body is being executed, you often need 
+to access that object itself. You can do that using <code>this</code>. </p>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
+
+  <span class="n">printName</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="nb">this</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="output">Francis</span>
+  <span class="p">}</span> 
+<span class="p">}</span>
+</pre></div>
+
+
+<p>The <code>this</code> keyword works sort of like a variable, but has special behavior. It 
+always refers to the instance whose method is currently being executed. This 
+lets you invoke methods on &ldquo;yourself&rdquo;. </p>
 <p>It&rsquo;s an error to refer to <code>this</code> outside of a method. However, it&rsquo;s perfectly 
-fine to use it inside a function contained in a method. When you do, <code>this</code> 
-still refers to the instance whose method is being called. </p>
+fine to use it inside a <a href="functions.html">function</a> contained in a method. When you do, <code>this</code> 
+still refers to the instance whose <em>method</em> is being called. </p>
 <p>This is unlike Lua and JavaScript which can &ldquo;forget&rdquo; <code>this</code> when you create a 
 callback inside a method. Wren does what you want here and retains the 
-reference to the original object. (In technical terms, a function&rsquo;s closure 
-includes <code>this</code>.) </p>
+reference to the original object. </p>
+<p>(In technical terms, a function&rsquo;s closure includes <code>this</code>. Wren can do this 
+because it makes a distinction between methods and functions.) </p>
+<h3>Implicit <code>this</code> <a href="#implicit-this" name="implicit-this" class="header-anchor">#</a></h3>
+<p>Using <code>this.</code> every time you want to call a method on yourself works, but it&rsquo;s 
+tedious and verbose, which is why some languages don&rsquo;t require it. You can do a 
+&ldquo;self send&rdquo; by calling a method (or getter or setter) without any explicit 
+receiver: </p>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
+
+  <span class="n">printName</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="output">Francis</span>
+  <span class="p">}</span> 
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Code like this gets tricky when you there is also a variable outside of the 
+class with the same name. Consider: </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;variable&quot;</span>
+
+<span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
+
+  <span class="n">printName</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="c1">// ???</span>
+  <span class="p">}</span> 
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Should <code>printName()</code> print &ldquo;variable&rdquo; or &ldquo;Francis&rdquo;? A method body has a foot in 
+each of two worlds. It is surrounded by the lexical scope where it&rsquo;s defined in 
+the program, but it also has the object scope of the methods on <code>this</code>. </p>
+<p>Which scope wins? Every language has to decide how to handle this and there 
+is a surprising plethora of approaches. Wren&rsquo;s approach to resolving a name 
+inside a method works like this: </p>
+<ol>
+<li>If there is a local variable inside the method with that name, that wins. </li>
+<li>Else, if the name starts with a lowercase letter, treat it like a method on 
+    <code>this</code>. </li>
+<li>Otherwise, look for a variable with that name in the surrounding scope. </li>
+</ol>
+<p>So, in the above example, we hit case #2 and it prints &ldquo;Francis&rdquo;. Distinguishing 
+self sends from outer variables based on the <em>case</em> of the first letter in the 
+name probably seems crazy but it works surprisingly well. Method names are 
+lowercase in Wren. Class names are capitalized. </p>
+<p>Most of the time, when you&rsquo;re in a method and want to access a name from outside 
+of the class, it&rsquo;s usually the name of some other class. This rule makes that 
+work. </p>
+<p>Here&rsquo;s an example that shows all three cases: </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">shadowed</span> <span class="o">=</span> <span class="s">&quot;surrounding&quot;</span> 
+<span class="k">var</span> <span class="n">lowercase</span> <span class="o">=</span> <span class="s">&quot;surrounding&quot;</span> 
+<span class="k">var</span> <span class="vg">Capitalized</span> <span class="o">=</span> <span class="s">&quot;surrounding&quot;</span>
+
+<span class="k">class</span> <span class="vg">Scope</span> <span class="p">{</span> 
+  <span class="n">shadowed</span> <span class="p">{</span> <span class="s">&quot;object&quot;</span> <span class="p">}</span> 
+  <span class="n">lowercase</span> <span class="p">{</span> <span class="s">&quot;object&quot;</span> <span class="p">}</span> 
+  <span class="vg">Capitalized</span> <span class="p">{</span> <span class="s">&quot;object&quot;</span> <span class="p">}</span>
+
+  <span class="n">test</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="k">var</span> <span class="n">shadowed</span> <span class="o">=</span> <span class="s">&quot;local&quot;</span>
+
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">shadowed</span><span class="p">)</span> <span class="output">local</span>
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">lowercase</span><span class="p">)</span> <span class="output">object</span>
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Capitalized</span><span class="p">)</span> <span class="output">surrounding</span>
+  <span class="p">}</span> 
+<span class="p">}</span>
+</pre></div>
+
+
+<p>It&rsquo;s a bit of a strange rule, but Ruby works more or less the same way. </p>
 <h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
-<p>Unicorns can prance around now (as well as a bunch of weird operators that don&rsquo;t 
-make sense outside of these examples), but we don&rsquo;t actually <em>have</em> any unicorns 
-to do it. To create instances of a class, we need a <em>constructor</em>. You can 
-define one like so: </p>
+<p>We&rsquo;ve seen how to define kinds of objects and how to declare methods on them. 
+Our unicorns can prance around, but we don&rsquo;t actually <em>have</em> any unicorns to do 
+it. To create <em>instances</em> of a class, we need a <em>constructor</em>. You define one 
+like so: </p>
 <div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="p">{</span> 
     <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot; and I am &quot;</span> <span class="o">+</span> <span class="n">color</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span><span class="p">)</span> 
@@ -284,7 +382,7 @@ instance. This is where the constructor body you defined gets run. </p>
 constructor, you can access <code>this</code>, assign <a href="#fields">fields</a>, call superclass 
 constructors, etc. </p>
 <h2>Fields <a href="#fields" name="fields" class="header-anchor">#</a></h2>
-<p>All state stored in instances is stored in <em>fields</em>. Each field has a named 
+<p>All state stored in instances is stored in <em>fields</em>. Each field has a name 
 that starts with an underscore. </p>
 <div class="codehilite"><pre><span class="k">class</span> <span class="vg">Rectangle</span> <span class="p">{</span> 
   <span class="n">area</span> <span class="p">{</span> <span class="vi">_width</span> <span class="o">*</span> <span class="vi">_height</span> <span class="p">}</span>
@@ -339,32 +437,30 @@ to or even should define getters or setters for most of your object&rsquo;s fiel
 similar to <a href="#fields">fields</a> except the data is stored on the class itself, and 
 not the instance. They can be used in <em>both</em> instance and static methods. </p>
 <div class="codehilite"><pre><span class="k">class</span> <span class="vg">Foo</span> <span class="p">{</span> 
-  <span class="c1">// Set the static field.</span>
-  <span class="k">static</span> <span class="n">set</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vc">__a</span> <span class="o">=</span> <span class="err">a</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{}</span>
+
+  <span class="k">static</span> <span class="n">setFromStatic</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="p">{</span> <span class="vc">__a</span> <span class="o">=</span> <span class="err">a</span> <span class="p">}</span> 
+  <span class="n">setFromInstance</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="p">{</span> <span class="vc">__a</span> <span class="o">=</span> <span class="err">a</span> <span class="p">}</span>
+
+  <span class="k">static</span> <span class="n">printFromStatic</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vc">__a</span><span class="p">)</span> 
   <span class="p">}</span>
 
-  <span class="n">setFromInstance</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vc">__a</span> <span class="o">=</span> <span class="err">a</span> 
-  <span class="p">}</span>
-
-  <span class="c1">// Can use __a in both static methods...</span>
-  <span class="k">static</span> <span class="n">bar</span> <span class="p">{</span> <span class="vc">__a</span> <span class="p">}</span>
-
-  <span class="c1">// ...and instance ones.</span>
-  <span class="n">baz</span> <span class="p">{</span> <span class="vc">__a</span> <span class="p">}</span> 
+  <span class="n">printFromInstance</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vc">__a</span><span class="p">)</span> 
+  <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
 
 
 <p>Just like instance fields, static fields are initially <code>null</code>: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Foo</span><span class="o">.</span><span class="n">bar</span><span class="p">)</span> <span class="output">null</span>
+<div class="codehilite"><pre><span class="vg">Foo</span><span class="o">.</span><span class="n">printFromStatic</span><span class="p">()</span> <span class="output">null</span>
 </pre></div>
 
 
 <p>They can be used from static methods: </p>
-<div class="codehilite"><pre><span class="vg">Foo</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Foo</span><span class="o">.</span><span class="n">bar</span><span class="p">)</span> <span class="output">foo</span>
+<div class="codehilite"><pre><span class="vg">Foo</span><span class="o">.</span><span class="n">setFromStatic</span><span class="p">(</span><span class="s">&quot;first&quot;</span><span class="p">)</span> 
+<span class="vg">Foo</span><span class="o">.</span><span class="n">bar</span><span class="o">.</span><span class="n">printFromStatic</span><span class="p">()</span> <span class="output">first</span>
 </pre></div>
 
 
@@ -373,8 +469,8 @@ shared among all instances of the class: </p>
 <div class="codehilite"><pre><span class="k">var</span> <span class="n">foo1</span> <span class="o">=</span> <span class="vg">Foo</span><span class="o">.</span><span class="n">new</span><span class="p">()</span> 
 <span class="k">var</span> <span class="n">foo2</span> <span class="o">=</span> <span class="vg">Foo</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
-<span class="n">foo1</span><span class="o">.</span><span class="n">setFromInstance</span><span class="p">(</span><span class="s">&quot;updated&quot;</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">foo2</span><span class="o">.</span><span class="n">baz</span><span class="p">)</span> <span class="output">updated</span>
+<span class="n">foo1</span><span class="o">.</span><span class="n">setFromInstance</span><span class="p">(</span><span class="s">&quot;second&quot;</span><span class="p">)</span> 
+<span class="n">foo2</span><span class="o">.</span><span class="n">printFromInstance</span><span class="p">()</span> <span class="output">second</span>
 </pre></div>
 
 
@@ -444,7 +540,7 @@ instance methods on the new object. </p>
 <h2>Super <a href="#super" name="super" class="header-anchor">#</a></h2>
 <p><strong>TODO: Integrate better into page. Should explain this before mentioning 
 super above.</strong> </p>
-<p>Sometimes you want to invoke a method on yourself, but only methods defined in 
+<p>Sometimes you want to invoke a method on yourself, but using methods defined in 
 one of your <a href="classes.html#inheritance">superclasses</a>. You typically do this in 
 an overridden method when you want to access the original method being 
 overridden. </p>

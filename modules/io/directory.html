@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Stdin Class &ndash; Wren</title>
+<title>Directory Class &ndash; Wren</title>
 <link rel="stylesheet" type="text/css" href="../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -57,13 +57,12 @@
     </table>
   </nav>
   <main>
-    <h1>Stdin Class</h1>
-    <p>The standard input stream. </p>
+    <h1>Directory Class</h1>
+    <p>A directory on the file system. </p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
-<h3><strong>readLine</strong>() <a href="#readline()" name="readline()" class="header-anchor">#</a></h3>
-<p>Reads one line of input from stdin. Blocks the current fiber until a full line 
-of input has been received. </p>
-<p>Returns the string of input or <code>null</code> if stdin is closed. </p>
+<h3>Directory.<strong>list</strong>(path) <a href="#directory.list(path)" name="directory.list(path)" class="header-anchor">#</a></h3>
+<p>Lists the contents of the directory at <code>path</code>. Returns a sorted list of path 
+strings for all of the contents of the directory. </p>
   </main>
 </div>
 <footer>

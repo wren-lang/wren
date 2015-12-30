@@ -133,6 +133,7 @@ though.) </p>
 <div class="codehilite"><pre><span class="s">&quot;</span><span class="se">\0</span><span class="s">&quot;</span> <span class="c1">// The NUL byte: 0.</span>
 <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="c1">// A double quote character.</span>
 <span class="s">&quot;</span><span class="se">\\</span><span class="s">&quot;</span> <span class="c1">// A backslash.</span>
+<span class="s">&quot;</span><span class="se">\%</span><span class="s">&quot;</span> <span class="c1">// A percent sign.</span>
 <span class="s">&quot;</span><span class="se">\a</span><span class="s">&quot;</span> <span class="c1">// Alarm beep. (Who uses this?)</span>
 <span class="s">&quot;</span><span class="se">\b</span><span class="s">&quot;</span> <span class="c1">// Backspace.</span>
 <span class="s">&quot;</span><span class="se">\f</span><span class="s">&quot;</span> <span class="c1">// Formfeed.</span>
@@ -150,7 +151,7 @@ though.) </p>
 
 <p>A capital <code>\U</code> followed by <em>eight</em> hex digits allows Unicode code points outside 
 of the basic multilingual plane, like all-important emoji: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;\U0001F64A\U0001F680&quot;</span><span class="p">)</span> <span class="output">🙊🚀</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\U0001F64A\U0001F680</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">🙊🚀</span>
 </pre></div>
 
 
@@ -160,6 +161,22 @@ of the basic multilingual plane, like all-important emoji: </p>
 
 
 <p>Strings are instances of class <a href="modules/core/string.html">String</a>. </p>
+<h3>Interpolation <a href="#interpolation" name="interpolation" class="header-anchor">#</a></h3>
+<p>String literals also allow <em>interpolation</em>. If you have a percent sign (<code>%</code>) 
+followed by a parenthesized expression, the expression is evaluated. The 
+resulting object&rsquo;s <code>toString</code> method is called and the result is inserted in the 
+string: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Math </span><span class="si">%(</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="mi">5</span><span class="si">)</span><span class="s"> is fun!&quot;</span><span class="p">)</span> <span class="output">Math 23 is fun!</span>
+</pre></div>
+
+
+<p>Arbitrarily complex expressions are allowed inside the parentheses: </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;wow </span><span class="si">%(</span><span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">*</span> <span class="err">n</span><span class="p">}</span><span class="o">.</span><span class="n">join</span><span class="p">()</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">wow 149</span>
+</pre></div>
+
+
+<p>An interpolated expression can even contain a string literal which in turn has 
+its own nested intpolations, but doing that gets unreadable pretty quickly. </p>
 <h2>Ranges <a href="#ranges" name="ranges" class="header-anchor">#</a></h2>
 <p>A range is a little object that represents a consecutive range of numbers. They 
 don&rsquo;t have their own dedicated literal syntax. Instead, the number class 
