@@ -148,8 +148,8 @@ cases. </p>
 compile time, we can compile this to directly call the right method and avoid 
 any &ldquo;if I got two arguments do this&hellip;&rdquo; logic. </p>
 <h2>Getters <a href="#getters" name="getters" class="header-anchor">#</a></h2>
-<p>Some methods exist to expose some stored or computed property of an object. 
-These are <em>getters</em> and have no parentheses: </p>
+<p>Some methods exist to expose a stored or computed property of an object. These 
+are <em>getters</em> and have no parentheses: </p>
 <div class="codehilite"><pre><span class="s">&quot;string&quot;</span><span class="o">.</span><span class="n">count</span>    <span class="output">6</span>
 <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">min</span>       <span class="output">1</span>
 <span class="mf">1.23</span><span class="o">.</span><span class="n">sin</span>          <span class="output">0.9424888019317</span>
@@ -157,8 +157,9 @@ These are <em>getters</em> and have no parentheses: </p>
 </pre></div>
 
 
-<p>Sometimes you have a method doesn&rsquo;t need any parameters, but modifies the object 
-or has some other side effect. For those, it&rsquo;s better to use empty parentheses: </p>
+<p>Sometimes you have a method that doesn&rsquo;t need any parameters, but modifies the 
+object or has some other side effect. For those, it&rsquo;s better to use empty 
+parentheses: </p>
 <div class="codehilite"><pre><span class="n">list</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 </pre></div>
 
@@ -175,7 +176,7 @@ part of the signature, so <code>count</code> and <code>count()</code> have diffe
 Unlike Ruby&rsquo;s optional parentheses, Wren wants to make sure you call a getter 
 like a getter and a <code>()</code> method like a <code>()</code> method. These don&rsquo;t work: </p>
 <div class="codehilite"><pre><span class="s">&quot;string&quot;</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> 
-<span class="n">list</span><span class="o">.</span><span class="n">clear</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">clear</span>
 </pre></div>
 
 
@@ -190,7 +191,7 @@ Likewise, a <em>setter</em> let you write to a property: </p>
 language&rsquo;s perspective, the above line is just a call to the <code>height=(_)</code> 
 method, passing in <code>74</code>. </p>
 <p>Since the <code>=(_)</code> is in the setter&rsquo;s signature, an object can have both a getter 
-and setter with the same name without any collision. This way, you can have 
+and setter with the same name without a collision. This way, you can have 
 read/write properties. </p>
 <h2>Operators <a href="#operators" name="operators" class="header-anchor">#</a></h2>
 <p>Wren has most of the same operators you know and love with the same precedence 
