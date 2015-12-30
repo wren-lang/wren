@@ -12,7 +12,7 @@ a file descriptor.
 
 ### File.**open**(path, fn)
 
-Opens the file at [path] and passes it to [fn]. After the function returns, the
+Opens the file at `path` and passes it to `fn`. After the function returns, the
 file is automatically closed.
 
     :::wren
@@ -22,7 +22,7 @@ file is automatically closed.
 
 ### File.**read**(path)
 
-Reads the entire contents of the file at [path] and returns it as a string.
+Reads the entire contents of the file at `path` and returns it as a string.
 
     :::wren
     File.read("words.txt")
@@ -33,13 +33,13 @@ whatever encoding the file uses.
 
 ### File.**size**(path)
 
-Returns the size in bytes of the contents of the file at [path].
+Returns the size in bytes of the contents of the file at `path`.
 
 ## Constructors
 
 ### File.**open**(path)
 
-Opens the file at [path] for reading.
+Opens the file at `path` for reading.
 
 ## Methods
 
@@ -61,6 +61,21 @@ Closes the file. After calling this, you can read or write from it.
 
 ### **readBytes**(count)
 
-Reads up to [count] bytes starting from the beginning of the file.
+Reads up to `count` bytes starting from the beginning of the file.
 
-(Allowing an offset to read elsewhere from the file isn't implemented yet.)
+    :::wren
+    // Assume this file contains "I am a file!".
+    File.open("example.txt") {|file|
+      System.print(file.readBytes(6)) //> I am a
+    }
+
+### **readBytes**(count, offset)
+
+Reads up to `count` bytes starting at `offset` bytes from the beginning of
+the file.
+
+    :::wren
+    // Assume this file contains "I am a file!".
+    File.open("example.txt") {|file|
+      System.print(file.readBytes(6, 2)) //> am a f
+    }

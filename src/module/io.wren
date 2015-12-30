@@ -62,13 +62,19 @@ foreign class File {
     return Scheduler.runNextScheduled_()
   }
 
-  readBytes(count) {
+  readBytes(count) { readBytes(count, 0) }
+
+  readBytes(count, offset) {
     if (!isOpen) Fiber.abort("File is not open.")
     if (!(count is Num)) Fiber.abort("Count must be an integer.")
     if (!count.isInteger) Fiber.abort("Count must be an integer.")
     if (count < 0) Fiber.abort("Count cannot be negative.")
 
-    readBytes_(count, Fiber.current)
+    if (!(offset is Num)) Fiber.abort("Offset must be an integer.")
+    if (!offset.isInteger) Fiber.abort("Offset must be an integer.")
+    if (offset < 0) Fiber.abort("Offset cannot be negative.")
+
+    readBytes_(count, offset, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
@@ -76,7 +82,7 @@ foreign class File {
   foreign static sizePath_(path, fiber)
 
   foreign close_(fiber)
-  foreign readBytes_(count, fiber)
+  foreign readBytes_(count, start, fiber)
   foreign size_(fiber)
 }
 

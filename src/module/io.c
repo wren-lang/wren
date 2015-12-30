@@ -228,12 +228,13 @@ static void fileReadBytesCallback(uv_fs_t* request)
 
   FileRequestData* data = (FileRequestData*)request->data;
   uv_buf_t buffer = data->buffer;
+  size_t count = request->result;
 
   // TODO: Having to copy the bytes here is a drag. It would be good if Wren's
   // embedding API supported a way to *give* it bytes that were previously
   // allocated using Wren's own allocator.
   schedulerResume(freeRequest(request), true);
-  wrenSetSlotBytes(getVM(), 2, buffer.base, buffer.len);
+  wrenSetSlotBytes(getVM(), 2, buffer.base, count);
   schedulerFinishResume();
 
   // TODO: Likewise, freeing this after we resume is lame.
@@ -242,19 +243,20 @@ static void fileReadBytesCallback(uv_fs_t* request)
 
 void fileReadBytes(WrenVM* vm)
 {
-  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 3));
 
   int fd = *(int*)wrenGetSlotForeign(vm, 0);
   // TODO: Assert fd != -1.
 
   FileRequestData* data = (FileRequestData*)request->data;
   size_t length = (size_t)wrenGetSlotDouble(vm, 1);
+  size_t offset = (size_t)wrenGetSlotDouble(vm, 2);
 
   data->buffer.len = length;
   data->buffer.base = (char*)malloc(length);
 
-  // TODO: Allow passing in offset.
-  uv_fs_read(getLoop(), request, fd, &data->buffer, 1, 0, fileReadBytesCallback);
+  uv_fs_read(getLoop(), request, fd, &data->buffer, 1, offset,
+             fileReadBytesCallback);
 }
 
 void fileSize(WrenVM* vm)

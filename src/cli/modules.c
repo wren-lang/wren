@@ -99,7 +99,7 @@ static ModuleRegistry modules[] =
       STATIC_METHOD("sizePath_(_,_)", fileSizePath)
       METHOD("close_(_)", fileClose)
       METHOD("descriptor", fileDescriptor)
-      METHOD("readBytes_(_,_)", fileReadBytes)
+      METHOD("readBytes_(_,_,_)", fileReadBytes)
       METHOD("size_(_)", fileSize)
     END_CLASS
     CLASS(Stdin)
