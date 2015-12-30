@@ -66,7 +66,7 @@ finalized, but that may take a while. In the meantime, leaving it open wastes
 a file descriptor. </p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3>File.<strong>open</strong>(path, fn) <a href="#file.open(path,-fn)" name="file.open(path,-fn)" class="header-anchor">#</a></h3>
-<p>Opens the file at [path] and passes it to [fn]. After the function returns, the 
+<p>Opens the file at <code>path</code> and passes it to <code>fn</code>. After the function returns, the 
 file is automatically closed. </p>
 <div class="codehilite"><pre><span class="vg">File</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;words.txt&quot;</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">file</span><span class="o">|</span> 
   <span class="n">file</span><span class="o">.</span><span class="n">readBytes</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> 
@@ -75,7 +75,7 @@ file is automatically closed. </p>
 
 
 <h3>File.<strong>read</strong>(path) <a href="#file.read(path)" name="file.read(path)" class="header-anchor">#</a></h3>
-<p>Reads the entire contents of the file at [path] and returns it as a string. </p>
+<p>Reads the entire contents of the file at <code>path</code> and returns it as a string. </p>
 <div class="codehilite"><pre><span class="vg">File</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s">&quot;words.txt&quot;</span><span class="p">)</span>
 </pre></div>
 
@@ -84,10 +84,10 @@ file is automatically closed. </p>
 string will be a UTF-8 string. Otherwise, it will be a string of bytes in 
 whatever encoding the file uses. </p>
 <h3>File.<strong>size</strong>(path) <a href="#file.size(path)" name="file.size(path)" class="header-anchor">#</a></h3>
-<p>Returns the size in bytes of the contents of the file at [path]. </p>
+<p>Returns the size in bytes of the contents of the file at <code>path</code>. </p>
 <h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
 <h3>File.<strong>open</strong>(path) <a href="#file.open(path)" name="file.open(path)" class="header-anchor">#</a></h3>
-<p>Opens the file at [path] for reading. </p>
+<p>Opens the file at <code>path</code> for reading. </p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>descriptor</strong> <a href="#descriptor" name="descriptor" class="header-anchor">#</a></h3>
 <p>The numeric file descriptor used to access the file. </p>
@@ -98,8 +98,22 @@ whatever encoding the file uses. </p>
 <h3><strong>close</strong>() <a href="#close()" name="close()" class="header-anchor">#</a></h3>
 <p>Closes the file. After calling this, you can read or write from it. </p>
 <h3><strong>readBytes</strong>(count) <a href="#readbytes(count)" name="readbytes(count)" class="header-anchor">#</a></h3>
-<p>Reads up to [count] bytes starting from the beginning of the file. </p>
-<p>(Allowing an offset to read elsewhere from the file isn&rsquo;t implemented yet.) </p>
+<p>Reads up to <code>count</code> bytes starting from the beginning of the file. </p>
+<div class="codehilite"><pre><span class="c1">// Assume this file contains &quot;I am a file!&quot;.</span>
+<span class="vg">File</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;example.txt&quot;</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">file</span><span class="o">|</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">readBytes</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span> <span class="output">I am a</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h3><strong>readBytes</strong>(count, offset) <a href="#readbytes(count,-offset)" name="readbytes(count,-offset)" class="header-anchor">#</a></h3>
+<p>Reads up to <code>count</code> bytes starting at <code>offset</code> bytes from the beginning of 
+the file. </p>
+<div class="codehilite"><pre><span class="c1">// Assume this file contains &quot;I am a file!&quot;.</span>
+<span class="vg">File</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;example.txt&quot;</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">file</span><span class="o">|</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">readBytes</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="output">am a f</span>
+<span class="p">}</span>
+</pre></div>
   </main>
 </div>
 <footer>
