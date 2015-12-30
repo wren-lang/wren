@@ -9,7 +9,7 @@
 
 extern void directoryList(WrenVM* vm);
 extern void fileAllocate(WrenVM* vm);
-extern void fileFinalize(WrenVM* vm);
+extern void fileFinalize(void* data);
 extern void fileOpen(WrenVM* vm);
 extern void fileSizePath(WrenVM* vm);
 extern void fileClose(WrenVM* vm);
@@ -83,6 +83,7 @@ typedef struct
 
 #define METHOD(signature, fn) { false, signature, fn },
 #define STATIC_METHOD(signature, fn) { true, signature, fn },
+#define FINALIZER(fn) { true, "<finalize>", (WrenForeignMethodFn)fn },
 
 // The array of built-in modules.
 static ModuleRegistry modules[] =
@@ -93,7 +94,7 @@ static ModuleRegistry modules[] =
     END_CLASS
     CLASS(File)
       STATIC_METHOD("<allocate>", fileAllocate)
-      STATIC_METHOD("<finalize>", fileFinalize)
+      FINALIZER(fileFinalize)
       STATIC_METHOD("open_(_,_)", fileOpen)
       STATIC_METHOD("sizePath_(_,_)", fileSizePath)
       METHOD("close_(_)", fileClose)
