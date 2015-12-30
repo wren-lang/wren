@@ -21,7 +21,7 @@ Prints a single newline to the console.
 
 ### System.**print**(object)
 
-Prints [object] to the console followed by a newline. If not already a string,
+Prints `object` to the console followed by a newline. If not already a string,
 the object is converted to a string by calling `toString` on it.
 
     :::wren
@@ -29,7 +29,7 @@ the object is converted to a string by calling `toString` on it.
 
 ### System.**printAll**(sequence)
 
-Iterates over [sequence] and prints each element, then prints a single newline
+Iterates over `sequence` and prints each element, then prints a single newline
 at the end. Each element is converted to a string by calling `toString` on it.
 
     :::wren
