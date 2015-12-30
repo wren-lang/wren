@@ -61,8 +61,8 @@ any "if I got two arguments do this..." logic.
 
 ## Getters
 
-Some methods exist to expose some stored or computed property of an object.
-These are *getters* and have no parentheses:
+Some methods exist to expose a stored or computed property of an object. These
+are *getters* and have no parentheses:
 
     :::wren
     "string".count    //> 6
@@ -70,8 +70,9 @@ These are *getters* and have no parentheses:
     1.23.sin          //> 0.9424888019317
     [1, 2, 3].isEmpty //> false
 
-Sometimes you have a method doesn't need any parameters, but modifies the object
-or has some other side effect. For those, it's better to use empty parentheses:
+Sometimes you have a method that doesn't need any parameters, but modifies the
+object or has some other side effect. For those, it's better to use empty
+parentheses:
 
     :::wren
     list.clear()
@@ -89,7 +90,7 @@ like a getter and a `()` method like a `()` method. These don't work:
 
     :::wren
     "string".count()
-    list.clear
+    [1, 2, 3].clear
 
 ## Setters
 
@@ -104,7 +105,7 @@ language's perspective, the above line is just a call to the `height=(_)`
 method, passing in `74`.
 
 Since the `=(_)` is in the setter's signature, an object can have both a getter
-and setter with the same name without any collision. This way, you can have
+and setter with the same name without a collision. This way, you can have
 read/write properties.
 
 ## Operators
