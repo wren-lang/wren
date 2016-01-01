@@ -12,6 +12,7 @@ extern void fileAllocate(WrenVM* vm);
 extern void fileFinalize(void* data);
 extern void fileOpen(WrenVM* vm);
 extern void fileSizePath(WrenVM* vm);
+extern void fileStatPath(WrenVM* vm);
 extern void fileClose(WrenVM* vm);
 extern void fileDescriptor(WrenVM* vm);
 extern void fileReadBytes(WrenVM* vm);
@@ -29,7 +30,7 @@ extern void timerStartTimer(WrenVM* vm);
 // If you add a new method to the longest class below, make sure to bump this.
 // Note that it also includes an extra slot for the sentinel value indicating
 // the end of the list.
-#define MAX_METHODS_PER_CLASS 9
+#define MAX_METHODS_PER_CLASS 10
 
 // The maximum number of foreign classes a single built-in module defines.
 //
@@ -97,6 +98,7 @@ static ModuleRegistry modules[] =
       FINALIZER(fileFinalize)
       STATIC_METHOD("open_(_,_)", fileOpen)
       STATIC_METHOD("sizePath_(_,_)", fileSizePath)
+      STATIC_METHOD("statPath_(_,_)", fileStatPath)
       METHOD("close_(_)", fileClose)
       METHOD("descriptor", fileDescriptor)
       METHOD("readBytes_(_,_,_)", fileReadBytes)

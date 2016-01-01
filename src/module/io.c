@@ -188,6 +188,62 @@ void fileSizePath(WrenVM* vm)
   uv_fs_stat(getLoop(), request, path, fileSizeCallback);
 }
 
+// Called by libuv when the stat call completes.
+static void fileStatPathCallback(uv_fs_t* request)
+{
+  if (handleRequestError(request)) return;
+  
+  WrenVM* vm = getVM();
+  wrenEnsureSlots(vm, 4);
+  wrenSetSlotNewList(vm, 2);
+  
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_dev);
+  wrenInsertInList(vm, 2, -1, 3);
+  
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_ino);
+  wrenInsertInList(vm, 2, -1, 3);
+  
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_mode);
+  wrenInsertInList(vm, 2, -1, 3);
+  
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_nlink);
+  wrenInsertInList(vm, 2, -1, 3);
+  
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_uid);
+  wrenInsertInList(vm, 2, -1, 3);
+  
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_gid);
+  wrenInsertInList(vm, 2, -1, 3);
+
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_rdev);
+  wrenInsertInList(vm, 2, -1, 3);
+  
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_size);
+  wrenInsertInList(vm, 2, -1, 3);
+  
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_blksize);
+  wrenInsertInList(vm, 2, -1, 3);
+  
+  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_blocks);
+  wrenInsertInList(vm, 2, -1, 3);
+
+  // TODO: Include access, modification, and change times once we figure out
+  // how we want to represent it.
+  //  time_t    st_atime;   /* time of last access */
+  //  time_t    st_mtime;   /* time of last modification */
+  //  time_t    st_ctime;   /* time of last status change */
+
+  schedulerResume(freeRequest(request), true);
+  schedulerFinishResume();
+}
+
+void fileStatPath(WrenVM* vm)
+{
+  const char* path = wrenGetSlotString(vm, 1);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
+  uv_fs_stat(getLoop(), request, path, fileStatPathCallback);
+}
+
 static void fileCloseCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
