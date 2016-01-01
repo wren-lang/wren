@@ -6,8 +6,10 @@
 
 #include "benchmark.h"
 #include "call.h"
+#include "get_variable.h"
 #include "foreign_class.h"
-#include "returns.h"
+#include "lists.h"
+#include "slots.h"
 #include "value.h"
 
 // The name of the currently executing API test.
@@ -32,11 +34,17 @@ static WrenForeignMethodFn bindForeignMethod(
   
   method = benchmarkBindMethod(fullName);
   if (method != NULL) return method;
-  
+
+  method = getVariableBindMethod(fullName);
+  if (method != NULL) return method;
+
   method = foreignClassBindMethod(fullName);
   if (method != NULL) return method;
   
-  method = returnsBindMethod(fullName);
+  method = listsBindMethod(fullName);
+  if (method != NULL) return method;
+  
+  method = slotsBindMethod(fullName);
   if (method != NULL) return method;
   
   method = valueBindMethod(fullName);
@@ -60,7 +68,7 @@ static WrenForeignClassMethods bindForeignClass(
 }
 
 static void afterLoad(WrenVM* vm) {
-  if (strstr(testName, "call.wren") != NULL) callRunTests(vm);
+  if (strstr(testName, "/call.wren") != NULL) callRunTests(vm);
 }
 
 int main(int argc, const char* argv[])

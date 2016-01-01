@@ -1,5 +1,16 @@
 import "scheduler" for Scheduler
 
+class Directory {
+  static def list(path) {
+    if (!(path is String)) Fiber.abort("Path must be a string.")
+
+    list_(path, Fiber.current)
+    return Scheduler.runNextScheduled_()
+  }
+
+  foreign static def list_(path, fiber)
+}
+
 foreign class File {
   static def open(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
@@ -33,12 +44,21 @@ foreign class File {
     return Scheduler.runNextScheduled_()
   }
 
+  static def stat(path) {
+    if (!(path is String)) Fiber.abort("Path must be a string.")
+
+    statPath_(path, Fiber.current)
+    return Stat.new_(Scheduler.runNextScheduled_())
+  }
+
   construct new_(fd) {}
 
   def close() {
     if (close_(Fiber.current)) return
     Scheduler.runNextScheduled_()
   }
+
+  foreign def descriptor
 
   def isOpen { descriptor != -1 }
 
@@ -49,23 +69,46 @@ foreign class File {
     return Scheduler.runNextScheduled_()
   }
 
-  def readBytes(count) {
+  def readBytes(count) { readBytes(count, 0) }
+
+  def readBytes(count, offset) {
     if (!isOpen) Fiber.abort("File is not open.")
     if (!(count is Num)) Fiber.abort("Count must be an integer.")
     if (!count.isInteger) Fiber.abort("Count must be an integer.")
     if (count < 0) Fiber.abort("Count cannot be negative.")
 
-    readBytes_(count, Fiber.current)
+    if (!(offset is Num)) Fiber.abort("Offset must be an integer.")
+    if (!offset.isInteger) Fiber.abort("Offset must be an integer.")
+    if (offset < 0) Fiber.abort("Offset cannot be negative.")
+
+    readBytes_(count, offset, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
   foreign static def open_(path, fiber)
   foreign static def sizePath_(path, fiber)
+  foreign static def statPath_(path, fiber)
 
   foreign def close_(fiber)
-  foreign def descriptor
-  foreign def readBytes_(count, fiber)
+  foreign def readBytes_(count, start, fiber)
   foreign def size_(fiber)
+}
+
+class Stat {
+  construct new_(fields) {
+    _fields = fields
+  }
+
+  def device { _fields[0] }
+  def inode { _fields[1] }
+  def mode { _fields[2] }
+  def linkCount { _fields[3] }
+  def user { _fields[4] }
+  def group { _fields[5] }
+  def specialDevice { _fields[6] }
+  def size { _fields[7] }
+  def blockSize { _fields[8] }
+  def blockCount { _fields[9] }
 }
 
 class Stdin {
@@ -90,6 +133,7 @@ class Stdin {
       readStop_()
 
       if (__line != null) {
+        // Emit the last line.
         var line = __line
         __line = null
         if (__waitingFiber != null) __waitingFiber.transfer(line)

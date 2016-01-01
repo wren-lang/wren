@@ -5,33 +5,84 @@
 
 void callRunTests(WrenVM* vm)
 {
-  WrenValue* noParams = wrenGetMethod(vm, "main", "Call", "noParams");
-  WrenValue* zero = wrenGetMethod(vm, "main", "Call", "zero()");
-  WrenValue* one = wrenGetMethod(vm, "main", "Call", "one(_)");
-  WrenValue* two = wrenGetMethod(vm, "main", "Call", "two(_,_)");
+  wrenEnsureSlots(vm, 1);
+  wrenGetVariable(vm, "main", "Call", 0);
+  WrenValue* callClass = wrenGetSlotValue(vm, 0);
+  
+  WrenValue* noParams = wrenMakeCallHandle(vm, "noParams");
+  WrenValue* zero = wrenMakeCallHandle(vm, "zero()");
+  WrenValue* one = wrenMakeCallHandle(vm, "one(_)");
+  WrenValue* two = wrenMakeCallHandle(vm, "two(_,_)");
   
   // Different arity.
-  wrenCall(vm, noParams, NULL, "");
-  wrenCall(vm, zero, NULL, "");
-  wrenCall(vm, one, NULL, "i", 1);
-  wrenCall(vm, two, NULL, "ii", 1, 2);
-
-  WrenValue* getValue = wrenGetMethod(vm, "main", "Call", "getValue(_)");
+  wrenEnsureSlots(vm, 1);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenCall(vm, noParams);
+  
+  wrenEnsureSlots(vm, 1);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenCall(vm, zero);
+  
+  wrenEnsureSlots(vm, 2);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotDouble(vm, 1, 1.0);
+  wrenCall(vm, one);
+  
+  wrenEnsureSlots(vm, 3);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotDouble(vm, 1, 1.0);
+  wrenSetSlotDouble(vm, 2, 2.0);
+  wrenCall(vm, two);
   
   // Returning a value.
-  WrenValue* value = NULL;
-  wrenCall(vm, getValue, &value, "v", NULL);
+  WrenValue* getValue = wrenMakeCallHandle(vm, "getValue()");
+  wrenEnsureSlots(vm, 1);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenCall(vm, getValue);
+  WrenValue* value = wrenGetSlotValue(vm, 0);
   
   // Different argument types.
-  wrenCall(vm, two, NULL, "bb", true, false);
-  wrenCall(vm, two, NULL, "dd", 1.2, 3.4);
-  wrenCall(vm, two, NULL, "ii", 3, 4);
-  wrenCall(vm, two, NULL, "ss", "string", "another");
-  wrenCall(vm, two, NULL, "vv", NULL, value);
+  wrenEnsureSlots(vm, 3);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotBool(vm, 1, true);
+  wrenSetSlotBool(vm, 2, false);
+  wrenCall(vm, two);
+
+  wrenEnsureSlots(vm, 3);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotDouble(vm, 1, 1.2);
+  wrenSetSlotDouble(vm, 2, 3.4);
+  wrenCall(vm, two);
+  
+  wrenEnsureSlots(vm, 3);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotString(vm, 1, "string");
+  wrenSetSlotString(vm, 2, "another");
+  wrenCall(vm, two);
+  
+  wrenEnsureSlots(vm, 3);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotNull(vm, 1);
+  wrenSetSlotValue(vm, 2, value);
+  wrenCall(vm, two);
   
   // Truncate a string, or allow null bytes.
-  wrenCall(vm, two, NULL, "aa", "string", 3, "b\0y\0t\0e", 7);
+  wrenEnsureSlots(vm, 3);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotBytes(vm, 1, "string", 3);
+  wrenSetSlotBytes(vm, 2, "b\0y\0t\0e", 7);
+  wrenCall(vm, two);
   
+  // Call ignores with extra temporary slots on stack.
+  wrenEnsureSlots(vm, 10);
+  wrenSetSlotValue(vm, 0, callClass);
+  for (int i = 1; i < 10; i++)
+  {
+    wrenSetSlotDouble(vm, i, i * 0.1);
+  }
+  wrenCall(vm, one);
+  
+  wrenReleaseValue(vm, callClass);
   wrenReleaseValue(vm, noParams);
   wrenReleaseValue(vm, zero);
   wrenReleaseValue(vm, one);

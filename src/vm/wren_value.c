@@ -157,7 +157,11 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   // Allocate the arrays before the fiber in case it triggers a GC.
   CallFrame* frames = ALLOCATE_ARRAY(vm, CallFrame, INITIAL_CALL_FRAMES);
   
-  int stackCapacity = wrenPowerOf2Ceil(wrenUpwrapClosure(fn)->maxSlots);
+  // Add one slot for the unused implicit receiver slot that the compiler
+  // assumes all functions have.
+  int stackCapacity = fn == NULL
+      ? 1
+      : wrenPowerOf2Ceil(wrenUpwrapClosure(fn)->maxSlots + 1);
   Value* stack = ALLOCATE_ARRAY(vm, Value, stackCapacity);
   
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
@@ -179,10 +183,52 @@ void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn)
   fiber->caller = NULL;
   fiber->error = NULL_VAL;
   fiber->callerIsTrying = false;
+  fiber->numFrames = 0;
 
   // Initialize the first call frame.
-  fiber->numFrames = 0;
-  wrenAppendCallFrame(vm, fiber, fn, fiber->stack);
+  if (fn != NULL) wrenAppendCallFrame(vm, fiber, fn, fiber->stack);
+}
+
+void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
+{
+  if (fiber->stackCapacity >= needed) return;
+  
+  int capacity = wrenPowerOf2Ceil(needed);
+  
+  Value* oldStack = fiber->stack;
+  fiber->stack = (Value*)wrenReallocate(vm, fiber->stack,
+                                        sizeof(Value) * fiber->stackCapacity,
+                                        sizeof(Value) * capacity);
+  fiber->stackCapacity = capacity;
+  
+  // If the reallocation moves the stack, then we need to shift every pointer
+  // into the stack to point to its new location.
+  if (fiber->stack != oldStack)
+  {
+    // Top of the stack.
+    long offset = fiber->stack - oldStack;
+    
+    if (vm->apiStack >= oldStack && vm->apiStack <= fiber->stackTop)
+    {
+      vm->apiStack += offset;
+    }
+    
+    // Stack pointer for each call frame.
+    for (int i = 0; i < fiber->numFrames; i++)
+    {
+      fiber->frames[i].stackStart += offset;
+    }
+    
+    // Open upvalues.
+    for (ObjUpvalue* upvalue = fiber->openUpvalues;
+         upvalue != NULL;
+         upvalue = upvalue->next)
+    {
+      upvalue->value += offset;
+    }
+    
+    fiber->stackTop += offset;
+  }
 }
 
 ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
@@ -389,6 +435,8 @@ static uint32_t hashValue(Value value)
     case VAL_OBJ:   return hashObject(AS_OBJ(value));
     default:        UNREACHABLE();
   }
+  
+  return 0;
 #endif
 }
 
@@ -1163,10 +1211,10 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       wrenValueBufferClear(vm, &((ObjModule*)obj)->variables);
       break;
 
-    case OBJ_STRING:
     case OBJ_CLOSURE:
     case OBJ_INSTANCE:
     case OBJ_RANGE:
+    case OBJ_STRING:
     case OBJ_UPVALUE:
       break;
   }

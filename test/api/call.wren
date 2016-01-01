@@ -20,13 +20,7 @@ class Call {
     System.print("two %(one) %(two)")
   }
 
-  static def getValue(value) {
-    // Return a new value if we aren't given one.
-    if (value == null) return ["a", "b"]
-
-    // Otherwise print it.
-    System.print(value)
-  }
+  static def getValue() { ["a", "b"] }
 }
 
 // expect: noParams
@@ -36,7 +30,7 @@ class Call {
 
 // expect: two true false
 // expect: two 1.2 3.4
-// expect: two 3 4
 // expect: two string another
 // expect: two null [a, b]
 // expect: two str [98, 0, 121, 0, 116, 0, 101]
+// expect: one 0.1

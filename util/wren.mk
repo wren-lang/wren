@@ -206,12 +206,15 @@ $(LIBUV): $(LIBUV_DIR)/build/gyp/gyp util/libuv.py
 
 # Wren modules that get compiled into the binary as C strings.
 src/optional/wren_opt_%.wren.inc: src/optional/wren_opt_%.wren util/wren_to_c_string.py
+	@ printf "%10s %-30s %s\n" str $<
 	@ ./util/wren_to_c_string.py $@ $<
 
 src/vm/wren_%.wren.inc: src/vm/wren_%.wren util/wren_to_c_string.py
+	@ printf "%10s %-30s %s\n" str $<
 	@ ./util/wren_to_c_string.py $@ $<
 
 src/module/%.wren.inc: src/module/%.wren util/wren_to_c_string.py
+	@ printf "%10s %-30s %s\n" str $<
 	@ ./util/wren_to_c_string.py $@ $<
 
 .PHONY: all cli test vm

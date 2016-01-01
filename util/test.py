@@ -182,6 +182,7 @@ class Test:
 
     # Make sure the stack trace has the right line. Skip over any lines that
     # come from builtin libraries.
+    match = False
     stack_lines = error_lines[line + 1:]
     match = None
     for stack_line in stack_lines:

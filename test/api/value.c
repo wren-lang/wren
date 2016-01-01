@@ -6,12 +6,12 @@ static WrenValue* value;
 
 static void setValue(WrenVM* vm)
 {
-  value = wrenGetArgumentValue(vm, 1);
+  value = wrenGetSlotValue(vm, 1);
 }
 
 static void getValue(WrenVM* vm)
 {
-  wrenReturnValue(vm, value);
+  wrenSetSlotValue(vm, 0, value);
   wrenReleaseValue(vm, value);
 }
 

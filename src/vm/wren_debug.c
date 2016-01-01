@@ -20,6 +20,9 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
     CallFrame* frame = &fiber->frames[i];
     ObjFn* fn = wrenUpwrapClosure(frame->fn);
 
+    // Skip over stub functions for calling methods from the C API.
+    if (fn->module == NULL) continue;
+    
     // The built-in core module has no name. We explicitly omit it from stack
     // traces since we don't want to highlight to a user the implementation
     // detail of what part of the core module is written in C and what is Wren.
@@ -50,7 +53,7 @@ static void dumpObject(Obj* obj)
     case OBJ_RANGE: printf("[range %p]", obj); break;
     case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
     case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
-    default: printf("[unknown object]"); break;
+    default: printf("[unknown object %d]", obj->type); break;
   }
 }
 

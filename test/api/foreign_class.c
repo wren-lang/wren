@@ -7,7 +7,7 @@ static int finalized = 0;
 
 static void apiFinalized(WrenVM* vm)
 {
-  wrenReturnDouble(vm, finalized);
+  wrenSetSlotDouble(vm, 0, finalized);
 }
 
 static void counterAllocate(WrenVM* vm)
@@ -18,25 +18,25 @@ static void counterAllocate(WrenVM* vm)
 
 static void counterIncrement(WrenVM* vm)
 {
-  double* value = (double*)wrenGetArgumentForeign(vm, 0);
-  double increment = wrenGetArgumentDouble(vm, 1);
+  double* value = (double*)wrenGetSlotForeign(vm, 0);
+  double increment = wrenGetSlotDouble(vm, 1);
 
   *value += increment;
 }
 
 static void counterValue(WrenVM* vm)
 {
-  double value = *(double*)wrenGetArgumentForeign(vm, 0);
-  wrenReturnDouble(vm, value);
+  double value = *(double*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, value);
 }
 
 static void pointAllocate(WrenVM* vm)
 {
   double* coordinates = (double*)wrenAllocateForeign(vm, sizeof(double[3]));
 
-  // This gets called by both constructors, so sniff the argument count to see
+  // This gets called by both constructors, so sniff the slot count to see
   // which one was invoked.
-  if (wrenGetArgumentCount(vm) == 1)
+  if (wrenGetSlotCount(vm) == 1)
   {
     coordinates[0] = 0.0;
     coordinates[1] = 0.0;
@@ -44,36 +44,41 @@ static void pointAllocate(WrenVM* vm)
   }
   else
   {
-    coordinates[0] = wrenGetArgumentDouble(vm, 1);
-    coordinates[1] = wrenGetArgumentDouble(vm, 2);
-    coordinates[2] = wrenGetArgumentDouble(vm, 3);
+    coordinates[0] = wrenGetSlotDouble(vm, 1);
+    coordinates[1] = wrenGetSlotDouble(vm, 2);
+    coordinates[2] = wrenGetSlotDouble(vm, 3);
   }
 }
 
 static void pointTranslate(WrenVM* vm)
 {
-  double* coordinates = (double*)wrenGetArgumentForeign(vm, 0);
-  coordinates[0] += wrenGetArgumentDouble(vm, 1);
-  coordinates[1] += wrenGetArgumentDouble(vm, 2);
-  coordinates[2] += wrenGetArgumentDouble(vm, 3);
+  double* coordinates = (double*)wrenGetSlotForeign(vm, 0);
+  coordinates[0] += wrenGetSlotDouble(vm, 1);
+  coordinates[1] += wrenGetSlotDouble(vm, 2);
+  coordinates[2] += wrenGetSlotDouble(vm, 3);
 }
 
 static void pointToString(WrenVM* vm)
 {
-  double* coordinates = (double*)wrenGetArgumentForeign(vm, 0);
+  double* coordinates = (double*)wrenGetSlotForeign(vm, 0);
   char result[100];
   sprintf(result, "(%g, %g, %g)",
       coordinates[0], coordinates[1], coordinates[2]);
-  wrenReturnString(vm, result, (int)strlen(result));
+  wrenSetSlotString(vm, 0, result);
 }
 
 static void resourceAllocate(WrenVM* vm)
 {
-  wrenAllocateForeign(vm, 0);
+  int* value = (int*)wrenAllocateForeign(vm, sizeof(int));
+  *value = 123;
 }
 
-static void resourceFinalize(WrenVM* vm)
+static void resourceFinalize(void* data)
 {
+  // Make sure we get the right data back.
+  int* value = (int*)data;
+  if (*value != 123) exit(1);
+  
   finalized++;
 }
 

@@ -45,7 +45,7 @@ static void randomAllocate(WrenVM* vm)
 
 static void randomSeed0(WrenVM* vm)
 {
-  Well512* well = (Well512*)wrenGetArgumentForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
 
   srand((uint32_t)time(NULL));
   for (int i = 0; i < 16; i++)
@@ -56,9 +56,9 @@ static void randomSeed0(WrenVM* vm)
 
 static void randomSeed1(WrenVM* vm)
 {
-  Well512* well = (Well512*)wrenGetArgumentForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
 
-  srand((uint32_t)wrenGetArgumentDouble(vm, 1));
+  srand((uint32_t)wrenGetSlotDouble(vm, 1));
   for (int i = 0; i < 16; i++)
   {
     well->state[i] = rand();
@@ -67,17 +67,17 @@ static void randomSeed1(WrenVM* vm)
 
 static void randomSeed16(WrenVM* vm)
 {
-  Well512* well = (Well512*)wrenGetArgumentForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
 
   for (int i = 0; i < 16; i++)
   {
-    well->state[i] = (uint32_t)wrenGetArgumentDouble(vm, i + 1);
+    well->state[i] = (uint32_t)wrenGetSlotDouble(vm, i + 1);
   }
 }
 
 static void randomFloat(WrenVM* vm)
 {
-  Well512* well = (Well512*)wrenGetArgumentForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
 
   // A double has 53 bits of precision in its mantissa, and we'd like to take
   // full advantage of that, so we need 53 bits of random source data.
@@ -92,14 +92,14 @@ static void randomFloat(WrenVM* vm)
   // from 0 to 1.0 (half-inclusive).
   result /= 9007199254740992.0;
 
-  wrenReturnDouble(vm, result);
+  wrenSetSlotDouble(vm, 0, result);
 }
 
 static void randomInt0(WrenVM* vm)
 {
-  Well512* well = (Well512*)wrenGetArgumentForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
 
-  wrenReturnDouble(vm, (double)advanceState(well));
+  wrenSetSlotDouble(vm, 0, (double)advanceState(well));
 }
 
 // TODO: The way these are wired up is pretty verbose and tedious. Also, the

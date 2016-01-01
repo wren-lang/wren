@@ -3,10 +3,16 @@
 
 #include "wren.h"
 
-void schedulerResume(WrenValue* fiber);
-void schedulerResumeBytes(WrenValue* fiber, const char* bytes, size_t length);
-void schedulerResumeDouble(WrenValue* fiber, double value);
-void schedulerResumeString(WrenValue* fiber, const char* text);
+// Sets up the API stack to call one of the resume methods on Scheduler.
+//
+// If [hasArgument] is false, this just sets up the stack to have another
+// argument stored in slot 2 and returns. The module must store the argument
+// on the stack and then call [schedulerFinishResume] to complete the call.
+//
+// Otherwise, the call resumes immediately. Releases [fiber] when called.
+void schedulerResume(WrenValue* fiber, bool hasArgument);
+
+void schedulerFinishResume();
 void schedulerResumeError(WrenValue* fiber, const char* error);
 
 void schedulerShutdown();

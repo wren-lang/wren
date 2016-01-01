@@ -1,0 +1,3 @@
+// nontest
+
+var Variable = "value"

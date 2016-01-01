@@ -7,10 +7,12 @@
 #include "scheduler.wren.inc"
 #include "timer.wren.inc"
 
+extern void directoryList(WrenVM* vm);
 extern void fileAllocate(WrenVM* vm);
-extern void fileFinalize(WrenVM* vm);
+extern void fileFinalize(void* data);
 extern void fileOpen(WrenVM* vm);
 extern void fileSizePath(WrenVM* vm);
+extern void fileStatPath(WrenVM* vm);
 extern void fileClose(WrenVM* vm);
 extern void fileDescriptor(WrenVM* vm);
 extern void fileReadBytes(WrenVM* vm);
@@ -28,14 +30,14 @@ extern void timerStartTimer(WrenVM* vm);
 // If you add a new method to the longest class below, make sure to bump this.
 // Note that it also includes an extra slot for the sentinel value indicating
 // the end of the list.
-#define MAX_METHODS_PER_CLASS 9
+#define MAX_METHODS_PER_CLASS 10
 
 // The maximum number of foreign classes a single built-in module defines.
 //
 // If you add a new class to the largest module below, make sure to bump this.
 // Note that it also includes an extra slot for the sentinel value indicating
 // the end of the list.
-#define MAX_CLASSES_PER_MODULE 3
+#define MAX_CLASSES_PER_MODULE 4
 
 // Describes one foreign method in a class.
 typedef struct
@@ -82,19 +84,24 @@ typedef struct
 
 #define METHOD(signature, fn) { false, signature, fn },
 #define STATIC_METHOD(signature, fn) { true, signature, fn },
+#define FINALIZER(fn) { true, "<finalize>", (WrenForeignMethodFn)fn },
 
 // The array of built-in modules.
 static ModuleRegistry modules[] =
 {
   MODULE(io)
+    CLASS(Directory)
+      STATIC_METHOD("list_(_,_)", directoryList)
+    END_CLASS
     CLASS(File)
       STATIC_METHOD("<allocate>", fileAllocate)
-      STATIC_METHOD("<finalize>", fileFinalize)
+      FINALIZER(fileFinalize)
       STATIC_METHOD("open_(_,_)", fileOpen)
       STATIC_METHOD("sizePath_(_,_)", fileSizePath)
+      STATIC_METHOD("statPath_(_,_)", fileStatPath)
       METHOD("close_(_)", fileClose)
       METHOD("descriptor", fileDescriptor)
-      METHOD("readBytes_(_,_)", fileReadBytes)
+      METHOD("readBytes_(_,_,_)", fileReadBytes)
       METHOD("size_(_)", fileSize)
     END_CLASS
     CLASS(Stdin)
@@ -204,7 +211,7 @@ WrenForeignClassMethods bindBuiltInForeignClass(
   if (clas == NULL) return methods;
 
   methods.allocate = findMethod(clas, true, "<allocate>");
-  methods.finalize = findMethod(clas, true, "<finalize>");
+  methods.finalize = (WrenFinalizerFn)findMethod(clas, true, "<finalize>");
 
   return methods;
 }

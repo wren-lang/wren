@@ -7,30 +7,19 @@
 #include "wren.h"
 #include "vm.h"
 
+// A handle to the "Scheduler" class object. Used to call static methods on it.
+static WrenValue* schedulerClass;
+
 // This method resumes a fiber that is suspended waiting on an asynchronous
 // operation. The first resumes it with zero arguments, and the second passes
 // one.
-static WrenValue* resume;
-static WrenValue* resumeWithArg;
+static WrenValue* resume1;
+static WrenValue* resume2;
 static WrenValue* resumeError;
 
-void schedulerCaptureMethods(WrenVM* vm)
+static void resume(WrenValue* method)
 {
-  resume = wrenGetMethod(vm, "scheduler", "Scheduler", "resume_(_)");
-  resumeWithArg = wrenGetMethod(vm, "scheduler", "Scheduler", "resume_(_,_)");
-  resumeError = wrenGetMethod(vm, "scheduler", "Scheduler", "resumeError_(_,_)");
-}
-
-static void callResume(WrenValue* resumeMethod, WrenValue* fiber,
-                       const char* argTypes, ...)
-{
-  va_list args;
-  va_start(args, argTypes);
-  WrenInterpretResult result = wrenCallVarArgs(getVM(), resumeMethod, NULL,
-                                               argTypes, args);
-  va_end(args);
-  
-  wrenReleaseValue(getVM(), fiber);
+  WrenInterpretResult result = wrenCall(getVM(), method);
   
   // If a runtime error occurs in response to an async operation and nothing
   // catches the error in the fiber, then exit the CLI.
@@ -41,34 +30,50 @@ static void callResume(WrenValue* resumeMethod, WrenValue* fiber,
   }
 }
 
-void schedulerResume(WrenValue* fiber)
+void schedulerCaptureMethods(WrenVM* vm)
 {
-  callResume(resume, fiber, "v", fiber);
+  wrenEnsureSlots(vm, 1);
+  wrenGetVariable(vm, "scheduler", "Scheduler", 0);
+  schedulerClass = wrenGetSlotValue(vm, 0);
+  
+  resume1 = wrenMakeCallHandle(vm, "resume_(_)");
+  resume2 = wrenMakeCallHandle(vm, "resume_(_,_)");
+  resumeError = wrenMakeCallHandle(vm, "resumeError_(_,_)");
 }
 
-void schedulerResumeBytes(WrenValue* fiber, const char* bytes, size_t length)
+void schedulerResume(WrenValue* fiber, bool hasArgument)
 {
-  callResume(resumeWithArg, fiber, "va", fiber, bytes, length);
+  WrenVM* vm = getVM();
+  wrenEnsureSlots(vm, 2 + (hasArgument ? 1 : 0));
+  wrenSetSlotValue(vm, 0, schedulerClass);
+  wrenSetSlotValue(vm, 1, fiber);
+  wrenReleaseValue(vm, fiber);
+  
+  // If we don't need to wait for an argument to be stored on the stack, resume
+  // it now.
+  if (!hasArgument) resume(resume1);
 }
 
-void schedulerResumeDouble(WrenValue* fiber, double value)
+void schedulerFinishResume()
 {
-  callResume(resumeWithArg, fiber, "vd", fiber, value);
-}
-
-void schedulerResumeString(WrenValue* fiber, const char* text)
-{
-  callResume(resumeWithArg, fiber, "vs", fiber, text);
+  resume(resume2);
 }
 
 void schedulerResumeError(WrenValue* fiber, const char* error)
 {
-  callResume(resumeError, fiber, "vs", fiber, error);
+  schedulerResume(fiber, true);
+  wrenSetSlotString(getVM(), 2, error);
+  resume(resumeError);
 }
 
 void schedulerShutdown()
 {
-  if (resume != NULL) wrenReleaseValue(getVM(), resume);
-  if (resumeWithArg != NULL) wrenReleaseValue(getVM(), resumeWithArg);
-  if (resumeError != NULL) wrenReleaseValue(getVM(), resumeError);
+  // If the module was never loaded, we don't have anything to release.
+  if (schedulerClass == NULL) return;
+  
+  WrenVM* vm = getVM();
+  wrenReleaseValue(vm, schedulerClass);
+  wrenReleaseValue(vm, resume1);
+  wrenReleaseValue(vm, resume2);
+  wrenReleaseValue(vm, resumeError);
 }

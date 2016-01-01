@@ -1331,7 +1331,7 @@ static int resolveLocal(Compiler* compiler, const char* name, int length)
 
 // Adds an upvalue to [compiler]'s function with the given properties. Does not
 // add one if an upvalue for that variable is already in the list. Returns the
-// index of the uvpalue.
+// index of the upvalue.
 static int addUpvalue(Compiler* compiler, bool isLocal, int index)
 {
   // Look for an existing one.

@@ -50,7 +50,5 @@ def main():
   with open(args.output, "w") as f:
     f.write(c_source)
 
-  print("        str " + args.input)
-
 
 main()
