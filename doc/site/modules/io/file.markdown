@@ -35,6 +35,13 @@ whatever encoding the file uses.
 
 Returns the size in bytes of the contents of the file at `path`.
 
+### File.**stat**(path)
+
+"Stats" the file or directory at `path`. Returns a [Stat][] object describing
+the low-level details of the file system entry.
+
+[stat]: stat.html
+
 ## Constructors
 
 ### File.**open**(path)
