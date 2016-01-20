@@ -36,6 +36,7 @@ TEST_SOURCES := $(wildcard test/api/*.c)
 
 BUILD_DIR := build
 
+C_OPTIONS += -flto
 C_WARNINGS := -Wall -Wextra -Werror -Wno-unused-parameter
 # Wren uses callbacks heavily, so -Wunused-parameter is too painful to enable.
 
@@ -142,7 +143,7 @@ bin/$(WREN): $(OPT_OBJECTS) $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
 		$(LIBUV)
 	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@ mkdir -p bin
-	@ $(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
+	@ $(CC) $(CFLAGS) -fwhole-program $^ -o $@ -lm $(LIBUV_LIBS)
 
 # Static library.
 lib/lib$(WREN).a: $(OPT_OBJECTS) $(VM_OBJECTS)
