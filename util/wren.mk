@@ -36,7 +36,6 @@ TEST_SOURCES := $(wildcard test/api/*.c)
 
 BUILD_DIR := build
 
-C_OPTIONS += -flto
 C_WARNINGS := -Wall -Wextra -Werror -Wno-unused-parameter
 # Wren uses callbacks heavily, so -Wunused-parameter is too painful to enable.
 
