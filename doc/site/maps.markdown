@@ -10,13 +10,13 @@ curly braces. Each entry is a key and a value separated by a colon:
     :::wren
     {
       "George": "Harrison",
-      "John": "Lennon",
-      "Paul": "McCartney",
-      "Ringo": "Starr"
+      "John":   "Lennon",
+      "Paul":   "McCartney",
+      "Ringo":  "Starr"
     }
 
-This creates a map that maps the first names of the Beatles to their last
-names. Syntactically, in a map literal, keys can be any literal, a variable
+This creates a map that associates the first name of each Beatle with his last
+name. Syntactically, in a map literal, keys can be any literal, a variable
 name, or a parenthesized expression. Values can be any expression. Here, we're
 using string literals for both keys and values.
 
@@ -28,12 +28,6 @@ You can also use a [class object][] as a key.
 [value types]: values.html
 [class object]: classes.html
 
-In addition, even though they aren't strictly immutable, [fibers][] can be used
-as map keys. This is handy for storing data that's roughly "thread-local" by
-using the current fiber as a map key.
-
-[fibers]: concurrency.html
-
 The reason for this limitation&mdash;and the reason maps are called "*hash*
 tables" in other languages&mdash;is that each key is used to generate a numeric
 *hash code*. This lets a map locate the value associated with a key in constant
@@ -42,7 +36,7 @@ built-in types, only those can be used as keys.
 
 ## Adding entries
 
-You add new key-value pairs to the map by using the [subscript operator][]:
+You add new key-value pairs to the map using the [subscript operator][]:
 
 [subscript operator]: method-calls.html#subscripts
 
@@ -98,8 +92,8 @@ If the key was found, this returns the value that was associated with it:
 
 If the key wasn't in the map to begin with, `remove()` just returns `null`.
 
-If you want to remove *everything* from the map, just like with [lists][], you
-can just call `clear()`:
+If you want to remove *everything* from the map, like with [lists][], you call
+`clear()`:
 
 [lists]: lists.html
 
@@ -133,10 +127,10 @@ iterate over the keys and use each to look up its value:
       System.print("The state bird of " + state + " is " + birds[state])
     }
 
-This program will print the three states and their birds. However, the *order*
+This program prints the three states and their birds. However, the *order*
 that they are printed isn't defined. Wren makes no promises about what order
-keys and values will be iterated in when you use these methods. All it promises
-is that every entry will appear exactly once.
+keys and values are iterated in when you use these methods. All it promises is
+that every entry will appear exactly once.
 
 <a class="right" href="method-calls.html">Method Calls &rarr;</a>
 <a href="lists.html">&larr; Lists</a>

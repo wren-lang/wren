@@ -4,10 +4,10 @@ Wren is deeply object oriented, so most code consists of invoking methods on
 objects, usually something like this:
 
     :::wren
-    System.print("hello")
+    System.print("Heyoo!") //> Heyoo!
 
 You have a *receiver* expression (here `System`) followed by a `.`, then a name
-(`print`) and an argument list in parentheses (`("hello")`). Multiple arguments
+(`print`) and an argument list in parentheses (`("Heyoo!")`). Multiple arguments
 are separated by commas:
 
     :::wren
@@ -18,7 +18,7 @@ The argument list can also be empty:
     :::wren
     list.clear()
 
-Semantically, all method calls work like this:
+The VM executes a method call like so:
 
 1. Evaluate the receiver and arguments from left to right.
 2. Look up the method on the receiver's [class][].
