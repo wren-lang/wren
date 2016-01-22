@@ -142,7 +142,7 @@ bin/$(WREN): $(OPT_OBJECTS) $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
 		$(LIBUV)
 	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
 	@ mkdir -p bin
-	@ $(CC) $(CFLAGS) -fwhole-program $^ -o $@ -lm $(LIBUV_LIBS)
+	@ $(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
 
 # Static library.
 lib/lib$(WREN).a: $(OPT_OBJECTS) $(VM_OBJECTS)
