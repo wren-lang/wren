@@ -4,6 +4,7 @@
 #include "modules.h"
 
 #include "io.wren.inc"
+#include "process.wren.inc"
 #include "scheduler.wren.inc"
 #include "timer.wren.inc"
 
@@ -17,6 +18,7 @@ extern void fileClose(WrenVM* vm);
 extern void fileDescriptor(WrenVM* vm);
 extern void fileReadBytes(WrenVM* vm);
 extern void fileSize(WrenVM* vm);
+extern void processAllArguments(WrenVM* vm);
 extern void stdinReadStart(WrenVM* vm);
 extern void stdinReadStop(WrenVM* vm);
 extern void schedulerCaptureMethods(WrenVM* vm);
@@ -107,6 +109,11 @@ static ModuleRegistry modules[] =
     CLASS(Stdin)
       STATIC_METHOD("readStart_()", stdinReadStart)
       STATIC_METHOD("readStop_()", stdinReadStop)
+    END_CLASS
+  END_MODULE
+  MODULE(process)
+    CLASS(Process)
+      STATIC_METHOD("allArguments", processAllArguments)
     END_CLASS
   END_MODULE
   MODULE(scheduler)

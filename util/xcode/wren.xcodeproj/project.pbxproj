@@ -37,6 +37,10 @@
 		29A4273A1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427331BDBE435001E6E22 /* wren_opt_random.wren.inc */; };
 		29A4273B1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427331BDBE435001E6E22 /* wren_opt_random.wren.inc */; };
 		29C8A9331AB71FFF00DEC81D /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
+		29D025E31C19CD1000A3BB28 /* process.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D025E01C19CD1000A3BB28 /* process.c */; };
+		29D025E41C19CD1000A3BB28 /* process.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D025E01C19CD1000A3BB28 /* process.c */; };
+		29D025E51C19CD1000A3BB28 /* process.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29D025E21C19CD1000A3BB28 /* process.wren.inc */; };
+		29D025E61C19CD1000A3BB28 /* process.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29D025E21C19CD1000A3BB28 /* process.wren.inc */; };
 		29DC149F1BBA2FCC008A8274 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
 		29DC14A01BBA2FD6008A8274 /* timer.c in Sources */ = {isa = PBXBuildFile; fileRef = 2901D7621B74F4050083A2C8 /* timer.c */; };
 		29DC14A11BBA2FEC008A8274 /* scheduler.c in Sources */ = {isa = PBXBuildFile; fileRef = 291647C21BA5EA45006142EE /* scheduler.c */; };
@@ -128,6 +132,9 @@
 		29D009AB1B7E39A8000CE58C /* slots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = slots.h; path = ../../test/api/slots.h; sourceTree = "<group>"; };
 		29D009AC1B7E39A8000CE58C /* value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = value.c; path = ../../test/api/value.c; sourceTree = "<group>"; };
 		29D009AD1B7E39A8000CE58C /* value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = value.h; path = ../../test/api/value.h; sourceTree = "<group>"; };
+		29D025E01C19CD1000A3BB28 /* process.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = process.c; path = ../../src/module/process.c; sourceTree = "<group>"; };
+		29D025E11C19CD1000A3BB28 /* process.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = process.h; path = ../../src/module/process.h; sourceTree = "<group>"; };
+		29D025E21C19CD1000A3BB28 /* process.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = process.wren.inc; path = ../../src/module/process.wren.inc; sourceTree = "<group>"; };
 		29F384111BD19706002F84E0 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../../src/module/io.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -157,6 +164,9 @@
 				29F384111BD19706002F84E0 /* io.h */,
 				29729F2E1BA70A620099CA20 /* io.c */,
 				29729F301BA70A620099CA20 /* io.wren.inc */,
+				29D025E11C19CD1000A3BB28 /* process.h */,
+				29D025E01C19CD1000A3BB28 /* process.c */,
+				29D025E21C19CD1000A3BB28 /* process.wren.inc */,
 				291647C31BA5EA45006142EE /* scheduler.h */,
 				291647C21BA5EA45006142EE /* scheduler.c */,
 				291647CD1BA5ED26006142EE /* scheduler.wren.inc */,
@@ -354,6 +364,8 @@
 				29A427341BDBE435001E6E22 /* wren_opt_meta.c in Sources */,
 				29205C9B1AB4E6430073018D /* wren_debug.c in Sources */,
 				29205C9D1AB4E6430073018D /* wren_utils.c in Sources */,
+				29D025E51C19CD1000A3BB28 /* process.wren.inc in Sources */,
+				29D025E31C19CD1000A3BB28 /* process.c in Sources */,
 				29729F311BA70A620099CA20 /* io.c in Sources */,
 				29A427361BDBE435001E6E22 /* wren_opt_meta.wren.inc in Sources */,
 				29205C9E1AB4E6430073018D /* wren_value.c in Sources */,
@@ -367,6 +379,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				29A427371BDBE435001E6E22 /* wren_opt_meta.wren.inc in Sources */,
+				29D025E41C19CD1000A3BB28 /* process.c in Sources */,
 				29729F321BA70A620099CA20 /* io.c in Sources */,
 				29932D541C210F8D00099DEE /* lists.c in Sources */,
 				291647C81BA5EC5E006142EE /* modules.c in Sources */,
@@ -383,6 +396,7 @@
 				29DC14A71BBA301A008A8274 /* wren_utils.c in Sources */,
 				29DC14A81BBA301D008A8274 /* wren_value.c in Sources */,
 				29A4273B1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */,
+				29D025E61C19CD1000A3BB28 /* process.wren.inc in Sources */,
 				29DC14A91BBA302F008A8274 /* wren_vm.c in Sources */,
 				29DC14AA1BBA3032008A8274 /* main.c in Sources */,
 				293D46961BB43F9900200083 /* call.c in Sources */,

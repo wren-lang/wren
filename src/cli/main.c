@@ -1,22 +1,26 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "process.h"
 #include "vm.h"
 #include "wren.h"
 
 int main(int argc, const char* argv[])
 {
-  if (argc < 1 || argc > 2)
+  if (argc == 2 && strcmp(argv[1], "--help") == 0)
   {
-    fprintf(stderr, "Usage: wren [file]\n");
-    return 64; // EX_USAGE.
+    printf("Usage: wren [file] [arguments...]\n");
+    printf("  --help  Show command line usage\n");
+    return 0;
   }
+  
+  processSetArguments(argc, argv);
 
   if (argc == 1)
   {
     runRepl();
   }
-  else if (argc == 2)
+  else
   {
     runFile(argv[1]);
   }
