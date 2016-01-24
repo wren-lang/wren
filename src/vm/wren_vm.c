@@ -700,6 +700,59 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
   finalizer(foreign->data);
 }
 
+// Executes a non-local return from the current call frame which is assumed to
+// be for a function.
+//
+// [thisUpvalue] is the upvalue that has closed over the "this" of the
+// enclosing method.
+//
+// If the enclosing method is still on the stack, this returns to it. Otherwise,
+// it sets the fiber to a runtime error.
+static void nonlocalReturn(WrenVM* vm, ObjUpvalue* thisUpvalue,
+                           Value returnValue)
+{
+  // Very conveniently, upvalues already track exactly what we need to know to
+  // see if the method's call frame is still on the stack. When compiling a
+  // non-local return, we load "this" and store the index of its upvalue as an
+  // argument to the instruction.
+  //
+  // This ensures we have an upvalue pointing to the enclosing method's
+  // receiver. This upvalue starts off open and closes when the method's frame
+  // returns. So, if the upvalue is still open (its closed value is still
+  // undefined), we know the method hasn't returned yet.
+  if (!IS_UNDEFINED(thisUpvalue->closed))
+  {
+    vm->fiber->error = wrenStringFormat(vm,
+        "Non-local return from method that already returned.");
+    return;
+  }
+
+  // Figure out how many call frames we'll be unwinding. We know "this" is
+  // stored in the first stack slot of the method's frame, so find that frame.
+  //
+  // Since we handled the method not being on the stack above, we can be
+  // certain it will be found.
+  ObjFiber* fiber = vm->fiber;
+  while (fiber->frames[fiber->numFrames - 1].stackStart != thisUpvalue->value) {
+    fiber->numFrames--;
+  }
+  
+  // We are on the method frame now, so make it return too.
+  fiber->numFrames--;
+  
+  // Close any upvalues still in scope.
+  CallFrame* frame = &fiber->frames[fiber->numFrames];
+  closeUpvalues(fiber, frame->stackStart);
+
+  // Store the result of the function in the first slot, which is where the
+  // caller expects it.
+  frame->stackStart[0] = returnValue;
+  
+  // Discard the stack slots for the discarded frames (leaving one slot for the
+  // result).
+  fiber->stackTop = frame->stackStart + 1;
+}
+
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical. Returns `true` if the
 // fiber completed without error.
@@ -1124,7 +1177,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       }
       else
       {
-        // Store the result of the block in the first slot, which is where the
+        // Store the result of the method in the first slot, which is where the
         // caller expects it.
         stackStart[0] = result;
 
@@ -1133,6 +1186,19 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         fiber->stackTop = frame->stackStart + 1;
       }
       
+      LOAD_FRAME();
+      DISPATCH();
+    }
+    
+    CASE_CODE(NONLOCAL_RETURN):
+    {
+      Value result = POP();
+      ObjUpvalue** upvalues = ((ObjClosure*)frame->fn)->upvalues;
+      ObjUpvalue* thisUpvalue = upvalues[READ_BYTE()];
+
+      nonlocalReturn(vm, thisUpvalue, result);
+      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+
       LOAD_FRAME();
       DISPATCH();
     }

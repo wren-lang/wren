@@ -140,9 +140,12 @@ OPCODE(OR, -1)
 // Close the upvalue for the local on the top of the stack, then pop it.
 OPCODE(CLOSE_UPVALUE, -1)
 
-// Exit from the current function and return the value on the top of the
-// stack.
+// Return from the current method and return the value on top of the stack.
 OPCODE(RETURN, 0)
+
+// Perform a non-local return from the current function up to the enclosing
+// method and return the value on top of the stack.
+OPCODE(NONLOCAL_RETURN, 0)
 
 // Creates a closure for the function stored at [arg] in the constant table.
 //

@@ -470,11 +470,11 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   }
   else
   {
-    // Declare a fake local variable for the receiver so that it's slot in the
+    // Declare a fake local variable for the receiver so that its slot in the
     // stack is taken. For methods, we call this "this", so that we can resolve
     // references to that like a normal variable. For functions, they have no
-    // explicit "this". So we pick a bogus name. That way references to "this"
-    // inside a function will try to walk up the parent chain to find a method
+    // explicit "this", so we pick a bogus name. That way, references to "this"
+    // inside a function will walk up the parent chain to find a method
     // enclosing the function whose "this" we can close over.
     compiler->numLocals = 1;
     if (isFunction)
@@ -499,6 +499,15 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
   wrenByteBufferInit(&compiler->bytecode);
   wrenIntBufferInit(&compiler->debugSourceLines);
+}
+
+// Returns `true` if [compiler] is compiling a function, and not a method or
+// top level code.
+static bool isFunction(Compiler* compiler)
+{
+  // Functions store a null name in their first local slot since they don't
+  // have their own "this".
+  return compiler->numLocals > 0 && compiler->locals[0].name == NULL;
 }
 
 // Lexing ----------------------------------------------------------------------
@@ -2736,6 +2745,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_STORE_FIELD_THIS:
     case CODE_LOAD_FIELD:
     case CODE_STORE_FIELD:
+    case CODE_NONLOCAL_RETURN:
     case CODE_CLASS:
       return 1;
 
@@ -2973,6 +2983,7 @@ static void whileStatement(Compiler* compiler)
 // curly blocks. Unlike expressions, these do not leave a value on the stack.
 void statement(Compiler* compiler)
 {
+  // TODO: Allow "break <value>" inside functions for an explicit local return?
   if (match(compiler, TOKEN_BREAK))
   {
     if (compiler->loop == NULL)
@@ -3046,7 +3057,21 @@ void statement(Compiler* compiler)
       expression(compiler);
     }
 
-    emitOp(compiler, CODE_RETURN);
+    // If we are in a function inside a method, then "return" performs a
+    // non-local return.
+    if (getEnclosingClass(compiler) != NULL && isFunction(compiler))
+    {
+      Code loadInstruction;
+      int index = resolveNonmodule(compiler, "this", 4, &loadInstruction);
+      ASSERT(loadInstruction == CODE_LOAD_UPVALUE,
+             "Should have upvalue for 'this'.");
+
+      emitByteArg(compiler, CODE_NONLOCAL_RETURN, index);
+    }
+    else
+    {
+      emitOp(compiler, CODE_RETURN);
+    }
     return;
   }
 
