@@ -252,15 +252,6 @@ void wrenReleaseValue(WrenVM* vm, WrenValue* value);
 // unsafe language, so it's up to you to be careful to use it correctly. In
 // return, you get a very fast FFI.
 
-// TODO: Generalize this to look up a foreign class in any slot and place the
-// object in a desired slot.
-// This must be called once inside a foreign class's allocator function.
-//
-// It tells Wren how many bytes of raw data need to be stored in the foreign
-// object and creates the new object with that size. It returns a pointer to
-// the foreign object's data.
-void* wrenAllocateForeign(WrenVM* vm, size_t size);
-
 // Returns the number of slots available to the current foreign method.
 int wrenGetSlotCount(WrenVM* vm);
 
@@ -336,6 +327,17 @@ void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length);
 
 // Stores the numeric [value] in [slot].
 void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
+
+// Creates a new instance of the foreign class stored in [classSlot] with [size]
+// bytes of raw storage and places the resulting object in [slot].
+//
+// This does not invoke the foreign class's constructor on the new instance. If
+// you need that to happen, call the constructor from Wren, which will then
+// call the allocator foreign method. In there, call this to create the object
+// and then the constructor will be invoked when the allocator returns.
+//
+// Returns a pointer to the foreign object's data.
+void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size);
 
 // Stores a new empty list in [slot].
 void wrenSetSlotNewList(WrenVM* vm, int slot);

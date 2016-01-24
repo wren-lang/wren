@@ -39,7 +39,7 @@ static uint32_t advanceState(Well512* well)
 
 static void randomAllocate(WrenVM* vm)
 {
-  Well512* well = (Well512*)wrenAllocateForeign(vm, sizeof(Well512));
+  Well512* well = (Well512*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Well512));
   well->index = 0;
 }
 

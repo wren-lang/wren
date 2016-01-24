@@ -1357,20 +1357,6 @@ void wrenReleaseValue(WrenVM* vm, WrenValue* value)
   DEALLOCATE(vm, value);
 }
 
-void* wrenAllocateForeign(WrenVM* vm, size_t size)
-{
-  ASSERT(vm->apiStack != NULL, "Must be in foreign call.");
-
-  // TODO: Validate this. It can fail if the user calls this inside another
-  // foreign method, or calls one of the return functions.
-  ObjClass* classObj = AS_CLASS(vm->apiStack[0]);
-
-  ObjForeign* foreign = wrenNewForeign(vm, classObj, size);
-  vm->apiStack[0] = OBJ_VAL(foreign);
-
-  return (void*)foreign->data;
-}
-
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source)
 {
   return wrenInterpretInModule(vm, "main", source);
@@ -1596,6 +1582,21 @@ void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length)
 void wrenSetSlotDouble(WrenVM* vm, int slot, double value)
 {
   setSlot(vm, slot, NUM_VAL(value));
+}
+
+void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size)
+{
+  validateApiSlot(vm, slot);
+  validateApiSlot(vm, classSlot);
+  ASSERT(IS_CLASS(vm->apiStack[classSlot]), "Slot must hold a class.");
+  
+  ObjClass* classObj = AS_CLASS(vm->apiStack[classSlot]);
+  ASSERT(classObj->numFields == -1, "Class must be a foreign class.");
+  
+  ObjForeign* foreign = wrenNewForeign(vm, classObj, size);
+  vm->apiStack[slot] = OBJ_VAL(foreign);
+  
+  return (void*)foreign->data;
 }
 
 void wrenSetSlotNewList(WrenVM* vm, int slot)

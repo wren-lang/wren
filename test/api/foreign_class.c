@@ -12,7 +12,7 @@ static void apiFinalized(WrenVM* vm)
 
 static void counterAllocate(WrenVM* vm)
 {
-  double* value = (double*)wrenAllocateForeign(vm, sizeof(double));
+  double* value = (double*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(double));
   *value = 0;
 }
 
@@ -32,7 +32,7 @@ static void counterValue(WrenVM* vm)
 
 static void pointAllocate(WrenVM* vm)
 {
-  double* coordinates = (double*)wrenAllocateForeign(vm, sizeof(double[3]));
+  double* coordinates = (double*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(double[3]));
 
   // This gets called by both constructors, so sniff the slot count to see
   // which one was invoked.
@@ -69,7 +69,7 @@ static void pointToString(WrenVM* vm)
 
 static void resourceAllocate(WrenVM* vm)
 {
-  int* value = (int*)wrenAllocateForeign(vm, sizeof(int));
+  int* value = (int*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(int));
   *value = 123;
 }
 

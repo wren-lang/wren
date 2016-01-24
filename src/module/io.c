@@ -135,7 +135,7 @@ void fileAllocate(WrenVM* vm)
 {
   // Store the file descriptor in the foreign data, so that we can get to it
   // in the finalizer.
-  int* fd = (int*)wrenAllocateForeign(vm, sizeof(int));
+  int* fd = (int*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(int));
   *fd = (int)wrenGetSlotDouble(vm, 1);
 }
 
