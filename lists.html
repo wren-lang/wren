@@ -23,7 +23,6 @@
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
       <li><a href="contributing.html">Contributing</a></li>
-      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
       <h2>language guide</h2>
@@ -57,7 +56,6 @@
       <tr>
         <td><a href="getting-started.html">Getting Started</a></td>
         <td><a href="contributing.html">Contributing</a></td>
-        <td><a href="community.html">Community</a></td>
       </tr>
       <tr>
         <td colspan="2"><h2>language guide</h2></td>
@@ -111,27 +109,27 @@ have to be the same type. </p>
 operator</a> on it with the index of the 
 element you want. Like most languages, indexes start at zero: </p>
 <div class="codehilite"><pre><span class="k">var</span> <span class="n">hirsute</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;sideburns&quot;</span><span class="p">,</span> <span class="s">&quot;porkchops&quot;</span><span class="p">,</span> <span class="s">&quot;&#39;stache&quot;</span><span class="p">,</span> <span class="s">&quot;goatee&quot;</span><span class="p">]</span> 
-<span class="n">hirsute</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="output">sideburns</span>
-<span class="n">hirsute</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="output">porkchops</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">hirsute</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="output">sideburns</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">hirsute</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="output">porkchops</span>
 </pre></div>
 
 
 <p>Negative indices counts backwards from the end: </p>
-<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="output">goatee</span>
-<span class="n">hirsute</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="output">&#39;stache</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">hirsute</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="output">goatee</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">hirsute</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="output">&#39;stache</span>
 </pre></div>
 
 
 <p>It&rsquo;s a runtime error to pass an index outside of the bounds of the list. If you 
 don&rsquo;t know what those bounds are, you can find out using count: </p>
-<div class="codehilite"><pre><span class="n">hirsute</span><span class="o">.</span><span class="n">count</span> <span class="output">4</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">hirsute</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="output">4</span>
 </pre></div>
 
 
 <h2>Slices and ranges <a href="#slices-and-ranges" name="slices-and-ranges" class="header-anchor">#</a></h2>
 <p>Sometimes you want to copy a chunk of elements from a list. You can do that by 
 passing a <a href="values.html#ranges">range</a> to the subscript operator, like so: </p>
-<div class="codehilite"><pre><span class="n">hirsute</span><span class="p">[</span><span class="mi">1</span><span class="o">..</span><span class="mi">2</span><span class="p">]</span> <span class="output">[porkchops, &#39;stache]</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">hirsute</span><span class="p">[</span><span class="mi">1</span><span class="o">..</span><span class="mi">2</span><span class="p">])</span> <span class="output">[porkchops, &#39;stache]</span>
 </pre></div>
 
 
@@ -172,9 +170,9 @@ after it. Like other methods, you can use a negative index to count from the
 back. Doing so counts back from the size of the list <em>after</em> it&rsquo;s grown by one: </p>
 <div class="codehilite"><pre><span class="k">var</span> <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span> 
 <span class="n">letters</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">)</span>   <span class="c1">// OK: inserts at end.</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>        <span class="output">[a, b, c, d]</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>    <span class="output">[a, b, c, d]</span>
 <span class="n">letters</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;e&quot;</span><span class="p">)</span>  <span class="c1">// Counts back from size after insert.</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>        <span class="output">[a, b, c, e, d]</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>    <span class="output">[a, b, c, e, d]</span>
 </pre></div>
 
 

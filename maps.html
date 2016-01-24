@@ -23,7 +23,6 @@
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
       <li><a href="contributing.html">Contributing</a></li>
-      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
       <h2>language guide</h2>
@@ -57,7 +56,6 @@
       <tr>
         <td><a href="getting-started.html">Getting Started</a></td>
         <td><a href="contributing.html">Contributing</a></td>
-        <td><a href="community.html">Community</a></td>
       </tr>
       <tr>
         <td colspan="2"><h2>language guide</h2></td>
@@ -104,30 +102,27 @@ other languages: hash table, dictionary, association, table, etc. </p>
 curly braces. Each entry is a key and a value separated by a colon: </p>
 <div class="codehilite"><pre><span class="p">{</span> 
   <span class="s">&quot;George&quot;</span><span class="o">:</span> <span class="s">&quot;Harrison&quot;</span><span class="p">,</span> 
-  <span class="s">&quot;John&quot;</span><span class="o">:</span> <span class="s">&quot;Lennon&quot;</span><span class="p">,</span> 
-  <span class="s">&quot;Paul&quot;</span><span class="o">:</span> <span class="s">&quot;McCartney&quot;</span><span class="p">,</span> 
-  <span class="s">&quot;Ringo&quot;</span><span class="o">:</span> <span class="s">&quot;Starr&quot;</span> 
+  <span class="s">&quot;John&quot;</span><span class="o">:</span>   <span class="s">&quot;Lennon&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;Paul&quot;</span><span class="o">:</span>   <span class="s">&quot;McCartney&quot;</span><span class="p">,</span> 
+  <span class="s">&quot;Ringo&quot;</span><span class="o">:</span>  <span class="s">&quot;Starr&quot;</span> 
 <span class="p">}</span>
 </pre></div>
 
 
-<p>This creates a map that maps the first names of the Beatles to their last 
-names. Syntactically, in a map literal, keys can be any literal, a variable 
+<p>This creates a map that associates the first name of each Beatle with his last 
+name. Syntactically, in a map literal, keys can be any literal, a variable 
 name, or a parenthesized expression. Values can be any expression. Here, we&rsquo;re 
 using string literals for both keys and values. </p>
 <p><em>Semantically</em>, values can be any object, and multiple keys may map to the same 
 value. Keys have a few limitations. They must be one of the immutable built-in 
 <a href="values.html">value types</a> in Wren. That means a number, string, range, bool, or <code>null</code>. 
 You can also use a <a href="classes.html">class object</a> as a key. </p>
-<p>In addition, even though they aren&rsquo;t strictly immutable, <a href="concurrency.html">fibers</a> can be used 
-as map keys. This is handy for storing data that&rsquo;s roughly &ldquo;thread-local&rdquo; by 
-using the current fiber as a map key. </p>
 <p>The reason for this limitation&mdash;and the reason maps are called &ldquo;<em>hash</em> 
 tables&rdquo; in other languages&mdash;is that each key is used to generate a numeric <em>hash code</em>. This lets a map locate the value associated with a key in constant 
 time, even in very large maps. Since Wren only knows how to hash certain 
 built-in types, only those can be used as keys. </p>
 <h2>Adding entries <a href="#adding-entries" name="adding-entries" class="header-anchor">#</a></h2>
-<p>You add new key-value pairs to the map by using the <a href="method-calls.html#subscripts">subscript operator</a>: </p>
+<p>You add new key-value pairs to the map using the <a href="method-calls.html#subscripts">subscript operator</a>: </p>
 <div class="codehilite"><pre><span class="k">var</span> <span class="n">capitals</span> <span class="o">=</span> <span class="p">{}</span> 
 <span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Georgia&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Atlanta&quot;</span> 
 <span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Idaho&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Boise&quot;</span> 
@@ -176,8 +171,8 @@ entry you want to delete: </p>
 
 
 <p>If the key wasn&rsquo;t in the map to begin with, <code>remove()</code> just returns <code>null</code>. </p>
-<p>If you want to remove <em>everything</em> from the map, just like with <a href="lists.html">lists</a>, you 
-can just call <code>clear()</code>: </p>
+<p>If you want to remove <em>everything</em> from the map, like with <a href="lists.html">lists</a>, you call 
+<code>clear()</code>: </p>
 <div class="codehilite"><pre><span class="n">capitals</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span> 
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="output">0</span>
 </pre></div>
@@ -203,10 +198,10 @@ iterate over the keys and use each to look up its value: </p>
 </pre></div>
 
 
-<p>This program will print the three states and their birds. However, the <em>order</em> 
+<p>This program prints the three states and their birds. However, the <em>order</em> 
 that they are printed isn&rsquo;t defined. Wren makes no promises about what order 
-keys and values will be iterated in when you use these methods. All it promises 
-is that every entry will appear exactly once. </p>
+keys and values are iterated in when you use these methods. All it promises is 
+that every entry will appear exactly once. </p>
 <p><a class="right" href="method-calls.html">Method Calls &rarr;</a> 
 <a href="lists.html">&larr; Lists</a> </p>
   </main>

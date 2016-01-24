@@ -23,7 +23,6 @@
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
       <li><a href="contributing.html">Contributing</a></li>
-      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
       <h2>language guide</h2>
@@ -57,7 +56,6 @@
       <tr>
         <td><a href="getting-started.html">Getting Started</a></td>
         <td><a href="contributing.html">Contributing</a></td>
-        <td><a href="community.html">Community</a></td>
       </tr>
       <tr>
         <td colspan="2"><h2>language guide</h2></td>
@@ -97,31 +95,39 @@
   </nav>
   <main>
     <h1>Contributing</h1>
-    <p>Wren is under active development and there&rsquo;s lots to do. We&rsquo;d be delighted to 
-have you help! </p>
-<h2>Getting acquainted <a href="#getting-acquainted" name="getting-acquainted" class="header-anchor">#</a></h2>
-<p><a href="https://github.com/munificent/wren/pulls">Pull requests</a> and <a href="https://github.com/munificent/wren/issues">bug reports</a> are always welcome. But, 
-if you&rsquo;d like to dip your toes in the water before diving in, please join 
- <a href="https://groups.google.com/forum/#!forum/wren-lang">the mailing list</a> and say, &ldquo;Hi&rdquo;. There&rsquo;s no strangers to Wren, just 
-friends we haven&rsquo;t met yet. </p>
-<h2>The source <a href="#the-source" name="the-source" class="header-anchor">#</a></h2>
-<p>Wren uses the OSI-approved <a href="http://opensource.org/licenses/MIT">MIT license</a>. I&rsquo;m not sure exactly what that 
-means, but I went with the most permissive license I could find. </p>
-<p>The source is developed <a href="https://github.com/munificent/wren">on GitHub</a>. My hope is that the codebase, 
-tests, and <a href="https://github.com/munificent/wren/tree/master/doc/site">documentation</a> are easy to understand and contribute to. If 
-they aren&rsquo;t, that&rsquo;s a bug. </p>
-<h2>Finding something to hack on <a href="#finding-something-to-hack-on" name="finding-something-to-hack-on" class="header-anchor">#</a></h2>
-<p>Eventually, the <a href="https://github.com/munificent/wren/issues">issue tracker</a> will be populated with a more complete 
-set of changes and features I have in mind. Until then, one easy way to find 
-things that need doing is to look for <code>TODO</code> comments in the code. </p>
-<p>Also, writing code in Wren and seeing what problems you run into is incredibly 
-helpful. Embedding Wren in an application will also exercise lots of corners of 
-the system and highlight problems and missing features. </p>
-<p>Of course, new ideas are also welcome as well! If you have an idea for a 
-significant change or addition, please file a <a href="https://github.com/munificent/wren/labels/proposal">proposal</a> to discuss it 
-before writing lots of code. Wren tries very <em>very</em> hard to be minimal which 
+    <p>Like the bird, Wren&rsquo;s ecosystem is small but full of life. Almost everything is 
+under active development and there&rsquo;s lots to do. We&rsquo;d be delighted to have you 
+help. </p>
+<p>The first thing to do is to join <a href="https://groups.google.com/forum/#!forum/wren-lang">the official mailing list</a> and say, 
+&ldquo;Hi&rdquo;. There are no strangers to Wren, just friends we haven&rsquo;t met yet. </p>
+<h2>Growing the ecosystem <a href="#growing-the-ecosystem" name="growing-the-ecosystem" class="header-anchor">#</a></h2>
+<p>The simplest and often most helpful way to join the Wren party is to be a Wren 
+<em>user</em>. Create an application that embeds Wren. Write a library or a handy 
+utility in Wren. Add syntax highlighting support for Wren to your favorite text 
+editor. Share that stuff and it will help the next Wren user to come along. </p>
+<p>If you do any of the above, let us know by adding it to the wiki. We like to 
+keep track of: </p>
+<ul>
+<li><a href="https://github.com/munificent/wren/wiki/Applications">Applications</a> that host Wren as a scripting language. </li>
+<li><a href="https://github.com/munificent/wren/wiki/Modules">Modules</a> written in Wren that others can use. </li>
+<li><a href="https://github.com/munificent/wren/wiki/Language-Bindings">Language bindings</a> that let you interact with Wren from other programming 
+  languages. </li>
+<li>Other <a href="https://github.com/munificent/wren/wiki/Tools">tools and utilities</a> that make it easier to be a Wren programmer. </li>
+</ul>
+<h2>Contributing to Wren <a href="#contributing-to-wren" name="contributing-to-wren" class="header-anchor">#</a></h2>
+<p>You&rsquo;re also more than welcome to contribute to Wren itself, both the core VM and 
+the command-line interpreter. The source is developed <a href="https://github.com/munificent/wren">on GitHub</a>. Our 
+hope is that the codebase, tests, and <a href="https://github.com/munificent/wren/tree/master/doc/site">documentation</a> are easy to 
+understand and contribute to. If they aren&rsquo;t, that&rsquo;s a bug. </p>
+<h3>Finding something to hack on <a href="#finding-something-to-hack-on" name="finding-something-to-hack-on" class="header-anchor">#</a></h3>
+<p>Between the <a href="https://github.com/munificent/wren/issues">issue tracker</a> and searching for <code>TODO</code> comments in the 
+code, it&rsquo;s pretty easy to find something that needs doing, though we don&rsquo;t 
+always do a good job of writing everything down. </p>
+<p>If nothing there suits your fancy, new ideas are welcome as well! If you have an 
+idea for a significant change or addition, please file a <a href="https://github.com/munificent/wren/labels/proposal">proposal</a> to discuss 
+it before writing lots of code. Wren tries very <em>very</em> hard to be minimal which 
 means often having to say &ldquo;no&rdquo; to language additions, even really cool ones. </p>
-<h2>Hacking on docs <a href="#hacking-on-docs" name="hacking-on-docs" class="header-anchor">#</a></h2>
+<h3>Hacking on docs <a href="#hacking-on-docs" name="hacking-on-docs" class="header-anchor">#</a></h3>
 <p>The <a href="/">documentation</a> is one of the easiest&mdash;and most 
 important!&mdash;parts of Wren to contribute to. The source for the site is 
 written in <a href="http://daringfireball.net/projects/markdown/">Markdown</a> (and a little <a href="http://sass-lang.com/">SASS</a>) and lives under <code>doc/site</code>. A 
@@ -153,7 +159,7 @@ docs when you edit a file: </p>
 </pre></div>
 
 
-<h2>Hacking on the VM <a href="#hacking-on-the-vm" name="hacking-on-the-vm" class="header-anchor">#</a></h2>
+<h3>Hacking on the VM <a href="#hacking-on-the-vm" name="hacking-on-the-vm" class="header-anchor">#</a></h3>
 <p>The basic process is simple: </p>
 <ol>
 <li>
@@ -194,9 +200,10 @@ docs when you edit a file: </p>
    landed smoothly. </p>
 </li>
 </ol>
+<h2>Getting help <a href="#getting-help" name="getting-help" class="header-anchor">#</a></h2>
 <p>If at any point you have questions, feel free to <a href="https://github.com/munificent/wren/issues">file an issue</a> or ask 
 on the <a href="https://groups.google.com/forum/#!forum/wren-lang">mailing list</a>. You can also email me directly (<code>robert</code> at 
-<code>stuffwithstuff.com</code>) if you want something less public. <em>Thank you!</em> </p>
+<code>stuffwithstuff.com</code>) if you want something less public. </p>
   </main>
 </div>
 <footer>

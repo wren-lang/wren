@@ -23,7 +23,6 @@
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
       <li><a href="contributing.html">Contributing</a></li>
-      <li><a href="community.html">Community</a></li>
     </ul>
     <section>
       <h2>language guide</h2>
@@ -57,7 +56,6 @@
       <tr>
         <td><a href="getting-started.html">Getting Started</a></td>
         <td><a href="contributing.html">Contributing</a></td>
-        <td><a href="community.html">Community</a></td>
       </tr>
       <tr>
         <td colspan="2"><h2>language guide</h2></td>
@@ -99,12 +97,12 @@
     <h1>Method Calls</h1>
     <p>Wren is deeply object oriented, so most code consists of invoking methods on 
 objects, usually something like this: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Heyoo!&quot;</span><span class="p">)</span> <span class="output">Heyoo!</span>
 </pre></div>
 
 
 <p>You have a <em>receiver</em> expression (here <code>System</code>) followed by a <code>.</code>, then a name 
-(<code>print</code>) and an argument list in parentheses (<code>("hello")</code>). Multiple arguments 
+(<code>print</code>) and an argument list in parentheses (<code>("Heyoo!")</code>). Multiple arguments 
 are separated by commas: </p>
 <div class="codehilite"><pre><span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&quot;item&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 </pre></div>
@@ -115,7 +113,7 @@ are separated by commas: </p>
 </pre></div>
 
 
-<p>Semantically, all method calls work like this: </p>
+<p>The VM executes a method call like so: </p>
 <ol>
 <li>Evaluate the receiver and arguments from left to right. </li>
 <li>Look up the method on the receiver&rsquo;s <a href="classes.html">class</a>. </li>
