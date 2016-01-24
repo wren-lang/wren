@@ -209,8 +209,8 @@ receiver:
       }
     }
 
-Code like this gets tricky when you there is also a variable outside of the
-class with the same name. Consider:
+Code like this gets tricky when there is also a variable outside of the class
+with the same name. Consider:
 
     :::wren
     var name = "variable"

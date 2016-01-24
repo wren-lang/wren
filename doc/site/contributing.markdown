@@ -1,40 +1,52 @@
 ^title Contributing
 
-Wren is under active development and there's lots to do. We'd be delighted to
-have you help!
+Like the bird, Wren's ecosystem is small but full of life. Almost everything is
+under active development and there's lots to do. We'd be delighted to have you
+help.
 
-## Getting acquainted
+The first thing to do is to join [the official mailing list][list] and say,
+"Hi". There are no strangers to Wren, just friends we haven't met yet.
 
-[Pull requests][pull request] and [bug reports][issue] are always welcome. But,
-if you'd like to dip your toes in the water before diving in, please join
- [the mailing list][list] and say, "Hi". There's no strangers to Wren, just
-friends we haven't met yet.
+## Growing the ecosystem
 
-## The source
+The simplest and often most helpful way to join the Wren party is to be a Wren
+*user*. Create an application that embeds Wren. Write a library or a handy
+utility in Wren. Add syntax highlighting support for Wren to your favorite text
+editor. Share that stuff and it will help the next Wren user to come along.
 
-Wren uses the OSI-approved [MIT license][mit]. I'm not sure exactly what that
-means, but I went with the most permissive license I could find.
+If you do any of the above, let us know by adding it to the wiki. We like to
+keep track of:
 
-The source is developed [on GitHub][github]. My hope is that the codebase,
-tests, and [documentation][docs] are easy to understand and contribute to. If
-they aren't, that's a bug.
+* [Applications][] that host Wren as a scripting language.
+* [Modules][] written in Wren that others can use.
+* [Language bindings][] that let you interact with Wren from other programming
+  languages.
+* Other [tools and utilities][] that make it easier to be a Wren programmer.
 
-## Finding something to hack on
+[applications]: https://github.com/munificent/wren/wiki/Applications
+[modules]: https://github.com/munificent/wren/wiki/Modules
+[language bindings]: https://github.com/munificent/wren/wiki/Language-Bindings
+[tools and utilities]: https://github.com/munificent/wren/wiki/Tools
 
-Eventually, the [issue tracker][issue] will be populated with a more complete
-set of changes and features I have in mind. Until then, one easy way to find
-things that need doing is to look for `TODO` comments in the code.
+## Contributing to Wren
 
-Also, writing code in Wren and seeing what problems you run into is incredibly
-helpful. Embedding Wren in an application will also exercise lots of corners of
-the system and highlight problems and missing features.
+You're also more than welcome to contribute to Wren itself, both the core VM and
+the command-line interpreter. The source is developed [on GitHub][github]. Our
+hope is that the codebase, tests, and [documentation][docs] are easy to
+understand and contribute to. If they aren't, that's a bug.
 
-Of course, new ideas are also welcome as well! If you have an idea for a
-significant change or addition, please file a [proposal][] to discuss it
-before writing lots of code. Wren tries very *very* hard to be minimal which
+### Finding something to hack on
+
+Between the [issue tracker][issue] and searching for `TODO` comments in the
+code, it's pretty easy to find something that needs doing, though we don't
+always do a good job of writing everything down.
+
+If nothing there suits your fancy, new ideas are welcome as well! If you have an
+idea for a significant change or addition, please file a [proposal][] to discuss
+it before writing lots of code. Wren tries very *very* hard to be minimal which
 means often having to say "no" to language additions, even really cool ones.
 
-## Hacking on docs
+### Hacking on docs
 
 The [documentation][] is one of the easiest&mdash;and most
 important!&mdash;parts of Wren to contribute to. The source for the site is
@@ -74,7 +86,7 @@ docs when you edit a file:
     :::sh
     $ make watchdocs
 
-## Hacking on the VM
+### Hacking on the VM
 
 The basic process is simple:
 
@@ -108,9 +120,11 @@ The basic process is simple:
    fun open source project! I'll take it from here and hopefully we'll get it
    landed smoothly.
 
+## Getting help
+
 If at any point you have questions, feel free to [file an issue][issue] or ask
 on the [mailing list][list]. You can also email me directly (`robert` at
-`stuffwithstuff.com`) if you want something less public. *Thank you!*
+`stuffwithstuff.com`) if you want something less public.
 
 [mit]: http://opensource.org/licenses/MIT
 [github]: https://github.com/munificent/wren
