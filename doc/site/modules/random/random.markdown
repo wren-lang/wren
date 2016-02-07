@@ -93,3 +93,23 @@ Returns an integer between `start` and `end`, including `start` but excluding
     System.print(random.int(3, 4))    //> 3
     System.print(random.int(-10, 10)) //> -6
     System.print(random.int(-4, 2))   //> -2
+
+### **shuffle**(list)
+
+Randomly shuffles the elements in `list`. The items are randomly re-ordered in
+place.
+
+    :::wren
+    var random = Random.new(12345)
+    var list = (1..5).toList
+    random.shuffle(list)
+    System.print(list) //> [3, 2, 4, 1, 5]
+
+Uses the Fisher-Yates algorithm to ensure that all permutations are chosen
+with equal probability.
+
+Keep in mind that a list with even a modestly large number of elements has an
+astronomically large number of permutations. For example, there are about 10^74
+ways a deck of 56 cards can be shuffled. The random number generator's internal
+state is not that large, which means there are many permutations it will never
+generate.

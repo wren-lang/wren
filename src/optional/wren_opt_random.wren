@@ -46,4 +46,16 @@ foreign class Random {
   foreign int()
   int(end) { (float() * end).floor }
   int(start, end) { (float() * (end - start)).floor + start }
+
+  shuffle(list) {
+    if (list.isEmpty) return
+
+    // Fisher-Yates shuffle.
+    for (i in 0...list.count - 1) {
+      var from = int(i, list.count)
+      var temp = list[from]
+      list[from] = list[i]
+      list[i] = temp
+    }
+  }
 }
