@@ -44,13 +44,6 @@ foreign class File {
     return Scheduler.runNextScheduled_()
   }
 
-  static stat(path) {
-    if (!(path is String)) Fiber.abort("Path must be a string.")
-
-    statPath_(path, Fiber.current)
-    return Stat.new_(Scheduler.runNextScheduled_())
-  }
-
   construct new_(fd) {}
 
   close() {
@@ -87,7 +80,6 @@ foreign class File {
 
   foreign static open_(path, fiber)
   foreign static sizePath_(path, fiber)
-  foreign static statPath_(path, fiber)
 
   foreign close_(fiber)
   foreign readBytes_(count, start, fiber)
@@ -97,6 +89,13 @@ foreign class File {
 class Stat {
   construct new_(fields) {
     _fields = fields
+  }
+
+  static path(path) {
+    if (!(path is String)) Fiber.abort("Path must be a string.")
+
+    path_(path, Fiber.current)
+    return Stat.new_(Scheduler.runNextScheduled_())
   }
 
   device { _fields[0] }
@@ -109,6 +108,8 @@ class Stat {
   size { _fields[7] }
   blockSize { _fields[8] }
   blockCount { _fields[9] }
+
+  foreign static path_(path, fiber)
 }
 
 class Stdin {

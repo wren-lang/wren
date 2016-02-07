@@ -1,8 +1,12 @@
 ^title Stat Class
 
-Contains the data returned by [File.stat()][stat].
+A data structure describing the low-level details of a file system entry.
 
-[stat]: file.html#file.stat(path)
+## Static Methods
+
+### Stat.**path**(path)
+
+"Stats" the file or directory at `path`.
 
 ## Methods
 

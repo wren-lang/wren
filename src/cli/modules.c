@@ -13,12 +13,12 @@ extern void fileAllocate(WrenVM* vm);
 extern void fileFinalize(void* data);
 extern void fileOpen(WrenVM* vm);
 extern void fileSizePath(WrenVM* vm);
-extern void fileStatPath(WrenVM* vm);
 extern void fileClose(WrenVM* vm);
 extern void fileDescriptor(WrenVM* vm);
 extern void fileReadBytes(WrenVM* vm);
 extern void fileSize(WrenVM* vm);
 extern void processAllArguments(WrenVM* vm);
+extern void statPath(WrenVM* vm);
 extern void stdinReadStart(WrenVM* vm);
 extern void stdinReadStop(WrenVM* vm);
 extern void schedulerCaptureMethods(WrenVM* vm);
@@ -39,7 +39,7 @@ extern void timerStartTimer(WrenVM* vm);
 // If you add a new class to the largest module below, make sure to bump this.
 // Note that it also includes an extra slot for the sentinel value indicating
 // the end of the list.
-#define MAX_CLASSES_PER_MODULE 4
+#define MAX_CLASSES_PER_MODULE 5
 
 // Describes one foreign method in a class.
 typedef struct
@@ -100,11 +100,13 @@ static ModuleRegistry modules[] =
       FINALIZER(fileFinalize)
       STATIC_METHOD("open_(_,_)", fileOpen)
       STATIC_METHOD("sizePath_(_,_)", fileSizePath)
-      STATIC_METHOD("statPath_(_,_)", fileStatPath)
       METHOD("close_(_)", fileClose)
       METHOD("descriptor", fileDescriptor)
       METHOD("readBytes_(_,_,_)", fileReadBytes)
       METHOD("size_(_)", fileSize)
+    END_CLASS
+    CLASS(Stat)
+      STATIC_METHOD("path_(_,_)", statPath)
     END_CLASS
     CLASS(Stdin)
       STATIC_METHOD("readStart_()", stdinReadStart)
