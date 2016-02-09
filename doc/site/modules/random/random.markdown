@@ -94,6 +94,21 @@ Returns an integer between `start` and `end`, including `start` but excluding
     System.print(random.int(-10, 10)) //> -6
     System.print(random.int(-4, 2))   //> -2
 
+### **sample**(list)
+
+Selects a random element from `list`.
+
+### **sample**(list, count)
+
+Samples `count` randomly chosen unique elements from `list`.
+
+This uses "random without replacement" sampling&mdash;no index in the list will
+be selected more than once.
+
+Returns a new list of the selected elements.
+
+It is an error if `count` is greater than the number of elements in the list.
+
 ### **shuffle**(list)
 
 Randomly shuffles the elements in `list`. The items are randomly re-ordered in
