@@ -77,16 +77,9 @@ VM, waiting to run some code!
 You can tell the VM to execute a string of Wren source code like so:
 
     :::c
-    WrenInterpretResult result = wrenInterpret(vm,
-        "<where>",
-        "System.print(\"Hi!\")");
+    WrenInterpretResult result = wrenInterpret(vm, "System.print(\"Hi!\")");
 
-The first string parameter is a "source path". It's just an arbitrary string
-that describes where the source code is from. It's what shows up in stack traces
-if a runtime error occurs in the code. It can be whatever you want as long as
-it's not `NULL`.
-
-The other string is the chunk of code to execute&mdash;a series of one or more
+The first string is the chunk of code to execute&mdash;a series of one or more
 statements separated by newlines. Wren runs this code in a special "main"
 module. Each time you call this, the code is run in the same module. This way,
 top-level names defined in one call can be accessed in later ones.
