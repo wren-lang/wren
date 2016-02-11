@@ -20,7 +20,7 @@ The value of &pi;.
 The absolute value of the number.
 
     :::wren
-    System.print(-123.abs) //> 123
+    System.print( (-123).abs ) //> 123
 
 ### **acos**
 
