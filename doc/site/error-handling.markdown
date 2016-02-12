@@ -49,7 +49,9 @@ not found" one. If you call a method on an object and its class (and all of its
 superclasses) don't define that method, there's nothing Wren can do:
 
     :::wren
-    class Foo {}
+    class Foo {
+      construct new() {}
+    }
 
     var foo = Foo.new()
     foo.someRandomMethod
