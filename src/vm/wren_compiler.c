@@ -3110,26 +3110,16 @@ static void createConstructor(Compiler* compiler, Signature* signature,
 
 // Loads the enclosing class onto the stack and then binds the function already
 // on the stack as a method on that class.
-static void defineMethod(Compiler* compiler, int classSlot, bool isStatic,
-                         int methodSymbol)
+static void defineMethod(Compiler* compiler, Variable classVariable,
+                         bool isStatic, int methodSymbol)
 {
   // Load the class. We have to do this for each method because we can't
   // keep the class on top of the stack. If there are static fields, they
   // will be locals above the initial variable slot for the class on the
   // stack. To skip past those, we just load the class each time right before
   // defining a method.
-  if (compiler->scopeDepth == 0)
-  {
-    // The class is at the top level (scope depth is 0, not -1 to account for
-    // the static variable scope surrounding the class itself), so load it from
-    // there.
-    emitShortArg(compiler, CODE_LOAD_MODULE_VAR, classSlot);
-  }
-  else
-  {
-    loadLocal(compiler, classSlot);
-  }
-  
+  loadVariable(compiler, classVariable);
+
   // Define the method.
   Code instruction = isStatic ? CODE_METHOD_STATIC : CODE_METHOD_INSTANCE;
   emitShortArg(compiler, instruction, methodSymbol);
@@ -3139,7 +3129,7 @@ static void defineMethod(Compiler* compiler, int classSlot, bool isStatic,
 //
 // Returns `true` if it compiled successfully, or `false` if the method couldn't
 // be parsed.
-static bool method(Compiler* compiler, int classSlot)
+static bool method(Compiler* compiler, Variable classVariable)
 {
   // TODO: What about foreign constructors?
   bool isForeign = match(compiler, TOKEN_FOREIGN);
@@ -3194,7 +3184,7 @@ static bool method(Compiler* compiler, int classSlot)
   // Define the method. For a constructor, this defines the instance
   // initializer method.
   int methodSymbol = signatureSymbol(compiler, &signature);
-  defineMethod(compiler, classSlot, compiler->enclosingClass->inStatic,
+  defineMethod(compiler, classVariable, compiler->enclosingClass->inStatic,
                methodSymbol);
 
   if (signature.type == SIG_INITIALIZER)
@@ -3204,7 +3194,7 @@ static bool method(Compiler* compiler, int classSlot)
     int constructorSymbol = signatureSymbol(compiler, &signature);
     
     createConstructor(compiler, &signature, methodSymbol);
-    defineMethod(compiler, classSlot, true, constructorSymbol);
+    defineMethod(compiler, classVariable, true, constructorSymbol);
   }
 
   return true;
@@ -3215,8 +3205,10 @@ static bool method(Compiler* compiler, int classSlot)
 static void classDefinition(Compiler* compiler, bool isForeign)
 {
   // Create a variable to store the class in.
-  int slot = declareNamedVariable(compiler);
-
+  Variable classVariable;
+  classVariable.scope = compiler->scopeDepth == -1 ? SCOPE_MODULE : SCOPE_LOCAL;
+  classVariable.index = declareNamedVariable(compiler);
+  
   // Make a string constant for the name.
   emitConstant(compiler, wrenNewString(compiler->parser->vm,
       compiler->parser->previous.start, compiler->parser->previous.length));
@@ -3246,7 +3238,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   }
 
   // Store it in its name.
-  defineVariable(compiler, slot);
+  defineVariable(compiler, classVariable.index);
 
   // Push a local variable scope. Static fields in a class body are hoisted out
   // into local variables declared in this scope. Methods that use them will
@@ -3261,7 +3253,6 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
   // into account.
   wrenSymbolTableInit(&classCompiler.fields);
-
   compiler->enclosingClass = &classCompiler;
 
   // Compile the method definitions.
@@ -3270,7 +3261,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
   while (!match(compiler, TOKEN_RIGHT_BRACE))
   {
-    if (!method(compiler, slot)) break;
+    if (!method(compiler, classVariable)) break;
     
     // Don't require a newline after the last definition.
     if (match(compiler, TOKEN_RIGHT_BRACE)) break;
@@ -3286,9 +3277,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   }
   
   wrenSymbolTableClear(compiler->parser->vm, &classCompiler.fields);
-
   compiler->enclosingClass = NULL;
-
   popScope(compiler);
 }
 
