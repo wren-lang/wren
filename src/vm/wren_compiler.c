@@ -1236,7 +1236,7 @@ static int declareVariable(Compiler* compiler, Token* token)
     if (local->depth < compiler->scopeDepth) break;
 
     if (local->length == token->length &&
-        strncmp(local->name, token->start, token->length) == 0)
+        memcmp(local->name, token->start, token->length) == 0)
     {
       error(compiler, "Variable is already declared in this scope.");
       return i;
@@ -1334,7 +1334,7 @@ static int resolveLocal(Compiler* compiler, const char* name, int length)
   for (int i = compiler->numLocals - 1; i >= 0; i--)
   {
     if (compiler->locals[i].length == length &&
-        strncmp(name, compiler->locals[i].name, length) == 0)
+        memcmp(name, compiler->locals[i].name, length) == 0)
     {
       return i;
     }
