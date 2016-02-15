@@ -122,7 +122,7 @@ class Test:
       timed_out[0] = True
       p.kill()
 
-    timer = Timer(5, kill_process, [proc])
+    timer = Timer(2, kill_process, [proc])
 
     try:
       timer.start()
@@ -361,6 +361,9 @@ def run_example(path):
   # Don't run examples that require user input.
   if "animals" in path: return
   if "guess_number" in path: return
+
+  # This one is annoyingly slow.
+  if "skynet" in path: return
 
   run_script(WREN_APP, path, "example")
 
