@@ -122,7 +122,7 @@ class Test:
       timed_out[0] = True
       p.kill()
 
-    timer = Timer(2, kill_process, [proc])
+    timer = Timer(5, kill_process, [proc])
 
     try:
       timer.start()
