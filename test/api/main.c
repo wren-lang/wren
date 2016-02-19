@@ -63,7 +63,15 @@ static WrenForeignClassMethods bindForeignClass(
   if (strcmp(module, "main") != 0) return methods;
 
   foreignClassBindClass(className, &methods);
-
+  if (methods.allocate != NULL) return methods;
+  
+  slotsBindClass(className, &methods);
+  if (methods.allocate != NULL) return methods;
+  
+  
+  fprintf(stderr,
+          "Unknown foreign class '%s' for test '%s'\n", className, testName);
+  exit(1);
   return methods;
 }
 

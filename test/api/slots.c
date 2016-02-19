@@ -74,6 +74,20 @@ static void setSlots(WrenVM* vm)
   }
 }
 
+static void slotTypes(WrenVM* vm)
+{
+  bool result =
+      wrenGetSlotType(vm, 1) == WREN_TYPE_BOOL &&
+      wrenGetSlotType(vm, 2) == WREN_TYPE_FOREIGN &&
+      wrenGetSlotType(vm, 3) == WREN_TYPE_LIST &&
+      wrenGetSlotType(vm, 4) == WREN_TYPE_NULL &&
+      wrenGetSlotType(vm, 5) == WREN_TYPE_NUM &&
+      wrenGetSlotType(vm, 6) == WREN_TYPE_STRING &&
+      wrenGetSlotType(vm, 7) == WREN_TYPE_UNKNOWN;
+  
+  wrenSetSlotBool(vm, 0, result);
+}
+
 static void ensure(WrenVM* vm)
 {
   int before = wrenGetSlotCount(vm);
@@ -134,13 +148,24 @@ static void ensureOutsideForeign(WrenVM* vm)
   wrenSetSlotString(vm, 0, result);
 }
 
+static void foreignClassAllocate(WrenVM* vm)
+{
+  wrenSetSlotNewForeign(vm, 0, 0, 4);
+}
+
 WrenForeignMethodFn slotsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Slots.noSet") == 0) return noSet;
   if (strcmp(signature, "static Slots.getSlots(_,_,_,_,_)") == 0) return getSlots;
   if (strcmp(signature, "static Slots.setSlots(_,_,_,_)") == 0) return setSlots;
+  if (strcmp(signature, "static Slots.slotTypes(_,_,_,_,_,_,_)") == 0) return slotTypes;
   if (strcmp(signature, "static Slots.ensure()") == 0) return ensure;
   if (strcmp(signature, "static Slots.ensureOutsideForeign()") == 0) return ensureOutsideForeign;
 
   return NULL;
+}
+
+void slotsBindClass(const char* className, WrenForeignClassMethods* methods)
+{
+  methods->allocate = foreignClassAllocate;
 }

@@ -162,11 +162,29 @@ typedef struct
   int heapGrowthPercent;
 } WrenConfiguration;
 
-typedef enum {
+typedef enum
+{
   WREN_RESULT_SUCCESS,
   WREN_RESULT_COMPILE_ERROR,
   WREN_RESULT_RUNTIME_ERROR
 } WrenInterpretResult;
+
+// The type of an object stored in a slot.
+//
+// This is not necessarily the object's *class*, but instead its low level
+// representation type.
+typedef enum
+{
+  WREN_TYPE_BOOL,
+  WREN_TYPE_NUM,
+  WREN_TYPE_FOREIGN,
+  WREN_TYPE_LIST,
+  WREN_TYPE_NULL,
+  WREN_TYPE_STRING,
+  
+  // The object is of a type that isn't accessible by the C API.
+  WREN_TYPE_UNKNOWN
+} WrenType;
 
 // Initializes [configuration] with all of its default values.
 //
@@ -262,6 +280,9 @@ int wrenGetSlotCount(WrenVM* vm);
 //
 // It is an error to call this from a finalizer.
 void wrenEnsureSlots(WrenVM* vm, int numSlots);
+
+// Gets the type of the object in [slot].
+WrenType wrenGetSlotType(WrenVM* vm, int slot);
 
 // Reads a boolean value from [slot].
 //

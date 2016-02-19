@@ -1512,6 +1512,20 @@ static void validateApiSlot(WrenVM* vm, int slot)
   ASSERT(slot < wrenGetSlotCount(vm), "Not that many slots.");
 }
 
+// Gets the type of the object in [slot].
+WrenType wrenGetSlotType(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+  if (IS_BOOL(vm->apiStack[slot])) return WREN_TYPE_BOOL;
+  if (IS_NUM(vm->apiStack[slot])) return WREN_TYPE_NUM;
+  if (IS_FOREIGN(vm->apiStack[slot])) return WREN_TYPE_FOREIGN;
+  if (IS_LIST(vm->apiStack[slot])) return WREN_TYPE_LIST;
+  if (IS_NULL(vm->apiStack[slot])) return WREN_TYPE_NULL;
+  if (IS_STRING(vm->apiStack[slot])) return WREN_TYPE_STRING;
+  
+  return WREN_TYPE_UNKNOWN;
+}
+
 bool wrenGetSlotBool(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
