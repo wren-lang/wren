@@ -35,6 +35,10 @@
 // two-byte argument.
 #define MAX_CONSTANTS (1 << 16)
 
+// The maximum distance a CODE_JUMP or CODE_JUMP_IF instruction can move the
+// instruction pointer.
+#define MAX_JUMP (1 << 16)
+
 // The maximum depth that interpolation can nest. For example, this string has
 // three levels:
 //
@@ -1589,7 +1593,8 @@ static void patchJump(Compiler* compiler, int offset)
 {
   // -2 to adjust for the bytecode for the jump offset itself.
   int jump = compiler->bytecode.count - offset - 2;
-  // TODO: Check for overflow.
+  if (jump > MAX_JUMP) error(compiler, "Too much code to jump over.");
+
   compiler->bytecode.data[offset] = (jump >> 8) & 0xff;
   compiler->bytecode.data[offset + 1] = jump & 0xff;
 }
@@ -2848,8 +2853,9 @@ static void loopBody(Compiler* compiler)
 // we know where the end of the loop is.
 static void endLoop(Compiler* compiler)
 {
+  // We don't check for overflow here since the forward jump over the loop body
+  // will report an error for the same problem.
   int loopOffset = compiler->bytecode.count - compiler->loop->start + 2;
-  // TODO: Check for overflow.
   emitShortArg(compiler, CODE_LOOP, loopOffset);
 
   patchJump(compiler, compiler->loop->exitJump);
