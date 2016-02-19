@@ -13,9 +13,17 @@ release:
 debug:
 	@ $(MAKE) -f util/wren.mk MODE=debug
 
-# A release build of just the VM.
+# A release build of just the VM, both shared and static libraries.
 vm:
 	@ $(MAKE) -f util/wren.mk vm
+
+# A release build of the shared library for the VM.
+shared:
+	@ $(MAKE) -f util/wren.mk shared
+
+# A release build of the shared library for the VM.
+static:
+	@ $(MAKE) -f util/wren.mk static
 
 # Build all configurations.
 all: debug release
