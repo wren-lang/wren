@@ -10,10 +10,25 @@ a file descriptor.
 
 ## Static Methods
 
+### File.**create**(path, fn)
+
+Opens the file at `path` for writing and passes it to `fn`. If there is already
+a file at that path, it is truncated. After the function returns, the file is
+automatically closed.
+
+    :::wren
+    File.create("numbers.txt") {|file|
+      file.writeBytes("one two three")
+    }
+
+### File.**delete**(path)
+
+Deletes the file at `path`.
+
 ### File.**open**(path, fn)
 
-Opens the file at `path` and passes it to `fn`. After the function returns, the
-file is automatically closed.
+Opens the file at `path` for reading and passes it to `fn`. After the function
+returns, the file is automatically closed.
 
     :::wren
     File.open("words.txt") {|file|
@@ -37,9 +52,20 @@ Returns the size in bytes of the contents of the file at `path`.
 
 ## Constructors
 
+### File.**create**(path)
+
+Opens the file at `path` for writing. If there is already a file at that path,
+it is truncated.
+
+    :::wren
+    var file = File.create("colors.txt")
+    file.writeBytes("chartreuse lime teal")
+    file.close()
+
 ### File.**open**(path)
 
-Opens the file at `path` for reading.
+Opens the file at `path` for reading. You are responsible for closing it when
+done with it.
 
 ## Methods
 
@@ -79,3 +105,13 @@ the file.
     File.open("example.txt") {|file|
       System.print(file.readBytes(6, 2)) //> am a f
     }
+
+### **writeBytes**(bytes)
+
+Writes the raw bytes of the string `bytes` to the end of the file.
+
+### **writeBytes**(bytes, offset)
+
+Writes the raw bytes of the string `bytes` to the to the file, starting at
+`offset`. Any overlapping bytes already in the file at the offset are
+overwritten.

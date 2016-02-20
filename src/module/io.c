@@ -124,7 +124,6 @@ static void directoryListCallback(uv_fs_t* request)
 void directoryList(WrenVM* vm)
 {
   const char* path = wrenGetSlotString(vm, 1);
-  
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
   
   // TODO: Check return.
@@ -151,6 +150,21 @@ void fileFinalize(void* data)
   uv_fs_req_cleanup(&request);
 }
 
+static void fileDeleteCallback(uv_fs_t* request)
+{
+  if (handleRequestError(request)) return;
+  schedulerResume(freeRequest(request), false);
+}
+
+void fileDelete(WrenVM* vm)
+{
+  const char* path = wrenGetSlotString(vm, 1);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
+  
+  // TODO: Check return.
+  uv_fs_unlink(getLoop(), request, path, fileDeleteCallback);
+}
+
 static void fileOpenCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
@@ -164,10 +178,12 @@ static void fileOpenCallback(uv_fs_t* request)
 void fileOpen(WrenVM* vm)
 {
   const char* path = wrenGetSlotString(vm, 1);
-  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
+  int flags = (int)wrenGetSlotDouble(vm, 2);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 3));
 
-  // TODO: Allow controlling flags and modes.
-  uv_fs_open(getLoop(), request, path, O_RDONLY, 0, fileOpenCallback);
+  // TODO: Allow controlling access.
+  uv_fs_open(getLoop(), request, path, flags, S_IRUSR | S_IWUSR,
+             fileOpenCallback);
 }
 
 // Called by libuv when the stat call for size completes.
@@ -261,12 +277,41 @@ void fileReadBytes(WrenVM* vm)
 
 void fileSize(WrenVM* vm)
 {
+  int fd = *(int*)wrenGetSlotForeign(vm, 0);
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 1));
 
-  int fd = *(int*)wrenGetSlotForeign(vm, 0);
-  // TODO: Assert fd != -1.
-
   uv_fs_fstat(getLoop(), request, fd, fileSizeCallback);
+}
+
+static void fileWriteBytesCallback(uv_fs_t* request)
+{
+  if (handleRequestError(request)) return;
+ 
+  FileRequestData* data = (FileRequestData*)request->data;
+  free(data->buffer.base);
+
+  schedulerResume(freeRequest(request), false);
+}
+
+void fileWriteBytes(WrenVM* vm)
+{
+  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  int length;
+  const char* bytes = wrenGetSlotBytes(vm, 1, &length);
+  size_t offset = (size_t)wrenGetSlotDouble(vm, 2);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 3));
+  
+  FileRequestData* data = (FileRequestData*)request->data;
+
+  data->buffer.len = length;
+  // TODO: Instead of copying, just create a WrenValue for the byte string and
+  // hold on to it in the request until the write is done.
+  // TODO: Handle allocation failure.
+  data->buffer.base = (char*)malloc(length);
+  memcpy(data->buffer.base, bytes, length);
+
+  uv_fs_write(getLoop(), request, fd, &data->buffer, 1, offset,
+              fileWriteBytesCallback);
 }
 
 // Called by libuv when the stat call completes.

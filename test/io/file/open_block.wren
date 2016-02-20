@@ -14,3 +14,4 @@ System.print(stash.isOpen) // expect: false
 System.print(File.open("test/io/file/open_block.wren") {|file|}) // expect: null
 
 // TODO: Test a fiber aborting inside the block.
+// TODO: Test return value.

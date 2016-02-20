@@ -1,9 +1,13 @@
 import "scheduler" for Scheduler
 
 class Directory {
-  static list(path) {
+  // TODO: Copied from File. Figure out good way to share this.
+  static ensurePath_(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
+  }
 
+  static list(path) {
+    ensurePath_(path)
     list_(path, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
@@ -12,16 +16,42 @@ class Directory {
 }
 
 foreign class File {
-  static open(path) {
-    if (!(path is String)) Fiber.abort("Path must be a string.")
+  static create(path) {
+    return openWithFlags(path,
+        FileFlags.writeOnly |
+        FileFlags.create |
+        FileFlags.truncate)
+  }
 
-    open_(path, Fiber.current)
+  static create(path, fn) {
+    return openWithFlags(path,
+        FileFlags.writeOnly |
+        FileFlags.create |
+        FileFlags.truncate, fn)
+  }
+
+  static delete(path) {
+    File.ensurePath_(path)
+    delete_(path, Fiber.current)
+    return Scheduler.runNextScheduled_()
+  }
+
+  static open(path) { openWithFlags(path, FileFlags.readOnly) }
+
+  static open(path, fn) { openWithFlags(path, FileFlags.readOnly, fn) }
+
+  // TODO: Add named parameters and then call this "open(_,flags:_)"?
+  // TODO: Test.
+  static openWithFlags(path, flags) {
+    File.ensurePath_(path)
+    File.ensureInt_(flags, "Flags")
+    open_(path, flags, Fiber.current)
     var fd = Scheduler.runNextScheduled_()
     return new_(fd)
   }
 
-  static open(path, fn) {
-    var file = open(path)
+  static openWithFlags(path, flags, fn) {
+    var file = openWithFlags(path, flags)
     var fiber = Fiber.new { fn.call(file) }
 
     // Poor man's finally. Can we make this more elegant?
@@ -38,8 +68,7 @@ foreign class File {
   }
 
   static size(path) {
-    if (!(path is String)) Fiber.abort("Path must be a string.")
-
+    File.ensurePath_(path)
     sizePath_(path, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
@@ -56,8 +85,7 @@ foreign class File {
   isOpen { descriptor != -1 }
 
   size {
-    if (!isOpen) Fiber.abort("File is not open.")
-
+    ensureOpen_()
     size_(Fiber.current)
     return Scheduler.runNextScheduled_()
   }
@@ -65,25 +93,57 @@ foreign class File {
   readBytes(count) { readBytes(count, 0) }
 
   readBytes(count, offset) {
-    if (!isOpen) Fiber.abort("File is not open.")
-    if (!(count is Num)) Fiber.abort("Count must be an integer.")
-    if (!count.isInteger) Fiber.abort("Count must be an integer.")
-    if (count < 0) Fiber.abort("Count cannot be negative.")
-
-    if (!(offset is Num)) Fiber.abort("Offset must be an integer.")
-    if (!offset.isInteger) Fiber.abort("Offset must be an integer.")
-    if (offset < 0) Fiber.abort("Offset cannot be negative.")
+    ensureOpen_()
+    File.ensureInt_(count, "Count")
+    File.ensureInt_(offset, "Offset")
 
     readBytes_(count, offset, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
-  foreign static open_(path, fiber)
+  writeBytes(bytes) { writeBytes(bytes, size) }
+
+  writeBytes(bytes, offset) {
+    ensureOpen_()
+    if (!(bytes is String)) Fiber.abort("Bytes must be a string.")
+    File.ensureInt_(offset, "Offset")
+
+    writeBytes_(bytes, offset, Fiber.current)
+    return Scheduler.runNextScheduled_()
+  }
+
+  ensureOpen_() {
+    if (!isOpen) Fiber.abort("File is not open.")
+  }
+
+  static ensurePath_(path) {
+    if (!(path is String)) Fiber.abort("Path must be a string.")
+  }
+
+  static ensureInt_(value, name) {
+    if (!(value is Num)) Fiber.abort("%(name) must be an integer.")
+    if (!value.isInteger) Fiber.abort("%(name) must be an integer.")
+    if (value < 0) Fiber.abort("%(name) cannot be negative.")
+  }
+
+  foreign static delete_(path, fiber)
+  foreign static open_(path, flags, fiber)
   foreign static sizePath_(path, fiber)
 
   foreign close_(fiber)
-  foreign readBytes_(count, start, fiber)
+  foreign readBytes_(count, offset, fiber)
   foreign size_(fiber)
+  foreign writeBytes_(bytes, offset, fiber)
+}
+
+class FileFlags {
+  static readOnly  { 0x0000 }
+  static writeOnly { 0x0001 }
+  static readWrite { 0x0002 }
+  static sync      { 0x0080 }
+  static create    { 0x0200 }
+  static truncate  { 0x0400 }
+  static exclusive { 0x0400 }
 }
 
 class Stat {
