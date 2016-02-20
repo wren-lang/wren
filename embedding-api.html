@@ -164,17 +164,11 @@ can discard the <code>WrenConfiguration</code> struct you filled in. Now you hav
 VM, waiting to run some code! </p>
 <h2>Executing Wren code <a href="#executing-wren-code" name="executing-wren-code" class="header-anchor">#</a></h2>
 <p>You can tell the VM to execute a string of Wren source code like so: </p>
-<div class="codehilite"><pre><span class="n">WrenInterpretResult</span> <span class="n">result</span> <span class="o">=</span> <span class="n">wrenInterpret</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> 
-    <span class="s">&quot;&lt;where&gt;&quot;</span><span class="p">,</span> 
-    <span class="s">&quot;System.print(</span><span class="se">\&quot;</span><span class="s">Hi!</span><span class="se">\&quot;</span><span class="s">)&quot;</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="n">WrenInterpretResult</span> <span class="n">result</span> <span class="o">=</span> <span class="n">wrenInterpret</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;System.print(</span><span class="se">\&quot;</span><span class="s">Hi!</span><span class="se">\&quot;</span><span class="s">)&quot;</span><span class="p">);</span>
 </pre></div>
 
 
-<p>The first string parameter is a &ldquo;source path&rdquo;. It&rsquo;s just an arbitrary string 
-that describes where the source code is from. It&rsquo;s what shows up in stack traces 
-if a runtime error occurs in the code. It can be whatever you want as long as 
-it&rsquo;s not <code>NULL</code>. </p>
-<p>The other string is the chunk of code to execute&mdash;a series of one or more 
+<p>The first string is the chunk of code to execute&mdash;a series of one or more 
 statements separated by newlines. Wren runs this code in a special &ldquo;main&rdquo; 
 module. Each time you call this, the code is run in the same module. This way, 
 top-level names defined in one call can be accessed in later ones. </p>

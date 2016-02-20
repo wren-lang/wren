@@ -29,6 +29,8 @@
       <ul>
         <li><a href="directory.html">Directory</a></li>
         <li><a href="file.html">File</a></li>
+        <li><a href="file-flags.html">FileFlags</a></li>
+        <li><a href="stat.html">Stat</a></li>
         <li><a href="stdin.html">Stdin</a></li>
       </ul>
     </section>
@@ -45,11 +47,14 @@
       <tr>
         <td>
           <ul>
+            <li><a href="directory.html">Directory</a></li>
             <li><a href="file.html">File</a></li>
+            <li><a href="file-flags.html">FileFlags</a></li>
           </ul>
         </td>
         <td>
           <ul>
+            <li><a href="stat.html">Stat</a></li>
             <li><a href="stdin.html">Stdin</a></li>
           </ul>
         </td>
@@ -58,7 +63,10 @@
   </nav>
   <main>
     <h1>Stat Class</h1>
-    <p>Contains the data returned by <a href="file.html#file.stat(path)">File.stat()</a>. </p>
+    <p>A data structure describing the low-level details of a file system entry. </p>
+<h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
+<h3>Stat.<strong>path</strong>(path) <a href="#stat.path(path)" name="stat.path(path)" class="header-anchor">#</a></h3>
+<p>&ldquo;Stats&rdquo; the file or directory at <code>path</code>. </p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>device</strong> <a href="#device" name="device" class="header-anchor">#</a></h3>
 <p>The ID of the device containing the entry. </p>

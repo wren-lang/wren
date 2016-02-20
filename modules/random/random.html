@@ -131,6 +131,33 @@ excluding <code>end</code>. </p>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> <span class="output">-6</span>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>   <span class="output">-2</span>
 </pre></div>
+
+
+<h3><strong>sample</strong>(list) <a href="#sample(list)" name="sample(list)" class="header-anchor">#</a></h3>
+<p>Selects a random element from <code>list</code>. </p>
+<h3><strong>sample</strong>(list, count) <a href="#sample(list,-count)" name="sample(list,-count)" class="header-anchor">#</a></h3>
+<p>Samples <code>count</code> randomly chosen unique elements from <code>list</code>. </p>
+<p>This uses &ldquo;random without replacement&rdquo; sampling&mdash;no index in the list will 
+be selected more than once. </p>
+<p>Returns a new list of the selected elements. </p>
+<p>It is an error if <code>count</code> is greater than the number of elements in the list. </p>
+<h3><strong>shuffle</strong>(list) <a href="#shuffle(list)" name="shuffle(list)" class="header-anchor">#</a></h3>
+<p>Randomly shuffles the elements in <code>list</code>. The items are randomly re-ordered in 
+place. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">random</span> <span class="o">=</span> <span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span> 
+<span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">toList</span> 
+<span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="output">[3, 2, 4, 1, 5]</span>
+</pre></div>
+
+
+<p>Uses the Fisher-Yates algorithm to ensure that all permutations are chosen 
+with equal probability. </p>
+<p>Keep in mind that a list with even a modestly large number of elements has an 
+astronomically large number of permutations. For example, there are about 10^74 
+ways a deck of 56 cards can be shuffled. The random number generator&rsquo;s internal 
+state is not that large, which means there are many permutations it will never 
+generate. </p>
   </main>
 </div>
 <footer>

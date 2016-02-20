@@ -29,6 +29,8 @@
       <ul>
         <li><a href="directory.html">Directory</a></li>
         <li><a href="file.html">File</a></li>
+        <li><a href="file-flags.html">FileFlags</a></li>
+        <li><a href="stat.html">Stat</a></li>
         <li><a href="stdin.html">Stdin</a></li>
       </ul>
     </section>
@@ -45,11 +47,14 @@
       <tr>
         <td>
           <ul>
+            <li><a href="directory.html">Directory</a></li>
             <li><a href="file.html">File</a></li>
+            <li><a href="file-flags.html">FileFlags</a></li>
           </ul>
         </td>
         <td>
           <ul>
+            <li><a href="stat.html">Stat</a></li>
             <li><a href="stdin.html">Stdin</a></li>
           </ul>
         </td>
@@ -65,9 +70,21 @@ If you don&rsquo;t, the GC will close it when the file is no longer used and get
 finalized, but that may take a while. In the meantime, leaving it open wastes 
 a file descriptor. </p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
+<h3>File.<strong>create</strong>(path, fn) <a href="#file.create(path,-fn)" name="file.create(path,-fn)" class="header-anchor">#</a></h3>
+<p>Opens the file at <code>path</code> for writing and passes it to <code>fn</code>. If there is already 
+a file at that path, it is truncated. After the function returns, the file is 
+automatically closed. </p>
+<div class="codehilite"><pre><span class="vg">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;numbers.txt&quot;</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">file</span><span class="o">|</span> 
+  <span class="n">file</span><span class="o">.</span><span class="n">writeBytes</span><span class="p">(</span><span class="s">&quot;one two three&quot;</span><span class="p">)</span> 
+<span class="p">}</span>
+</pre></div>
+
+
+<h3>File.<strong>delete</strong>(path) <a href="#file.delete(path)" name="file.delete(path)" class="header-anchor">#</a></h3>
+<p>Deletes the file at <code>path</code>. </p>
 <h3>File.<strong>open</strong>(path, fn) <a href="#file.open(path,-fn)" name="file.open(path,-fn)" class="header-anchor">#</a></h3>
-<p>Opens the file at <code>path</code> and passes it to <code>fn</code>. After the function returns, the 
-file is automatically closed. </p>
+<p>Opens the file at <code>path</code> for reading and passes it to <code>fn</code>. After the function 
+returns, the file is automatically closed. </p>
 <div class="codehilite"><pre><span class="vg">File</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;words.txt&quot;</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">file</span><span class="o">|</span> 
   <span class="n">file</span><span class="o">.</span><span class="n">readBytes</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> 
 <span class="p">}</span>
@@ -85,12 +102,19 @@ string will be a UTF-8 string. Otherwise, it will be a string of bytes in
 whatever encoding the file uses. </p>
 <h3>File.<strong>size</strong>(path) <a href="#file.size(path)" name="file.size(path)" class="header-anchor">#</a></h3>
 <p>Returns the size in bytes of the contents of the file at <code>path</code>. </p>
-<h3>File.<strong>stat</strong>(path) <a href="#file.stat(path)" name="file.stat(path)" class="header-anchor">#</a></h3>
-<p>&ldquo;Stats&rdquo; the file or directory at <code>path</code>. Returns a <a href="stat.html">Stat</a> object describing 
-the low-level details of the file system entry. </p>
 <h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
+<h3>File.<strong>create</strong>(path) <a href="#file.create(path)" name="file.create(path)" class="header-anchor">#</a></h3>
+<p>Opens the file at <code>path</code> for writing. If there is already a file at that path, 
+it is truncated. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">file</span> <span class="o">=</span> <span class="vg">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;colors.txt&quot;</span><span class="p">)</span> 
+<span class="n">file</span><span class="o">.</span><span class="n">writeBytes</span><span class="p">(</span><span class="s">&quot;chartreuse lime teal&quot;</span><span class="p">)</span> 
+<span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+
 <h3>File.<strong>open</strong>(path) <a href="#file.open(path)" name="file.open(path)" class="header-anchor">#</a></h3>
-<p>Opens the file at <code>path</code> for reading. </p>
+<p>Opens the file at <code>path</code> for reading. You are responsible for closing it when 
+done with it. </p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>descriptor</strong> <a href="#descriptor" name="descriptor" class="header-anchor">#</a></h3>
 <p>The numeric file descriptor used to access the file. </p>
@@ -117,6 +141,14 @@ the file. </p>
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">readBytes</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="output">am a f</span>
 <span class="p">}</span>
 </pre></div>
+
+
+<h3><strong>writeBytes</strong>(bytes) <a href="#writebytes(bytes)" name="writebytes(bytes)" class="header-anchor">#</a></h3>
+<p>Writes the raw bytes of the string <code>bytes</code> to the end of the file. </p>
+<h3><strong>writeBytes</strong>(bytes, offset) <a href="#writebytes(bytes,-offset)" name="writebytes(bytes,-offset)" class="header-anchor">#</a></h3>
+<p>Writes the raw bytes of the string <code>bytes</code> to the to the file, starting at 
+<code>offset</code>. Any overlapping bytes already in the file at the offset are 
+overwritten. </p>
   </main>
 </div>
 <footer>

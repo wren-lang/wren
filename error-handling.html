@@ -136,7 +136,9 @@ statically. Since they can&rsquo;t be found until your code is run, they&rsquo;r
 perform an operation that the VM can&rsquo;t do. The most common error is a &ldquo;method 
 not found&rdquo; one. If you call a method on an object and its class (and all of its 
 superclasses) don&rsquo;t define that method, there&rsquo;s nothing Wren can do: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Foo</span> <span class="p">{}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Foo</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{}</span> 
+<span class="p">}</span>
 
 <span class="k">var</span> <span class="n">foo</span> <span class="o">=</span> <span class="vg">Foo</span><span class="o">.</span><span class="n">new</span><span class="p">()</span> 
 <span class="n">foo</span><span class="o">.</span><span class="n">someRandomMethod</span>
