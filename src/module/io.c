@@ -167,6 +167,8 @@ void fileDelete(WrenVM* vm)
 
 static void fileOpenCallback(uv_fs_t* request)
 {
+  printf("open callback file: %d flags: %d fs_type: %d mode: %d result: %ld\n", request->file, request->flags,
+         request->fs_type, request->mode, request->result);
   if (handleRequestError(request)) return;
   
   double fd = (double)request->result;
@@ -199,6 +201,12 @@ void fileOpen(WrenVM* vm)
   int flags = (int)wrenGetSlotDouble(vm, 2);
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 3));
 
+  printf("opening '%s' with %d\n", path, flags);
+  printf("remapped = %d\n", mapFileFlags(flags));
+  printf("O_WRONLY = %x\n", O_WRONLY);
+  printf("O_CREAT = %x\n", O_CREAT);
+  printf("O_TRUNC = %x\n", O_TRUNC);
+  
   // TODO: Allow controlling access.
   uv_fs_open(getLoop(), request, path, mapFileFlags(flags), S_IRUSR | S_IWUSR,
              fileOpenCallback);
