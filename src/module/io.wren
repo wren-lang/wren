@@ -137,13 +137,15 @@ foreign class File {
 }
 
 class FileFlags {
-  static readOnly  { 0x0000 }
-  static writeOnly { 0x0001 }
-  static readWrite { 0x0002 }
-  static sync      { 0x0080 }
-  static create    { 0x0200 }
-  static truncate  { 0x0400 }
-  static exclusive { 0x0800 }
+  // Note: These must be kept in sync with mapFileFlags() in io.c.
+
+  static readOnly  { 0x01 }
+  static writeOnly { 0x02 }
+  static readWrite { 0x04 }
+  static sync      { 0x08 }
+  static create    { 0x10 }
+  static truncate  { 0x20 }
+  static exclusive { 0x40 }
 }
 
 class Stat {
