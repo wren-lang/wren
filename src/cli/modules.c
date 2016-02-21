@@ -22,6 +22,16 @@ extern void fileStat(WrenVM* vm);
 extern void fileWriteBytes(WrenVM* vm);
 extern void processAllArguments(WrenVM* vm);
 extern void statPath(WrenVM* vm);
+extern void statBlockCount(WrenVM* vm);
+extern void statBlockSize(WrenVM* vm);
+extern void statDevice(WrenVM* vm);
+extern void statGroup(WrenVM* vm);
+extern void statInode(WrenVM* vm);
+extern void statLinkCount(WrenVM* vm);
+extern void statMode(WrenVM* vm);
+extern void statSize(WrenVM* vm);
+extern void statSpecialDevice(WrenVM* vm);
+extern void statUser(WrenVM* vm);
 extern void stdinReadStart(WrenVM* vm);
 extern void stdinReadStop(WrenVM* vm);
 extern void schedulerCaptureMethods(WrenVM* vm);
@@ -113,6 +123,16 @@ static ModuleRegistry modules[] =
     END_CLASS
     CLASS(Stat)
       STATIC_METHOD("path_(_,_)", statPath)
+      METHOD("blockCount", statBlockCount)
+      METHOD("blockSize", statBlockSize)
+      METHOD("device", statDevice)
+      METHOD("group", statGroup)
+      METHOD("inode", statInode)
+      METHOD("linkCount", statLinkCount)
+      METHOD("mode", statMode)
+      METHOD("size", statSize)
+      METHOD("specialDevice", statSpecialDevice)
+      METHOD("user", statUser)
     END_CLASS
     CLASS(Stdin)
       STATIC_METHOD("readStart_()", stdinReadStart)

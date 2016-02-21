@@ -612,18 +612,19 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
 
   Method method;
   method.type = METHOD_FOREIGN;
-  method.fn.foreign = methods.allocate;
-
-  ASSERT(method.fn.foreign != NULL,
-      "A foreign class must provide an allocate function.");
-
-  int symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<allocate>", 10);
-  wrenBindMethod(vm, classObj, symbol, method);
 
   // Add the symbol even if there is no finalizer so we can ensure that the
   // symbol itself is always in the symbol table.
+  int symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<allocate>", 10);
+  if (methods.allocate != NULL)
+  {
+    method.fn.foreign = methods.allocate;
+    wrenBindMethod(vm, classObj, symbol, method);
+  }
+  
+  // Add the symbol even if there is no finalizer so we can ensure that the
+  // symbol itself is always in the symbol table.
   symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<finalize>", 10);
-
   if (methods.finalize != NULL)
   {
     method.fn.foreign = (WrenForeignMethodFn)methods.finalize;

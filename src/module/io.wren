@@ -93,7 +93,7 @@ foreign class File {
   stat {
     ensureOpen_()
     stat_(Fiber.current)
-    return Stat.new_(Scheduler.runNextScheduled_())
+    return Scheduler.runNextScheduled_()
   }
 
   readBytes(count) { readBytes(count, 0) }
@@ -155,30 +155,26 @@ class FileFlags {
   static exclusive { 0x40 }
 }
 
-class Stat {
-  construct new_(fields) {
-    _fields = fields
-  }
-
+foreign class Stat {
   static path(path) {
     if (!(path is String)) Fiber.abort("Path must be a string.")
 
     path_(path, Fiber.current)
-    return Stat.new_(Scheduler.runNextScheduled_())
+    return Scheduler.runNextScheduled_()
   }
 
-  device { _fields[0] }
-  inode { _fields[1] }
-  mode { _fields[2] }
-  linkCount { _fields[3] }
-  user { _fields[4] }
-  group { _fields[5] }
-  specialDevice { _fields[6] }
-  size { _fields[7] }
-  blockSize { _fields[8] }
-  blockCount { _fields[9] }
-
   foreign static path_(path, fiber)
+
+  foreign blockCount
+  foreign blockSize
+  foreign device
+  foreign group
+  foreign inode
+  foreign linkCount
+  foreign mode
+  foreign size
+  foreign specialDevice
+  foreign user
 }
 
 class Stdin {

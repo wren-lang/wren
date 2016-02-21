@@ -18,6 +18,9 @@ typedef struct sFileRequestData
 
 static const int stdinDescriptor = 0;
 
+// Handle to the Stat class object.
+static WrenValue* statClass = NULL;
+
 // Handle to the Stdin class object.
 static WrenValue* stdinClass = NULL;
 
@@ -53,6 +56,12 @@ static void shutdownStdin()
 void ioShutdown()
 {
   shutdownStdin();
+  
+  if (statClass != NULL)
+  {
+    wrenReleaseValue(getVM(), statClass);
+    statClass = NULL;
+  }
 }
 
 // If [request] failed with an error, sends the runtime error to the VM and
@@ -299,44 +308,23 @@ static void statCallback(uv_fs_t* request)
   if (handleRequestError(request)) return;
   
   WrenVM* vm = getVM();
-  wrenEnsureSlots(vm, 4);
-  wrenSetSlotNewList(vm, 2);
+  wrenEnsureSlots(vm, 3);
   
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_dev);
-  wrenInsertInList(vm, 2, -1, 3);
+  // Get a handle to the Stat class. We'll hang on to this so we don't have to
+  // look it up by name every time.
+  if (statClass == NULL)
+  {
+    wrenGetVariable(vm, "io", "Stat", 0);
+    statClass = wrenGetSlotValue(vm, 0);
+  }
   
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_ino);
-  wrenInsertInList(vm, 2, -1, 3);
+  // Create a foreign Stat object to store the stat struct.
+  wrenSetSlotValue(vm, 2, statClass);
+  wrenSetSlotNewForeign(vm, 2, 2, sizeof(uv_stat_t));
   
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_mode);
-  wrenInsertInList(vm, 2, -1, 3);
-  
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_nlink);
-  wrenInsertInList(vm, 2, -1, 3);
-  
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_uid);
-  wrenInsertInList(vm, 2, -1, 3);
-  
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_gid);
-  wrenInsertInList(vm, 2, -1, 3);
-  
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_rdev);
-  wrenInsertInList(vm, 2, -1, 3);
-  
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_size);
-  wrenInsertInList(vm, 2, -1, 3);
-  
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_blksize);
-  wrenInsertInList(vm, 2, -1, 3);
-  
-  wrenSetSlotDouble(vm, 3, (double)request->statbuf.st_blocks);
-  wrenInsertInList(vm, 2, -1, 3);
-  
-  // TODO: Include access, modification, and change times once we figure out
-  // how we want to represent it.
-  //  time_t    st_atime;   /* time of last access */
-  //  time_t    st_mtime;   /* time of last modification */
-  //  time_t    st_ctime;   /* time of last status change */
+  // Copy the stat data.
+  uv_stat_t* data = (uv_stat_t*)wrenGetSlotForeign(vm, 2);
+  *data = request->statbuf;
   
   schedulerResume(freeRequest(request), true);
   schedulerFinishResume();
@@ -392,6 +380,66 @@ void statPath(WrenVM* vm)
   const char* path = wrenGetSlotString(vm, 1);
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
   uv_fs_stat(getLoop(), request, path, statCallback);
+}
+
+void statBlockCount(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_blocks);
+}
+
+void statBlockSize(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_blksize);
+}
+
+void statDevice(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_dev);
+}
+
+void statGroup(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_gid);
+}
+
+void statInode(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_ino);
+}
+
+void statLinkCount(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_nlink);
+}
+
+void statMode(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_mode);
+}
+
+void statSize(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_size);
+}
+
+void statSpecialDevice(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_rdev);
+}
+
+void statUser(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotDouble(vm, 0, (double)stat->st_uid);
 }
 
 static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
