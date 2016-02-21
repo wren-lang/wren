@@ -54,6 +54,9 @@ test: debug
 	@ $(MAKE) -f util/wren.mk MODE=debug test
 	@ ./util/test.py $(suite)
 
+temp: debug
+	@ ./bin/wrend test/io/file/create.wren
+
 benchmark: release
 	@ $(MAKE) -f util/wren.mk test
 	@ ./util/benchmark.py -l wren $(suite)
