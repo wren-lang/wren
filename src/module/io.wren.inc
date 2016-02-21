@@ -145,7 +145,7 @@ static const char* ioModuleSource =
 "  static sync      { 0x0080 }\n"
 "  static create    { 0x0200 }\n"
 "  static truncate  { 0x0400 }\n"
-"  static exclusive { 0x0400 }\n"
+"  static exclusive { 0x0800 }\n"
 "}\n"
 "\n"
 "class Stat {\n"

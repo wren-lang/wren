@@ -143,7 +143,7 @@ class FileFlags {
   static sync      { 0x0080 }
   static create    { 0x0200 }
   static truncate  { 0x0400 }
-  static exclusive { 0x0400 }
+  static exclusive { 0x0800 }
 }
 
 class Stat {

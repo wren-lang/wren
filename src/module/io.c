@@ -184,6 +184,9 @@ void fileOpen(WrenVM* vm)
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 3));
 
   printf("opening '%s' with %d\n", path, flags);
+  printf("O_WRONLY = %x\n", O_WRONLY);
+  printf("O_CREAT = %x\n", O_CREAT);
+  printf("O_TRUNC = %x\n", O_TRUNC);
   
   // TODO: Allow controlling access.
   uv_fs_open(getLoop(), request, path, flags, S_IRUSR | S_IWUSR,
