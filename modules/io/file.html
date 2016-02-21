@@ -82,6 +82,9 @@ automatically closed. </p>
 
 <h3>File.<strong>delete</strong>(path) <a href="#file.delete(path)" name="file.delete(path)" class="header-anchor">#</a></h3>
 <p>Deletes the file at <code>path</code>. </p>
+<h3>File.<strong>exists</strong>(path) <a href="#file.exists(path)" name="file.exists(path)" class="header-anchor">#</a></h3>
+<p>Whether a regular file exists at <code>path</code>. This returns <code>false</code> for directories 
+or other special file system entities. </p>
 <h3>File.<strong>open</strong>(path, fn) <a href="#file.open(path,-fn)" name="file.open(path,-fn)" class="header-anchor">#</a></h3>
 <p>Opens the file at <code>path</code> for reading and passes it to <code>fn</code>. After the function 
 returns, the file is automatically closed. </p>

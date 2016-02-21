@@ -68,27 +68,32 @@
 <h3>Stat.<strong>path</strong>(path) <a href="#stat.path(path)" name="stat.path(path)" class="header-anchor">#</a></h3>
 <p>&ldquo;Stats&rdquo; the file or directory at <code>path</code>. </p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
-<h3><strong>device</strong> <a href="#device" name="device" class="header-anchor">#</a></h3>
-<p>The ID of the device containing the entry. </p>
-<h3><strong>inode</strong> <a href="#inode" name="inode" class="header-anchor">#</a></h3>
-<p>The <a href="https://en.wikipedia.org/wiki/Inode">inode</a> number of the entry. </p>
-<h3><strong>mode</strong> <a href="#mode" name="mode" class="header-anchor">#</a></h3>
-<p>A bit field describing the entry&rsquo;s type and protection flags. </p>
-<h3><strong>linkCount</strong> <a href="#linkcount" name="linkcount" class="header-anchor">#</a></h3>
-<p>The number of hard links to the entry. </p>
-<h3><strong>user</strong> <a href="#user" name="user" class="header-anchor">#</a></h3>
-<p>Numeric user ID of the file&rsquo;s owner. </p>
-<h3><strong>group</strong> <a href="#group" name="group" class="header-anchor">#</a></h3>
-<p>Numeric group ID of the file&rsquo;s owner. </p>
-<h3><strong>specialDevice</strong> <a href="#specialdevice" name="specialdevice" class="header-anchor">#</a></h3>
-<p>The device ID for the entry, if it&rsquo;s a special file. </p>
-<h3><strong>size</strong> <a href="#size" name="size" class="header-anchor">#</a></h3>
-<p>The size of the entry in bytes. </p>
+<h3><strong>blockCount</strong> <a href="#blockcount" name="blockcount" class="header-anchor">#</a></h3>
+<p>The number of system blocks allocated on disk for the file. </p>
 <h3><strong>blockSize</strong> <a href="#blocksize" name="blocksize" class="header-anchor">#</a></h3>
 <p>The preferred block size in bytes for interacting with the file. It may vary 
 from file to file. </p>
-<h3><strong>blockCount</strong> <a href="#blockcount" name="blockcount" class="header-anchor">#</a></h3>
-<p>The number of system blocks allocated on disk for the file. </p>
+<h3><strong>device</strong> <a href="#device" name="device" class="header-anchor">#</a></h3>
+<p>The ID of the device containing the entry. </p>
+<h3><strong>group</strong> <a href="#group" name="group" class="header-anchor">#</a></h3>
+<p>Numeric group ID of the file&rsquo;s owner. </p>
+<h3><strong>inode</strong> <a href="#inode" name="inode" class="header-anchor">#</a></h3>
+<p>The <a href="https://en.wikipedia.org/wiki/Inode">inode</a> number of the entry. </p>
+<h3><strong>isDirectory</strong> <a href="#isdirectory" name="isdirectory" class="header-anchor">#</a></h3>
+<p>Whether the file system entity is a directory. </p>
+<h3><strong>isFile</strong> <a href="#isfile" name="isfile" class="header-anchor">#</a></h3>
+<p>Whether the file system entity is a regular file, as opposed to a directory or 
+other special entity. </p>
+<h3><strong>linkCount</strong> <a href="#linkcount" name="linkcount" class="header-anchor">#</a></h3>
+<p>The number of hard links to the entry. </p>
+<h3><strong>mode</strong> <a href="#mode" name="mode" class="header-anchor">#</a></h3>
+<p>A bit field describing the entry&rsquo;s type and protection flags. </p>
+<h3><strong>size</strong> <a href="#size" name="size" class="header-anchor">#</a></h3>
+<p>The size of the entry in bytes. </p>
+<h3><strong>specialDevice</strong> <a href="#specialdevice" name="specialdevice" class="header-anchor">#</a></h3>
+<p>The device ID for the entry, if it&rsquo;s a special file. </p>
+<h3><strong>user</strong> <a href="#user" name="user" class="header-anchor">#</a></h3>
+<p>Numeric user ID of the file&rsquo;s owner. </p>
   </main>
 </div>
 <footer>
