@@ -175,6 +175,24 @@ static void fileOpenCallback(uv_fs_t* request)
   schedulerFinishResume();
 }
 
+// The UNIX file flags have specified names but not values. So we define out
+// own values in FileFlags and remap them to the host OS's values here.
+static int mapFileFlags(int flags)
+{
+  int result = 0;
+  
+  // Note: These must be kept in sync with FileFlags in io.wren.
+  if (flags & 0x01) result |= O_RDONLY;
+  if (flags & 0x02) result |= O_WRONLY;
+  if (flags & 0x04) result |= O_RDWR;
+  if (flags & 0x08) result |= O_SYNC;
+  if (flags & 0x10) result |= O_CREAT;
+  if (flags & 0x20) result |= O_TRUNC;
+  if (flags & 0x40) result |= O_EXCL;
+  
+  return result;
+}
+
 void fileOpen(WrenVM* vm)
 {
   const char* path = wrenGetSlotString(vm, 1);
@@ -182,7 +200,7 @@ void fileOpen(WrenVM* vm)
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 3));
 
   // TODO: Allow controlling access.
-  uv_fs_open(getLoop(), request, path, flags, S_IRUSR | S_IWUSR,
+  uv_fs_open(getLoop(), request, path, mapFileFlags(flags), S_IRUSR | S_IWUSR,
              fileOpenCallback);
 }
 
