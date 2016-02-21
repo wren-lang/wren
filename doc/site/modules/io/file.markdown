@@ -25,6 +25,11 @@ automatically closed.
 
 Deletes the file at `path`.
 
+### File.**exists**(path)
+
+Whether a regular file exists at `path`. This returns `false` for directories
+or other special file system entities.
+
 ### File.**open**(path, fn)
 
 Opens the file at `path` for reading and passes it to `fn`. After the function

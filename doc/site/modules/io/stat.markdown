@@ -10,9 +10,22 @@ A data structure describing the low-level details of a file system entry.
 
 ## Methods
 
+### **blockCount**
+
+The number of system blocks allocated on disk for the file.
+
+### **blockSize**
+
+The preferred block size in bytes for interacting with the file. It may vary
+from file to file.
+
 ### **device**
 
 The ID of the device containing the entry.
+
+### **group**
+
+Numeric group ID of the file's owner.
 
 ### **inode**
 
@@ -20,35 +33,31 @@ The [inode][] number of the entry.
 
 [inode]: https://en.wikipedia.org/wiki/Inode
 
-### **mode**
+### **isDirectory**
 
-A bit field describing the entry's type and protection flags.
+Whether the file system entity is a directory.
+
+### **isFile**
+
+Whether the file system entity is a regular file, as opposed to a directory or
+other special entity.
 
 ### **linkCount**
 
 The number of hard links to the entry.
 
-### **user**
+### **mode**
 
-Numeric user ID of the file's owner.
-
-### **group**
-
-Numeric group ID of the file's owner.
-
-### **specialDevice**
-
-The device ID for the entry, if it's a special file.
+A bit field describing the entry's type and protection flags.
 
 ### **size**
 
 The size of the entry in bytes.
 
-### **blockSize**
+### **specialDevice**
 
-The preferred block size in bytes for interacting with the file. It may vary
-from file to file.
+The device ID for the entry, if it's a special file.
 
-### **blockCount**
+### **user**
 
-The number of system blocks allocated on disk for the file.
+Numeric user ID of the file's owner.

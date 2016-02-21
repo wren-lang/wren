@@ -1,5 +1,4 @@
 import "io" for Stat
-import "scheduler" for Scheduler
 
 var stat = Stat.path("test/io/directory/dir")
 

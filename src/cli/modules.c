@@ -32,6 +32,8 @@ extern void statMode(WrenVM* vm);
 extern void statSize(WrenVM* vm);
 extern void statSpecialDevice(WrenVM* vm);
 extern void statUser(WrenVM* vm);
+extern void statIsDirectory(WrenVM* vm);
+extern void statIsFile(WrenVM* vm);
 extern void stdinReadStart(WrenVM* vm);
 extern void stdinReadStop(WrenVM* vm);
 extern void schedulerCaptureMethods(WrenVM* vm);
@@ -45,7 +47,7 @@ extern void timerStartTimer(WrenVM* vm);
 // If you add a new method to the longest class below, make sure to bump this.
 // Note that it also includes an extra slot for the sentinel value indicating
 // the end of the list.
-#define MAX_METHODS_PER_CLASS 12
+#define MAX_METHODS_PER_CLASS 14
 
 // The maximum number of foreign classes a single built-in module defines.
 //
@@ -133,6 +135,8 @@ static ModuleRegistry modules[] =
       METHOD("size", statSize)
       METHOD("specialDevice", statSpecialDevice)
       METHOD("user", statUser)
+      METHOD("isDirectory", statIsDirectory)
+      METHOD("isFile", statIsFile)
     END_CLASS
     CLASS(Stdin)
       STATIC_METHOD("readStart_()", stdinReadStart)

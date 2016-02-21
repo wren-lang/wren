@@ -6,6 +6,18 @@ class Directory {
     if (!(path is String)) Fiber.abort("Path must be a string.")
   }
 
+  static exists(path) {
+    ensurePath_(path)
+    var stat
+    Fiber.new {
+      stat = Stat.path(path)
+    }.try()
+
+    // If we can't stat it, there's nothing there.
+    if (stat == null) return false
+    return stat.isDirectory
+  }
+
   static list(path) {
     ensurePath_(path)
     list_(path, Fiber.current)
@@ -31,9 +43,21 @@ foreign class File {
   }
 
   static delete(path) {
-    File.ensurePath_(path)
+    ensurePath_(path)
     delete_(path, Fiber.current)
     return Scheduler.runNextScheduled_()
+  }
+
+  static exists(path) {
+    ensurePath_(path)
+    var stat
+    Fiber.new {
+      stat = Stat.path(path)
+    }.try()
+
+    // If we can't stat it, there's nothing there.
+    if (stat == null) return false
+    return stat.isFile
   }
 
   static open(path) { openWithFlags(path, FileFlags.readOnly) }
@@ -43,8 +67,8 @@ foreign class File {
   // TODO: Add named parameters and then call this "open(_,flags:_)"?
   // TODO: Test.
   static openWithFlags(path, flags) {
-    File.ensurePath_(path)
-    File.ensureInt_(flags, "Flags")
+    ensurePath_(path)
+    ensureInt_(flags, "Flags")
     open_(path, flags, Fiber.current)
     var fd = Scheduler.runNextScheduled_()
     return new_(fd)
@@ -68,7 +92,7 @@ foreign class File {
   }
 
   static size(path) {
-    File.ensurePath_(path)
+    ensurePath_(path)
     sizePath_(path, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
@@ -175,6 +199,10 @@ foreign class Stat {
   foreign size
   foreign specialDevice
   foreign user
+
+  foreign isFile
+  foreign isDirectory
+  // TODO: Other mode checks.
 }
 
 class Stdin {

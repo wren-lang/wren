@@ -442,6 +442,18 @@ void statUser(WrenVM* vm)
   wrenSetSlotDouble(vm, 0, (double)stat->st_uid);
 }
 
+void statIsDirectory(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotBool(vm, 0, S_ISDIR(stat->st_mode));
+}
+
+void statIsFile(WrenVM* vm)
+{
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  wrenSetSlotBool(vm, 0, S_ISREG(stat->st_mode));
+}
+
 static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
                           uv_buf_t* buf)
 {
