@@ -293,47 +293,8 @@ void fileReadBytes(WrenVM* vm)
              fileReadBytesCallback);
 }
 
-void fileSize(WrenVM* vm)
-{
-  int fd = *(int*)wrenGetSlotForeign(vm, 0);
-  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 1));
-
-  uv_fs_fstat(getLoop(), request, fd, fileSizeCallback);
-}
-
-static void fileWriteBytesCallback(uv_fs_t* request)
-{
-  if (handleRequestError(request)) return;
- 
-  FileRequestData* data = (FileRequestData*)request->data;
-  free(data->buffer.base);
-
-  schedulerResume(freeRequest(request), false);
-}
-
-void fileWriteBytes(WrenVM* vm)
-{
-  int fd = *(int*)wrenGetSlotForeign(vm, 0);
-  int length;
-  const char* bytes = wrenGetSlotBytes(vm, 1, &length);
-  size_t offset = (size_t)wrenGetSlotDouble(vm, 2);
-  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 3));
-  
-  FileRequestData* data = (FileRequestData*)request->data;
-
-  data->buffer.len = length;
-  // TODO: Instead of copying, just create a WrenValue for the byte string and
-  // hold on to it in the request until the write is done.
-  // TODO: Handle allocation failure.
-  data->buffer.base = (char*)malloc(length);
-  memcpy(data->buffer.base, bytes, length);
-
-  uv_fs_write(getLoop(), request, fd, &data->buffer, 1, offset,
-              fileWriteBytesCallback);
-}
-
 // Called by libuv when the stat call completes.
-static void statPathCallback(uv_fs_t* request)
+static void statCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
   
@@ -381,11 +342,56 @@ static void statPathCallback(uv_fs_t* request)
   schedulerFinishResume();
 }
 
+void fileStat(WrenVM* vm)
+{
+  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 1));
+  uv_fs_fstat(getLoop(), request, fd, statCallback);
+}
+
+void fileSize(WrenVM* vm)
+{
+  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 1));
+  uv_fs_fstat(getLoop(), request, fd, fileSizeCallback);
+}
+
+static void fileWriteBytesCallback(uv_fs_t* request)
+{
+  if (handleRequestError(request)) return;
+ 
+  FileRequestData* data = (FileRequestData*)request->data;
+  free(data->buffer.base);
+
+  schedulerResume(freeRequest(request), false);
+}
+
+void fileWriteBytes(WrenVM* vm)
+{
+  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  int length;
+  const char* bytes = wrenGetSlotBytes(vm, 1, &length);
+  size_t offset = (size_t)wrenGetSlotDouble(vm, 2);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 3));
+  
+  FileRequestData* data = (FileRequestData*)request->data;
+
+  data->buffer.len = length;
+  // TODO: Instead of copying, just create a WrenValue for the byte string and
+  // hold on to it in the request until the write is done.
+  // TODO: Handle allocation failure.
+  data->buffer.base = (char*)malloc(length);
+  memcpy(data->buffer.base, bytes, length);
+
+  uv_fs_write(getLoop(), request, fd, &data->buffer, 1, offset,
+              fileWriteBytesCallback);
+}
+
 void statPath(WrenVM* vm)
 {
   const char* path = wrenGetSlotString(vm, 1);
   uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
-  uv_fs_stat(getLoop(), request, path, statPathCallback);
+  uv_fs_stat(getLoop(), request, path, statCallback);
 }
 
 static void allocCallback(uv_handle_t* handle, size_t suggestedSize,

@@ -90,6 +90,12 @@ foreign class File {
     return Scheduler.runNextScheduled_()
   }
 
+  stat {
+    ensureOpen_()
+    stat_(Fiber.current)
+    return Stat.new_(Scheduler.runNextScheduled_())
+  }
+
   readBytes(count) { readBytes(count, 0) }
 
   readBytes(count, offset) {
@@ -133,6 +139,7 @@ foreign class File {
   foreign close_(fiber)
   foreign readBytes_(count, offset, fiber)
   foreign size_(fiber)
+  foreign stat_(fiber)
   foreign writeBytes_(bytes, offset, fiber)
 }
 
