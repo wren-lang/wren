@@ -22,14 +22,9 @@ A [Sequence](sequence.html) that can be used to iterate over the keys in the
 map. Note that iteration order is undefined. All keys will be iterated over,
 but may be in any order, and may even change between invocations of Wren.
 
-### **iterate**(iterator), **iteratorValue**(iterator)
-
-Implements the [iterator protocol](../control-flow.html#the-iterator-protocol)
-for iterating over the elements in the list.
-
 ### **remove**(key)
 
-Removes [key] and the value associated with it from the map. Returns the value.
+Removes `key` and the value associated with it from the map. Returns the value.
 
 If the key was not present, returns `null`.
 

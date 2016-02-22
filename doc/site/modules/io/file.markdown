@@ -47,7 +47,7 @@ Reads the entire contents of the file at `path` and returns it as a string.
     :::wren
     File.read("words.txt")
 
-The encoding or decoding is done. If the file is UTF-8, then the resulting
+No encoding or decoding is done. If the file is UTF-8, then the resulting
 string will be a UTF-8 string. Otherwise, it will be a string of bytes in
 whatever encoding the file uses.
 
