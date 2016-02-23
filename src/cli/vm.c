@@ -86,11 +86,8 @@ static char* wrenFilePath(const char* name)
 //
 // Returns it if found, or NULL if the module could not be found. Exits if the
 // module was found but could not be read.
-static char* readModule(WrenVM* vm, const char* module)
+static char* loadModule(WrenVM* vm, const char* module)
 {
-  char* source = readBuiltInModule(module);
-  if (source != NULL) return source;
-  
   // First try to load the module with a ".wren" extension.
   char* modulePath = wrenFilePath(module);
   char* moduleContents = readFile(modulePath);
@@ -114,6 +111,33 @@ static char* readModule(WrenVM* vm, const char* module)
   free(moduleDirPath);
   
   return moduleContents;
+}
+
+// Attempts to read the source for [module] relative to the current root
+// directory.
+//
+// Returns it if found, or NULL if the module could not be found. Exits if the
+// module was found but could not be read.
+static char* readModule(WrenVM* vm, const char* module)
+{
+  char* source = readBuiltInModule(module);
+  if (source != NULL) return source;
+  
+  source = loadModule(vm, module);
+  if (source != NULL) return source;
+  
+  // If searching in the current path fails, look 
+  size_t moduleLength = strlen(module);
+  size_t extModuleLength = moduleLength + 13;
+  char* extModule = (char*)malloc(extModuleLength + 1);
+  memcpy(extModule, "wren_modules/", 13);
+  memcpy(extModule + 13, module, moduleLength);
+  extModule[extModuleLength] = '\0';
+  
+  source = loadModule(vm, extModule);
+  if (source != NULL) return source;
+  
+  return NULL;
 }
 
 // Binds foreign methods declared in either built in modules, or the injected
