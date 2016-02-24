@@ -290,8 +290,11 @@ typedef struct
 // Bookkeeping information for compiling a class definition.
 typedef struct
 {
+  ObjString* name;
+  
   // Symbol table for the fields of the class.
   SymbolTable fields;
+  SymbolTable methods;
 
   // True if the class being compiled is a foreign class.
   bool isForeign;
@@ -3116,6 +3119,18 @@ static bool method(Compiler* compiler, Variable classVariable)
   char fullSignature[MAX_METHOD_SIGNATURE];
   int length;
   signatureToString(&signature, fullSignature, &length);
+  
+  // Check for duplicate methods
+  StringBuffer* methods = &compiler->enclosingClass->methods;
+  int symbol = wrenSymbolTableFind(methods,
+    fullSignature, length);
+  if (symbol != -1)
+  {
+    error(compiler, "Already defined method '%s' for class %s in module '%s'.",
+      fullSignature, &compiler->enclosingClass->name->value,
+      compiler->parser->module->name);
+  }
+  wrenSymbolTableAdd(compiler->parser->vm, methods, fullSignature, length);
 
   if (isForeign)
   {
@@ -3162,6 +3177,9 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   classVariable.scope = compiler->scopeDepth == -1 ? SCOPE_MODULE : SCOPE_LOCAL;
   classVariable.index = declareNamedVariable(compiler);
   
+  ObjString* className = AS_STRING(wrenNewString(compiler->parser->vm, 
+    compiler->parser->previous.start, compiler->parser->previous.length));
+  
   // Make a string constant for the name.
   emitConstant(compiler, wrenNewString(compiler->parser->vm,
       compiler->parser->previous.start, compiler->parser->previous.length));
@@ -3200,12 +3218,14 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
   ClassCompiler classCompiler;
   classCompiler.isForeign = isForeign;
+  classCompiler.name = className;
 
   // Set up a symbol table for the class's fields. We'll initially compile
   // them to slots starting at zero. When the method is bound to the class, the
   // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
   // into account.
   wrenSymbolTableInit(&classCompiler.fields);
+  wrenSymbolTableInit(&classCompiler.methods);
   compiler->enclosingClass = &classCompiler;
 
   // Compile the method definitions.
@@ -3230,6 +3250,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   }
   
   wrenSymbolTableClear(compiler->parser->vm, &classCompiler.fields);
+  wrenSymbolTableClear(compiler->parser->vm, &classCompiler.methods);
   compiler->enclosingClass = NULL;
   popScope(compiler);
 }
