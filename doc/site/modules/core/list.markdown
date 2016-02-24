@@ -71,6 +71,7 @@ are shifted up to fill in where the removed element was.
 
 Returns the removed item.
 
+    :::wren
     System.print(["a", "b", "c"].removeAt(1)) //> b
 
 It is a runtime error if the index is not an integer or is out of bounds.

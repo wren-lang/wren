@@ -839,8 +839,7 @@ static void readString(Parser* parser)
         // TODO: Allow format string.
         if (nextChar(parser) != '(') lexError(parser, "Expect '(' after '%%'.");
         
-        parser->parens[parser->numParens] = 1;
-        parser->numParens++;
+        parser->parens[parser->numParens++] = 1;
         type = TOKEN_INTERPOLATION;
         break;
       }
