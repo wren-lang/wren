@@ -1,18 +1,11 @@
-var a = [1, 2, 3]
-var b = [4, 5, 6]
-var c = a + b
-var d = a + (4..6)
-var e = a + []
-var f = [] + a
-var g = [] + []
-
-System.print(a) // expect: [1, 2, 3]
-System.print(b) // expect: [4, 5, 6]
-System.print(c) // expect: [1, 2, 3, 4, 5, 6]
-System.print(d) // expect: [1, 2, 3, 4, 5, 6]
-System.print(e) // expect: [1, 2, 3]
-System.print(f) // expect: [1, 2, 3]
-System.print(g) // expect: []
+System.print([1, 2, 3] + [4, 5, 6]) // expect: [1, 2, 3, 4, 5, 6]
+System.print([1, 2, 3] + (4..6)) // expect: [1, 2, 3, 4, 5, 6]
+System.print([1, 2, 3] + "abc") // expect: [1, 2, 3, a, b, c]
+System.print([] + []) // expect: []
+System.print([1, 2] + []) // expect: [1, 2]
+System.print([] + [3, 4]) // expect: [3, 4]
 
 // Doesn't modify original list.
+var a = [1, 2, 3]
+a * 5
 System.print(a) // expect: [1, 2, 3]
