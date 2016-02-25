@@ -2694,28 +2694,6 @@ void expression(Compiler* compiler)
   parsePrecedence(compiler, true, PREC_LOWEST);
 }
 
-// Parses a curly block or an expression statement. Used in places like the
-// arms of an if statement where either a single expression or a curly body is
-// allowed.
-void block(Compiler* compiler)
-{
-  // Curly block.
-  if (match(compiler, TOKEN_LEFT_BRACE))
-  {
-    pushScope(compiler);
-    if (finishBlock(compiler))
-    {
-      // Block was an expression, so discard it.
-      emitOp(compiler, CODE_POP);
-    }
-    popScope(compiler);
-    return;
-  }
-
-  // Single statement body.
-  statement(compiler);
-}
-
 // Returns the number of arguments to the instruction at [ip] in [fn]'s
 // bytecode.
 static int getNumArguments(const uint8_t* bytecode, const Value* constants,
@@ -2845,7 +2823,7 @@ static void testExitLoop(Compiler* compiler)
 static void loopBody(Compiler* compiler)
 {
   compiler->loop->body = compiler->bytecode.count;
-  block(compiler);
+  statement(compiler);
 }
 
 // Ends the current innermost loop. Patches up all jumps and breaks now that
@@ -2988,8 +2966,12 @@ static void whileStatement(Compiler* compiler)
   endLoop(compiler);
 }
 
-// Compiles a statement. These can only appear at the top-level or within
-// curly blocks. Unlike expressions, these do not leave a value on the stack.
+// Compiles a simple statement. These can only appear at the top-level or
+// within curly blocks. Simple statements exclude variable binding statements
+// like "var" and "class" which are not allowed directly in places like the
+// branches of an "if" statement.
+//
+// Unlike expressions, statements do not leave a value on the stack.
 void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_BREAK))
@@ -3029,7 +3011,7 @@ void statement(Compiler* compiler)
     int ifJump = emitJump(compiler, CODE_JUMP_IF);
 
     // Compile the then branch.
-    block(compiler);
+    statement(compiler);
 
     // Compile the else branch if there is one.
     if (match(compiler, TOKEN_ELSE))
@@ -3039,7 +3021,7 @@ void statement(Compiler* compiler)
 
       patchJump(compiler, ifJump);
 
-      block(compiler);
+      statement(compiler);
 
       // Patch the jump over the else.
       patchJump(compiler, elseJump);
@@ -3074,6 +3056,19 @@ void statement(Compiler* compiler)
     return;
   }
 
+  // Block statement.
+  if (match(compiler, TOKEN_LEFT_BRACE))
+  {
+    pushScope(compiler);
+    if (finishBlock(compiler))
+    {
+      // Block was an expression, so discard it.
+      emitOp(compiler, CODE_POP);
+    }
+    popScope(compiler);
+    return;
+  }
+  
   // Expression statement.
   expression(compiler);
   emitOp(compiler, CODE_POP);
@@ -3371,7 +3366,7 @@ void definition(Compiler* compiler)
   }
   else
   {
-    block(compiler);
+    statement(compiler);
   }
 }
 
