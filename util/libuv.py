@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 
-LIB_UV_VERSION = "v1.6.1"
+LIB_UV_VERSION = "v1.8.0"
 LIB_UV_DIR = "deps/libuv"
 
 def python2_binary():
