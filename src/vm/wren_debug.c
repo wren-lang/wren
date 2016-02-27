@@ -307,27 +307,6 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
 
-    case CODE_LOAD_MODULE:
-    {
-      int constant = READ_SHORT();
-      printf("%-16s %5d '", "LOAD_MODULE", constant);
-      wrenDumpValue(fn->constants[constant]);
-      printf("'\n");
-      break;
-    }
-
-    case CODE_IMPORT_VARIABLE:
-    {
-      int module = READ_SHORT();
-      int variable = READ_SHORT();
-      printf("%-16s %5d '", "IMPORT_VARIABLE", module);
-      wrenDumpValue(fn->constants[module]);
-      printf("' '");
-      wrenDumpValue(fn->constants[variable]);
-      printf("'\n");
-      break;
-    }
-
     case CODE_END:
       printf("END\n");
       break;

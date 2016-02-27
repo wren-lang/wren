@@ -135,15 +135,20 @@ WrenValue* wrenCaptureValue(WrenVM* vm, Value value);
 WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
                                           const char* source);
 
-// Imports the module with [name].
+// Imports the module with [name], a string.
 //
 // If the module has already been imported (or is already in the middle of
-// being imported, in the case of a circular import), returns true. Otherwise,
+// being imported, in the case of a circular import), returns null. Otherwise,
 // returns a new fiber that will execute the module's code. That fiber should
 // be called before any variables are loaded from the module.
 //
-// If the module could not be found, returns false.
-Value wrenImportModule(WrenVM* vm, const char* name);
+// If the module could not be found, sets an error in the current fiber.
+Value wrenImportModule(WrenVM* vm, Value name);
+
+// Looks up a variable from a previously-loaded module.
+//
+// Aborts the current fiber if the module or variable could not be found.
+Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName);
 
 // Returns the value of the module-level variable named [name] in the main
 // module.

@@ -2762,7 +2762,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_OR:
     case CODE_METHOD_INSTANCE:
     case CODE_METHOD_STATIC:
-    case CODE_LOAD_MODULE:
       return 2;
 
     case CODE_SUPER_0:
@@ -2782,7 +2781,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_SUPER_14:
     case CODE_SUPER_15:
     case CODE_SUPER_16:
-    case CODE_IMPORT_VARIABLE:
       return 4;
 
     case CODE_CLOSURE:
@@ -3282,6 +3280,16 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 }
 
 // Compiles an "import" statement.
+//
+// An import just desugars to calling a few special core methods. Given:
+//
+//     import "foo" for Bar, Baz
+//
+// We compile it to:
+//
+//     System.importModule("foo")
+//     var Bar = System.getModuleVariable("foo", "Bar")
+//     var Baz = System.getModuleVariable("foo", "Baz")
 static void import(Compiler* compiler)
 {
   ignoreNewlines(compiler);
@@ -3289,7 +3297,9 @@ static void import(Compiler* compiler)
   int moduleConstant = addConstant(compiler, compiler->parser->previous.value);
 
   // Load the module.
-  emitShortArg(compiler, CODE_LOAD_MODULE, moduleConstant);
+  loadCoreVariable(compiler, "System");
+  emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
+  callMethod(compiler, 1, "importModule(_)", 15);
 
   // Discard the unused result value from calling the module's fiber.
   emitOp(compiler, CODE_POP);
@@ -3310,9 +3320,11 @@ static void import(Compiler* compiler)
                       compiler->parser->previous.length));
 
     // Load the variable from the other module.
-    emitShortArg(compiler, CODE_IMPORT_VARIABLE, moduleConstant);
-    emitShort(compiler, variableConstant);
-
+    loadCoreVariable(compiler, "System");
+    emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
+    emitShortArg(compiler, CODE_CONSTANT, variableConstant);
+    callMethod(compiler, 2, "getModuleVariable(_,_)", 22);
+    
     // Store the result in the variable here.
     defineVariable(compiler, slot);
   } while (match(compiler, TOKEN_COMMA));

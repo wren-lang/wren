@@ -193,18 +193,6 @@ OPCODE(METHOD_INSTANCE, -2)
 // closure.
 OPCODE(METHOD_STATIC, -2)
 
-// Load the module whose name is stored in string constant [arg]. Pushes
-// NULL onto the stack. If the module has already been loaded, does nothing
-// else. Otherwise, it creates a fiber to run the desired module and switches
-// to that. When that fiber is done, the current one is resumed.
-OPCODE(LOAD_MODULE, 1)
-
-// Reads a top-level variable from another module. [arg1] is a string
-// constant for the name of the module, and [arg2] is a string constant for
-// the variable name. Pushes the variable if found, or generates a runtime
-// error otherwise.
-OPCODE(IMPORT_VARIABLE, 1)
-
 // This pseudo-instruction indicates the end of the bytecode. It should
 // always be preceded by a `CODE_RETURN`, so is never actually executed.
 OPCODE(END, 0)

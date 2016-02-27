@@ -494,53 +494,6 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
   return moduleFiber;
 }
 
-static Value importModule(WrenVM* vm, Value name)
-{
-  // If the module is already loaded, we don't need to do anything.
-  if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
-
-  // Load the module's source code from the embedder.
-  char* source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
-  if (source == NULL)
-  {
-    vm->fiber->error = wrenStringFormat(vm, "Could not load module '@'.", name);
-    return NULL_VAL;
-  }
-
-  ObjFiber* moduleFiber = loadModule(vm, name, source);
-  if (moduleFiber == NULL)
-  {
-    vm->fiber->error = wrenStringFormat(vm,
-                                        "Could not compile module '@'.", name);
-    return NULL_VAL;
-  }
-
-  // Return the fiber that executes the module.
-  return OBJ_VAL(moduleFiber);
-}
-
-static Value importVariable(WrenVM* vm, Value moduleName, Value variableName)
-{
-  ObjModule* module = getModule(vm, moduleName);
-  ASSERT(module != NULL, "Should only look up loaded modules.");
-
-  ObjString* variable = AS_STRING(variableName);
-  uint32_t variableEntry = wrenSymbolTableFind(&module->variableNames,
-                                               variable->value,
-                                               variable->length);
-
-  // It's a runtime error if the imported variable does not exist.
-  if (variableEntry != UINT32_MAX)
-  {
-    return module->variables.data[variableEntry];
-  }
-
-  vm->fiber->error = wrenStringFormat(vm,
-      "Could not find a variable named '@' in module '@'.",
-      variableName, moduleName);
-  return NULL_VAL;
-}
-
 // Verifies that [superclassValue] is a valid object to inherit from. That
 // means it must be a class and cannot be the class of any built-in type.
 //
@@ -1209,44 +1162,6 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       DISPATCH();
     }
 
-    CASE_CODE(LOAD_MODULE):
-    {
-      Value name = fn->constants[READ_SHORT()];
-      Value result = importModule(vm, name);
-
-      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
-
-      // Make a slot that the module's fiber can use to store its result in.
-      // It ends up getting discarded, but CODE_RETURN expects to be able to
-      // place a value there.
-      PUSH(NULL_VAL);
-
-      // If it returned a fiber to execute the module body, switch to it.
-      if (IS_FIBER(result))
-      {
-        // Return to this module when that one is done.
-        AS_FIBER(result)->caller = fiber;
-
-        STORE_FRAME();
-        fiber = AS_FIBER(result);
-        vm->fiber = fiber;
-        LOAD_FRAME();
-      }
-
-      DISPATCH();
-    }
-
-    CASE_CODE(IMPORT_VARIABLE):
-    {
-      Value module = fn->constants[READ_SHORT()];
-      Value variable = fn->constants[READ_SHORT()];
-      Value result = importVariable(vm, module, variable);
-      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
-
-      PUSH(result);
-      DISPATCH();
-    }
-
     CASE_CODE(END):
       // A CODE_END should always be preceded by a CODE_RETURN. If we get here,
       // the compiler generated wrong code.
@@ -1389,34 +1304,56 @@ WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
   return runInterpreter(vm, fiber);
 }
 
-Value wrenImportModule(WrenVM* vm, const char* name)
+Value wrenImportModule(WrenVM* vm, Value name)
 {
-  Value nameValue = wrenStringFormat(vm, "$", name);
-  wrenPushRoot(vm, AS_OBJ(nameValue));
-
   // If the module is already loaded, we don't need to do anything.
-  if (!IS_UNDEFINED(wrenMapGet(vm->modules, nameValue)))
-  {
-    wrenPopRoot(vm); // nameValue.
-    return NULL_VAL;
-  }
-
+  if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
+  
   // Load the module's source code from the embedder.
-  char* source = vm->config.loadModuleFn(vm, name);
+  char* source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
   if (source == NULL)
   {
-    wrenPopRoot(vm); // nameValue.
-
-    // Couldn't load the module.
-    return wrenStringFormat(vm, "Could not find module '$'.", name);
+    vm->fiber->error = wrenStringFormat(vm, "Could not load module '@'.", name);
+    return NULL_VAL;
   }
-
-  ObjFiber* moduleFiber = loadModule(vm, nameValue, source);
-
-  wrenPopRoot(vm); // nameValue.
-
+  
+  ObjFiber* moduleFiber = loadModule(vm, name, source);
+  if (moduleFiber == NULL)
+  {
+    vm->fiber->error = wrenStringFormat(vm,
+                                        "Could not compile module '@'.", name);
+    return NULL_VAL;
+  }
+  
   // Return the fiber that executes the module.
   return OBJ_VAL(moduleFiber);
+}
+
+Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName)
+{
+  ObjModule* module = getModule(vm, moduleName);
+  if (module == NULL)
+  {
+    vm->fiber->error = wrenStringFormat(vm, "Module '@' is not loaded.",
+                                        moduleName);
+    return NULL_VAL;
+  }
+  
+  ObjString* variable = AS_STRING(variableName);
+  uint32_t variableEntry = wrenSymbolTableFind(&module->variableNames,
+                                               variable->value,
+                                               variable->length);
+  
+  // It's a runtime error if the imported variable does not exist.
+  if (variableEntry != UINT32_MAX)
+  {
+    return module->variables.data[variableEntry];
+  }
+  
+  vm->fiber->error = wrenStringFormat(vm,
+      "Could not find a variable named '@' in module '@'.",
+      variableName, moduleName);
+  return NULL_VAL;
 }
 
 Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name)
