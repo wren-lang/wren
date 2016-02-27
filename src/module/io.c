@@ -302,6 +302,23 @@ void fileReadBytes(WrenVM* vm)
              fileReadBytesCallback);
 }
 
+static void realPathCallback(uv_fs_t* request)
+{
+  if (handleRequestError(request)) return;
+  
+  wrenEnsureSlots(getVM(), 3);
+  wrenSetSlotString(getVM(), 2, (char*)request->ptr);
+  schedulerResume(freeRequest(request), true);
+  schedulerFinishResume();
+}
+
+void fileRealPath(WrenVM* vm)
+{
+  const char* path = wrenGetSlotString(vm, 1);
+  uv_fs_t* request = createRequest(wrenGetSlotValue(vm, 2));
+  uv_fs_realpath(getLoop(), request, path, realPathCallback);
+}
+
 // Called by libuv when the stat call completes.
 static void statCallback(uv_fs_t* request)
 {

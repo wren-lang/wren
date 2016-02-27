@@ -51,6 +51,15 @@ No encoding or decoding is done. If the file is UTF-8, then the resulting
 string will be a UTF-8 string. Otherwise, it will be a string of bytes in
 whatever encoding the file uses.
 
+### File.**realPath**(path)
+
+Resolves `path`, traversing symlinks and removining any unneeded `./` and `../`
+components. Returns the canonical absolute path to the file.
+
+    :::wren
+    var path = "/some/./symlink/a/../b/file.txt"
+    System.print(File.realPath(path)) //> /real/path/a/file.txt
+
 ### File.**size**(path)
 
 Returns the size in bytes of the contents of the file at `path`.

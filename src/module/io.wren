@@ -91,6 +91,14 @@ foreign class File {
     return File.open(path) {|file| file.readBytes(file.size) }
   }
 
+  // TODO: This works for directories too, so putting it on File is kind of
+  // lame. Consider reorganizing these classes some.
+  static realPath(path) {
+    ensurePath_(path)
+    realPath_(path, Fiber.current)
+    return Scheduler.runNextScheduled_()
+  }
+
   static size(path) {
     ensurePath_(path)
     sizePath_(path, Fiber.current)
@@ -158,6 +166,7 @@ foreign class File {
 
   foreign static delete_(path, fiber)
   foreign static open_(path, flags, fiber)
+  foreign static realPath_(path, fiber)
   foreign static sizePath_(path, fiber)
 
   foreign close_(fiber)
