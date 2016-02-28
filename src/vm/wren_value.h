@@ -34,14 +34,14 @@
 //
 // There are two supported Value representations. The main one uses a technique
 // called "NaN tagging" (explained in detail below) to store a number, any of
-// the value types, or a pointer all inside a single double-precision floating
-// point value. A larger, slower, Value type that uses a struct to store these
+// the value types, or a pointer, all inside one double-precision floating
+// point number. A larger, slower, Value type that uses a struct to store these
 // is also supported, and is useful for debugging the VM.
 //
 // The representation is controlled by the `WREN_NAN_TAGGING` define. If that's
 // defined, Nan tagging is used.
 
-// These macros cast a Value to one of the specific value types. These do *not*
+// These macros cast a Value to one of the specific object types. These do *not*
 // perform any validation, so must only be used after the Value has been
 // ensured to be the right type.
 #define AS_CLASS(value)     ((ObjClass*)AS_OBJ(value))          // ObjClass*

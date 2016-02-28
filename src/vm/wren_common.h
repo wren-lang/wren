@@ -3,8 +3,8 @@
 
 // This header contains macros and defines used across the entire Wren
 // implementation. In particular, it contains "configuration" defines that
-// control how Wren works. Some of these are only used while hacking on
-// debugging Wren itself.
+// control how Wren works. Some of these are only used while hacking on Wren
+// itself.
 //
 // This header is *not* intended to be included by code outside of Wren itself.
 
@@ -19,9 +19,9 @@
 // Usually they trade-off a bit of portability for speed. They default to the
 // most efficient behavior.
 
-// If true, then Wren will use a NaN-tagged double for its core value
-// representation. Otherwise, it will use a larger more conventional struct.
-// The former is significantly faster and more compact. The latter is useful for
+// If true, then Wren uses a NaN-tagged double for its core value
+// representation. Otherwise, it uses a larger more conventional struct. The
+// former is significantly faster and more compact. The latter is useful for
 // debugging and may be more portable.
 //
 // Defaults to on.
@@ -34,7 +34,7 @@
 // Enabling this speeds up the main dispatch loop a bit, but requires compiler
 // support.
 //
-// Defaults to on on supported compilers.
+// Defaults to true on supported compilers.
 #ifndef WREN_COMPUTED_GOTO
   #ifdef _MSC_VER
     // No computed gotos in Visual Studio.

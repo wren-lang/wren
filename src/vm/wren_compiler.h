@@ -35,7 +35,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
 // class definitions are just imperative statements. Most of the bytecode for a
 // a method doesn't care, but there are two places where it matters:
 //
-//   - To load or store a field, we need to know its index of the field in the
+//   - To load or store a field, we need to know the index of the field in the
 //     instance's field array. We need to adjust this so that subclass fields
 //     are positioned after superclass fields, and we don't know this until the
 //     superclass is known.

@@ -2862,7 +2862,7 @@ static void forStatement(Compiler* compiler)
   // A for statement like:
   //
   //     for (i in sequence.expression) {
-  //       IO.write(i)
+  //       System.print(i)
   //     }
   //
   // Is compiled to bytecode almost as if the source looked like this:
@@ -2872,7 +2872,7 @@ static void forStatement(Compiler* compiler)
   //       var iter_
   //       while (iter_ = seq_.iterate(iter_)) {
   //         var i = seq_.iteratorValue(iter_)
-  //         IO.write(i)
+  //         System.print(i)
   //       }
   //     }
   //
@@ -2919,18 +2919,14 @@ static void forStatement(Compiler* compiler)
   loadLocal(compiler, seqSlot);
   loadLocal(compiler, iterSlot);
 
+  // Update and test the iterator.
   callMethod(compiler, 1, "iterate(_)", 10);
-
-  // Store the iterator back in its local for the next iteration.
   emitByteArg(compiler, CODE_STORE_LOCAL, iterSlot);
-  // TODO: We can probably get this working with a bit less stack juggling.
-
   testExitLoop(compiler);
 
   // Get the current value in the sequence by calling ".iteratorValue".
   loadLocal(compiler, seqSlot);
   loadLocal(compiler, iterSlot);
-
   callMethod(compiler, 1, "iteratorValue(_)", 16);
 
   // Bind the loop variable in its own scope. This ensures we get a fresh
@@ -3016,9 +3012,8 @@ void statement(Compiler* compiler)
     {
       // Jump over the else branch when the if branch is taken.
       int elseJump = emitJump(compiler, CODE_JUMP);
-
       patchJump(compiler, ifJump);
-
+      
       statement(compiler);
 
       // Patch the jump over the else.
