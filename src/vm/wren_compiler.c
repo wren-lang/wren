@@ -294,7 +294,8 @@ typedef struct
   
   // Symbol table for the fields of the class.
   SymbolTable fields;
-  SymbolTable methods;
+  IntBuffer staticMethods;
+  IntBuffer instanceMethods;
 
   // True if the class being compiled is a foreign class.
   bool isForeign;
@@ -3089,7 +3090,8 @@ static bool method(Compiler* compiler, Variable classVariable)
 {
   // TODO: What about foreign constructors?
   bool isForeign = match(compiler, TOKEN_FOREIGN);
-  compiler->enclosingClass->inStatic = match(compiler, TOKEN_STATIC);
+  bool isStatic = match(compiler, TOKEN_STATIC);
+  compiler->enclosingClass->inStatic = isStatic;
     
   SignatureFn signatureFn = rules[compiler->parser->current.type].method;
   nextToken(compiler->parser);
@@ -3110,7 +3112,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   // Compile the method signature.
   signatureFn(&methodCompiler, &signature);
   
-  if (compiler->enclosingClass->inStatic && signature.type == SIG_INITIALIZER)
+  if (isStatic && signature.type == SIG_INITIALIZER)
   {
     error(compiler, "A constructor cannot be static.");
   }
@@ -3120,18 +3122,6 @@ static bool method(Compiler* compiler, Variable classVariable)
   int length;
   signatureToString(&signature, fullSignature, &length);
   
-  // Check for duplicate methods
-  StringBuffer* methods = &compiler->enclosingClass->methods;
-  int symbol = wrenSymbolTableFind(methods,
-    fullSignature, length);
-  if (symbol != -1)
-  {
-    error(compiler, "Already defined method '%s' for class %s in module '%s'.",
-      fullSignature, &compiler->enclosingClass->name->value,
-      compiler->parser->module->name);
-  }
-  wrenSymbolTableAdd(compiler->parser->vm, methods, fullSignature, length);
-
   if (isForeign)
   {
     // Define a constant for the signature.
@@ -3152,8 +3142,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   // Define the method. For a constructor, this defines the instance
   // initializer method.
   int methodSymbol = signatureSymbol(compiler, &signature);
-  defineMethod(compiler, classVariable, compiler->enclosingClass->inStatic,
-               methodSymbol);
+  defineMethod(compiler, classVariable, isStatic, methodSymbol);
 
   if (signature.type == SIG_INITIALIZER)
   {
@@ -3164,6 +3153,21 @@ static bool method(Compiler* compiler, Variable classVariable)
     createConstructor(compiler, &signature, methodSymbol);
     defineMethod(compiler, classVariable, true, constructorSymbol);
   }
+  
+  // Check for duplicate methods. Doesn't matter that it's already been
+  // defined, error will discard bytecode anyway.
+  IntBuffer* methods = isStatic ? &compiler->enclosingClass->staticMethods
+                                : &compiler->enclosingClass->instanceMethods;
+  
+  int symbol = wrenIntBufferFind(methods, methodSymbol);
+  if (symbol != -1)
+  {
+    const char* methodType = isStatic ? "static method" : "method";
+    error(compiler, "Already defined %s '%s' for class %s in module '%s'.",
+      methodType, fullSignature, &compiler->enclosingClass->name->value,
+      compiler->parser->module->name);
+  }
+  wrenIntBufferWrite(compiler->parser->vm, methods, methodSymbol);
 
   return true;
 }
@@ -3225,7 +3229,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
   // into account.
   wrenSymbolTableInit(&classCompiler.fields);
-  wrenSymbolTableInit(&classCompiler.methods);
+  wrenIntBufferInit(&classCompiler.staticMethods);
+  wrenIntBufferInit(&classCompiler.instanceMethods);
   compiler->enclosingClass = &classCompiler;
 
   // Compile the method definitions.
@@ -3250,7 +3255,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   }
   
   wrenSymbolTableClear(compiler->parser->vm, &classCompiler.fields);
-  wrenSymbolTableClear(compiler->parser->vm, &classCompiler.methods);
+  wrenIntBufferClear(compiler->parser->vm, &classCompiler.staticMethods);
+  wrenIntBufferClear(compiler->parser->vm, &classCompiler.instanceMethods);
   compiler->enclosingClass = NULL;
   popScope(compiler);
 }

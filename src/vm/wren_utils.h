@@ -27,7 +27,8 @@ typedef struct {
     void wren##name##BufferClear(WrenVM* vm, name##Buffer* buffer); \
     void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data, \
                                 int count); \
-    void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
+    void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data); \
+    int wren##name##BufferFind(name##Buffer* buffer, type data)
 
 // This should be used once for each type instantiation, somewhere in a .c file.
 #define DEFINE_BUFFER(name, type) \
@@ -64,6 +65,15 @@ typedef struct {
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data) \
     { \
       wren##name##BufferFill(vm, buffer, data, 1); \
+    } \
+    int wren##name##BufferFind(name##Buffer* buffer, type data) \
+    { \
+      for (int i = 0; i < buffer->count; i++) \
+      { \
+        if (memcmp(&buffer->data[i], &data, sizeof(data)) == 0) return i; \
+      } \
+      \
+      return -1; \
     }
 
 DECLARE_BUFFER(Byte, uint8_t);
