@@ -634,7 +634,7 @@ void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn);
 
 // Returns the base ObjFn backing an ObjClosure, or [function] if it already is
 // a raw ObjFn.
-static inline ObjFn* wrenUpwrapClosure(Obj* function)
+static inline ObjFn* wrenUnwrapClosure(Obj* function)
 {
   switch (function->type)
   {
@@ -657,7 +657,7 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
   CallFrame* frame = &fiber->frames[fiber->numFrames++];
   frame->stackStart = stackStart;
   frame->fn = function;
-  frame->ip = wrenUpwrapClosure(frame->fn)->bytecode;
+  frame->ip = wrenUnwrapClosure(frame->fn)->bytecode;
 }
 
 // Ensures [fiber]'s stack has at least [needed] slots.

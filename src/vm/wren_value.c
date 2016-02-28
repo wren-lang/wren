@@ -154,7 +154,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   // assumes all functions have.
   int stackCapacity = fn == NULL
       ? 1
-      : wrenPowerOf2Ceil(wrenUpwrapClosure(fn)->maxSlots + 1);
+      : wrenPowerOf2Ceil(wrenUnwrapClosure(fn)->maxSlots + 1);
   Value* stack = ALLOCATE_ARRAY(vm, Value, stackCapacity);
   
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);

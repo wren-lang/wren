@@ -438,7 +438,7 @@ static inline void callFunction(
   
   // Grow the stack if needed.
   int stackSize = (int)(fiber->stackTop - fiber->stack);
-  int needed = stackSize + wrenUpwrapClosure(function)->maxSlots;
+  int needed = stackSize + wrenUnwrapClosure(function)->maxSlots;
   wrenEnsureStack(vm, fiber, needed);
   
   wrenAppendCallFrame(vm, fiber, function, fiber->stackTop - numArgs);
@@ -690,7 +690,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       frame = &fiber->frames[fiber->numFrames - 1];    \
       stackStart = frame->stackStart;                  \
       ip = frame->ip;                                  \
-      fn = wrenUpwrapClosure(frame->fn);
+      fn = wrenUnwrapClosure(frame->fn);
 
   // Terminates the current fiber with error string [error]. If another calling
   // fiber is willing to catch the error, transfers control to it, otherwise
@@ -1229,7 +1229,7 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method)
          "Stack must have enough arguments for method.");
   
   // Discard any extra temporary slots. We take for granted that the stub
-  // function has exactly one slot for each arguments.
+  // function has exactly one slot for each argument.
   vm->fiber->stackTop = &vm->fiber->stack[fn->maxSlots];
   
   callFunction(vm, vm->fiber, (Obj*)fn, 0);
@@ -1565,6 +1565,7 @@ void wrenSetSlotNull(WrenVM* vm, int slot)
 void wrenSetSlotString(WrenVM* vm, int slot, const char* text)
 {
   ASSERT(text != NULL, "String cannot be NULL.");
+  
   setSlot(vm, slot, wrenNewString(vm, text, strlen(text)));
 }
 

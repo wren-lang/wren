@@ -18,7 +18,7 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
   for (int i = fiber->numFrames - 1; i >= 0; i--)
   {
     CallFrame* frame = &fiber->frames[i];
-    ObjFn* fn = wrenUpwrapClosure(frame->fn);
+    ObjFn* fn = wrenUnwrapClosure(frame->fn);
 
     // Skip over stub functions for calling methods from the C API.
     if (fn->module == NULL) continue;
