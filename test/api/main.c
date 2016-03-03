@@ -9,6 +9,7 @@
 #include "get_variable.h"
 #include "foreign_class.h"
 #include "lists.h"
+#include "new_vm.h"
 #include "slots.h"
 #include "value.h"
 
@@ -42,6 +43,9 @@ static WrenForeignMethodFn bindForeignMethod(
   if (method != NULL) return method;
   
   method = listsBindMethod(fullName);
+  if (method != NULL) return method;
+  
+  method = newVMBindMethod(fullName);
   if (method != NULL) return method;
   
   method = slotsBindMethod(fullName);

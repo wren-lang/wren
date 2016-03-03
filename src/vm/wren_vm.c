@@ -49,18 +49,19 @@ void wrenInitConfiguration(WrenConfiguration* config)
 
 WrenVM* wrenNewVM(WrenConfiguration* config)
 {
-  WrenVM* vm;
+  WrenReallocateFn reallocate = defaultReallocate;
+  if (config != NULL) reallocate = config->reallocateFn;
+  
+  WrenVM* vm = (WrenVM*)reallocate(NULL, sizeof(*vm));
+  memset(vm, 0, sizeof(WrenVM));
 
+  // Copy the configuration if given one.
   if (config != NULL)
   {
-    vm = (WrenVM*)config->reallocateFn(NULL, sizeof(*vm));
-    memset(vm, 0, sizeof(WrenVM));
     memcpy(&vm->config, config, sizeof(WrenConfiguration));
   }
   else
   {
-    vm = (WrenVM*)defaultReallocate(NULL, sizeof(*vm));
-    memset(vm, 0, sizeof(WrenVM));
     wrenInitConfiguration(&vm->config);
   }
 
@@ -68,8 +69,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->grayCount = 0;
   // TODO: Tune this.
   vm->grayCapacity = 4;
-  vm->gray = (Obj**)vm->config.reallocateFn(NULL,
-                                            vm->grayCapacity * sizeof(Obj*));
+  vm->gray = (Obj**)reallocate(NULL, vm->grayCapacity * sizeof(Obj*));
   vm->nextGC = vm->config.initialHeapSize;
 
   wrenSymbolTableInit(&vm->methodNames);
