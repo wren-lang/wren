@@ -49,9 +49,20 @@ void wrenInitConfiguration(WrenConfiguration* config)
 
 WrenVM* wrenNewVM(WrenConfiguration* config)
 {
-  WrenVM* vm = (WrenVM*)config->reallocateFn(NULL, sizeof(*vm));
-  memset(vm, 0, sizeof(WrenVM));
-  memcpy(&vm->config, config, sizeof(WrenConfiguration));
+  WrenVM* vm;
+
+  if (config != NULL)
+  {
+    vm = (WrenVM*)config->reallocateFn(NULL, sizeof(*vm));
+    memset(vm, 0, sizeof(WrenVM));
+    memcpy(&vm->config, config, sizeof(WrenConfiguration));
+  }
+  else
+  {
+    vm = (WrenVM*)defaultReallocate(NULL, sizeof(*vm));
+    memset(vm, 0, sizeof(WrenVM));
+    wrenInitConfiguration(&vm->config);
+  }
 
   // TODO: Should we allocate and free this during a GC?
   vm->grayCount = 0;
@@ -59,7 +70,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->grayCapacity = 4;
   vm->gray = (Obj**)vm->config.reallocateFn(NULL,
                                             vm->grayCapacity * sizeof(Obj*));
-  vm->nextGC = config->initialHeapSize;
+  vm->nextGC = vm->config.initialHeapSize;
 
   wrenSymbolTableInit(&vm->methodNames);
 
