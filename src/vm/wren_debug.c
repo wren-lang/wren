@@ -13,14 +13,20 @@ void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
     else
     {
       fprintf(stderr, "%s\n", AS_CSTRING(fiber->error));
-    }    
+    }
   }
   else
   {
     // TODO: Print something a little useful here. Maybe the name of the error's
     // class?
-    vm->config.errorFn(vm, "[error object]\n");
-    fprintf(stderr, "[error object]\n");
+    if ( vm->config.errorFn != NULL)
+    {
+      vm->config.errorFn(vm, "[error object]\n");
+    }
+    else
+    {
+      fprintf(stderr, "[error object]\n");
+    }
   }
 
   for (int i = fiber->numFrames - 1; i >= 0; i--)
@@ -30,12 +36,12 @@ void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
 
     // Skip over stub functions for calling methods from the C API.
     if (fn->module == NULL) continue;
-    
+
     // The built-in core module has no name. We explicitly omit it from stack
     // traces since we don't want to highlight to a user the implementation
     // detail of what part of the core module is written in C and what is Wren.
     if (fn->module->name == NULL) continue;
-    
+
     // -1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
 
@@ -300,7 +306,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 
     case CODE_CONSTRUCT:         printf("CONSTRUCT\n"); break;
     case CODE_FOREIGN_CONSTRUCT: printf("FOREIGN_CONSTRUCT\n"); break;
-      
+
     case CODE_CLASS:
     {
       int numFields = READ_BYTE();
