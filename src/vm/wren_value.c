@@ -234,52 +234,31 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
   return object;
 }
 
-ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
-                       const Value* constants, int numConstants,
-                       int numUpvalues, int maxSlots, int arity,
-                       uint8_t* bytecode, int bytecodeLength,
-                       const char* debugName, int debugNameLength,
-                       int* sourceLines)
+ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
 {
-  // Allocate these before the function in case they trigger a GC which would
-  // free the function.
-  Value* copiedConstants = NULL;
-  if (numConstants > 0)
-  {
-    copiedConstants = ALLOCATE_ARRAY(vm, Value, numConstants);
-    for (int i = 0; i < numConstants; i++)
-    {
-      copiedConstants[i] = constants[i];
-    }
-  }
-
   FnDebug* debug = ALLOCATE(vm, FnDebug);
-
-  // Copy the function's name.
-  debug->name = ALLOCATE_ARRAY(vm, char, debugNameLength + 1);
-  memcpy(debug->name, debugName, debugNameLength);
-  debug->name[debugNameLength] = '\0';
-
-  debug->sourceLines = sourceLines;
+  debug->name = NULL;
+  wrenIntBufferInit(&debug->sourceLines);
 
   ObjFn* fn = ALLOCATE(vm, ObjFn);
   initObj(vm, &fn->obj, OBJ_FN, vm->fnClass);
-
-  // TODO: Should eventually copy this instead of taking ownership. When the
-  // compiler grows this, its capacity will often exceed the actual used size.
-  // Copying to an exact-sized buffer will save a bit of memory. I tried doing
-  // this, but it made the "for" benchmark ~15% slower for some unknown reason.
-  fn->bytecode = bytecode;
-  fn->constants = copiedConstants;
+  
+  wrenValueBufferInit(&fn->constants);
+  wrenByteBufferInit(&fn->code);
   fn->module = module;
   fn->maxSlots = maxSlots;
-  fn->numUpvalues = numUpvalues;
-  fn->numConstants = numConstants;
-  fn->arity = arity;
-  fn->bytecodeLength = bytecodeLength;
+  fn->numUpvalues = 0;
+  fn->arity = 0;
   fn->debug = debug;
-
+  
   return fn;
+}
+
+void wrenFunctionBindName(WrenVM* vm, ObjFn* fn, const char* name, int length)
+{
+  fn->debug->name = ALLOCATE_ARRAY(vm, char, length + 1);
+  memcpy(fn->debug->name, name, length);
+  fn->debug->name[length] = '\0';
 }
 
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
@@ -1016,18 +995,15 @@ static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
 static void blackenFn(WrenVM* vm, ObjFn* fn)
 {
   // Mark the constants.
-  for (int i = 0; i < fn->numConstants; i++)
-  {
-    wrenGrayValue(vm, fn->constants[i]);
-  }
+  wrenGrayBuffer(vm, &fn->constants);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjFn);
-  vm->bytesAllocated += sizeof(uint8_t) * fn->bytecodeLength;
-  vm->bytesAllocated += sizeof(Value) * fn->numConstants;
-
+  vm->bytesAllocated += sizeof(uint8_t) * fn->code.capacity;
+  vm->bytesAllocated += sizeof(Value) * fn->constants.capacity;
+  
   // The debug line number buffer.
-  vm->bytesAllocated += sizeof(int) * fn->bytecodeLength;
+  vm->bytesAllocated += sizeof(int) * fn->code.capacity;
   // TODO: What about the function name?
 }
 
@@ -1179,10 +1155,10 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
     case OBJ_FN:
     {
       ObjFn* fn = (ObjFn*)obj;
-      DEALLOCATE(vm, fn->constants);
-      DEALLOCATE(vm, fn->bytecode);
+      wrenValueBufferClear(vm, &fn->constants);
+      wrenByteBufferClear(vm, &fn->code);
+      wrenIntBufferClear(vm, &fn->debug->sourceLines);
       DEALLOCATE(vm, fn->debug->name);
-      DEALLOCATE(vm, fn->debug->sourceLines);
       DEALLOCATE(vm, fn->debug);
       break;
     }

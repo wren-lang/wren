@@ -29,7 +29,7 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
     if (fn->module->name == NULL) continue;
     
     // -1 because IP has advanced past the instruction that it just executed.
-    int line = fn->debug->sourceLines[frame->ip - fn->bytecode - 1];
+    int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
     fprintf(stderr, "[%s line %d] in %s\n",
             fn->module->name->value, line, fn->debug->name);
   }
@@ -95,10 +95,10 @@ void wrenDumpValue(Value value)
 static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 {
   int start = i;
-  uint8_t* bytecode = fn->bytecode;
+  uint8_t* bytecode = fn->code.data;
   Code code = (Code)bytecode[i];
 
-  int line = fn->debug->sourceLines[i];
+  int line = fn->debug->sourceLines.data[i];
   if (lastLine == NULL || *lastLine != line)
   {
     printf("%4d:", line);
@@ -124,7 +124,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int constant = READ_SHORT();
       printf("%-16s %5d '", "CONSTANT", constant);
-      wrenDumpValue(fn->constants[constant]);
+      wrenDumpValue(fn->constants.data[constant]);
       printf("'\n");
       break;
     }
@@ -265,9 +265,9 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     {
       int constant = READ_SHORT();
       printf("%-16s %5d ", "CLOSURE", constant);
-      wrenDumpValue(fn->constants[constant]);
+      wrenDumpValue(fn->constants.data[constant]);
       printf(" ");
-      ObjFn* loadedFn = AS_FN(fn->constants[constant]);
+      ObjFn* loadedFn = AS_FN(fn->constants.data[constant]);
       for (int j = 0; j < loadedFn->numUpvalues; j++)
       {
         int isLocal = READ_BYTE();

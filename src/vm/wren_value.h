@@ -269,7 +269,7 @@ typedef struct
   // An array of line numbers. There is one element in this array for each
   // bytecode in the function's bytecode array. The value of that element is
   // the line in the source code that generated that instruction.
-  int* sourceLines;
+  IntBuffer sourceLines;
 } FnDebug;
 
 // A loaded module and the top-level variables it defines.
@@ -298,23 +298,19 @@ typedef struct
 typedef struct
 {
   Obj obj;
-  // TODO: Make one of these a flexible array? I tried each and it didn't seem
-  // to help perf, but it bears more investigation.
-  Value* constants;
-  uint8_t* bytecode;
-
+  
+  ByteBuffer code;
+  ValueBuffer constants;
+  
   // The module where this function was defined.
   ObjModule* module;
 
   // The maximum number of stack slots this function may use.
   int maxSlots;
   
+  // The number of upvalues this function closes over.
   int numUpvalues;
-  int numConstants;
-
-  // TODO: Move to FnDebug?
-  int bytecodeLength;
-
+  
   // The number of parameters this function expects. Used to ensure that .call
   // handles a mismatch between number of parameters and arguments. This will
   // only be set for fns, and not ObjFns that represent methods or scripts.
@@ -657,7 +653,7 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
   CallFrame* frame = &fiber->frames[fiber->numFrames++];
   frame->stackStart = stackStart;
   frame->fn = function;
-  frame->ip = wrenUnwrapClosure(frame->fn)->bytecode;
+  frame->ip = wrenUnwrapClosure(frame->fn)->code.data;
 }
 
 // Ensures [fiber]'s stack has at least [needed] slots.
@@ -665,16 +661,11 @@ void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed);
 
 ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
-// TODO: The argument list here is getting a bit gratuitous.
-// Creates a new function object with the given code and constants. The new
-// function will take over ownership of [bytecode] and [sourceLines]. It will
-// copy [constants] into its own array.
-ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module,
-                       const Value* constants, int numConstants,
-                       int numUpvalues, int maxSlots, int arity,
-                       uint8_t* bytecode, int bytecodeLength,
-                       const char* debugName, int debugNameLength,
-                       int* sourceLines);
+// Creates a new empty function. Before being used, it must have code,
+// constants, etc. added to it.
+ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots);
+
+void wrenFunctionBindName(WrenVM* vm, ObjFn* fn, const char* name, int length);
 
 // Creates a new instance of the given [classObj].
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj);

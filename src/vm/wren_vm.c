@@ -805,7 +805,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       DISPATCH();
 
     CASE_CODE(CONSTANT):
-      PUSH(fn->constants[READ_SHORT()]);
+      PUSH(fn->constants.data[READ_SHORT()]);
       DISPATCH();
 
     {
@@ -876,7 +876,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       args = fiber->stackTop - numArgs;
 
       // The superclass is stored in a constant.
-      classObj = AS_CLASS(fn->constants[READ_SHORT()]);
+      classObj = AS_CLASS(fn->constants.data[READ_SHORT()]);
       goto completeCall;
 
     completeCall:
@@ -1110,7 +1110,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(CLOSURE):
     {
-      ObjFn* prototype = AS_FN(fn->constants[READ_SHORT()]);
+      ObjFn* prototype = AS_FN(fn->constants.data[READ_SHORT()]);
 
       ASSERT(prototype->numUpvalues > 0,
              "Should not create closure for functions that don't need it.");
@@ -1204,21 +1204,21 @@ WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   
   // Create a little stub function that assumes the arguments are on the stack
   // and calls the method.
-  uint8_t* bytecode = ALLOCATE_ARRAY(vm, uint8_t, 5);
-  bytecode[0] = (uint8_t)(CODE_CALL_0 + numParams);
-  bytecode[1] = (method >> 8) & 0xff;
-  bytecode[2] = method & 0xff;
-  bytecode[3] = CODE_RETURN;
-  bytecode[4] = CODE_END;
+  ObjFn* fn = wrenNewFunction(vm, NULL, numParams + 1);
   
-  int* debugLines = ALLOCATE_ARRAY(vm, int, 5);
-  memset(debugLines, 1, 5);
+  // Wrap the function in a handle. Do this here so it doesn't get collected as
+  // we fill it in.
+  WrenValue* value = wrenCaptureValue(vm, OBJ_VAL(fn));
   
-  ObjFn* fn = wrenNewFunction(vm, NULL, NULL, 0, 0, numParams + 1, 0, bytecode,
-                             5, signature, signatureLength, debugLines);
+  wrenByteBufferWrite(vm, &fn->code, (uint8_t)(CODE_CALL_0 + numParams));
+  wrenByteBufferWrite(vm, &fn->code, (method >> 8) & 0xff);
+  wrenByteBufferWrite(vm, &fn->code, method & 0xff);
+  wrenByteBufferWrite(vm, &fn->code, CODE_RETURN);
+  wrenByteBufferWrite(vm, &fn->code, CODE_END);
+  wrenIntBufferFill(vm, &fn->debug->sourceLines, 0, 5);
+  wrenFunctionBindName(vm, fn, signature, signatureLength);
 
-  // Wrap the function in a handle.
-  return wrenCaptureValue(vm, OBJ_VAL(fn));
+  return value;
 }
 
 WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method)
