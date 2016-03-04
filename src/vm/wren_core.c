@@ -57,8 +57,6 @@ DEF_PRIMITIVE(fiber_new)
   // The compiler expects the first slot of a function to hold the receiver.
   // Since a fiber's stack is invoked directly, it doesn't have one, so put it
   // in here.
-  // TODO: Is there a cleaner solution?
-  // TODO: If we make growable stacks, make sure this grows it.
   newFiber->stack[0] = NULL_VAL;
   newFiber->stackTop++;
 
@@ -81,7 +79,7 @@ DEF_PRIMITIVE(fiber_abort)
 // [hasValue] is true if a value in [args] is being passed to the new fiber.
 // Otherwise, `null` is implicitly being passed.
 static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
-                     bool hasValue)
+                     bool hasValue, const char* verb)
 {
   if (isCall)
   {
@@ -93,15 +91,13 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
 
   if (fiber->numFrames == 0)
   {
-    vm->fiber->error = wrenStringFormat(vm, "Cannot $ a finished fiber.",
-                               isCall ? "call" : "transfer to");
+    vm->fiber->error = wrenStringFormat(vm, "Cannot $ a finished fiber.", verb);
     return false;
   }
 
   if (!IS_NULL(fiber->error))
   {
-    vm->fiber->error = wrenStringFormat(vm, "Cannot $ an aborted fiber.",
-                               isCall ? "call" : "transfer to");
+    vm->fiber->error = wrenStringFormat(vm, "Cannot $ an aborted fiber.", verb);
     return false;
   }
 
@@ -122,12 +118,12 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
 
 DEF_PRIMITIVE(fiber_call)
 {
-  return runFiber(vm, AS_FIBER(args[0]), args, true, false);
+  return runFiber(vm, AS_FIBER(args[0]), args, true, false, "call");
 }
 
 DEF_PRIMITIVE(fiber_call1)
 {
-  return runFiber(vm, AS_FIBER(args[0]), args, true, true);
+  return runFiber(vm, AS_FIBER(args[0]), args, true, true, "call");
 }
 
 DEF_PRIMITIVE(fiber_current)
@@ -151,47 +147,32 @@ DEF_PRIMITIVE(fiber_suspend)
   // Switching to a null fiber tells the interpreter to stop and exit.
   vm->fiber = NULL;
   vm->apiStack = NULL;
-  
   return false;
 }
 
 DEF_PRIMITIVE(fiber_transfer)
 {
-  return runFiber(vm, AS_FIBER(args[0]), args, false, false);
+  return runFiber(vm, AS_FIBER(args[0]), args, false, false, "transfer to");
 }
 
 DEF_PRIMITIVE(fiber_transfer1)
 {
-  return runFiber(vm, AS_FIBER(args[0]), args, false, true);
+  return runFiber(vm, AS_FIBER(args[0]), args, false, true, "transfer to");
 }
 
 DEF_PRIMITIVE(fiber_transferError)
 {
-  runFiber(vm, AS_FIBER(args[0]), args, false, true);
+  runFiber(vm, AS_FIBER(args[0]), args, false, true, "transfer to");
   vm->fiber->error = args[1];
   return false;
 }
 
 DEF_PRIMITIVE(fiber_try)
 {
-  ObjFiber* current = vm->fiber;
-  ObjFiber* tried = AS_FIBER(args[0]);
-  // TODO: Use runFiber().
-  if (tried->numFrames == 0) RETURN_ERROR("Cannot try a finished fiber.");
-  if (tried->caller != NULL) RETURN_ERROR("Fiber has already been called.");
-
-  vm->fiber = tried;
-
-  // Remember who ran it.
-  vm->fiber->caller = current;
-  vm->fiber->callerIsTrying = true;
-
-  // If the fiber was yielded, make the yield call return null.
-  if (vm->fiber->stackTop > vm->fiber->stack)
-  {
-    vm->fiber->stackTop[-1] = NULL_VAL;
-  }
-
+  runFiber(vm, AS_FIBER(args[0]), args, true, false, "try");
+  
+  // If we're switching to a valid fiber to try, remember that we're trying it.
+  if (IS_NULL(vm->fiber->error)) vm->fiber->callerIsTrying = true;
   return false;
 }
 
