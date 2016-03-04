@@ -487,7 +487,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->loop = NULL;
   compiler->enclosingClass = NULL;
 
-  wrenSetCompiler(parser->vm, compiler);
+  parser->vm->compiler = compiler;
 
   if (parent == NULL)
   {
@@ -1456,12 +1456,15 @@ static void loadLocal(Compiler* compiler, int slot)
   emitByteArg(compiler, CODE_LOAD_LOCAL, slot);
 }
 
-// Discards memory owned by [compiler].
-static void freeCompiler(Compiler* compiler)
+// Discards memory owned by [compiler] and removes it from the stack of
+// ongoing compilers.
+static void abortCompiler(Compiler* compiler)
 {
   wrenByteBufferClear(compiler->parser->vm, &compiler->bytecode);
   wrenIntBufferClear(compiler->parser->vm, &compiler->debugSourceLines);
   wrenValueBufferClear(compiler->parser->vm, &compiler->constants);
+  
+  compiler->parser->vm->compiler = compiler->parent;
 }
 
 // Finishes [compiler], which is compiling a function, method, or chunk of top
@@ -1474,10 +1477,7 @@ static ObjFn* endCompiler(Compiler* compiler,
   // anyway.
   if (compiler->parser->hasError)
   {
-    wrenSetCompiler(compiler->parser->vm, compiler->parent);
-
-    // Free the code and constants since they won't be used.
-    freeCompiler(compiler);
+    abortCompiler(compiler);
     return NULL;
   }
 
@@ -1529,7 +1529,7 @@ static ObjFn* endCompiler(Compiler* compiler,
   }
 
   // Pop this compiler off the stack.
-  wrenSetCompiler(compiler->parser->vm, compiler->parent);
+  compiler->parser->vm->compiler = compiler->parent;
 
   wrenPopRoot(compiler->parser->vm);
 
@@ -3161,7 +3161,7 @@ static bool method(Compiler* compiler, Variable classVariable)
 
     // We don't need the function we started compiling in the parameter list
     // any more.
-    freeCompiler(&methodCompiler);
+    abortCompiler(&methodCompiler);
   }
   else
   {

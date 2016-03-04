@@ -169,9 +169,6 @@ int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
 int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
                        size_t length, Value value);
 
-// Sets the current Compiler being run to [compiler].
-void wrenSetCompiler(WrenVM* vm, Compiler* compiler);
-
 // Mark [obj] as a GC root so that it doesn't get collected.
 void wrenPushRoot(WrenVM* vm, Obj* obj);
 

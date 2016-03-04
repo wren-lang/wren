@@ -115,11 +115,6 @@ void wrenFreeVM(WrenVM* vm)
   DEALLOCATE(vm, vm);
 }
 
-void wrenSetCompiler(WrenVM* vm, Compiler* compiler)
-{
-  vm->compiler = compiler;
-}
-
 void wrenCollectGarbage(WrenVM* vm)
 {
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
@@ -149,7 +144,7 @@ void wrenCollectGarbage(WrenVM* vm)
     wrenGrayObj(vm, vm->tempRoots[i]);
   }
 
-  // The rooted fiber.
+  // The current fiber.
   wrenGrayObj(vm, (Obj*)vm->fiber);
 
   // The value handles.
