@@ -58,7 +58,7 @@ typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
 // Displays a string of text to the user.
 typedef void (*WrenWriteFn)(WrenVM* vm, const char* text);
 
-// Displays a runtime error to the user.
+// Processes a runtime error.
 typedef void (*WrenErrorFn)(WrenVM* vm, const char* text);
 
 typedef struct
@@ -130,9 +130,9 @@ typedef struct
   // If this is `NULL`, Wren discards any printed text.
   WrenWriteFn writeFn;
 
-  // The callback Wren uses to display text when runtime errors occur.
+  // The callback Wren uses to display runtime errors.
   //
-  // If this is `NULL`, Wren printf's the error.
+  // If this is `NULL`, Wren outputs the error to the stderr stream.
   WrenErrorFn errorFn;
 
   // The number of bytes Wren will allocate before triggering the first garbage
@@ -189,7 +189,7 @@ typedef enum
   WREN_TYPE_LIST,
   WREN_TYPE_NULL,
   WREN_TYPE_STRING,
-  
+
   // The object is of a type that isn't accessible by the C API.
   WREN_TYPE_UNKNOWN
 } WrenType;
