@@ -31,24 +31,19 @@ bool validateFn(WrenVM* vm, Value arg, const char* argName)
 bool validateNum(WrenVM* vm, Value arg, const char* argName)
 {
   if (IS_NUM(arg)) return true;
-
-  vm->fiber->error = wrenStringFormat(vm, "$ must be a number.", argName);
-  return false;
+  RETURN_ERROR_FMT("$ must be a number.", argName);
 }
 
 bool validateIntValue(WrenVM* vm, double value, const char* argName)
 {
   if (trunc(value) == value) return true;
-
-  vm->fiber->error = wrenStringFormat(vm, "$ must be an integer.", argName);
-  return false;
+  RETURN_ERROR_FMT("$ must be an integer.", argName);
 }
 
 bool validateInt(WrenVM* vm, Value arg, const char* argName)
 {
   // Make sure it's a number first.
   if (!validateNum(vm, arg, argName)) return false;
-
   return validateIntValue(vm, AS_NUM(arg), argName);
 }
 
@@ -60,24 +55,20 @@ bool validateKey(WrenVM* vm, Value arg)
     return true;
   }
 
-  vm->fiber->error = CONST_STRING(vm, "Key must be a value type.");
-  return false;
+  RETURN_ERROR("Key must be a value type.");
 }
 
 uint32_t validateIndex(WrenVM* vm, Value arg, uint32_t count,
                        const char* argName)
 {
   if (!validateNum(vm, arg, argName)) return UINT32_MAX;
-
   return validateIndexValue(vm, count, AS_NUM(arg), argName);
 }
 
 bool validateString(WrenVM* vm, Value arg, const char* argName)
 {
   if (IS_STRING(arg)) return true;
-
-  vm->fiber->error = wrenStringFormat(vm, "$ must be a string.", argName);
-  return false;
+  RETURN_ERROR_FMT("$ must be a string.", argName);
 }
 
 uint32_t calculateRange(WrenVM* vm, ObjRange* range, uint32_t* length,

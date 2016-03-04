@@ -91,14 +91,12 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
 
   if (fiber->numFrames == 0)
   {
-    vm->fiber->error = wrenStringFormat(vm, "Cannot $ a finished fiber.", verb);
-    return false;
+    RETURN_ERROR_FMT("Cannot $ a finished fiber.", verb);
   }
 
   if (!IS_NULL(fiber->error))
   {
-    vm->fiber->error = wrenStringFormat(vm, "Cannot $ an aborted fiber.", verb);
-    return false;
+    RETURN_ERROR_FMT("Cannot $ an aborted fiber.", verb);
   }
 
   // When the calling fiber resumes, we'll store the result of the call in its
@@ -515,11 +513,7 @@ DEF_PRIMITIVE(num_fromString)
   // Skip past any trailing whitespace.
   while (*end != '\0' && isspace((unsigned char)*end)) end++;
 
-  if (errno == ERANGE)
-  {
-    vm->fiber->error = CONST_STRING(vm, "Number literal is too large.");
-    return false;
-  }
+  if (errno == ERANGE) RETURN_ERROR("Number literal is too large.");
 
   // We must have consumed the entire string. Otherwise, it contains non-number
   // characters and we can't parse it.
