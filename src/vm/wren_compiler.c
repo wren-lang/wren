@@ -1547,7 +1547,7 @@ typedef enum
   PREC_NONE,
   PREC_LOWEST,
   PREC_ASSIGNMENT,    // =
-  PREC_TERNARY,       // ?:
+  PREC_CONDITIONAL,   // ?:
   PREC_LOGICAL_OR,    // ||
   PREC_LOGICAL_AND,   // &&
   PREC_EQUALITY,      // == !=
@@ -1565,7 +1565,7 @@ typedef enum
   PREC_PRIMARY
 } Precedence;
 
-typedef void (*GrammarFn)(Compiler*, bool allowAssignment);
+typedef void (*GrammarFn)(Compiler*, bool canAssign);
 
 typedef void (*SignatureFn)(Compiler* compiler, Signature* signature);
 
@@ -1583,8 +1583,7 @@ static GrammarRule* getRule(TokenType type);
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
 static void definition(Compiler* compiler);
-static void parsePrecedence(Compiler* compiler, bool allowAssignment,
-                            Precedence precedence);
+static void parsePrecedence(Compiler* compiler, Precedence precedence);
 
 // Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
 // instruction with an offset that jumps to the current end of bytecode.
@@ -1910,16 +1909,13 @@ static void methodCall(Compiler* compiler, Code instruction,
 
 // Compiles a call whose name is the previously consumed token. This includes
 // getters, method calls with arguments, and setter calls.
-static void namedCall(Compiler* compiler, bool allowAssignment,
-                      Code instruction)
+static void namedCall(Compiler* compiler, bool canAssign, Code instruction)
 {
   // Get the token for the method name.
   Signature signature = signatureFromToken(compiler, SIG_GETTER);
 
-  if (match(compiler, TOKEN_EQ))
+  if (canAssign && match(compiler, TOKEN_EQ))
   {
-    if (!allowAssignment) error(compiler, "Invalid assignment.");
-
     ignoreNewlines(compiler);
 
     // Build the setter signature.
@@ -1972,14 +1968,14 @@ static void loadCoreVariable(Compiler* compiler, const char* name)
 }
 
 // A parenthesized expression.
-static void grouping(Compiler* compiler, bool allowAssignment)
+static void grouping(Compiler* compiler, bool canAssign)
 {
   expression(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
 // A list literal.
-static void list(Compiler* compiler, bool allowAssignment)
+static void list(Compiler* compiler, bool canAssign)
 {
   // Instantiate a new list.
   loadCoreVariable(compiler, "List");
@@ -2004,7 +2000,7 @@ static void list(Compiler* compiler, bool allowAssignment)
 }
 
 // A map literal.
-static void map(Compiler* compiler, bool allowAssignment)
+static void map(Compiler* compiler, bool canAssign)
 {
   // Instantiate a new map.
   loadCoreVariable(compiler, "Map");
@@ -2020,7 +2016,7 @@ static void map(Compiler* compiler, bool allowAssignment)
     if (peek(compiler) == TOKEN_RIGHT_BRACE) break;
 
     // The key.
-    parsePrecedence(compiler, false, PREC_UNARY);
+    parsePrecedence(compiler, PREC_UNARY);
     consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
     ignoreNewlines(compiler);
 
@@ -2035,20 +2031,20 @@ static void map(Compiler* compiler, bool allowAssignment)
 }
 
 // Unary operators like `-foo`.
-static void unaryOp(Compiler* compiler, bool allowAssignment)
+static void unaryOp(Compiler* compiler, bool canAssign)
 {
   GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   ignoreNewlines(compiler);
 
   // Compile the argument.
-  parsePrecedence(compiler, false, (Precedence)(PREC_UNARY + 1));
+  parsePrecedence(compiler, (Precedence)(PREC_UNARY + 1));
 
   // Call the operator method on the left-hand side.
   callMethod(compiler, 0, rule->name, 1);
 }
 
-static void boolean(Compiler* compiler, bool allowAssignment)
+static void boolean(Compiler* compiler, bool canAssign)
 {
   emitOp(compiler,
       compiler->parser->previous.type == TOKEN_FALSE ? CODE_FALSE : CODE_TRUE);
@@ -2075,7 +2071,7 @@ static ClassCompiler* getEnclosingClass(Compiler* compiler)
   return compiler == NULL ? NULL : compiler->enclosingClass;
 }
 
-static void field(Compiler* compiler, bool allowAssignment)
+static void field(Compiler* compiler, bool canAssign)
 {
   // Initialize it with a fake value so we can keep parsing and minimize the
   // number of cascaded errors.
@@ -2110,10 +2106,8 @@ static void field(Compiler* compiler, bool allowAssignment)
 
   // If there's an "=" after a field name, it's an assignment.
   bool isLoad = true;
-  if (match(compiler, TOKEN_EQ))
+  if (canAssign && match(compiler, TOKEN_EQ))
   {
-    if (!allowAssignment) error(compiler, "Invalid assignment.");
-
     // Compile the right-hand side.
     expression(compiler);
     isLoad = false;
@@ -2134,14 +2128,11 @@ static void field(Compiler* compiler, bool allowAssignment)
 }
 
 // Compiles a read or assignment to [variable].
-static void bareName(Compiler* compiler, bool allowAssignment,
-                     Variable variable)
+static void bareName(Compiler* compiler, bool canAssign, Variable variable)
 {
   // If there's an "=" after a bare name, it's a variable assignment.
-  if (match(compiler, TOKEN_EQ))
+  if (canAssign && match(compiler, TOKEN_EQ))
   {
-    if (!allowAssignment) error(compiler, "Invalid assignment.");
-
     // Compile the right-hand side.
     expression(compiler);
 
@@ -2167,7 +2158,7 @@ static void bareName(Compiler* compiler, bool allowAssignment,
   loadVariable(compiler, variable);
 }
 
-static void staticField(Compiler* compiler, bool allowAssignment)
+static void staticField(Compiler* compiler, bool canAssign)
 {
   Compiler* classCompiler = getEnclosingClassCompiler(compiler);
   if (classCompiler == NULL)
@@ -2194,7 +2185,7 @@ static void staticField(Compiler* compiler, bool allowAssignment)
   // the above resolveLocal() call because we may have already closed over it
   // as an upvalue.
   Variable variable = resolveName(compiler, token->start, token->length);
-  bareName(compiler, allowAssignment, variable);
+  bareName(compiler, canAssign, variable);
 }
 
 // Returns `true` if [name] is a local variable name (starts with a lowercase
@@ -2205,7 +2196,7 @@ static bool isLocalName(const char* name)
 }
 
 // Compiles a variable name or method call with an implicit receiver.
-static void name(Compiler* compiler, bool allowAssignment)
+static void name(Compiler* compiler, bool canAssign)
 {
   // Look for the name in the scope chain up to the nearest enclosing method.
   Token* token = &compiler->parser->previous;
@@ -2213,7 +2204,7 @@ static void name(Compiler* compiler, bool allowAssignment)
   Variable variable = resolveNonmodule(compiler, token->start, token->length);
   if (variable.index != -1)
   {
-    bareName(compiler, allowAssignment, variable);
+    bareName(compiler, canAssign, variable);
     return;
   }
 
@@ -2230,7 +2221,7 @@ static void name(Compiler* compiler, bool allowAssignment)
   if (isLocalName(token->start) && getEnclosingClass(compiler) != NULL)
   {
     loadThis(compiler);
-    namedCall(compiler, allowAssignment, CODE_CALL_0);
+    namedCall(compiler, canAssign, CODE_CALL_0);
     return;
   }
 
@@ -2258,16 +2249,16 @@ static void name(Compiler* compiler, bool allowAssignment)
     }
   }
   
-  bareName(compiler, allowAssignment, variable);
+  bareName(compiler, canAssign, variable);
 }
 
-static void null(Compiler* compiler, bool allowAssignment)
+static void null(Compiler* compiler, bool canAssign)
 {
   emitOp(compiler, CODE_NULL);
 }
 
 // A number or string literal.
-static void literal(Compiler* compiler, bool allowAssignment)
+static void literal(Compiler* compiler, bool canAssign)
 {
   emitConstant(compiler, compiler->parser->previous.value);
 }
@@ -2282,7 +2273,7 @@ static void literal(Compiler* compiler, bool allowAssignment)
 // is compiled roughly like:
 //
 //     ["a ", b + c, " d"].join()
-static void stringInterpolation(Compiler* compiler, bool allowAssignment)
+static void stringInterpolation(Compiler* compiler, bool canAssign)
 {
   // Instantiate a new list.
   loadCoreVariable(compiler, "List");
@@ -2311,7 +2302,7 @@ static void stringInterpolation(Compiler* compiler, bool allowAssignment)
   callMethod(compiler, 0, "join()", 6);
 }
 
-static void super_(Compiler* compiler, bool allowAssignment)
+static void super_(Compiler* compiler, bool canAssign)
 {
   ClassCompiler* enclosingClass = getEnclosingClass(compiler);
 
@@ -2331,7 +2322,7 @@ static void super_(Compiler* compiler, bool allowAssignment)
   {
     // Compile the superclass call.
     consume(compiler, TOKEN_NAME, "Expect method name after 'super.'.");
-    namedCall(compiler, allowAssignment, CODE_SUPER_0);
+    namedCall(compiler, canAssign, CODE_SUPER_0);
   }
   else if (enclosingClass != NULL)
   {
@@ -2342,7 +2333,7 @@ static void super_(Compiler* compiler, bool allowAssignment)
   }
 }
 
-static void this_(Compiler* compiler, bool allowAssignment)
+static void this_(Compiler* compiler, bool canAssign)
 {
   if (getEnclosingClass(compiler) == NULL)
   {
@@ -2354,7 +2345,7 @@ static void this_(Compiler* compiler, bool allowAssignment)
 }
 
 // Subscript or "array indexing" operator like `foo[bar]`.
-static void subscript(Compiler* compiler, bool allowAssignment)
+static void subscript(Compiler* compiler, bool canAssign)
 {
   Signature signature = { "", 0, SIG_SUBSCRIPT, 0 };
 
@@ -2362,10 +2353,8 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   finishArgumentList(compiler, &signature);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
 
-  if (match(compiler, TOKEN_EQ))
+  if (canAssign && match(compiler, TOKEN_EQ))
   {
-    if (!allowAssignment) error(compiler, "Invalid assignment.");
-
     signature.type = SIG_SUBSCRIPT_SETTER;
 
     // Compile the assigned value.
@@ -2376,34 +2365,34 @@ static void subscript(Compiler* compiler, bool allowAssignment)
   callSignature(compiler, CODE_CALL_0, &signature);
 }
 
-static void call(Compiler* compiler, bool allowAssignment)
+static void call(Compiler* compiler, bool canAssign)
 {
   ignoreNewlines(compiler);
   consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
-  namedCall(compiler, allowAssignment, CODE_CALL_0);
+  namedCall(compiler, canAssign, CODE_CALL_0);
 }
 
-static void and_(Compiler* compiler, bool allowAssignment)
+static void and_(Compiler* compiler, bool canAssign)
 {
   ignoreNewlines(compiler);
 
   // Skip the right argument if the left is false.
   int jump = emitJump(compiler, CODE_AND);
-  parsePrecedence(compiler, false, PREC_LOGICAL_AND);
+  parsePrecedence(compiler, PREC_LOGICAL_AND);
   patchJump(compiler, jump);
 }
 
-static void or_(Compiler* compiler, bool allowAssignment)
+static void or_(Compiler* compiler, bool canAssign)
 {
   ignoreNewlines(compiler);
 
   // Skip the right argument if the left is true.
   int jump = emitJump(compiler, CODE_OR);
-  parsePrecedence(compiler, false, PREC_LOGICAL_OR);
+  parsePrecedence(compiler, PREC_LOGICAL_OR);
   patchJump(compiler, jump);
 }
 
-static void conditional(Compiler* compiler, bool allowAssignment)
+static void conditional(Compiler* compiler, bool canAssign)
 {
   // Ignore newline after '?'.
   ignoreNewlines(compiler);
@@ -2412,7 +2401,7 @@ static void conditional(Compiler* compiler, bool allowAssignment)
   int ifJump = emitJump(compiler, CODE_JUMP_IF);
 
   // Compile the then branch.
-  parsePrecedence(compiler, allowAssignment, PREC_TERNARY);
+  parsePrecedence(compiler, PREC_CONDITIONAL);
 
   consume(compiler, TOKEN_COLON,
           "Expect ':' after then branch of conditional operator.");
@@ -2424,13 +2413,13 @@ static void conditional(Compiler* compiler, bool allowAssignment)
   // Compile the else branch.
   patchJump(compiler, ifJump);
 
-  parsePrecedence(compiler, allowAssignment, PREC_ASSIGNMENT);
+  parsePrecedence(compiler, PREC_ASSIGNMENT);
 
   // Patch the jump over the else.
   patchJump(compiler, elseJump);
 }
 
-void infixOp(Compiler* compiler, bool allowAssignment)
+void infixOp(Compiler* compiler, bool canAssign)
 {
   GrammarRule* rule = getRule(compiler->parser->previous.type);
 
@@ -2438,7 +2427,7 @@ void infixOp(Compiler* compiler, bool allowAssignment)
   ignoreNewlines(compiler);
 
   // Compile the right-hand side.
-  parsePrecedence(compiler, false, (Precedence)(rule->precedence + 1));
+  parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
 
   // Call the operator method on the left-hand side.
   Signature signature = { rule->name, (int)strlen(rule->name), SIG_METHOD, 1 };
@@ -2665,8 +2654,7 @@ static GrammarRule* getRule(TokenType type)
 }
 
 // The main entrypoint for the top-down operator precedence parser.
-void parsePrecedence(Compiler* compiler, bool allowAssignment,
-                     Precedence precedence)
+void parsePrecedence(Compiler* compiler, Precedence precedence)
 {
   nextToken(compiler->parser);
   GrammarFn prefix = rules[compiler->parser->previous.type].prefix;
@@ -2677,13 +2665,21 @@ void parsePrecedence(Compiler* compiler, bool allowAssignment,
     return;
   }
 
-  prefix(compiler, allowAssignment);
+  // Track if the precendence of the surrounding expression is low enough to
+  // allow an assignment inside this one. We can't compile an assignment like
+  // a normal expression because it requires us to handle the LHS specially --
+  // it needs to be an lvalue, not an rvalue. So, for each of the kinds of
+  // expressions that are valid lvalues -- names, subscripts, fields, etc. --
+  // we pass in whether or not it appears in a context loose enough to allow
+  // "=". If so, it will parse the "=" itself and handle it appropriately.
+  bool canAssign = precedence <= PREC_CONDITIONAL;
+  prefix(compiler, canAssign);
 
   while (precedence <= rules[compiler->parser->current.type].precedence)
   {
     nextToken(compiler->parser);
     GrammarFn infix = rules[compiler->parser->previous.type].infix;
-    infix(compiler, allowAssignment);
+    infix(compiler, canAssign);
   }
 }
 
@@ -2691,7 +2687,7 @@ void parsePrecedence(Compiler* compiler, bool allowAssignment,
 // on the stack.
 void expression(Compiler* compiler)
 {
-  parsePrecedence(compiler, true, PREC_LOWEST);
+  parsePrecedence(compiler, PREC_LOWEST);
 }
 
 // Returns the number of arguments to the instruction at [ip] in [fn]'s
@@ -3209,7 +3205,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
   {
-    parsePrecedence(compiler, false, PREC_CALL);
+    parsePrecedence(compiler, PREC_CALL);
   }
   else
   {
