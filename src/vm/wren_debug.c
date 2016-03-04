@@ -2,16 +2,24 @@
 
 #include "wren_debug.h"
 
-void wrenDebugPrintStackTrace(ObjFiber* fiber)
+void wrenDebugPrintStackTrace(WrenVM* vm, ObjFiber* fiber)
 {
   if (IS_STRING(fiber->error))
   {
-    fprintf(stderr, "%s\n", AS_CSTRING(fiber->error));
+    if ( vm->config.errorFn != NULL)
+    {
+      vm->config.errorFn(vm, AS_CSTRING(fiber->error) );
+    }
+    else
+    {
+      fprintf(stderr, "%s\n", AS_CSTRING(fiber->error));
+    }    
   }
   else
   {
     // TODO: Print something a little useful here. Maybe the name of the error's
     // class?
+    vm->config.errorFn(vm, "[error object]\n");
     fprintf(stderr, "[error object]\n");
   }
 
@@ -30,8 +38,19 @@ void wrenDebugPrintStackTrace(ObjFiber* fiber)
     
     // -1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
-    fprintf(stderr, "[%s line %d] in %s\n",
+
+    char buffer[1024];
+    snprintf(buffer, sizeof buffer, "[%s line %d] in %s\n",
             fn->module->name->value, line, fn->debug->name);
+
+    if ( vm->config.errorFn != NULL)
+    {
+      vm->config.errorFn(vm, buffer);
+    }
+    else
+    {
+      fprintf(stderr, "%s", buffer);
+    }
   }
 }
 
