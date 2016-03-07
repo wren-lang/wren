@@ -48,20 +48,20 @@ Here's an example of that kind of object-oriented programming in Lua:
     end
 
     -- create and use an Account
-    acc = Account.create(1000)
-    acc:withdraw(100)
+    account = Account.create(1000)
+    account:withdraw(100)
 
 Here's the same example in Wren:
 
     :::wren
     class Account {
-      this new(balance) { _balance = balance }
+      construct new(balance) { _balance = balance }
       withdraw(amount) { _balance = _balance - amount }
     }
 
     // create and use an Account
-    var acc = Account.new(1000)
-    acc.withdraw(100)
+    var account = Account.new(1000)
+    account.withdraw(100)
 
 Classes have a reputation for complexity because most of the widely used
 languages with them are quite complex: C++, Java, C#, Ruby, and Python. I hope
@@ -89,7 +89,7 @@ is that bytecode is a nice trade-off between performance and simplicity. Also:
 
 ## Why is the VM stack-based instead of register-based?
 
-Bytecode VMs come in two flavors. Stack-based VMs have short (usually one-byte)
+Bytecode VMs come in two flavors. Stack-based VMs have short (usually one byte)
 instructions whose operands are implicitly understood to be at the top of the
 stack. That means you often have a couple of instructions to push some stuff on
 the stack and then an instruction to do something.
