@@ -190,7 +190,7 @@ int wrenPowerOf2Ceil(int n)
   return n;
 }
 
-// Default errorFn that prints to stderr.
+// Default printError function that prints to stderr.
 void defaultErrorFn(WrenVM* vm, const char* text)
 {
   fprintf(stderr, "%s", text);
