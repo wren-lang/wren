@@ -382,7 +382,7 @@ static void lexError(Parser* parser, const char* format, ...)
   parser->hasError = true;
   if (!parser->printErrors) return;
 
-  fprintf(stderr, "[%s line %d] Error: ",
+  wrenPrintError(parser->vm, "[%s line %d] Error: ",
           parser->module->name->value, parser->currentLine);
 
   va_list args;
@@ -412,7 +412,7 @@ static void error(Compiler* compiler, const char* format, ...)
   // reported it.
   if (token->type == TOKEN_ERROR) return;
 
-  fprintf(stderr, "[%s line %d] Error at ",
+  wrenPrintError(compiler->parser->vm, "[%s line %d] Error at ",
           compiler->parser->module->name->value, token->line);
 
   if (token->type == TOKEN_LINE)
