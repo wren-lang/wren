@@ -194,7 +194,9 @@ static int mapFileFlags(int flags)
   if (flags & 0x01) result |= O_RDONLY;
   if (flags & 0x02) result |= O_WRONLY;
   if (flags & 0x04) result |= O_RDWR;
+#ifdef O_SYNC
   if (flags & 0x08) result |= O_SYNC;
+#endif
   if (flags & 0x10) result |= O_CREAT;
   if (flags & 0x20) result |= O_TRUNC;
   if (flags & 0x40) result |= O_EXCL;

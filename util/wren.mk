@@ -103,8 +103,12 @@ else
 	SHARED_LIB_FLAGS := -Wl,-soname,$@.so
 	SHARED_EXT := so
 
+ifeq ($(OS),mingw32)
+	LIBUV_LIBS := -lws2_32 -liphlpapi -lpsapi -luserenv
+else
 	# On Linux we need to explicitly link to these for libuv.
 	LIBUV_LIBS := -lpthread -lrt
+endif
 endif
 
 CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
