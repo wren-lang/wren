@@ -1628,17 +1628,30 @@ void wrenPrintError(WrenVM* vm, const char* format, ...)
 {
   va_list args;
   
+#if defined( _MSC_VER )
+  // MSVC doesn't have snprintf():
+  #define WREN_STRING_SIZE(format, args) _vscprintf(format, args)
+  #define WREN_STRING_PRINT(buffer, size, format, args) _vsnprintf_s(buffer, size, _TRUNCATE, format, args)
+#else
+  // Use C99's snprintf():
+  #define WREN_STRING_SIZE(format, args) vsnprintf(NULL, 0, format, args)
+  #define WREN_STRING_PRINT(buffer, size, format, args) vsnprintf(buffer, size, format, args)
+#endif
+
   // Allocate `buffer` to hold the output:
   va_start(args, format);
-  int sizeNeeded = vsnprintf(NULL, 0, format, args);
-  int sizeAvailable = sizeNeeded + 1; // +1 for the null terminator
-  char *buffer = malloc(sizeAvailable);
+  int sizeNeeded = WREN_STRING_SIZE(format, args);
+  int sizeAllocated = sizeNeeded + 1; // +1 for the null terminator
+  char *buffer = malloc(sizeAllocated);
   va_end(args);
-  
+
   // Write the format and args into `buffer`:
   va_start(args, format);
-  vsnprintf(buffer, sizeAvailable, format, args);
+  WREN_STRING_PRINT(buffer, sizeAllocated, format, args);
   va_end(args);
+  
+  #undef WREN_STRING_SIZE
+  #undef WREN_STRING_PRINT
   
   // Output `buffer`:
   if (vm->config.errorFn != NULL)
