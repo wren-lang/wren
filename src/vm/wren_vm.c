@@ -1642,7 +1642,7 @@ void wrenPrintError(WrenVM* vm, const char* format, ...)
   va_start(args, format);
   int sizeNeeded = WREN_STRING_SIZE(format, args);
   int sizeAllocated = sizeNeeded + 1; // +1 for the null terminator
-  char *buffer = malloc(sizeAllocated);
+  char *buffer = (char *)malloc(sizeAllocated);
   va_end(args);
 
   // Write the format and args into `buffer`:
