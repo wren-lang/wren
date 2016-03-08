@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "wren.h"
 #include "wren_common.h"
@@ -17,7 +18,6 @@
 
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   #include <time.h>
-  #include <stdio.h>
 #endif
 
 // The behavior of realloc() when the size is 0 is implementation defined. It
@@ -42,6 +42,7 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->bindForeignMethodFn = NULL;
   config->bindForeignClassFn = NULL;
   config->writeFn = NULL;
+  config->errorFn = NULL;
   config->initialHeapSize = 1024 * 1024 * 10;
   config->minHeapSize = 1024 * 1024;
   config->heapGrowthPercent = 50;
@@ -387,7 +388,7 @@ static void runtimeError(WrenVM* vm)
   }
 
   // If we got here, nothing caught the error, so show the stack trace.
-  wrenDebugPrintStackTrace(vm->fiber);
+  wrenDebugPrintStackTrace(vm, vm->fiber);
   vm->fiber = NULL;
 }
 
@@ -1620,4 +1621,34 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   ASSERT(variableSlot != -1, "Could not find variable.");
   
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
+}
+
+// Prints to WrenVM.errorFn if provided, otherwise prints to stderr.
+void wrenPrintError(WrenVM* vm, const char* format, ...)
+{
+  va_list args;
+  
+  // Allocate `buffer` to hold the output:
+  va_start(args, format);
+  int sizeNeeded = vsnprintf(NULL, 0, format, args);
+  int sizeAvailable = sizeNeeded + 1; // +1 for the null terminator
+  char *buffer = malloc(sizeAvailable);
+  va_end(args);
+  
+  // Write the format and args into `buffer`:
+  va_start(args, format);
+  vsnprintf(buffer, sizeAvailable, format, args);
+  va_end(args);
+  
+  // Output `buffer`:
+  if (vm->config.errorFn != NULL)
+  {
+    vm->config.errorFn(vm, buffer);
+  }
+  else
+  {
+    fprintf(stderr, "%s", buffer);
+  }
+  
+  free(buffer);
 }

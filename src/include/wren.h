@@ -58,6 +58,9 @@ typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
 // Displays a string of text to the user.
 typedef void (*WrenWriteFn)(WrenVM* vm, const char* text);
 
+// Displays runtime or compile time error text to the user.
+typedef void (*WrenErrorFn)(WrenVM* vm, const char* text);
+
 typedef struct
 {
   // The callback invoked when the foreign object is created.
@@ -126,6 +129,12 @@ typedef struct
   //
   // If this is `NULL`, Wren discards any printed text.
   WrenWriteFn writeFn;
+
+  // The callback Wren uses to display text when a runtime or compile-time
+  // error has occurred.
+  //
+  // If this is `NULL`, Wren writes the error to stderr.
+  WrenErrorFn errorFn;
 
   // The number of bytes Wren will allocate before triggering the first garbage
   // collection.
