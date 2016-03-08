@@ -1,6 +1,5 @@
 #include <stdarg.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "wren.h"
 #include "wren_common.h"
