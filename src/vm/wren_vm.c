@@ -42,7 +42,7 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->bindForeignMethodFn = NULL;
   config->bindForeignClassFn = NULL;
   config->writeFn = NULL;
-  config->errorFn = NULL;
+  config->errorFn = defaultErrorFn;
   config->initialHeapSize = 1024 * 1024 * 10;
   config->minHeapSize = 1024 * 1024;
   config->heapGrowthPercent = 50;
@@ -1623,6 +1623,11 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
 }
 
+void defaultErrorFn(WrenVM* vm, const char* text)
+{
+  fprintf(stderr, "%s", text);
+}
+
 // Prints to WrenVM.errorFn if provided, otherwise prints to stderr.
 void wrenPrintError(WrenVM* vm, const char* format, ...)
 {
@@ -1654,14 +1659,7 @@ void wrenPrintError(WrenVM* vm, const char* format, ...)
   #undef WREN_STRING_PRINT
   
   // Output `buffer`:
-  if (vm->config.errorFn != NULL)
-  {
-    vm->config.errorFn(vm, buffer);
-  }
-  else
-  {
-    fprintf(stderr, "%s", buffer);
-  }
+  vm->config.errorFn(vm, buffer);
   
   free(buffer);
 }
