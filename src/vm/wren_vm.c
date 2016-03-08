@@ -17,6 +17,7 @@
 
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   #include <time.h>
+  #include <stdio.h>
 #endif
 
 // The behavior of realloc() when the size is 0 is implementation defined. It
