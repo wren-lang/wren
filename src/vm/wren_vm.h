@@ -125,13 +125,6 @@ struct WrenVM
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
-// Default printError function that prints to stderr.
-void defaultErrorFn(WrenVM* vm, const char* text);
-
-// Prints an error to the configuration's `errorFn`, if non-NULL.
-// Otherwise, prints to stderr.
-void wrenPrintError(WrenVM* vm, const char* format, ...);
-
 // Invoke the finalizer for the foreign object referenced by [foreign].
 void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 
