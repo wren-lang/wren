@@ -1,6 +1,5 @@
 #include <stdarg.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "wren.h"
 #include "wren_common.h"
@@ -18,6 +17,7 @@
 
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   #include <time.h>
+  #include <stdio.h>
 #endif
 
 // The behavior of realloc() when the size is 0 is implementation defined. It
@@ -42,7 +42,7 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->bindForeignMethodFn = NULL;
   config->bindForeignClassFn = NULL;
   config->writeFn = NULL;
-  config->errorFn = NULL;
+  config->errorFn = defaultErrorFn;
   config->initialHeapSize = 1024 * 1024 * 10;
   config->minHeapSize = 1024 * 1024;
   config->heapGrowthPercent = 50;
@@ -1621,47 +1621,4 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   ASSERT(variableSlot != -1, "Could not find variable.");
   
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
-}
-
-// Prints to WrenVM.errorFn if provided, otherwise prints to stderr.
-void wrenPrintError(WrenVM* vm, const char* format, ...)
-{
-  va_list args;
-  
-#if defined( _MSC_VER )
-  // MSVC doesn't have snprintf():
-  #define WREN_STRING_SIZE(format, args) _vscprintf(format, args)
-  #define WREN_STRING_PRINT(buffer, size, format, args) _vsnprintf_s(buffer, size, _TRUNCATE, format, args)
-#else
-  // Use C99's snprintf():
-  #define WREN_STRING_SIZE(format, args) vsnprintf(NULL, 0, format, args)
-  #define WREN_STRING_PRINT(buffer, size, format, args) vsnprintf(buffer, size, format, args)
-#endif
-
-  // Allocate `buffer` to hold the output:
-  va_start(args, format);
-  int sizeNeeded = WREN_STRING_SIZE(format, args);
-  int sizeAllocated = sizeNeeded + 1; // +1 for the null terminator
-  char *buffer = (char *)malloc(sizeAllocated);
-  va_end(args);
-
-  // Write the format and args into `buffer`:
-  va_start(args, format);
-  WREN_STRING_PRINT(buffer, sizeAllocated, format, args);
-  va_end(args);
-  
-  #undef WREN_STRING_SIZE
-  #undef WREN_STRING_PRINT
-  
-  // Output `buffer`:
-  if (vm->config.errorFn != NULL)
-  {
-    vm->config.errorFn(vm, buffer);
-  }
-  else
-  {
-    fprintf(stderr, "%s", buffer);
-  }
-  
-  free(buffer);
 }
