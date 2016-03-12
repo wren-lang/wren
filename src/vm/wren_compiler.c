@@ -45,6 +45,13 @@
 //      "outside %(one + "%(two + "%(three)")")"
 #define MAX_INTERPOLATION_NESTING 8
 
+// The buffer size used to format a compile error message, excluding the header
+// with the module name and error location. Using a hardcoded buffer for this
+// is kind of hairy, but fortunately we can control what the longest possible
+// message is and handle that. Ideally, we'd use `snprintf()`, but that's not
+// available in standard C++98.
+#define ERROR_MESSAGE_SIZE (60 + MAX_VARIABLE_NAME + 15)
+
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -373,24 +380,32 @@ static const int stackEffects[] = {
   #undef OPCODE
 };
 
+static void printError(Parser* parser, int line, const char* label,
+                       const char* format, va_list args)
+{
+  parser->hasError = true;
+  if (!parser->printErrors) return;
+  
+  // Format the label and message.
+  char message[ERROR_MESSAGE_SIZE];
+  int length = sprintf(message, "%s: ", label);
+  length += vsprintf(message + length, format, args);
+  ASSERT(length < ERROR_MESSAGE_SIZE, "Error should not exceed buffer.");
+  
+  fprintf(stderr, "[%s line %d] %s\n", parser->module->name->value, line,
+          message);
+}
+
 // Outputs a compile or syntax error. This also marks the compilation as having
 // an error, which ensures that the resulting code will be discarded and never
 // run. This means that after calling lexError(), it's fine to generate whatever
 // invalid bytecode you want since it won't be used.
 static void lexError(Parser* parser, const char* format, ...)
 {
-  parser->hasError = true;
-  if (!parser->printErrors) return;
-
-  fprintf(stderr, "[%s line %d] Error: ",
-          parser->module->name->value, parser->currentLine);
-
   va_list args;
   va_start(args, format);
-  vfprintf(stderr, format, args);
+  printError(parser, parser->currentLine, "Error", format, args);
   va_end(args);
-
-  fprintf(stderr, "\n");
 }
 
 // Outputs a compile or syntax error. This also marks the compilation as having
@@ -403,37 +418,37 @@ static void lexError(Parser* parser, const char* format, ...)
 // one pass as possible instead of just bailing at the first one.
 static void error(Compiler* compiler, const char* format, ...)
 {
-  compiler->parser->hasError = true;
-  if (!compiler->parser->printErrors) return;
-
   Token* token = &compiler->parser->previous;
 
   // If the parse error was caused by an error token, the lexer has already
   // reported it.
   if (token->type == TOKEN_ERROR) return;
-
-  fprintf(stderr, "[%s line %d] Error at ",
-          compiler->parser->module->name->value, token->line);
-
+  
+  va_list args;
+  va_start(args, format);
   if (token->type == TOKEN_LINE)
   {
-    fprintf(stderr, "newline: ");
+    printError(compiler->parser, token->line, "Error at newline", format, args);
   }
   else if (token->type == TOKEN_EOF)
   {
-    fprintf(stderr, "end of file: ");
+    printError(compiler->parser, token->line, "Error at end of file", format, args);
   }
   else
   {
-    fprintf(stderr, "'%.*s': ", token->length, token->start);
+    // Make sure we don't exceed the buffer with a very long token.
+    char label[ERROR_MESSAGE_SIZE];
+    if (token->length <= MAX_VARIABLE_NAME)
+    {
+      sprintf(label, "Error at '%.*s'", token->length, token->start);
+    }
+    else
+    {
+      sprintf(label, "Error at '%.*s...'", MAX_VARIABLE_NAME, token->start);
+    }
+    printError(compiler->parser, token->line, label, format, args);
   }
-
-  va_list args;
-  va_start(args, format);
-  vfprintf(stderr, format, args);
   va_end(args);
-
-  fprintf(stderr, "\n");
 }
 
 // Adds [constant] to the constant pool and returns its index.
