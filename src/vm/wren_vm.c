@@ -42,6 +42,7 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->bindForeignMethodFn = NULL;
   config->bindForeignClassFn = NULL;
   config->writeFn = NULL;
+  config->errorFn = defaultErrorFn;
   config->initialHeapSize = 1024 * 1024 * 10;
   config->minHeapSize = 1024 * 1024;
   config->heapGrowthPercent = 50;
@@ -387,7 +388,7 @@ static void runtimeError(WrenVM* vm)
   }
 
   // If we got here, nothing caught the error, so show the stack trace.
-  wrenDebugPrintStackTrace(vm->fiber);
+  wrenDebugPrintStackTrace(vm, vm->fiber);
   vm->fiber = NULL;
 }
 

@@ -118,4 +118,11 @@ int wrenUtf8DecodeNumBytes(uint8_t byte);
 // Returns the smallest power of two that is equal to or greater than [n].
 int wrenPowerOf2Ceil(int n);
 
+// Default printError function that prints to stderr.
+void defaultErrorFn(WrenVM* vm, const char* text);
+
+// Prints an error to the configuration's `errorFn`, if non-NULL.
+// Otherwise, prints to stderr.
+void wrenPrintError(WrenVM* vm, const char* format, ...);
+
 #endif

@@ -1,4 +1,6 @@
 #include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #include "wren_utils.h"
 #include "wren_vm.h"
@@ -188,4 +190,45 @@ int wrenPowerOf2Ceil(int n)
   n++;
   
   return n;
+}
+
+// Default printError function that prints to stderr.
+void defaultErrorFn(WrenVM* vm, const char* text)
+{
+  fprintf(stderr, "%s", text);
+}
+
+#if defined( _MSC_VER ) && _MSC_VER < 1900
+// Emulate snprintf() on MSVC<2015, _snprintf() doesn't zero-terminate the buffer
+// on overflow. Adapted from libuv.
+int vsnprintf(char* buf, size_t len, const char* fmt, va_list ap) {
+  int n;
+  n = _vscprintf(fmt, ap);
+  vsnprintf_s(buf, len, _TRUNCATE, fmt, ap);
+  return n;
+}
+#endif
+
+// Prints to WrenVM.config.errorFn if provided, otherwise prints to stderr.
+void wrenPrintError(WrenVM* vm, const char* format, ...)
+{
+  va_list args;
+  
+  // Allocate `buffer` to hold the output:
+  va_start(args, format);
+  int sizeNeeded = vsnprintf(NULL, 0, format, args);
+  int sizeAllocated = sizeNeeded + 1; // +1 for the null terminator
+  char *buffer = (char *)vm->config.reallocateFn(NULL, sizeAllocated);
+  va_end(args);
+  
+  // Write the format and args into `buffer`:
+  va_start(args, format);
+  vsnprintf(buffer, sizeAllocated, format, args);
+  va_end(args);
+  
+  // Output `buffer`:
+  vm->config.errorFn(vm, buffer);
+  
+  // Free the buffer's memory:
+  vm->config.reallocateFn(buffer, 0);
 }
