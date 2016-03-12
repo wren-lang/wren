@@ -998,17 +998,6 @@ static void nextToken(Parser* parser)
                  peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD);
         return;
 
-      case '#':
-        // Ignore shebang on the first line.
-        if (peekChar(parser) == '!' && parser->currentLine == 1)
-        {
-          skipLineComment(parser);
-          break;
-        }
-
-        lexError(parser, "Invalid character '%c'.", c);
-        return;
-
       case '0':
         if (peekChar(parser) == 'x')
         {
@@ -1020,6 +1009,12 @@ static void nextToken(Parser* parser)
         return;
 
       default:
+        if (parser->currentLine == 1 && c == '#' && peekChar(parser) == '!')
+        {
+          // Ignore shebang on the first line.
+          skipLineComment(parser);
+          break;
+        }
         if (isName(c))
         {
           readName(parser, TOKEN_NAME);
