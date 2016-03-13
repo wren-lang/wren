@@ -3082,6 +3082,17 @@ static void defineMethod(Compiler* compiler, Variable classVariable,
   emitShortArg(compiler, instruction, methodSymbol);
 }
 
+// Used by `method` function below to find a method in the method list
+bool hasMethod(IntBuffer* buffer, int data)
+{
+  for (int i = 0; i < buffer->count; i++)
+  {
+    if (memcmp(&buffer->data[i], &data, sizeof(data)) == 0) return true;
+  }
+  
+  return false;
+}
+
 // Compiles a method definition inside a class body.
 //
 // Returns `true` if it compiled successfully, or `false` if the method couldn't
@@ -3159,13 +3170,12 @@ static bool method(Compiler* compiler, Variable classVariable)
   IntBuffer* methods = isStatic ? &compiler->enclosingClass->staticMethods
                                 : &compiler->enclosingClass->instanceMethods;
   
-  int symbol = wrenIntBufferFind(methods, methodSymbol);
-  if (symbol != -1)
+  // Check if the method table already contains this symbol
+  if (hasMethod(methods, methodSymbol))
   {
     const char* methodType = isStatic ? "static method" : "method";
-    error(compiler, "Already defined %s '%s' for class %s in module '%s'.",
-      methodType, fullSignature, &compiler->enclosingClass->name->value,
-      compiler->parser->module->name);
+    error(compiler, "Already defined %s '%s' for class %s.",
+      methodType, fullSignature, &compiler->enclosingClass->name->value);
   }
   wrenIntBufferWrite(compiler->parser->vm, methods, methodSymbol);
 
@@ -3181,12 +3191,15 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   classVariable.scope = compiler->scopeDepth == -1 ? SCOPE_MODULE : SCOPE_LOCAL;
   classVariable.index = declareNamedVariable(compiler);
   
-  ObjString* className = AS_STRING(wrenNewString(compiler->parser->vm, 
-    compiler->parser->previous.start, compiler->parser->previous.length));
+  // Create shared class name value
+  Value classNameString = wrenNewString(compiler->parser->vm, 
+    compiler->parser->previous.start, compiler->parser->previous.length);
+  
+  // Create class name string to track method duplicates
+  ObjString* className = AS_STRING(classNameString);
   
   // Make a string constant for the name.
-  emitConstant(compiler, wrenNewString(compiler->parser->vm,
-      compiler->parser->previous.start, compiler->parser->previous.length));
+  emitConstant(compiler, classNameString);
 
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
@@ -3229,6 +3242,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
   // into account.
   wrenSymbolTableInit(&classCompiler.fields);
+  
+  // Set up int buffers to track duplicate static and instance methods
   wrenIntBufferInit(&classCompiler.staticMethods);
   wrenIntBufferInit(&classCompiler.instanceMethods);
   compiler->enclosingClass = &classCompiler;
@@ -3254,6 +3269,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
         (uint8_t)classCompiler.fields.count;
   }
   
+  // Clear symbol table for tracking field names
+  // and int buffers for tracking duplicate methods
   wrenSymbolTableClear(compiler->parser->vm, &classCompiler.fields);
   wrenIntBufferClear(compiler->parser->vm, &classCompiler.staticMethods);
   wrenIntBufferClear(compiler->parser->vm, &classCompiler.instanceMethods);
