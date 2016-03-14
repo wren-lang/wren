@@ -790,12 +790,6 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     }
 
     CASE_CODE(POP):   DROP(); DISPATCH();
-    CASE_CODE(DUP):
-    {
-      Value value = PEEK();
-      PUSH(value); DISPATCH();
-    }
-
     CASE_CODE(NULL):  PUSH(NULL_VAL); DISPATCH();
     CASE_CODE(FALSE): PUSH(FALSE_VAL); DISPATCH();
     CASE_CODE(TRUE):  PUSH(TRUE_VAL); DISPATCH();
