@@ -58,6 +58,9 @@ typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
 // Displays a string of text to the user.
 typedef void (*WrenWriteFn)(WrenVM* vm, const char* text);
 
+// Reports an error to the user.
+typedef void (*WrenErrorFn)(const char* module, int line, const char* message);
+
 typedef struct
 {
   // The callback invoked when the foreign object is created.
