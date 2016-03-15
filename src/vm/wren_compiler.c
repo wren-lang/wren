@@ -290,8 +290,12 @@ typedef struct
 // Bookkeeping information for compiling a class definition.
 typedef struct
 {
+  ObjString* name;
+  
   // Symbol table for the fields of the class.
   SymbolTable fields;
+  IntBuffer staticMethods;
+  IntBuffer instanceMethods;
 
   // True if the class being compiled is a foreign class.
   bool isForeign;
@@ -3077,6 +3081,17 @@ static void defineMethod(Compiler* compiler, Variable classVariable,
   emitShortArg(compiler, instruction, methodSymbol);
 }
 
+// Used by `method` function below to find a method in the method list
+bool hasMethod(IntBuffer* buffer, int data)
+{
+  for (int i = 0; i < buffer->count; i++)
+  {
+    if (memcmp(&buffer->data[i], &data, sizeof(data)) == 0) return true;
+  }
+  
+  return false;
+}
+
 // Compiles a method definition inside a class body.
 //
 // Returns `true` if it compiled successfully, or `false` if the method couldn't
@@ -3085,7 +3100,8 @@ static bool method(Compiler* compiler, Variable classVariable)
 {
   // TODO: What about foreign constructors?
   bool isForeign = match(compiler, TOKEN_FOREIGN);
-  compiler->enclosingClass->inStatic = match(compiler, TOKEN_STATIC);
+  bool isStatic = match(compiler, TOKEN_STATIC);
+  compiler->enclosingClass->inStatic = isStatic;
     
   SignatureFn signatureFn = rules[compiler->parser->current.type].method;
   nextToken(compiler->parser);
@@ -3106,7 +3122,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   // Compile the method signature.
   signatureFn(&methodCompiler, &signature);
   
-  if (compiler->enclosingClass->inStatic && signature.type == SIG_INITIALIZER)
+  if (isStatic && signature.type == SIG_INITIALIZER)
   {
     error(compiler, "A constructor cannot be static.");
   }
@@ -3115,7 +3131,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   char fullSignature[MAX_METHOD_SIGNATURE];
   int length;
   signatureToString(&signature, fullSignature, &length);
-
+  
   if (isForeign)
   {
     // Define a constant for the signature.
@@ -3136,8 +3152,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   // Define the method. For a constructor, this defines the instance
   // initializer method.
   int methodSymbol = signatureSymbol(compiler, &signature);
-  defineMethod(compiler, classVariable, compiler->enclosingClass->inStatic,
-               methodSymbol);
+  defineMethod(compiler, classVariable, isStatic, methodSymbol);
 
   if (signature.type == SIG_INITIALIZER)
   {
@@ -3148,6 +3163,20 @@ static bool method(Compiler* compiler, Variable classVariable)
     createConstructor(compiler, &signature, methodSymbol);
     defineMethod(compiler, classVariable, true, constructorSymbol);
   }
+  
+  // Check for duplicate methods. Doesn't matter that it's already been
+  // defined, error will discard bytecode anyway.
+  IntBuffer* methods = isStatic ? &compiler->enclosingClass->staticMethods
+                                : &compiler->enclosingClass->instanceMethods;
+  
+  // Check if the method table already contains this symbol
+  if (hasMethod(methods, methodSymbol))
+  {
+    const char* methodType = isStatic ? "static method" : "method";
+    error(compiler, "Already defined %s '%s' for class %s.",
+      methodType, fullSignature, &compiler->enclosingClass->name->value);
+  }
+  wrenIntBufferWrite(compiler->parser->vm, methods, methodSymbol);
 
   return true;
 }
@@ -3161,9 +3190,15 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   classVariable.scope = compiler->scopeDepth == -1 ? SCOPE_MODULE : SCOPE_LOCAL;
   classVariable.index = declareNamedVariable(compiler);
   
+  // Create shared class name value
+  Value classNameString = wrenNewString(compiler->parser->vm, 
+    compiler->parser->previous.start, compiler->parser->previous.length);
+  
+  // Create class name string to track method duplicates
+  ObjString* className = AS_STRING(classNameString);
+  
   // Make a string constant for the name.
-  emitConstant(compiler, wrenNewString(compiler->parser->vm,
-      compiler->parser->previous.start, compiler->parser->previous.length));
+  emitConstant(compiler, classNameString);
 
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
@@ -3199,12 +3234,17 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
   ClassCompiler classCompiler;
   classCompiler.isForeign = isForeign;
+  classCompiler.name = className;
 
   // Set up a symbol table for the class's fields. We'll initially compile
   // them to slots starting at zero. When the method is bound to the class, the
   // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
   // into account.
   wrenSymbolTableInit(&classCompiler.fields);
+  
+  // Set up int buffers to track duplicate static and instance methods
+  wrenIntBufferInit(&classCompiler.staticMethods);
+  wrenIntBufferInit(&classCompiler.instanceMethods);
   compiler->enclosingClass = &classCompiler;
 
   // Compile the method definitions.
@@ -3228,7 +3268,11 @@ static void classDefinition(Compiler* compiler, bool isForeign)
         (uint8_t)classCompiler.fields.count;
   }
   
+  // Clear symbol table for tracking field names
+  // and int buffers for tracking duplicate methods
   wrenSymbolTableClear(compiler->parser->vm, &classCompiler.fields);
+  wrenIntBufferClear(compiler->parser->vm, &classCompiler.staticMethods);
+  wrenIntBufferClear(compiler->parser->vm, &classCompiler.instanceMethods);
   compiler->enclosingClass = NULL;
   popScope(compiler);
 }
