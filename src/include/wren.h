@@ -129,6 +129,12 @@ typedef struct
   //
   // If this is `NULL`, Wren discards any printed text.
   WrenWriteFn writeFn;
+  
+  // The callback Wren uses to report errors.
+  //
+  // When an error occurs, this will be called with the module name, line number, 
+  // and an error message. If this is `NULL`, Wren doesn't report any errors.
+  WrenErrorFn errorFn;
 
   // The number of bytes Wren will allocate before triggering the first garbage
   // collection.
