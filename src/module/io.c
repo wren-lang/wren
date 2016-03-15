@@ -10,6 +10,15 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+#if defined(WIN32) || defined(WIN64)
+#include <sys\stat.h>
+#define S_IRUSR _S_IREAD 
+#define S_IWUSR _S_IWRITE
+#define O_SYNC 0
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
+
 typedef struct sFileRequestData
 {
   WrenValue* fiber;
@@ -184,7 +193,7 @@ static void fileOpenCallback(uv_fs_t* request)
   schedulerFinishResume();
 }
 
-// The UNIX file flags have specified names but not values. So we define out
+// The UNIX file flags have specified names but not values. So we define our
 // own values in FileFlags and remap them to the host OS's values here.
 static int mapFileFlags(int flags)
 {
