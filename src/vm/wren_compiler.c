@@ -387,7 +387,7 @@ static void printError(Parser* parser, int line, const char* label,
   if (!parser->printErrors) return;
   
   // Only report errors if there is a WrenErrorFn to handle them.
-  if (vm->config.errorFn == NULL) return
+  if (parser->vm->config.errorFn == NULL) return;
   
   // Format the label and message.
   char message[ERROR_MESSAGE_SIZE];
@@ -395,7 +395,7 @@ static void printError(Parser* parser, int line, const char* label,
   length += vsprintf(message + length, format, args);
   ASSERT(length < ERROR_MESSAGE_SIZE, "Error should not exceed buffer.");
   
-  vm->config.errorFn(parser->module->name->value, line, message);
+  parser->vm->config.errorFn(parser->module->name->value, line, message);
 }
 
 // Outputs a compile or syntax error. This also marks the compilation as having
