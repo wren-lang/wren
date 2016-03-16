@@ -1,6 +1,4 @@
 var fn = Fn.new {
-  System.print(Foo)
-  System.print(Bar)
+  System.print(Foo) // expect error
+  System.print(Bar) // expect error
 }
-
-// expect error line 6

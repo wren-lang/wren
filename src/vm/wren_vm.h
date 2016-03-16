@@ -154,13 +154,14 @@ Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName);
 // module.
 Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name);
 
-// Adds a new implicitly declared top-level variable named [name] to [module].
+// Adds a new implicitly declared top-level variable named [name] to [module]
+// based on a use site occurring on [line].
 //
 // Does not check to see if a variable with that name is already declared or
 // defined. Returns the symbol for the new variable or -2 if there are too many
 // variables defined.
 int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
-                        size_t length);
+                        size_t length, int line);
 
 // Adds a new top-level variable named [name] to [module].
 //

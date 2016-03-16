@@ -1363,11 +1363,14 @@ Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name)
 }
 
 int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
-                        size_t length)
+                        size_t length, int line)
 {
   if (module->variables.count == MAX_MODULE_VARS) return -2;
 
-  wrenValueBufferWrite(vm, &module->variables, UNDEFINED_VAL);
+  // Implicitly defined variables get a "value" that is the line where the
+  // variable is first used. We'll use that later to report an error on the
+  // right line.
+  wrenValueBufferWrite(vm, &module->variables, NUM_VAL(line));
   return wrenSymbolTableAdd(vm, &module->variableNames, name, length);
 }
 
@@ -1387,9 +1390,10 @@ int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
     symbol = wrenSymbolTableAdd(vm, &module->variableNames, name, length);
     wrenValueBufferWrite(vm, &module->variables, value);
   }
-  else if (IS_UNDEFINED(module->variables.data[symbol]))
+  else if (IS_NUM(module->variables.data[symbol]))
   {
-    // Explicitly declaring an implicitly declared one. Mark it as defined.
+    // An implicitly declared variable's value will always be a number. Now we
+    // have a real definition.
     module->variables.data[symbol] = value;
   }
   else

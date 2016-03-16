@@ -2213,7 +2213,8 @@ static void name(Compiler* compiler, bool canAssign)
     // the hopes that we get a real definition later.
     variable.index = wrenDeclareVariable(compiler->parser->vm,
                                          compiler->parser->module,
-                                         token->start, token->length);
+                                         token->start, token->length,
+                                         token->line);
 
     if (variable.index == -2)
     {
@@ -3438,14 +3439,18 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   emitOp(&compiler, CODE_RETURN);
 
   // See if there are any implicitly declared module-level variables that never
-  // got an explicit definition.
-  // TODO: It would be nice if the error was on the line where it was used.
+  // got an explicit definition. They will have values that are numbers
+  // indicating the line where the variable was first used.
   for (int i = 0; i < parser.module->variables.count; i++)
   {
-    if (IS_UNDEFINED(parser.module->variables.data[i]))
+    if (IS_NUM(parser.module->variables.data[i]))
     {
-      error(&compiler, "Variable '%s' is used but not defined.",
-            parser.module->variableNames.data[i].buffer);
+      // Synthesize a token for the original use site.
+      parser.previous.type = TOKEN_NAME;
+      parser.previous.start = parser.module->variableNames.data[i].buffer;
+      parser.previous.length = parser.module->variableNames.data[i].length;
+      parser.previous.line = (int)AS_NUM(parser.module->variables.data[i]);
+      error(&compiler, "Variable is used but not defined.");
     }
   }
   
