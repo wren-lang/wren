@@ -156,6 +156,11 @@ static void write(WrenVM* vm, const char* text)
   fflush(stdout);
 }
 
+static void reportError(const char* module, int line, const char* message)
+{
+  fprintf(stderr, "[%s line %d] %s\n", module, line, message);
+}
+
 static void initVM()
 {
   WrenConfiguration config;
@@ -165,6 +170,7 @@ static void initVM()
   config.bindForeignClassFn = bindForeignClass;
   config.loadModuleFn = readModule;
   config.writeFn = write;
+  config.errorFn = reportError;
 
   // Since we're running in a standalone process, be generous with memory.
   config.initialHeapSize = 1024 * 1024 * 100;
