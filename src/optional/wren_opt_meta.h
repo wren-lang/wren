@@ -7,7 +7,11 @@
 // This module defines the Meta class and its associated methods.
 #if WREN_OPT_META
 
-void wrenLoadMetaModule(WrenVM* vm);
+const char* wrenMetaSource();
+WrenForeignMethodFn wrenMetaBindForeignMethod(WrenVM* vm,
+                                              const char* className,
+                                              bool isStatic,
+                                              const char* signature);
 
 #endif
 

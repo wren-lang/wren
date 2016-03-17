@@ -25,29 +25,22 @@ void metaCompile(WrenVM* vm)
   vm->apiStack[0] = fn != NULL ? OBJ_VAL(fn) : NULL_VAL;
 }
 
-static WrenForeignMethodFn bindMetaForeignMethods(WrenVM* vm,
-                                                  const char* module,
-                                                  const char* className,
-                                                  bool isStatic,
-                                                  const char* signature)
+const char* wrenMetaSource()
+{
+  return metaModuleSource;
+}
+
+WrenForeignMethodFn wrenMetaBindForeignMethod(WrenVM* vm,
+                                              const char* className,
+                                              bool isStatic,
+                                              const char* signature)
 {
   // There is only one foreign method in the meta module.
-  ASSERT(strcmp(module, "meta") == 0, "Should be in meta module.");
   ASSERT(strcmp(className, "Meta") == 0, "Should be in Meta class.");
   ASSERT(isStatic, "Should be static.");
   ASSERT(strcmp(signature, "compile_(_)") == 0, "Should be compile method.");
-
+  
   return metaCompile;
-}
-
-void wrenLoadMetaModule(WrenVM* vm)
-{
-  WrenBindForeignMethodFn previousBindFn = vm->config.bindForeignMethodFn;
-  vm->config.bindForeignMethodFn = bindMetaForeignMethods;
-
-  wrenInterpretInModule(vm, "meta", metaModuleSource);
-
-  vm->config.bindForeignMethodFn = previousBindFn;
 }
 
 #endif

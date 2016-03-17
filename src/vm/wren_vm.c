@@ -76,17 +76,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   wrenSymbolTableInit(&vm->methodNames);
 
   vm->modules = wrenNewMap(vm);
-
   wrenInitializeCore(vm);
-  
-  // TODO: Lazy load these.
-  #if WREN_OPT_META
-    wrenLoadMetaModule(vm);
-  #endif
-  #if WREN_OPT_RANDOM
-    wrenLoadRandomModule(vm);
-  #endif
-
   return vm;
 }
 
@@ -302,9 +292,32 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
                                              bool isStatic,
                                              const char* signature)
 {
-  if (vm->config.bindForeignMethodFn == NULL) return NULL;
+  WrenForeignMethodFn method = NULL;
+  
+  if (vm->config.bindForeignMethodFn != NULL)
+  {
+    method = vm->config.bindForeignMethodFn(vm, moduleName, className, isStatic,
+                                            signature);
+  }
+  
+  // If the host didn't provide it, see if it's an optional one.
+  if (method == NULL)
+  {
+#if WREN_OPT_META
+    if (strcmp(moduleName, "meta") == 0)
+    {
+      method = wrenMetaBindForeignMethod(vm, className, isStatic, signature);
+    }
+#endif
+#if WREN_OPT_RANDOM
+    if (strcmp(moduleName, "random") == 0)
+    {
+      method = wrenRandomBindForeignMethod(vm, className, isStatic, signature);
+    }
+#endif
+  }
 
-  return vm->config.bindForeignMethodFn(vm, moduleName, className, isStatic, signature);
+  return method;
 }
 
 // Defines [methodValue] as a method on [classObj].
@@ -462,9 +475,8 @@ static ObjModule* getModule(WrenVM* vm, Value name)
 
 static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
 {
-  ObjModule* module = getModule(vm, name);
-
   // See if the module has already been loaded.
+  ObjModule* module = getModule(vm, name);
   if (module == NULL)
   {
     module = wrenNewModule(vm, AS_STRING(name));
@@ -563,17 +575,34 @@ static Value validateSuperclass(WrenVM* vm, Value name, Value superclassValue,
 
 static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
 {
-  // TODO: Make this a runtime error?
-  ASSERT(vm->config.bindForeignClassFn != NULL,
-      "Cannot declare foreign classes without a bindForeignClassFn.");
+  WrenForeignClassMethods methods;
+  methods.allocate = NULL;
+  methods.finalize = NULL;
+  
+  // Check the optional built-in module first so the host can override it.
+  
+  if (vm->config.bindForeignClassFn != NULL)
+  {
+    methods = vm->config.bindForeignClassFn(vm, module->name->value,
+                                            classObj->name->value);
+  }
 
-  WrenForeignClassMethods methods = vm->config.bindForeignClassFn(
-      vm, module->name->value, classObj->name->value);
-
+  // If the host didn't provide it, see if it's a built in optional module.
+  if (methods.allocate == NULL && methods.finalize == NULL)
+  {
+#if WREN_OPT_RANDOM
+    if (strcmp(module->name->value, "random") == 0)
+    {
+      methods = wrenRandomBindForeignClass(vm, module->name->value,
+                                           classObj->name->value);
+    }
+#endif
+  }
+  
   Method method;
   method.type = METHOD_FOREIGN;
 
-  // Add the symbol even if there is no finalizer so we can ensure that the
+  // Add the symbol even if there is no allocator so we can ensure that the
   // symbol itself is always in the symbol table.
   int symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<allocate>", 10);
   if (methods.allocate != NULL)
@@ -1310,8 +1339,21 @@ Value wrenImportModule(WrenVM* vm, Value name)
   // If the module is already loaded, we don't need to do anything.
   if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
   
-  // Load the module's source code from the embedder.
-  char* source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
+  // Load the module's source code from the host.
+  const char* source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
+  
+  // If the host didn't provide it, see if it's a built in optional module.
+  if (source == NULL)
+  {
+    ObjString* nameString = AS_STRING(name);
+#if WREN_OPT_META
+    if (strcmp(nameString->value, "meta") == 0) source = wrenMetaSource();
+#endif
+#if WREN_OPT_RANDOM
+    if (strcmp(nameString->value, "random") == 0) source = wrenRandomSource();
+#endif
+  }
+  
   if (source == NULL)
   {
     vm->fiber->error = wrenStringFormat(vm, "Could not load module '@'.", name);

@@ -1028,6 +1028,7 @@ DEF_PRIMITIVE(system_getModuleVariable)
 
 DEF_PRIMITIVE(system_importModule)
 {
+  if (!validateString(vm, args[1], "Module")) return false;
   Value result = wrenImportModule(vm, args[1]);
   if (!IS_NULL(vm->fiber->error)) return false;
 

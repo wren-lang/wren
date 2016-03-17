@@ -102,55 +102,43 @@ static void randomInt0(WrenVM* vm)
   wrenSetSlotDouble(vm, 0, (double)advanceState(well));
 }
 
-// TODO: The way these are wired up is pretty verbose and tedious. Also, the
-// CLI has its own separate way of handling this. Figure out something cleaner.
-static WrenForeignMethodFn bindForeignMethods(WrenVM* vm,
-                                              const char* module,
-                                              const char* className,
-                                              bool isStatic,
-                                              const char* signature)
+const char* wrenRandomSource()
 {
-  ASSERT(strcmp(module, "random") == 0, "Should be in random module.");
-  ASSERT(strcmp(className, "Random") == 0, "Should be in Random class.");
-
-  if (strcmp(signature, "<allocate>") == 0) return randomAllocate;
-  if (strcmp(signature, "seed_()") == 0) return randomSeed0;
-  if (strcmp(signature, "seed_(_)") == 0) return randomSeed1;
-
-  if (strcmp(signature, "seed_(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)") == 0)
-  {
-    return randomSeed16;
-  }
-
-  if (strcmp(signature, "float()") == 0) return randomFloat;
-  if (strcmp(signature, "int()") == 0) return randomInt0;
-
-  ASSERT(false, "Unknown method.");
-  return NULL;
+  return randomModuleSource;
 }
 
-static WrenForeignClassMethods bindForeignClass(WrenVM* vm, const char* module,
-                                                const char* className)
+WrenForeignClassMethods wrenRandomBindForeignClass(WrenVM* vm,
+                                                   const char* module,
+                                                   const char* className)
 {
+  ASSERT(strcmp(className, "Random") == 0, "Should be in Random class.");
   WrenForeignClassMethods methods;
   methods.allocate = randomAllocate;
   methods.finalize = NULL;
   return methods;
 }
 
-// TODO: Lots of duplication between here and meta.
-void wrenLoadRandomModule(WrenVM* vm)
+WrenForeignMethodFn wrenRandomBindForeignMethod(WrenVM* vm,
+                                                const char* className,
+                                                bool isStatic,
+                                                const char* signature)
 {
-  WrenBindForeignMethodFn previousBindMethodFn = vm->config.bindForeignMethodFn;
-  vm->config.bindForeignMethodFn = bindForeignMethods;
-
-  WrenBindForeignClassFn previousBindClassFn = vm->config.bindForeignClassFn;
-  vm->config.bindForeignClassFn = bindForeignClass;
-
-  wrenInterpretInModule(vm, "random", randomModuleSource);
-
-  vm->config.bindForeignMethodFn = previousBindMethodFn;
-  vm->config.bindForeignClassFn = previousBindClassFn;
+  ASSERT(strcmp(className, "Random") == 0, "Should be in Random class.");
+  
+  if (strcmp(signature, "<allocate>") == 0) return randomAllocate;
+  if (strcmp(signature, "seed_()") == 0) return randomSeed0;
+  if (strcmp(signature, "seed_(_)") == 0) return randomSeed1;
+  
+  if (strcmp(signature, "seed_(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)") == 0)
+  {
+    return randomSeed16;
+  }
+  
+  if (strcmp(signature, "float()") == 0) return randomFloat;
+  if (strcmp(signature, "int()") == 0) return randomInt0;
+  
+  ASSERT(false, "Unknown method.");
+  return NULL;
 }
 
 #endif
