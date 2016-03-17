@@ -4,10 +4,10 @@
 #include "wren_value.h"
 #include "wren_vm.h"
 
-// Prints the current stack trace for [fiber] to stderr.
+// Prints the stack trace for the current fiber.
 //
 // Used when a fiber throws a runtime error which is not caught.
-void wrenDebugPrintStackTrace(ObjFiber* fiber);
+void wrenDebugPrintStackTrace(WrenVM* vm);
 
 // The "dump" functions are used for debugging Wren itself. Normal code paths
 // will not call them unless one of the various DEBUG_ flags is enabled.

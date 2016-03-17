@@ -156,9 +156,23 @@ static void write(WrenVM* vm, const char* text)
   fflush(stdout);
 }
 
-static void reportError(const char* module, int line, const char* message)
+static void reportError(WrenErrorType type,
+                        const char* module, int line, const char* message)
 {
-  fprintf(stderr, "[%s line %d] %s\n", module, line, message);
+  switch (type)
+  {
+    case WREN_ERROR_COMPILE:
+      fprintf(stderr, "[%s line %d] %s\n", module, line, message);
+      break;
+      
+    case WREN_ERROR_RUNTIME:
+      fprintf(stderr, "%s\n", message);
+      break;
+      
+    case WREN_ERROR_STACK_TRACE:
+      fprintf(stderr, "[%s line %d] in %s\n", module, line, message);
+      break;
+  }
 }
 
 static void initVM()

@@ -58,8 +58,31 @@ typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
 // Displays a string of text to the user.
 typedef void (*WrenWriteFn)(WrenVM* vm, const char* text);
 
+typedef enum
+{
+  // A syntax or resolution error detected at compile time.
+  WREN_ERROR_COMPILE,
+  
+  // The error message for a runtime error.
+  WREN_ERROR_RUNTIME,
+  
+  // One entry of a runtime error's stack trace.
+  WREN_ERROR_STACK_TRACE
+} WrenErrorType;
+
 // Reports an error to the user.
-typedef void (*WrenErrorFn)(const char* module, int line, const char* message);
+//
+// An error detected during compile time is reported by calling this once with
+// `WREN_ERROR_COMPILE`, the name of the module and line where the error occurs,
+// and the compiler's error message.
+//
+// A runtime error is reported by calling this once with `WREN_ERROR_RUNTIME`,
+// no module or line, and the runtime error's message. After that, a series of
+// `WREN_ERROR_STACK_TRACE` calls are made for each line in the stack trace.
+// Each of those has the module and line where the method or function is
+// defined and [message] is the name of the method or function.
+typedef void (*WrenErrorFn)(
+    WrenErrorType type, const char* module, int line, const char* message);
 
 typedef struct
 {
