@@ -52,7 +52,7 @@ DEF_PRIMITIVE(fiber_new)
 {
   if (!validateFn(vm, args[1], "Argument")) return false;
 
-  ObjFiber* newFiber = wrenNewFiber(vm, AS_OBJ(args[1]));
+  ObjFiber* newFiber = wrenNewFiber(vm, AS_CLOSURE(args[1]));
 
   // The compiler expects the first slot of a function to hold the receiver.
   // Since a fiber's stack is invoked directly, it doesn't have one, so put it
@@ -226,7 +226,7 @@ DEF_PRIMITIVE(fn_new)
 
 DEF_PRIMITIVE(fn_arity)
 {
-  RETURN_NUM(AS_FN(args[0])->arity);
+  RETURN_NUM(AS_CLOSURE(args[0])->fn->arity);
 }
 
 DEF_PRIMITIVE(fn_toString)

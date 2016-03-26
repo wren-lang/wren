@@ -12,17 +12,24 @@ void metaCompile(WrenVM* vm)
   // Evaluate the code in the module where the calling function was defined.
   // That's one stack frame back from the top since the top-most frame is the
   // helper eval() method in Meta itself.
-  Value callingFn = OBJ_VAL(vm->fiber->frames[vm->fiber->numFrames - 2].fn);
-  ObjModule* module = IS_FN(callingFn)
-      ? AS_FN(callingFn)->module
-      : AS_CLOSURE(callingFn)->fn->module;
+  ObjClosure* caller = vm->fiber->frames[vm->fiber->numFrames - 2].closure;
+  ObjModule* module = caller->fn->module;
 
   // Compile it.
   ObjFn* fn = wrenCompile(vm, module, wrenGetSlotString(vm, 1), false);
 
   // Return the result. We can't use the public API for this since we have a
   // bare ObjFn.
-  vm->apiStack[0] = fn != NULL ? OBJ_VAL(fn) : NULL_VAL;
+  if (fn == NULL)
+  {
+    vm->apiStack[0] = NULL_VAL;
+  }
+  else
+  {
+    wrenPushRoot(vm, (Obj*)fn);
+    vm->apiStack[0] = OBJ_VAL(wrenNewClosure(vm, fn));
+    wrenPopRoot(vm);
+  }
 }
 
 const char* wrenMetaSource()

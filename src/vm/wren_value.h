@@ -190,65 +190,6 @@ typedef struct sUpvalue
   struct sUpvalue* next;
 } ObjUpvalue;
 
-typedef struct
-{
-  // Pointer to the current (really next-to-be-executed) instruction in the
-  // function's bytecode.
-  uint8_t* ip;
-
-  // The function or closure being executed.
-  Obj* fn;
-
-  // Pointer to the first stack slot used by this call frame. This will contain
-  // the receiver, followed by the function's parameters, then local variables
-  // and temporaries.
-  Value* stackStart;
-} CallFrame;
-
-typedef struct sObjFiber
-{
-  Obj obj;
-  
-  // The stack of value slots. This is used for holding local variables and
-  // temporaries while the fiber is executing. It heap-allocated and grown as
-  // needed.
-  Value* stack;
-  
-  // A pointer to one past the top-most value on the stack.
-  Value* stackTop;
-
-  // The number of allocated slots in the stack array.
-  int stackCapacity;
-  
-  // The stack of call frames. This is a dynamic array that grows as needed but
-  // never shrinks.
-  CallFrame* frames;
-  
-  // The number of frames currently in use in [frames].
-  int numFrames;
-  
-  // The number of [frames] allocated.
-  int frameCapacity;
-
-  // Pointer to the first node in the linked list of open upvalues that are
-  // pointing to values still on the stack. The head of the list will be the
-  // upvalue closest to the top of the stack, and then the list works downwards.
-  ObjUpvalue* openUpvalues;
-
-  // The fiber that ran this one. If this fiber is yielded, control will resume
-  // to this one. May be `NULL`.
-  struct sObjFiber* caller;
-
-  // If the fiber failed because of a runtime error, this will contain the
-  // error object. Otherwise, it will be null.
-  Value error;
-
-  // This will be true if the caller that called this fiber did so using "try".
-  // In that case, if this fiber fails with an error, the error will be given
-  // to the caller.
-  bool callerIsTrying;
-} ObjFiber;
-
 // The type of a primitive function.
 //
 // Primitives are similiar to foreign functions, but have more direct access to
@@ -291,10 +232,14 @@ typedef struct
   ObjString* name;
 } ObjModule;
 
-// A first-class function object. A raw ObjFn can be used and invoked directly
-// if it has no upvalues (i.e. [numUpvalues] is zero). If it does use upvalues,
-// it must be wrapped in an [ObjClosure] first. The compiler is responsible for
-// emitting code to ensure that that happens.
+// A function object. It wraps and owns the bytecode and other debug information
+// for a callable chunk of code.
+//
+// Function objects are not passed around and invoked directly. Instead, they
+// are always referenced by an [ObjClosure] which is the real first-class
+// representation of a function. This isn't strictly necessary if they function
+// has no upvalues, but lets the rest of the VM assume all called objects will
+// be closures.
 typedef struct
 {
   Obj obj;
@@ -331,6 +276,65 @@ typedef struct
   ObjUpvalue* upvalues[FLEXIBLE_ARRAY];
 } ObjClosure;
 
+typedef struct
+{
+  // Pointer to the current (really next-to-be-executed) instruction in the
+  // function's bytecode.
+  uint8_t* ip;
+  
+  // The closure being executed.
+  ObjClosure* closure;
+  
+  // Pointer to the first stack slot used by this call frame. This will contain
+  // the receiver, followed by the function's parameters, then local variables
+  // and temporaries.
+  Value* stackStart;
+} CallFrame;
+
+typedef struct sObjFiber
+{
+  Obj obj;
+  
+  // The stack of value slots. This is used for holding local variables and
+  // temporaries while the fiber is executing. It heap-allocated and grown as
+  // needed.
+  Value* stack;
+  
+  // A pointer to one past the top-most value on the stack.
+  Value* stackTop;
+  
+  // The number of allocated slots in the stack array.
+  int stackCapacity;
+  
+  // The stack of call frames. This is a dynamic array that grows as needed but
+  // never shrinks.
+  CallFrame* frames;
+  
+  // The number of frames currently in use in [frames].
+  int numFrames;
+  
+  // The number of [frames] allocated.
+  int frameCapacity;
+  
+  // Pointer to the first node in the linked list of open upvalues that are
+  // pointing to values still on the stack. The head of the list will be the
+  // upvalue closest to the top of the stack, and then the list works downwards.
+  ObjUpvalue* openUpvalues;
+  
+  // The fiber that ran this one. If this fiber is yielded, control will resume
+  // to this one. May be `NULL`.
+  struct sObjFiber* caller;
+  
+  // If the fiber failed because of a runtime error, this will contain the
+  // error object. Otherwise, it will be null.
+  Value error;
+  
+  // This will be true if the caller that called this fiber did so using "try".
+  // In that case, if this fiber fails with an error, the error will be given
+  // to the caller.
+  bool callerIsTrying;
+} ObjFiber;
+
 typedef enum
 {
   // A primitive method implemented in C in the VM. Unlike foreign methods,
@@ -362,7 +366,7 @@ typedef struct
     WrenForeignMethodFn foreign;
     
     // May be a [ObjFn] or [ObjClosure].
-    Obj* obj;
+    ObjClosure* obj;
   } fn;
 } Method;
 
@@ -621,39 +625,25 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
 // upvalues, but assumes outside code will populate it.
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 
-// Creates a new fiber object that will invoke [fn], which can be a function or
-// closure.
-ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn);
+// Creates a new fiber object that will invoke [closure].
+ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure);
 
-// Resets [fiber] back to an initial state where it is ready to invoke [fn].
-void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn);
+// Resets [fiber] back to an initial state where it is ready to invoke
+// [closure].
+void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, ObjClosure* closure);
 
-// Returns the base ObjFn backing an ObjClosure, or [function] if it already is
-// a raw ObjFn.
-static inline ObjFn* wrenUnwrapClosure(Obj* function)
-{
-  switch (function->type)
-  {
-    case OBJ_FN:      return (ObjFn*)function;
-    case OBJ_CLOSURE: return ((ObjClosure*)function)->fn;
-    default:
-      ASSERT(false, "Function should be an ObjFn or ObjClosure.");
-      return NULL;
-  }
-}
-
-// Adds a new [CallFrame] to [fiber] invoking [function] whose stack starts at
+// Adds a new [CallFrame] to [fiber] invoking [closure] whose stack starts at
 // [stackStart].
 static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
-                                       Obj* function, Value* stackStart)
+                                       ObjClosure* closure, Value* stackStart)
 {
   // The caller should have ensured we already have enough capacity.
   ASSERT(fiber->frameCapacity > fiber->numFrames, "No memory for call frame.");
   
   CallFrame* frame = &fiber->frames[fiber->numFrames++];
   frame->stackStart = stackStart;
-  frame->fn = function;
-  frame->ip = wrenUnwrapClosure(frame->fn)->code.data;
+  frame->closure = closure;
+  frame->ip = closure->fn->code.data;
 }
 
 // Ensures [fiber]'s stack has at least [needed] slots.

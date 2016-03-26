@@ -145,16 +145,16 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
   return closure;
 }
 
-ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
+ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
 {
   // Allocate the arrays before the fiber in case it triggers a GC.
   CallFrame* frames = ALLOCATE_ARRAY(vm, CallFrame, INITIAL_CALL_FRAMES);
   
   // Add one slot for the unused implicit receiver slot that the compiler
   // assumes all functions have.
-  int stackCapacity = fn == NULL
+  int stackCapacity = closure == NULL
       ? 1
-      : wrenPowerOf2Ceil(wrenUnwrapClosure(fn)->maxSlots + 1);
+      : wrenPowerOf2Ceil(closure->fn->maxSlots + 1);
   Value* stack = ALLOCATE_ARRAY(vm, Value, stackCapacity);
   
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
@@ -163,12 +163,12 @@ ObjFiber* wrenNewFiber(WrenVM* vm, Obj* fn)
   fiber->frameCapacity = INITIAL_CALL_FRAMES;
   fiber->stack = stack;
   fiber->stackCapacity = stackCapacity;
-  wrenResetFiber(vm, fiber, fn);
+  wrenResetFiber(vm, fiber, closure);
 
   return fiber;
 }
 
-void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn)
+void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, ObjClosure* closure)
 {
   // Push the stack frame for the function.
   fiber->stackTop = fiber->stack;
@@ -179,7 +179,7 @@ void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, Obj* fn)
   fiber->numFrames = 0;
 
   // Initialize the first call frame.
-  if (fn != NULL) wrenAppendCallFrame(vm, fiber, fn, fiber->stack);
+  if (closure != NULL) wrenAppendCallFrame(vm, fiber, closure, fiber->stack);
 }
 
 void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
@@ -933,7 +933,7 @@ static void blackenClass(WrenVM* vm, ObjClass* classObj)
   {
     if (classObj->methods.data[i].type == METHOD_BLOCK)
     {
-      wrenGrayObj(vm, classObj->methods.data[i].fn.obj);
+      wrenGrayObj(vm, (Obj*)classObj->methods.data[i].fn.obj);
     }
   }
 
@@ -965,7 +965,7 @@ static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
   // Stack functions.
   for (int i = 0; i < fiber->numFrames; i++)
   {
-    wrenGrayObj(vm, fiber->frames[i].fn);
+    wrenGrayObj(vm, (Obj*)fiber->frames[i].closure);
   }
 
   // Stack variables.

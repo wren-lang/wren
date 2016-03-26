@@ -1482,24 +1482,19 @@ static ObjFn* endCompiler(Compiler* compiler,
   {
     int constant = addConstant(compiler->parent, OBJ_VAL(compiler->fn));
 
-    // If the function has no upvalues, we don't need to create a closure.
-    // We can just load and run the function directly.
-    if (compiler->fn->numUpvalues == 0)
-    {
-      emitShortArg(compiler->parent, CODE_CONSTANT, constant);
-    }
-    else
-    {
-      // Capture the upvalues in the new closure object.
-      emitShortArg(compiler->parent, CODE_CLOSURE, constant);
+    // Wrap the function in a closure. We do this even if it has no upvalues so
+    // that the VM can uniformly assume all called objects are closures. This
+    // makes creating a function a little slower, but makes invoking them
+    // faster. Given that functions are invoked more often than they are
+    // created, this is a win.
+    emitShortArg(compiler->parent, CODE_CLOSURE, constant);
 
-      // Emit arguments for each upvalue to know whether to capture a local or
-      // an upvalue.
-      for (int i = 0; i < compiler->fn->numUpvalues; i++)
-      {
-        emitByte(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0);
-        emitByte(compiler->parent, compiler->upvalues[i].index);
-      }
+    // Emit arguments for each upvalue to know whether to capture a local or
+    // an upvalue.
+    for (int i = 0; i < compiler->fn->numUpvalues; i++)
+    {
+      emitByte(compiler->parent, compiler->upvalues[i].isLocal ? 1 : 0);
+      emitByte(compiler->parent, compiler->upvalues[i].index);
     }
   }
 

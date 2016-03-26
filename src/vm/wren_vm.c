@@ -353,14 +353,11 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
   }
   else
   {
-    ObjFn* methodFn = IS_FN(methodValue) ? AS_FN(methodValue)
-                                         : AS_CLOSURE(methodValue)->fn;
+    method.fn.obj = AS_CLOSURE(methodValue);
+    method.type = METHOD_BLOCK;
 
     // Patch up the bytecode now that we know the superclass.
-    wrenBindMethodCode(classObj, methodFn);
-
-    method.type = METHOD_BLOCK;
-    method.fn.obj = AS_OBJ(methodValue);
+    wrenBindMethodCode(classObj, method.fn.obj->fn);
   }
 
   wrenBindMethod(vm, classObj, symbol, method);
@@ -413,23 +410,15 @@ static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
       OBJ_VAL(classObj->name), vm->methodNames.data[symbol].buffer);
 }
 
-// Checks that [value], which must be a function or closure, does not require
-// more parameters than are provided by [numArgs].
+// Checks that [value], which must be a closure, does not require more
+// parameters than are provided by [numArgs].
 //
 // If there are not enough arguments, aborts the current fiber and returns
 // `false`.
 static bool checkArity(WrenVM* vm, Value value, int numArgs)
 {
-  ObjFn* fn;
-  if (IS_CLOSURE(value))
-  {
-    fn = AS_CLOSURE(value)->fn;
-  }
-  else
-  {
-    ASSERT(IS_FN(value), "Receiver must be a function or closure.");
-    fn = AS_FN(value);
-  }
+  ASSERT(IS_CLOSURE(value), "Receiver must be a closure.");
+  ObjFn* fn = AS_CLOSURE(value)->fn;
 
   // We only care about missing arguments, not extras. The "- 1" is because
   // numArgs includes the receiver, the function itself, which we don't want to
@@ -440,11 +429,10 @@ static bool checkArity(WrenVM* vm, Value value, int numArgs)
   return false;
 }
 
-// Pushes [function] onto [fiber]'s callstack and invokes it. Expects [numArgs]
+// Pushes [closure] onto [fiber]'s callstack and invokes it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
-// [function] can be an `ObjFn` or `ObjClosure`.
 static inline void callFunction(
-    WrenVM* vm, ObjFiber* fiber, Obj* function, int numArgs)
+    WrenVM* vm, ObjFiber* fiber, ObjClosure* closure, int numArgs)
 {
   // Grow the call frame array if needed.
   if (fiber->numFrames + 1 > fiber->frameCapacity)
@@ -458,10 +446,10 @@ static inline void callFunction(
   
   // Grow the stack if needed.
   int stackSize = (int)(fiber->stackTop - fiber->stack);
-  int needed = stackSize + wrenUnwrapClosure(function)->maxSlots;
+  int needed = stackSize + closure->fn->maxSlots;
   wrenEnsureStack(vm, fiber, needed);
   
-  wrenAppendCallFrame(vm, fiber, function, fiber->stackTop - numArgs);
+  wrenAppendCallFrame(vm, fiber, closure, fiber->stackTop - numArgs);
 }
 
 // Looks up the previously loaded module with [name].
@@ -504,9 +492,14 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
   }
 
   wrenPushRoot(vm, (Obj*)fn);
+  
+  // TODO: Doc.
+  ObjClosure* closure = wrenNewClosure(vm, fn);
+  wrenPushRoot(vm, (Obj*)closure);
+  
+  ObjFiber* moduleFiber = wrenNewFiber(vm, closure);
 
-  ObjFiber* moduleFiber = wrenNewFiber(vm, (Obj*)fn);
-
+  wrenPopRoot(vm); // closure.
   wrenPopRoot(vm); // fn.
 
   // Return the fiber that executes the module.
@@ -726,7 +719,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       frame = &fiber->frames[fiber->numFrames - 1];    \
       stackStart = frame->stackStart;                  \
       ip = frame->ip;                                  \
-      fn = wrenUnwrapClosure(frame->fn);
+      fn = frame->closure->fn;
 
   // Terminates the current fiber with error string [error]. If another calling
   // fiber is willing to catch the error, transfers control to it, otherwise
@@ -940,13 +933,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           if (!checkArity(vm, args[0], numArgs)) RUNTIME_ERROR();
 
           STORE_FRAME();
-          callFunction(vm, fiber, AS_OBJ(args[0]), numArgs);
+          callFunction(vm, fiber, AS_CLOSURE(args[0]), numArgs);
           LOAD_FRAME();
           break;
 
         case METHOD_BLOCK:
           STORE_FRAME();
-          callFunction(vm, fiber, method->fn.obj, numArgs);
+          callFunction(vm, fiber, (ObjClosure*)method->fn.obj, numArgs);
           LOAD_FRAME();
           break;
 
@@ -959,14 +952,14 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(LOAD_UPVALUE):
     {
-      ObjUpvalue** upvalues = ((ObjClosure*)frame->fn)->upvalues;
+      ObjUpvalue** upvalues = frame->closure->upvalues;
       PUSH(*upvalues[READ_BYTE()]->value);
       DISPATCH();
     }
 
     CASE_CODE(STORE_UPVALUE):
     {
-      ObjUpvalue** upvalues = ((ObjClosure*)frame->fn)->upvalues;
+      ObjUpvalue** upvalues = frame->closure->upvalues;
       *upvalues[READ_BYTE()]->value = PEEK();
       DISPATCH();
     }
@@ -1134,18 +1127,14 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(CLOSURE):
     {
-      ObjFn* prototype = AS_FN(fn->constants.data[READ_SHORT()]);
-
-      ASSERT(prototype->numUpvalues > 0,
-             "Should not create closure for functions that don't need it.");
-
       // Create the closure and push it on the stack before creating upvalues
       // so that it doesn't get collected.
-      ObjClosure* closure = wrenNewClosure(vm, prototype);
+      ObjFn* function = AS_FN(fn->constants.data[READ_SHORT()]);
+      ObjClosure* closure = wrenNewClosure(vm, function);
       PUSH(OBJ_VAL(closure));
 
-      // Capture upvalues.
-      for (int i = 0; i < prototype->numUpvalues; i++)
+      // Capture upvalues, if any.
+      for (int i = 0; i < function->numUpvalues; i++)
       {
         uint8_t isLocal = READ_BYTE();
         uint8_t index = READ_BYTE();
@@ -1158,10 +1147,9 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         else
         {
           // Use the same upvalue as the current call frame.
-          closure->upvalues[i] = ((ObjClosure*)frame->fn)->upvalues[index];
+          closure->upvalues[i] = frame->closure->upvalues[index];
         }
       }
-
       DISPATCH();
     }
 
@@ -1230,9 +1218,10 @@ WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   // and calls the method.
   ObjFn* fn = wrenNewFunction(vm, NULL, numParams + 1);
   
-  // Wrap the function in a handle. Do this here so it doesn't get collected as
-  // we fill it in.
+  // Wrap the function in a closure and then in a handle. Do this here so it
+  // doesn't get collected as we fill it in.
   WrenValue* value = wrenCaptureValue(vm, OBJ_VAL(fn));
+  value->value = OBJ_VAL(wrenNewClosure(vm, fn));
   
   wrenByteBufferWrite(vm, &fn->code, (uint8_t)(CODE_CALL_0 + numParams));
   wrenByteBufferWrite(vm, &fn->code, (method >> 8) & 0xff);
@@ -1248,21 +1237,21 @@ WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature)
 WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method)
 {
   ASSERT(method != NULL, "Method cannot be NULL.");
-  ASSERT(IS_FN(method->value), "Method must be a method handle.");
+  ASSERT(IS_CLOSURE(method->value), "Method must be a method handle.");
   ASSERT(vm->fiber != NULL, "Must set up arguments for call first.");
   ASSERT(vm->apiStack != NULL, "Must set up arguments for call first.");
   ASSERT(vm->fiber->numFrames == 0, "Can not call from a foreign method.");
   
-  ObjFn* fn = AS_FN(method->value);
+  ObjClosure* closure = AS_CLOSURE(method->value);
   
-  ASSERT(vm->fiber->stackTop - vm->fiber->stack >= fn->arity,
+  ASSERT(vm->fiber->stackTop - vm->fiber->stack >= closure->fn->arity,
          "Stack must have enough arguments for method.");
   
   // Discard any extra temporary slots. We take for granted that the stub
   // function has exactly one slot for each argument.
-  vm->fiber->stackTop = &vm->fiber->stack[fn->maxSlots];
+  vm->fiber->stackTop = &vm->fiber->stack[closure->fn->maxSlots];
   
-  callFunction(vm, vm->fiber, (Obj*)fn, 0);
+  callFunction(vm, vm->fiber, closure, 0);
   return runInterpreter(vm, vm->fiber);
 }
 
