@@ -14,3 +14,10 @@ System.print(Fn.new { 123 } != "fn 123")  // expect: true
 var f = Fn.new { 123 }
 System.print(f == f) // expect: true
 System.print(f != f) // expect: false
+
+// Closures for the same function are not equal.
+var fns = []
+for (i in 1..2) {
+  fns.add(Fn.new { 123 })
+}
+System.print(fns[0] == fns[1]) // expect: false
