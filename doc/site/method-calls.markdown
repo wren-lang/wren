@@ -11,7 +11,7 @@ You have a *receiver* expression (here `System`) followed by a `.`, then a name
 are separated by commas:
 
     :::wren
-    list.insert("item", 3)
+    list.insert(3, "item")
 
 The argument list can also be empty:
 
