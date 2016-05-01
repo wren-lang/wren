@@ -6,7 +6,7 @@ few dependencies are nice that way. "Wren" encompasses two separate artifacts:
  *  **The virtual machine.** This is the core chunk of C that executes Wren
     source code. It is just a library, not a standalone application. It's
     designed to be [embedded][] in a larger host application. It has no
-    dependencies beyond the C standard library. You can is use as a static
+    dependencies beyond the C standard library. You can use it as a static
     library, shared library, or simply compile the source into your app.
 
  *  **The command line executable.** Wren also ships with a CLI wrapper around
