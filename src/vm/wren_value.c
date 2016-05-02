@@ -477,7 +477,7 @@ static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
   map->capacity = capacity;
 }
 
-static MapEntry *findEntry(ObjMap* map, Value key)
+static MapEntry* findEntry(ObjMap* map, Value key)
 {
   // If there is no entry array (an empty map), we definitely won't find it.
   if (map->capacity == 0) return NULL;
@@ -511,7 +511,7 @@ static MapEntry *findEntry(ObjMap* map, Value key)
 
 Value wrenMapGet(ObjMap* map, Value key)
 {
-  MapEntry *entry = findEntry(map, key);
+  MapEntry* entry = findEntry(map, key);
   if (entry != NULL) return entry->value;
 
   return UNDEFINED_VAL;
@@ -546,7 +546,7 @@ void wrenMapClear(WrenVM* vm, ObjMap* map)
 
 Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
 {
-  MapEntry *entry = findEntry(map, key);
+  MapEntry* entry = findEntry(map, key);
   if (entry == NULL) return NULL_VAL;
 
   // Remove the entry from the map. Set this value to true, which marks it as a
