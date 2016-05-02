@@ -10,7 +10,7 @@ get Wren into your application:
 2.  **Include the source directly in your application.** If you want to include
     the source directly in your program, you don't need to run any build steps.
     Just add the source files in `src/vm` to your project. They should compile
-    cleanly as C99 or C++89 or anything later.
+    cleanly as C99 or C++98 or anything later.
 
 [build]: getting-started.html
 
