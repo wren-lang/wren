@@ -94,7 +94,7 @@ Arbitrarily complex expressions are allowed inside the parentheses:
     System.print("wow %((1..3).map {|n| n * n}.join())") //> wow 149
 
 An interpolated expression can even contain a string literal which in turn has
-its own nested intpolations, but doing that gets unreadable pretty quickly.
+its own nested interpolations, but doing that gets unreadable pretty quickly.
 
 ## Ranges
 
