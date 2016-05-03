@@ -92,7 +92,7 @@ typedef struct
   // [wrenAllocateForeign] exactly once.
   WrenForeignMethodFn allocate;
 
-  // The callback invoked when the garbage collector is about to collecto a
+  // The callback invoked when the garbage collector is about to collect a
   // foreign object's memory.
   //
   // This may be `NULL` if the foreign class does not need to finalize.
@@ -178,15 +178,14 @@ typedef struct
   // If zero, defaults to 1MB.
   size_t minHeapSize;
 
-  // Wren will grow (and shrink) the heap automatically as the number of bytes
+  // Wren will resize the heap automatically as the number of bytes
   // remaining in use after a collection changes. This number determines the
   // amount of additional memory Wren will use after a collection, as a
   // percentage of the current heap size.
   //
-  // For example, say that this is 50. After a garbage collection, Wren there
-  // are 400 bytes of memory still in use. That means the next collection will
-  // be triggered after a total of 600 bytes are allocated (including the 400
-  // already in use.
+  // For example, say that this is 50. After a garbage collection, when there
+  // are 400 bytes of memory still in use, the next collection will be triggered 
+  // after a total of 600 bytes are allocated (including the 400 already in use.)
   //
   // Setting this to a smaller number wastes less memory, but triggers more
   // frequent garbage collections.
