@@ -6,7 +6,7 @@ This contains the Wren source code. It is organized like so:
     defines.
 
 *   `cli`: the source code for the command line interface. This is a custom
-    exectuable that embeds the VM in itself. Code here handles reading
+    executable that embeds the VM in itself. Code here handles reading
     command-line, running the REPL, loading modules from disc, etc.
 
 *   `include`: the public header directory for the VM. If you are embedding the
