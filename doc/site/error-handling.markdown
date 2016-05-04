@@ -81,7 +81,7 @@ This exits with:
     Subscript must be a number or a range.
     [main line 2] in (script)
 
-These are the most two common kinds of runtime errors, but there are others.
+These are the two most common kinds of runtime errors, but there are others.
 Stuff like out of bounds errors on lists, calling a function with the wrong
 number of arguments, etc.
 
