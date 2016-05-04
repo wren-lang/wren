@@ -21,12 +21,32 @@ class Call {
   }
 
   static getValue() { ["a", "b"] }
+
+  static - {
+    System.print("unary")
+  }
+
+  static -(arg) {
+    System.print("binary %(arg)")
+  }
+
+  static [one, two] {
+    System.print("subscript %(one) %(two)")
+  }
+
+  static [one, two]=(three) {
+    System.print("subscript set %(one) %(two) %(three)")
+  }
 }
 
 // expect: noParams
 // expect: zero
 // expect: one 1
 // expect: two 1 2
+// expect: unary
+// expect: binary 1
+// expect: subscript 1 2
+// expect: subscript set 1 2 3
 
 // expect: two true false
 // expect: two 1.2 3.4

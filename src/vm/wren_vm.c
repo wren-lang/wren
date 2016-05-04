@@ -1197,16 +1197,27 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
 WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature)
 {
+  ASSERT(signature != NULL, "Signature cannot be NULL.");
+  
   int signatureLength = (int)strlen(signature);
+  ASSERT(signatureLength > 0, "Signature cannot be empty.");
   
   // Count the number parameters the method expects.
   int numParams = 0;
   if (signature[signatureLength - 1] == ')')
   {
-    for (const char* s = signature + signatureLength - 2;
-         s > signature && *s != '('; s--)
+    for (int i = signatureLength - 1; i > 0 && signature[i] != '('; i--)
     {
-      if (*s == '_') numParams++;
+      if (signature[i] == '_') numParams++;
+    }
+  }
+  
+  // Count subscript arguments.
+  if (signature[0] == '[')
+  {
+    for (int i = 0; i < signatureLength && signature[i] != ']'; i++)
+    {
+      if (signature[i] == '_') numParams++;
     }
   }
   

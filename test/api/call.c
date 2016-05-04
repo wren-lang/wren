@@ -13,7 +13,11 @@ void callRunTests(WrenVM* vm)
   WrenValue* zero = wrenMakeCallHandle(vm, "zero()");
   WrenValue* one = wrenMakeCallHandle(vm, "one(_)");
   WrenValue* two = wrenMakeCallHandle(vm, "two(_,_)");
-  
+  WrenValue* unary = wrenMakeCallHandle(vm, "-");
+  WrenValue* binary = wrenMakeCallHandle(vm, "-(_)");
+  WrenValue* subscript = wrenMakeCallHandle(vm, "[_,_]");
+  WrenValue* subscriptSet = wrenMakeCallHandle(vm, "[_,_]=(_)");
+
   // Different arity.
   wrenEnsureSlots(vm, 1);
   wrenSetSlotValue(vm, 0, callClass);
@@ -34,6 +38,29 @@ void callRunTests(WrenVM* vm)
   wrenSetSlotDouble(vm, 2, 2.0);
   wrenCall(vm, two);
   
+  // Operators.
+  wrenEnsureSlots(vm, 1);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenCall(vm, unary);
+
+  wrenEnsureSlots(vm, 2);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotDouble(vm, 1, 1.0);
+  wrenCall(vm, binary);
+  
+  wrenEnsureSlots(vm, 3);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotDouble(vm, 1, 1.0);
+  wrenSetSlotDouble(vm, 2, 2.0);
+  wrenCall(vm, subscript);
+  
+  wrenEnsureSlots(vm, 4);
+  wrenSetSlotValue(vm, 0, callClass);
+  wrenSetSlotDouble(vm, 1, 1.0);
+  wrenSetSlotDouble(vm, 2, 2.0);
+  wrenSetSlotDouble(vm, 3, 3.0);
+  wrenCall(vm, subscriptSet);
+
   // Returning a value.
   WrenValue* getValue = wrenMakeCallHandle(vm, "getValue()");
   wrenEnsureSlots(vm, 1);
@@ -89,4 +116,8 @@ void callRunTests(WrenVM* vm)
   wrenReleaseValue(vm, two);
   wrenReleaseValue(vm, getValue);
   wrenReleaseValue(vm, value);
+  wrenReleaseValue(vm, unary);
+  wrenReleaseValue(vm, binary);
+  wrenReleaseValue(vm, subscript);
+  wrenReleaseValue(vm, subscriptSet);
 }
