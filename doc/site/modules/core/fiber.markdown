@@ -25,13 +25,17 @@ The currently executing fiber.
 Pauses the current fiber, and stops the interpreter. Control returns to the
 host application.
 
-To resume execution, the host application will need to invoke the interpreter
-again. If there is still a reference to the suspended fiber, it can be resumed.
+Typically, you store a reference to the fiber using `Fiber.current` before
+calling this. The fiber can be resumed later by calling or transferring to that
+reference. If there are no references to it, it is eventually garbage collected.
+
+Much like `yield()`, returns the value passed to `call()` or `transfer()` when
+the fiber is resumed.
 
 ### Fiber.**yield**()
 
 Pauses the current fiber and transfers control to the parent fiber. "Parent"
-here means the last fiber that was started using `call` and not `run`.
+here means the last fiber that was started using `call` and not `transfer`.
 
     :::wren
     var fiber = Fiber.new {
@@ -46,8 +50,8 @@ here means the last fiber that was started using `call` and not `run`.
 
 When resumed, the parent fiber's `call()` method returns `null`.
 
-If a yielded fiber is resumed by calling `call()` or `run()` with an argument,
-`yield()` returns that value.
+If a yielded fiber is resumed by calling `call()` or `transfer()` with an
+argument, `yield()` returns that value.
 
     :::wren
     var fiber = Fiber.new {
@@ -57,8 +61,8 @@ If a yielded fiber is resumed by calling `call()` or `run()` with an argument,
     fiber.call()        // Run until the first yield.
     fiber.call("value") // Resume the fiber.
 
-If it was resumed by calling `call()` or `run()` with no argument, it returns
-`null`.
+If it was resumed by calling `call()` or `transfer()` with no argument, it
+returns `null`.
 
 If there is no parent fiber to return to, this exits the interpreter. This can
 be useful to pause execution until the host application wants to resume it

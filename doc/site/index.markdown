@@ -51,7 +51,7 @@ involved][contribute]!
 [perf]: performance.html
 [classes]: classes.html
 [fibers]: concurrency.html
-[embedding]: embedding-api.html
+[embedding]: embedding
 [started]: getting-started.html
 [browser]: http://ppvk.github.io/wren-nest/
 [contribute]: contributing.html

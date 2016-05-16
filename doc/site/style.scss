@@ -277,12 +277,15 @@ footer {
   span.c1, span.cm { color: mix($code-color, $code-bg, 60%); }
 
   // Keywords.
-  span.k, span.kd, span.kc, span.nb  { color: hsl(200, 70%, 50%); }
+  span.k, span.kd, span.kc, span.kt, span.nb  { color: hsl(200, 70%, 50%); }
 
   // Names.
   span.vg { color: hsl(180, 70%, 35%); }
   span.vi { color: hsl(90, 80%, 35%); }
   span.vc { color: hsl(130, 60%, 40%); }
+
+  // C function name.
+  span.nf { color: hsl(180, 60%, 40%); }
 
   // Numbers.
   span.m, span.mi, span.mf { color: hsl(90, 40%, 50%); }
