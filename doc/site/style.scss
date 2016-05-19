@@ -245,6 +245,8 @@ pre {
 
   // Scroll horizontally if not wide enough.
   overflow: auto;
+
+  white-space: pre-wrap;
 }
 
 footer {
