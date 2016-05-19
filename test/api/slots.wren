@@ -5,6 +5,8 @@ class Slots {
   foreign static slotTypes(bool, foreignObj, list, nullObj, num, string, unknown)
   foreign static ensure()
   foreign static ensureOutsideForeign()
+  foreign static getListSize(list)
+  foreign static getListValue(list, index)
 }
 
 foreign class ForeignType {
@@ -30,3 +32,7 @@ System.print(Slots.ensure())
 
 System.print(Slots.ensureOutsideForeign())
 // expect: 0 -> 20 (190)
+
+var ducks = ["Huey", "Dewey", "Louie"]
+System.print(Slots.getListSize(ducks))     // expect: 3
+System.print(Slots.getListValue(ducks, 1)) // expect: Dewey

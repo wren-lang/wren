@@ -153,6 +153,19 @@ static void foreignClassAllocate(WrenVM* vm)
   wrenSetSlotNewForeign(vm, 0, 0, 4);
 }
 
+static void getListSize(WrenVM* vm)
+{
+  wrenSetSlotDouble(vm, 0, wrenGetSlotListSize(vm, 1));
+}
+
+static void getListValue(WrenVM* vm)
+{
+  int index = (int)wrenGetSlotDouble(vm, 2);
+  WrenValue* value = wrenGetSlotListValue(vm, 1, index);
+  wrenSetSlotValue(vm, 0, value);
+  wrenReleaseValue(vm, value);
+}
+
 WrenForeignMethodFn slotsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Slots.noSet") == 0) return noSet;
@@ -161,6 +174,8 @@ WrenForeignMethodFn slotsBindMethod(const char* signature)
   if (strcmp(signature, "static Slots.slotTypes(_,_,_,_,_,_,_)") == 0) return slotTypes;
   if (strcmp(signature, "static Slots.ensure()") == 0) return ensure;
   if (strcmp(signature, "static Slots.ensureOutsideForeign()") == 0) return ensureOutsideForeign;
+  if (strcmp(signature, "static Slots.getListSize(_)") == 0) return getListSize;
+  if (strcmp(signature, "static Slots.getListValue(_,_)") == 0) return getListValue;
 
   return NULL;
 }

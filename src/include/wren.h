@@ -345,6 +345,12 @@ double wrenGetSlotDouble(WrenVM* vm, int slot);
 // foreign class.
 void* wrenGetSlotForeign(WrenVM* vm, int slot);
 
+// Returns the size of the list stored in [slot].
+int wrenGetSlotListSize(WrenVM* vm, int slot);
+
+// Reads a value from the list in [slot].
+WrenValue* wrenGetSlotListValue(WrenVM* vm, int slot, int index);
+
 // Reads a string from [slot].
 //
 // The memory for the returned string is owned by Wren. You can inspect it
