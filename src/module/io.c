@@ -496,7 +496,7 @@ static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
 }
 
 static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
-                               const uv_buf_t* buffer)
+                              const uv_buf_t* buffer)
 {
   WrenVM* vm = getVM();
   
