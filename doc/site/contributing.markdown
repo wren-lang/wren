@@ -14,8 +14,10 @@ The simplest and often most helpful way to join the Wren party is to be a Wren
 utility in Wren. Add syntax highlighting support for Wren to your favorite text
 editor. Share that stuff and it will help the next Wren user to come along.
 
-If you do any of the above, let us know by adding it to the wiki. We like to
-keep track of:
+If you do any of the above, let us know by adding it to [the wiki][wiki]. We
+like to keep track of:
+
+[wiki]: https://github.com/munificent/wren/wiki
 
 * [Applications][] that host Wren as a scripting language.
 * [Modules][] written in Wren that others can use.
@@ -123,7 +125,8 @@ The basic process is simple:
 ## Getting help
 
 If at any point you have questions, feel free to [file an issue][issue] or ask
-on the [mailing list][list]. You can also email me directly (`robert` at
+on the [mailing list][list]. If you're a Redditor, try the
+[/r/wren_lang][subreddit] subreddit. You can also email me directly (`robert` at
 `stuffwithstuff.com`) if you want something less public.
 
 [mit]: http://opensource.org/licenses/MIT
@@ -136,3 +139,4 @@ on the [mailing list][list]. You can also email me directly (`robert` at
 [authors]: https://github.com/munificent/wren/tree/master/AUTHORS
 [pull request]: https://github.com/munificent/wren/pulls
 [list]: https://groups.google.com/forum/#!forum/wren-lang
+[subreddit]: https://www.reddit.com/r/wren_lang/
