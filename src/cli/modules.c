@@ -35,6 +35,8 @@ extern void statSpecialDevice(WrenVM* vm);
 extern void statUser(WrenVM* vm);
 extern void statIsDirectory(WrenVM* vm);
 extern void statIsFile(WrenVM* vm);
+extern void stdinIsRaw(WrenVM* vm);
+extern void stdinIsRawSet(WrenVM* vm);
 extern void stdinReadStart(WrenVM* vm);
 extern void stdinReadStop(WrenVM* vm);
 extern void schedulerCaptureMethods(WrenVM* vm);
@@ -141,6 +143,8 @@ static ModuleRegistry modules[] =
       METHOD("isFile", statIsFile)
     END_CLASS
     CLASS(Stdin)
+      STATIC_METHOD("isRaw", stdinIsRaw)
+      STATIC_METHOD("isRaw=(_)", stdinIsRawSet)
       STATIC_METHOD("readStart_()", stdinReadStart)
       STATIC_METHOD("readStop_()", stdinReadStop)
     END_CLASS

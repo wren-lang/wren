@@ -46,6 +46,9 @@ static WrenValue* stdinOnData = NULL;
 // The stream used to read from stdin. Initialized on the first read.
 static uv_stream_t* stdinStream = NULL;
 
+// True if stdin has been set to raw mode.
+static bool isStdinRaw = false;
+
 // Frees all resources related to stdin.
 static void shutdownStdin()
 {
@@ -67,6 +70,8 @@ static void shutdownStdin()
     wrenReleaseValue(getVM(), stdinOnData);
     stdinOnData = NULL;
   }
+  
+  uv_tty_reset_mode();
 }
 
 void ioShutdown()
@@ -487,6 +492,53 @@ void statIsFile(WrenVM* vm)
   wrenSetSlotBool(vm, 0, S_ISREG(stat->st_mode));
 }
 
+// Sets up the stdin stream if not already initialized.
+static void initStdin()
+{
+  if (stdinStream == NULL)
+  {
+    if (uv_guess_handle(stdinDescriptor) == UV_TTY)
+    {
+      // stdin is connected to a terminal.
+      uv_tty_t* handle = (uv_tty_t*)malloc(sizeof(uv_tty_t));
+      uv_tty_init(getLoop(), handle, stdinDescriptor, true);
+      
+      stdinStream = (uv_stream_t*)handle;
+    }
+    else
+    {
+      // stdin is a pipe or a file.
+      uv_pipe_t* handle = (uv_pipe_t*)malloc(sizeof(uv_pipe_t));
+      uv_pipe_init(getLoop(), handle, false);
+      uv_pipe_open(handle, stdinDescriptor);
+      stdinStream = (uv_stream_t*)handle;
+    }
+  }
+}
+
+void stdinIsRaw(WrenVM* vm)
+{
+  wrenSetSlotBool(vm, 0, isStdinRaw);
+}
+
+void stdinIsRawSet(WrenVM* vm)
+{
+  initStdin();
+  
+  isStdinRaw = wrenGetSlotBool(vm, 1);
+  
+  if (uv_guess_handle(stdinDescriptor) == UV_TTY)
+  {
+    uv_tty_t* handle = (uv_tty_t*)stdinStream;
+    uv_tty_set_mode(handle, isStdinRaw ? UV_TTY_MODE_RAW : UV_TTY_MODE_NORMAL);
+  }
+  else
+  {
+    // Can't set raw mode when not talking to a TTY.
+    // TODO: Make this a runtime error?
+  }
+}
+
 static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
                           uv_buf_t* buf)
 {
@@ -540,25 +592,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
 
 void stdinReadStart(WrenVM* vm)
 {
-  if (stdinStream == NULL)
-  {
-    if (uv_guess_handle(stdinDescriptor) == UV_TTY)
-    {
-      // stdin is connected to a terminal.
-      uv_tty_t* handle = (uv_tty_t*)malloc(sizeof(uv_tty_t));
-      uv_tty_init(getLoop(), handle, stdinDescriptor, true);
-      stdinStream = (uv_stream_t*)handle;
-    }
-    else
-    {
-      // stdin is a pipe or a file.
-      uv_pipe_t* handle = (uv_pipe_t*)malloc(sizeof(uv_pipe_t));
-      uv_pipe_init(getLoop(), handle, false);
-      uv_pipe_open(handle, stdinDescriptor);
-      stdinStream = (uv_stream_t*)handle;
-    }
-  }
-
+  initStdin();
   uv_read_start(stdinStream, allocCallback, stdinReadCallback);
   // TODO: Check return.
 }

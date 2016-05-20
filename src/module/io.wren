@@ -215,6 +215,9 @@ foreign class Stat {
 }
 
 class Stdin {
+  foreign static isRaw
+  foreign static isRaw=(value)
+
   static readByte() {
     return read_ {
       // Peel off the first byte.
