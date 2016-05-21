@@ -539,6 +539,12 @@ void stdinIsRawSet(WrenVM* vm)
   }
 }
 
+void stdinIsTerminal(WrenVM* vm)
+{
+  initStdin();
+  wrenSetSlotBool(vm, 0, uv_guess_handle(stdinDescriptor) == UV_TTY);
+}
+
 static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
                           uv_buf_t* buf)
 {

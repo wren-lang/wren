@@ -217,6 +217,7 @@ foreign class Stat {
 class Stdin {
   foreign static isRaw
   foreign static isRaw=(value)
+  foreign static isTerminal
 
   static readByte() {
     return read_ {

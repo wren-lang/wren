@@ -219,6 +219,7 @@ static const char* ioModuleSource =
 "class Stdin {\n"
 "  foreign static isRaw\n"
 "  foreign static isRaw=(value)\n"
+"  foreign static isTerminal\n"
 "\n"
 "  static readByte() {\n"
 "    return read_ {\n"
