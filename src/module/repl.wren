@@ -1,3 +1,4 @@
+import "meta" for Meta
 import "io" for Stdin
 
 class EscapeBracket {
@@ -38,7 +39,7 @@ class Repl {
       } else if (byte == Chars.escape) {
         handleEscape()
       } else if (byte == Chars.carriageReturn) {
-        executeLine()
+        executeInput()
       } else if (byte == Chars.delete) {
         deleteLeft()
       } else if (byte >= Chars.space && byte <= Chars.tilde) {
@@ -100,11 +101,73 @@ class Repl {
     }
   }
 
-  executeLine() {
-    // TODO: Execute line.
+  executeInput() {
+    System.print()
+    var input = _line
     _line = ""
     _cursor = 0
-    System.print()
+
+    // Guess if it looks like a statement or expression. Statements need to be
+    // evaluated at the top level in case they declare variables, but they
+    // don't return a value. Expressions need to have their result displayed.
+    var tokens = lex(input, false)
+    if (tokens.isEmpty) {
+      // No code, so do nothing.
+      // TODO: Temp.
+      System.print("empty")
+      return
+    }
+
+    var first = tokens[0]
+    var isStatement =
+        first.type == Token.breakKeyword ||
+        first.type == Token.classKeyword ||
+        first.type == Token.forKeyword ||
+        first.type == Token.foreignKeyword ||
+        first.type == Token.ifKeyword ||
+        first.type == Token.importKeyword ||
+        first.type == Token.returnKeyword ||
+        first.type == Token.varKeyword ||
+        first.type == Token.whileKeyword
+
+    var fiber
+    if (isStatement) {
+      fiber = Fiber.new {
+        Meta.eval(input)
+      }
+
+      var result = fiber.try()
+      if (fiber.error == null) return
+    } else {
+      var function = Meta.compileExpression(input)
+      if (function == null) return
+
+      fiber = Fiber.new(function)
+      var result = fiber.try()
+      if (fiber.error == null) {
+        // TODO: Handle error in result.toString.
+        System.print("%(Color.brightWhite)%(result)%(Color.none)")
+        return
+    }
+
+    System.print("%(Color.red)Runtime error: %(result)%(Color.none)")
+    // TODO: Print entire stack.
+  }
+
+  lex(line, includeWhitespace) {
+    var lexer = Lexer.new(line)
+    var tokens = []
+    while (true) {
+      var token = lexer.readToken()
+      if (token.type == Token.eof) break
+
+      if (includeWhitespace ||
+          (token.type != Token.comment && token.type != Token.whitespace)) {
+        tokens.add(token)
+      }
+    }
+
+    return tokens
   }
 
   refreshLine() {
@@ -113,14 +176,11 @@ class Repl {
 
     // Show the prompt at the beginning of the line.
     System.write(Color.gray)
-    System.write("\r>> ")
+    System.write("\r> ")
     System.write(Color.none)
 
     // Syntax highlight the line.
-    var lexer = Lexer.new(_line)
-
-    while (true) {
-      var token = lexer.readToken()
+    for (token in lex(_line, true)) {
       if (token.type == Token.eof) break
 
       System.write(TOKEN_COLORS[token.type])
@@ -129,7 +189,7 @@ class Repl {
     }
 
     // Position the cursor.
-    System.write("\r\x1b[%(3 + _cursor)C")
+    System.write("\r\x1b[%(2 + _cursor)C")
   }
 }
 
@@ -146,6 +206,8 @@ class Color {
   static white { "\x1b[37m" }
 
   static gray { "\x1b[30;1m" }
+  static pink { "\x1b[31;1m" }
+  static brightWhite { "\x1b[37;1m" }
 }
 
 /// Utilities for working with characters.
@@ -329,6 +391,74 @@ var KEYWORDS = {
   "while": Token.whileKeyword
 }
 
+var TOKEN_COLORS = {
+  Token.leftParen: Color.gray,
+  Token.rightParen: Color.gray,
+  Token.leftBracket: Color.gray,
+  Token.rightBracket: Color.gray,
+  Token.leftBrace: Color.gray,
+  Token.rightBrace: Color.gray,
+  Token.colon: Color.gray,
+  Token.dot: Color.gray,
+  Token.dotDot: Color.none,
+  Token.dotDotDot: Color.none,
+  Token.comma: Color.gray,
+  Token.star: Color.none,
+  Token.slash: Color.none,
+  Token.percent: Color.none,
+  Token.plus: Color.none,
+  Token.minus: Color.none,
+  Token.pipe: Color.none,
+  Token.pipePipe: Color.none,
+  Token.caret: Color.none,
+  Token.amp: Color.none,
+  Token.ampAmp: Color.none,
+  Token.question: Color.none,
+  Token.bang: Color.none,
+  Token.tilde: Color.none,
+  Token.equal: Color.none,
+  Token.less: Color.none,
+  Token.lessEqual: Color.none,
+  Token.lessLess: Color.none,
+  Token.greater: Color.none,
+  Token.greaterEqual: Color.none,
+  Token.greaterGreater: Color.none,
+  Token.equalEqual: Color.none,
+  Token.bangEqual: Color.none,
+
+  // Keywords.
+  Token.breakKeyword: Color.cyan,
+  Token.classKeyword: Color.cyan,
+  Token.constructKeyword: Color.cyan,
+  Token.elseKeyword: Color.cyan,
+  Token.falseKeyword: Color.cyan,
+  Token.forKeyword: Color.cyan,
+  Token.foreignKeyword: Color.cyan,
+  Token.ifKeyword: Color.cyan,
+  Token.importKeyword: Color.cyan,
+  Token.inKeyword: Color.cyan,
+  Token.isKeyword: Color.cyan,
+  Token.nullKeyword: Color.cyan,
+  Token.returnKeyword: Color.cyan,
+  Token.staticKeyword: Color.cyan,
+  Token.superKeyword: Color.cyan,
+  Token.thisKeyword: Color.cyan,
+  Token.trueKeyword: Color.cyan,
+  Token.varKeyword: Color.cyan,
+  Token.whileKeyword: Color.cyan,
+
+  Token.field: Color.none,
+  Token.name: Color.none,
+  Token.number: Color.magenta,
+  Token.string: Color.yellow,
+  Token.interpolation: Color.yellow,
+  Token.comment: Color.gray,
+  Token.whitespace: Color.none,
+  Token.line: Color.none,
+  Token.error: Color.red,
+  Token.eof: Color.none,
+}
+
 // Data table for tokens that are tokenized using maximal munch.
 //
 // The key is the character that starts the token or tokens. After that is a
@@ -360,6 +490,10 @@ var PUNCTUATORS = {
   Chars.dot: [Token.dot, Chars.dot, Token.dotDot, Chars.dot, Token.dotDotDot]
 }
 
+/// Tokenizes a string of input. This lexer differs from most in that it
+/// silently ignores errors from incomplete input, like a string literal with
+/// no closing quote. That's because this is intended to be run on a line of
+/// input while the user is still typing it.
 class Lexer {
   construct new(source) {
     _source = source
@@ -599,72 +733,5 @@ class Lexer {
   makeToken(type) { Token.new(_source, type, _start, _current - _start) }
 }
 
-var TOKEN_COLORS = {
-  Token.leftParen: Color.gray,
-  Token.rightParen: Color.gray,
-  Token.leftBracket: Color.gray,
-  Token.rightBracket: Color.gray,
-  Token.leftBrace: Color.gray,
-  Token.rightBrace: Color.gray,
-  Token.colon: Color.gray,
-  Token.dot: Color.gray,
-  Token.dotDot: Color.none,
-  Token.dotDotDot: Color.none,
-  Token.comma: Color.gray,
-  Token.star: Color.none,
-  Token.slash: Color.none,
-  Token.percent: Color.none,
-  Token.plus: Color.none,
-  Token.minus: Color.none,
-  Token.pipe: Color.none,
-  Token.pipePipe: Color.none,
-  Token.caret: Color.none,
-  Token.amp: Color.none,
-  Token.ampAmp: Color.none,
-  Token.question: Color.none,
-  Token.bang: Color.none,
-  Token.tilde: Color.none,
-  Token.equal: Color.none,
-  Token.less: Color.none,
-  Token.lessEqual: Color.none,
-  Token.lessLess: Color.none,
-  Token.greater: Color.none,
-  Token.greaterEqual: Color.none,
-  Token.greaterGreater: Color.none,
-  Token.equalEqual: Color.none,
-  Token.bangEqual: Color.none,
-
-  // Keywords.
-  Token.breakKeyword: Color.cyan,
-  Token.classKeyword: Color.cyan,
-  Token.constructKeyword: Color.cyan,
-  Token.elseKeyword: Color.cyan,
-  Token.falseKeyword: Color.cyan,
-  Token.forKeyword: Color.cyan,
-  Token.foreignKeyword: Color.cyan,
-  Token.ifKeyword: Color.cyan,
-  Token.importKeyword: Color.cyan,
-  Token.inKeyword: Color.cyan,
-  Token.isKeyword: Color.cyan,
-  Token.nullKeyword: Color.cyan,
-  Token.returnKeyword: Color.cyan,
-  Token.staticKeyword: Color.cyan,
-  Token.superKeyword: Color.cyan,
-  Token.thisKeyword: Color.cyan,
-  Token.trueKeyword: Color.cyan,
-  Token.varKeyword: Color.cyan,
-  Token.whileKeyword: Color.cyan,
-
-  Token.field: Color.none,
-  Token.name: Color.none,
-  Token.number: Color.magenta,
-  Token.string: Color.yellow,
-  Token.interpolation: Color.yellow,
-  Token.comment: Color.gray,
-  Token.whitespace: Color.none,
-  Token.line: Color.none,
-  Token.error: Color.red,
-  Token.eof: Color.none,
-}
-
+// Fire up the REPL.
 Repl.new().run()

@@ -15,8 +15,12 @@ void metaCompile(WrenVM* vm)
   ObjClosure* caller = vm->fiber->frames[vm->fiber->numFrames - 2].closure;
   ObjModule* module = caller->fn->module;
 
+  const char* source = wrenGetSlotString(vm, 1);
+  bool isExpression = wrenGetSlotBool(vm, 2);
+  bool printErrors = wrenGetSlotBool(vm, 3);
+  
   // Compile it.
-  ObjFn* fn = wrenCompile(vm, module, wrenGetSlotString(vm, 1), false);
+  ObjFn* fn = wrenCompile(vm, module, source, isExpression, printErrors);
 
   // Return the result. We can't use the public API for this since we have a
   // bare ObjFn.
@@ -45,7 +49,7 @@ WrenForeignMethodFn wrenMetaBindForeignMethod(WrenVM* vm,
   // There is only one foreign method in the meta module.
   ASSERT(strcmp(className, "Meta") == 0, "Should be in Meta class.");
   ASSERT(isStatic, "Should be static.");
-  ASSERT(strcmp(signature, "compile_(_)") == 0, "Should be compile method.");
+  ASSERT(strcmp(signature, "compile_(_,_,_)") == 0, "Should be compile method.");
   
   return metaCompile;
 }

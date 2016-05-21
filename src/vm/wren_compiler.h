@@ -26,10 +26,14 @@ typedef struct sCompiler Compiler;
 // [ObjFn] that will execute that code when invoked. Returns `NULL` if the
 // source contains any syntax errors.
 //
+// If [isExpression] is `true`, [source] should be a single expression, and
+// this compiles it to a function that evaluates and returns that expression.
+// Otherwise, [source] should be a series of top level statements.
+//
 // If [printErrors] is `true`, any compile errors are output to stderr.
 // Otherwise, they are silently discarded.
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
-                   bool printErrors);
+                   bool isExpression, bool printErrors);
 
 // When a class is defined, its superclass is not known until runtime since
 // class definitions are just imperative statements. Most of the bytecode for a

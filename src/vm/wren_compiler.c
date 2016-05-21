@@ -3345,6 +3345,7 @@ static void variableDefinition(Compiler* compiler)
   // Compile the initializer.
   if (match(compiler, TOKEN_EQ))
   {
+    ignoreNewlines(compiler);
     expression(compiler);
   }
   else
@@ -3387,7 +3388,7 @@ void definition(Compiler* compiler)
 }
 
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
-                   bool printErrors)
+                   bool isExpression, bool printErrors)
 {
   Parser parser;
   parser.vm = vm;
@@ -3415,29 +3416,39 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   // Read the first token.
   nextToken(&parser);
 
+  int numExistingVariables = module->variables.count;
+  
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, true);
   ignoreNewlines(&compiler);
 
-  while (!match(&compiler, TOKEN_EOF))
+  if (isExpression)
   {
-    definition(&compiler);
-
-    // If there is no newline, it must be the end of the block on the same line.
-    if (!matchLine(&compiler))
-    {
-      consume(&compiler, TOKEN_EOF, "Expect end of file.");
-      break;
-    }
+    expression(&compiler);
   }
-
-  emitOp(&compiler, CODE_NULL);
+  else
+  {
+    while (!match(&compiler, TOKEN_EOF))
+    {
+      definition(&compiler);
+      
+      // If there is no newline, it must be the end of the block on the same line.
+      if (!matchLine(&compiler))
+      {
+        consume(&compiler, TOKEN_EOF, "Expect end of file.");
+        break;
+      }
+    }
+    
+    emitOp(&compiler, CODE_NULL);
+  }
+  
   emitOp(&compiler, CODE_RETURN);
 
   // See if there are any implicitly declared module-level variables that never
   // got an explicit definition. They will have values that are numbers
   // indicating the line where the variable was first used.
-  for (int i = 0; i < parser.module->variables.count; i++)
+  for (int i = numExistingVariables; i < parser.module->variables.count; i++)
   {
     if (IS_NUM(parser.module->variables.data[i]))
     {
