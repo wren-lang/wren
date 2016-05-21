@@ -32,11 +32,11 @@ static void call(WrenVM* vm)
   
   wrenInterpret(otherVM, testScript);
   
-  WrenValue* method = wrenMakeCallHandle(otherVM, "method(_,_,_,_)");
+  WrenHandle* method = wrenMakeCallHandle(otherVM, "method(_,_,_,_)");
   
   wrenEnsureSlots(otherVM, 1);
   wrenGetVariable(otherVM, "main", "Test", 0);
-  WrenValue* testClass = wrenGetSlotValue(otherVM, 0);
+  WrenHandle* testClass = wrenGetSlotHandle(otherVM, 0);
   
   double startTime = (double)clock() / CLOCKS_PER_SEC;
   
@@ -44,7 +44,7 @@ static void call(WrenVM* vm)
   for (int i = 0; i < iterations; i++)
   {
     wrenEnsureSlots(otherVM, 5);
-    wrenSetSlotValue(otherVM, 0, testClass);
+    wrenSetSlotHandle(otherVM, 0, testClass);
     wrenSetSlotDouble(otherVM, 1, 1.0);
     wrenSetSlotDouble(otherVM, 2, 2.0);
     wrenSetSlotDouble(otherVM, 3, 3.0);
@@ -57,8 +57,8 @@ static void call(WrenVM* vm)
   
   double elapsed = (double)clock() / CLOCKS_PER_SEC - startTime;
   
-  wrenReleaseValue(otherVM, testClass);
-  wrenReleaseValue(otherVM, method);
+  wrenReleaseHandle(otherVM, testClass);
+  wrenReleaseHandle(otherVM, method);
   wrenFreeVM(otherVM);
   
   if (result == (1.0 + 2.0 + 3.0 + 4.0) * iterations)

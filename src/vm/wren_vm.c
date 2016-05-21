@@ -99,7 +99,7 @@ void wrenFreeVM(WrenVM* vm)
   // Tell the user if they didn't free any handles. We don't want to just free
   // them here because the host app may still have pointers to them that they
   // may try to use. Better to tell them about the bug early.
-  ASSERT(vm->valueHandles == NULL, "All values have not been released.");
+  ASSERT(vm->handles == NULL, "All handles have not been released.");
 
   wrenSymbolTableClear(vm, &vm->methodNames);
 
@@ -138,12 +138,12 @@ void wrenCollectGarbage(WrenVM* vm)
   // The current fiber.
   wrenGrayObj(vm, (Obj*)vm->fiber);
 
-  // The value handles.
-  for (WrenValue* value = vm->valueHandles;
-       value != NULL;
-       value = value->next)
+  // The handles.
+  for (WrenHandle* handle = vm->handles;
+       handle != NULL;
+       handle = handle->next)
   {
-    wrenGrayValue(vm, value->value);
+    wrenGrayValue(vm, handle->value);
   }
 
   // Any object the compiler is using (if there is one).
@@ -1195,7 +1195,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #undef READ_SHORT
 }
 
-WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature)
+WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
 {
   ASSERT(signature != NULL, "Signature cannot be NULL.");
   
@@ -1231,7 +1231,7 @@ WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   
   // Wrap the function in a closure and then in a handle. Do this here so it
   // doesn't get collected as we fill it in.
-  WrenValue* value = wrenCaptureValue(vm, OBJ_VAL(fn));
+  WrenHandle* value = wrenMakeHandle(vm, OBJ_VAL(fn));
   value->value = OBJ_VAL(wrenNewClosure(vm, fn));
   
   wrenByteBufferWrite(vm, &fn->code, (uint8_t)(CODE_CALL_0 + numParams));
@@ -1245,7 +1245,7 @@ WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   return value;
 }
 
-WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method)
+WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
 {
   ASSERT(method != NULL, "Method cannot be NULL.");
   ASSERT(IS_CLOSURE(method->value), "Method must be a method handle.");
@@ -1266,42 +1266,42 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method)
   return runInterpreter(vm, vm->fiber);
 }
 
-WrenValue* wrenCaptureValue(WrenVM* vm, Value value)
+WrenHandle* wrenMakeHandle(WrenVM* vm, Value value)
 {
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
   
   // Make a handle for it.
-  WrenValue* wrappedValue = ALLOCATE(vm, WrenValue);
-  wrappedValue->value = value;
+  WrenHandle* handle = ALLOCATE(vm, WrenHandle);
+  handle->value = value;
 
   if (IS_OBJ(value)) wrenPopRoot(vm);
 
   // Add it to the front of the linked list of handles.
-  if (vm->valueHandles != NULL) vm->valueHandles->prev = wrappedValue;
-  wrappedValue->prev = NULL;
-  wrappedValue->next = vm->valueHandles;
-  vm->valueHandles = wrappedValue;
+  if (vm->handles != NULL) vm->handles->prev = handle;
+  handle->prev = NULL;
+  handle->next = vm->handles;
+  vm->handles = handle;
   
-  return wrappedValue;
+  return handle;
 }
 
-void wrenReleaseValue(WrenVM* vm, WrenValue* value)
+void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle)
 {
-  ASSERT(value != NULL, "Value cannot be NULL.");
+  ASSERT(handle != NULL, "Handle cannot be NULL.");
 
   // Update the VM's head pointer if we're releasing the first handle.
-  if (vm->valueHandles == value) vm->valueHandles = value->next;
+  if (vm->handles == handle) vm->handles = handle->next;
 
   // Unlink it from the list.
-  if (value->prev != NULL) value->prev->next = value->next;
-  if (value->next != NULL) value->next->prev = value->prev;
+  if (handle->prev != NULL) handle->prev->next = handle->next;
+  if (handle->next != NULL) handle->next->prev = handle->prev;
 
   // Clear it out. This isn't strictly necessary since we're going to free it,
   // but it makes for easier debugging.
-  value->prev = NULL;
-  value->next = NULL;
-  value->value = NULL_VAL;
-  DEALLOCATE(vm, value);
+  handle->prev = NULL;
+  handle->next = NULL;
+  handle->value = NULL_VAL;
+  DEALLOCATE(vm, handle);
 }
 
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source)
@@ -1555,10 +1555,10 @@ const char* wrenGetSlotString(WrenVM* vm, int slot)
   return AS_CSTRING(vm->apiStack[slot]);
 }
 
-WrenValue* wrenGetSlotValue(WrenVM* vm, int slot)
+WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
-  return wrenCaptureValue(vm, vm->apiStack[slot]);
+  return wrenMakeHandle(vm, vm->apiStack[slot]);
 }
 
 // Stores [value] in [slot] in the foreign call stack.
@@ -1616,11 +1616,11 @@ void wrenSetSlotString(WrenVM* vm, int slot, const char* text)
   setSlot(vm, slot, wrenNewString(vm, text, strlen(text)));
 }
 
-void wrenSetSlotValue(WrenVM* vm, int slot, WrenValue* value)
+void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle)
 {
-  ASSERT(value != NULL, "Value cannot be NULL.");
+  ASSERT(handle != NULL, "Handle cannot be NULL.");
 
-  setSlot(vm, slot, value->value);
+  setSlot(vm, slot, handle->value);
 }
 
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
@@ -1639,8 +1639,6 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
 }
 
-// TODO: Maybe just have this always return a WrenValue* instead of having to
-// deal with slots?
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {

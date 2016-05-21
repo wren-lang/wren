@@ -16,7 +16,7 @@ static void timerCloseCallback(uv_handle_t* handle)
 // Called by libuv when the timer has completed.
 static void timerCallback(uv_timer_t* handle)
 {
-  WrenValue* fiber = (WrenValue*)handle->data;
+  WrenHandle* fiber = (WrenHandle*)handle->data;
 
   // Tell libuv that we don't need the timer anymore.
   uv_close((uv_handle_t*)handle, timerCloseCallback);
@@ -28,7 +28,7 @@ static void timerCallback(uv_timer_t* handle)
 void timerStartTimer(WrenVM* vm)
 {
   int milliseconds = (int)wrenGetSlotDouble(vm, 1);
-  WrenValue* fiber = wrenGetSlotValue(vm, 2);
+  WrenHandle* fiber = wrenGetSlotHandle(vm, 2);
 
   // Store the fiber to resume when the timer completes.
   uv_timer_t* handle = (uv_timer_t*)malloc(sizeof(uv_timer_t));

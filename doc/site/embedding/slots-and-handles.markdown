@@ -1,4 +1,4 @@
-^title Slots and Values
+^title Slots and Handles
 
 With `wrenInterpret()`, we can execute code, but that code can't do anything
 particularly interesting. Out of the box, the VM is very isolated from the rest
@@ -8,7 +8,7 @@ laptop into a lap warmer, but that's about it.
 To make our Wren code *useful*, the VM needs to communicate with the outside
 world. Wren uses a single unified set of functions for passing data into and out
 of the VM. These functions are based on two fundamental concepts: **slots** and
-**values**.
+**handles**.
 
 ## The Slot Array
 
@@ -154,7 +154,7 @@ hash the name and look it up in the module's string table. You might want to
 avoid calling this in the middle of a hot loop where performance is critical.
 
 Instead, it's faster to look up the variable once outside the loop and store a
-reference to the object using a [WrenValue](#values).
+reference to the object using a [WrenHandle](#handles).
 
 ### Working with lists
 
@@ -197,7 +197,7 @@ the list. This is kind of tedious, but it lets us use the same set of functions
 for moving values into slots of each primitive type. Otherwise, we'd need
 `wrenInsertInListDouble()`, `wrenInsertInListBool()`, etc.
 
-## Values
+## Handles
 
 Slots are pretty good for shuttling primitive data between C and Wren, but they
 have two limitations:
@@ -211,53 +211,51 @@ have two limitations:
     that aren't simple primitive ones. If you want to grab a reference to,
     say, an instance of some class, how do you do it?
 
-To address those, we have WrenValue. A WrenValue is a handle that wraps a
-reference to an object of any kind&mdash;strings, numbers, instances of classes,
-collections, whatever.
+To address those, we have WrenHandle. A WrenHandle wraps a reference to an
+object of any kind&mdash;strings, numbers, instances of classes, collections,
+whatever.
 
-*(Note: WrenValue will probably be renamed to WrenHandle soon.)*
-
-You create a WrenValue using this:
+You create a WrenHandle using this:
 
     :::c
-    WrenValue* wrenGetSlotValue(WrenVM* vm, int slot);
+    WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
 
-This takes the object stored in the given slot, creates a new WrenValue to wrap
+This takes the object stored in the given slot, creates a new WrenHandle to wrap
 it, and returns a pointer to it back to you.
 
 You can send that wrapped object back to Wren by calling:
 
     :::c
-    void wrenSetSlotValue(WrenVM* vm, int slot, WrenValue* value);
+    void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
 
-Note that this doesn't invalidate your WrenValue. You can still keep using it.
+Note that this doesn't invalidate your WrenHandle. You can still keep using it.
 
-### Retaining and releasing values
+### Retaining and releasing handles
 
-A WrenValue is an opaque wrapper around an object of any type, but just as
+A WrenHandle is an opaque wrapper around an object of any type, but just as
 important, it's a *persistent* one. When Wren gives you a pointer to a
-WrenValue, it guarantees that that pointer remains valid. You can keep it
+WrenHandle, it guarantees that that pointer remains valid. You can keep it
 around as long as you want. Even if a garbage collection occurs, Wren will
-ensure all of the WrenValues and the objects they wrap are kept safely in
+ensure all of the WrenHandles and the objects they wrap are kept safely in
 memory.
 
-Internally, Wren keeps a list of all of the WrenValues that have been created.
+Internally, Wren keeps a list of all of the WrenHandles that have been created.
 That way, during garbage collection, it can find them all and make sure their
 objects aren't freed.
 
 But what if you don't want it to be kept around any more? Since C relies on
-manual memory management, WrenValue does too. When you are done with one, you
+manual memory management, WrenHandle does too. When you are done with one, you
 must explicitly release it by calling:
 
     :::c
-    void wrenReleaseValue(WrenVM* vm, WrenValue* value);
+    void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle);
 
 This does not immediately delete the wrapped object&mdash;after all, there may
 be other references to the same object in the program. It just invalidates the
-WrenValue wrapper itself. After you call this, you cannot use that pointer
+WrenHandle wrapper itself. After you call this, you cannot use that pointer
 again.
 
-You must release every WrenValue you've created before shutting down the VM.
+You must release every WrenHandle you've created before shutting down the VM.
 Wren warns you if you don't, since it implies you've probably leaked a resource
 somewhere.
 

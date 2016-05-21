@@ -20,12 +20,12 @@ typedef enum
 // A handle to a value, basically just a linked list of extra GC roots.
 //
 // Note that even non-heap-allocated values can be stored here.
-struct WrenValue
+struct WrenHandle
 {
   Value value;
 
-  WrenValue* prev;
-  WrenValue* next;
+  WrenHandle* prev;
+  WrenHandle* next;
 };
 
 struct WrenVM
@@ -80,9 +80,9 @@ struct WrenVM
 
   int numTempRoots;
   
-  // Pointer to the first node in the linked list of active value handles or
-  // NULL if there are no handles.
-  WrenValue* valueHandles;
+  // Pointer to the first node in the linked list of active handles or NULL if
+  // there are none.
+  WrenHandle* handles;
   
   // Pointer to the bottom of the range of stack slots available for use from
   // the C API. During a foreign method, this will be in the stack of the fiber
@@ -128,8 +128,8 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 // Invoke the finalizer for the foreign object referenced by [foreign].
 void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 
-// Creates a new [WrenValue] for [value].
-WrenValue* wrenCaptureValue(WrenVM* vm, Value value);
+// Creates a new [WrenHandle] for [value].
+WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
 
 // Executes [source] in the context of [module].
 WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,

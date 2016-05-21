@@ -14,9 +14,9 @@ typedef struct WrenVM WrenVM;
 // A handle to a Wren object.
 //
 // This lets code outside of the VM hold a persistent reference to an object.
-// After a value is acquired, and until it is released, this ensures the
-// garbage collector will not reclaim it.
-typedef struct WrenValue WrenValue;
+// After a handle is acquired, and until it is released, this ensures the
+// garbage collector will not reclaim the object it references.
+typedef struct WrenHandle WrenHandle;
 
 // A generic allocation function that handles all explicit memory management
 // used by Wren. It's used like so:
@@ -246,8 +246,8 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source);
 // code using [wrenCall].
 //
 // When you are done with this handle, it must be released using
-// [wrenReleaseValue].
-WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature);
+// [wrenReleaseHandle].
+WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
 
 // Calls [method], using the receiver and arguments previously set up on the
 // stack.
@@ -259,17 +259,17 @@ WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature);
 // signature.
 //
 // After this returns, you can access the return value from slot 0 on the stack.
-WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method);
+WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
 
-// Releases the reference stored in [value]. After calling this, [value] can no
-// longer be used.
-void wrenReleaseValue(WrenVM* vm, WrenValue* value);
+// Releases the reference stored in [handle]. After calling this, [handle] can
+// no longer be used.
+void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle);
 
 // The following functions are intended to be called from foreign methods or
 // finalizers. The interface Wren provides to a foreign method is like a
 // register machine: you are given a numbered array of slots that values can be
 // read from and written to. Values always live in a slot (unless explicitly
-// captured using wrenGetSlotValue(), which ensures the garbage collector can
+// captured using wrenGetSlotHandle(), which ensures the garbage collector can
 // find them.
 //
 // When your foreign function is called, you are given one slot for the receiver
@@ -357,8 +357,8 @@ const char* wrenGetSlotString(WrenVM* vm, int slot);
 // Creates a handle for the value stored in [slot].
 //
 // This will prevent the object that is referred to from being garbage collected
-// until the handle is released by calling [wrenReleaseValue()].
-WrenValue* wrenGetSlotValue(WrenVM* vm, int slot);
+// until the handle is released by calling [wrenReleaseHandle()].
+WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
 
 // The following functions provide the return value for a foreign method back
 // to Wren. Like above, they may only be called during a foreign call invoked
@@ -406,10 +406,10 @@ void wrenSetSlotNull(WrenVM* vm, int slot);
 // should use [wrenSetSlotBytes()] instead.
 void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
 
-// Stores the value captured in [value] in [slot].
+// Stores the value captured in [handle] in [slot].
 //
 // This does not release the handle for the value.
-void wrenSetSlotValue(WrenVM* vm, int slot, WrenValue* value);
+void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
 
 // Takes the value stored at [elementSlot] and inserts it into the list stored
 // at [listSlot] at [index].

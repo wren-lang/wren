@@ -40,11 +40,15 @@ It would be a shame if calling a method from C didn't have that same speed benef
 First, we create a handle that represents a "compiled" method signature. You do that using this:
 
     :::c
-    WrenValue* wrenMakeCallHandle(WrenVM* vm, const char* signature);
+    WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
 
 That takes a method signature as a string and gives you back an opaque handle that represents the compiled method symbol. Now you have a *reusable* handle that can be used to very quickly call a certain method given a receiver and some arguments.
 
-This is just a regular WrenValue, which means you can hold onto it as long as you like. Typically, you'd call this once outside of your applications performance critical loops and reuse it as long as you need. Then, it is us up to you to release it when you no longer need it by calling `wrenReleaseValue()`.
+This is just a regular WrenHandle, which means you can hold onto it as long as
+you like. Typically, you'd call this once outside of your applications
+performance critical loops and reuse it as long as you need. Then, it is us up
+to you to release it when you no longer need it by calling
+`wrenReleaseHandle()`.
 
 ### Setting up a receiver
 
@@ -52,7 +56,7 @@ OK, we have a method, but who are we calling it on? We need a receiver, and as y
 
 Any object you store in that slot can be used as a receiver. You could even call `+` on a number by storing a number in there if you felt like it.
 
-[last section]: slots-and-values.html
+[last section]: slots-and-handles.html
 
 *Needing* to pick some kind of receiver from C might feel strange. C is procedural, so it's natural to want to just invoke a bare *function* from Wren, but Wren isn't procedural. Instead, if you want to define some executable operation that isn't logically tied to a specific object, the natural way is to define a static method on an appropriate class.
 
@@ -69,7 +73,7 @@ So, very often, when you call a method from C, you'll be calling a static method
 
 Assuming you declared that class at the top level, the C API [gives you a way to look it up][variable].
 
-[variable]: slots-and-values.html#looking-up-variables
+[variable]: slots-and-handles.html#looking-up-variables
 
 We can get a handle to the above class like so:
 
@@ -84,12 +88,12 @@ We could do this every time we call `update()`, but, again, that's kind of slow 
     // Load the class into slot 0.
     wrenEnsureSlots(vm, 1);
     wrenGetVariable(vm, "main", "GameEngine", 0);
-    WrenValue* gameEngine = wrenGetSlotValue(vm, 0);
+    WrenHandle* gameEngine = wrenGetSlotHandle(vm, 0);
 
 Now, each time we want to call a method on GameEngine, we store that value back in slot zero:
 
     :::c
-    wrenSetSlotValue(vm, 0, gameEngine);
+    wrenSetSlotHandle(vm, 0, gameEngine);
 
 Just like we hoisted `wrenMakeCallHandle()` out of our performance critical loop, we can hoist the call to `wrenGetVariable()` out. Of course, if your code isn't performance critical, you don't have to do this.
 
@@ -105,7 +109,7 @@ We've got a receiver in slot zero now, next we need to pass in any other argumen
 We have all of the data in place, so all that's left is to pull the trigger and tell the VM to start running some code. There's one more function to call:
 
     :::c
-    WrenInterpretResult wrenCall(WrenVM* vm, WrenValue* method);
+    WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
 
 It takes the method handle we created using `wrenMakeCallHandle()`. It assumes you have already set up the receiver and arguments in the slot array. Critically, it assumes you have as many arguments as the method signature defines. If you call a method like `takeThree(_,_,_)` and don't put three arguments in the slot array, bad things we'll happen.
 
@@ -122,4 +126,4 @@ When `wrenCall()` returns, it leaves the slot array in place. In slot zero, you 
 This is how you drive Wren from C, but how do you put control in Wren's hands? For that, you'll need the next section...
 
 <a class="right" href="calling-c-from-wren.html">Calling C From Wren &rarr;</a>
-<a href="slots-and-values.html">&larr; Slots and Values</a>
+<a href="slots-and-handles.html">&larr; Slots and Handles</a>

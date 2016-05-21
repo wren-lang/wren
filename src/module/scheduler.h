@@ -10,10 +10,10 @@
 // on the stack and then call [schedulerFinishResume] to complete the call.
 //
 // Otherwise, the call resumes immediately. Releases [fiber] when called.
-void schedulerResume(WrenValue* fiber, bool hasArgument);
+void schedulerResume(WrenHandle* fiber, bool hasArgument);
 
 void schedulerFinishResume();
-void schedulerResumeError(WrenValue* fiber, const char* error);
+void schedulerResumeError(WrenHandle* fiber, const char* error);
 
 void schedulerShutdown();
 

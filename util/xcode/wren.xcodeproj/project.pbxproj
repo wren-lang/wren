@@ -55,7 +55,7 @@
 		29DC14AA1BBA3032008A8274 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009A61B7E3993000CE58C /* main.c */; };
 		29DC14AB1BBA3038008A8274 /* foreign_class.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009A81B7E39A8000CE58C /* foreign_class.c */; };
 		29DC14AC1BBA303D008A8274 /* slots.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AA1B7E39A8000CE58C /* slots.c */; };
-		29DC14AD1BBA3040008A8274 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AC1B7E39A8000CE58C /* value.c */; };
+		29DC14AD1BBA3040008A8274 /* handle.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AC1B7E39A8000CE58C /* handle.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -133,8 +133,8 @@
 		29D009A91B7E39A8000CE58C /* foreign_class.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = foreign_class.h; path = ../../test/api/foreign_class.h; sourceTree = "<group>"; };
 		29D009AA1B7E39A8000CE58C /* slots.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = slots.c; path = ../../test/api/slots.c; sourceTree = "<group>"; };
 		29D009AB1B7E39A8000CE58C /* slots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = slots.h; path = ../../test/api/slots.h; sourceTree = "<group>"; };
-		29D009AC1B7E39A8000CE58C /* value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = value.c; path = ../../test/api/value.c; sourceTree = "<group>"; };
-		29D009AD1B7E39A8000CE58C /* value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = value.h; path = ../../test/api/value.h; sourceTree = "<group>"; };
+		29D009AC1B7E39A8000CE58C /* handle.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = handle.c; path = ../../test/api/handle.c; sourceTree = "<group>"; };
+		29D009AD1B7E39A8000CE58C /* handle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = handle.h; path = ../../test/api/handle.h; sourceTree = "<group>"; };
 		29D025E01C19CD1000A3BB28 /* process.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = process.c; path = ../../src/module/process.c; sourceTree = "<group>"; };
 		29D025E11C19CD1000A3BB28 /* process.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = process.h; path = ../../src/module/process.h; sourceTree = "<group>"; };
 		29D025E21C19CD1000A3BB28 /* process.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = process.wren.inc; path = ../../src/module/process.wren.inc; sourceTree = "<group>"; };
@@ -270,14 +270,14 @@
 				29D009A91B7E39A8000CE58C /* foreign_class.h */,
 				2949AA8B1C2F14F000B106BA /* get_variable.c */,
 				2949AA8C1C2F14F000B106BA /* get_variable.h */,
+				29D009AC1B7E39A8000CE58C /* handle.c */,
+				29D009AD1B7E39A8000CE58C /* handle.h */,
 				29932D521C210F8D00099DEE /* lists.c */,
 				29932D531C210F8D00099DEE /* lists.h */,
 				29C946961C88F14F00B4A4F3 /* new_vm.c */,
 				29C946971C88F14F00B4A4F3 /* new_vm.h */,
 				29D009AA1B7E39A8000CE58C /* slots.c */,
 				29D009AB1B7E39A8000CE58C /* slots.h */,
-				29D009AC1B7E39A8000CE58C /* value.c */,
-				29D009AD1B7E39A8000CE58C /* value.h */,
 			);
 			name = api_test;
 			sourceTree = "<group>";
@@ -409,7 +409,7 @@
 				29A427351BDBE435001E6E22 /* wren_opt_meta.c in Sources */,
 				29DC14AB1BBA3038008A8274 /* foreign_class.c in Sources */,
 				29DC14AC1BBA303D008A8274 /* slots.c in Sources */,
-				29DC14AD1BBA3040008A8274 /* value.c in Sources */,
+				29DC14AD1BBA3040008A8274 /* handle.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

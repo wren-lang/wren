@@ -22,13 +22,13 @@ static void getSlots(WrenVM* vm)
   if (wrenGetSlotDouble(vm, 3) != 12.34) result = false;
   if (strcmp(wrenGetSlotString(vm, 4), "str") != 0) result = false;
   
-  WrenValue* value = wrenGetSlotValue(vm, 5);
+  WrenHandle* handle = wrenGetSlotHandle(vm, 5);
 
   if (result)
   {
     // Otherwise, return the value so we can tell if we captured it correctly.
-    wrenSetSlotValue(vm, 0, value);
-    wrenReleaseValue(vm, value);
+    wrenSetSlotHandle(vm, 0, handle);
+    wrenReleaseHandle(vm, handle);
   }
   else
   {
@@ -39,7 +39,7 @@ static void getSlots(WrenVM* vm)
 
 static void setSlots(WrenVM* vm)
 {
-  WrenValue* value = wrenGetSlotValue(vm, 1);
+  WrenHandle* handle = wrenGetSlotHandle(vm, 1);
   
   wrenSetSlotBool(vm, 1, true);
   wrenSetSlotBytes(vm, 2, "by\0te", 5);
@@ -64,8 +64,8 @@ static void setSlots(WrenVM* vm)
   if (result)
   {
     // Move the value into the return position.
-    wrenSetSlotValue(vm, 0, value);
-    wrenReleaseValue(vm, value);
+    wrenSetSlotHandle(vm, 0, handle);
+    wrenReleaseHandle(vm, handle);
   }
   else
   {

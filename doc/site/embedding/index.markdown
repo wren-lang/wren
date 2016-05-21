@@ -169,41 +169,13 @@ need to free any memory it allocated. You do that like so:
 After calling that, you obviously cannot use the `WrenVM*` you passed to it
 again. It's dead.
 
-Note that Wren will yell at you if you still have any live [WrenValue][value]
+Note that Wren will yell at you if you still have any live [WrenHandle][handle]
 objects when you call this. This makes sure you haven't lost track of any of
 them (which leaks memory) and you don't try to use any of them after the VM has
 been freed.
 
-[value]: slots-and-values.html#values
+[handle]: slots-and-handles.html#handles
 
 Next, we'll learn to make that VM do useful stuff...
 
-<a class="right" href="slots-and-values.html">Slots and Values &rarr;</a>
-
-<!--
-- configuration
-    - each field and what it means
-- preprocessor option
-    - WREN_NAN_TAGGING
-    - WREN_COMPUTED_GOTO
-    - WREN_OPT_META
-    - WREN_OPT_RANDOM
-    - WREN_DEBUG_GC_STRESS 0
-    - WREN_DEBUG_TRACE_MEMORY 0
-    - WREN_DEBUG_TRACE_GC 0
-    - WREN_DEBUG_DUMP_COMPILED_CODE 0
-    - WREN_DEBUG_TRACE_INSTRUCTIONS 0
-- calling wren from c
-
-    Often a host application wants to load a bunch of Wren code into the VM and
-    then periodically call a method. For example, a game engine might load all
-    of the entity scripts into Wren. Then, each tick of the game loop, it calls
-    Wren to tell all of the entities to update.
-
-- calling c from wren
-- storing c data in wren objects
-- fibers and scheduling
-- app lifecycle, wren in charge
-- app lifecycle, c in charge
-
--->
+<a class="right" href="slots-and-handles.html">Slots and Handles &rarr;</a>

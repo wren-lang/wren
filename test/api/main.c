@@ -8,10 +8,10 @@
 #include "call.h"
 #include "get_variable.h"
 #include "foreign_class.h"
+#include "handle.h"
 #include "lists.h"
 #include "new_vm.h"
 #include "slots.h"
-#include "value.h"
 
 // The name of the currently executing API test.
 const char* testName;
@@ -42,6 +42,9 @@ static WrenForeignMethodFn bindForeignMethod(
   method = foreignClassBindMethod(fullName);
   if (method != NULL) return method;
   
+  method = handleBindMethod(fullName);
+  if (method != NULL) return method;
+
   method = listsBindMethod(fullName);
   if (method != NULL) return method;
   
@@ -49,9 +52,6 @@ static WrenForeignMethodFn bindForeignMethod(
   if (method != NULL) return method;
   
   method = slotsBindMethod(fullName);
-  if (method != NULL) return method;
-  
-  method = valueBindMethod(fullName);
   if (method != NULL) return method;
 
   fprintf(stderr,
