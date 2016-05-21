@@ -25,6 +25,8 @@ class Repl {
       var byte = Stdin.readByte()
       if (byte == Chars.ctrlA) {
         _cursor = 0
+      } else if (byte == Chars.ctrlB) {
+        cursorLeft()
       } else if (byte == Chars.ctrlC) {
         System.print()
         return
@@ -39,6 +41,24 @@ class Repl {
         deleteRight()
       } else if (byte == Chars.ctrlE) {
         _cursor = _line.count
+      } else if (byte == Chars.ctrlF) {
+        cursorRight()
+      } else if (byte == Chars.ctrlK) {
+        // Delete everything after the cursor.
+        _line = _line[0..._cursor]
+      } else if (byte == Chars.ctrlL) {
+        // Clear the screen.
+        System.write("\x1b[2J")
+        // Move cursor to top left.
+        System.write("\x1b[H")
+      } else if (byte == Chars.ctrlU) {
+        // Clear the line.
+        _line = ""
+        _cursor = 0
+      } else if (byte == Chars.ctrlN) {
+        nextHistory()
+      } else if (byte == Chars.ctrlP) {
+        previousHistory()
       } else if (byte == Chars.escape) {
         handleEscape()
       } else if (byte == Chars.carriageReturn) {
@@ -48,7 +68,12 @@ class Repl {
       } else if (byte >= Chars.space && byte <= Chars.tilde) {
         insertChar(byte)
       } else {
-        // TODO: Handle other non-printing characters.
+        // TODO: Ctrl-T to swap chars.
+        // TODO: ESC H and F to move to beginning and end of line. (Both ESC
+        // [ and ESC 0 sequences?)
+        // TODO: Ctrl-W delete previous word.
+        // TODO: Completion.
+        // TODO: Other shortcuts?
         System.print("Unhandled byte: %(byte)")
       }
 
@@ -90,16 +115,24 @@ class Repl {
       } else if (value == EscapeBracket.down) {
         nextHistory()
       } else if (value == EscapeBracket.left) {
-        // Move the cursor left one.
-        if (_cursor > 0) _cursor = _cursor - 1
+        cursorLeft()
       } else if (value == EscapeBracket.right) {
-        // Move the cursor right one.
-        // TODO: Take into account multi-byte characters?
-        if (_cursor < _line.count) _cursor = _cursor + 1
+        cursorRight()
       }
     } else {
       // TODO: Handle ESC 0 sequences.
     }
+  }
+
+  /// Move the cursor left one character.
+  cursorLeft() {
+    if (_cursor > 0) _cursor = _cursor - 1
+  }
+
+  /// Move the cursor right one character.
+  cursorRight() {
+    // TODO: Take into account multi-byte characters?
+    if (_cursor < _line.count) _cursor = _cursor + 1
   }
 
   previousHistory() {
@@ -239,12 +272,19 @@ class Color {
 /// Utilities for working with characters.
 class Chars {
   static ctrlA { 0x01 }
+  static ctrlB { 0x02 }
   static ctrlC { 0x03 }
   static ctrlD { 0x04 }
   static ctrlE { 0x05 }
+  static ctrlF { 0x06 }
   static tab { 0x09 }
   static lineFeed { 0x0a }
+  static ctrlK { 0x0b }
+  static ctrlL { 0x0c }
   static carriageReturn { 0x0d }
+  static ctrlN { 0x0e }
+  static ctrlP { 0x10 }
+  static ctrlU { 0x15 }
   static escape { 0x1b }
   static space { 0x20 }
   static bang { 0x21 }
