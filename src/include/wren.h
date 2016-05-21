@@ -5,6 +5,20 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+// The Wren semantic version number components.
+#define WREN_VERSION_MAJOR 0
+#define WREN_VERSION_MINOR 1
+#define WREN_VERSION_PATCH 0
+
+// A human-friendly string representation of the version.
+#define WREN_VERSION_STRING "0.1.0"
+
+// A monotonically increasing numeric representation of the version number. Use
+// this if you want to do range checks over versions.
+#define WREN_VERSION_NUMBER (WREN_VERSION_MAJOR * 1000000 + \
+                             WREN_VERSION_MINOR * 1000 + \
+                             WREN_VERSION_PATCH)
+
 // A single virtual machine for executing Wren code.
 //
 // Wren has no global state, so all state stored by a running interpreter lives

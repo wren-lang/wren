@@ -257,7 +257,7 @@ int runRepl()
   initVM();
 
   printf("\\\\/\"-\n");
-  printf(" \\_/   wren v0.0.0\n");
+  printf(" \\_/   wren v%s\n", WREN_VERSION_STRING);
 
   char line[MAX_LINE_LENGTH];
 
