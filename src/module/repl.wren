@@ -12,6 +12,9 @@ class Repl {
   construct new() {
     _cursor = 0
     _line = ""
+
+    _history = []
+    _historyIndex = 0
   }
 
   run() {
@@ -27,7 +30,7 @@ class Repl {
         return
       } else if (byte == Chars.ctrlD) {
         // If the line is empty, Ctrl_D exits.
-        if (_line == "") {
+        if (!_line.isEmpty) {
           System.print()
           return
         }
@@ -83,11 +86,9 @@ class Repl {
     if (escapeType == Chars.leftBracket) {
       // ESC [ sequence.
       if (value == EscapeBracket.up) {
-        // TODO: Handle this.
-        System.print("up")
+        previousHistory()
       } else if (value == EscapeBracket.down) {
-        // TODO: Handle this.
-        System.print("down")
+        nextHistory()
       } else if (value == EscapeBracket.left) {
         // Move the cursor left one.
         if (_cursor > 0) _cursor = _cursor - 1
@@ -101,22 +102,46 @@ class Repl {
     }
   }
 
+  previousHistory() {
+    if (_historyIndex == 0) return
+
+    _historyIndex = _historyIndex - 1
+    _line = _history[_historyIndex]
+    _cursor = _line.count
+  }
+
+  nextHistory() {
+    if (_historyIndex >= _history.count) return
+
+    _historyIndex = _historyIndex + 1
+    if (_historyIndex < _history.count) {
+      _line = _history[_historyIndex]
+      _cursor = _line.count
+    } else {
+      _line = ""
+      _cursor = 0
+    }
+  }
+
   executeInput() {
-    System.print()
+    // Add it to the history.
+    _history.add(_line)
+    _historyIndex = _history.count
+
+    // Reset the current line.
     var input = _line
     _line = ""
     _cursor = 0
+
+    System.print()
 
     // Guess if it looks like a statement or expression. Statements need to be
     // evaluated at the top level in case they declare variables, but they
     // don't return a value. Expressions need to have their result displayed.
     var tokens = lex(input, false)
-    if (tokens.isEmpty) {
-      // No code, so do nothing.
-      // TODO: Temp.
-      System.print("empty")
-      return
-    }
+
+    // No code, so do nothing.
+    if (tokens.isEmpty) return
 
     var first = tokens[0]
     var isStatement =
@@ -148,6 +173,7 @@ class Repl {
         // TODO: Handle error in result.toString.
         System.print("%(Color.brightWhite)%(result)%(Color.none)")
         return
+      }
     }
 
     System.print("%(Color.red)Runtime error: %(result)%(Color.none)")
