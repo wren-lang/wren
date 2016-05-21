@@ -44,6 +44,6 @@ applications that want to embed Wren.
 [libuv]: http://libuv.org
 
 * [io](io)
-* [process](process)
+* [os](os)
 * [scheduler](scheduler)
 * [timer](timer)

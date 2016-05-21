@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "process.h"
+#include "os.h"
 #include "vm.h"
 #include "wren.h"
 
@@ -14,7 +14,7 @@ int main(int argc, const char* argv[])
     return 0;
   }
   
-  processSetArguments(argc, argv);
+  osSetArguments(argc, argv);
 
   if (argc == 1)
   {

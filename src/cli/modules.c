@@ -4,7 +4,7 @@
 #include "modules.h"
 
 #include "io.wren.inc"
-#include "process.wren.inc"
+#include "os.wren.inc"
 #include "scheduler.wren.inc"
 #include "timer.wren.inc"
 
@@ -21,6 +21,8 @@ extern void fileRealPath(WrenVM* vm);
 extern void fileSize(WrenVM* vm);
 extern void fileStat(WrenVM* vm);
 extern void fileWriteBytes(WrenVM* vm);
+extern void platformIsPosix(WrenVM* vm);
+extern void platformName(WrenVM* vm);
 extern void processAllArguments(WrenVM* vm);
 extern void statPath(WrenVM* vm);
 extern void statBlockCount(WrenVM* vm);
@@ -149,7 +151,11 @@ static ModuleRegistry modules[] =
       STATIC_METHOD("readStop_()", stdinReadStop)
     END_CLASS
   END_MODULE
-  MODULE(process)
+  MODULE(os)
+    CLASS(Platform)
+      STATIC_METHOD("isPosix", platformIsPosix)
+      STATIC_METHOD("name", platformName)
+    END_CLASS
     CLASS(Process)
       STATIC_METHOD("allArguments", processAllArguments)
     END_CLASS

@@ -1,6 +1,6 @@
 ^title Process Class
 
-The Process class lets you work with operating processes, including the
+The Process class lets you work with operating system processes, including the
 currently running one.
 
 ## Static Methods

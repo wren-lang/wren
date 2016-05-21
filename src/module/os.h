@@ -4,6 +4,6 @@
 #include "wren.h"
 
 // Stores the command line arguments passed to the CLI.
-void processSetArguments(int argc, const char* argv[]);
+void osSetArguments(int argc, const char* argv[]);
 
 #endif

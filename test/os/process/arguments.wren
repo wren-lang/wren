@@ -1,4 +1,4 @@
-import "process" for Process
+import "os" for Process
 
 // No additional arguments are passed to the test.
 System.print(Process.arguments) // expect: []
