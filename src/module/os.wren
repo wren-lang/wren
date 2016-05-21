@@ -1,6 +1,8 @@
 class Platform {
   foreign static isPosix
   foreign static name
+
+  static isWindows { name == "Windows" }
 }
 
 class Process {

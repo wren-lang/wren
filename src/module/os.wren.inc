@@ -3,6 +3,8 @@ static const char* osModuleSource =
 "class Platform {\n"
 "  foreign static isPosix\n"
 "  foreign static name\n"
+"\n"
+"  static isWindows { name == \"Windows\" }\n"
 "}\n"
 "\n"
 "class Process {\n"
