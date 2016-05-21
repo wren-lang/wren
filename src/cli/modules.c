@@ -5,6 +5,7 @@
 
 #include "io.wren.inc"
 #include "os.wren.inc"
+#include "repl.wren.inc"
 #include "scheduler.wren.inc"
 #include "timer.wren.inc"
 
@@ -161,6 +162,8 @@ static ModuleRegistry modules[] =
     CLASS(Process)
       STATIC_METHOD("allArguments", processAllArguments)
     END_CLASS
+  END_MODULE
+  MODULE(repl)
   END_MODULE
   MODULE(scheduler)
     CLASS(Scheduler)

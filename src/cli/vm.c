@@ -6,8 +6,6 @@
 #include "scheduler.h"
 #include "vm.h"
 
-#define MAX_LINE_LENGTH 1024 // TODO: Something less arbitrary.
-
 // The single VM instance that the CLI uses.
 static WrenVM* vm;
 
@@ -259,23 +257,9 @@ int runRepl()
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v%s\n", WREN_VERSION_STRING);
 
-  char line[MAX_LINE_LENGTH];
-
-  for (;;)
-  {
-    printf("> ");
-
-    if (!fgets(line, MAX_LINE_LENGTH, stdin))
-    {
-      printf("\n");
-      break;
-    }
-
-    // TODO: Handle failure.
-    wrenInterpret(vm, line);
-
-    // TODO: Automatically print the result of expressions.
-  }
+  wrenInterpret(vm, "import \"repl\"\n");
+  
+  uv_run(loop, UV_RUN_DEFAULT);
 
   freeVM();
 
