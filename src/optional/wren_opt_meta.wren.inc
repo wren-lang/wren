@@ -1,6 +1,14 @@
 // Generated automatically from src/optional/wren_opt_meta.wren. Do not edit.
 static const char* metaModuleSource =
 "class Meta {\n"
+"  static getModuleVariables(module) {\n"
+"    if (!(module is String)) Fiber.abort(\"Module name must be a string.\")\n"
+"    var result = getModuleVariables_(module)\n"
+"    if (result != null) return result\n"
+"\n"
+"    Fiber.abort(\"Could not find a module named '%(module)'.\")\n"
+"  }\n"
+"\n"
 "  static eval(source) {\n"
 "    if (!(source is String)) Fiber.abort(\"Source code must be a string.\")\n"
 "\n"
@@ -17,4 +25,5 @@ static const char* metaModuleSource =
 "  }\n"
 "\n"
 "  foreign static compile_(source, isExpression, printErrors)\n"
+"  foreign static getModuleVariables_(module)\n"
 "}\n";

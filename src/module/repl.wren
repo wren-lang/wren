@@ -1,13 +1,6 @@
 import "meta" for Meta
 import "io" for Stdin
 
-class EscapeBracket {
-  static up { 65 }
-  static down { 66 }
-  static right { 67 }
-  static left { 68 }
-}
-
 class Repl {
   construct new() {
     _cursor = 0
@@ -19,7 +12,7 @@ class Repl {
 
   run() {
     Stdin.isRaw = true
-    refreshLine()
+    refreshLine(false)
 
     while (true) {
       var byte = Stdin.readByte()
@@ -32,7 +25,7 @@ class Repl {
         return
       } else if (byte == Chars.ctrlD) {
         // If the line is empty, Ctrl_D exits.
-        if (!_line.isEmpty) {
+        if (_line.isEmpty) {
           System.print()
           return
         }
@@ -43,6 +36,12 @@ class Repl {
         _cursor = _line.count
       } else if (byte == Chars.ctrlF) {
         cursorRight()
+      } else if (byte == Chars.tab) {
+        var completion = getCompletion()
+        if (completion != null) {
+          _line = _line + completion
+          _cursor = _line.count
+        }
       } else if (byte == Chars.ctrlK) {
         // Delete everything after the cursor.
         _line = _line[0..._cursor]
@@ -77,7 +76,7 @@ class Repl {
         System.print("Unhandled byte: %(byte)")
       }
 
-      refreshLine()
+      refreshLine(true)
     }
   }
 
@@ -157,6 +156,9 @@ class Repl {
   }
 
   executeInput() {
+    // Remove the completion hint.
+    refreshLine(false)
+
     // Add it to the history.
     _history.add(_line)
     _historyIndex = _history.count
@@ -191,12 +193,14 @@ class Repl {
     var fiber
     if (isStatement) {
       fiber = Fiber.new {
+        // TODO: Should evaluate in main module, not repl's own.
         Meta.eval(input)
       }
 
       var result = fiber.try()
       if (fiber.error == null) return
     } else {
+      // TODO: Should evaluate in main module, not repl's own.
       var function = Meta.compileExpression(input)
       if (function == null) return
 
@@ -204,6 +208,9 @@ class Repl {
       var result = fiber.try()
       if (fiber.error == null) {
         // TODO: Handle error in result.toString.
+        // TODO: Syntax color based on type? It might be nice to distinguish
+        // between string results versus stringified results. Otherwise, the
+        // user can't tell the difference between `true` and "true".
         System.print("%(Color.brightWhite)%(result)%(Color.none)")
         return
       }
@@ -229,7 +236,7 @@ class Repl {
     return tokens
   }
 
-  refreshLine() {
+  refreshLine(showCompletion) {
     // Erase the whole line.
     System.write("\x1b[2K")
 
@@ -247,8 +254,31 @@ class Repl {
       System.write(Color.none)
     }
 
+    if (showCompletion) {
+      var completion = getCompletion()
+      if (completion != null) {
+        System.write("%(Color.gray)%(completion)%(Color.none)")
+      }
+    }
+
     // Position the cursor.
     System.write("\r\x1b[%(2 + _cursor)C")
+  }
+
+  /// Gets the best possible auto-completion for the current line, or null if
+  /// there is none. The completion is the remaining string to append to the
+  /// line, not the entire completed line.
+  getCompletion() {
+    if (_line.isEmpty) return null
+
+    // Only complete if the cursor is at the end.
+    if (_cursor != _line.count) return null
+
+    for (name in Meta.getModuleVariables("repl")) {
+      if (name.startsWith(_line)) {
+        return name[_line.count..-1]
+      }
+    }
   }
 }
 
@@ -349,6 +379,13 @@ class Chars {
   static isLowerAlpha(c) { c >= lowerA && c <= lowerZ }
 
   static isWhitespace(c) { c == space || c == tab || c == carriageReturn }
+}
+
+class EscapeBracket {
+  static up { 0x41 }
+  static down { 0x42 }
+  static right { 0x43 }
+  static left { 0x44 }
 }
 
 class Token {
