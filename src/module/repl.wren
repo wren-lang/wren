@@ -1,6 +1,9 @@
 import "meta" for Meta
 import "io" for Stdin
+import "os" for Platform
 
+/// Abstract base class for the REPL. Manages the input line and history, but
+/// does not render.
 class Repl {
   construct new() {
     _cursor = 0
@@ -8,7 +11,17 @@ class Repl {
 
     _history = []
     _historyIndex = 0
+
+    // Whether or not we allow ASCI escape sequences for showing colors and
+    // moving the cursor. When this is false, the REPL has reduced
+    // functionality.
+    _allowAnsi = false
   }
+
+  cursor { _cursor }
+  cursor=(value) { _cursor = value }
+  line { _line }
+  line=(value) { _line = value }
 
   run() {
     Stdin.isRaw = true
@@ -16,68 +29,59 @@ class Repl {
 
     while (true) {
       var byte = Stdin.readByte()
-      if (byte == Chars.ctrlA) {
-        _cursor = 0
-      } else if (byte == Chars.ctrlB) {
-        cursorLeft()
-      } else if (byte == Chars.ctrlC) {
-        System.print()
-        return
-      } else if (byte == Chars.ctrlD) {
-        // If the line is empty, Ctrl_D exits.
-        if (_line.isEmpty) {
-          System.print()
-          return
-        }
-
-        // Otherwise, it deletes the character after the cursor.
-        deleteRight()
-      } else if (byte == Chars.ctrlE) {
-        _cursor = _line.count
-      } else if (byte == Chars.ctrlF) {
-        cursorRight()
-      } else if (byte == Chars.tab) {
-        var completion = getCompletion()
-        if (completion != null) {
-          _line = _line + completion
-          _cursor = _line.count
-        }
-      } else if (byte == Chars.ctrlK) {
-        // Delete everything after the cursor.
-        _line = _line[0..._cursor]
-      } else if (byte == Chars.ctrlL) {
-        // Clear the screen.
-        System.write("\x1b[2J")
-        // Move cursor to top left.
-        System.write("\x1b[H")
-      } else if (byte == Chars.ctrlU) {
-        // Clear the line.
-        _line = ""
-        _cursor = 0
-      } else if (byte == Chars.ctrlN) {
-        nextHistory()
-      } else if (byte == Chars.ctrlP) {
-        previousHistory()
-      } else if (byte == Chars.escape) {
-        handleEscape()
-      } else if (byte == Chars.carriageReturn) {
-        executeInput()
-      } else if (byte == Chars.delete) {
-        deleteLeft()
-      } else if (byte >= Chars.space && byte <= Chars.tilde) {
-        insertChar(byte)
-      } else {
-        // TODO: Ctrl-T to swap chars.
-        // TODO: ESC H and F to move to beginning and end of line. (Both ESC
-        // [ and ESC 0 sequences?)
-        // TODO: Ctrl-W delete previous word.
-        // TODO: Completion.
-        // TODO: Other shortcuts?
-        System.print("Unhandled byte: %(byte)")
-      }
-
+      if (handleChar(byte)) break
       refreshLine(true)
     }
+  }
+
+  handleChar(byte) {
+    if (byte == Chars.ctrlC) {
+      System.print()
+      return true
+    } else if (byte == Chars.ctrlD) {
+      // If the line is empty, Ctrl_D exits.
+      if (_line.isEmpty) {
+        System.print()
+        return true
+      }
+
+      // Otherwise, it deletes the character after the cursor.
+      deleteRight()
+    } else if (byte == Chars.tab) {
+      var completion = getCompletion()
+      if (completion != null) {
+        _line = _line + completion
+        _cursor = _line.count
+      }
+    } else if (byte == Chars.ctrlU) {
+      // Clear the line.
+      _line = ""
+      _cursor = 0
+    } else if (byte == Chars.ctrlN) {
+      nextHistory()
+    } else if (byte == Chars.ctrlP) {
+      previousHistory()
+    } else if (byte == Chars.escape) {
+      var escapeType = Stdin.readByte()
+      var value = Stdin.readByte()
+      if (escapeType == Chars.leftBracket) {
+        // ESC [ sequence.
+        handleEscapeBracket(value)
+      } else {
+        // TODO: Handle ESC 0 sequences.
+      }
+    } else if (byte == Chars.carriageReturn) {
+      executeInput()
+    } else if (byte == Chars.delete) {
+      deleteLeft()
+    } else if (byte >= Chars.space && byte <= Chars.tilde) {
+      insertChar(byte)
+    } else {
+      // TODO: Other shortcuts?
+      System.print("Unhandled byte: %(byte)")
+    }
+
+    return false
   }
 
   /// Inserts the character with [byte] value at the current cursor position.
@@ -104,34 +108,12 @@ class Repl {
     _line = _line[0..._cursor] + _line[(_cursor + 1)..-1]
   }
 
-  handleEscape() {
-    var escapeType = Stdin.readByte()
-    var value = Stdin.readByte()
-    if (escapeType == Chars.leftBracket) {
-      // ESC [ sequence.
-      if (value == EscapeBracket.up) {
-        previousHistory()
-      } else if (value == EscapeBracket.down) {
-        nextHistory()
-      } else if (value == EscapeBracket.left) {
-        cursorLeft()
-      } else if (value == EscapeBracket.right) {
-        cursorRight()
-      }
-    } else {
-      // TODO: Handle ESC 0 sequences.
+  handleEscapeBracket(byte) {
+    if (byte == EscapeBracket.up) {
+      previousHistory()
+    } else if (byte == EscapeBracket.down) {
+      nextHistory()
     }
-  }
-
-  /// Move the cursor left one character.
-  cursorLeft() {
-    if (_cursor > 0) _cursor = _cursor - 1
-  }
-
-  /// Move the cursor right one character.
-  cursorRight() {
-    // TODO: Take into account multi-byte characters?
-    if (_cursor < _line.count) _cursor = _cursor + 1
   }
 
   previousHistory() {
@@ -159,9 +141,11 @@ class Repl {
     // Remove the completion hint.
     refreshLine(false)
 
-    // Add it to the history.
-    _history.add(_line)
-    _historyIndex = _history.count
+    // Add it to the history (if the line is interesting).
+    if (_line != "" && (_history.isEmpty || _history[-1] != _line)) {
+      _history.add(_line)
+      _historyIndex = _history.count
+    }
 
     // Reset the current line.
     var input = _line
@@ -208,16 +192,13 @@ class Repl {
       var result = fiber.try()
       if (fiber.error == null) {
         // TODO: Handle error in result.toString.
-        // TODO: Syntax color based on type? It might be nice to distinguish
-        // between string results versus stringified results. Otherwise, the
-        // user can't tell the difference between `true` and "true".
-        System.print("%(Color.brightWhite)%(result)%(Color.none)")
+        showResult(result)
         return
       }
     }
 
-    System.print("%(Color.red)Runtime error: %(result)%(Color.none)")
-    // TODO: Print entire stack.
+    // TODO: Include callstack.
+    showRuntimeError("Runtime error: %(fiber.error)")
   }
 
   lex(line, includeWhitespace) {
@@ -236,6 +217,113 @@ class Repl {
     return tokens
   }
 
+  /// Gets the best possible auto-completion for the current line, or null if
+  /// there is none. The completion is the remaining string to append to the
+  /// line, not the entire completed line.
+  getCompletion() {
+    if (_line.isEmpty) return null
+
+    // Only complete if the cursor is at the end.
+    if (_cursor != _line.count) return null
+
+    for (name in Meta.getModuleVariables("repl")) {
+      // TODO: Also allow completion if the line ends with an identifier but
+      // has other stuff before it.
+      if (name.startsWith(_line)) {
+        return name[_line.count..-1]
+      }
+    }
+  }
+}
+
+/// A reduced functionality REPL that doesn't use ANSI escape sequences.
+class SimpleRepl is Repl {
+  construct new() {
+    super()
+    _erase = ""
+  }
+
+  refreshLine(showCompletion) {
+    // A carriage return just moves the cursor to the beginning of the line.
+    // We have to erase it manually. Since we can't use ANSI escapes, and we
+    // don't know how wide the terminal is, erase the longest line we've seen
+    // so far.
+    if (line.count > _erase.count) _erase = " " * line.count
+    System.write("\r  %(_erase)")
+
+    // Show the prompt at the beginning of the line.
+    System.write("\r> ")
+
+    // Write the line.
+    System.write(line)
+  }
+
+  showResult(value) {
+    // TODO: Syntax color based on type? It might be nice to distinguish
+    // between string results versus stringified results. Otherwise, the
+    // user can't tell the difference between `true` and "true".
+    System.print(value)
+  }
+
+  showRuntimeError(message) {
+    System.print(message)
+  }
+}
+
+class AnsiRepl is Repl {
+  construct new() {
+    super()
+  }
+
+  handleChar(byte) {
+    if (byte == Chars.ctrlA) {
+      cursor = 0
+    } else if (byte == Chars.ctrlB) {
+      cursorLeft()
+    } else if (byte == Chars.ctrlE) {
+      cursor = line.count
+    } else if (byte == Chars.ctrlF) {
+      cursorRight()
+    } else if (byte == Chars.ctrlK) {
+      // Delete everything after the cursor.
+      line = line[0...cursor]
+    } else if (byte == Chars.ctrlL) {
+      // Clear the screen.
+      System.write("\x1b[2J")
+      // Move cursor to top left.
+      System.write("\x1b[H")
+    } else {
+      // TODO: Ctrl-T to swap chars.
+      // TODO: ESC H and F to move to beginning and end of line. (Both ESC
+      // [ and ESC 0 sequences?)
+      // TODO: Ctrl-W delete previous word.
+      return super.handleChar(byte)
+    }
+
+    return false
+  }
+
+  handleEscapeBracket(byte) {
+    if (byte == EscapeBracket.left) {
+      cursorLeft()
+    } else if (byte == EscapeBracket.right) {
+      cursorRight()
+    }
+
+    super.handleEscapeBracket(byte)
+  }
+
+  /// Move the cursor left one character.
+  cursorLeft() {
+    if (cursor > 0) cursor = cursor - 1
+  }
+
+  /// Move the cursor right one character.
+  cursorRight() {
+    // TODO: Take into account multi-byte characters?
+    if (cursor < line.count) cursor = cursor + 1
+  }
+
   refreshLine(showCompletion) {
     // Erase the whole line.
     System.write("\x1b[2K")
@@ -246,7 +334,7 @@ class Repl {
     System.write(Color.none)
 
     // Syntax highlight the line.
-    for (token in lex(_line, true)) {
+    for (token in lex(line, true)) {
       if (token.type == Token.eof) break
 
       System.write(TOKEN_COLORS[token.type])
@@ -262,23 +350,19 @@ class Repl {
     }
 
     // Position the cursor.
-    System.write("\r\x1b[%(2 + _cursor)C")
+    System.write("\r\x1b[%(2 + cursor)C")
   }
 
-  /// Gets the best possible auto-completion for the current line, or null if
-  /// there is none. The completion is the remaining string to append to the
-  /// line, not the entire completed line.
-  getCompletion() {
-    if (_line.isEmpty) return null
+  showResult(value) {
+    // TODO: Syntax color based on type? It might be nice to distinguish
+    // between string results versus stringified results. Otherwise, the
+    // user can't tell the difference between `true` and "true".
+    System.print("%(Color.brightWhite)%(value)%(Color.none)")
+  }
 
-    // Only complete if the cursor is at the end.
-    if (_cursor != _line.count) return null
-
-    for (name in Meta.getModuleVariables("repl")) {
-      if (name.startsWith(_line)) {
-        return name[_line.count..-1]
-      }
-    }
+  showRuntimeError(message) {
+    System.print("%(Color.red)%(message)%(Color.none)")
+    // TODO: Print entire stack.
   }
 }
 
@@ -836,5 +920,10 @@ class Lexer {
   makeToken(type) { Token.new(_source, type, _start, _current - _start) }
 }
 
-// Fire up the REPL.
-Repl.new().run()
+// Fire up the REPL. We use ANSI when talking to a POSIX TTY.
+if (Platform.isPosix && Stdin.isTerminal) {
+  AnsiRepl.new().run()
+} else {
+  // ANSI escape sequences probably aren't supported, so degrade.
+  SimpleRepl.new().run()
+}
