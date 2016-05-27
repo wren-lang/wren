@@ -52,6 +52,9 @@ static bool isStdinRaw = false;
 // Frees all resources related to stdin.
 static void shutdownStdin()
 {
+  // Reset the TTY before we close the stdin stream.
+  uv_tty_reset_mode();
+  
   if (stdinStream != NULL)
   {
     uv_close((uv_handle_t*)stdinStream, NULL);
@@ -70,8 +73,6 @@ static void shutdownStdin()
     wrenReleaseHandle(getVM(), stdinOnData);
     stdinOnData = NULL;
   }
-  
-  uv_tty_reset_mode();
 }
 
 void ioShutdown()
