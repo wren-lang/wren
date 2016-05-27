@@ -122,7 +122,7 @@ It is a runtime error if `search` is not a string.
 
 ### **iterate**(iterator), **iteratorValue**(iterator)
 
-Implements the [iterator protocol](../control-flow.html#the-iterator-protocol)
+Implements the [iterator protocol](../../control-flow.html#the-iterator-protocol)
 for iterating over the *code points* in the string:
 
     :::wren
