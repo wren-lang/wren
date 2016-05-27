@@ -52,11 +52,9 @@ static bool isStdinRaw = false;
 // Frees all resources related to stdin.
 static void shutdownStdin()
 {
-  // Reset the TTY before we close the stdin stream.
-  uv_tty_reset_mode();
-  
   if (stdinStream != NULL)
   {
+    uv_tty_reset_mode();
     uv_close((uv_handle_t*)stdinStream, NULL);
     free(stdinStream);
     stdinStream = NULL;
