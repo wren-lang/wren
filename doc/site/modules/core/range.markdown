@@ -1,7 +1,7 @@
 ^title Range Class
 
 A range defines a bounded range of values from a starting point to a possibly
-exclusive endpoint. [Here](../range.html) is a friendly introduction.
+exclusive endpoint. [Here](../../values.html#ranges) is a friendly introduction.
 
 Extends [Sequence](sequence.html).
 
