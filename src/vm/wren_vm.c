@@ -927,6 +927,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
         case METHOD_FOREIGN:
           callForeign(vm, fiber, method->fn.foreign, numArgs);
+          if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
           break;
 
         case METHOD_FN_CALL:
@@ -1659,4 +1660,10 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   ASSERT(variableSlot != -1, "Could not find variable.");
   
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
+}
+
+void wrenAbortFiber(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+  vm->fiber->error = vm->apiStack[slot];
 }

@@ -513,7 +513,7 @@ typedef struct
 // S[NaN      ]1---------------------------------------------------
 //
 // For singleton values, we just enumerate the different values. We'll use the
-// low three bits of the mantissa for that, and only need a couple:
+// low bits of the mantissa for that, and only need a few:
 //
 //                                                 3 Type bits--v
 // 0[NaN      ]1------------------------------------------------[T]
