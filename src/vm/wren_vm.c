@@ -1339,10 +1339,15 @@ Value wrenImportModule(WrenVM* vm, Value name)
 {
   // If the module is already loaded, we don't need to do anything.
   if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
-  
-  // Load the module's source code from the host.
-  const char* source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
-  
+
+  const char* source = NULL;
+
+  // Let the host try to provide the module.
+  if (vm->config.loadModuleFn != NULL)
+  {
+    source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
+  }
+
   // If the host didn't provide it, see if it's a built in optional module.
   if (source == NULL)
   {
