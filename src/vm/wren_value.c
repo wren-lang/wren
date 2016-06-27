@@ -350,13 +350,33 @@ ObjMap* wrenNewMap(WrenVM* vm)
   return map;
 }
 
+static inline uint32_t hashBits(DoubleBits bits)
+{
+  uint32_t result = bits.bits32[0] ^ bits.bits32[1];
+  
+  // Slosh the bits around some. Due to the way doubles are represented, small
+  // integers will have most of low bits of the double respresentation set to
+  // zero. For example, the above result for 5 is 43d00600.
+  //
+  // We map that to an entry index by masking off the high bits which means
+  // most small integers would all end up in entry zero. That's bad. To avoid
+  // that, push a bunch of the high bits lower down so they affect the lower
+  // bits too.
+  //
+  // The specific mixing function here was pulled from Java's HashMap
+  // implementation.
+  result ^= (result >> 20) ^ (result >> 12);
+  result ^= (result >> 7) ^ (result >> 4);
+  return result;
+}
+
 // Generates a hash code for [num].
-static uint32_t hashNumber(double num)
+static inline uint32_t hashNumber(double num)
 {
   // Hash the raw bits of the value.
-  DoubleBits data;
-  data.num = num;
-  return data.bits32[0] ^ data.bits32[1];
+  DoubleBits bits;
+  bits.num = num;
+  return hashBits(bits);
 }
 
 // Generates a hash code for [object].
@@ -394,9 +414,8 @@ static uint32_t hashValue(Value value)
 
   // Hash the raw bits of the unboxed value.
   DoubleBits bits;
-
   bits.bits64 = value;
-  return bits.bits32[0] ^ bits.bits32[1];
+  return hashBits(bits);
 #else
   switch (value.type)
   {
