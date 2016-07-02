@@ -440,7 +440,7 @@ static bool findEntry(MapEntry* entries, uint32_t capacity, Value key,
                       MapEntry** result)
 {
   // If there is no entry array (an empty map), we definitely won't find it.
-  if (capacity == 0) return NULL;
+  if (capacity == 0) return false;
   
   // Figure out where to insert it in the table. Use open addressing and
   // basic linear probing.
