@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <errno.h>
+#include <float.h>
 #include <math.h>
 #include <string.h>
 #include <time.h>
@@ -666,6 +667,21 @@ DEF_PRIMITIVE(num_sign)
   }
 }
 
+DEF_PRIMITIVE(num_highest)
+{
+  RETURN_NUM(DBL_MAX);
+}
+
+DEF_PRIMITIVE(num_lowest)
+{
+  RETURN_NUM(-DBL_MAX);
+}
+
+DEF_PRIMITIVE(num_epsilon)
+{
+  RETURN_NUM(DBL_EPSILON);
+}
+
 DEF_PRIMITIVE(num_toString)
 {
   RETURN_VAL(wrenNumToString(vm, AS_NUM(args[0])));
@@ -1200,6 +1216,9 @@ void wrenInitializeCore(WrenVM* vm)
   vm->numClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Num"));
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
   PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
+  PRIMITIVE(vm->numClass->obj.classObj, "highest", num_highest);
+  PRIMITIVE(vm->numClass->obj.classObj, "lowest", num_lowest);
+  PRIMITIVE(vm->numClass->obj.classObj, "epsilon", num_epsilon);
   PRIMITIVE(vm->numClass, "-(_)", num_minus);
   PRIMITIVE(vm->numClass, "+(_)", num_plus);
   PRIMITIVE(vm->numClass, "*(_)", num_multiply);
