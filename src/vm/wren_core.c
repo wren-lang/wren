@@ -466,7 +466,7 @@ DEF_PRIMITIVE(map_keyIteratorValue)
   MapEntry* entry = &map->entries[index];
   if (IS_UNDEFINED(entry->key))
   {
-    RETURN_ERROR("Invalid map iterator value.");
+    RETURN_ERROR("Invalid map iterator.");
   }
 
   RETURN_VAL(entry->key);
@@ -481,7 +481,7 @@ DEF_PRIMITIVE(map_valueIteratorValue)
   MapEntry* entry = &map->entries[index];
   if (IS_UNDEFINED(entry->key))
   {
-    RETURN_ERROR("Invalid map iterator value.");
+    RETURN_ERROR("Invalid map iterator.");
   }
 
   RETURN_VAL(entry->value);
@@ -1280,7 +1280,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->mapClass, "containsKey(_)", map_containsKey);
   PRIMITIVE(vm->mapClass, "count", map_count);
   PRIMITIVE(vm->mapClass, "remove(_)", map_remove);
-  PRIMITIVE(vm->mapClass, "iterate_(_)", map_iterate);
+  PRIMITIVE(vm->mapClass, "iterate(_)", map_iterate);
   PRIMITIVE(vm->mapClass, "keyIteratorValue_(_)", map_keyIteratorValue);
   PRIMITIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
 
