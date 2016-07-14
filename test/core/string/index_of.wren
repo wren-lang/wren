@@ -5,6 +5,12 @@ System.print("abcd".indexOf("abcd")) // expect: 0
 System.print("abcd".indexOf("abcde")) // expect: -1
 System.print("abab".indexOf("ab")) // expect: 0
 
+System.print("abcd".indexOf("cd", 0)) // expect: 2
+System.print("abcd".indexOf("cd", 1)) // expect: 2
+System.print("abcd".indexOf("cd", 2)) // expect: 2
+System.print("abcd".indexOf("cd", 3)) // expect: -1
+System.print("abcd".indexOf("cd", 10)) // expect: -1
+
 // More complex cases.
 System.print("abcdefabcdefg".indexOf("defg")) // expect: 9
 System.print("abcdabcdabcd".indexOf("dab")) // expect: 3

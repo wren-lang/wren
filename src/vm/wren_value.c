@@ -854,13 +854,16 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
 }
 
 // Uses the Boyer-Moore-Horspool string matching algorithm.
-uint32_t wrenStringFind(ObjString* haystack, ObjString* needle)
+uint32_t wrenStringFind(ObjString* haystack, ObjString* needle, uint32_t startIndex)
 {
   // Corner case, an empty needle is always found.
   if (needle->length == 0) return 0;
 
   // If the needle is longer than the haystack it won't be found.
-  if (needle->length > haystack->length) return UINT32_MAX;
+  if (needle->length > (haystack->length - startIndex)) return UINT32_MAX;
+
+  // If the startIndex is too far it also won't be found.
+  if (startIndex >= haystack->length) return UINT32_MAX;
 
   // Pre-calculate the shift table. For each character (8-bit value), we
   // determine how far the search window can be advanced if that character is
@@ -890,18 +893,18 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle)
   // Slide the needle across the haystack, looking for the first match or
   // stopping if the needle goes off the end.
   char lastChar = needle->value[needleEnd];
-  uint32_t range = haystack->length - needle->length;
+  uint32_t range = (haystack->length - startIndex) - needle->length;
 
   for (uint32_t index = 0; index <= range; )
   {
     // Compare the last character in the haystack's window to the last character
     // in the needle. If it matches, see if the whole needle matches.
-    char c = haystack->value[index + needleEnd];
+    char c = haystack->value[startIndex + (index + needleEnd)];
     if (lastChar == c &&
-        memcmp(haystack->value + index, needle->value, needleEnd) == 0)
+        memcmp(haystack->value + startIndex + index, needle->value, needleEnd) == 0)
     {
       // Found a match.
-      return index;
+      return index + startIndex;
     }
 
     // Otherwise, slide the needle forward.
