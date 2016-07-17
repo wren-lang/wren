@@ -239,6 +239,41 @@ DEF_PRIMITIVE(list_new)
   RETURN_OBJ(wrenNewList(vm, 0));
 }
 
+//creates a new list of size args[1], with all elements initilized to null
+DEF_PRIMITIVE(list_newWithSize)
+{
+  if(!validateInt(vm, args[1], "Size")) return false;
+
+  uint32_t size = (uint32_t)AS_NUM(args[1]);
+  ObjList* list = wrenNewList(vm, size);
+
+  for(uint32_t i=0; i < size; i++)
+  {
+    list->elements.data[i] = NULL_VAL;
+  }
+
+  RETURN_OBJ(list);
+}
+
+
+//creates a new list of size args[1], with all elements initilized to args[2]
+DEF_PRIMITIVE(list_newWithSizeDefault)
+{
+  if(!validateInt(vm, args[1], "Size")) return false;
+
+  uint32_t size = (uint32_t)AS_NUM(args[1]);
+
+  ObjList* list = wrenNewList(vm, size);
+
+  for(uint32_t i=0; i < size; i++)
+  {
+    list->elements.data[i] = args[2];
+  }
+
+  RETURN_OBJ(list);
+}
+
+
 DEF_PRIMITIVE(list_add)
 {
   wrenValueBufferWrite(vm, &AS_LIST(args[0])->elements, args[1]);
@@ -1260,6 +1295,8 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "new()", list_new);
+  PRIMITIVE(vm->listClass->obj.classObj, "new(_)", list_newWithSize);
+  PRIMITIVE(vm->listClass->obj.classObj, "new(_,_)", list_newWithSizeDefault);
   PRIMITIVE(vm->listClass, "[_]", list_subscript);
   PRIMITIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
   PRIMITIVE(vm->listClass, "add(_)", list_add);
