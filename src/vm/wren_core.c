@@ -1296,7 +1296,7 @@ void wrenInitializeCore(WrenVM* vm)
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "new()", list_new);
   PRIMITIVE(vm->listClass->obj.classObj, "new(_)", list_newWithSize);
-  PRIMITIVE(vm->listClass->obj.classObj, "new(_,_)", list_newWithSizeDefault);
+  PRIMITIVE(vm->listClass->obj.classObj, "filled(_,_)", list_newWithSizeDefault);
   PRIMITIVE(vm->listClass, "[_]", list_subscript);
   PRIMITIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
   PRIMITIVE(vm->listClass, "add(_)", list_add);
