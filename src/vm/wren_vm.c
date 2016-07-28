@@ -1553,6 +1553,26 @@ void* wrenGetSlotForeign(WrenVM* vm, int slot)
   return AS_FOREIGN(vm->apiStack[slot])->data;
 }
 
+int wrenGetSlotListSize(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+  ASSERT(IS_LIST(vm->apiStack[slot]),
+         "Slot must hold a list instance.");
+
+  ValueBuffer elements = AS_LIST(vm->apiStack[slot])->elements;
+  return elements.count;
+}
+
+WrenValue* wrenGetSlotListValue(WrenVM* vm, int slot, int index)
+{
+  validateApiSlot(vm, slot);
+  ASSERT(IS_LIST(vm->apiStack[slot]),
+         "Slot must hold a list instance.");
+
+  ValueBuffer elements = AS_LIST(vm->apiStack[slot])->elements;
+  return wrenCaptureValue(vm, elements.data[index]);
+}
+
 const char* wrenGetSlotString(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
