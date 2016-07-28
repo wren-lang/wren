@@ -1553,26 +1553,6 @@ void* wrenGetSlotForeign(WrenVM* vm, int slot)
   return AS_FOREIGN(vm->apiStack[slot])->data;
 }
 
-int wrenGetSlotListSize(WrenVM* vm, int slot)
-{
-  validateApiSlot(vm, slot);
-  ASSERT(IS_LIST(vm->apiStack[slot]),
-         "Slot must hold a list instance.");
-
-  ValueBuffer elements = AS_LIST(vm->apiStack[slot])->elements;
-  return elements.count;
-}
-
-WrenValue* wrenGetSlotListValue(WrenVM* vm, int slot, int index)
-{
-  validateApiSlot(vm, slot);
-  ASSERT(IS_LIST(vm->apiStack[slot]),
-         "Slot must hold a list instance.");
-
-  ValueBuffer elements = AS_LIST(vm->apiStack[slot])->elements;
-  return wrenCaptureValue(vm, elements.data[index]);
-}
-
 const char* wrenGetSlotString(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
@@ -1647,6 +1627,25 @@ void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle)
   ASSERT(handle != NULL, "Handle cannot be NULL.");
 
   setSlot(vm, slot, handle->value);
+}
+
+int wrenGetListCount(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+  ASSERT(IS_LIST(vm->apiStack[slot]), "Slot must hold a list.");
+  
+  ValueBuffer elements = AS_LIST(vm->apiStack[slot])->elements;
+  return elements.count;
+}
+
+void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
+{
+  validateApiSlot(vm, listSlot);
+  validateApiSlot(vm, elementSlot);
+  ASSERT(IS_LIST(vm->apiStack[listSlot]), "Slot must hold a list.");
+  
+  ValueBuffer elements = AS_LIST(vm->apiStack[listSlot])->elements;
+  vm->apiStack[elementSlot] = elements.data[index];
 }
 
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)

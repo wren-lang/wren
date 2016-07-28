@@ -359,12 +359,6 @@ double wrenGetSlotDouble(WrenVM* vm, int slot);
 // foreign class.
 void* wrenGetSlotForeign(WrenVM* vm, int slot);
 
-// Returns the size of the list stored in [slot].
-int wrenGetSlotListSize(WrenVM* vm, int slot);
-
-// Reads a value from the list in [slot].
-WrenValue* wrenGetSlotListValue(WrenVM* vm, int slot, int index);
-
 // Reads a string from [slot].
 //
 // The memory for the returned string is owned by Wren. You can inspect it
@@ -430,6 +424,13 @@ void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
 //
 // This does not release the handle for the value.
 void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
+
+// Returns the number of elements in the list stored in [slot].
+int wrenGetListCount(WrenVM* vm, int slot);
+
+// Reads element [index] from the list in [listSlot] and stores it in
+// [elementSlot].
+void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 
 // Takes the value stored at [elementSlot] and inserts it into the list stored
 // at [listSlot] at [index].
