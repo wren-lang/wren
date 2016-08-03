@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include "wren_common.h"
 #include "wren_core.h"
@@ -1058,6 +1059,20 @@ DEF_PRIMITIVE(system_writeString)
   RETURN_VAL(args[1]);
 }
 
+DEF_PRIMITIVE(system_getEnv)
+{
+  char* value = getenv(AS_CSTRING(args[1]));
+
+  if(!value) 
+  {
+    RETURN_VAL(NULL_VAL);
+  }
+  else
+  {
+    RETURN_VAL(wrenNewString(vm, value, strlen(value)));
+  }
+}
+
 // Creates either the Object or Class class in the core module with [name].
 static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 {
@@ -1302,6 +1317,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(systemClass->obj.classObj, "getModuleVariable(_,_)", system_getModuleVariable);
   PRIMITIVE(systemClass->obj.classObj, "importModule(_)", system_importModule);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
+  PRIMITIVE(systemClass->obj.classObj, "getEnv(_)", system_getEnv);
 
   // While bootstrapping the core types and running the core module, a number
   // of string objects have been created, many of which were instantiated
