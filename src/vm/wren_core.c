@@ -879,14 +879,14 @@ DEF_PRIMITIVE(string_endsWith)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  // Corner case, if the search string is longer than return false right away.
+  // Edge case: If the search string is longer then return false right away.
   if (search->length > string->length) RETURN_FALSE;
 
   RETURN_BOOL(memcmp(string->value + string->length - search->length,
                      search->value, search->length) == 0);
 }
 
-DEF_PRIMITIVE(string_indexOf)
+DEF_PRIMITIVE(string_indexOf1)
 {
   if (!validateString(vm, args[1], "Argument")) return false;
 
@@ -897,15 +897,16 @@ DEF_PRIMITIVE(string_indexOf)
   RETURN_NUM(index == UINT32_MAX ? -1 : (int)index);
 }
 
-DEF_PRIMITIVE(string_indexOf_with_startIndex)
+DEF_PRIMITIVE(string_indexOf2)
 {
   if (!validateString(vm, args[1], "Argument")) return false;
 
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
-  uint32_t startIndex = AS_NUM(args[2]);
-
-  uint32_t index = wrenStringFind(string, search, startIndex);
+  uint32_t start = validateIndex(vm, args[2], string->length, "Start");
+  if (start == UINT32_MAX) return false;
+  
+  uint32_t index = wrenStringFind(string, search, start);
   RETURN_NUM(index == UINT32_MAX ? -1 : (int)index);
 }
 
@@ -974,7 +975,7 @@ DEF_PRIMITIVE(string_startsWith)
   ObjString* string = AS_STRING(args[0]);
   ObjString* search = AS_STRING(args[1]);
 
-  // Corner case, if the search string is longer than return false right away.
+  // Edge case: If the search string is longer then return false right away.
   if (search->length > string->length) RETURN_FALSE;
 
   RETURN_BOOL(memcmp(string->value, search->value, search->length) == 0);
@@ -1263,8 +1264,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "codePointAt_(_)", string_codePointAt);
   PRIMITIVE(vm->stringClass, "contains(_)", string_contains);
   PRIMITIVE(vm->stringClass, "endsWith(_)", string_endsWith);
-  PRIMITIVE(vm->stringClass, "indexOf(_)", string_indexOf);
-  PRIMITIVE(vm->stringClass, "indexOf(_,_)", string_indexOf_with_startIndex);
+  PRIMITIVE(vm->stringClass, "indexOf(_)", string_indexOf1);
+  PRIMITIVE(vm->stringClass, "indexOf(_,_)", string_indexOf2);
   PRIMITIVE(vm->stringClass, "iterate(_)", string_iterate);
   PRIMITIVE(vm->stringClass, "iterateByte_(_)", string_iterateByte);
   PRIMITIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
