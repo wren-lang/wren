@@ -742,7 +742,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         do                                                        \
         {                                                         \
           wrenDumpStack(fiber);                                   \
-          wrenDumpInstruction(vm, fn, (int)(ip - fn->bytecode));  \
+          wrenDumpInstruction(vm, fn, (int)(ip - fn->code.data)); \
         }                                                         \
         while (false)
   #else
