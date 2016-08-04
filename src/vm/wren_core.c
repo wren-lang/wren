@@ -234,45 +234,27 @@ DEF_PRIMITIVE(fn_toString)
   RETURN_VAL(CONST_STRING(vm, "<fn>"));
 }
 
+// Creates a new list of size args[1], with all elements initialized to args[2].
+DEF_PRIMITIVE(list_filled)
+{
+  if (!validateInt(vm, args[1], "Size")) return false;  
+  if (AS_NUM(args[1]) < 0) RETURN_ERROR("Size cannot be negative.");
+  
+  uint32_t size = (uint32_t)AS_NUM(args[1]);
+  ObjList* list = wrenNewList(vm, size);
+  
+  for (uint32_t i = 0; i < size; i++)
+  {
+    list->elements.data[i] = args[2];
+  }
+  
+  RETURN_OBJ(list);
+}
+
 DEF_PRIMITIVE(list_new)
 {
   RETURN_OBJ(wrenNewList(vm, 0));
 }
-
-//creates a new list of size args[1], with all elements initilized to null
-DEF_PRIMITIVE(list_newWithSize)
-{
-  if(!validateInt(vm, args[1], "Size")) return false;
-
-  uint32_t size = (uint32_t)AS_NUM(args[1]);
-  ObjList* list = wrenNewList(vm, size);
-
-  for(uint32_t i=0; i < size; i++)
-  {
-    list->elements.data[i] = NULL_VAL;
-  }
-
-  RETURN_OBJ(list);
-}
-
-
-//creates a new list of size args[1], with all elements initilized to args[2]
-DEF_PRIMITIVE(list_newWithSizeDefault)
-{
-  if(!validateInt(vm, args[1], "Size")) return false;
-
-  uint32_t size = (uint32_t)AS_NUM(args[1]);
-
-  ObjList* list = wrenNewList(vm, size);
-
-  for(uint32_t i=0; i < size; i++)
-  {
-    list->elements.data[i] = args[2];
-  }
-
-  RETURN_OBJ(list);
-}
-
 
 DEF_PRIMITIVE(list_add)
 {
@@ -1308,9 +1290,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "toString", string_toString);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
+  PRIMITIVE(vm->listClass->obj.classObj, "filled(_,_)", list_filled);
   PRIMITIVE(vm->listClass->obj.classObj, "new()", list_new);
-  PRIMITIVE(vm->listClass->obj.classObj, "new(_)", list_newWithSize);
-  PRIMITIVE(vm->listClass->obj.classObj, "filled(_,_)", list_newWithSizeDefault);
   PRIMITIVE(vm->listClass, "[_]", list_subscript);
   PRIMITIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
   PRIMITIVE(vm->listClass, "add(_)", list_add);
