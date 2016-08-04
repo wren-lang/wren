@@ -13,15 +13,11 @@ It is a runtime error if `value` is not a string.
 
 The value of &pi;.
 
-### Num.**highest**
+### Num.**largest**
 
 The highest representable value of `Num`.
 
-### Num.**lowest**
-
-The lowest representable value of `Num`.
-
-### Num.**epsilon**
+### Num.**smallest**
 
 The difference between 1.0 and the next representable value for `Num`.
 
