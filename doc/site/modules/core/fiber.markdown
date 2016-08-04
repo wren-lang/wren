@@ -4,6 +4,12 @@ A lightweight coroutine. [Here][fibers] is a gentle introduction.
 
 [fibers]: ../../concurrency.html
 
+## Static Methods
+
+### Fiber.**current**
+
+The currently executing fiber.
+
 ### Fiber.**new**(function)
 
 Creates a new fiber that executes `function` in a separate coroutine when the
@@ -13,12 +19,6 @@ fiber is run. Does not immediately start running the fiber.
     var fiber = Fiber.new {
       System.print("I won't get printed")
     }
-
-## Static Methods
-
-### Fiber.**current**
-
-The currently executing fiber.
 
 ### Fiber.**suspend**()
 

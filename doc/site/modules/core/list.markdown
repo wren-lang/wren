@@ -6,6 +6,18 @@ An indexable contiguous collection of elements. More details [here][lists].
 
 [lists]: ../../lists.html
 
+## Static Methods
+
+### List.**filled**(size, element)
+
+Creates a new list with `size` elements, all set to `element`.
+
+It is a runtime error if `size` is not a nonnegative integer.
+
+### List.**new**()
+
+Creates a new empty list. Equivalent to `[]`.
+
 ## Methods
 
 ### **add**(item)
