@@ -465,6 +465,17 @@ static int addConstant(Compiler* compiler, Value constant)
 {
   if (compiler->parser->hasError) return -1;
   
+  // See if we already have a constant for the value. If so, reuse it.
+  // TODO: This is O(n). Do something better?
+  for (int i = 0; i < compiler->fn->constants.count; i++)
+  {
+    if (wrenValuesEqual(constant, compiler->fn->constants.data[i]))
+    {
+      return i;
+    }
+  }
+  
+  // It's a new constant.
   if (compiler->fn->constants.count < MAX_CONSTANTS)
   {
     if (IS_OBJ(constant)) wrenPushRoot(compiler->parser->vm, AS_OBJ(constant));
