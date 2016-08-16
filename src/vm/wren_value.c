@@ -387,6 +387,16 @@ static uint32_t hashObject(Obj* object)
     case OBJ_CLASS:
       // Classes just use their name.
       return hashObject((Obj*)((ObjClass*)object)->name);
+      
+      // Allow bare (non-closure) functions so that we can use a map to find
+      // existing constants in a function's constant table. This is only used
+      // internally. Since user code never sees a non-closure function, they
+      // cannot use them as map keys.
+    case OBJ_FN:
+    {
+      ObjFn* fn = (ObjFn*)object;
+      return hashNumber(fn->arity) ^ hashNumber(fn->code.count);
+    }
 
     case OBJ_RANGE:
     {

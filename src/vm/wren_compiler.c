@@ -352,6 +352,8 @@ struct sCompiler
 
   // The function being compiled.
   ObjFn* fn;
+  
+  ObjMap* constants;
 };
 
 // Describes where a variable is declared.
@@ -466,13 +468,10 @@ static int addConstant(Compiler* compiler, Value constant)
   if (compiler->parser->hasError) return -1;
   
   // See if we already have a constant for the value. If so, reuse it.
-  // TODO: This is O(n). Do something better?
-  for (int i = 0; i < compiler->fn->constants.count; i++)
+  if (compiler->constants != NULL)
   {
-    if (wrenValuesEqual(constant, compiler->fn->constants.data[i]))
-    {
-      return i;
-    }
+    Value existing = wrenMapGet(compiler->constants, constant);
+    if (IS_NUM(existing)) return (int)AS_NUM(existing);
   }
   
   // It's a new constant.
@@ -482,6 +481,13 @@ static int addConstant(Compiler* compiler, Value constant)
     wrenValueBufferWrite(compiler->parser->vm, &compiler->fn->constants,
                          constant);
     if (IS_OBJ(constant)) wrenPopRoot(compiler->parser->vm);
+    
+    if (compiler->constants == NULL)
+    {
+      compiler->constants = wrenNewMap(compiler->parser->vm);
+    }
+    wrenMapSet(compiler->parser->vm, compiler->constants, constant,
+               NUM_VAL(compiler->fn->constants.count - 1));
   }
   else
   {
@@ -501,9 +507,10 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->loop = NULL;
   compiler->enclosingClass = NULL;
   
-  // Initialize this to NULL before allocating in case a GC gets triggered in
+  // Initialize these to NULL before allocating in case a GC gets triggered in
   // the middle of initializing the compiler.
   compiler->fn = NULL;
+  compiler->constants = NULL;
 
   parser->vm->compiler = compiler;
 
@@ -3551,6 +3558,7 @@ void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
   do
   {
     wrenGrayObj(vm, (Obj*)compiler->fn);
+    wrenGrayObj(vm, (Obj*)compiler->constants);
     compiler = compiler->parent;
   }
   while (compiler != NULL);
