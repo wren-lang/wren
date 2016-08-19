@@ -29,6 +29,22 @@
   #define WREN_NAN_TAGGING 1
 #endif
 
+// If true, the VM's interpreter loop will keep track of how many operations
+// have been executed and abort with a runtime error when the limit is exceeded.
+// The sandbox is unable to defend against native calls entering an infinite loop.
+#ifndef WREN_SANDBOX
+   #define WREN_SANDBOX 1
+#endif
+
+#if WREN_SANDBOX
+  #ifndef WREN_DEFAULT_MAX_RUN_OPS
+   #define WREN_DEFAULT_MAX_RUN_OPS ((int64_t)1) << 62
+ #endif
+ #ifndef WREN_DEFAULT_MAX_HEAP_SIZE
+   #define WREN_DEFAULT_MAX_HEAP_SIZE  (1024*1024*128) // 64 MB
+ #endif
+#endif
+
 // If true, the VM's interpreter loop uses computed gotos. See this for more:
 // http://gcc.gnu.org/onlinedocs/gcc-3.1.1/gcc/Labels-as-Values.html
 // Enabling this speeds up the main dispatch loop a bit, but requires compiler

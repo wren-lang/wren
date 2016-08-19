@@ -1,7 +1,7 @@
 #ifndef vm_h
 #define vm_h
 
-#include "uv.h"
+#include <uv.h>
 #include "wren.h"
 
 // Executes the Wren script at [path] in a new VM.

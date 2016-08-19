@@ -7,6 +7,7 @@
 #include "wren_core.h"
 #include "wren_debug.h"
 #include "wren_vm.h"
+#include <stdint.h>
 
 #if WREN_OPT_META
   #include "wren_opt_meta.h"
@@ -17,8 +18,8 @@
 
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   #include <time.h>
-  #include <stdio.h>
 #endif
+  #include <stdio.h>
 
 // The behavior of realloc() when the size is 0 is implementation defined. It
 // may return a non-NULL pointer which must not be dereferenced but nevertheless
@@ -46,6 +47,10 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->initialHeapSize = 1024 * 1024 * 10;
   config->minHeapSize = 1024 * 1024;
   config->heapGrowthPercent = 50;
+#if WREN_SANDBOX
+  config->maxRunOps = WREN_DEFAULT_MAX_RUN_OPS;
+  config->maxHeapSize  = WREN_DEFAULT_MAX_HEAP_SIZE;
+#endif
 }
 
 WrenVM* wrenNewVM(WrenConfiguration* config)
@@ -214,7 +219,14 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 #else
   if (newSize > 0 && vm->bytesAllocated > vm->nextGC) wrenCollectGarbage(vm);
 #endif
-
+#if WREN_SANDBOX
+  if( vm->bytesAllocated > vm->config.maxHeapSize ) {
+     fprintf(stderr,"reallocate %p %lu -> %lu\n would exceed sandbox memory allocation",
+            memory, (unsigned long)oldSize, (unsigned long)newSize);
+     vm->fiber->error = wrenStringFormat(vm, "out of memory" );
+     return 0;
+  }
+#endif
   return vm->config.reallocateFn(memory, newSize);
 }
 
@@ -701,13 +713,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   register ObjFn* fn;
 
   // These macros are designed to only be invoked within this function.
-  #define PUSH(value)  (*fiber->stackTop++ = value)
-  #define POP()        (*(--fiber->stackTop))
-  #define DROP()       (fiber->stackTop--)
-  #define PEEK()       (*(fiber->stackTop - 1))
-  #define PEEK2()      (*(fiber->stackTop - 2))
-  #define READ_BYTE()  (*ip++)
-  #define READ_SHORT() (ip += 2, (uint16_t)((ip[-2] << 8) | ip[-1]))
+  #define PUSH(value)   (*fiber->stackTop++ = value)
+  #define POP()         (*(--fiber->stackTop))
+  #define DROP()        (fiber->stackTop--)
+  #define PEEK()        (*(fiber->stackTop - 1))
+  #define PEEK2()       (*(fiber->stackTop - 2))
+  #define READ_BYTE()   (*ip++)
+  #define READ_SHORT()  (ip += 2, (uint16_t)((ip[-2] << 8) | ip[-1]))
 
   // Use this before a CallFrame is pushed to store the local variables back
   // into the current one.
@@ -735,6 +747,35 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         DISPATCH();                                               \
       }                                                           \
       while (false)
+
+#if WREN_SANDBOX 
+  int64_t op_count = vm->config.maxRunOps;
+
+  #if WREN_COMPUTED_GOTO
+     #define SANDBOX_ERROR_DISPATCH() do { goto *dispatchTable[instruction = (Code)READ_BYTE()]; } while( false )
+  #else
+     #define SANDBOX_ERROR_DISPATCH() goto loop
+  #endif 
+
+     /**
+      *  I cannot call RUNTIME_ERROR because RUNTIME_ERROR calls DISPATCH
+      *  which calls CHECK_OP_COUNT  
+      */
+     #define CHECK_OP_COUNT()                                           \
+         do {                                                           \
+           if( --op_count <= 0 ) {                                      \
+              fprintf( stderr, "ran out of ops" );                      \
+              STORE_FRAME();                                            \
+              runtimeError(vm);                                         \
+              if (vm->fiber == NULL) return WREN_RESULT_RUNTIME_ERROR;  \
+              fiber = vm->fiber;                                        \
+              LOAD_FRAME();                                             \
+              SANDBOX_ERROR_DISPATCH();                                 \
+           }                                                            \
+         } while ( false )
+#else 
+     #define CHECK_OP_COUNT() do { } while (false)             
+#endif // WREN_SANDBOX
 
   #if WREN_DEBUG_TRACE_INSTRUCTIONS
     // Prints the stack and instruction before each instruction is executed.
@@ -764,6 +805,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       do                                                        \
       {                                                         \
         DEBUG_TRACE_INSTRUCTIONS();                             \
+        CHECK_OP_COUNT();                                       \
         goto *dispatchTable[instruction = (Code)READ_BYTE()];   \
       }                                                         \
       while (false)
@@ -773,6 +815,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #define INTERPRET_LOOP                                        \
       loop:                                                     \
         DEBUG_TRACE_INSTRUCTIONS();                             \
+        CHECK_OP_COUNT();                                       \
         switch (instruction = (Code)READ_BYTE())
 
   #define CASE_CODE(name)  case CODE_##name
@@ -919,7 +962,10 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
             // If we don't have a fiber to switch to, stop interpreting.
             fiber = vm->fiber;
-            if (fiber == NULL) return WREN_RESULT_SUCCESS;
+            if (fiber == NULL) {
+               //fprintf( stderr, "%lld ops executed\n", op_count );
+               return WREN_RESULT_SUCCESS;
+            }
             if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
             LOAD_FRAME();
           }
@@ -1089,6 +1135,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           // C API can get it.
           fiber->stack[0] = result;
           fiber->stackTop = fiber->stack + 1;
+          //fprintf( stderr, "%lld ops executed\n", op_count );
           return WREN_RESULT_SUCCESS;
         }
         

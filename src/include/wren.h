@@ -4,6 +4,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include "../vm/wren_common.h"
 
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
@@ -206,6 +208,15 @@ typedef struct
   //
   // If zero, defaults to 50.
   int heapGrowthPercent;
+
+  
+#if WREN_SANDBOX
+  /// Specifies the maximum number of virtual machine instructions to execute, this
+  /// field is only used when WREN_
+  int64_t maxRunOps;
+  int64_t maxHeapSize;
+#endif 
+
 } WrenConfiguration;
 
 typedef enum
