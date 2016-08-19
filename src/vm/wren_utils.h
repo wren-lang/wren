@@ -90,7 +90,8 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
                           const char* name, size_t length);
 
 // Looks up name in the symbol table. Returns its index if found or -1 if not.
-int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length);
+int wrenSymbolTableFind(const SymbolTable* symbols,
+                        const char* name, size_t length);
 
 // Returns the number of bytes needed to encode [value] in UTF-8.
 //

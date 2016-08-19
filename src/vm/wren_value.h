@@ -513,7 +513,7 @@ typedef struct
 // S[NaN      ]1---------------------------------------------------
 //
 // For singleton values, we just enumerate the different values. We'll use the
-// low three bits of the mantissa for that, and only need a couple:
+// low bits of the mantissa for that, and only need a few:
 //
 //                                                 3 Type bits--v
 // 0[NaN      ]1------------------------------------------------[T]
@@ -728,7 +728,7 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index);
 // Search for the first occurence of [needle] within [haystack] and returns its
 // zero-based offset. Returns `UINT32_MAX` if [haystack] does not contain
 // [needle].
-uint32_t wrenStringFind(ObjString* haystack, ObjString* needle);
+uint32_t wrenStringFind(ObjString* haystack, ObjString* needle, uint32_t startIndex);
 
 // Creates a new open upvalue pointing to [value] on the stack.
 ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value);

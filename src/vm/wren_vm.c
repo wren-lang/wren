@@ -496,7 +496,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
     }
   }
 
-  ObjFn* fn = wrenCompile(vm, module, source, true);
+  ObjFn* fn = wrenCompile(vm, module, source, false, true);
   if (fn == NULL)
   {
     // TODO: Should we still store the module even if it didn't compile?
@@ -783,7 +783,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         do                                                        \
         {                                                         \
           wrenDumpStack(fiber);                                   \
-          wrenDumpInstruction(vm, fn, (int)(ip - fn->bytecode));  \
+          wrenDumpInstruction(vm, fn, (int)(ip - fn->code.data)); \
         }                                                         \
         while (false)
   #else
@@ -973,6 +973,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
         case METHOD_FOREIGN:
           callForeign(vm, fiber, method->fn.foreign, numArgs);
+          if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
           break;
 
         case METHOD_FN_CALL:
@@ -1385,10 +1386,15 @@ Value wrenImportModule(WrenVM* vm, Value name)
 {
   // If the module is already loaded, we don't need to do anything.
   if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
-  
-  // Load the module's source code from the host.
-  const char* source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
-  
+
+  const char* source = NULL;
+
+  // Let the host try to provide the module.
+  if (vm->config.loadModuleFn != NULL)
+  {
+    source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
+  }
+
   // If the host didn't provide it, see if it's a built in optional module.
   if (source == NULL)
   {
@@ -1670,6 +1676,25 @@ void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle)
   setSlot(vm, slot, handle->value);
 }
 
+int wrenGetListCount(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+  ASSERT(IS_LIST(vm->apiStack[slot]), "Slot must hold a list.");
+  
+  ValueBuffer elements = AS_LIST(vm->apiStack[slot])->elements;
+  return elements.count;
+}
+
+void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
+{
+  validateApiSlot(vm, listSlot);
+  validateApiSlot(vm, elementSlot);
+  ASSERT(IS_LIST(vm->apiStack[listSlot]), "Slot must hold a list.");
+  
+  ValueBuffer elements = AS_LIST(vm->apiStack[listSlot])->elements;
+  vm->apiStack[elementSlot] = elements.data[index];
+}
+
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
 {
   validateApiSlot(vm, listSlot);
@@ -1706,4 +1731,10 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   ASSERT(variableSlot != -1, "Could not find variable.");
   
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
+}
+
+void wrenAbortFiber(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+  vm->fiber->error = vm->apiStack[slot];
 }

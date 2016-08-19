@@ -46,7 +46,8 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
   return wrenSymbolTableAdd(vm, symbols, name, length);
 }
 
-int wrenSymbolTableFind(SymbolTable* symbols, const char* name, size_t length)
+int wrenSymbolTableFind(const SymbolTable* symbols,
+                        const char* name, size_t length)
 {
   // See if the symbol is already defined.
   // TODO: O(n). Do something better.

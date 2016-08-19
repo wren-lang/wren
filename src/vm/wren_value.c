@@ -350,13 +350,33 @@ ObjMap* wrenNewMap(WrenVM* vm)
   return map;
 }
 
+static inline uint32_t hashBits(DoubleBits bits)
+{
+  uint32_t result = bits.bits32[0] ^ bits.bits32[1];
+  
+  // Slosh the bits around some. Due to the way doubles are represented, small
+  // integers will have most of low bits of the double respresentation set to
+  // zero. For example, the above result for 5 is 43d00600.
+  //
+  // We map that to an entry index by masking off the high bits which means
+  // most small integers would all end up in entry zero. That's bad. To avoid
+  // that, push a bunch of the high bits lower down so they affect the lower
+  // bits too.
+  //
+  // The specific mixing function here was pulled from Java's HashMap
+  // implementation.
+  result ^= (result >> 20) ^ (result >> 12);
+  result ^= (result >> 7) ^ (result >> 4);
+  return result;
+}
+
 // Generates a hash code for [num].
-static uint32_t hashNumber(double num)
+static inline uint32_t hashNumber(double num)
 {
   // Hash the raw bits of the value.
-  DoubleBits data;
-  data.num = num;
-  return data.bits32[0] ^ data.bits32[1];
+  DoubleBits bits;
+  bits.num = num;
+  return hashBits(bits);
 }
 
 // Generates a hash code for [object].
@@ -367,6 +387,16 @@ static uint32_t hashObject(Obj* object)
     case OBJ_CLASS:
       // Classes just use their name.
       return hashObject((Obj*)((ObjClass*)object)->name);
+      
+      // Allow bare (non-closure) functions so that we can use a map to find
+      // existing constants in a function's constant table. This is only used
+      // internally. Since user code never sees a non-closure function, they
+      // cannot use them as map keys.
+    case OBJ_FN:
+    {
+      ObjFn* fn = (ObjFn*)object;
+      return hashNumber(fn->arity) ^ hashNumber(fn->code.count);
+    }
 
     case OBJ_RANGE:
     {
@@ -394,9 +424,8 @@ static uint32_t hashValue(Value value)
 
   // Hash the raw bits of the unboxed value.
   DoubleBits bits;
-
   bits.bits64 = value;
-  return bits.bits32[0] ^ bits.bits32[1];
+  return hashBits(bits);
 #else
   switch (value.type)
   {
@@ -412,39 +441,91 @@ static uint32_t hashValue(Value value)
 #endif
 }
 
+// Looks for an entry with [key] in an array of [capacity] [entries].
+//
+// If found, sets [result] to point to it and returns `true`. Otherwise,
+// returns `false` and points [result] to the entry where the key/value pair
+// should be inserted.
+static bool findEntry(MapEntry* entries, uint32_t capacity, Value key,
+                      MapEntry** result)
+{
+  // If there is no entry array (an empty map), we definitely won't find it.
+  if (capacity == 0) return false;
+  
+  // Figure out where to insert it in the table. Use open addressing and
+  // basic linear probing.
+  uint32_t startIndex = hashValue(key) % capacity;
+  uint32_t index = startIndex;
+  
+  // If we pass a tombstone and don't end up finding the key, its entry will
+  // be re-used for the insert.
+  MapEntry* tombstone = NULL;
+  
+  // Walk the probe sequence until we've tried every slot.
+  do
+  {
+    MapEntry* entry = &entries[index];
+    
+    if (IS_UNDEFINED(entry->key))
+    {
+      // If we found an empty slot, the key is not in the table. If we found a
+      // slot that contains a deleted key, we have to keep looking.
+      if (IS_FALSE(entry->value))
+      {
+        // We found an empty slot, so we've reached the end of the probe
+        // sequence without finding the key. If we passed a tombstone, then
+        // that's where we should insert the item, otherwise, put it here at
+        // the end of the sequence.
+        *result = tombstone != NULL ? tombstone : entry;
+        return false;
+      }
+      else
+      {
+        // We found a tombstone. We need to keep looking in case the key is
+        // after it, but we'll use this entry as the insertion point if the
+        // key ends up not being found.
+        if (tombstone == NULL) tombstone = entry;
+      }
+    }
+    else if (wrenValuesEqual(entry->key, key))
+    {
+      // We found the key.
+      *result = entry;
+      return true;
+    }
+    
+    // Try the next slot.
+    index = (index + 1) % capacity;
+  }
+  while (index != startIndex);
+  
+  // If we get here, the table is full of tombstones. Return the first one we
+  // found.
+  ASSERT(tombstone != NULL, "Map should have tombstones or empty entries.");
+  *result = tombstone;
+  return false;
+}
+
 // Inserts [key] and [value] in the array of [entries] with the given
 // [capacity].
 //
 // Returns `true` if this is the first time [key] was added to the map.
-static bool addEntry(MapEntry* entries, uint32_t capacity,
-                     Value key, Value value)
+static bool insertEntry(MapEntry* entries, uint32_t capacity,
+                        Value key, Value value)
 {
-  // Figure out where to insert it in the table. Use open addressing and
-  // basic linear probing.
-  uint32_t index = hashValue(key) % capacity;
-
-  // We don't worry about an infinite loop here because resizeMap() ensures
-  // there are open slots in the array.
-  while (true)
+  MapEntry* entry;
+  if (findEntry(entries, capacity, key, &entry))
   {
-    MapEntry* entry = &entries[index];
-
-    // If we found an open slot, the key is not in the table.
-    if (IS_UNDEFINED(entry->key))
-    {
-      entry->key = key;
-      entry->value = value;
-      return true;
-    }
-    else if (wrenValuesEqual(entry->key, key))
-    {
-      // If the key already exists, just replace the value.
-      entry->value = value;
-      return false;
-    }
-
-    // Try the next slot.
-    index = (index + 1) % capacity;
+    // Already present, so just replace the value.
+    entry->value = value;
+    return false;
+  }
+  else
+  {
+    ASSERT(entry != NULL, "Should ensure capacity before inserting.");
+    entry->key = key;
+    entry->value = value;
+    return true;
   }
 }
 
@@ -465,9 +546,11 @@ static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
     for (uint32_t i = 0; i < map->capacity; i++)
     {
       MapEntry* entry = &map->entries[i];
+      
+      // Don't copy empty entries or tombstones.
       if (IS_UNDEFINED(entry->key)) continue;
 
-      addEntry(entries, capacity, entry->key, entry->value);
+      insertEntry(entries, capacity, entry->key, entry->value);
     }
   }
 
@@ -477,42 +560,10 @@ static void resizeMap(WrenVM* vm, ObjMap* map, uint32_t capacity)
   map->capacity = capacity;
 }
 
-static MapEntry* findEntry(ObjMap* map, Value key)
-{
-  // If there is no entry array (an empty map), we definitely won't find it.
-  if (map->capacity == 0) return NULL;
-
-  // Figure out where to insert it in the table. Use open addressing and
-  // basic linear probing.
-  uint32_t index = hashValue(key) % map->capacity;
-
-  // We don't worry about an infinite loop here because ensureMapCapacity()
-  // ensures there are empty (i.e. UNDEFINED) spaces in the table.
-  while (true)
-  {
-    MapEntry* entry = &map->entries[index];
-
-    if (IS_UNDEFINED(entry->key))
-    {
-      // If we found an empty slot, the key is not in the table. If we found a
-      // slot that contains a deleted key, we have to keep looking.
-      if (IS_FALSE(entry->value)) return NULL;
-    }
-    else if (wrenValuesEqual(entry->key, key))
-    {
-      // If the key matches, we found it.
-      return entry;
-    }
-
-    // Try the next slot.
-    index = (index + 1) % map->capacity;
-  }
-}
-
 Value wrenMapGet(ObjMap* map, Value key)
 {
-  MapEntry* entry = findEntry(map, key);
-  if (entry != NULL) return entry->value;
+  MapEntry* entry;
+  if (findEntry(map->entries, map->capacity, key, &entry)) return entry->value;
 
   return UNDEFINED_VAL;
 }
@@ -529,7 +580,7 @@ void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value)
     resizeMap(vm, map, capacity);
   }
 
-  if (addEntry(map->entries, map->capacity, key, value))
+  if (insertEntry(map->entries, map->capacity, key, value))
   {
     // A new key was added.
     map->count++;
@@ -546,8 +597,8 @@ void wrenMapClear(WrenVM* vm, ObjMap* map)
 
 Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
 {
-  MapEntry* entry = findEntry(map, key);
-  if (entry == NULL) return NULL_VAL;
+  MapEntry* entry;
+  if (!findEntry(map->entries, map->capacity, key, &entry)) return NULL_VAL;
 
   // Remove the entry from the map. Set this value to true, which marks it as a
   // deleted slot. When searching for a key, we will stop on empty slots, but
@@ -813,13 +864,16 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
 }
 
 // Uses the Boyer-Moore-Horspool string matching algorithm.
-uint32_t wrenStringFind(ObjString* haystack, ObjString* needle)
+uint32_t wrenStringFind(ObjString* haystack, ObjString* needle, uint32_t start)
 {
-  // Corner case, an empty needle is always found.
-  if (needle->length == 0) return 0;
+  // Edge case: An empty needle is always found.
+  if (needle->length == 0) return start;
 
-  // If the needle is longer than the haystack it won't be found.
-  if (needle->length > haystack->length) return UINT32_MAX;
+  // If the needle goes past the haystack it won't be found.
+  if (start + needle->length > haystack->length) return UINT32_MAX;
+
+  // If the startIndex is too far it also won't be found.
+  if (start >= haystack->length) return UINT32_MAX;
 
   // Pre-calculate the shift table. For each character (8-bit value), we
   // determine how far the search window can be advanced if that character is
@@ -851,7 +905,7 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle)
   char lastChar = needle->value[needleEnd];
   uint32_t range = haystack->length - needle->length;
 
-  for (uint32_t index = 0; index <= range; )
+  for (uint32_t index = start; index <= range; )
   {
     // Compare the last character in the haystack's window to the last character
     // in the needle. If it matches, see if the whole needle matches.

@@ -352,6 +352,8 @@ struct sCompiler
 
   // The function being compiled.
   ObjFn* fn;
+  
+  ObjMap* constants;
 };
 
 // Describes where a variable is declared.
@@ -465,12 +467,27 @@ static int addConstant(Compiler* compiler, Value constant)
 {
   if (compiler->parser->hasError) return -1;
   
+  // See if we already have a constant for the value. If so, reuse it.
+  if (compiler->constants != NULL)
+  {
+    Value existing = wrenMapGet(compiler->constants, constant);
+    if (IS_NUM(existing)) return (int)AS_NUM(existing);
+  }
+  
+  // It's a new constant.
   if (compiler->fn->constants.count < MAX_CONSTANTS)
   {
     if (IS_OBJ(constant)) wrenPushRoot(compiler->parser->vm, AS_OBJ(constant));
     wrenValueBufferWrite(compiler->parser->vm, &compiler->fn->constants,
                          constant);
     if (IS_OBJ(constant)) wrenPopRoot(compiler->parser->vm);
+    
+    if (compiler->constants == NULL)
+    {
+      compiler->constants = wrenNewMap(compiler->parser->vm);
+    }
+    wrenMapSet(compiler->parser->vm, compiler->constants, constant,
+               NUM_VAL(compiler->fn->constants.count - 1));
   }
   else
   {
@@ -490,9 +507,10 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->loop = NULL;
   compiler->enclosingClass = NULL;
   
-  // Initialize this to NULL before allocating in case a GC gets triggered in
+  // Initialize these to NULL before allocating in case a GC gets triggered in
   // the middle of initializing the compiler.
   compiler->fn = NULL;
+  compiler->constants = NULL;
 
   parser->vm->compiler = compiler;
 
@@ -3345,6 +3363,7 @@ static void variableDefinition(Compiler* compiler)
   // Compile the initializer.
   if (match(compiler, TOKEN_EQ))
   {
+    ignoreNewlines(compiler);
     expression(compiler);
   }
   else
@@ -3387,7 +3406,7 @@ void definition(Compiler* compiler)
 }
 
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
-                   bool printErrors)
+                   bool isExpression, bool printErrors)
 {
   Parser parser;
   parser.vm = vm;
@@ -3415,29 +3434,39 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   // Read the first token.
   nextToken(&parser);
 
+  int numExistingVariables = module->variables.count;
+  
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, true);
   ignoreNewlines(&compiler);
 
-  while (!match(&compiler, TOKEN_EOF))
+  if (isExpression)
   {
-    definition(&compiler);
-
-    // If there is no newline, it must be the end of the block on the same line.
-    if (!matchLine(&compiler))
-    {
-      consume(&compiler, TOKEN_EOF, "Expect end of file.");
-      break;
-    }
+    expression(&compiler);
   }
-
-  emitOp(&compiler, CODE_NULL);
+  else
+  {
+    while (!match(&compiler, TOKEN_EOF))
+    {
+      definition(&compiler);
+      
+      // If there is no newline, it must be the end of the block on the same line.
+      if (!matchLine(&compiler))
+      {
+        consume(&compiler, TOKEN_EOF, "Expect end of file.");
+        break;
+      }
+    }
+    
+    emitOp(&compiler, CODE_NULL);
+  }
+  
   emitOp(&compiler, CODE_RETURN);
 
   // See if there are any implicitly declared module-level variables that never
   // got an explicit definition. They will have values that are numbers
   // indicating the line where the variable was first used.
-  for (int i = 0; i < parser.module->variables.count; i++)
+  for (int i = numExistingVariables; i < parser.module->variables.count; i++)
   {
     if (IS_NUM(parser.module->variables.data[i]))
     {
@@ -3529,6 +3558,7 @@ void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
   do
   {
     wrenGrayObj(vm, (Obj*)compiler->fn);
+    wrenGrayObj(vm, (Obj*)compiler->constants);
     compiler = compiler->parent;
   }
   while (compiler != NULL);

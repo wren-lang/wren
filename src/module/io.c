@@ -54,6 +54,7 @@ static void shutdownStdin()
 {
   if (stdinStream != NULL)
   {
+    uv_tty_reset_mode();
     uv_close((uv_handle_t*)stdinStream, NULL);
     free(stdinStream);
     stdinStream = NULL;
@@ -70,8 +71,6 @@ static void shutdownStdin()
     wrenReleaseHandle(getVM(), stdinOnData);
     stdinOnData = NULL;
   }
-  
-  uv_tty_reset_mode();
 }
 
 void ioShutdown()

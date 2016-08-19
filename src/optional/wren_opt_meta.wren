@@ -1,13 +1,27 @@
 class Meta {
+  static getModuleVariables(module) {
+    if (!(module is String)) Fiber.abort("Module name must be a string.")
+    var result = getModuleVariables_(module)
+    if (result != null) return result
+
+    Fiber.abort("Could not find a module named '%(module)'.")
+  }
+
   static eval(source) {
     if (!(source is String)) Fiber.abort("Source code must be a string.")
 
-    var fn = compile_(source)
+    var fn = compile_(source, false, false)
     // TODO: Include compile errors.
     if (fn == null) Fiber.abort("Could not compile source code.")
 
     Fiber.new(fn).call()
   }
 
-  foreign static compile_(source)
+  static compileExpression(source) {
+    if (!(source is String)) Fiber.abort("Source code must be a string.")
+    return compile_(source, true, true)
+  }
+
+  foreign static compile_(source, isExpression, printErrors)
+  foreign static getModuleVariables_(module)
 }

@@ -214,7 +214,7 @@ typedef struct
   /// Specifies the maximum number of virtual machine instructions to execute, this
   /// field is only used when WREN_
   int64_t maxRunOps;
-  int64_t maxHeapSize;
+  size_t maxHeapSize;
 #endif 
 
 } WrenConfiguration;
@@ -436,6 +436,13 @@ void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
 // This does not release the handle for the value.
 void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
 
+// Returns the number of elements in the list stored in [slot].
+int wrenGetListCount(WrenVM* vm, int slot);
+
+// Reads element [index] from the list in [listSlot] and stores it in
+// [elementSlot].
+void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
+
 // Takes the value stored at [elementSlot] and inserts it into the list stored
 // at [listSlot] at [index].
 //
@@ -447,5 +454,8 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 // [slot].
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot);
+// Sets the current fiber to be aborted, and uses the value in [slot] as the
+// runtime error object.
+void wrenAbortFiber(WrenVM* vm, int slot);
 
 #endif

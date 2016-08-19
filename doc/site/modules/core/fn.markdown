@@ -5,6 +5,8 @@ A first class function&mdash;an object that wraps an executable chunk of code.
 
 [functions]: ../../functions.html
 
+## Static Methods
+
 ### Fn.**new**(function)
 
 Creates a new function from... `function`. Of course, `function` is already a
