@@ -2,8 +2,8 @@
 
 With `wrenInterpret()`, we can execute code, but that code can't do anything
 particularly interesting. Out of the box, the VM is very isolated from the rest
-of the world, so pretty much all it can do is burn CPU cycles. It can turn your
-laptop into a lap warmer, but that's about it.
+of the world, so pretty much all it can do is turn your laptop into a lap
+warmer.
 
 To make our Wren code *useful*, the VM needs to communicate with the outside
 world. Wren uses a single unified set of functions for passing data into and out
@@ -19,7 +19,7 @@ can leave bits of data on for the other side to process.
 
 The array is zero-based, and each slot holds a value of any type. It is
 dynamically sized, but it's your responsibility to ensure there are enough
-slots before you start using them. You do this by calling:
+slots *before* you use them. You do this by calling:
 
     :::c
     wrenEnsureSlots(WrenVM* vm, int slotCount);
@@ -31,11 +31,6 @@ before populating the slots with data that you want to send to Wren.
     :::c
     wrenEnsureSlots(vm, 4);
     // Can now use slots 0 through 3, inclusive.
-
-When Wren is [calling your C code][] and passing data to you, it ensures there
-are enough slots for the objects it is sending you.
-
-[calling your c code]: calling-c-from-wren.html
 
 After you ensure an array of slots, you can only rely on them being there until
 you pass control back to Wren. That includes calling `wrenCall()` or
@@ -55,6 +50,11 @@ If you want to see how big the slot array is, you can call:
 It returns the number of slots in the array. Note that this may be higher than
 the size you've ensured. Wren reuses the memory for this array when possible,
 so you may get one bigger than you need if it happened to be laying around.
+
+When Wren [calls your C code][] and passes data to you, it ensures there are
+enough slots for the objects it is sending you.
+
+[calls your c code]: calling-c-from-wren.html
 
 ### Writing slots
 
@@ -143,11 +143,9 @@ Here's the first:
                          const char* name, int slot);
 
 This looks up a top level variable with the given name in the module with the
-given name and stores its value in the given slot. (Code you executed using
-`wrenInterpret()` implicitly goes into a module named "main".)
-
-Note that classes are just objects stored in variables too, so you can use this
-to look up a class by its name. Handy for calling static methods on it.
+given name and stores its value in the given slot. Note that classes are just
+objects stored in variables too, so you can use this to look up a class by its
+name. Handy for calling static methods on it.
 
 Like any method that works with strings, this one is a bit slow. It has to
 hash the name and look it up in the module's string table. You might want to

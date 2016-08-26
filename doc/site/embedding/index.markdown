@@ -7,20 +7,19 @@ features. Designing this API well requires satisfying several constraints:
 1. **Wren is dynamically typed, but C is not.** A variable can hold a value of
    any type in Wren, but that's definitely not the case in C unless you define
    some sort of variant type, which ultimately just kicks the problem down the
-   road. Eventually, we have to move data across the boundary between typed and
-   untyped code.
+   road. Eventually, we have to move data across the boundary between statically and dynamically typed code.
 
 2. **Wren uses garbage collection, but C manages memory manually.** GC adds a
    few constraints on the API. The VM must be able to find every Wren object
-   that is still usable, even if that object is being held onto by native C
-   code. Otherwise, it could free an object that's still in use.
+   that is still usable, even if that object is being referenced from native C
+   code. Otherwise, Wren could free an object that's still in use.
 
     Also, we ideally don't want to let native C code see a bare pointer to a
     chunk of memory managed by Wren. Many garbage collection strategies involve
     [moving objects][] in memory. If we allow C code to point directly to an
-    object, that pointer will be left dangling when the object moves. To prevent
-    that, we can't using moving GCs even though they have some nice performance
-    properties.
+    object, that pointer will be left dangling when the object moves. Wren's GC
+    doesn't move objects today, but we would like to keep that option for the
+    future.
 
 3. **The embedding API needs to be fast.** Users may add layers of abstraction
    on top of the API to make it more pleasant to work with, but the base API
@@ -29,14 +28,14 @@ features. Designing this API well requires satisfying several constraints:
    it's too slow. There is no lower level alternative.
 
 4. **We want the API to be pleasant to use.** This is the last constraint
-   because it's the softest. Of course, we want a beautiful, usable, API. But we
+   because it's the softest. Of course, we want a beautiful, usable API. But we
    really *need* to handle the above, so we're willing to make things a bit more
    of a chore to reach the first three goals.
 
 [moving objects]: https://en.wikipedia.org/wiki/Tracing_garbage_collection#Copying_vs._mark-and-sweep_vs._mark-and-don.27t-sweep
 
-Fortunately, Wren isn't the first language to tackle this. If you're familiar
-with [Lua's C API][lua], you'll find Wren's to be fairly familiar.
+Fortunately, we aren't the first people to tackle this. If you're familiar with
+[Lua's C API][lua], you'll find Wren's similar.
 
 [lua]: https://www.lua.org/pil/24.html
 
@@ -133,23 +132,17 @@ You can tell the VM to execute a string of Wren source code like so:
     WrenInterpretResult result = wrenInterpret(vm,
         "System.print(\"I am running in a VM!\")");
 
-The string is a chunk of Wren code to execute&mdash;a series of one or more
-statements separated by newlines. Wren copies the string, so you can free it
-after calling this.
-
-When you call `wrenInterpret()`, Wren first compiles your source to bytecode. If
-an error occurs, it returns immediately with `WREN_RESULT_COMPILE_ERROR`.
+The string is a series of one or more statements separated by newlines. Wren
+copies the string, so you can free it after calling this. When you call
+`wrenInterpret()`, Wren first compiles your source to bytecode. If an error
+occurs, it returns immediately with `WREN_RESULT_COMPILE_ERROR`.
 
 Otherwise, Wren spins up a new [fiber][] and executes the code in that. Your
 code can in turn spawn whatever other fibers it wants. It keeps running fibers
-until they all complete or the current one [suspends].
+until they all complete or the one [suspends].
 
 [fiber]: ../concurrency.html
 [suspends]: ../modules/core/fiber.html#fiber.suspend()
-
-The code runs in a special "main" module. Everytime you call `wrenInterpret()`,
-it runs in the same module. That way, top-level names defined in one call can be
-accessed in later ones.
 
 If a [runtime error][] occurs (and another fiber doesn't handle it), Wren abort
 fibers all the way back to the main one and returns `WREN_RESULT_RUNTIME_ERROR`.
@@ -157,6 +150,10 @@ Otherwise, when the last fiber successfully returns, it returns
 `WREN_RESULT_SUCCESS`.
 
 [runtime error]: error-handling.html
+
+All code passed to `wrenInterpret()` runs in a special "main" module. That way,
+top-level names defined in one call can be accessed in later ones. It's similar
+to a REPL session.
 
 ## Shutting down a VM
 
