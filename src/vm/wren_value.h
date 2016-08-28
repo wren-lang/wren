@@ -61,7 +61,7 @@
 // These macros promote a primitive C value to a full Wren Value. There are
 // more defined below that are specific to the Nan tagged or other
 // representation.
-#define BOOL_VAL(boolean) (boolean ? TRUE_VAL : FALSE_VAL)      // boolean
+#define BOOL_VAL(boolean) ((boolean) ? TRUE_VAL : FALSE_VAL)    // boolean
 #define NUM_VAL(num) (wrenNumToValue(num))                      // double
 #define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))           // Any Obj___*
 
