@@ -659,6 +659,7 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
 
   method->fn.foreign(vm);
 
+  vm->apiStack = NULL;
   // TODO: Check that allocateForeign was called.
 }
 

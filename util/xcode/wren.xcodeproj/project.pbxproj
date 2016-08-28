@@ -41,6 +41,7 @@
 		29A4273A1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427331BDBE435001E6E22 /* wren_opt_random.wren.inc */; };
 		29A4273B1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427331BDBE435001E6E22 /* wren_opt_random.wren.inc */; };
 		29AD96611D0A57F800C4DFE7 /* error.c in Sources */ = {isa = PBXBuildFile; fileRef = 29AD965F1D0A57F800C4DFE7 /* error.c */; };
+		29C80D5A1D73332A00493837 /* reset_stack_after_foreign_construct.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C80D581D73332A00493837 /* reset_stack_after_foreign_construct.c */; };
 		29C8A9331AB71FFF00DEC81D /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
 		29C946981C88F14F00B4A4F3 /* new_vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C946961C88F14F00B4A4F3 /* new_vm.c */; };
 		29D025E31C19CD1000A3BB28 /* os.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D025E01C19CD1000A3BB28 /* os.c */; };
@@ -134,6 +135,8 @@
 		29AB1F061816E3AD004B501E /* wren */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wren; sourceTree = BUILT_PRODUCTS_DIR; };
 		29AD965F1D0A57F800C4DFE7 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = error.c; path = ../../test/api/error.c; sourceTree = "<group>"; };
 		29AD96601D0A57F800C4DFE7 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = error.h; path = ../../test/api/error.h; sourceTree = "<group>"; };
+		29C80D581D73332A00493837 /* reset_stack_after_foreign_construct.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = reset_stack_after_foreign_construct.c; path = ../../test/api/reset_stack_after_foreign_construct.c; sourceTree = "<group>"; };
+		29C80D591D73332A00493837 /* reset_stack_after_foreign_construct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reset_stack_after_foreign_construct.h; path = ../../test/api/reset_stack_after_foreign_construct.h; sourceTree = "<group>"; };
 		29C8A9311AB71FFF00DEC81D /* vm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vm.c; path = ../../src/cli/vm.c; sourceTree = "<group>"; };
 		29C8A9321AB71FFF00DEC81D /* vm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vm.h; path = ../../src/cli/vm.h; sourceTree = "<group>"; };
 		29C946961C88F14F00B4A4F3 /* new_vm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = new_vm.c; path = ../../test/api/new_vm.c; sourceTree = "<group>"; };
@@ -291,6 +294,8 @@
 				29932D531C210F8D00099DEE /* lists.h */,
 				29C946961C88F14F00B4A4F3 /* new_vm.c */,
 				29C946971C88F14F00B4A4F3 /* new_vm.h */,
+				29C80D581D73332A00493837 /* reset_stack_after_foreign_construct.c */,
+				29C80D591D73332A00493837 /* reset_stack_after_foreign_construct.h */,
 				29D009AA1B7E39A8000CE58C /* slots.c */,
 				29D009AB1B7E39A8000CE58C /* slots.h */,
 			);
@@ -424,6 +429,7 @@
 				29DC14A91BBA302F008A8274 /* wren_vm.c in Sources */,
 				29DC14AA1BBA3032008A8274 /* main.c in Sources */,
 				293B25581CEFD8C7005D9537 /* repl.c in Sources */,
+				29C80D5A1D73332A00493837 /* reset_stack_after_foreign_construct.c in Sources */,
 				29AD96611D0A57F800C4DFE7 /* error.c in Sources */,
 				293D46961BB43F9900200083 /* call.c in Sources */,
 				29A427351BDBE435001E6E22 /* wren_opt_meta.c in Sources */,

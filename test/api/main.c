@@ -12,6 +12,7 @@
 #include "handle.h"
 #include "lists.h"
 #include "new_vm.h"
+#include "reset_stack_after_foreign_construct.h"
 #include "slots.h"
 
 // The name of the currently executing API test.
@@ -73,9 +74,11 @@ static WrenForeignClassMethods bindForeignClass(
   foreignClassBindClass(className, &methods);
   if (methods.allocate != NULL) return methods;
   
-  slotsBindClass(className, &methods);
+  resetStackAfterForeignConstructBindClass(className, &methods);
   if (methods.allocate != NULL) return methods;
   
+  slotsBindClass(className, &methods);
+  if (methods.allocate != NULL) return methods;
   
   fprintf(stderr,
           "Unknown foreign class '%s' for test '%s'\n", className, testName);
@@ -85,6 +88,10 @@ static WrenForeignClassMethods bindForeignClass(
 
 static void afterLoad(WrenVM* vm) {
   if (strstr(testName, "/call.wren") != NULL) callRunTests(vm);
+  if (strstr(testName, "/reset_stack_after_foreign_construct.wren") != NULL)
+  {
+    resetStackAfterForeignConstructRunTests(vm);
+  }
 }
 
 int main(int argc, const char* argv[])
