@@ -691,7 +691,7 @@ DEF_PRIMITIVE(num_largest)
 
 DEF_PRIMITIVE(num_smallest)
 {
-  RETURN_NUM(DBL_EPSILON);
+  RETURN_NUM(DBL_MIN);
 }
 
 DEF_PRIMITIVE(num_toString)

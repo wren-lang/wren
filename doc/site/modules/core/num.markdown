@@ -15,11 +15,11 @@ The value of &pi;.
 
 ### Num.**largest**
 
-The highest representable value of `Num`.
+The largest representable numeric value.
 
 ### Num.**smallest**
 
-The difference between 1.0 and the next representable value for `Num`.
+The smallest positive representable numeric value.
 
 ## Methods
 
