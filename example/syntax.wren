@@ -129,8 +129,10 @@ class Literals is SyntaxExample {
     3.14159
     1.0
     -12.34
-    0xdeadbeef
-    0x1234567890ABCDEF
+    0x1000000
+// Literals larger than 0x1000000 are only valid in 64 bit builds
+//    0xdeadbeef
+//    0x1234567890ABCDEF
   }
 
   strings {

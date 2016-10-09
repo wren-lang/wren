@@ -18,7 +18,7 @@ foreign class ForeignType {
 System.print(Slots.noSet == Slots) // expect: true
 
 var value = ["value"]
-System.print(Slots.getSlots(true, "by\0te", 12.34, "str", value) == value)
+System.print(Slots.getSlots(true, "by\0te", 1.5, "str", value) == value)
 // expect: true
 
 System.print(Slots.setSlots(value, 0, 0, 0) == value)

@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+from argparse import ArgumentParser
 from collections import defaultdict
 from os import listdir
 from os.path import abspath, basename, dirname, isdir, isfile, join, realpath, relpath, splitext
@@ -10,10 +11,22 @@ from subprocess import Popen, PIPE
 import sys
 from threading import Timer
 
+parser = ArgumentParser()
+parser.add_argument('--suffix', default='d')
+parser.add_argument('suite', nargs='?')
+
+args = parser.parse_args(sys.argv[1:])
+
+config=args.suffix.lstrip('d')
+is_debug=args.suffix.startswith('d')
+config_dir=("debug" if is_debug else "release") + config
 # Runs the tests.
 WREN_DIR = dirname(dirname(realpath(__file__)))
-WREN_APP = join(WREN_DIR, 'bin', 'wrend')
-TEST_APP = join(WREN_DIR, 'build', 'debug', 'test', 'wrend')
+WREN_APP = join(WREN_DIR, 'bin', 'wren' + args.suffix)
+TEST_APP = join(WREN_DIR, 'build', config_dir, 'test', 'wren' + args.suffix)
+
+print("WREN_APP=" + WREN_APP)
+print("TEST_APP=" + TEST_APP)
 
 EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
@@ -114,7 +127,7 @@ class Test:
     test_arg = self.path
     proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
-    # If a test takes longer than two seconds, kill it.
+    # If a test takes longer than five seconds, kill it.
     #
     # This is mainly useful for running the tests while stress testing the GC,
     # which can make a few pathological tests much slower.
@@ -123,7 +136,7 @@ class Test:
       timed_out[0] = True
       p.kill()
 
-    timer = Timer(2, kill_process, [proc])
+    timer = Timer(5, kill_process, [proc])
 
     try:
       timer.start()
@@ -313,9 +326,9 @@ def run_script(app, path, type):
     return
 
   # Check if we are just running a subset of the tests.
-  if len(sys.argv) == 2:
+  if args.suite:
     this_test = relpath(path, join(WREN_DIR, 'test'))
-    if not this_test.startswith(sys.argv[1]):
+    if not this_test.startswith(args.suite):
       return
 
   # Update the status line.
