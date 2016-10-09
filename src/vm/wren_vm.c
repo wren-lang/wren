@@ -173,10 +173,9 @@ void wrenCollectGarbage(WrenVM* vm)
     }
   }
 
-  // +100 here because the configuration gives us the *additional* size of
-  // the heap relative to the in-use memory, while heapScalePercent is the
-  // *total* size of the heap relative to in-use.
-  vm->nextGC = vm->bytesAllocated * (100 + vm->config.heapGrowthPercent) / 100;
+  // Calculate the next gc point, this is the current allocation plus
+  // a configured percentage of the current allocation.
+  vm->nextGC = vm->bytesAllocated + ((vm->bytesAllocated * vm->config.heapGrowthPercent) / 100);
   if (vm->nextGC < vm->config.minHeapSize) vm->nextGC = vm->config.minHeapSize;
 
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
