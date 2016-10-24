@@ -46,6 +46,11 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->initialHeapSize = 1024 * 1024 * 10;
   config->minHeapSize = 1024 * 1024;
   config->heapGrowthPercent = 50;
+
+#if WREN_SANDBOX
+  config->maxRunOps = WREN_DEFAULT_MAX_RUN_OPS;
+  config->maxHeapSize  = WREN_DEFAULT_MAX_HEAP_SIZE;
+#endif
 }
 
 WrenVM* wrenNewVM(WrenConfiguration* config)
@@ -72,6 +77,9 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->grayCapacity = 4;
   vm->gray = (Obj**)reallocate(NULL, vm->grayCapacity * sizeof(Obj*));
   vm->nextGC = vm->config.initialHeapSize;
+#if WREN_SANDBOX
+  vm->totalRunOps = vm->config.maxRunOps;
+#endif
 
   wrenSymbolTableInit(&vm->methodNames);
 
@@ -213,6 +221,13 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   if (newSize > 0) wrenCollectGarbage(vm);
 #else
   if (newSize > 0 && vm->bytesAllocated > vm->nextGC) wrenCollectGarbage(vm);
+#endif
+
+#if WREN_SANDBOX
+  if( vm->bytesAllocated > vm->config.maxHeapSize ) {
+     vm->fiber->error = wrenStringFormat(vm, "out of memory" );
+     return 0;
+  }
 #endif
 
   return vm->config.reallocateFn(memory, newSize);
@@ -722,6 +737,30 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       ip = frame->ip;                                  \
       fn = frame->closure->fn;
 
+
+#if WREN_SANDBOX
+  int64_t op_count = vm->totalRunOps;
+
+  #define STORE_RUN_OPS() vm->totalRunOps = op_count
+
+     /**
+      *  Cannot call RUNTIME_ERROR because RUNTIME_ERROR calls DISPATCH
+      *  which calls CHECK_OP_COUNT
+      */
+     #define CHECK_OP_COUNT()                                           \
+         do {                                                           \
+           if( --op_count <= 0 ) {                                      \
+              vm->totalRunOps = 0;                                      \
+              STORE_FRAME();                                            \
+              runtimeError(vm);                                         \
+              return WREN_RESULT_RUNTIME_ERROR;                         \
+           }                                                            \
+         } while ( false )
+#else
+     #define CHECK_OP_COUNT() do { } while (false)
+     #define STORE_RUN_OPS() do { } while (false)
+#endif // WREN_SANDBOX
+
   // Terminates the current fiber with error string [error]. If another calling
   // fiber is willing to catch the error, transfers control to it, otherwise
   // exits the interpreter.
@@ -730,12 +769,18 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       {                                                           \
         STORE_FRAME();                                            \
         runtimeError(vm);                                         \
-        if (vm->fiber == NULL) return WREN_RESULT_RUNTIME_ERROR;  \
+        if (vm->fiber == NULL) {                                  \
+           STORE_RUN_OPS();                                       \
+           return WREN_RESULT_RUNTIME_ERROR;                      \
+        }                                                         \
         fiber = vm->fiber;                                        \
         LOAD_FRAME();                                             \
         DISPATCH();                                               \
       }                                                           \
       while (false)
+
+
+
 
   #if WREN_DEBUG_TRACE_INSTRUCTIONS
     // Prints the stack and instruction before each instruction is executed.
@@ -765,6 +810,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       do                                                        \
       {                                                         \
         DEBUG_TRACE_INSTRUCTIONS();                             \
+        CHECK_OP_COUNT();                                       \
         goto *dispatchTable[instruction = (Code)READ_BYTE()];   \
       }                                                         \
       while (false)
@@ -774,6 +820,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #define INTERPRET_LOOP                                        \
       loop:                                                     \
         DEBUG_TRACE_INSTRUCTIONS();                             \
+        CHECK_OP_COUNT();                                       \
         switch (instruction = (Code)READ_BYTE())
 
   #define CASE_CODE(name)  case CODE_##name
@@ -920,7 +967,10 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
             // If we don't have a fiber to switch to, stop interpreting.
             fiber = vm->fiber;
-            if (fiber == NULL) return WREN_RESULT_SUCCESS;
+            if (fiber == NULL) {
+               STORE_RUN_OPS();
+               return WREN_RESULT_SUCCESS;
+            }
             if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
             LOAD_FRAME();
           }
@@ -1091,6 +1141,9 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           // C API can get it.
           fiber->stack[0] = result;
           fiber->stackTop = fiber->stack + 1;
+
+          STORE_RUN_OPS();
+
           return WREN_RESULT_SUCCESS;
         }
         
