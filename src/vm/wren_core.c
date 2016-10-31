@@ -596,6 +596,7 @@ DEF_NUM_FN(negate,  -)
 DEF_NUM_FN(sin,     sin)
 DEF_NUM_FN(sqrt,    sqrt)
 DEF_NUM_FN(tan,     tan)
+DEF_NUM_FN(log,     log)
 
 DEF_PRIMITIVE(num_mod)
 {
@@ -1272,6 +1273,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "sin", num_sin);
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
   PRIMITIVE(vm->numClass, "tan", num_tan);
+  PRIMITIVE(vm->numClass, "log", num_log);
   PRIMITIVE(vm->numClass, "%(_)", num_mod);
   PRIMITIVE(vm->numClass, "~", num_bitwiseNot);
   PRIMITIVE(vm->numClass, "..(_)", num_dotDot);
