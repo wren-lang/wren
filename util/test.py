@@ -18,7 +18,7 @@ TEST_APP = join(WREN_DIR, 'build', 'debug', 'test', 'wrend')
 EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
-EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect runtime error: (.+)')
+EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect (handled )?runtime error: (.+)')
 ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
 STACK_TRACE_PATTERN = re.compile(r'\[main line (\d+)\] in')
 STDIN_PATTERN = re.compile(r'// stdin: (.*)')
@@ -77,9 +77,10 @@ class Test:
         match = EXPECT_RUNTIME_ERROR_PATTERN.search(line)
         if match:
           self.runtime_error_line = line_num
-          self.runtime_error_message = match.group(1)
-          # If we expect a runtime error, it should exit with EX_SOFTWARE.
-          self.exit_code = 70
+          self.runtime_error_message = match.group(2)
+          # If the runtime error isn't handled, it should exit with EX_SOFTWARE.
+          if match.group(1) != "handled ":
+            self.exit_code = 70
           expectations += 1
 
         match = STDIN_PATTERN.search(line)

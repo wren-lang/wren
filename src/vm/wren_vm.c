@@ -400,6 +400,7 @@ static void runtimeError(WrenVM* vm)
   // If we got here, nothing caught the error, so show the stack trace.
   wrenDebugPrintStackTrace(vm);
   vm->fiber = NULL;
+  vm->apiStack = NULL;
 }
 
 // Aborts the current fiber with an appropriate method not found error for a

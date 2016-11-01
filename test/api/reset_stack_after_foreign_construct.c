@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "foreign_class.h"
+#include "wren.h"
 
 static void counterAllocate(WrenVM* vm)
 {

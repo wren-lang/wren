@@ -12,6 +12,7 @@
 #include "handle.h"
 #include "lists.h"
 #include "new_vm.h"
+#include "reset_stack_after_call_abort.h"
 #include "reset_stack_after_foreign_construct.h"
 #include "slots.h"
 
@@ -87,8 +88,15 @@ static WrenForeignClassMethods bindForeignClass(
 }
 
 static void afterLoad(WrenVM* vm) {
-  if (strstr(testName, "/call.wren") != NULL) callRunTests(vm);
-  if (strstr(testName, "/reset_stack_after_foreign_construct.wren") != NULL)
+  if (strstr(testName, "/call.wren") != NULL)
+  {
+    callRunTests(vm);
+  }
+  else if (strstr(testName, "/reset_stack_after_call_abort.wren") != NULL)
+  {
+    resetStackAfterCallAbortRunTests(vm);
+  }
+  else if (strstr(testName, "/reset_stack_after_foreign_construct.wren") != NULL)
   {
     resetStackAfterForeignConstructRunTests(vm);
   }
