@@ -95,11 +95,12 @@ static bool handleRequestError(uv_fs_t* request)
   FileRequestData* data = (FileRequestData*)request->data;
   WrenHandle* fiber = (WrenHandle*)data->fiber;
   
-  schedulerResumeError(fiber, uv_strerror((int)request->result));
-  
+  int error = (int)request->result;
   free(data);
   uv_fs_req_cleanup(request);
   free(request);
+  
+  schedulerResumeError(fiber, uv_strerror(error));
   return true;
 }
 
