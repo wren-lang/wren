@@ -139,7 +139,7 @@ CLI_FLAGS := -D_XOPEN_SOURCE=600 -Isrc/include -I$(LIBUV_DIR)/include \
 all: vm cli
 
 # Builds just the VM libraries.
-vm: shared static
+vm: shared static bytecode
 
 # Builds the shared VM library.
 shared: lib/lib$(WREN).$(SHARED_EXT)
