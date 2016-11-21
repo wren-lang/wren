@@ -147,6 +147,9 @@ shared: lib/lib$(WREN).$(SHARED_EXT)
 # Builds the static VM library.
 static: lib/lib$(WREN).a
 
+# Builds the static VM library.
+bytecode: lib/lib$(WREN).bc
+
 # Builds just the CLI interpreter.
 cli: bin/$(WREN)
 
@@ -168,6 +171,12 @@ lib/lib$(WREN).a: $(OPT_OBJECTS) $(VM_OBJECTS)
 
 # Shared library.
 lib/lib$(WREN).$(SHARED_EXT): $(OPT_OBJECTS) $(VM_OBJECTS)
+	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS) $(SHARED_LIB_FLAGS)"
+	$(V) mkdir -p lib
+	$(V) $(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
+
+# Bytecode.
+lib/lib$(WREN).bc: $(VM_OBJECTS)
 	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS) $(SHARED_LIB_FLAGS)"
 	$(V) mkdir -p lib
 	$(V) $(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
