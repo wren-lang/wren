@@ -147,7 +147,7 @@ shared: lib/lib$(WREN).$(SHARED_EXT)
 # Builds the static VM library.
 static: lib/lib$(WREN).a
 
-# Builds the static VM library.
+# Builds the VM library in bytecode.
 bytecode: lib/lib$(WREN).bc
 
 # Builds just the CLI interpreter.
