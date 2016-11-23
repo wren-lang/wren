@@ -42,7 +42,7 @@ ifeq ($(VERBOSE),1)
 	V :=
 endif
 
-C_WARNINGS := -Wall -Wextra -Werror -Wno-unused-parameter
+C_WARNINGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-parentheses-equality
 # Wren uses callbacks heavily, so -Wunused-parameter is too painful to enable.
 
 # Mode configuration.
