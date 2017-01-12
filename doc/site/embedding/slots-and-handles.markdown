@@ -17,9 +17,9 @@ around with Wren objects from C, you do so by going through an array of slots.
 You can think of it as a shared message board that both the VM and your C code
 can leave bits of data on for the other side to process.
 
-The array is zero-based, and each slot holds a value of any type. It is
-dynamically sized, but it's your responsibility to ensure there are enough
-slots *before* you use them. You do this by calling:
+The array is zero-based, and each slot can hold a value of any type. It is
+dynamically sized, but it's your responsibility to ensure there are enough slots
+*before* you use them. You do this by calling:
 
     :::c
     wrenEnsureSlots(WrenVM* vm, int slotCount);
@@ -126,7 +126,7 @@ can ask:
     WrenType wrenGetSlotType(WrenVM* vm, int slot);
 
 This returns an enum defining what type of value is in the slot. It only covers
-the primitive values that are supported by the C API. Thinks like ranges and
+the primitive values that are supported by the C API. Things like ranges and
 instances of classes come back as `WREN_TYPE_UNKNOWN`. If you want to move that
 kind of data between Wren and C, you'll have to pull the object apart into
 simple primitive values first or use a [foreign class][].
