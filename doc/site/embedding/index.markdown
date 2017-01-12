@@ -42,15 +42,15 @@ Fortunately, we aren't the first people to tackle this. If you're familiar with
 ### Performance and safety
 
 When code is safely snuggled within the confines of the VM, it's pretty safe.
-Method calls are dynamically checked and generate a runtime error which can be
+Method calls are dynamically checked and generate runtime errors which can be
 caught and handled. The stack grows if it gets close to overflowing. In general,
 when you're within Wren code, it tries very hard to avoid crashing and burning.
 
 This is why you use a high level language after all&mdash;it's safer and more
 productive than C. C, meanwhile, really assumes you know what you're doing. You
 can cast pointers in invalid ways, misinterpret bits, use memory after freeing
-it, etc. What that gives you in return is blazing performance. Many of the
-reasons C is fast are because it takes all the governors and guardrails off.
+it, etc. What you get in return is blazing performance. Many of the reasons C is
+fast are because it takes all the governors and guardrails off.
 
 Wren's embedding API defines the border between those worlds, and takes on some
 of the characteristics of C. When you call any of the embedding API functions,
@@ -77,7 +77,7 @@ There are two (well, three) ways to get the Wren VM into your program:
 [build]: ../getting-started.html
 
 In either case, you also want to add `src/include` to your include path so you
-can get to the [public header for Wren][wren.h]:
+can find the [public header for Wren][wren.h]:
 
 [wren.h]: https://github.com/munificent/wren/blob/master/src/include/wren.h
 
@@ -92,7 +92,7 @@ then you'll need to handle the calling convention differences like so:
     #include "wren.h"
     }
 
-(Wren's source can be compiled as either C or C++, so you can avoid this by
+(Wren's source can be compiled as either C or C++, so you can skip this by
 compiling the whole thing yourself as C++. Whatever floats your boat.)
 
 ## Creating a Wren VM
@@ -118,7 +118,7 @@ With this ready, you can create the VM:
 This allocates memory for a new VM and initializes it. The Wren C implementation
 has no global state, so every single bit of data Wren uses is bundled up inside
 a WrenVM. You can have multiple Wren VMs running independently of each other
-without any problems.
+without any problems, even concurrently on different threads.
 
 `wrenNewVM()` stores its own copy of the configuration, so after calling it, you
 can discard the `WrenConfiguration` struct you filled in. Now you have a live
@@ -139,12 +139,12 @@ occurs, it returns immediately with `WREN_RESULT_COMPILE_ERROR`.
 
 Otherwise, Wren spins up a new [fiber][] and executes the code in that. Your
 code can in turn spawn whatever other fibers it wants. It keeps running fibers
-until they all complete or the one [suspends].
+until they all complete or one [suspends].
 
 [fiber]: ../concurrency.html
 [suspends]: ../modules/core/fiber.html#fiber.suspend()
 
-If a [runtime error][] occurs (and another fiber doesn't handle it), Wren abort
+If a [runtime error][] occurs (and another fiber doesn't handle it), Wren aborts
 fibers all the way back to the main one and returns `WREN_RESULT_RUNTIME_ERROR`.
 Otherwise, when the last fiber successfully returns, it returns
 `WREN_RESULT_SUCCESS`.
