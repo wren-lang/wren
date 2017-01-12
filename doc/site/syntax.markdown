@@ -124,6 +124,17 @@ same as doing:
       return "single expression"
     }
 
+Statements are not allowed in this form (since they don't produce values), which
+means nothing starting with `class`, `for`, `if`, `import`,  `return`,
+`var`, or `while`. If you want a block that contains a single statement,
+put a newline in there:
+
+    :::wren
+    {
+      if (happy) {
+        System.print("I'm feelin' it!")
+      }
+    }
 
 ## Precedence and Associativity
 
