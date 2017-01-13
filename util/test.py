@@ -27,9 +27,6 @@ WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wren' + args.suffix)
 TEST_APP = join(WREN_DIR, 'build', config_dir, 'test', 'wren' + args.suffix)
 
-print("WREN_APP=" + WREN_APP)
-print("TEST_APP=" + TEST_APP)
-
 EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
@@ -334,9 +331,8 @@ def run_script(app, path, type):
       return
 
   # Update the status line.
-  print_line('Passed: ' + green(passed) +
-             ' Failed: ' + red(failed) +
-             ' Skipped: ' + yellow(num_skipped))
+  print_line('({}) Passed: {} Failed: {} Skipped: {} '.format(
+      relpath(app, WREN_DIR), green(passed), red(failed), yellow(num_skipped)))
 
   # Make a nice short path relative to the working directory.
 
