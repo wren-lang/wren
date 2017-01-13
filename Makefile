@@ -44,6 +44,7 @@ all: debug release
 	$(V) $(MAKE) -f util/wren.mk MODE=debug ARCH=64
 	$(V) $(MAKE) -f util/wren.mk MODE=debug LANG=cpp ARCH=64
 
+# Travis uses these targets for continuous integration.
 ci: ci_32 ci_64
 
 ci_32:
