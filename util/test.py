@@ -11,16 +11,18 @@ from subprocess import Popen, PIPE
 import sys
 from threading import Timer
 
+# Runs the tests.
+
 parser = ArgumentParser()
 parser.add_argument('--suffix', default='d')
 parser.add_argument('suite', nargs='?')
 
 args = parser.parse_args(sys.argv[1:])
 
-config=args.suffix.lstrip('d')
-is_debug=args.suffix.startswith('d')
-config_dir=("debug" if is_debug else "release") + config
-# Runs the tests.
+config = args.suffix.lstrip('d')
+is_debug = args.suffix.startswith('d')
+config_dir = ("debug" if is_debug else "release") + config
+
 WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wren' + args.suffix)
 TEST_APP = join(WREN_DIR, 'build', config_dir, 'test', 'wren' + args.suffix)

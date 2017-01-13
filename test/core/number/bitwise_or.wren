@@ -1,12 +1,10 @@
 System.print(0 | 0) // expect: 0
-System.print(2863311530 | 1431655765) // expect: 4294967295
-System.print(3435973836 | 1717986918) // expect: 4008636142
+System.print(0xaaaaaaaa | 0x55555555) // expect: 4294967295
+System.print(0xcccccccc | 0x66666666) // expect: 4008636142
 
 // Max u32 value.
-System.print(4294967295 | 4294967295) // expect: 4294967295
-
-// Past max u32 value.
-System.print(4294967296 | 4294967296) // expect: 0
+System.print(0xffffffff | 0xffffffff) // expect: 4294967295
 
 // TODO: Negative numbers.
 // TODO: Floating-point numbers.
+// TODO: Numbers that don't fit in u32.
