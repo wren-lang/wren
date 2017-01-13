@@ -712,16 +712,23 @@ static void makeNumber(Parser* parser, bool isHex)
 {
   errno = 0;
 
-  // We don't check that the entire token is consumed because we've already
-  // scanned it ourselves and know it's valid.
-  parser->current.value = NUM_VAL(isHex ? strtol(parser->tokenStart, NULL, 16)
-                                        : strtod(parser->tokenStart, NULL));
+  if (isHex)
+  {
+    parser->current.value = NUM_VAL(strtoll(parser->tokenStart, NULL, 16));
+  }
+  else
+  {
+    parser->current.value = NUM_VAL(strtod(parser->tokenStart, NULL));
+  }
   
   if (errno == ERANGE)
   {
-    lexError(parser, "Number literal was too large.");
+    lexError(parser, "Number literal was too large (%d).", sizeof(long int));
     parser->current.value = NUM_VAL(0);
   }
+  
+  // We don't check that the entire token is consumed after calling strtoll()
+  // or strtod() because we've already scanned it ourselves and know it's valid.
 
   makeToken(parser, TOKEN_NUMBER);
 }
