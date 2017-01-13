@@ -618,7 +618,9 @@ DEF_PRIMITIVE(num_bangeq)
 DEF_PRIMITIVE(num_bitwiseNot)
 {
   // Bitwise operators always work on 32-bit unsigned ints.
-  RETURN_NUM(~(uint32_t)AS_NUM(args[0]));
+  uint64_t wideVal = AS_NUM(args[0]);
+  uint32_t val = wideVal & 0xFFFFFFFF;
+  RETURN_NUM(~(uint32_t)val);
 }
 
 DEF_PRIMITIVE(num_dotDot)

@@ -44,6 +44,28 @@ all: debug release
 	$(V) $(MAKE) -f util/wren.mk MODE=debug ARCH=64
 	$(V) $(MAKE) -f util/wren.mk MODE=debug LANG=cpp ARCH=64
 
+ci: ci_32 ci_64
+
+ci_32:
+	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=c   ARCH=32 vm cli test
+	$(V) ./util/test.py --suffix=d-32 $(suite)
+	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=cpp ARCH=32 vm cli test
+	$(V) ./util/test.py --suffix=d-cpp-32 $(suite)
+	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=c   ARCH=32 vm cli test
+	$(V) ./util/test.py --suffix=-32 $(suite)
+	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=cpp ARCH=32 vm cli test
+	$(V) ./util/test.py --suffix=-cpp-32 $(suite)
+
+ci_64:
+	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=c   ARCH=64 vm cli test
+	$(V) ./util/test.py --suffix=d-64 $(suite)
+	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=cpp ARCH=64 vm cli test
+	$(V) ./util/test.py --suffix=d-cpp-64 $(suite)
+	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=c   ARCH=64 vm cli test
+	$(V) ./util/test.py --suffix=-64 $(suite)
+	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=cpp ARCH=64 vm cli test
+	$(V) ./util/test.py --suffix=-cpp-64 $(suite)
+
 # Remove all build outputs and intermediate files. Does not remove downloaded
 # dependencies. Use cleanall for that.
 clean:
@@ -80,4 +102,4 @@ gh-pages: docs
 amalgamation: src/include/wren.h src/vm/*.h src/vm/*.c
 	./util/generate_amalgamation.py > build/wren.c
 
-.PHONY: all amalgamation builtin clean debug docs gh-pages release test vm watchdocs
+.PHONY: all amalgamation builtin clean debug docs gh-pages release test vm watchdocs ci ci_32 ci_64

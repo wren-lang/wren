@@ -742,9 +742,16 @@ Value wrenNumToString(WrenVM* vm, double value)
   // Corner case: If the value is NaN, different versions of libc produce
   // different outputs (some will format it signed and some won't). To get
   // reliable output, handle that ourselves.
-  if (value != value) return CONST_STRING(vm, "nan");
-  if (value == INFINITY) return CONST_STRING(vm, "infinity");
-  if (value == -INFINITY) return CONST_STRING(vm, "-infinity");
+  switch (fpclassify(value))
+  {
+  case FP_INFINITE:
+    if (signbit(value))
+      return CONST_STRING(vm, "-infinity");
+    else
+      return CONST_STRING(vm, "infinity");
+  case FP_NAN:
+    return CONST_STRING(vm, "nan");
+  }
 
   // This is large enough to hold any double converted to a string using
   // "%.14g". Example:
