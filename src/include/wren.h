@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
 #define WREN_VERSION_MINOR 1
@@ -446,5 +450,9 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
 // Sets the current fiber to be aborted, and uses the value in [slot] as the
 // runtime error object.
 void wrenAbortFiber(WrenVM* vm, int slot);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
