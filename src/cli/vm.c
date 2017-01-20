@@ -155,7 +155,7 @@ static void write(WrenVM* vm, const char* text)
 }
 
 static void reportError(WrenErrorType type,
-                        const char* module, int line, const char* message)
+                        const char* module, int line, const char* message, WrenVM* vm)
 {
   switch (type)
   {

@@ -404,7 +404,7 @@ static void printError(Parser* parser, int line, const char* label,
   ASSERT(length < ERROR_MESSAGE_SIZE, "Error should not exceed buffer.");
   
   parser->vm->config.errorFn(WREN_ERROR_COMPILE,
-                             parser->module->name->value, line, message);
+                             parser->module->name->value, line, message, parser->vm);
 }
 
 // Outputs a compile or syntax error. This also marks the compilation as having
