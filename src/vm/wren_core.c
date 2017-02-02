@@ -944,6 +944,71 @@ DEF_PRIMITIVE(string_indexOf2)
   RETURN_NUM(index == UINT32_MAX ? -1 : (int)index);
 }
 
+DEF_PRIMITIVE(string_split)
+{
+  if (!validateString(vm, args[1], "Argument")) return false;
+
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
+
+  if (search->length == 0) RETURN_ERROR("Separator cannot be empty.");
+
+  ObjList* result = wrenNewList(vm, 0);
+  uint32_t start = 0;
+
+  do {
+    uint32_t next = wrenStringFind(string, search, start);
+
+    if (next == UINT32_MAX) {
+      wrenValueBufferWrite(vm, &result->elements,
+                         wrenNewStringFromRange(vm, string, start, string->length - start, 1));
+
+      break;
+    }
+
+    wrenValueBufferWrite(vm, &result->elements,
+                         wrenNewStringFromRange(vm, string, start, next - start, 1));
+
+    start = next + search->length;
+  } while (true);
+
+  RETURN_OBJ(result);
+}
+
+DEF_PRIMITIVE(string_replace)
+{
+  if (!validateString(vm, args[1], "Argument")) return false;
+  if (!validateString(vm, args[2], "Argument")) return false;
+
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* old = AS_STRING(args[1]);
+  ObjString* swap = AS_STRING(args[2]);
+
+  if (old->length == 0) RETURN_ERROR("Old cannot be empty.");
+
+  Value result = wrenNewString(vm, NULL, 0);
+  uint32_t start = 0;
+
+  do {
+    uint32_t next = wrenStringFind(string, old, start);
+
+    if (next == UINT32_MAX) {
+      result = wrenStringFormat(vm, "@@", result,
+                                wrenNewStringFromRange(vm, string, start, string->length - start, 1));
+
+      break;
+    }
+
+    result = wrenStringFormat(vm, "@@@", result, 
+                              wrenNewStringFromRange(vm, string, start, next - start, 1),
+                              swap);    
+
+    start = next + old->length;
+  } while (true);
+
+  RETURN_VAL(result);
+}
+
 DEF_PRIMITIVE(string_iterate)
 {
   ObjString* string = AS_STRING(args[0]);
@@ -1304,6 +1369,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "endsWith(_)", string_endsWith);
   PRIMITIVE(vm->stringClass, "indexOf(_)", string_indexOf1);
   PRIMITIVE(vm->stringClass, "indexOf(_,_)", string_indexOf2);
+  PRIMITIVE(vm->stringClass, "split(_)", string_split);
+  PRIMITIVE(vm->stringClass, "replace(_,_)", string_replace);
   PRIMITIVE(vm->stringClass, "iterate(_)", string_iterate);
   PRIMITIVE(vm->stringClass, "iterateByte_(_)", string_iterateByte);
   PRIMITIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
