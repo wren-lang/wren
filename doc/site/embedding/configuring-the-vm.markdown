@@ -1,6 +1,8 @@
 ^title Configuring the VM
 
-When you create a Wren VM, you pass in a pointer to a WrenConfiguration structure that is used to tune and control the VM. Since Wren has no global state and each VM is independent of the others, you can also configure them differently if your application happens to run multiple VMs.
+When you create a Wren VM, you tweak it by passing in a pointer to a
+WrenConfiguration structure. Since Wren has no global state, you can configure
+each VM them differently if your application happens to run multiple.
 
 The struct looks like:
 
@@ -23,9 +25,9 @@ Most fields have useful defaults, which you can (and should) set by calling:
     :::c
     wrenInitConfiguration(&configuration);
 
-This ensures that if new fields are added to WrenConfiguration, that your application will correctly initialize them to default values.
-
-Here is what each field does, roughly categorized:
+Calling this ensures that your VM doesn't get uninitialized configuration when
+new fields are added to WrenConfiguration. Here is what each field does, roughly
+categorized:
 
 ## Binding
 
@@ -34,7 +36,7 @@ access to imported code and foreign functionality.
 
 ### `loadModuleFn`
 
-This is the callback the VM uses to load an imported module. The VM itself does
+This is the callback Wren uses to load an imported module. The VM itself does
 not know how to talk to the file system, so when an `import` statement is
 executed, it relies on the host application to locate and read the source code
 for a module.
@@ -46,17 +48,17 @@ The signature of this function is:
 
 When a module is imported, Wren calls this and passes in the module's name. The
 host should return the source code for that module. Memory for the source should
-be allocated using the same allocator that the VM uses for other allocation.
-Wren will take ownership over it.
+be allocated using the same allocator that the VM uses for other allocation (see
+below). Wren will take ownership of the returned string and free it later.
 
-This is only be called once for any given module name. Wren caches the result
-internally so subsequent imports of the same module use the previous source and
-do not call this.
+The module loader is only be called once for any given module name. Wren caches
+the result internally so subsequent imports of the same module use the
+previously loaded code.
 
-If a module with the given name could not be found by the embedder, it should
+If your host application isn't able to load a module with some name, it should
 return `NULL` and Wren will report that as a runtime error.
 
-If you don't use any `import` statements, you can omit this.
+If you don't use any `import` statements, you can leave this `NULL`.
 
 ### `bindForeignMethodFn`
 
@@ -69,7 +71,8 @@ If your application defines no foreign methods, you can leave this `NULL`.
 
 ### `bindForeignClassFn`
 
-The callback Wren uses to find a foreign class and get its foreign methods. See [this page][foreign class] for details.
+The callback Wren uses to find a foreign class and get its foreign methods. See
+[this page][foreign class] for details.
 
 [foreign class]: /embedding/storing-c-data.html
 
@@ -84,18 +87,19 @@ what you expect.
 
 This is the callback Wren uses to output text when `System.print()` or the other
 related functions are called. This is the minimal connection the VM has with the
-outside world and lets you do rudimentary "printf debugging". It's signature is:
+outside world and lets you do rudimentary "printf debugging". Its signature is:
 
     :::c
     void write(WrenVM* vm, const char* text)
 
-This does *not* have a default implementation. It's up to you to wire it up to
-`printf()` or some other way to show the text. If you leave it `NULL`, calls
-to `System.print()` and others silently do nothing.
+Wren does *not* have a default implementation for this. It's up to you to wire
+it up to `printf()` or some other way to show the text. If you leave it `NULL`,
+calls to `System.print()` and others silently do nothing.
 
 ### `errorFn`
 
-The callback Wren uses to report compile time and runtime errors. Its signature is:
+Wren uses this callback to report compile time and runtime errors. Its signature
+is:
 
     :::c
     void error(
@@ -104,29 +108,31 @@ The callback Wren uses to report compile time and runtime errors. Its signature 
           int line,
           const char* message)
 
-The type is one of:
+The type parameter is one of:
 
-      :::c
-      typedef enum
-      {
-        // A syntax or resolution error detected at compile time.
-        WREN_ERROR_COMPILE,
+    :::c
+    typedef enum
+    {
+      // A syntax or resolution error detected at compile time.
+      WREN_ERROR_COMPILE,
 
-        // The error message for a runtime error.
-        WREN_ERROR_RUNTIME,
+      // The error message for a runtime error.
+      WREN_ERROR_RUNTIME,
 
-        // One entry of a runtime error's stack trace.
-        WREN_ERROR_STACK_TRACE
-      } WrenErrorType;
+      // One entry of a runtime error's stack trace.
+      WREN_ERROR_STACK_TRACE
+    } WrenErrorType;
 
-When a compile error occurs, this is called once with type `WREN_ERROR_COMPILE`,
-the name of the module and line where the error occurs, and the error message.
+When a compile error occurs, `errorFn` is called once with type
+`WREN_ERROR_COMPILE`, the name of the module and line where the error occurs,
+and the error message.
 
-Runtime errors also include stack traces. To handle this, Wren first calls this
+Runtime errors include stack traces. To handle this, Wren first calls `errorFn`
 with `WREN_ERROR_RUNTIME`, no module or line, and the runtime error's message.
-After that, a series of `WREN_ERROR_STACK_TRACE` calls are made for each line in
-the stack trace. Each of those has the module and line where the method or
-function is defined and [message] is the name of the method or function.
+After that, it calls `errorFn` again using type `WREN_ERROR_STACK_TRACE`, once
+for each line in the stack trace. Each of those calls has the module and line
+where the method or function is defined and `message` is the name of the method
+or function.
 
 If you leave this `NULL`, Wren does not report any errors.
 
@@ -136,15 +142,15 @@ These fields control how the VM allocates and manages memory.
 
 ### `reallocateFn`
 
-This lets you provide a custom memory allocation function. It's signature is:
+This lets you provide a custom memory allocation function. Its signature is:
 
     :::c
     void* reallocate(void* memory, size_t newSize)
 
 Wren uses this one function to allocate, grow, shrink, and deallocate memory.
-When called, `void*` is the existing pointer to the block of memory if an
-allocation is being changed or freed. If Wren is requested new memory, this is
-`NULL`.
+When called, `memory` is the existing pointer to the block of memory if an
+allocation is being changed or freed. If Wren is requesting new memory, then
+`memory` is `NULL`.
 
 `newSize` is the number of bytes of memory being requested. If memory is being
 freed, this is zero. Your callback should allocate the proper amount of memory
