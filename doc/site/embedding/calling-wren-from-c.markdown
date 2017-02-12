@@ -33,7 +33,7 @@ C, first we need a few things:
 
 We'll tackle these one at a time.
 
-### Getting a method handle
+### Getting a Method Handle
 
 When you run a chunk of Wren code like this:
 
@@ -57,9 +57,7 @@ array index into the table. That's why method calls are so fast in Wren.
 
 It would be a shame if calling a method from C didn't have that same speed
 benefit. So to do that, we split the process of calling a method into two steps.
-
-First, we create a handle that represents a "compiled" method signature. You do
-that using this:
+First, we create a handle that represents a "compiled" method signature:
 
     :::c
     WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
@@ -70,12 +68,12 @@ that can be used to very quickly call a certain method given a receiver and some
 arguments.
 
 This is just a regular WrenHandle, which means you can hold onto it as long as
-you like. Typically, you'd call this once outside of your applications
+you like. Typically, you'd call this once outside of your application's
 performance critical loops and reuse it as long as you need. Then, it is us up
 to you to release it when you no longer need it by calling
 `wrenReleaseHandle()`.
 
-### Setting up a receiver
+## Setting Up a Receiver
 
 OK, we have a method, but who are we calling it on? We need a receiver, and as
 you can probably guess after reading the [last section][], we give that to Wren
@@ -87,7 +85,7 @@ Any object you store in that slot can be used as a receiver. You could even call
 
 [last section]: slots-and-handles.html
 
-*Needing* to pick some kind of receiver from C might feel strange. C is
+Needing a receiver to call some Wren code from C might feel strange. C is
 procedural, so it's natural to want to just invoke a bare *function* from Wren,
 but Wren isn't procedural. Instead, if you want to define some executable
 operation that isn't logically tied to a specific object, the natural way is to
@@ -129,52 +127,47 @@ create a handle to the class once and use it each time:
     // Load the class into slot 0.
     wrenEnsureSlots(vm, 1);
     wrenGetVariable(vm, "main", "GameEngine", 0);
-    WrenHandle* gameEngine = wrenGetSlotHandle(vm, 0);
+    WrenHandle* gameEngineClass = wrenGetSlotHandle(vm, 0);
 
 Now, each time we want to call a method on GameEngine, we store that value back
 in slot zero:
 
     :::c
-    wrenSetSlotHandle(vm, 0, gameEngine);
+    wrenSetSlotHandle(vm, 0, gameEngineClass);
 
 Just like we hoisted `wrenMakeCallHandle()` out of our performance critical
 loop, we can hoist the call to `wrenGetVariable()` out. Of course, if your code
 isn't performance critical, you don't have to do this.
 
-### Passing arguments
+## Passing Arguments
 
 We've got a receiver in slot zero now, next we need to pass in any other
-arguments. In our GameEngine example, that's just the elapsed time. The
-remaining arguments go in adjacent slots, right after the receiver. So our one
-elapsed time goes into slot one. You can use any of the slot functions to set
-this up. For the example, it's just:
+arguments. In our GameEngine example, that's just the elapsed time. Method
+arguments go in consecutive slots after the receiver. So the elapsed time goes
+into slot one. You can use any of the slot functions to set this up. For the
+example, it's just:
 
     :::c
     wrenSetSlotDouble(vm, 1, elapsedTime);
 
-### Calling the method
+## Calling the Method
 
 We have all of the data in place, so all that's left is to pull the trigger and
-tell the VM to start running some code. There's one more function to call:
+tell the VM to start running some code:
 
     :::c
     WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
 
-It takes the method handle we created using `wrenMakeCallHandle()`. It assumes
-you have already set up the receiver and arguments in the slot array.
-Critically, it assumes you have as many arguments as the method signature
-defines. If you call a method like `takeThree(_,_,_)` and don't put three
-arguments in the slot array, bad things will happen.
-
-Now Wren starts running code. It looks up the method on the receiver, executes
-it and keeps running until either the method returns or a fiber [suspends][].
+It takes the method handle we created using `wrenMakeCallHandle()`. Now Wren
+starts running code. It looks up the method on the receiver, executes it and
+keeps running until either the method returns or a fiber [suspends][].
 
 [suspends]: ../modules/core/fiber.html#fiber.suspend()
 
-`wrenCall()` returns the same WrenInterpretResult enum to tell you if the method
-completed successfully or a runtime error occurred.
+`wrenCall()` returns the same WrenInterpretResult enum as `wrenInterpret()` to
+tell you if the method completed successfully or a runtime error occurred.
 
-### Getting the return value
+## Getting the Return Value
 
 When `wrenCall()` returns, it leaves the slot array in place. In slot zero, you
 can find the method's return value, which you can access using any of the slot

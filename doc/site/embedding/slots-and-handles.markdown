@@ -15,7 +15,7 @@ of the VM. These functions are based on two fundamental concepts: **slots** and
 When you want to send data to Wren, read data from it, or generally monkey
 around with Wren objects from C, you do so by going through an array of slots.
 You can think of it as a shared message board that both the VM and your C code
-can leave bits of data on for the other side to process.
+leave notes on for the other side to process.
 
 The array is zero-based, and each slot can hold a value of any type. It is
 dynamically sized, but it's your responsibility to ensure there are enough slots
@@ -42,7 +42,7 @@ If you read or write from a slot that you haven't ensured is valid, Wren makes
 no guarantees about what will happen. I've heard rumors of smoke and feathers
 flying out of a user's computer.
 
-If you want to see how big the slot array is, you can call:
+If you want to see how big the slot array is, use:
 
     :::c
     int wrenGetSlotCount(WrenVM* vm);
@@ -152,7 +152,7 @@ hash the name and look it up in the module's string table. You might want to
 avoid calling this in the middle of a hot loop where performance is critical.
 
 Instead, it's faster to look up the variable once outside the loop and store a
-reference to the object using a [WrenHandle](#handles).
+reference to the object using a [handle](#handles).
 
 ### Working with lists
 
@@ -209,19 +209,16 @@ have two limitations:
     that aren't simple primitive ones. If you want to grab a reference to,
     say, an instance of some class, how do you do it?
 
-To address those, we have WrenHandle. A WrenHandle wraps a reference to an
-object of any kind&mdash;strings, numbers, instances of classes, collections,
-whatever.
-
-You create a WrenHandle using this:
+To address those, we have handles. A handle wraps a reference to an object of
+any kind&mdash;strings, numbers, instances of classes, collections, whatever.
+You create a handle using this:
 
     :::c
     WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
 
 This takes the object stored in the given slot, creates a new WrenHandle to wrap
-it, and returns a pointer to it back to you.
-
-You can send that wrapped object back to Wren by calling:
+it, and returns a pointer to it back to you. You can send that wrapped object
+back to Wren by calling:
 
     :::c
     void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
@@ -230,12 +227,11 @@ Note that this doesn't invalidate your WrenHandle. You can still keep using it.
 
 ### Retaining and releasing handles
 
-A WrenHandle is an opaque wrapper around an object of any type, but just as
+A handle is an opaque wrapper around an object of any type, but just as
 important, it's a *persistent* one. When Wren gives you a pointer to a
 WrenHandle, it guarantees that that pointer remains valid. You can keep it
 around as long as you want. Even if a garbage collection occurs, Wren will
-ensure all of the WrenHandles and the objects they wrap are kept safely in
-memory.
+ensure all of the handle and the objects they wrap are kept safely in memory.
 
 Internally, Wren keeps a list of all of the WrenHandles that have been created.
 That way, during garbage collection, it can find them all and make sure their

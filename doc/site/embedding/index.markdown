@@ -126,7 +126,7 @@ VM, waiting to run some code!
 
 ## Executing Wren code
 
-You can tell the VM to execute a string of Wren source code like so:
+You execute a string of Wren source code like so:
 
     :::c
     WrenInterpretResult result = wrenInterpret(vm,

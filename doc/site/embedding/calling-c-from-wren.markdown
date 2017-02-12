@@ -1,106 +1,133 @@
 ^title Calling C from Wren
 
-- foreign class
-- foreign method
+When we are ensconced within the world of Wren, the external C world is
+"foreign" to us. There are two reasons we might want to bring some foreign
+flavor into our VM:
 
-- WrenBindForeignMethodFn
-- finalizers (WrenFinalizerFn)
-- WrenBindForeignClassFn
-- WrenForeignClassMethods
-- bindForeignMethodFn
-- bindForeignClassFn
+* We want to execute code written in C.
+* We want to store raw C data.
 
-- wren vm reaches out to c for two things, raw data and behavior written in c
-  - wren is oop so data is stored in instances of classes
-    - foreign classes
-  - likewise, behavior in methods, so foreign methods
-- foreign methods
-  - want to call code in wren, invoke method
-  - want to call c code, still invoke method
-  - declaring:
-    - just that method is implemented in c
-    - bit like "native" in java
-    - need to tell wren that method is declared on class but implementation is
-      in c
-    - "foreign"
-    - can be instance or static
-  - binding:
-    - wren needs to find corresponding c fn to call for it
-    - uses pull model
-    - when class decl is executed, wren asks embedder for pointer to c fn
-    - when configure vm, give it bindForeignMethodFn
-    - this is called every time foreign method decl is executed
-    - tells you module, class, and sig of method
-    - your job is to return proper c fn for that method
-    - wren wires two together then calls c fn whenever method is called
-    - looking up class and sig by name kind of slow and tedious
-    - but only done once when class decl itself executes
-    - after that, remembers binding
-  - calling:
-    - when foreign method is called, wren sets up slots
-    - then calls c fn
-    - receiver in slot zero, other args in later slots
-    - do whatever work you want in c
-    - can modify slot array
-    - put return value in slot zero
+Since Wren is object-oriented, behavior lives in methods, so for the former we
+have **foreign methods**. Likewise, data lives in objects, so for the latter, we
+define **foreign classes**. This page is about the first, foreign methods. The
+[next page][] covers foreign classes.
 
-**TODO: next page**
+[next page]: /embedding/storing-c-data.html
 
-- foreign classes
-  - embedded language often need to work with native c data
-  - maybe want to refer to pointer to memory in c heap
-  - maybe want more dense efficient encoding c provides
-  - may want to refer to resource otherwise managed outside of wren, like file
-    handle
-  - wrap in foreign class
-  - hybrid of wren and c
-  - foreign class has methods defined in wren (though can be foreign)
-  - each instance is instance of wren class, knows type, etc.
-  - but also stores bytes of data opaque to wren
-  - defining:
-    - "foreign class"
-    - declaring class foreign says "when construct call into c to fill in
-      opaque bytes"
-    - need c fn pointer to do that work
-    - like method, bound when class is declared
-    - bindForeignClassFn
-    - takes two pointers, ctor and finalizer
-  - initializing:
-    - whenever construct instance of foreign class, calls fn
-    - call wrenSetSlotNewForeign() to create instance and tell it how many
-      bytes to allocate
-    - returns void* to opaque data
-    - initialize as see fit
-  - accessing:
-    - data opaque, can't be too opaque, need to use it!
-    - cannot access from within wren, only c
-    - if have instance of foreign class in slot, wrenGetSlotForeign() returns
-      void* to raw data
-    - typically, used if foreign method defined on foreign class
-    - remember receiver in slot zero
-  - freeing:
-    - memory for foreign objects managed like all mem in wren
-    - may be gc'd
-    - usually ok
-    - but foreign obj may point to resource whose lifetime should be tied to
-      life of obj
-    - for ex: file handle
-    - if foreign obj is collected, no longer have way to get to file handle
-    - if didn't close it first, leak
-    - when object is gc'd, want to close file
-    - define finalizer fn
-    - other thing set in bindForeignClassFn
-    - if provided, gc calls this before obj is collected
-    - provides raw bits of obj
-    - nothing else!
-    - called from right inside gc, so vm is in brittle state
-    - don't mess with wren, use stack, etc.
-    - just free resource
-    - cannot fail
+A foreign method looks to Wren like a regular method. It is defined on a Wren
+class, it has a name and signature, and calls to it are dynamically dispatched.
+The only difference is that the *body* of the method is written in C.
 
-Until these are written, you can read the docs in [wren.h][].
+A foreign method is declared in Wren like so:
 
-[wren.h]: https://github.com/munificent/wren/blob/master/src/include/wren.h
+    :::wren
+    class Math {
+      foreign static add(a, b)
+    }
+
+The `foreign` tells Wren that the method `add()` is declared on `Math`, but
+implemented in C. Both static and instance methods can be foreign.
+
+## Binding Foreign Methods
+
+When you call a foreign method, Wren needs to figure out which C function to
+execute. This process is called *binding*. Binding is performed on-demand by the
+VM. When a class that declares a foreign method is executed -- when the `class`
+statement itself is evaluated -- the VM askes the host application for the C
+function that should be used for the foreign method.
+
+It does this through the `bindForeignMethodFn` callback you give it when you
+first configure the VM. This callback isn't the foreign method itself. It's the
+binding function your app uses to *look up* the foreign methods.
+
+Its signature is:
+
+    :::c
+    WrenForeignMethodFn bindForeignMethodFn(
+        WrenVM* vm,
+        const char* module,
+        const char* className,
+        bool isStatic,
+        const char* signature);
+
+Every time a foreign method is declared, the VM invokes this callback. It passes
+in the module containing the class declaration, the name of the class containing
+the method, the method's signature, and whether or not it's a static method. In
+the above example, it would pass something like:
+
+    :::c
+    bindForeignMethodFn(vm, "main", "Math", true, "add(_,_)");
+
+When you configure the VM, you give a pointer to a function that looks up the
+appropriate C function for the given foreign method and returns a pointer to it.
+Something like:
+
+    :::c
+    WrenForeignMethodFn bindForeignMethod(
+        WrenVM* vm,
+        const char* module,
+        const char* className,
+        bool isStatic,
+        const char* signature)
+    {
+      if (strcmp(module, "main") == 0)
+      {
+        if (strcmp(className, "Math") == 0)
+        {
+          if (!isStatic && strcmp(signature, "add(_,_)") == 0)
+          {
+            return mathAdd; // C function for Math.add(_,_).
+          }
+          // Other foreign methods on Math...
+        }
+        // Other classes in main...
+      }
+      // Other modules...
+    }
+
+This implementation is pretty tedious, but you get the idea. Feel free to do
+something more clever here in your host application.
+
+The important part is that it returns a pointer to a C function to use for that
+foreign method. Wren does this binding step *once* when the class definition is
+first executed. It then keeps the function pointer you return and associates it
+with that method. This way, *calls* to the foreign method are fast.
+
+## Implementing a Foreign Method
+
+All C functions for foreign methods have the same signature:
+
+    :::c
+    void foreignMethod(WrenVM* vm);
+
+Arguments passed from Wren are not passed as C arguments, and the method's
+return value is not a C return value. Instead -- you guessed it -- we go through
+the [slot array][].
+
+[slot array]: /embedding/slots-and-handles.html
+
+When a foreign method is called from Wren, the VM sets up the slot array with
+the receiver and arguments to the call. As in calling Wren from C, the receiver
+object is in slot zero, and arguments are in consecutive slots after that.
+
+You use the slot API to read those arguments, and then perform whatever work you
+want to in C. If you want the foreign method to return a value, place it in slot
+zero. that slot, the foreign method will implicitly return the receiver, since
+that's what is already in there.) Like so:
+
+    :::c
+    void mathAdd(WrenVM* vm)
+    {
+      double a = wrenGetSlotDouble(vm, 1);
+      double b = wrenGetSlotDouble(vm, 2);
+      wrenSetSlotDouble(vm, 0, a + b);
+    }
+
+While your foreign method is executed, the VM is completely suspended. No other
+fibers will run until your foreign method returns.
+
+This covers foreign behavior, but what about foreign *state*? For that, we need
+a foreign *class*...
 
 <a class="right" href="storing-c-data.html">Storing C Data &rarr;</a>
 <a href="calling-wren-from-c.html">&larr; Calling Wren from C</a>
