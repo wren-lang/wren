@@ -17,6 +17,7 @@ void callRunTests(WrenVM* vm)
   WrenHandle* binary = wrenMakeCallHandle(vm, "-(_)");
   WrenHandle* subscript = wrenMakeCallHandle(vm, "[_,_]");
   WrenHandle* subscriptSet = wrenMakeCallHandle(vm, "[_,_]=(_)");
+  WrenHandle* call = wrenMakeCallHandle(vm, "call()");
 
   // Different arity.
   wrenSetSlotCount(vm, 1);
@@ -116,6 +117,10 @@ void callRunTests(WrenVM* vm)
   wrenSetSlotDouble(vm, 1, after);
   wrenCall(vm, one);
   
+  wrenSetSlotCount(vm, 1);
+  wrenGetVariable(vm, "./test/api/call", "Factorial", 0);
+  wrenCall(vm, call);
+  
   wrenReleaseHandle(vm, callClass);
   wrenReleaseHandle(vm, noParams);
   wrenReleaseHandle(vm, zero);
@@ -127,4 +132,41 @@ void callRunTests(WrenVM* vm)
   wrenReleaseHandle(vm, binary);
   wrenReleaseHandle(vm, subscript);
   wrenReleaseHandle(vm, subscriptSet);
+  wrenReleaseHandle(vm, call);
+}
+
+static void factorial(WrenVM* vm)
+{
+  WrenHandle* recursiveFactorial = wrenMakeCallHandle(vm, "call(_)");
+  double num = wrenGetSlotDouble(vm, 1);
+
+  if (num > 1)
+  {
+    wrenSetSlotCount(vm, 4);
+    wrenCopySlot(vm, 2, 0);
+    wrenSetSlotDouble(vm, 3, num - 1);
+    
+    if (wrenCall(vm, recursiveFactorial) == WREN_RESULT_SUCCESS)
+    {
+      wrenSetSlotDouble(vm, 0, num * wrenGetSlotDouble(vm, 2));
+    }
+  }
+  else if (num == 1)
+  {
+    wrenSetSlotDouble(vm, 0, 1);
+  }
+  else
+  {
+    wrenSetSlotCount(vm, 3);
+    wrenSetSlotString(vm, 2, "Not a valid number!");
+    wrenAbortFiber(vm, 2);
+  }
+  wrenReleaseHandle(vm, recursiveFactorial);
+}
+
+WrenForeignMethodFn callBindMethod(const char* signature)
+{
+  if (strcmp(signature, "static Factorial.call(_)") == 0) return factorial;
+
+  return NULL;
 }

@@ -774,6 +774,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 {
   // Remember the current fiber so we can find it if a GC happens.
   vm->fiber = fiber;
+  ObjFiber* calling_fiber = fiber;
   fiber->state = FIBER_ROOT;
 
   // Hoist these into local variables. They are accessed frequently in the loop
@@ -1182,6 +1183,12 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       }
       else if (fiber->frames[fiber->numFrames - 1].closure == NULL)
       {
+        if (fiber != calling_fiber)
+        {
+          //Attempting to return to wrenCall from wrong fiber.
+          abort();
+        }
+
         wrenPopCallFrame(vm, fiber);
 
         return WREN_RESULT_SUCCESS;
@@ -1373,7 +1380,6 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   ASSERT(method != NULL, "Method cannot be NULL.");
   ASSERT(IS_CLOSURE(method->value), "Method must be a method handle.");
   ASSERT(vm->fiber != NULL, "Must set up arguments for call first.");
-  ASSERT(vm->fiber->numFrames == 0, "Can not call from a foreign method.");
   
   ObjFiber* fiber = vm->fiber;
   ObjClosure* closure = AS_CLOSURE(method->value);

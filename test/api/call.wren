@@ -39,6 +39,17 @@ class Call {
   }
 }
 
+class Factorial {
+  static call() {
+    System.print("factorial(1) = %(call(1))")
+    System.print("factorial(2) = %(call(2))")
+    System.print("factorial(3) = %(call(3))")
+    System.print("factorial(5) = %(call(5))")
+  }
+
+  foreign static call(n)
+}
+
 // expect: noParams
 // expect: zero
 // expect: one 1
@@ -55,3 +66,8 @@ class Call {
 // expect: two str [98, 0, 121, 0, 116, 0, 101]
 // expect: one 0.9
 // expect: one 9
+
+// expect: factorial(1) = 1
+// expect: factorial(2) = 2
+// expect: factorial(3) = 6
+// expect: factorial(5) = 120

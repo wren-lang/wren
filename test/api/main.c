@@ -42,6 +42,9 @@ static WrenForeignMethodFn bindForeignMethod(
   method = benchmarkBindMethod(fullName);
   if (method != NULL) return method;
   
+  method = callBindMethod(fullName);
+  if (method != NULL) return method;
+
   method = errorBindMethod(fullName);
   if (method != NULL) return method;
 
