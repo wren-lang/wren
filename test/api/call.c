@@ -100,13 +100,20 @@ void callRunTests(WrenVM* vm)
   wrenSetSlotBytes(vm, 2, "b\0y\0t\0e", 7);
   wrenCall(vm, two);
   
-  // Call ignores with extra temporary slots on stack.
+  // Call ignores extra temporary slots on stack.
   wrenSetSlotCount(vm, 10);
-  wrenSetSlotHandle(vm, 0, callClass);
-  for (int i = 1; i < 10; i++)
+  for (int i = 0; i < 10; i++)
   {
     wrenSetSlotDouble(vm, i, i * 0.1);
   }
+  wrenSetSlotHandle(vm, 8, callClass);
+  wrenCall(vm, one);
+  int after = wrenGetSlotCount(vm);
+
+  // Ensure stack size after a call
+  wrenSetSlotCount(vm, 2);
+  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotDouble(vm, 1, after);
   wrenCall(vm, one);
   
   wrenReleaseHandle(vm, callClass);
