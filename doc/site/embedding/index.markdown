@@ -84,6 +84,13 @@ can find the [public header for Wren][wren.h]:
     :::c
     #include "wren.h"
 
+Wren depends only on the C standard library, so you don't usually need to link
+to anything else. On some platforms (at least BSD and Linux) some of the math
+functions in `math.h` are implemented in a separate library, [libm][], that you
+have to explicitly link to.
+
+[libm]: https://en.wikipedia.org/wiki/C_mathematical_functions#libm
+
 If your program is in C++ but you are linking to the Wren library compiled as C,
 then you'll need to handle the calling convention differences like so:
 
