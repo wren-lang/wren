@@ -129,6 +129,24 @@ negative to count backwards from the end of the string.
 It is a runtime error if `search` is not a string or `start` is not an integer
 index within the string's byte length.
 
+### **split**(seperator)
+
+Returns a list of one or more strings seperated by `seperator`.
+
+    :::wren
+    var string = "abc abc abc"
+    System.print(string.split(" ")) //> [abc, abc, abc]
+
+It is a runtime error if `seperator` is not a string or is an empty string.
+
+### **replace**(old, swap)
+
+Returns a new string with all occurences of `old` replaced with `swap`.
+
+    :::wren
+    var string = "abc abc abc"
+    System.print(string.replace(" ", "")) //> abcabcabc
+
 ### **iterate**(iterator), **iteratorValue**(iterator)
 
 Implements the [iterator protocol](../../control-flow.html#the-iterator-protocol)
