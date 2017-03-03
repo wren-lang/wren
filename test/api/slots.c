@@ -12,7 +12,6 @@ static void getSlots(WrenVM* vm)
 {
   bool result = true;
   if (wrenGetSlotBool(vm, 1) != true) result = false;
-  // TODO: Test wrenGetSlotForeign().
   
   int length;
   const char* bytes = wrenGetSlotBytes(vm, 2, &length);
@@ -46,8 +45,7 @@ static void setSlots(WrenVM* vm)
   wrenSetSlotBytes(vm, 2, "by\0te", 5);
   wrenSetSlotDouble(vm, 3, 1.5);
   wrenSetSlotString(vm, 4, "str");
-  
-  // TODO: wrenSetSlotNull().
+  wrenSetSlotNull(vm, 5);
   
   // Read the slots back to make sure they were set correctly.
   
@@ -62,6 +60,8 @@ static void setSlots(WrenVM* vm)
   if (wrenGetSlotDouble(vm, 3) != 1.5) result = false;
   if (strcmp(wrenGetSlotString(vm, 4), "str") != 0) result = false;
 
+  if (wrenGetSlotType(vm, 5) != WREN_TYPE_NULL) result = false;
+  
   if (result)
   {
     // Move the value into the return position.
@@ -170,7 +170,7 @@ WrenForeignMethodFn slotsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Slots.noSet") == 0) return noSet;
   if (strcmp(signature, "static Slots.getSlots(_,_,_,_,_)") == 0) return getSlots;
-  if (strcmp(signature, "static Slots.setSlots(_,_,_,_)") == 0) return setSlots;
+  if (strcmp(signature, "static Slots.setSlots(_,_,_,_,_)") == 0) return setSlots;
   if (strcmp(signature, "static Slots.slotTypes(_,_,_,_,_,_,_)") == 0) return slotTypes;
   if (strcmp(signature, "static Slots.ensure()") == 0) return ensure;
   if (strcmp(signature, "static Slots.ensureOutsideForeign()") == 0) return ensureOutsideForeign;
