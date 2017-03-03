@@ -48,11 +48,27 @@
 // these or not. By default, they are all available. To disable one, set the
 // corresponding `WREN_OPT_<name>` define to `0`.
 #ifndef WREN_OPT_META
-  #define WREN_OPT_META 1
+  #define WREN_OPT_META 0
 #endif
 
 #ifndef WREN_OPT_RANDOM
-  #define WREN_OPT_RANDOM 1
+  #define WREN_OPT_RANDOM 0
+#endif
+
+// If true, the VM's interpreter loop will keep track of how many operations
+// have been executed and abort with a runtime error when the limit is exceeded.
+// The sandbox is unable to defend against native calls entering an infinite loop.
+#ifndef WREN_SANDBOX
+  #define WREN_SANDBOX 0
+#endif
+#if WREN_SANDBOX
+
+#ifndef WREN_DEFAULT_MAX_RUN_OPS
+   #define WREN_DEFAULT_MAX_RUN_OPS (((int64_t)1) << 62)
+ #endif
+ #ifndef WREN_DEFAULT_MAX_HEAP_SIZE
+   #define WREN_DEFAULT_MAX_HEAP_SIZE  (1024*1024*128) // 64 MB
+ #endif
 #endif
 
 // These flags are useful for debugging and hacking on Wren itself. They are not

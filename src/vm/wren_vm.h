@@ -61,6 +61,10 @@ struct WrenVM
   // The number of total allocated bytes that will trigger the next GC.
   size_t nextGC;
 
+#if WREN_SANDBOX
+  size_t totalRunOps;
+#endif
+
   // The first object in the linked list of all currently allocated objects.
   Obj* first;
 

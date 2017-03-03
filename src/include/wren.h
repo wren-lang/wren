@@ -206,6 +206,12 @@ typedef struct
   //
   // If zero, defaults to 50.
   int heapGrowthPercent;
+
+#if WREN_SANDBOX
+  int64_t maxRunOps;
+  int64_t maxHeapSize;
+#endif
+
 } WrenConfiguration;
 
 typedef enum
