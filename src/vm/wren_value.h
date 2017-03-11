@@ -78,6 +78,7 @@
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
+#define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
 
 // Creates a new string object from [text], which should be a bare C string
 // literal. This determines the length of the string automatically at compile
