@@ -1702,7 +1702,10 @@ bool wrenExistsInMap(WrenVM* vm, int mapSlot, int keySlot)
   ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must check in a map.");
   ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
 
-  return !(wrenMapGet(map, vm->apiStack[keySlot]) == UNDEFINED_VAL);
+  if (wrenMapGet(map, vm->apiStack[keySlot]) == UNDEFINED_VAL)
+    return false;
+  else
+    return true;
 }
 
 void wrenGetInMap(WrenVM* vm, int mapSlot, int keySlot, int elementSlot)
@@ -1715,7 +1718,7 @@ void wrenGetInMap(WrenVM* vm, int mapSlot, int keySlot, int elementSlot)
   ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
 
   Value value = wrenMapGet(map, vm->apiStack[keySlot]);
-  ASSERT(value != UNDEFINED_VAL, "Key does not exist in map.");
+  ASSERT((!(IS_UNDEFINED(value))), "Key does not exist in map.");
   vm->apiStack[elementSlot] = value;
 }
 
