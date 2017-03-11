@@ -96,7 +96,7 @@ typedef enum
 // Each of those has the module and line where the method or function is
 // defined and [message] is the name of the method or function.
 typedef void (*WrenErrorFn)(
-    WrenErrorType type, const char* module, int line, const char* message);
+    WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message);
 
 typedef struct
 {
