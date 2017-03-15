@@ -132,6 +132,57 @@ class String is Sequence {
   bytes { StringByteSequence.new(this) }
   codePoints { StringCodePointSequence.new(this) }
 
+  split(delim) {
+    if (!(delim is String) || delim.isEmpty) {
+      Fiber.abort("Argument must be a non-empty string.")
+    }
+
+    var result = []
+
+    var last = 0
+    var index = 0
+
+    var delimSize = delim.byteCount_
+    var size = byteCount_
+
+    while (last < size && (index = indexOf(delim, last)) != -1) {
+      result.add(this[last...index])
+      last = index + delimSize
+    }
+
+    if (last < size) {
+      result.add(this[last..-1])
+    } else {
+      result.add("")
+    }
+    return result
+  }
+
+  replace(from, to) {
+    if (!(from is String) || from.isEmpty) {
+      Fiber.abort("From must be a non-empty string.")
+    } else if (!(to is String)) {
+      Fiber.abort("To must be a string.")
+    }
+
+    var result = ""
+
+    var last = 0
+    var index = 0
+
+    var fromSize = from.byteCount_
+    var size = byteCount_
+
+    while (last < size && (index = indexOf(from, last)) != -1) {
+      result = result + this[last...index] + to
+      last = index + fromSize
+    }
+
+    if (last < size) result = result + this[last..-1]
+
+    return result
+  }
+
   *(count) {
     if (!(count is Num) || !count.isInteger || count < 0) {
       Fiber.abort("Count must be a non-negative integer.")
