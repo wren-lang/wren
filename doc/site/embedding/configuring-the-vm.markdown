@@ -103,6 +103,7 @@ is:
 
     :::c
     void error(
+          WrenVM* vm,
           WrenErrorType type,
           const char* module,
           int line,
