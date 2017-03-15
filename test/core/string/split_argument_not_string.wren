@@ -1,1 +1,1 @@
-"foo".split(1) // expect runtime error: Argument must be a non-empty string.
+"foo".split(1) // expect runtime error: Delimiter must be a non-empty string.
