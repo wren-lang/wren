@@ -1518,6 +1518,7 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
   if (IS_LIST(vm->apiStack[slot])) return WREN_TYPE_LIST;
   if (IS_NULL(vm->apiStack[slot])) return WREN_TYPE_NULL;
   if (IS_STRING(vm->apiStack[slot])) return WREN_TYPE_STRING;
+  if (IS_MAP(vm->apiStack[slot])) return WREN_TYPE_MAP;
   
   return WREN_TYPE_UNKNOWN;
 }
@@ -1614,6 +1615,11 @@ void wrenSetSlotNewList(WrenVM* vm, int slot)
   setSlot(vm, slot, OBJ_VAL(wrenNewList(vm, 0)));
 }
 
+void wrenSetSlotNewMap(WrenVM* vm, int slot)
+{
+  setSlot(vm, slot, OBJ_VAL(wrenNewMap(vm)));
+}
+
 void wrenSetSlotNull(WrenVM* vm, int slot)
 {
   setSlot(vm, slot, NULL_VAL);
@@ -1668,11 +1674,96 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
 }
 
+void wrenInsertInMap(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
+{
+  validateApiSlot(vm, mapSlot);
+  validateApiSlot(vm, keySlot);
+  validateApiSlot(vm, valueSlot);
+
+  ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must insert into a map.");
+  ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+
+  wrenMapSet(vm, map, vm->apiStack[keySlot], vm->apiStack[valueSlot]);
+}
+
+void wrenRemoveFromMap(WrenVM* vm, int mapSlot, int keySlot)
+{
+  validateApiSlot(vm, mapSlot);
+  validateApiSlot(vm, keySlot);
+
+  ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must remove from a map.");
+  ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+
+  wrenMapRemoveKey(vm, map, vm->apiStack[keySlot]);
+}
+
+bool wrenExistsInMap(WrenVM* vm, int mapSlot, int keySlot)
+{
+  validateApiSlot(vm, mapSlot);
+  validateApiSlot(vm, keySlot);
+
+  ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must check in a map.");
+  ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+
+  return !(wrenMapGet(map, vm->apiStack[keySlot]) == UNDEFINED_VAL);
+}
+
+void wrenGetInMap(WrenVM* vm, int mapSlot, int keySlot, int elementSlot)
+{
+  validateApiSlot(vm, mapSlot);
+  validateApiSlot(vm, keySlot);
+  validateApiSlot(vm, elementSlot);
+
+  ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must get from a map.");
+  ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+
+  Value value = wrenMapGet(map, vm->apiStack[keySlot]);
+  ASSERT(value != UNDEFINED_VAL, "Key does not exist in map.");
+  vm->apiStack[elementSlot] = value;
+}
+
+int wrenGetMapCount(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+  ASSERT(IS_MAP(vm->apiStack[slot]), "Must get from a map.");
+  ObjMap* map = AS_MAP(vm->apiStack[slot]);
+  return map->count;
+}
+
+void wrenGetMapKeys(WrenVM* vm, int mapSlot, int listSlot)
+{
+  validateApiSlot(vm, mapSlot);
+  validateApiSlot(vm, listSlot);
+  ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must list keys from a map.");
+  ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+  setSlot(vm, listSlot, OBJ_VAL(wrenNewList(vm, 0)));
+  MapEntry *entries = map->entries;
+  uint32_t nb_found = 0;
+  for (uint32_t i=0; i<map->capacity; i++) {
+    MapEntry *entry = &entries[i];
+    if (IS_UNDEFINED(entry->key))
+      continue;
+    wrenListInsert(vm, AS_LIST(vm->apiStack[listSlot]), entry->key, nb_found);
+    nb_found++;
+    if (nb_found == map->count)
+      break;
+  }
+}
+
+void wrenSwapSlot(WrenVM* vm, int slotX, int slotY)
+{
+  validateApiSlot(vm, slotX);
+  validateApiSlot(vm, slotY);
+  Value old = vm->apiStack[slotX];
+  vm->apiStack[slotX] = vm->apiStack[slotY];
+  vm->apiStack[slotY] = old;
+}
+
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {
   ASSERT(module != NULL, "Module cannot be NULL.");
-  ASSERT(module != NULL, "Variable name cannot be NULL.");  
+  ASSERT(name != NULL, "Variable name cannot be NULL.");
   validateApiSlot(vm, slot);
   
   Value moduleName = wrenStringFormat(vm, "$", module);
@@ -1688,6 +1779,37 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   ASSERT(variableSlot != -1, "Could not find variable.");
   
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
+}
+
+void wrenSetVariable(WrenVM* vm, const char* module, const char* name,
+                     int slot)
+{
+  ASSERT(module != NULL, "Module cannot be NULL.");
+  ASSERT(name != NULL, "Variable name cannot be NULL.");
+  validateApiSlot(vm, slot);
+
+  Value moduleName = wrenStringFormat(vm, "$", module);
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+
+  ObjModule* moduleObj = getModule(vm, moduleName);
+  ASSERT(moduleObj != NULL, "Could not find module.");
+
+  wrenPopRoot(vm); // moduleName.
+
+  wrenDefineVariable(vm, moduleObj, name, strlen(name), vm->apiStack[slot]);
+}
+
+bool wrenModuleExists(WrenVM* vm, const char* module)
+{
+	ASSERT(module != NULL, "Module cannot be NULL.");
+
+	Value moduleName = wrenStringFormat(vm, "$", module);
+	wrenPushRoot(vm, AS_OBJ(moduleName));
+
+	ObjModule* moduleObj = getModule(vm, moduleName);
+
+	wrenPopRoot(vm); // moduleName.
+	return (moduleObj != NULL);
 }
 
 void wrenAbortFiber(WrenVM* vm, int slot)
