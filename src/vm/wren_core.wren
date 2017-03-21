@@ -302,6 +302,22 @@ class List is Sequence {
     }
     return result
   }
+
+  sort() { sortStep_(this) }
+
+  sortStep_(l) {
+    if (l.isEmpty) return l
+    return sortStep_(l[1..-1].where {|x| x < l[0] }.toList) + [l[0]] + 
+           sortStep_(l[1..-1].where {|x| x >= l[0] }.toList)
+  }
+
+  sort(key) { sortStep_(this, key) }
+
+  sortStep_(l, key) {
+    if (l.isEmpty) return l
+    return sortStep_(l[1..-1].where {|x| key.call(x) < key.call(l[0]) }.toList, key) + [l[0]] + 
+           sortStep_(l[1..-1].where {|x| key.call(x) >= key.call(l[0]) }.toList, key)
+  }
 }
 
 class Map is Sequence {
