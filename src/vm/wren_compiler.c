@@ -403,8 +403,8 @@ static void printError(Parser* parser, int line, const char* label,
   length += vsprintf(message + length, format, args);
   ASSERT(length < ERROR_MESSAGE_SIZE, "Error should not exceed buffer.");
   
-  parser->vm->config.errorFn(WREN_ERROR_COMPILE,
-                             parser->module->name->value, line, message, parser->vm);
+  parser->vm->config.errorFn(parser->vm, WREN_ERROR_COMPILE,
+                             parser->module->name->value, line, message);
 }
 
 // Outputs a compile or syntax error. This also marks the compilation as having

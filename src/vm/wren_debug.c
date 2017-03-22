@@ -10,13 +10,15 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
   ObjFiber* fiber = vm->fiber;
   if (IS_STRING(fiber->error))
   {
-    vm->config.errorFn(WREN_ERROR_RUNTIME, NULL, -1, AS_CSTRING(fiber->error), vm);
+    vm->config.errorFn(vm, WREN_ERROR_RUNTIME,
+                       NULL, -1, AS_CSTRING(fiber->error));
   }
   else
   {
     // TODO: Print something a little useful here. Maybe the name of the error's
     // class?
-    vm->config.errorFn(WREN_ERROR_RUNTIME, NULL, -1, "[error object]", vm);
+    vm->config.errorFn(vm, WREN_ERROR_RUNTIME,
+                       NULL, -1, "[error object]");
   }
 
   for (int i = fiber->numFrames - 1; i >= 0; i--)
@@ -34,8 +36,9 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
     
     // -1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
-    vm->config.errorFn(WREN_ERROR_STACK_TRACE, fn->module->name->value, line,
-                       fn->debug->name, vm);
+    vm->config.errorFn(vm, WREN_ERROR_STACK_TRACE,
+                       fn->module->name->value, line,
+                       fn->debug->name);
   }
 }
 

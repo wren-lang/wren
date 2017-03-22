@@ -96,7 +96,8 @@ typedef enum
 // Each of those has the module and line where the method or function is
 // defined and [message] is the name of the method or function.
 typedef void (*WrenErrorFn)(
-    WrenErrorType type, const char* module, int line, const char* message, WrenVM* vm);
+    WrenVM* vm, WrenErrorType type, const char* module, int line,
+    const char* message);
 
 typedef struct
 {
@@ -207,7 +208,7 @@ typedef struct
   // If zero, defaults to 50.
   int heapGrowthPercent;
 
-  // User defined state data associated with the WrenVM.
+  // User-defined data associated with the VM.
   void* userData;
 
 } WrenConfiguration;
