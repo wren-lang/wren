@@ -303,20 +303,50 @@ class List is Sequence {
     return result
   }
 
-  sort() { sortStep_(this) }
+  sort() { sort_(this.map {|n| [n, n] }.toList) }
 
-  sortStep_(l) {
-    if (l.isEmpty) return l
-    return sortStep_(l[1..-1].where {|x| x < l[0] }.toList) + [l[0]] + 
-           sortStep_(l[1..-1].where {|x| x >= l[0] }.toList)
+  sort(key) { sort_(this.map {|n| [n, key.call(n)] }.toList) }
+
+  sort_(A) {
+    var size = count
+    var width = 1
+
+    var B = A[0..-1]
+
+    while (width < size) {
+      var i = 0
+      while (i < size) {
+        merge_(A, B, i,
+          i+width < size ? i+width : size,
+          i+2*width < size ? i+2*width : size
+        )
+
+        i = i + 2 * width
+      }
+
+      var T = B
+      B = A
+      A = T
+
+      width = 2 * width
+    }
+
+    return A.map {|n| n[0] }.toList
   }
 
-  sort(key) { sortStep_(this, key) }
+  merge_(A, B, left, right, end) {
+    var i = left
+    var j = right
 
-  sortStep_(l, key) {
-    if (l.isEmpty) return l
-    return sortStep_(l[1..-1].where {|x| key.call(x) < key.call(l[0]) }.toList, key) + [l[0]] + 
-           sortStep_(l[1..-1].where {|x| key.call(x) >= key.call(l[0]) }.toList, key)
+    for (k in left...end) {
+      if (i < right && (j >= end || A[i][1] <= A[j][1])) {
+        B[k] = A[i]
+        i = i + 1
+      } else {
+        B[k] = A[j]
+        j = j + 1
+      }
+    }
   }
 }
 
