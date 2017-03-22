@@ -46,6 +46,7 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->initialHeapSize = 1024 * 1024 * 10;
   config->minHeapSize = 1024 * 1024;
   config->heapGrowthPercent = 50;
+  config->userData = NULL;
 }
 
 WrenVM* wrenNewVM(WrenConfiguration* config)
@@ -1694,4 +1695,14 @@ void wrenAbortFiber(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
   vm->fiber->error = vm->apiStack[slot];
+}
+
+void* wrenGetUserData(WrenVM* vm)
+{
+	return vm->config.userData;
+}
+
+void wrenSetUserData(WrenVM* vm, void* userData)
+{
+	vm->config.userData = userData;
 }
