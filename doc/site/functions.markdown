@@ -39,6 +39,8 @@ could be defined like so:
       }
     }
 
+    var blondie = Blondie.new()
+
 A method can take other arguments in addition to the block. They appear before
 the block just like a regular argument list. For example:
 
