@@ -303,50 +303,58 @@ class List is Sequence {
     return result
   }
 
-  sort() { sort_(this.map {|n| [n, n] }.toList) }
-
-  sort(key) { sort_(this.map {|n| [n, key.call(n)] }.toList) }
-
-  sort_(A) {
-    var size = count
-    var width = 1
-
-    var B = A[0..-1]
-
-    while (width < size) {
-      var i = 0
-      while (i < size) {
-        merge_(A, B, i,
-          i+width < size ? i+width : size,
-          i+2*width < size ? i+2*width : size
-        )
-
-        i = i + 2 * width
-      }
-
-      var T = B
-      B = A
-      A = T
-
-      width = 2 * width
-    }
-
-    return A.map {|n| n[0] }.toList
+  sorted() {
+    sort_(this, 0, count-1) {|n| n }
   }
 
-  merge_(A, B, left, right, end) {
-    var i = left
-    var j = right
+  sorted(key) {
+    sort_(this, 0, count-1, key)
+  }
 
-    for (k in left...end) {
-      if (i < right && (j >= end || A[i][1] <= A[j][1])) {
-        B[k] = A[i]
-        i = i + 1
-      } else {
-        B[k] = A[j]
-        j = j + 1
+  sort() { 
+    var l = this[0..-1]
+    sort_(l, 0, count-1) {|n| n }
+    return l 
+  }
+
+  sort(key) {
+    var l = this[0..-1]
+    sort_(l, 0, count-1, key)
+    return l
+  }
+
+  sort_(A, start, end, key) {
+    if (start < end) {
+      var pivot = partition(A, start, end, key)
+      sort_(A, start, pivot - 1, key)
+      sort_(A, pivot + 1, end, key)
+    }
+  }
+
+  partition(A, start, end, key) {
+    var pivot = ((start + end) / 2).floor
+
+    var pivotValue = key.call(A[pivot])
+    var i = start
+
+    var t = A[pivot]
+    A[pivot] = A[end]
+    A[end] = t
+
+    for (j in start..end) {
+      if (key.call(A[j]) < pivotValue) {
+        var t = A[j]
+        A[j] = A[i]
+        A[i] = t
+        i = i+1
       }
     }
+
+    t = A[end]
+    A[end] = A[i]
+    A[i] = t
+
+    return i
   }
 }
 
