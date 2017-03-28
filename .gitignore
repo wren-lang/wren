@@ -4,8 +4,9 @@
 /wren
 
 # Intermediate files.
-/build
-/deps
+build/
+deps/
+obj/
 /.sass-cache
 *.pyc
 
@@ -24,6 +25,7 @@ xcuserdata/
 !wren_lib/
 
 # Visual Studio cache files.
+.vs/
 ipch/
 *.aps
 *.ncb
