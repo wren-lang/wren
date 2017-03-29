@@ -110,3 +110,40 @@ backwards from the end of the list where `-1` is the last element.
     System.print(list) //> [a, new, c]
 
 It is a runtime error if the index is not an integer or is out of bounds.
+
+### **sort**()
+
+Sorts the list in place.
+
+    :::wren
+    var list = [3, 4, 2, 1]
+    list.sort()
+    System.print(list) //> [1, 2, 3, 4]
+
+### **sort**(key)
+
+Sorts the list in place using the key to calculate the sorting value.
+
+    :::wren
+    var list = [3, 4, 2, 1]
+    list.sort {|n| -n }
+    System.print(list) //> [4, 3, 2, 1]
+
+It is a runtime error if the key is not a function.
+
+### **sorted**()
+
+Returns a sorted copy of the list.
+
+    :::wren
+    System.print([3, 4, 2, 1].sorted()) //> [1, 2, 3, 4]
+
+### **sorted**(key)
+
+Returns a sorted copy of the list. The key is used to calculate the 
+sorting value.
+
+    :::wren
+    System.print([3, 4, 2, 1].sorted {|n| -n }) //> [4, 3, 2, 1]
+
+It is a runtime error if the key is not a function.

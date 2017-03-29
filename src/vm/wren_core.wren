@@ -303,21 +303,29 @@ class List is Sequence {
     return result
   }
 
-  sorted() {
+  sort() {
     sort_(this, 0, count-1) {|n| n }
   }
 
-  sorted(key) {
+  sort(key) {
+    if (!(key is Fn)) {
+        Fiber.abort("Key must be a function.")
+    }
+
     sort_(this, 0, count-1, key)
   }
 
-  sort() { 
+  sorted() { 
     var l = this[0..-1]
     sort_(l, 0, count-1) {|n| n }
     return l 
   }
 
-  sort(key) {
+  sorted(key) {
+    if (!(key is Fn)) {
+        Fiber.abort("Key must be a function.")
+    }
+    
     var l = this[0..-1]
     sort_(l, 0, count-1, key)
     return l
