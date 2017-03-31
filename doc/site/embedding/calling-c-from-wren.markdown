@@ -33,7 +33,7 @@ implemented in C. Both static and instance methods can be foreign.
 When you call a foreign method, Wren needs to figure out which C function to
 execute. This process is called *binding*. Binding is performed on-demand by the
 VM. When a class that declares a foreign method is executed -- when the `class`
-statement itself is evaluated -- the VM askes the host application for the C
+statement itself is evaluated -- the VM asks the host application for the C
 function that should be used for the foreign method.
 
 It does this through the `bindForeignMethodFn` callback you give it when you
