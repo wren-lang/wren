@@ -67,6 +67,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
     wrenInitConfiguration(&vm->config);
   }
 
+  vm->isSourceAllocated = 0;
   // TODO: Should we allocate and free this during a GC?
   vm->grayCount = 0;
   // TODO: Tune this.
@@ -506,6 +507,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
      void * check = vm->config.reallocateFn((void *) source, 0);
      if(check)
       return NULL;
+    vm->isSourceAllocated = 0;
   }
   if (fn == NULL)
   {
