@@ -255,6 +255,8 @@ void wrenFreeVM(WrenVM* vm);
 // Immediately run the garbage collector to free unused memory.
 void wrenCollectGarbage(WrenVM* vm);
 
+void * scalloc(WrenVM * vm, size_t size);
+
 // Runs [source], a string of Wren source code in a new fiber in [vm].
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source);
 
