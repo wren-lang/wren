@@ -79,11 +79,11 @@ struct WrenVM
   Obj* tempRoots[WREN_MAX_TEMP_ROOTS];
 
   int numTempRoots;
-  
+
   // Pointer to the first node in the linked list of active handles or NULL if
   // there are none.
   WrenHandle* handles;
-  
+
   // Pointer to the bottom of the range of stack slots available for use from
   // the C API. During a foreign method, this will be in the stack of the fiber
   // that is executing a method.
@@ -94,7 +94,7 @@ struct WrenVM
   Value* apiStack;
 
   WrenConfiguration config;
-  
+
   // Compiler and debugger data:
 
   // The compiler that is currently compiling code. This is used so that heap
@@ -105,6 +105,8 @@ struct WrenVM
   // There is a single global symbol table for all method names on all classes.
   // Method calls are dispatched directly by index in this table.
   SymbolTable methodNames;
+
+  short int isSourceAllocated;
 };
 
 // A generic allocation function that handles all explicit memory management.
