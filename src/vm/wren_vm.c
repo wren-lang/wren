@@ -84,7 +84,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 void wrenFreeVM(WrenVM* vm)
 {
   ASSERT(vm->methodNames.count > 0, "VM appears to have already been freed.");
-
+  
   // Free all of the GC objects.
   Obj* obj = vm->first;
   while (obj != NULL)
@@ -1346,6 +1346,7 @@ Value wrenImportModule(WrenVM* vm, Value name)
   if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
 
   const char* source = NULL;
+  bool allocatedSource = true;
 
   // Let the host try to provide the module.
   if (vm->config.loadModuleFn != NULL)
@@ -1363,6 +1364,10 @@ Value wrenImportModule(WrenVM* vm, Value name)
 #if WREN_OPT_RANDOM
     if (strcmp(nameString->value, "random") == 0) source = wrenRandomSource();
 #endif
+    
+    // TODO: Should we give the host the ability to provide strings that don't
+    // need to be freed?
+    allocatedSource = false;
   }
   
   if (source == NULL)
@@ -1372,6 +1377,12 @@ Value wrenImportModule(WrenVM* vm, Value name)
   }
   
   ObjFiber* moduleFiber = loadModule(vm, name, source);
+  
+  // Modules loaded by the host are expected to be dynamically allocated with
+  // ownership given to the VM, which will free it. The built in optional
+  // modules are constant strings which don't need to be freed.
+  if (allocatedSource) DEALLOCATE(vm, (char*)source);
+  
   if (moduleFiber == NULL)
   {
     vm->fiber->error = wrenStringFormat(vm,
