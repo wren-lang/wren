@@ -77,7 +77,7 @@ def build_libuv(arch, out):
 def main(args):
   expect_usage(len(args) >= 1 and len(args) <= 2)
 
-  arch = "" if len(args) < 2 else args[2]
+  arch = "" if len(args) < 2 else args[1]
   out = os.path.join("build", "libuv" + arch + ".a")
 
   build_libuv(arch, out)
