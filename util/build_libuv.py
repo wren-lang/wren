@@ -43,7 +43,7 @@ def build_libuv_linux(arch):
     args.append("-Dtarget_arch=x64")
 
   run(args, cwd=LIB_UV_DIR)
-  run(["make", "-C", "out", "BUILDTYPE=Release"], cwd=LIB_UV_DIR)
+  run(["make", "-C", "out", "BUILDTYPE=Release", "libuv"], cwd=LIB_UV_DIR)
 
 
 def build_libuv_windows(arch):
