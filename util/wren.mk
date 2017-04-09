@@ -213,13 +213,10 @@ $(BUILD_DIR)/test/%.o: test/api/%.c $(OPT_HEADERS) $(MODULE_HEADERS) \
 	$(V) mkdir -p $(dir $@)
 	$(V) $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
-# Download libuv.
-$(LIBUV_DIR)/build/gyp/gyp: util/libuv.py
-	$(V) ./util/libuv.py download
-
 # Build libuv to a static library.
-$(LIBUV): $(LIBUV_DIR)/build/gyp/gyp util/libuv.py
-	$(V) ./util/libuv.py build $(LIBUV_ARCH)
+$(LIBUV): $(LIBUV_DIR)/build/gyp/gyp util/update_deps.py
+	@ printf "%10s %-30s %s\n" run util/build_libuv.py
+	$(V) ./util/build_libuv.py $(LIBUV_ARCH)
 
 # Wren modules that get compiled into the binary as C strings.
 src/optional/wren_opt_%.wren.inc: src/optional/wren_opt_%.wren util/wren_to_c_string.py

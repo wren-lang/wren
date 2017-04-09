@@ -11,9 +11,10 @@ endif
 # Executables are built to bin/. Libraries are built to lib/.
 
 # A normal, optimized release build for the current CPU architecture.
+# For convenience, also copies the interpreter to the top level.
 release:
 	$(V) $(MAKE) -f util/wren.mk
-	$(V) cp bin/wren wren # For convenience, copy the interpreter to the top level.
+	$(V) cp bin/wren wren
 
 # A debug build for the current architecture.
 debug:
@@ -73,10 +74,6 @@ clean:
 	$(V) rm -rf bin
 	$(V) rm -rf build
 	$(V) rm -rf lib
-
-# Remove all build outputs, intermediate files, and downloaded dependencies.
-cleanall: clean
-	$(V) rm -rf deps
 
 # Run the tests against the debug build of Wren.
 test: debug

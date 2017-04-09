@@ -26,10 +26,9 @@ If you're on a Unix or Mac and you can rock a command line, it's just:
     $ make
     $ ./wren
 
-This builds both the VM and the CLI. It downloads libuv automatically for you.
-The release build of the CLI goes right into the repo's top level directory.
-Binaries for other configurations are built to `bin/`. Static and shared
-libraries for embedding Wren get built in `lib/`.
+This builds both the VM and the CLI. The release build of the CLI goes right
+into the repo's top level directory. Binaries for other configurations are built
+to `bin/`. Static and shared libraries for embedding Wren get built in `lib/`.
 
 For Mac users, there is also an XCode project under `util/xcode`. For
 Windows brethren, `util/msvc2013` contains a Visual Studio solution. Note
@@ -41,8 +40,7 @@ If you only want to build the VM, you can do:
     :::sh
     $ make vm
 
-This compiles the VM to static and shared libraries. It does not even download
-libuv since it isn't needed.
+This compiles the VM to static and shared libraries.
 
 ## Interactive mode
 

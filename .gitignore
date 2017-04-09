@@ -4,11 +4,12 @@
 /wren
 
 # Intermediate files.
-build/
-deps/
-obj/
+/build
+/obj
 /.sass-cache
 *.pyc
+/util/vs2017/build
+/util/vs2017/obj
 
 # I leave a temporary Wren script at the top level so that I can quickly test
 # stuff.
