@@ -394,3 +394,194 @@ class System {
     }
   }
 }
+
+class Set {
+  construct new() {
+      _root = null
+      _header = __SetNode.new(null) //avoid recreation
+  }
+
+  insert(value) {
+      if ( !_root ) {
+          _root = __SetNode.new(value)
+          return true
+      }
+
+      splay(value)
+      if ( _root.data == value ) return false //already there
+
+      var node = __SetNode.new(value)
+      if ( value < _root.data ) {
+          node.left = _root.left
+          node.right = _root
+          _root.left = null
+      } else {
+          node.right = _root.right
+          node.left = _root
+          _root.right = null
+      }
+
+      _root = node
+      return true
+  }
+
+  remove(value) {
+      if ( !_root ) return false
+      
+      splay(value)
+      if ( value != _root.data ) return false //not there
+
+      //delete the root
+      if ( !_root.left ) {
+          _root = _root.right
+      } else {
+          var node = _root.right
+          _root = _root.left
+          splay(value)
+          _root.right = node
+      }
+
+      return true
+  }
+
+  splay(value) {
+      var left = _header
+      var right = _header
+      var node = _root
+
+      _header.left = _header.right = null
+      
+      while ( true ) {
+          if ( value < node.data ) {
+              if ( !node.left ) break
+
+              if ( value < node.left.data ) {
+                  var y = node.left
+                  node.left = y.right
+                  y.right = node
+                  node = y
+
+                  if ( !node.left ) break
+              }
+
+              right.left = node
+              right = node
+              node = node.left
+          } else if ( value == node.data ) {
+              break
+          } else {
+              if ( !node.right ) break
+
+              if ( value > node.right.data ) {
+                  var y = node.right
+                  node.right = y.left
+                  y.left = node
+                  node = y
+
+                  if ( !node.right ) break
+              }
+
+              left.right = node
+              left = node
+              node = node.right
+          }
+      }
+
+      left.right = node.left
+      right.left = node.right
+      node.left = _header.right
+      node.right = _header.left
+      _root = node
+      return true
+  }
+
+  contains(value) {
+      if ( !_root ) return false
+      
+      splay(value)
+      if ( _root.data != value ) {
+        return false
+      } else {
+        return true
+      }
+  }
+
+  max {
+      if ( !_root ) return null
+
+      var node = _root
+      while ( node.right ) node = node.right
+      splay(node.data)
+      return node.data
+  }
+
+  min {
+      if ( !_root ) return null
+
+      var node = _root
+      while ( node.left ) node = node.left
+      splay(node.data)
+      return node.data
+  }
+
+
+  empty {
+      if ( _root ) {
+          return false
+      } else {
+          return true
+      }
+  }
+
+  //I think calling like a function is better
+  clear() {
+      _root = null
+  }
+
+  succ(value) {
+      if ( !_root ) return null
+      
+      splay(value)
+      if ( _root.data != value || !_root.right ) {
+          return null
+      } else {
+          var node = _root.right
+          while ( node.left ) node = node.left
+
+          return node.data
+      }
+  }
+
+  pred(value) {
+      if ( !_root ) return null
+      
+      splay(value)
+      if ( _root.data != value || !_root.left ) {
+          return null
+      } else {
+          var node = _root.left
+          while ( node.right ) node = node.right
+
+          return node.data
+      }
+  }
+  
+  static init() {
+      class SetNode {
+          left { _left }
+          right { _right }
+          data { _data }
+
+          left=(left) { _left = left }
+          right=(right) { _right = right }
+          data=(data) { _data }
+
+          construct new(data) {
+              _data = data
+          }
+      }
+
+      __SetNode = SetNode
+  }
+}
+Set.init()
