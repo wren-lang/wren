@@ -375,6 +375,14 @@ class System {
     for (object in sequence) writeObject_(object)
     writeString_("\n")
   }
+  
+  static puts() {
+    writeString_("")
+  }
+  
+  static puts(obj) {
+    writeObject_(obj)
+  }
 
   static write(obj) {
     writeObject_(obj)
