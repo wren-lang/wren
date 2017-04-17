@@ -140,13 +140,16 @@ CLI_FLAGS := -D_XOPEN_SOURCE=600 -Isrc/include -I$(LIBUV_DIR)/include \
 all: vm cli
 
 # Builds just the VM libraries.
-vm: shared static
+vm: shared static bytecode
 
 # Builds the shared VM library.
 shared: lib/lib$(WREN).$(SHARED_EXT)
 
 # Builds the static VM library.
 static: lib/lib$(WREN).a
+
+# Builds the VM library in bytecode.
+bytecode: lib/lib$(WREN).bc
 
 # Builds just the CLI interpreter.
 cli: bin/$(WREN)
@@ -169,6 +172,12 @@ lib/lib$(WREN).a: $(OPT_OBJECTS) $(VM_OBJECTS)
 
 # Shared library.
 lib/lib$(WREN).$(SHARED_EXT): $(OPT_OBJECTS) $(VM_OBJECTS)
+	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS) $(SHARED_LIB_FLAGS)"
+	$(V) mkdir -p lib
+	$(V) $(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
+
+# Bytecode.
+lib/lib$(WREN).bc: $(VM_OBJECTS)
 	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS) $(SHARED_LIB_FLAGS)"
 	$(V) mkdir -p lib
 	$(V) $(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
