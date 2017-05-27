@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "os.h"
 #include "wren.h"
 
@@ -68,4 +70,32 @@ void processAllArguments(WrenVM* vm)
     wrenSetSlotString(vm, 1, args[i]);
     wrenInsertInList(vm, 0, -1, 1);
   }
+}
+
+void spawnSubprocess(WrenVM* vm)
+{
+	// the number of args in the command
+	int argsCount = wrenGetListCount(vm, 1);
+
+	// an array of strings to store the args
+	// makes mallocs in a loop, bad idea, but I don't know a better one
+	// and this shouldn't be too hot/performant anyway
+	char **args;
+	args = malloc(argsCount * sizeof(char*));
+
+	//ensure we have enough slots to store the args:
+	const int numberOfPreExitingSlots = 3;
+	wrenEnsureSlots(vm, numberOfPreExitingSlots + argsCount);
+
+	// get each arg out of the command array
+	for(int i = 0; i < argsCount; i++){
+		
+	}
+
+	printf("argsCount: %d", argsCount);
+}
+
+void callSubprocess(WrenVM* vm)
+{
+
 }

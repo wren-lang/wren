@@ -11,3 +11,20 @@ class Process {
 
   foreign static allArguments
 }
+
+class Subprocess {
+	//will launch a subproces, and calls fn with the process' PID
+	static spawn(command, fn){
+		spawn_(command, fn)
+		fn.call(1234)
+	}
+	//will launch a subprocess, and run a function with the subprocess' STDOUT
+	//once the subprocess has terminated
+	static call(command, fn){
+
+		fn.call("'STDOUT of %(command)'")
+	}
+
+	foreign static spawn_(command, fn)
+	foreign static call_(command, fn)
+}
