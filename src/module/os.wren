@@ -15,8 +15,7 @@ class Process {
 class Subprocess {
 	//will launch a subproces, and calls fn with the process' PID
 	static spawn(command, fn){
-		spawn_(command, fn)
-		fn.call(1234)
+		fn.call(spawn_(command, fn))
 	}
 	//will launch a subprocess, and run a function with the subprocess' STDOUT
 	//once the subprocess has terminated

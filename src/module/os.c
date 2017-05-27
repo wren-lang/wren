@@ -1,5 +1,9 @@
 #include <stdio.h>
+#include <string.h>
 
+#include "uv.h"
+
+#include "vm.h"
 #include "os.h"
 #include "wren.h"
 
@@ -72,6 +76,12 @@ void processAllArguments(WrenVM* vm)
   }
 }
 
+void on_exit(uv_process_t *req, int64_t exit_status, int term_signal)
+{
+    printf("Process exited with status, signal %d\n", term_signal);
+    uv_close((uv_handle_t*) req, NULL);
+}
+
 void spawnSubprocess(WrenVM* vm)
 {
 	// the number of args in the command
@@ -81,7 +91,7 @@ void spawnSubprocess(WrenVM* vm)
 	// makes mallocs in a loop, bad idea, but I don't know a better one
 	// and this shouldn't be too hot/performant anyway
 	char **args;
-	args = malloc(argsCount * sizeof(char*));
+	args = malloc( ( argsCount  +  1 ) * sizeof(char*));
 
 	//ensure we have enough slots to store the args:
 	const int numberOfPreExitingSlots = 3;
@@ -89,10 +99,44 @@ void spawnSubprocess(WrenVM* vm)
 
 	// get each arg out of the command array
 	for(int i = 0; i < argsCount; i++){
-		
+		int length;
+
+		//put the ith element into a slot to be read
+		wrenGetListElement(vm, 1, i, i + numberOfPreExitingSlots);
+
+		//read from the slot
+		const char* wrenString = wrenGetSlotBytes(vm, i + numberOfPreExitingSlots, &length);
+
+		//include the \0 character at the end
+		length++;
+
+		//move string into a locally managed store, REMEMBER TO FREE THIS!!!
+		args[i] = malloc(length * sizeof(char));
+		memcpy(args[i], wrenString, length);
+	}
+	//required by libuv
+	args[argsCount] = NULL;
+
+
+	uv_process_t child_req;
+	uv_process_options_t options = {0};
+
+	options.exit_cb = on_exit;
+	options.file = args[0];
+	options.args = args;
+
+	int r;
+	if ((r = uv_spawn(getLoop(), &child_req, &options))) {
+		printf( "error: %s\n", uv_strerror(r));
+	} else {
+		wrenSetSlotDouble(vm, 0, (double)(child_req.pid));
 	}
 
-	printf("argsCount: %d", argsCount);
+	//free args memory
+	for(int i = 0; i < argsCount; i++){
+		free(args[i]);
+	}
+	free(args);
 }
 
 void callSubprocess(WrenVM* vm)
