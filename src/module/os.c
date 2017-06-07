@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "uv.h"
 
@@ -76,11 +77,40 @@ void processAllArguments(WrenVM* vm)
   }
 }
 
-void on_exit(uv_process_t *req, int64_t exit_status, int term_signal)
-{
-    printf("Process exited with status, signal %d\n", term_signal);
-    uv_close((uv_handle_t*) req, NULL);
+
+/* subprocess callbacks and variables */
+void on_exit(uv_process_t *req, int64_t exit_status, int term_signal) {
+	fprintf(stderr, "Process exited with status %" PRId64 ", signal %d\n", exit_status, term_signal);
+	uv_close((uv_handle_t*) req, NULL);
 }
+
+static void alloc_buffer(uv_handle_t* handle, size_t suggestedSize,
+                          uv_buf_t* buf) 
+{
+  // TODO: Handle allocation failure.
+  buf->base = (char*)malloc(suggestedSize);
+  buf->len = suggestedSize;
+}
+
+void read_apipe(uv_stream_t* stream, ssize_t numRead,
+                              const uv_buf_t* buffer) {
+
+    printf("read %li bytes in a %lu byte buffer\n", numRead, buffer->len);
+
+    if (numRead + 1 > (unsigned int)(buffer->len) 
+     ||
+		 numRead == UV_EOF ){
+		printf("wew, lad");
+		return;
+	}
+
+    buffer->base[numRead] = '\0'; // turn it into a cstring
+    printf("read: |%s|", buffer->base);
+}
+
+uv_process_t child_req;
+uv_process_options_t options;
+uv_pipe_t apipe;
 
 void spawnSubprocess(WrenVM* vm)
 {
@@ -90,6 +120,9 @@ void spawnSubprocess(WrenVM* vm)
 	// an array of strings to store the args
 	// makes mallocs in a loop, bad idea, but I don't know a better one
 	// and this shouldn't be too hot/performant anyway
+	// 
+	// we could do some calculations to store all the strings in one malloc,
+	// discuss the pros/cons of performance vs readable code.
 	char **args;
 	args = malloc( ( argsCount  +  1 ) * sizeof(char*));
 
@@ -117,10 +150,19 @@ void spawnSubprocess(WrenVM* vm)
 	//required by libuv
 	args[argsCount] = NULL;
 
+	//prepare the pipe for stdout
+    uv_pipe_init(getLoop(), &apipe, 0);
+    uv_pipe_open(&apipe, 0);
 
-	uv_process_t child_req;
-	uv_process_options_t options = {0};
+	//spawn options
+    uv_stdio_container_t child_stdio[3];
+    child_stdio[0].flags = UV_IGNORE;
+    child_stdio[1].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
+    child_stdio[1].data.stream = (uv_stream_t *) &apipe;
+    child_stdio[2].flags = UV_IGNORE;
 
+    options.stdio = child_stdio;
+    options.stdio_count = 3;
 	options.exit_cb = on_exit;
 	options.file = args[0];
 	options.args = args;
@@ -128,7 +170,10 @@ void spawnSubprocess(WrenVM* vm)
 	int r;
 	if ((r = uv_spawn(getLoop(), &child_req, &options))) {
 		printf( "error: %s\n", uv_strerror(r));
-	} else {
+	}
+	else {
+		uv_read_start((uv_stream_t*)&apipe, alloc_buffer, read_apipe);
+		fprintf(stderr, "Launched process with ID %d\n", child_req.pid);
 		wrenSetSlotDouble(vm, 0, (double)(child_req.pid));
 	}
 
@@ -139,7 +184,3 @@ void spawnSubprocess(WrenVM* vm)
 	free(args);
 }
 
-void callSubprocess(WrenVM* vm)
-{
-
-}

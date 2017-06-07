@@ -1,5 +1,5 @@
 import "os" for Subprocess
 
-var callBack = Fn.new { |PID| System.print("PID: %( PID )")} // expect: PID: 1234
+var subprocess = Subprocess.spawn(["cat", "/tmp/foo.bar"])
 
-Subprocess.spawn(["file", "/tmp/foo.bar"], callBack) 
+System.print(subprocess.stdout) //expect big bants

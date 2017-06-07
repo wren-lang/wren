@@ -13,17 +13,16 @@ class Process {
 }
 
 class Subprocess {
+	pid { _pid }
+	exitCode { _exitCode }
+	stdout { _stdout }
+
 	//will launch a subproces, and calls fn with the process' PID
-	static spawn(command, fn){
-		fn.call(spawn_(command, fn))
-	}
-	//will launch a subprocess, and run a function with the subprocess' STDOUT
-	//once the subprocess has terminated
-	static call(command, fn){
-
-		fn.call("'STDOUT of %(command)'")
+	construct spawn(command){
+		_stdout = Subprocess.spawn_(command)
+		_pid = null
+		_exitCode = null
 	}
 
-	foreign static spawn_(command, fn)
-	foreign static call_(command, fn)
+	foreign static spawn_(command)
 }
