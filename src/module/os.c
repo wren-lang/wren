@@ -79,38 +79,62 @@ void processAllArguments(WrenVM* vm)
 
 
 /* subprocess callbacks and variables */
-void on_exit(uv_process_t *req, int64_t exit_status, int term_signal) {
-	fprintf(stderr, "Process exited with status %" PRId64 ", signal %d\n", exit_status, term_signal);
+void on_exit(uv_process_t *req, int64_t exit_status, int term_signal)
+{
 	uv_close((uv_handle_t*) req, NULL);
 }
 
-static void alloc_buffer(uv_handle_t* handle, size_t suggestedSize,
-                          uv_buf_t* buf) 
+static void alloc_buffer(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf) 
 {
   // TODO: Handle allocation failure.
   buf->base = (char*)malloc(suggestedSize);
   buf->len = suggestedSize;
 }
 
-void read_out(uv_stream_t* stream, ssize_t numRead,
-                              const uv_buf_t* buffer) {
+typedef struct subprocessBundle {
+	bool running;
+	uv_process_t child_req;
+	uv_process_options_t options;
+	uv_pipe_t out;
+	uv_stdio_container_t stdio[2];
+} subprocessBundle;
 
+#define NUMBER_OF_SUB_PROCESSES 4
+
+subprocessBundle subprocesses[NUMBER_OF_SUB_PROCESSES];
+
+void read_out(uv_stream_t* stream, ssize_t numRead, const uv_buf_t* buffer)
+{
     if (numRead + 1 > (unsigned int)(buffer->len) || numRead == UV_EOF ){
 		return;
 	}
 
     buffer->base[numRead] = '\0'; // turn it into a cstring
-    printf("read: |%s|", buffer->base);
-}
 
-uv_process_t child_req;
-uv_process_options_t options;
-uv_pipe_t in;
-uv_pipe_t out;
-uv_stdio_container_t stdio[2];
+	for(int i = 0; i < NUMBER_OF_SUB_PROCESSES; i++){
+		if(stream == ( (uv_stream_t*) &subprocesses[i].out ) ){
+			fprintf(stderr, "got stdout for %d\n", subprocesses[i].child_req.pid);
+			printf("read: |%s|", buffer->base);
+			break;
+		}
+	}
+}
 
 void spawnSubprocess(WrenVM* vm)
 {
+
+	//find a subprocessBundle to use
+	//limited to a constant number of subprocess ATM
+	int bundleN = 0;
+
+	for(int i = 0; i < NUMBER_OF_SUB_PROCESSES; i++){
+		if(!subprocesses[i].running){
+			subprocesses[i].running = true;
+			bundleN = i;
+			break;
+		}
+	}
+
 	// the number of args in the command
 	int argsCount = wrenGetListCount(vm, 1);
 
@@ -148,35 +172,26 @@ void spawnSubprocess(WrenVM* vm)
 	args[argsCount] = NULL;
 
 	//prepare the pipe for stdout
-	uv_pipe_init(getLoop(), &in, 0);
-	uv_pipe_init(getLoop(), &out, 0);
-
-	/*uv_pipe_open(&out, 0);*/
-	/*uv_unref((uv_handle_t*)&out);*/
+	uv_pipe_init(getLoop(), &subprocesses[bundleN].out, 0);
 
 	//spawn options
-	 
-	options.stdio = stdio;
-	stdio[0].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
-	stdio[0].data.stream = (uv_stream_t*)&in;
-	stdio[1].flags = UV_CREATE_PIPE | UV_WRITABLE_PIPE;
-	stdio[1].data.stream = (uv_stream_t*)&out;
-	options.stdio_count = 2;
+	subprocesses[bundleN].options.stdio = subprocesses[bundleN].stdio;
+	subprocesses[bundleN].stdio[0].flags = UV_IGNORE;
+	subprocesses[bundleN].stdio[1].flags = UV_CREATE_PIPE | UV_WRITABLE_PIPE;
+	subprocesses[bundleN].stdio[1].data.stream = (uv_stream_t*)&subprocesses[bundleN].out;
+	subprocesses[bundleN].options.stdio_count = 2;
 
-	options.exit_cb = on_exit;
-	options.file = args[0];
-	options.args = args;
-
-	printf("ewew: %s %s \n", options.file, args[1]);
+	subprocesses[bundleN].options.exit_cb = on_exit;
+	subprocesses[bundleN].options.file = args[0];
+	subprocesses[bundleN].options.args = args;
 
 	int r;
-	if ((r = uv_spawn(getLoop(), &child_req, &options))) {
+	if ((r = uv_spawn(getLoop(), &(subprocesses[bundleN].child_req), &(subprocesses[bundleN].options)))) {
 		printf( "error: %s\n", uv_strerror(r));
 	}
 	else {
-		uv_read_start((uv_stream_t*)&out, alloc_buffer, read_out);
-		fprintf(stderr, "Launched process with ID %d\n", child_req.pid);
-		wrenSetSlotDouble(vm, 0, (double)(child_req.pid));
+		uv_read_start((uv_stream_t*)&subprocesses[bundleN].out, alloc_buffer, read_out);
+		wrenSetSlotDouble(vm, 0, (double)(subprocesses[bundleN].child_req.pid));
 	}
 
 	//free args memory
