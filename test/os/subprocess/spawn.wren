@@ -1,5 +1,12 @@
 import "os" for Subprocess
 
-var subprocess = Subprocess.spawn(["cat", "/tmp/foo.bar"])
+var cat = Subprocess.spawn(["ls", "/"])
+var catOut = cat.stdOut
 
-System.print(subprocess.stdout) //expect big bants
+var out = catOut.call()
+System.print("out: %( out )")
+
+cat.onOutCB = Fn.new {
+	var out = catOut.call()
+	System.print("out: %( out )")
+} 

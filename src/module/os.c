@@ -92,15 +92,10 @@ static void alloc_buffer(uv_handle_t* handle, size_t suggestedSize,
   buf->len = suggestedSize;
 }
 
-void read_apipe(uv_stream_t* stream, ssize_t numRead,
+void read_out(uv_stream_t* stream, ssize_t numRead,
                               const uv_buf_t* buffer) {
 
-    printf("read %li bytes in a %lu byte buffer\n", numRead, buffer->len);
-
-    if (numRead + 1 > (unsigned int)(buffer->len) 
-     ||
-		 numRead == UV_EOF ){
-		printf("wew, lad");
+    if (numRead + 1 > (unsigned int)(buffer->len) || numRead == UV_EOF ){
 		return;
 	}
 
@@ -110,7 +105,9 @@ void read_apipe(uv_stream_t* stream, ssize_t numRead,
 
 uv_process_t child_req;
 uv_process_options_t options;
-uv_pipe_t apipe;
+uv_pipe_t in;
+uv_pipe_t out;
+uv_stdio_container_t stdio[2];
 
 void spawnSubprocess(WrenVM* vm)
 {
@@ -151,28 +148,33 @@ void spawnSubprocess(WrenVM* vm)
 	args[argsCount] = NULL;
 
 	//prepare the pipe for stdout
-    uv_pipe_init(getLoop(), &apipe, 0);
-    uv_pipe_open(&apipe, 0);
+	uv_pipe_init(getLoop(), &in, 0);
+	uv_pipe_init(getLoop(), &out, 0);
+
+	/*uv_pipe_open(&out, 0);*/
+	/*uv_unref((uv_handle_t*)&out);*/
 
 	//spawn options
-    uv_stdio_container_t child_stdio[3];
-    child_stdio[0].flags = UV_IGNORE;
-    child_stdio[1].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
-    child_stdio[1].data.stream = (uv_stream_t *) &apipe;
-    child_stdio[2].flags = UV_IGNORE;
+	 
+	options.stdio = stdio;
+	stdio[0].flags = UV_CREATE_PIPE | UV_READABLE_PIPE;
+	stdio[0].data.stream = (uv_stream_t*)&in;
+	stdio[1].flags = UV_CREATE_PIPE | UV_WRITABLE_PIPE;
+	stdio[1].data.stream = (uv_stream_t*)&out;
+	options.stdio_count = 2;
 
-    options.stdio = child_stdio;
-    options.stdio_count = 3;
 	options.exit_cb = on_exit;
 	options.file = args[0];
 	options.args = args;
+
+	printf("ewew: %s %s \n", options.file, args[1]);
 
 	int r;
 	if ((r = uv_spawn(getLoop(), &child_req, &options))) {
 		printf( "error: %s\n", uv_strerror(r));
 	}
 	else {
-		uv_read_start((uv_stream_t*)&apipe, alloc_buffer, read_apipe);
+		uv_read_start((uv_stream_t*)&out, alloc_buffer, read_out);
 		fprintf(stderr, "Launched process with ID %d\n", child_req.pid);
 		wrenSetSlotDouble(vm, 0, (double)(child_req.pid));
 	}
@@ -183,4 +185,3 @@ void spawnSubprocess(WrenVM* vm)
 	}
 	free(args);
 }
-
