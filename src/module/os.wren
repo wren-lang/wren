@@ -70,8 +70,9 @@ class Subprocess {
 		__onExitCBs[_pid] = Fn.new {}
 	}
 
-	static recieveStdOut(pid, stdOut){
+	static recieveStdOut_(pid, stdOut){
 		__stdOutBuffers[pid] = __stdOutBuffers[pid] + stdOut
+		__onOutCBs[pid].call()
 	}
 
 	foreign static spawn_(command)

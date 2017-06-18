@@ -103,6 +103,9 @@ typedef struct subprocessBundle {
 
 subprocessBundle subprocesses[NUMBER_OF_SUB_PROCESSES];
 
+WrenHandle* SubprocessClass;
+WrenHandle* recieveStdOutMethod;
+
 void read_out(uv_stream_t* stream, ssize_t numRead, const uv_buf_t* buffer)
 {
     if (numRead + 1 > (unsigned int)(buffer->len) || numRead == UV_EOF ){
@@ -113,8 +116,33 @@ void read_out(uv_stream_t* stream, ssize_t numRead, const uv_buf_t* buffer)
 
 	for(int i = 0; i < NUMBER_OF_SUB_PROCESSES; i++){
 		if(stream == ( (uv_stream_t*) &subprocesses[i].out ) ){
-			fprintf(stderr, "got stdout for %d\n", subprocesses[i].child_req.pid);
-			printf("read: |%s|", buffer->base);
+			/*fprintf(stderr, "got stdout for %d\n", subprocesses[i].child_req.pid);*/
+			/*printf("read: |%s|", buffer->base);*/
+
+			//call wren::Subprocess::recieveStdOut(_, _)
+			//
+			// Load the class into slot 0.
+			WrenVM* vm = getVM();
+			
+			wrenEnsureSlots(vm, 3);
+			if(!SubprocessClass){
+				wrenGetVariable(vm, "os", "Subprocess", 0);
+				SubprocessClass = wrenGetSlotHandle(vm, 0);
+			}
+
+			if(!recieveStdOutMethod){
+				recieveStdOutMethod = wrenMakeCallHandle(
+					vm,
+					"recieveStdOut_(_,_)"
+				);
+			}
+
+			wrenSetSlotHandle(vm, 0, SubprocessClass);
+			wrenSetSlotDouble(vm, 1, (double) subprocesses[i].child_req.pid);
+			wrenSetSlotString(vm, 2, buffer->base);
+
+			wrenCall(vm, recieveStdOutMethod);
+
 			break;
 		}
 	}

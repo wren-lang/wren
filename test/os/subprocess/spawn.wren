@@ -1,10 +1,7 @@
 import "os" for Subprocess
 
-var cat = Subprocess.spawn(["ls", "/"])
+var cat = Subprocess.spawn(["curl", "https://api.cryptonator.com/api/ticker/btc-eth"])
 var catOut = cat.stdOut
-
-var out = catOut.call()
-System.print("out: %( out )")
 
 cat.onOutCB = Fn.new {
 	var out = catOut.call()
