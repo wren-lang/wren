@@ -43,7 +43,7 @@ ifeq ($(VERBOSE),1)
 endif
 
 C_OPTIONS := $(WREN_CFLAGS)
-C_WARNINGS := 
+C_WARNINGS := -Wall -Wextra -Werror -Wno-unused-parameter
 # Wren uses callbacks heavily, so -Wunused-parameter is too painful to enable.
 
 # Mode configuration.
