@@ -13,8 +13,12 @@ class Process {
 }
 
 class Subprocess {
+
 	pid { _pid }
-	exitCode { _exitCode }
+
+	exitCode {
+		__stdinBuffers[_pid]
+	}
 
 	//loads more data into stdin
 	stdIn=(x){
@@ -53,6 +57,10 @@ class Subprocess {
 			__stdOutBuffers = {}
 		}
 
+		if(!__exitCodeBuffers){
+			__exitCodeBuffers = {}
+		}
+
 		if(!__onOutCBs){
 			__onOutCBs = {}
 		}
@@ -65,6 +73,7 @@ class Subprocess {
 
 		__stdInBuffers[_pid] = ""
 		__stdOutBuffers[_pid] = ""
+		__exitCodeBuffers[_pid] = null
 
 		__onOutCBs[_pid] = Fn.new {}
 		__onExitCBs[_pid] = Fn.new {}
@@ -73,6 +82,11 @@ class Subprocess {
 	static recieveStdOut_(pid, stdOut){
 		__stdOutBuffers[pid] = __stdOutBuffers[pid] + stdOut
 		__onOutCBs[pid].call()
+	}
+
+	static recieveExit(pid, exitCode){
+		__exitCodeBuffers[pid] = exitCode
+		__onExitCBs[pid].call(exitCode)
 	}
 
 	foreign static spawn_(command)
