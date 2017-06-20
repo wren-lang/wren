@@ -77,43 +77,46 @@ void processAllArguments(WrenVM* vm)
   }
 }
 
+//contains all information about a running sub-process
 typedef struct subprocessBundle {
 	bool running;
-	uv_process_t child_req;
+	uv_process_t childReq;
 	uv_process_options_t options;
 	uv_pipe_t out;
 	uv_stdio_container_t stdio[2];
 } subprocessBundle;
 
+//number of concurrent subprocessess is currently hardcoded,
+//wasn't sure if it was worth making this array dynamic
 #define NUMBER_OF_SUB_PROCESSES 4
 
 subprocessBundle subprocesses[NUMBER_OF_SUB_PROCESSES];
 
+// handles for subprocess callback
 WrenHandle* SubprocessClass;
 WrenHandle* recieveStdOutMethod;
 WrenHandle* recieveExitMethod;;
 
-/* subprocess callbacks and variables */
-void on_exit(uv_process_t *req, int64_t exit_status, int term_signal)
+void onExit(uv_process_t *req, int64_t exitStatus, int termSignal)
 {
+
+	//first close the libuv handle for the subprocess
 	uv_close((uv_handle_t*) req, NULL);
 
+	//call the wren subprocess' onExitCB
 	WrenVM* vm = getVM();
 
 	unsigned int processesStillRunning = 0;
 	for(int i = 0; i < NUMBER_OF_SUB_PROCESSES; i++){
-		if(req == &subprocesses[i].child_req){
+		if(req == &subprocesses[i].childReq){
 			if(!recieveExitMethod){
-				recieveExitMethod = wrenMakeCallHandle(
-						vm,
-						"recieveExit(_,_)"
-						);
+				recieveExitMethod = wrenMakeCallHandle( vm, "recieveExit(_,_)" );
 			}
 
 			wrenEnsureSlots(vm, 3);
 			wrenSetSlotHandle(vm, 0, SubprocessClass);
-			wrenSetSlotDouble(vm, 1, (double) subprocesses[i].child_req.pid);
-			wrenSetSlotDouble(vm, 2, (double) exit_status);
+			wrenSetSlotDouble(vm, 1, (double) subprocesses[i].childReq.pid);
+			wrenSetSlotDouble(vm, 2, (double) exitStatus);
 
 			wrenCall(vm, recieveExitMethod);
 
@@ -124,6 +127,8 @@ void on_exit(uv_process_t *req, int64_t exit_status, int term_signal)
 			processesStillRunning++;
 		}
 	}
+
+	//if there are no more processes running, clear our handles
 	if(processesStillRunning == 0){
 		wrenReleaseHandle(vm, SubprocessClass);
 		wrenReleaseHandle(vm, recieveStdOutMethod);
@@ -131,15 +136,15 @@ void on_exit(uv_process_t *req, int64_t exit_status, int term_signal)
 	}
 }
 
-static void alloc_buffer(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf) 
+// needed to alocate space as buffer grows, coppied from io.c
+static void allocBuffer(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf) 
 {
 	// TODO: Handle allocation failure.
 	buf->base = (char*)malloc(suggestedSize);
 	buf->len = suggestedSize;
 }
 
-
-void read_out(uv_stream_t* stream, ssize_t numRead, const uv_buf_t* buffer)
+void readOut(uv_stream_t* stream, ssize_t numRead, const uv_buf_t* buffer)
 {
 	if (numRead + 1 > (unsigned int)(buffer->len) || numRead == UV_EOF ){
 		return;
@@ -147,11 +152,9 @@ void read_out(uv_stream_t* stream, ssize_t numRead, const uv_buf_t* buffer)
 
 	buffer->base[numRead] = '\0'; // turn it into a cstring
 
+	//call the wren subprocess onStdOutCB
 	for(int i = 0; i < NUMBER_OF_SUB_PROCESSES; i++){
 		if(stream == ( (uv_stream_t*) &subprocesses[i].out ) ){
-			//call wren::Subprocess::recieveStdOut(_, _)
-			//
-			// Load the class into slot 0.
 			WrenVM* vm = getVM();
 
 			wrenEnsureSlots(vm, 3);
@@ -168,7 +171,7 @@ void read_out(uv_stream_t* stream, ssize_t numRead, const uv_buf_t* buffer)
 			}
 
 			wrenSetSlotHandle(vm, 0, SubprocessClass);
-			wrenSetSlotDouble(vm, 1, (double) subprocesses[i].child_req.pid);
+			wrenSetSlotDouble(vm, 1, (double) subprocesses[i].childReq.pid);
 			wrenSetSlotString(vm, 2, buffer->base);
 
 			wrenCall(vm, recieveStdOutMethod);
@@ -180,11 +183,8 @@ void read_out(uv_stream_t* stream, ssize_t numRead, const uv_buf_t* buffer)
 
 void spawnSubprocess(WrenVM* vm)
 {
-
 	//find a subprocessBundle to use
-	//limited to a constant number of subprocess ATM
 	int bundleN = 0;
-
 	for(int i = 0; i < NUMBER_OF_SUB_PROCESSES; i++){
 		if(!subprocesses[i].running){
 			subprocesses[i].running = true;
@@ -199,9 +199,8 @@ void spawnSubprocess(WrenVM* vm)
 	// an array of strings to store the args
 	// makes mallocs in a loop, bad idea, but I don't know a better one
 	// and this shouldn't be too hot/performant anyway
-	// 
 	// we could do some calculations to store all the strings in one malloc,
-	// discuss the pros/cons of performance vs readable code.
+	// TODO: discuss the pros/cons of performance vs readable code.
 	char **args;
 	args = malloc( ( argsCount  +  1 ) * sizeof(char*));
 
@@ -239,17 +238,23 @@ void spawnSubprocess(WrenVM* vm)
 	subprocesses[bundleN].stdio[1].data.stream = (uv_stream_t*)&subprocesses[bundleN].out;
 	subprocesses[bundleN].options.stdio_count = 2;
 
-	subprocesses[bundleN].options.exit_cb = on_exit;
+	subprocesses[bundleN].options.exit_cb = onExit;
 	subprocesses[bundleN].options.file = args[0];
 	subprocesses[bundleN].options.args = args;
 
+	//start the SubProcess, prints to stderr if unsucsesful,
+	//should probably bubble error up for wren to deal with
 	int r;
-	if ((r = uv_spawn(getLoop(), &(subprocesses[bundleN].child_req), &(subprocesses[bundleN].options)))) {
+	if ((r = uv_spawn(getLoop(), &(subprocesses[bundleN].childReq), &(subprocesses[bundleN].options)))) {
 		printf( "error: %s\n", uv_strerror(r));
 	}
 	else {
-		uv_read_start((uv_stream_t*)&subprocesses[bundleN].out, alloc_buffer, read_out);
-		wrenSetSlotDouble(vm, 0, (double)(subprocesses[bundleN].child_req.pid));
+		uv_read_start((uv_stream_t*)&subprocesses[bundleN].out, allocBuffer, readOut);
+		//return the Subprocess PID, which will be used as its identifier for passing 
+		//information in and out of wren,
+		//TODO: is a PID the right fit for this use, should we generate a seperate
+		//random ID?
+		wrenSetSlotDouble(vm, 0, (double)(subprocesses[bundleN].childReq.pid));
 	}
 
 	//free args memory
