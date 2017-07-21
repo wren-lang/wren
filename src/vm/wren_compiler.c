@@ -95,6 +95,7 @@ typedef enum
   TOKEN_FOREIGN,
   TOKEN_IF,
   TOKEN_IMPORT,
+  TOKEN_AS,
   TOKEN_IN,
   TOKEN_IS,
   TOKEN_NULL,
@@ -571,6 +572,7 @@ static Keyword keywords[] =
   {"foreign",   7, TOKEN_FOREIGN},
   {"if",        2, TOKEN_IF},
   {"import",    6, TOKEN_IMPORT},
+  {"as",        2, TOKEN_AS},
   {"in",        2, TOKEN_IN},
   {"is",        2, TOKEN_IS},
   {"null",      4, TOKEN_NULL},
@@ -2630,6 +2632,7 @@ GrammarRule rules[] =
   /* TOKEN_FOREIGN       */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IMPORT        */ UNUSED,
+  /* TOKEN_AS            */ UNUSED,
   /* TOKEN_IN            */ UNUSED,
   /* TOKEN_IS            */ INFIX_OPERATOR(PREC_IS, "is"),
   /* TOKEN_NULL          */ PREFIX(null),
@@ -3350,18 +3353,35 @@ static void import(Compiler* compiler)
   do
   {
     ignoreNewlines(compiler);
-    int slot = declareNamedVariable(compiler);
+    
+    consume(compiler, TOKEN_NAME, "Expect variable name.");
+    
+    // We need to hold onto the source variable, in order
+    Token sourceVariable = compiler->parser->previous;
 
     // Define a string constant for the variable name.
-    int variableConstant = addConstant(compiler,
+    int sourceVariableConstant = addConstant(compiler,
         wrenNewString(compiler->parser->vm,
-                      compiler->parser->previous.start,
-                      compiler->parser->previous.length));
+                        sourceVariable.start,
+                        sourceVariable.length));
+
+    //import "module" for Source in Dest
+
+    // Store the symbol we care about for the variable
+    int slot = -1;
+    if(match(compiler, TOKEN_AS))
+    {
+      slot = declareNamedVariable(compiler);
+    }
+    else
+    {
+      slot = declareVariable(compiler, &sourceVariable);
+    }
 
     // Load the variable from the other module.
     loadCoreVariable(compiler, "System");
     emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
-    emitShortArg(compiler, CODE_CONSTANT, variableConstant);
+    emitShortArg(compiler, CODE_CONSTANT, sourceVariableConstant);
     callMethod(compiler, 2, "getModuleVariable(_,_)", 22);
     
     // Store the result in the variable here.
