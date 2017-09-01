@@ -56,6 +56,22 @@ class Sequence {
 
   map(transformation) { MapSequence.new(this, transformation) }
 
+  skip(count) {
+    if (!(count is Num) || !count.isInteger || count < 0) {
+      Fiber.abort("Count must be a non-negative integer.")
+    }
+
+    return SkipSequence.new(this, count)
+  }
+
+  take(count) {
+    if (!(count is Num) || !count.isInteger || count < 0) {
+      Fiber.abort("Count must be a non-negative integer.")
+    }
+
+    return TakeSequence.new(this, count)
+  }
+
   where(predicate) { WhereSequence.new(this, predicate) }
 
   reduce(acc, f) {
@@ -112,6 +128,43 @@ class MapSequence is Sequence {
   iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
 }
 
+class SkipSequence is Sequence {
+  construct new(sequence, count) {
+    _sequence = sequence
+    _count = count
+  }
+
+  iterate(iterator) {
+    if (iterator) {
+      return _sequence.iterate(iterator)
+    } else {
+      iterator = _sequence.iterate(iterator)
+      var count = _count
+      while (count > 0 && iterator) {
+        iterator = _sequence.iterate(iterator)
+        count = count - 1
+      }
+      return iterator
+    }
+  }
+
+  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
+}
+
+class TakeSequence is Sequence {
+  construct new(sequence, count) {
+    _sequence = sequence
+    _count = count
+  }
+
+  iterate(iterator) {
+    if (!iterator) _taken = 1 else _taken = _taken + 1
+    return _taken > _count ? null : _sequence.iterate(iterator)
+  }
+
+  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
+}
+
 class WhereSequence is Sequence {
   construct new(sequence, fn) {
     _sequence = sequence
@@ -131,6 +184,57 @@ class WhereSequence is Sequence {
 class String is Sequence {
   bytes { StringByteSequence.new(this) }
   codePoints { StringCodePointSequence.new(this) }
+
+  split(delimiter) {
+    if (!(delimiter is String) || delimiter.isEmpty) {
+      Fiber.abort("Delimiter must be a non-empty string.")
+    }
+
+    var result = []
+
+    var last = 0
+    var index = 0
+
+    var delimSize = delimiter.byteCount_
+    var size = byteCount_
+
+    while (last < size && (index = indexOf(delimiter, last)) != -1) {
+      result.add(this[last...index])
+      last = index + delimSize
+    }
+
+    if (last < size) {
+      result.add(this[last..-1])
+    } else {
+      result.add("")
+    }
+    return result
+  }
+
+  replace(from, to) {
+    if (!(from is String) || from.isEmpty) {
+      Fiber.abort("From must be a non-empty string.")
+    } else if (!(to is String)) {
+      Fiber.abort("To must be a string.")
+    }
+
+    var result = ""
+
+    var last = 0
+    var index = 0
+
+    var fromSize = from.byteCount_
+    var size = byteCount_
+
+    while (last < size && (index = indexOf(from, last)) != -1) {
+      result = result + this[last...index] + to
+      last = index + fromSize
+    }
+
+    if (last < size) result = result + this[last..-1]
+
+    return result
+  }
 
   *(count) {
     if (!(count is Num) || !count.isInteger || count < 0) {

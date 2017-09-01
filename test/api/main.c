@@ -15,6 +15,7 @@
 #include "reset_stack_after_call_abort.h"
 #include "reset_stack_after_foreign_construct.h"
 #include "slots.h"
+#include "user_data.h"
 
 // The name of the currently executing API test.
 const char* testName;
@@ -58,6 +59,9 @@ static WrenForeignMethodFn bindForeignMethod(
   if (method != NULL) return method;
   
   method = slotsBindMethod(fullName);
+  if (method != NULL) return method;
+  
+  method = userDataBindMethod(fullName);
   if (method != NULL) return method;
 
   fprintf(stderr,

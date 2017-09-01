@@ -407,10 +407,7 @@ static void printError(Parser* parser, int line, const char* label,
                              parser->module->name->value, line, message);
 }
 
-// Outputs a compile or syntax error. This also marks the compilation as having
-// an error, which ensures that the resulting code will be discarded and never
-// run. This means that after calling lexError(), it's fine to generate whatever
-// invalid bytecode you want since it won't be used.
+// Outputs a lexical error.
 static void lexError(Parser* parser, const char* format, ...)
 {
   va_list args;
@@ -1074,7 +1071,20 @@ static void nextToken(Parser* parser)
         }
         else
         {
-          lexError(parser, "Invalid character '%c'.", c);
+          if (c >= 32 && c <= 126)
+          {
+            lexError(parser, "Invalid character '%c'.", c);
+          }
+          else
+          {
+            // Don't show non-ASCII values since we didn't UTF-8 decode the
+            // bytes. Since there are no non-ASCII byte values that are
+            // meaningful code units in Wren, the lexer works on raw bytes,
+            // even though the source code and console output are UTF-8.
+            lexError(parser, "Invalid byte 0x%x.", (uint8_t)c);
+          }
+          parser->current.type = TOKEN_ERROR;
+          parser->current.length = 0;
         }
         return;
     }

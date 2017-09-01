@@ -152,7 +152,7 @@ It is a runtime error if `other` is not a number.
 
 Performs bitwise or on the number. Both numbers are first converted to 32-bit
 unsigned values. The result is then a 32-bit unsigned number where each bit is
-`true` only where the corresponding bits of both inputs were `true`.
+`true` only where the corresponding bits of one or both inputs were `true`.
 
 It is a runtime error if `other` is not a number.
 

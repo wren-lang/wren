@@ -125,6 +125,23 @@ It is a runtime error to call this on an empty sequence.
 Similar to above, but uses `seed` for the initial value of the accumulator. If
 the sequence is empty, returns `seed`.
 
+### **skip**(count)
+
+Creates a new sequence that skips the first `count` elements of the original
+sequence.
+
+The returned sequence is *lazy*. The first `count` elements are only skipped
+once you start to iterate the returned sequence. Changes to the original
+sequence will be reflected in the filtered sequence.
+
+### **take**(count)
+
+Creates a new sequence that iterates only the first `count` elements of the
+original sequence.
+
+The returned sequence is *lazy*. Changes to the original sequence will be
+reflected in the filtered sequence.
+
 ### **toList**
 
 Creates a [list][] containing all the elements in the sequence.

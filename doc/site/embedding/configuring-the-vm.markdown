@@ -51,7 +51,7 @@ host should return the source code for that module. Memory for the source should
 be allocated using the same allocator that the VM uses for other allocation (see
 below). Wren will take ownership of the returned string and free it later.
 
-The module loader is only be called once for any given module name. Wren caches
+The module loader will only be called once for any given module name. Wren caches
 the result internally so subsequent imports of the same module use the
 previously loaded code.
 

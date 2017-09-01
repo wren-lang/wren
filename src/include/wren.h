@@ -96,7 +96,8 @@ typedef enum
 // Each of those has the module and line where the method or function is
 // defined and [message] is the name of the method or function.
 typedef void (*WrenErrorFn)(
-    WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message);
+    WrenVM* vm, WrenErrorType type, const char* module, int line,
+    const char* message);
 
 typedef struct
 {
@@ -206,6 +207,10 @@ typedef struct
   //
   // If zero, defaults to 50.
   int heapGrowthPercent;
+
+  // User-defined data associated with the VM.
+  void* userData;
+
 } WrenConfiguration;
 
 typedef enum
@@ -485,5 +490,11 @@ bool wrenModuleExists(WrenVM* vm, const char* module);
 // Sets the current fiber to be aborted, and uses the value in [slot] as the
 // runtime error object.
 void wrenAbortFiber(WrenVM* vm, int slot);
+
+// Returns the user data associated with the WrenVM.
+void* wrenGetUserData(WrenVM* vm);
+
+// Sets user data associated with the WrenVM.
+void wrenSetUserData(WrenVM* vm, void* userData);
 
 #endif

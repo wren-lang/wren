@@ -46,6 +46,7 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->initialHeapSize = 1024 * 1024 * 10;
   config->minHeapSize = 1024 * 1024;
   config->heapGrowthPercent = 50;
+  config->userData = NULL;
 }
 
 WrenVM* wrenNewVM(WrenConfiguration* config)
@@ -83,7 +84,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 void wrenFreeVM(WrenVM* vm)
 {
   ASSERT(vm->methodNames.count > 0, "VM appears to have already been freed.");
-
+  
   // Free all of the GC objects.
   Obj* obj = vm->first;
   while (obj != NULL)
@@ -365,6 +366,8 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
 static void callForeign(WrenVM* vm, ObjFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
+  // Save the current state so we can restore it when done.
+  Value* apiStack = vm->apiStack;
   vm->apiStack = fiber->stackTop - numArgs;
 
   foreign(vm);
@@ -372,7 +375,7 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
   // Discard the stack slots for the arguments and temporaries but leave one
   // for the result.
   fiber->stackTop = vm->apiStack + 1;
-  vm->apiStack = NULL;
+  vm->apiStack = apiStack;
 }
 
 // Handles the current fiber having aborted because of an error. Switches to
@@ -655,11 +658,12 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
 
   // Pass the constructor arguments to the allocator as well.
+  Value* oldApiStack = vm->apiStack;
   vm->apiStack = stack;
 
   method->fn.foreign(vm);
 
-  vm->apiStack = NULL;
+  vm->apiStack = oldApiStack;
   // TODO: Check that allocateForeign was called.
 }
 
@@ -1342,6 +1346,7 @@ Value wrenImportModule(WrenVM* vm, Value name)
   if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
 
   const char* source = NULL;
+  bool allocatedSource = true;
 
   // Let the host try to provide the module.
   if (vm->config.loadModuleFn != NULL)
@@ -1359,6 +1364,10 @@ Value wrenImportModule(WrenVM* vm, Value name)
 #if WREN_OPT_RANDOM
     if (strcmp(nameString->value, "random") == 0) source = wrenRandomSource();
 #endif
+    
+    // TODO: Should we give the host the ability to provide strings that don't
+    // need to be freed?
+    allocatedSource = false;
   }
   
   if (source == NULL)
@@ -1368,6 +1377,12 @@ Value wrenImportModule(WrenVM* vm, Value name)
   }
   
   ObjFiber* moduleFiber = loadModule(vm, name, source);
+  
+  // Modules loaded by the host are expected to be dynamically allocated with
+  // ownership given to the VM, which will free it. The built in optional
+  // modules are constant strings which don't need to be freed.
+  if (allocatedSource) DEALLOCATE(vm, (char*)source);
+  
   if (moduleFiber == NULL)
   {
     vm->fiber->error = wrenStringFormat(vm,
@@ -1814,4 +1829,14 @@ void wrenAbortFiber(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
   vm->fiber->error = vm->apiStack[slot];
+}
+
+void* wrenGetUserData(WrenVM* vm)
+{
+	return vm->config.userData;
+}
+
+void wrenSetUserData(WrenVM* vm, void* userData)
+{
+	vm->config.userData = userData;
 }
