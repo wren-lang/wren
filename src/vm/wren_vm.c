@@ -770,6 +770,9 @@ static Value getModuleVariable(WrenVM* vm, ObjModule* module,
 // also, as you can imagine, highly performance critical.
 static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 {
+  // NULL the apiStack when the fiber changes.
+  if (vm->fiber != fiber)
+      vm->apiStack = NULL;
   // Remember the current fiber so we can find it if a GC happens.
   vm->fiber = fiber;
   fiber->state = FIBER_ROOT;
