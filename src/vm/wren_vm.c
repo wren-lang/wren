@@ -694,6 +694,9 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
 // fiber completed without error.
 static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 {
+  // NULL the apiStack when the fiber changes.
+  if (vm->fiber != fiber)
+      vm->apiStack = NULL;
   // Remember the current fiber so we can find it if a GC happens.
   vm->fiber = fiber;
 
