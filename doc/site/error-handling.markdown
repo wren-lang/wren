@@ -144,6 +144,8 @@ to cause your own runtime errors to occur. This can be done by calling the
 
 You must pass in an error message, and it must be a string.
 
+If the provided message is `null`, no runtime error is raised.
+
 ## Failures
 
 The last flavor of errors is the highest-level one. All of the above errors

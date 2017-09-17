@@ -6,6 +6,14 @@ A lightweight coroutine. [Here][fibers] is a gentle introduction.
 
 ## Static Methods
 
+### Fiber.**abort**(message)
+Raises a runtime error with the provided message, unless `message` is `null`
+
+    :::wren
+    Fiber.abort(null) // Do nothing.
+    Fiber.abort("Something bad happened") // Raise a runtime error with provided messsage.
+
+
 ### Fiber.**current**
 
 The currently executing fiber.
@@ -127,12 +135,37 @@ Invokes the fiber or resumes the fiber if it is in a paused state and sets
     fiber.call()
     fiber.call("value") //> value
 
+### **error***
+Assuming that a fiber has raised an error, `error` returns the error message.
+
+    :::wren
+    var fiber = Fiber.new {
+      123.badMethod
+    }
+
+    fiber.try()
+    System.print(fiber.error) //> Num does not implement method 'badMethod'.
+
 ### **isDone**
 
 Whether the fiber's main function has completed and the fiber can no longer be
 run. This returns `false` if the fiber is currently running or has yielded.
 
 ### **transfer**()
+
+### **try**()
+Tries to run the fiber. If a runtime error occurs
+in the called fiber, the error is captured and is returned as a string.
+
+    :::wren
+    var fiber = Fiber.new {
+      123.badMethod
+    }
+
+    var error = fiber.try()
+    System.print("Caught error: " + error)
+
+If the called fiber raises an error, it can no longer be used.
 
 **TODO**
 
