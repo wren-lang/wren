@@ -97,6 +97,15 @@ The natural logarithm of the number.
 
 Raises this number (the base) to `power`. Returns `nan` if the base is negative.
 
+### **round**
+
+Rounds the number to the nearest integer.
+
+    :::wren
+    System.print(1.5.round)    //> 2
+    System.print((-3.2).round) //> -3
+    System.print((-3.7).round) //> -4
+
 ### **sin**
 
 The sine of the number.
