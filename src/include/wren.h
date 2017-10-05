@@ -379,15 +379,6 @@ const char* wrenGetSlotString(WrenVM* vm, int slot);
 // until the handle is released by calling [wrenReleaseHandle()].
 WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
 
-// The following functions provide the return value for a foreign method back
-// to Wren. Like above, they may only be called during a foreign call invoked
-// by Wren.
-//
-// If none of these is called by the time the foreign function returns, the
-// method implicitly returns `null`. Within a given foreign call, you may only
-// call one of these once. It is an error to access any of the foreign calls
-// arguments after one of these has been called.
-
 // Stores the boolean [value] in [slot].
 void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
 
