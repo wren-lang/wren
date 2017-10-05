@@ -7,12 +7,13 @@ A lightweight coroutine. [Here][fibers] is a gentle introduction.
 ## Static Methods
 
 ### Fiber.**abort**(message)
-Raises a runtime error with the provided message, unless `message` is `null`
+
+Raises a runtime error with the provided message:
 
     :::wren
-    Fiber.abort(null) // Do nothing.
-    Fiber.abort("Something bad happened") // Raise a runtime error with provided messsage.
+    Fiber.abort("Something bad happened.")
 
+If the message is `null`, does nothing.
 
 ### Fiber.**current**
 
@@ -136,7 +137,9 @@ Invokes the fiber or resumes the fiber if it is in a paused state and sets
     fiber.call("value") //> value
 
 ### **error***
-Assuming that a fiber has raised an error, `error` returns the error message.
+
+The error message that was passed when aborting the fiber, or `null` if the
+fiber has not been aborted.
 
     :::wren
     var fiber = Fiber.new {
