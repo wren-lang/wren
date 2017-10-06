@@ -378,32 +378,35 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
   vm->apiStack = apiStack;
 }
 
-// Handles the current fiber having aborted because of an error. Switches to
-// a new fiber if there is a fiber that will handle the error, otherwise, tells
-// the VM to stop.
+// Handles the current fiber having aborted because of an error.
+//
+// Walks the call chain of fibers, aborting each one until it hits a fiber that
+// handles the error. If none do, tells the VM to stop.
 static void runtimeError(WrenVM* vm)
 {
   ASSERT(!IS_NULL(vm->fiber->error), "Should only call this after an error.");
 
   ObjFiber* current = vm->fiber;
-  while (current->caller != NULL) {
-    if (current->callerIsTrying) {
-        break;
-    }
-    ObjFiber* temp = current;
-    current = temp->caller;
-    temp->caller = NULL;
-  }
-  ObjFiber* caller = current->caller;
-
-  // If the caller ran this fiber using "try", give it the error.
-  if (current->callerIsTrying)
+  Value error = current->error;
+  
+  while (current != NULL)
   {
-    // Make the caller's try method return the error message.
-    caller->stackTop[-1] = vm->fiber->error;
+    // Every fiber along the call chain gets aborted with the same error.
+    current->error = error;
 
-    vm->fiber = caller;
-    return;
+    // If the caller ran this fiber using "try", give it the error and stop.
+    if (current->callerIsTrying)
+    {
+      // Make the caller's try method return the error message.
+      current->caller->stackTop[-1] = vm->fiber->error;
+      vm->fiber = current->caller;
+      return;
+    }
+    
+    // Otherwise, unhook the caller since we will never resume and return to it.
+    ObjFiber* caller = current->caller;
+    current->caller = NULL;
+    current = caller;
   }
 
   // If we got here, nothing caught the error, so show the stack trace.
