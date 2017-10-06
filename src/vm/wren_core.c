@@ -82,6 +82,12 @@ DEF_PRIMITIVE(fiber_abort)
 static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
                      bool hasValue, const char* verb)
 {
+
+  if (!IS_NULL(fiber->error))
+  {
+    RETURN_ERROR_FMT("Cannot $ an aborted fiber.", verb);
+  }
+
   if (isCall)
   {
     if (fiber->caller != NULL) RETURN_ERROR("Fiber has already been called.");
@@ -93,11 +99,6 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
   if (fiber->numFrames == 0)
   {
     RETURN_ERROR_FMT("Cannot $ a finished fiber.", verb);
-  }
-
-  if (!IS_NULL(fiber->error))
-  {
-    RETURN_ERROR_FMT("Cannot $ an aborted fiber.", verb);
   }
 
   // When the calling fiber resumes, we'll store the result of the call in its
