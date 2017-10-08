@@ -1629,13 +1629,11 @@ static bool finishBlock(Compiler* compiler)
   do
   {
     definition(compiler);
-
-    // If we got into a weird error state, don't get stuck in a loop.
-    if (peek(compiler) == TOKEN_EOF) return true;
-
     consumeLine(compiler, "Expect newline after statement.");
   }
-  while (!match(compiler, TOKEN_RIGHT_BRACE));
+  while (peek(compiler) != TOKEN_RIGHT_BRACE && peek(compiler) != TOKEN_EOF);
+  
+  consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' at end of block.");
   return false;
 }
 
