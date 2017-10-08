@@ -440,7 +440,8 @@ static void error(Compiler* compiler, const char* format, ...)
   }
   else if (token->type == TOKEN_EOF)
   {
-    printError(compiler->parser, token->line, "Error at end of file", format, args);
+    printError(compiler->parser, token->line,
+               "Error at end of file", format, args);
   }
   else
   {
@@ -2942,6 +2943,37 @@ static void forStatement(Compiler* compiler)
   popScope(compiler);
 }
 
+static void ifStatement(Compiler* compiler)
+{
+  // Compile the condition.
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+  expression(compiler);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
+  
+  // Jump to the else branch if the condition is false.
+  int ifJump = emitJump(compiler, CODE_JUMP_IF);
+  
+  // Compile the then branch.
+  statement(compiler);
+  
+  // Compile the else branch if there is one.
+  if (match(compiler, TOKEN_ELSE))
+  {
+    // Jump over the else branch when the if branch is taken.
+    int elseJump = emitJump(compiler, CODE_JUMP);
+    patchJump(compiler, ifJump);
+    
+    statement(compiler);
+    
+    // Patch the jump over the else.
+    patchJump(compiler, elseJump);
+  }
+  else
+  {
+    patchJump(compiler, ifJump);
+  }
+}
+
 static void whileStatement(Compiler* compiler)
 {
   Loop loop;
@@ -2983,48 +3015,16 @@ void statement(Compiler* compiler)
     // We use `CODE_END` here because that can't occur in the middle of
     // bytecode.
     emitJump(compiler, CODE_END);
-    return;
   }
-
-  if (match(compiler, TOKEN_FOR)) {
-    forStatement(compiler);
-    return;
-  }
-
-  if (match(compiler, TOKEN_IF))
+  else if (match(compiler, TOKEN_FOR))
   {
-    // Compile the condition.
-    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
-    expression(compiler);
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
-
-    // Jump to the else branch if the condition is false.
-    int ifJump = emitJump(compiler, CODE_JUMP_IF);
-
-    // Compile the then branch.
-    statement(compiler);
-
-    // Compile the else branch if there is one.
-    if (match(compiler, TOKEN_ELSE))
-    {
-      // Jump over the else branch when the if branch is taken.
-      int elseJump = emitJump(compiler, CODE_JUMP);
-      patchJump(compiler, ifJump);
-      
-      statement(compiler);
-
-      // Patch the jump over the else.
-      patchJump(compiler, elseJump);
-    }
-    else
-    {
-      patchJump(compiler, ifJump);
-    }
-
-    return;
+    forStatement(compiler);
   }
-
-  if (match(compiler, TOKEN_RETURN))
+  else if (match(compiler, TOKEN_IF))
+  {
+    ifStatement(compiler);
+  }
+  else if (match(compiler, TOKEN_RETURN))
   {
     // Compile the return value.
     if (peek(compiler) == TOKEN_LINE)
@@ -3038,17 +3038,14 @@ void statement(Compiler* compiler)
     }
 
     emitOp(compiler, CODE_RETURN);
-    return;
   }
-
-  if (match(compiler, TOKEN_WHILE)) {
-    whileStatement(compiler);
-    return;
-  }
-
-  // Block statement.
-  if (match(compiler, TOKEN_LEFT_BRACE))
+  else if (match(compiler, TOKEN_WHILE))
   {
+    whileStatement(compiler);
+  }
+  else if (match(compiler, TOKEN_LEFT_BRACE))
+  {
+    // Block statement.
     pushScope(compiler);
     if (finishBlock(compiler))
     {
@@ -3056,12 +3053,13 @@ void statement(Compiler* compiler)
       emitOp(compiler, CODE_POP);
     }
     popScope(compiler);
-    return;
   }
-  
-  // Expression statement.
-  expression(compiler);
-  emitOp(compiler, CODE_POP);
+  else
+  {
+    // Expression statement.
+    expression(compiler);
+    emitOp(compiler, CODE_POP);
+  }
 }
 
 // Creates a matching constructor method for an initializer with [signature]
