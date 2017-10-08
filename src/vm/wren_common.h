@@ -121,11 +121,11 @@
 // flexible array of [count] objects of [arrayType].
 #define ALLOCATE_FLEX(vm, mainType, arrayType, count) \
     ((mainType*)wrenReallocate(vm, NULL, 0, \
-    sizeof(mainType) + sizeof(arrayType) * count))
+    sizeof(mainType) + sizeof(arrayType) * (count)))
 
 // Use the VM's allocator to allocate an array of [count] elements of [type].
 #define ALLOCATE_ARRAY(vm, type, count) \
-    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * count))
+    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * (count)))
 
 // Use the VM's allocator to free the previously allocated memory at [pointer].
 #define DEALLOCATE(vm, pointer) wrenReallocate(vm, pointer, 0, 0)
