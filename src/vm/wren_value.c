@@ -194,22 +194,24 @@ void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
                                         sizeof(Value) * capacity);
   fiber->stackCapacity = capacity;
   
-  // If the reallocation moves the stack, then we need to shift every pointer
-  // into the stack to point to its new location.
+  // If the reallocation moves the stack, then we need to recalculate every
+  // pointer that points into the old stack to into the same relative distance
+  // in the new stack. We have to be a little careful about how these are
+  // calculated because pointer subtraction is only well-defined within a
+  // single array, hence the slightly redundant-looking arithmetic below.
   if (fiber->stack != oldStack)
   {
     // Top of the stack.
-    long offset = fiber->stack - oldStack;
-    
     if (vm->apiStack >= oldStack && vm->apiStack <= fiber->stackTop)
     {
-      vm->apiStack += offset;
+      vm->apiStack = fiber->stack + (vm->apiStack - oldStack);
     }
     
     // Stack pointer for each call frame.
     for (int i = 0; i < fiber->numFrames; i++)
     {
-      fiber->frames[i].stackStart += offset;
+      CallFrame* frame = &fiber->frames[i];
+      frame->stackStart = fiber->stack + (frame->stackStart - oldStack);
     }
     
     // Open upvalues.
@@ -217,10 +219,10 @@ void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
          upvalue != NULL;
          upvalue = upvalue->next)
     {
-      upvalue->value += offset;
+      upvalue->value = fiber->stack + (upvalue->value - oldStack);
     }
     
-    fiber->stackTop += offset;
+    fiber->stackTop = fiber->stack + (fiber->stackTop - oldStack);
   }
 }
 
