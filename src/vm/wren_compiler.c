@@ -307,7 +307,7 @@ typedef struct
 
   // The signature of the method being compiled.
   Signature* signature;
-} ClassCompiler;
+} ClassInfo;
 
 struct sCompiler
 {
@@ -348,7 +348,7 @@ struct sCompiler
   Loop* loop;
 
   // If this is a compiler for a method, keeps track of the class enclosing it.
-  ClassCompiler* enclosingClass;
+  ClassInfo* enclosingClass;
 
   // The function being compiled.
   ObjFn* fn;
@@ -2067,7 +2067,7 @@ static Compiler* getEnclosingClassCompiler(Compiler* compiler)
 
 // Walks the compiler chain to find the nearest class enclosing this one.
 // Returns NULL if not currently inside a class definition.
-static ClassCompiler* getEnclosingClass(Compiler* compiler)
+static ClassInfo* getEnclosingClass(Compiler* compiler)
 {
   compiler = getEnclosingClassCompiler(compiler);
   return compiler == NULL ? NULL : compiler->enclosingClass;
@@ -2079,7 +2079,7 @@ static void field(Compiler* compiler, bool canAssign)
   // number of cascaded errors.
   int field = 255;
 
-  ClassCompiler* enclosingClass = getEnclosingClass(compiler);
+  ClassInfo* enclosingClass = getEnclosingClass(compiler);
 
   if (enclosingClass == NULL)
   {
@@ -2307,8 +2307,7 @@ static void stringInterpolation(Compiler* compiler, bool canAssign)
 
 static void super_(Compiler* compiler, bool canAssign)
 {
-  ClassCompiler* enclosingClass = getEnclosingClass(compiler);
-
+  ClassInfo* enclosingClass = getEnclosingClass(compiler);
   if (enclosingClass == NULL)
   {
     error(compiler, "Cannot use 'super' outside of a method.");
@@ -3123,13 +3122,14 @@ static int declareMethod(Compiler* compiler, Signature* signature,
   int symbol = signatureSymbol(compiler, signature);
   
   // See if the class has already declared method with this signature.
-  ClassCompiler* clas = compiler->enclosingClass;
-  IntBuffer* methods = clas->inStatic ? &clas->staticMethods : &clas->methods;
+  ClassInfo* classInfo = compiler->enclosingClass;
+  IntBuffer* methods = classInfo->inStatic
+      ? &classInfo->staticMethods : &classInfo->methods;
   for (int i = 0; i < methods->count; i++)
   {
     if (methods->data[i] == symbol)
     {
-      const char* staticPrefix = clas->inStatic ? "static " : "";
+      const char* staticPrefix = classInfo->inStatic ? "static " : "";
       error(compiler, "Class %s already defines a %smethod '%s'.",
             &compiler->enclosingClass->name->value, staticPrefix, name);
       break;
@@ -3249,9 +3249,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
     loadCoreVariable(compiler, "Object");
   }
 
-  // Store a placeholder for the number of fields argument. We don't know
-  // the value until we've compiled all the methods to see which fields are
-  // used.
+  // Store a placeholder for the number of fields argument. We don't know the
+  // count until we've compiled all the methods to see which fields are used.
   int numFieldsInstruction = -1;
   if (isForeign)
   {
@@ -3270,20 +3269,20 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // have upvalues referencing them.
   pushScope(compiler);
 
-  ClassCompiler classCompiler;
-  classCompiler.isForeign = isForeign;
-  classCompiler.name = className;
+  ClassInfo classInfo;
+  classInfo.isForeign = isForeign;
+  classInfo.name = className;
 
   // Set up a symbol table for the class's fields. We'll initially compile
   // them to slots starting at zero. When the method is bound to the class, the
   // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
   // into account.
-  wrenSymbolTableInit(&classCompiler.fields);
+  wrenSymbolTableInit(&classInfo.fields);
   
   // Set up symbol buffers to track duplicate static and instance methods.
-  wrenIntBufferInit(&classCompiler.methods);
-  wrenIntBufferInit(&classCompiler.staticMethods);
-  compiler->enclosingClass = &classCompiler;
+  wrenIntBufferInit(&classInfo.methods);
+  wrenIntBufferInit(&classInfo.staticMethods);
+  compiler->enclosingClass = &classInfo;
 
   // Compile the method definitions.
   consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after class declaration.");
@@ -3303,13 +3302,13 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   if (!isForeign)
   {
     compiler->fn->code.data[numFieldsInstruction] =
-        (uint8_t)classCompiler.fields.count;
+        (uint8_t)classInfo.fields.count;
   }
   
   // Clear symbol tables for tracking field and method names.
-  wrenSymbolTableClear(compiler->parser->vm, &classCompiler.fields);
-  wrenIntBufferClear(compiler->parser->vm, &classCompiler.methods);
-  wrenIntBufferClear(compiler->parser->vm, &classCompiler.staticMethods);
+  wrenSymbolTableClear(compiler->parser->vm, &classInfo.fields);
+  wrenIntBufferClear(compiler->parser->vm, &classInfo.methods);
+  wrenIntBufferClear(compiler->parser->vm, &classInfo.staticMethods);
   compiler->enclosingClass = NULL;
   popScope(compiler);
 }
