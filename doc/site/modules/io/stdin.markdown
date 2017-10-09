@@ -29,9 +29,17 @@ been received.
 
 Returns the byte value as a number or `null` if stdin is closed.
 
+Note that output is not automatically flushed when calling this. If you want to
+display a prompt before reading input, you'll want to call `Stdout.flush()`
+after printing the prompt.
+
 ### **readLine**()
 
 Reads one line of input from stdin. Blocks the current fiber until a full line
 of input has been received.
 
 Returns the string of input or `null` if stdin is closed.
+
+Note that output is not automatically flushed when calling this. If you want to
+display a prompt before reading input, you'll want to call `Stdout.flush()`
+after printing the prompt.

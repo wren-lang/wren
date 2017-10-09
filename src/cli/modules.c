@@ -43,6 +43,7 @@ extern void stdinIsRawSet(WrenVM* vm);
 extern void stdinIsTerminal(WrenVM* vm);
 extern void stdinReadStart(WrenVM* vm);
 extern void stdinReadStop(WrenVM* vm);
+extern void stdoutFlush(WrenVM* vm);
 extern void schedulerCaptureMethods(WrenVM* vm);
 extern void timerStartTimer(WrenVM* vm);
 
@@ -61,7 +62,7 @@ extern void timerStartTimer(WrenVM* vm);
 // If you add a new class to the largest module below, make sure to bump this.
 // Note that it also includes an extra slot for the sentinel value indicating
 // the end of the list.
-#define MAX_CLASSES_PER_MODULE 5
+#define MAX_CLASSES_PER_MODULE 6
 
 // Describes one foreign method in a class.
 typedef struct
@@ -152,6 +153,9 @@ static ModuleRegistry modules[] =
       STATIC_METHOD("isTerminal", stdinIsTerminal)
       STATIC_METHOD("readStart_()", stdinReadStart)
       STATIC_METHOD("readStop_()", stdinReadStop)
+    END_CLASS
+    CLASS(Stdout)
+      STATIC_METHOD("flush()", stdoutFlush)
     END_CLASS
   END_MODULE
   MODULE(os)

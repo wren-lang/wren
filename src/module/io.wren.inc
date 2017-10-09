@@ -298,4 +298,8 @@ static const char* ioModuleSource =
 "\n"
 "  foreign static readStart_()\n"
 "  foreign static readStop_()\n"
+"}\n"
+"\n"
+"class Stdout {\n"
+"  foreign static flush()\n"
 "}\n";

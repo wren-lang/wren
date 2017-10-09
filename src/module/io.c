@@ -545,6 +545,12 @@ void stdinIsTerminal(WrenVM* vm)
   wrenSetSlotBool(vm, 0, uv_guess_handle(stdinDescriptor) == UV_TTY);
 }
 
+void stdoutFlush(WrenVM* vm)
+{
+  fflush(stdout);
+  wrenSetSlotNull(vm, 0);
+}
+
 static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
                           uv_buf_t* buf)
 {

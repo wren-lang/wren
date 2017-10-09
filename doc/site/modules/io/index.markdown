@@ -6,3 +6,4 @@ Provides access to operating system streams and the file system.
 * [File](file.html)
 * [Stat](stat.html)
 * [Stdin](stdin.html)
+* [Stdout](stdout.html)

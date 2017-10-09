@@ -297,3 +297,7 @@ class Stdin {
   foreign static readStart_()
   foreign static readStop_()
 }
+
+class Stdout {
+  foreign static flush()
+}

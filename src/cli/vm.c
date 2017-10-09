@@ -151,7 +151,6 @@ static WrenForeignClassMethods bindForeignClass(
 static void write(WrenVM* vm, const char* text)
 {
   printf("%s", text);
-  fflush(stdout);
 }
 
 static void reportError(WrenVM* vm, WrenErrorType type,
