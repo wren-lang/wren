@@ -1,15 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import codecs
 import glob
 import fnmatch
 import os
+import posixpath
 import shutil
 import subprocess
 import sys
 import time
 import re
+import urllib
 from datetime import datetime
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 import markdown
 
@@ -20,6 +23,39 @@ MARKDOWN_HEADER = re.compile(r'#+ ')
 
 # Clean up a header to be a valid URL.
 FORMAT_ANCHOR = re.compile(r'\?|!|:|/|\*|`')
+
+
+class RootedHTTPServer(HTTPServer):
+  """Simple server that resolves paths relative to a given directory.
+
+  From: http://louistiao.me/posts/python-simplehttpserver-recipe-serve-specific-directory/
+  """
+  def __init__(self, base_path, *args, **kwargs):
+    HTTPServer.__init__(self, *args, **kwargs)
+    self.RequestHandlerClass.base_path = base_path
+
+
+class RootedHTTPRequestHandler(SimpleHTTPRequestHandler):
+  """Simple handler that resolves paths relative to a given directory.
+
+  From: http://louistiao.me/posts/python-simplehttpserver-recipe-serve-specific-directory/
+  """
+  def translate_path(self, path):
+    # Refresh files that are being requested.
+    format_files(True)
+
+    path = posixpath.normpath(urllib.parse.unquote(path))
+    words = path.split('/')
+    words = filter(None, words)
+    path = self.base_path
+    for word in words:
+      drive, word = os.path.splitdrive(word)
+      head, word = os.path.split(word)
+      if word in (os.curdir, os.pardir):
+        continue
+      path = os.path.join(path, word)
+    return path
+
 
 def ensure_dir(path):
   if not os.path.exists(path):
@@ -114,7 +150,7 @@ def format_file(path, skip_up_to_date):
   with codecs.open(out_path, "w", encoding="utf-8") as out:
     out.write(page_template.format(**fields))
 
-  print("converted " + path)
+  print("Built " + path)
 
 
 def check_sass():
@@ -128,7 +164,7 @@ def check_sass():
         return
 
     subprocess.call(['sass', 'doc/site/style.scss', 'build/docs/style.css'])
-    print("built css")
+    print("Built build/docs/style.css")
 
 
 def format_files(skip_up_to_date):
@@ -140,6 +176,15 @@ def format_files(skip_up_to_date):
       format_file(f, skip_up_to_date)
 
 
+def run_server():
+  port = 8000
+  handler = RootedHTTPRequestHandler
+  server = RootedHTTPServer("build/docs", ('localhost', port), handler)
+
+  print('Serving at port', port)
+  server.serve_forever()
+
+
 # Clean the output directory.
 if os.path.exists("build/docs"):
   shutil.rmtree("build/docs")
@@ -147,6 +192,10 @@ ensure_dir("build/docs")
 
 # Process each markdown file.
 format_files(False)
+
+# Watch and serve files.
+if len(sys.argv) == 2 and sys.argv[1] == '--serve':
+  run_server()
 
 # Watch files.
 if len(sys.argv) == 2 and sys.argv[1] == '--watch':

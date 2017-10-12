@@ -91,6 +91,10 @@ benchmark: release
 docs:
 	$(V) ./util/generate_docs.py
 
+# Continuously generate and serve the Wren site.
+servedocs:
+	$(V) ./util/generate_docs.py --serve
+
 # Continuously generate the Wren site.
 watchdocs:
 	$(V) ./util/generate_docs.py --watch
