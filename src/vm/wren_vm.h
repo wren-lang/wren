@@ -135,6 +135,13 @@ WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
 WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
                                           const char* source);
 
+// Compile [source] in the context of [module] and wrap in a fiber that can
+// execute it.
+//
+// Returns NULL if a compile error occurred.
+ObjFiber* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
+                            bool isExpression, bool printErrors);
+
 // Imports the module with [name], a string.
 //
 // If the module has already been imported (or is already in the middle of

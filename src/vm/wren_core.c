@@ -1110,7 +1110,7 @@ DEF_PRIMITIVE(system_writeString)
 // Creates either the Object or Class class in the core module with [name].
 static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 {
-  ObjString* nameString = AS_STRING(wrenStringFormat(vm, "$", name));
+  ObjString* nameString = AS_STRING(wrenNewString(vm, name));
   wrenPushRoot(vm, (Obj*)nameString);
 
   ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);

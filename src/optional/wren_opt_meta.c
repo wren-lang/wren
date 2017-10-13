@@ -9,30 +9,23 @@
 
 void metaCompile(WrenVM* vm)
 {
-  // Evaluate the code in the module where the calling function was defined.
-  // That's one stack frame back from the top since the top-most frame is the
-  // helper eval() method in Meta itself.
-  ObjClosure* caller = vm->fiber->frames[vm->fiber->numFrames - 2].closure;
-  ObjModule* module = caller->fn->module;
-
   const char* source = wrenGetSlotString(vm, 1);
   bool isExpression = wrenGetSlotBool(vm, 2);
   bool printErrors = wrenGetSlotBool(vm, 3);
-  
-  // Compile it.
-  ObjFn* fn = wrenCompile(vm, module, source, isExpression, printErrors);
 
+  // TODO: Allow passing in module?
+  ObjFiber* fiber = wrenCompileSource(vm, "main", source,
+                                      isExpression, printErrors);
+  
   // Return the result. We can't use the public API for this since we have a
-  // bare ObjFn.
-  if (fn == NULL)
+  // bare ObjFiber*.
+  if (fiber == NULL)
   {
     vm->apiStack[0] = NULL_VAL;
   }
   else
   {
-    wrenPushRoot(vm, (Obj*)fn);
-    vm->apiStack[0] = OBJ_VAL(wrenNewClosure(vm, fn));
-    wrenPopRoot(vm);
+    vm->apiStack[0] = OBJ_VAL(fiber);
   }
 }
 
@@ -60,7 +53,8 @@ void metaGetModuleVariables(WrenVM* vm) {
   for (int i = 0; i < names->elements.count; i++)
   {
     String* name = &module->variableNames.data[i];
-    names->elements.data[i] = wrenNewString(vm, name->buffer, name->length);
+    names->elements.data[i] = wrenNewStringLength(vm,
+                                                  name->buffer, name->length);
   }
 }
 

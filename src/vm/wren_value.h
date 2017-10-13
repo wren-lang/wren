@@ -81,7 +81,7 @@
 // Creates a new string object from [text], which should be a bare C string
 // literal. This determines the length of the string automatically at compile
 // time based on the size of the character array (-1 for the terminating '\0').
-#define CONST_STRING(vm, text) wrenNewString((vm), (text), sizeof(text) - 1)
+#define CONST_STRING(vm, text) wrenNewStringLength((vm), (text), sizeof(text) - 1)
 
 // Identifies which specific type a heap-allocated object is.
 typedef enum {
@@ -692,10 +692,15 @@ ObjModule* wrenNewModule(WrenVM* vm, ObjString* name);
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 
+// Creates a new string object and copies [text] into it.
+//
+// [text] must be non-NULL.
+Value wrenNewString(WrenVM* vm, const char* text);
+
 // Creates a new string object of [length] and copies [text] into it.
 //
 // [text] may be NULL if [length] is zero.
-Value wrenNewString(WrenVM* vm, const char* text, size_t length);
+Value wrenNewStringLength(WrenVM* vm, const char* text, size_t length);
 
 // Creates a new string object by taking a range of characters from [source].
 // The range starts at [start], contains [count] bytes, and increments by

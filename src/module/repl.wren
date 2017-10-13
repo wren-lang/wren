@@ -1,5 +1,5 @@
 import "meta" for Meta
-import "io" for Stdin
+import "io" for Stdin, Stdout
 import "os" for Platform
 
 /// Abstract base class for the REPL. Manages the input line and history, but
@@ -154,51 +154,44 @@ class Repl {
 
     System.print()
 
-    // Guess if it looks like a statement or expression. Statements need to be
-    // evaluated at the top level in case they declare variables, but they
-    // don't return a value. Expressions need to have their result displayed.
-    var tokens = lex(input, false)
+    // Guess if it looks like a statement or expression. If it looks like an
+    // expression, we try to print the result.
+    var token = lexFirst(input)
 
     // No code, so do nothing.
-    if (tokens.isEmpty) return
+    if (token == null) return
 
-    var first = tokens[0]
     var isStatement =
-        first.type == Token.breakKeyword ||
-        first.type == Token.classKeyword ||
-        first.type == Token.forKeyword ||
-        first.type == Token.foreignKeyword ||
-        first.type == Token.ifKeyword ||
-        first.type == Token.importKeyword ||
-        first.type == Token.returnKeyword ||
-        first.type == Token.varKeyword ||
-        first.type == Token.whileKeyword
+        token.type == Token.breakKeyword ||
+        token.type == Token.classKeyword ||
+        token.type == Token.forKeyword ||
+        token.type == Token.foreignKeyword ||
+        token.type == Token.ifKeyword ||
+        token.type == Token.importKeyword ||
+        token.type == Token.returnKeyword ||
+        token.type == Token.varKeyword ||
+        token.type == Token.whileKeyword
 
     var fiber
     if (isStatement) {
-      fiber = Fiber.new {
-        // TODO: Should evaluate in main module, not repl's own.
-        Meta.eval(input)
-      }
-
-      var result = fiber.try()
-      if (fiber.error == null) return
+      fiber = Meta.compile(input)
     } else {
-      // TODO: Should evaluate in main module, not repl's own.
-      var function = Meta.compileExpression(input)
-      if (function == null) return
-
-      fiber = Fiber.new(function)
-      var result = fiber.try()
-      if (fiber.error == null) {
-        // TODO: Handle error in result.toString.
-        showResult(result)
-        return
-      }
+      fiber = Meta.compileExpression(input)
     }
 
-    // TODO: Include callstack.
-    showRuntimeError("Runtime error: %(fiber.error)")
+    // Stop if there was a compile error.
+    if (fiber == null) return
+
+    var result = fiber.try()
+    if (fiber.error != null) {
+      // TODO: Include callstack.
+      showRuntimeError("Runtime error: %(fiber.error)")
+      return
+    }
+
+    if (!isStatement) {
+      showResult(result)
+    }
   }
 
   lex(line, includeWhitespace) {
@@ -215,6 +208,18 @@ class Repl {
     }
 
     return tokens
+  }
+
+  lexFirst(line) {
+    var lexer = Lexer.new(line)
+    while (true) {
+      var token = lexer.readToken()
+      if (token.type == Token.eof) return null
+
+      if (token.type != Token.comment && token.type != Token.whitespace) {
+        return token
+      }
+    }
   }
 
   /// Gets the best possible auto-completion for the current line, or null if
@@ -256,6 +261,7 @@ class SimpleRepl is Repl {
 
     // Write the line.
     System.write(line)
+    Stdout.flush()
   }
 
   showResult(value) {
@@ -351,6 +357,7 @@ class AnsiRepl is Repl {
 
     // Position the cursor.
     System.write("\r\x1b[%(2 + cursor)C")
+    Stdout.flush()
   }
 
   showResult(value) {

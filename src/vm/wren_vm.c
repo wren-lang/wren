@@ -474,7 +474,8 @@ static ObjModule* getModule(WrenVM* vm, Value name)
   return !IS_UNDEFINED(moduleValue) ? AS_MODULE(moduleValue) : NULL;
 }
 
-static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
+static ObjFiber* compileInModule(WrenVM* vm, Value name, const char* source,
+                                 bool isExpression, bool printErrors)
 {
   // See if the module has already been loaded.
   ObjModule* module = getModule(vm, name);
@@ -497,7 +498,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
     }
   }
 
-  ObjFn* fn = wrenCompile(vm, module, source, false, true);
+  ObjFn* fn = wrenCompile(vm, module, source, isExpression, printErrors);
   if (fn == NULL)
   {
     // TODO: Should we still store the module even if it didn't compile?
@@ -506,7 +507,7 @@ static ObjFiber* loadModule(WrenVM* vm, Value name, const char* source)
 
   wrenPushRoot(vm, (Obj*)fn);
   
-  // TODO: Doc.
+  // Functions are always wrapped in closures.
   ObjClosure* closure = wrenNewClosure(vm, fn);
   wrenPushRoot(vm, (Obj*)closure);
   
@@ -1328,26 +1329,36 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source)
 WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
                                           const char* source)
 {
+  ObjFiber* fiber = wrenCompileSource(vm, module, source, false, true);
+  if (fiber == NULL) return WREN_RESULT_COMPILE_ERROR;
+  
+  return runInterpreter(vm, fiber);
+}
+
+ObjFiber* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
+                            bool isExpression, bool printErrors)
+{
   Value nameValue = NULL_VAL;
   if (module != NULL)
   {
-    nameValue = wrenStringFormat(vm, "$", module);
+    nameValue = wrenNewString(vm, module);
     wrenPushRoot(vm, AS_OBJ(nameValue));
   }
-
-  ObjFiber* fiber = loadModule(vm, nameValue, source);
-  if (fiber == NULL)
+  
+  ObjFiber* fiber = compileInModule(vm, nameValue, source,
+                                    isExpression, printErrors);
+  if (fiber == NULL && module != NULL)
   {
-    wrenPopRoot(vm);
-    return WREN_RESULT_COMPILE_ERROR;
+    wrenPopRoot(vm); // nameValue.
+    return NULL;
   }
-
+  
   if (module != NULL)
   {
     wrenPopRoot(vm); // nameValue.
   }
-
-  return runInterpreter(vm, fiber);
+  
+  return fiber;
 }
 
 Value wrenImportModule(WrenVM* vm, Value name)
@@ -1386,7 +1397,7 @@ Value wrenImportModule(WrenVM* vm, Value name)
     return NULL_VAL;
   }
   
-  ObjFiber* moduleFiber = loadModule(vm, name, source);
+  ObjFiber* moduleFiber = compileInModule(vm, name, source, false, true);
   
   // Modules loaded by the host are expected to be dynamically allocated with
   // ownership given to the VM, which will free it. The built in optional
@@ -1608,7 +1619,7 @@ void wrenSetSlotBool(WrenVM* vm, int slot, bool value)
 void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length)
 {
   ASSERT(bytes != NULL, "Byte array cannot be NULL.");
-  setSlot(vm, slot, wrenNewString(vm, bytes, length));
+  setSlot(vm, slot, wrenNewStringLength(vm, bytes, length));
 }
 
 void wrenSetSlotDouble(WrenVM* vm, int slot, double value)
@@ -1645,7 +1656,7 @@ void wrenSetSlotString(WrenVM* vm, int slot, const char* text)
 {
   ASSERT(text != NULL, "String cannot be NULL.");
   
-  setSlot(vm, slot, wrenNewString(vm, text, strlen(text)));
+  setSlot(vm, slot, wrenNewString(vm, text));
 }
 
 void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle)

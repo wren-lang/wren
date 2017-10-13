@@ -695,20 +695,26 @@ static void hashString(ObjString* string)
   string->hash = hash;
 }
 
-Value wrenNewString(WrenVM* vm, const char* text, size_t length)
+Value wrenNewString(WrenVM* vm, const char* text)
+{
+  return wrenNewStringLength(vm, text, strlen(text));
+}
+
+Value wrenNewStringLength(WrenVM* vm, const char* text, size_t length)
 {
   // Allow NULL if the string is empty since byte buffers don't allocate any
   // characters for a zero-length string.
   ASSERT(length == 0 || text != NULL, "Unexpected NULL string.");
-
+  
   ObjString* string = allocateString(vm, length);
-
+  
   // Copy the string (if given one).
   if (length > 0 && text != NULL) memcpy(string->value, text, length);
-
+  
   hashString(string);
   return OBJ_VAL(string);
 }
+
 
 Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
                              uint32_t count, int step)
@@ -775,7 +781,7 @@ Value wrenNumToString(WrenVM* vm, double value)
   // = 24
   char buffer[24];
   int length = sprintf(buffer, "%.14g", value);
-  return wrenNewString(vm, buffer, length);
+  return wrenNewStringLength(vm, buffer, length);
 }
 
 Value wrenStringFromCodePoint(WrenVM* vm, int value)
@@ -868,7 +874,7 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index)
     char bytes[2];
     bytes[0] = string->value[index];
     bytes[1] = '\0';
-    return wrenNewString(vm, bytes, 1);
+    return wrenNewStringLength(vm, bytes, 1);
   }
 
   return wrenStringFromCodePoint(vm, codePoint);

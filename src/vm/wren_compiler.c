@@ -911,8 +911,8 @@ static void readString(Parser* parser)
     }
   }
 
-  parser->current.value = wrenNewString(parser->vm,
-                                        (char*)string.data, string.count);
+  parser->current.value = wrenNewStringLength(parser->vm,
+                                              (char*)string.data, string.count);
   
   wrenByteBufferClear(parser->vm, &string);
   makeToken(parser, type);
@@ -3188,8 +3188,8 @@ static bool method(Compiler* compiler, Variable classVariable)
   if (isForeign)
   {
     // Define a constant for the signature.
-    emitConstant(compiler, wrenNewString(compiler->parser->vm,
-                                         fullSignature, length));
+    emitConstant(compiler, wrenNewStringLength(compiler->parser->vm,
+                                               fullSignature, length));
 
     // We don't need the function we started compiling in the parameter list
     // any more.
@@ -3229,8 +3229,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   classVariable.index = declareNamedVariable(compiler);
   
   // Create shared class name value
-  Value classNameString = wrenNewString(compiler->parser->vm, 
-    compiler->parser->previous.start, compiler->parser->previous.length);
+  Value classNameString = wrenNewStringLength(compiler->parser->vm,
+      compiler->parser->previous.start, compiler->parser->previous.length);
   
   // Create class name string to track method duplicates
   ObjString* className = AS_STRING(classNameString);
@@ -3349,9 +3349,9 @@ static void import(Compiler* compiler)
 
     // Define a string constant for the variable name.
     int variableConstant = addConstant(compiler,
-        wrenNewString(compiler->parser->vm,
-                      compiler->parser->previous.start,
-                      compiler->parser->previous.length));
+        wrenNewStringLength(compiler->parser->vm,
+                            compiler->parser->previous.start,
+                            compiler->parser->previous.length));
 
     // Load the variable from the other module.
     loadCoreVariable(compiler, "System");

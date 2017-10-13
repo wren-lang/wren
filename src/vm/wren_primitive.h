@@ -32,7 +32,7 @@
 
 #define RETURN_ERROR(msg) \
     do { \
-      vm->fiber->error = wrenNewString(vm, msg, sizeof(msg) - 1); \
+      vm->fiber->error = wrenNewStringLength(vm, msg, sizeof(msg) - 1); \
       return false; \
     } while (0);
 
