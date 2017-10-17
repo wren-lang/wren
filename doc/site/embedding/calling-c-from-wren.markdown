@@ -37,8 +37,10 @@ statement itself is evaluated -- the VM asks the host application for the C
 function that should be used for the foreign method.
 
 It does this through the `bindForeignMethodFn` callback you give it when you
-first configure the VM. This callback isn't the foreign method itself. It's the
-binding function your app uses to *look up* the foreign methods.
+first [configure the VM][config]. This callback isn't the foreign method itself.
+It's the binding function your app uses to *look up* foreign methods.
+
+[config]: configuring-the-vm.html
 
 Its signature is:
 
@@ -112,8 +114,7 @@ object is in slot zero, and arguments are in consecutive slots after that.
 
 You use the slot API to read those arguments, and then perform whatever work you
 want to in C. If you want the foreign method to return a value, place it in slot
-zero. that slot, the foreign method will implicitly return the receiver, since
-that's what is already in there.) Like so:
+zero. Like so:
 
     :::c
     void mathAdd(WrenVM* vm)
@@ -124,7 +125,9 @@ that's what is already in there.) Like so:
     }
 
 While your foreign method is executed, the VM is completely suspended. No other
-fibers will run until your foreign method returns.
+fibers will run until your foreign method returns. You should *not* try to
+resume the VM from within a foreign method by calling `wrenCall()` or
+`wrenInterpret()`. The VM is not re-entrant.
 
 This covers foreign behavior, but what about foreign *state*? For that, we need
 a foreign *class*...

@@ -14,8 +14,8 @@ of the VM. These functions are based on two fundamental concepts: **slots** and
 
 When you want to send data to Wren, read data from it, or generally monkey
 around with Wren objects from C, you do so by going through an array of slots.
-You can think of it as a shared message board that both the VM and your C code
-leave notes on for the other side to process.
+Think of it as a shared message board that both the VM and your C code leave
+notes on for the other side to process.
 
 The array is zero-based, and each slot can hold a value of any type. It is
 dynamically sized, but it's your responsibility to ensure there are enough slots
@@ -58,8 +58,9 @@ enough slots for the objects it is sending you.
 
 ### Writing slots
 
-Once you have some slots, you can store data in them using a number of functions all named `wrenSetSlot<type>()` where `<type>` is the kind of data.
-We'll start with the simple ones:
+Once you have some slots, you store data in them using a number of functions all
+named `wrenSetSlot<type>()` where `<type>` is the kind of data. We'll start with
+the simple ones:
 
     :::c
     void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
@@ -231,15 +232,13 @@ A handle is an opaque wrapper around an object of any type, but just as
 important, it's a *persistent* one. When Wren gives you a pointer to a
 WrenHandle, it guarantees that that pointer remains valid. You can keep it
 around as long as you want. Even if a garbage collection occurs, Wren will
-ensure all of the handle and the objects they wrap are kept safely in memory.
+ensure the handle and the object it wraps are kept safely in memory.
 
 Internally, Wren keeps a list of all of the WrenHandles that have been created.
 That way, during garbage collection, it can find them all and make sure their
-objects aren't freed.
-
-But what if you don't want it to be kept around any more? Since C relies on
-manual memory management, WrenHandle does too. When you are done with one, you
-must explicitly release it by calling:
+objects aren't freed. But what if you don't want it to be kept around any more?
+Since C relies on manual memory management, WrenHandle does too. When you are
+done with one, you must explicitly release it by calling:
 
     :::c
     void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle);

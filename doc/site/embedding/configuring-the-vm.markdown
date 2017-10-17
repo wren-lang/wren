@@ -2,7 +2,7 @@
 
 When you create a Wren VM, you tweak it by passing in a pointer to a
 WrenConfiguration structure. Since Wren has no global state, you can configure
-each VM them differently if your application happens to run multiple.
+each VM differently if your application happens to run multiple.
 
 The struct looks like:
 
@@ -20,7 +20,8 @@ The struct looks like:
       int heapGrowthPercent;
     } WrenConfiguration;
 
-Most fields have useful defaults, which you can (and should) set by calling:
+Most fields have useful defaults, which you can (and should) initialize by
+calling:
 
     :::c
     wrenInitConfiguration(&configuration);
@@ -51,7 +52,7 @@ host should return the source code for that module. Memory for the source should
 be allocated using the same allocator that the VM uses for other allocation (see
 below). Wren will take ownership of the returned string and free it later.
 
-The module loader will only be called once for any given module name. Wren caches
+The module loader is only be called once for any given module name. Wren caches
 the result internally so subsequent imports of the same module use the
 previously loaded code.
 
@@ -63,20 +64,18 @@ If you don't use any `import` statements, you can leave this `NULL`.
 ### `bindForeignMethodFn`
 
 The callback Wren uses to find a foreign method and bind it to a class. See
-[this page][foreign method] for details.
+[this page][foreign method] for details. If your application defines no foreign
+methods, you can leave this `NULL`.
 
 [foreign method]: /embedding/calling-c-from-wren.html
-
-If your application defines no foreign methods, you can leave this `NULL`.
 
 ### `bindForeignClassFn`
 
 The callback Wren uses to find a foreign class and get its foreign methods. See
-[this page][foreign class] for details.
+[this page][foreign class] for details. If your application defines no foreign
+classes, you can leave this `NULL`.
 
 [foreign class]: /embedding/storing-c-data.html
-
-If your application defines no foreign classes, you can leave this `NULL`.
 
 ## Diagnostics
 
@@ -108,7 +107,7 @@ is:
           int line,
           const char* message)
 
-The type parameter is one of:
+The `type` parameter is one of:
 
     :::c
     typedef enum
@@ -197,5 +196,4 @@ frequent garbage collections.
 
 If set to zero, the VM uses a default of 50.
 
-<a class="right" href="application-lifecycle.html">Application Lifecycle &rarr;</a>
 <a href="storing-c-data.html">&larr; Storing C Data</a>

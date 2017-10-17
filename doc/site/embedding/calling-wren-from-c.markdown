@@ -7,7 +7,7 @@ compiler, but that's still a good bit of work.
 
 It's also not an effective way to communicate. You can't pass arguments to
 Wren&mdash;at least, not without doing something nasty like converting them to
-literals in a string of source code&mdash;and we can't get a result value back.
+literals in a string of source code&mdash;and you can't get a result value back.
 
 `wrenInterpret()` is great for loading code into the VM, but it's not the best
 way to execute code that's already been loaded. What we want to do is invoke
@@ -26,7 +26,7 @@ C, first we need a few things:
 
 [signature]: ../method-calls.html#signature
 
-* **The receiver to invoke the method on.** It's the receiver's class that
+* **The receiver object to invoke the method on.** The receiver's class
   determines which method is actually called.
 
 * **The arguments to pass to the method.**

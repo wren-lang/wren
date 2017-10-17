@@ -92,15 +92,10 @@ have to explicitly link to.
 [libm]: https://en.wikipedia.org/wiki/C_mathematical_functions#libm
 
 If your program is in C++ but you are linking to the Wren library compiled as C,
-then you'll need to handle the calling convention differences like so:
+this header handles the differences in calling conventions between C and C++:
 
     :::c
-    extern "C" {
-    #include "wren.h"
-    }
-
-(Wren's source can be compiled as either C or C++, so you can skip this by
-compiling the whole thing yourself as C++. Whatever floats your boat.)
+    #include "wren.hpp"
 
 ## Creating a Wren VM
 
@@ -115,7 +110,7 @@ This gives you a basic configuration that has reasonable defaults for
 everything. If you don't need to tweak stuff, you can leave it at that. We'll
 [learn more][configuration] about what you can configure later.
 
-[configuration]: configuration.html
+[configuration]: configuring-the-vm.html
 
 With this ready, you can create the VM:
 
@@ -128,7 +123,7 @@ a WrenVM. You can have multiple Wren VMs running independently of each other
 without any problems, even concurrently on different threads.
 
 `wrenNewVM()` stores its own copy of the configuration, so after calling it, you
-can discard the `WrenConfiguration` struct you filled in. Now you have a live
+can discard the WrenConfiguration struct you filled in. Now you have a live
 VM, waiting to run some code!
 
 ## Executing Wren code
