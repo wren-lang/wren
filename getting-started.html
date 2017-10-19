@@ -45,7 +45,7 @@
       <h2>reference</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
-        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
@@ -85,7 +85,7 @@
         <td>
           <ul>
             <li><a href="modules">Modules</a></li>
-            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
           </ul>
@@ -114,10 +114,10 @@ few dependencies are nice that way. &ldquo;Wren&rdquo; encompasses two separate 
 </li>
 </ul>
 <p>If you&rsquo;re on a Unix or Mac and you can rock a command line, it&rsquo;s just: </p>
-<div class="codehilite"><pre><span class="nv">$ </span>git clone https://github.com/munificent/wren.git
-<span class="nv">$ </span><span class="nb">cd </span>wren 
-<span class="nv">$ </span>make 
-<span class="nv">$ </span>./wren
+<div class="codehilite"><pre><span></span>$ git clone https://github.com/munificent/wren.git
+$ <span class="nb">cd</span> wren 
+$ make 
+$ ./wren
 </pre></div>
 
 
@@ -130,7 +130,7 @@ Windows brethren, <code>util/msvc2013</code> contains a Visual Studio solution. 
 that these may not have the exact same build settings as the makefile. The 
 makefile is the &ldquo;official&rdquo; way to compile Wren. </p>
 <p>If you only want to build the VM, you can do: </p>
-<div class="codehilite"><pre><span class="nv">$ </span>make vm
+<div class="codehilite"><pre><span></span>$ make vm
 </pre></div>
 
 
@@ -140,12 +140,12 @@ libuv since it isn&rsquo;t needed. </p>
 <p>If you just run <code>wren</code> without any arguments, it starts the interpreter in 
 interactive mode. You can type in a line of code, and it immediately executes 
 it. Here&rsquo;s something to try: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello, world!&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello, world!&quot;</span><span class="p">)</span>
 </pre></div>
 
 
 <p>Or a little more exciting: </p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Counting up </span><span class="si">%(</span><span class="err">i</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Counting up </span><span class="si">%(</span><span class="err">i</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -155,7 +155,7 @@ your computer to the ground and storm off. </p>
 <p>The standalone interpreter can also load scripts from files and run them. Just 
 pass the name of the script to <code>wren</code>. Create a file named &ldquo;my_script.wren&rdquo; in 
 your favorite text editor and paste this into it: </p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">yPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">24</span><span class="p">)</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">yPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">24</span><span class="p">)</span> <span class="p">{</span> 
   <span class="k">var</span> <span class="err">y</span> <span class="o">=</span> <span class="n">yPixel</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">-</span> <span class="mi">1</span> 
   <span class="k">for</span> <span class="p">(</span><span class="n">xPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">80</span><span class="p">)</span> <span class="p">{</span> 
     <span class="k">var</span> <span class="err">x</span> <span class="o">=</span> <span class="n">xPixel</span> <span class="o">/</span> <span class="mi">30</span> <span class="o">-</span> <span class="mi">2</span> 
@@ -178,7 +178,7 @@ your favorite text editor and paste this into it: </p>
 
 
 <p>Now run: </p>
-<div class="codehilite"><pre><span class="nv">$ </span>./wren my_script.wren
+<div class="codehilite"><pre><span></span>$ ./wren my_script.wren
 </pre></div>
 
 

@@ -45,7 +45,7 @@
       <h2>reference</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
-        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
@@ -85,7 +85,7 @@
         <td>
           <ul>
             <li><a href="modules">Modules</a></li>
-            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
           </ul>
@@ -103,12 +103,12 @@ bottom like a typical scripting language. (Internally, programs are compiled to
 bytecode for <a href="performance.html">efficiency</a>, but that&rsquo;s an implementation detail.) </p>
 <h2>Comments <a href="#comments" name="comments" class="header-anchor">#</a></h2>
 <p>Line comments start with <code>//</code> and end at the end of the line:</p>
-<div class="codehilite"><pre><span class="c1">// This is a comment.</span>
+<div class="codehilite"><pre><span></span><span class="c1">// This is a comment.</span>
 </pre></div>
 
 
 <p>Block comments start with <code>/*</code> and end with <code>*/</code>. They can span multiple lines: </p>
-<div class="codehilite"><pre><span class="cm">/* This </span>
+<div class="codehilite"><pre><span></span><span class="cm">/* This </span>
 <span class="cm">   is </span>
 <span class="cm">   a </span>
 <span class="cm">   multi-line </span>
@@ -117,7 +117,7 @@ bytecode for <a href="performance.html">efficiency</a>, but that&rsquo;s an impl
 
 
 <p>Unlike C, block comments can nest in Wren: </p>
-<div class="codehilite"><pre><span class="cm">/* This is /* a nested */ comment. */</span>
+<div class="codehilite"><pre><span></span><span class="cm">/* This is /* a nested */ comment. */</span>
 </pre></div>
 
 
@@ -126,7 +126,7 @@ even if the code already contains block comments. </p>
 <h2>Reserved words <a href="#reserved-words" name="reserved-words" class="header-anchor">#</a></h2>
 <p>One way to get a quick feel for a language&rsquo;s style is to see what words it 
 reserves. Here&rsquo;s what Wren has: </p>
-<div class="codehilite"><pre><span class="k">break</span> <span class="k">class</span> <span class="k">construct</span> <span class="k">else</span> <span class="kc">false</span> <span class="k">for</span> <span class="k">foreign</span> <span class="k">if</span> <span class="k">import</span> 
+<div class="codehilite"><pre><span></span><span class="k">break</span> <span class="k">class</span> <span class="k">construct</span> <span class="k">else</span> <span class="kc">false</span> <span class="k">for</span> <span class="k">foreign</span> <span class="k">if</span> <span class="k">import</span> 
 <span class="k">in</span> <span class="k">is</span> <span class="kc">null</span> <span class="k">return</span> <span class="k">static</span> <span class="k">super</span> <span class="nb">this</span> <span class="kc">true</span> <span class="k">var</span> <span class="k">while</span>
 </pre></div>
 
@@ -135,7 +135,7 @@ reserves. Here&rsquo;s what Wren has: </p>
 <p>Naming rules are similar to other programming languages. Identifiers start with 
 a letter or underscore and may contain letters, digits, and underscores. Case 
 is sensitive. </p>
-<div class="codehilite"><pre><span class="n">hi</span> 
+<div class="codehilite"><pre><span></span><span class="n">hi</span> 
 <span class="n">camelCase</span> 
 <span class="vg">PascalCase</span> 
 <span class="vi">_under_score</span> 
@@ -148,7 +148,7 @@ is sensitive. </p>
 to indicate <a href="classes.html#fields">fields</a> in classes. </p>
 <h2>Newlines <a href="#newlines" name="newlines" class="header-anchor">#</a></h2>
 <p>Newlines (<code>\n</code>) are meaningful in Wren. They are used to separate statements: </p>
-<div class="codehilite"><pre><span class="c1">// Two statements:</span>
+<div class="codehilite"><pre><span></span><span class="c1">// Two statements:</span>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;hi&quot;</span><span class="p">)</span> <span class="c1">// Newline.</span>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;bye&quot;</span><span class="p">)</span>
 </pre></div>
@@ -157,7 +157,7 @@ to indicate <a href="classes.html#fields">fields</a> in classes. </p>
 <p>Sometimes, though, a statement doesn&rsquo;t fit on a single line and jamming a 
 newline in the middle would trip it up. To handle that, Wren has a very simple 
 rule: It ignores a newline following any token that can&rsquo;t end a statement. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span> <span class="c1">// Newline here is ignored.</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span> <span class="c1">// Newline here is ignored.</span>
     <span class="s">&quot;hi&quot;</span><span class="p">)</span>
 </pre></div>
 
@@ -170,7 +170,7 @@ statement is allowed, like in <a href="control-flow.html">control flow</a> state
 <a href="classes.html#methods">Method</a> and <a href="functions.html">function</a> bodies are also 
 blocks. For example, here we have a block for the then case, and a single 
 statement for the else: </p>
-<div class="codehilite"><pre><span class="k">if</span> <span class="p">(</span><span class="n">happy</span> <span class="o">&amp;&amp;</span> <span class="n">knowIt</span><span class="p">)</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">happy</span> <span class="o">&amp;&amp;</span> <span class="n">knowIt</span><span class="p">)</span> <span class="p">{</span> 
   <span class="n">hands</span><span class="o">.</span><span class="n">clap</span><span class="p">()</span> 
 <span class="p">}</span> <span class="k">else</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;sad&quot;</span><span class="p">)</span>
 </pre></div>
@@ -178,7 +178,7 @@ statement for the else: </p>
 
 <p>Blocks have two similar but not identical forms. Typically, blocks contain a 
 series of statements like: </p>
-<div class="codehilite"><pre><span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="p">{</span> 
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;one&quot;</span><span class="p">)</span> 
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;two&quot;</span><span class="p">)</span> 
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;three&quot;</span><span class="p">)</span> 
@@ -192,7 +192,7 @@ value, you need an explicit <code>return</code> statement. </p>
 <p>However, it&rsquo;s pretty common to have a method or function that just evaluates 
 and returns the result of a single expression. For that, Wren has a more 
 compact notation: </p>
-<div class="codehilite"><pre><span class="p">{</span> <span class="s">&quot;single expression&quot;</span> <span class="p">}</span>
+<div class="codehilite"><pre><span></span><span class="p">{</span> <span class="s">&quot;single expression&quot;</span> <span class="p">}</span>
 </pre></div>
 
 
@@ -200,8 +200,20 @@ compact notation: </p>
 <a href="functions.html">function</a>), then the block may only contain a single 
 expression, and it automatically returns the result of it. It&rsquo;s exactly the 
 same as doing: </p>
-<div class="codehilite"><pre><span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="p">{</span> 
   <span class="k">return</span> <span class="s">&quot;single expression&quot;</span> 
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Statements are not allowed in this form (since they don&rsquo;t produce values), which 
+means nothing starting with <code>class</code>, <code>for</code>, <code>if</code>, <code>import</code>,  <code>return</code>, 
+<code>var</code>, or <code>while</code>. If you want a block that contains a single statement, 
+put a newline in there: </p>
+<div class="codehilite"><pre><span></span><span class="p">{</span> 
+  <span class="k">if</span> <span class="p">(</span><span class="n">happy</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I&#39;m feelin&#39; it!&quot;</span><span class="p">)</span> 
+  <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
 

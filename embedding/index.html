@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Embedding &ndash; Wren</title>
+<link rel="stylesheet" type="text/css" href="../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top" class="embedding">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <section>
+      <h2>embedding</h2>
+      <ul>
+        <li><a href="./">Introduction</a></li>
+        <li><a href="slots-and-handles.html">Slots and Handles</a></li>
+        <li><a href="calling-wren-from-c.html">Calling Wren from C</a></li>
+        <li><a href="calling-c-from-wren.html">Calling C from Wren</a></li>
+        <li><a href="storing-c-data.html">Storing C Data</a></li>
+        <li><a href="configuring-the-vm.html">Configuring the VM</a></li>
+      </ul>
+    </section>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><h2>embedding</h2></td>
+        <td><h2>?</h2></td>
+        <td><h2>?</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="./">Introduction</a></li>
+            <li><a href="slots-and-handles.html">Slots and Handles</a></li>
+            <li><a href="calling-wren-from-c.html">Calling Wren from C</a></li>
+            <li><a href="calling-c-from-wren.html">Calling C from Wren</a></li>
+            <li><a href="storing-c-data.html">Storing C Data</a></li>
+            <li><a href="configuring-the-vm.html">Configuring the VM</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+          </ul>
+        </td>
+        <td>
+          <ul>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h1>Embedding</h1>
+    <p>Wren is designed to be a scripting language that lives inside a host 
+application, so the embedding API is as important as any of its language 
+features. Designing this API well requires satisfying several constraints: </p>
+<ol>
+<li>
+<p><strong>Wren is dynamically typed, but C is not.</strong> A variable can hold a value of 
+   any type in Wren, but that&rsquo;s definitely not the case in C unless you define 
+   some sort of variant type, which ultimately just kicks the problem down the 
+   road. Eventually, we have to move data across the boundary between statically and dynamically typed code. </p>
+</li>
+<li>
+<p><strong>Wren uses garbage collection, but C manages memory manually.</strong> GC adds a 
+   few constraints on the API. The VM must be able to find every Wren object 
+   that is still usable, even if that object is being referenced from native C 
+   code. Otherwise, Wren could free an object that&rsquo;s still in use. </p>
+<p>Also, we ideally don&rsquo;t want to let native C code see a bare pointer to a 
+chunk of memory managed by Wren. Many garbage collection strategies involve 
+<a href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Copying_vs._mark-and-sweep_vs._mark-and-don.27t-sweep">moving objects</a> in memory. If we allow C code to point directly to an 
+object, that pointer will be left dangling when the object moves. Wren&rsquo;s GC 
+doesn&rsquo;t move objects today, but we would like to keep that option for the 
+future. </p>
+</li>
+<li>
+<p><strong>The embedding API needs to be fast.</strong> Users may add layers of abstraction 
+   on top of the API to make it more pleasant to work with, but the base API 
+   defines the <em>maximum</em> performance you can get out of the system. It&rsquo;s the 
+   bottom of the stack, so there&rsquo;s no way for a user to optimize around it if 
+   it&rsquo;s too slow. There is no lower level alternative. </p>
+</li>
+<li>
+<p><strong>We want the API to be pleasant to use.</strong> This is the last constraint 
+   because it&rsquo;s the softest. Of course, we want a beautiful, usable API. But we 
+   really <em>need</em> to handle the above, so we&rsquo;re willing to make things a bit more 
+   of a chore to reach the first three goals. </p>
+</li>
+</ol>
+<p>Fortunately, we aren&rsquo;t the first people to tackle this. If you&rsquo;re familiar with 
+<a href="https://www.lua.org/pil/24.html">Lua&rsquo;s C API</a>, you&rsquo;ll find Wren&rsquo;s similar. </p>
+<h3>Performance and safety <a href="#performance-and-safety" name="performance-and-safety" class="header-anchor">#</a></h3>
+<p>When code is safely snuggled within the confines of the VM, it&rsquo;s pretty safe. 
+Method calls are dynamically checked and generate runtime errors which can be 
+caught and handled. The stack grows if it gets close to overflowing. In general, 
+when you&rsquo;re within Wren code, it tries very hard to avoid crashing and burning. </p>
+<p>This is why you use a high level language after all&mdash;it&rsquo;s safer and more 
+productive than C. C, meanwhile, really assumes you know what you&rsquo;re doing. You 
+can cast pointers in invalid ways, misinterpret bits, use memory after freeing 
+it, etc. What you get in return is blazing performance. Many of the reasons C is 
+fast are because it takes all the governors and guardrails off. </p>
+<p>Wren&rsquo;s embedding API defines the border between those worlds, and takes on some 
+of the characteristics of C. When you call any of the embedding API functions, 
+it assumes you are calling them correctly. If you invoke a Wren method from C 
+that expects three arguments, it trusts that you gave it three arguments. </p>
+<p>In debug builds, Wren has assertions to check as many things as it can, but in 
+release builds, Wren expects you to do the right thing. This means you need to 
+take care when using the embedding API, just like you do in all C code you 
+write. In return, you get an API that is quite fast. </p>
+<h2>Including Wren <a href="#including-wren" name="including-wren" class="header-anchor">#</a></h2>
+<p>There are two (well, three) ways to get the Wren VM into your program: </p>
+<ol>
+<li>
+<p><strong>Link to the static or dynamic library.</strong> When you <a href="../getting-started.html">build Wren</a>, it 
+    generates both shared and static libraries in <code>lib</code> that you can link to. </p>
+</li>
+<li>
+<p><strong>Include the source directly in your application.</strong> If you want to include 
+    the source directly in your program, you don&rsquo;t need to run any build steps. 
+    Just add the source files in <code>src/vm</code> to your project. They should compile 
+    cleanly as C99 or C++98 or anything later. </p>
+</li>
+</ol>
+<p>In either case, you also want to add <code>src/include</code> to your include path so you 
+can find the <a href="https://github.com/munificent/wren/blob/master/src/include/wren.h">public header for Wren</a>: </p>
+<div class="codehilite"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;wren.h&quot;</span><span class="cp"></span>
+</pre></div>
+
+
+<p>Wren depends only on the C standard library, so you don&rsquo;t usually need to link 
+to anything else. On some platforms (at least BSD and Linux) some of the math 
+functions in <code>math.h</code> are implemented in a separate library, <a href="https://en.wikipedia.org/wiki/C_mathematical_functions#libm">libm</a>, that you 
+have to explicitly link to. </p>
+<p>If your program is in C++ but you are linking to the Wren library compiled as C, 
+this header handles the differences in calling conventions between C and C++: </p>
+<div class="codehilite"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;wren.hpp&quot;</span><span class="cp"></span>
+</pre></div>
+
+
+<h2>Creating a Wren VM <a href="#creating-a-wren-vm" name="creating-a-wren-vm" class="header-anchor">#</a></h2>
+<p>Once you&rsquo;ve integrated the code into your executable, you need to create a 
+virtual machine. To do that, you create a WrenConfiguration: </p>
+<div class="codehilite"><pre><span></span><span class="n">WrenConfiguration</span> <span class="n">config</span><span class="p">;</span> 
+<span class="n">wrenInitConfiguration</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
+</pre></div>
+
+
+<p>This gives you a basic configuration that has reasonable defaults for 
+everything. If you don&rsquo;t need to tweak stuff, you can leave it at that. We&rsquo;ll 
+<a href="configuring-the-vm.html">learn more</a> about what you can configure later. </p>
+<p>With this ready, you can create the VM: </p>
+<div class="codehilite"><pre><span></span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span> <span class="o">=</span> <span class="n">wrenNewVM</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
+</pre></div>
+
+
+<p>This allocates memory for a new VM and initializes it. The Wren C implementation 
+has no global state, so every single bit of data Wren uses is bundled up inside 
+a WrenVM. You can have multiple Wren VMs running independently of each other 
+without any problems, even concurrently on different threads. </p>
+<p><code>wrenNewVM()</code> stores its own copy of the configuration, so after calling it, you 
+can discard the WrenConfiguration struct you filled in. Now you have a live 
+VM, waiting to run some code! </p>
+<h2>Executing Wren code <a href="#executing-wren-code" name="executing-wren-code" class="header-anchor">#</a></h2>
+<p>You execute a string of Wren source code like so: </p>
+<div class="codehilite"><pre><span></span><span class="n">WrenInterpretResult</span> <span class="n">result</span> <span class="o">=</span> <span class="n">wrenInterpret</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> 
+    <span class="s">&quot;System.print(</span><span class="se">\&quot;</span><span class="s">I am running in a VM!</span><span class="se">\&quot;</span><span class="s">)&quot;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>The string is a series of one or more statements separated by newlines. Wren 
+copies the string, so you can free it after calling this. When you call 
+<code>wrenInterpret()</code>, Wren first compiles your source to bytecode. If an error 
+occurs, it returns immediately with <code>WREN_RESULT_COMPILE_ERROR</code>. </p>
+<p>Otherwise, Wren spins up a new <a href="../concurrency.html">fiber</a> and executes the code in that. Your 
+code can in turn spawn whatever other fibers it wants. It keeps running fibers 
+until they all complete or one <a href="../modules/core/fiber.html#fiber.suspend()">suspends</a>. </p>
+<p>If a <a href="error-handling.html">runtime error</a> occurs (and another fiber doesn&rsquo;t handle it), Wren aborts 
+fibers all the way back to the main one and returns <code>WREN_RESULT_RUNTIME_ERROR</code>. 
+Otherwise, when the last fiber successfully returns, it returns 
+<code>WREN_RESULT_SUCCESS</code>. </p>
+<p>All code passed to <code>wrenInterpret()</code> runs in a special &ldquo;main&rdquo; module. That way, 
+top-level names defined in one call can be accessed in later ones. It&rsquo;s similar 
+to a REPL session. </p>
+<h2>Shutting down a VM <a href="#shutting-down-a-vm" name="shutting-down-a-vm" class="header-anchor">#</a></h2>
+<p>Once the party is over and you&rsquo;re ready to end your relationship with a VM, you 
+need to free any memory it allocated. You do that like so: </p>
+<div class="codehilite"><pre><span></span><span class="n">wrenFreeVM</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+</pre></div>
+
+
+<p>After calling that, you obviously cannot use the <code>WrenVM*</code> you passed to it 
+again. It&rsquo;s dead. </p>
+<p>Note that Wren will yell at you if you still have any live <a href="slots-and-handles.html#handles">WrenHandle</a> 
+objects when you call this. This makes sure you haven&rsquo;t lost track of any of 
+them (which leaks memory) and you don&rsquo;t try to use any of them after the VM has 
+been freed. </p>
+<p>Next, we&rsquo;ll learn to make that VM do useful stuff&hellip; </p>
+<p><a class="right" href="slots-and-handles.html">Slots and Handles &rarr;</a> </p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

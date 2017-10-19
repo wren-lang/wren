@@ -45,7 +45,7 @@
       <h2>reference</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
-        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
@@ -85,7 +85,7 @@
         <td>
           <ul>
             <li><a href="modules">Modules</a></li>
-            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
           </ul>
@@ -109,7 +109,7 @@ you&rsquo;re filtering on. </p>
 <p>Since that&rsquo;s the most common usage pattern, Wren&rsquo;s syntax optimizes for that. 
 Taking a page from Ruby, a function is created by passing a <em>block argument</em> to 
 a method. At its simplest, it looks like this: </p>
-<div class="codehilite"><pre><span class="n">blondie</span><span class="o">.</span><span class="n">callMe</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="n">blondie</span><span class="o">.</span><span class="n">callMe</span> <span class="p">{</span> 
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;This is the body!&quot;</span><span class="p">)</span> 
 <span class="p">}</span>
 </pre></div>
@@ -121,17 +121,19 @@ following <a href="syntax.html#blocks">block</a>&mdash;everything between that p
 curly braces. </p>
 <p>Methods that take a block argument receive it as a normal parameter. <code>callMe</code> 
 could be defined like so: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Blondie</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Blondie</span> <span class="p">{</span> 
   <span class="n">callMe</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="p">{</span> 
     <span class="c1">// Call it...</span>
   <span class="p">}</span> 
 <span class="p">}</span>
+
+<span class="k">var</span> <span class="n">blondie</span> <span class="o">=</span> <span class="vg">Blondie</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 </pre></div>
 
 
 <p>A method can take other arguments in addition to the block. They appear before 
 the block just like a regular argument list. For example: </p>
-<div class="codehilite"><pre><span class="n">blondie</span><span class="o">.</span><span class="n">callMeAt</span><span class="p">(</span><span class="mi">867</span><span class="p">,</span> <span class="mi">5309</span><span class="p">)</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="n">blondie</span><span class="o">.</span><span class="n">callMeAt</span><span class="p">(</span><span class="mi">867</span><span class="p">,</span> <span class="mi">5309</span><span class="p">)</span> <span class="p">{</span> 
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;This is the body!&quot;</span><span class="p">)</span> 
 <span class="p">}</span>
 </pre></div>
@@ -140,7 +142,7 @@ the block just like a regular argument list. For example: </p>
 <p>Of course, you don&rsquo;t <em>have</em> to use a block argument to pass a function to a 
 method. If you already have a function object, you can pass it like a regular 
 argument: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">someFn</span> <span class="o">=</span> <span class="c1">// Get a function...</span>
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">someFn</span> <span class="o">=</span> <span class="c1">// Get a function...</span>
 <span class="n">blondie</span><span class="o">.</span><span class="n">callMe</span><span class="p">(</span><span class="n">someFn</span><span class="p">)</span>
 </pre></div>
 
@@ -149,7 +151,7 @@ argument: </p>
 little blob of syntax. There are some times when you want to create a function 
 but <em>don&rsquo;t</em> need to pass it to a method. For that, you can call the <code>Fn</code> 
 class&rsquo;s constructor: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">someFn</span> <span class="o">=</span> <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">someFn</span> <span class="o">=</span> <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hi!&quot;</span><span class="p">)</span> 
 <span class="p">}</span>
 </pre></div>
@@ -160,7 +162,7 @@ return that, so this exists purely as a convenience method for you. </p>
 <h2>Calling functions <a href="#calling-functions" name="calling-functions" class="header-anchor">#</a></h2>
 <p>Once you have a function, how do you invoke it? Like everything in Wren, you do 
 so by calling a method on it: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Blondie</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Blondie</span> <span class="p">{</span> 
   <span class="n">callMe</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="p">{</span> 
     <span class="n">fn</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> 
   <span class="p">}</span> 
@@ -171,7 +173,7 @@ so by calling a method on it: </p>
 <p>Functions expose a <code>call()</code> method that executes the body of the function. This 
 method is dynamically-dispatched like any other, so you can define your own 
 &ldquo;function-like&rdquo; classes and pass them to methods that expect &ldquo;real&rdquo; functions. </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">FakeFn</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">FakeFn</span> <span class="p">{</span> 
   <span class="n">call</span><span class="p">()</span> <span class="p">{</span> 
     <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I&#39;m feeling functional!&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
@@ -186,7 +188,7 @@ method is dynamically-dispatched like any other, so you can define your own
 functions that we&rsquo;ve seen so far take no arguments. To change that, you can 
 provide a parameter list surrounded by <code>|</code> immediately after the opening brace 
 of the body, like so: </p>
-<div class="codehilite"><pre><span class="n">blondie</span><span class="o">.</span><span class="n">callMe</span> <span class="p">{</span><span class="o">|</span><span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="o">|</span> 
+<div class="codehilite"><pre><span></span><span class="n">blondie</span><span class="o">.</span><span class="n">callMe</span> <span class="p">{</span><span class="o">|</span><span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="o">|</span> 
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hi, &quot;</span> <span class="o">+</span> <span class="n">first</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">last</span> <span class="o">+</span> <span class="s">&quot;!&quot;</span><span class="p">)</span> 
 <span class="p">}</span>
 </pre></div>
@@ -194,7 +196,7 @@ of the body, like so: </p>
 
 <p>Here we&rsquo;re passing a function to <code>greet</code> that takes two parameters, <code>first</code> and 
 <code>last</code>. They are passed to the function when it&rsquo;s called: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Blondie</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Blondie</span> <span class="p">{</span> 
   <span class="n">callMe</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="p">{</span> 
     <span class="n">fn</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;Debbie&quot;</span><span class="p">,</span> <span class="s">&quot;Harry&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
@@ -212,7 +214,7 @@ expression. </p>
 <p>Otherwise, the body returns <code>null</code> by default. You can explicitly return a 
 value using a <code>return</code> statement. In other words, these two functions do the 
 same thing: </p>
-<div class="codehilite"><pre><span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="s">&quot;return value&quot;</span> <span class="p">}</span>
+<div class="codehilite"><pre><span></span><span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="s">&quot;return value&quot;</span> <span class="p">}</span>
 
 <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
   <span class="k">return</span> <span class="s">&quot;return value&quot;</span> 
@@ -224,7 +226,7 @@ same thing: </p>
 <p>As you expect, functions are closures&mdash;they can access variables defined 
 outside of their scope. They will hold onto closed-over variables even after 
 leaving the scope where the function is defined: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Counter</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Counter</span> <span class="p">{</span> 
   <span class="k">static</span> <span class="n">create</span><span class="p">()</span> <span class="p">{</span> 
     <span class="k">var</span> <span class="err">i</span> <span class="o">=</span> <span class="mi">0</span> 
     <span class="k">return</span> <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="err">i</span> <span class="o">=</span> <span class="err">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">}</span> 
@@ -237,7 +239,7 @@ leaving the scope where the function is defined: </p>
 function references a variable <code>i</code> declared outside of the function. Even after 
 the function is returned from <code>create</code>, it is still able to read and assign 
 to<code>i</code>: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">counter</span> <span class="o">=</span> <span class="vg">Counter</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> 
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">counter</span> <span class="o">=</span> <span class="vg">Counter</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> 
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="o">.</span><span class="n">call</span><span class="p">())</span> <span class="output">1</span>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="o">.</span><span class="n">call</span><span class="p">())</span> <span class="output">2</span>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">counter</span><span class="o">.</span><span class="n">call</span><span class="p">())</span> <span class="output">3</span>

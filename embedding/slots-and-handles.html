@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Slots and Handles &ndash; Wren</title>
+<link rel="stylesheet" type="text/css" href="../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top" class="embedding">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <section>
+      <h2>embedding</h2>
+      <ul>
+        <li><a href="./">Introduction</a></li>
+        <li><a href="slots-and-handles.html">Slots and Handles</a></li>
+        <li><a href="calling-wren-from-c.html">Calling Wren from C</a></li>
+        <li><a href="calling-c-from-wren.html">Calling C from Wren</a></li>
+        <li><a href="storing-c-data.html">Storing C Data</a></li>
+        <li><a href="configuring-the-vm.html">Configuring the VM</a></li>
+      </ul>
+    </section>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><h2>embedding</h2></td>
+        <td><h2>?</h2></td>
+        <td><h2>?</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="./">Introduction</a></li>
+            <li><a href="slots-and-handles.html">Slots and Handles</a></li>
+            <li><a href="calling-wren-from-c.html">Calling Wren from C</a></li>
+            <li><a href="calling-c-from-wren.html">Calling C from Wren</a></li>
+            <li><a href="storing-c-data.html">Storing C Data</a></li>
+            <li><a href="configuring-the-vm.html">Configuring the VM</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+          </ul>
+        </td>
+        <td>
+          <ul>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h1>Slots and Handles</h1>
+    <p>With <code>wrenInterpret()</code>, we can execute code, but that code can&rsquo;t do anything 
+particularly interesting. By default, the VM is isolated from the rest of the 
+world, so pretty much all it can do is turn your laptop into a lap warmer. </p>
+<p>To make our Wren code <em>useful</em>, the VM needs to communicate with the outside 
+world. Wren uses a single unified set of functions for passing data into and out 
+of the VM. These functions are based on two fundamental concepts: <strong>slots</strong> and 
+<strong>handles</strong>. </p>
+<h2>The Slot Array <a href="#the-slot-array" name="the-slot-array" class="header-anchor">#</a></h2>
+<p>When you want to send data to Wren, read data from it, or generally monkey 
+around with Wren objects from C, you do so by going through an array of slots. 
+Think of it as a shared message board that both the VM and your C code leave 
+notes on for the other side to process. </p>
+<p>The array is zero-based, and each slot can hold a value of any type. It is 
+dynamically sized, but it&rsquo;s your responsibility to ensure there are enough slots 
+<em>before</em> you use them. You do this by calling: </p>
+<div class="codehilite"><pre><span></span><span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slotCount</span><span class="p">);</span>
+</pre></div>
+
+
+<p>This grows the slot array if needed to ensure that many slots are available. If 
+it&rsquo;s already big enough, this does nothing. You&rsquo;ll typically call this once 
+before populating the slots with data that you want to send to Wren. </p>
+<div class="codehilite"><pre><span></span><span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> 
+<span class="c1">// Can now use slots 0 through 3, inclusive.</span>
+</pre></div>
+
+
+<p>After you ensure an array of slots, you can only rely on them being there until 
+you pass control back to Wren. That includes calling <code>wrenCall()</code> or 
+<code>wrenInterpret()</code>, or returning from a <a href="calling-c-from-wren.html">foreign method</a>. </p>
+<p>If you read or write from a slot that you haven&rsquo;t ensured is valid, Wren makes 
+no guarantees about what will happen. I&rsquo;ve heard rumors of smoke and feathers 
+flying out of a user&rsquo;s computer. </p>
+<p>If you want to see how big the slot array is, use: </p>
+<div class="codehilite"><pre><span></span><span class="kt">int</span> <span class="nf">wrenGetSlotCount</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">);</span>
+</pre></div>
+
+
+<p>It returns the number of slots in the array. Note that this may be higher than 
+the size you&rsquo;ve ensured. Wren reuses the memory for this array when possible, 
+so you may get one bigger than you need if it happened to be laying around. </p>
+<p>When Wren <a href="calling-c-from-wren.html">calls your C code</a> and passes data to you, it ensures there are 
+enough slots for the objects it is sending you. </p>
+<h3>Writing slots <a href="#writing-slots" name="writing-slots" class="header-anchor">#</a></h3>
+<p>Once you have some slots, you store data in them using a number of functions all 
+named <code>wrenSetSlot&lt;type&gt;()</code> where <code>&lt;type&gt;</code> is the kind of data. We&rsquo;ll start with 
+the simple ones: </p>
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenSetSlotBool</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">value</span><span class="p">);</span> 
+<span class="kt">void</span> <span class="nf">wrenSetSlotDouble</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> <span class="kt">double</span> <span class="n">value</span><span class="p">);</span> 
+<span class="kt">void</span> <span class="nf">wrenSetSlotNull</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Each of these takes a primitive C value and converts it to the corresponding 
+<a href="../values.html">Wren value</a>. (Since Wren&rsquo;s <a href="../values.html#numbers">native number type</a> <em>is</em> a double, there&rsquo;s not 
+really much <em>conversion</em> going on, but you get the idea.) </p>
+<p>You can also pass string data to Wren: </p>
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenSetSlotBytes</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> 
+                      <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">bytes</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">length</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">wrenSetSlotString</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> 
+                       <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">text</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Both of these copy the bytes into a new <a href="../values.html#strings">String</a> object managed by Wren&rsquo;s 
+garbage collector, so you can free your copy of it after you call this. The 
+difference between the two is that <code>wrenSetSlotBytes()</code> takes an explicit 
+length. Since Wren strings may contain arbitrary byte values, including the null 
+byte, this lets you pass those in. It&rsquo;s also a little faster to use this for 
+regular strings if you happen to know the length. The latter calculates the 
+length of the string using <code>strlen()</code>. </p>
+<h3>Reading slots <a href="#reading-slots" name="reading-slots" class="header-anchor">#</a></h3>
+<p>You can, of course, also pull data out of slots. Here are the simple ones: </p>
+<div class="codehilite"><pre><span></span><span class="kt">bool</span> <span class="nf">wrenGetSlotBool</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span> 
+<span class="kt">double</span> <span class="nf">wrenGetSlotDouble</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+</pre></div>
+
+
+<p>These take a Wren value of the corresponding type and convert it to its raw C 
+representation. For strings, we have: </p>
+<div class="codehilite"><pre><span></span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="nf">wrenGetSlotString</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span> 
+<span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="nf">wrenGetSlotBytes</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> 
+                             <span class="kt">int</span><span class="o">*</span> <span class="n">length</span><span class="p">);</span>
+</pre></div>
+
+
+<p>These return a pointer to the first byte of the string. If you want to know the 
+length, the latter stores it in the variable pointed to by <code>length</code>. Both of 
+these return a direct pointer to the bytes managed by Wren. You should not hold 
+on to this pointer for long. Wren does not promise that it won&rsquo;t move or free 
+the data. </p>
+<p>With these functions, you are going from dynamically typed Wren data to 
+statically typed C. It&rsquo;s up to <em>you</em> to ensure that you read a value as the 
+correct type. If you read a number from a slot that currently holds a string, 
+you&rsquo;re gonna have a bad time. </p>
+<p>Fortunately, you usually know what type of data you have in a slot. If not, you 
+can ask: </p>
+<div class="codehilite"><pre><span></span><span class="n">WrenType</span> <span class="nf">wrenGetSlotType</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+</pre></div>
+
+
+<p>This returns an enum defining what type of value is in the slot. It only covers 
+the primitive values that are supported by the C API. Things like ranges and 
+instances of classes come back as <code>WREN_TYPE_UNKNOWN</code>. If you want to move that 
+kind of data between Wren and C, you&rsquo;ll have to pull the object apart into 
+simple primitive values first or use a <a href="storing-c-data.html">foreign class</a>. </p>
+<h3>Looking up variables <a href="#looking-up-variables" name="looking-up-variables" class="header-anchor">#</a></h3>
+<p>There are a few other utility functions that move data into and out of slots. 
+Here&rsquo;s the first: </p>
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenGetVariable</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
+                     <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">name</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+</pre></div>
+
+
+<p>This looks up a top level variable with the given name in the module with the 
+given name and stores its value in the given slot. Note that classes are just 
+objects stored in variables too, so you can use this to look up a class by its 
+name. Handy for calling static methods on it. </p>
+<p>Like any method that works with strings, this one is a bit slow. It has to hash 
+the name and look it up in the module&rsquo;s string table. You might want to avoid 
+calling this in the middle of a hot loop where performance is critical. Instead, 
+it&rsquo;s faster to look up the variable once outside the loop and store a reference 
+to the object using a <a href="#handles">handle</a>. </p>
+<h3>Working with lists <a href="#working-with-lists" name="working-with-lists" class="header-anchor">#</a></h3>
+<p>The slot array is fine for moving a fixed number of objects between Wren and 
+C, but sometimes you need to shuttle a larger or dynamically-sized ball of 
+stuff. <a href="../lists.html">List objects</a> work well for that, so the C API lets you work 
+with them directly. </p>
+<p>You can create a new empty list from C using: </p>
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenSetSlotNewList</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+</pre></div>
+
+
+<p>It stores the resulting list in the given slot. If you have a list in a 
+slot&mdash;either one you created from C or from Wren&mdash;you can add elements 
+to it using: </p>
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenInsertInList</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">listSlot</span><span class="p">,</span> <span class="kt">int</span> <span class="n">index</span><span class="p">,</span> 
+                      <span class="kt">int</span> <span class="n">elementSlot</span><span class="p">);</span>
+</pre></div>
+
+
+<p>That&rsquo;s a lot of int parameters: </p>
+<ul>
+<li>
+<p><code>listSlot</code> is the slot where the list object is stored. That&rsquo;s the list you&rsquo;ll 
+  be modifying. If you created the list from C, it will be the slot you passed 
+  to <code>wrenSetSlotNewList()</code>. </p>
+</li>
+<li>
+<p><code>index</code> is the index within the list where you want to insert the element. 
+  Just like from within Wren, you can use a negative number to count back from 
+  the end, so <code>-1</code> appends to the list. </p>
+</li>
+<li>
+<p><code>elementSlot</code> identifies the slot where the value you want to insert in the 
+  list can be found. </p>
+</li>
+</ul>
+<p>This API means getting a value from C into a list is a two step operation. First 
+you move the value into a slot, then you take it from the slot and insert it in 
+the list. This is kind of tedious, but it lets us use the same set of functions 
+for moving values into slots of each primitive type. Otherwise, we&rsquo;d need 
+<code>wrenInsertInListDouble()</code>, <code>wrenInsertInListBool()</code>, etc. </p>
+<h2>Handles <a href="#handles" name="handles" class="header-anchor">#</a></h2>
+<p>Slots are pretty good for shuttling primitive data between C and Wren, but they 
+have two limitations: </p>
+<ol>
+<li>
+<p><strong>They are short-lived.</strong> As soon as you execute some more Wren code, the 
+    slot array is invalidated. You can&rsquo;t use a slot to persistently keep track 
+    of some object. </p>
+</li>
+<li>
+<p><strong>They only support primitive types.</strong> A slot can hold a value of any type, 
+    but the C API we&rsquo;ve seen so far doesn&rsquo;t let you <em>do</em> anything with values 
+    that aren&rsquo;t simple primitive ones. If you want to grab a reference to, 
+    say, an instance of some class, how do you do it? </p>
+</li>
+</ol>
+<p>To address those, we have handles. A handle wraps a reference to an object of 
+any kind&mdash;strings, numbers, instances of classes, collections, whatever. 
+You create a handle using this: </p>
+<div class="codehilite"><pre><span></span><span class="n">WrenHandle</span><span class="o">*</span> <span class="nf">wrenGetSlotHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+</pre></div>
+
+
+<p>This takes the object stored in the given slot, creates a new WrenHandle to wrap 
+it, and returns a pointer to it back to you. You can send that wrapped object 
+back to Wren by calling: </p>
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenSetSlotHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> <span class="n">WrenHandle</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Note that this doesn&rsquo;t invalidate your WrenHandle. You can still keep using it. </p>
+<h3>Retaining and releasing handles <a href="#retaining-and-releasing-handles" name="retaining-and-releasing-handles" class="header-anchor">#</a></h3>
+<p>A handle is an opaque wrapper around an object of any type, but just as 
+important, it&rsquo;s a <em>persistent</em> one. When Wren gives you a pointer to a 
+WrenHandle, it guarantees that that pointer remains valid. You can keep it 
+around as long as you want. Even if a garbage collection occurs, Wren will 
+ensure the handle and the object it wraps are kept safely in memory. </p>
+<p>Internally, Wren keeps a list of all of the WrenHandles that have been created. 
+That way, during garbage collection, it can find them all and make sure their 
+objects aren&rsquo;t freed. But what if you don&rsquo;t want it to be kept around any more? 
+Since C relies on manual memory management, WrenHandle does too. When you are 
+done with one, you must explicitly release it by calling: </p>
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenReleaseHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="n">WrenHandle</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
+
+
+<p>This does not immediately delete the wrapped object&mdash;after all, there may 
+be other references to the same object in the program. It just invalidates the 
+WrenHandle wrapper itself. After you call this, you cannot use that pointer 
+again. </p>
+<p>You must release every WrenHandle you&rsquo;ve created before shutting down the VM. 
+Wren warns you if you don&rsquo;t, since it implies you&rsquo;ve probably leaked a resource 
+somewhere. </p>
+<p>Now we know how to pass values between Wren and C, but we don&rsquo;t know how to 
+actually <em>do</em> anything with them. Next, we&rsquo;ll learn how to use slots to pass 
+parameters to a Wren method from C&hellip; </p>
+<p><a class="right" href="calling-wren-from-c.html">Calling Wren from C &rarr;</a> 
+<a href="index.html">&larr; Introduction</a> </p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/munificent/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

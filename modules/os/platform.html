@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Module "process" &ndash; Wren</title>
+<title>Platform Class &ndash; Wren</title>
 <link rel="stylesheet" type="text/css" href="../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -22,11 +22,12 @@
   <nav class="big">
     <ul>
       <li><a href="../">Modules</a></li>
-      <li><a href="./">process</a></li>
+      <li><a href="./">os</a></li>
     </ul>
     <section>
-      <h2>process classes</h2>
+      <h2>os classes</h2>
       <ul>
+        <li><a href="platform.html">Platform</a></li>
         <li><a href="process.html">Process</a></li>
       </ul>
     </section>
@@ -35,14 +36,15 @@
     <table>
       <tr>
         <td><a href="../">Modules</a></td>
-        <td><a href="./">process</a></td>
+        <td><a href="./">os</a></td>
       </tr>
       <tr>
-        <td colspan="2"><h2>process classes</h2></td>
+        <td colspan="2"><h2>os classes</h2></td>
       </tr>
       <tr>
         <td>
           <ul>
+            <li><a href="platform.html">Platform</a></li>
             <li><a href="process.html">Process</a></li>
           </ul>
         </td>
@@ -54,11 +56,28 @@
     </table>
   </nav>
   <main>
-    <h1>Module "process"</h1>
-    <p>The process module exposes a single class for working with operating processes. </p>
+    <h1>Platform Class</h1>
+    <p>The Platform class exposes basic information about the operating system Wren is 
+running on top of. </p>
+<h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
+<h3><strong>name</strong> <a href="#name" name="name" class="header-anchor">#</a></h3>
+<p>The name of the platform. This roughly describes the operating system, and is 
+usually one of: </p>
 <ul>
-<li><a href="process.html">Process</a> </li>
+<li>&ldquo;iOS&rdquo; </li>
+<li>&ldquo;Linux&rdquo; </li>
+<li>&ldquo;OS X&rdquo; </li>
+<li>&ldquo;POSIX&rdquo; </li>
+<li>&ldquo;Unix&rdquo; </li>
+<li>&ldquo;Windows&rdquo; </li>
 </ul>
+<p>If Wren was compiled for an unknown operating system, returns &ldquo;Unknown&rdquo;. </p>
+<h3><strong>isPosix</strong> <a href="#isposix" name="isposix" class="header-anchor">#</a></h3>
+<p>Returns <code>true</code> if the host operating system is known to support the POSIX 
+standard. This is true for Linux and other Unices, as well as the various Apple 
+operating systems. </p>
+<h3><strong>isWindows</strong> <a href="#iswindows" name="iswindows" class="header-anchor">#</a></h3>
+<p>Returns <code>true</code> if the host operating system is some flavor of Windows. </p>
   </main>
 </div>
 <footer>

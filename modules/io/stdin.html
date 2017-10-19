@@ -32,6 +32,7 @@
         <li><a href="file-flags.html">FileFlags</a></li>
         <li><a href="stat.html">Stat</a></li>
         <li><a href="stdin.html">Stdin</a></li>
+        <li><a href="stdout.html">Stdout</a></li>
       </ul>
     </section>
   </nav>
@@ -56,6 +57,7 @@
           <ul>
             <li><a href="stat.html">Stat</a></li>
             <li><a href="stdin.html">Stdin</a></li>
+            <li><a href="stdout.html">Stdout</a></li>
           </ul>
         </td>
       </tr>
@@ -65,10 +67,31 @@
     <h1>Stdin Class</h1>
     <p>The standard input stream. </p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
+<h3><strong>isRaw</strong> <a href="#israw" name="israw" class="header-anchor">#</a></h3>
+<p>Returns <code>true</code> if stdin is in raw mode. When in raw mode, input is not echoed 
+or buffered, and all characters, even non-printing and control characters go 
+into stdin. </p>
+<p>Defaults to <code>false</code>. </p>
+<h3><strong>isRaw</strong>=(value) <a href="#israw=(value)" name="israw=(value)" class="header-anchor">#</a></h3>
+<p>Sets raw mode on or off. </p>
+<h3><strong>isTerminal</strong> <a href="#isterminal" name="isterminal" class="header-anchor">#</a></h3>
+<p>Returns <code>true</code> if Stdin is connected to a &ldquo;TTY&rdquo;. This is true when the user is 
+running Wren in an interactive terminal, and false if it its input is coming 
+from a pipe. </p>
+<h3><strong>readByte</strong>() <a href="#readbyte()" name="readbyte()" class="header-anchor">#</a></h3>
+<p>Reads one byte of input from stdin. Blocks the current fiber until a byte has 
+been received. </p>
+<p>Returns the byte value as a number or <code>null</code> if stdin is closed. </p>
+<p>Note that output is not automatically flushed when calling this. If you want to 
+display a prompt before reading input, you&rsquo;ll want to call <code>Stdout.flush()</code> 
+after printing the prompt. </p>
 <h3><strong>readLine</strong>() <a href="#readline()" name="readline()" class="header-anchor">#</a></h3>
 <p>Reads one line of input from stdin. Blocks the current fiber until a full line 
 of input has been received. </p>
 <p>Returns the string of input or <code>null</code> if stdin is closed. </p>
+<p>Note that output is not automatically flushed when calling this. If you want to 
+display a prompt before reading input, you&rsquo;ll want to call <code>Stdout.flush()</code> 
+after printing the prompt. </p>
   </main>
 </div>
 <footer>

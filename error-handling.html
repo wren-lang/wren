@@ -45,7 +45,7 @@
       <h2>reference</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
-        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
@@ -85,7 +85,7 @@
         <td>
           <ul>
             <li><a href="modules">Modules</a></li>
-            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
           </ul>
@@ -99,26 +99,26 @@
 <h2>Syntax errors <a href="#syntax-errors" name="syntax-errors" class="header-anchor">#</a></h2>
 <p>The first errors you&rsquo;re likely to run into are syntax errors. These include 
 simple bugs where your code doesn&rsquo;t follow the language&rsquo;s grammar, like: </p>
-<div class="codehilite"><pre><span class="mi">1</span> <span class="o">+</span> <span class="o">*</span> <span class="mi">2</span>
+<div class="codehilite"><pre><span></span><span class="mi">1</span> <span class="o">+</span> <span class="o">*</span> <span class="mi">2</span>
 </pre></div>
 
 
 <p>Wren detects these errors as soon as it tries to read your code. When it hits 
 one, you get a friendly error message, like: </p>
-<div class="codehilite"><pre>[main line 1] Error on &#39;*&#39;: Unexpected token for expression.
+<div class="codehilite"><pre><span></span>[main line 1] Error on &#39;*&#39;: Unexpected token for expression.
 </pre></div>
 
 
 <p>Some slightly more &ldquo;semantic&rdquo; errors fall into this bucket too. Things like 
 using a variable that hasn&rsquo;t been defined, or declaring two variables with the 
 same name in the same scope. So if you do: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;once&quot;</span> 
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;once&quot;</span> 
 <span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;twice&quot;</span>
 </pre></div>
 
 
 <p>Wren tells you: </p>
-<div class="codehilite"><pre>[main line 2] Error on &#39;a&#39;: Top-level variable is already defined.
+<div class="codehilite"><pre><span></span>[main line 2] Error on &#39;a&#39;: Top-level variable is already defined.
 </pre></div>
 
 
@@ -136,7 +136,7 @@ statically. Since they can&rsquo;t be found until your code is run, they&rsquo;r
 perform an operation that the VM can&rsquo;t do. The most common error is a &ldquo;method 
 not found&rdquo; one. If you call a method on an object and its class (and all of its 
 superclasses) don&rsquo;t define that method, there&rsquo;s nothing Wren can do: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Foo</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Foo</span> <span class="p">{</span> 
   <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{}</span> 
 <span class="p">}</span>
 
@@ -146,7 +146,7 @@ superclasses) don&rsquo;t define that method, there&rsquo;s nothing Wren can do:
 
 
 <p>If you run this, Wren will print: </p>
-<div class="codehilite"><pre>Foo does not implement method &#39;someRandomMethod&#39;.
+<div class="codehilite"><pre><span></span>Foo does not implement method &#39;someRandomMethod&#39;.
 </pre></div>
 
 
@@ -158,18 +158,18 @@ and all of the method calls that led to it. </p>
 <p>Another common runtime error is passing an argument of the wrong type to a 
 method. For example, lists are indexed using a number. If you try to pass some 
 other type, it&rsquo;s an error: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span> 
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span> 
 <span class="n">list</span><span class="p">[</span><span class="s">&quot;1&quot;</span><span class="p">]</span>
 </pre></div>
 
 
 <p>This exits with: </p>
-<div class="codehilite"><pre>Subscript must be a number or a range. 
+<div class="codehilite"><pre><span></span>Subscript must be a number or a range. 
 [main line 2] in (script)
 </pre></div>
 
 
-<p>These are the most two common kinds of runtime errors, but there are others. 
+<p>These are the two most common kinds of runtime errors, but there are others. 
 Stuff like out of bounds errors on lists, calling a function with the wrong 
 number of arguments, etc. </p>
 <h2>Handling runtime errors <a href="#handling-runtime-errors" name="handling-runtime-errors" class="header-anchor">#</a></h2>
@@ -184,7 +184,7 @@ invoked that one, all the way to the main fiber, and then exit the VM. </p>
 in the called fiber, the error is captured and the <code>try</code> method returns the 
 error message as a string. </p>
 <p>For example, if you run this program: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
   <span class="mi">123</span><span class="o">.</span><span class="n">badMethod</span> 
 <span class="p">}</span>
 
@@ -194,19 +194,19 @@ error message as a string. </p>
 
 
 <p>It prints: </p>
-<div class="codehilite"><pre>Caught error: Num does not implement method &#39;badMethod&#39;.
+<div class="codehilite"><pre><span></span>Caught error: Num does not implement method &#39;badMethod&#39;.
 </pre></div>
 
 
 <p>The called fiber can no longer be used, but any other fibers can proceed as 
 usual. When a fiber has been aborted because of a runtime error, you can also 
 get the error from the fiber object. Continuing the above example: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>
 </pre></div>
 
 
 <p>This also prints: </p>
-<div class="codehilite"><pre>Num does not implement method &#39;badMethod&#39;.
+<div class="codehilite"><pre><span></span>Num does not implement method &#39;badMethod&#39;.
 </pre></div>
 
 
@@ -217,11 +217,12 @@ errors generated in fibers that are invoked by the one you called <code>try</cod
 <p>Most runtime errors come from within the Wren VM, but you may want to be able 
 to cause your own runtime errors to occur. This can be done by calling the 
 <code>abort()</code> static method on <code>Fiber</code>: </p>
-<div class="codehilite"><pre><span class="vg">Fiber</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="s">&quot;Something bad happened&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="vg">Fiber</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="s">&quot;Something bad happened&quot;</span><span class="p">)</span>
 </pre></div>
 
 
 <p>You must pass in an error message, and it must be a string. </p>
+<p>If the provided message is <code>null</code>, no runtime error is raised. </p>
 <h2>Failures <a href="#failures" name="failures" class="header-anchor">#</a></h2>
 <p>The last flavor of errors is the highest-level one. All of the above errors 
 indicate <em>bugs</em>&mdash;places where the code itself is incorrect. But some 

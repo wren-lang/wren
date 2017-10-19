@@ -45,7 +45,7 @@
       <h2>reference</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
-        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
@@ -85,7 +85,7 @@
         <td>
           <ul>
             <li><a href="modules">Modules</a></li>
-            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
           </ul>
@@ -100,7 +100,7 @@ maps a <em>key</em> to a <em>value</em>. The same data structure has a variety o
 other languages: hash table, dictionary, association, table, etc. </p>
 <p>You can create a map by placing a series of comma-separated entries inside 
 curly braces. Each entry is a key and a value separated by a colon: </p>
-<div class="codehilite"><pre><span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="p">{</span> 
   <span class="s">&quot;George&quot;</span><span class="o">:</span> <span class="s">&quot;Harrison&quot;</span><span class="p">,</span> 
   <span class="s">&quot;John&quot;</span><span class="o">:</span>   <span class="s">&quot;Lennon&quot;</span><span class="p">,</span> 
   <span class="s">&quot;Paul&quot;</span><span class="o">:</span>   <span class="s">&quot;McCartney&quot;</span><span class="p">,</span> 
@@ -118,12 +118,13 @@ value. Keys have a few limitations. They must be one of the immutable built-in
 <a href="values.html">value types</a> in Wren. That means a number, string, range, bool, or <code>null</code>. 
 You can also use a <a href="classes.html">class object</a> as a key. </p>
 <p>The reason for this limitation&mdash;and the reason maps are called &ldquo;<em>hash</em> 
-tables&rdquo; in other languages&mdash;is that each key is used to generate a numeric <em>hash code</em>. This lets a map locate the value associated with a key in constant 
+tables&rdquo; in other languages&mdash;is that each key is used to generate a numeric 
+<em>hash code</em>. This lets a map locate the value associated with a key in constant 
 time, even in very large maps. Since Wren only knows how to hash certain 
 built-in types, only those can be used as keys. </p>
 <h2>Adding entries <a href="#adding-entries" name="adding-entries" class="header-anchor">#</a></h2>
 <p>You add new key-value pairs to the map using the <a href="method-calls.html#subscripts">subscript operator</a>: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">capitals</span> <span class="o">=</span> <span class="p">{}</span> 
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">capitals</span> <span class="o">=</span> <span class="p">{}</span> 
 <span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Georgia&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Atlanta&quot;</span> 
 <span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Idaho&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Boise&quot;</span> 
 <span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Maine&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Augusta&quot;</span>
@@ -135,7 +136,7 @@ value. If the key is already there, this just replaces its value. </p>
 <h2>Looking up values <a href="#looking-up-values" name="looking-up-values" class="header-anchor">#</a></h2>
 <p>To find the value associated with some key, again you use your friend the 
 subscript operator: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Idaho&quot;</span><span class="p">])</span> <span class="output">Boise</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="p">[</span><span class="s">&quot;Idaho&quot;</span><span class="p">])</span> <span class="output">Boise</span>
 </pre></div>
 
 
@@ -143,7 +144,7 @@ subscript operator: </p>
 course, <code>null</code> itself can also be used as a value, so seeing <code>null</code> here 
 doesn&rsquo;t necessarily mean the key wasn&rsquo;t found. </p>
 <p>To tell definitively if a key exists, you can call <code>containsKey()</code>: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">belief</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;nihilism&quot;</span><span class="o">:</span> <span class="kc">null</span><span class="p">}</span>
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">belief</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;nihilism&quot;</span><span class="o">:</span> <span class="kc">null</span><span class="p">}</span>
 
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="p">[</span><span class="s">&quot;nihilism&quot;</span><span class="p">])</span> <span class="output">null (though key exists)</span>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">belief</span><span class="p">[</span><span class="s">&quot;solipsism&quot;</span><span class="p">])</span> <span class="output">null</span>
@@ -153,27 +154,27 @@ doesn&rsquo;t necessarily mean the key wasn&rsquo;t found. </p>
 
 
 <p>You can see how many entries a map contains using <code>count</code>: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="output">3</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="output">3</span>
 </pre></div>
 
 
 <h2>Removing entries <a href="#removing-entries" name="removing-entries" class="header-anchor">#</a></h2>
 <p>To remove an entry from a map, call <code>remove()</code> and pass in the key for the 
 entry you want to delete: </p>
-<div class="codehilite"><pre><span class="n">capitals</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&quot;Maine&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span></span><span class="n">capitals</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&quot;Maine&quot;</span><span class="p">)</span> 
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s">&quot;Maine&quot;</span><span class="p">))</span> <span class="output">false</span>
 </pre></div>
 
 
 <p>If the key was found, this returns the value that was associated with it: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&quot;Georgia&quot;</span><span class="p">))</span> <span class="output">Atlanta</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&quot;Georgia&quot;</span><span class="p">))</span> <span class="output">Atlanta</span>
 </pre></div>
 
 
 <p>If the key wasn&rsquo;t in the map to begin with, <code>remove()</code> just returns <code>null</code>. </p>
 <p>If you want to remove <em>everything</em> from the map, like with <a href="lists.html">lists</a>, you call 
 <code>clear()</code>: </p>
-<div class="codehilite"><pre><span class="n">capitals</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span> 
+<div class="codehilite"><pre><span></span><span class="n">capitals</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span> 
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">capitals</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="output">0</span>
 </pre></div>
 
@@ -186,7 +187,7 @@ For that, map exposes two methods: <code>keys</code> and <code>values</code>. </
 map, and the second returns one that iterates over the values. </p>
 <p>If you want to see all of the key-value pairs in a map, the easiest way is to 
 iterate over the keys and use each to look up its value: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">birds</span> <span class="o">=</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">birds</span> <span class="o">=</span> <span class="p">{</span> 
   <span class="s">&quot;Arizona&quot;</span><span class="o">:</span> <span class="s">&quot;Cactus wren&quot;</span><span class="p">,</span> 
   <span class="s">&quot;Hawaii&quot;</span><span class="o">:</span> <span class="s">&quot;Nēnē&quot;</span><span class="p">,</span> 
   <span class="s">&quot;Ohio&quot;</span><span class="o">:</span> <span class="s">&quot;Northern Cardinal&quot;</span> 

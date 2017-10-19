@@ -45,7 +45,7 @@
       <h2>reference</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
-        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
@@ -85,7 +85,7 @@
         <td>
           <ul>
             <li><a href="modules">Modules</a></li>
-            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
           </ul>
@@ -117,7 +117,7 @@ prototypes are interesting, but after <a href="http://finch.stuffwithstuff.com/"
 I concluded (like many people on the original Self project that invented 
 prototypes) that classes are more usable. </p>
 <p>Here&rsquo;s an example of that kind of object-oriented programming in Lua: </p>
-<div class="codehilite"><pre><span class="n">Account</span> <span class="o">=</span> <span class="p">{}</span> 
+<div class="codehilite"><pre><span></span><span class="n">Account</span> <span class="o">=</span> <span class="p">{}</span> 
 <span class="n">Account</span><span class="p">.</span><span class="n">__index</span> <span class="o">=</span> <span class="n">Account</span>
 
 <span class="k">function</span> <span class="nc">Account</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="n">balance</span><span class="p">)</span> 
@@ -132,20 +132,20 @@ prototypes) that classes are more usable. </p>
 <span class="k">end</span>
 
 <span class="c1">-- create and use an Account </span>
-<span class="n">acc</span> <span class="o">=</span> <span class="n">Account</span><span class="p">.</span><span class="n">create</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> 
-<span class="n">acc</span><span class="p">:</span><span class="n">withdraw</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">.</span><span class="n">create</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> 
+<span class="n">account</span><span class="p">:</span><span class="n">withdraw</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
 
 
 <p>Here&rsquo;s the same example in Wren: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Account</span> <span class="p">{</span> 
-  <span class="nb">this</span> <span class="n">new</span><span class="p">(</span><span class="n">balance</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="p">}</span> 
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Account</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">balance</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="p">}</span> 
   <span class="n">withdraw</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_balance</span> <span class="o">=</span> <span class="vi">_balance</span> <span class="o">-</span> <span class="n">amount</span> <span class="p">}</span> 
 <span class="p">}</span>
 
 <span class="c1">// create and use an Account</span>
-<span class="k">var</span> <span class="n">acc</span> <span class="o">=</span> <span class="vg">Account</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> 
-<span class="n">acc</span><span class="o">.</span><span class="n">withdraw</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="k">var</span> <span class="n">account</span> <span class="o">=</span> <span class="vg">Account</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> 
+<span class="n">account</span><span class="o">.</span><span class="n">withdraw</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
 
 
@@ -170,14 +170,14 @@ is that bytecode is a nice trade-off between performance and simplicity. Also: <
 </li>
 </ul>
 <h2>Why is the VM stack-based instead of register-based? <a href="#why-is-the-vm-stack-based-instead-of-register-based" name="why-is-the-vm-stack-based-instead-of-register-based" class="header-anchor">#</a></h2>
-<p>Bytecode VMs come in two flavors. Stack-based VMs have short (usually one-byte) 
+<p>Bytecode VMs come in two flavors. Stack-based VMs have short (usually one byte) 
 instructions whose operands are implicitly understood to be at the top of the 
 stack. That means you often have a couple of instructions to push some stuff on 
 the stack and then an instruction to do something. </p>
 <p>Register-based VMs have big instructions (usually 32 bits) that contain both an 
 opcode and a couple of numbers indicating where in the stack the operands can 
 be found. This is cool because it means, that, for example, this Lua statement: </p>
-<div class="codehilite"><pre><span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span>
+<div class="codehilite"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span>
 </pre></div>
 
 
@@ -211,7 +211,8 @@ assignments are statements in Lua but expressions in Wren, which would make
 them harder to compile to efficient register-based code. </p>
 <h2>What about your other languages? <a href="#what-about-your-other-languages" name="what-about-your-other-languages" class="header-anchor">#</a></h2>
 <p>This is a strange question if you don&rsquo;t happen to know <a href="http://journal.stuffwithstuff.com">who I am</a>. In the 
-past, I&rsquo;ve hacked on and blogged about a couple of other hobby languages like <a href="http://finch.stuffwithstuff.com/">Finch</a> and <a href="http://magpie-lang.org/">Magpie</a>. </p>
+past, I&rsquo;ve hacked on and blogged about a couple of other hobby languages like 
+<a href="http://finch.stuffwithstuff.com/">Finch</a> and <a href="http://magpie-lang.org/">Magpie</a>. </p>
 <p>I started Finch to learn more about implementing an interpreter and also about 
 the prototype paradigm. I learned a ton about both. Critically, I learned that 
 I really prefer classes over prototypes. I started retrofitting classes into 

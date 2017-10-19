@@ -45,7 +45,7 @@
       <h2>reference</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
-        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
@@ -85,7 +85,7 @@
         <td>
           <ul>
             <li><a href="modules">Modules</a></li>
-            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
           </ul>
@@ -107,7 +107,7 @@ character array modified in place. </p>
 <p>Like other scripting languages, Wren has a single numeric type: 
 double-precision floating point. Number literals look like you expect coming 
 from other languages: </p>
-<div class="codehilite"><pre><span class="mi">0</span> 
+<div class="codehilite"><pre><span></span><span class="mi">0</span> 
 <span class="mi">1234</span> 
 <span class="o">-</span><span class="mi">5678</span> 
 <span class="mf">3.14159</span> 
@@ -123,12 +123,12 @@ UTF-8, but you can put any byte values in there, even zero or invalid UTF-8
 sequences. (You might have some trouble <em>printing</em> the latter to your terminal, 
 though.) </p>
 <p>String literals are surrounded in double quotes: </p>
-<div class="codehilite"><pre><span class="s">&quot;hi there&quot;</span>
+<div class="codehilite"><pre><span></span><span class="s">&quot;hi there&quot;</span>
 </pre></div>
 
 
 <p>A handful of escape characters are supported: </p>
-<div class="codehilite"><pre><span class="s">&quot;</span><span class="se">\0</span><span class="s">&quot;</span> <span class="c1">// The NUL byte: 0.</span>
+<div class="codehilite"><pre><span></span><span class="s">&quot;</span><span class="se">\0</span><span class="s">&quot;</span> <span class="c1">// The NUL byte: 0.</span>
 <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="c1">// A double quote character.</span>
 <span class="s">&quot;</span><span class="se">\\</span><span class="s">&quot;</span> <span class="c1">// A backslash.</span>
 <span class="s">&quot;</span><span class="se">\%</span><span class="s">&quot;</span> <span class="c1">// A percent sign.</span>
@@ -143,18 +143,18 @@ though.) </p>
 
 
 <p>A <code>\u</code> followed by four hex digits can be used to specify a Unicode code point: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\u0041\u0b83\u00DE</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">AஃÞ</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\u0041\u0b83\u00DE</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">AஃÞ</span>
 </pre></div>
 
 
 <p>A capital <code>\U</code> followed by <em>eight</em> hex digits allows Unicode code points outside 
 of the basic multilingual plane, like all-important emoji: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\U0001F64A\U0001F680</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">🙊🚀</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\U0001F64A\U0001F680</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">🙊🚀</span>
 </pre></div>
 
 
 <p>A <code>\x</code> followed by two hex digits specifies a single unencoded byte: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\x48\x69\x2e</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">Hi.</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\x48\x69\x2e</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">Hi.</span>
 </pre></div>
 
 
@@ -164,28 +164,28 @@ of the basic multilingual plane, like all-important emoji: </p>
 followed by a parenthesized expression, the expression is evaluated. The 
 resulting object&rsquo;s <code>toString</code> method is called and the result is inserted in the 
 string: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Math </span><span class="si">%(</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="mi">5</span><span class="si">)</span><span class="s"> is fun!&quot;</span><span class="p">)</span> <span class="output">Math 23 is fun!</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Math </span><span class="si">%(</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="mi">5</span><span class="si">)</span><span class="s"> is fun!&quot;</span><span class="p">)</span> <span class="output">Math 23 is fun!</span>
 </pre></div>
 
 
 <p>Arbitrarily complex expressions are allowed inside the parentheses: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;wow </span><span class="si">%(</span><span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">*</span> <span class="err">n</span><span class="p">}</span><span class="o">.</span><span class="n">join</span><span class="p">()</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">wow 149</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;wow </span><span class="si">%(</span><span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">*</span> <span class="err">n</span><span class="p">}</span><span class="o">.</span><span class="n">join</span><span class="p">()</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span> <span class="output">wow 149</span>
 </pre></div>
 
 
 <p>An interpolated expression can even contain a string literal which in turn has 
-its own nested intpolations, but doing that gets unreadable pretty quickly. </p>
+its own nested interpolations, but doing that gets unreadable pretty quickly. </p>
 <h2>Ranges <a href="#ranges" name="ranges" class="header-anchor">#</a></h2>
 <p>A range is a little object that represents a consecutive range of numbers. They 
 don&rsquo;t have their own dedicated literal syntax. Instead, the number class 
 implements the <code>..</code> and <code>...</code> <a href="method-calls.html#operators">operators</a> to create them: </p>
-<div class="codehilite"><pre><span class="mi">3</span><span class="o">..</span><span class="mi">8</span>
+<div class="codehilite"><pre><span></span><span class="mi">3</span><span class="o">..</span><span class="mi">8</span>
 </pre></div>
 
 
 <p>This creates a range from three to eight, including eight itself. If you want a 
 half-inclusive range, use <code>...</code>: </p>
-<div class="codehilite"><pre><span class="mi">4</span><span class="o">...</span><span class="mi">6</span>
+<div class="codehilite"><pre><span></span><span class="mi">4</span><span class="o">...</span><span class="mi">6</span>
 </pre></div>
 
 
@@ -194,7 +194,7 @@ commonly used for <a href="control-flow.html#for-statements">iterating</a> over 
 sequences of numbers, but are useful in other places too. You can pass them to 
 a <a href="lists.html">list</a>&lsquo;s subscript operator to return a subset of the list, for 
 example: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">,</span> <span class="s">&quot;e&quot;</span><span class="p">]</span> 
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">,</span> <span class="s">&quot;e&quot;</span><span class="p">]</span> 
 <span class="k">var</span> <span class="n">slice</span> <span class="o">=</span> <span class="n">list</span><span class="p">[</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">]</span> 
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">slice</span><span class="p">)</span> <span class="output">[b, c, d]</span>
 </pre></div>

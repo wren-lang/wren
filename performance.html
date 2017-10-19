@@ -45,7 +45,7 @@
       <h2>reference</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
-        <li><a href="embedding-api.html">Embedding API</a></li>
+        <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
       </ul>
@@ -85,7 +85,7 @@
         <td>
           <ul>
             <li><a href="modules">Modules</a></li>
-            <li><a href="embedding-api.html">Embedding API</a></li>
+            <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
           </ul>
@@ -268,7 +268,8 @@ the language more expressive, but also faster. When a method is called, we look
 it up on the receiver&rsquo;s class. If we succeed in finding it, we also know it has 
 the right number of parameters. </p>
 <p>This lets Wren avoid the extra checking most languages need to do at runtime to 
-handle too few or too many arguments being passed to a method. In Wren, it&rsquo;s not <em>syntactically</em> possible to call a method with the wrong number of arguments. </p>
+handle too few or too many arguments being passed to a method. In Wren, it&rsquo;s not 
+<em>syntactically</em> possible to call a method with the wrong number of arguments. </p>
 <h3>Computed gotos <a href="#computed-gotos" name="computed-gotos" class="header-anchor">#</a></h3>
 <p>On compilers that support it, Wren&rsquo;s core bytecode interpreter loop uses 
 something called <a href="http://eli.thegreenplace.net/2012/07/12/computed-goto-for-efficient-dispatch-tables/"><em>computed gotos</em></a>. The hot core of a bytecode 

@@ -22,11 +22,12 @@
   <nav class="big">
     <ul>
       <li><a href="../">Modules</a></li>
-      <li><a href="./">process</a></li>
+      <li><a href="./">os</a></li>
     </ul>
     <section>
-      <h2>process classes</h2>
+      <h2>os classes</h2>
       <ul>
+        <li><a href="platform.html">Platform</a></li>
         <li><a href="process.html">Process</a></li>
       </ul>
     </section>
@@ -35,14 +36,15 @@
     <table>
       <tr>
         <td><a href="../">Modules</a></td>
-        <td><a href="./">process</a></td>
+        <td><a href="./">os</a></td>
       </tr>
       <tr>
-        <td colspan="2"><h2>process classes</h2></td>
+        <td colspan="2"><h2>os classes</h2></td>
       </tr>
       <tr>
         <td>
           <ul>
+            <li><a href="platform.html">Platform</a></li>
             <li><a href="process.html">Process</a></li>
           </ul>
         </td>
@@ -55,7 +57,7 @@
   </nav>
   <main>
     <h1>Process Class</h1>
-    <p>The Process class lets you work with operating processes, including the 
+    <p>The Process class lets you work with operating system processes, including the 
 currently running one. </p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3><strong>allArguments</strong> <a href="#allarguments" name="allarguments" class="header-anchor">#</a></h3>
@@ -63,12 +65,12 @@ currently running one. </p>
 spawned. This includes the Wren executable itself, the path to the file being 
 run (if any), and any other options passed to Wren itself. </p>
 <p>If you run: </p>
-<div class="codehilite"><pre><span class="nv">$ </span>wren file.wren arg
+<div class="codehilite"><pre><span></span>$ wren file.wren arg
 </pre></div>
 
 
 <p>This returns: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Process</span><span class="o">.</span><span class="n">allArguments</span><span class="p">)</span> <span class="output">[&quot;wren&quot;, &quot;file.wren&quot;, &quot;arg&quot;]</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Process</span><span class="o">.</span><span class="n">allArguments</span><span class="p">)</span> <span class="output">[&quot;wren&quot;, &quot;file.wren&quot;, &quot;arg&quot;]</span>
 </pre></div>
 
 
@@ -77,12 +79,12 @@ run (if any), and any other options passed to Wren itself. </p>
 Wren process was spawned. This does not include arguments handled by Wren 
 itself. </p>
 <p>If you run: </p>
-<div class="codehilite"><pre><span class="nv">$ </span>wren file.wren arg
+<div class="codehilite"><pre><span></span>$ wren file.wren arg
 </pre></div>
 
 
 <p>This returns: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Process</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="output">[&quot;arg&quot;]</span>
+<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Process</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="output">[&quot;arg&quot;]</span>
 </pre></div>
   </main>
 </div>
