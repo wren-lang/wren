@@ -2,8 +2,8 @@
 
 An embedded language often needs to work with native data. You may want a
 pointer to some memory managed in the C heap, or maybe you want to store a chunk
-of data more efficiently than Wren's dynamism allows. Often, you want to have a
-Wren object that manages an external resource like a file handle.
+of data more efficiently than Wren's dynamism allows. You may want a Wren object
+that represents a native resource like a file handle or database connection.
 
 For those cases, you can define a **foreign class**, a chimera whose state is
 half Wren and half C. It is a real Wren class with a name, constructor, and
@@ -24,16 +24,17 @@ You define one like so:
     }
 
 The `foreign` keyword tells Wren to loop in the host application when it
-constructs an instance of the class. The host tells Wren how many bytes of extra
+constructs instances of the class. The host tells Wren how many bytes of extra
 memory the foreign instance should contain and in return, Wren gives the host
 the opportunity to initialize that data.
 
 To talk to the host app, Wren needs a C function it can call when it constructs
 an instance of the foreign class. This function is found through a binding
-process similar to how foreign methods are bound. When you [configure the VM][],
-you set the `bindForeignClassFn` field in WrenConfiguration to point to a C
-callback you define. Its signature must be:
+process similar to [how foreign methods are bound][bind]. When you [configure
+the VM][], you set the `bindForeignClassFn` field in WrenConfiguration to point
+to a C callback you define. Its signature must be:
 
+[bind]: calling-c-from-wren.html#binding-foreign-methods
 [configure the vm]: configuring-the-vm.html
 
     :::c
@@ -92,8 +93,8 @@ can also be used in other foreign methods:
   number of extra raw bytes of data you want the foreign instance to store.
   This is the memory you get to play with from C.
 
-So, for example, if you wanted to create a foreign instance that wraps an extra
-eight bytes of data, you'd call:
+So, for example, if you wanted to create a foreign instance that contains eight
+bytes of C data, you'd call:
 
     :::c
     void* data = wrenSetSlotNewForeign(vm, 0, 0, 8);
@@ -117,11 +118,8 @@ Typically, the way you make use of the data stored in an instance of a foreign
 class is through other foreign methods. Those are usually defined on the same
 foreign class, but can be defined on other classes as well. Wren doesn't care.
 
-If you call a foreign method on a foreign instance, or you pass in a foreign
-instance as a parameter to the method, then it will be in the slot array. If the
-foreign instance is the receiver of the method, it's in slot zero. Parameters go
-in order after that. Given a foreign instance in a slot, you can access the raw
-bytes it stores by calling:
+Once you have a foreign instance in a slot, you can access the raw bytes it
+stores by calling:
 
     :::c
     void* wrenGetSlotForeign(WrenVM* vm, int slot);
@@ -139,7 +137,7 @@ to. They're your bits, Wren just holds them for you.
 
 If your foreign instances are just holding memory and you're OK with Wren's
 garbage collector managing the lifetime of that memory, then you're done. Wren
-will keep the bytes around as long as their is still a reference to them. When
+will keep the bytes around as long as there is still a reference to them. When
 the instance is no longer reachable, eventually the garbage collector will do
 its thing and free the memory.
 
@@ -249,7 +247,8 @@ and finalize functions the VM should call. Allocation looks like:
 
     void fileAllocate(WrenVM* vm)
     {
-      FILE** file = (FILE**)wrenSetSlotNewForeign(vm, 0, 0, sizeof(FILE*));
+      FILE** file = (FILE**)wrenSetSlotNewForeign(vm,
+          0, 0, sizeof(FILE*));
       const char* path = wrenGetSlotString(vm, 1);
       *file = fopen(path, "w");
     }
@@ -286,8 +285,8 @@ It uses this little utility function:
       *file = NULL;
     }
 
-This closes the file (if it's not already closed) and also nulls out the pointer
-so that we don't try to use the file after it's been closed.
+This closes the file (if it's not already closed) and also nulls out the file
+handle so that we don't try to use the file after it's been closed.
 
 ### Binding the foreign methods
 
@@ -317,7 +316,7 @@ function:
     }
 
 When Wren calls this, we look at the class and method name to figure out which
-method its binding, and then return a pointer to the appropriate function. The
+method it's binding, and then return a pointer to the appropriate function. The
 foreign method for writing to the file is:
 
     :::c
@@ -361,6 +360,10 @@ like so:
     var file = File.create("some/path.txt")
     file.write("some text")
     file.close()
+
+Pretty neat, right? The resulting class looks and feels like a normal Wren
+class, but it has the functionality and much of the performance of native C
+code.
 
 <a class="right" href="configuring-the-vm.html">Configuring the VM &rarr;</a>
 <a href="calling-c-from-wren.html">&larr; Calling C from Wren</a>

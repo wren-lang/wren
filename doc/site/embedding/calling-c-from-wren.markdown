@@ -25,8 +25,8 @@ A foreign method is declared in Wren like so:
       foreign static add(a, b)
     }
 
-The `foreign` tells Wren that the method `add()` is declared on `Math`, but
-implemented in C. Both static and instance methods can be foreign.
+The `foreign` keyword tells Wren that the method `add()` is declared on `Math`,
+but implemented in C. Both static and instance methods can be foreign.
 
 ## Binding Foreign Methods
 
@@ -52,16 +52,16 @@ Its signature is:
         bool isStatic,
         const char* signature);
 
-Every time a foreign method is declared, the VM invokes this callback. It passes
-in the module containing the class declaration, the name of the class containing
-the method, the method's signature, and whether or not it's a static method. In
-the above example, it would pass something like:
+Every time a foreign method is first declared, the VM invokes this callback. It
+passes in the module containing the class declaration, the name of the class
+containing the method, the method's signature, and whether or not it's a static
+method. In the above example, it would pass something like:
 
     :::c
     bindForeignMethodFn(vm, "main", "Math", true, "add(_,_)");
 
-When you configure the VM, you give a pointer to a function that looks up the
-appropriate C function for the given foreign method and returns a pointer to it.
+When you configure the VM, you give it a C callback that looks up the
+appropriate function for the given foreign method and returns a pointer to it.
 Something like:
 
     :::c
@@ -124,10 +124,10 @@ zero. Like so:
       wrenSetSlotDouble(vm, 0, a + b);
     }
 
-While your foreign method is executed, the VM is completely suspended. No other
-fibers will run until your foreign method returns. You should *not* try to
-resume the VM from within a foreign method by calling `wrenCall()` or
-`wrenInterpret()`. The VM is not re-entrant.
+While your foreign method is executing, the VM is completely suspended. No other
+fibers run until your foreign method returns. You should *not* try to resume the
+VM from within a foreign method by calling `wrenCall()` or `wrenInterpret()`.
+The VM is not re-entrant.
 
 This covers foreign behavior, but what about foreign *state*? For that, we need
 a foreign *class*...

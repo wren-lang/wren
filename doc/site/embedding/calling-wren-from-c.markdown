@@ -18,7 +18,7 @@ some already compiled chunk of code. Since Wren is an object-oriented language,
 [function]: ../functions.html
 
 The C API for doing this is `wrenCall()`. In order to invoke a Wren method from
-C, first we need a few things:
+C, we need a few things:
 
 * **The method to call.** Wren is dynamically typed, so this means we'll look it
   up by name. Further, since Wren supports overloading by arity, we actually
@@ -53,11 +53,13 @@ that requires treating a signature as a string.
 
 At runtime, the VM just looks for the method *symbol* in the receiver's class's
 method table. In fact, the way it's implemented today, the symbol is simply the
-array index into the table. That's why method calls are so fast in Wren.
+array index into the table. That's [why method calls are so fast][perf] in Wren.
+
+[perf]: ../performance.html
 
 It would be a shame if calling a method from C didn't have that same speed
-benefit. So to do that, we split the process of calling a method into two steps.
-First, we create a handle that represents a "compiled" method signature:
+benefit. To achieve that, we split the process of calling a method into two
+steps. First, we create a handle that represents a "compiled" method signature:
 
     :::c
     WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
@@ -69,9 +71,8 @@ arguments.
 
 This is just a regular WrenHandle, which means you can hold onto it as long as
 you like. Typically, you'd call this once outside of your application's
-performance critical loops and reuse it as long as you need. Then, it is us up
-to you to release it when you no longer need it by calling
-`wrenReleaseHandle()`.
+performance critical loops and reuse it as long as you need. It is us up to you
+to release it when you no longer need it by calling `wrenReleaseHandle()`.
 
 ## Setting Up a Receiver
 
@@ -103,11 +104,11 @@ on. Instead, we'll just make it a static method:
       }
     }
 
-So, very often, when you call a method from C, you'll be calling a static
-method. But, even then, you need a receiver. Now, though, the receiver is the
-*class itself*. Classes are first class objects in Wren, and when you define a
-named class, you're really declaring a variable with the class's name and
-storing a reference to the class object in it.
+Often, when you call a Wren method from C, you'll be calling a static method.
+But, even then, you need a receiver. Now, though, the receiver is the *class
+itself*. Classes are first class objects in Wren, and when you define a named
+class, you're really declaring a variable with the class's name and storing a
+reference to the class object in it.
 
 Assuming you declared that class at the top level, the C API [gives you a way to
 look it up][variable]. We can get a handle to the above class like so:
@@ -166,6 +167,8 @@ keeps running until either the method returns or a fiber [suspends][].
 
 `wrenCall()` returns the same WrenInterpretResult enum as `wrenInterpret()` to
 tell you if the method completed successfully or a runtime error occurred.
+(`wrenCall()` never returns `WREN_ERROR_COMPILE` since it doesn't compile
+anything.)
 
 ## Getting the Return Value
 

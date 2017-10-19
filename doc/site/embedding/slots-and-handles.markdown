@@ -1,9 +1,8 @@
 ^title Slots and Handles
 
 With `wrenInterpret()`, we can execute code, but that code can't do anything
-particularly interesting. Out of the box, the VM is very isolated from the rest
-of the world, so pretty much all it can do is turn your laptop into a lap
-warmer.
+particularly interesting. By default, the VM is isolated from the rest of the
+world, so pretty much all it can do is turn your laptop into a lap warmer.
 
 To make our Wren code *useful*, the VM needs to communicate with the outside
 world. Wren uses a single unified set of functions for passing data into and out
@@ -86,10 +85,10 @@ You can also pass string data to Wren:
 Both of these copy the bytes into a new [String][] object managed by Wren's
 garbage collector, so you can free your copy of it after you call this. The
 difference between the two is that `wrenSetSlotBytes()` takes an explicit
-length. Since Wren supports strings containing arbitrary byte values, including
-the null byte, this lets you pass those in. It's also a little faster to use
-this for regular strings if you happen to know the length. The latter calculates
-the length of the string using `strlen()`.
+length. Since Wren strings may contain arbitrary byte values, including the null
+byte, this lets you pass those in. It's also a little faster to use this for
+regular strings if you happen to know the length. The latter calculates the
+length of the string using `strlen()`.
 
 [string]: ../values.html#strings
 
@@ -148,12 +147,11 @@ given name and stores its value in the given slot. Note that classes are just
 objects stored in variables too, so you can use this to look up a class by its
 name. Handy for calling static methods on it.
 
-Like any method that works with strings, this one is a bit slow. It has to
-hash the name and look it up in the module's string table. You might want to
-avoid calling this in the middle of a hot loop where performance is critical.
-
-Instead, it's faster to look up the variable once outside the loop and store a
-reference to the object using a [handle](#handles).
+Like any method that works with strings, this one is a bit slow. It has to hash
+the name and look it up in the module's string table. You might want to avoid
+calling this in the middle of a hot loop where performance is critical. Instead,
+it's faster to look up the variable once outside the loop and store a reference
+to the object using a [handle](#handles).
 
 ### Working with lists
 
