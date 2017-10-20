@@ -170,7 +170,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
 
 void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, ObjClosure* closure)
 {
-  // Push the stack frame for the function.
+  // Reset everything.
   fiber->stackTop = fiber->stack;
   fiber->openUpvalues = NULL;
   fiber->caller = NULL;

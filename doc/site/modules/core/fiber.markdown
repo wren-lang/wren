@@ -29,6 +29,11 @@ fiber is run. Does not immediately start running the fiber.
       System.print("I won't get printed")
     }
 
+`function` must be a function (an actual [Fn][] instance, not just an object
+with a `call()` method) and it may only take zero or one parameters.
+
+[fn]: fn.html
+
 ### Fiber.**suspend**()
 
 Pauses the current fiber, and stops the interpreter. Control returns to the
@@ -97,46 +102,36 @@ Similar to `Fiber.yield` but provides a value to return to the parent fiber's
 
 ### **call**()
 
-Starts or resumes the fiber if it is in a paused state.
+Starts or resumes the fiber if it is in a paused state. Equivalent to:
 
     :::wren
-    var fiber = Fiber.new {
-      System.print("Fiber called")
-      Fiber.yield()
-      System.print("Fiber called again")
-    }
-
-    fiber.call() // Start it.
-    fiber.call() // Resume after the yield() call.
-
-When the called fiber yields, control is transferred back to the fiber that
-called it.
-
-If the called fiber is resuming from a yield, the `yield()` method returns
-`null` in the called fiber.
-
-    :::wren
-    var fiber = Fiber.new {
-      System.print(Fiber.yield())
-    }
-
-    fiber.call()
-    fiber.call() //> null
+    fiber.call(null)
 
 ### **call**(value)
 
-Invokes the fiber or resumes the fiber if it is in a paused state and sets
-`value` as the returned value of the fiber's call to `yield`.
+Start or resumes the fiber if it is in a paused state. If the fiber is being
+started for the first time, and its function takes a parameter, `value` is
+passed to it.
+
+    :::wren
+    var fiber = Fiber.new {|param|
+      System.print(param) //> begin
+    }
+
+    fiber.call("begin")
+
+If the fiber is being resumed, `value` becomes the returned value of the fiber's
+call to `yield`.
 
     :::wren
     var fiber = Fiber.new {
-      System.print(Fiber.yield())
+      System.print(Fiber.yield()) //> resume
     }
 
     fiber.call()
-    fiber.call("value") //> value
+    fiber.call("resume")
 
-### **error***
+### **error**
 
 The error message that was passed when aborting the fiber, or `null` if the
 fiber has not been aborted.
@@ -154,8 +149,6 @@ fiber has not been aborted.
 Whether the fiber's main function has completed and the fiber can no longer be
 run. This returns `false` if the fiber is currently running or has yielded.
 
-### **transfer**()
-
 ### **try**()
 Tries to run the fiber. If a runtime error occurs
 in the called fiber, the error is captured and is returned as a string.
@@ -169,6 +162,8 @@ in the called fiber, the error is captured and is returned as a string.
     System.print("Caught error: " + error)
 
 If the called fiber raises an error, it can no longer be used.
+
+### **transfer**()
 
 **TODO**
 

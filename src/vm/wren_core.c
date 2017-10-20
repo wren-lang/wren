@@ -53,14 +53,20 @@ DEF_PRIMITIVE(fiber_new)
 {
   if (!validateFn(vm, args[1], "Argument")) return false;
 
-  ObjFiber* newFiber = wrenNewFiber(vm, AS_CLOSURE(args[1]));
+  ObjClosure* closure = AS_CLOSURE(args[1]);
+  if (closure->fn->arity > 1)
+  {
+    RETURN_ERROR("Function cannot take more than one parameter.");
+  }
+  
+  ObjFiber* newFiber = wrenNewFiber(vm, closure);
 
   // The compiler expects the first slot of a function to hold the receiver.
   // Since a fiber's stack is invoked directly, it doesn't have one, so put it
   // in here.
   newFiber->stack[0] = NULL_VAL;
   newFiber->stackTop++;
-
+  
   RETURN_OBJ(newFiber);
 }
 
@@ -106,9 +112,20 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
   // need one slot for the result, so discard the other slot now.
   if (hasValue) vm->fiber->stackTop--;
 
-  // If the fiber was paused, make yield() or transfer() return the result.
-  if (fiber->stackTop > fiber->stack)
+  if (fiber->numFrames == 1 &&
+      fiber->frames[0].ip == fiber->frames[0].closure->fn->code.data)
   {
+    // The fiber is being started for the first time. If its function takes a
+    // parameter, bind an argument to it.
+    if (fiber->frames[0].closure->fn->arity == 1)
+    {
+      fiber->stackTop[0] = hasValue ? args[1] : NULL_VAL;
+      fiber->stackTop++;
+    }
+  }
+  else
+  {
+    // The fiber is being resumed, make yield() or transfer() return the result.
     fiber->stackTop[-1] = hasValue ? args[1] : NULL_VAL;
   }
 

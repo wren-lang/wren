@@ -7,8 +7,8 @@ var fiber = Fiber.new {
 }
 
 System.print(fiber.call())  // expect: fiber 1
-                        // expect: yield 1
+                            // expect: yield 1
 System.print(fiber.call())  // expect: fiber 2
-                        // expect: yield 2
+                            // expect: yield 2
 System.print(fiber.call())  // expect: fiber 3
-                        // expect: null
+                            // expect: null
