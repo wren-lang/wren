@@ -189,17 +189,17 @@ series of statements like: </p>
 <p>Blocks of this form when used for method and function bodies automatically 
 return <code>null</code> after the block has completed. If you want to return a different 
 value, you need an explicit <code>return</code> statement. </p>
-<p>However, it&rsquo;s pretty common to have a method or function that just evaluates 
-and returns the result of a single expression. For that, Wren has a more 
-compact notation: </p>
+<p>However, it&rsquo;s pretty common to have a method or function that just evaluates and 
+returns the result of a single expression. Some other languages use <code>=&gt;</code> to 
+define these. Wren uses: </p>
 <div class="codehilite"><pre><span></span><span class="p">{</span> <span class="s">&quot;single expression&quot;</span> <span class="p">}</span>
 </pre></div>
 
 
 <p>If there is no newline after the <code>{</code> (or after the parameter list in a 
 <a href="functions.html">function</a>), then the block may only contain a single 
-expression, and it automatically returns the result of it. It&rsquo;s exactly the 
-same as doing: </p>
+expression, and it automatically returns the result of it. It&rsquo;s exactly the same 
+as doing: </p>
 <div class="codehilite"><pre><span></span><span class="p">{</span> 
   <span class="k">return</span> <span class="s">&quot;single expression&quot;</span> 
 <span class="p">}</span>
@@ -215,6 +215,14 @@ put a newline in there: </p>
     <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I&#39;m feelin&#39; it!&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
+</pre></div>
+
+
+<p>Using an initial newline after the <code>{</code> does feel a little weird or magical, but 
+newlines are already significant in Wren, so it&rsquo;s not totally crazy. The nice 
+thing about this syntax as opposed to something like <code>=&gt;</code> is that the <em>end</em> of 
+the block has an explicit delimiter. That helps when chaining: </p>
+<div class="codehilite"><pre><span></span><span class="n">numbers</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">}</span><span class="o">.</span><span class="n">where</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">&lt;</span> <span class="mi">100</span> <span class="p">}</span>
 </pre></div>
 
 

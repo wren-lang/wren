@@ -123,7 +123,7 @@ stored in each instance. </p>
 their names inside the parentheses: </p>
 <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">when</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in &quot;</span> <span class="o">+</span> <span class="n">where</span> <span class="o">+</span> <span class="s">&quot; at &quot;</span> <span class="o">+</span> <span class="n">when</span><span class="p">)</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in </span><span class="si">%(</span><span class="n">where</span><span class="si">)</span><span class="s"> at </span><span class="si">%(</span><span class="n">when</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -137,11 +137,11 @@ define multiple methods with the same name: </p>
   <span class="p">}</span>
 
   <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in &quot;</span> <span class="o">+</span> <span class="n">where</span><span class="p">)</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in </span><span class="si">%(</span><span class="n">where</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
   <span class="p">}</span>
 
   <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">when</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in &quot;</span> <span class="o">+</span> <span class="n">where</span> <span class="o">+</span> <span class="s">&quot; at &quot;</span> <span class="o">+</span> <span class="n">when</span><span class="p">)</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in </span><span class="si">%(</span><span class="n">where</span><span class="si">)</span><span class="s"> at </span><span class="si">%(</span><span class="n">when</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -156,7 +156,8 @@ different syntaxes for methods. Your classes can define all of them. </p>
 <h3>Getters <a href="#getters" name="getters" class="header-anchor">#</a></h3>
 <p>A getter leaves off the parameter list and the parentheses: </p>
 <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="n">isFancy</span> <span class="p">{</span> <span class="kc">true</span> <span class="p">}</span> <span class="c1">// Unicorns are always fancy.</span>
+  <span class="c1">// Unicorns are always fancy.</span>
+  <span class="n">isFancy</span> <span class="p">{</span> <span class="kc">true</span> <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
 
@@ -165,7 +166,7 @@ different syntaxes for methods. Your classes can define all of them. </p>
 <p>A setter has <code>=</code> after the name, followed by a single parenthesized parameter: </p>
 <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="n">rider</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I am being ridden by &quot;</span> <span class="o">+</span> <span class="n">value</span><span class="p">)</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I am being ridden by </span><span class="si">%(</span><span class="n">value</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -177,7 +178,7 @@ whatever makes your heart flutter. </p>
 <p>Prefix operators, like getters, have no parameter list: </p>
 <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="o">-</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Negating a unicorn is weird&quot;</span><span class="p">)</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Negating a unicorn is weird.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -187,7 +188,7 @@ whatever makes your heart flutter. </p>
 right-hand operand: </p>
 <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="o">-</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Subtracting &quot;</span> <span class="o">+</span> <span class="n">other</span> <span class="o">+</span> <span class="s">&quot; from a unicorn is weird&quot;</span><span class="p">)</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Subtracting </span><span class="si">%(</span><span class="n">other</span><span class="si">)</span><span class="s"> from a unicorn is weird.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -213,7 +214,7 @@ parameter list. </p>
 operator and a setter: </p>
 <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;You can&#39;t stuff &quot;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s">&quot; into me at &quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">)</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;You can&#39;t stuff </span><span class="si">%(</span><span class="n">value</span><span class="si">)</span><span class="s"> into me at </span><span class="si">%(</span><span class="n">index</span><span class="si">)</span><span class="s">!&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -251,8 +252,21 @@ to access that object itself. You can do that using <code>this</code>. </p>
 always refers to the instance whose method is currently being executed. This 
 lets you invoke methods on &ldquo;yourself&rdquo;. </p>
 <p>It&rsquo;s an error to refer to <code>this</code> outside of a method. However, it&rsquo;s perfectly 
-fine to use it inside a <a href="functions.html">function</a> contained in a method. When you do, <code>this</code> 
-still refers to the instance whose <em>method</em> is being called. </p>
+fine to use it inside a <a href="functions.html">function</a> declared <em>inside</em> a method. When you do, 
+<code>this</code> still refers to the instance whose <em>method</em> is being called: </p>
+<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
+
+  <span class="n">printNameThrice</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span> 
+      <span class="c1">// Use &quot;this&quot; inside the function passed to each().</span>
+      <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="nb">this</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="output">Francis</span>
+    <span class="p">}</span> <span class="output">Francis</span>
+  <span class="p">}</span> <span class="output">Francis</span>
+<span class="p">}</span>
+</pre></div>
+
+
 <p>This is unlike Lua and JavaScript which can &ldquo;forget&rdquo; <code>this</code> when you create a 
 callback inside a method. Wren does what you want here and retains the 
 reference to the original object. </p>
@@ -477,22 +491,22 @@ shared among all instances of the class: </p>
 <p>A class can inherit from a &ldquo;parent&rdquo; or <em>superclass</em>. When you invoke a method 
 on an object of some class, if it can&rsquo;t be found, it walks up the chain of 
 superclasses looking for it there. </p>
-<p>By default, any new class inherits from <code>Object</code>, which is the superclass from 
+<p>By default, any new class inherits from Object, which is the superclass from 
 which all other classes ultimately descend. You can specify a different parent 
 class using <code>is</code> when you declare the class: </p>
 <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Pegasus</span> <span class="k">is</span> <span class="vg">Unicorn</span> <span class="p">{}</span>
 </pre></div>
 
 
-<p>This declares a new class <code>Pegasus</code> that inherits from <code>Unicorn</code>. </p>
+<p>This declares a new class Pegasus that inherits from Unicorn. </p>
 <p>Note that you should not create classes that inherit from the built-in types 
 (Bool, Num, String, Range, List). The built-in types expect their internal bit 
 representation to be very specific and get horribly confused when you invoke one 
 of the inherited built-in methods on the derived type. </p>
 <p>The metaclass hierarchy does <em>not</em> parallel the regular class hierarchy. So, if 
-<code>Pegasus</code> inherits from <code>Unicorn</code>, <code>Pegasus</code>&lsquo;s metaclass will not inherit from 
-<code>Unicorn</code>&lsquo;s metaclass. In more prosaic terms, this means that static methods 
-are not inherited. </p>
+Pegasus inherits from Unicorn, Pegasus&rsquo;s metaclass does not inherit from 
+Unicorn&rsquo;s metaclass. In more prosaic terms, this means that static methods are 
+not inherited. </p>
 <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="c1">// Unicorns cannot fly. :(</span>
   <span class="k">static</span> <span class="n">canFly</span> <span class="p">{</span> <span class="kc">false</span> <span class="p">}</span> 

@@ -113,35 +113,39 @@ fiber for every line of code you type in. </p>
 <h2>Creating fibers <a href="#creating-fibers" name="creating-fibers" class="header-anchor">#</a></h2>
 <p>All Wren code runs within the context of a fiber. When you first start a Wren 
 script, a main fiber is created for you automatically. You can spawn new fibers 
-using the <code>Fiber</code> class&rsquo;s constructor: </p>
+using the Fiber class&rsquo;s constructor: </p>
 <div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;This runs in a separate fiber.&quot;</span><span class="p">)</span> 
 <span class="p">}</span>
 </pre></div>
 
 
-<p>Creating a fiber does not immediately run it. It&rsquo;s just a first class bundle of 
-code sitting there waiting to be activated, a bit like 
-a <a href="functions.html">function</a>. </p>
+<p>It takes a <a href="functions.html">function</a> containing the code the fiber should execute. The 
+function can take zero or one parameter, but no more than that. Creating the 
+fiber does not immediately run it. It just wraps the function and sits there, 
+waiting to be activated. </p>
 <h2>Invoking fibers <a href="#invoking-fibers" name="invoking-fibers" class="header-anchor">#</a></h2>
-<p>Once you&rsquo;ve created a fiber, you can invoke it (which suspends the current 
-fiber) by calling its <code>call()</code> method: </p>
+<p>Once you&rsquo;ve created a fiber, you run it by calling its <code>call()</code> method: </p>
 <div class="codehilite"><pre><span></span><span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>
 </pre></div>
 
 
-<p>The called fiber will execute its code until it reaches the end of its body or 
-until it passes control to another fiber. If it reaches the end of its body, 
-it&rsquo;s considered <em>done</em>: </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hi&quot;</span><span class="p">)</span> <span class="p">}</span> 
+<p>This suspends the current fiber and executes the called one until it reaches the 
+end of its body or until it passes control to yet another fiber. If it reaches 
+the end of its body, it is considered <em>done</em>: </p>
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;It&#39;s alive!&quot;</span><span class="p">)</span> 
+<span class="p">}</span>
+
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">isDone</span><span class="p">)</span> <span class="output">false</span>
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> 
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> <span class="output">It&#39;s alive!</span>
 <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">isDone</span><span class="p">)</span> <span class="output">true</span>
 </pre></div>
 
 
-<p>When it finishes, it automatically resumes the fiber that called it. It&rsquo;s a 
-runtime error to try to call a fiber that is already done. </p>
+<p>When a called fiber finishes, it automatically passes control <em>back</em> to the 
+fiber that called it. It&rsquo;s a runtime error to try to call a fiber that is 
+already done. </p>
 <h2>Yielding <a href="#yielding" name="yielding" class="header-anchor">#</a></h2>
 <p>The main difference between fibers and functions is that a fiber can be 
 suspended in the middle of its operation and then resumed later. Calling 
@@ -150,72 +154,73 @@ as one function calling another. </p>
 <p>Things get interesting when a fiber <em>yields</em>. A yielded fiber passes control 
 <em>back</em> to the fiber that ran it, but <em>remembers where it is</em>. The next time the 
 fiber is called, it picks up right where it left off and keeps going. </p>
-<p>You can make a fiber yield by calling the static <code>yield()</code> method on <code>Fiber</code>: </p>
+<p>You make a fiber yield by calling the static <code>yield()</code> method on Fiber: </p>
 <div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;fiber 1&quot;</span><span class="p">)</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Before yield&quot;</span><span class="p">)</span> 
   <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">()</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;fiber 2&quot;</span><span class="p">)</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Resumed&quot;</span><span class="p">)</span> 
 <span class="p">}</span>
 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;main 1&quot;</span><span class="p">)</span> 
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;main 2&quot;</span><span class="p">)</span> 
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;main 3&quot;</span><span class="p">)</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Before call&quot;</span><span class="p">)</span> <span class="output">Before call</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> <span class="output">Before yield</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Calling again&quot;</span><span class="p">)</span> <span class="output">Calling again</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> <span class="output">Resumed</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;All done&quot;</span><span class="p">)</span> <span class="output">All done</span>
 </pre></div>
 
 
-<p>This program prints: </p>
-<div class="codehilite"><pre><span></span>main 1 
-fiber 1 
-main 2 
-fiber 2 
-main 3
-</pre></div>
-
-
-<p>Note that even though this program has <em>concurrency</em>, it&rsquo;s 
-still <em>deterministic</em>. You can reason precisely about what it&rsquo;s doing and 
-aren&rsquo;t at the mercy of a thread scheduler playing Russian roulette with your 
-code. </p>
+<p>Note that even though this program uses <em>concurrency</em>, it is still 
+<em>deterministic</em>. You can reason precisely about what it&rsquo;s doing and aren&rsquo;t at 
+the mercy of a thread scheduler playing Russian roulette with your code. </p>
 <h2>Passing values <a href="#passing-values" name="passing-values" class="header-anchor">#</a></h2>
 <p>Calling and yielding fibers is used for passing control, but it can also pass 
-<em>data</em>. When you call a fiber, you can optionally pass a value to it. If the 
-fiber has yielded and is waiting to resume, the value becomes the return value 
-of the <code>yield()</code> call: </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+<em>data</em>. When you call a fiber, you can optionally pass a value to it. </p>
+<p>If you create a fiber using a function that takes a parameter, you can pass a 
+value to it through <code>call()</code>: </p>
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span><span class="o">|</span><span class="n">param</span><span class="o">|</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> 
+<span class="p">}</span>
+
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;Here you go&quot;</span><span class="p">)</span> <span class="output">Here you go</span>
+</pre></div>
+
+
+<p>If the fiber has yielded and is waiting to resume, the value you pass to call 
+becomes the return value of the <code>yield()</code> call when it resumes: </p>
+<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span><span class="o">|</span><span class="n">param</span><span class="o">|</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> 
   <span class="k">var</span> <span class="n">result</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">()</span> 
   <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> 
 <span class="p">}</span>
 
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;discarded&quot;</span><span class="p">)</span> 
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;sent&quot;</span><span class="p">)</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;First&quot;</span><span class="p">)</span> <span class="output">First</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;Second&quot;</span><span class="p">)</span> <span class="output">Second</span>
 </pre></div>
 
 
-<p>This prints &ldquo;sent&rdquo;. Note that the first value sent to the fiber through call is 
-ignored. That&rsquo;s because the fiber isn&rsquo;t waiting on a <code>yield()</code> call, so there&rsquo;s 
-nowhere for the sent value to go. </p>
 <p>Fibers can also pass values <em>back</em> when they yield. If you pass an argument to 
 <code>yield()</code>, that will become the return value of the <code>call()</code> that was used to 
 invoke the fiber: </p>
 <div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="s">&quot;sent&quot;</span><span class="p">)</span> 
+  <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="s">&quot;Reply&quot;</span><span class="p">)</span> 
 <span class="p">}</span>
 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">())</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">())</span> <span class="output">Reply</span>
 </pre></div>
 
 
-<p>This also prints &ldquo;sent&rdquo;. </p>
+<p>This is sort of like how a function call may return a value, except that a fiber 
+may return a whole sequence of values, one every time it yields. </p>
 <h2>Full coroutines <a href="#full-coroutines" name="full-coroutines" class="header-anchor">#</a></h2>
 <p>What we&rsquo;ve seen so far is very similar to what you can do with languages like 
 Python and C# that have <em>generators</em>. Those let you define a function call that 
 you can suspend and resume. When using the function, it appears like a sequence 
 you can iterate over. </p>
-<p>Wren&rsquo;s fibers can do that, but they can do much more. Like Lua, they are 
-full <em>coroutines</em>&mdash;they can suspend from anywhere in the callstack. For 
-example: </p>
+<p>Wren&rsquo;s fibers can do that, but they can do much more. Like Lua, they are full 
+<em>coroutines</em>&mdash;they can suspend from anywhere in the callstack. The function 
+you use to create a fiber can call a method that calls another method that calls 
+some third method which finally calls yield. When that happens, <em>all</em> of those 
+method calls &mdash; the entire callstack &mdash; gets suspended. For example: </p>
 <div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
   <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="err">i</span><span class="o">|</span> 
     <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="err">i</span><span class="p">)</span> 
@@ -233,14 +238,19 @@ as a callback. </p>
 <code>call()</code>, the fiber tracks which fiber it will return to when it yields. This 
 lets you build up a chain of fiber calls that will eventually unwind back to 
 the main fiber when all of the called ones yield or finish. </p>
-<p>This is almost always what you want. But if you&rsquo;re doing something really low 
-level, like writing your own scheduler to manage a pool of fibers, you may not 
-want to treat them explicitly like a stack. </p>
+<p>This is usually what you want. But if you&rsquo;re doing something low level, like 
+writing your own scheduler to manage a pool of fibers, you may not want to treat 
+them explicitly like a stack. </p>
 <p>For rare cases like that, fibers also have a <code>transfer()</code> method. This switches 
-execution immediately to the transferred fiber. The previous one is suspended, 
-leaving it in whatever state it was in. You can resume the previous fiber by 
-transferring back to it, or even calling it. If you don&rsquo;t, execution stops when 
-the last transferred fiber returns. </p>
+execution to the transferred fiber and &ldquo;forgets&rdquo; the fiber that was transferred 
+<em>from</em>. The previous one is suspended, leaving it in whatever state it was in. 
+You can resume the previous fiber by explicitly transferring back to it, or even 
+calling it. If you don&rsquo;t, execution stops when the last transferred fiber 
+returns. </p>
+<p>Where <code>call()</code> and <code>yield()</code> are analogous to calling and returning from 
+functions, <code>transfer()</code> works more like an unstructured goto. It lets you freely 
+switch control between a number of fibers, all of which act as peers to one 
+another. </p>
 <p><a class="right" href="error-handling.html">Error Handling &rarr;</a> 
 <a href="classes.html">&larr; Classes</a> </p>
   </main>

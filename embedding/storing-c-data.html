@@ -374,10 +374,11 @@ pointer. </p>
 <p>We do a little sanity checking to make sure the user isn&rsquo;t writing to a file 
 they already closed. If not, we call <code>fwrite()</code> to write to the file. </p>
 <p>The other method is <code>close()</code> to let them explicitly close the file: </p>
-<div class="codehilite"><pre><span></span>void fileClose(WrenVM* vm) 
-{ 
-  closeFile(file); 
-}
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">fileClose</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">)</span> 
+<span class="p">{</span> 
+  <span class="kt">FILE</span><span class="o">**</span> <span class="n">file</span> <span class="o">=</span> <span class="p">(</span><span class="kt">FILE</span><span class="o">**</span><span class="p">)</span><span class="n">wrenGetSlotForeign</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> 
+  <span class="n">closeFile</span><span class="p">(</span><span class="n">file</span><span class="p">);</span> 
+<span class="p">}</span>
 </pre></div>
 
 
