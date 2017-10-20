@@ -347,8 +347,10 @@ they already closed. If not, we call `fwrite()` to write to the file.
 
 The other method is `close()` to let them explicitly close the file:
 
+    :::c
     void fileClose(WrenVM* vm)
     {
+      FILE** file = (FILE**)wrenGetSlotForeign(vm, 0);
       closeFile(file);
     }
 
