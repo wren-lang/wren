@@ -23,7 +23,7 @@ fiber for every line of code you type in.
 
 All Wren code runs within the context of a fiber. When you first start a Wren
 script, a main fiber is created for you automatically. You can spawn new fibers
-using the `Fiber` class's constructor:
+using the Fiber class's constructor:
 
     :::wren
     var fiber = Fiber.new {
@@ -36,20 +36,20 @@ a [function](functions.html).
 
 ## Invoking fibers
 
-Once you've created a fiber, you can invoke it (which suspends the current
-fiber) by calling its `call()` method:
+Once you've created a fiber, you can invoke it, which suspends the current
+fiber, by calling its `call()` method:
 
     :::wren
     fiber.call()
 
-The called fiber will execute its code until it reaches the end of its body or
-until it passes control to another fiber. If it reaches the end of its body,
-it's considered *done*:
+The called fiber executes until it reaches the end of its body or until it
+passes control to another fiber. If it reaches the end of its body, it's
+considered *done*:
 
     :::wren
     var fiber = Fiber.new { System.print("Hi") }
     System.print(fiber.isDone) //> false
-    fiber.call()
+    fiber.call() //> "Hi"
     System.print(fiber.isDone) //> true
 
 When it finishes, it automatically resumes the fiber that called it. It's a
@@ -66,34 +66,24 @@ Things get interesting when a fiber *yields*. A yielded fiber passes control
 *back* to the fiber that ran it, but *remembers where it is*. The next time the
 fiber is called, it picks up right where it left off and keeps going.
 
-You can make a fiber yield by calling the static `yield()` method on `Fiber`:
+You make a fiber yield by calling the static `yield()` method on Fiber:
 
     :::wren
     var fiber = Fiber.new {
-      System.print("fiber 1")
+      System.print("before yield")
       Fiber.yield()
-      System.print("fiber 2")
+      System.print("resumed")
     }
 
-    System.print("main 1")
-    fiber.call()
-    System.print("main 2")
-    fiber.call()
-    System.print("main 3")
+    System.print("before call") //> before call
+    fiber.call() //> before yield
+    System.print("calling again") //> calling again
+    fiber.call() //> resumed
+    System.print("all done") //> add done
 
-This program prints:
-
-    :::text
-    main 1
-    fiber 1
-    main 2
-    fiber 2
-    main 3
-
-Note that even though this program has *concurrency*, it's
-still *deterministic*. You can reason precisely about what it's doing and
-aren't at the mercy of a thread scheduler playing Russian roulette with your
-code.
+Note that even though this program uses *concurrency*, it is still
+*deterministic*. You can reason precisely about what it's doing and aren't at
+the mercy of a thread scheduler playing Russian roulette with your code.
 
 ## Passing values
 

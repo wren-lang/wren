@@ -39,7 +39,7 @@ their names inside the parentheses:
     :::wren
     class Unicorn {
       prance(where, when) {
-        System.print("The unicorn prances in " + where + " at " + when)
+        System.print("The unicorn prances in %(where) at %(when).")
       }
     }
 
@@ -55,11 +55,11 @@ define multiple methods with the same name:
       }
 
       prance(where) {
-        System.print("The unicorn prances in " + where)
+        System.print("The unicorn prances in %(where).")
       }
 
       prance(where, when) {
-        System.print("The unicorn prances in " + where + " at " + when)
+        System.print("The unicorn prances in %(where) at %(when).")
       }
     }
 
@@ -77,7 +77,8 @@ A getter leaves off the parameter list and the parentheses:
 
     :::wren
     class Unicorn {
-      isFancy { true } // Unicorns are always fancy.
+      // Unicorns are always fancy.
+      isFancy { true }
     }
 
 ### Setters
@@ -87,7 +88,7 @@ A setter has `=` after the name, followed by a single parenthesized parameter:
     :::wren
     class Unicorn {
       rider=(value) {
-        System.print("I am being ridden by " + value)
+        System.print("I am being ridden by %(value).")
       }
     }
 
@@ -101,7 +102,7 @@ Prefix operators, like getters, have no parameter list:
     :::wren
     class Unicorn {
       - {
-        System.print("Negating a unicorn is weird")
+        System.print("Negating a unicorn is weird.")
       }
     }
 
@@ -111,7 +112,7 @@ right-hand operand:
     :::wren
     class Unicorn {
       -(other) {
-        System.print("Subtracting " + other + " from a unicorn is weird")
+        System.print("Subtracting %(other) from a unicorn is weird.")
       }
     }
 
@@ -138,7 +139,7 @@ operator and a setter:
     :::wren
     class Unicorn {
       [index]=(value) {
-        System.print("You can't stuff " + value + " into me at " + index)
+        System.print("You can't stuff %(value) into me at %(index)!")
       }
     }
 
@@ -181,8 +182,20 @@ always refers to the instance whose method is currently being executed. This
 lets you invoke methods on "yourself".
 
 It's an error to refer to `this` outside of a method. However, it's perfectly
-fine to use it inside a [function][] contained in a method. When you do, `this`
-still refers to the instance whose *method* is being called.
+fine to use it inside a [function][] declared *inside* a method. When you do,
+`this` still refers to the instance whose *method* is being called:
+
+    :::wren
+    class Unicorn {
+      name { "Francis" }
+
+      printNameThrice() {
+        (1..3).each {
+          // Use "this" inside the function passed to each().
+          System.print(this.name) //> Francis
+        } //> Francis
+      } //> Francis
+    }
 
 [function]: functions.html
 
@@ -435,14 +448,14 @@ A class can inherit from a "parent" or *superclass*. When you invoke a method
 on an object of some class, if it can't be found, it walks up the chain of
 superclasses looking for it there.
 
-By default, any new class inherits from `Object`, which is the superclass from
+By default, any new class inherits from Object, which is the superclass from
 which all other classes ultimately descend. You can specify a different parent
 class using `is` when you declare the class:
 
     :::wren
     class Pegasus is Unicorn {}
 
-This declares a new class `Pegasus` that inherits from `Unicorn`.
+This declares a new class Pegasus that inherits from Unicorn.
 
 Note that you should not create classes that inherit from the built-in types
 (Bool, Num, String, Range, List). The built-in types expect their internal bit
@@ -450,9 +463,9 @@ representation to be very specific and get horribly confused when you invoke one
 of the inherited built-in methods on the derived type.
 
 The metaclass hierarchy does *not* parallel the regular class hierarchy. So, if
-`Pegasus` inherits from `Unicorn`, `Pegasus`'s metaclass will not inherit from
-`Unicorn`'s metaclass. In more prosaic terms, this means that static methods
-are not inherited.
+Pegasus inherits from Unicorn, Pegasus's metaclass does not inherit from
+Unicorn's metaclass. In more prosaic terms, this means that static methods are
+not inherited.
 
     :::wren
     class Unicorn {

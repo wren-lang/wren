@@ -57,7 +57,7 @@ cases.
 
 It's also faster to execute. Since we know how many arguments are passed at
 compile time, we can compile this to directly call the right method and avoid
-any "if I got two arguments do this..." logic.
+any "if I got two arguments do this..." runtime work.
 
 ## Getters
 
@@ -70,19 +70,6 @@ are *getters* and have no parentheses:
     1.23.sin          //> 0.9424888019317
     [1, 2, 3].isEmpty //> false
 
-Sometimes you have a method that doesn't need any parameters, but modifies the
-object or has some other side effect. For those, it's better to use empty
-parentheses:
-
-    :::wren
-    list.clear()
-
-Also, when a method supports multiple arities, it's typical to include the `()`
-in the zero-argument case to be consistent with the other versions:
-
-    Fiber.yield()
-    Fiber.yield("value")
-
 A getter is *not* the same as a method with an empty argument list. The `()` is
 part of the signature, so `count` and `count()` have different signatures.
 Unlike Ruby's optional parentheses, Wren wants to make sure you call a getter
@@ -92,21 +79,39 @@ like a getter and a `()` method like a `()` method. These don't work:
     "string".count()
     [1, 2, 3].clear
 
+If you're defining some member that doesn't need any parameters, you need to
+decide if it should be a getter or a method with an empty `()` parameter list.
+The general guidelines are:
+
+*   If it modifies the object or has some other side effect, make it a method:
+
+        :::wren
+        list.clear()
+
+*   If the method supports multiple arities, make the zero-parameter case a `()`
+    method to be consistent with the other versions:
+
+        :::wren
+        Fiber.yield()
+        Fiber.yield("value")
+
+*   Otherwise, it can probably be a getter.
+
 ## Setters
 
 A getter lets an object expose a public "property" that you can *read*.
-Likewise, a *setter* let you write to a property:
+Likewise, a *setter* lets you write to a property:
 
     :::wren
     person.height = 74 // Grew up!
 
 Despite the `=`, this is just another syntax for a method call. From the
 language's perspective, the above line is just a call to the `height=(_)`
-method, passing in `74`.
+method on `person`, passing in `74`.
 
 Since the `=(_)` is in the setter's signature, an object can have both a getter
-and setter with the same name without a collision. This way, you can have
-read/write properties.
+and setter with the same name without a collision. Defining both lets you
+provide a read/write property.
 
 ## Operators
 
