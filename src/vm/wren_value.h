@@ -689,6 +689,13 @@ Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key);
 // Creates a new module.
 ObjModule* wrenNewModule(WrenVM* vm, ObjString* name);
 
+// Creates a new num from [value].
+static inline
+int wrenNewNumFromString(const char *text, Value *out);
+
+// Creates a new num from [value].
+int wrenNewNumFromStringLength(const char *text, size_t length, Value *out);
+
 // Creates a new range from [from] to [to].
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive);
 
@@ -702,14 +709,15 @@ Value wrenNewString(WrenVM* vm, const char* text);
 // [text] may be NULL if [length] is zero.
 Value wrenNewStringLength(WrenVM* vm, const char* text, size_t length);
 
+// Creates a new string object of [value].
+static inline
+Value wrenNewStringFromDouble(WrenVM* vm, double value);
+
 // Creates a new string object by taking a range of characters from [source].
 // The range starts at [start], contains [count] bytes, and increments by
 // [step].
 Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
                              uint32_t count, int step);
-
-// Produces a string representation of [value].
-Value wrenNumToString(WrenVM* vm, double value);
 
 // Creates a new formatted string from [format] and any additional arguments
 // used in the format string.
@@ -847,6 +855,54 @@ static inline Value wrenNumToValue(double num)
   value.as.num = num;
   return value;
 #endif
+}
+
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+int wrenNewNumFromString(const char *text, Value *out)
+{
+  return wrenNewNumFromStringLength(text, strlen(text), out);
+}
+
+Value wrenNewStringFromDouble(WrenVM* vm, double value)
+{
+  // Edge case: If the value is NaN or infinity, different versions of libc
+  // produce different outputs (some will format it signed and some won't). To
+  // get reliable output, handle it ourselves.
+  if (isnan(value)) return CONST_STRING(vm, "nan");
+  if (isinf(value))
+  {
+    if (value > 0.0)
+    {
+      return CONST_STRING(vm, "infinity");
+    }
+    else
+    {
+      return CONST_STRING(vm, "-infinity");
+    }
+  }
+
+  // This is large enough to hold any double converted to a string using
+  // "%.14g". Example:
+  //
+  //     -1.12345678901234e-1022
+  //
+  // So we have:
+  //
+  // + 1 char for sign
+  // + 1 char for digit
+  // + 1 char for "."
+  // + 14 chars for decimal digits
+  // + 1 char for "e"
+  // + 1 char for "-" or "+"
+  // + 4 chars for exponent
+  // + 1 char for "\0"
+  // = 24
+  char buffer[24];
+  int length = sprintf(buffer, "%.14g", value);
+  return wrenNewStringLength(vm, buffer, length);
 }
 
 #endif

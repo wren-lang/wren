@@ -1,7 +1,6 @@
-#include <math.h>
+#include <errno.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#include <strings.h>
 
 #include "wren.h"
 #include "wren_value.h"
@@ -651,6 +650,49 @@ ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
   return module;
 }
 
+int wrenNewNumFromStringLength(const char *text, size_t length, Value *out)
+{
+  if (text == NULL || length == 0) return EINVAL;
+
+  double number;
+  char *end;
+
+  text = wrenEatSpace(text, &length);
+  if (length == 0) return EINVAL;
+
+  int errno_backup = errno;
+  errno = 0;
+  if (length >= 2 && strncasecmp(text, "0x", 2) == 0) // strlen("0x") == 2
+  {
+    uint64_t hex_number = strtoull(text, &end, 16);
+    number = hex_number;
+
+#if 0
+    // Check for precision lost in uint64_t to double conversion
+    errno = (errno == 0 && hex_number == (uint64_t)number) ? 0 : ERANGE;
+#endif
+  }
+  else
+  {
+    number = strtod(text, &end);
+  }
+  int err = errno;
+  errno = errno_backup;
+
+  if (err != 0) return err;
+
+  // Skip past any trailing whitespace.
+  end = wrenEatSpace(end, NULL);
+
+  // We must have consumed the entire string. Otherwise, it contains non-number
+  // characters and we can't parse it.
+  if (end < text + length) return EINVAL;
+
+  if (out != NULL) *out = NUM_VAL(number);
+
+  return 0;
+}
+
 Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
 {
   ObjRange* range = ALLOCATE(vm, ObjRange);
@@ -743,45 +785,6 @@ Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
 
   hashString(result);
   return OBJ_VAL(result);
-}
-
-Value wrenNumToString(WrenVM* vm, double value)
-{
-  // Edge case: If the value is NaN or infinity, different versions of libc
-  // produce different outputs (some will format it signed and some won't). To
-  // get reliable output, handle it ourselves.
-  if (isnan(value)) return CONST_STRING(vm, "nan");
-  if (isinf(value))
-  {
-    if (value > 0.0)
-    {
-      return CONST_STRING(vm, "infinity");
-    }
-    else
-    {
-      return CONST_STRING(vm, "-infinity");
-    }
-  }
-
-  // This is large enough to hold any double converted to a string using
-  // "%.14g". Example:
-  //
-  //     -1.12345678901234e-1022
-  //
-  // So we have:
-  //
-  // + 1 char for sign
-  // + 1 char for digit
-  // + 1 char for "."
-  // + 14 chars for decimal digits
-  // + 1 char for "e"
-  // + 1 char for "-" or "+"
-  // + 4 chars for exponent
-  // + 1 char for "\0"
-  // = 24
-  char buffer[24];
-  int length = sprintf(buffer, "%.14g", value);
-  return wrenNewStringLength(vm, buffer, length);
 }
 
 Value wrenStringFromCodePoint(WrenVM* vm, int value)

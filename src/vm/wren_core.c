@@ -720,7 +720,7 @@ DEF_PRIMITIVE(num_smallest)
 
 DEF_PRIMITIVE(num_toString)
 {
-  RETURN_VAL(wrenNumToString(vm, AS_NUM(args[0])));
+  RETURN_VAL(wrenNewStringFromDouble(vm, AS_NUM(args[0])));
 }
 
 DEF_PRIMITIVE(num_truncate)
@@ -852,10 +852,10 @@ DEF_PRIMITIVE(range_toString)
 {
   ObjRange* range = AS_RANGE(args[0]);
 
-  Value from = wrenNumToString(vm, range->from);
+  Value from = wrenNewStringFromDouble(vm, range->from);
   wrenPushRoot(vm, AS_OBJ(from));
 
-  Value to = wrenNumToString(vm, range->to);
+  Value to = wrenNewStringFromDouble(vm, range->to);
   wrenPushRoot(vm, AS_OBJ(to));
 
   Value result = wrenStringFormat(vm, "@$@", from,
