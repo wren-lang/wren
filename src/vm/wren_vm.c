@@ -703,7 +703,7 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical. Returns `true` if the
 // fiber completed without error.
-static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
+static WrenError runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 {
   // Remember the current fiber so we can find it if a GC happens.
   vm->fiber = fiber;
@@ -745,7 +745,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       {                                                           \
         STORE_FRAME();                                            \
         runtimeError(vm);                                         \
-        if (vm->fiber == NULL) return WREN_RESULT_RUNTIME_ERROR;  \
+        if (vm->fiber == NULL) return WREN_ERROR_RUNTIME;         \
         fiber = vm->fiber;                                        \
         LOAD_FRAME();                                             \
         DISPATCH();                                               \
@@ -935,7 +935,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
             // If we don't have a fiber to switch to, stop interpreting.
             fiber = vm->fiber;
-            if (fiber == NULL) return WREN_RESULT_SUCCESS;
+            if (fiber == NULL) return WREN_ERROR_NOERROR;
             if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
             LOAD_FRAME();
           }
@@ -1106,7 +1106,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           // C API can get it.
           fiber->stack[0] = result;
           fiber->stackTop = fiber->stack + 1;
-          return WREN_RESULT_SUCCESS;
+          return WREN_ERROR_NOERROR;
         }
         
         ObjFiber* resumingFiber = fiber->caller;
@@ -1246,7 +1246,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   // We should only exit this function from an explicit return from CODE_RETURN
   // or a runtime error.
   UNREACHABLE();
-  return WREN_RESULT_RUNTIME_ERROR;
+  return WREN_ERROR_RUNTIME;
 
   #undef READ_BYTE
   #undef READ_SHORT
@@ -1302,7 +1302,7 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   return value;
 }
 
-WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
+WrenError wrenCall(WrenVM* vm, WrenHandle* method)
 {
   ASSERT(method != NULL, "Method cannot be NULL.");
   ASSERT(IS_CLOSURE(method->value), "Method must be a method handle.");
@@ -1361,16 +1361,16 @@ void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle)
   DEALLOCATE(vm, handle);
 }
 
-WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source)
+WrenError wrenInterpret(WrenVM* vm, const char* source)
 {
   return wrenInterpretInModule(vm, "main", source);
 }
 
-WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
-                                          const char* source)
+WrenError wrenInterpretInModule(WrenVM* vm, const char* module,
+                                const char* source)
 {
   ObjFiber* fiber = wrenCompileSource(vm, module, source, false, true);
-  if (fiber == NULL) return WREN_RESULT_COMPILE_ERROR;
+  if (fiber == NULL) return WREN_ERROR_COMPILE;
   
   return runInterpreter(vm, fiber);
 }

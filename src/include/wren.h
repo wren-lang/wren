@@ -74,6 +74,9 @@ typedef void (*WrenWriteFn)(WrenVM* vm, const char* text);
 
 typedef enum
 {
+  // Not an error
+  WREN_ERROR_NOERROR,
+
   // A syntax or resolution error detected at compile time.
   WREN_ERROR_COMPILE,
 
@@ -82,7 +85,7 @@ typedef enum
 
   // One entry of a runtime error's stack trace.
   WREN_ERROR_STACK_TRACE
-} WrenErrorType;
+} WrenError;
 
 // Reports an error to the user.
 //
@@ -96,7 +99,7 @@ typedef enum
 // Each of those has the module and line where the method or function is
 // defined and [message] is the name of the method or function.
 typedef void (*WrenErrorFn)(
-    WrenVM* vm, WrenErrorType type, const char* module, int line,
+    WrenVM* vm, WrenError type, const char* module, int line,
     const char* message);
 
 typedef struct
@@ -213,13 +216,6 @@ typedef struct
 
 } WrenConfiguration;
 
-typedef enum
-{
-  WREN_RESULT_SUCCESS,
-  WREN_RESULT_COMPILE_ERROR,
-  WREN_RESULT_RUNTIME_ERROR
-} WrenInterpretResult;
-
 // The type of an object stored in a slot.
 //
 // This is not necessarily the object's *class*, but instead its low level
@@ -256,7 +252,7 @@ void wrenFreeVM(WrenVM* vm);
 void wrenCollectGarbage(WrenVM* vm);
 
 // Runs [source], a string of Wren source code in a new fiber in [vm].
-WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source);
+WrenError wrenInterpret(WrenVM* vm, const char* source);
 
 // Creates a handle that can be used to invoke a method with [signature] on
 // using a receiver and arguments that are set up on the stack.
@@ -278,7 +274,7 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
 // signature.
 //
 // After this returns, you can access the return value from slot 0 on the stack.
-WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
+WrenError wrenCall(WrenVM* vm, WrenHandle* method);
 
 // Releases the reference stored in [handle]. After calling this, [handle] can
 // no longer be used.

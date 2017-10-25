@@ -153,11 +153,14 @@ static void write(WrenVM* vm, const char* text)
   printf("%s", text);
 }
 
-static void reportError(WrenVM* vm, WrenErrorType type,
+static void reportError(WrenVM* vm, WrenError type,
                         const char* module, int line, const char* message)
 {
   switch (type)
   {
+    case WREN_ERROR_NOERROR:
+      break;
+
     case WREN_ERROR_COMPILE:
       fprintf(stderr, "[%s line %d] %s\n", module, line, message);
       break;
@@ -228,11 +231,11 @@ void runFile(const char* path)
 
   initVM();
 
-  WrenInterpretResult result = wrenInterpret(vm, source);
+  WrenError result = wrenInterpret(vm, source);
 
   if (afterLoadFn != NULL) afterLoadFn(vm);
   
-  if (result == WREN_RESULT_SUCCESS)
+  if (result == WREN_ERROR_NOERROR)
   {
     uv_run(loop, UV_RUN_DEFAULT);
   }
@@ -243,8 +246,8 @@ void runFile(const char* path)
   free(root);
 
   // Exit with an error code if the script failed.
-  if (result == WREN_RESULT_COMPILE_ERROR) exit(65); // EX_DATAERR.
-  if (result == WREN_RESULT_RUNTIME_ERROR) exit(70); // EX_SOFTWARE.
+  if (result == WREN_ERROR_COMPILE) exit(65); // EX_DATAERR.
+  if (result == WREN_ERROR_RUNTIME) exit(70); // EX_SOFTWARE.
   
   if (defaultExitCode != 0) exit(defaultExitCode);
 }

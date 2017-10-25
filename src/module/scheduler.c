@@ -19,11 +19,11 @@ static WrenHandle* resumeError;
 
 static void resume(WrenHandle* method)
 {
-  WrenInterpretResult result = wrenCall(getVM(), method);
+  WrenError result = wrenCall(getVM(), method);
   
   // If a runtime error occurs in response to an async operation and nothing
   // catches the error in the fiber, then exit the CLI.
-  if (result == WREN_RESULT_RUNTIME_ERROR)
+  if (result == WREN_ERROR_RUNTIME)
   {
     uv_stop(getLoop());
     setExitCode(70); // EX_SOFTWARE.
