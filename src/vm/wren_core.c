@@ -537,24 +537,23 @@ DEF_PRIMITIVE(num_fromString)
   if (!validateString(vm, args[1], "Argument")) return false;
 
   ObjString* string = AS_STRING(args[1]);
+  Value number = NULL_VAL;
 
-  // Corner case: Can't parse an empty string.
-  if (string->length == 0) RETURN_NULL;
+  switch (wrenNewNumFromStringLength(string->value, string->length, &number))
+  {
+  case 0:
+    break;
+  case ERANGE:
+    RETURN_ERROR("Number literal is too large.");
+    break;
+  case EINVAL:
+    //RETURN_ERROR("Invalid value.");
+    break;
+  default:
+    RETURN_ERROR("Internal error: Unexpected error.");
+  }
 
-  errno = 0;
-  char* end;
-  double number = strtod(string->value, &end);
-
-  // Skip past any trailing whitespace.
-  end = wrenEatSpace(end, NULL);
-
-  if (errno == ERANGE) RETURN_ERROR("Number literal is too large.");
-
-  // We must have consumed the entire string. Otherwise, it contains non-number
-  // characters and we can't parse it.
-  if (end < string->value + string->length) RETURN_NULL;
-
-  RETURN_NUM(number);
+  RETURN_VAL(number);
 }
 
 DEF_PRIMITIVE(num_pi)
