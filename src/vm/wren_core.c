@@ -1,4 +1,3 @@
-#include <ctype.h>
 #include <errno.h>
 #include <float.h>
 #include <math.h>
@@ -547,7 +546,7 @@ DEF_PRIMITIVE(num_fromString)
   double number = strtod(string->value, &end);
 
   // Skip past any trailing whitespace.
-  while (*end != '\0' && isspace((unsigned char)*end)) end++;
+  end = wrenEatSpace(end, NULL);
 
   if (errno == ERANGE) RETURN_ERROR("Number literal is too large.");
 

@@ -93,6 +93,10 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
 int wrenSymbolTableFind(const SymbolTable* symbols,
                         const char* name, size_t length);
 
+// Skip past any whitespace.
+inline static
+char *wrenEatSpace(const char *s, size_t *length);
+
 // Returns the number of bytes needed to encode [value] in UTF-8.
 //
 // Returns 0 if [value] is too large to encode.
@@ -118,5 +122,22 @@ int wrenUtf8DecodeNumBytes(uint8_t byte);
 
 // Returns the smallest power of two that is equal to or greater than [n].
 int wrenPowerOf2Ceil(int n);
+
+#include <ctype.h>
+
+char *wrenEatSpace(const char *s, size_t *length)
+{
+  if (length == NULL)
+  {
+    while (*s != '\0' && isspace((unsigned char)*s)) s++;
+  } else {
+    while (*length > 0 && *s != '\0' && isspace((unsigned char)*s))
+    {
+      s++;
+      (*length)--;
+    }
+  }
+  return (char *)s;
+}
 
 #endif
