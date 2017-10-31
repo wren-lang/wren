@@ -1196,6 +1196,46 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       DROP();
       DISPATCH();
     }
+    
+    CASE_CODE(IMPORT_MODULE):
+    {
+      Value name = fn->constants.data[READ_SHORT()];
+
+      // Make a slot on the stack for the module's fiber to place the return
+      // value. It will be popped after this fiber is resumed.
+      PUSH(NULL_VAL);
+      
+      Value result = wrenImportModule(vm, name);
+      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+
+      // If we get a fiber, switch to it to execute the module body.
+      if (IS_FIBER(result))
+      {
+        STORE_FRAME();
+
+        // Return to this module when that one is done.
+        AS_FIBER(result)->caller = fiber;
+
+        // Switch to the module's fiber.
+        fiber = AS_FIBER(result);
+        vm->fiber = fiber;
+        LOAD_FRAME();
+      }
+
+      DISPATCH();
+    }
+    
+    CASE_CODE(IMPORT_VARIABLE):
+    {
+      Value module = fn->constants.data[READ_SHORT()];
+      Value variable = fn->constants.data[READ_SHORT()];
+      
+      Value result = wrenGetModuleVariable(vm, module, variable);
+      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+
+      PUSH(result);
+      DISPATCH();
+    }
 
     CASE_CODE(END):
       // A CODE_END should always be preceded by a CODE_RETURN. If we get here,

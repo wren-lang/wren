@@ -1081,39 +1081,6 @@ DEF_PRIMITIVE(system_gc)
   RETURN_NULL;
 }
 
-DEF_PRIMITIVE(system_getModuleVariable)
-{
-  if (!validateString(vm, args[1], "Module")) return false;
-  if (!validateString(vm, args[2], "Variable")) return false;
-  
-  Value result = wrenGetModuleVariable(vm, args[1], args[2]);
-  if (!IS_NULL(vm->fiber->error)) return false;
-  
-  RETURN_VAL(result);
-}
-
-DEF_PRIMITIVE(system_importModule)
-{
-  if (!validateString(vm, args[1], "Module")) return false;
-  Value result = wrenImportModule(vm, args[1]);
-  if (!IS_NULL(vm->fiber->error)) return false;
-
-  // If we get null, the module is already loaded and there is no work to do.
-  if (IS_NULL(result)) RETURN_NULL;
-  
-  // Otherwise, we should get a fiber that executes the module.
-  ASSERT(IS_FIBER(result), "Should get a fiber to execute.");
-
-  // We have two slots on the stack for this call, but we only need one for the
-  // return value of the fiber we're calling. Discard the other.
-  vm->fiber->stackTop--;
-
-  // Return to this module when that one is done.
-  AS_FIBER(result)->caller = vm->fiber;
-  vm->fiber = AS_FIBER(result);
-  return false;
-}
-
 DEF_PRIMITIVE(system_writeString)
 {
   if (vm->config.writeFn != NULL)
@@ -1370,10 +1337,6 @@ void wrenInitializeCore(WrenVM* vm)
   ObjClass* systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
   PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);
   PRIMITIVE(systemClass->obj.classObj, "gc()", system_gc);
-  // TODO: Do we want to give these magic names that can't be called from
-  // regular code?
-  PRIMITIVE(systemClass->obj.classObj, "getModuleVariable(_,_)", system_getModuleVariable);
-  PRIMITIVE(systemClass->obj.classObj, "importModule(_)", system_importModule);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
 
   // While bootstrapping the core types and running the core module, a number

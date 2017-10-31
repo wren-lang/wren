@@ -2730,6 +2730,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_LOAD_FIELD:
     case CODE_STORE_FIELD:
     case CODE_CLASS:
+    case CODE_IMPORT_MODULE:
       return 1;
 
     case CODE_CONSTANT:
@@ -2759,6 +2760,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_OR:
     case CODE_METHOD_INSTANCE:
     case CODE_METHOD_STATIC:
+    case CODE_IMPORT_VARIABLE:
       return 2;
 
     case CODE_SUPER_0:
@@ -2788,10 +2790,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
       // There are two bytes for the constant, then two for each upvalue.
       return 2 + (loadedFn->numUpvalues * 2);
     }
-
-    default:
-      UNREACHABLE();
-      return 0;
   }
 }
 
@@ -3315,15 +3313,14 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
 // Compiles an "import" statement.
 //
-// An import just desugars to calling a few special core methods. Given:
+// An import compiles to a series of instructions. Given:
 //
 //     import "foo" for Bar, Baz
 //
-// We compile it to:
-//
-//     System.importModule("foo")
-//     var Bar = System.getModuleVariable("foo", "Bar")
-//     var Baz = System.getModuleVariable("foo", "Baz")
+// We compile a single IMPORT_MODULE "foo" instruction to load the module
+// itself. Then, for each imported name, we declare a variable and them emit a
+// IMPORT_VARIABLE instruction to load the variable from the other module and
+// assign it to the new variable in this one.
 static void import(Compiler* compiler)
 {
   ignoreNewlines(compiler);
@@ -3331,9 +3328,7 @@ static void import(Compiler* compiler)
   int moduleConstant = addConstant(compiler, compiler->parser->previous.value);
 
   // Load the module.
-  loadCoreVariable(compiler, "System");
-  emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
-  callMethod(compiler, 1, "importModule(_)", 15);
+  emitShortArg(compiler, CODE_IMPORT_MODULE, moduleConstant);
 
   // Discard the unused result value from calling the module's fiber.
   emitOp(compiler, CODE_POP);
@@ -3354,10 +3349,8 @@ static void import(Compiler* compiler)
                             compiler->parser->previous.length));
 
     // Load the variable from the other module.
-    loadCoreVariable(compiler, "System");
-    emitShortArg(compiler, CODE_CONSTANT, moduleConstant);
-    emitShortArg(compiler, CODE_CONSTANT, variableConstant);
-    callMethod(compiler, 2, "getModuleVariable(_,_)", 22);
+    emitShortArg(compiler, CODE_IMPORT_VARIABLE, moduleConstant);
+    emitShort(compiler, variableConstant);
     
     // Store the result in the variable here.
     defineVariable(compiler, slot);

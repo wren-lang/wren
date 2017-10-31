@@ -190,6 +190,19 @@ OPCODE(METHOD_INSTANCE, -2)
 // closure.
 OPCODE(METHOD_STATIC, -2)
 
+// Import a module whose name is the string stored at [arg] in the constant
+// table.
+//
+// Pushes null onto the stack so that the fiber for the imported module can
+// replace that with a dummy value when it returns. (Fibers always return a
+// value when resuming a caller.)
+OPCODE(IMPORT_MODULE, 1)
+
+// Import a variable from a previously-imported module. The module's name is at
+// [arg1] in the constant table and the variable name is at [arg2]. Pushes the
+// loaded variable onto the stack.
+OPCODE(IMPORT_VARIABLE, 1)
+
 // This pseudo-instruction indicates the end of the bytecode. It should
 // always be preceded by a `CODE_RETURN`, so is never actually executed.
 OPCODE(END, 0)
