@@ -15,7 +15,7 @@ few dependencies are nice that way. "Wren" encompasses two separate artifacts:
     networking, stuff like that. It depends on [libuv][] for that
     functionality.
 
-[embedded]: embedding-api.html
+[embedded]: embedding
 [libuv]: http://libuv.org/
 
 If you're on a Unix or Mac and you can rock a command line, it's just:
