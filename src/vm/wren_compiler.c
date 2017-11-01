@@ -2791,6 +2791,9 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
       return 2 + (loadedFn->numUpvalues * 2);
     }
   }
+
+  UNREACHABLE();
+  return 0;
 }
 
 // Marks the beginning of a loop. Keeps track of the current instruction so we
