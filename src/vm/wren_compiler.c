@@ -585,6 +585,35 @@ static Keyword keywords[] =
   {NULL,        0, TOKEN_EOF} // Sentinel to mark the end of the array.
 };
 
+typedef TokenType (*MagicFunction)(Parser* parser);
+
+typedef struct
+{
+  const char* identifier;
+  size_t      length;
+  MagicFunction fn;
+} MagicConstant;
+
+static TokenType lineConstant(Parser* parser)
+{
+  parser->current.value = NUM_VAL(parser->currentLine);
+  return TOKEN_NUMBER;
+}
+
+static TokenType moduleConstant(Parser* parser)
+{
+  parser->current.value = OBJ_VAL(parser->module->name);
+  return TOKEN_STRING;
+}
+
+// The table of magic constants
+static MagicConstant magicConstants[] =
+{
+  {"__LINE__",    8, lineConstant},
+  {"__MODULE__", 10, moduleConstant},
+  {NULL,          0, NULL} // Sentinel to mark the end of the array.
+};
+
 // Returns true if [c] is a valid (non-initial) identifier character.
 static bool isName(char c)
 {
@@ -793,6 +822,17 @@ static void readName(Parser* parser, TokenType type)
     }
   }
   
+  // Update the type if it's a magic constant.
+  for (int i = 0; magicConstants[i].identifier != NULL; i++)
+  {
+    if (length == magicConstants[i].length &&
+        memcmp(parser->tokenStart, magicConstants[i].identifier, length) == 0)
+    {
+      type = magicConstants[i].fn(parser);
+      break;
+    }
+  }
+
   makeToken(parser, type);
 }
 
