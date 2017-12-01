@@ -367,6 +367,22 @@ int wrenGetSlotCount(WrenVM* vm);
 // It is an error to call this from a finalizer.
 void wrenEnsureSlots(WrenVM* vm, int numSlots);
 
+// Copy the slot value from [srcSlot] to [dstSlot].
+//
+// Does not grow the stack if destination is more then slot count
+#define wrenCopySlot(vm, dstSlot, srcSlot) \
+    wrenCopySlots((vm), (dstSlot), (srcSlot), 1)
+
+// Copy [size] slot values from [srcSlot] to [dstSlot].
+//
+// Does not grow the stack if destination is more then slot count
+void wrenCopySlots(WrenVM* vm, int dstSlot, int srcSlot, int size);
+
+// Fill [size] slot values from [dstSlot] with [srcSlot].
+//
+// Does not grow the stack if destination is more then slot count
+void wrenFillSlots(WrenVM* vm, int dstSlot, int srcSlot, int size);
+
 // Gets the type of the object in [slot].
 WrenType wrenGetSlotType(WrenVM* vm, int slot);
 

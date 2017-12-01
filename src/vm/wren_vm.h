@@ -134,6 +134,18 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 // Invoke the finalizer for the foreign object referenced by [foreign].
 void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 
+// Return value in [slot] in the foreign call stack.
+inline static
+Value wrenGetSlot(WrenVM* vm, int srcSlot);
+
+// Stores [value] in [slot] in the foreign call stack.
+inline static
+void wrenSetSlot(WrenVM* vm, int dstSlot, Value value);
+
+// Stores [value] in [slot] in the foreign call stack.
+inline static
+void wrenSetSlots(WrenVM* vm, int dstSlot, Value value, size_t size);
+
 // Creates a new [WrenHandle] for [value].
 WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
 
@@ -230,6 +242,34 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 
   UNREACHABLE();
   return NULL;
+}
+
+// Ensures that [slot] is a valid index into the API's stack of slots.
+static inline
+void validateApiSlot(WrenVM* vm, int slot)
+{
+  ASSERT(slot >= 0, "Slot cannot be negative.");
+  ASSERT(slot < wrenGetSlotCount(vm), "Not that many slots.");
+}
+
+Value wrenGetSlot(WrenVM* vm, int srcSlot)
+{
+  validateApiSlot(vm, srcSlot);
+  return vm->apiStack[srcSlot];
+}
+
+void wrenSetSlot(WrenVM* vm, int dstSlot, Value value)
+{
+  validateApiSlot(vm, dstSlot);
+  vm->apiStack[dstSlot] = value;
+}
+
+void wrenSetSlots(WrenVM* vm, int dstSlot, Value value, size_t size)
+{
+  for (size_t i = 0; i < size; ++i)
+  {
+    wrenSetSlot(vm, dstSlot + i, value);
+  }
 }
 
 #endif

@@ -27,30 +27,23 @@ void metaCompile(WrenVM* vm)
   
   // Return the result. We can't use the public API for this since we have a
   // bare ObjClosure*.
-  if (closure == NULL)
-  {
-    vm->apiStack[0] = NULL_VAL;
-  }
-  else
-  {
-    vm->apiStack[0] = OBJ_VAL(closure);
-  }
+  wrenSetSlot(vm, 0, closure != NULL ? OBJ_VAL(closure) : NULL_VAL);
 }
 
 void metaGetModuleVariables(WrenVM* vm)
 {
   wrenEnsureSlots(vm, 3);
   
-  Value moduleValue = wrenMapGet(vm->modules, vm->apiStack[1]);
+  Value moduleValue = wrenMapGet(vm->modules, wrenGetSlot(vm, 1));
   if (IS_UNDEFINED(moduleValue))
   {
-    vm->apiStack[0] = NULL_VAL;
+    wrenSetSlotNull(vm, 0);
     return;
   }
     
   ObjModule* module = AS_MODULE(moduleValue);
   ObjList* names = wrenNewList(vm, module->variableNames.count);
-  vm->apiStack[0] = OBJ_VAL(names);
+  wrenSetSlot(vm, 0, OBJ_VAL(names));
 
   // Initialize the elements to null in case a collection happens when we
   // allocate the strings below.
