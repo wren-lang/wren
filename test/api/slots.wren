@@ -31,7 +31,7 @@ System.print(Slots.ensure())
 // expect: 1 -> 20 (190)
 
 System.print(Slots.ensureOutsideForeign())
-// expect: 0 -> 20 (190)
+// expect: 1 -> 20 (190)
 
 var ducks = ["Huey", "Dewey", "Louie"]
 System.print(Slots.getListCount(ducks))      // expect: 3

@@ -1370,7 +1370,7 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   
   ObjClosure* closure = AS_CLOSURE(method->value);
   
-  ASSERT(vm->fiber->stackTop - vm->fiber->stack >= closure->fn->arity,
+  ASSERT(wrenGetSlotCount(vm) >= closure->fn->arity,
          "Stack must have enough arguments for method.");
   
   // Discard any extra temporary slots. We take for granted that the stub
@@ -1517,9 +1517,9 @@ void wrenPopRoot(WrenVM* vm)
 
 int wrenGetSlotCount(WrenVM* vm)
 {
-  if (vm->apiStack == NULL) return 0;
+  if (vm->fiber == NULL) return 0;
   
-  return (int)(vm->fiber->stackTop - vm->apiStack);
+  return (int)(vm->fiber->stackTop - (vm->apiStack != NULL ? vm->apiStack : vm->fiber->stack));
 }
 
 void wrenEnsureSlots(WrenVM* vm, int numSlots)
