@@ -123,7 +123,7 @@ static void directoryListCallback(uv_fs_t* request)
   uv_dirent_t entry;
 
   WrenVM* vm = getVM();
-  wrenEnsureSlots(vm, 3);
+  wrenSetSlotCount(vm, 3);
   wrenSetSlotNewList(vm, 2);
   
   while (uv_fs_scandir_next(request, &entry) != UV_EOF)
@@ -312,7 +312,7 @@ static void realPathCallback(uv_fs_t* request)
 {
   if (handleRequestError(request)) return;
   
-  wrenEnsureSlots(getVM(), 3);
+  wrenSetSlotCount(getVM(), 3);
   wrenSetSlotString(getVM(), 2, (char*)request->ptr);
   schedulerResume(freeRequest(request), true);
   schedulerFinishResume();
@@ -331,7 +331,7 @@ static void statCallback(uv_fs_t* request)
   if (handleRequestError(request)) return;
   
   WrenVM* vm = getVM();
-  wrenEnsureSlots(vm, 3);
+  wrenSetSlotCount(vm, 3);
   
   // Get a handle to the Stat class. We'll hang on to this so we don't have to
   // look it up by name every time.
@@ -551,7 +551,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   
   if (stdinClass == NULL)
   {
-    wrenEnsureSlots(vm, 1);
+    wrenSetSlotCount(vm, 1);
     wrenGetVariable(vm, "io", "Stdin", 0);
     stdinClass = wrenGetSlotHandle(vm, 0);
   }
@@ -564,7 +564,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   // If stdin was closed, send null to let io.wren know.
   if (numRead == UV_EOF)
   {
-    wrenEnsureSlots(vm, 2);
+    wrenSetSlotCount(vm, 2);
     wrenSetSlotHandle(vm, 0, stdinClass);
     wrenSetSlotNull(vm, 1);
     wrenCall(vm, stdinOnData);
@@ -578,7 +578,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   // TODO: Having to copy the bytes here is a drag. It would be good if Wren's
   // embedding API supported a way to *give* it bytes that were previously
   // allocated using Wren's own allocator.
-  wrenEnsureSlots(vm, 2);
+  wrenSetSlotCount(vm, 2);
   wrenSetSlotHandle(vm, 0, stdinClass);
   wrenSetSlotBytes(vm, 1, buffer->base, numRead);
   wrenCall(vm, stdinOnData);

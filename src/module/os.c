@@ -16,7 +16,7 @@ void osSetArguments(int argc, const char* argv[])
 
 void platformName(WrenVM* vm)
 {
-  wrenEnsureSlots(vm, 1);
+  wrenSetSlotCount(vm, 1);
   
   #ifdef _WIN32
     wrenSetSlotString(vm, 0, "Windows");
@@ -41,7 +41,7 @@ void platformName(WrenVM* vm)
 
 void platformIsPosix(WrenVM* vm)
 {
-  wrenEnsureSlots(vm, 1);
+  wrenSetSlotCount(vm, 1);
   
   #ifdef _WIN32
     wrenSetSlotBool(vm, 0, false);
@@ -60,7 +60,7 @@ void platformIsPosix(WrenVM* vm)
 
 void processAllArguments(WrenVM* vm)
 {
-  wrenEnsureSlots(vm, 2);
+  wrenSetSlotCount(vm, 2);
   wrenSetSlotNewList(vm, 0);
 
   for (int i = 0; i < numArgs; i++)

@@ -32,7 +32,7 @@ static void resume(WrenHandle* method)
 
 void schedulerCaptureMethods(WrenVM* vm)
 {
-  wrenEnsureSlots(vm, 1);
+  wrenSetSlotCount(vm, 1);
   wrenGetVariable(vm, "scheduler", "Scheduler", 0);
   schedulerClass = wrenGetSlotHandle(vm, 0);
   
@@ -44,7 +44,7 @@ void schedulerCaptureMethods(WrenVM* vm)
 void schedulerResume(WrenHandle* fiber, bool hasArgument)
 {
   WrenVM* vm = getVM();
-  wrenEnsureSlots(vm, 2 + (hasArgument ? 1 : 0));
+  wrenSetSlotCount(vm, 2 + (hasArgument ? 1 : 0));
   wrenSetSlotHandle(vm, 0, schedulerClass);
   wrenSetSlotHandle(vm, 1, fiber);
   wrenReleaseHandle(vm, fiber);

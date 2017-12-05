@@ -19,7 +19,7 @@ static void insert(WrenVM* vm)
 {
   wrenSetSlotNewList(vm, 0);
   
-  wrenEnsureSlots(vm, 2);
+  wrenSetSlotCount(vm, 2);
   
   // Appending.
   insertNumber(vm, 0, 1.0);

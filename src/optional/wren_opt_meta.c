@@ -32,7 +32,7 @@ void metaCompile(WrenVM* vm)
 
 void metaGetModuleVariables(WrenVM* vm)
 {
-  wrenEnsureSlots(vm, 3);
+  wrenSetSlotCount(vm, 3);
   
   Value moduleValue = wrenMapGet(vm->modules, wrenGetSlot(vm, 1));
   if (IS_UNDEFINED(moduleValue))

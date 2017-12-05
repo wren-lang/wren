@@ -94,7 +94,7 @@ static void ensure(WrenVM* vm)
 {
   int before = wrenGetSlotCount(vm);
   
-  wrenEnsureSlots(vm, 20);
+  wrenSetSlotCount(vm, 20);
   
   int after = wrenGetSlotCount(vm);
   
@@ -126,7 +126,7 @@ static void ensureOutsideForeign(WrenVM* vm)
 
   int before = wrenGetSlotCount(otherVM);
 
-  wrenEnsureSlots(otherVM, 20);
+  wrenSetSlotCount(otherVM, 20);
 
   int after = wrenGetSlotCount(otherVM);
 
