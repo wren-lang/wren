@@ -661,7 +661,7 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
 // Creates a new empty function. Before being used, it must have code,
 // constants, etc. added to it.
-ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots);
+ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int arity, int maxSlots);
 
 void wrenFunctionBindName(WrenVM* vm, ObjFn* fn, const char* name, int length);
 

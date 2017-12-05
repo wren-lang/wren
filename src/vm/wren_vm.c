@@ -1346,7 +1346,7 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   
   // Create a little stub function that assumes the arguments are on the stack
   // and calls the method.
-  ObjFn* fn = wrenNewFunction(vm, NULL, numParams + 1);
+  ObjFn* fn = wrenNewFunction(vm, NULL, numParams, numParams + 1);
   
   // Wrap the function in a closure and then in a handle. Do this here so it
   // doesn't get collected as we fill it in.

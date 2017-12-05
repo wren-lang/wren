@@ -240,7 +240,7 @@ ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
   return object;
 }
 
-ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
+ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int arity, int maxSlots)
 {
   FnDebug* debug = ALLOCATE(vm, FnDebug);
   debug->name = NULL;
@@ -254,7 +254,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
   fn->module = module;
   fn->maxSlots = maxSlots;
   fn->numUpvalues = 0;
-  fn->arity = 0;
+  fn->arity = arity;
   fn->debug = debug;
   
   return fn;

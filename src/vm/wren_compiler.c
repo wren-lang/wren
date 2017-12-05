@@ -548,7 +548,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   }
   
   compiler->fn = wrenNewFunction(parser->vm, parser->module,
-                                 compiler->numLocals);
+                                 0, compiler->numLocals);
 }
 
 // Lexing ----------------------------------------------------------------------
