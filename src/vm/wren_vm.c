@@ -992,6 +992,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         RUNTIME_ERROR();
       }
 
+      STORE_FRAME();
       switch (method->type)
       {
         case METHOD_PRIMITIVE:
@@ -1002,13 +1003,11 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
             fiber->stackTop -= numArgs - 1;
           } else {
             // An error, fiber switch, or call frame change occurred.
-            STORE_FRAME();
 
             // If we don't have a fiber to switch to, stop interpreting.
             fiber = vm->fiber;
             if (fiber == NULL) return WREN_RESULT_SUCCESS;
             if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
-            LOAD_FRAME();
           }
           break;
 
@@ -1018,15 +1017,14 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           break;
 
         case METHOD_BLOCK:
-          STORE_FRAME();
           wrenCallFunction(vm, fiber, (ObjClosure*)method->as.closure, numArgs);
-          LOAD_FRAME();
           break;
 
         case METHOD_NONE:
           UNREACHABLE();
           break;
       }
+      LOAD_FRAME();
       DISPATCH();
     }
 
@@ -1196,7 +1194,9 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(FOREIGN_CONSTRUCT):
       ASSERT(IS_CLASS(stackStart[0]), "'this' should be a class.");
+      STORE_FRAME();
       createForeign(vm, fiber, stackStart);
+      LOAD_FRAME();
       DISPATCH();
 
     CASE_CODE(CLOSURE):
