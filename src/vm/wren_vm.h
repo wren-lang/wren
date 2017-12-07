@@ -186,21 +186,12 @@ int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
 static inline void wrenCallFunction(WrenVM* vm, ObjFiber* fiber,
                                     ObjClosure* closure, int numArgs)
 {
-  // Grow the call frame array if needed.
-  if (fiber->numFrames + 1 > fiber->frameCapacity)
-  {
-    int max = fiber->frameCapacity * 2;
-    fiber->frames = (CallFrame*)wrenReallocate(vm, fiber->frames,
-        sizeof(CallFrame) * fiber->frameCapacity, sizeof(CallFrame) * max);
-    fiber->frameCapacity = max;
-  }
-  
   // Grow the stack if needed.
   int stackSize = (int)(fiber->stackTop - fiber->stack);
   int needed = stackSize + closure->fn->maxSlots;
-  wrenEnsureStack(vm, fiber, needed);
+  wrenGrowStackInline(vm, fiber, needed);
   
-  wrenAppendCallFrame(vm, fiber, closure, fiber->stackTop - numArgs);
+  wrenPushCallFrame(vm, fiber, closure, fiber->stackTop - numArgs);
 }
 
 // Marks [obj] as a GC root so that it doesn't get collected.

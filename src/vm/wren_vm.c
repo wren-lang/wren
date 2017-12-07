@@ -1152,7 +1152,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     CASE_CODE(RETURN):
     {
       Value result = POP();
-      fiber->numFrames--;
+      wrenPopCallFrame(vm, fiber);
 
       // Close any upvalues still in scope.
       closeUpvalues(fiber, stackStart);
@@ -1537,7 +1537,7 @@ void wrenSetSlotCount(WrenVM* vm, int numSlots)
   
   // Grow the stack if needed.
   int needed = (int)(vm->apiStack - vm->fiber->stack) + numSlots;
-  wrenEnsureStack(vm, vm->fiber, needed);
+  wrenGrowStackInline(vm, vm->fiber, needed);
   
   // Avoid the gc to access invalidated values, and user to access unwanted
   // bread crumbs.

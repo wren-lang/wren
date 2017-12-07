@@ -176,7 +176,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   if (closure != NULL)
   {
     // Initialize the first call frame.
-    wrenAppendCallFrame(vm, fiber, closure, fiber->stack);
+    wrenPushCallFrame(vm, fiber, closure, fiber->stack);
 
     // The first slot always holds the closure.
     fiber->stackTop[0] = OBJ_VAL(closure);
@@ -186,7 +186,19 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   return fiber;
 }
 
-void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
+void wrenGrowFrames(WrenVM* vm, ObjFiber* fiber, int needed)
+{
+  if (fiber->frameCapacity >= needed) return;
+
+  int capacity = wrenPowerOf2Ceil(needed);
+
+  fiber->frames = (CallFrame*)wrenReallocate(vm, fiber->frames,
+      sizeof(CallFrame) * fiber->frameCapacity,
+      sizeof(CallFrame) * capacity);
+  fiber->frameCapacity = capacity;
+}
+
+void wrenGrowStack(WrenVM* vm, ObjFiber* fiber, int needed)
 {
   if (fiber->stackCapacity >= needed) return;
   

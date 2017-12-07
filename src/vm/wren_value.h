@@ -640,11 +640,34 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 // Creates a new fiber object that will invoke [closure].
 ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure);
 
+// Ensures [fiber]'s frames has at least [needed] entries.
+void wrenGrowFrames(WrenVM* vm, ObjFiber* fiber, int needed);
+
+static inline void wrenGrowFramesInline(WrenVM* vm, ObjFiber* fiber, int needed)
+{
+  if (fiber->frameCapacity >= needed) return;
+
+  wrenGrowFrames(vm, fiber, needed);
+}
+
+// Ensures [fiber]'s stack has at least [needed] slots.
+void wrenGrowStack(WrenVM* vm, ObjFiber* fiber, int needed);
+
+static inline void wrenGrowStackInline(WrenVM* vm, ObjFiber* fiber, int needed)
+{
+  if (fiber->stackCapacity >= needed) return;
+
+  wrenGrowStack(vm, fiber, needed);
+}
+
 // Adds a new [CallFrame] to [fiber] invoking [closure] whose stack starts at
 // [stackStart].
-static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
-                                       ObjClosure* closure, Value* stackStart)
+static inline void wrenPushCallFrame(WrenVM* vm, ObjFiber* fiber,
+                                     ObjClosure* closure, Value* stackStart)
 {
+  // Grow the call frame array if needed.
+  wrenGrowFramesInline(vm, fiber, fiber->numFrames + 1);
+
   // The caller should have ensured we already have enough capacity.
   ASSERT(fiber->frameCapacity > fiber->numFrames, "No memory for call frame.");
   
@@ -654,8 +677,12 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
   frame->ip = closure->fn->code.data;
 }
 
-// Ensures [fiber]'s stack has at least [needed] slots.
-void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed);
+static inline void wrenPopCallFrame(WrenVM* vm, ObjFiber* fiber)
+{
+  ASSERT(fiber->numFrames > 0, "Frame stack underflow.");
+
+  fiber->numFrames--;
+}
 
 ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
