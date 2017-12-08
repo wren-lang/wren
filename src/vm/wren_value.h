@@ -675,15 +675,18 @@ static inline void wrenPushCallFrame(WrenVM* vm, ObjFiber* fiber,
   ASSERT(fiber->frameCapacity > fiber->numFrames, "No memory for call frame.");
   
   CallFrame* frame = &fiber->frames[fiber->numFrames++];
-  frame->stackStart = stackStart;
+  fiber->stackStart = frame->stackStart = stackStart;
   frame->closure = closure;
-  frame->ip = closure->fn->code.data;
+  frame->ip = closure != NULL ? closure->fn->code.data : 0;
 }
 
 static inline void wrenPopCallFrame(WrenVM* vm, ObjFiber* fiber)
 {
   ASSERT(fiber->numFrames > 0, "Frame stack underflow.");
 
+  fiber->stackStart = fiber->numFrames > 1 ?
+                          fiber->frames[fiber->numFrames - 1].stackStart :
+                          fiber->stack;
   fiber->numFrames--;
 }
 

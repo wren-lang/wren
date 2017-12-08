@@ -14,12 +14,12 @@ void metaCompile(WrenVM* vm)
   bool printErrors = wrenGetSlotBool(vm, 3);
 
   // TODO: Allow passing in module?
-  // Look up the module surrounding the callsite. This is brittle. The -2 walks
+  // Look up the module surrounding the callsite. This is brittle. The -3 walks
   // up the callstack assuming that the meta module has one level of
   // indirection before hitting the user's code. Any change to meta may require
   // this constant to be tweaked.
   ObjFiber* currentFiber = vm->fiber;
-  ObjFn* fn = currentFiber->frames[currentFiber->numFrames - 2].closure->fn;
+  ObjFn* fn = currentFiber->frames[currentFiber->numFrames - 3].closure->fn;
   ObjString* module = fn->module->name;
 
   ObjClosure* closure = wrenCompileSource(vm, module->value, source,

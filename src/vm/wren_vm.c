@@ -371,15 +371,14 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
   // Save the current state so we can restore it when done.
-  Value* apiStack = fiber->stackStart;
-  fiber->stackStart = fiber->stackTop - numArgs;
+  wrenPushCallFrame(vm, fiber, NULL, fiber->stackTop - numArgs);
 
   foreign(vm);
 
   // Discard the stack slots for the arguments and temporaries but leave one
   // for the result.
   fiber->stackTop = fiber->stackStart + 1;
-  fiber->stackStart = apiStack;
+  wrenPopCallFrame(vm, fiber);
 }
 
 // Handles the current fiber having aborted because of an error.
@@ -623,8 +622,7 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
 
   // Pass the constructor arguments to the allocator as well.
-  Value* oldApiStack = fiber->stackStart;
-  fiber->stackStart = stack;
+  wrenPushCallFrame(vm, fiber, NULL, stack);
 
 #ifdef DEBUG
   int numSlots = wrenGetSlotCount(vm);
@@ -632,7 +630,7 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   method->as.foreign(vm);
   ASSERT(numSlots == wrenGetSlotCount(vm), "Foreign creator altered slot count.");
 
-  fiber->stackStart = oldApiStack;
+  wrenPopCallFrame(vm, fiber);
   // TODO: Check that allocateForeign was called.
 }
 
@@ -803,6 +801,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   // variables.
   #define LOAD_FRAME()                                 \
       frame = &fiber->frames[fiber->numFrames - 1];    \
+      ASSERT(frame->closure != NULL, "Trying to unwind native call frame");    \
       stackStart = frame->stackStart;                  \
       ip = frame->ip;                                  \
       fn = frame->closure->fn;
