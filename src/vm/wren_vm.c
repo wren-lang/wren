@@ -1155,16 +1155,20 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       // Close any upvalues still in scope.
       closeUpvalues(fiber, stackStart);
 
+      // Store the result of the block in the first slot, which is where the
+      // caller expects it.
+      stackStart[0] = result; 
+
+      // Discard the stack slots for the call frame (leaving one slot for the
+      // result).
+      fiber->stackTop = stackStart + 1;
+
       // If the fiber is complete, end it.
       if (fiber->numFrames == 0)
       {
         // See if there's another fiber to return to. If not, we're done.
         if (fiber->caller == NULL)
         {
-          // Store the final result value at the beginning of the stack so the
-          // C API can get it.
-          fiber->stack[0] = result;
-          fiber->stackTop = fiber->stack + 1;
           return WREN_RESULT_SUCCESS;
         }
         
@@ -1175,16 +1179,6 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         
         // Store the result in the resuming fiber.
         fiber->stackTop[-1] = result;
-      }
-      else
-      {
-        // Store the result of the block in the first slot, which is where the
-        // caller expects it.
-        stackStart[0] = result;
-
-        // Discard the stack slots for the call frame (leaving one slot for the
-        // result).
-        fiber->stackTop = frame->stackStart + 1;
       }
       
       LOAD_FRAME();
