@@ -627,7 +627,11 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   Value* oldApiStack = vm->apiStack;
   vm->apiStack = stack;
 
+#ifdef DEBUG
+  int numSlots = wrenGetSlotCount(vm);
+#endif
   method->as.foreign(vm);
+  ASSERT(numSlots == wrenGetSlotCount(vm), "Foreign creator altered slot count.");
 
   vm->apiStack = oldApiStack;
   // TODO: Check that allocateForeign was called.
