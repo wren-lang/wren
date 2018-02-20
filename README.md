@@ -52,7 +52,7 @@ involved][contribute]!
 [perf]: http://munificent.github.io/wren/performance.html
 [classes]: http://munificent.github.io/wren/classes.html
 [fibers]: http://munificent.github.io/wren/concurrency.html
-[embedding]: http://munificent.github.io/wren/embedding-api.html
+[embedding]: http://munificent.github.io/wren/embedding/
 [started]: http://munificent.github.io/wren/getting-started.html
 [browser]: http://ppvk.github.io/wren-nest/
 [contribute]: http://munificent.github.io/wren/contributing.html
