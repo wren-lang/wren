@@ -214,7 +214,7 @@ $(BUILD_DIR)/test/%.o: test/api/%.c $(OPT_HEADERS) $(MODULE_HEADERS) \
 	$(V) $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
 # Build libuv to a static library.
-$(LIBUV): $(LIBUV_DIR)/build/gyp/gyp util/update_deps.py
+$(LIBUV):
 	@ printf "%10s %-30s %s\n" run util/build_libuv.py
 	$(V) ./util/build_libuv.py $(LIBUV_ARCH)
 
