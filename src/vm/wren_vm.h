@@ -132,7 +132,7 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
 
 // Executes [source] in the context of [module].
-WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
+WrenError wrenInterpretInModule(WrenVM* vm, const char* module,
                                           const char* source);
 
 // Compile [source] in the context of [module] and wrap in a fiber that can
