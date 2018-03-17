@@ -10,11 +10,11 @@ class Meta {
   static eval(source) {
     if (!(source is String)) Fiber.abort("Source code must be a string.")
 
-    var fiber = compile_(source, false, false)
+    var closure = compile_(source, false, false)
     // TODO: Include compile errors.
-    if (fiber == null) Fiber.abort("Could not compile source code.")
+    if (closure == null) Fiber.abort("Could not compile source code.")
 
-    fiber.call()
+    closure.call()
   }
 
   static compileExpression(source) {

@@ -139,18 +139,9 @@ WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
 // execute it.
 //
 // Returns NULL if a compile error occurred.
-ObjFiber* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
-                            bool isExpression, bool printErrors);
-
-// Imports the module with [name], a string.
-//
-// If the module has already been imported (or is already in the middle of
-// being imported, in the case of a circular import), returns null. Otherwise,
-// returns a new fiber that will execute the module's code. That fiber should
-// be called before any variables are loaded from the module.
-//
-// If the module could not be found, sets an error in the current fiber.
-Value wrenImportModule(WrenVM* vm, Value name);
+ObjClosure* wrenCompileSource(WrenVM* vm, const char* module,
+                              const char* source, bool isExpression,
+                              bool printErrors);
 
 // Looks up a variable from a previously-loaded module.
 //

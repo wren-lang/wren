@@ -14,18 +14,18 @@ void metaCompile(WrenVM* vm)
   bool printErrors = wrenGetSlotBool(vm, 3);
 
   // TODO: Allow passing in module?
-  ObjFiber* fiber = wrenCompileSource(vm, "main", source,
-                                      isExpression, printErrors);
-  
+  ObjClosure* closure = wrenCompileSource(vm, "main", source,
+                                          isExpression, printErrors);
+
   // Return the result. We can't use the public API for this since we have a
-  // bare ObjFiber*.
-  if (fiber == NULL)
+  // bare ObjClosure*.
+  if (closure == NULL)
   {
     vm->apiStack[0] = NULL_VAL;
   }
   else
   {
-    vm->apiStack[0] = OBJ_VAL(fiber);
+    vm->apiStack[0] = OBJ_VAL(closure);
   }
 }
 
