@@ -1387,17 +1387,8 @@ ObjFiber* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
   
   ObjFiber* fiber = compileInModule(vm, nameValue, source,
                                     isExpression, printErrors);
-  if (fiber == NULL && module != NULL)
-  {
-    wrenPopRoot(vm); // nameValue.
-    return NULL;
-  }
-  
-  if (module != NULL)
-  {
-    wrenPopRoot(vm); // nameValue.
-  }
-  
+
+  if (module != NULL) wrenPopRoot(vm); // nameValue.
   return fiber;
 }
 
