@@ -696,7 +696,8 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
 Value wrenImportModule(WrenVM* vm, Value name)
 {
   // If the module is already loaded, we don't need to do anything.
-  if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
+  Value existing = wrenMapGet(vm->modules, name);
+  if (!IS_UNDEFINED(existing)) return existing;
   
   const char* source = NULL;
   bool allocatedSource = true;
@@ -745,6 +746,26 @@ Value wrenImportModule(WrenVM* vm, Value name)
   
   // Return the closure that executes the module.
   return OBJ_VAL(moduleClosure);
+}
+
+static Value getModuleVariable(WrenVM* vm, ObjModule* module,
+                               Value variableName)
+{
+  ObjString* variable = AS_STRING(variableName);
+  uint32_t variableEntry = wrenSymbolTableFind(&module->variableNames,
+                                               variable->value,
+                                               variable->length);
+  
+  // It's a runtime error if the imported variable does not exist.
+  if (variableEntry != UINT32_MAX)
+  {
+    return module->variables.data[variableEntry];
+  }
+  
+  vm->fiber->error = wrenStringFormat(vm,
+      "Could not find a variable named '@' in module '@'.",
+      variableName, OBJ_VAL(module->name));
+  return NULL_VAL;
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
@@ -1244,17 +1265,24 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       DISPATCH();
     }
     
+    CASE_CODE(END_MODULE):
+    {
+      vm->lastModule = fn->module;
+      PUSH(NULL_VAL);
+      DISPATCH();
+    }
+    
     CASE_CODE(IMPORT_MODULE):
     {
       Value name = fn->constants.data[READ_SHORT()];
 
-      // Make a slot on the stack for the module's fiber to place the return
-      // value. It will be popped after this fiber is resumed.
-      PUSH(NULL_VAL);
-      
       Value result = wrenImportModule(vm, name);
       if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
 
+      // Make a slot on the stack for the module's closure to place the return
+      // value. It will be popped after the module body code returns.
+      PUSH(NULL_VAL);
+      
       // If we get a closure, call it to execute the module body.
       if (IS_CLOSURE(result))
       {
@@ -1263,16 +1291,21 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         callFunction(vm, fiber, closure, 1);
         LOAD_FRAME();
       }
+      else
+      {
+        // The module has already been loaded. Remember it so we can import
+        // variables from it if needed.
+        vm->lastModule = AS_MODULE(result);
+      }
 
       DISPATCH();
     }
     
     CASE_CODE(IMPORT_VARIABLE):
     {
-      Value module = fn->constants.data[READ_SHORT()];
       Value variable = fn->constants.data[READ_SHORT()];
-      
-      Value result = wrenGetModuleVariable(vm, module, variable);
+      ASSERT(vm->lastModule != NULL, "Should have already imported module.");
+      Value result = getModuleVariable(vm, vm->lastModule, variable);
       if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
 
       PUSH(result);
@@ -1448,21 +1481,7 @@ Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName)
     return NULL_VAL;
   }
   
-  ObjString* variable = AS_STRING(variableName);
-  uint32_t variableEntry = wrenSymbolTableFind(&module->variableNames,
-                                               variable->value,
-                                               variable->length);
-  
-  // It's a runtime error if the imported variable does not exist.
-  if (variableEntry != UINT32_MAX)
-  {
-    return module->variables.data[variableEntry];
-  }
-  
-  vm->fiber->error = wrenStringFormat(vm,
-      "Could not find a variable named '@' in module '@'.",
-      variableName, moduleName);
-  return NULL_VAL;
+  return getModuleVariable(vm, module, variableName);
 }
 
 Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name)

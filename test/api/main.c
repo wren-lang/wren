@@ -91,7 +91,8 @@ static WrenForeignClassMethods bindForeignClass(
   return methods;
 }
 
-static void afterLoad(WrenVM* vm) {
+static void afterLoad(WrenVM* vm)
+{
   if (strstr(testName, "/call.wren") != NULL)
   {
     callRunTests(vm);

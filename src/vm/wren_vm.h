@@ -49,6 +49,12 @@ struct WrenVM
   // whose key is null) for the module's name and the value is the ObjModule
   // for the module.
   ObjMap* modules;
+  
+  // The most recently imported module. More specifically, the module whose
+  // code has most recently finished executing.
+  //
+  // Not treated like a GC root since the module is already in [modules].
+  ObjModule* lastModule;
 
   // Memory management data:
 

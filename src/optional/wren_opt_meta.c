@@ -29,7 +29,8 @@ void metaCompile(WrenVM* vm)
   }
 }
 
-void metaGetModuleVariables(WrenVM* vm) {
+void metaGetModuleVariables(WrenVM* vm)
+{
   wrenEnsureSlots(vm, 3);
   
   Value moduleValue = wrenMapGet(vm->modules, vm->apiStack[1]);
