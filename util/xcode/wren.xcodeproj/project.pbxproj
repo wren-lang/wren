@@ -23,6 +23,7 @@
 		293B25591CEFD8C7005D9537 /* repl.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 293B25561CEFD8C7005D9537 /* repl.wren.inc */; };
 		293B255A1CEFD8C7005D9537 /* repl.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 293B25561CEFD8C7005D9537 /* repl.wren.inc */; };
 		293D46961BB43F9900200083 /* call.c in Sources */ = {isa = PBXBuildFile; fileRef = 293D46941BB43F9900200083 /* call.c */; };
+		2940E98D2063EC030054503C /* resolution.c in Sources */ = {isa = PBXBuildFile; fileRef = 2940E98B2063EC020054503C /* resolution.c */; };
 		2949AA8D1C2F14F000B106BA /* get_variable.c in Sources */ = {isa = PBXBuildFile; fileRef = 2949AA8B1C2F14F000B106BA /* get_variable.c */; };
 		29512C811B91F8EB008C10E6 /* libuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29512C801B91F8EB008C10E6 /* libuv.a */; };
 		29512C821B91F901008C10E6 /* libuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29512C801B91F8EB008C10E6 /* libuv.a */; };
@@ -115,6 +116,8 @@
 		293B25561CEFD8C7005D9537 /* repl.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = repl.wren.inc; path = ../../src/module/repl.wren.inc; sourceTree = "<group>"; };
 		293D46941BB43F9900200083 /* call.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = call.c; path = ../../test/api/call.c; sourceTree = "<group>"; };
 		293D46951BB43F9900200083 /* call.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = call.h; path = ../../test/api/call.h; sourceTree = "<group>"; };
+		2940E98B2063EC020054503C /* resolution.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resolution.c; path = ../../test/api/resolution.c; sourceTree = "<group>"; };
+		2940E98C2063EC020054503C /* resolution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = resolution.h; path = ../../test/api/resolution.h; sourceTree = "<group>"; };
 		2949AA8B1C2F14F000B106BA /* get_variable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = get_variable.c; path = ../../test/api/get_variable.c; sourceTree = "<group>"; };
 		2949AA8C1C2F14F000B106BA /* get_variable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = get_variable.h; path = ../../test/api/get_variable.h; sourceTree = "<group>"; };
 		29512C7F1B91F86E008C10E6 /* api_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = api_test; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -304,6 +307,8 @@
 				29D880651DC8ECF600025364 /* reset_stack_after_call_abort.h */,
 				29C80D581D73332A00493837 /* reset_stack_after_foreign_construct.c */,
 				29C80D591D73332A00493837 /* reset_stack_after_foreign_construct.h */,
+				2940E98B2063EC020054503C /* resolution.c */,
+				2940E98C2063EC020054503C /* resolution.h */,
 				29D009AA1B7E39A8000CE58C /* slots.c */,
 				29D009AB1B7E39A8000CE58C /* slots.h */,
 				29D24DB01E82C0A2006618CC /* user_data.c */,
@@ -394,6 +399,7 @@
 				29205C9A1AB4E6430073018D /* wren_core.c in Sources */,
 				2901D7641B74F4050083A2C8 /* timer.c in Sources */,
 				29729F331BA70A620099CA20 /* io.wren.inc in Sources */,
+				2940E98D2063EC030054503C /* resolution.c in Sources */,
 				29C8A9331AB71FFF00DEC81D /* vm.c in Sources */,
 				291647C41BA5EA45006142EE /* scheduler.c in Sources */,
 				29A427341BDBE435001E6E22 /* wren_opt_meta.c in Sources */,

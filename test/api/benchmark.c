@@ -30,7 +30,7 @@ static void call(WrenVM* vm)
   wrenInitConfiguration(&config);
   WrenVM* otherVM = wrenNewVM(&config);
   
-  wrenInterpret(otherVM, testScript);
+  wrenInterpret(otherVM, "main", testScript);
   
   WrenHandle* method = wrenMakeCallHandle(otherVM, "method(_,_,_,_)");
   

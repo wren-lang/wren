@@ -228,7 +228,7 @@ void runFile(const char* path)
 
   initVM();
 
-  WrenInterpretResult result = wrenInterpret(vm, source);
+  WrenInterpretResult result = wrenInterpret(vm, "main", source);
 
   if (afterLoadFn != NULL) afterLoadFn(vm);
   
@@ -256,7 +256,7 @@ int runRepl()
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v%s\n", WREN_VERSION_STRING);
 
-  wrenInterpret(vm, "import \"repl\"\n");
+  wrenInterpret(vm, "main", "import \"repl\"\n");
   
   uv_run(loop, UV_RUN_DEFAULT);
 

@@ -38,6 +38,7 @@ static void* defaultReallocate(void* ptr, size_t newSize)
 void wrenInitConfiguration(WrenConfiguration* config)
 {
   config->reallocateFn = defaultReallocate;
+  config->resolveModuleFn = NULL;
   config->loadModuleFn = NULL;
   config->bindForeignMethodFn = NULL;
   config->bindForeignClassFn = NULL;
@@ -693,8 +694,39 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
   finalizer(foreign->data);
 }
 
+// Let the host resolve an imported module name if it wants to.
+static Value resolveModule(WrenVM* vm, Value name)
+{
+  // If the host doesn't care to resolve, leave the name alone.
+  if (vm->config.resolveModuleFn == NULL) return name;
+
+  ObjFiber* fiber = vm->fiber;
+  ObjFn* fn = fiber->frames[fiber->numFrames - 1].closure->fn;
+  ObjString* importer = fn->module->name;
+  
+  const char* resolved = vm->config.resolveModuleFn(vm, importer->value,
+                                                    AS_CSTRING(name));
+  if (resolved == NULL)
+  {
+    vm->fiber->error = wrenStringFormat(vm,
+        "Could not resolve module '@' imported from '@'.",
+        name, OBJ_VAL(importer));
+    return NULL_VAL;
+  }
+  
+  // If they resolved to the exact same string, we don't need to copy it.
+  if (resolved == AS_CSTRING(name)) return name;
+
+  // Copy the string into a Wren String object.
+  name = wrenNewString(vm, resolved);
+  DEALLOCATE(vm, (char*)resolved);
+  return name;
+}
+
 Value wrenImportModule(WrenVM* vm, Value name)
 {
+  name = resolveModule(vm, name);
+  
   // If the module is already loaded, we don't need to do anything.
   Value existing = wrenMapGet(vm->modules, name);
   if (!IS_UNDEFINED(existing)) return existing;
@@ -1436,13 +1468,8 @@ void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle)
   DEALLOCATE(vm, handle);
 }
 
-WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source)
-{
-  return wrenInterpretInModule(vm, "main", source);
-}
-
-WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
-                                          const char* source)
+WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
+                                  const char* source)
 {
   ObjClosure* closure = wrenCompileSource(vm, module, source, false, true);
   if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;

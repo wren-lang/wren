@@ -14,6 +14,7 @@
 #include "new_vm.h"
 #include "reset_stack_after_call_abort.h"
 #include "reset_stack_after_foreign_construct.h"
+#include "resolution.h"
 #include "slots.h"
 #include "user_data.h"
 
@@ -58,6 +59,9 @@ static WrenForeignMethodFn bindForeignMethod(
   method = newVMBindMethod(fullName);
   if (method != NULL) return method;
   
+  method = resolutionBindMethod(fullName);
+  if (method != NULL) return method;
+
   method = slotsBindMethod(fullName);
   if (method != NULL) return method;
   

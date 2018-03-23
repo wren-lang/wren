@@ -58,16 +58,21 @@ typedef void (*WrenForeignMethodFn)(WrenVM* vm);
 // collection.
 typedef void (*WrenFinalizerFn)(void* data);
 
+// Gives the host a chance to canonicalize the imported module name,
+// potentially taking into account the (previously resolved) name of the module
+// that contains the import. Typically, this is used to implement relative
+// imports.
+typedef const char* (*WrenResolveModuleFn)(WrenVM* vm,
+    const char* importer, const char* name);
+
 // Loads and returns the source code for the module [name].
 typedef char* (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
 
 // Returns a pointer to a foreign method on [className] in [module] with
 // [signature].
 typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
-                                                       const char* module,
-                                                       const char* className,
-                                                       bool isStatic,
-                                                       const char* signature);
+    const char* module, const char* className, bool isStatic,
+    const char* signature);
 
 // Displays a string of text to the user.
 typedef void (*WrenWriteFn)(WrenVM* vm, const char* text);
@@ -125,6 +130,32 @@ typedef struct
   //
   // If `NULL`, defaults to a built-in function that uses `realloc` and `free`.
   WrenReallocateFn reallocateFn;
+
+  // The callback Wren uses to resolve a module name.
+  //
+  // Some host applications may wish to support "relative" imports, where the
+  // meaning of an import string depends on the module that contains it. To
+  // support that without baking any policy into Wren itself, the VM gives the
+  // host a chance to resolve an import string.
+  //
+  // Before an import is loaded, it calls this, passing in the name of the
+  // module that contains the import and the import string. The host app can
+  // look at both of those and produce a new "canonical" string that uniquely
+  // identifies the module. This string is then used as the name of the module
+  // going forward. It is what is passed to [loadModuleFn], how duplicate
+  // imports of the same module are detected, and how the module is reported in
+  // stack traces.
+  //
+  // If you leave this function NULL, then the original import string is
+  // treated as the resolved string.
+  //
+  // If an import cannot be resolved by the embedder, it should return NULL and
+  // Wren will report that as a runtime error.
+  //
+  // Wren will take ownership of the string you return and free it for you, so
+  // it should be allocated using the same allocation function you provide
+  // above.
+  WrenResolveModuleFn resolveModuleFn;
 
   // The callback Wren uses to load a module.
   //
@@ -200,7 +231,8 @@ typedef struct
   //
   // For example, say that this is 50. After a garbage collection, when there
   // are 400 bytes of memory still in use, the next collection will be triggered
-  // after a total of 600 bytes are allocated (including the 400 already in use.)
+  // after a total of 600 bytes are allocated (including the 400 already in
+  // use.)
   //
   // Setting this to a smaller number wastes less memory, but triggers more
   // frequent garbage collections.
@@ -256,7 +288,8 @@ void wrenFreeVM(WrenVM* vm);
 void wrenCollectGarbage(WrenVM* vm);
 
 // Runs [source], a string of Wren source code in a new fiber in [vm].
-WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source);
+WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
+                                  const char* source);
 
 // Creates a handle that can be used to invoke a method with [signature] on
 // using a receiver and arguments that are set up on the stack.

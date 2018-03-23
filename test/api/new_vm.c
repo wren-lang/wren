@@ -7,7 +7,7 @@ static void nullConfig(WrenVM* vm)
   WrenVM* otherVM = wrenNewVM(NULL);
   
   // We should be able to execute code.
-  WrenInterpretResult result = wrenInterpret(otherVM, "1 + 2");
+  WrenInterpretResult result = wrenInterpret(otherVM, "main", "1 + 2");
   wrenSetSlotBool(vm, 0, result == WREN_RESULT_SUCCESS);
   
   wrenFreeVM(otherVM);
