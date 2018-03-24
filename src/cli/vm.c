@@ -3,6 +3,7 @@
 
 #include "io.h"
 #include "modules.h"
+#include "path.h"
 #include "scheduler.h"
 #include "vm.h"
 
@@ -15,7 +16,9 @@ static WrenForeignMethodFn afterLoadFn = NULL;
 
 static uv_loop_t* loop;
 
-static char const* rootDirectory = NULL;
+// TODO: This isn't currently used, but probably will be when package imports
+// are supported. If not then, then delete this.
+static char* rootDirectory = NULL;
 
 // The exit code to use unless some other error overrides it.
 int defaultExitCode = 0;
@@ -44,7 +47,7 @@ static char* readFile(const char* path)
   }
   
   // Read the entire file.
-  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+  size_t bytesRead = fread(buffer, 1, fileSize, file);
   if (bytesRead < fileSize)
   {
     fprintf(stderr, "Could not read file \"%s\".\n", path);
@@ -58,25 +61,46 @@ static char* readFile(const char* path)
   return buffer;
 }
 
-// Converts the module [name] to a file path.
-static char* wrenFilePath(const char* name)
+// Applies the CLI's import resolution policy. The rules are:
+//
+// * If [name] starts with "./" or "../", it is a relative import, relative to
+//   [importer]. The resolved path is [name] concatenated onto the directory
+//   containing [importer] and then normalized.
+//
+//   For example, importing "./a/./b/../c" from "d/e/f" gives you "d/e/a/c".
+//
+// * Otherwise, it is a "package" import. This isn't implemented yet.
+//
+static const char* resolveModule(WrenVM* vm, const char* importer,
+                                 const char* name)
 {
-  // The module path is relative to the root directory and with ".wren".
-  size_t rootLength = rootDirectory == NULL ? 0 : strlen(rootDirectory);
   size_t nameLength = strlen(name);
-  size_t pathLength = rootLength + nameLength + 5;
-  char* path = (char*)malloc(pathLength + 1);
   
-  if (rootDirectory != NULL)
+  // See if it's a relative import.
+  if (nameLength > 2 &&
+      ((name[0] == '.' && name[1] == '/') ||
+       (name[0] == '.' && name[1] == '.' && name[2] == '/')))
   {
-    memcpy(path, rootDirectory, rootLength);
+    // Get the directory containing the importing module.
+    Path* relative = pathNew(importer);
+    pathDirName(relative);
+    
+    // Add the relative import path.
+    pathJoin(relative, name);
+    Path* normal = pathNormalize(relative);
+    pathFree(relative);
+
+    char* resolved = pathToString(normal);
+    pathFree(normal);
+    return resolved;
+  }
+  else
+  {
+    // TODO: Implement package imports. For now, treat any non-relative import
+    // as an import relative to the current working directory.
   }
   
-  memcpy(path + rootLength, name, nameLength);
-  memcpy(path + rootLength + nameLength, ".wren", 5);
-  path[pathLength] = '\0';
-  
-  return path;
+  return name;
 }
 
 // Attempts to read the source for [module] relative to the current root
@@ -86,32 +110,26 @@ static char* wrenFilePath(const char* name)
 // module was found but could not be read.
 static char* readModule(WrenVM* vm, const char* module)
 {
-  char* source = readBuiltInModule(module);
+  // Since the module has already been resolved, it should now be either a
+  // valid relative path, or a package-style name.
+  
+  // TODO: Implement package imports.
+  
+  // Add a ".wren" file extension.
+  Path* modulePath = pathNew(module);
+  pathAppendString(modulePath, ".wren");
+  
+  char* source = readFile(modulePath->chars);
+  pathFree(modulePath);
+  
   if (source != NULL) return source;
-  
-  // First try to load the module with a ".wren" extension.
-  char* modulePath = wrenFilePath(module);
-  char* moduleContents = readFile(modulePath);
-  free(modulePath);
-  
-  if (moduleContents != NULL) return moduleContents;
-  
-  // If no contents could be loaded treat the module name as specifying a
-  // directory and try to load the "module.wren" file in the directory.
-  size_t moduleLength = strlen(module);
-  size_t moduleDirLength = moduleLength + 7;
-  char* moduleDir = (char*)malloc(moduleDirLength + 1);
-  memcpy(moduleDir, module, moduleLength);
-  memcpy(moduleDir + moduleLength, "/module", 7);
-  moduleDir[moduleDirLength] = '\0';
-  
-  char* moduleDirPath = wrenFilePath(moduleDir);
-  free(moduleDir);
-  
-  moduleContents = readFile(moduleDirPath);
-  free(moduleDirPath);
-  
-  return moduleContents;
+
+  // TODO: This used to look for a file named "<path>/module.wren" if
+  // "<path>.wren" could not be found. Do we still want to support that with
+  // the new relative import and package stuff?
+
+  // Otherwise, see if it's a built-in module.
+  return readBuiltInModule(module);
 }
 
 // Binds foreign methods declared in either built in modules, or the injected
@@ -179,6 +197,7 @@ static void initVM()
 
   config.bindForeignMethodFn = bindForeignMethod;
   config.bindForeignClassFn = bindForeignClass;
+  config.resolveModuleFn = resolveModule;
   config.loadModuleFn = readModule;
   config.writeFn = write;
   config.errorFn = reportError;
@@ -207,18 +226,6 @@ static void freeVM()
 
 void runFile(const char* path)
 {
-  // Use the directory where the file is as the root to resolve imports
-  // relative to.
-  char* root = NULL;
-  const char* lastSlash = strrchr(path, '/');
-  if (lastSlash != NULL)
-  {
-    root = (char*)malloc(lastSlash - path + 2);
-    memcpy(root, path, lastSlash - path + 1);
-    root[lastSlash - path + 1] = '\0';
-    rootDirectory = root;
-  }
-
   char* source = readFile(path);
   if (source == NULL)
   {
@@ -226,9 +233,19 @@ void runFile(const char* path)
     exit(66);
   }
 
+  // Use the directory where the file is as the root to resolve imports
+  // relative to.
+  Path* directory = pathNew(path);
+  pathDirName(directory);
+  rootDirectory = pathToString(directory);
+  pathFree(directory);
+  
+  Path* moduleName = pathNew(path);
+  pathRemoveExtension(moduleName);
+
   initVM();
 
-  WrenInterpretResult result = wrenInterpret(vm, "main", source);
+  WrenInterpretResult result = wrenInterpret(vm, moduleName->chars, source);
 
   if (afterLoadFn != NULL) afterLoadFn(vm);
   
@@ -240,7 +257,8 @@ void runFile(const char* path)
   freeVM();
 
   free(source);
-  free(root);
+  free(rootDirectory);
+  pathFree(moduleName);
 
   // Exit with an error code if the script failed.
   if (result == WREN_RESULT_COMPILE_ERROR) exit(65); // EX_DATAERR.
@@ -256,7 +274,7 @@ int runRepl()
   printf("\\\\/\"-\n");
   printf(" \\_/   wren v%s\n", WREN_VERSION_STRING);
 
-  wrenInterpret(vm, "main", "import \"repl\"\n");
+  wrenInterpret(vm, "repl", "import \"repl\"\n");
   
   uv_run(loop, UV_RUN_DEFAULT);
 

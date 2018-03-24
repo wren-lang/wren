@@ -1,4 +1,4 @@
-import "module" for Module1, Module2, Module3, Module4, Module5
+import "./module" for Module1, Module2, Module3, Module4, Module5
 
 // Only execute module body once:
 // expect: ran module

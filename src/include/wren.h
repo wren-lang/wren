@@ -92,14 +92,15 @@ typedef enum
 // Reports an error to the user.
 //
 // An error detected during compile time is reported by calling this once with
-// `WREN_ERROR_COMPILE`, the name of the module and line where the error occurs,
-// and the compiler's error message.
+// [type] `WREN_ERROR_COMPILE`, the resolved name of the [module] and [line]
+// where the error occurs, and the compiler's error [message].
 //
-// A runtime error is reported by calling this once with `WREN_ERROR_RUNTIME`,
-// no module or line, and the runtime error's message. After that, a series of
-// `WREN_ERROR_STACK_TRACE` calls are made for each line in the stack trace.
-// Each of those has the module and line where the method or function is
-// defined and [message] is the name of the method or function.
+// A runtime error is reported by calling this once with [type]
+// `WREN_ERROR_RUNTIME`, no [module] or [line], and the runtime error's
+// [message]. After that, a series of [type] `WREN_ERROR_STACK_TRACE` calls are
+// made for each line in the stack trace. Each of those has the resolved
+// [module] and [line] where the method or function is defined and [message] is
+// the name of the method or function.
 typedef void (*WrenErrorFn)(
     WrenVM* vm, WrenErrorType type, const char* module, int line,
     const char* message);
@@ -120,7 +121,7 @@ typedef struct
 } WrenForeignClassMethods;
 
 // Returns a pair of pointers to the foreign methods used to allocate and
-// finalize the data for instances of [className] in [module].
+// finalize the data for instances of [className] in resolved [module].
 typedef WrenForeignClassMethods (*WrenBindForeignClassFn)(
     WrenVM* vm, const char* module, const char* className);
 
@@ -287,7 +288,8 @@ void wrenFreeVM(WrenVM* vm);
 // Immediately run the garbage collector to free unused memory.
 void wrenCollectGarbage(WrenVM* vm);
 
-// Runs [source], a string of Wren source code in a new fiber in [vm].
+// Runs [source], a string of Wren source code in a new fiber in [vm] in the
+// context of resolved [module].
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
                                   const char* source);
 
@@ -468,10 +470,11 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 // an element, use `-1` for the index.
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
-// Looks up the top level variable with [name] in [module] and stores it in
-// [slot].
+// Looks up the top level variable with [name] in resolved [module] and stores
+// it in [slot].
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot);
+
 // Sets the current fiber to be aborted, and uses the value in [slot] as the
 // runtime error object.
 void wrenAbortFiber(WrenVM* vm, int slot);

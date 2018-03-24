@@ -24,8 +24,8 @@ const char* testName;
 static WrenForeignMethodFn bindForeignMethod(
     WrenVM* vm, const char* module, const char* className,
     bool isStatic, const char* signature)
-{  
-  if (strcmp(module, "main") != 0) return NULL;
+{
+  if (strncmp(module, "test/", 5) != 0) return NULL;
 
   // For convenience, concatenate all of the method qualifiers into a single
   // signature string.
@@ -78,7 +78,7 @@ static WrenForeignClassMethods bindForeignClass(
     WrenVM* vm, const char* module, const char* className)
 {
   WrenForeignClassMethods methods = { NULL, NULL };
-  if (strcmp(module, "main") != 0) return methods;
+  if (strncmp(module, "test/", 5) != 0) return methods;
 
   foreignClassBindClass(className, &methods);
   if (methods.allocate != NULL) return methods;
