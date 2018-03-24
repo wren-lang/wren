@@ -25,7 +25,7 @@ config_dir = ("debug" if is_debug else "release") + config
 
 WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wren' + args.suffix)
-TEST_APP = join(WREN_DIR, 'build', config_dir, 'test', 'wren' + args.suffix)
+TEST_APP = join(WREN_DIR, 'build', config_dir, 'test', 'api_wren' + args.suffix)
 
 EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')

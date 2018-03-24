@@ -31,8 +31,11 @@ MODULE_SOURCES   := $(wildcard src/module/*.c)
 VM_HEADERS   := $(wildcard src/vm/*.h) $(wildcard src/vm/*.wren.inc)
 VM_SOURCES   := $(wildcard src/vm/*.c)
 
-TEST_HEADERS := $(wildcard test/api/*.h)
-TEST_SOURCES := $(wildcard test/api/*.c)
+API_TEST_HEADERS := $(wildcard test/api/*.h)
+API_TEST_SOURCES := $(wildcard test/api/*.c)
+
+UNIT_TEST_HEADERS := $(wildcard test/unit/*.h)
+UNIT_TEST_SOURCES := $(wildcard test/unit/*.c)
 
 BUILD_DIR := build
 
@@ -120,11 +123,12 @@ endif
 
 CFLAGS := $(C_OPTIONS) $(C_WARNINGS)
 
-OPT_OBJECTS    := $(addprefix $(BUILD_DIR)/optional/, $(notdir $(OPT_SOURCES:.c=.o)))
-CLI_OBJECTS    := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
-MODULE_OBJECTS := $(addprefix $(BUILD_DIR)/module/, $(notdir $(MODULE_SOURCES:.c=.o)))
-VM_OBJECTS     := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
-TEST_OBJECTS   := $(patsubst test/api/%.c, $(BUILD_DIR)/test/%.o, $(TEST_SOURCES))
+OPT_OBJECTS       := $(addprefix $(BUILD_DIR)/optional/, $(notdir $(OPT_SOURCES:.c=.o)))
+CLI_OBJECTS       := $(addprefix $(BUILD_DIR)/cli/, $(notdir $(CLI_SOURCES:.c=.o)))
+MODULE_OBJECTS    := $(addprefix $(BUILD_DIR)/module/, $(notdir $(MODULE_SOURCES:.c=.o)))
+VM_OBJECTS        := $(addprefix $(BUILD_DIR)/vm/, $(notdir $(VM_SOURCES:.c=.o)))
+API_TEST_OBJECTS  := $(patsubst test/api/%.c, $(BUILD_DIR)/test/api/%.o, $(API_TEST_SOURCES))
+UNIT_TEST_OBJECTS := $(patsubst test/unit/%.c, $(BUILD_DIR)/test/unit/%.o, $(UNIT_TEST_SOURCES))
 
 LIBUV_DIR := deps/libuv
 LIBUV     := build/libuv$(LIBUV_ARCH).a
@@ -152,7 +156,10 @@ static: lib/lib$(WREN).a
 cli: bin/$(WREN)
 
 # Builds the API test executable.
-test: $(BUILD_DIR)/test/$(WREN)
+api_test: $(BUILD_DIR)/test/api_$(WREN)
+
+# Builds the unit test executable.
+unit_test: $(BUILD_DIR)/test/unit_$(WREN)
 
 # Command-line interpreter.
 bin/$(WREN): $(OPT_OBJECTS) $(CLI_OBJECTS) $(MODULE_OBJECTS) $(VM_OBJECTS) \
@@ -173,12 +180,21 @@ lib/lib$(WREN).$(SHARED_EXT): $(OPT_OBJECTS) $(VM_OBJECTS)
 	$(V) mkdir -p lib
 	$(V) $(CC) $(CFLAGS) -shared $(SHARED_LIB_FLAGS) -o $@ $^
 
-# Test executable.
-$(BUILD_DIR)/test/$(WREN): $(OPT_OBJECTS) $(MODULE_OBJECTS) $(TEST_OBJECTS) \
-		$(VM_OBJECTS) $(BUILD_DIR)/cli/modules.o $(BUILD_DIR)/cli/vm.o $(LIBUV)
+# API test executable.
+$(BUILD_DIR)/test/api_$(WREN): $(OPT_OBJECTS) $(MODULE_OBJECTS) $(API_TEST_OBJECTS) \
+		$(VM_OBJECTS) $(BUILD_DIR)/cli/modules.o $(BUILD_DIR)/cli/vm.o \
+		$(BUILD_DIR)/cli/path.o $(LIBUV)
 	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
-	$(V) mkdir -p $(BUILD_DIR)/test
+	$(V) mkdir -p $(BUILD_DIR)/test/api
 	$(V) $(CC) $(CFLAGS) $^ -o $@ -lm $(LIBUV_LIBS)
+
+# Unit test executable.
+$(BUILD_DIR)/test/unit_$(WREN): $(OPT_OBJECTS) $(MODULE_OBJECTS) $(UNIT_TEST_OBJECTS) \
+		$(VM_OBJECTS) $(BUILD_DIR)/cli/modules.o $(BUILD_DIR)/cli/vm.o \
+		$(BUILD_DIR)/cli/path.o $(LIBUV)
+	@ printf "%10s %-30s %s\n" $(CC) $@ "$(C_OPTIONS)"
+	$(V) mkdir -p $(BUILD_DIR)/test/unit
+	$(V) $(CC) $(CFLAGS) $^ -o $@
 
 # CLI object files.
 $(BUILD_DIR)/cli/%.o: src/cli/%.c $(CLI_HEADERS) $(MODULE_HEADERS) \
@@ -194,7 +210,7 @@ $(BUILD_DIR)/module/%.o: src/module/%.c $(CLI_HEADERS) $(MODULE_HEADERS) \
 	$(V) mkdir -p $(BUILD_DIR)/module
 	$(V) $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
 
-# Aux object files.
+# Optional object files.
 $(BUILD_DIR)/optional/%.o: src/optional/%.c $(VM_HEADERS) $(OPT_HEADERS)
 	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	$(V) mkdir -p $(BUILD_DIR)/optional
@@ -206,9 +222,16 @@ $(BUILD_DIR)/vm/%.o: src/vm/%.c $(VM_HEADERS)
 	$(V) mkdir -p $(BUILD_DIR)/vm
 	$(V) $(CC) -c $(CFLAGS) -Isrc/include -Isrc/optional -Isrc/vm -o $@ $(FILE_FLAG) $<
 
-# Test object files.
-$(BUILD_DIR)/test/%.o: test/api/%.c $(OPT_HEADERS) $(MODULE_HEADERS) \
-		 $(VM_HEADERS) $(TEST_HEADERS) $(LIBUV)
+# API test object files.
+$(BUILD_DIR)/test/api/%.o: test/api/%.c $(OPT_HEADERS) $(MODULE_HEADERS) \
+		 $(VM_HEADERS) $(API_TEST_HEADERS) $(LIBUV)
+	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
+	$(V) mkdir -p $(dir $@)
+	$(V) $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
+
+# Unit test object files.
+$(BUILD_DIR)/test/unit/%.o: test/unit/%.c $(OPT_HEADERS) $(MODULE_HEADERS) \
+		 $(VM_HEADERS) $(UNIT_TEST_HEADERS) $(LIBUV)
 	@ printf "%10s %-30s %s\n" $(CC) $< "$(C_OPTIONS)"
 	$(V) mkdir -p $(dir $@)
 	$(V) $(CC) -c $(CFLAGS) $(CLI_FLAGS) -o $@ $(FILE_FLAG) $<
@@ -231,4 +254,4 @@ src/module/%.wren.inc: src/module/%.wren util/wren_to_c_string.py
 	@ printf "%10s %-30s %s\n" str $<
 	$(V) ./util/wren_to_c_string.py $@ $<
 
-.PHONY: all cli test vm
+.PHONY: all api_test cli unit_test vm

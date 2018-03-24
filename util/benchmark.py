@@ -154,7 +154,7 @@ def run_trial(benchmark, language):
   # of the normal Wren build.
   if benchmark[0].startswith("api_"):
     executable_args = [
-      os.path.join(WREN_DIR, "build", "release", "test", "wren")
+      os.path.join(WREN_DIR, "build", "release", "test", "api_wren")
     ]
 
   args = []
