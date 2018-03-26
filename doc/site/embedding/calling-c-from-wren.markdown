@@ -76,7 +76,7 @@ Something like:
       {
         if (strcmp(className, "Math") == 0)
         {
-          if (!isStatic && strcmp(signature, "add(_,_)") == 0)
+          if (isStatic && strcmp(signature, "add(_,_)") == 0)
           {
             return mathAdd; // C function for Math.add(_,_).
           }
