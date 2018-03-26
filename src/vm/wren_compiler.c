@@ -2730,7 +2730,6 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_LOAD_FIELD:
     case CODE_STORE_FIELD:
     case CODE_CLASS:
-    case CODE_IMPORT_MODULE:
       return 1;
 
     case CODE_CONSTANT:
@@ -2760,7 +2759,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_OR:
     case CODE_METHOD_INSTANCE:
     case CODE_METHOD_STATIC:
-    case CODE_IMPORT_VARIABLE:
+    case CODE_IMPORT_MODULE:
       return 2;
 
     case CODE_SUPER_0:
@@ -2780,6 +2779,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_SUPER_14:
     case CODE_SUPER_15:
     case CODE_SUPER_16:
+    case CODE_IMPORT_VARIABLE:
       return 4;
 
     case CODE_CLOSURE:
@@ -3495,7 +3495,7 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
   int ip = 0;
   for (;;)
   {
-    Code instruction = (Code)fn->code.data[ip++];
+    Code instruction = (Code)fn->code.data[ip];
     switch (instruction)
     {
       case CODE_LOAD_FIELD:
@@ -3505,7 +3505,7 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
         // Shift this class's fields down past the inherited ones. We don't
         // check for overflow here because we'll see if the number of fields
         // overflows when the subclass is created.
-        fn->code.data[ip++] += classObj->superclass->numFields;
+        fn->code.data[ip + 1] += classObj->superclass->numFields;
         break;
 
       case CODE_SUPER_0:
@@ -3526,11 +3526,8 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
       case CODE_SUPER_15:
       case CODE_SUPER_16:
       {
-        // Skip over the symbol.
-        ip += 2;
-        
         // Fill in the constant slot with a reference to the superclass.
-        int constant = (fn->code.data[ip] << 8) | fn->code.data[ip + 1];
+        int constant = (fn->code.data[ip + 3] << 8) | fn->code.data[ip + 4];
         fn->constants.data[constant] = OBJ_VAL(classObj->superclass);
         break;
       }
@@ -3538,10 +3535,8 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
       case CODE_CLOSURE:
       {
         // Bind the nested closure too.
-        int constant = (fn->code.data[ip] << 8) | fn->code.data[ip + 1];
+        int constant = (fn->code.data[ip + 1] << 8) | fn->code.data[ip + 2];
         wrenBindMethodCode(classObj, AS_FN(fn->constants.data[constant]));
-
-        ip += getNumArguments(fn->code.data, fn->constants.data, ip - 1);
         break;
       }
 
@@ -3550,9 +3545,9 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
 
       default:
         // Other instructions are unaffected, so just skip over them.
-        ip += getNumArguments(fn->code.data, fn->constants.data, ip - 1);
         break;
     }
+    ip += 1 + getNumArguments(fn->code.data, fn->constants.data, ip);
   }
 }
 
