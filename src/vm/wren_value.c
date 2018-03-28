@@ -1137,11 +1137,12 @@ static void blackenModule(WrenVM* vm, ObjModule* module)
     wrenGrayValue(vm, module->variables.data[i]);
   }
 
+  wrenBlackenSymbolTable(vm, &module->variableNames);
+
   wrenGrayObj(vm, (Obj*)module->name);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjModule);
-  // TODO: Track memory for symbol table and buffer.
 }
 
 static void blackenRange(WrenVM* vm, ObjRange* range)
