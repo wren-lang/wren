@@ -1295,11 +1295,7 @@ bool wrenValuesEqual(Value a, Value b)
 
     case OBJ_STRING:
     {
-      ObjString* aString = (ObjString*)aObj;
-      ObjString* bString = (ObjString*)bObj;
-      return aString->length == bString->length &&
-             aString->hash == bString->hash &&
-             memcmp(aString->value, bString->value, aString->length) == 0;
+      return wrenStringsEqual((ObjString*)aObj, (ObjString*)bObj);
     }
 
     default:

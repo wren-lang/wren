@@ -47,8 +47,7 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
   // TODO: O(n). Do something better.
   for (int i = 0; i < symbols->count; i++)
   {
-    if (symbols->data[i]->length == length &&
-        memcmp(symbols->data[i]->value, name, length) == 0) return i;
+    if(wrenStringEqualStrLength(symbols->data[i], name, length)) return i;
   }
 
   return -1;

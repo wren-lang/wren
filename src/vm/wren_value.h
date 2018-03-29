@@ -2,6 +2,7 @@
 #define wren_value_h
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "wren_common.h"
 #include "wren_utils.h"
@@ -784,6 +785,22 @@ static inline bool wrenValuesSame(Value a, Value b)
 // numbers, ranges, and strings) are equal if they have the same data. All
 // other values are equal if they are identical objects.
 bool wrenValuesEqual(Value a, Value b);
+
+// Returns true is [a] and [str] represent the same string.
+static inline bool wrenStringEqualStrLength(const ObjString* a,
+                                            const char* str, size_t length)
+{
+  return a->length == length &&
+         memcmp(a->value, str, length) == 0;
+}
+
+// Returns true is [a] and [b] represent the same string.
+static inline bool wrenStringsEqual(const ObjString* a, const ObjString* b)
+{
+  return a == b ||
+         (a->hash == b->hash &&
+          wrenStringEqualStrLength(a, b->value, b->length));
+}
 
 // Returns true if [value] is a bool. Do not call this directly, instead use
 // [IS_BOOL].
