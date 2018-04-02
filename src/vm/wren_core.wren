@@ -4,118 +4,148 @@ class Fn {}
 class Null {}
 class Num {}
 
-class Sequence {
-  all(f) {
+class Algorithm {
+  // Non-modifying sequence operations.
+  static all(seq, unary_predicate) {
     var result = true
-    for (element in this) {
-      result = f.call(element)
+    for (element in seq) {
+      result = unary_predicate.call(element)
       if (!result) return result
     }
     return result
   }
-
-  any(f) {
+  
+  static any(seq, unary_predicate) {
     var result = false
-    for (element in this) {
-      result = f.call(element)
+    for (element in seq) {
+      result = unary_predicate.call(element)
       if (result) return result
     }
     return result
   }
-
-  contains(element) {
-    for (item in this) {
+  
+  static contains(seq, element) {
+    for (item in seq) {
       if (element == item) return true
     }
     return false
   }
-
-  count {
+  
+  static count(seq) {
     var result = 0
-    for (element in this) {
+    for (element in seq) {
       result = result + 1
     }
     return result
   }
 
-  count(f) {
+  static count(seq, unary_predicate) {
     var result = 0
-    for (element in this) {
-      if (f.call(element)) result = result + 1
+    for (element in seq) {
+      if (unary_predicate.call(element)) result = result + 1
     }
     return result
   }
-
-  each(f) {
-    for (element in this) {
-      f.call(element)
+  
+  static each(seq, fn) {
+    for (element in seq) {
+      fn.call(element)
     }
   }
-
-  isEmpty { iterate(null) ? false : true }
-
-  map(transformation) { MapSequence.new(this, transformation) }
-
-  skip(count) {
+  
+  static isEmpty(seq) { seq.iterate(null) ? false : true }
+  
+  // Modifying sequence operations.
+  static copy(seq, res) {
+    for (element in seq) {
+      res.add(element)
+    }
+    return res
+  }
+  
+  static copy(seq, res, unary_predicate) {
+    for (element in seq) {
+      if (unary_predicate.call(element)) res.add(element)
+    }
+    return res
+  }
+  
+  // Views
+  static map(seq, transformation) { MapSequence.new(seq, transformation) }
+  
+  static skip(seq, count) {
     if (!(count is Num) || !count.isInteger || count < 0) {
       Fiber.abort("Count must be a non-negative integer.")
     }
-
-    return SkipSequence.new(this, count)
+    return SkipSequence.new(seq, count)
   }
 
-  take(count) {
+  static take(seq, count) {
     if (!(count is Num) || !count.isInteger || count < 0) {
       Fiber.abort("Count must be a non-negative integer.")
     }
-
-    return TakeSequence.new(this, count)
+    
+    return TakeSequence.new(seq, count)
   }
-
-  where(predicate) { WhereSequence.new(this, predicate) }
-
-  reduce(acc, f) {
-    for (element in this) {
-      acc = f.call(acc, element)
+  
+  static where(seq, unary_predicate) { WhereSequence.new(seq, unary_predicate) }
+  
+  static reduce(seq, fn) {
+    var iter = seq.iterate(null)
+    if (!iter) Fiber.abort("Can't reduce an empty sequence.")
+    
+    // Seed with the first element.
+    var result = seq.iteratorValue(iter)
+    while (iter = seq.iterate(iter)) {
+      result = fn.call(result, seq.iteratorValue(iter))
+    }
+    return result
+  }
+  
+  static reduce(seq, acc, fn) {
+    for (element in seq) {
+      acc = fn.call(acc, element)
     }
     return acc
   }
-
-  reduce(f) {
-    var iter = iterate(null)
-    if (!iter) Fiber.abort("Can't reduce an empty sequence.")
-
-    // Seed with the first element.
-    var result = iteratorValue(iter)
-    while (iter = iterate(iter)) {
-      result = f.call(result, iteratorValue(iter))
-    }
-
-    return result
-  }
-
-  join() { join("") }
-
-  join(sep) {
+  
+  static join(seq) { join(seq, "") }
+  
+  static join(seq, sep) {
     var first = true
     var result = ""
-
-    for (element in this) {
+    
+    for (element in seq) {
       if (!first) result = result + sep
       first = false
       result = result + element.toString
     }
-
     return result
   }
+  
+  static toList(seq) { Algorithm.copy(seq, List.new()) }
+}
 
-  toList {
-    var result = List.new()
-    for (element in this) {
-      result.add(element)
-    }
-    return result
-  }
+class Sequence {
+  all(unary_predicate)       { Algorithm.all(this, unary_predicate) }
+  any(unary_predicate)       { Algorithm.any(this, unary_predicate) }
+  contains(element)          { Algorithm.contains(this, element) }
+  count                      { Algorithm.count(this) }
+  count(unary_predicate)     { Algorithm.count(this, unary_predicate) }
+  each(fn)                   { Algorithm.each(this, fn) }
+  isEmpty                    { Algorithm.isEmpty(this) }
+
+  map(transformation)        { Algorithm.map(this, transformation) }
+  skip(count)                { Algorithm.skip(this, count) }
+  take(count)                { Algorithm.take(this, count) }
+  where(unary_predicate)     { Algorithm.where(this, unary_predicate) }
+  reduce(fn)                 { Algorithm.reduce(this, fn) }
+  reduce(acc, fn)            { Algorithm.reduce(this, acc, fn) }
+
+  join()                     { Algorithm.join(this) }
+  join(sep)                  { Algorithm.join(this, sep) }
+
+  toList                     { Algorithm.toList(this) }
 }
 
 class MapSequence is Sequence {
