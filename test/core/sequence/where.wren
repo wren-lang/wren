@@ -30,7 +30,6 @@ var largeFibs = Fib.new().where {|fib| fib > 100 }
 var iterator = null
 
 System.print(largeFibs is Sequence) // expect: true
-System.print(largeFibs) // expect: instance of WhereSequence
 
 iterator = largeFibs.iterate(iterator)
 System.print(largeFibs.iteratorValue(iterator)) // expect: 144

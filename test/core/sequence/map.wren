@@ -30,7 +30,6 @@ var squareFib = Fib.new().map {|fib| fib * fib }
 var iterator = null
 
 System.print(squareFib is Sequence) // expect: true
-System.print(squareFib) // expect: instance of MapSequence
 
 iterator = squareFib.iterate(iterator)
 System.print(squareFib.iteratorValue(iterator)) // expect: 0

@@ -71,7 +71,8 @@ class Algorithm {
   }
   
   // Views
-  static map(seq, transformation) { MapSequence.new(seq, transformation) }
+  static filter(seq, unary_predicate)  { seq | View.filter(unary_predicate) }
+  static transform(seq, fn)            { seq | View.transform(fn) }
   
   static skip(seq, count) {
     if (!(count is Num) || !count.isInteger || count < 0) {
@@ -88,7 +89,7 @@ class Algorithm {
     return TakeSequence.new(seq, count)
   }
   
-  static where(seq, unary_predicate) { WhereSequence.new(seq, unary_predicate) }
+  static where(seq, unary_predicate) { FilterSequenceView.new(seq, unary_predicate) }
   
   static reduce(seq, fn) {
     var iter = seq.iterate(null)
@@ -127,6 +128,8 @@ class Algorithm {
 }
 
 class Sequence {
+  | (view) { view.compose(this) }
+
   all(unary_predicate)       { Algorithm.all(this, unary_predicate) }
   any(unary_predicate)       { Algorithm.any(this, unary_predicate) }
   contains(element)          { Algorithm.contains(this, element) }
@@ -135,10 +138,13 @@ class Sequence {
   each(fn)                   { Algorithm.each(this, fn) }
   isEmpty                    { Algorithm.isEmpty(this) }
 
-  map(transformation)        { Algorithm.map(this, transformation) }
+  filter(unary_predicate)    { Algorithm.filter(this, unary_predicate) }
+  transform(fn)              { Algorithm.transform(this, fn) }
+
+  map(transformation)        { transform(transformation) }
   skip(count)                { Algorithm.skip(this, count) }
   take(count)                { Algorithm.take(this, count) }
-  where(unary_predicate)     { Algorithm.where(this, unary_predicate) }
+  where(unary_predicate)     { filter(unary_predicate) }
   reduce(fn)                 { Algorithm.reduce(this, fn) }
   reduce(acc, fn)            { Algorithm.reduce(this, acc, fn) }
 
@@ -148,14 +154,89 @@ class Sequence {
   toList                     { Algorithm.toList(this) }
 }
 
-class MapSequence is Sequence {
-  construct new(sequence, fn) {
-    _sequence = sequence
+class ViewedSequence is Sequence {
+  construct new(seq, view) {
+    _seq = seq
+    _view = view
+  }
+  
+  | (view) { view.compose(this) }
+  
+  iterate(iter) { _view.iterate(_seq, iter) }
+  iteratorValue(iter) { _view.iteratorValue(_seq, iter) }
+}
+
+class View {
+  static filter(unary_predicate) { FilterView.new(unary_predicate) }
+  static identity() { View.new() }
+//  static remove_if(unary_predicate) { }
+  static transform(fn) { TransformView.new(fn) }
+  
+  construct new() { } // Identity
+  
+  | (other) { ComposedView.new(this, other) }
+  
+  compose(seq) { ViewedSequence.new(seq, this) }
+  
+  iterate(seq, iter) { seq.iterate(iter) }
+  iteratorValue(seq, iter) { seq.iteratorValue(iter) }
+}
+
+class ComposedView is View {
+  construct new (a, b) {
+    _views = [a, b]
+  }
+  
+  | (other) {
+    _views.add(other)
+    return this
+  }
+  
+  compose(seq) {
+    for (view in _views) seq = view.compose(seq)
+    return seq
+  }
+}
+
+class FilterView is View {
+  construct new(unary_predicate) {
+    _unary_predicate = unary_predicate
+  }
+  
+  compose(seq) { FilterSequenceView.new(seq, _unary_predicate) }
+}
+
+class FilterSequenceView is Sequence {
+  construct new(seq, unary_predicate) {
+    _seq = seq
+    _unary_predicate = unary_predicate
+  }
+  
+  iterate(iter) {
+    while (iter = _seq.iterate(iter)) {
+      if (_unary_predicate.call(iteratorValue(iter))) return iter
+    }
+    return iter
+  }
+  iteratorValue(iter) { _seq.iteratorValue(iter) }
+}
+
+class TransformView is View {
+  construct new(fn) {
+    _fn = fn
+  }
+  
+  compose(seq) { TransformSequenceView.new(seq, _fn) }
+}
+
+class TransformSequenceView is Sequence {
+  construct new(seq, fn) {
+    _seq = seq
     _fn = fn
   }
 
-  iterate(iterator) { _sequence.iterate(iterator) }
-  iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
+  iterate(iterator) { _seq.iterate(iterator) }
+  iteratorValue(iterator) { _fn.call(_seq.iteratorValue(iterator)) }
 }
 
 class SkipSequence is Sequence {
@@ -190,22 +271,6 @@ class TakeSequence is Sequence {
   iterate(iterator) {
     if (!iterator) _taken = 1 else _taken = _taken + 1
     return _taken > _count ? null : _sequence.iterate(iterator)
-  }
-
-  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
-}
-
-class WhereSequence is Sequence {
-  construct new(sequence, fn) {
-    _sequence = sequence
-    _fn = fn
-  }
-
-  iterate(iterator) {
-    while (iterator = _sequence.iterate(iterator)) {
-      if (_fn.call(_sequence.iteratorValue(iterator))) break
-    }
-    return iterator
   }
 
   iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
