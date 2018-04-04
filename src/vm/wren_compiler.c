@@ -3446,12 +3446,11 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   parser.printErrors = printErrors;
   parser.hasError = false;
 
-
   // Read the first token.
   nextToken(&parser);
 
   int numExistingVariables = module->variables.count;
-  
+
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, true);
   ignoreNewlines(&compiler);
