@@ -3416,20 +3416,27 @@ void definition(Compiler* compiler)
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
                    bool isExpression, bool printErrors)
 {
+  // Skip potential UTF-8 BOM
+  size_t sourceOffset = 0;
+  if (source[0] == (char) 0xef && source[1] == (char) 0xbb && source[2] == (char) 0xbf)
+  {
+    sourceOffset = 3;
+  }
+
   Parser parser;
   parser.vm = vm;
   parser.module = module;
-  parser.source = source;
+  parser.source = source + sourceOffset;
 
-  parser.tokenStart = source;
-  parser.currentChar = source;
+  parser.tokenStart = source + sourceOffset;
+  parser.currentChar = source + sourceOffset;
   parser.currentLine = 1;
   parser.numParens = 0;
 
   // Zero-init the current token. This will get copied to previous when
   // advance() is called below.
   parser.current.type = TOKEN_ERROR;
-  parser.current.start = source;
+  parser.current.start = source + sourceOffset;
   parser.current.length = 0;
   parser.current.line = 0;
   parser.current.value = UNDEFINED_VAL;
@@ -3438,6 +3445,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   parser.skipNewlines = true;
   parser.printErrors = printErrors;
   parser.hasError = false;
+
 
   // Read the first token.
   nextToken(&parser);
