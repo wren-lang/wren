@@ -148,14 +148,14 @@ method calls &mdash; the entire callstack &mdash; gets suspended. For example:
 
     :::wren
     var fiber = Fiber.new {
-      (1..10).map {|i|
+      (1..10).each {|i|
         Fiber.yield(i)
       }
     }
 
 Here, we're calling `yield()` from within a [function](functions.html) being
-passed to the `map()` method. This works fine in Wren because that inner
-`yield()` call will suspend the call to `map()` and the function passed to it
+passed to the `each()` method. This works fine in Wren because that inner
+`yield()` call will suspend the call to `each()` and the function passed to it
 as a callback.
 
 ## Transferring control
