@@ -13,6 +13,7 @@ jobs:
   include:
     - stage: deploy
       script: bash util/deployGHP.sh
+      if: branch = master
 
 # Travis VMs are 64-bit but we compile both for 32 and 64 bit. To enable the
 # 32-bit builds to work, we need gcc-multilib.
