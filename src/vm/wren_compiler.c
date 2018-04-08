@@ -1293,12 +1293,18 @@ static int declareVariable(Compiler* compiler, Token* token)
   return addLocal(compiler, token->start, token->length);
 }
 
+static void optionalTypeDefinition(Compiler* compiler);
+
 // Parses a name token and declares a variable in the current scope with that
 // name. Returns its slot.
 static int declareNamedVariable(Compiler* compiler)
 {
   consume(compiler, TOKEN_NAME, "Expect variable name.");
-  return declareVariable(compiler, NULL);
+  int symbol = declareVariable(compiler, NULL);
+  
+  optionalTypeDefinition(compiler);
+  
+  return symbol;
 }
 
 // Stores a variable with the previously defined symbol in the current scope.
@@ -2485,7 +2491,11 @@ void mixedSignature(Compiler* compiler, Signature* signature)
 static bool maybeSetter(Compiler* compiler, Signature* signature)
 {
   // See if it's a setter.
-  if (!match(compiler, TOKEN_EQ)) return false;
+  if (!match(compiler, TOKEN_EQ))
+  {
+    optionalTypeDefinition(compiler);
+    return false;
+  }
 
   // It's a setter.
   if (signature->type == SIG_SUBSCRIPT)
@@ -2504,6 +2514,8 @@ static bool maybeSetter(Compiler* compiler, Signature* signature)
 
   signature->arity++;
 
+  optionalTypeDefinition(compiler);
+  
   return true;
 }
 
@@ -2533,10 +2545,15 @@ static void parameterList(Compiler* compiler, Signature* signature)
   signature->type = SIG_METHOD;
   
   // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
+  if (match(compiler, TOKEN_RIGHT_PAREN))
+  {
+    optionalTypeDefinition(compiler);
+    return;
+  }
 
   finishParameterList(compiler, signature);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+  optionalTypeDefinition(compiler);
 }
 
 // Compiles a method signature for a named method or setter.
@@ -3364,6 +3381,20 @@ static void import(Compiler* compiler)
   } while (match(compiler, TOKEN_COMMA));
 }
 
+// Consume the optional type definition.
+static void optionalTypeDefinition(Compiler* compiler)
+{
+  if (match(compiler, TOKEN_COLON))
+  {
+    ignoreNewlines(compiler);
+    parsePrecedence(compiler, PREC_IS);
+    
+    // Discard the type definition.
+    // This compiler is too simple to handle optional type definition.
+    emitOp(compiler, CODE_POP);
+  }
+}
+
 // Compiles a "var" variable definition statement.
 static void variableDefinition(Compiler* compiler)
 {
@@ -3372,6 +3403,8 @@ static void variableDefinition(Compiler* compiler)
   consume(compiler, TOKEN_NAME, "Expect variable name.");
   Token nameToken = compiler->parser->previous;
 
+  optionalTypeDefinition(compiler);
+  
   // Compile the initializer.
   if (match(compiler, TOKEN_EQ))
   {
