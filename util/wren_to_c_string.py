@@ -1,10 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 import argparse
-import glob
 import os.path
-import re
 
 # The source for the Wren modules that are built into the VM or CLI are turned
 # include C string literals. This way they can be compiled directly into the

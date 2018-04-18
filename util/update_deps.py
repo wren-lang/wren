@@ -1,11 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Downloads GYP and libuv into deps/.
 #
 # Run this manually to update the vendored copies of GYP and libuv that are
 # committed in the Wren repo.
-
-from __future__ import print_function
 
 import sys
 

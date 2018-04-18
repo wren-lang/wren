@@ -1,7 +1,5 @@
 # Utility functions used by other Python files in this directory.
 
-from __future__ import print_function
-
 import os
 import os.path
 import platform

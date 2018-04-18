@@ -1,10 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import print_function
-
+import codecs
 import glob
 import fnmatch
-import itertools
 import os
 import re
 
@@ -86,7 +84,8 @@ def wren_metrics(label, directories):
       for file_name in fnmatch.filter(file_names, "*.wren"):
         num_files += 1
 
-        with open(os.path.join(dir_path, file_name), "r") as input:
+        # NOTE: In the old Python 2 version of the script, files were opened as ISO-8859-1
+        with codecs.open(os.path.join(dir_path, file_name), "r", encoding="utf-8", errors="ignore") as input:
           for line in input:
             if line.strip() == "":
               num_empty += 1

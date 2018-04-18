@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import print_function
-
+import codecs
 from argparse import ArgumentParser
 from collections import defaultdict
 from os import listdir
-from os.path import abspath, basename, dirname, isdir, isfile, join, realpath, relpath, splitext
+from os.path import abspath, dirname, isdir, join, realpath, relpath, splitext
 import re
 from subprocess import Popen, PIPE
 import sys
@@ -63,8 +62,11 @@ class Test:
 
     input_lines = []
     line_num = 1
-    with open(self.path, 'r') as file:
-      for line in file:
+    with codecs.open(self.path, 'r', encoding='utf-8', errors='ignore') as file:
+
+      # NOTE: Using Unix-newlines only. Python 3 will otherwise interpret \r\n as a
+      # single newline, causing test/language/ignore_carriage_returns.wren to fail.
+      for line in file.read().split('\n'):
         match = EXPECT_PATTERN.search(line)
         if match:
           self.output.append((match.group(1), line_num))
@@ -111,7 +113,6 @@ class Test:
           return False
 
         line_num += 1
-
 
     # If any input is fed to the test in stdin, concatenate it into one string.
     if input_lines:

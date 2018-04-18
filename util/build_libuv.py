@@ -1,8 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Runs GYP to generate the right project then uses that to build libuv.
-
-from __future__ import print_function
 
 import os
 import platform
