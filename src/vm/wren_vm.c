@@ -1249,17 +1249,18 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       Value name = fn->constants.data[READ_SHORT()];
 
       // Make a slot on the stack for the module's fiber to place the return
-      // value. It will be popped after this fiber is resumed.
-      PUSH(NULL_VAL);
+      // value. It will be popped after this fiber is resumed. Store the
+      // imported module's closure in the slot in case a GC happens when
+      // invoking the closure.
+      PUSH(wrenImportModule(vm, name));
       
-      Value result = wrenImportModule(vm, name);
       if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
 
       // If we get a closure, call it to execute the module body.
-      if (IS_CLOSURE(result))
+      if (IS_CLOSURE(PEEK()))
       {
         STORE_FRAME();
-        ObjClosure* closure = AS_CLOSURE(result);
+        ObjClosure* closure = AS_CLOSURE(PEEK());
         callFunction(vm, fiber, closure, 1);
         LOAD_FRAME();
       }
@@ -1417,7 +1418,7 @@ WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
   wrenPushRoot(vm, (Obj*)closure);
   ObjFiber* fiber = wrenNewFiber(vm, closure);
   wrenPopRoot(vm); // closure.
-
+  
   return runInterpreter(vm, fiber);
 }
 

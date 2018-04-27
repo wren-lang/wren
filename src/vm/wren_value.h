@@ -628,10 +628,6 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 // Creates a new fiber object that will invoke [closure].
 ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure);
 
-// Resets [fiber] back to an initial state where it is ready to invoke
-// [closure].
-void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, ObjClosure* closure);
-
 // Adds a new [CallFrame] to [fiber] invoking [closure] whose stack starts at
 // [stackStart].
 static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,

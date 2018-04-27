@@ -159,27 +159,31 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
+
+  fiber->stack = stack;
+  fiber->stackTop = fiber->stack;
+  fiber->stackCapacity = stackCapacity;
+
   fiber->frames = frames;
   fiber->frameCapacity = INITIAL_CALL_FRAMES;
-  fiber->stack = stack;
-  fiber->stackCapacity = stackCapacity;
-  wrenResetFiber(vm, fiber, closure);
+  fiber->numFrames = 0;
 
-  return fiber;
-}
-
-void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, ObjClosure* closure)
-{
-  // Reset everything.
-  fiber->stackTop = fiber->stack;
   fiber->openUpvalues = NULL;
   fiber->caller = NULL;
   fiber->error = NULL_VAL;
   fiber->callerIsTrying = false;
-  fiber->numFrames = 0;
+  
+  if (closure != NULL)
+  {
+    // Initialize the first call frame.
+    wrenAppendCallFrame(vm, fiber, closure, fiber->stack);
 
-  // Initialize the first call frame.
-  if (closure != NULL) wrenAppendCallFrame(vm, fiber, closure, fiber->stack);
+    // The first slot always holds the closure.
+    fiber->stackTop[0] = OBJ_VAL(closure);
+    fiber->stackTop++;
+  }
+  
+  return fiber;
 }
 
 void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)

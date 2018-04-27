@@ -498,7 +498,7 @@ static int addConstant(Compiler* compiler, Value constant)
 
 // Initializes [compiler].
 static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
-                         bool isFunction)
+                         bool isMethod)
 {
   compiler->parser = parser;
   compiler->parent = parent;
@@ -512,41 +512,41 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
   parser->vm->compiler = compiler;
 
+  // Declare a local slot for either the closure or method receiver so that we
+  // don't try to reuse that slot for a user-defined local variable. For
+  // methods, we name it "this", so that we can resolve references to that like
+  // a normal variable. For functions, they have no explicit "this", so we use
+  // an empty name. That way references to "this" inside a function walks up
+  // the parent chain to find a method enclosing the function whose "this" we
+  // can close over.
+  compiler->numLocals = 1;
+  compiler->numSlots = compiler->numLocals;
+
+  if (isMethod)
+  {
+    compiler->locals[0].name = "this";
+    compiler->locals[0].length = 4;
+  }
+  else
+  {
+    compiler->locals[0].name = NULL;
+    compiler->locals[0].length = 0;
+  }
+  
+  compiler->locals[0].depth = -1;
+  compiler->locals[0].isUpvalue = false;
+
   if (parent == NULL)
   {
-    compiler->numLocals = 0;
-
     // Compiling top-level code, so the initial scope is module-level.
     compiler->scopeDepth = -1;
   }
   else
   {
-    // Declare a fake local variable for the receiver so that it's slot in the
-    // stack is taken. For methods, we call this "this", so that we can resolve
-    // references to that like a normal variable. For functions, they have no
-    // explicit "this". So we pick a bogus name. That way references to "this"
-    // inside a function will try to walk up the parent chain to find a method
-    // enclosing the function whose "this" we can close over.
-    compiler->numLocals = 1;
-    if (isFunction)
-    {
-      compiler->locals[0].name = NULL;
-      compiler->locals[0].length = 0;
-    }
-    else
-    {
-      compiler->locals[0].name = "this";
-      compiler->locals[0].length = 4;
-    }
-    compiler->locals[0].depth = -1;
-    compiler->locals[0].isUpvalue = false;
-
-    // The initial scope for function or method is a local scope.
+    // The initial scope for functions and methods is local scope.
     compiler->scopeDepth = 0;
   }
   
-  compiler->numSlots = compiler->numLocals;
-
   compiler->fn = wrenNewFunction(parser->vm, parser->module,
                                  compiler->numLocals);
 }
@@ -1867,7 +1867,7 @@ static void methodCall(Compiler* compiler, Code instruction,
     called.arity++;
 
     Compiler fnCompiler;
-    initCompiler(&fnCompiler, compiler->parser, compiler, true);
+    initCompiler(&fnCompiler, compiler->parser, compiler, false);
 
     // Make a dummy signature to track the arity.
     Signature fnSignature = { "", 0, SIG_METHOD, 0 };
@@ -3080,7 +3080,7 @@ static void createConstructor(Compiler* compiler, Signature* signature,
                               int initializerSymbol)
 {
   Compiler methodCompiler;
-  initCompiler(&methodCompiler, compiler->parser, compiler, false);
+  initCompiler(&methodCompiler, compiler->parser, compiler, true);
   
   // Allocate the instance.
   emitOp(&methodCompiler, compiler->enclosingClass->isForeign
@@ -3166,7 +3166,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   compiler->enclosingClass->signature = &signature;
 
   Compiler methodCompiler;
-  initCompiler(&methodCompiler, compiler->parser, compiler, false);
+  initCompiler(&methodCompiler, compiler->parser, compiler, true);
 
   // Compile the method signature.
   signatureFn(&methodCompiler, &signature);
@@ -3445,7 +3445,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   int numExistingVariables = module->variables.count;
   
   Compiler compiler;
-  initCompiler(&compiler, &parser, NULL, true);
+  initCompiler(&compiler, &parser, NULL, false);
   ignoreNewlines(&compiler);
 
   if (isExpression)
