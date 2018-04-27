@@ -1704,7 +1704,11 @@ static void signatureParameterList(char name[MAX_METHOD_SIGNATURE], int* length,
                                    int numParams, char leftBracket, char rightBracket)
 {
   name[(*length)++] = leftBracket;
-  for (int i = 0; i < numParams; i++)
+
+  // This function may be called with too many parameters. When that happens,
+  // a compile error has already been reported, but we need to make sure we
+  // don't overflow the string too, hence the MAX_PARAMETERS check.
+  for (int i = 0; i < numParams && i < MAX_PARAMETERS; i++)
   {
     if (i > 0) name[(*length)++] = ',';
     name[(*length)++] = '_';
