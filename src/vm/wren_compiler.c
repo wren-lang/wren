@@ -3420,12 +3420,9 @@ void definition(Compiler* compiler)
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
                    bool isExpression, bool printErrors)
 {
-  // Skip potential UTF-8 BOM
-  if (strncmp(source, "\xEF\xBB\xBF", 3) == 0)
-  {
-    source += 3;
-  }
-
+  // Skip the UTF-8 BOM if there is one.
+  if (strncmp(source, "\xEF\xBB\xBF", 3) == 0) source += 3;
+  
   Parser parser;
   parser.vm = vm;
   parser.module = module;
