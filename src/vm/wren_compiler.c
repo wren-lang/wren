@@ -3458,6 +3458,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   if (isExpression)
   {
     expression(&compiler);
+    consume(&compiler, TOKEN_EOF, "Expect end of expression.");
   }
   else
   {
@@ -3465,7 +3466,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
     {
       definition(&compiler);
       
-      // If there is no newline, it must be the end of the block on the same line.
+      // If there is no newline, it must be the end of file on the same line.
       if (!matchLine(&compiler))
       {
         consume(&compiler, TOKEN_EOF, "Expect end of file.");
