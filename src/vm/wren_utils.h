@@ -6,6 +6,10 @@
 
 // Reusable data structures and other utility functions.
 
+// Forward declare this here to break a cycle between wren_utils.h and
+// wren_value.h.
+typedef struct sObjString ObjString;
+
 // We need buffers of a few different types. To avoid lots of casting between
 // void* and back, we'll use the preprocessor as a poor man's generics and let
 // it generate a few type-specific ones.

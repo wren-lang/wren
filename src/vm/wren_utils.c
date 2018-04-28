@@ -24,7 +24,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
   
   wrenPushRoot(vm, &symbol->obj);
   wrenStringBufferWrite(vm, symbols, symbol);
-  wrenPopRoot(vm); // symbol
+  wrenPopRoot(vm);
   
   return symbols->count - 1;
 }
@@ -47,7 +47,7 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
   // TODO: O(n). Do something better.
   for (int i = 0; i < symbols->count; i++)
   {
-    if(wrenStringEqualStrLength(symbols->data[i], name, length)) return i;
+    if (wrenStringEqualsCString(symbols->data[i], name, length)) return i;
   }
 
   return -1;

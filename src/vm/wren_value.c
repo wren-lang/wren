@@ -1299,7 +1299,10 @@ bool wrenValuesEqual(Value a, Value b)
 
     case OBJ_STRING:
     {
-      return wrenStringsEqual((ObjString*)aObj, (ObjString*)bObj);
+      ObjString* aString = (ObjString*)aObj;
+      ObjString* bString = (ObjString*)bObj;
+      return aString->hash == bString->hash &&
+      wrenStringEqualsCString(aString, bString->value, bString->length);
     }
 
     default:

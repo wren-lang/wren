@@ -3569,6 +3569,12 @@ void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
   {
     wrenGrayObj(vm, (Obj*)compiler->fn);
     wrenGrayObj(vm, (Obj*)compiler->constants);
+    
+    if (compiler->enclosingClass != NULL)
+    {
+      wrenBlackenSymbolTable(vm, &compiler->enclosingClass->fields);
+    }
+    
     compiler = compiler->parent;
   }
   while (compiler != NULL);

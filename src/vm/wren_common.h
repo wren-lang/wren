@@ -199,17 +199,4 @@
 
 #endif
 
-typedef struct sObjClass       ObjClass;
-typedef struct sObjClosure     ObjClosure;
-typedef struct sObjFiber       ObjFiber;
-typedef struct sObjForeign     ObjForeign;
-typedef struct sObjFn          ObjFn;
-typedef struct sObjInstance    ObjInstance;
-typedef struct sObjList        ObjList;
-typedef struct sObjMap         ObjMap;
-typedef struct sObjModule      ObjModule;
-typedef struct sObjRange       ObjRange;
-typedef struct sObjString      ObjString;
-typedef struct sObjUpvalue     ObjUpvalue;
-
 #endif
