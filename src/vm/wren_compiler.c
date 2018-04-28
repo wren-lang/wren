@@ -48,7 +48,7 @@
 // is kind of hairy, but fortunately we can control what the longest possible
 // message is and handle that. Ideally, we'd use `snprintf()`, but that's not
 // available in standard C++98.
-#define ERROR_MESSAGE_SIZE (60 + MAX_VARIABLE_NAME + 15)
+#define ERROR_MESSAGE_SIZE (80 + MAX_VARIABLE_NAME + 15)
 
 typedef enum
 {
