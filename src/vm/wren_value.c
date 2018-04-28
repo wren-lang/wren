@@ -1141,11 +1141,12 @@ static void blackenModule(WrenVM* vm, ObjModule* module)
     wrenGrayValue(vm, module->variables.data[i]);
   }
 
+  wrenBlackenSymbolTable(vm, &module->variableNames);
+
   wrenGrayObj(vm, (Obj*)module->name);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjModule);
-  // TODO: Track memory for symbol table and buffer.
 }
 
 static void blackenRange(WrenVM* vm, ObjRange* range)
@@ -1298,11 +1299,7 @@ bool wrenValuesEqual(Value a, Value b)
 
     case OBJ_STRING:
     {
-      ObjString* aString = (ObjString*)aObj;
-      ObjString* bString = (ObjString*)bObj;
-      return aString->length == bString->length &&
-             aString->hash == bString->hash &&
-             memcmp(aString->value, bString->value, aString->length) == 0;
+      return wrenStringsEqual((ObjString*)aObj, (ObjString*)bObj);
     }
 
     default:

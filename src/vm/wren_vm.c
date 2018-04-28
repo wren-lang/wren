@@ -150,6 +150,9 @@ void wrenCollectGarbage(WrenVM* vm)
   // Any object the compiler is using (if there is one).
   if (vm->compiler != NULL) wrenMarkCompiler(vm, vm->compiler);
 
+  // Method names.
+  wrenBlackenSymbolTable(vm, &vm->methodNames);
+
   // Now that we have grayed the roots, do a depth-first search over all of the
   // reachable objects.
   wrenBlackenObjects(vm);
@@ -420,7 +423,7 @@ static void runtimeError(WrenVM* vm)
 static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
   vm->fiber->error = wrenStringFormat(vm, "@ does not implement '$'.",
-      OBJ_VAL(classObj->name), vm->methodNames.data[symbol].buffer);
+      OBJ_VAL(classObj->name), vm->methodNames.data[symbol]->value);
 }
 
 // Checks that [value], which must be a closure, does not require more
@@ -492,8 +495,8 @@ static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
     for (int i = 0; i < coreModule->variables.count; i++)
     {
       wrenDefineVariable(vm, module,
-                         coreModule->variableNames.data[i].buffer,
-                         coreModule->variableNames.data[i].length,
+                         coreModule->variableNames.data[i]->value,
+                         coreModule->variableNames.data[i]->length,
                          coreModule->variables.data[i]);
     }
   }

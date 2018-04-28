@@ -2,6 +2,7 @@
 #define wren_value_h
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "wren_common.h"
 #include "wren_utils.h"
@@ -99,10 +100,9 @@ typedef enum {
   OBJ_UPVALUE
 } ObjType;
 
-typedef struct sObjClass ObjClass;
-
 // Base struct for all heap-allocated objects.
-typedef struct sObj
+typedef struct sObj Obj;
+struct sObj
 {
   ObjType type;
   bool isDark;
@@ -112,7 +112,7 @@ typedef struct sObj
 
   // The next object in the linked list of all currently allocated objects.
   struct sObj* next;
-} Obj;
+};
 
 #if WREN_NAN_TAGGING
 
@@ -145,7 +145,7 @@ typedef struct
 DECLARE_BUFFER(Value, Value);
 
 // A heap-allocated string object.
-typedef struct
+struct sObjString
 {
   Obj obj;
 
@@ -157,7 +157,7 @@ typedef struct
 
   // Inline array of the string's bytes followed by a null terminator.
   char value[FLEXIBLE_ARRAY];
-} ObjString;
+};
 
 // The dynamically allocated data structure for a variable that has been used
 // by a closure. Whenever a function accesses a variable declared in an
@@ -171,7 +171,7 @@ typedef struct
 // be closed. When that happens, the value gets copied off the stack into the
 // upvalue itself. That way, it can have a longer lifetime than the stack
 // variable.
-typedef struct sUpvalue
+struct sObjUpvalue
 {
   // The object header. Note that upvalues have this because they are garbage
   // collected, but they are not first class Wren objects.
@@ -187,8 +187,8 @@ typedef struct sUpvalue
 
   // Open upvalues are stored in a linked list by the fiber. This points to the
   // next upvalue in that list.
-  struct sUpvalue* next;
-} ObjUpvalue;
+  struct sObjUpvalue* next;
+};
 
 // The type of a primitive function.
 //
@@ -217,7 +217,7 @@ typedef struct
 //
 // While this is an Obj and is managed by the GC, it never appears as a
 // first-class object in Wren.
-typedef struct
+struct sObjModule
 {
   Obj obj;
 
@@ -230,7 +230,7 @@ typedef struct
 
   // The name of the module.
   ObjString* name;
-} ObjModule;
+};
 
 // A function object. It wraps and owns the bytecode and other debug information
 // for a callable chunk of code.
@@ -240,7 +240,7 @@ typedef struct
 // representation of a function. This isn't strictly necessary if they function
 // has no upvalues, but lets the rest of the VM assume all called objects will
 // be closures.
-typedef struct
+struct sObjFn
 {
   Obj obj;
   
@@ -261,11 +261,11 @@ typedef struct
   // only be set for fns, and not ObjFns that represent methods or scripts.
   int arity;
   FnDebug* debug;
-} ObjFn;
+};
 
 // An instance of a first-class function and the environment it has closed over.
 // Unlike [ObjFn], this has captured the upvalues that the function accesses.
-typedef struct
+struct sObjClosure
 {
   Obj obj;
 
@@ -274,7 +274,7 @@ typedef struct
 
   // The upvalues this function has closed over.
   ObjUpvalue* upvalues[FLEXIBLE_ARRAY];
-} ObjClosure;
+};
 
 typedef struct
 {
@@ -291,7 +291,7 @@ typedef struct
   Value* stackStart;
 } CallFrame;
 
-typedef struct sObjFiber
+struct sObjFiber
 {
   Obj obj;
   
@@ -333,7 +333,7 @@ typedef struct sObjFiber
   // In that case, if this fiber fails with an error, the error will be given
   // to the caller.
   bool callerIsTrying;
-} ObjFiber;
+};
 
 typedef enum
 {
@@ -395,25 +395,25 @@ struct sObjClass
   ObjString* name;
 };
 
-typedef struct
+struct sObjForeign
 {
   Obj obj;
   uint8_t data[FLEXIBLE_ARRAY];
-} ObjForeign;
+};
 
-typedef struct
+struct sObjInstance
 {
   Obj obj;
   Value fields[FLEXIBLE_ARRAY];
-} ObjInstance;
+};
 
-typedef struct
+struct sObjList
 {
   Obj obj;
 
   // The elements in the list.
   ValueBuffer elements;
-} ObjList;
+};
 
 typedef struct
 {
@@ -443,7 +443,7 @@ typedef struct
 // for a key, we will continue past tombstones, because the desired key may be
 // found after them if the key that was removed was part of a prior collision.
 // When the array gets resized, all tombstones are discarded.
-typedef struct
+struct sObjMap
 {
   Obj obj;
 
@@ -455,9 +455,9 @@ typedef struct
 
   // Pointer to a contiguous array of [capacity] entries.
   MapEntry* entries;
-} ObjMap;
+};
 
-typedef struct
+struct sObjRange
 {
   Obj obj;
 
@@ -469,7 +469,7 @@ typedef struct
 
   // True if [to] is included in the range.
   bool isInclusive;
-} ObjRange;
+};
 
 // An IEEE 754 double-precision float is a 64-bit value with bits laid out like:
 //
@@ -781,6 +781,22 @@ static inline bool wrenValuesSame(Value a, Value b)
 // numbers, ranges, and strings) are equal if they have the same data. All
 // other values are equal if they are identical objects.
 bool wrenValuesEqual(Value a, Value b);
+
+// Returns true is [a] and [str] represent the same string.
+static inline bool wrenStringEqualStrLength(const ObjString* a,
+                                            const char* str, size_t length)
+{
+  return a->length == length &&
+         memcmp(a->value, str, length) == 0;
+}
+
+// Returns true is [a] and [b] represent the same string.
+static inline bool wrenStringsEqual(const ObjString* a, const ObjString* b)
+{
+  return a == b ||
+         (a->hash == b->hash &&
+          wrenStringEqualStrLength(a, b->value, b->length));
+}
 
 // Returns true if [value] is a bool. Do not call this directly, instead use
 // [IS_BOOL].
