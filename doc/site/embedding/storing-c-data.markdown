@@ -270,7 +270,7 @@ and closes the file:
     :::c
     void fileFinalize(void* data)
     {
-      closeFile((FILE**)file);
+      closeFile((FILE**) data);
     }
 
 It uses this little utility function:

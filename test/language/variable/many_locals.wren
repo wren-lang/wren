@@ -1,6 +1,6 @@
 {
-  var a0 = "value"
-  var a1 = a0
+  // Slot zero is always taken to hold the closure or receiver.
+  var a1 = "value"
   var a2 = a1
   var a3 = a2
   var a4 = a3

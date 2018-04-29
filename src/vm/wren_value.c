@@ -159,27 +159,31 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
+
+  fiber->stack = stack;
+  fiber->stackTop = fiber->stack;
+  fiber->stackCapacity = stackCapacity;
+
   fiber->frames = frames;
   fiber->frameCapacity = INITIAL_CALL_FRAMES;
-  fiber->stack = stack;
-  fiber->stackCapacity = stackCapacity;
-  wrenResetFiber(vm, fiber, closure);
+  fiber->numFrames = 0;
 
-  return fiber;
-}
-
-void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, ObjClosure* closure)
-{
-  // Reset everything.
-  fiber->stackTop = fiber->stack;
   fiber->openUpvalues = NULL;
   fiber->caller = NULL;
   fiber->error = NULL_VAL;
   fiber->callerIsTrying = false;
-  fiber->numFrames = 0;
+  
+  if (closure != NULL)
+  {
+    // Initialize the first call frame.
+    wrenAppendCallFrame(vm, fiber, closure, fiber->stack);
 
-  // Initialize the first call frame.
-  if (closure != NULL) wrenAppendCallFrame(vm, fiber, closure, fiber->stack);
+    // The first slot always holds the closure.
+    fiber->stackTop[0] = OBJ_VAL(closure);
+    fiber->stackTop++;
+  }
+  
+  return fiber;
 }
 
 void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
@@ -1137,11 +1141,12 @@ static void blackenModule(WrenVM* vm, ObjModule* module)
     wrenGrayValue(vm, module->variables.data[i]);
   }
 
+  wrenBlackenSymbolTable(vm, &module->variableNames);
+
   wrenGrayObj(vm, (Obj*)module->name);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjModule);
-  // TODO: Track memory for symbol table and buffer.
 }
 
 static void blackenRange(WrenVM* vm, ObjRange* range)
@@ -1296,9 +1301,8 @@ bool wrenValuesEqual(Value a, Value b)
     {
       ObjString* aString = (ObjString*)aObj;
       ObjString* bString = (ObjString*)bObj;
-      return aString->length == bString->length &&
-             aString->hash == bString->hash &&
-             memcmp(aString->value, bString->value, aString->length) == 0;
+      return aString->hash == bString->hash &&
+      wrenStringEqualsCString(aString, bString->value, bString->length);
     }
 
     default:

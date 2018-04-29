@@ -6,12 +6,9 @@
 
 // Reusable data structures and other utility functions.
 
-// A simple structure to keep track of a string and its length (including the
-// null-terminator).
-typedef struct {
-  char* buffer;
-  uint32_t length;
-} String;
+// Forward declare this here to break a cycle between wren_utils.h and
+// wren_value.h.
+typedef struct sObjString ObjString;
 
 // We need buffers of a few different types. To avoid lots of casting between
 // void* and back, we'll use the preprocessor as a poor man's generics and let
@@ -68,7 +65,7 @@ typedef struct {
 
 DECLARE_BUFFER(Byte, uint8_t);
 DECLARE_BUFFER(Int, int);
-DECLARE_BUFFER(String, String);
+DECLARE_BUFFER(String, ObjString*);
 
 // TODO: Change this to use a map.
 typedef StringBuffer SymbolTable;
@@ -92,6 +89,8 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
 // Looks up name in the symbol table. Returns its index if found or -1 if not.
 int wrenSymbolTableFind(const SymbolTable* symbols,
                         const char* name, size_t length);
+
+void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable);
 
 // Returns the number of bytes needed to encode [value] in UTF-8.
 //

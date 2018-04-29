@@ -241,7 +241,7 @@ char* readBuiltInModule(const char* name)
 
   size_t length = strlen(*module->source);
   char* copy = (char*)malloc(length + 1);
-  strncpy(copy, *module->source, length + 1);
+  memcpy(copy, *module->source, length + 1);
   return copy;
 }
 
