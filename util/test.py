@@ -257,8 +257,6 @@ class Test:
 
     index = 0
     for line in out_lines:
-      # if sys.version_info < (3, 0):
-      #   line = line.encode('utf-8')
 
       if index >= len(self.output):
         self.fail('Got output "{0}" when none was expected.', line)
