@@ -1,6 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
-import codecs
+from __future__ import print_function
+
+from io import open
 from argparse import ArgumentParser
 from collections import defaultdict
 from os import listdir
@@ -62,11 +64,16 @@ class Test:
 
     input_lines = []
     line_num = 1
-    with codecs.open(self.path, 'r', encoding='utf-8', errors='ignore') as file:
+    with open(self.path, 'rb') as file:
 
-      # NOTE: Using Unix-newlines only. Python 3 will otherwise interpret \r\n as a
-      # single newline, causing test/language/ignore_carriage_returns.wren to fail.
-      for line in file.read().split('\n'):
+      # NOTE: Using Unix-newlines only. Python 3 will otherwise interpret \r as a
+      # newline, causing test/language/ignore_carriage_returns.wren to fail.
+      for line in file.read().split(b'\n'):
+        try:
+          line = line.decode("utf-8")
+        except:
+          line = line.decode("latin-1")
+
         match = EXPECT_PATTERN.search(line)
         if match:
           self.output.append((match.group(1), line_num))
@@ -250,8 +257,8 @@ class Test:
 
     index = 0
     for line in out_lines:
-      if sys.version_info < (3, 0):
-        line = line.encode('utf-8')
+      # if sys.version_info < (3, 0):
+      #   line = line.encode('utf-8')
 
       if index >= len(self.output):
         self.fail('Got output "{0}" when none was expected.', line)
@@ -268,7 +275,10 @@ class Test:
 
   def fail(self, message, *args):
     if args:
-      message = message.format(*args)
+      try:
+        message = (message).format(*args)
+      except:
+        print("Message:", message, "Args:", args)
     self.failures.append(message)
 
 
