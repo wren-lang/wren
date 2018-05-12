@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from os.path import basename, dirname, join, realpath
+from os.path import basename, dirname, join, realpath, isfile
 from glob import iglob
 import re
 
@@ -11,6 +11,18 @@ WREN_DIR = dirname(dirname(realpath(__file__)))
 
 seen_files = set()
 out = sys.stdout
+
+# Find a file in the different folders of the src dir.
+def find_file(filename):
+  names = [
+    join(WREN_DIR, 'src', 'include', filename),
+    join(WREN_DIR, 'src', 'vm', filename),
+    join(WREN_DIR, 'src', 'optional', filename),
+  ]
+  for f in names:
+    if isfile(f):
+      return f
+  raise Exception('File "{0}" not found!'.format(filename))
 
 # Prints a plain text file, adding comment markers.
 def add_comment_file(filename):
@@ -26,19 +38,18 @@ def add_file(filename):
   if bname in seen_files:
     return
   once = False
-  path = dirname(filename)
 
-  out.write('// Begin file "{0}"\n'.format(filename))
+  out.write('// Begin file "{0}"\n'.format(bname))
   with open(filename, 'r') as f:
     for line in f:
       m = INCLUDE_PATTERN.match(line)
       if m:
-        add_file(join(path, m.group(1)))
+        add_file(find_file(m.group(1)))
       else:
         out.write(line)
       if GUARD_PATTERN.match(line):
         once = True
-  out.write('// End file "{0}"\n'.format(filename))
+  out.write('// End file "{0}"\n'.format(bname))
 
   # Only skip header files which use #ifndef guards.
   # This is necessary because of the X Macro technique.
@@ -56,4 +67,7 @@ add_file(join(WREN_DIR, 'src', 'include', 'wren.h'))
 add_file(join(WREN_DIR, 'src', 'vm', 'wren_debug.h'))
 
 for f in iglob(join(WREN_DIR, 'src', 'vm', '*.c')):
+  add_file(f)
+
+for f in iglob(join(WREN_DIR, 'src', 'optional', '*.c')):
   add_file(f)

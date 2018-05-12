@@ -101,7 +101,8 @@ gh-pages: docs
 	$(V) cp -r build/docs/. build/gh-pages
 
 # Build amalgamation of all Wren library files.
-amalgamation: src/include/wren.h src/vm/*.h src/vm/*.c
+amalgamation: src/include/wren.h src/vm/*.h src/vm/*.c src/optional/*.h src/vm/*.c
+	mkdir -p build
 	./util/generate_amalgamation.py > build/wren.c
 
 .PHONY: all amalgamation builtin clean debug docs gh-pages release test vm watchdocs ci ci_32 ci_64
