@@ -47,7 +47,7 @@ def build_libuv_linux(arch):
 
 
 def build_libuv_windows(arch):
-  args = ["cmd", "/c", "vcbuild.bat", "release"]
+  args = ["cmd", "/c", "vcbuild.bat", "release", "vs2017"]
   if arch == "-32":
     args.append("x86")
   elif arch == "-64":
