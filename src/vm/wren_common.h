@@ -72,6 +72,9 @@
 // Set this to true to print out the compiled bytecode of each function.
 #define WREN_DEBUG_DUMP_COMPILED_CODE 0
 
+// Set this to validate each stack manipulation
+#define WREN_DEBUG_STACK 0
+
 // Set this to trace each instruction as it's executed.
 #define WREN_DEBUG_TRACE_INSTRUCTIONS 0
 

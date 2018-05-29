@@ -767,11 +767,27 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   register ObjFn* fn;
 
   // These macros are designed to only be invoked within this function.
-  #define PUSH(value)  (*fiber->stackTop++ = value)
-  #define POP()        (*(--fiber->stackTop))
-  #define DROP()       (fiber->stackTop--)
-  #define PEEK()       (*(fiber->stackTop - 1))
-  #define PEEK2()      (*(fiber->stackTop - 2))
+  #if WREN_DEBUG_STACK
+    #if defined(__GNUC__)
+      #define DEBUG_STACK(top)                                                 \
+        ({                                                                     \
+          Value *_top = (top);                                                 \
+          ASSERT(_top >= fiber->stack, "Stack underflow");                     \
+          ASSERT(_top < fiber->stack + fiber->stackCapacity, "Stack overflow");\
+          _top;                                                                \
+        })
+    #else
+      #error WREN_DEBUG_STACK not supported on your compiler.
+    #endif
+  #else
+    #define DEBUG_STACK(top) (top)
+  #endif
+  
+  #define PUSH(value)  (*DEBUG_STACK(fiber->stackTop++) = value)
+  #define POP()        (*DEBUG_STACK(--fiber->stackTop))
+  #define DROP()       (DEBUG_STACK(fiber->stackTop--))
+  #define PEEK()       (*DEBUG_STACK(fiber->stackTop - 1))
+  #define PEEK2()      (*DEBUG_STACK(fiber->stackTop - 2))
   #define READ_BYTE()  (*ip++)
   #define READ_SHORT() (ip += 2, (uint16_t)((ip[-2] << 8) | ip[-1]))
 
