@@ -519,7 +519,7 @@ static bool findEntry(MapEntry* entries, uint32_t capacity, Value key,
 static bool insertEntry(MapEntry* entries, uint32_t capacity,
                         Value key, Value value)
 {
-  MapEntry* entry;
+  MapEntry* entry = NULL;
   if (findEntry(entries, capacity, key, &entry))
   {
     // Already present, so just replace the value.
