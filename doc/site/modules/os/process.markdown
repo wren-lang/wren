@@ -36,3 +36,7 @@ This returns:
 
     :::wren
     System.print(Process.arguments) //> ["arg"]
+
+### **environ**
+
+The map with the environments variable with the format `[key: value]`.

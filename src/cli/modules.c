@@ -25,6 +25,7 @@ extern void fileWriteBytes(WrenVM* vm);
 extern void platformIsPosix(WrenVM* vm);
 extern void platformName(WrenVM* vm);
 extern void processAllArguments(WrenVM* vm);
+extern void processEnviron(WrenVM* vm);
 extern void statPath(WrenVM* vm);
 extern void statBlockCount(WrenVM* vm);
 extern void statBlockSize(WrenVM* vm);
@@ -165,6 +166,7 @@ static ModuleRegistry modules[] =
     END_CLASS
     CLASS(Process)
       STATIC_METHOD("allArguments", processAllArguments)
+      STATIC_METHOD("environ_", processEnviron)
     END_CLASS
   END_MODULE
   MODULE(repl)

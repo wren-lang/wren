@@ -69,3 +69,16 @@ void processAllArguments(WrenVM* vm)
     wrenInsertInList(vm, 0, -1, 1);
   }
 }
+
+extern char **environ;
+void processEnviron(WrenVM* vm)
+{
+  wrenEnsureSlots(vm, 2);
+  wrenSetSlotNewList(vm, 0);
+  int i = 1;
+  for(char **current = environ; *current; current++) {
+    wrenSetSlotString(vm, 1, *current);
+    wrenInsertInList(vm, 0, -1, 1);
+    i++;
+  }
+}
