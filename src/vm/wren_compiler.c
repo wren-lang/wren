@@ -2023,12 +2023,19 @@ static void map(Compiler* compiler, bool canAssign)
 
     // The key.
     parsePrecedence(compiler, PREC_UNARY);
-    consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
-    ignoreNewlines(compiler);
 
     // The value.
-    expression(compiler);
-    callMethod(compiler, 2, "addCore_(_,_)", 13);
+    if (match(compiler, TOKEN_COLON)) {
+      ignoreNewlines(compiler);
+
+      expression(compiler);
+      callMethod(compiler, 2, "addCore_(_,_)", 13);
+    } else {
+      // Syntax sugar: if the colon isn't present, then emit a "true" value
+      // The map {1} is the same of {1: true}
+      emitOp(compiler, CODE_TRUE);
+      callMethod(compiler, 2, "addCore_(_,_)", 13);
+    }
   } while (match(compiler, TOKEN_COMMA));
 
   // Allow newlines before the closing '}'.

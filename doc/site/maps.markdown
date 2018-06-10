@@ -134,3 +134,17 @@ that every entry will appear exactly once.
 
 <a class="right" href="method-calls.html">Method Calls &rarr;</a>
 <a href="lists.html">&larr; Lists</a>
+
+## Set
+
+You can create a set using a syntax sugar of map:
+
+    ::wren
+    var set1 = {1, 2, 3}
+    var set2 = {"foo", "bar": "baz"}
+
+is the same of:
+
+    ::wren
+    var set1 = {1: true, 2: true, 3: true}
+    var set2 = {"foo": true, "bar": "baz"}
