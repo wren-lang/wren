@@ -1,6 +1,6 @@
 import "meta" for Meta
 import "io" for Stdin, Stdout
-import "os" for Platform
+import "os" for Platform, Process
 
 /// Abstract base class for the REPL. Manages the input line and history, but
 /// does not render.
@@ -367,6 +367,39 @@ class AnsiRepl is Repl {
   showRuntimeError(message) {
     System.print("%(Color.red)%(message)%(Color.none)")
     // TODO: Print entire stack.
+  }
+}
+
+/// A REPL for Xcode, that is a very simplified console
+class XcodeRepl is Repl {
+  construct new() {
+    super()
+    System.write("> ")
+  }
+
+  refreshLine(showCompletion) { }
+
+  handleChar(byte) {
+    if (byte == 0xEF) {
+      // Disable up and down keys, because it's not works on Xcode console
+      return
+    }
+
+    super(byte)
+  }
+
+  executeInput() {
+    super()
+
+    System.write("> ")
+  }
+
+  showResult(value) {
+    System.print(value)
+  }
+
+  showRuntimeError(message) {
+    System.print(message)
   }
 }
 
@@ -924,8 +957,11 @@ class Lexer {
   makeToken(type) { Token.new(_source, type, _start, _current - _start) }
 }
 
-// Fire up the REPL. We use ANSI when talking to a POSIX TTY.
-if (Platform.isPosix && Stdin.isTerminal) {
+// Fire up the REPL.
+if (Process.environ["XCODE"] != null) {
+  XcodeRepl.new().run()
+} else if (Platform.isPosix && Stdin.isTerminal) {
+  // We use ANSI when talking to a POSIX TTY.
   AnsiRepl.new().run()
 } else {
   // ANSI escape sequences probably aren't supported, so degrade.
