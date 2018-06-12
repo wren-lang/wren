@@ -2906,6 +2906,16 @@ static void forStatement(Compiler* compiler)
   // The space in the variable name ensures it won't collide with a user-defined
   // variable.
   expression(compiler);
+
+  // Verify that there is space to hidden local variables.
+  // Note that we expect only two addLocal calls next to each other in the
+  // following code.
+  if (compiler->numLocals + 2 > MAX_LOCALS)
+  {
+    error(compiler, "Cannot declare more than %d variables in one scope. (Not enough space for for-loops internal variables)",
+          MAX_LOCALS);
+    return;
+  }
   int seqSlot = addLocal(compiler, "seq ", 4);
 
   // Create another hidden local for the iterator object.
