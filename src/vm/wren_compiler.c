@@ -48,7 +48,7 @@
 // is kind of hairy, but fortunately we can control what the longest possible
 // message is and handle that. Ideally, we'd use `snprintf()`, but that's not
 // available in standard C++98.
-#define ERROR_MESSAGE_SIZE (60 + MAX_VARIABLE_NAME + 15)
+#define ERROR_MESSAGE_SIZE (80 + MAX_VARIABLE_NAME + 15)
 
 typedef enum
 {
@@ -498,7 +498,7 @@ static int addConstant(Compiler* compiler, Value constant)
 
 // Initializes [compiler].
 static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
-                         bool isFunction)
+                         bool isMethod)
 {
   compiler->parser = parser;
   compiler->parent = parent;
@@ -512,41 +512,41 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
 
   parser->vm->compiler = compiler;
 
+  // Declare a local slot for either the closure or method receiver so that we
+  // don't try to reuse that slot for a user-defined local variable. For
+  // methods, we name it "this", so that we can resolve references to that like
+  // a normal variable. For functions, they have no explicit "this", so we use
+  // an empty name. That way references to "this" inside a function walks up
+  // the parent chain to find a method enclosing the function whose "this" we
+  // can close over.
+  compiler->numLocals = 1;
+  compiler->numSlots = compiler->numLocals;
+
+  if (isMethod)
+  {
+    compiler->locals[0].name = "this";
+    compiler->locals[0].length = 4;
+  }
+  else
+  {
+    compiler->locals[0].name = NULL;
+    compiler->locals[0].length = 0;
+  }
+  
+  compiler->locals[0].depth = -1;
+  compiler->locals[0].isUpvalue = false;
+
   if (parent == NULL)
   {
-    compiler->numLocals = 0;
-
     // Compiling top-level code, so the initial scope is module-level.
     compiler->scopeDepth = -1;
   }
   else
   {
-    // Declare a fake local variable for the receiver so that it's slot in the
-    // stack is taken. For methods, we call this "this", so that we can resolve
-    // references to that like a normal variable. For functions, they have no
-    // explicit "this". So we pick a bogus name. That way references to "this"
-    // inside a function will try to walk up the parent chain to find a method
-    // enclosing the function whose "this" we can close over.
-    compiler->numLocals = 1;
-    if (isFunction)
-    {
-      compiler->locals[0].name = NULL;
-      compiler->locals[0].length = 0;
-    }
-    else
-    {
-      compiler->locals[0].name = "this";
-      compiler->locals[0].length = 4;
-    }
-    compiler->locals[0].depth = -1;
-    compiler->locals[0].isUpvalue = false;
-
-    // The initial scope for function or method is a local scope.
+    // The initial scope for functions and methods is local scope.
     compiler->scopeDepth = 0;
   }
   
-  compiler->numSlots = compiler->numLocals;
-
   compiler->fn = wrenNewFunction(parser->vm, parser->module,
                                  compiler->numLocals);
 }
@@ -1704,7 +1704,11 @@ static void signatureParameterList(char name[MAX_METHOD_SIGNATURE], int* length,
                                    int numParams, char leftBracket, char rightBracket)
 {
   name[(*length)++] = leftBracket;
-  for (int i = 0; i < numParams; i++)
+
+  // This function may be called with too many parameters. When that happens,
+  // a compile error has already been reported, but we need to make sure we
+  // don't overflow the string too, hence the MAX_PARAMETERS check.
+  for (int i = 0; i < numParams && i < MAX_PARAMETERS; i++)
   {
     if (i > 0) name[(*length)++] = ',';
     name[(*length)++] = '_';
@@ -1867,7 +1871,7 @@ static void methodCall(Compiler* compiler, Code instruction,
     called.arity++;
 
     Compiler fnCompiler;
-    initCompiler(&fnCompiler, compiler->parser, compiler, true);
+    initCompiler(&fnCompiler, compiler->parser, compiler, false);
 
     // Make a dummy signature to track the arity.
     Signature fnSignature = { "", 0, SIG_METHOD, 0 };
@@ -3080,7 +3084,7 @@ static void createConstructor(Compiler* compiler, Signature* signature,
                               int initializerSymbol)
 {
   Compiler methodCompiler;
-  initCompiler(&methodCompiler, compiler->parser, compiler, false);
+  initCompiler(&methodCompiler, compiler->parser, compiler, true);
   
   // Allocate the instance.
   emitOp(&methodCompiler, compiler->enclosingClass->isForeign
@@ -3166,7 +3170,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   compiler->enclosingClass->signature = &signature;
 
   Compiler methodCompiler;
-  initCompiler(&methodCompiler, compiler->parser, compiler, false);
+  initCompiler(&methodCompiler, compiler->parser, compiler, true);
 
   // Compile the method signature.
   signatureFn(&methodCompiler, &signature);
@@ -3416,6 +3420,9 @@ void definition(Compiler* compiler)
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
                    bool isExpression, bool printErrors)
 {
+  // Skip the UTF-8 BOM if there is one.
+  if (strncmp(source, "\xEF\xBB\xBF", 3) == 0) source += 3;
+  
   Parser parser;
   parser.vm = vm;
   parser.module = module;
@@ -3443,14 +3450,15 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   nextToken(&parser);
 
   int numExistingVariables = module->variables.count;
-  
+
   Compiler compiler;
-  initCompiler(&compiler, &parser, NULL, true);
+  initCompiler(&compiler, &parser, NULL, false);
   ignoreNewlines(&compiler);
 
   if (isExpression)
   {
     expression(&compiler);
+    consume(&compiler, TOKEN_EOF, "Expect end of expression.");
   }
   else
   {
@@ -3458,7 +3466,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
     {
       definition(&compiler);
       
-      // If there is no newline, it must be the end of the block on the same line.
+      // If there is no newline, it must be the end of file on the same line.
       if (!matchLine(&compiler))
       {
         consume(&compiler, TOKEN_EOF, "Expect end of file.");
@@ -3480,8 +3488,8 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
     {
       // Synthesize a token for the original use site.
       parser.previous.type = TOKEN_NAME;
-      parser.previous.start = parser.module->variableNames.data[i].buffer;
-      parser.previous.length = parser.module->variableNames.data[i].length;
+      parser.previous.start = parser.module->variableNames.data[i]->value;
+      parser.previous.length = parser.module->variableNames.data[i]->length;
       parser.previous.line = (int)AS_NUM(parser.module->variables.data[i]);
       error(&compiler, "Variable is used but not defined.");
     }
@@ -3562,6 +3570,12 @@ void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
   {
     wrenGrayObj(vm, (Obj*)compiler->fn);
     wrenGrayObj(vm, (Obj*)compiler->constants);
+    
+    if (compiler->enclosingClass != NULL)
+    {
+      wrenBlackenSymbolTable(vm, &compiler->enclosingClass->fields);
+    }
+    
     compiler = compiler->parent;
   }
   while (compiler != NULL);

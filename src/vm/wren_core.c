@@ -59,15 +59,7 @@ DEF_PRIMITIVE(fiber_new)
     RETURN_ERROR("Function cannot take more than one parameter.");
   }
   
-  ObjFiber* newFiber = wrenNewFiber(vm, closure);
-
-  // The compiler expects the first slot of a function to hold the receiver.
-  // Since a fiber's stack is invoked directly, it doesn't have one, so put it
-  // in here.
-  newFiber->stack[0] = NULL_VAL;
-  newFiber->stackTop++;
-  
-  RETURN_OBJ(newFiber);
+  RETURN_OBJ(wrenNewFiber(vm, closure));
 }
 
 DEF_PRIMITIVE(fiber_abort)

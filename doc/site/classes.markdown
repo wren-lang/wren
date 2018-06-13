@@ -430,7 +430,7 @@ They can be used from static methods:
 
     :::wren
     Foo.setFromStatic("first")
-    Foo.bar.printFromStatic() //> first
+    Foo.printFromStatic() //> first
 
 And also instance methods. When you do so, there is still only one static field
 shared among all instances of the class:
