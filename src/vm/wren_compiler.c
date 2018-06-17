@@ -2723,6 +2723,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_CONSTRUCT:
     case CODE_FOREIGN_CONSTRUCT:
     case CODE_FOREIGN_CLASS:
+    case CODE_UNPACK_LIST:
       return 0;
 
     case CODE_LOAD_LOCAL:
@@ -3364,29 +3365,47 @@ static void import(Compiler* compiler)
   } while (match(compiler, TOKEN_COMMA));
 }
 
-// Compiles a "var" variable definition statement.
+// Compiles a "var" variables definition statement.
 static void variableDefinition(Compiler* compiler)
 {
+  Token nameTokens[MAX_LOCALS - compiler->numLocals];
+
   // Grab its name, but don't declare it yet. A (local) variable shouldn't be
   // in scope in its own initializer.
-  consume(compiler, TOKEN_NAME, "Expect variable name.");
-  Token nameToken = compiler->parser->previous;
+  int countVars = 0;
+  do {
+    consume(compiler, TOKEN_NAME, "Expect variable name.");
+    nameTokens[countVars] = compiler->parser->previous;
 
-  // Compile the initializer.
-  if (match(compiler, TOKEN_EQ))
-  {
+    countVars++;
+  } while (match(compiler, TOKEN_COMMA));
+
+  if (!match(compiler, TOKEN_EQ)) {
+    // Default initialize it to null.
+    for (int i = 0; i < countVars; i++) {
+      null(compiler, false);
+    }
+  } else {
     ignoreNewlines(compiler);
     expression(compiler);
-  }
-  else
-  {
-    // Default initialize it to null.
-    null(compiler, false);
+
+    if (countVars > 1) {
+      // If it's a multiple assignment, then we need unpack the list
+      emitConstant(compiler, countVars);
+      emitOp(compiler, CODE_UNPACK_LIST);
+    }
   }
 
   // Now put it in scope.
-  int symbol = declareVariable(compiler, &nameToken);
-  defineVariable(compiler, symbol);
+  for (int i = countVars-1; i >= 0; i--) {
+    int symbol = declareVariable(compiler, &nameTokens[i]);
+
+    if (symbol == -1) {
+      return;
+    }
+
+    defineVariable(compiler, symbol);
+  }
 }
 
 // Compiles a "definition". These are the statements that bind new variables.

@@ -203,6 +203,10 @@ OPCODE(IMPORT_MODULE, 1)
 // loaded variable onto the stack.
 OPCODE(IMPORT_VARIABLE, 1)
 
+// Unpack [arg1] first elements of a list [arg2].
+// If this list has less elements than [arg1], fill it with null.
+OPCODE(UNPACK_LIST, -2)
+
 // This pseudo-instruction indicates the end of the bytecode. It should
 // always be preceded by a `CODE_RETURN`, so is never actually executed.
 OPCODE(END, 0)

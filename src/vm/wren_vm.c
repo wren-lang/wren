@@ -1035,6 +1035,34 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       PUSH(fn->module->variables.data[READ_SHORT()]);
       DISPATCH();
 
+    CASE_CODE(UNPACK_LIST):
+    {
+      int totalWished = (int) *(fiber->stackTop - 1);
+      Value* listPtr = (fiber->stackTop - 2);
+      ASSERT(IS_LIST(*listPtr), "Must unpack a list.");
+      ObjList* list = AS_LIST(*listPtr);
+
+      int elementsCount = list->elements.count;
+      Value elements[list->elements.count];
+      memcpy(elements, list->elements.data, sizeof(elements));
+
+      POP();
+      POP();
+
+      int count = (elementsCount > totalWished ? totalWished : elementsCount);
+      for (int i = 0; i < count; i++) {
+        PUSH(elements[i]);
+      }
+
+      if (totalWished > elementsCount) {
+        for (int i = 0; i < (totalWished - elementsCount); i++) {
+          PUSH(NULL_VAL);
+        }
+      }
+
+      DISPATCH();
+    }
+
     CASE_CODE(STORE_MODULE_VAR):
       fn->module->variables.data[READ_SHORT()] = PEEK();
       DISPATCH();
