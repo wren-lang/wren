@@ -31,6 +31,7 @@ EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect (handled )?runtime error: (.+)')
+EXPECT_ASSERT_FAILED = re.compile(r'// expect assert failed: (.+)')
 ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
 STACK_TRACE_PATTERN = re.compile(r'\[main line (\d+)\] in')
 STDIN_PATTERN = re.compile(r'// stdin: (.*)')
@@ -53,6 +54,8 @@ class Test:
     self.runtime_error_message = None
     self.exit_code = 0
     self.input_bytes = None
+    self.no_stack_trace = True
+    self.filter_error_message = None
     self.failures = []
 
 
@@ -93,6 +96,15 @@ class Test:
           # If the runtime error isn't handled, it should exit with EX_SOFTWARE.
           if match.group(1) != "handled ":
             self.exit_code = 70
+          expectations += 1
+
+        match = EXPECT_ASSERT_FAILED.search(line)
+        if match:
+          self.runtime_error_line = line_num
+          self.runtime_error_message = match.group(1)
+          self.exit_code = -6
+          self.filter_error_message = re.compile(r'\[src/vm/wren_vm\.c:1042] Assert failed in runInterpreter\(\):\s(.+)')
+          self.no_stack_trace = True
           expectations += 1
 
         match = STDIN_PATTERN.search(line)
@@ -188,6 +200,9 @@ class Test:
     while ERROR_PATTERN.search(error_lines[line]):
       line += 1
 
+    if self.filter_error_message is not None:
+      error_lines[line] = self.filter_error_message.search(error_lines[line]).group(1)
+
     if error_lines[line] != self.runtime_error_message:
       self.fail('Expected runtime error "{0}" and got:',
           self.runtime_error_message)
@@ -200,6 +215,9 @@ class Test:
     for stack_line in stack_lines:
       match = STACK_TRACE_PATTERN.search(stack_line)
       if match: break
+
+    if self.no_stack_trace:
+      return
 
     if not match:
       self.fail('Expected stack trace and got:')
