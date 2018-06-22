@@ -399,8 +399,8 @@ static void printError(Parser* parser, int line, const char* label,
   
   // Format the label and message.
   char message[ERROR_MESSAGE_SIZE];
-  int length = sprintf(message, "%s: ", label);
-  length += vsprintf(message + length, format, args);
+  int length = snprintf(message, ERROR_MESSAGE_SIZE, "%s: ", label);
+  length += vsnprintf(message + length, ERROR_MESSAGE_SIZE - length, format, args);
   ASSERT(length < ERROR_MESSAGE_SIZE, "Error should not exceed buffer.");
   
   parser->vm->config.errorFn(parser->vm, WREN_ERROR_COMPILE,
