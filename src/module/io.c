@@ -16,11 +16,21 @@
   #include <sys\stat.h>
 
   // Map to Windows permission flags.
+  #ifndef S_IRUSR
   #define S_IRUSR _S_IREAD
+  #endif
+  
+  #ifndef S_IWUSR
   #define S_IWUSR _S_IWRITE
+  #endif
 
+  #ifndef S_ISREG
   #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+  #endif
+  
+  #ifndef S_ISDIR
   #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+  #endif
 
   // Not supported on Windows.
   #define O_SYNC 0

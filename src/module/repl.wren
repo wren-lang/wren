@@ -73,7 +73,7 @@ class Repl {
       insertChar(byte)
     } else {
       // TODO: Other shortcuts?
-      System.print("Unhandled byte: %(byte)")
+      System.print("Unhandled key-code [dec]: %(byte)")
     }
 
     return false

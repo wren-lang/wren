@@ -75,7 +75,7 @@ static const char* replModuleSource =
 "      insertChar(byte)\n"
 "    } else {\n"
 "      // TODO: Other shortcuts?\n"
-"      System.print(\"Unhandled byte: %(byte)\")\n"
+"      System.print(\"Unhandled key-code [dec]: %(byte)\")\n"
 "    }\n"
 "\n"
 "    return false\n"
