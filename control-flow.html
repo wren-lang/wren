@@ -118,29 +118,33 @@ values. </p>
 <h2>If statements <a href="#if-statements" name="if-statements" class="header-anchor">#</a></h2>
 <p>The simplest branching statement, <code>if</code> lets you conditionally skip a chunk of 
 code. It looks like this: </p>
-<pre class="codehilite"><code class="language-wren">if (ready) System.print(&quot;go!&quot;)</code></pre>
+<div class="codehilite"><pre><span></span>if (ready) System.print(&quot;go!&quot;)
+</pre></div>
 
 
 <p>That evaluates the parenthesized expression after <code>if</code>. If it&rsquo;s true, then the 
 statement after the condition is evaluated. Otherwise it is skipped. Instead of 
 a statement, you can have a <a href="syntax.html#blocks">block</a>: </p>
-<pre class="codehilite"><code class="language-wren">if (ready) { 
+<div class="codehilite"><pre><span></span>if (ready) { 
   System.print(&quot;getSet&quot;) 
   System.print(&quot;go!&quot;) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>You may also provide an <code>else</code> branch. It will be executed if the condition is 
 false: </p>
-<pre class="codehilite"><code class="language-wren">if (ready) System.print(&quot;go!&quot;) else System.print(&quot;not ready!&quot;)</code></pre>
+<div class="codehilite"><pre><span></span>if (ready) System.print(&quot;go!&quot;) else System.print(&quot;not ready!&quot;)
+</pre></div>
 
 
 <p>And, of course, it can take a block too: </p>
-<pre class="codehilite"><code class="language-wren">if (ready) { 
+<div class="codehilite"><pre><span></span>if (ready) { 
   System.print(&quot;go!&quot;) 
 } else { 
   System.print(&quot;not ready!&quot;) 
-}</code></pre>
+}
+</pre></div>
 
 
 <h2>Logical operators <a href="#logical-operators" name="logical-operators" class="header-anchor">#</a></h2>
@@ -150,22 +154,25 @@ only conditionally evaluate right operand&mdash;they short-circuit. </p>
 <p>A <code>&amp;&amp;</code> (&ldquo;logical and&rdquo;) expression evaluates the left-hand argument. If it&rsquo;s 
 false, it returns that value. Otherwise it evaluates and returns the right-hand 
 argument. </p>
-<pre class="codehilite"><code class="language-wren">System.print(false &amp;&amp; 1)  //&gt; false
-System.print(1 &amp;&amp; 2)      //&gt; 2</code></pre>
+<div class="codehilite"><pre><span></span>System.print(false &amp;&amp; 1)  //&gt; false
+System.print(1 &amp;&amp; 2)      //&gt; 2
+</pre></div>
 
 
 <p>A <code>||</code> (&ldquo;logical or&rdquo;) expression is reversed. If the left-hand argument is 
 <em>true</em>, it&rsquo;s returned, otherwise the right-hand argument is evaluated and 
 returned: </p>
-<pre class="codehilite"><code class="language-wren">System.print(false || 1)  //&gt; 1
-System.print(1 || 2)      //&gt; 1</code></pre>
+<div class="codehilite"><pre><span></span>System.print(false || 1)  //&gt; 1
+System.print(1 || 2)      //&gt; 1
+</pre></div>
 
 
 <h2>The conditional operator <code>?:</code> <a href="#the-conditional-operator-" name="the-conditional-operator-" class="header-anchor">#</a></h2>
 <p>Also known as the &ldquo;ternary&rdquo; operator since it takes three arguments, Wren has 
 the little &ldquo;if statement in the form of an expression&rdquo; you know and love from C 
 and its brethren. </p>
-<pre class="codehilite"><code class="language-wren">System.print(1 != 2 ? &quot;math is sane&quot; : &quot;math is not sane!&quot;)</code></pre>
+<div class="codehilite"><pre><span></span>System.print(1 != 2 ? &quot;math is sane&quot; : &quot;math is not sane!&quot;)
+</pre></div>
 
 
 <p>It takes a condition expression, followed by <code>?</code>, followed by a then 
@@ -178,7 +185,7 @@ repeatedly. To do that, you use looping statements. There are two in Wren, and
 they should be familiar if you&rsquo;ve used other imperative languages. </p>
 <p>The simplest, a <code>while</code> statement executes a chunk of code as long as a 
 condition continues to hold. For example: </p>
-<pre class="codehilite"><code class="language-wren">// Hailstone sequence.
+<div class="codehilite"><pre><span></span>// Hailstone sequence.
 var n = 27 
 while (n != 1) { 
   if (n % 2 == 0) { 
@@ -186,7 +193,8 @@ while (n != 1) {
   } else { 
     n = 3 * n + 1 
   } 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>This evaluates the expression <code>n != 1</code>. If it is true, then it executes the 
@@ -196,8 +204,9 @@ something true. </p>
 <p>The condition for a while loop can be any expression, and must be surrounded by 
 parentheses. The body of the loop is usually a curly block but can also be a 
 single statement: </p>
-<pre class="codehilite"><code class="language-wren">var n = 27 
-while (n != 1) if (n % 2 == 0) n = n / 2 else n = 3 * n + 1</code></pre>
+<div class="codehilite"><pre><span></span>var n = 27 
+while (n != 1) if (n % 2 == 0) n = n / 2 else n = 3 * n + 1
+</pre></div>
 
 
 <h2>For statements <a href="#for-statements" name="for-statements" class="header-anchor">#</a></h2>
@@ -205,9 +214,10 @@ while (n != 1) if (n % 2 == 0) n = n / 2 else n = 3 * n + 1</code></pre>
 some complex condition. But in most cases, you&rsquo;re looping through 
 a <a href="lists.html">list</a>, a series of numbers, or some other &ldquo;sequence&rdquo; object. 
 That&rsquo;s what <code>for</code> is, uh, for. It looks like this: </p>
-<pre class="codehilite"><code class="language-wren">for (beatle in [&quot;george&quot;, &quot;john&quot;, &quot;paul&quot;, &quot;ringo&quot;]) { 
+<div class="codehilite"><pre><span></span>for (beatle in [&quot;george&quot;, &quot;john&quot;, &quot;paul&quot;, &quot;ringo&quot;]) { 
   System.print(beatle) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>A <code>for</code> loop has three components: </p>
@@ -231,26 +241,29 @@ That&rsquo;s what <code>for</code> is, uh, for. It looks like this: </p>
 and stop. To do that, you can use a <code>break</code> statement. It&rsquo;s just the <code>break</code> 
 keyword all by itself. That immediately exits out of the nearest enclosing 
 <code>while</code> or <code>for</code> loop. </p>
-<pre class="codehilite"><code class="language-wren">for (i in [1, 2, 3, 4]) { 
+<div class="codehilite"><pre><span></span>for (i in [1, 2, 3, 4]) { 
   System.print(i)           //&gt; 1
   if (i == 3) break         //&gt; 2
-}                           //&gt; 3</code></pre>
+}                           //&gt; 3
+</pre></div>
 
 
 <h2>Numeric ranges <a href="#numeric-ranges" name="numeric-ranges" class="header-anchor">#</a></h2>
 <p>Lists are one common use for <code>for</code> loops, but sometimes you want to walk over a 
 sequence of numbers, or loop a number of times. For that, you can create a 
 <a href="values.html#ranges">range</a>, like so: </p>
-<pre class="codehilite"><code class="language-wren">for (i in 1..100) { 
+<div class="codehilite"><pre><span></span>for (i in 1..100) { 
   System.print(i) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>This loops over the numbers from 1 to 100, including 100 itself. If you want to 
 leave off the last value, use three dots instead of two: </p>
-<pre class="codehilite"><code class="language-wren">for (i in 1...100) { 
+<div class="codehilite"><pre><span></span>for (i in 1...100) { 
   System.print(i) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>This looks like some special &ldquo;range&rdquo; syntax in the <code>for</code> loop, but it&rsquo;s actually 
@@ -265,18 +278,20 @@ are defined in terms of an &ldquo;iterator protocol&rdquo;. The loop itself does
 anything about lists or ranges, it just knows how to call two particular 
 methods on the object that resulted from evaluating the sequence expression. </p>
 <p>When you write a loop like this: </p>
-<pre class="codehilite"><code class="language-wren">for (i in 1..100) { 
+<div class="codehilite"><pre><span></span>for (i in 1..100) { 
   System.print(i) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>Wren sees it something like this: </p>
-<pre class="codehilite"><code class="language-wren">var iter_ = null 
+<div class="codehilite"><pre><span></span>var iter_ = null 
 var seq_ = 1..100 
 while (iter_ = seq_.iterate(iter_)) { 
   var i = seq_.iteratorValue(iter_) 
   System.print(i) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>First, Wren evaluates the sequence expression and stores it in a hidden 

@@ -100,12 +100,13 @@ maps a <em>key</em> to a <em>value</em>. The same data structure has a variety o
 other languages: hash table, dictionary, association, table, etc. </p>
 <p>You can create a map by placing a series of comma-separated entries inside 
 curly braces. Each entry is a key and a value separated by a colon: </p>
-<pre class="codehilite"><code class="language-wren">{ 
+<div class="codehilite"><pre><span></span>{ 
   &quot;George&quot;: &quot;Harrison&quot;, 
   &quot;John&quot;:   &quot;Lennon&quot;, 
   &quot;Paul&quot;:   &quot;McCartney&quot;, 
   &quot;Ringo&quot;:  &quot;Starr&quot; 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>This creates a map that associates the first name of each Beatle with his last 
@@ -123,10 +124,11 @@ time, even in very large maps. Since Wren only knows how to hash certain
 built-in types, only those can be used as keys. </p>
 <h2>Adding entries <a href="#adding-entries" name="adding-entries" class="header-anchor">#</a></h2>
 <p>You add new key-value pairs to the map using the <a href="method-calls.html#subscripts">subscript operator</a>: </p>
-<pre class="codehilite"><code class="language-wren">var capitals = {} 
+<div class="codehilite"><pre><span></span>var capitals = {} 
 capitals[&quot;Georgia&quot;] = &quot;Atlanta&quot; 
 capitals[&quot;Idaho&quot;] = &quot;Boise&quot; 
-capitals[&quot;Maine&quot;] = &quot;Augusta&quot;</code></pre>
+capitals[&quot;Maine&quot;] = &quot;Augusta&quot;
+</pre></div>
 
 
 <p>If the key isn&rsquo;t already present, this adds it and associates it with the given 
@@ -134,41 +136,47 @@ value. If the key is already there, this just replaces its value. </p>
 <h2>Looking up values <a href="#looking-up-values" name="looking-up-values" class="header-anchor">#</a></h2>
 <p>To find the value associated with some key, again you use your friend the 
 subscript operator: </p>
-<pre class="codehilite"><code class="language-wren">System.print(capitals[&quot;Idaho&quot;]) //&gt; Boise</code></pre>
+<div class="codehilite"><pre><span></span>System.print(capitals[&quot;Idaho&quot;]) //&gt; Boise
+</pre></div>
 
 
 <p>If the key is present, this returns its value. Otherwise, it returns <code>null</code>. Of 
 course, <code>null</code> itself can also be used as a value, so seeing <code>null</code> here 
 doesn&rsquo;t necessarily mean the key wasn&rsquo;t found. </p>
 <p>To tell definitively if a key exists, you can call <code>containsKey()</code>: </p>
-<pre class="codehilite"><code class="language-wren">var belief = {&quot;nihilism&quot;: null}
+<div class="codehilite"><pre><span></span>var belief = {&quot;nihilism&quot;: null}
 
 System.print(belief[&quot;nihilism&quot;]) //&gt; null (though key exists)
 System.print(belief[&quot;solipsism&quot;]) //&gt; null
 System.print(belief.containsKey(&quot;nihilism&quot;)) //&gt; true
-System.print(belief.containsKey(&quot;solipsism&quot;)) //&gt; false</code></pre>
+System.print(belief.containsKey(&quot;solipsism&quot;)) //&gt; false
+</pre></div>
 
 
 <p>You can see how many entries a map contains using <code>count</code>: </p>
-<pre class="codehilite"><code class="language-wren">System.print(capitals.count) //&gt; 3</code></pre>
+<div class="codehilite"><pre><span></span>System.print(capitals.count) //&gt; 3
+</pre></div>
 
 
 <h2>Removing entries <a href="#removing-entries" name="removing-entries" class="header-anchor">#</a></h2>
 <p>To remove an entry from a map, call <code>remove()</code> and pass in the key for the 
 entry you want to delete: </p>
-<pre class="codehilite"><code class="language-wren">capitals.remove(&quot;Maine&quot;) 
-System.print(capitals.containsKey(&quot;Maine&quot;)) //&gt; false</code></pre>
+<div class="codehilite"><pre><span></span>capitals.remove(&quot;Maine&quot;) 
+System.print(capitals.containsKey(&quot;Maine&quot;)) //&gt; false
+</pre></div>
 
 
 <p>If the key was found, this returns the value that was associated with it: </p>
-<pre class="codehilite"><code class="language-wren">System.print(capitals.remove(&quot;Georgia&quot;)) //&gt; Atlanta</code></pre>
+<div class="codehilite"><pre><span></span>System.print(capitals.remove(&quot;Georgia&quot;)) //&gt; Atlanta
+</pre></div>
 
 
 <p>If the key wasn&rsquo;t in the map to begin with, <code>remove()</code> just returns <code>null</code>. </p>
 <p>If you want to remove <em>everything</em> from the map, like with <a href="lists.html">lists</a>, you call 
 <code>clear()</code>: </p>
-<pre class="codehilite"><code class="language-wren">capitals.clear() 
-System.print(capitals.count) //&gt; 0</code></pre>
+<div class="codehilite"><pre><span></span>capitals.clear() 
+System.print(capitals.count) //&gt; 0
+</pre></div>
 
 
 <h2>Iterating over the contents <a href="#iterating-over-the-contents" name="iterating-over-the-contents" class="header-anchor">#</a></h2>
@@ -179,7 +187,7 @@ For that, map exposes two methods: <code>keys</code> and <code>values</code>. </
 map, and the second returns one that iterates over the values. </p>
 <p>If you want to see all of the key-value pairs in a map, the easiest way is to 
 iterate over the keys and use each to look up its value: </p>
-<pre class="codehilite"><code class="language-wren">var birds = { 
+<div class="codehilite"><pre><span></span>var birds = { 
   &quot;Arizona&quot;: &quot;Cactus wren&quot;, 
   &quot;Hawaii&quot;: &quot;Nēnē&quot;, 
   &quot;Ohio&quot;: &quot;Northern Cardinal&quot; 
@@ -187,7 +195,8 @@ iterate over the keys and use each to look up its value: </p>
 
 for (state in birds.keys) { 
   System.print(&quot;The state bird of &quot; + state + &quot; is &quot; + birds[state]) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>This program prints the three states and their birds. However, the <em>order</em> 

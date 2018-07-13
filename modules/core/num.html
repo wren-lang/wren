@@ -93,7 +93,8 @@
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>abs</strong> <a href="#abs" name="abs" class="header-anchor">#</a></h3>
 <p>The absolute value of the number. </p>
-<pre class="codehilite"><code class="language-wren">System.print( (-123).abs ) //&gt; 123</code></pre>
+<div class="codehilite"><pre><span></span>System.print( (-123).abs ) //&gt; 123
+</pre></div>
 
 
 <h3><strong>acos</strong> <a href="#acos" name="acos" class="header-anchor">#</a></h3>
@@ -107,28 +108,32 @@
 numbers to determine the quadrant of the result. </p>
 <h3><strong>ceil</strong> <a href="#ceil" name="ceil" class="header-anchor">#</a></h3>
 <p>Rounds the number up to the nearest integer. </p>
-<pre class="codehilite"><code class="language-wren">System.print(1.5.ceil)    //&gt; 2
-System.print((-3.2).ceil) //&gt; -3</code></pre>
+<div class="codehilite"><pre><span></span>System.print(1.5.ceil)    //&gt; 2
+System.print((-3.2).ceil) //&gt; -3
+</pre></div>
 
 
 <h3><strong>cos</strong> <a href="#cos" name="cos" class="header-anchor">#</a></h3>
 <p>The cosine of the number. </p>
 <h3><strong>floor</strong> <a href="#floor" name="floor" class="header-anchor">#</a></h3>
 <p>Rounds the number down to the nearest integer. </p>
-<pre class="codehilite"><code class="language-wren">System.print(1.5.floor)    //&gt; 1
-System.print((-3.2).floor) //&gt; -4</code></pre>
+<div class="codehilite"><pre><span></span>System.print(1.5.floor)    //&gt; 1
+System.print((-3.2).floor) //&gt; -4
+</pre></div>
 
 
 <h3><strong>isInfinity</strong> <a href="#isinfinity" name="isinfinity" class="header-anchor">#</a></h3>
 <p>Whether the number is positive or negative infinity or not. </p>
-<pre class="codehilite"><code class="language-wren">System.print(99999.isInfinity)  //&gt; false
-System.print((1/0).isInfinity)  //&gt; true</code></pre>
+<div class="codehilite"><pre><span></span>System.print(99999.isInfinity)  //&gt; false
+System.print((1/0).isInfinity)  //&gt; true
+</pre></div>
 
 
 <h3><strong>isInteger</strong> <a href="#isinteger" name="isinteger" class="header-anchor">#</a></h3>
 <p>Whether the number is an integer or has some fractional component. </p>
-<pre class="codehilite"><code class="language-wren">System.print(2.isInteger)   //&gt; true
-System.print(2.3.isInteger) //&gt; false</code></pre>
+<div class="codehilite"><pre><span></span>System.print(2.isInteger)   //&gt; true
+System.print(2.3.isInteger) //&gt; false
+</pre></div>
 
 
 <h3><strong>isNan</strong> <a href="#isnan" name="isnan" class="header-anchor">#</a></h3>
@@ -141,9 +146,10 @@ System.print(2.3.isInteger) //&gt; false</code></pre>
 <p>Raises this number (the base) to <code>power</code>. Returns <code>nan</code> if the base is negative. </p>
 <h3><strong>round</strong> <a href="#round" name="round" class="header-anchor">#</a></h3>
 <p>Rounds the number to the nearest integer. </p>
-<pre class="codehilite"><code class="language-wren">System.print(1.5.round)    //&gt; 2
+<div class="codehilite"><pre><span></span>System.print(1.5.round)    //&gt; 2
 System.print((-3.2).round) //&gt; -3
-System.print((-3.7).round) //&gt; -4</code></pre>
+System.print((-3.7).round) //&gt; -4
+</pre></div>
 
 
 <h3><strong>sin</strong> <a href="#sin" name="sin" class="header-anchor">#</a></h3>
@@ -154,8 +160,9 @@ System.print((-3.7).round) //&gt; -4</code></pre>
 <p>The tangent of the number. </p>
 <h3><strong>-</strong> operator <a href="#--operator" name="--operator" class="header-anchor">#</a></h3>
 <p>Negates the number. </p>
-<pre class="codehilite"><code class="language-wren">var a = 123 
-System.print(-a) //&gt; -123</code></pre>
+<div class="codehilite"><pre><span></span>var a = 123 
+System.print(-a) //&gt; -123
+</pre></div>
 
 
 <h3><strong>-</strong>(other), <strong>+</strong>(other), <strong>/</strong>(other), <strong>*</strong>(other) operators <a href="#-(other),-+(other),-(other),-\(other)-operators" name="-(other),-+(other),-(other),-\(other)-operators" class="header-anchor">#</a></h3>
@@ -185,19 +192,21 @@ unsigned values. The result is then a 32-bit unsigned number where each bit is
 <h3><strong>..</strong>(other) operator <a href="#..(other)-operator" name="..(other)-operator" class="header-anchor">#</a></h3>
 <p>Creates a <a href="range.html">Range</a> representing a consecutive range of numbers 
 from the beginning number to the ending number. </p>
-<pre class="codehilite"><code class="language-wren">var range = 1.2..3.4 
+<div class="codehilite"><pre><span></span>var range = 1.2..3.4 
 System.print(range.min)         //&gt; 1.2
 System.print(range.max)         //&gt; 3.4
-System.print(range.isInclusive) //&gt; true</code></pre>
+System.print(range.isInclusive) //&gt; true
+</pre></div>
 
 
 <h3><strong>&hellip;</strong>(other) operator <a href="#...(other)-operator" name="...(other)-operator" class="header-anchor">#</a></h3>
 <p>Creates a <a href="range.html">Range</a> representing a consecutive range of numbers 
 from the beginning number to the ending number not including the ending number. </p>
-<pre class="codehilite"><code class="language-wren">var range = 1.2...3.4 
+<div class="codehilite"><pre><span></span>var range = 1.2...3.4 
 System.print(range.min)         //&gt; 1.2
 System.print(range.max)         //&gt; 3.4
-System.print(range.isInclusive) //&gt; false</code></pre>
+System.print(range.isInclusive) //&gt; false
+</pre></div>
   </main>
 </div>
 <footer>

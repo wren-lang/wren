@@ -78,9 +78,10 @@ define <strong>foreign classes</strong>. This page is about the first, foreign m
 class, it has a name and signature, and calls to it are dynamically dispatched. 
 The only difference is that the <em>body</em> of the method is written in C. </p>
 <p>A foreign method is declared in Wren like so: </p>
-<pre class="codehilite"><code class="language-wren">class Math { 
-  foreign static add(a, b) 
-}</code></pre>
+<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nb">Math</span> <span class="p">{</span> 
+  <span class="nx">foreign</span> <span class="kr">static</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> 
+<span class="p">}</span>
+</pre></div>
 
 
 <p>The <code>foreign</code> keyword tells Wren that the method <code>add()</code> is declared on <code>Math</code>, 
@@ -95,45 +96,48 @@ function that should be used for the foreign method. </p>
 first <a href="configuring-the-vm.html">configure the VM</a>. This callback isn&rsquo;t the foreign method itself. 
 It&rsquo;s the binding function your app uses to <em>look up</em> foreign methods. </p>
 <p>Its signature is: </p>
-<pre class="codehilite"><code class="language-c">WrenForeignMethodFn bindForeignMethodFn( 
-    WrenVM* vm, 
-    const char* module, 
-    const char* className, 
-    bool isStatic, 
-    const char* signature);</code></pre>
+<div class="codehilite"><pre><span></span><span class="n">WrenForeignMethodFn</span> <span class="nf">bindForeignMethodFn</span><span class="p">(</span> 
+    <span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> 
+    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
+    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">className</span><span class="p">,</span> 
+    <span class="kt">bool</span> <span class="n">isStatic</span><span class="p">,</span> 
+    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">signature</span><span class="p">);</span>
+</pre></div>
 
 
 <p>Every time a foreign method is first declared, the VM invokes this callback. It 
 passes in the module containing the class declaration, the name of the class 
 containing the method, the method&rsquo;s signature, and whether or not it&rsquo;s a static 
 method. In the above example, it would pass something like: </p>
-<pre class="codehilite"><code class="language-c">bindForeignMethodFn(vm, &quot;main&quot;, &quot;Math&quot;, true, &quot;add(_,_)&quot;);</code></pre>
+<div class="codehilite"><pre><span></span><span class="n">bindForeignMethodFn</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;main&quot;</span><span class="p">,</span> <span class="s">&quot;Math&quot;</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="s">&quot;add(_,_)&quot;</span><span class="p">);</span>
+</pre></div>
 
 
 <p>When you configure the VM, you give it a C callback that looks up the 
 appropriate function for the given foreign method and returns a pointer to it. 
 Something like: </p>
-<pre class="codehilite"><code class="language-c">WrenForeignMethodFn bindForeignMethod( 
-    WrenVM* vm, 
-    const char* module, 
-    const char* className, 
-    bool isStatic, 
-    const char* signature) 
-{ 
-  if (strcmp(module, &quot;main&quot;) == 0) 
-  { 
-    if (strcmp(className, &quot;Math&quot;) == 0) 
-    { 
-      if (isStatic &amp;&amp; strcmp(signature, &quot;add(_,_)&quot;) == 0) 
-      { 
-        return mathAdd; // C function for Math.add(_,_).
-      } 
-      // Other foreign methods on Math...
-    } 
-    // Other classes in main...
-  } 
-  // Other modules...
-}</code></pre>
+<div class="codehilite"><pre><span></span><span class="n">WrenForeignMethodFn</span> <span class="nf">bindForeignMethod</span><span class="p">(</span> 
+    <span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> 
+    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
+    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">className</span><span class="p">,</span> 
+    <span class="kt">bool</span> <span class="n">isStatic</span><span class="p">,</span> 
+    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">signature</span><span class="p">)</span> 
+<span class="p">{</span> 
+  <span class="k">if</span> <span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s">&quot;main&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> 
+  <span class="p">{</span> 
+    <span class="k">if</span> <span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">className</span><span class="p">,</span> <span class="s">&quot;Math&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> 
+    <span class="p">{</span> 
+      <span class="k">if</span> <span class="p">(</span><span class="n">isStatic</span> <span class="o">&amp;&amp;</span> <span class="n">strcmp</span><span class="p">(</span><span class="n">signature</span><span class="p">,</span> <span class="s">&quot;add(_,_)&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> 
+      <span class="p">{</span> 
+        <span class="k">return</span> <span class="n">mathAdd</span><span class="p">;</span> <span class="c1">// C function for Math.add(_,_).</span>
+      <span class="p">}</span> 
+      <span class="c1">// Other foreign methods on Math...</span>
+    <span class="p">}</span> 
+    <span class="c1">// Other classes in main...</span>
+  <span class="p">}</span> 
+  <span class="c1">// Other modules...</span>
+<span class="p">}</span>
+</pre></div>
 
 
 <p>This implementation is pretty tedious, but you get the idea. Feel free to do 
@@ -144,7 +148,8 @@ first executed. It then keeps the function pointer you return and associates it
 with that method. This way, <em>calls</em> to the foreign method are fast. </p>
 <h2>Implementing a Foreign Method <a href="#implementing-a-foreign-method" name="implementing-a-foreign-method" class="header-anchor">#</a></h2>
 <p>All C functions for foreign methods have the same signature: </p>
-<pre class="codehilite"><code class="language-c">void foreignMethod(WrenVM* vm);</code></pre>
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">foreignMethod</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">);</span>
+</pre></div>
 
 
 <p>Arguments passed from Wren are not passed as C arguments, and the method&rsquo;s 
@@ -156,12 +161,13 @@ object is in slot zero, and arguments are in consecutive slots after that. </p>
 <p>You use the slot API to read those arguments, and then perform whatever work you 
 want to in C. If you want the foreign method to return a value, place it in slot 
 zero. Like so: </p>
-<pre class="codehilite"><code class="language-c">void mathAdd(WrenVM* vm) 
-{ 
-  double a = wrenGetSlotDouble(vm, 1); 
-  double b = wrenGetSlotDouble(vm, 2); 
-  wrenSetSlotDouble(vm, 0, a + b); 
-}</code></pre>
+<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">mathAdd</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">)</span> 
+<span class="p">{</span> 
+  <span class="kt">double</span> <span class="n">a</span> <span class="o">=</span> <span class="n">wrenGetSlotDouble</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> 
+  <span class="kt">double</span> <span class="n">b</span> <span class="o">=</span> <span class="n">wrenGetSlotDouble</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> 
+  <span class="n">wrenSetSlotDouble</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">);</span> 
+<span class="p">}</span>
+</pre></div>
 
 
 <p>While your foreign method is executing, the VM is completely suspended. No other 

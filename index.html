@@ -98,19 +98,20 @@
     <h2>Wren is a small, fast, class-based concurrent scripting language <a href="#wren-is-a-small,-fast,-class-based-concurrent-scripting-language" name="wren-is-a-small,-fast,-class-based-concurrent-scripting-language" class="header-anchor">#</a></h2>
 <p>Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in 
 a familiar, modern <a href="syntax.html">syntax</a>. </p>
-<pre class="codehilite"><code class="language-wren">System.print(&quot;Hello, world!&quot;)
+<div class="codehilite"><pre><span></span><span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">)</span>
 
-class Wren { 
-  flyTo(city) { 
-    System.print(&quot;Flying to %(city)&quot;) 
-  } 
-}
+<span class="kr">class</span> <span class="nx">Wren</span> <span class="p">{</span> 
+  <span class="nx">flyTo</span><span class="p">(</span><span class="nx">city</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;Flying to %(city)&quot;</span><span class="p">)</span> 
+  <span class="p">}</span> 
+<span class="p">}</span>
 
-var adjectives = Fiber.new { 
-  [&quot;small&quot;, &quot;clean&quot;, &quot;fast&quot;].each {|word| Fiber.yield(word) } 
-}
+<span class="kd">var</span> <span class="nx">adjectives</span> <span class="o">=</span> <span class="nx">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span> 
+  <span class="p">[</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="s2">&quot;clean&quot;</span><span class="p">,</span> <span class="s2">&quot;fast&quot;</span><span class="p">].</span><span class="nx">each</span> <span class="p">{</span><span class="o">|</span><span class="nx">word</span><span class="o">|</span> <span class="nx">Fiber</span><span class="p">.</span><span class="nx">yield</span><span class="p">(</span><span class="nx">word</span><span class="p">)</span> <span class="p">}</span> 
+<span class="p">}</span>
 
-while (!adjectives.isDone) System.print(adjectives.call())</code></pre>
+<span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="nx">adjectives</span><span class="p">.</span><span class="nx">isDone</span><span class="p">)</span> <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">adjectives</span><span class="p">.</span><span class="nx">call</span><span class="p">())</span>
+</pre></div>
 
 
 <ul>

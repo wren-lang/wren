@@ -85,18 +85,21 @@
 <p>The name of the class. </p>
 <h3><strong>supertype</strong> <a href="#supertype" name="supertype" class="header-anchor">#</a></h3>
 <p>The superclass of this class. </p>
-<pre class="codehilite"><code class="language-wren">class Crustacean {} 
-class Crab is Crustacean {}
+<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Crustacean</span> <span class="p">{}</span> 
+<span class="kr">class</span> <span class="nx">Crab</span> <span class="nx">is</span> <span class="nx">Crustacean</span> <span class="p">{}</span>
 
-System.print(Crab.supertype) //&gt; Crustacean</code></pre>
+<span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">Crab</span><span class="p">.</span><span class="nx">supertype</span><span class="p">)</span> <span class="output">Crustacean</span>
+</pre></div>
 
 
 <p>A class with no explicit superclass implicitly inherits Object: </p>
-<pre class="codehilite"><code class="language-wren">System.print(Crustacean.supertype) //&gt; Object</code></pre>
+<div class="codehilite"><pre><span></span>System.print(Crustacean.supertype) //&gt; Object
+</pre></div>
 
 
 <p>Object forms the root of the class hierarchy and has no supertype: </p>
-<pre class="codehilite"><code class="language-wren">System.print(Object.supertype) //&gt; null</code></pre>
+<div class="codehilite"><pre><span></span>System.print(Object.supertype) //&gt; null
+</pre></div>
   </main>
 </div>
 <footer>

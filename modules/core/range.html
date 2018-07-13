@@ -86,35 +86,40 @@ exclusive endpoint. <a href="../../values.html#ranges">Here</a> is a friendly in
 <h3><strong>from</strong> <a href="#from" name="from" class="header-anchor">#</a></h3>
 <p>The starting point of the range. A range may be backwards, so this can be 
 greater than [to]. </p>
-<pre class="codehilite"><code class="language-wren">System.print((3..5).from) //&gt; 3
-System.print((4..2).from) //&gt; 4</code></pre>
+<div class="codehilite"><pre><span></span>System.print((3..5).from) //&gt; 3
+System.print((4..2).from) //&gt; 4
+</pre></div>
 
 
 <h3><strong>to</strong> <a href="#to" name="to" class="header-anchor">#</a></h3>
 <p>The endpoint of the range. If the range is inclusive, this value is included, 
 otherwise it is not. </p>
-<pre class="codehilite"><code class="language-wren">System.print((3..5).to) //&gt; 5
-System.print((4..2).to) //&gt; 2</code></pre>
+<div class="codehilite"><pre><span></span>System.print((3..5).to) //&gt; 5
+System.print((4..2).to) //&gt; 2
+</pre></div>
 
 
 <h3><strong>min</strong> <a href="#min" name="min" class="header-anchor">#</a></h3>
 <p>The minimum bound of the range. Returns either <code>from</code>, or <code>to</code>, whichever is 
 lower. </p>
-<pre class="codehilite"><code class="language-wren">System.print((3..5).min) //&gt; 3
-System.print((4..2).min) //&gt; 2</code></pre>
+<div class="codehilite"><pre><span></span>System.print((3..5).min) //&gt; 3
+System.print((4..2).min) //&gt; 2
+</pre></div>
 
 
 <h3><strong>max</strong> <a href="#max" name="max" class="header-anchor">#</a></h3>
 <p>The maximum bound of the range. Returns either <code>from</code>, or <code>to</code>, whichever is 
 greater. </p>
-<pre class="codehilite"><code class="language-wren">System.print((3..5).max) //&gt; 5
-System.print((4..2).max) //&gt; 4</code></pre>
+<div class="codehilite"><pre><span></span>System.print((3..5).max) //&gt; 5
+System.print((4..2).max) //&gt; 4
+</pre></div>
 
 
 <h3><strong>isInclusive</strong> <a href="#isinclusive" name="isinclusive" class="header-anchor">#</a></h3>
 <p>Whether or not the range includes <code>to</code>. (<code>from</code> is always included.) </p>
-<pre class="codehilite"><code class="language-wren">System.print((3..5).isInclusive)   //&gt; true
-System.print((3...5).isInclusive)  //&gt; false</code></pre>
+<div class="codehilite"><pre><span></span>System.print((3..5).isInclusive)   //&gt; true
+System.print((3...5).isInclusive)  //&gt; false
+</pre></div>
 
 
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>

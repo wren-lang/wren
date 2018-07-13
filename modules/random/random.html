@@ -62,13 +62,15 @@ based on the internal state of the object. The state is initialized from a
 <em>seed</em>. Two instances with the same seed generate the exact same sequence of 
 numbers. </p>
 <p>It must be imported from the <a href="../">random</a> module: </p>
-<pre class="codehilite"><code class="language-wren">import &quot;random&quot; for Random</code></pre>
+<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="s2">&quot;random&quot;</span> <span class="k">for</span> <span class="n">Random</span>
+</pre></div>
 
 
 <h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
 <h3>Random.<strong>new</strong>() <a href="#random.new()" name="random.new()" class="header-anchor">#</a></h3>
 <p>Creates a new generator whose state is seeded based on the current time. </p>
-<pre class="codehilite"><code class="language-wren">var random = Random.new()</code></pre>
+<div class="codehilite"><pre><span></span>var random = Random.new()
+</pre></div>
 
 
 <h3>Random.<strong>new</strong>(seed) <a href="#random.new(seed)" name="random.new(seed)" class="header-anchor">#</a></h3>
@@ -76,53 +78,59 @@ numbers. </p>
 number, or a non-empty sequence of numbers. If the sequnce has more than 16 
 elements, only the first 16 are used. If it has fewer, the elements are cycled 
 to generate 16 seed values. </p>
-<pre class="codehilite"><code class="language-wren">Random.new(12345) 
-Random.new(&quot;appleseed&quot;.codePoints)</code></pre>
+<div class="codehilite"><pre><span></span>Random.new(12345) 
+Random.new(&quot;appleseed&quot;.codePoints)
+</pre></div>
 
 
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>float</strong>() <a href="#float()" name="float()" class="header-anchor">#</a></h3>
 <p>Returns a floating point value between 0.0 and 1.0, including 0.0, but excluding 
 1.0. </p>
-<pre class="codehilite"><code class="language-wren">var random = Random.new(12345) 
+<div class="codehilite"><pre><span></span>var random = Random.new(12345) 
 System.print(random.float()) //&gt; 0.53178795980617
 System.print(random.float()) //&gt; 0.20180515043262
-System.print(random.float()) //&gt; 0.43371948658705</code></pre>
+System.print(random.float()) //&gt; 0.43371948658705
+</pre></div>
 
 
 <h3><strong>float</strong>(end) <a href="#float(end)" name="float(end)" class="header-anchor">#</a></h3>
 <p>Returns a floating point value between 0.0 and <code>end</code>, including 0.0 but 
 excluding <code>end</code>. </p>
-<pre class="codehilite"><code class="language-wren">var random = Random.new(12345) 
+<div class="codehilite"><pre><span></span>var random = Random.new(12345) 
 System.print(random.float(0))     //&gt; 0
 System.print(random.float(100))   //&gt; 20.180515043262
-System.print(random.float(-100))  //&gt; -43.371948658705</code></pre>
+System.print(random.float(-100))  //&gt; -43.371948658705
+</pre></div>
 
 
 <h3><strong>float</strong>(start, end) <a href="#float(start,-end)" name="float(start,-end)" class="header-anchor">#</a></h3>
 <p>Returns a floating point value between <code>start</code> and <code>end</code>, including <code>start</code> but 
 excluding <code>end</code>. </p>
-<pre class="codehilite"><code class="language-wren">var random = Random.new(12345) 
+<div class="codehilite"><pre><span></span>var random = Random.new(12345) 
 System.print(random.float(3, 4))    //&gt; 3.5317879598062
 System.print(random.float(-10, 10)) //&gt; -5.9638969913476
-System.print(random.float(-4, 2))   //&gt; -1.3976830804777</code></pre>
+System.print(random.float(-4, 2))   //&gt; -1.3976830804777
+</pre></div>
 
 
 <h3><strong>int</strong>(end) <a href="#int(end)" name="int(end)" class="header-anchor">#</a></h3>
 <p>Returns an integer between 0 and <code>end</code>, including 0 but excluding <code>end</code>. </p>
-<pre class="codehilite"><code class="language-wren">var random = Random.new(12345) 
+<div class="codehilite"><pre><span></span>var random = Random.new(12345) 
 System.print(random.int(1))    //&gt; 0
 System.print(random.int(10))   //&gt; 2
-System.print(random.int(-50))  //&gt; -22</code></pre>
+System.print(random.int(-50))  //&gt; -22
+</pre></div>
 
 
 <h3><strong>int</strong>(start, end) <a href="#int(start,-end)" name="int(start,-end)" class="header-anchor">#</a></h3>
 <p>Returns an integer between <code>start</code> and <code>end</code>, including <code>start</code> but excluding 
 <code>end</code>. </p>
-<pre class="codehilite"><code class="language-wren">var random = Random.new(12345) 
+<div class="codehilite"><pre><span></span>var random = Random.new(12345) 
 System.print(random.int(3, 4))    //&gt; 3
 System.print(random.int(-10, 10)) //&gt; -6
-System.print(random.int(-4, 2))   //&gt; -2</code></pre>
+System.print(random.int(-4, 2))   //&gt; -2
+</pre></div>
 
 
 <h3><strong>sample</strong>(list) <a href="#sample(list)" name="sample(list)" class="header-anchor">#</a></h3>
@@ -136,10 +144,11 @@ be selected more than once. </p>
 <h3><strong>shuffle</strong>(list) <a href="#shuffle(list)" name="shuffle(list)" class="header-anchor">#</a></h3>
 <p>Randomly shuffles the elements in <code>list</code>. The items are randomly re-ordered in 
 place. </p>
-<pre class="codehilite"><code class="language-wren">var random = Random.new(12345) 
+<div class="codehilite"><pre><span></span>var random = Random.new(12345) 
 var list = (1..5).toList 
 random.shuffle(list) 
-System.print(list) //&gt; [3, 2, 4, 1, 5]</code></pre>
+System.print(list) //&gt; [3, 2, 4, 1, 5]
+</pre></div>
 
 
 <p>Uses the Fisher-Yates algorithm to ensure that all permutations are chosen 

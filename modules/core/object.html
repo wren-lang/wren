@@ -98,11 +98,12 @@ types</a> by value, and all other objects are compared by
 identity&mdash;two objects are equal only if they are the exact same object. </p>
 <h3><strong>is</strong>(class) operator <a href="#is(class)-operator" name="is(class)-operator" class="header-anchor">#</a></h3>
 <p>Returns <code>true</code> if this object&rsquo;s class or one of its superclasses is <code>class</code>. </p>
-<pre class="codehilite"><code class="language-wren">System.print(123 is Num)     //&gt; true
+<div class="codehilite"><pre><span></span>System.print(123 is Num)     //&gt; true
 System.print(&quot;s&quot; is Num)     //&gt; false
 System.print(null is String) //&gt; false
 System.print([] is List)     //&gt; true
-System.print([] is Sequence) //&gt; true</code></pre>
+System.print([] is Sequence) //&gt; true
+</pre></div>
 
 
 <p>It is a runtime error if <code>class</code> is not a <a href="class.html">Class</a>. </p>

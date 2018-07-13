@@ -76,9 +76,10 @@ a file descriptor. </p>
 <p>Opens the file at <code>path</code> for writing and passes it to <code>fn</code>. If there is already 
 a file at that path, it is truncated. After the function returns, the file is 
 automatically closed. </p>
-<pre class="codehilite"><code class="language-wren">File.create(&quot;numbers.txt&quot;) {|file| 
+<div class="codehilite"><pre><span></span>File.create(&quot;numbers.txt&quot;) {|file| 
   file.writeBytes(&quot;one two three&quot;) 
-}</code></pre>
+}
+</pre></div>
 
 
 <h3>File.<strong>delete</strong>(path) <a href="#file.delete(path)" name="file.delete(path)" class="header-anchor">#</a></h3>
@@ -89,14 +90,16 @@ or other special file system entities. </p>
 <h3>File.<strong>open</strong>(path, fn) <a href="#file.open(path,-fn)" name="file.open(path,-fn)" class="header-anchor">#</a></h3>
 <p>Opens the file at <code>path</code> for reading and passes it to <code>fn</code>. After the function 
 returns, the file is automatically closed. </p>
-<pre class="codehilite"><code class="language-wren">File.open(&quot;words.txt&quot;) {|file| 
+<div class="codehilite"><pre><span></span>File.open(&quot;words.txt&quot;) {|file| 
   file.readBytes(5) 
-}</code></pre>
+}
+</pre></div>
 
 
 <h3>File.<strong>read</strong>(path) <a href="#file.read(path)" name="file.read(path)" class="header-anchor">#</a></h3>
 <p>Reads the entire contents of the file at <code>path</code> and returns it as a string. </p>
-<pre class="codehilite"><code class="language-wren">File.read(&quot;words.txt&quot;)</code></pre>
+<div class="codehilite"><pre><span></span>File.read(&quot;words.txt&quot;)
+</pre></div>
 
 
 <p>No encoding or decoding is done. If the file is UTF-8, then the resulting 
@@ -105,8 +108,9 @@ whatever encoding the file uses. </p>
 <h3>File.<strong>realPath</strong>(path) <a href="#file.realpath(path)" name="file.realpath(path)" class="header-anchor">#</a></h3>
 <p>Resolves <code>path</code>, traversing symlinks and removining any unneeded <code>./</code> and <code>../</code> 
 components. Returns the canonical absolute path to the file. </p>
-<pre class="codehilite"><code class="language-wren">var path = &quot;/some/./symlink/a/../b/file.txt&quot; 
-System.print(File.realPath(path)) //&gt; /real/path/a/file.txt</code></pre>
+<div class="codehilite"><pre><span></span>var path = &quot;/some/./symlink/a/../b/file.txt&quot; 
+System.print(File.realPath(path)) //&gt; /real/path/a/file.txt
+</pre></div>
 
 
 <h3>File.<strong>size</strong>(path) <a href="#file.size(path)" name="file.size(path)" class="header-anchor">#</a></h3>
@@ -115,9 +119,10 @@ System.print(File.realPath(path)) //&gt; /real/path/a/file.txt</code></pre>
 <h3>File.<strong>create</strong>(path) <a href="#file.create(path)" name="file.create(path)" class="header-anchor">#</a></h3>
 <p>Opens the file at <code>path</code> for writing. If there is already a file at that path, 
 it is truncated. </p>
-<pre class="codehilite"><code class="language-wren">var file = File.create(&quot;colors.txt&quot;) 
+<div class="codehilite"><pre><span></span>var file = File.create(&quot;colors.txt&quot;) 
 file.writeBytes(&quot;chartreuse lime teal&quot;) 
-file.close()</code></pre>
+file.close()
+</pre></div>
 
 
 <h3>File.<strong>open</strong>(path) <a href="#file.open(path)" name="file.open(path)" class="header-anchor">#</a></h3>
@@ -134,19 +139,21 @@ done with it. </p>
 <p>Closes the file. After calling this, you can&rsquo;t read or write from it. </p>
 <h3><strong>readBytes</strong>(count) <a href="#readbytes(count)" name="readbytes(count)" class="header-anchor">#</a></h3>
 <p>Reads up to <code>count</code> bytes starting from the beginning of the file. </p>
-<pre class="codehilite"><code class="language-wren">// Assume this file contains &quot;I am a file!&quot;.
+<div class="codehilite"><pre><span></span>// Assume this file contains &quot;I am a file!&quot;.
 File.open(&quot;example.txt&quot;) {|file| 
   System.print(file.readBytes(6)) //&gt; I am a
-}</code></pre>
+}
+</pre></div>
 
 
 <h3><strong>readBytes</strong>(count, offset) <a href="#readbytes(count,-offset)" name="readbytes(count,-offset)" class="header-anchor">#</a></h3>
 <p>Reads up to <code>count</code> bytes starting at <code>offset</code> bytes from the beginning of 
 the file. </p>
-<pre class="codehilite"><code class="language-wren">// Assume this file contains &quot;I am a file!&quot;.
+<div class="codehilite"><pre><span></span>// Assume this file contains &quot;I am a file!&quot;.
 File.open(&quot;example.txt&quot;) {|file| 
   System.print(file.readBytes(6, 2)) //&gt; am a f
-}</code></pre>
+}
+</pre></div>
 
 
 <h3><strong>writeBytes</strong>(bytes) <a href="#writebytes(bytes)" name="writebytes(bytes)" class="header-anchor">#</a></h3>

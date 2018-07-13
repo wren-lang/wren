@@ -98,7 +98,8 @@
     <p>A list is a compound object that holds a collection of elements identified by 
 integer index. You can create a list by placing a sequence of comma-separated 
 expressions inside square brackets: </p>
-<pre class="codehilite"><code class="language-wren">[1, &quot;banana&quot;, true]</code></pre>
+<div class="codehilite"><pre><span></span>[1, &quot;banana&quot;, true]
+</pre></div>
 
 
 <p>Here, we&rsquo;ve created a list of three elements. Notice that the elements don&rsquo;t 
@@ -107,25 +108,29 @@ have to be the same type. </p>
 <p>You can access an element from a list by calling the <a href="method-calls.html#subscripts">subscript 
 operator</a> on it with the index of the 
 element you want. Like most languages, indexes start at zero: </p>
-<pre class="codehilite"><code class="language-wren">var hirsute = [&quot;sideburns&quot;, &quot;porkchops&quot;, &quot;'stache&quot;, &quot;goatee&quot;] 
+<div class="codehilite"><pre><span></span>var hirsute = [&quot;sideburns&quot;, &quot;porkchops&quot;, &quot;&#39;stache&quot;, &quot;goatee&quot;] 
 System.print(hirsute[0]) //&gt; sideburns
-System.print(hirsute[1]) //&gt; porkchops</code></pre>
+System.print(hirsute[1]) //&gt; porkchops
+</pre></div>
 
 
 <p>Negative indices counts backwards from the end: </p>
-<pre class="codehilite"><code class="language-wren">System.print(hirsute[-1]) //&gt; goatee
-System.print(hirsute[-2]) //&gt; 'stache</code></pre>
+<div class="codehilite"><pre><span></span>System.print(hirsute[-1]) //&gt; goatee
+System.print(hirsute[-2]) //&gt; &#39;stache
+</pre></div>
 
 
 <p>It&rsquo;s a runtime error to pass an index outside of the bounds of the list. If you 
 don&rsquo;t know what those bounds are, you can find out using count: </p>
-<pre class="codehilite"><code class="language-wren">System.print(hirsute.count) //&gt; 4</code></pre>
+<div class="codehilite"><pre><span></span>System.print(hirsute.count) //&gt; 4
+</pre></div>
 
 
 <h2>Slices and ranges <a href="#slices-and-ranges" name="slices-and-ranges" class="header-anchor">#</a></h2>
 <p>Sometimes you want to copy a chunk of elements from a list. You can do that by 
 passing a <a href="values.html#ranges">range</a> to the subscript operator, like so: </p>
-<pre class="codehilite"><code class="language-wren">System.print(hirsute[1..2]) //&gt; [porkchops, 'stache]</code></pre>
+<div class="codehilite"><pre><span></span>System.print(hirsute[1..2]) //&gt; [porkchops, &#39;stache]
+</pre></div>
 
 
 <p>This returns a new list containing the elements of the original list whose 
@@ -133,24 +138,28 @@ indices are within the given range. Both inclusive and exclusive ranges work
 and do what you expect. </p>
 <p>Negative bounds also work like they do when passing a single number, so to copy 
 a list, you can just do: </p>
-<pre class="codehilite"><code class="language-wren">hirsute[0..-1]</code></pre>
+<div class="codehilite"><pre><span></span>hirsute[0..-1]
+</pre></div>
 
 
 <h2>Adding elements <a href="#adding-elements" name="adding-elements" class="header-anchor">#</a></h2>
 <p>Lists are <em>mutable</em>, meaning their contents can be changed. You can swap out an 
 existing element in the list using the subscript setter: </p>
-<pre class="codehilite"><code class="language-wren">hirsute[1] = &quot;muttonchops&quot; 
-System.print(hirsute[1]) //&gt; muttonchops</code></pre>
+<div class="codehilite"><pre><span></span>hirsute[1] = &quot;muttonchops&quot; 
+System.print(hirsute[1]) //&gt; muttonchops
+</pre></div>
 
 
 <p>It&rsquo;s an error to set an element that&rsquo;s out of bounds. To grow a list, you can 
 use <code>add</code> to append a single item to the end: </p>
-<pre class="codehilite"><code class="language-wren">hirsute.add(&quot;goatee&quot;) 
-System.print(hirsute.count) //&gt; 4</code></pre>
+<div class="codehilite"><pre><span></span>hirsute.add(&quot;goatee&quot;) 
+System.print(hirsute.count) //&gt; 4
+</pre></div>
 
 
 <p>You can insert a new element at a specific position using <code>insert</code>: </p>
-<pre class="codehilite"><code class="language-wren">hirsute.insert(2, &quot;soul patch&quot;)</code></pre>
+<div class="codehilite"><pre><span></span>hirsute.insert(2, &quot;soul patch&quot;)
+</pre></div>
 
 
 <p>The first argument is the index to insert at, and the second is the value to 
@@ -159,29 +168,33 @@ make room for it. </p>
 <p>It&rsquo;s valid to &ldquo;insert&rdquo; after the last element in the list, but only <em>right</em> 
 after it. Like other methods, you can use a negative index to count from the 
 back. Doing so counts back from the size of the list <em>after</em> it&rsquo;s grown by one: </p>
-<pre class="codehilite"><code class="language-wren">var letters = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
+<div class="codehilite"><pre><span></span>var letters = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
 letters.insert(3, &quot;d&quot;)   // OK: inserts at end.
 System.print(letters)    //&gt; [a, b, c, d]
 letters.insert(-2, &quot;e&quot;)  // Counts back from size after insert.
-System.print(letters)    //&gt; [a, b, c, e, d]</code></pre>
+System.print(letters)    //&gt; [a, b, c, e, d]
+</pre></div>
 
 
 <h2>Removing elements <a href="#removing-elements" name="removing-elements" class="header-anchor">#</a></h2>
 <p>The opposite of <code>insert</code> is <code>removeAt</code>. It removes a single element from a 
 given position in the list. All following items are shifted up to fill in the 
 gap: </p>
-<pre class="codehilite"><code class="language-wren">var letters = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;] 
+<div class="codehilite"><pre><span></span>var letters = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;] 
 letters.removeAt(1) 
-System.print(letters) //&gt; [a, c, d]</code></pre>
+System.print(letters) //&gt; [a, c, d]
+</pre></div>
 
 
 <p>The <code>removeAt</code> method returns the removed item: </p>
-<pre class="codehilite"><code class="language-wren">System.print(letters.removeAt(1)) //&gt; c</code></pre>
+<div class="codehilite"><pre><span></span>System.print(letters.removeAt(1)) //&gt; c
+</pre></div>
 
 
 <p>If you want to remove everything from the list, you can clear it: </p>
-<pre class="codehilite"><code class="language-wren">hirsute.clear() 
-System.print(hirsute) //&gt; []</code></pre>
+<div class="codehilite"><pre><span></span>hirsute.clear() 
+System.print(hirsute) //&gt; []
+</pre></div>
 
 
 <p><a class="right" href="maps.html">Maps &rarr;</a> 

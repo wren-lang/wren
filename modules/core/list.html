@@ -96,26 +96,30 @@
 <p>The number of elements in the list. </p>
 <h3><strong>insert</strong>(index, item) <a href="#insert(index,-item)" name="insert(index,-item)" class="header-anchor">#</a></h3>
 <p>Inserts the <code>item</code> at <code>index</code> in the list. </p>
-<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;] 
+<div class="codehilite"><pre><span></span>var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;] 
 list.insert(1, &quot;e&quot;) 
-System.print(list) //&gt; [a, e, b, c, d]</code></pre>
+System.print(list) //&gt; [a, e, b, c, d]
+</pre></div>
 
 
 <p>The <code>index</code> may be one past the last index in the list to append an element. </p>
-<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
+<div class="codehilite"><pre><span></span>var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
 list.insert(3, &quot;d&quot;) 
-System.print(list) //&gt; [a, b, c, d]</code></pre>
+System.print(list) //&gt; [a, b, c, d]
+</pre></div>
 
 
 <p>If <code>index</code> is negative, it counts backwards from the end of the list. It bases this on the length of the list <em>after</em> inserted the element, so that <code>-1</code> will append the element, not insert it before the last element. </p>
-<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;] 
+<div class="codehilite"><pre><span></span>var list = [&quot;a&quot;, &quot;b&quot;] 
 list.insert(-1, &quot;d&quot;) 
 list.insert(-2, &quot;c&quot;) 
-System.print(list) //&gt; [a, b, c, d]</code></pre>
+System.print(list) //&gt; [a, b, c, d]
+</pre></div>
 
 
 <p>Returns the inserted item. </p>
-<pre class="codehilite"><code class="language-wren">System.print([&quot;a&quot;, &quot;c&quot;].insert(1, &quot;b&quot;)) //&gt; b</code></pre>
+<div class="codehilite"><pre><span></span>System.print([&quot;a&quot;, &quot;c&quot;].insert(1, &quot;b&quot;)) //&gt; b
+</pre></div>
 
 
 <p>It is a runtime error if the index is not an integer or is out of bounds. </p>
@@ -126,30 +130,34 @@ list. </p>
 <p>Removes the element at <code>index</code>. If <code>index</code> is negative, it counts backwards 
 from the end of the list where <code>-1</code> is the last element. All trailing elements 
 are shifted up to fill in where the removed element was. </p>
-<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;] 
+<div class="codehilite"><pre><span></span>var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;] 
 list.removeAt(1) 
-System.print(list) //&gt; [a, c, d]</code></pre>
+System.print(list) //&gt; [a, c, d]
+</pre></div>
 
 
 <p>Returns the removed item. </p>
-<pre class="codehilite"><code class="language-wren">System.print([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].removeAt(1)) //&gt; b</code></pre>
+<div class="codehilite"><pre><span></span>System.print([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].removeAt(1)) //&gt; b
+</pre></div>
 
 
 <p>It is a runtime error if the index is not an integer or is out of bounds. </p>
 <h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
 <p>Gets the element at <code>index</code>. If <code>index</code> is negative, it counts backwards from 
 the end of the list where <code>-1</code> is the last element. </p>
-<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
-System.print(list[1]) //&gt; b</code></pre>
+<div class="codehilite"><pre><span></span>var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
+System.print(list[1]) //&gt; b
+</pre></div>
 
 
 <p>It is a runtime error if the index is not an integer or is out of bounds. </p>
 <h3><strong>[</strong>index<strong>]=</strong>(item) operator <a href="#[index]=(item)-operator" name="[index]=(item)-operator" class="header-anchor">#</a></h3>
 <p>Replaces the element at <code>index</code> with <code>item</code>. If <code>index</code> is negative, it counts 
 backwards from the end of the list where <code>-1</code> is the last element. </p>
-<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
+<div class="codehilite"><pre><span></span>var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
 list[1] = &quot;new&quot; 
-System.print(list) //&gt; [a, new, c]</code></pre>
+System.print(list) //&gt; [a, new, c]
+</pre></div>
 
 
 <p>It is a runtime error if the index is not an integer or is out of bounds. </p>

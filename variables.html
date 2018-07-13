@@ -97,25 +97,28 @@
     <h1>Variables</h1>
     <p>Variables are named slots for storing values. You define a new variable in Wren 
 using a <code>var</code> statement, like so: </p>
-<pre class="codehilite"><code class="language-wren">var a = 1 + 2</code></pre>
+<div class="codehilite"><pre><span></span>var a = 1 + 2
+</pre></div>
 
 
 <p>This creates a new variable <code>a</code> in the current scope and initializes it with 
 the result of the expression following the <code>=</code>. Once a variable has been 
 defined, it can be accessed by name as you would expect. </p>
-<pre class="codehilite"><code class="language-wren">var animal = &quot;Slow Loris&quot; 
-System.print(animal) //&gt; Slow Loris</code></pre>
+<div class="codehilite"><pre><span></span>var animal = &quot;Slow Loris&quot; 
+System.print(animal) //&gt; Slow Loris
+</pre></div>
 
 
 <h2>Scope <a href="#scope" name="scope" class="header-anchor">#</a></h2>
 <p>Wren has true block scope: a variable exists from the point where it is defined 
 until the end of the <a href="syntax.html#blocks">block</a> where that definition appears. </p>
-<pre class="codehilite"><code class="language-wren">{ 
-  System.print(a) //! &quot;a&quot; doesn't exist yet.
+<div class="codehilite"><pre><span></span>{ 
+  System.print(a) //! &quot;a&quot; doesn&#39;t exist yet.
   var a = 123 
   System.print(a) //&gt; 123
 } 
-System.print(a) //! &quot;a&quot; doesn't exist anymore.</code></pre>
+System.print(a) //! &quot;a&quot; doesn&#39;t exist anymore.
+</pre></div>
 
 
 <p>Variables defined at the top level of a script are <em>top-level</em> and are visible 
@@ -123,23 +126,26 @@ to the <a href="modules.html">module</a> system. All other variables are <em>loc
 Declaring a variable in an inner scope with the same name as an outer one is 
 called <em>shadowing</em> and is not an error (although it&rsquo;s not something you likely 
 intend to do much). </p>
-<pre class="codehilite"><code class="language-wren">var a = &quot;outer&quot; 
+<div class="codehilite"><pre><span></span>var a = &quot;outer&quot; 
 { 
   var a = &quot;inner&quot; 
   System.print(a) //&gt; inner
 } 
-System.print(a) //&gt; outer</code></pre>
+System.print(a) //&gt; outer
+</pre></div>
 
 
 <p>Declaring a variable with the same name in the <em>same</em> scope <em>is</em> an error. </p>
-<pre class="codehilite"><code class="language-wren">var a = &quot;hi&quot; 
-var a = &quot;again&quot; //! &quot;a&quot; is already declared.</code></pre>
+<div class="codehilite"><pre><span></span>var a = &quot;hi&quot; 
+var a = &quot;again&quot; //! &quot;a&quot; is already declared.
+</pre></div>
 
 
 <h2>Assignment <a href="#assignment" name="assignment" class="header-anchor">#</a></h2>
 <p>After a variable has been declared, you can assign to it using <code>=</code>: </p>
-<pre class="codehilite"><code class="language-wren">var a = 123 
-a = 234</code></pre>
+<div class="codehilite"><pre><span></span>var a = 123 
+a = 234
+</pre></div>
 
 
 <p>An assignment walks up the scope stack to find where the named variable is 
@@ -147,8 +153,9 @@ declared. It&rsquo;s an error to assign to a variable that isn&rsquo;t defined. 
 doesn&rsquo;t roll with implicit variable definition. </p>
 <p>When used in a larger expression, an assignment expression evaluates to the 
 assigned value. </p>
-<pre class="codehilite"><code class="language-wren">var a = &quot;before&quot; 
-System.print(a = &quot;after&quot;) //&gt; after</code></pre>
+<div class="codehilite"><pre><span></span>var a = &quot;before&quot; 
+System.print(a = &quot;after&quot;) //&gt; after
+</pre></div>
 
 
 <p>If the left-hand side is some more complex expression than a bare variable name, 

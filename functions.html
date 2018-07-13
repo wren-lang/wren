@@ -109,9 +109,10 @@ you&rsquo;re filtering on. </p>
 <p>Since that&rsquo;s the most common usage pattern, Wren&rsquo;s syntax optimizes for that. 
 Taking a page from Ruby, a function is created by passing a <em>block argument</em> to 
 a method. At its simplest, it looks like this: </p>
-<pre class="codehilite"><code class="language-wren">blondie.callMe { 
+<div class="codehilite"><pre><span></span>blondie.callMe { 
   System.print(&quot;This is the body!&quot;) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>Here we&rsquo;re invoking the <code>callMe</code> method on <code>blondie</code>. We&rsquo;re passing one 
@@ -120,36 +121,40 @@ following <a href="syntax.html#blocks">block</a>&mdash;everything between that p
 curly braces. </p>
 <p>Methods that take a block argument receive it as a normal parameter. <code>callMe</code> 
 could be defined like so: </p>
-<pre class="codehilite"><code class="language-wren">class Blondie { 
-  callMe(fn) { 
-    // Call it...
-  } 
-}
+<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Blondie</span> <span class="p">{</span> 
+  <span class="nx">callMe</span><span class="p">(</span><span class="nx">fn</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="c1">// Call it...</span>
+  <span class="p">}</span> 
+<span class="p">}</span>
 
-var blondie = Blondie.new()</code></pre>
+<span class="kd">var</span> <span class="nx">blondie</span> <span class="o">=</span> <span class="nx">Blondie</span><span class="p">.</span><span class="k">new</span><span class="p">()</span>
+</pre></div>
 
 
 <p>A method can take other arguments in addition to the block. They appear before 
 the block just like a regular argument list. For example: </p>
-<pre class="codehilite"><code class="language-wren">blondie.callMeAt(867, 5309) { 
+<div class="codehilite"><pre><span></span>blondie.callMeAt(867, 5309) { 
   System.print(&quot;This is the body!&quot;) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>Of course, you don&rsquo;t <em>have</em> to use a block argument to pass a function to a 
 method. If you already have a function object, you can pass it like a regular 
 argument: </p>
-<pre class="codehilite"><code class="language-wren">var someFn = // Get a function...
-blondie.callMe(someFn)</code></pre>
+<div class="codehilite"><pre><span></span>var someFn = // Get a function...
+blondie.callMe(someFn)
+</pre></div>
 
 
 <p>Block arguments are purely sugar for creating a function and passing it in one 
 little blob of syntax. There are some times when you want to create a function 
 but <em>don&rsquo;t</em> need to pass it to a method. For that, you can call the <code>Fn</code> 
 class&rsquo;s constructor: </p>
-<pre class="codehilite"><code class="language-wren">var someFn = Fn.new { 
+<div class="codehilite"><pre><span></span>var someFn = Fn.new { 
   System.print(&quot;Hi!&quot;) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>As you can see it takes a block argument too! All the constructor does it 
@@ -157,23 +162,25 @@ return that, so this exists purely as a convenience method for you. </p>
 <h2>Calling functions <a href="#calling-functions" name="calling-functions" class="header-anchor">#</a></h2>
 <p>Once you have a function, how do you invoke it? Like everything in Wren, you do 
 so by calling a method on it: </p>
-<pre class="codehilite"><code class="language-wren">class Blondie { 
-  callMe(fn) { 
-    fn.call() 
-  } 
-}</code></pre>
+<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Blondie</span> <span class="p">{</span> 
+  <span class="nx">callMe</span><span class="p">(</span><span class="nx">fn</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="nx">fn</span><span class="p">.</span><span class="nx">call</span><span class="p">()</span> 
+  <span class="p">}</span> 
+<span class="p">}</span>
+</pre></div>
 
 
 <p>Functions expose a <code>call()</code> method that executes the body of the function. This 
 method is dynamically-dispatched like any other, so you can define your own 
 &ldquo;function-like&rdquo; classes and pass them to methods that expect &ldquo;real&rdquo; functions. </p>
-<pre class="codehilite"><code class="language-wren">class FakeFn { 
-  call() { 
-    System.print(&quot;I'm feeling functional!&quot;) 
-  } 
-}
+<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">FakeFn</span> <span class="p">{</span> 
+  <span class="nx">call() {</span> 
+    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;I&#39;m feeling functional!&quot;</span><span class="p">)</span> 
+  <span class="p">}</span> 
+<span class="p">}</span>
 
-blondie.callMe(FakeFn.new())</code></pre>
+<span class="nx">blondie</span><span class="p">.</span><span class="nx">callMe</span><span class="p">(</span><span class="nx">FakeFn</span><span class="p">.</span><span class="k">new</span><span class="p">())</span>
+</pre></div>
 
 
 <h2>Function parameters <a href="#function-parameters" name="function-parameters" class="header-anchor">#</a></h2>
@@ -181,18 +188,20 @@ blondie.callMe(FakeFn.new())</code></pre>
 functions that we&rsquo;ve seen so far take no arguments. To change that, you can 
 provide a parameter list surrounded by <code>|</code> immediately after the opening brace 
 of the body, like so: </p>
-<pre class="codehilite"><code class="language-wren">blondie.callMe {|first, last| 
+<div class="codehilite"><pre><span></span>blondie.callMe {|first, last| 
   System.print(&quot;Hi, &quot; + first + &quot; &quot; + last + &quot;!&quot;) 
-}</code></pre>
+}
+</pre></div>
 
 
 <p>Here we&rsquo;re passing a function to <code>greet</code> that takes two parameters, <code>first</code> and 
 <code>last</code>. They are passed to the function when it&rsquo;s called: </p>
-<pre class="codehilite"><code class="language-wren">class Blondie { 
-  callMe(fn) { 
-    fn.call(&quot;Debbie&quot;, &quot;Harry&quot;) 
-  } 
-}</code></pre>
+<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Blondie</span> <span class="p">{</span> 
+  <span class="nx">callMe</span><span class="p">(</span><span class="nx">fn</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="nx">fn</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="s2">&quot;Debbie&quot;</span><span class="p">,</span> <span class="s2">&quot;Harry&quot;</span><span class="p">)</span> 
+  <span class="p">}</span> 
+<span class="p">}</span>
+</pre></div>
 
 
 <p>It&rsquo;s an error to call a function with fewer arguments than its parameter list 
@@ -205,33 +214,36 @@ expression. </p>
 <p>Otherwise, the body returns <code>null</code> by default. You can explicitly return a 
 value using a <code>return</code> statement. In other words, these two functions do the 
 same thing: </p>
-<pre class="codehilite"><code class="language-wren">Fn.new { &quot;return value&quot; }
+<div class="codehilite"><pre><span></span>Fn.new { &quot;return value&quot; }
 
 Fn.new { 
   return &quot;return value&quot; 
-}</code></pre>
+}
+</pre></div>
 
 
 <h2>Closures <a href="#closures" name="closures" class="header-anchor">#</a></h2>
 <p>As you expect, functions are closures&mdash;they can access variables defined 
 outside of their scope. They will hold onto closed-over variables even after 
 leaving the scope where the function is defined: </p>
-<pre class="codehilite"><code class="language-wren">class Counter { 
-  static create() { 
-    var i = 0 
-    return Fn.new { i = i + 1 } 
-  } 
-}</code></pre>
+<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Counter</span> <span class="p">{</span> 
+  <span class="kr">static</span> <span class="nx">create() {</span> 
+    <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span> 
+    <span class="k">return</span> <span class="nx">Fn</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span> <span class="nx">i</span> <span class="o">=</span> <span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">}</span> 
+  <span class="p">}</span> 
+<span class="p">}</span>
+</pre></div>
 
 
 <p>Here, the <code>create</code> method returns the function created on its second line. That 
 function references a variable <code>i</code> declared outside of the function. Even after 
 the function is returned from <code>create</code>, it is still able to read and assign 
 to<code>i</code>: </p>
-<pre class="codehilite"><code class="language-wren">var counter = Counter.create() 
+<div class="codehilite"><pre><span></span>var counter = Counter.create() 
 System.print(counter.call()) //&gt; 1
 System.print(counter.call()) //&gt; 2
-System.print(counter.call()) //&gt; 3</code></pre>
+System.print(counter.call()) //&gt; 3
+</pre></div>
 
 
 <p><a class="right" href="classes.html">Classes &rarr;</a> 

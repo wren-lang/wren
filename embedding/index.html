@@ -135,7 +135,8 @@ write. In return, you get an API that is quite fast. </p>
 </ol>
 <p>In either case, you also want to add <code>src/include</code> to your include path so you 
 can find the <a href="https://github.com/munificent/wren/blob/master/src/include/wren.h">public header for Wren</a>: </p>
-<pre class="codehilite"><code class="language-c">#include &quot;wren.h&quot;</code></pre>
+<div class="codehilite"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;wren.h&quot;</span><span class="cp"></span>
+</pre></div>
 
 
 <p>Wren depends only on the C standard library, so you don&rsquo;t usually need to link 
@@ -144,21 +145,24 @@ functions in <code>math.h</code> are implemented in a separate library, <a href=
 have to explicitly link to. </p>
 <p>If your program is in C++ but you are linking to the Wren library compiled as C, 
 this header handles the differences in calling conventions between C and C++: </p>
-<pre class="codehilite"><code class="language-c">#include &quot;wren.hpp&quot;</code></pre>
+<div class="codehilite"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;wren.hpp&quot;</span><span class="cp"></span>
+</pre></div>
 
 
 <h2>Creating a Wren VM <a href="#creating-a-wren-vm" name="creating-a-wren-vm" class="header-anchor">#</a></h2>
 <p>Once you&rsquo;ve integrated the code into your executable, you need to create a 
 virtual machine. To do that, you create a WrenConfiguration: </p>
-<pre class="codehilite"><code class="language-c">WrenConfiguration config; 
-wrenInitConfiguration(&amp;config);</code></pre>
+<div class="codehilite"><pre><span></span><span class="n">WrenConfiguration</span> <span class="n">config</span><span class="p">;</span> 
+<span class="n">wrenInitConfiguration</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
+</pre></div>
 
 
 <p>This gives you a basic configuration that has reasonable defaults for 
 everything. If you don&rsquo;t need to tweak stuff, you can leave it at that. We&rsquo;ll 
 <a href="configuring-the-vm.html">learn more</a> about what you can configure later. </p>
 <p>With this ready, you can create the VM: </p>
-<pre class="codehilite"><code class="language-c">WrenVM* vm = wrenNewVM(&amp;config);</code></pre>
+<div class="codehilite"><pre><span></span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span> <span class="o">=</span> <span class="n">wrenNewVM</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
+</pre></div>
 
 
 <p>This allocates memory for a new VM and initializes it. The Wren C implementation 
@@ -170,8 +174,9 @@ can discard the WrenConfiguration struct you filled in. Now you have a live
 VM, waiting to run some code! </p>
 <h2>Executing Wren code <a href="#executing-wren-code" name="executing-wren-code" class="header-anchor">#</a></h2>
 <p>You execute a string of Wren source code like so: </p>
-<pre class="codehilite"><code class="language-c">WrenInterpretResult result = wrenInterpret(vm, 
-    &quot;System.print(\&quot;I am running in a VM!\&quot;)&quot;);</code></pre>
+<div class="codehilite"><pre><span></span><span class="n">WrenInterpretResult</span> <span class="n">result</span> <span class="o">=</span> <span class="n">wrenInterpret</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> 
+    <span class="s">&quot;System.print(</span><span class="se">\&quot;</span><span class="s">I am running in a VM!</span><span class="se">\&quot;</span><span class="s">)&quot;</span><span class="p">);</span>
+</pre></div>
 
 
 <p>The string is a series of one or more statements separated by newlines. Wren 
@@ -191,7 +196,8 @@ to a REPL session. </p>
 <h2>Shutting down a VM <a href="#shutting-down-a-vm" name="shutting-down-a-vm" class="header-anchor">#</a></h2>
 <p>Once the party is over and you&rsquo;re ready to end your relationship with a VM, you 
 need to free any memory it allocated. You do that like so: </p>
-<pre class="codehilite"><code class="language-c">wrenFreeVM(vm);</code></pre>
+<div class="codehilite"><pre><span></span><span class="n">wrenFreeVM</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+</pre></div>
 
 
 <p>After calling that, you obviously cannot use the <code>WrenVM*</code> you passed to it 
