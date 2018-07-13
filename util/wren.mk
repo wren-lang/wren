@@ -107,7 +107,7 @@ endif
 ifneq (,$(findstring darwin,$(OS)))
 	SHARED_EXT := dylib
 else
-	SHARED_LIB_FLAGS := -Wl,-soname,$@.so
+	SHARED_LIB_FLAGS := -Wl,-soname,libwren.so
 	SHARED_EXT := so
 
 	# Link in the right libraries needed by libuv on Windows and Linux.
