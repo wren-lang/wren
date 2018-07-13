@@ -192,6 +192,7 @@ static ModuleRegistry modules[] =
 #undef END_CLASS
 #undef METHOD
 #undef STATIC_METHOD
+#undef FINALIZER
 
 // Looks for a built-in module with [name].
 //
