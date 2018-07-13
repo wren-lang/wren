@@ -67,25 +67,23 @@
 WrenConfiguration structure. Since Wren has no global state, you can configure 
 each VM differently if your application happens to run multiple. </p>
 <p>The struct looks like: </p>
-<div class="codehilite"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> 
-<span class="p">{</span> 
-  <span class="n">WrenReallocateFn</span> <span class="n">reallocateFn</span><span class="p">;</span> 
-  <span class="n">WrenLoadModuleFn</span> <span class="n">loadModuleFn</span><span class="p">;</span> 
-  <span class="n">WrenBindForeignMethodFn</span> <span class="n">bindForeignMethodFn</span><span class="p">;</span> 
-  <span class="n">WrenBindForeignClassFn</span> <span class="n">bindForeignClassFn</span><span class="p">;</span> 
-  <span class="n">WrenWriteFn</span> <span class="n">writeFn</span><span class="p">;</span> 
-  <span class="n">WrenErrorFn</span> <span class="n">errorFn</span><span class="p">;</span> 
-  <span class="kt">size_t</span> <span class="n">initialHeapSize</span><span class="p">;</span> 
-  <span class="kt">size_t</span> <span class="n">minHeapSize</span><span class="p">;</span> 
-  <span class="kt">int</span> <span class="n">heapGrowthPercent</span><span class="p">;</span> 
-<span class="p">}</span> <span class="n">WrenConfiguration</span><span class="p">;</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">typedef struct 
+{ 
+  WrenReallocateFn reallocateFn; 
+  WrenLoadModuleFn loadModuleFn; 
+  WrenBindForeignMethodFn bindForeignMethodFn; 
+  WrenBindForeignClassFn bindForeignClassFn; 
+  WrenWriteFn writeFn; 
+  WrenErrorFn errorFn; 
+  size_t initialHeapSize; 
+  size_t minHeapSize; 
+  int heapGrowthPercent; 
+} WrenConfiguration;</code></pre>
 
 
 <p>Most fields have useful defaults, which you can (and should) initialize by 
 calling: </p>
-<div class="codehilite"><pre><span></span><span class="n">wrenInitConfiguration</span><span class="p">(</span><span class="o">&amp;</span><span class="n">configuration</span><span class="p">);</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">wrenInitConfiguration(&amp;configuration);</code></pre>
 
 
 <p>Calling this ensures that your VM doesn&rsquo;t get uninitialized configuration when 
@@ -100,8 +98,7 @@ not know how to talk to the file system, so when an <code>import</code> statemen
 executed, it relies on the host application to locate and read the source code 
 for a module. </p>
 <p>The signature of this function is: </p>
-<div class="codehilite"><pre><span></span><span class="kt">char</span><span class="o">*</span> <span class="n">loadModule</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">name</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">char* loadModule(WrenVM* vm, const char* name)</code></pre>
 
 
 <p>When a module is imported, Wren calls this and passes in the module&rsquo;s name. The 
@@ -129,8 +126,7 @@ what you expect. </p>
 <p>This is the callback Wren uses to output text when <code>System.print()</code> or the other 
 related functions are called. This is the minimal connection the VM has with the 
 outside world and lets you do rudimentary &ldquo;printf debugging&rdquo;. Its signature is: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="n">write</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">text</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">void write(WrenVM* vm, const char* text)</code></pre>
 
 
 <p>Wren does <em>not</em> have a default implementation for this. It&rsquo;s up to you to wire 
@@ -139,27 +135,26 @@ calls to <code>System.print()</code> and others silently do nothing. </p>
 <h3><code>errorFn</code> <a href="#errorfn" name="errorfn" class="header-anchor">#</a></h3>
 <p>Wren uses this callback to report compile time and runtime errors. Its signature 
 is: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="n">error</span><span class="p">(</span> 
-      <span class="n">WrenErrorType</span> <span class="n">type</span><span class="p">,</span> 
-      <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
-      <span class="kt">int</span> <span class="n">line</span><span class="p">,</span> 
-      <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">message</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">void error( 
+      WrenVM* vm, 
+      WrenErrorType type, 
+      const char* module, 
+      int line, 
+      const char* message)</code></pre>
 
 
 <p>The <code>type</code> parameter is one of: </p>
-<div class="codehilite"><pre><span></span><span class="k">typedef</span> <span class="k">enum</span> 
-<span class="p">{</span> 
-  <span class="c1">// A syntax or resolution error detected at compile time.</span>
-  <span class="n">WREN_ERROR_COMPILE</span><span class="p">,</span>
+<pre class="codehilite"><code class="language-c">typedef enum 
+{ 
+  // A syntax or resolution error detected at compile time.
+  WREN_ERROR_COMPILE,
 
-  <span class="c1">// The error message for a runtime error.</span>
-  <span class="n">WREN_ERROR_RUNTIME</span><span class="p">,</span>
+  // The error message for a runtime error.
+  WREN_ERROR_RUNTIME,
 
-  <span class="c1">// One entry of a runtime error&#39;s stack trace.</span>
-  <span class="n">WREN_ERROR_STACK_TRACE</span> 
-<span class="p">}</span> <span class="n">WrenErrorType</span><span class="p">;</span>
-</pre></div>
+  // One entry of a runtime error's stack trace.
+  WREN_ERROR_STACK_TRACE 
+} WrenErrorType;</code></pre>
 
 
 <p>When a compile error occurs, <code>errorFn</code> is called once with type 
@@ -176,8 +171,7 @@ or function. </p>
 <p>These fields control how the VM allocates and manages memory. </p>
 <h3><code>reallocateFn</code> <a href="#reallocatefn" name="reallocatefn" class="header-anchor">#</a></h3>
 <p>This lets you provide a custom memory allocation function. Its signature is: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span><span class="o">*</span> <span class="n">reallocate</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">memory</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">newSize</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">void* reallocate(void* memory, size_t newSize)</code></pre>
 
 
 <p>Wren uses this one function to allocate, grow, shrink, and deallocate memory. 

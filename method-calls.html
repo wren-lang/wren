@@ -97,20 +97,17 @@
     <h1>Method Calls</h1>
     <p>Wren is deeply object oriented, so most code consists of invoking methods on 
 objects, usually something like this: </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Heyoo!&quot;</span><span class="p">)</span> <span class="output">Heyoo!</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(&quot;Heyoo!&quot;) //&gt; Heyoo!</code></pre>
 
 
 <p>You have a <em>receiver</em> expression (here <code>System</code>) followed by a <code>.</code>, then a name 
 (<code>print</code>) and an argument list in parentheses (<code>("Heyoo!")</code>). Multiple arguments 
 are separated by commas: </p>
-<div class="codehilite"><pre><span></span><span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&quot;item&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">list.insert(3, &quot;item&quot;)</code></pre>
 
 
 <p>The argument list can also be empty: </p>
-<div class="codehilite"><pre><span></span><span class="n">list</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">list.clear()</code></pre>
 
 
 <p>The VM executes a method call like so: </p>
@@ -127,10 +124,9 @@ takes. In technical terms, this means you can <em>overload by arity</em>. </p>
 <p>For example, the <a href="modules/random/random.html">Random</a> class has two methods for getting a random integer. 
 One takes a minimum and maximum value and returns a value in that range. The 
 other only takes a maximum value and uses 0 as the minimum: </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">random</span> <span class="o">=</span> <span class="vg">Random</span><span class="o">.</span><span class="n">new</span><span class="p">()</span> 
-<span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> 
-<span class="n">random</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var random = Random.new() 
+random.int(3, 10) 
+random.int(4)</code></pre>
 
 
 <p>In a language like Python or JavaScript, these would both call a single <code>int()</code> 
@@ -148,20 +144,18 @@ any &ldquo;if I got two arguments do this&hellip;&rdquo; runtime work. </p>
 <h2>Getters <a href="#getters" name="getters" class="header-anchor">#</a></h2>
 <p>Some methods exist to expose a stored or computed property of an object. These 
 are <em>getters</em> and have no parentheses: </p>
-<div class="codehilite"><pre><span></span><span class="s">&quot;string&quot;</span><span class="o">.</span><span class="n">count</span>    <span class="output">6</span>
-<span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">min</span>       <span class="output">1</span>
-<span class="mf">1.23</span><span class="o">.</span><span class="n">sin</span>          <span class="output">0.9424888019317</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">isEmpty</span> <span class="output">false</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">&quot;string&quot;.count    //&gt; 6
+(1..10).min       //&gt; 1
+1.23.sin          //&gt; 0.9424888019317
+[1, 2, 3].isEmpty //&gt; false</code></pre>
 
 
 <p>A getter is <em>not</em> the same as a method with an empty argument list. The <code>()</code> is 
 part of the signature, so <code>count</code> and <code>count()</code> have different signatures. 
 Unlike Ruby&rsquo;s optional parentheses, Wren wants to make sure you call a getter 
 like a getter and a <code>()</code> method like a <code>()</code> method. These don&rsquo;t work: </p>
-<div class="codehilite"><pre><span></span><span class="s">&quot;string&quot;</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> 
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">clear</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">&quot;string&quot;.count() 
+[1, 2, 3].clear</code></pre>
 
 
 <p>If you&rsquo;re defining some member that doesn&rsquo;t need any parameters, you need to 
@@ -170,17 +164,15 @@ The general guidelines are: </p>
 <ul>
 <li>
 <p>If it modifies the object or has some other side effect, make it a method: </p>
-<div class="codehilite"><pre><span></span><span class="n">list</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">list.clear()</code></pre>
 
 
 </li>
 <li>
 <p>If the method supports multiple arities, make the zero-parameter case a <code>()</code> 
     method to be consistent with the other versions: </p>
-<div class="codehilite"><pre><span></span><span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">()</span> 
-<span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="s">&quot;value&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">Fiber.yield() 
+Fiber.yield(&quot;value&quot;)</code></pre>
 
 
 </li>
@@ -191,8 +183,7 @@ The general guidelines are: </p>
 <h2>Setters <a href="#setters" name="setters" class="header-anchor">#</a></h2>
 <p>A getter lets an object expose a public &ldquo;property&rdquo; that you can <em>read</em>. 
 Likewise, a <em>setter</em> lets you write to a property: </p>
-<div class="codehilite"><pre><span></span><span class="n">person</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="mi">74</span> <span class="c1">// Grew up!</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">person.height = 74 // Grew up!</code></pre>
 
 
 <p>Despite the <code>=</code>, this is just another syntax for a method call. From the 
@@ -204,21 +195,19 @@ provide a read/write property. </p>
 <h2>Operators <a href="#operators" name="operators" class="header-anchor">#</a></h2>
 <p>Wren has most of the same operators you know and love with the same precedence 
 and associativity. We have three prefix operators: </p>
-<div class="codehilite"><pre><span></span><span class="o">!</span> <span class="o">~</span> <span class="o">-</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">! ~ -</code></pre>
 
 
 <p>They are just method calls on their operand without any other arguments. An 
-expression like <code>!possible</code> means &ldquo;call the <code>!</code> method on <code>possible</code>&rdquo;. </p>
+expression like <code>!possible</code> means &ldquo;call the <code>!</code> method on <code>possible</code>&ldquo;. </p>
 <p>We also have a slew of infix operators&mdash;they have operands on both sides. 
 They are: </p>
-<div class="codehilite"><pre><span></span><span class="o">*</span> <span class="o">/</span> <span class="o">%</span> <span class="o">+</span> <span class="o">-</span> <span class="o">..</span> <span class="o">...</span> <span class="o">&lt;&lt;</span> <span class="o">&gt;&gt;</span> <span class="o">&lt;</span> <span class="o">&lt;=</span> <span class="o">&gt;</span> <span class="o">&gt;=</span> <span class="o">==</span> <span class="o">!=</span> <span class="o">&amp;</span> <span class="o">^</span> <span class="o">|</span> <span class="k">is</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">* / % + - .. ... &lt;&lt; &gt;&gt; &lt; &lt;= &gt; &gt;= == != &amp; ^ | is</code></pre>
 
 
 <p>Like prefix operators, they are all funny ways of writing method calls. The left 
 operand is the receiver, and the right operand gets passed to it. So <code>a + b</code> is 
-semantically interpreted as &ldquo;invoke the <code>+(_)</code> method on <code>a</code>, passing it <code>b</code>&rdquo;. </p>
+semantically interpreted as &ldquo;invoke the <code>+(_)</code> method on <code>a</code>, passing it <code>b</code>&ldquo;. </p>
 <p>Note that <code>-</code> is both a prefix and an infix operator. Since they have different 
 signatures (<code>-</code> and <code>-(_)</code>), there&rsquo;s no ambiguity between them. </p>
 <p>Most of these are probably familiar already. The <code>..</code> and <code>...</code> operators are 
@@ -231,23 +220,20 @@ like mocks or proxies where you want an object to masquerade as a certain class.
 <h2>Subscripts <a href="#subscripts" name="subscripts" class="header-anchor">#</a></h2>
 <p>Another familiar syntax from math class is <em>subscripting</em> using square brackets 
 (<code>[]</code>). It&rsquo;s handy for working with collection-like objects. For example: </p>
-<div class="codehilite"><pre><span></span><span class="n">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1">// Get the first item in a list.</span>
-<span class="n">map</span><span class="p">[</span><span class="s">&quot;key&quot;</span><span class="p">]</span> <span class="c1">// Get the value associated with &quot;key&quot;.</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">list[0]    // Get the first item in a list.
+map[&quot;key&quot;] // Get the value associated with &quot;key&quot;.</code></pre>
 
 
 <p>You know the refrain by now. In Wren, these are method calls. In the above 
 examples, the signature is <code>[_]</code>. Subscript operators may also take multiple 
 arguments, which is useful for things like multi-dimensional arrays: </p>
-<div class="codehilite"><pre><span></span><span class="n">matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">matrix[3, 5]</code></pre>
 
 
 <p>These examples are subscript &ldquo;getters&rdquo;, and there are also 
 corresponding <em>subscript setters</em>: </p>
-<div class="codehilite"><pre><span></span><span class="n">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;item&quot;</span> 
-<span class="n">map</span><span class="p">[</span><span class="s">&quot;key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;value&quot;</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">list[0] = &quot;item&quot; 
+map[&quot;key&quot;] = &quot;value&quot;</code></pre>
 
 
 <p>These are equivalent to method calls whose signature is <code>[_]=(_)</code> and whose 

@@ -93,22 +93,19 @@ memory. </p>
 <h3>System.<strong>print</strong>(object) <a href="#system.print(object)" name="system.print(object)" class="header-anchor">#</a></h3>
 <p>Prints <code>object</code> to the console followed by a newline. If not already a string, 
 the object is converted to a string by calling <code>toString</code> on it. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I like bananas&quot;</span><span class="p">)</span> <span class="output">I like bananas</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(&quot;I like bananas&quot;) //&gt; I like bananas</code></pre>
 
 
 <h3>System.<strong>printAll</strong>(sequence) <a href="#system.printall(sequence)" name="system.printall(sequence)" class="header-anchor">#</a></h3>
 <p>Iterates over <code>sequence</code> and prints each element, then prints a single newline 
 at the end. Each element is converted to a string by calling <code>toString</code> on it. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">printAll</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="mi">4</span><span class="p">])</span> <span class="output">1[2, 3]4</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.printAll([1, [2, 3], 4]) //&gt; 1[2, 3]4</code></pre>
 
 
 <h3>System.<strong>write</strong>(object) <a href="#system.write(object)" name="system.write(object)" class="header-anchor">#</a></h3>
 <p>Prints a single value to the console, but does not print a newline character 
 afterwards. Converts the value to a string by calling <code>toString</code> on it. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span> <span class="output">9</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.write(4 + 5) //&gt; 9</code></pre>
 
 
 <p>In the above example, the result of <code>4 + 5</code> is printed, and then the prompt is 

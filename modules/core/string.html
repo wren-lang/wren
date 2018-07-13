@@ -105,17 +105,15 @@ fifth code point in a string without walking the string from the beginning and
 counting them as you go. </p>
 <p>Because counting code points is relatively slow, the indexes passed to string 
 methods are <em>byte</em> offsets, not <em>code point</em> offsets. When you do: </p>
-<div class="codehilite"><pre><span></span><span class="n">someString</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">someString[3]</code></pre>
 
 
 <p>That means &ldquo;get the code point starting at <em>byte</em> three&rdquo;, not &ldquo;get the third 
 code point in the string&rdquo;. This sounds scary, but keep in mind that the methods 
 on strings <em>return</em> byte indexes too. So, for example, this does what you want: </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">metalBand</span> <span class="o">=</span> <span class="s">&quot;Fäcëhämmër&quot;</span> 
-<span class="k">var</span> <span class="n">hPosition</span> <span class="o">=</span> <span class="n">metalBand</span><span class="o">.</span><span class="n">indexOf</span><span class="p">(</span><span class="s">&quot;h&quot;</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">metalBand</span><span class="p">[</span><span class="n">hPosition</span><span class="p">])</span> <span class="output">h</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var metalBand = &quot;Fäcëhämmër&quot; 
+var hPosition = metalBand.indexOf(&quot;h&quot;) 
+System.print(metalBand[hPosition]) //&gt; h</code></pre>
 
 
 <p>If you want to work with a string as a sequence numeric code points, call the 
@@ -126,8 +124,7 @@ ignores any UTF-8 encoding and works directly at the byte level. </p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3>String.<strong>fromCodePoint</strong>(codePoint) <a href="#string.fromcodepoint(codepoint)" name="string.fromcodepoint(codepoint)" class="header-anchor">#</a></h3>
 <p>Creates a new string containing the UTF-8 encoding of <code>codePoint</code>. </p>
-<div class="codehilite"><pre><span></span><span class="vg">String</span><span class="o">.</span><span class="n">fromCodePoint</span><span class="p">(</span><span class="mi">8225</span><span class="p">)</span> <span class="output">‡</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">String.fromCodePoint(8225) //&gt; ‡</code></pre>
 
 
 <p>It is a runtime error if <code>codePoint</code> is not an integer between <code>0</code> and 
@@ -138,8 +135,7 @@ ignores any UTF-8 encoding and works directly at the byte level. </p>
 the string and ignore any UTF-8 encoding. In addition to the normal sequence 
 methods, the returned object also has a subscript operator that can be used to 
 directly index bytes. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="o">.</span><span class="n">bytes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="output">101 (for &quot;e&quot;)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(&quot;hello&quot;.bytes[1]) //&gt; 101 (for &quot;e&quot;)</code></pre>
 
 
 <p>The <code>count</code> method on the returned sequence returns the number of bytes in the 
@@ -150,17 +146,15 @@ the string, and runs in constant time instead. </p>
 code points of the string <em>as numbers</em>. Iteration and subscripting work similar 
 to the string itself. The difference is that instead of returning 
 single-character strings, this returns the numeric code point values. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="output">40 (for &quot;(&quot;)</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="output">7461 (for &quot;ᴥ&quot;)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var string = &quot;(ᵔᴥᵔ)&quot; 
+System.print(string.codePoints[0]) //&gt; 40 (for &quot;(&quot;)
+System.print(string.codePoints[4]) //&gt; 7461 (for &quot;ᴥ&quot;)</code></pre>
 
 
 <p>If the byte at <code>index</code> does not begin a valid UTF-8 sequence, or the end of the 
 string is reached before the sequence is complete, returns <code>-1</code>. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="output">-1 (in the middle of &quot;ᵔ&quot;)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var string = &quot;(ᵔᴥᵔ)&quot; 
+System.print(string.codePoints[2]) //&gt; -1 (in the middle of &quot;ᵔ&quot;)</code></pre>
 
 
 <h3><strong>contains</strong>(other) <a href="#contains(other)" name="contains(other)" class="header-anchor">#</a></h3>
@@ -187,29 +181,26 @@ negative to count backwards from the end of the string. </p>
 index within the string&rsquo;s byte length. </p>
 <h3><strong>split</strong>(separator) <a href="#split(separator)" name="split(separator)" class="header-anchor">#</a></h3>
 <p>Returns a list of one or more strings separated by <code>separator</code>. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;abc abc abc&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">))</span> <span class="output">[abc, abc, abc]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var string = &quot;abc abc abc&quot; 
+System.print(string.split(&quot; &quot;)) //&gt; [abc, abc, abc]</code></pre>
 
 
 <p>It is a runtime error if <code>separator</code> is not a string or is an empty string. </p>
 <h3><strong>replace</strong>(old, swap) <a href="#replace(old,-swap)" name="replace(old,-swap)" class="header-anchor">#</a></h3>
 <p>Returns a new string with all occurences of <code>old</code> replaced with <code>swap</code>. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;abc abc abc&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">))</span> <span class="output">abcabcabc</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var string = &quot;abc abc abc&quot; 
+System.print(string.replace(&quot; &quot;, &quot;&quot;)) //&gt; abcabcabc</code></pre>
 
 
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
 <p>Implements the <a href="../../control-flow.html#the-iterator-protocol">iterator protocol</a> 
 for iterating over the <em>code points</em> in the string: </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">codePoints</span> <span class="o">=</span> <span class="p">[]</span> 
-<span class="k">for</span> <span class="p">(</span><span class="err">c</span> <span class="k">in</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="n">codePoints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="err">c</span><span class="p">)</span> 
-<span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">var codePoints = [] 
+for (c in &quot;(ᵔᴥᵔ)&quot;) { 
+  codePoints.add(c) 
+}
 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">codePoints</span><span class="p">)</span> <span class="output">[(, ᵔ, ᴥ, ᵔ, )]</span>
-</pre></div>
+System.print(codePoints) //&gt; [(, ᵔ, ᴥ, ᵔ, )]</code></pre>
 
 
 <p>If the string contains any bytes that are not valid UTF-8, this iterates over 
@@ -226,16 +217,14 @@ those too, one byte at a time. </p>
 <p>Check if the string is not equal to <code>other</code>. </p>
 <h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
 <p>Returns a string containing the code point starting at byte <code>index</code>. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ʕ•ᴥ•ʔ&quot;</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="output">ᴥ</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(&quot;ʕ•ᴥ•ʔ&quot;[5]) //&gt; ᴥ</code></pre>
 
 
 <p>Since <code>ʕ</code> is two bytes in UTF-8 and <code>•</code> is three, the fifth byte points to the 
 bear&rsquo;s nose. </p>
 <p>If <code>index</code> points into the middle of a UTF-8 sequence or at otherwise invalid 
 UTF-8, this returns a one-byte string containing the byte at that index: </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I ♥ NY&quot;</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="output">(one-byte string [153])</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(&quot;I ♥ NY&quot;[3]) //&gt; (one-byte string [153])</code></pre>
 
 
 <p>It is a runtime error if <code>index</code> is greater than the number of bytes in the 

@@ -93,8 +93,7 @@ C, we need a few things: </p>
 <p>We&rsquo;ll tackle these one at a time. </p>
 <h3>Getting a Method Handle <a href="#getting-a-method-handle" name="getting-a-method-handle" class="header-anchor">#</a></h3>
 <p>When you run a chunk of Wren code like this: </p>
-<div class="codehilite"><pre><span></span><span class="n">object</span><span class="o">.</span><span class="n">someMethod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">object.someMethod(1, 2, 3)</code></pre>
 
 
 <p>At runtime, the VM has to look up the class of <code>object</code> and find a method there 
@@ -112,8 +111,7 @@ array index into the table. That&rsquo;s <a href="../performance.html">why metho
 <p>It would be a shame if calling a method from C didn&rsquo;t have that same speed 
 benefit. To achieve that, we split the process of calling a method into two 
 steps. First, we create a handle that represents a &ldquo;compiled&rdquo; method signature: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenHandle</span><span class="o">*</span> <span class="nf">wrenMakeCallHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">signature</span><span class="p">);</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);</code></pre>
 
 
 <p>That takes a method signature as a string and gives you back an opaque handle 
@@ -140,12 +138,11 @@ define a static method on an appropriate class. </p>
 engine to update all of the entities each frame. We&rsquo;ll keep track of the list of 
 entities within Wren, so from C, there&rsquo;s no obvious object to call <code>update(_)</code> 
 on. Instead, we&rsquo;ll just make it a static method: </p>
-<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">GameEngine</span> <span class="p">{</span> 
-  <span class="k">static</span> <span class="n">update</span><span class="p">(</span><span class="n">elapsedTime</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="c1">// ...</span>
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">class GameEngine { 
+  static update(elapsedTime) { 
+    // ...
+  } 
+}</code></pre>
 
 
 <p>Often, when you call a Wren method from C, you&rsquo;ll be calling a static method. 
@@ -155,26 +152,23 @@ class, you&rsquo;re really declaring a variable with the class&rsquo;s name and 
 reference to the class object in it. </p>
 <p>Assuming you declared that class at the top level, the C API <a href="slots-and-handles.html#looking-up-variables">gives you a way to 
 look it up</a>. We can get a handle to the above class like so: </p>
-<div class="codehilite"><pre><span></span><span class="c1">// Load the class into slot 0.</span>
-<span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> 
-<span class="n">wrenGetVariable</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;main&quot;</span><span class="p">,</span> <span class="s">&quot;GameEngine&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">// Load the class into slot 0.
+wrenEnsureSlots(vm, 1); 
+wrenGetVariable(vm, &quot;main&quot;, &quot;GameEngine&quot;, 0);</code></pre>
 
 
 <p>We could do this every time we call <code>update()</code>, but, again, that&rsquo;s kind of slow 
 because we&rsquo;re looking up &ldquo;GameEngine&rdquo; by name each time. A faster solution is to 
 create a handle to the class once and use it each time: </p>
-<div class="codehilite"><pre><span></span><span class="c1">// Load the class into slot 0.</span>
-<span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> 
-<span class="n">wrenGetVariable</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;main&quot;</span><span class="p">,</span> <span class="s">&quot;GameEngine&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> 
-<span class="n">WrenHandle</span><span class="o">*</span> <span class="n">gameEngineClass</span> <span class="o">=</span> <span class="n">wrenGetSlotHandle</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">// Load the class into slot 0.
+wrenEnsureSlots(vm, 1); 
+wrenGetVariable(vm, &quot;main&quot;, &quot;GameEngine&quot;, 0); 
+WrenHandle* gameEngineClass = wrenGetSlotHandle(vm, 0);</code></pre>
 
 
 <p>Now, each time we want to call a method on GameEngine, we store that value back 
 in slot zero: </p>
-<div class="codehilite"><pre><span></span><span class="n">wrenSetSlotHandle</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">gameEngineClass</span><span class="p">);</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">wrenSetSlotHandle(vm, 0, gameEngineClass);</code></pre>
 
 
 <p>Just like we hoisted <code>wrenMakeCallHandle()</code> out of our performance critical 
@@ -186,15 +180,13 @@ arguments. In our GameEngine example, that&rsquo;s just the elapsed time. Method
 arguments go in consecutive slots after the receiver. So the elapsed time goes 
 into slot one. You can use any of the slot functions to set this up. For the 
 example, it&rsquo;s just: </p>
-<div class="codehilite"><pre><span></span><span class="n">wrenSetSlotDouble</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">elapsedTime</span><span class="p">);</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">wrenSetSlotDouble(vm, 1, elapsedTime);</code></pre>
 
 
 <h2>Calling the Method <a href="#calling-the-method" name="calling-the-method" class="header-anchor">#</a></h2>
 <p>We have all of the data in place, so all that&rsquo;s left is to pull the trigger and 
 tell the VM to start running some code: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenInterpretResult</span> <span class="nf">wrenCall</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="n">WrenHandle</span><span class="o">*</span> <span class="n">method</span><span class="p">);</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);</code></pre>
 
 
 <p>It takes the method handle we created using <code>wrenMakeCallHandle()</code>. Now Wren 

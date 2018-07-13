@@ -87,9 +87,8 @@ core <a href="../../control-flow.html#the-iterator-protocol">iterator protocol</
 <p>Iterates over the sequence, passing each element to the function <code>predicate</code>. 
 If it returns something <a href="../control-flow.html#truth">false</a>, stops iterating 
 and returns the value. Otherwise, returns <code>true</code>. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">all</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">})</span> <span class="output">false</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">all</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">})</span> <span class="output">true</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print([1, 2, 3].all {|n| n &gt; 2}) //&gt; false
+System.print([1, 2, 3].all {|n| n &lt; 4}) //&gt; true</code></pre>
 
 
 <h3><strong>any</strong>(predicate) <a href="#any(predicate)" name="any(predicate)" class="header-anchor">#</a></h3>
@@ -97,9 +96,8 @@ and returns the value. Otherwise, returns <code>true</code>. </p>
 <p>Iterates over the sequence, passing each element to the function <code>predicate</code>. 
 If it returns something <a href="../../control-flow.html#truth">true</a>, stops iterating and 
 returns that value. Otherwise, returns <code>false</code>. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">any</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">})</span> <span class="output">false</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">any</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">})</span> <span class="output">true</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print([1, 2, 3].any {|n| n &lt; 1}) //&gt; false
+System.print([1, 2, 3].any {|n| n &gt; 2}) //&gt; true</code></pre>
 
 
 <h3><strong>contains</strong>(element) <a href="#contains(element)" name="contains(element)" class="header-anchor">#</a></h3>
@@ -112,15 +110,13 @@ sequence in order to determine how many elements it contains. </p>
 <p>Returns the number of elements in the sequence that pass the <code>predicate</code>. </p>
 <p>Iterates over the sequence, passing each element to the function <code>predicate</code> 
 and counting the number of times the returned value evaluates to <code>true</code>. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">count</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">})</span> <span class="output">1</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">count</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">})</span> <span class="output">3</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print([1, 2, 3].count {|n| n &gt; 2}) //&gt; 1
+System.print([1, 2, 3].count {|n| n &lt; 4}) //&gt; 3</code></pre>
 
 
 <h3><strong>each</strong>(function) <a href="#each(function)" name="each(function)" class="header-anchor">#</a></h3>
 <p>Iterates over the sequence, passing each element to the given <code>function</code>. </p>
-<div class="codehilite"><pre><span></span><span class="p">[</span><span class="s">&quot;one&quot;</span><span class="p">,</span> <span class="s">&quot;two&quot;</span><span class="p">,</span> <span class="s">&quot;three&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span><span class="o">|</span><span class="n">word</span><span class="o">|</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">[&quot;one&quot;, &quot;two&quot;, &quot;three&quot;].each {|word| System.print(word) }</code></pre>
 
 
 <h3><strong>isEmpty</strong> <a href="#isempty" name="isempty" class="header-anchor">#</a></h3>
@@ -137,13 +133,12 @@ together into a single string. </p>
 <h3><strong>map</strong>(transformation) <a href="#map(transformation)" name="map(transformation)" class="header-anchor">#</a></h3>
 <p>Creates a new sequence that applies the <code>transformation</code> to each element in the 
 original sequence while it is iterated. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">doubles</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">}</span> 
-<span class="k">for</span> <span class="p">(</span><span class="err">n</span> <span class="k">in</span> <span class="n">doubles</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">n</span><span class="p">)</span> <span class="output">2</span>
-                  <span class="output">4</span>
-                  <span class="output">6</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var doubles = [1, 2, 3].map {|n| n * 2 } 
+for (n in doubles) { 
+  System.print(n) //&gt; 2
+                  //&gt; 4
+                  //&gt; 6
+}</code></pre>
 
 
 <p>The returned sequence is <em>lazy</em>. It only applies the mapping when you iterate 
@@ -153,11 +148,10 @@ sequence. </p>
 that have side effects when you iterate over them. But it also means that 
 changes to the original sequence will be reflected in the mapped sequence. </p>
 <p>To force eager evaluation, just call <code>.toList</code> on the result. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> 
-<span class="k">var</span> <span class="n">doubles</span> <span class="o">=</span> <span class="n">numbers</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">}</span><span class="o">.</span><span class="n">toList</span> 
-<span class="n">numbers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">doubles</span><span class="p">)</span> <span class="output">[2, 4, 6]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var numbers = [1, 2, 3] 
+var doubles = numbers.map {|n| n * 2 }.toList 
+numbers.add(4) 
+System.print(doubles) //&gt; [2, 4, 6]</code></pre>
 
 
 <h3><strong>reduce</strong>(function) <a href="#reduce(function)" name="reduce(function)" class="header-anchor">#</a></h3>
@@ -183,8 +177,7 @@ original sequence. </p>
 reflected in the filtered sequence. </p>
 <h3><strong>toList</strong> <a href="#tolist" name="tolist" class="header-anchor">#</a></h3>
 <p>Creates a <a href="list.html">list</a> containing all the elements in the sequence. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">toList</span><span class="p">)</span>  <span class="output">[1, 2, 3]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print((1..3).toList)  //&gt; [1, 2, 3]</code></pre>
 
 
 <p>If the sequence is already a list, this creates a copy of it. </p>
@@ -193,13 +186,12 @@ reflected in the filtered sequence. </p>
 that pass the <code>predicate</code>. </p>
 <p>During iteration, each element in the original sequence is passed to the 
 function <code>predicate</code>. If it returns <code>false</code>, the element is skipped. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">odds</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">where</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">}</span> 
-<span class="k">for</span> <span class="p">(</span><span class="err">n</span> <span class="k">in</span> <span class="n">odds</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">n</span><span class="p">)</span> <span class="output">1</span>
-                    <span class="output">3</span>
-                    <span class="output">5</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var odds = (1..6).where {|n| n % 2 == 1 } 
+for (n in odds) { 
+    System.print(n) //&gt; 1
+                    //&gt; 3
+                    //&gt; 5
+}</code></pre>
 
 
 <p>The returned sequence is <em>lazy</em>. It only applies the filtering when you iterate 
@@ -210,11 +202,10 @@ sequences that have side effects when you iterate over them. But it also means
 that changes to the original sequence will be reflected in the filtered 
 sequence. </p>
 <p>To force eager evaluation, just call <code>.toList</code> on the result. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span> 
-<span class="k">var</span> <span class="n">odds</span> <span class="o">=</span> <span class="n">numbers</span><span class="o">.</span><span class="n">where</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">}</span><span class="o">.</span><span class="n">toList</span> 
-<span class="n">numbers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">odds</span><span class="p">)</span> <span class="output">[1, 3, 5]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var numbers = [1, 2, 3, 4, 5, 6] 
+var odds = numbers.where {|n| n % 2 == 1 }.toList 
+numbers.add(7) 
+System.print(odds) //&gt; [1, 3, 5]</code></pre>
   </main>
 </div>
 <footer>

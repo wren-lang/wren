@@ -119,8 +119,7 @@ a name collision. Each module is, well, modular. </p>
 <p>When you run Wren and give it a file name to execute, the contents of that file 
 define the &ldquo;main&rdquo; module that execution starts at. To load and execute other 
 modules, you use an import statement: </p>
-<div class="codehilite"><pre><span></span><span class="k">import</span> <span class="s">&quot;beverages&quot;</span> <span class="k">for</span> <span class="vg">Coffee</span><span class="p">,</span> <span class="vg">Tea</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">import &quot;beverages&quot; for Coffee, Tea</code></pre>
 
 
 <p>This finds a module named &ldquo;beverages&rdquo; and executes its source code. Then, it 
@@ -128,16 +127,14 @@ looks up two top-level variables, <code>Coffee</code> and <code>Tea</code> in <e
 creates new variables in <em>this</em> module with their values. </p>
 <p>This statement can appear anywhere a variable declaration is allowed, even 
 inside blocks: </p>
-<div class="codehilite"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">thirsty</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="k">import</span> <span class="s">&quot;beverages&quot;</span> <span class="k">for</span> <span class="vg">Coffee</span><span class="p">,</span> <span class="vg">Tea</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">if (thirsty) { 
+  import &quot;beverages&quot; for Coffee, Tea 
+}</code></pre>
 
 
 <p>If you want to load a module, but not bind any variables from it, you can omit 
 the <code>for</code> clause: </p>
-<div class="codehilite"><pre><span></span><span class="k">import</span> <span class="s">&quot;some_imperative_code&quot;</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">import &quot;some_imperative_code&quot;</code></pre>
 
 
 <p>That&rsquo;s the basic idea. Now let&rsquo;s break it down into each of the steps it 
@@ -156,18 +153,16 @@ to uniquely identify the module. The embedding application controls how that
 string is used to locate a blob of source code. </p>
 <p>When the host application creates a new Wren VM, it provides a module loader 
 function: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenConfiguration</span> <span class="n">config</span><span class="p">;</span> 
-<span class="n">config</span><span class="p">.</span><span class="n">loadModuleFn</span> <span class="o">=</span> <span class="n">loadModule</span><span class="p">;</span>
+<pre class="codehilite"><code class="language-c">WrenConfiguration config; 
+config.loadModuleFn = loadModule;
 
-<span class="c1">// Other configuration...</span>
+// Other configuration...
 
-<span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span> <span class="o">=</span> <span class="n">wrenNewVM</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
-</pre></div>
+WrenVM* vm = wrenNewVM(&amp;config);</code></pre>
 
 
 <p>That function has this signature: </p>
-<div class="codehilite"><pre><span></span><span class="kt">char</span><span class="o">*</span> <span class="nf">WrenLoadModuleFn</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">name</span><span class="p">);</span>
-</pre></div>
+<pre class="codehilite"><code class="language-c">char* WrenLoadModuleFn(WrenVM* vm, const char* name);</code></pre>
 
 
 <p>Whenever a module is imported, the VM calls this and passes it the name of the 
@@ -181,13 +176,11 @@ found. When you do this, Wren will report it as a runtime error. </p>
 <p>The default little command-line VM that comes with Wren has a very simple 
 lookup process. It appends the module name and &ldquo;.wren&rdquo; to the directory where 
 the main module was loaded and looks for that file. So, let&rsquo;s say you run: </p>
-<div class="codehilite"><pre><span></span>$ wren /code/my_program.wren
-</pre></div>
+<pre class="codehilite"><code class="language-bash">$ wren /code/my_program.wren</code></pre>
 
 
 <p>And that main module has: </p>
-<div class="codehilite"><pre><span></span><span class="k">import</span> <span class="s">&quot;some/module&quot;</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">import &quot;some/module&quot;</code></pre>
 
 
 <p>Then the command-line VM will try to find <code>/code/some/module.wren</code>. By 
@@ -216,8 +209,7 @@ These are simply variables declared outside of any
 <a href="classes.html#methods">method</a> or <a href="functions.html">function</a>. </p>
 <p>These are visible to anything inside the module, but they can also be 
 <em>exported</em> and used by other modules. When Wren executes an import like: </p>
-<div class="codehilite"><pre><span></span><span class="k">import</span> <span class="s">&quot;beverages&quot;</span> <span class="k">for</span> <span class="vg">Coffee</span><span class="p">,</span> <span class="vg">Tea</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">import &quot;beverages&quot; for Coffee, Tea</code></pre>
 
 
 <p>First it runs the &ldquo;beverages&rdquo; module. Then it goes through each of the variable 
@@ -236,19 +228,18 @@ rarely makes a difference. </p>
 <p>Earlier, I described a program&rsquo;s set of modules as a tree. Of course, it&rsquo;s only 
 a <em>tree</em> of modules if there are no <em>shared imports</em>. But consider a program 
 like: </p>
-<div class="codehilite"><pre><span></span><span class="c1">// main.wren</span>
-<span class="k">import</span> <span class="s">&quot;a&quot;</span> 
-<span class="k">import</span> <span class="s">&quot;b&quot;</span>
+<pre class="codehilite"><code class="language-wren">// main.wren
+import &quot;a&quot; 
+import &quot;b&quot;
 
-<span class="c1">// a.wren</span>
-<span class="k">import</span> <span class="s">&quot;shared&quot;</span>
+// a.wren
+import &quot;shared&quot;
 
-<span class="c1">// b.wren</span>
-<span class="k">import</span> <span class="s">&quot;shared&quot;</span>
+// b.wren
+import &quot;shared&quot;
 
-<span class="c1">// shared.wren</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Shared!&quot;</span><span class="p">)</span>
-</pre></div>
+// shared.wren
+System.print(&quot;Shared!&quot;)</code></pre>
 
 
 <p>Here, &ldquo;a&rdquo; and &ldquo;b&rdquo; both want to use &ldquo;shared&rdquo;. If &ldquo;shared&rdquo; defines some top-level 
@@ -276,41 +267,38 @@ the registry <em>before</em> it is executed. This means if an import for that sa
 module is reached while the module itself or one of its imports is executing, 
 it will be found in the registry and the cycle is short-circuited. </p>
 <p>For example: </p>
-<div class="codehilite"><pre><span></span><span class="c1">// main.wren</span>
-<span class="k">import</span> <span class="s">&quot;a&quot;</span>
+<pre class="codehilite"><code class="language-wren">// main.wren
+import &quot;a&quot;
 
-<span class="c1">// a.wren</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;start a&quot;</span><span class="p">)</span> 
-<span class="k">import</span> <span class="s">&quot;b&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;end a&quot;</span><span class="p">)</span>
+// a.wren
+System.print(&quot;start a&quot;) 
+import &quot;b&quot; 
+System.print(&quot;end a&quot;)
 
-<span class="c1">// b.wren</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;start b&quot;</span><span class="p">)</span> 
-<span class="k">import</span> <span class="s">&quot;a&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;end b&quot;</span><span class="p">)</span>
-</pre></div>
+// b.wren
+System.print(&quot;start b&quot;) 
+import &quot;a&quot; 
+System.print(&quot;end b&quot;)</code></pre>
 
 
 <p>This program runs successfully and prints: </p>
-<div class="codehilite"><pre><span></span>start a 
+<pre class="codehilite"><code class="language-text">start a 
 start b 
 end b 
-end a
-</pre></div>
+end a</code></pre>
 
 
 <p>Where you have to be careful is binding variables. Consider: </p>
-<div class="codehilite"><pre><span></span><span class="c1">// main.wren</span>
-<span class="k">import</span> <span class="s">&quot;a&quot;</span>
+<pre class="codehilite"><code class="language-wren">// main.wren
+import &quot;a&quot;
 
-<span class="c1">// a.wren</span>
-<span class="k">import</span> <span class="s">&quot;b&quot;</span> <span class="k">for</span> <span class="err">B</span> 
-<span class="k">var</span> <span class="err">A</span> <span class="o">=</span> <span class="s">&quot;a variable&quot;</span>
+// a.wren
+import &quot;b&quot; for B 
+var A = &quot;a variable&quot;
 
-<span class="c1">// b.wren</span>
-<span class="k">import</span> <span class="s">&quot;a&quot;</span> <span class="k">for</span> <span class="err">A</span> 
-<span class="k">var</span> <span class="err">B</span> <span class="o">=</span> <span class="s">&quot;b variable&quot;</span>
-</pre></div>
+// b.wren
+import &quot;a&quot; for A 
+var B = &quot;b variable&quot;</code></pre>
 
 
 <p>The import of &ldquo;a&rdquo; in b.wren will fail here. If you trace the execution, you 
@@ -325,17 +313,16 @@ get: </p>
 defined yet since &ldquo;a.wren&rdquo; is still sitting on the <code>import "b" for B</code> line 
 before the declaration. To get this to work, you would need to move the 
 variable declaration above the import: </p>
-<div class="codehilite"><pre><span></span><span class="c1">// main.wren</span>
-<span class="k">import</span> <span class="s">&quot;a&quot;</span>
+<pre class="codehilite"><code class="language-wren">// main.wren
+import &quot;a&quot;
 
-<span class="c1">// a.wren</span>
-<span class="k">var</span> <span class="err">A</span> <span class="o">=</span> <span class="s">&quot;a variable&quot;</span> 
-<span class="k">import</span> <span class="s">&quot;b&quot;</span> <span class="k">for</span> <span class="err">B</span>
+// a.wren
+var A = &quot;a variable&quot; 
+import &quot;b&quot; for B
 
-<span class="c1">// b.wren</span>
-<span class="k">import</span> <span class="s">&quot;a&quot;</span> <span class="k">for</span> <span class="err">A</span> 
-<span class="k">var</span> <span class="err">B</span> <span class="o">=</span> <span class="s">&quot;b variable&quot;</span>
-</pre></div>
+// b.wren
+import &quot;a&quot; for A 
+var B = &quot;b variable&quot;</code></pre>
 
 
 <p>Now when we run it, we get: </p>

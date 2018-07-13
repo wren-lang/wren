@@ -103,22 +103,19 @@ bottom like a typical scripting language. (Internally, programs are compiled to
 bytecode for <a href="performance.html">efficiency</a>, but that&rsquo;s an implementation detail.) </p>
 <h2>Comments <a href="#comments" name="comments" class="header-anchor">#</a></h2>
 <p>Line comments start with <code>//</code> and end at the end of the line:</p>
-<div class="codehilite"><pre><span></span><span class="c1">// This is a comment.</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">// This is a comment.</code></pre>
 
 
 <p>Block comments start with <code>/*</code> and end with <code>*/</code>. They can span multiple lines: </p>
-<div class="codehilite"><pre><span></span><span class="cm">/* This </span>
-<span class="cm">   is </span>
-<span class="cm">   a </span>
-<span class="cm">   multi-line </span>
-<span class="cm">   comment. */</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">/* This 
+   is 
+   a 
+   multi-line 
+   comment. */</code></pre>
 
 
 <p>Unlike C, block comments can nest in Wren: </p>
-<div class="codehilite"><pre><span></span><span class="cm">/* This is /* a nested */ comment. */</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">/* This is /* a nested */ comment. */</code></pre>
 
 
 <p>This is handy because it lets you easily comment out an entire block of code, 
@@ -126,40 +123,36 @@ even if the code already contains block comments. </p>
 <h2>Reserved words <a href="#reserved-words" name="reserved-words" class="header-anchor">#</a></h2>
 <p>One way to get a quick feel for a language&rsquo;s style is to see what words it 
 reserves. Here&rsquo;s what Wren has: </p>
-<div class="codehilite"><pre><span></span><span class="k">break</span> <span class="k">class</span> <span class="k">construct</span> <span class="k">else</span> <span class="kc">false</span> <span class="k">for</span> <span class="k">foreign</span> <span class="k">if</span> <span class="k">import</span> 
-<span class="k">in</span> <span class="k">is</span> <span class="kc">null</span> <span class="k">return</span> <span class="k">static</span> <span class="k">super</span> <span class="nb">this</span> <span class="kc">true</span> <span class="k">var</span> <span class="k">while</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">break class construct else false for foreign if import 
+in is null return static super this true var while</code></pre>
 
 
 <h2>Identifiers <a href="#identifiers" name="identifiers" class="header-anchor">#</a></h2>
 <p>Naming rules are similar to other programming languages. Identifiers start with 
 a letter or underscore and may contain letters, digits, and underscores. Case 
 is sensitive. </p>
-<div class="codehilite"><pre><span></span><span class="n">hi</span> 
-<span class="n">camelCase</span> 
-<span class="vg">PascalCase</span> 
-<span class="vi">_under_score</span> 
-<span class="n">abc123</span> 
-<span class="vg">ALL_CAPS</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">hi 
+camelCase 
+PascalCase 
+_under_score 
+abc123 
+ALL_CAPS</code></pre>
 
 
 <p>Identifiers that start with underscore (<code>_</code>) are special in Wren. They are used 
 to indicate <a href="classes.html#fields">fields</a> in classes. </p>
 <h2>Newlines <a href="#newlines" name="newlines" class="header-anchor">#</a></h2>
 <p>Newlines (<code>\n</code>) are meaningful in Wren. They are used to separate statements: </p>
-<div class="codehilite"><pre><span></span><span class="c1">// Two statements:</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;hi&quot;</span><span class="p">)</span> <span class="c1">// Newline.</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;bye&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">// Two statements:
+System.print(&quot;hi&quot;) // Newline.
+System.print(&quot;bye&quot;)</code></pre>
 
 
 <p>Sometimes, though, a statement doesn&rsquo;t fit on a single line and jamming a 
 newline in the middle would trip it up. To handle that, Wren has a very simple 
 rule: It ignores a newline following any token that can&rsquo;t end a statement. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span> <span class="c1">// Newline here is ignored.</span>
-    <span class="s">&quot;hi&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print( // Newline here is ignored.
+    &quot;hi&quot;)</code></pre>
 
 
 <p>In practice, this means you can put each statement on its own line and wrap 
@@ -170,20 +163,18 @@ statement is allowed, like in <a href="control-flow.html">control flow</a> state
 <a href="classes.html#methods">Method</a> and <a href="functions.html">function</a> bodies are also 
 blocks. For example, here we have a block for the then case, and a single 
 statement for the else: </p>
-<div class="codehilite"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">happy</span> <span class="o">&amp;&amp;</span> <span class="n">knowIt</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="n">hands</span><span class="o">.</span><span class="n">clap</span><span class="p">()</span> 
-<span class="p">}</span> <span class="k">else</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;sad&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">if (happy &amp;&amp; knowIt) { 
+  hands.clap() 
+} else System.print(&quot;sad&quot;)</code></pre>
 
 
 <p>Blocks have two similar but not identical forms. Typically, blocks contain a 
 series of statements like: </p>
-<div class="codehilite"><pre><span></span><span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;one&quot;</span><span class="p">)</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;two&quot;</span><span class="p">)</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;three&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">{ 
+  System.print(&quot;one&quot;) 
+  System.print(&quot;two&quot;) 
+  System.print(&quot;three&quot;) 
+}</code></pre>
 
 
 <p>Blocks of this form when used for method and function bodies automatically 
@@ -192,38 +183,34 @@ value, you need an explicit <code>return</code> statement. </p>
 <p>However, it&rsquo;s pretty common to have a method or function that just evaluates and 
 returns the result of a single expression. Some other languages use <code>=&gt;</code> to 
 define these. Wren uses: </p>
-<div class="codehilite"><pre><span></span><span class="p">{</span> <span class="s">&quot;single expression&quot;</span> <span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">{ &quot;single expression&quot; }</code></pre>
 
 
 <p>If there is no newline after the <code>{</code> (or after the parameter list in a 
 <a href="functions.html">function</a>), then the block may only contain a single 
 expression, and it automatically returns the result of it. It&rsquo;s exactly the same 
 as doing: </p>
-<div class="codehilite"><pre><span></span><span class="p">{</span> 
-  <span class="k">return</span> <span class="s">&quot;single expression&quot;</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">{ 
+  return &quot;single expression&quot; 
+}</code></pre>
 
 
 <p>Statements are not allowed in this form (since they don&rsquo;t produce values), which 
 means nothing starting with <code>class</code>, <code>for</code>, <code>if</code>, <code>import</code>,  <code>return</code>, 
 <code>var</code>, or <code>while</code>. If you want a block that contains a single statement, 
 put a newline in there: </p>
-<div class="codehilite"><pre><span></span><span class="p">{</span> 
-  <span class="k">if</span> <span class="p">(</span><span class="n">happy</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I&#39;m feelin&#39; it!&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">{ 
+  if (happy) { 
+    System.print(&quot;I'm feelin' it!&quot;) 
+  } 
+}</code></pre>
 
 
 <p>Using an initial newline after the <code>{</code> does feel a little weird or magical, but 
 newlines are already significant in Wren, so it&rsquo;s not totally crazy. The nice 
 thing about this syntax as opposed to something like <code>=&gt;</code> is that the <em>end</em> of 
 the block has an explicit delimiter. That helps when chaining: </p>
-<div class="codehilite"><pre><span></span><span class="n">numbers</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">}</span><span class="o">.</span><span class="n">where</span> <span class="p">{</span><span class="o">|</span><span class="err">n</span><span class="o">|</span> <span class="err">n</span> <span class="o">&lt;</span> <span class="mi">100</span> <span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">numbers.map {|n| n * 2 }.where {|n| n &lt; 100 }</code></pre>
 
 
 <h2>Precedence and Associativity <a href="#precedence-and-associativity" name="precedence-and-associativity" class="header-anchor">#</a></h2>

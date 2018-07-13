@@ -24,9 +24,9 @@ body {
   width: 560px; }
 
 header {
-  text-shadow: 0 1px 1px #141a1f;
+  text-shadow: 0 1px 1px #14191f;
   background: #394046;
-  border-bottom: solid 1px #141a1f; }
+  border-bottom: solid 1px #14191f; }
   header .page {
     height: 120px; }
   header h1 {
@@ -44,19 +44,19 @@ header {
     font: 500 13px "Lato", helvetica, arial, sans-serif;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: #9ca0a3; }
+    color: #9c9fa2; }
   header a {
-    color: #d7d9da; }
+    color: #d7d8da; }
   header a:hover {
     color: #99ccff;
-    text-shadow: 0 0 6px rgba(0, 128, 255, 0.4); }
+    text-shadow: 0 0 6px rgba(0, 127, 255, 0.4); }
 
 nav {
   float: right;
   width: 160px;
   padding-top: 109px; }
   nav h2 {
-    color: #c4c6c8;
+    color: #c3c5c7;
     font: 500 11px "Lato", helvetica, arial, sans-serif;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -66,7 +66,7 @@ nav {
     margin: 6px 0 20px 0; }
   nav li {
     font: 15px "Source Sans Pro", georgia, serif;
-    color: #c4c6c8;
+    color: #c3c5c7;
     list-style-type: none;
     margin: 0 0 4px 0; }
 
@@ -76,7 +76,7 @@ nav.small {
   width: 100%;
   padding: 16px 0 0 0;
   margin: 0;
-  background: #ebeced; }
+  background: #ebebec; }
   nav.small table {
     width: 100%;
     border-collapse: separate;
@@ -84,7 +84,7 @@ nav.small {
   nav.small h2 {
     margin: 16px 0 0 0;
     padding: 0 0 1px 0;
-    border-bottom: solid 1px #d7d9da; }
+    border-bottom: solid 1px #d7d8da; }
 
 h1 {
   padding-top: 30px;
@@ -129,7 +129,7 @@ a:hover {
 
 h2:hover > .header-anchor,
 h3:hover > .header-anchor {
-  color: #ebeced; }
+  color: #ebebec; }
 
 h2:hover > .header-anchor:hover,
 h3:hover > .header-anchor:hover {
@@ -165,10 +165,10 @@ footer {
   padding: 20px 0 40px 0;
   font: 14px "Source Sans Pro", georgia, serif;
   background: #394046;
-  color: #d7d9da;
-  border-top: solid 1px #141a1f;
+  color: #d7d8da;
+  border-top: solid 1px #14191f;
   text-align: center;
-  text-shadow: 0 1px 1px #141a1f; }
+  text-shadow: 0 1px 1px #14191f; }
   footer a {
     color: #99ccff; }
   footer a:hover {
@@ -178,7 +178,7 @@ footer {
   float: right; }
 
 .codehilite pre span.c1, .codehilite pre span.cm {
-  color: #95a1ae; }
+  color: #94a1ad; }
 .codehilite pre span.k, .codehilite pre span.kd, .codehilite pre span.kc, .codehilite pre span.kt, .codehilite pre span.nb {
   color: #269dd9; }
 .codehilite pre span.vg {
@@ -199,9 +199,9 @@ footer {
   color: #c2a30a;
   background: #fef6e7; }
 .codehilite pre span.o {
-  color: #4d91b3; }
+  color: #4d90b3; }
 .codehilite pre span.p {
-  color: #738494; }
+  color: #738393; }
 .codehilite pre span.cp {
   color: #9970c2; }
 .codehilite pre span.output {
@@ -221,21 +221,21 @@ footer {
     content: "Error: "; }
 
 body.module header a {
-  color: #d7d9da; }
+  color: #d7d8da; }
 body.module header a:hover {
   color: #7de88f;
   text-shadow: 0 0 6px rgba(13, 242, 51, 0.4); }
 body.module a {
   color: #1fad66; }
 body.module a:hover {
-  color: #1a664d; }
+  color: #19664d; }
 body.module .header-anchor {
   color: white; }
 body.module main h1, body.module main h2, body.module main h3 {
   color: #1fad66; }
 body.module main h2:hover > .header-anchor:hover,
 body.module main h3:hover > .header-anchor:hover {
-  color: #1a664d; }
+  color: #19664d; }
 body.module footer a {
   color: #7de88f; }
 body.module footer a:hover {
@@ -272,7 +272,7 @@ table.chart {
     text-align: right;
     border-radius: 2px; }
   table.chart .chart-bar.wren {
-    background: #1d5277;
+    background: #1d5176;
     border-bottom: solid 1px #143352; }
 
 table.precedence th {
@@ -281,10 +281,10 @@ table.precedence th {
   letter-spacing: 1px;
   color: #888c90;
   padding: 6px 0;
-  border-bottom: solid 1px #ebeced; }
+  border-bottom: solid 1px #ebebec; }
 table.precedence td {
   padding: 3px 0;
-  border-bottom: solid 1px #ebeced; }
+  border-bottom: solid 1px #ebebec; }
 
 @media only screen and (max-width: 839px) {
   .page {
@@ -353,5 +353,3 @@ table.precedence td {
 
   footer {
     padding: 20px 20px 40px 20px; } }
-
-/*# sourceMappingURL=style.css.map */

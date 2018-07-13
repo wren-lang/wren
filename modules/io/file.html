@@ -76,10 +76,9 @@ a file descriptor. </p>
 <p>Opens the file at <code>path</code> for writing and passes it to <code>fn</code>. If there is already 
 a file at that path, it is truncated. After the function returns, the file is 
 automatically closed. </p>
-<div class="codehilite"><pre><span></span><span class="vg">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;numbers.txt&quot;</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">file</span><span class="o">|</span> 
-  <span class="n">file</span><span class="o">.</span><span class="n">writeBytes</span><span class="p">(</span><span class="s">&quot;one two three&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">File.create(&quot;numbers.txt&quot;) {|file| 
+  file.writeBytes(&quot;one two three&quot;) 
+}</code></pre>
 
 
 <h3>File.<strong>delete</strong>(path) <a href="#file.delete(path)" name="file.delete(path)" class="header-anchor">#</a></h3>
@@ -90,16 +89,14 @@ or other special file system entities. </p>
 <h3>File.<strong>open</strong>(path, fn) <a href="#file.open(path,-fn)" name="file.open(path,-fn)" class="header-anchor">#</a></h3>
 <p>Opens the file at <code>path</code> for reading and passes it to <code>fn</code>. After the function 
 returns, the file is automatically closed. </p>
-<div class="codehilite"><pre><span></span><span class="vg">File</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;words.txt&quot;</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">file</span><span class="o">|</span> 
-  <span class="n">file</span><span class="o">.</span><span class="n">readBytes</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">File.open(&quot;words.txt&quot;) {|file| 
+  file.readBytes(5) 
+}</code></pre>
 
 
 <h3>File.<strong>read</strong>(path) <a href="#file.read(path)" name="file.read(path)" class="header-anchor">#</a></h3>
 <p>Reads the entire contents of the file at <code>path</code> and returns it as a string. </p>
-<div class="codehilite"><pre><span></span><span class="vg">File</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s">&quot;words.txt&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">File.read(&quot;words.txt&quot;)</code></pre>
 
 
 <p>No encoding or decoding is done. If the file is UTF-8, then the resulting 
@@ -108,9 +105,8 @@ whatever encoding the file uses. </p>
 <h3>File.<strong>realPath</strong>(path) <a href="#file.realpath(path)" name="file.realpath(path)" class="header-anchor">#</a></h3>
 <p>Resolves <code>path</code>, traversing symlinks and removining any unneeded <code>./</code> and <code>../</code> 
 components. Returns the canonical absolute path to the file. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">path</span> <span class="o">=</span> <span class="s">&quot;/some/./symlink/a/../b/file.txt&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">File</span><span class="o">.</span><span class="n">realPath</span><span class="p">(</span><span class="n">path</span><span class="p">))</span> <span class="output">/real/path/a/file.txt</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var path = &quot;/some/./symlink/a/../b/file.txt&quot; 
+System.print(File.realPath(path)) //&gt; /real/path/a/file.txt</code></pre>
 
 
 <h3>File.<strong>size</strong>(path) <a href="#file.size(path)" name="file.size(path)" class="header-anchor">#</a></h3>
@@ -119,10 +115,9 @@ components. Returns the canonical absolute path to the file. </p>
 <h3>File.<strong>create</strong>(path) <a href="#file.create(path)" name="file.create(path)" class="header-anchor">#</a></h3>
 <p>Opens the file at <code>path</code> for writing. If there is already a file at that path, 
 it is truncated. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">file</span> <span class="o">=</span> <span class="vg">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;colors.txt&quot;</span><span class="p">)</span> 
-<span class="n">file</span><span class="o">.</span><span class="n">writeBytes</span><span class="p">(</span><span class="s">&quot;chartreuse lime teal&quot;</span><span class="p">)</span> 
-<span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var file = File.create(&quot;colors.txt&quot;) 
+file.writeBytes(&quot;chartreuse lime teal&quot;) 
+file.close()</code></pre>
 
 
 <h3>File.<strong>open</strong>(path) <a href="#file.open(path)" name="file.open(path)" class="header-anchor">#</a></h3>
@@ -136,24 +131,22 @@ done with it. </p>
 <h3><strong>size</strong> <a href="#size" name="size" class="header-anchor">#</a></h3>
 <p>The size of the contents of the file in bytes. </p>
 <h3><strong>close</strong>() <a href="#close()" name="close()" class="header-anchor">#</a></h3>
-<p>Closes the file. After calling this, you can read or write from it. </p>
+<p>Closes the file. After calling this, you can&rsquo;t read or write from it. </p>
 <h3><strong>readBytes</strong>(count) <a href="#readbytes(count)" name="readbytes(count)" class="header-anchor">#</a></h3>
 <p>Reads up to <code>count</code> bytes starting from the beginning of the file. </p>
-<div class="codehilite"><pre><span></span><span class="c1">// Assume this file contains &quot;I am a file!&quot;.</span>
-<span class="vg">File</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;example.txt&quot;</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">file</span><span class="o">|</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">readBytes</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span> <span class="output">I am a</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">// Assume this file contains &quot;I am a file!&quot;.
+File.open(&quot;example.txt&quot;) {|file| 
+  System.print(file.readBytes(6)) //&gt; I am a
+}</code></pre>
 
 
 <h3><strong>readBytes</strong>(count, offset) <a href="#readbytes(count,-offset)" name="readbytes(count,-offset)" class="header-anchor">#</a></h3>
 <p>Reads up to <code>count</code> bytes starting at <code>offset</code> bytes from the beginning of 
 the file. </p>
-<div class="codehilite"><pre><span></span><span class="c1">// Assume this file contains &quot;I am a file!&quot;.</span>
-<span class="vg">File</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;example.txt&quot;</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">file</span><span class="o">|</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">readBytes</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="output">am a f</span>
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">// Assume this file contains &quot;I am a file!&quot;.
+File.open(&quot;example.txt&quot;) {|file| 
+  System.print(file.readBytes(6, 2)) //&gt; am a f
+}</code></pre>
 
 
 <h3><strong>writeBytes</strong>(bytes) <a href="#writebytes(bytes)" name="writebytes(bytes)" class="header-anchor">#</a></h3>

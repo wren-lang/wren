@@ -101,7 +101,7 @@ few dependencies are nice that way. &ldquo;Wren&rdquo; encompasses two separate 
 <li>
 <p><strong>The virtual machine.</strong> This is the core chunk of C that executes Wren 
     source code. It is just a library, not a standalone application. It&rsquo;s 
-    designed to be <a href="embedding-api.html">embedded</a> in a larger host application. It has no 
+    designed to be <a href="embedding">embedded</a> in a larger host application. It has no 
     dependencies beyond the C standard library. You can use it as a static 
     library, shared library, or simply compile the source into your app. </p>
 </li>
@@ -114,39 +114,33 @@ few dependencies are nice that way. &ldquo;Wren&rdquo; encompasses two separate 
 </li>
 </ul>
 <p>If you&rsquo;re on a Unix or Mac and you can rock a command line, it&rsquo;s just: </p>
-<div class="codehilite"><pre><span></span>$ git clone https://github.com/munificent/wren.git
-$ <span class="nb">cd</span> wren 
+<pre class="codehilite"><code class="language-sh">$ git clone https://github.com/munificent/wren.git
+$ cd wren 
 $ make 
-$ ./wren
-</pre></div>
+$ ./wren</code></pre>
 
 
-<p>This builds both the VM and the CLI. It downloads libuv automatically for you. 
-The release build of the CLI goes right into the repo&rsquo;s top level directory. 
-Binaries for other configurations are built to <code>bin/</code>. Static and shared 
-libraries for embedding Wren get built in <code>lib/</code>. </p>
+<p>This builds both the VM and the CLI. The release build of the CLI goes right 
+into the repo&rsquo;s top level directory. Binaries for other configurations are built 
+to <code>bin/</code>. Static and shared libraries for embedding Wren get built in <code>lib/</code>. </p>
 <p>For Mac users, there is also an XCode project under <code>util/xcode</code>. For 
 Windows brethren, <code>util/msvc2013</code> contains a Visual Studio solution. Note 
 that these may not have the exact same build settings as the makefile. The 
 makefile is the &ldquo;official&rdquo; way to compile Wren. </p>
 <p>If you only want to build the VM, you can do: </p>
-<div class="codehilite"><pre><span></span>$ make vm
-</pre></div>
+<pre class="codehilite"><code class="language-sh">$ make vm</code></pre>
 
 
-<p>This compiles the VM to static and shared libraries. It does not even download 
-libuv since it isn&rsquo;t needed. </p>
+<p>This compiles the VM to static and shared libraries. </p>
 <h2>Interactive mode <a href="#interactive-mode" name="interactive-mode" class="header-anchor">#</a></h2>
 <p>If you just run <code>wren</code> without any arguments, it starts the interpreter in 
 interactive mode. You can type in a line of code, and it immediately executes 
 it. Here&rsquo;s something to try: </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello, world!&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(&quot;Hello, world!&quot;)</code></pre>
 
 
 <p>Or a little more exciting: </p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Counting up </span><span class="si">%(</span><span class="err">i</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">for (i in 1..10) System.print(&quot;Counting up %(i)&quot;)</code></pre>
 
 
 <p>You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw 
@@ -155,31 +149,29 @@ your computer to the ground and storm off. </p>
 <p>The standalone interpreter can also load scripts from files and run them. Just 
 pass the name of the script to <code>wren</code>. Create a file named &ldquo;my_script.wren&rdquo; in 
 your favorite text editor and paste this into it: </p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">yPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">24</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="k">var</span> <span class="err">y</span> <span class="o">=</span> <span class="n">yPixel</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">-</span> <span class="mi">1</span> 
-  <span class="k">for</span> <span class="p">(</span><span class="n">xPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">80</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="k">var</span> <span class="err">x</span> <span class="o">=</span> <span class="n">xPixel</span> <span class="o">/</span> <span class="mi">30</span> <span class="o">-</span> <span class="mi">2</span> 
-    <span class="k">var</span> <span class="n">x0</span> <span class="o">=</span> <span class="err">x</span> 
-    <span class="k">var</span> <span class="n">y0</span> <span class="o">=</span> <span class="err">y</span> 
-    <span class="k">var</span> <span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span> 
-    <span class="k">while</span> <span class="p">(</span><span class="n">iter</span> <span class="o">&lt;</span> <span class="mi">11</span> <span class="o">&amp;&amp;</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span> 
-      <span class="k">var</span> <span class="n">x1</span> <span class="o">=</span> <span class="p">(</span><span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span><span class="p">)</span> <span class="o">+</span> <span class="err">x</span> 
-      <span class="k">var</span> <span class="n">y1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">+</span> <span class="err">y</span> 
-      <span class="n">x0</span> <span class="o">=</span> <span class="n">x1</span> 
-      <span class="n">y0</span> <span class="o">=</span> <span class="n">y1</span> 
-      <span class="n">iter</span> <span class="o">=</span> <span class="n">iter</span> <span class="o">+</span> <span class="mi">1</span> 
-    <span class="p">}</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot; .-:;+=xX$&amp; &quot;</span><span class="p">[</span><span class="n">iter</span><span class="p">])</span> 
-  <span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">for (yPixel in 0...24) { 
+  var y = yPixel / 12 - 1 
+  for (xPixel in 0...80) { 
+    var x = xPixel / 30 - 2 
+    var x0 = x 
+    var y0 = y 
+    var iter = 0 
+    while (iter &lt; 11 &amp;&amp; x0 * x0 + y0 * y0 &lt;= 4) { 
+      var x1 = (x0 * x0) - (y0 * y0) + x 
+      var y1 = 2 * x0 * y0 + y 
+      x0 = x1 
+      y0 = y1 
+      iter = iter + 1 
+    } 
+    System.write(&quot; .-:;+=xX$&amp; &quot;[iter]) 
+  }
 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+  System.print(&quot;&quot;) 
+}</code></pre>
 
 
 <p>Now run: </p>
-<div class="codehilite"><pre><span></span>$ ./wren my_script.wren
-</pre></div>
+<pre class="codehilite"><code class="language-sh">$ ./wren my_script.wren</code></pre>
 
 
 <p>Neat, right? You&rsquo;re a Wren programmer now! The next step is to <a href="syntax.html">learn the 

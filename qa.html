@@ -117,36 +117,34 @@ prototypes are interesting, but after <a href="http://finch.stuffwithstuff.com/"
 I concluded (like many people on the original Self project that invented 
 prototypes) that classes are more usable. </p>
 <p>Here&rsquo;s an example of that kind of object-oriented programming in Lua: </p>
-<div class="codehilite"><pre><span></span><span class="n">Account</span> <span class="o">=</span> <span class="p">{}</span> 
-<span class="n">Account</span><span class="p">.</span><span class="n">__index</span> <span class="o">=</span> <span class="n">Account</span>
+<pre class="codehilite"><code class="language-lua">Account = {} 
+Account.__index = Account
 
-<span class="k">function</span> <span class="nc">Account</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="n">balance</span><span class="p">)</span> 
-   <span class="kd">local</span> <span class="n">acnt</span> <span class="o">=</span> <span class="p">{}</span>             <span class="c1">-- our new object </span>
-   <span class="nb">setmetatable</span><span class="p">(</span><span class="n">acnt</span><span class="p">,</span><span class="n">Account</span><span class="p">)</span>  <span class="c1">-- make Account handle lookup </span>
-   <span class="n">acnt</span><span class="p">.</span><span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span>      <span class="c1">-- initialize our object </span>
-   <span class="k">return</span> <span class="n">acnt</span> 
-<span class="k">end</span>
+function Account.create(balance) 
+   local acnt = {}             -- our new object 
+   setmetatable(acnt,Account)  -- make Account handle lookup 
+   acnt.balance = balance      -- initialize our object 
+   return acnt 
+end
 
-<span class="k">function</span> <span class="nf">Account</span><span class="p">:</span><span class="n">withdraw</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span> 
-   <span class="n">self</span><span class="p">.</span><span class="n">balance</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">balance</span> <span class="o">-</span> <span class="n">amount</span> 
-<span class="k">end</span>
+function Account:withdraw(amount) 
+   self.balance = self.balance - amount 
+end
 
-<span class="c1">-- create and use an Account </span>
-<span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">.</span><span class="n">create</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> 
-<span class="n">account</span><span class="p">:</span><span class="n">withdraw</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-</pre></div>
+-- create and use an Account 
+account = Account.create(1000) 
+account:withdraw(100)</code></pre>
 
 
 <p>Here&rsquo;s the same example in Wren: </p>
-<div class="codehilite"><pre><span></span><span class="k">class</span> <span class="vg">Account</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">balance</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="p">}</span> 
-  <span class="n">withdraw</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_balance</span> <span class="o">=</span> <span class="vi">_balance</span> <span class="o">-</span> <span class="n">amount</span> <span class="p">}</span> 
-<span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">class Account { 
+  construct new(balance) { _balance = balance } 
+  withdraw(amount) { _balance = _balance - amount } 
+}
 
-<span class="c1">// create and use an Account</span>
-<span class="k">var</span> <span class="n">account</span> <span class="o">=</span> <span class="vg">Account</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> 
-<span class="n">account</span><span class="o">.</span><span class="n">withdraw</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-</pre></div>
+// create and use an Account
+var account = Account.new(1000) 
+account.withdraw(100)</code></pre>
 
 
 <p>Classes have a reputation for complexity because most of the widely used 
@@ -177,8 +175,7 @@ the stack and then an instruction to do something. </p>
 <p>Register-based VMs have big instructions (usually 32 bits) that contain both an 
 opcode and a couple of numbers indicating where in the stack the operands can 
 be found. This is cool because it means, that, for example, this Lua statement: </p>
-<div class="codehilite"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span>
-</pre></div>
+<pre class="codehilite"><code class="language-lua">a = b + c</code></pre>
 
 
 <p>Can be a single bytecode instruction. In a stack-based language, it would be 

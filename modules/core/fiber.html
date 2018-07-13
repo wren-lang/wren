@@ -83,8 +83,7 @@
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3>Fiber.<strong>abort</strong>(message) <a href="#fiber.abort(message)" name="fiber.abort(message)" class="header-anchor">#</a></h3>
 <p>Raises a runtime error with the provided message: </p>
-<div class="codehilite"><pre><span></span><span class="vg">Fiber</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="s">&quot;Something bad happened.&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">Fiber.abort(&quot;Something bad happened.&quot;)</code></pre>
 
 
 <p>If the message is <code>null</code>, does nothing. </p>
@@ -93,10 +92,9 @@
 <h3>Fiber.<strong>new</strong>(function) <a href="#fiber.new(function)" name="fiber.new(function)" class="header-anchor">#</a></h3>
 <p>Creates a new fiber that executes <code>function</code> in a separate coroutine when the 
 fiber is run. Does not immediately start running the fiber. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I won&#39;t get printed&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var fiber = Fiber.new { 
+  System.print(&quot;I won't get printed&quot;) 
+}</code></pre>
 
 
 <p><code>function</code> must be a function (an actual <a href="fn.html">Fn</a> instance, not just an object 
@@ -112,28 +110,26 @@ the fiber is resumed. </p>
 <h3>Fiber.<strong>yield</strong>() <a href="#fiber.yield()" name="fiber.yield()" class="header-anchor">#</a></h3>
 <p>Pauses the current fiber and transfers control to the parent fiber. &ldquo;Parent&rdquo; 
 here means the last fiber that was started using <code>call</code> and not <code>transfer</code>. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Before yield&quot;</span><span class="p">)</span> 
-  <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">()</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;After yield&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">var fiber = Fiber.new { 
+  System.print(&quot;Before yield&quot;) 
+  Fiber.yield() 
+  System.print(&quot;After yield&quot;) 
+}
 
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>                <span class="output">Before yield</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;After call&quot;</span><span class="p">)</span>  <span class="output">After call</span>
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>                <span class="output">After yield</span>
-</pre></div>
+fiber.call()                //&gt; Before yield
+System.print(&quot;After call&quot;)  //&gt; After call
+fiber.call()                //&gt; After yield</code></pre>
 
 
 <p>When resumed, the parent fiber&rsquo;s <code>call()</code> method returns <code>null</code>. </p>
 <p>If a yielded fiber is resumed by calling <code>call()</code> or <code>transfer()</code> with an 
 argument, <code>yield()</code> returns that value. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">())</span> <span class="output">value</span>
-<span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">var fiber = Fiber.new { 
+  System.print(Fiber.yield()) //&gt; value
+}
 
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>        <span class="c1">// Run until the first yield.</span>
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;value&quot;</span><span class="p">)</span> <span class="c1">// Resume the fiber.</span>
-</pre></div>
+fiber.call()        // Run until the first yield.
+fiber.call(&quot;value&quot;) // Resume the fiber.</code></pre>
 
 
 <p>If it was resumed by calling <code>call()</code> or <code>transfer()</code> with no argument, it 
@@ -141,62 +137,56 @@ returns <code>null</code>. </p>
 <p>If there is no parent fiber to return to, this exits the interpreter. This can 
 be useful to pause execution until the host application wants to resume it 
 later. </p>
-<div class="codehilite"><pre><span></span><span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">()</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;this does not get reached&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">Fiber.yield() 
+System.print(&quot;this does not get reached&quot;)</code></pre>
 
 
 <h3>Fiber.<strong>yield</strong>(value) <a href="#fiber.yield(value)" name="fiber.yield(value)" class="header-anchor">#</a></h3>
 <p>Similar to <code>Fiber.yield</code> but provides a value to return to the parent fiber&rsquo;s 
 <code>call</code>. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="s">&quot;value&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">var fiber = Fiber.new { 
+  Fiber.yield(&quot;value&quot;) 
+}
 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">())</span> <span class="output">value</span>
-</pre></div>
+System.print(fiber.call()) //&gt; value</code></pre>
 
 
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>call</strong>() <a href="#call()" name="call()" class="header-anchor">#</a></h3>
 <p>Starts or resumes the fiber if it is in a paused state. Equivalent to: </p>
-<div class="codehilite"><pre><span></span><span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">fiber.call(null)</code></pre>
 
 
 <h3><strong>call</strong>(value) <a href="#call(value)" name="call(value)" class="header-anchor">#</a></h3>
 <p>Start or resumes the fiber if it is in a paused state. If the fiber is being 
 started for the first time, and its function takes a parameter, <code>value</code> is 
 passed to it. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span><span class="o">|</span><span class="n">param</span><span class="o">|</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="output">begin</span>
-<span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">var fiber = Fiber.new {|param| 
+  System.print(param) //&gt; begin
+}
 
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;begin&quot;</span><span class="p">)</span>
-</pre></div>
+fiber.call(&quot;begin&quot;)</code></pre>
 
 
 <p>If the fiber is being resumed, <code>value</code> becomes the returned value of the fiber&rsquo;s 
 call to <code>yield</code>. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">())</span> <span class="output">resume</span>
-<span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">var fiber = Fiber.new { 
+  System.print(Fiber.yield()) //&gt; resume
+}
 
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> 
-<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;resume&quot;</span><span class="p">)</span>
-</pre></div>
+fiber.call() 
+fiber.call(&quot;resume&quot;)</code></pre>
 
 
 <h3><strong>error</strong> <a href="#error" name="error" class="header-anchor">#</a></h3>
 <p>The error message that was passed when aborting the fiber, or <code>null</code> if the 
 fiber has not been aborted. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="mi">123</span><span class="o">.</span><span class="n">badMethod</span> 
-<span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">var fiber = Fiber.new { 
+  123.badMethod 
+}
 
-<span class="n">fiber</span><span class="o">.</span><span class="n">try</span><span class="p">()</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">error</span><span class="p">)</span> <span class="output">Num does not implement method &#39;badMethod&#39;.</span>
-</pre></div>
+fiber.try() 
+System.print(fiber.error) //&gt; Num does not implement method 'badMethod'.</code></pre>
 
 
 <h3><strong>isDone</strong> <a href="#isdone" name="isdone" class="header-anchor">#</a></h3>
@@ -205,13 +195,12 @@ run. This returns <code>false</code> if the fiber is currently running or has yi
 <h3><strong>try</strong>() <a href="#try()" name="try()" class="header-anchor">#</a></h3>
 <p>Tries to run the fiber. If a runtime error occurs 
 in the called fiber, the error is captured and is returned as a string. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="mi">123</span><span class="o">.</span><span class="n">badMethod</span> 
-<span class="p">}</span>
+<pre class="codehilite"><code class="language-wren">var fiber = Fiber.new { 
+  123.badMethod 
+}
 
-<span class="k">var</span> <span class="n">error</span> <span class="o">=</span> <span class="n">fiber</span><span class="o">.</span><span class="n">try</span><span class="p">()</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Caught error: &quot;</span> <span class="o">+</span> <span class="n">error</span><span class="p">)</span>
-</pre></div>
+var error = fiber.try() 
+System.print(&quot;Caught error: &quot; + error)</code></pre>
 
 
 <p>If the called fiber raises an error, it can no longer be used. </p>

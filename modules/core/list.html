@@ -96,30 +96,26 @@
 <p>The number of elements in the list. </p>
 <h3><strong>insert</strong>(index, item) <a href="#insert(index,-item)" name="insert(index,-item)" class="header-anchor">#</a></h3>
 <p>Inserts the <code>item</code> at <code>index</code> in the list. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">]</span> 
-<span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;e&quot;</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="output">[a, e, b, c, d]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;] 
+list.insert(1, &quot;e&quot;) 
+System.print(list) //&gt; [a, e, b, c, d]</code></pre>
 
 
 <p>The <code>index</code> may be one past the last index in the list to append an element. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span> 
-<span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="output">[a, b, c, d]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
+list.insert(3, &quot;d&quot;) 
+System.print(list) //&gt; [a, b, c, d]</code></pre>
 
 
 <p>If <code>index</code> is negative, it counts backwards from the end of the list. It bases this on the length of the list <em>after</em> inserted the element, so that <code>-1</code> will append the element, not insert it before the last element. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">]</span> 
-<span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">)</span> 
-<span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="output">[a, b, c, d]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;] 
+list.insert(-1, &quot;d&quot;) 
+list.insert(-2, &quot;c&quot;) 
+System.print(list) //&gt; [a, b, c, d]</code></pre>
 
 
 <p>Returns the inserted item. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">))</span> <span class="output">b</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print([&quot;a&quot;, &quot;c&quot;].insert(1, &quot;b&quot;)) //&gt; b</code></pre>
 
 
 <p>It is a runtime error if the index is not an integer or is out of bounds. </p>
@@ -130,34 +126,30 @@ list. </p>
 <p>Removes the element at <code>index</code>. If <code>index</code> is negative, it counts backwards 
 from the end of the list where <code>-1</code> is the last element. All trailing elements 
 are shifted up to fill in where the removed element was. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">]</span> 
-<span class="n">list</span><span class="o">.</span><span class="n">removeAt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="output">[a, c, d]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;] 
+list.removeAt(1) 
+System.print(list) //&gt; [a, c, d]</code></pre>
 
 
 <p>Returns the removed item. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">removeAt</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="output">b</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].removeAt(1)) //&gt; b</code></pre>
 
 
 <p>It is a runtime error if the index is not an integer or is out of bounds. </p>
 <h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
 <p>Gets the element at <code>index</code>. If <code>index</code> is negative, it counts backwards from 
 the end of the list where <code>-1</code> is the last element. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="output">b</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
+System.print(list[1]) //&gt; b</code></pre>
 
 
 <p>It is a runtime error if the index is not an integer or is out of bounds. </p>
 <h3><strong>[</strong>index<strong>]=</strong>(item) operator <a href="#[index]=(item)-operator" name="[index]=(item)-operator" class="header-anchor">#</a></h3>
 <p>Replaces the element at <code>index</code> with <code>item</code>. If <code>index</code> is negative, it counts 
 backwards from the end of the list where <code>-1</code> is the last element. </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span> 
-<span class="n">list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;new&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="output">[a, new, c]</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var list = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] 
+list[1] = &quot;new&quot; 
+System.print(list) //&gt; [a, new, c]</code></pre>
 
 
 <p>It is a runtime error if the index is not an integer or is out of bounds. </p>

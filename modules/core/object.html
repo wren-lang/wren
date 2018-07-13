@@ -98,12 +98,11 @@ types</a> by value, and all other objects are compared by
 identity&mdash;two objects are equal only if they are the exact same object. </p>
 <h3><strong>is</strong>(class) operator <a href="#is(class)-operator" name="is(class)-operator" class="header-anchor">#</a></h3>
 <p>Returns <code>true</code> if this object&rsquo;s class or one of its superclasses is <code>class</code>. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mi">123</span> <span class="k">is</span> <span class="vg">Num</span><span class="p">)</span>     <span class="output">true</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;s&quot;</span> <span class="k">is</span> <span class="vg">Num</span><span class="p">)</span>     <span class="output">false</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="kc">null</span> <span class="k">is</span> <span class="vg">String</span><span class="p">)</span> <span class="output">false</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([]</span> <span class="k">is</span> <span class="vg">List</span><span class="p">)</span>     <span class="output">true</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([]</span> <span class="k">is</span> <span class="vg">Sequence</span><span class="p">)</span> <span class="output">true</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(123 is Num)     //&gt; true
+System.print(&quot;s&quot; is Num)     //&gt; false
+System.print(null is String) //&gt; false
+System.print([] is List)     //&gt; true
+System.print([] is Sequence) //&gt; true</code></pre>
 
 
 <p>It is a runtime error if <code>class</code> is not a <a href="class.html">Class</a>. </p>

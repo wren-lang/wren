@@ -118,33 +118,29 @@ values. </p>
 <h2>If statements <a href="#if-statements" name="if-statements" class="header-anchor">#</a></h2>
 <p>The simplest branching statement, <code>if</code> lets you conditionally skip a chunk of 
 code. It looks like this: </p>
-<div class="codehilite"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;go!&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">if (ready) System.print(&quot;go!&quot;)</code></pre>
 
 
 <p>That evaluates the parenthesized expression after <code>if</code>. If it&rsquo;s true, then the 
 statement after the condition is evaluated. Otherwise it is skipped. Instead of 
 a statement, you can have a <a href="syntax.html#blocks">block</a>: </p>
-<div class="codehilite"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;getSet&quot;</span><span class="p">)</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;go!&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">if (ready) { 
+  System.print(&quot;getSet&quot;) 
+  System.print(&quot;go!&quot;) 
+}</code></pre>
 
 
 <p>You may also provide an <code>else</code> branch. It will be executed if the condition is 
 false: </p>
-<div class="codehilite"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;go!&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;not ready!&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">if (ready) System.print(&quot;go!&quot;) else System.print(&quot;not ready!&quot;)</code></pre>
 
 
 <p>And, of course, it can take a block too: </p>
-<div class="codehilite"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">ready</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;go!&quot;</span><span class="p">)</span> 
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;not ready!&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">if (ready) { 
+  System.print(&quot;go!&quot;) 
+} else { 
+  System.print(&quot;not ready!&quot;) 
+}</code></pre>
 
 
 <h2>Logical operators <a href="#logical-operators" name="logical-operators" class="header-anchor">#</a></h2>
@@ -154,25 +150,22 @@ only conditionally evaluate right operand&mdash;they short-circuit. </p>
 <p>A <code>&amp;&amp;</code> (&ldquo;logical and&rdquo;) expression evaluates the left-hand argument. If it&rsquo;s 
 false, it returns that value. Otherwise it evaluates and returns the right-hand 
 argument. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="kc">false</span> <span class="o">&amp;&amp;</span> <span class="mi">1</span><span class="p">)</span>  <span class="output">false</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="mi">2</span><span class="p">)</span>      <span class="output">2</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(false &amp;&amp; 1)  //&gt; false
+System.print(1 &amp;&amp; 2)      //&gt; 2</code></pre>
 
 
 <p>A <code>||</code> (&ldquo;logical or&rdquo;) expression is reversed. If the left-hand argument is 
 <em>true</em>, it&rsquo;s returned, otherwise the right-hand argument is evaluated and 
 returned: </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="kc">false</span> <span class="o">||</span> <span class="mi">1</span><span class="p">)</span>  <span class="output">1</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mi">1</span> <span class="o">||</span> <span class="mi">2</span><span class="p">)</span>      <span class="output">1</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(false || 1)  //&gt; 1
+System.print(1 || 2)      //&gt; 1</code></pre>
 
 
 <h2>The conditional operator <code>?:</code> <a href="#the-conditional-operator-" name="the-conditional-operator-" class="header-anchor">#</a></h2>
 <p>Also known as the &ldquo;ternary&rdquo; operator since it takes three arguments, Wren has 
 the little &ldquo;if statement in the form of an expression&rdquo; you know and love from C 
 and its brethren. </p>
-<div class="codehilite"><pre><span></span><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mi">1</span> <span class="o">!=</span> <span class="mi">2</span> <span class="o">?</span> <span class="s">&quot;math is sane&quot;</span> <span class="o">:</span> <span class="s">&quot;math is not sane!&quot;</span><span class="p">)</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">System.print(1 != 2 ? &quot;math is sane&quot; : &quot;math is not sane!&quot;)</code></pre>
 
 
 <p>It takes a condition expression, followed by <code>?</code>, followed by a then 
@@ -185,16 +178,15 @@ repeatedly. To do that, you use looping statements. There are two in Wren, and
 they should be familiar if you&rsquo;ve used other imperative languages. </p>
 <p>The simplest, a <code>while</code> statement executes a chunk of code as long as a 
 condition continues to hold. For example: </p>
-<div class="codehilite"><pre><span></span><span class="c1">// Hailstone sequence.</span>
-<span class="k">var</span> <span class="err">n</span> <span class="o">=</span> <span class="mi">27</span> 
-<span class="k">while</span> <span class="p">(</span><span class="err">n</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="k">if</span> <span class="p">(</span><span class="err">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="err">n</span> <span class="o">=</span> <span class="err">n</span> <span class="o">/</span> <span class="mi">2</span> 
-  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span> 
-    <span class="err">n</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="err">n</span> <span class="o">+</span> <span class="mi">1</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">// Hailstone sequence.
+var n = 27 
+while (n != 1) { 
+  if (n % 2 == 0) { 
+    n = n / 2 
+  } else { 
+    n = 3 * n + 1 
+  } 
+}</code></pre>
 
 
 <p>This evaluates the expression <code>n != 1</code>. If it is true, then it executes the 
@@ -204,9 +196,8 @@ something true. </p>
 <p>The condition for a while loop can be any expression, and must be surrounded by 
 parentheses. The body of the loop is usually a curly block but can also be a 
 single statement: </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="err">n</span> <span class="o">=</span> <span class="mi">27</span> 
-<span class="k">while</span> <span class="p">(</span><span class="err">n</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="err">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="err">n</span> <span class="o">=</span> <span class="err">n</span> <span class="o">/</span> <span class="mi">2</span> <span class="k">else</span> <span class="err">n</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="err">n</span> <span class="o">+</span> <span class="mi">1</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var n = 27 
+while (n != 1) if (n % 2 == 0) n = n / 2 else n = 3 * n + 1</code></pre>
 
 
 <h2>For statements <a href="#for-statements" name="for-statements" class="header-anchor">#</a></h2>
@@ -214,10 +205,9 @@ single statement: </p>
 some complex condition. But in most cases, you&rsquo;re looping through 
 a <a href="lists.html">list</a>, a series of numbers, or some other &ldquo;sequence&rdquo; object. 
 That&rsquo;s what <code>for</code> is, uh, for. It looks like this: </p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">beatle</span> <span class="k">in</span> <span class="p">[</span><span class="s">&quot;george&quot;</span><span class="p">,</span> <span class="s">&quot;john&quot;</span><span class="p">,</span> <span class="s">&quot;paul&quot;</span><span class="p">,</span> <span class="s">&quot;ringo&quot;</span><span class="p">])</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">beatle</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">for (beatle in [&quot;george&quot;, &quot;john&quot;, &quot;paul&quot;, &quot;ringo&quot;]) { 
+  System.print(beatle) 
+}</code></pre>
 
 
 <p>A <code>for</code> loop has three components: </p>
@@ -241,29 +231,26 @@ That&rsquo;s what <code>for</code> is, uh, for. It looks like this: </p>
 and stop. To do that, you can use a <code>break</code> statement. It&rsquo;s just the <code>break</code> 
 keyword all by itself. That immediately exits out of the nearest enclosing 
 <code>while</code> or <code>for</code> loop. </p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span>           <span class="output">1</span>
-  <span class="k">if</span> <span class="p">(</span><span class="err">i</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="k">break</span>         <span class="output">2</span>
-<span class="p">}</span>                           <span class="output">3</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">for (i in [1, 2, 3, 4]) { 
+  System.print(i)           //&gt; 1
+  if (i == 3) break         //&gt; 2
+}                           //&gt; 3</code></pre>
 
 
 <h2>Numeric ranges <a href="#numeric-ranges" name="numeric-ranges" class="header-anchor">#</a></h2>
 <p>Lists are one common use for <code>for</code> loops, but sometimes you want to walk over a 
 sequence of numbers, or loop a number of times. For that, you can create a 
 <a href="values.html#ranges">range</a>, like so: </p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">..</span><span class="mi">100</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">for (i in 1..100) { 
+  System.print(i) 
+}</code></pre>
 
 
 <p>This loops over the numbers from 1 to 100, including 100 itself. If you want to 
 leave off the last value, use three dots instead of two: </p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">...</span><span class="mi">100</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">for (i in 1...100) { 
+  System.print(i) 
+}</code></pre>
 
 
 <p>This looks like some special &ldquo;range&rdquo; syntax in the <code>for</code> loop, but it&rsquo;s actually 
@@ -278,20 +265,18 @@ are defined in terms of an &ldquo;iterator protocol&rdquo;. The loop itself does
 anything about lists or ranges, it just knows how to call two particular 
 methods on the object that resulted from evaluating the sequence expression. </p>
 <p>When you write a loop like this: </p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">..</span><span class="mi">100</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">for (i in 1..100) { 
+  System.print(i) 
+}</code></pre>
 
 
 <p>Wren sees it something like this: </p>
-<div class="codehilite"><pre><span></span><span class="k">var</span> <span class="n">iter_</span> <span class="o">=</span> <span class="kc">null</span> 
-<span class="k">var</span> <span class="n">seq_</span> <span class="o">=</span> <span class="mi">1</span><span class="o">..</span><span class="mi">100</span> 
-<span class="k">while</span> <span class="p">(</span><span class="n">iter_</span> <span class="o">=</span> <span class="n">seq_</span><span class="o">.</span><span class="n">iterate</span><span class="p">(</span><span class="n">iter_</span><span class="p">))</span> <span class="p">{</span> 
-  <span class="k">var</span> <span class="err">i</span> <span class="o">=</span> <span class="n">seq_</span><span class="o">.</span><span class="n">iteratorValue</span><span class="p">(</span><span class="n">iter_</span><span class="p">)</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">i</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<pre class="codehilite"><code class="language-wren">var iter_ = null 
+var seq_ = 1..100 
+while (iter_ = seq_.iterate(iter_)) { 
+  var i = seq_.iteratorValue(iter_) 
+  System.print(i) 
+}</code></pre>
 
 
 <p>First, Wren evaluates the sequence expression and stores it in a hidden 
