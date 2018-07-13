@@ -97,7 +97,7 @@ The size of the contents of the file in bytes.
 
 ### **close**()
 
-Closes the file. After calling this, you can read or write from it.
+Closes the file. After calling this, you can't read or write from it.
 
 ### **readBytes**(count)
 
