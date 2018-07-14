@@ -66,7 +66,7 @@ for Wren. To install that, run:
 
     :::sh
     $ cd util/pygments-lexer
-    $ sudo python setup.py develop
+    $ sudo python3 setup.py develop
     $ cd ../.. # Back to the root Wren directory.
 
 Now you can build the docs:
@@ -79,7 +79,7 @@ server from there. Python includes one:
 
     :::sh
     $ cd build/docs
-    $ python -m SimpleHTTPServer
+    $ python3 -m http.server
 
 Running `make docs` is a drag every time you change a line of Markdown or SASS,
 so there is also a file watching version that will automatically regenerate the
