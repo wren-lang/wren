@@ -24,7 +24,9 @@ addons:
     packages:
     - gcc-multilib
     - g++-multilib
+    # These are needed for building and deploying the docs.
     - python3-markdown
+    - python3-setuptools
     - ruby-sass
 
 # Can't do container-based builds for now because installing the custom
