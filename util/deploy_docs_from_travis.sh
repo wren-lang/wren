@@ -3,7 +3,7 @@ set -e
 
 # Install the Wren Pygments lexer.
 cd util/pygments-lexer
-python setup.py develop
+python sudo setup.py develop
 cd ../..
 
 # Build the docs.

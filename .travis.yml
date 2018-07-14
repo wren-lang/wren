@@ -27,5 +27,11 @@ addons:
     - python3-markdown
     - ruby-sass
 
-sudo: false # Enable container-based builds.
+# Can't do container-based builds for now because installing the custom
+# Pygments lexer to generate the docs requires sudo. :( If that changes,
+# uncomment the next line and delete the "sudo" and "dist" lines.
+# sudo: false # Enable container-based builds.
+sudo: required
+dist: trusty
+
 script: make WREN_CFLAGS=${WREN_OPTIONS} ${CI_ARCHS}
