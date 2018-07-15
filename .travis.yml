@@ -28,6 +28,7 @@ addons:
     - python3-markdown
     - python3-pygments
     - python3-setuptools
+    - python3-smartypants
     - ruby-sass
 
 # Can't do container-based builds for now because installing the custom
