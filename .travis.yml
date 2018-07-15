@@ -28,8 +28,8 @@ addons:
     - python3-markdown
     - python3-pygments
     - python3-setuptools
+    - python-smartypants
     - ruby-sass
-    - smartypants
 
 # Can't do container-based builds for now because installing the custom
 # Pygments lexer to generate the docs requires sudo. :( If that changes,
