@@ -75,9 +75,9 @@ checks on, etc. But it also wraps a blob of raw memory that is opaque to Wren
 but accessible from C. </p>
 <h2>Defining a Foreign Class <a href="#defining-a-foreign-class" name="defining-a-foreign-class" class="header-anchor">#</a></h2>
 <p>You define one like so: </p>
-<div class="codehilite"><pre><span></span>foreign class Point { 
-  // ...
-}
+<div class="codehilite"><pre><span class="k">foreign</span> <span class="k">class</span> <span class="vg">Point</span> <span class="p">{</span> 
+  <span class="c1">// ...</span>
+<span class="p">}</span>
 </pre></div>
 
 
@@ -90,7 +90,7 @@ an instance of the foreign class. This function is found through a binding
 process similar to <a href="calling-c-from-wren.html#binding-foreign-methods">how foreign methods are bound</a>. When you <a href="configuring-the-vm.html">configure 
 the VM</a>, you set the <code>bindForeignClassFn</code> field in WrenConfiguration to point 
 to a C callback you define. Its signature must be: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenForeignClassMethods</span> <span class="nf">bindForeignClass</span><span class="p">(</span> 
+<div class="codehilite"><pre><span class="n">WrenForeignClassMethods</span> <span class="nf">bindForeignClass</span><span class="p">(</span> 
     <span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">className</span><span class="p">);</span>
 </pre></div>
 
@@ -99,7 +99,7 @@ to a C callback you define. Its signature must be: </p>
 Wren passes in the name of the module containing the foreign class, and the name 
 of the class being declared. The host&rsquo;s responsibility is to return one of these 
 structs: </p>
-<div class="codehilite"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> 
+<div class="codehilite"><pre><span class="k">typedef</span> <span class="k">struct</span> 
 <span class="p">{</span> 
   <span class="n">WrenForeignMethodFn</span> <span class="n">allocate</span><span class="p">;</span> 
   <span class="n">WrenFinalizerFn</span> <span class="n">finalize</span><span class="p">;</span> 
@@ -111,7 +111,7 @@ structs: </p>
 whenever an instance of the foreign class is created. (We&rsquo;ll get to the optional 
 <code>finalize</code> callback later.) The allocation callback has the same signature as a 
 foreign method: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">allocate</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">allocate</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">);</span>
 </pre></div>
 
 
@@ -120,7 +120,7 @@ foreign method: </p>
 <a href="../classes.html#constructors">constructors</a>, Wren invokes the <code>allocate</code> callback you gave it when binding 
 the foreign class. Your primary responsibility in that callback is to tell Wren 
 how many bytes of raw memory you need. You do that by calling: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span><span class="o">*</span> <span class="nf">wrenSetSlotNewForeign</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> 
+<div class="codehilite"><pre><span class="kt">void</span><span class="o">*</span> <span class="nf">wrenSetSlotNewForeign</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> 
     <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> <span class="kt">int</span> <span class="n">classSlot</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">);</span>
 </pre></div>
 
@@ -148,7 +148,7 @@ can also be used in other foreign methods: </p>
 </ul>
 <p>So, for example, if you wanted to create a foreign instance that contains eight 
 bytes of C data, you&rsquo;d call: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span><span class="o">*</span> <span class="n">data</span> <span class="o">=</span> <span class="n">wrenSetSlotNewForeign</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="kt">void</span><span class="o">*</span> <span class="n">data</span> <span class="o">=</span> <span class="n">wrenSetSlotNewForeign</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
 </pre></div>
 
 
@@ -168,7 +168,7 @@ class is through other foreign methods. Those are usually defined on the same
 foreign class, but can be defined on other classes as well. Wren doesn&rsquo;t care. </p>
 <p>Once you have a foreign instance in a slot, you can access the raw bytes it 
 stores by calling: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span><span class="o">*</span> <span class="nf">wrenGetSlotForeign</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="kt">void</span><span class="o">*</span> <span class="nf">wrenGetSlotForeign</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
 </pre></div>
 
 
@@ -203,7 +203,7 @@ have unfettered access to the VM. It&rsquo;s not like a normal foreign method wh
 you can monkey around with slots and other stuff. Doing that while the GC is 
 running could leave Wren in a weird state. </p>
 <p>Instead, the finalize callback&rsquo;s signature is only: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">finalize</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">data</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">finalize</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">data</span><span class="p">);</span>
 </pre></div>
 
 
@@ -215,12 +215,12 @@ referenced by that memory. </p>
 with a finalizer and a couple of methods. We&rsquo;ll do a File class that wraps the 
 C standard file API. </p>
 <p>In Wren, the class we want looks like this: </p>
-<div class="codehilite"><pre><span></span>foreign class File { 
-  construct create(path) {}
+<div class="codehilite"><pre><span class="k">foreign</span> <span class="k">class</span> <span class="vg">File</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">create</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="p">{}</span>
 
-  foreign write(text) 
-  foreign close() 
-}
+  <span class="k">foreign</span> <span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> 
+  <span class="k">foreign</span> <span class="n">close</span><span class="p">()</span> 
+<span class="p">}</span>
 </pre></div>
 
 
@@ -229,7 +229,7 @@ it and then explicitly close it if you want. We also need to make sure the file
 gets closed if the user forgets to and the GC cleans up the object. </p>
 <h3>Setting up the VM <a href="#setting-up-the-vm" name="setting-up-the-vm" class="header-anchor">#</a></h3>
 <p>Over in the host, first we&rsquo;ll set up the VM: </p>
-<div class="codehilite"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;wren.h&quot;</span><span class="cp"></span>
+<div class="codehilite"><pre><span class="cp">#include &quot;wren.h&quot;</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> 
 <span class="p">{</span> 
@@ -250,7 +250,7 @@ gets closed if the user forgets to and the GC cleans up the object. </p>
 <h3>Binding the foreign class <a href="#binding-the-foreign-class" name="binding-the-foreign-class" class="header-anchor">#</a></h3>
 <p>We give the VM two callbacks. The first is for wiring up the foreign class 
 itself: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenForeignClassMethods</span> <span class="nf">bindForeignClass</span><span class="p">(</span> 
+<div class="codehilite"><pre><span class="n">WrenForeignClassMethods</span> <span class="nf">bindForeignClass</span><span class="p">(</span> 
     <span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">className</span><span class="p">)</span> 
 <span class="p">{</span> 
   <span class="n">WrenForeignClassMethods</span> <span class="n">methods</span><span class="p">;</span>
@@ -274,8 +274,8 @@ itself: </p>
 
 <p>When our binding callback is invoked for the File class, we return the allocate 
 and finalize functions the VM should call. Allocation looks like: </p>
-<div class="codehilite"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt; </span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&quot;wren.h&quot;</span><span class="cp"></span>
+<div class="codehilite"><pre><span class="cp">#include &lt;stdio.h&gt; </span>
+<span class="cp">#include &quot;wren.h&quot;</span>
 
 <span class="kt">void</span> <span class="nf">fileAllocate</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">)</span> 
 <span class="p">{</span> 
@@ -298,7 +298,7 @@ store that back into the foreign instance using <code>*file</code>. Now we have 
 object that wraps an open file handle. </p>
 <p>The finalizer simply casts the foreign instance&rsquo;s data back to the proper type 
 and closes the file: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">fileFinalize</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">data</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">fileFinalize</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">data</span><span class="p">)</span> 
 <span class="p">{</span> 
   <span class="n">closeFile</span><span class="p">((</span><span class="kt">FILE</span><span class="o">**</span><span class="p">)</span> <span class="n">data</span><span class="p">);</span> 
 <span class="p">}</span>
@@ -306,7 +306,7 @@ and closes the file: </p>
 
 
 <p>It uses this little utility function: </p>
-<div class="codehilite"><pre><span></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">closeFile</span><span class="p">(</span><span class="kt">FILE</span><span class="o">**</span> <span class="n">file</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">static</span> <span class="kt">void</span> <span class="nf">closeFile</span><span class="p">(</span><span class="kt">FILE</span><span class="o">**</span> <span class="n">file</span><span class="p">)</span> 
 <span class="p">{</span> 
   <span class="c1">// Already closed.</span>
   <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">file</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
@@ -323,7 +323,7 @@ handle so that we don&rsquo;t try to use the file after it&rsquo;s been closed. 
 <p>That&rsquo;s the foreign <em>class</em> part. Now we have a couple of foreign <em>methods</em> to 
 handle. The host tells the VM how to find them by giving Wren a pointer to this 
 function: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenForeignMethodFn</span> <span class="nf">bindForeignMethod</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
+<div class="codehilite"><pre><span class="n">WrenForeignMethodFn</span> <span class="nf">bindForeignMethod</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
     <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">className</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">isStatic</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">signature</span><span class="p">)</span> 
 <span class="p">{</span> 
   <span class="k">if</span> <span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">className</span><span class="p">,</span> <span class="s">&quot;File&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> 
@@ -348,7 +348,7 @@ function: </p>
 <p>When Wren calls this, we look at the class and method name to figure out which 
 method it&rsquo;s binding, and then return a pointer to the appropriate function. The 
 foreign method for writing to the file is: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">fileWrite</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">fileWrite</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">)</span> 
 <span class="p">{</span> 
   <span class="kt">FILE</span><span class="o">**</span> <span class="n">file</span> <span class="o">=</span> <span class="p">(</span><span class="kt">FILE</span><span class="o">**</span><span class="p">)</span><span class="n">wrenGetSlotForeign</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 
@@ -374,7 +374,7 @@ pointer. </p>
 <p>We do a little sanity checking to make sure the user isn&rsquo;t writing to a file 
 they already closed. If not, we call <code>fwrite()</code> to write to the file. </p>
 <p>The other method is <code>close()</code> to let them explicitly close the file: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">fileClose</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">fileClose</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">)</span> 
 <span class="p">{</span> 
   <span class="kt">FILE</span><span class="o">**</span> <span class="n">file</span> <span class="o">=</span> <span class="p">(</span><span class="kt">FILE</span><span class="o">**</span><span class="p">)</span><span class="n">wrenGetSlotForeign</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> 
   <span class="n">closeFile</span><span class="p">(</span><span class="n">file</span><span class="p">);</span> 
@@ -385,9 +385,9 @@ they already closed. If not, we call <code>fwrite()</code> to write to the file.
 <p>It uses the same helper we defined above. And that&rsquo;s it, a complete foreign 
 class with a finalizer and a couple of foreign methods. In Wren, you can use it 
 like so: </p>
-<div class="codehilite"><pre><span></span>var file = File.create(&quot;some/path.txt&quot;) 
-file.write(&quot;some text&quot;) 
-file.close()
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">file</span> <span class="o">=</span> <span class="vg">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;some/path.txt&quot;</span><span class="p">)</span> 
+<span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;some text&quot;</span><span class="p">)</span> 
+<span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 
 

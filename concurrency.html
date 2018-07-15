@@ -114,9 +114,9 @@ fiber for every line of code you type in. </p>
 <p>All Wren code runs within the context of a fiber. When you first start a Wren 
 script, a main fiber is created for you automatically. You can spawn new fibers 
 using the Fiber class&rsquo;s constructor: </p>
-<div class="codehilite"><pre><span></span>var fiber = Fiber.new { 
-  System.print(&quot;This runs in a separate fiber.&quot;) 
-}
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;This runs in a separate fiber.&quot;</span><span class="p">)</span> 
+<span class="p">}</span>
 </pre></div>
 
 
@@ -126,20 +126,20 @@ fiber does not immediately run it. It just wraps the function and sits there,
 waiting to be activated. </p>
 <h2>Invoking fibers <a href="#invoking-fibers" name="invoking-fibers" class="header-anchor">#</a></h2>
 <p>Once you&rsquo;ve created a fiber, you run it by calling its <code>call()</code> method: </p>
-<div class="codehilite"><pre><span></span>fiber.call()
+<div class="codehilite"><pre><span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span>
 </pre></div>
 
 
 <p>This suspends the current fiber and executes the called one until it reaches the 
 end of its body or until it passes control to yet another fiber. If it reaches 
 the end of its body, it is considered <em>done</em>: </p>
-<div class="codehilite"><pre><span></span>var fiber = Fiber.new { 
-  System.print(&quot;It&#39;s alive!&quot;) 
-}
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;It&#39;s alive!&quot;</span><span class="p">)</span> 
+<span class="p">}</span>
 
-System.print(fiber.isDone) //&gt; false
-fiber.call() //&gt; It&#39;s alive!
-System.print(fiber.isDone) //&gt; true
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">isDone</span><span class="p">)</span> <span class="output">false</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> <span class="output">It&#39;s alive!</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">isDone</span><span class="p">)</span> <span class="output">true</span>
 </pre></div>
 
 
@@ -155,17 +155,17 @@ as one function calling another. </p>
 <em>back</em> to the fiber that ran it, but <em>remembers where it is</em>. The next time the 
 fiber is called, it picks up right where it left off and keeps going. </p>
 <p>You make a fiber yield by calling the static <code>yield()</code> method on Fiber: </p>
-<div class="codehilite"><pre><span></span>var fiber = Fiber.new { 
-  System.print(&quot;Before yield&quot;) 
-  Fiber.yield() 
-  System.print(&quot;Resumed&quot;) 
-}
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Before yield&quot;</span><span class="p">)</span> 
+  <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">()</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Resumed&quot;</span><span class="p">)</span> 
+<span class="p">}</span>
 
-System.print(&quot;Before call&quot;) //&gt; Before call
-fiber.call() //&gt; Before yield
-System.print(&quot;Calling again&quot;) //&gt; Calling again
-fiber.call() //&gt; Resumed
-System.print(&quot;All done&quot;) //&gt; All done
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Before call&quot;</span><span class="p">)</span> <span class="output">Before call</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> <span class="output">Before yield</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Calling again&quot;</span><span class="p">)</span> <span class="output">Calling again</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">()</span> <span class="output">Resumed</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;All done&quot;</span><span class="p">)</span> <span class="output">All done</span>
 </pre></div>
 
 
@@ -177,35 +177,35 @@ the mercy of a thread scheduler playing Russian roulette with your code. </p>
 <em>data</em>. When you call a fiber, you can optionally pass a value to it. </p>
 <p>If you create a fiber using a function that takes a parameter, you can pass a 
 value to it through <code>call()</code>: </p>
-<div class="codehilite"><pre><span></span>var fiber = Fiber.new {|param| 
-  System.print(param) 
-}
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span><span class="o">|</span><span class="n">param</span><span class="o">|</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> 
+<span class="p">}</span>
 
-fiber.call(&quot;Here you go&quot;) //&gt; Here you go
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;Here you go&quot;</span><span class="p">)</span> <span class="output">Here you go</span>
 </pre></div>
 
 
 <p>If the fiber has yielded and is waiting to resume, the value you pass to call 
 becomes the return value of the <code>yield()</code> call when it resumes: </p>
-<div class="codehilite"><pre><span></span>var fiber = Fiber.new {|param| 
-  System.print(param) 
-  var result = Fiber.yield() 
-  System.print(result) 
-}
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span><span class="o">|</span><span class="n">param</span><span class="o">|</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> 
+  <span class="k">var</span> <span class="n">result</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">()</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> 
+<span class="p">}</span>
 
-fiber.call(&quot;First&quot;) //&gt; First
-fiber.call(&quot;Second&quot;) //&gt; Second
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;First&quot;</span><span class="p">)</span> <span class="output">First</span>
+<span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;Second&quot;</span><span class="p">)</span> <span class="output">Second</span>
 </pre></div>
 
 
 <p>Fibers can also pass values <em>back</em> when they yield. If you pass an argument to 
 <code>yield()</code>, that will become the return value of the <code>call()</code> that was used to 
 invoke the fiber: </p>
-<div class="codehilite"><pre><span></span>var fiber = Fiber.new { 
-  Fiber.yield(&quot;Reply&quot;) 
-}
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+  <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="s">&quot;Reply&quot;</span><span class="p">)</span> 
+<span class="p">}</span>
 
-System.print(fiber.call()) //&gt; Reply
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">call</span><span class="p">())</span> <span class="output">Reply</span>
 </pre></div>
 
 
@@ -221,11 +221,11 @@ you can iterate over. </p>
 you use to create a fiber can call a method that calls another method that calls 
 some third method which finally calls yield. When that happens, <em>all</em> of those 
 method calls &mdash; the entire callstack &mdash; gets suspended. For example: </p>
-<div class="codehilite"><pre><span></span>var fiber = Fiber.new { 
-  (1..10).each {|i| 
-    Fiber.yield(i) 
-  } 
-}
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fiber</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+  <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span><span class="o">|</span><span class="err">i</span><span class="o">|</span> 
+    <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="err">i</span><span class="p">)</span> 
+  <span class="p">}</span> 
+<span class="p">}</span>
 </pre></div>
 
 

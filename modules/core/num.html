@@ -93,7 +93,7 @@
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>abs</strong> <a href="#abs" name="abs" class="header-anchor">#</a></h3>
 <p>The absolute value of the number. </p>
-<div class="codehilite"><pre><span></span>System.print( (-123).abs ) //&gt; 123
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span> <span class="p">(</span><span class="o">-</span><span class="mi">123</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span> <span class="p">)</span> <span class="output">123</span>
 </pre></div>
 
 
@@ -108,8 +108,8 @@
 numbers to determine the quadrant of the result. </p>
 <h3><strong>ceil</strong> <a href="#ceil" name="ceil" class="header-anchor">#</a></h3>
 <p>Rounds the number up to the nearest integer. </p>
-<div class="codehilite"><pre><span></span>System.print(1.5.ceil)    //&gt; 2
-System.print((-3.2).ceil) //&gt; -3
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mf">1.5</span><span class="o">.</span><span class="n">ceil</span><span class="p">)</span>    <span class="output">2</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="o">-</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">ceil</span><span class="p">)</span> <span class="output">-3</span>
 </pre></div>
 
 
@@ -117,22 +117,22 @@ System.print((-3.2).ceil) //&gt; -3
 <p>The cosine of the number. </p>
 <h3><strong>floor</strong> <a href="#floor" name="floor" class="header-anchor">#</a></h3>
 <p>Rounds the number down to the nearest integer. </p>
-<div class="codehilite"><pre><span></span>System.print(1.5.floor)    //&gt; 1
-System.print((-3.2).floor) //&gt; -4
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mf">1.5</span><span class="o">.</span><span class="n">floor</span><span class="p">)</span>    <span class="output">1</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="o">-</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">)</span> <span class="output">-4</span>
 </pre></div>
 
 
 <h3><strong>isInfinity</strong> <a href="#isinfinity" name="isinfinity" class="header-anchor">#</a></h3>
 <p>Whether the number is positive or negative infinity or not. </p>
-<div class="codehilite"><pre><span></span>System.print(99999.isInfinity)  //&gt; false
-System.print((1/0).isInfinity)  //&gt; true
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mi">99999</span><span class="o">.</span><span class="n">isInfinity</span><span class="p">)</span>  <span class="output">false</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">isInfinity</span><span class="p">)</span>  <span class="output">true</span>
 </pre></div>
 
 
 <h3><strong>isInteger</strong> <a href="#isinteger" name="isinteger" class="header-anchor">#</a></h3>
 <p>Whether the number is an integer or has some fractional component. </p>
-<div class="codehilite"><pre><span></span>System.print(2.isInteger)   //&gt; true
-System.print(2.3.isInteger) //&gt; false
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mi">2</span><span class="o">.</span><span class="n">isInteger</span><span class="p">)</span>   <span class="output">true</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mf">2.3</span><span class="o">.</span><span class="n">isInteger</span><span class="p">)</span> <span class="output">false</span>
 </pre></div>
 
 
@@ -146,9 +146,9 @@ System.print(2.3.isInteger) //&gt; false
 <p>Raises this number (the base) to <code>power</code>. Returns <code>nan</code> if the base is negative. </p>
 <h3><strong>round</strong> <a href="#round" name="round" class="header-anchor">#</a></h3>
 <p>Rounds the number to the nearest integer. </p>
-<div class="codehilite"><pre><span></span>System.print(1.5.round)    //&gt; 2
-System.print((-3.2).round) //&gt; -3
-System.print((-3.7).round) //&gt; -4
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mf">1.5</span><span class="o">.</span><span class="n">round</span><span class="p">)</span>    <span class="output">2</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="o">-</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">)</span> <span class="output">-3</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="o">-</span><span class="mf">3.7</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">)</span> <span class="output">-4</span>
 </pre></div>
 
 
@@ -160,8 +160,8 @@ System.print((-3.7).round) //&gt; -4
 <p>The tangent of the number. </p>
 <h3><strong>-</strong> operator <a href="#--operator" name="--operator" class="header-anchor">#</a></h3>
 <p>Negates the number. </p>
-<div class="codehilite"><pre><span></span>var a = 123 
-System.print(-a) //&gt; -123
+<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="mi">123</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="o">-</span><span class="err">a</span><span class="p">)</span> <span class="output">-123</span>
 </pre></div>
 
 
@@ -192,20 +192,20 @@ unsigned values. The result is then a 32-bit unsigned number where each bit is
 <h3><strong>..</strong>(other) operator <a href="#..(other)-operator" name="..(other)-operator" class="header-anchor">#</a></h3>
 <p>Creates a <a href="range.html">Range</a> representing a consecutive range of numbers 
 from the beginning number to the ending number. </p>
-<div class="codehilite"><pre><span></span>var range = 1.2..3.4 
-System.print(range.min)         //&gt; 1.2
-System.print(range.max)         //&gt; 3.4
-System.print(range.isInclusive) //&gt; true
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">range</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">..</span><span class="mf">3.4</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>         <span class="output">1.2</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>         <span class="output">3.4</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="output">true</span>
 </pre></div>
 
 
 <h3><strong>&hellip;</strong>(other) operator <a href="#...(other)-operator" name="...(other)-operator" class="header-anchor">#</a></h3>
 <p>Creates a <a href="range.html">Range</a> representing a consecutive range of numbers 
 from the beginning number to the ending number not including the ending number. </p>
-<div class="codehilite"><pre><span></span>var range = 1.2...3.4 
-System.print(range.min)         //&gt; 1.2
-System.print(range.max)         //&gt; 3.4
-System.print(range.isInclusive) //&gt; false
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">range</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">...</span><span class="mf">3.4</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>         <span class="output">1.2</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>         <span class="output">3.4</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="output">false</span>
 </pre></div>
   </main>
 </div>

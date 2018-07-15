@@ -98,19 +98,19 @@
     <h2>Wren is a small, fast, class-based concurrent scripting language <a href="#wren-is-a-small,-fast,-class-based-concurrent-scripting-language" name="wren-is-a-small,-fast,-class-based-concurrent-scripting-language" class="header-anchor">#</a></h2>
 <p>Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in 
 a familiar, modern <a href="syntax.html">syntax</a>. </p>
-<div class="codehilite"><pre><span></span><span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">)</span>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello, world!&quot;</span><span class="p">)</span>
 
-<span class="kr">class</span> <span class="nx">Wren</span> <span class="p">{</span> 
-  <span class="nx">flyTo</span><span class="p">(</span><span class="nx">city</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;Flying to %(city)&quot;</span><span class="p">)</span> 
+<span class="k">class</span> <span class="vg">Wren</span> <span class="p">{</span> 
+  <span class="n">flyTo</span><span class="p">(</span><span class="n">city</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Flying to </span><span class="si">%(</span><span class="n">city</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">adjectives</span> <span class="o">=</span> <span class="nx">Fiber</span><span class="p">.</span><span class="k">new</span> <span class="p">{</span> 
-  <span class="p">[</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="s2">&quot;clean&quot;</span><span class="p">,</span> <span class="s2">&quot;fast&quot;</span><span class="p">].</span><span class="nx">each</span> <span class="p">{</span><span class="o">|</span><span class="nx">word</span><span class="o">|</span> <span class="nx">Fiber</span><span class="p">.</span><span class="nx">yield</span><span class="p">(</span><span class="nx">word</span><span class="p">)</span> <span class="p">}</span> 
+<span class="k">var</span> <span class="n">adjectives</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+  <span class="p">[</span><span class="s">&quot;small&quot;</span><span class="p">,</span> <span class="s">&quot;clean&quot;</span><span class="p">,</span> <span class="s">&quot;fast&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span><span class="o">|</span><span class="n">word</span><span class="o">|</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="nx">adjectives</span><span class="p">.</span><span class="nx">isDone</span><span class="p">)</span> <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">adjectives</span><span class="p">.</span><span class="nx">call</span><span class="p">())</span>
+<span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">adjectives</span><span class="o">.</span><span class="n">isDone</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">adjectives</span><span class="o">.</span><span class="n">call</span><span class="p">())</span>
 </pre></div>
 
 

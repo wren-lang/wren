@@ -104,16 +104,16 @@ class supports the same methods. State is defined in <em>fields</em>, whose valu
 stored in each instance. </p>
 <h2>Defining a class <a href="#defining-a-class" name="defining-a-class" class="header-anchor">#</a></h2>
 <p>Classes are created using the <code>class</code> keyword, unsurprisingly: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{}</span>
 </pre></div>
 
 
 <p>This creates a class named <code>Unicorn</code> with no methods or fields. </p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <p>To let our unicorn do stuff, we need to give it methods. </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">prance() {</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;The unicorn prances in a fancy manner!&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">prance</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in a fancy manner!&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -121,9 +121,9 @@ stored in each instance. </p>
 
 <p>This defines a <code>prance()</code> method that takes no arguments. To add parameters, put 
 their names inside the parentheses: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">prance</span><span class="p">(</span><span class="nx">where</span><span class="p">,</span> <span class="nx">when</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;The unicorn prances in %(where) at %(when).&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">when</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in </span><span class="si">%(</span><span class="n">where</span><span class="si">)</span><span class="s"> at </span><span class="si">%(</span><span class="n">when</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -131,17 +131,17 @@ their names inside the parentheses: </p>
 
 <p>Since the number of parameters is part of a method&rsquo;s <a href="method-calls.html#signature">signature</a> a class can 
 define multiple methods with the same name: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">prance() {</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;The unicorn prances in a fancy manner!&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">prance</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in a fancy manner!&quot;</span><span class="p">)</span> 
   <span class="p">}</span>
 
-  <span class="nx">prance</span><span class="p">(</span><span class="nx">where</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;The unicorn prances in %(where).&quot;</span><span class="p">)</span> 
+  <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in </span><span class="si">%(</span><span class="n">where</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
   <span class="p">}</span>
 
-  <span class="nx">prance</span><span class="p">(</span><span class="nx">where</span><span class="p">,</span> <span class="nx">when</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;The unicorn prances in %(where) at %(when).&quot;</span><span class="p">)</span> 
+  <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">when</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in </span><span class="si">%(</span><span class="n">where</span><span class="si">)</span><span class="s"> at </span><span class="si">%(</span><span class="n">when</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -155,18 +155,18 @@ different methods that you implement separately. </p>
 different syntaxes for methods. Your classes can define all of them. </p>
 <h3>Getters <a href="#getters" name="getters" class="header-anchor">#</a></h3>
 <p>A getter leaves off the parameter list and the parentheses: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="c1">// Unicorns are always fancy.</span>
-  <span class="nx">isFancy</span> <span class="p">{</span> <span class="kc">true</span> <span class="p">}</span> 
+  <span class="n">isFancy</span> <span class="p">{</span> <span class="kc">true</span> <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
 
 
 <h3>Setters <a href="#setters" name="setters" class="header-anchor">#</a></h3>
 <p>A setter has <code>=</code> after the name, followed by a single parenthesized parameter: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">rider</span><span class="o">=</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;I am being ridden by %(value).&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">rider</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I am being ridden by </span><span class="si">%(</span><span class="n">value</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -176,9 +176,9 @@ different syntaxes for methods. Your classes can define all of them. </p>
 whatever makes your heart flutter. </p>
 <h3>Operators <a href="#operators" name="operators" class="header-anchor">#</a></h3>
 <p>Prefix operators, like getters, have no parameter list: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="o">-</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;Negating a unicorn is weird.&quot;</span><span class="p">)</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Negating a unicorn is weird.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -186,9 +186,9 @@ whatever makes your heart flutter. </p>
 
 <p>Infix operators, like setters, have a single parenthesized parameter for the 
 right-hand operand: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="o">-</span><span class="p">(</span><span class="nx">other</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;Subtracting %(other) from a unicorn is weird.&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="o">-</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Subtracting </span><span class="si">%(</span><span class="n">other</span><span class="si">)</span><span class="s"> from a unicorn is weird.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -196,13 +196,13 @@ right-hand operand: </p>
 
 <p>A subscript operator puts the parameters inside square brackets and can have 
 more than one: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="p">[</span><span class="nx">index</span><span class="p">]</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;Unicorns are not lists!&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Unicorns are not lists!&quot;</span><span class="p">)</span> 
   <span class="p">}</span>
 
-  <span class="p">[</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">]</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;Unicorns are not matrices either!&quot;</span><span class="p">)</span> 
+  <span class="p">[</span><span class="err">x</span><span class="p">,</span> <span class="err">y</span><span class="p">]</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Unicorns are not matrices either!&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -212,9 +212,9 @@ more than one: </p>
 parameter list. </p>
 <p>As the name implies, a subscript setter looks like a combination of a subscript 
 operator and a setter: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="p">[</span><span class="nx">index</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;You can&#39;t stuff %(value) into me at %(index)!&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;You can&#39;t stuff </span><span class="si">%(</span><span class="n">value</span><span class="si">)</span><span class="s"> into me at </span><span class="si">%(</span><span class="n">index</span><span class="si">)</span><span class="s">!&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -226,23 +226,24 @@ operator and a setter: </p>
 that&rsquo;s the only kind of scope there is. But object-oriented languages like Wren 
 introduce another kind of scope: <em>object scope</em>. It contains the methods that 
 are available on an object. When you write: </p>
-<div class="codehilite"><pre><span></span>unicorn.isFancy
+<div class="codehilite"><pre><span class="n">unicorn</span><span class="o">.</span><span class="n">isFancy</span>
 </pre></div>
 
 
 <p>You&rsquo;re saying &ldquo;look up the method <code>isFancy</code> in the scope of the object 
-<code>unicorn</code>&rdquo;. In this case, the fact that you want to look up a <em>method</em> <code>isFancy</code> 
-and not a <em>variable</em> <code>isFancy</code> is explicit. That&rsquo;s what <code>.</code> does and the 
-object to the left of the period is the object you want to look up the method on. </p>
+<code>unicorn</code>&rdquo;. In this case, the fact that you want to look up a <em>method</em> 
+<code>isFancy</code> and not a <em>variable</em> <code>isFancy</code> is explicit. That&rsquo;s what <code>.</code> does and 
+the object to the left of the period is the object you want to look up the 
+method on. </p>
 <h3><code>this</code> <a href="#this" name="this" class="header-anchor">#</a></h3>
 <p>Things get more interesting when you&rsquo;re inside the body of a method. When the 
 method is called on some object and the body is being executed, you often need 
 to access that object itself. You can do that using <code>this</code>. </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">name</span> <span class="p">{</span> <span class="s2">&quot;Francis&quot;</span> <span class="p">}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
 
-  <span class="nx">printName() {</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">)</span> <span class="output">Francis</span>
+  <span class="n">printName</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="nb">this</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="output">Francis</span>
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -254,13 +255,13 @@ lets you invoke methods on &ldquo;yourself&rdquo;. </p>
 <p>It&rsquo;s an error to refer to <code>this</code> outside of a method. However, it&rsquo;s perfectly 
 fine to use it inside a <a href="functions.html">function</a> declared <em>inside</em> a method. When you do, 
 <code>this</code> still refers to the instance whose <em>method</em> is being called: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">name</span> <span class="p">{</span> <span class="s2">&quot;Francis&quot;</span> <span class="p">}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
 
-  <span class="nx">printNameThrice() {</span> 
-    <span class="p">(</span><span class="mi">1</span><span class="p">..</span><span class="mi">3</span><span class="p">).</span><span class="nx">each</span> <span class="p">{</span> 
+  <span class="n">printNameThrice</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span> 
       <span class="c1">// Use &quot;this&quot; inside the function passed to each().</span>
-      <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">)</span> <span class="output">Francis</span>
+      <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="nb">this</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="output">Francis</span>
     <span class="p">}</span> <span class="output">Francis</span>
   <span class="p">}</span> <span class="output">Francis</span>
 <span class="p">}</span>
@@ -277,11 +278,11 @@ because it makes a distinction between methods and functions.) </p>
 tedious and verbose, which is why some languages don&rsquo;t require it. You can do a 
 &ldquo;self send&rdquo; by calling a method (or getter or setter) without any explicit 
 receiver: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">name</span> <span class="p">{</span> <span class="s2">&quot;Francis&quot;</span> <span class="p">}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
 
-  <span class="nx">printName() {</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="output">Francis</span>
+  <span class="n">printName</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="output">Francis</span>
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -289,13 +290,13 @@ receiver: </p>
 
 <p>Code like this gets tricky when there is also a variable outside of the class 
 with the same name. Consider: </p>
-<div class="codehilite"><pre><span></span><span class="kd">var</span> <span class="nx">name</span> <span class="o">=</span> <span class="s2">&quot;variable&quot;</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;variable&quot;</span>
 
-<span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">name</span> <span class="p">{</span> <span class="s2">&quot;Francis&quot;</span> <span class="p">}</span>
+<span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
 
-  <span class="nx">printName() {</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="c1">// ???</span>
+  <span class="n">printName</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="c1">// ???</span>
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -321,21 +322,21 @@ lowercase in Wren. Class names are capitalized. </p>
 of the class, it&rsquo;s usually the name of some other class. This rule makes that 
 work. </p>
 <p>Here&rsquo;s an example that shows all three cases: </p>
-<div class="codehilite"><pre><span></span><span class="kd">var</span> <span class="nx">shadowed</span> <span class="o">=</span> <span class="s2">&quot;surrounding&quot;</span> 
-<span class="kd">var</span> <span class="nx">lowercase</span> <span class="o">=</span> <span class="s2">&quot;surrounding&quot;</span> 
-<span class="kd">var</span> <span class="nx">Capitalized</span> <span class="o">=</span> <span class="s2">&quot;surrounding&quot;</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">shadowed</span> <span class="o">=</span> <span class="s">&quot;surrounding&quot;</span> 
+<span class="k">var</span> <span class="n">lowercase</span> <span class="o">=</span> <span class="s">&quot;surrounding&quot;</span> 
+<span class="k">var</span> <span class="vg">Capitalized</span> <span class="o">=</span> <span class="s">&quot;surrounding&quot;</span>
 
-<span class="kr">class</span> <span class="nx">Scope</span> <span class="p">{</span> 
-  <span class="nx">shadowed</span> <span class="p">{</span> <span class="s2">&quot;object&quot;</span> <span class="p">}</span> 
-  <span class="nx">lowercase</span> <span class="p">{</span> <span class="s2">&quot;object&quot;</span> <span class="p">}</span> 
-  <span class="nx">Capitalized</span> <span class="p">{</span> <span class="s2">&quot;object&quot;</span> <span class="p">}</span>
+<span class="k">class</span> <span class="vg">Scope</span> <span class="p">{</span> 
+  <span class="n">shadowed</span> <span class="p">{</span> <span class="s">&quot;object&quot;</span> <span class="p">}</span> 
+  <span class="n">lowercase</span> <span class="p">{</span> <span class="s">&quot;object&quot;</span> <span class="p">}</span> 
+  <span class="vg">Capitalized</span> <span class="p">{</span> <span class="s">&quot;object&quot;</span> <span class="p">}</span>
 
-  <span class="nx">test() {</span> 
-    <span class="kd">var</span> <span class="nx">shadowed</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
+  <span class="n">test</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="k">var</span> <span class="n">shadowed</span> <span class="o">=</span> <span class="s">&quot;local&quot;</span>
 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">shadowed</span><span class="p">)</span> <span class="output">local</span>
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">lowercase</span><span class="p">)</span> <span class="output">object</span>
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">Capitalized</span><span class="p">)</span> <span class="output">surrounding</span>
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">shadowed</span><span class="p">)</span> <span class="output">local</span>
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">lowercase</span><span class="p">)</span> <span class="output">object</span>
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Capitalized</span><span class="p">)</span> <span class="output">surrounding</span>
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -347,9 +348,9 @@ work. </p>
 Our unicorns can prance around, but we don&rsquo;t actually <em>have</em> any unicorns to do 
 it. To create <em>instances</em> of a class, we need a <em>constructor</em>. You define one 
 like so: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">construct</span> <span class="k">new</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">color</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot; and I am &quot;</span> <span class="o">+</span> <span class="nx">color</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot; and I am &quot;</span> <span class="o">+</span> <span class="n">color</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -359,19 +360,19 @@ like so: </p>
 name. In Wren, all constructors have names. The word &ldquo;new&rdquo; isn&rsquo;t special to 
 Wren, it&rsquo;s just a common constructor name. </p>
 <p>To make a unicorn now, we call the constructor method on the class itself: </p>
-<div class="codehilite"><pre><span></span>var fred = Unicorn.new(&quot;Fred&quot;, &quot;palomino&quot;)
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fred</span> <span class="o">=</span> <span class="vg">Unicorn</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">&quot;Fred&quot;</span><span class="p">,</span> <span class="s">&quot;palomino&quot;</span><span class="p">)</span>
 </pre></div>
 
 
 <p>Giving constructors names is handy because it means you can have more than one, 
 and each can clarify how it creates the instance: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">construct</span> <span class="nx">brown</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot; and I am brown.&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">brown</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot; and I am brown.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">dave</span> <span class="o">=</span> <span class="nx">Unicorn</span><span class="p">.</span><span class="nx">brown</span><span class="p">(</span><span class="s2">&quot;Dave&quot;</span><span class="p">)</span>
+<span class="k">var</span> <span class="n">dave</span> <span class="o">=</span> <span class="vg">Unicorn</span><span class="o">.</span><span class="n">brown</span><span class="p">(</span><span class="s">&quot;Dave&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -385,7 +386,7 @@ overloaded by <a href="#signature">arity</a>. A constructor <em>must</em> be a n
 a (possibly empty) argument list. Operators, getters, and setters cannot be 
 constructors. </p>
 <p>A constructor is actually a pair of methods. You get a method on the class: </p>
-<div class="codehilite"><pre><span></span>Unicorn.brown(&quot;Dave&quot;)
+<div class="codehilite"><pre><span class="vg">Unicorn</span><span class="o">.</span><span class="n">brown</span><span class="p">(</span><span class="s">&quot;Dave&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -397,8 +398,8 @@ constructors, etc. </p>
 <h2>Fields <a href="#fields" name="fields" class="header-anchor">#</a></h2>
 <p>All state stored in instances is stored in <em>fields</em>. Each field has a name 
 that starts with an underscore. </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Rectangle</span> <span class="p">{</span> 
-  <span class="nx">area</span> <span class="p">{</span> <span class="nx">_width</span> <span class="o">*</span> <span class="nx">_height</span> <span class="p">}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Rectangle</span> <span class="p">{</span> 
+  <span class="n">area</span> <span class="p">{</span> <span class="vi">_width</span> <span class="o">*</span> <span class="vi">_height</span> <span class="p">}</span>
 
   <span class="c1">// Other stuff...</span>
 <span class="p">}</span>
@@ -422,9 +423,9 @@ accessed from within methods defined on the object&rsquo;s class. You cannot eve
 access fields on another instance of your own class, unlike C++ and Java. </p>
 <p>If you want to make a property of an object visible, you need to define a 
 getter to expose it: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Rectangle</span> <span class="p">{</span> 
-  <span class="nx">width</span> <span class="p">{</span> <span class="nx">_width</span> <span class="p">}</span> 
-  <span class="nx">height</span> <span class="p">{</span> <span class="nx">_height</span> <span class="p">}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Rectangle</span> <span class="p">{</span> 
+  <span class="n">width</span> <span class="p">{</span> <span class="vi">_width</span> <span class="p">}</span> 
+  <span class="n">height</span> <span class="p">{</span> <span class="vi">_height</span> <span class="p">}</span>
 
   <span class="c1">// ...</span>
 <span class="p">}</span>
@@ -432,9 +433,9 @@ getter to expose it: </p>
 
 
 <p>To allow outside code to modify the field, you&rsquo;ll also need to provide setters: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Rectangle</span> <span class="p">{</span> 
-  <span class="nx">width</span><span class="o">=</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span> <span class="nx">_width</span> <span class="o">=</span> <span class="nx">value</span> <span class="p">}</span> 
-  <span class="nx">height</span><span class="o">=</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span> <span class="nx">_height</span> <span class="o">=</span> <span class="nx">value</span> <span class="p">}</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Rectangle</span> <span class="p">{</span> 
+  <span class="n">width</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_width</span> <span class="o">=</span> <span class="n">value</span> <span class="p">}</span> 
+  <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_height</span> <span class="o">=</span> <span class="n">value</span> <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
 
@@ -449,41 +450,41 @@ to or even should define getters or setters for most of your object&rsquo;s fiel
 <p>A name that starts with <em>two</em> underscores is a <em>static</em> field. They work 
 similar to <a href="#fields">fields</a> except the data is stored on the class itself, and 
 not the instance. They can be used in <em>both</em> instance and static methods. </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Foo</span> <span class="p">{</span> 
-  <span class="nx">construct</span> <span class="k">new</span><span class="p">()</span> <span class="p">{}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Foo</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{}</span>
 
-  <span class="kr">static</span> <span class="nx">setFromStatic</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span> <span class="p">{</span> <span class="nx">__a</span> <span class="o">=</span> <span class="nx">a</span> <span class="p">}</span> 
-  <span class="nx">setFromInstance</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span> <span class="p">{</span> <span class="nx">__a</span> <span class="o">=</span> <span class="nx">a</span> <span class="p">}</span>
+  <span class="k">static</span> <span class="n">setFromStatic</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="p">{</span> <span class="vc">__a</span> <span class="o">=</span> <span class="err">a</span> <span class="p">}</span> 
+  <span class="n">setFromInstance</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="p">{</span> <span class="vc">__a</span> <span class="o">=</span> <span class="err">a</span> <span class="p">}</span>
 
-  <span class="kr">static</span> <span class="nx">printFromStatic() {</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">__a</span><span class="p">)</span> 
+  <span class="k">static</span> <span class="n">printFromStatic</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vc">__a</span><span class="p">)</span> 
   <span class="p">}</span>
 
-  <span class="nx">printFromInstance() {</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">__a</span><span class="p">)</span> 
+  <span class="n">printFromInstance</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vc">__a</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
 
 
 <p>Just like instance fields, static fields are initially <code>null</code>: </p>
-<div class="codehilite"><pre><span></span>Foo.printFromStatic() //&gt; null
+<div class="codehilite"><pre><span class="vg">Foo</span><span class="o">.</span><span class="n">printFromStatic</span><span class="p">()</span> <span class="output">null</span>
 </pre></div>
 
 
 <p>They can be used from static methods: </p>
-<div class="codehilite"><pre><span></span>Foo.setFromStatic(&quot;first&quot;) 
-Foo.printFromStatic() //&gt; first
+<div class="codehilite"><pre><span class="vg">Foo</span><span class="o">.</span><span class="n">setFromStatic</span><span class="p">(</span><span class="s">&quot;first&quot;</span><span class="p">)</span> 
+<span class="vg">Foo</span><span class="o">.</span><span class="n">printFromStatic</span><span class="p">()</span> <span class="output">first</span>
 </pre></div>
 
 
 <p>And also instance methods. When you do so, there is still only one static field 
 shared among all instances of the class: </p>
-<div class="codehilite"><pre><span></span>var foo1 = Foo.new() 
-var foo2 = Foo.new()
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">foo1</span> <span class="o">=</span> <span class="vg">Foo</span><span class="o">.</span><span class="n">new</span><span class="p">()</span> 
+<span class="k">var</span> <span class="n">foo2</span> <span class="o">=</span> <span class="vg">Foo</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
-foo1.setFromInstance(&quot;second&quot;) 
-foo2.printFromInstance() //&gt; second
+<span class="n">foo1</span><span class="o">.</span><span class="n">setFromInstance</span><span class="p">(</span><span class="s">&quot;second&quot;</span><span class="p">)</span> 
+<span class="n">foo2</span><span class="o">.</span><span class="n">printFromInstance</span><span class="p">()</span> <span class="output">second</span>
 </pre></div>
 
 
@@ -494,7 +495,7 @@ superclasses looking for it there. </p>
 <p>By default, any new class inherits from Object, which is the superclass from 
 which all other classes ultimately descend. You can specify a different parent 
 class using <code>is</code> when you declare the class: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Pegasus</span> <span class="nx">is</span> <span class="nx">Unicorn</span> <span class="p">{}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Pegasus</span> <span class="k">is</span> <span class="vg">Unicorn</span> <span class="p">{}</span>
 </pre></div>
 
 
@@ -507,27 +508,27 @@ of the inherited built-in methods on the derived type. </p>
 Pegasus inherits from Unicorn, Pegasus&rsquo;s metaclass does not inherit from 
 Unicorn&rsquo;s metaclass. In more prosaic terms, this means that static methods are 
 not inherited. </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
   <span class="c1">// Unicorns cannot fly. :(</span>
-  <span class="kr">static</span> <span class="nx">canFly</span> <span class="p">{</span> <span class="kc">false</span> <span class="p">}</span> 
+  <span class="k">static</span> <span class="n">canFly</span> <span class="p">{</span> <span class="kc">false</span> <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="kr">class</span> <span class="nx">Pegasus</span> <span class="nx">is</span> <span class="nx">Unicorn</span> <span class="p">{}</span>
+<span class="k">class</span> <span class="vg">Pegasus</span> <span class="k">is</span> <span class="vg">Unicorn</span> <span class="p">{}</span>
 
-<span class="nx">Pegasus</span><span class="p">.</span><span class="nx">canFly</span> <span class="error">Static methods are not inherited.</span>
+<span class="vg">Pegasus</span><span class="o">.</span><span class="n">canFly</span> <span class="error">Static methods are not inherited.</span>
 </pre></div>
 
 
 <p>This also means constructors are not inherited: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">construct</span> <span class="k">new</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="kr">class</span> <span class="nx">Pegasus</span> <span class="nx">is</span> <span class="nx">Unicorn</span> <span class="p">{}</span>
+<span class="k">class</span> <span class="vg">Pegasus</span> <span class="k">is</span> <span class="vg">Unicorn</span> <span class="p">{}</span>
 
-<span class="nx">Pegasus</span><span class="p">.</span><span class="k">new</span><span class="p">(</span><span class="s2">&quot;Fred&quot;</span><span class="p">)</span> <span class="error">Pegasus does not define new().</span>
+<span class="vg">Pegasus</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">&quot;Fred&quot;</span><span class="p">)</span> <span class="error">Pegasus does not define new().</span>
 </pre></div>
 
 
@@ -535,19 +536,19 @@ not inherited. </p>
 classes. However, constructor <em>initializers</em> are inherited since those are 
 instance methods on the new object. </p>
 <p>This means you can do <code>super</code> calls inside a constructor: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">construct</span> <span class="k">new</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;My name is &quot;</span> <span class="o">+</span> <span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="kr">class</span> <span class="nx">Pegasus</span> <span class="nx">is</span> <span class="nx">Unicorn</span> <span class="p">{</span> 
-  <span class="nx">construct</span> <span class="k">new</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="kr">super</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> 
+<span class="k">class</span> <span class="vg">Pegasus</span> <span class="k">is</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="k">super</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="nx">Pegasus</span><span class="p">.</span><span class="k">new</span><span class="p">(</span><span class="s2">&quot;Fred&quot;</span><span class="p">)</span> <span class="output">My name is Fred</span>
+<span class="vg">Pegasus</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">&quot;Fred&quot;</span><span class="p">)</span> <span class="output">My name is Fred</span>
 </pre></div>
 
 
@@ -560,15 +561,15 @@ an overridden method when you want to access the original method being
 overridden. </p>
 <p>To do that, you can use the special <code>super</code> keyword as the receiver in a method 
 call: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Base</span> <span class="p">{</span> 
-  <span class="nx">method() {</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;base method&quot;</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Base</span> <span class="p">{</span> 
+  <span class="n">method</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;base method&quot;</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="kr">class</span> <span class="nx">Derived</span> <span class="nx">is</span> <span class="nx">Base</span> <span class="p">{</span> 
-  <span class="nx">method() {</span> 
-    <span class="kr">super</span><span class="p">.</span><span class="nx">method</span><span class="p">()</span> <span class="output">base method</span>
+<span class="k">class</span> <span class="vg">Derived</span> <span class="k">is</span> <span class="vg">Base</span> <span class="p">{</span> 
+  <span class="n">method</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="k">super</span><span class="o">.</span><span class="n">method</span><span class="p">()</span> <span class="output">base method</span>
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>
@@ -576,15 +577,15 @@ call: </p>
 
 <p>You can also use <code>super</code> without a method name inside a constructor to invoke a 
 base class constructor: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Base</span> <span class="p">{</span> 
-  <span class="nx">construct</span> <span class="k">new</span><span class="p">(</span><span class="nx">arg</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;base got &quot;</span> <span class="o">+</span> <span class="nx">arg</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Base</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;base got &quot;</span> <span class="o">+</span> <span class="n">arg</span><span class="p">)</span> 
   <span class="p">}</span> 
 <span class="p">}</span>
 
-<span class="kr">class</span> <span class="nx">Derived</span> <span class="nx">is</span> <span class="nx">Base</span> <span class="p">{</span> 
-  <span class="nx">construct</span> <span class="k">new</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="kr">super</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="output">base got value</span>
+<span class="k">class</span> <span class="vg">Derived</span> <span class="k">is</span> <span class="vg">Base</span> <span class="p">{</span> 
+  <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="k">super</span><span class="p">(</span><span class="s">&quot;value&quot;</span><span class="p">)</span> <span class="output">base got value</span>
   <span class="p">}</span> 
 <span class="p">}</span>
 </pre></div>

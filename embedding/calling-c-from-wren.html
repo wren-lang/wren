@@ -78,8 +78,8 @@ define <strong>foreign classes</strong>. This page is about the first, foreign m
 class, it has a name and signature, and calls to it are dynamically dispatched. 
 The only difference is that the <em>body</em> of the method is written in C. </p>
 <p>A foreign method is declared in Wren like so: </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nb">Math</span> <span class="p">{</span> 
-  <span class="nx">foreign</span> <span class="kr">static</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Math</span> <span class="p">{</span> 
+  <span class="k">foreign</span> <span class="k">static</span> <span class="n">add</span><span class="p">(</span><span class="err">a</span><span class="p">,</span> <span class="err">b</span><span class="p">)</span> 
 <span class="p">}</span>
 </pre></div>
 
@@ -96,7 +96,7 @@ function that should be used for the foreign method. </p>
 first <a href="configuring-the-vm.html">configure the VM</a>. This callback isn&rsquo;t the foreign method itself. 
 It&rsquo;s the binding function your app uses to <em>look up</em> foreign methods. </p>
 <p>Its signature is: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenForeignMethodFn</span> <span class="nf">bindForeignMethodFn</span><span class="p">(</span> 
+<div class="codehilite"><pre><span class="n">WrenForeignMethodFn</span> <span class="nf">bindForeignMethodFn</span><span class="p">(</span> 
     <span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> 
     <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
     <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">className</span><span class="p">,</span> 
@@ -109,14 +109,14 @@ It&rsquo;s the binding function your app uses to <em>look up</em> foreign method
 passes in the module containing the class declaration, the name of the class 
 containing the method, the method&rsquo;s signature, and whether or not it&rsquo;s a static 
 method. In the above example, it would pass something like: </p>
-<div class="codehilite"><pre><span></span><span class="n">bindForeignMethodFn</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;main&quot;</span><span class="p">,</span> <span class="s">&quot;Math&quot;</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="s">&quot;add(_,_)&quot;</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="n">bindForeignMethodFn</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;main&quot;</span><span class="p">,</span> <span class="s">&quot;Math&quot;</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="s">&quot;add(_,_)&quot;</span><span class="p">);</span>
 </pre></div>
 
 
 <p>When you configure the VM, you give it a C callback that looks up the 
 appropriate function for the given foreign method and returns a pointer to it. 
 Something like: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenForeignMethodFn</span> <span class="nf">bindForeignMethod</span><span class="p">(</span> 
+<div class="codehilite"><pre><span class="n">WrenForeignMethodFn</span> <span class="nf">bindForeignMethod</span><span class="p">(</span> 
     <span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> 
     <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
     <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">className</span><span class="p">,</span> 
@@ -148,7 +148,7 @@ first executed. It then keeps the function pointer you return and associates it
 with that method. This way, <em>calls</em> to the foreign method are fast. </p>
 <h2>Implementing a Foreign Method <a href="#implementing-a-foreign-method" name="implementing-a-foreign-method" class="header-anchor">#</a></h2>
 <p>All C functions for foreign methods have the same signature: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">foreignMethod</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">foreignMethod</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">);</span>
 </pre></div>
 
 
@@ -161,7 +161,7 @@ object is in slot zero, and arguments are in consecutive slots after that. </p>
 <p>You use the slot API to read those arguments, and then perform whatever work you 
 want to in C. If you want the foreign method to return a value, place it in slot 
 zero. Like so: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">mathAdd</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">)</span> 
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">mathAdd</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">)</span> 
 <span class="p">{</span> 
   <span class="kt">double</span> <span class="n">a</span> <span class="o">=</span> <span class="n">wrenGetSlotDouble</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> 
   <span class="kt">double</span> <span class="n">b</span> <span class="o">=</span> <span class="n">wrenGetSlotDouble</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> 

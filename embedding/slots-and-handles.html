@@ -78,14 +78,14 @@ notes on for the other side to process. </p>
 <p>The array is zero-based, and each slot can hold a value of any type. It is 
 dynamically sized, but it&rsquo;s your responsibility to ensure there are enough slots 
 <em>before</em> you use them. You do this by calling: </p>
-<div class="codehilite"><pre><span></span><span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slotCount</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slotCount</span><span class="p">);</span>
 </pre></div>
 
 
 <p>This grows the slot array if needed to ensure that many slots are available. If 
 it&rsquo;s already big enough, this does nothing. You&rsquo;ll typically call this once 
 before populating the slots with data that you want to send to Wren. </p>
-<div class="codehilite"><pre><span></span><span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> 
+<div class="codehilite"><pre><span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> 
 <span class="c1">// Can now use slots 0 through 3, inclusive.</span>
 </pre></div>
 
@@ -97,7 +97,7 @@ you pass control back to Wren. That includes calling <code>wrenCall()</code> or
 no guarantees about what will happen. I&rsquo;ve heard rumors of smoke and feathers 
 flying out of a user&rsquo;s computer. </p>
 <p>If you want to see how big the slot array is, use: </p>
-<div class="codehilite"><pre><span></span><span class="kt">int</span> <span class="nf">wrenGetSlotCount</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="kt">int</span> <span class="nf">wrenGetSlotCount</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">);</span>
 </pre></div>
 
 
@@ -110,7 +110,7 @@ enough slots for the objects it is sending you. </p>
 <p>Once you have some slots, you store data in them using a number of functions all 
 named <code>wrenSetSlot&lt;type&gt;()</code> where <code>&lt;type&gt;</code> is the kind of data. We&rsquo;ll start with 
 the simple ones: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenSetSlotBool</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">value</span><span class="p">);</span> 
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">wrenSetSlotBool</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">value</span><span class="p">);</span> 
 <span class="kt">void</span> <span class="nf">wrenSetSlotDouble</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> <span class="kt">double</span> <span class="n">value</span><span class="p">);</span> 
 <span class="kt">void</span> <span class="nf">wrenSetSlotNull</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
 </pre></div>
@@ -120,7 +120,7 @@ the simple ones: </p>
 <a href="../values.html">Wren value</a>. (Since Wren&rsquo;s <a href="../values.html#numbers">native number type</a> <em>is</em> a double, there&rsquo;s not 
 really much <em>conversion</em> going on, but you get the idea.) </p>
 <p>You can also pass string data to Wren: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenSetSlotBytes</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> 
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">wrenSetSlotBytes</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> 
                       <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">bytes</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">length</span><span class="p">);</span>
 
 <span class="kt">void</span> <span class="nf">wrenSetSlotString</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> 
@@ -137,14 +137,14 @@ regular strings if you happen to know the length. The latter calculates the
 length of the string using <code>strlen()</code>. </p>
 <h3>Reading slots <a href="#reading-slots" name="reading-slots" class="header-anchor">#</a></h3>
 <p>You can, of course, also pull data out of slots. Here are the simple ones: </p>
-<div class="codehilite"><pre><span></span><span class="kt">bool</span> <span class="nf">wrenGetSlotBool</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span> 
+<div class="codehilite"><pre><span class="kt">bool</span> <span class="nf">wrenGetSlotBool</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span> 
 <span class="kt">double</span> <span class="nf">wrenGetSlotDouble</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
 </pre></div>
 
 
 <p>These take a Wren value of the corresponding type and convert it to its raw C 
 representation. For strings, we have: </p>
-<div class="codehilite"><pre><span></span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="nf">wrenGetSlotString</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span> 
+<div class="codehilite"><pre><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="nf">wrenGetSlotString</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span> 
 <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="nf">wrenGetSlotBytes</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> 
                              <span class="kt">int</span><span class="o">*</span> <span class="n">length</span><span class="p">);</span>
 </pre></div>
@@ -161,7 +161,7 @@ correct type. If you read a number from a slot that currently holds a string,
 you&rsquo;re gonna have a bad time. </p>
 <p>Fortunately, you usually know what type of data you have in a slot. If not, you 
 can ask: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenType</span> <span class="nf">wrenGetSlotType</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="n">WrenType</span> <span class="nf">wrenGetSlotType</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
 </pre></div>
 
 
@@ -173,7 +173,7 @@ simple primitive values first or use a <a href="storing-c-data.html">foreign cla
 <h3>Looking up variables <a href="#looking-up-variables" name="looking-up-variables" class="header-anchor">#</a></h3>
 <p>There are a few other utility functions that move data into and out of slots. 
 Here&rsquo;s the first: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenGetVariable</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">wrenGetVariable</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">module</span><span class="p">,</span> 
                      <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">name</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
 </pre></div>
 
@@ -193,14 +193,14 @@ C, but sometimes you need to shuttle a larger or dynamically-sized ball of
 stuff. <a href="../lists.html">List objects</a> work well for that, so the C API lets you work 
 with them directly. </p>
 <p>You can create a new empty list from C using: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenSetSlotNewList</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">wrenSetSlotNewList</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
 </pre></div>
 
 
 <p>It stores the resulting list in the given slot. If you have a list in a 
 slot&mdash;either one you created from C or from Wren&mdash;you can add elements 
 to it using: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenInsertInList</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">listSlot</span><span class="p">,</span> <span class="kt">int</span> <span class="n">index</span><span class="p">,</span> 
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">wrenInsertInList</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">listSlot</span><span class="p">,</span> <span class="kt">int</span> <span class="n">index</span><span class="p">,</span> 
                       <span class="kt">int</span> <span class="n">elementSlot</span><span class="p">);</span>
 </pre></div>
 
@@ -246,14 +246,14 @@ have two limitations: </p>
 <p>To address those, we have handles. A handle wraps a reference to an object of 
 any kind&mdash;strings, numbers, instances of classes, collections, whatever. 
 You create a handle using this: </p>
-<div class="codehilite"><pre><span></span><span class="n">WrenHandle</span><span class="o">*</span> <span class="nf">wrenGetSlotHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="n">WrenHandle</span><span class="o">*</span> <span class="nf">wrenGetSlotHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">);</span>
 </pre></div>
 
 
 <p>This takes the object stored in the given slot, creates a new WrenHandle to wrap 
 it, and returns a pointer to it back to you. You can send that wrapped object 
 back to Wren by calling: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenSetSlotHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> <span class="n">WrenHandle</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">wrenSetSlotHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="kt">int</span> <span class="n">slot</span><span class="p">,</span> <span class="n">WrenHandle</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
 </pre></div>
 
 
@@ -269,7 +269,7 @@ That way, during garbage collection, it can find them all and make sure their
 objects aren&rsquo;t freed. But what if you don&rsquo;t want it to be kept around any more? 
 Since C relies on manual memory management, WrenHandle does too. When you are 
 done with one, you must explicitly release it by calling: </p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="nf">wrenReleaseHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="n">WrenHandle</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">wrenReleaseHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="n">WrenHandle</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
 </pre></div>
 
 

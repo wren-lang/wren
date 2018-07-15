@@ -65,12 +65,12 @@ currently running one. </p>
 spawned. This includes the Wren executable itself, the path to the file being 
 run (if any), and any other options passed to Wren itself. </p>
 <p>If you run: </p>
-<div class="codehilite"><pre><span></span>$ wren file.wren arg
+<div class="codehilite"><pre><span class="nv">$ </span>wren file.wren arg
 </pre></div>
 
 
 <p>This returns: </p>
-<div class="codehilite"><pre><span></span>System.print(Process.allArguments) //&gt; [&quot;wren&quot;, &quot;file.wren&quot;, &quot;arg&quot;]
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Process</span><span class="o">.</span><span class="n">allArguments</span><span class="p">)</span> <span class="output">[&quot;wren&quot;, &quot;file.wren&quot;, &quot;arg&quot;]</span>
 </pre></div>
 
 
@@ -79,12 +79,12 @@ run (if any), and any other options passed to Wren itself. </p>
 Wren process was spawned. This does not include arguments handled by Wren 
 itself. </p>
 <p>If you run: </p>
-<div class="codehilite"><pre><span></span>$ wren file.wren arg
+<div class="codehilite"><pre><span class="nv">$ </span>wren file.wren arg
 </pre></div>
 
 
 <p>This returns: </p>
-<div class="codehilite"><pre><span></span>System.print(Process.arguments) //&gt; [&quot;arg&quot;]
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Process</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="output">[&quot;arg&quot;]</span>
 </pre></div>
   </main>
 </div>

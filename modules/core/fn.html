@@ -87,9 +87,9 @@
 function, so this really just returns the argument. It exists mainly to let you 
 create a &ldquo;bare&rdquo; function when you don&rsquo;t want to immediately pass it as a <a href="../functions.html#block-arguments">block 
 argument</a> to some other method. </p>
-<div class="codehilite"><pre><span></span>var fn = Fn.new { 
-  System.print(&quot;The body&quot;) 
-}
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The body&quot;</span><span class="p">)</span> 
+<span class="p">}</span>
 </pre></div>
 
 
@@ -97,18 +97,18 @@ argument</a> to some other method. </p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>arity</strong> <a href="#arity" name="arity" class="header-anchor">#</a></h3>
 <p>The number of arguments the function requires. </p>
-<div class="codehilite"><pre><span></span>System.print(Fn.new {}.arity)             //&gt; 0
-System.print(Fn.new {|a, b, c| a }.arity) //&gt; 3
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{}</span><span class="o">.</span><span class="n">arity</span><span class="p">)</span>             <span class="output">0</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span><span class="o">|</span><span class="err">a</span><span class="p">,</span> <span class="err">b</span><span class="p">,</span> <span class="err">c</span><span class="o">|</span> <span class="err">a</span> <span class="p">}</span><span class="o">.</span><span class="n">arity</span><span class="p">)</span> <span class="output">3</span>
 </pre></div>
 
 
 <h3><strong>call</strong>(args&hellip;) <a href="#call(args...)" name="call(args...)" class="header-anchor">#</a></h3>
 <p>Invokes the function with the given arguments. </p>
-<div class="codehilite"><pre><span></span>var fn = Fn.new { |arg| 
-  System.print(arg)     //&gt; Hello world
-}
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="o">|</span><span class="n">arg</span><span class="o">|</span> 
+  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>     <span class="output">Hello world</span>
+<span class="p">}</span>
 
-fn.call(&quot;Hello world&quot;)
+<span class="n">fn</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;Hello world&quot;</span><span class="p">)</span>
 </pre></div>
 
 

@@ -85,20 +85,20 @@
 <p>The name of the class. </p>
 <h3><strong>supertype</strong> <a href="#supertype" name="supertype" class="header-anchor">#</a></h3>
 <p>The superclass of this class. </p>
-<div class="codehilite"><pre><span></span><span class="kr">class</span> <span class="nx">Crustacean</span> <span class="p">{}</span> 
-<span class="kr">class</span> <span class="nx">Crab</span> <span class="nx">is</span> <span class="nx">Crustacean</span> <span class="p">{}</span>
+<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Crustacean</span> <span class="p">{}</span> 
+<span class="k">class</span> <span class="vg">Crab</span> <span class="k">is</span> <span class="vg">Crustacean</span> <span class="p">{}</span>
 
-<span class="nx">System</span><span class="p">.</span><span class="nx">print</span><span class="p">(</span><span class="nx">Crab</span><span class="p">.</span><span class="nx">supertype</span><span class="p">)</span> <span class="output">Crustacean</span>
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Crab</span><span class="o">.</span><span class="n">supertype</span><span class="p">)</span> <span class="output">Crustacean</span>
 </pre></div>
 
 
 <p>A class with no explicit superclass implicitly inherits Object: </p>
-<div class="codehilite"><pre><span></span>System.print(Crustacean.supertype) //&gt; Object
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Crustacean</span><span class="o">.</span><span class="n">supertype</span><span class="p">)</span> <span class="output">Object</span>
 </pre></div>
 
 
 <p>Object forms the root of the class hierarchy and has no supertype: </p>
-<div class="codehilite"><pre><span></span>System.print(Object.supertype) //&gt; null
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Object</span><span class="o">.</span><span class="n">supertype</span><span class="p">)</span> <span class="output">null</span>
 </pre></div>
   </main>
 </div>

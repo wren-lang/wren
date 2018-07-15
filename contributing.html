@@ -134,28 +134,28 @@ written in <a href="http://daringfireball.net/projects/markdown/">Markdown</a> (
 simple Python script, <code>util/generate_docs.py</code>, converts that to HTML and CSS. </p>
 <p>The site uses <a href="http://pygments.org">Pygments</a> for syntax highlighting, with a custom lexer plug-in 
 for Wren. To install that, run: </p>
-<div class="codehilite"><pre><span></span>$ <span class="nb">cd</span> util/pygments-lexer 
-$ sudo python setup.py develop 
-$ <span class="nb">cd</span> ../.. <span class="c1"># Back to the root Wren directory.</span>
+<div class="codehilite"><pre><span class="nv">$ </span><span class="nb">cd </span>util/pygments-lexer 
+<span class="nv">$ </span>sudo python3 setup.py develop 
+<span class="nv">$ </span><span class="nb">cd</span> ../.. <span class="c"># Back to the root Wren directory.</span>
 </pre></div>
 
 
 <p>Now you can build the docs: </p>
-<div class="codehilite"><pre><span></span>$ make docs
+<div class="codehilite"><pre><span class="nv">$ </span>make docs
 </pre></div>
 
 
 <p>This generates the site in <code>build/docs/</code>. You can run any simple static web 
 server from there. Python includes one: </p>
-<div class="codehilite"><pre><span></span>$ <span class="nb">cd</span> build/docs 
-$ python -m SimpleHTTPServer
+<div class="codehilite"><pre><span class="nv">$ </span><span class="nb">cd </span>build/docs 
+<span class="nv">$ </span>python3 -m http.server
 </pre></div>
 
 
 <p>Running <code>make docs</code> is a drag every time you change a line of Markdown or SASS, 
 so there is also a file watching version that will automatically regenerate the 
 docs when you edit a file: </p>
-<div class="codehilite"><pre><span></span>$ make watchdocs
+<div class="codehilite"><pre><span class="nv">$ </span>make watchdocs
 </pre></div>
 
 
@@ -166,7 +166,7 @@ docs when you edit a file: </p>
 <p><strong>Make sure you can build and run the tests locally.</strong> It&rsquo;s good to ensure 
    you&rsquo;re starting from a happy place before you poke at the code. Running the 
    tests is as simple as: </p>
-<div class="codehilite"><pre><span></span>$ make <span class="nb">test</span>
+<div class="codehilite"><pre><span class="nv">$ </span>make <span class="nb">test</span>
 </pre></div>
 
 
