@@ -111,8 +111,8 @@
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
     <PreBuildEvent>
-      <Command>python ../../libuv.py download
-python ../../libuv.py build -32</Command>
+      <Command>python ../../update_deps.py
+python ../../build_libuv.py -32</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -133,8 +133,8 @@ python ../../libuv.py build -32</Command>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
     <PreBuildEvent>
-      <Command>python ../../libuv.py download
-python ../../libuv.py build -64</Command>
+      <Command>python ../../update_deps.py
+python ../../build_libuv.py -64</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -159,8 +159,8 @@ python ../../libuv.py build -64</Command>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
     <PreBuildEvent>
-      <Command>python ../../libuv.py download
-python ../../libuv.py build -32</Command>
+      <Command>python ../../update_deps.py
+python ../../build_libuv.py -32</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -185,8 +185,8 @@ python ../../libuv.py build -32</Command>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
     <PreBuildEvent>
-      <Command>python ../../libuv.py download
-python ../../libuv.py build -64</Command>
+      <Command>python ../../update_deps.py
+python ../../build_libuv.py -64</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
