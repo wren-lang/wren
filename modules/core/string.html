@@ -185,24 +185,9 @@ count as well. </p>
 negative to count backwards from the end of the string. </p>
 <p>It is a runtime error if <code>search</code> is not a string or <code>start</code> is not an integer 
 index within the string&rsquo;s byte length. </p>
-<h3><strong>split</strong>(separator) <a href="#split(separator)" name="split(separator)" class="header-anchor">#</a></h3>
-<p>Returns a list of one or more strings separated by <code>separator</code>. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;abc abc abc&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">))</span> <span class="output">[abc, abc, abc]</span>
-</pre></div>
-
-
-<p>It is a runtime error if <code>separator</code> is not a string or is an empty string. </p>
-<h3><strong>replace</strong>(old, swap) <a href="#replace(old,-swap)" name="replace(old,-swap)" class="header-anchor">#</a></h3>
-<p>Returns a new string with all occurences of <code>old</code> replaced with <code>swap</code>. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;abc abc abc&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">))</span> <span class="output">abcabcabc</span>
-</pre></div>
-
-
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
-<p>Implements the <a href="../../control-flow.html#the-iterator-protocol">iterator protocol</a> 
-for iterating over the <em>code points</em> in the string: </p>
+<p>Implements the <a href="../../control-flow.html#the-iterator-protocol">iterator protocol</a> for iterating over the <em>code points</em> in the 
+string: </p>
 <div class="codehilite"><pre><span class="k">var</span> <span class="n">codePoints</span> <span class="o">=</span> <span class="p">[]</span> 
 <span class="k">for</span> <span class="p">(</span><span class="err">c</span> <span class="k">in</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span><span class="p">)</span> <span class="p">{</span> 
   <span class="n">codePoints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="err">c</span><span class="p">)</span> 
@@ -214,9 +199,62 @@ for iterating over the <em>code points</em> in the string: </p>
 
 <p>If the string contains any bytes that are not valid UTF-8, this iterates over 
 those too, one byte at a time. </p>
+<h3><strong>replace</strong>(old, swap) <a href="#replace(old,-swap)" name="replace(old,-swap)" class="header-anchor">#</a></h3>
+<p>Returns a new string with all occurrences of <code>old</code> replaced with <code>swap</code>. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;abc abc abc&quot;</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">))</span> <span class="output">abcabcabc</span>
+</pre></div>
+
+
+<h3><strong>split</strong>(separator) <a href="#split(separator)" name="split(separator)" class="header-anchor">#</a></h3>
+<p>Returns a list of one or more strings separated by <code>separator</code>. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;abc abc abc&quot;</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">))</span> <span class="output">[abc, abc, abc]</span>
+</pre></div>
+
+
+<p>It is a runtime error if <code>separator</code> is not a string or is an empty string. </p>
 <h3><strong>startsWith</strong>(prefix) <a href="#startswith(prefix)" name="startswith(prefix)" class="header-anchor">#</a></h3>
 <p>Checks if the string starts with <code>prefix</code>. </p>
 <p>It is a runtime error if <code>prefix</code> is not a string. </p>
+<h3><strong>trim</strong>() <a href="#trim()" name="trim()" class="header-anchor">#</a></h3>
+<p>Returns a new string with whitespace removed from the beginning and end of this 
+string. &ldquo;Whitespace&rdquo; is space, tab, carriage return, and line feed characters. </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot; </span><span class="se">\n</span><span class="s">stuff</span><span class="se">\r\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">trim</span><span class="p">())</span> <span class="output">stuff</span>
+</pre></div>
+
+
+<h3><strong>trim</strong>(chars) <a href="#trim(chars)" name="trim(chars)" class="header-anchor">#</a></h3>
+<p>Returns a new string with all code points in <code>chars</code> removed from the beginning 
+and end of this string. </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ&quot;</span><span class="o">.</span><span class="n">trim</span><span class="p">(</span><span class="s">&quot;ᵔᴥ&quot;</span><span class="p">))</span> <span class="output">bear</span>
+</pre></div>
+
+
+<h3><strong>trimEnd</strong>() <a href="#trimend()" name="trimend()" class="header-anchor">#</a></h3>
+<p>Like <code>trim()</code> but only removes from the end of the string. </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot; </span><span class="se">\n</span><span class="s">stuff</span><span class="se">\r\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">trimEnd</span><span class="p">())</span> <span class="output">&quot; \nstuff&quot;</span>
+</pre></div>
+
+
+<h3><strong>trimEnd</strong>(chars) <a href="#trimend(chars)" name="trimend(chars)" class="header-anchor">#</a></h3>
+<p>Like <code>trim()</code> but only removes from the end of the string. </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ&quot;</span><span class="o">.</span><span class="n">trimEnd</span><span class="p">(</span><span class="s">&quot;ᵔᴥ&quot;</span><span class="p">))</span> <span class="output">ᵔᴥᵔᴥᵔbear</span>
+</pre></div>
+
+
+<h3><strong>trimStart</strong>() <a href="#trimstart()" name="trimstart()" class="header-anchor">#</a></h3>
+<p>Like <code>trim()</code> but only removes from the beginning of the string. </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot; </span><span class="se">\n</span><span class="s">stuff</span><span class="se">\r\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">trimStart</span><span class="p">())</span> <span class="output">&quot;stuff\r\t&quot;</span>
+</pre></div>
+
+
+<h3><strong>trimStart</strong>(chars) <a href="#trimstart(chars)" name="trimstart(chars)" class="header-anchor">#</a></h3>
+<p>Like <code>trim()</code> but only removes from the beginning of the string. </p>
+<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ&quot;</span><span class="o">.</span><span class="n">trimStart</span><span class="p">(</span><span class="s">&quot;ᵔᴥ&quot;</span><span class="p">))</span> <span class="output">bearᵔᴥᴥᵔᵔ</span>
+</pre></div>
+
+
 <h3><strong>+</strong>(other) operator <a href="#+(other)-operator" name="+(other)-operator" class="header-anchor">#</a></h3>
 <p>Returns a new string that concatenates this string and <code>other</code>. </p>
 <p>It is a runtime error if <code>other</code> is not a string. </p>
