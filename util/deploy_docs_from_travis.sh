@@ -10,9 +10,8 @@ cd ../..
 make gh-pages
 
 # Clone the repo at the gh-pages branch.
-# TODO: Testing right now, so not using live branch.
 git clone https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG} gh-pages-repo \
-    --branch gh-pages-temp --depth 1
+    --branch gh-pages --depth 1
 cd gh-pages-repo
 
 # Copy them into the gh-pages branch.

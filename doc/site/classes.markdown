@@ -158,9 +158,10 @@ are available on an object. When you write:
     unicorn.isFancy
 
 You're saying "look up the method `isFancy` in the scope of the object
-`unicorn`". In this case, the fact that you want to look up a *method* `isFancy`
-and not a *variable* `isFancy` is explicit. That's what `.` does and the
-object to the left of the period is the object you want to look up the method on.
+`unicorn`&rdquo;. In this case, the fact that you want to look up a *method*
+`isFancy` and not a *variable* `isFancy` is explicit. That's what `.` does and
+the object to the left of the period is the object you want to look up the
+method on.
 
 ### `this`
 
