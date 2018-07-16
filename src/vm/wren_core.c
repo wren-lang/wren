@@ -1173,7 +1173,7 @@ void wrenInitializeCore(WrenVM* vm)
   //   '---------'   '-------------------'            -'
 
   // The rest of the classes can now be defined normally.
-  wrenInterpretInModule(vm, NULL, coreModuleSource);
+  wrenInterpret(vm, NULL, coreModuleSource);
 
   vm->boolClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);

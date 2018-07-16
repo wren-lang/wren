@@ -1,4 +1,4 @@
-import "a"
+import "./a"
 
 // Shared module should only run once:
 // expect: start a

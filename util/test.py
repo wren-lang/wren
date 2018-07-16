@@ -25,14 +25,14 @@ config_dir = ("debug" if is_debug else "release") + config
 
 WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wren' + args.suffix)
-TEST_APP = join(WREN_DIR, 'build', config_dir, 'test', 'wren' + args.suffix)
+TEST_APP = join(WREN_DIR, 'build', config_dir, 'test', 'api_wren' + args.suffix)
 
 EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect (handled )?runtime error: (.+)')
 ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
-STACK_TRACE_PATTERN = re.compile(r'\[main line (\d+)\] in')
+STACK_TRACE_PATTERN = re.compile(r'\[\./test/.* line (\d+)\] in')
 STDIN_PATTERN = re.compile(r'// stdin: (.*)')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')

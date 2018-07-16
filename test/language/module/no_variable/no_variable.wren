@@ -1,2 +1,2 @@
-import "module"
+import "./module"
 // expect: ran module

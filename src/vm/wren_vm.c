@@ -38,6 +38,7 @@ static void* defaultReallocate(void* ptr, size_t newSize)
 void wrenInitConfiguration(WrenConfiguration* config)
 {
   config->reallocateFn = defaultReallocate;
+  config->resolveModuleFn = NULL;
   config->loadModuleFn = NULL;
   config->bindForeignMethodFn = NULL;
   config->bindForeignClassFn = NULL;
@@ -696,11 +697,45 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
   finalizer(foreign->data);
 }
 
-Value wrenImportModule(WrenVM* vm, Value name)
+// Let the host resolve an imported module name if it wants to.
+static Value resolveModule(WrenVM* vm, Value name)
 {
-  // If the module is already loaded, we don't need to do anything.
-  if (!IS_UNDEFINED(wrenMapGet(vm->modules, name))) return NULL_VAL;
+  // If the host doesn't care to resolve, leave the name alone.
+  if (vm->config.resolveModuleFn == NULL) return name;
+
+  ObjFiber* fiber = vm->fiber;
+  ObjFn* fn = fiber->frames[fiber->numFrames - 1].closure->fn;
+  ObjString* importer = fn->module->name;
   
+  const char* resolved = vm->config.resolveModuleFn(vm, importer->value,
+                                                    AS_CSTRING(name));
+  if (resolved == NULL)
+  {
+    vm->fiber->error = wrenStringFormat(vm,
+        "Could not resolve module '@' imported from '@'.",
+        name, OBJ_VAL(importer));
+    return NULL_VAL;
+  }
+  
+  // If they resolved to the exact same string, we don't need to copy it.
+  if (resolved == AS_CSTRING(name)) return name;
+
+  // Copy the string into a Wren String object.
+  name = wrenNewString(vm, resolved);
+  DEALLOCATE(vm, (char*)resolved);
+  return name;
+}
+
+static Value importModule(WrenVM* vm, Value name)
+{
+  name = resolveModule(vm, name);
+  
+  // If the module is already loaded, we don't need to do anything.
+  Value existing = wrenMapGet(vm->modules, name);
+  if (!IS_UNDEFINED(existing)) return existing;
+
+  wrenPushRoot(vm, AS_OBJ(name));
+
   const char* source = NULL;
   bool allocatedSource = true;
   
@@ -729,6 +764,7 @@ Value wrenImportModule(WrenVM* vm, Value name)
   if (source == NULL)
   {
     vm->fiber->error = wrenStringFormat(vm, "Could not load module '@'.", name);
+    wrenPopRoot(vm); // name.
     return NULL_VAL;
   }
   
@@ -743,11 +779,34 @@ Value wrenImportModule(WrenVM* vm, Value name)
   {
     vm->fiber->error = wrenStringFormat(vm,
                                         "Could not compile module '@'.", name);
+    wrenPopRoot(vm); // name.
     return NULL_VAL;
   }
-  
+
+  wrenPopRoot(vm); // name.
+
   // Return the closure that executes the module.
   return OBJ_VAL(moduleClosure);
+}
+
+static Value getModuleVariable(WrenVM* vm, ObjModule* module,
+                               Value variableName)
+{
+  ObjString* variable = AS_STRING(variableName);
+  uint32_t variableEntry = wrenSymbolTableFind(&module->variableNames,
+                                               variable->value,
+                                               variable->length);
+  
+  // It's a runtime error if the imported variable does not exist.
+  if (variableEntry != UINT32_MAX)
+  {
+    return module->variables.data[variableEntry];
+  }
+  
+  vm->fiber->error = wrenStringFormat(vm,
+      "Could not find a variable named '@' in module '@'.",
+      variableName, OBJ_VAL(module->name));
+  return NULL_VAL;
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
@@ -1247,18 +1306,22 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       DISPATCH();
     }
     
+    CASE_CODE(END_MODULE):
+    {
+      vm->lastModule = fn->module;
+      PUSH(NULL_VAL);
+      DISPATCH();
+    }
+    
     CASE_CODE(IMPORT_MODULE):
     {
-      Value name = fn->constants.data[READ_SHORT()];
-
       // Make a slot on the stack for the module's fiber to place the return
       // value. It will be popped after this fiber is resumed. Store the
       // imported module's closure in the slot in case a GC happens when
       // invoking the closure.
-      PUSH(wrenImportModule(vm, name));
-      
+      PUSH(importModule(vm, fn->constants.data[READ_SHORT()]));
       if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
-
+      
       // If we get a closure, call it to execute the module body.
       if (IS_CLOSURE(PEEK()))
       {
@@ -1267,16 +1330,21 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         callFunction(vm, fiber, closure, 1);
         LOAD_FRAME();
       }
+      else
+      {
+        // The module has already been loaded. Remember it so we can import
+        // variables from it if needed.
+        vm->lastModule = AS_MODULE(PEEK());
+      }
 
       DISPATCH();
     }
     
     CASE_CODE(IMPORT_VARIABLE):
     {
-      Value module = fn->constants.data[READ_SHORT()];
       Value variable = fn->constants.data[READ_SHORT()];
-      
-      Value result = wrenGetModuleVariable(vm, module, variable);
+      ASSERT(vm->lastModule != NULL, "Should have already imported module.");
+      Value result = getModuleVariable(vm, vm->lastModule, variable);
       if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
 
       PUSH(result);
@@ -1407,13 +1475,8 @@ void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle)
   DEALLOCATE(vm, handle);
 }
 
-WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source)
-{
-  return wrenInterpretInModule(vm, "main", source);
-}
-
-WrenInterpretResult wrenInterpretInModule(WrenVM* vm, const char* module,
-                                          const char* source)
+WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
+                                  const char* source)
 {
   ObjClosure* closure = wrenCompileSource(vm, module, source, false, true);
   if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;
@@ -1452,21 +1515,7 @@ Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName)
     return NULL_VAL;
   }
   
-  ObjString* variable = AS_STRING(variableName);
-  uint32_t variableEntry = wrenSymbolTableFind(&module->variableNames,
-                                               variable->value,
-                                               variable->length);
-  
-  // It's a runtime error if the imported variable does not exist.
-  if (variableEntry != UINT32_MAX)
-  {
-    return module->variables.data[variableEntry];
-  }
-  
-  vm->fiber->error = wrenStringFormat(vm,
-      "Could not find a variable named '@' in module '@'.",
-      variableName, moduleName);
-  return NULL_VAL;
+  return getModuleVariable(vm, module, variableName);
 }
 
 Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name)

@@ -58,16 +58,21 @@ typedef void (*WrenForeignMethodFn)(WrenVM* vm);
 // collection.
 typedef void (*WrenFinalizerFn)(void* data);
 
+// Gives the host a chance to canonicalize the imported module name,
+// potentially taking into account the (previously resolved) name of the module
+// that contains the import. Typically, this is used to implement relative
+// imports.
+typedef const char* (*WrenResolveModuleFn)(WrenVM* vm,
+    const char* importer, const char* name);
+
 // Loads and returns the source code for the module [name].
 typedef char* (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
 
 // Returns a pointer to a foreign method on [className] in [module] with
 // [signature].
 typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
-                                                       const char* module,
-                                                       const char* className,
-                                                       bool isStatic,
-                                                       const char* signature);
+    const char* module, const char* className, bool isStatic,
+    const char* signature);
 
 // Displays a string of text to the user.
 typedef void (*WrenWriteFn)(WrenVM* vm, const char* text);
@@ -87,14 +92,15 @@ typedef enum
 // Reports an error to the user.
 //
 // An error detected during compile time is reported by calling this once with
-// `WREN_ERROR_COMPILE`, the name of the module and line where the error occurs,
-// and the compiler's error message.
+// [type] `WREN_ERROR_COMPILE`, the resolved name of the [module] and [line]
+// where the error occurs, and the compiler's error [message].
 //
-// A runtime error is reported by calling this once with `WREN_ERROR_RUNTIME`,
-// no module or line, and the runtime error's message. After that, a series of
-// `WREN_ERROR_STACK_TRACE` calls are made for each line in the stack trace.
-// Each of those has the module and line where the method or function is
-// defined and [message] is the name of the method or function.
+// A runtime error is reported by calling this once with [type]
+// `WREN_ERROR_RUNTIME`, no [module] or [line], and the runtime error's
+// [message]. After that, a series of [type] `WREN_ERROR_STACK_TRACE` calls are
+// made for each line in the stack trace. Each of those has the resolved
+// [module] and [line] where the method or function is defined and [message] is
+// the name of the method or function.
 typedef void (*WrenErrorFn)(
     WrenVM* vm, WrenErrorType type, const char* module, int line,
     const char* message);
@@ -115,7 +121,7 @@ typedef struct
 } WrenForeignClassMethods;
 
 // Returns a pair of pointers to the foreign methods used to allocate and
-// finalize the data for instances of [className] in [module].
+// finalize the data for instances of [className] in resolved [module].
 typedef WrenForeignClassMethods (*WrenBindForeignClassFn)(
     WrenVM* vm, const char* module, const char* className);
 
@@ -125,6 +131,32 @@ typedef struct
   //
   // If `NULL`, defaults to a built-in function that uses `realloc` and `free`.
   WrenReallocateFn reallocateFn;
+
+  // The callback Wren uses to resolve a module name.
+  //
+  // Some host applications may wish to support "relative" imports, where the
+  // meaning of an import string depends on the module that contains it. To
+  // support that without baking any policy into Wren itself, the VM gives the
+  // host a chance to resolve an import string.
+  //
+  // Before an import is loaded, it calls this, passing in the name of the
+  // module that contains the import and the import string. The host app can
+  // look at both of those and produce a new "canonical" string that uniquely
+  // identifies the module. This string is then used as the name of the module
+  // going forward. It is what is passed to [loadModuleFn], how duplicate
+  // imports of the same module are detected, and how the module is reported in
+  // stack traces.
+  //
+  // If you leave this function NULL, then the original import string is
+  // treated as the resolved string.
+  //
+  // If an import cannot be resolved by the embedder, it should return NULL and
+  // Wren will report that as a runtime error.
+  //
+  // Wren will take ownership of the string you return and free it for you, so
+  // it should be allocated using the same allocation function you provide
+  // above.
+  WrenResolveModuleFn resolveModuleFn;
 
   // The callback Wren uses to load a module.
   //
@@ -200,7 +232,8 @@ typedef struct
   //
   // For example, say that this is 50. After a garbage collection, when there
   // are 400 bytes of memory still in use, the next collection will be triggered
-  // after a total of 600 bytes are allocated (including the 400 already in use.)
+  // after a total of 600 bytes are allocated (including the 400 already in
+  // use.)
   //
   // Setting this to a smaller number wastes less memory, but triggers more
   // frequent garbage collections.
@@ -255,8 +288,10 @@ void wrenFreeVM(WrenVM* vm);
 // Immediately run the garbage collector to free unused memory.
 void wrenCollectGarbage(WrenVM* vm);
 
-// Runs [source], a string of Wren source code in a new fiber in [vm].
-WrenInterpretResult wrenInterpret(WrenVM* vm, const char* source);
+// Runs [source], a string of Wren source code in a new fiber in [vm] in the
+// context of resolved [module].
+WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
+                                  const char* source);
 
 // Creates a handle that can be used to invoke a method with [signature] on
 // using a receiver and arguments that are set up on the stack.
@@ -435,10 +470,11 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 // an element, use `-1` for the index.
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
-// Looks up the top level variable with [name] in [module] and stores it in
-// [slot].
+// Looks up the top level variable with [name] in resolved [module] and stores
+// it in [slot].
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot);
+
 // Sets the current fiber to be aborted, and uses the value in [slot] as the
 // runtime error object.
 void wrenAbortFiber(WrenVM* vm, int slot);

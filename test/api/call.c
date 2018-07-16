@@ -6,7 +6,7 @@
 void callRunTests(WrenVM* vm)
 {
   wrenEnsureSlots(vm, 1);
-  wrenGetVariable(vm, "main", "Call", 0);
+  wrenGetVariable(vm, "./test/api/call", "Call", 0);
   WrenHandle* callClass = wrenGetSlotHandle(vm, 0);
   
   WrenHandle* noParams = wrenMakeCallHandle(vm, "noParams");

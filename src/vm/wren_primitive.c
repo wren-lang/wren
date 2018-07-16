@@ -80,7 +80,8 @@ uint32_t calculateRange(WrenVM* vm, ObjRange* range, uint32_t* length,
   // list[0..-1] and list[0...list.count] can be used to copy a list even when
   // empty.
   if (range->from == *length &&
-      range->to == (range->isInclusive ? -1.0 : (double)*length)) {
+      range->to == (range->isInclusive ? -1.0 : (double)*length))
+  {
     *length = 0;
     return 0;
   }

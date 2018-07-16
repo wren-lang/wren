@@ -1609,9 +1609,7 @@ static void patchJump(Compiler* compiler, int offset)
 static bool finishBlock(Compiler* compiler)
 {
   // Empty blocks do nothing.
-  if (match(compiler, TOKEN_RIGHT_BRACE)) {
-    return false;
-  }
+  if (match(compiler, TOKEN_RIGHT_BRACE)) return false;
 
   // If there's no line after the "{", it's a single-expression body.
   if (!matchLine(compiler))
@@ -1622,9 +1620,7 @@ static bool finishBlock(Compiler* compiler)
   }
 
   // Empty blocks (with just a newline inside) do nothing.
-  if (match(compiler, TOKEN_RIGHT_BRACE)) {
-    return false;
-  }
+  if (match(compiler, TOKEN_RIGHT_BRACE)) return false;
 
   // Compile the definition list.
   do
@@ -2723,6 +2719,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_CONSTRUCT:
     case CODE_FOREIGN_CONSTRUCT:
     case CODE_FOREIGN_CLASS:
+    case CODE_END_MODULE:
       return 0;
 
     case CODE_LOAD_LOCAL:
@@ -3325,9 +3322,13 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 //     import "foo" for Bar, Baz
 //
 // We compile a single IMPORT_MODULE "foo" instruction to load the module
-// itself. Then, for each imported name, we declare a variable and them emit a
-// IMPORT_VARIABLE instruction to load the variable from the other module and
-// assign it to the new variable in this one.
+// itself. When that finishes executing the imported module, it leaves the
+// ObjModule in vm->lastModule. Then, for Bar and Baz, we:
+//
+// * Declare a variable in the current scope with that name.
+// * Emit an IMPORT_VARIABLE instruction to load the variable's value from the
+//   other module.
+// * Compile the code to store that value in the variable in this scope.
 static void import(Compiler* compiler)
 {
   ignoreNewlines(compiler);
@@ -3337,9 +3338,9 @@ static void import(Compiler* compiler)
   // Load the module.
   emitShortArg(compiler, CODE_IMPORT_MODULE, moduleConstant);
 
-  // Discard the unused result value from calling the module's fiber.
+  // Discard the unused result value from calling the module body's closure.
   emitOp(compiler, CODE_POP);
-
+  
   // The for clause is optional.
   if (!match(compiler, TOKEN_FOR)) return;
 
@@ -3348,16 +3349,15 @@ static void import(Compiler* compiler)
   {
     ignoreNewlines(compiler);
     int slot = declareNamedVariable(compiler);
-
+    
     // Define a string constant for the variable name.
     int variableConstant = addConstant(compiler,
         wrenNewStringLength(compiler->parser->vm,
                             compiler->parser->previous.start,
                             compiler->parser->previous.length));
-
+    
     // Load the variable from the other module.
-    emitShortArg(compiler, CODE_IMPORT_VARIABLE, moduleConstant);
-    emitShort(compiler, variableConstant);
+    emitShortArg(compiler, CODE_IMPORT_VARIABLE, variableConstant);
     
     // Store the result in the variable here.
     defineVariable(compiler, slot);
@@ -3474,7 +3474,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
       }
     }
     
-    emitOp(&compiler, CODE_NULL);
+    emitOp(&compiler, CODE_END_MODULE);
   }
   
   emitOp(&compiler, CODE_RETURN);

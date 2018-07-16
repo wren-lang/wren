@@ -1,4 +1,4 @@
-import "module"
+import "./module"
 // expect: Bool
 // expect: Class
 // expect: Fiber

@@ -6,7 +6,7 @@
 void resetStackAfterCallAbortRunTests(WrenVM* vm)
 {
   wrenEnsureSlots(vm, 1);
-  wrenGetVariable(vm, "main", "Test", 0);
+  wrenGetVariable(vm, "./test/api/reset_stack_after_call_abort", "Test", 0);
   WrenHandle* testClass = wrenGetSlotHandle(vm, 0);
   
   WrenHandle* abortFiber = wrenMakeCallHandle(vm, "abortFiber()");

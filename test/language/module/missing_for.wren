@@ -1,1 +1,1 @@
-import "module" NoString // expect error
+import "./module" NoString // expect error

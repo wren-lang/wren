@@ -40,7 +40,7 @@ import sys
 
 WREN_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 WREN_BIN = os.path.join(WREN_DIR, 'bin')
-BENCHMARK_DIR = os.path.join(WREN_DIR, 'test', 'benchmark')
+BENCHMARK_DIR = os.path.join('test', 'benchmark')
 
 # How many times to run a given benchmark.
 NUM_TRIALS = 10
@@ -154,7 +154,7 @@ def run_trial(benchmark, language):
   # of the normal Wren build.
   if benchmark[0].startswith("api_"):
     executable_args = [
-      os.path.join(WREN_DIR, "build", "release", "test", "wren")
+      os.path.join(WREN_DIR, "build", "release", "test", "api_wren")
     ]
 
   args = []

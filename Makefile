@@ -49,23 +49,23 @@ all: debug release
 ci: ci_32 ci_64
 
 ci_32:
-	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=c   ARCH=32 vm cli test
+	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=c   ARCH=32 vm cli api_test
 	$(V) ./util/test.py --suffix=d-32 $(suite)
-	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=cpp ARCH=32 vm cli test
+	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=cpp ARCH=32 vm cli api_test
 	$(V) ./util/test.py --suffix=d-cpp-32 $(suite)
-	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=c   ARCH=32 vm cli test
+	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=c   ARCH=32 vm cli api_test
 	$(V) ./util/test.py --suffix=-32 $(suite)
-	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=cpp ARCH=32 vm cli test
+	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=cpp ARCH=32 vm cli api_test
 	$(V) ./util/test.py --suffix=-cpp-32 $(suite)
 
 ci_64:
-	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=c   ARCH=64 vm cli test
+	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=c   ARCH=64 vm cli api_test
 	$(V) ./util/test.py --suffix=d-64 $(suite)
-	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=cpp ARCH=64 vm cli test
+	$(V) $(MAKE) -f util/wren.mk MODE=debug   LANG=cpp ARCH=64 vm cli api_test
 	$(V) ./util/test.py --suffix=d-cpp-64 $(suite)
-	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=c   ARCH=64 vm cli test
+	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=c   ARCH=64 vm cli api_test
 	$(V) ./util/test.py --suffix=-64 $(suite)
-	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=cpp ARCH=64 vm cli test
+	$(V) $(MAKE) -f util/wren.mk MODE=release LANG=cpp ARCH=64 vm cli api_test
 	$(V) ./util/test.py --suffix=-cpp-64 $(suite)
 
 # Remove all build outputs and intermediate files. Does not remove downloaded
@@ -77,12 +77,16 @@ clean:
 
 # Run the tests against the debug build of Wren.
 test: debug
-	$(V) $(MAKE) -f util/wren.mk MODE=debug test
+	$(V) $(MAKE) -f util/wren.mk MODE=debug api_test
 	$(V) ./util/test.py $(suite)
 
 benchmark: release
-	$(V) $(MAKE) -f util/wren.mk test
+	$(V) $(MAKE) -f util/wren.mk api_test
 	$(V) ./util/benchmark.py -l wren $(suite)
+
+unit_test:
+	$(V) $(MAKE) -f util/wren.mk MODE=debug unit_test
+	$(V) ./build/debug/test/unit_wrend
 
 # Generate the Wren site.
 docs:
@@ -105,4 +109,4 @@ gh-pages: docs
 amalgamation: src/include/wren.h src/vm/*.h src/vm/*.c
 	./util/generate_amalgamation.py > build/wren.c
 
-.PHONY: all amalgamation builtin clean debug docs gh-pages release test vm watchdocs ci ci_32 ci_64
+.PHONY: all amalgamation benchmark builtin clean debug docs gh-pages release test vm watchdocs ci ci_32 ci_64
