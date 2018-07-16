@@ -9,40 +9,39 @@
 static void expectNormalize(const char* input, const char* expected)
 {
   Path* path = pathNew(input);
-  Path* result = pathNormalize(path);
+  pathNormalize(path);
   
-  if (strcmp(result->chars, expected) != 0)
+  if (strcmp(path->chars, expected) != 0)
   {
     printf("FAIL %-30s Want %s\n", input, expected);
-    printf("                                     Got %s\n\n", result->chars);
+    printf("                                     Got %s\n\n", path->chars);
     fail();
   }
   else
   {
 #if SHOW_PASSES
-    printf("PASS %-30s   -> %s\n", input, result->chars);
+    printf("PASS %-30s   -> %s\n", input, path->chars);
 #endif
     pass();
   }
   
   pathFree(path);
-  pathFree(result);
 }
 
 static void testNormalize()
 {
-  // simple cases
+  // Simple cases.
   expectNormalize("", ".");
   expectNormalize(".", ".");
   expectNormalize("..", "..");
   expectNormalize("a", "a");
   expectNormalize("/", "/");
   
-  // collapses redundant separators
+  // Collapses redundant separators.
   expectNormalize("a/b/c", "a/b/c");
   expectNormalize("a//b///c////d", "a/b/c/d");
   
-  // eliminates "." parts
+  // Eliminates "." parts, except one at the beginning.
   expectNormalize("./", ".");
   expectNormalize("/.", "/");
   expectNormalize("/./", "/");
@@ -50,10 +49,10 @@ static void testNormalize()
   expectNormalize("a/./b", "a/b");
   expectNormalize("a/.b/c", "a/.b/c");
   expectNormalize("a/././b/./c", "a/b/c");
-  expectNormalize("././a", "a");
+  expectNormalize("././a", "./a");
   expectNormalize("a/./.", "a");
   
-  // eliminates ".." parts
+  // Eliminates ".." parts.
   expectNormalize("..", "..");
   expectNormalize("../", "..");
   expectNormalize("../../..", "../../..");
@@ -68,7 +67,7 @@ static void testNormalize()
   expectNormalize("a/b/c/../../d/e/..", "a/d");
   expectNormalize("a/b/../../../../c", "../../c");
   
-  // does not walk before root on absolute paths
+  // Does not walk before root on absolute paths.
   expectNormalize("..", "..");
   expectNormalize("../", "..");
   expectNormalize("/..", "/");
@@ -84,7 +83,7 @@ static void testNormalize()
   expectNormalize("a/b/../../../../c", "../../c");
   expectNormalize("a/b/c/../../..d/./.e/f././", "a/..d/.e/f.");
   
-  // removes trailing separators
+  // Removes trailing separators.
   expectNormalize("./", ".");
   expectNormalize(".//", ".");
   expectNormalize("a/", "a");
@@ -94,7 +93,7 @@ static void testNormalize()
   expectNormalize("foo/bar/baz", "foo/bar/baz");
   expectNormalize("foo", "foo");
   expectNormalize("foo/bar/", "foo/bar");
-  expectNormalize("./foo/././bar/././", "foo/bar");
+  expectNormalize("./foo/././bar/././", "./foo/bar");
 }
 
 void testPath()

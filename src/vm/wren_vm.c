@@ -723,7 +723,7 @@ static Value resolveModule(WrenVM* vm, Value name)
   return name;
 }
 
-Value wrenImportModule(WrenVM* vm, Value name)
+static Value importModule(WrenVM* vm, Value name)
 {
   name = resolveModule(vm, name);
   
@@ -1308,7 +1308,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     {
       Value name = fn->constants.data[READ_SHORT()];
 
-      Value result = wrenImportModule(vm, name);
+      Value result = importModule(vm, name);
       if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
 
       // Make a slot on the stack for the module's closure to place the return

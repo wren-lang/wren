@@ -1,6 +1,6 @@
 import "meta" for Meta
 
-var variables = Meta.getModuleVariables("test/meta/get_module_variables")
+var variables = Meta.getModuleVariables("./test/meta/get_module_variables")
 
 // Includes implicitly imported core stuff.
 System.print(variables.contains("Object")) // expect: true

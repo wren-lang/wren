@@ -5,18 +5,19 @@
 #include "wren.h"
 
 // Executes the Wren script at [path] in a new VM.
-//
-// Exits if the script failed or could not be loaded.
-void runFile(const char* path);
+WrenInterpretResult runFile(const char* path);
 
 // Runs the Wren interactive REPL.
-int runRepl();
+WrenInterpretResult runRepl();
 
 // Gets the currently running VM.
 WrenVM* getVM();
 
 // Gets the event loop the VM is using.
 uv_loop_t* getLoop();
+
+// Get the exit code the CLI should exit with when done.
+int getExitCode();
 
 // Set the exit code the CLI should exit with when done.
 void setExitCode(int exitCode);
