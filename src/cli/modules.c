@@ -192,6 +192,7 @@ static ModuleRegistry modules[] =
 #undef END_CLASS
 #undef METHOD
 #undef STATIC_METHOD
+#undef FINALIZER
 
 // Looks for a built-in module with [name].
 //
@@ -241,7 +242,7 @@ char* readBuiltInModule(const char* name)
 
   size_t length = strlen(*module->source);
   char* copy = (char*)malloc(length + 1);
-  strncpy(copy, *module->source, length + 1);
+  memcpy(copy, *module->source, length + 1);
   return copy;
 }
 

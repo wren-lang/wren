@@ -151,6 +151,9 @@ void wrenCollectGarbage(WrenVM* vm)
   // Any object the compiler is using (if there is one).
   if (vm->compiler != NULL) wrenMarkCompiler(vm, vm->compiler);
 
+  // Method names.
+  wrenBlackenSymbolTable(vm, &vm->methodNames);
+
   // Now that we have grayed the roots, do a depth-first search over all of the
   // reachable objects.
   wrenBlackenObjects(vm);
@@ -421,7 +424,7 @@ static void runtimeError(WrenVM* vm)
 static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
   vm->fiber->error = wrenStringFormat(vm, "@ does not implement '$'.",
-      OBJ_VAL(classObj->name), vm->methodNames.data[symbol].buffer);
+      OBJ_VAL(classObj->name), vm->methodNames.data[symbol]->value);
 }
 
 // Checks that [value], which must be a closure, does not require more
@@ -493,8 +496,8 @@ static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
     for (int i = 0; i < coreModule->variables.count; i++)
     {
       wrenDefineVariable(vm, module,
-                         coreModule->variableNames.data[i].buffer,
-                         coreModule->variableNames.data[i].length,
+                         coreModule->variableNames.data[i]->value,
+                         coreModule->variableNames.data[i]->length,
                          coreModule->variables.data[i]);
     }
   }
@@ -730,7 +733,9 @@ static Value importModule(WrenVM* vm, Value name)
   // If the module is already loaded, we don't need to do anything.
   Value existing = wrenMapGet(vm->modules, name);
   if (!IS_UNDEFINED(existing)) return existing;
-  
+
+  wrenPushRoot(vm, AS_OBJ(name));
+
   const char* source = NULL;
   bool allocatedSource = true;
   
@@ -759,6 +764,7 @@ static Value importModule(WrenVM* vm, Value name)
   if (source == NULL)
   {
     vm->fiber->error = wrenStringFormat(vm, "Could not load module '@'.", name);
+    wrenPopRoot(vm); // name.
     return NULL_VAL;
   }
   
@@ -773,9 +779,12 @@ static Value importModule(WrenVM* vm, Value name)
   {
     vm->fiber->error = wrenStringFormat(vm,
                                         "Could not compile module '@'.", name);
+    wrenPopRoot(vm); // name.
     return NULL_VAL;
   }
-  
+
+  wrenPopRoot(vm); // name.
+
   // Return the closure that executes the module.
   return OBJ_VAL(moduleClosure);
 }
@@ -1306,20 +1315,18 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     
     CASE_CODE(IMPORT_MODULE):
     {
-      Value name = fn->constants.data[READ_SHORT()];
-
-      Value result = importModule(vm, name);
+      // Make a slot on the stack for the module's fiber to place the return
+      // value. It will be popped after this fiber is resumed. Store the
+      // imported module's closure in the slot in case a GC happens when
+      // invoking the closure.
+      PUSH(importModule(vm, fn->constants.data[READ_SHORT()]));
       if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
-
-      // Make a slot on the stack for the module's closure to place the return
-      // value. It will be popped after the module body code returns.
-      PUSH(NULL_VAL);
       
       // If we get a closure, call it to execute the module body.
-      if (IS_CLOSURE(result))
+      if (IS_CLOSURE(PEEK()))
       {
         STORE_FRAME();
-        ObjClosure* closure = AS_CLOSURE(result);
+        ObjClosure* closure = AS_CLOSURE(PEEK());
         callFunction(vm, fiber, closure, 1);
         LOAD_FRAME();
       }
@@ -1327,7 +1334,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       {
         // The module has already been loaded. Remember it so we can import
         // variables from it if needed.
-        vm->lastModule = AS_MODULE(result);
+        vm->lastModule = AS_MODULE(PEEK());
       }
 
       DISPATCH();
@@ -1477,7 +1484,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
   wrenPushRoot(vm, (Obj*)closure);
   ObjFiber* fiber = wrenNewFiber(vm, closure);
   wrenPopRoot(vm); // closure.
-
+  
   return runInterpreter(vm, fiber);
 }
 
@@ -1774,7 +1781,7 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {
   ASSERT(module != NULL, "Module cannot be NULL.");
-  ASSERT(module != NULL, "Variable name cannot be NULL.");  
+  ASSERT(name != NULL, "Variable name cannot be NULL.");  
   validateApiSlot(vm, slot);
   
   Value moduleName = wrenStringFormat(vm, "$", module);

@@ -90,6 +90,7 @@ unit_test:
 
 # Generate the Wren site.
 docs:
+	mkdir -p build
 	$(V) ./util/generate_docs.py
 
 # Continuously generate and serve the Wren site.

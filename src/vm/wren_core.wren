@@ -236,6 +236,48 @@ class String is Sequence {
     return result
   }
 
+  trim() { trim_("\t\r\n ", true, true) }
+  trim(chars) { trim_(chars, true, true) }
+  trimEnd() { trim_("\t\r\n ", false, true) }
+  trimEnd(chars) { trim_(chars, false, true) }
+  trimStart() { trim_("\t\r\n ", true, false) }
+  trimStart(chars) { trim_(chars, true, false) }
+
+  trim_(chars, trimStart, trimEnd) {
+    if (!(chars is String)) {
+      Fiber.abort("Characters must be a string.")
+    }
+
+    var codePoints = chars.codePoints.toList
+
+    var start
+    if (trimStart) {
+      while (start = iterate(start)) {
+        if (!codePoints.contains(codePointAt_(start))) break
+      }
+
+      if (start == false) return ""
+    } else {
+      start = 0
+    }
+
+    var end
+    if (trimEnd) {
+      end = byteCount_ - 1
+      while (end >= start) {
+        var codePoint = codePointAt_(end)
+        if (codePoint != -1 && !codePoints.contains(codePoint)) break
+        end = end - 1
+      }
+
+      if (end < start) return ""
+    } else {
+      end = -1
+    }
+
+    return this[start..end]
+  }
+
   *(count) {
     if (!(count is Num) || !count.isInteger || count < 0) {
       Fiber.abort("Count must be a non-negative integer.")

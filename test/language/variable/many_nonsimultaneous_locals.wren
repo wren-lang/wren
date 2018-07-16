@@ -1,10 +1,10 @@
-// Can have more than 256 local variables in a local scope, as long as they
+// Can have more than 255 local variables in a local scope, as long as they
 // aren't all in scope at the same time.
 
 {
   {
-    var a0 = "value a"
-    var a1 = a0
+    // Slot zero is always taken to hold the closure or receiver.
+    var a1 = "value a"
     var a2 = a1
     var a3 = a2
     var a4 = a3
@@ -263,8 +263,8 @@
   }
 
   {
-    var b0 = "value b"
-    var b1 = b0
+    // Slot zero is always taken to hold the closure or receiver.
+    var b1 = "value b"
     var b2 = b1
     var b3 = b2
     var b4 = b3

@@ -1,13 +1,22 @@
 language: c
 os:
- - osx
  - linux
+ - osx
 compiler:
   - gcc
   - clang
 env:
   - WREN_OPTIONS="" CI_ARCHS="ci_32 ci_64"
   - WREN_OPTIONS="-DWREN_NAN_TAGGING=0" CI_ARCHS="ci_64"
+
+# Automatically build and deploy docs.
+jobs:
+  include:
+    - stage: deploy
+      script: bash util/deploy_docs_from_travis.sh
+      # Only deploy commits that land on master.
+      if: branch = master and type = push
+
 # Travis VMs are 64-bit but we compile both for 32 and 64 bit. To enable the
 # 32-bit builds to work, we need gcc-multilib.
 addons:
@@ -15,5 +24,17 @@ addons:
     packages:
     - gcc-multilib
     - g++-multilib
-sudo: false # Enable container-based builds.
+    # These are needed for building and deploying the docs.
+    - python3-markdown
+    - python3-pygments
+    - python3-setuptools
+    - ruby-sass
+
+# Can't do container-based builds for now because installing the custom
+# Pygments lexer to generate the docs requires sudo. :( If that changes,
+# uncomment the next line and delete the "sudo" and "dist" lines.
+# sudo: false # Enable container-based builds.
+sudo: required
+dist: trusty
+
 script: make WREN_CFLAGS=${WREN_OPTIONS} ${CI_ARCHS}

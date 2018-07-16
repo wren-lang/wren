@@ -129,28 +129,12 @@ negative to count backwards from the end of the string.
 It is a runtime error if `search` is not a string or `start` is not an integer
 index within the string's byte length.
 
-### **split**(separator)
-
-Returns a list of one or more strings separated by `separator`.
-
-    :::wren
-    var string = "abc abc abc"
-    System.print(string.split(" ")) //> [abc, abc, abc]
-
-It is a runtime error if `separator` is not a string or is an empty string.
-
-### **replace**(old, swap)
-
-Returns a new string with all occurences of `old` replaced with `swap`.
-
-    :::wren
-    var string = "abc abc abc"
-    System.print(string.replace(" ", "")) //> abcabcabc
-
 ### **iterate**(iterator), **iteratorValue**(iterator)
 
-Implements the [iterator protocol](../../control-flow.html#the-iterator-protocol)
-for iterating over the *code points* in the string:
+Implements the [iterator protocol][] for iterating over the *code points* in the
+string:
+
+[iterator protocol]: ../../control-flow.html#the-iterator-protocol
 
     :::wren
     var codePoints = []
@@ -163,11 +147,73 @@ for iterating over the *code points* in the string:
 If the string contains any bytes that are not valid UTF-8, this iterates over
 those too, one byte at a time.
 
+### **replace**(old, swap)
+
+Returns a new string with all occurrences of `old` replaced with `swap`.
+
+    :::wren
+    var string = "abc abc abc"
+    System.print(string.replace(" ", "")) //> abcabcabc
+
+### **split**(separator)
+
+Returns a list of one or more strings separated by `separator`.
+
+    :::wren
+    var string = "abc abc abc"
+    System.print(string.split(" ")) //> [abc, abc, abc]
+
+It is a runtime error if `separator` is not a string or is an empty string.
+
 ### **startsWith**(prefix)
 
 Checks if the string starts with `prefix`.
 
 It is a runtime error if `prefix` is not a string.
+
+### **trim**()
+
+Returns a new string with whitespace removed from the beginning and end of this
+string. "Whitespace" is space, tab, carriage return, and line feed characters.
+
+    :::wren
+    System.print(" \nstuff\r\t".trim()) //> stuff
+
+### **trim**(chars)
+
+Returns a new string with all code points in `chars` removed from the beginning
+and end of this string.
+
+    :::wren
+    System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trim("ᵔᴥ")) //> bear
+
+### **trimEnd**()
+
+Like `trim()` but only removes from the end of the string.
+
+    :::wren
+    System.print(" \nstuff\r\t".trimEnd()) //> " \nstuff"
+
+### **trimEnd**(chars)
+
+Like `trim()` but only removes from the end of the string.
+
+    :::wren
+    System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimEnd("ᵔᴥ")) //> ᵔᴥᵔᴥᵔbear
+
+### **trimStart**()
+
+Like `trim()` but only removes from the beginning of the string.
+
+    :::wren
+    System.print(" \nstuff\r\t".trimStart()) //> "stuff\r\t"
+
+### **trimStart**(chars)
+
+Like `trim()` but only removes from the beginning of the string.
+
+    :::wren
+    System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimStart("ᵔᴥ")) //> bearᵔᴥᴥᵔᵔ
 
 ### **+**(other) operator
 

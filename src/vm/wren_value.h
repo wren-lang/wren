@@ -2,6 +2,7 @@
 #define wren_value_h
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "wren_common.h"
 #include "wren_utils.h"
@@ -102,7 +103,8 @@ typedef enum {
 typedef struct sObjClass ObjClass;
 
 // Base struct for all heap-allocated objects.
-typedef struct sObj
+typedef struct sObj Obj;
+struct sObj
 {
   ObjType type;
   bool isDark;
@@ -112,7 +114,7 @@ typedef struct sObj
 
   // The next object in the linked list of all currently allocated objects.
   struct sObj* next;
-} Obj;
+};
 
 #if WREN_NAN_TAGGING
 
@@ -145,7 +147,7 @@ typedef struct
 DECLARE_BUFFER(Value, Value);
 
 // A heap-allocated string object.
-typedef struct
+struct sObjString
 {
   Obj obj;
 
@@ -157,7 +159,7 @@ typedef struct
 
   // Inline array of the string's bytes followed by a null terminator.
   char value[FLEXIBLE_ARRAY];
-} ObjString;
+};
 
 // The dynamically allocated data structure for a variable that has been used
 // by a closure. Whenever a function accesses a variable declared in an
@@ -171,7 +173,7 @@ typedef struct
 // be closed. When that happens, the value gets copied off the stack into the
 // upvalue itself. That way, it can have a longer lifetime than the stack
 // variable.
-typedef struct sUpvalue
+typedef struct sObjUpvalue
 {
   // The object header. Note that upvalues have this because they are garbage
   // collected, but they are not first class Wren objects.
@@ -187,7 +189,7 @@ typedef struct sUpvalue
 
   // Open upvalues are stored in a linked list by the fiber. This points to the
   // next upvalue in that list.
-  struct sUpvalue* next;
+  struct sObjUpvalue* next;
 } ObjUpvalue;
 
 // The type of a primitive function.
@@ -628,10 +630,6 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 // Creates a new fiber object that will invoke [closure].
 ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure);
 
-// Resets [fiber] back to an initial state where it is ready to invoke
-// [closure].
-void wrenResetFiber(WrenVM* vm, ObjFiber* fiber, ObjClosure* closure);
-
 // Adds a new [CallFrame] to [fiber] invoking [closure] whose stack starts at
 // [stackStart].
 static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
@@ -733,7 +731,15 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index);
 // Search for the first occurence of [needle] within [haystack] and returns its
 // zero-based offset. Returns `UINT32_MAX` if [haystack] does not contain
 // [needle].
-uint32_t wrenStringFind(ObjString* haystack, ObjString* needle, uint32_t startIndex);
+uint32_t wrenStringFind(ObjString* haystack, ObjString* needle,
+                        uint32_t startIndex);
+
+// Returns true if [a] and [b] represent the same string.
+static inline bool wrenStringEqualsCString(const ObjString* a,
+                                           const char* b, size_t length)
+{
+  return a->length == length && memcmp(a->value, b, length) == 0;
+}
 
 // Creates a new open upvalue pointing to [value] on the stack.
 ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value);

@@ -11,11 +11,6 @@ class Repl {
 
     _history = []
     _historyIndex = 0
-
-    // Whether or not we allow ASCI escape sequences for showing colors and
-    // moving the cursor. When this is false, the REPL has reduced
-    // functionality.
-    _allowAnsi = false
   }
 
   cursor { _cursor }
@@ -78,7 +73,7 @@ class Repl {
       insertChar(byte)
     } else {
       // TODO: Other shortcuts?
-      System.print("Unhandled byte: %(byte)")
+      System.print("Unhandled key-code [dec]: %(byte)")
     }
 
     return false
@@ -172,15 +167,17 @@ class Repl {
         token.type == Token.varKeyword ||
         token.type == Token.whileKeyword
 
-    var fiber
+    var closure
     if (isStatement) {
-      fiber = Meta.compile(input)
+      closure = Meta.compile(input)
     } else {
-      fiber = Meta.compileExpression(input)
+      closure = Meta.compileExpression(input)
     }
 
     // Stop if there was a compile error.
-    if (fiber == null) return
+    if (closure == null) return
+
+    var fiber = Fiber.new(closure)
 
     var result = fiber.try()
     if (fiber.error != null) {

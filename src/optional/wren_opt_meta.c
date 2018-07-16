@@ -61,9 +61,7 @@ void metaGetModuleVariables(WrenVM* vm)
   
   for (int i = 0; i < names->elements.count; i++)
   {
-    String* name = &module->variableNames.data[i];
-    names->elements.data[i] = wrenNewStringLength(vm,
-                                                  name->buffer, name->length);
+    names->elements.data[i] = OBJ_VAL(module->variableNames.data[i]);
   }
 }
 
