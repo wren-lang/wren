@@ -1,5 +1,8 @@
 # Smarter Imports
 
+**Note: This is now mostly implemented, though the implementation differs
+somewhat from this original proposal.**
+
 Here's a proposal for improving how imported modules are identified and found
 to hopefully help us start growing an ecosystem of reusable Wren code. Please
 do [let me know][list] what you think!
