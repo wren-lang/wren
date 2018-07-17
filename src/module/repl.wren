@@ -265,7 +265,7 @@ class SimpleRepl is Repl {
     // TODO: Syntax color based on type? It might be nice to distinguish
     // between string results versus stringified results. Otherwise, the
     // user can't tell the difference between `true` and "true".
-    System.print(value)
+    System.print("%(Color.bold)value%(Color.none)")
   }
 
   showRuntimeError(message) {
@@ -361,7 +361,7 @@ class AnsiRepl is Repl {
     // TODO: Syntax color based on type? It might be nice to distinguish
     // between string results versus stringified results. Otherwise, the
     // user can't tell the difference between `true` and "true".
-    System.print("%(Color.brightWhite)%(value)%(Color.none)")
+    System.print(value)
   }
 
   showRuntimeError(message) {
@@ -373,6 +373,7 @@ class AnsiRepl is Repl {
 /// ANSI color escape sequences.
 class Color {
   static none { "\x1b[0m" }
+  static bold { "\x1b[1m" }
   static black { "\x1b[30m" }
   static red { "\x1b[31m" }
   static green { "\x1b[32m" }
