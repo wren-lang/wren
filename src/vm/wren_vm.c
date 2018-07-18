@@ -342,12 +342,12 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
   {
     const char* name = AS_CSTRING(methodValue);
     method.type = METHOD_FOREIGN;
-    method.fn.foreign = findForeignMethod(vm, module->name->value,
+    method.as.foreign = findForeignMethod(vm, module->name->value,
                                           className,
                                           methodType == CODE_METHOD_STATIC,
                                           name);
 
-    if (method.fn.foreign == NULL)
+    if (method.as.foreign == NULL)
     {
       vm->fiber->error = wrenStringFormat(vm,
           "Could not find foreign method '@' for class $ in module '$'.",
@@ -357,11 +357,11 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
   }
   else
   {
-    method.fn.obj = AS_CLOSURE(methodValue);
+    method.as.closure = AS_CLOSURE(methodValue);
     method.type = METHOD_BLOCK;
 
     // Patch up the bytecode now that we know the superclass.
-    wrenBindMethodCode(classObj, method.fn.obj->fn);
+    wrenBindMethodCode(classObj, method.as.closure->fn);
   }
 
   wrenBindMethod(vm, classObj, symbol, method);
@@ -425,48 +425,6 @@ static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
   vm->fiber->error = wrenStringFormat(vm, "@ does not implement '$'.",
       OBJ_VAL(classObj->name), vm->methodNames.data[symbol]->value);
-}
-
-// Checks that [value], which must be a closure, does not require more
-// parameters than are provided by [numArgs].
-//
-// If there are not enough arguments, aborts the current fiber and returns
-// `false`.
-static bool checkArity(WrenVM* vm, Value value, int numArgs)
-{
-  ASSERT(IS_CLOSURE(value), "Receiver must be a closure.");
-  ObjFn* fn = AS_CLOSURE(value)->fn;
-
-  // We only care about missing arguments, not extras. The "- 1" is because
-  // numArgs includes the receiver, the function itself, which we don't want to
-  // count.
-  if (numArgs - 1 >= fn->arity) return true;
-
-  vm->fiber->error = CONST_STRING(vm, "Function expects more arguments.");
-  return false;
-}
-
-// Pushes [closure] onto [fiber]'s callstack and invokes it. Expects [numArgs]
-// arguments (including the receiver) to be on the top of the stack already.
-static inline void callFunction(
-    WrenVM* vm, ObjFiber* fiber, ObjClosure* closure, int numArgs)
-{
-  // Grow the call frame array if needed.
-  if (fiber->numFrames + 1 > fiber->frameCapacity)
-  {
-    int max = fiber->frameCapacity * 2;
-    fiber->frames = (CallFrame*)wrenReallocate(vm, fiber->frames,
-        sizeof(CallFrame) * fiber->frameCapacity,
-        sizeof(CallFrame) * max);
-    fiber->frameCapacity = max;
-  }
-  
-  // Grow the stack if needed.
-  int stackSize = (int)(fiber->stackTop - fiber->stack);
-  int needed = stackSize + closure->fn->maxSlots;
-  wrenEnsureStack(vm, fiber, needed);
-  
-  wrenAppendCallFrame(vm, fiber, closure, fiber->stackTop - numArgs);
 }
 
 // Looks up the previously loaded module with [name].
@@ -611,7 +569,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   int symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<allocate>", 10);
   if (methods.allocate != NULL)
   {
-    method.fn.foreign = methods.allocate;
+    method.as.foreign = methods.allocate;
     wrenBindMethod(vm, classObj, symbol, method);
   }
   
@@ -620,7 +578,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "<finalize>", 10);
   if (methods.finalize != NULL)
   {
-    method.fn.foreign = (WrenForeignMethodFn)methods.finalize;
+    method.as.foreign = (WrenForeignMethodFn)methods.finalize;
     wrenBindMethod(vm, classObj, symbol, method);
   }
 }
@@ -669,7 +627,7 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   Value* oldApiStack = vm->apiStack;
   vm->apiStack = stack;
 
-  method->fn.foreign(vm);
+  method->as.foreign(vm);
 
   vm->apiStack = oldApiStack;
   // TODO: Check that allocateForeign was called.
@@ -693,7 +651,7 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
 
   ASSERT(method->type == METHOD_FOREIGN, "Finalizer should be foreign.");
 
-  WrenFinalizerFn finalizer = (WrenFinalizerFn)method->fn.foreign;
+  WrenFinalizerFn finalizer = (WrenFinalizerFn)method->as.foreign;
   finalizer(foreign->data);
 }
 
@@ -1033,13 +991,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       switch (method->type)
       {
         case METHOD_PRIMITIVE:
-          if (method->fn.primitive(vm, args))
+          if (method->as.primitive(vm, args))
           {
             // The result is now in the first arg slot. Discard the other
             // stack slots.
             fiber->stackTop -= numArgs - 1;
           } else {
-            // An error or fiber switch occurred.
+            // An error, fiber switch, or call frame change occurred.
             STORE_FRAME();
 
             // If we don't have a fiber to switch to, stop interpreting.
@@ -1051,21 +1009,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           break;
 
         case METHOD_FOREIGN:
-          callForeign(vm, fiber, method->fn.foreign, numArgs);
+          callForeign(vm, fiber, method->as.foreign, numArgs);
           if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
-          break;
-
-        case METHOD_FN_CALL:
-          if (!checkArity(vm, args[0], numArgs)) RUNTIME_ERROR();
-
-          STORE_FRAME();
-          callFunction(vm, fiber, AS_CLOSURE(args[0]), numArgs);
-          LOAD_FRAME();
           break;
 
         case METHOD_BLOCK:
           STORE_FRAME();
-          callFunction(vm, fiber, (ObjClosure*)method->fn.obj, numArgs);
+          wrenCallFunction(vm, fiber, (ObjClosure*)method->as.closure, numArgs);
           LOAD_FRAME();
           break;
 
@@ -1327,7 +1277,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       {
         STORE_FRAME();
         ObjClosure* closure = AS_CLOSURE(PEEK());
-        callFunction(vm, fiber, closure, 1);
+        wrenCallFunction(vm, fiber, closure, 1);
         LOAD_FRAME();
       }
       else
@@ -1433,7 +1383,7 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   // function has exactly one slot for each argument.
   vm->fiber->stackTop = &vm->fiber->stack[closure->fn->maxSlots];
   
-  callFunction(vm, vm->fiber, closure, 0);
+  wrenCallFunction(vm, vm->fiber, closure, 0);
   return runInterpreter(vm, vm->fiber);
 }
 

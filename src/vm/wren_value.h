@@ -349,9 +349,6 @@ typedef enum
   // A normal user-defined method.
   METHOD_BLOCK,
   
-  // The special "call(...)" methods on function.
-  METHOD_FN_CALL,
-
   // No method for the given symbol.
   METHOD_NONE
 } MethodType;
@@ -366,10 +363,8 @@ typedef struct
   {
     Primitive primitive;
     WrenForeignMethodFn foreign;
-    
-    // May be a [ObjFn] or [ObjClosure].
-    ObjClosure* obj;
-  } fn;
+    ObjClosure* closure;
+  } as;
 } Method;
 
 DECLARE_BUFFER(Method, Method);

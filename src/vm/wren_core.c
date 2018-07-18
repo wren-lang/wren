@@ -240,6 +240,44 @@ DEF_PRIMITIVE(fn_arity)
   RETURN_NUM(AS_CLOSURE(args[0])->fn->arity);
 }
 
+static void call(WrenVM* vm, Value* args, int numArgs)
+{
+  // We only care about missing arguments, not extras.
+  if (AS_CLOSURE(args[0])->fn->arity > numArgs)
+  {
+    vm->fiber->error = CONST_STRING(vm, "Function expects more arguments.");
+    return;
+  }
+  
+  // +1 to include the function itself.
+  wrenCallFunction(vm, vm->fiber, AS_CLOSURE(args[0]), numArgs + 1);
+}
+
+#define DEF_FN_CALL(numArgs) \
+    DEF_PRIMITIVE(fn_call##numArgs) \
+    { \
+      call(vm, args, numArgs); \
+      return false; \
+    } \
+
+DEF_FN_CALL(0)
+DEF_FN_CALL(1)
+DEF_FN_CALL(2)
+DEF_FN_CALL(3)
+DEF_FN_CALL(4)
+DEF_FN_CALL(5)
+DEF_FN_CALL(6)
+DEF_FN_CALL(7)
+DEF_FN_CALL(8)
+DEF_FN_CALL(9)
+DEF_FN_CALL(10)
+DEF_FN_CALL(11)
+DEF_FN_CALL(12)
+DEF_FN_CALL(13)
+DEF_FN_CALL(14)
+DEF_FN_CALL(15)
+DEF_FN_CALL(16)
+
 DEF_PRIMITIVE(fn_toString)
 {
   RETURN_VAL(CONST_STRING(vm, "<fn>"));
@@ -1097,19 +1135,6 @@ static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
   return classObj;
 }
 
-// Defines one of the overloads of the special "call(...)" method on Fn.
-//
-// These methods have their own unique method type to handle pushing the
-// function onto the callstack and checking its arity.
-static void fnCall(WrenVM* vm, const char* signature)
-{
-  int symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, signature,
-                                     strlen(signature));
-  Method method;
-  method.type = METHOD_FN_CALL;
-  wrenBindMethod(vm, vm->fnClass, symbol, method);
-}
-
 void wrenInitializeCore(WrenVM* vm)
 {
   ObjModule* coreModule = wrenNewModule(vm, NULL);
@@ -1199,23 +1224,23 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
-  fnCall(vm, "call()");
-  fnCall(vm, "call(_)");
-  fnCall(vm, "call(_,_)");
-  fnCall(vm, "call(_,_,_)");
-  fnCall(vm, "call(_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)");
-  fnCall(vm, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)");
+  PRIMITIVE(vm->fnClass, "call()", fn_call0);
+  PRIMITIVE(vm->fnClass, "call(_)", fn_call1);
+  PRIMITIVE(vm->fnClass, "call(_,_)", fn_call2);
+  PRIMITIVE(vm->fnClass, "call(_,_,_)", fn_call3);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_)", fn_call4);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_)", fn_call5);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_)", fn_call6);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_)", fn_call7);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_)", fn_call8);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_)", fn_call9);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_)", fn_call10);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
+  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Null"));

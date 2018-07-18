@@ -84,6 +84,10 @@ benchmark: release
 	$(V) $(MAKE) -f util/wren.mk api_test
 	$(V) ./util/benchmark.py -l wren $(suite)
 
+benchmark_baseline: release
+	$(V) $(MAKE) -f util/wren.mk api_test
+	$(V) ./util/benchmark.py --generate-baseline
+
 unit_test:
 	$(V) $(MAKE) -f util/wren.mk MODE=debug unit_test
 	$(V) ./build/debug/test/unit_wrend

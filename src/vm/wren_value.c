@@ -1008,7 +1008,7 @@ static void blackenClass(WrenVM* vm, ObjClass* classObj)
   {
     if (classObj->methods.data[i].type == METHOD_BLOCK)
     {
-      wrenGrayObj(vm, (Obj*)classObj->methods.data[i].fn.obj);
+      wrenGrayObj(vm, (Obj*)classObj->methods.data[i].as.closure);
     }
   }
 
