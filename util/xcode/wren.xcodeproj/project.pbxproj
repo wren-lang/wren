@@ -47,6 +47,8 @@
 		29B59F0820FC37B700767E48 /* path_test.c in Sources */ = {isa = PBXBuildFile; fileRef = 29B59F0320FC37B600767E48 /* path_test.c */; };
 		29B59F0920FC37B700767E48 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29B59F0420FC37B700767E48 /* main.c */; };
 		29B59F0A20FC37B700767E48 /* test.c in Sources */ = {isa = PBXBuildFile; fileRef = 29B59F0520FC37B700767E48 /* test.c */; };
+		29BB20AB20FEBEE900DB29B6 /* path.c in Sources */ = {isa = PBXBuildFile; fileRef = 2952CD1B1FA9941700985F5F /* path.c */; };
+		29BB20AC20FEBF0500DB29B6 /* resolution.c in Sources */ = {isa = PBXBuildFile; fileRef = 2940E98B2063EC020054503C /* resolution.c */; };
 		29C80D5A1D73332A00493837 /* reset_stack_after_foreign_construct.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C80D581D73332A00493837 /* reset_stack_after_foreign_construct.c */; };
 		29C8A9331AB71FFF00DEC81D /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C8A9311AB71FFF00DEC81D /* vm.c */; };
 		29C946981C88F14F00B4A4F3 /* new_vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C946961C88F14F00B4A4F3 /* new_vm.c */; };
@@ -498,6 +500,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29BB20AC20FEBF0500DB29B6 /* resolution.c in Sources */,
+				29BB20AB20FEBEE900DB29B6 /* path.c in Sources */,
 				29A427371BDBE435001E6E22 /* wren_opt_meta.wren.inc in Sources */,
 				29D025E41C19CD1000A3BB28 /* os.c in Sources */,
 				29729F321BA70A620099CA20 /* io.c in Sources */,
