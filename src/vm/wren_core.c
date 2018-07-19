@@ -81,7 +81,7 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
                      bool hasValue, const char* verb)
 {
 
-  if (!IS_NULL(fiber->error))
+  if (wrenHasError(fiber))
   {
     RETURN_ERROR_FMT("Cannot $ an aborted fiber.", verb);
   }
@@ -154,7 +154,7 @@ DEF_PRIMITIVE(fiber_error)
 DEF_PRIMITIVE(fiber_isDone)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
-  RETURN_BOOL(runFiber->numFrames == 0 || !IS_NULL(runFiber->error));
+  RETURN_BOOL(runFiber->numFrames == 0 || wrenHasError(runFiber));
 }
 
 DEF_PRIMITIVE(fiber_suspend)
@@ -187,7 +187,7 @@ DEF_PRIMITIVE(fiber_try)
   runFiber(vm, AS_FIBER(args[0]), args, true, false, "try");
   
   // If we're switching to a valid fiber to try, remember that we're trying it.
-  if (IS_NULL(vm->fiber->error)) vm->fiber->state = FIBER_TRY;
+  if (!wrenHasError(vm->fiber)) vm->fiber->state = FIBER_TRY;
   return false;
 }
 
