@@ -399,7 +399,7 @@ static void runtimeError(WrenVM* vm)
     current->error = error;
 
     // If the caller ran this fiber using "try", give it the error and stop.
-    if (current->callerIsTrying)
+    if (current->state == FIBER_TRY)
     {
       // Make the caller's try method return the error message.
       current->caller->stackTop[-1] = vm->fiber->error;
@@ -768,12 +768,12 @@ static Value getModuleVariable(WrenVM* vm, ObjModule* module,
 }
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
-// also, as you can imagine, highly performance critical. Returns `true` if the
-// fiber completed without error.
+// also, as you can imagine, highly performance critical.
 static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 {
   // Remember the current fiber so we can find it if a GC happens.
   vm->fiber = fiber;
+  fiber->state = FIBER_ROOT;
 
   // Hoist these into local variables. They are accessed frequently in the loop
   // but assigned less frequently. Keeping them in locals and updating them when

@@ -72,6 +72,7 @@
 		29DC14AB1BBA3038008A8274 /* foreign_class.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009A81B7E39A8000CE58C /* foreign_class.c */; };
 		29DC14AC1BBA303D008A8274 /* slots.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AA1B7E39A8000CE58C /* slots.c */; };
 		29DC14AD1BBA3040008A8274 /* handle.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D009AC1B7E39A8000CE58C /* handle.c */; };
+		29F3D08121039A630082DD88 /* call_wren_call_root.c in Sources */ = {isa = PBXBuildFile; fileRef = 29F3D08021039A630082DD88 /* call_wren_call_root.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -186,6 +187,8 @@
 		29D880641DC8ECF600025364 /* reset_stack_after_call_abort.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = reset_stack_after_call_abort.c; path = ../../test/api/reset_stack_after_call_abort.c; sourceTree = "<group>"; };
 		29D880651DC8ECF600025364 /* reset_stack_after_call_abort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reset_stack_after_call_abort.h; path = ../../test/api/reset_stack_after_call_abort.h; sourceTree = "<group>"; };
 		29F384111BD19706002F84E0 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../../src/module/io.h; sourceTree = "<group>"; };
+		29F3D07F21039A630082DD88 /* call_wren_call_root.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = call_wren_call_root.h; path = ../../test/api/call_wren_call_root.h; sourceTree = "<group>"; };
+		29F3D08021039A630082DD88 /* call_wren_call_root.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = call_wren_call_root.c; path = ../../test/api/call_wren_call_root.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -337,6 +340,8 @@
 			children = (
 				29932D4F1C20D8C900099DEE /* benchmark.c */,
 				29932D501C20D8C900099DEE /* benchmark.h */,
+				29F3D08021039A630082DD88 /* call_wren_call_root.c */,
+				29F3D07F21039A630082DD88 /* call_wren_call_root.h */,
 				29D009A61B7E3993000CE58C /* main.c */,
 				293D46941BB43F9900200083 /* call.c */,
 				293D46951BB43F9900200083 /* call.h */,
@@ -527,6 +532,7 @@
 				29D025E61C19CD1000A3BB28 /* os.wren.inc in Sources */,
 				29DC14A91BBA302F008A8274 /* wren_vm.c in Sources */,
 				29DC14AA1BBA3032008A8274 /* main.c in Sources */,
+				29F3D08121039A630082DD88 /* call_wren_call_root.c in Sources */,
 				293B25581CEFD8C7005D9537 /* repl.c in Sources */,
 				29C80D5A1D73332A00493837 /* reset_stack_after_foreign_construct.c in Sources */,
 				29AD96611D0A57F800C4DFE7 /* error.c in Sources */,

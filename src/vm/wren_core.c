@@ -88,8 +88,14 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
 
   if (isCall)
   {
+    // You can't call a called fiber, but you can transfer directly to it,
+    // which is why this check is gated on `isCall`. This way, after resuming a
+    // suspended fiber, it will run and then return to the fiber that called it
+    // and so on.
     if (fiber->caller != NULL) RETURN_ERROR("Fiber has already been called.");
 
+    if (fiber->state == FIBER_ROOT) RETURN_ERROR("Cannot call root fiber.");
+    
     // Remember who ran it.
     fiber->caller = vm->fiber;
   }
@@ -181,7 +187,7 @@ DEF_PRIMITIVE(fiber_try)
   runFiber(vm, AS_FIBER(args[0]), args, true, false, "try");
   
   // If we're switching to a valid fiber to try, remember that we're trying it.
-  if (IS_NULL(vm->fiber->error)) vm->fiber->callerIsTrying = true;
+  if (IS_NULL(vm->fiber->error)) vm->fiber->state = FIBER_TRY;
   return false;
 }
 
@@ -192,7 +198,7 @@ DEF_PRIMITIVE(fiber_yield)
 
   // Unhook this fiber from the one that called it.
   current->caller = NULL;
-  current->callerIsTrying = false;
+  current->state = FIBER_OTHER;
 
   if (vm->fiber != NULL)
   {
@@ -210,7 +216,7 @@ DEF_PRIMITIVE(fiber_yield1)
 
   // Unhook this fiber from the one that called it.
   current->caller = NULL;
-  current->callerIsTrying = false;
+  current->state = FIBER_OTHER;
 
   if (vm->fiber != NULL)
   {

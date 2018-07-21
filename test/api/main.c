@@ -6,6 +6,7 @@
 
 #include "benchmark.h"
 #include "call.h"
+#include "call_wren_call_root.h"
 #include "error.h"
 #include "get_variable.h"
 #include "foreign_class.h"
@@ -101,6 +102,10 @@ static void afterLoad(WrenVM* vm)
   {
     callRunTests(vm);
   }
+  else if (strstr(testName, "/call_wren_call_root.wren") != NULL)
+  {
+    callWrenCallRootRunTests(vm);
+  }
   else if (strstr(testName, "/reset_stack_after_call_abort.wren") != NULL)
   {
     resetStackAfterCallAbortRunTests(vm);
@@ -122,5 +127,5 @@ int main(int argc, const char* argv[])
   testName = argv[1];
   setTestCallbacks(bindForeignMethod, bindForeignClass, afterLoad);
   runFile(testName);
-  return 0;
+  return getExitCode();
 }
