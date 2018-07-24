@@ -356,7 +356,8 @@ WrenInterpretResult runFile(const char* path)
 
 WrenInterpretResult runRepl()
 {
-  rootDirectory = ".";
+  // This cast is safe since we don't try to free the string later.
+  rootDirectory = (char*)".";
   initVM();
 
   printf("\\\\/\"-\n");
