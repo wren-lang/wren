@@ -28,7 +28,7 @@ static char* loadModule(WrenVM* vm, const char* module)
     source = "System.print(\"ok\")";
   }
   
-  char* string = malloc(strlen(source) + 1);
+  char* string = (char*)malloc(strlen(source) + 1);
   strcpy(string, source);
   return string;
 }
@@ -91,7 +91,7 @@ static const char* resolveChange(WrenVM* vm, const char* importer,
 {
   // Concatenate importer and name.
   size_t length = strlen(importer) + 1 + strlen(name) + 1;
-  char* result = malloc(length);
+  char* result = (char*)malloc(length);
   strcpy(result, importer);
   strcat(result, "/");
   strcat(result, name);
