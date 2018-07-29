@@ -161,7 +161,7 @@ DEF_PRIMITIVE(fiber_suspend)
 {
   // Switching to a null fiber tells the interpreter to stop and exit.
   vm->fiber = NULL;
-  vm->apiStack = NULL;
+  vm->stackStart = NULL;
   return false;
 }
 

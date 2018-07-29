@@ -218,9 +218,9 @@ void wrenGrowStack(WrenVM* vm, ObjFiber* fiber, int needed)
   if (fiber->stack != oldStack)
   {
     // Top of the stack.
-    if (vm->apiStack >= oldStack && vm->apiStack <= fiber->stackTop)
+    if (vm->stackStart >= oldStack && vm->stackStart <= fiber->stackTop)
     {
-      vm->apiStack = fiber->stack + (vm->apiStack - oldStack);
+      vm->stackStart = fiber->stack + (vm->stackStart - oldStack);
     }
     
     // Stack pointer for each call frame.

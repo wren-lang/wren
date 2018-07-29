@@ -97,7 +97,7 @@ struct WrenVM
   // If not in a foreign method, this is initially NULL. If the user requests
   // slots by calling wrenEnsureSlots(), a stack is created and this is
   // initialized.
-  Value* apiStack;
+  Value* stackStart;
 
   WrenConfiguration config;
   
@@ -246,13 +246,13 @@ void validateApiSlot(WrenVM* vm, int slot)
 Value wrenGetSlot(WrenVM* vm, int srcSlot)
 {
   validateApiSlot(vm, srcSlot);
-  return vm->apiStack[srcSlot];
+  return vm->stackStart[srcSlot];
 }
 
 void wrenSetSlot(WrenVM* vm, int dstSlot, Value value)
 {
   validateApiSlot(vm, dstSlot);
-  vm->apiStack[dstSlot] = value;
+  vm->stackStart[dstSlot] = value;
 }
 
 void wrenSetSlots(WrenVM* vm, int dstSlot, Value value, size_t size)
