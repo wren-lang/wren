@@ -320,6 +320,15 @@ typedef struct sObjFiber
   // needed.
   Value* stack;
   
+  // Pointer to the bottom of the range of stack slots available for use from
+  // the C API. During a foreign method, this will be in the stack of the fiber
+  // that is executing a method.
+  //
+  // If not in a foreign method, this is initially NULL. If the user requests
+  // slots by calling wrenEnsureSlots(), a stack is created and this is
+  // initialized.
+  Value* stackStart;
+  
   // A pointer to one past the top-most value on the stack.
   Value* stackTop;
   

@@ -371,15 +371,15 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
   // Save the current state so we can restore it when done.
-  Value* apiStack = vm->stackStart;
-  vm->stackStart = fiber->stackTop - numArgs;
+  Value* apiStack = fiber->stackStart;
+  fiber->stackStart = fiber->stackTop - numArgs;
 
   foreign(vm);
 
   // Discard the stack slots for the arguments and temporaries but leave one
   // for the result.
-  fiber->stackTop = vm->stackStart + 1;
-  vm->stackStart = apiStack;
+  fiber->stackTop = fiber->stackStart + 1;
+  fiber->stackStart = apiStack;
 }
 
 // Handles the current fiber having aborted because of an error.
@@ -415,8 +415,8 @@ static void runtimeError(WrenVM* vm)
 
   // If we got here, nothing caught the error, so show the stack trace.
   wrenDebugPrintStackTrace(vm);
+  vm->fiber->stackStart = NULL;
   vm->fiber = NULL;
-  vm->stackStart = NULL;
 }
 
 // Aborts the current fiber with an appropriate method not found error for a
@@ -624,8 +624,8 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
 
   // Pass the constructor arguments to the allocator as well.
-  Value* oldApiStack = vm->stackStart;
-  vm->stackStart = stack;
+  Value* oldApiStack = fiber->stackStart;
+  fiber->stackStart = stack;
 
 #ifdef DEBUG
   int numSlots = wrenGetSlotCount(vm);
@@ -633,7 +633,7 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   method->as.foreign(vm);
   ASSERT(numSlots == wrenGetSlotCount(vm), "Foreign creator altered slot count.");
 
-  vm->stackStart = oldApiStack;
+  fiber->stackStart = oldApiStack;
   // TODO: Check that allocateForeign was called.
 }
 
@@ -1369,7 +1369,7 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   ASSERT(method != NULL, "Method cannot be NULL.");
   ASSERT(IS_CLOSURE(method->value), "Method must be a method handle.");
   ASSERT(vm->fiber != NULL, "Must set up arguments for call first.");
-  ASSERT(vm->stackStart != NULL, "Must set up arguments for call first.");
+  ASSERT(vm->fiber->stackStart != NULL, "Must set up arguments for call first.");
   ASSERT(vm->fiber->numFrames == 0, "Can not call from a foreign method.");
   
   ObjClosure* closure = AS_CLOSURE(method->value);
@@ -1523,25 +1523,25 @@ int wrenGetSlotCount(WrenVM* vm)
 {
   if (vm->fiber == NULL) return 0;
   
-  return (int)(vm->fiber->stackTop - (vm->stackStart != NULL ? vm->stackStart : vm->fiber->stack));
+  return (int)(vm->fiber->stackTop - (vm->fiber->stackStart != NULL ? vm->fiber->stackStart : vm->fiber->stack));
 }
 
 void wrenSetSlotCount(WrenVM* vm, int numSlots)
 {
   // If we don't have a fiber accessible, create one for the API to use.
-  if (vm->stackStart == NULL)
+  if (vm->fiber == NULL || vm->fiber->stackStart == NULL)
   {
     vm->fiber = wrenNewFiber(vm, NULL);
-    vm->stackStart = vm->fiber->stack;
+    vm->fiber->stackStart = vm->fiber->stack;
   }
   
   // Grow the stack if needed.
-  int needed = (int)(vm->stackStart - vm->fiber->stack) + numSlots;
+  int needed = (int)(vm->fiber->stackStart - vm->fiber->stack) + numSlots;
   wrenGrowStackInline(vm, vm->fiber, needed);
   
   // Avoid the gc to access invalidated values, and user to access unwanted
   // bread crumbs.
-  Value* pend = vm->stackStart + numSlots;
+  Value* pend = vm->fiber->stackStart + numSlots;
   for (Value* p = vm->fiber->stackTop; p < pend ; p++)
   {
     *p = NULL_VAL;
