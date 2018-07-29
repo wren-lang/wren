@@ -415,7 +415,6 @@ static void runtimeError(WrenVM* vm)
 
   // If we got here, nothing caught the error, so show the stack trace.
   wrenDebugPrintStackTrace(vm);
-  vm->fiber->stackStart = NULL;
   vm->fiber = NULL;
 }
 
@@ -1369,7 +1368,6 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   ASSERT(method != NULL, "Method cannot be NULL.");
   ASSERT(IS_CLOSURE(method->value), "Method must be a method handle.");
   ASSERT(vm->fiber != NULL, "Must set up arguments for call first.");
-  ASSERT(vm->fiber->stackStart != NULL, "Must set up arguments for call first.");
   ASSERT(vm->fiber->numFrames == 0, "Can not call from a foreign method.");
   
   ObjClosure* closure = AS_CLOSURE(method->value);
@@ -1523,16 +1521,15 @@ int wrenGetSlotCount(WrenVM* vm)
 {
   if (vm->fiber == NULL) return 0;
   
-  return (int)(vm->fiber->stackTop - (vm->fiber->stackStart != NULL ? vm->fiber->stackStart : vm->fiber->stack));
+  return (int)(vm->fiber->stackTop - vm->fiber->stackStart);
 }
 
 void wrenSetSlotCount(WrenVM* vm, int numSlots)
 {
   // If we don't have a fiber accessible, create one for the API to use.
-  if (vm->fiber == NULL || vm->fiber->stackStart == NULL)
+  if (vm->fiber == NULL)
   {
     vm->fiber = wrenNewFiber(vm, NULL);
-    vm->fiber->stackStart = vm->fiber->stack;
   }
   
   // Grow the stack if needed.

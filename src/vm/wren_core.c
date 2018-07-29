@@ -160,7 +160,6 @@ DEF_PRIMITIVE(fiber_isDone)
 DEF_PRIMITIVE(fiber_suspend)
 {
   // Switching to a null fiber tells the interpreter to stop and exit.
-  vm->fiber->stackStart = NULL;
   vm->fiber = NULL;
   return false;
 }

@@ -160,8 +160,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
 
-  fiber->stack = stack;
-  fiber->stackTop = fiber->stack;
+  fiber->stack = fiber->stackStart = fiber->stackTop = stack;
   fiber->stackCapacity = stackCapacity;
 
   fiber->frames = frames;
@@ -217,12 +216,6 @@ void wrenGrowStack(WrenVM* vm, ObjFiber* fiber, int needed)
   // single array, hence the slightly redundant-looking arithmetic below.
   if (fiber->stack != oldStack)
   {
-    // Top of the stack.
-    if (vm->fiber->stackStart >= oldStack && vm->fiber->stackStart <= fiber->stackTop)
-    {
-      vm->fiber->stackStart = fiber->stack + (vm->fiber->stackStart - oldStack);
-    }
-    
     // Stack pointer for each call frame.
     for (int i = 0; i < fiber->numFrames; i++)
     {
@@ -238,6 +231,7 @@ void wrenGrowStack(WrenVM* vm, ObjFiber* fiber, int needed)
       upvalue->value = fiber->stack + (upvalue->value - oldStack);
     }
     
+    fiber->stackStart = fiber->stack + (fiber->stackStart - oldStack);
     fiber->stackTop = fiber->stack + (fiber->stackTop - oldStack);
   }
 }
