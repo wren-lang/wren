@@ -11,6 +11,10 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+#ifndef O_SYNC
+#define O_SYNC 0 /* O_SYNC seem not to be defined in mingw32 */
+#endif
+
 typedef struct sFileRequestData
 {
   WrenHandle* fiber;

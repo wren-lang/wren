@@ -56,7 +56,7 @@ ifeq ($(MODE),debug)
 	BUILD_DIR := $(BUILD_DIR)/debug
 else
 	WREN += wren
-	C_OPTIONS += -O3
+	C_OPTIONS += -s -O3
 	BUILD_DIR := $(BUILD_DIR)/release
 endif
 
@@ -93,10 +93,16 @@ OS := $(lastword $(subst -, ,$(shell gcc -dumpmachine)))
 # Don't add -fPIC on Windows since it generates a warning which gets promoted
 # to an error by -Werror.
 ifeq      ($(OS),mingw32)
-else ifeq ($(OS),cygwin)
-	# Do nothing.
 else
-	C_OPTIONS += -fPIC
+	ifeq ($(OS),cygwin)
+		# Do nothing.
+	else
+		ifeq ($(OS),)
+			# Do nothing.
+		else
+			C_OPTIONS += -fPIC
+		endif
+	endif
 endif
 
 # MinGW--or at least some versions of it--default CC to "cc" but then don't
@@ -117,7 +123,11 @@ else
 	ifeq ($(OS),mingw32)
 		LIBUV_LIBS := -lws2_32 -liphlpapi -lpsapi -luserenv
 	else
-		LIBUV_LIBS := -lpthread -lrt
+		ifeq ($(OS),)
+			LIBUV_LIBS := -lws2_32 -liphlpapi -lpsapi -luserenv
+		else
+			LIBUV_LIBS := -lpthread -lrt
+		endif
 	endif
 endif
 
