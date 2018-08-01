@@ -1,4 +1,4 @@
-import "io" for Stdin
+import "io" for Stdin, Stdout
 
 // Implements the classic "Animals" guessing game. The user thinks of an animal.
 // The program asks a series of yes/no questions to try to guess the animal
@@ -27,6 +27,7 @@ class Node {
   // Writes a prompt and reads a string of input.
   promptString(prompt) {
     System.write("%(prompt) ")
+    Stdout.flush()
     return Stdin.readLine()
   }
 }
