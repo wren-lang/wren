@@ -76,6 +76,7 @@
 #define IS_FOREIGN(value) (wrenIsObjType(value, OBJ_FOREIGN))   // ObjForeign
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
+#define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))         // ObjMap
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
 
@@ -545,7 +546,7 @@ typedef struct
 #define SIGN_BIT ((uint64_t)1 << 63)
 
 // The bits that must be set to indicate a quiet NaN.
-#define QNAN ((uint64_t)0x7ffc000000000000)
+#define QNAN ((uint64_t)0x7ff8000000000000)
 
 // If the NaN bits are set, it's not a number.
 #define IS_NUM(value) (((value) & QNAN) != QNAN)

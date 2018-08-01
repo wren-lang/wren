@@ -263,7 +263,9 @@ typedef enum
   WREN_TYPE_NUM,
   WREN_TYPE_FOREIGN,
   WREN_TYPE_LIST,
+WREN_TYPE_MAP,
   WREN_TYPE_NULL,
+WREN_TYPE_RANGE,
   WREN_TYPE_STRING,
 
   // The object is of a type that isn't accessible by the C API.
@@ -484,5 +486,103 @@ void* wrenGetUserData(WrenVM* vm);
 
 // Sets user data associated with the WrenVM.
 void wrenSetUserData(WrenVM* vm, void* userData);
+
+// Return the type name of the object in the slot, e.g. Num, Bool, String
+// Don't modify or free the string returned
+const char* wrenGetSlotTypeName (WrenVM* vm, int slot);
+
+// Retriev the type of the object in [slot] and store its class object in [classSlot].
+void wrenGetSlotClass (WrenVM* vm, int slot, int classSlot);
+
+// Checks if the object in [slot] is an instance of the type at [classSlot].
+// The element in [classSlot] must be a class.
+// Does not invoke any overloaded is operator.
+bool wrenGetSlotIsClass (WrenVM* vm, int slot, int classSlot);
+
+// Same as above, but take the class out of an handle instead of look for it in a slot.
+// Generally faster if you can cache class objects in handles in order to reuse them.
+// Also faster since it doesn't need you to reserve a slot to temporarily store the class handle to be compared.
+bool wrenGetSlotIsClassHandle (WrenVM* vm, int slot, WrenHandle* classHandle);
+
+// Checks if the value in the given slot is a bool
+// If yes, true is returned
+// If no, false is returned, and the current fiber is aborted with a message like "Expected parameter 2 to be of type 'Bool', got 'Num'."
+bool wrenCheckSlotBool (WrenVM* vm, int slot);
+
+// Checks if the value in the given slot is a number a.k.a Num / C double
+// If yes, true is returned
+// If no, false is returned, and the current fiber is aborted with a message like "Expected parameter 2 to be of type 'Bool', got 'Num'."
+bool wrenCheckSlotDouble (WrenVM* vm, int slot);
+
+// Checks if the value in the given slot is a string.
+// If yes, true is returned
+// If no, false is returned, and the current fiber is aborted with a message like "Expected parameter 2 to be of type 'Bool', got 'Num'."
+bool wrenCheckSlotString (WrenVM* vm, int slot);
+
+// Checks if the value in the given slot is a list.
+// If yes, true is returned
+// If no, false is returned, and the current fiber is aborted with a message like "Expected parameter 2 to be of type 'Bool', got 'Num'."
+bool wrenCheckSlotList (WrenVM* vm, int slot);
+
+// Checks if the value in the given slot is a map.
+// If yes, true is returned
+// If no, false is returned, and the current fiber is aborted with a message like "Expected parameter 2 to be of type 'Bool', got 'Num'."
+bool wrenCheckSlotMap (WrenVM* vm, int slot);
+
+// Checks if the value in the given slot is a range.
+// If yes, true is returned
+// If no, false is returned, and the current fiber is aborted with a message like "Expected parameter 2 to be of type 'Bool', got 'Num'."
+bool wrenCheckSlotRange (WrenVM* vm, int slot);
+
+// Checks if the value in the given slot is a foreign object, and if it is of the type in [classSlot].
+// If yes, true is returned
+// If no, false is returned, and the current fiber is aborted with a message like "Expected parameter 2 to be of type 'Bool', got 'Num'."
+bool wrenCheckSlotForeign (WrenVM* vm, int slot, int classSlot);
+
+// Checks if the value in the given slot is a foreign object, and if it is of the type passed in [classHandle].
+// This is generally faster as the function above, see wrenSlotIsClass vs. wrenSlotIsClassHandle.
+// If yes, true is returned
+// If no, false is returned, and the current fiber is aborted with a message like "Expected parameter 2 to be of type 'Bool', got 'Num'."
+bool wrenCheckSlotForeignHandle (WrenVM* vm, int slot, WrenHandle* classHandle);
+
+// Store a new empty map in [slot].
+void wrenSetSlotNewMap (WrenVM* vm, int slot);
+
+// Retriev the value associated with a key in a map.
+// mapSlot: the slot containing the map to be looked up
+// keySlot: the slot containing the key too look up in the map
+// valueSlot: the slot where to store the value retrieved. If you aren't actually interested in storing this value anywhere, you may pass -1 (i.e. if you just want to check the presence of the key in the map).
+// If the key is present in the map, its value is tored in [valueSlot] and true is returned.
+// If the key is absent from the map, null is stored in [valueSlot] and false is returned.
+// This function makes the difference between null and absent: if a key is associated to null, null is stored in [valueSlot] and true is returned.
+bool wrenGetMapValue (WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
+
+// Associate a value with a key in a map.
+// mapSlot: the slot containing the map to be modified
+// keySlot: the slot containing the key to associate
+// valueSlot: the slot containing the value to associate with the key
+void wrenPutInMap (WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
+
+// Remove a key/value association from a map.
+// mapSlot: the slot containing the map to be modified
+// keySlot: the slot containing the key to be removed from the map.
+// valueSlot: the slot where to store the value that has just been removed. If you aren't interested in storing this value anywhere, you may pass -1.
+// If the key was present in the map, its previous value is stored in [valueSlot], and true is returned.
+// If the key wasn't present in the map, null is stored in [valueSlot] and false is returned.
+// IN contrary to wrenGetMapValue above, this fonction doesn't make the difference between an absent key and a key associated to null; if a key was associated to null, false is returned.
+bool wrenRemoveMap (WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
+
+// Clear the map at the given slot
+void wrenClearMap (WrenVM* vm, int mapSlot);
+
+// Store a new range in slot
+void wrenSetSlotNewRange (WrenVM* vm, int slot, double from, double to, bool inclusive);
+
+// Retriev the bounds of a range stored in the slot.
+// You may pass NULL for from, to and inclusive if you aren't interested in them all.
+void wrenGetSlotRange (WrenVM* vm, int slot, double* from, double* to, bool* inclusive);
+
+// Return true if the current fiber has been aborted by a call to wrenAbortFiber or a runtime error.
+bool wrenIsAborted (WrenVM* vm);
 
 #endif

@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <string.h>
+#include<stdio.h>
 
 #include "wren.h"
 #include "wren_common.h"
@@ -1575,7 +1576,9 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
   if (IS_NUM(vm->apiStack[slot])) return WREN_TYPE_NUM;
   if (IS_FOREIGN(vm->apiStack[slot])) return WREN_TYPE_FOREIGN;
   if (IS_LIST(vm->apiStack[slot])) return WREN_TYPE_LIST;
+  if (IS_MAP(vm->apiStack[slot])) return WREN_TYPE_MAP;
   if (IS_NULL(vm->apiStack[slot])) return WREN_TYPE_NULL;
+  if (IS_RANGE(vm->apiStack[slot])) return WREN_TYPE_RANGE;
   if (IS_STRING(vm->apiStack[slot])) return WREN_TYPE_STRING;
   
   return WREN_TYPE_UNKNOWN;
@@ -1764,3 +1767,196 @@ void wrenSetUserData(WrenVM* vm, void* userData)
 {
 	vm->config.userData = userData;
 }
+
+static inline Value getSlot (WrenVM* vm, int slot) 
+{
+	validateApiSlot(vm, slot);
+	return vm->apiStack[slot];
+}
+
+const char* wrenGetSlotTypeName (WrenVM* vm, int slot)
+{
+  ObjClass *classObj = wrenGetClass(vm, getSlot(vm, slot));
+	return classObj->name->value;
+}
+
+void wrenGetSlotClass (WrenVM* vm, int slot, int classSlot) 
+{
+  ObjClass *classObj = wrenGetClass(vm, getSlot(vm, slot));
+	setSlot(vm, classSlot, OBJ_VAL(classObj));
+}
+
+// Return true if objClass is a subclass of baseClassObj; does not invoke overloaded is operator.
+static inline bool isOfClass (ObjClass* classObj, ObjClass* baseClassObj) 
+{
+  do  {
+    if (baseClassObj == classObj) return true;
+    classObj = classObj->superclass;
+  }   while (classObj != NULL);
+  return false;
+}
+
+bool wrenGetSlotIsClass (WrenVM* vm, int slot, int classSlot) 
+{
+  ASSERT(IS_CLASS(getSlot(vm, classSlot)), "must be a class");
+  ObjClass *classObj = wrenGetClass(vm, getSlot(vm, slot));
+  ObjClass *baseClassObj = AS_CLASS(getSlot(vm, classSlot));
+  return isOfClass(classObj, baseClassObj);
+}
+
+bool wrenGetSlotIsClassHandle (WrenVM* vm, int slot, WrenHandle* classHandle) 
+{
+  ASSERT(IS_CLASS(classHandle->value), "must be a class");
+  ObjClass *classObj = wrenGetClass(vm, getSlot(vm, slot));
+  ObjClass *baseClassObj = AS_CLASS(classHandle->value);
+  return isOfClass(classObj, baseClassObj);
+}
+
+// SEt an error message like this: Expected parameter 2 to be of type 'String', got 'Num'.
+static inline void wrenTypeError (WrenVM* vm, int slot, const char* expectedType)
+{
+	char sSlot[5] = {0};
+	snprintf(sSlot, 4, "%d", slot);
+	vm->fiber->error = wrenStringFormat(vm, "Expected parameter $ to be of type '$', got '$'.", sSlot, expectedType, wrenGetSlotTypeName(vm, slot));
+}
+
+bool wrenCheckSlotBool (WrenVM* vm, int slot)
+{
+	if (WREN_TYPE_BOOL!=wrenGetSlotType(vm, slot)) 
+	{
+		wrenTypeError(vm, slot, "Bool");
+		return false;
+	}
+	return true;
+}
+
+bool wrenCheckSlotDouble (WrenVM* vm, int slot) 
+{
+	if (WREN_TYPE_NUM!=wrenGetSlotType(vm, slot)) 
+	{
+		wrenTypeError(vm, slot, "Num");
+		return false;
+	}
+	return true;
+}
+
+bool wrenCheckSlotString (WrenVM* vm, int slot) 
+{
+	if (WREN_TYPE_STRING!=wrenGetSlotType(vm, slot)) 
+	{
+		wrenTypeError(vm, slot, "String");
+		return false;
+	}
+	return true;
+}
+
+bool wrenCheckSlotList (WrenVM* vm, int slot) 
+{
+	if (WREN_TYPE_LIST!=wrenGetSlotType(vm, slot)) 
+	{
+		wrenTypeError(vm, slot, "List");
+		return false;
+	}
+	return true;
+}
+
+bool wrenCheckSlotMap (WrenVM* vm, int slot) 
+{
+	if (WREN_TYPE_MAP!=wrenGetSlotType(vm, slot)) 
+	{
+		wrenTypeError(vm, slot, "Map");
+		return false;
+	}
+	return true;
+}
+
+bool wrenCheckSlotRange (WrenVM* vm, int slot) 
+{
+	if (WREN_TYPE_RANGE!=wrenGetSlotType(vm, slot)) 
+	{
+		wrenTypeError(vm, slot, "Range");
+		return false;
+	}
+	return true;
+}
+
+bool wrenCheckSlotForeign (WrenVM* vm, int slot, int classSlot)
+{
+	if (WREN_TYPE_FOREIGN!=wrenGetSlotType(vm, slot) || !wrenGetSlotIsClass(vm, slot, classSlot)) 
+	{
+		  ObjClass *classObj = AS_CLASS(getSlot(vm, classSlot));
+		wrenTypeError(vm, slot, classObj->name->value);
+		return false;
+	}
+	return true;
+}
+
+bool wrenCheckSlotForeignHandle (WrenVM* vm, int slot, WrenHandle* classHandle)
+{
+	if (WREN_TYPE_FOREIGN!=wrenGetSlotType(vm, slot) || !wrenGetSlotIsClassHandle(vm, slot, classHandle)) {
+	  ObjClass *classObj = AS_CLASS(classHandle->value);
+	wrenTypeError(vm, slot, classObj->name->value);
+	return false;
+	}
+	return true;
+}
+
+void wrenSetSlotNewMap (WrenVM* vm, int slot) 
+{
+  setSlot(vm, slot, OBJ_VAL(wrenNewMap(vm)));
+}
+
+bool wrenGetMapValue (WrenVM* vm, int mapSlot, int keySlot, int valueSlot) 
+{
+  ASSERT(IS_MAP(getSlot(vm, mapSlot)), "Must be a map");
+  ObjMap* map = AS_MAP(getSlot(vm, mapSlot));
+  Value value = wrenMapGet(map, getSlot(vm, keySlot));
+  if (valueSlot>=0)
+  {
+    if (IS_UNDEFINED(value)) setSlot(vm, valueSlot, NULL_VAL);
+    else setSlot(vm, valueSlot, value);
+  }
+return !IS_UNDEFINED(value);
+}
+
+void wrenPutInMap (WrenVM* vm, int mapSlot, int keySlot, int valueSlot) 
+{
+  ASSERT(IS_MAP(getSlot(vm, mapSlot)), "Must be a map");
+  ObjMap* map = AS_MAP(getSlot(vm, mapSlot));
+  wrenMapSet(vm, map, getSlot(vm, keySlot), getSlot(vm, valueSlot));
+}
+
+bool wrenRemoveMap (WrenVM* vm, int mapSlot, int keySlot, int valueSlot) 
+{
+  ASSERT(IS_MAP(getSlot(vm, mapSlot)), "Must be a map");
+  ObjMap* map = AS_MAP(getSlot(vm, mapSlot));
+  Value removedValue = wrenMapRemoveKey(vm, map, getSlot(vm, keySlot));
+  if (valueSlot>=0) setSlot(vm, valueSlot, removedValue);
+  return !IS_NULL(removedValue);
+}
+
+void wrenClearMap (WrenVM* vm, int mapSlot) 
+{
+  ASSERT(IS_MAP(getSlot(vm, mapSlot)), "Must be a map");
+  ObjMap* map = AS_MAP(getSlot(vm, mapSlot));
+  wrenMapClear(vm, map);
+}
+
+void wrenSetSlotNewRange (WrenVM* vm, int slot, double from, double to, bool inclusive)
+{
+  setSlot(vm, slot, wrenNewRange(vm, from, to, inclusive));
+}
+
+void wrenGetSlotRange (WrenVM* vm, int slot, double* from, double* to, bool* inclusive) 
+{
+  ASSERT(IS_RANGE(getSlot(vm, slot)), "Must be a range");
+  ObjRange* range = AS_RANGE(getSlot(vm, slot));
+  if (from) *from = range->from;
+  if (to) *to = range->to;
+  if (inclusive) *inclusive = range->isInclusive;
+}
+
+	bool wrenIsAborted (WrenVM* vm) {
+	return !IS_NULL(vm->fiber->error);
+}
+
