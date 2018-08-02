@@ -24,8 +24,7 @@ static void call(WrenFiber* fiber)
 {
   int iterations = (int)wrenGetSlotDouble(fiber, 1);
   
-  // Since the VM is not re-entrant, we can't call from within this foreign
-  // method. Instead, make a new VM to run the call test in.
+  // Since the VM is re-entrant, we can call from within this foreign method.
   WrenConfiguration config;
   wrenInitConfiguration(&config);
   WrenVM* otherVM = wrenNewVM(&config);
