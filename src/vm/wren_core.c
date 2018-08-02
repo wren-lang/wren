@@ -19,6 +19,8 @@ DEF_PRIMITIVE(bool_not)
 
 DEF_PRIMITIVE(bool_toString)
 {
+  WrenVM* vm = fiber->vm;
+  
   if (AS_BOOL(args[0]))
   {
     RETURN_VAL(CONST_STRING(vm, "true"));
@@ -51,8 +53,6 @@ DEF_PRIMITIVE(class_toString)
 
 DEF_PRIMITIVE(fiber_new)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateFn(fiber, args[1], "Argument")) return false;
 
   ObjClosure* closure = AS_CLOSURE(args[1]);
@@ -61,12 +61,12 @@ DEF_PRIMITIVE(fiber_new)
     RETURN_ERROR("Function cannot take more than one parameter.");
   }
   
-  RETURN_OBJ(wrenNewFiber(vm, closure));
+  RETURN_OBJ(wrenNewFiber(fiber->vm, closure));
 }
 
 DEF_PRIMITIVE(fiber_abort)
 {
-  vm->fiber->error = args[1];
+  fiber->error = args[1];
 
   // If the error is explicitly null, it's not really an abort.
   return IS_NULL(args[1]);
@@ -79,11 +79,9 @@ DEF_PRIMITIVE(fiber_abort)
 //
 // [hasValue] is true if a value in [args] is being passed to the new fiber.
 // Otherwise, `null` is implicitly being passed.
-static bool runFiber(WrenVM* vm, WrenFiber* runFiber, Value* args, bool isCall,
+static bool runFiber(WrenFiber* fiber, WrenFiber* runFiber, Value* args, bool isCall,
                      bool hasValue, const char* verb)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!IS_NULL(runFiber->error))
   {
     RETURN_ERROR_FMT("Cannot $ an aborted fiber.", verb);
@@ -100,7 +98,7 @@ static bool runFiber(WrenVM* vm, WrenFiber* runFiber, Value* args, bool isCall,
     if (runFiber->state == FIBER_ROOT) RETURN_ERROR("Cannot call root fiber.");
     
     // Remember who ran it.
-    runFiber->caller = vm->fiber;
+    runFiber->caller = fiber;
   }
 
   if (runFiber->numFrames == 0)
@@ -111,7 +109,7 @@ static bool runFiber(WrenVM* vm, WrenFiber* runFiber, Value* args, bool isCall,
   // When the calling fiber resumes, we'll store the result of the call in its
   // stack. If the call has two arguments (the fiber and the value), we only
   // need one slot for the result, so discard the other slot now.
-  if (hasValue) vm->fiber->stackTop--;
+  if (hasValue) fiber->stackTop--;
 
   if (runFiber->numFrames == 1 &&
       runFiber->frames[0].ip == runFiber->frames[0].closure->fn->code.data)
@@ -130,23 +128,23 @@ static bool runFiber(WrenVM* vm, WrenFiber* runFiber, Value* args, bool isCall,
     runFiber->stackTop[-1] = hasValue ? args[1] : NULL_VAL;
   }
 
-  vm->fiber = runFiber;
+  fiber->vm->fiber = runFiber;
   return false;
 }
 
 DEF_PRIMITIVE(fiber_call)
 {
-  return runFiber(vm, AS_FIBER(args[0]), args, true, false, "call");
+  return runFiber(fiber, AS_FIBER(args[0]), args, true, false, "call");
 }
 
 DEF_PRIMITIVE(fiber_call1)
 {
-  return runFiber(vm, AS_FIBER(args[0]), args, true, true, "call");
+  return runFiber(fiber, AS_FIBER(args[0]), args, true, true, "call");
 }
 
 DEF_PRIMITIVE(fiber_current)
 {
-  RETURN_OBJ(vm->fiber);
+  RETURN_OBJ(fiber);
 }
 
 DEF_PRIMITIVE(fiber_error)
@@ -163,49 +161,49 @@ DEF_PRIMITIVE(fiber_isDone)
 DEF_PRIMITIVE(fiber_suspend)
 {
   // Switching to a null fiber tells the interpreter to stop and exit.
-  vm->fiber = NULL;
+  fiber->vm->fiber = NULL;
   return false;
 }
 
 DEF_PRIMITIVE(fiber_transfer)
 {
-  return runFiber(vm, AS_FIBER(args[0]), args, false, false, "transfer to");
+  return runFiber(fiber, AS_FIBER(args[0]), args, false, false, "transfer to");
 }
 
 DEF_PRIMITIVE(fiber_transfer1)
 {
-  return runFiber(vm, AS_FIBER(args[0]), args, false, true, "transfer to");
+  return runFiber(fiber, AS_FIBER(args[0]), args, false, true, "transfer to");
 }
 
 DEF_PRIMITIVE(fiber_transferError)
 {
-  runFiber(vm, AS_FIBER(args[0]), args, false, true, "transfer to");
-  vm->fiber->error = args[1];
+  runFiber(fiber, AS_FIBER(args[0]), args, false, true, "transfer to");
+  fiber->vm->fiber->error = args[1];
   return false;
 }
 
 DEF_PRIMITIVE(fiber_try)
 {
-  runFiber(vm, AS_FIBER(args[0]), args, true, false, "try");
+  runFiber(fiber, AS_FIBER(args[0]), args, true, false, "try");
   
   // If we're switching to a valid fiber to try, remember that we're trying it.
-  if (IS_NULL(vm->fiber->error)) vm->fiber->state = FIBER_TRY;
+  if (IS_NULL(fiber->vm->fiber->error)) fiber->vm->fiber->state = FIBER_TRY;
   return false;
 }
 
 DEF_PRIMITIVE(fiber_yield)
 {
-  WrenFiber* current = vm->fiber;
-  vm->fiber = current->caller;
+  WrenFiber* caller = fiber->caller;
+  fiber->vm->fiber = caller;
 
   // Unhook this fiber from the one that called it.
-  current->caller = NULL;
-  current->state = FIBER_OTHER;
+  fiber->caller = NULL;
+  fiber->state = FIBER_OTHER;
 
-  if (vm->fiber != NULL)
+  if (caller != NULL)
   {
     // Make the caller's run method return null.
-    vm->fiber->stackTop[-1] = NULL_VAL;
+    caller->stackTop[-1] = NULL_VAL;
   }
 
   return false;
@@ -213,23 +211,23 @@ DEF_PRIMITIVE(fiber_yield)
 
 DEF_PRIMITIVE(fiber_yield1)
 {
-  WrenFiber* current = vm->fiber;
-  vm->fiber = current->caller;
+  WrenFiber* caller = fiber->caller;
+  fiber->vm->fiber = caller;
 
   // Unhook this fiber from the one that called it.
-  current->caller = NULL;
-  current->state = FIBER_OTHER;
+  fiber->caller = NULL;
+  fiber->state = FIBER_OTHER;
 
-  if (vm->fiber != NULL)
+  if (caller != NULL)
   {
     // Make the caller's run method return the argument passed to yield.
-    vm->fiber->stackTop[-1] = args[1];
+    caller->stackTop[-1] = args[1];
 
     // When the yielding fiber resumes, we'll store the result of the yield
     // call in its stack. Since Fiber.yield(value) has two arguments (the Fiber
     // class and the value) and we only need one slot for the result, discard
     // the other slot now.
-    current->stackTop--;
+    fiber->stackTop--;
   }
 
   return false;
@@ -237,8 +235,6 @@ DEF_PRIMITIVE(fiber_yield1)
 
 DEF_PRIMITIVE(fn_new)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateFn(fiber, args[1], "Argument")) return false;
 
   // The block argument is already a function, so just return it.
@@ -266,7 +262,7 @@ static void call(WrenFiber* fiber, Value* args, int numArgs)
 #define DEF_FN_CALL(numArgs) \
     DEF_PRIMITIVE(fn_call##numArgs) \
     { \
-      call(vm->fiber, args, numArgs); \
+      call(fiber, args, numArgs); \
       return false; \
     } \
 
@@ -290,19 +286,17 @@ DEF_FN_CALL(16)
 
 DEF_PRIMITIVE(fn_toString)
 {
-  RETURN_VAL(CONST_STRING(vm, "<fn>"));
+  RETURN_VAL(CONST_STRING(fiber->vm, "<fn>"));
 }
 
 // Creates a new list of size args[1], with all elements initialized to args[2].
 DEF_PRIMITIVE(list_filled)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateInt(fiber, args[1], "Size")) return false;  
   if (AS_NUM(args[1]) < 0) RETURN_ERROR("Size cannot be negative.");
   
   uint32_t size = (uint32_t)AS_NUM(args[1]);
-  ObjList* list = wrenNewList(vm, size);
+  ObjList* list = wrenNewList(fiber->vm, size);
   
   for (uint32_t i = 0; i < size; i++)
   {
@@ -314,12 +308,12 @@ DEF_PRIMITIVE(list_filled)
 
 DEF_PRIMITIVE(list_new)
 {
-  RETURN_OBJ(wrenNewList(vm, 0));
+  RETURN_OBJ(wrenNewList(fiber->vm, 0));
 }
 
 DEF_PRIMITIVE(list_add)
 {
-  wrenValueBufferWrite(vm, &AS_LIST(args[0])->elements, args[1]);
+  wrenValueBufferWrite(fiber->vm, &AS_LIST(args[0])->elements, args[1]);
   RETURN_VAL(args[1]);
 }
 
@@ -328,7 +322,7 @@ DEF_PRIMITIVE(list_add)
 // minimize stack churn.
 DEF_PRIMITIVE(list_addCore)
 {
-  wrenValueBufferWrite(vm, &AS_LIST(args[0])->elements, args[1]);
+  wrenValueBufferWrite(fiber->vm, &AS_LIST(args[0])->elements, args[1]);
   
   // Return the list.
   RETURN_VAL(args[0]);
@@ -336,7 +330,7 @@ DEF_PRIMITIVE(list_addCore)
 
 DEF_PRIMITIVE(list_clear)
 {
-  wrenValueBufferClear(vm, &AS_LIST(args[0])->elements);
+  wrenValueBufferClear(fiber->vm, &AS_LIST(args[0])->elements);
   RETURN_NULL;
 }
 
@@ -347,7 +341,6 @@ DEF_PRIMITIVE(list_count)
 
 DEF_PRIMITIVE(list_insert)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjList* list = AS_LIST(args[0]);
 
   // count + 1 here so you can "insert" at the very end.
@@ -355,13 +348,12 @@ DEF_PRIMITIVE(list_insert)
                                  "Index");
   if (index == UINT32_MAX) return false;
 
-  wrenListInsert(vm, list, args[2], index);
+  wrenListInsert(fiber->vm, list, args[2], index);
   RETURN_VAL(args[2]);
 }
 
 DEF_PRIMITIVE(list_iterate)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjList* list = AS_LIST(args[0]);
 
   // If we're starting the iteration, return the first index.
@@ -383,7 +375,6 @@ DEF_PRIMITIVE(list_iterate)
 
 DEF_PRIMITIVE(list_iteratorValue)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjList* list = AS_LIST(args[0]);
   uint32_t index = validateIndex(fiber, args[1], list->elements.count, "Iterator");
   if (index == UINT32_MAX) return false;
@@ -393,17 +384,15 @@ DEF_PRIMITIVE(list_iteratorValue)
 
 DEF_PRIMITIVE(list_removeAt)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjList* list = AS_LIST(args[0]);
   uint32_t index = validateIndex(fiber, args[1], list->elements.count, "Index");
   if (index == UINT32_MAX) return false;
 
-  RETURN_VAL(wrenListRemoveAt(vm, list, index));
+  RETURN_VAL(wrenListRemoveAt(fiber->vm, list, index));
 }
 
 DEF_PRIMITIVE(list_subscript)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjList* list = AS_LIST(args[0]);
 
   if (IS_NUM(args[1]))
@@ -425,7 +414,7 @@ DEF_PRIMITIVE(list_subscript)
   uint32_t start = calculateRange(fiber, AS_RANGE(args[1]), &count, &step);
   if (start == UINT32_MAX) return false;
 
-  ObjList* result = wrenNewList(vm, count);
+  ObjList* result = wrenNewList(fiber->vm, count);
   for (uint32_t i = 0; i < count; i++)
   {
     result->elements.data[i] = list->elements.data[start + i * step];
@@ -436,7 +425,6 @@ DEF_PRIMITIVE(list_subscript)
 
 DEF_PRIMITIVE(list_subscriptSetter)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjList* list = AS_LIST(args[0]);
   uint32_t index = validateIndex(fiber, args[1], list->elements.count,
                                  "Subscript");
@@ -448,13 +436,11 @@ DEF_PRIMITIVE(list_subscriptSetter)
 
 DEF_PRIMITIVE(map_new)
 {
-  RETURN_OBJ(wrenNewMap(vm));
+  RETURN_OBJ(wrenNewMap(fiber->vm));
 }
 
 DEF_PRIMITIVE(map_subscript)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateKey(fiber, args[1])) return false;
 
   ObjMap* map = AS_MAP(args[0]);
@@ -466,11 +452,9 @@ DEF_PRIMITIVE(map_subscript)
 
 DEF_PRIMITIVE(map_subscriptSetter)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateKey(fiber, args[1])) return false;
 
-  wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
+  wrenMapSet(fiber->vm, AS_MAP(args[0]), args[1], args[2]);
   RETURN_VAL(args[2]);
 }
 
@@ -479,11 +463,9 @@ DEF_PRIMITIVE(map_subscriptSetter)
 // minimize stack churn.
 DEF_PRIMITIVE(map_addCore)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateKey(fiber, args[1])) return false;
   
-  wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
+  wrenMapSet(fiber->vm, AS_MAP(args[0]), args[1], args[2]);
   
   // Return the map itself.
   RETURN_VAL(args[0]);
@@ -491,14 +473,12 @@ DEF_PRIMITIVE(map_addCore)
 
 DEF_PRIMITIVE(map_clear)
 {
-  wrenMapClear(vm, AS_MAP(args[0]));
+  wrenMapClear(fiber->vm, AS_MAP(args[0]));
   RETURN_NULL;
 }
 
 DEF_PRIMITIVE(map_containsKey)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateKey(fiber, args[1])) return false;
 
   RETURN_BOOL(!IS_UNDEFINED(wrenMapGet(AS_MAP(args[0]), args[1])));
@@ -511,7 +491,6 @@ DEF_PRIMITIVE(map_count)
 
 DEF_PRIMITIVE(map_iterate)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjMap* map = AS_MAP(args[0]);
 
   if (map->count == 0) RETURN_FALSE;
@@ -545,16 +524,13 @@ DEF_PRIMITIVE(map_iterate)
 
 DEF_PRIMITIVE(map_remove)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateKey(fiber, args[1])) return false;
 
-  RETURN_VAL(wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1]));
+  RETURN_VAL(wrenMapRemoveKey(fiber->vm, AS_MAP(args[0]), args[1]));
 }
 
 DEF_PRIMITIVE(map_keyIteratorValue)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjMap* map = AS_MAP(args[0]);
   uint32_t index = validateIndex(fiber, args[1], map->capacity, "Iterator");
   if (index == UINT32_MAX) return false;
@@ -570,7 +546,6 @@ DEF_PRIMITIVE(map_keyIteratorValue)
 
 DEF_PRIMITIVE(map_valueIteratorValue)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjMap* map = AS_MAP(args[0]);
   uint32_t index = validateIndex(fiber, args[1], map->capacity, "Iterator");
   if (index == UINT32_MAX) return false;
@@ -591,13 +566,11 @@ DEF_PRIMITIVE(null_not)
 
 DEF_PRIMITIVE(null_toString)
 {
-  RETURN_VAL(CONST_STRING(vm, "null"));
+  RETURN_VAL(CONST_STRING(fiber->vm, "null"));
 }
 
 DEF_PRIMITIVE(num_fromString)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateString(fiber, args[1], "Argument")) return false;
 
   ObjString* string = AS_STRING(args[1]);
@@ -630,7 +603,6 @@ DEF_PRIMITIVE(num_pi)
 #define DEF_NUM_INFIX(name, op, type) \
     DEF_PRIMITIVE(num_##name) \
     { \
-      WrenFiber* fiber = vm->fiber;                                            \
       if (!validateNum(fiber, args[1], "Right operand")) return false;         \
       RETURN_##type(AS_NUM(args[0]) op AS_NUM(args[1])); \
     }
@@ -648,7 +620,6 @@ DEF_NUM_INFIX(gte,      >=, BOOL)
 #define DEF_NUM_BITWISE(name, op) \
     DEF_PRIMITIVE(num_bitwise##name) \
     { \
-      WrenFiber* fiber = vm->fiber;                                            \
       if (!validateNum(fiber, args[1], "Right operand")) return false;         \
       uint32_t left = (uint32_t)AS_NUM(args[0]); \
       uint32_t right = (uint32_t)AS_NUM(args[1]); \
@@ -684,8 +655,6 @@ DEF_NUM_FN(log,     log)
 
 DEF_PRIMITIVE(num_mod)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateNum(fiber, args[1], "Right operand")) return false;
   RETURN_NUM(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
@@ -710,24 +679,20 @@ DEF_PRIMITIVE(num_bitwiseNot)
 
 DEF_PRIMITIVE(num_dotDot)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateNum(fiber, args[1], "Right hand side of range")) return false;
 
   double from = AS_NUM(args[0]);
   double to = AS_NUM(args[1]);
-  RETURN_VAL(wrenNewRange(vm, from, to, true));
+  RETURN_VAL(wrenNewRange(fiber->vm, from, to, true));
 }
 
 DEF_PRIMITIVE(num_dotDotDot)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateNum(fiber, args[1], "Right hand side of range")) return false;
 
   double from = AS_NUM(args[0]);
   double to = AS_NUM(args[1]);
-  RETURN_VAL(wrenNewRange(vm, from, to, false));
+  RETURN_VAL(wrenNewRange(fiber->vm, from, to, false));
 }
 
 DEF_PRIMITIVE(num_atan2)
@@ -792,7 +757,7 @@ DEF_PRIMITIVE(num_smallest)
 
 DEF_PRIMITIVE(num_toString)
 {
-  RETURN_VAL(wrenNumToString(vm, AS_NUM(args[0])));
+  RETURN_VAL(wrenNumToString(fiber->vm, AS_NUM(args[0])));
 }
 
 DEF_PRIMITIVE(num_truncate)
@@ -824,14 +789,12 @@ DEF_PRIMITIVE(object_bangeq)
 
 DEF_PRIMITIVE(object_is)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!IS_CLASS(args[1]))
   {
     RETURN_ERROR("Right operand must be a class.");
   }
 
-  ObjClass *classObj = wrenGetClass(vm, args[0]);
+  ObjClass *classObj = wrenGetClass(fiber->vm, args[0]);
   ObjClass *baseClassObj = AS_CLASS(args[1]);
 
   // Walk the superclass chain looking for the class.
@@ -850,12 +813,12 @@ DEF_PRIMITIVE(object_toString)
 {
   Obj* obj = AS_OBJ(args[0]);
   Value name = OBJ_VAL(obj->classObj->name);
-  RETURN_VAL(wrenStringFormat(vm, "instance of @", name));
+  RETURN_VAL(wrenStringFormat(fiber->vm, "instance of @", name));
 }
 
 DEF_PRIMITIVE(object_type)
 {
-  RETURN_OBJ(wrenGetClass(vm, args[0]));
+  RETURN_OBJ(wrenGetClass(fiber->vm, args[0]));
 }
 
 DEF_PRIMITIVE(range_from)
@@ -887,7 +850,6 @@ DEF_PRIMITIVE(range_isInclusive)
 
 DEF_PRIMITIVE(range_iterate)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjRange* range = AS_RANGE(args[0]);
 
   // Special case: empty range.
@@ -925,6 +887,7 @@ DEF_PRIMITIVE(range_iteratorValue)
 
 DEF_PRIMITIVE(range_toString)
 {
+  WrenVM* vm = fiber->vm;
   ObjRange* range = AS_RANGE(args[0]);
 
   Value from = wrenNumToString(vm, range->from);
@@ -943,8 +906,6 @@ DEF_PRIMITIVE(range_toString)
 
 DEF_PRIMITIVE(string_fromCodePoint)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateInt(fiber, args[1], "Code point")) return false;
 
   int codePoint = (int)AS_NUM(args[1]);
@@ -957,12 +918,11 @@ DEF_PRIMITIVE(string_fromCodePoint)
     RETURN_ERROR("Code point cannot be greater than 0x10ffff.");
   }
 
-  RETURN_VAL(wrenStringFromCodePoint(vm, codePoint));
+  RETURN_VAL(wrenStringFromCodePoint(fiber->vm, codePoint));
 }
 
 DEF_PRIMITIVE(string_byteAt)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjString* string = AS_STRING(args[0]);
 
   uint32_t index = validateIndex(fiber, args[1], string->length, "Index");
@@ -978,7 +938,6 @@ DEF_PRIMITIVE(string_byteCount)
 
 DEF_PRIMITIVE(string_codePointAt)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjString* string = AS_STRING(args[0]);
 
   uint32_t index = validateIndex(fiber, args[1], string->length, "Index");
@@ -995,8 +954,6 @@ DEF_PRIMITIVE(string_codePointAt)
 
 DEF_PRIMITIVE(string_contains)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateString(fiber, args[1], "Argument")) return false;
 
   ObjString* string = AS_STRING(args[0]);
@@ -1007,8 +964,6 @@ DEF_PRIMITIVE(string_contains)
 
 DEF_PRIMITIVE(string_endsWith)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateString(fiber, args[1], "Argument")) return false;
 
   ObjString* string = AS_STRING(args[0]);
@@ -1023,8 +978,6 @@ DEF_PRIMITIVE(string_endsWith)
 
 DEF_PRIMITIVE(string_indexOf1)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateString(fiber, args[1], "Argument")) return false;
 
   ObjString* string = AS_STRING(args[0]);
@@ -1036,8 +989,6 @@ DEF_PRIMITIVE(string_indexOf1)
 
 DEF_PRIMITIVE(string_indexOf2)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateString(fiber, args[1], "Argument")) return false;
 
   ObjString* string = AS_STRING(args[0]);
@@ -1051,7 +1002,6 @@ DEF_PRIMITIVE(string_indexOf2)
 
 DEF_PRIMITIVE(string_iterate)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjString* string = AS_STRING(args[0]);
 
   // If we're starting the iteration, return the first index.
@@ -1078,7 +1028,6 @@ DEF_PRIMITIVE(string_iterate)
 
 DEF_PRIMITIVE(string_iterateByte)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjString* string = AS_STRING(args[0]);
 
   // If we're starting the iteration, return the first index.
@@ -1102,18 +1051,15 @@ DEF_PRIMITIVE(string_iterateByte)
 
 DEF_PRIMITIVE(string_iteratorValue)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjString* string = AS_STRING(args[0]);
   uint32_t index = validateIndex(fiber, args[1], string->length, "Iterator");
   if (index == UINT32_MAX) return false;
 
-  RETURN_VAL(wrenStringCodePointAt(vm, string, index));
+  RETURN_VAL(wrenStringCodePointAt(fiber->vm, string, index));
 }
 
 DEF_PRIMITIVE(string_startsWith)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateString(fiber, args[1], "Argument")) return false;
 
   ObjString* string = AS_STRING(args[0]);
@@ -1127,15 +1073,12 @@ DEF_PRIMITIVE(string_startsWith)
 
 DEF_PRIMITIVE(string_plus)
 {
-  WrenFiber* fiber = vm->fiber;
-  
   if (!validateString(fiber, args[1], "Right operand")) return false;
-  RETURN_VAL(wrenStringFormat(vm, "@@", args[0], args[1]));
+  RETURN_VAL(wrenStringFormat(fiber->vm, "@@", args[0], args[1]));
 }
 
 DEF_PRIMITIVE(string_subscript)
 {
-  WrenFiber* fiber = vm->fiber;
   ObjString* string = AS_STRING(args[0]);
 
   if (IS_NUM(args[1]))
@@ -1143,7 +1086,7 @@ DEF_PRIMITIVE(string_subscript)
     int index = validateIndex(fiber, args[1], string->length, "Subscript");
     if (index == -1) return false;
 
-    RETURN_VAL(wrenStringCodePointAt(vm, string, index));
+    RETURN_VAL(wrenStringCodePointAt(fiber->vm, string, index));
   }
 
   if (!IS_RANGE(args[1]))
@@ -1156,7 +1099,7 @@ DEF_PRIMITIVE(string_subscript)
   int start = calculateRange(fiber, AS_RANGE(args[1]), &count, &step);
   if (start == -1) return false;
 
-  RETURN_VAL(wrenNewStringFromRange(vm, string, start, count, step));
+  RETURN_VAL(wrenNewStringFromRange(fiber->vm, string, start, count, step));
 }
 
 DEF_PRIMITIVE(string_toString)
@@ -1171,15 +1114,17 @@ DEF_PRIMITIVE(system_clock)
 
 DEF_PRIMITIVE(system_gc)
 {
-  wrenCollectGarbage(vm);
+  wrenCollectGarbage(fiber->vm);
   RETURN_NULL;
 }
 
 DEF_PRIMITIVE(system_writeString)
 {
-  if (vm->config.writeFn != NULL)
+  WrenWriteFn writeFn = fiber->vm->config.writeFn;
+  
+  if (writeFn != NULL)
   {
-    vm->config.writeFn(vm, AS_CSTRING(args[1]));
+    writeFn(fiber->vm, AS_CSTRING(args[1]));
   }
 
   RETURN_VAL(args[1]);
