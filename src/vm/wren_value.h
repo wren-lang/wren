@@ -668,7 +668,7 @@ static inline void wrenGrowStackInline(WrenFiber* fiber, int needed)
 
 // Adds a new [CallFrame] to [fiber] invoking [closure] whose stack starts at
 // [stackStart].
-static inline void wrenPushCallFrame(WrenVM* vm, WrenFiber* fiber,
+static inline void wrenPushCallFrame(WrenFiber* fiber,
                                      ObjClosure* closure, Value* stackStart)
 {
   // Grow the call frame array if needed.
@@ -683,7 +683,7 @@ static inline void wrenPushCallFrame(WrenVM* vm, WrenFiber* fiber,
   frame->ip = closure != NULL ? closure->fn->code.data : 0;
 }
 
-static inline void wrenPopCallFrame(WrenVM* vm, WrenFiber* fiber)
+static inline void wrenPopCallFrame(WrenFiber* fiber)
 {
   ASSERT(fiber->numFrames > 0, "Frame stack underflow.");
 

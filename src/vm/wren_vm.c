@@ -376,14 +376,14 @@ static void callForeign(WrenVM* vm, WrenFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
   // Save the current state so we can restore it when done.
-  wrenPushCallFrame(vm, fiber, NULL, fiber->stackTop - numArgs);
+  wrenPushCallFrame(fiber, NULL, fiber->stackTop - numArgs);
 
   foreign(vm);
 
   // Discard the stack slots for the arguments and temporaries but leave one
   // for the result.
   fiber->stackTop = fiber->stackStart + 1;
-  wrenPopCallFrame(vm, fiber);
+  wrenPopCallFrame(fiber);
 }
 
 // Handles the current fiber having aborted because of an error.
@@ -627,7 +627,7 @@ static void createForeign(WrenVM* vm, WrenFiber* fiber, Value* stack)
   ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
 
   // Pass the constructor arguments to the allocator as well.
-  wrenPushCallFrame(vm, fiber, NULL, stack);
+  wrenPushCallFrame(fiber, NULL, stack);
 
 #ifdef DEBUG
   int numSlots = wrenGetSlotCount(vm);
@@ -635,7 +635,7 @@ static void createForeign(WrenVM* vm, WrenFiber* fiber, Value* stack)
   method->as.foreign(vm);
   ASSERT(numSlots == wrenGetSlotCount(vm), "Foreign creator altered slot count.");
 
-  wrenPopCallFrame(vm, fiber);
+  wrenPopCallFrame(fiber);
   // TODO: Check that allocateForeign was called.
 }
 
@@ -1156,7 +1156,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register WrenFiber* fiber)
     CASE_CODE(RETURN):
     {
       Value result = POP();
-      wrenPopCallFrame(vm, fiber);
+      wrenPopCallFrame(fiber);
 
       // Close any upvalues still in scope.
       closeUpvalues(fiber, stackStart);
@@ -1194,7 +1194,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register WrenFiber* fiber)
           abort();
         }
 
-        wrenPopCallFrame(vm, fiber);
+        wrenPopCallFrame(fiber);
 
         return WREN_RESULT_SUCCESS;
       }
@@ -1393,7 +1393,7 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
          "Stack must have enough arguments for method.");
   
   // Protect native call frame.
-  wrenPushCallFrame(vm, fiber, NULL, vm->fiber->stackStart);
+  wrenPushCallFrame(fiber, NULL, vm->fiber->stackStart);
   
   wrenCallFunction(vm, fiber, closure, closure->fn->arity + 1);
   return runInterpreter(vm, fiber);
