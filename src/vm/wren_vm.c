@@ -232,12 +232,12 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 // ensure that multiple closures closing over the same variable actually see
 // the same variable.) Otherwise, it will create a new open upvalue and add it
 // the fiber's list of upvalues.
-static ObjUpvalue* captureUpvalue(WrenVM* vm, WrenFiber* fiber, Value* local)
+static ObjUpvalue* captureUpvalue(WrenFiber* fiber, Value* local)
 {
   // If there are no open upvalues at all, we must need a new one.
   if (fiber->openUpvalues == NULL)
   {
-    fiber->openUpvalues = wrenNewUpvalue(vm, local);
+    fiber->openUpvalues = wrenNewUpvalue(fiber->vm, local);
     return fiber->openUpvalues;
   }
 
@@ -258,7 +258,7 @@ static ObjUpvalue* captureUpvalue(WrenVM* vm, WrenFiber* fiber, Value* local)
   // We've walked past this local on the stack, so there must not be an
   // upvalue for it already. Make a new one and link it in in the right
   // place to keep the list sorted.
-  ObjUpvalue* createdUpvalue = wrenNewUpvalue(vm, local);
+  ObjUpvalue* createdUpvalue = wrenNewUpvalue(fiber->vm, local);
   if (prevUpvalue == NULL)
   {
     // The new one is the first one in the list.
@@ -613,13 +613,13 @@ static void createClass(WrenVM* vm, int numFields, ObjModule* module)
   if (numFields == -1) bindForeignClass(vm, classObj, module);
 }
 
-static void createForeign(WrenVM* vm, WrenFiber* fiber, Value* stack)
+static void createForeign(WrenFiber* fiber, Value* stack)
 {
   ObjClass* classObj = AS_CLASS(stack[0]);
   ASSERT(classObj->numFields == -1, "Class must be a foreign class.");
 
   // TODO: Don't look up every time.
-  int symbol = wrenSymbolTableFind(&vm->methodNames, "<allocate>", 10);
+  int symbol = wrenSymbolTableFind(&fiber->vm->methodNames, "<allocate>", 10);
   ASSERT(symbol != -1, "Should have defined <allocate> symbol.");
 
   ASSERT(classObj->methods.count > symbol, "Class should have allocator.");
@@ -630,10 +630,10 @@ static void createForeign(WrenVM* vm, WrenFiber* fiber, Value* stack)
   wrenPushCallFrame(fiber, NULL, stack);
 
 #ifdef DEBUG
-  int numSlots = wrenGetSlotCount(vm);
+  int numSlots = wrenGetSlotCount(fiber->vm);
 #endif
-  method->as.foreign(vm);
-  ASSERT(numSlots == wrenGetSlotCount(vm), "Foreign creator altered slot count.");
+  method->as.foreign(fiber->vm);
+  ASSERT(numSlots == wrenGetSlotCount(fiber->vm), "Foreign creator altered slot count.");
 
   wrenPopCallFrame(fiber);
   // TODO: Check that allocateForeign was called.
@@ -1211,7 +1211,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register WrenFiber* fiber)
     CASE_CODE(FOREIGN_CONSTRUCT):
       ASSERT(IS_CLASS(stackStart[0]), "'this' should be a class.");
       STORE_FRAME();
-      createForeign(vm, fiber, stackStart);
+      createForeign(fiber, stackStart);
       LOAD_FRAME();
       DISPATCH();
 
@@ -1231,7 +1231,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register WrenFiber* fiber)
         if (isLocal)
         {
           // Make an new upvalue to close over the parent's local variable.
-          closure->upvalues[i] = captureUpvalue(vm, fiber,
+          closure->upvalues[i] = captureUpvalue(fiber,
                                                 frame->stackStart + index);
         }
         else
