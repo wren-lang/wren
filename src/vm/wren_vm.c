@@ -1550,27 +1550,24 @@ int wrenGetSlotCount(WrenFiber* fiber)
   return (int)(fiber->stackTop - fiber->stackStart);
 }
 
-void wrenSetSlotCount(WrenVM* vm, int numSlots)
+void wrenSetSlotCount(WrenFiber* fiber, int numSlots)
 {
-  // If we don't have a fiber accessible, create one for the API to use.
-  if (vm->fiber == NULL)
-  {
-    vm->fiber = wrenNewFiber(vm, NULL);
-  }
+  ASSERT(fiber != NULL, "Fiber must exist.");
+  ASSERT(fiber == fiber->vm->fiber, "Fiber out of sync.");
   
   // Grow the stack if needed.
-  int needed = (int)(vm->fiber->stackStart - vm->fiber->stack) + numSlots;
-  wrenGrowStackInline(vm->fiber, needed);
+  int needed = (int)(fiber->stackStart - fiber->stack) + numSlots;
+  wrenGrowStackInline(fiber, needed);
   
   // Avoid the gc to access invalidated values, and user to access unwanted
   // bread crumbs.
-  Value* pend = vm->fiber->stackStart + numSlots;
-  for (Value* p = vm->fiber->stackTop; p < pend ; p++)
+  Value* pend = fiber->stackStart + numSlots;
+  for (Value* p = fiber->stackTop; p < pend ; p++)
   {
     *p = NULL_VAL;
   }
   
-  vm->fiber->stackTop = pend;
+  fiber->stackTop = pend;
 }
 
 void wrenCopySlots(WrenVM *vm, int dstSlot, int srcSlot, int size)

@@ -37,7 +37,7 @@ static void call(WrenFiber* fiber)
   WrenHandle* method = wrenMakeCallHandle(otherVM, "method(_,_,_,_)");
   
   WrenFiber* otherFiber = wrenGetCurrentFiber(otherVM);
-  wrenSetSlotCount(otherVM, 1);
+  wrenSetSlotCount(otherFiber, 1);
   wrenGetVariable(otherVM, "main", "Test", 0);
   WrenHandle* testClass = wrenGetSlotHandle(otherVM, 0);
   
@@ -46,7 +46,7 @@ static void call(WrenFiber* fiber)
   double result = 0;
   for (int i = 0; i < iterations; i++)
   {
-    wrenSetSlotCount(otherVM, 5);
+    wrenSetSlotCount(otherFiber, 5);
     wrenSetSlotHandle(otherVM, 0, testClass);
     wrenSetSlotDouble(otherVM, 1, 1.0);
     wrenSetSlotDouble(otherVM, 2, 2.0);

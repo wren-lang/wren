@@ -23,7 +23,7 @@ static void afterAssigned(WrenFiber* fiber)
 static void otherSlot(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotCount(vm, 3);
+  wrenSetSlotCount(fiber, 3);
   wrenGetVariable(vm, "./test/api/get_variable", "B", 2);
   
   // Move it into return position.

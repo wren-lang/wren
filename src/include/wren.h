@@ -375,7 +375,7 @@ int wrenGetSlotCount(WrenFiber* fiber);
 // growing the stack if needed.
 //
 // It is an error to call this from a finalizer.
-void wrenSetSlotCount(WrenVM* vm, int numSlots);
+void wrenSetSlotCount(WrenFiber* fiber, int numSlots);
 
 // Copy the slot value from [srcSlot] to [dstSlot].
 //

@@ -35,7 +35,8 @@ static void resume(WrenHandle* method)
 void schedulerCaptureMethods(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotCount(vm, 1);
+  
+  wrenSetSlotCount(fiber, 1);
   wrenGetVariable(vm, "scheduler", "Scheduler", 0);
   schedulerClass = wrenGetSlotHandle(vm, 0);
   
@@ -44,13 +45,15 @@ void schedulerCaptureMethods(WrenFiber* fiber)
   resumeError = wrenMakeCallHandle(vm, "resumeError_(_,_)");
 }
 
-void schedulerResume(WrenHandle* fiber, bool hasArgument)
+void schedulerResume(WrenHandle* resumedFiber, bool hasArgument)
 {
   WrenVM* vm = getVM();
-  wrenSetSlotCount(vm, 2 + (hasArgument ? 1 : 0));
+  WrenFiber* fiber = wrenGetCurrentFiber(vm);
+  
+  wrenSetSlotCount(fiber, 2 + (hasArgument ? 1 : 0));
   wrenSetSlotHandle(vm, 0, schedulerClass);
-  wrenSetSlotHandle(vm, 1, fiber);
-  wrenReleaseHandle(vm, fiber);
+  wrenSetSlotHandle(vm, 1, resumedFiber);
+  wrenReleaseHandle(vm, resumedFiber);
   
   // If we don't need to wait for an argument to be stored on the stack, resume
   // it now.

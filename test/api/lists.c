@@ -21,7 +21,7 @@ static void insert(WrenFiber* fiber)
   WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotNewList(vm, 0);
   
-  wrenSetSlotCount(vm, 2);
+  wrenSetSlotCount(fiber, 2);
   
   // Appending.
   insertNumber(vm, 0, 1.0);

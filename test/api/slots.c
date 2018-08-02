@@ -98,7 +98,7 @@ static void ensure(WrenFiber* fiber)
   WrenVM* vm = wrenGetVM(fiber);
   int before = wrenGetSlotCount(fiber);
   
-  wrenSetSlotCount(vm, 20);
+  wrenSetSlotCount(fiber, 20);
   
   int after = wrenGetSlotCount(fiber);
   
@@ -132,7 +132,7 @@ static void ensureOutsideForeign(WrenFiber* fiber)
 
   int before = wrenGetSlotCount(otherFiber);
 
-  wrenSetSlotCount(otherVM, 20);
+  wrenSetSlotCount(otherFiber, 20);
 
   int after = wrenGetSlotCount(otherFiber);
 

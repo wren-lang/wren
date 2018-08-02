@@ -33,7 +33,7 @@ void metaCompile(WrenFiber* fiber)
 void metaGetModuleVariables(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotCount(vm, 3);
+  wrenSetSlotCount(fiber, 3);
   
   Value moduleValue = wrenMapGet(vm->modules, wrenGetSlot(fiber, 1));
   if (IS_UNDEFINED(moduleValue))

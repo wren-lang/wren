@@ -6,7 +6,7 @@
 static void runtimeError(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotCount(vm, 1);
+  wrenSetSlotCount(fiber, 1);
   wrenSetSlotString(vm, 0, "Error!");
   wrenAbortFiber(vm, 0);
 }
