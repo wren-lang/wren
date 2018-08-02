@@ -160,6 +160,8 @@ WrenFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   WrenFiber* fiber = ALLOCATE(vm, WrenFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
 
+  fiber->vm = vm;
+
   fiber->stack = fiber->stackStart = fiber->stackTop = stack;
   fiber->stackCapacity = stackCapacity;
 

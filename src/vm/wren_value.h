@@ -315,6 +315,9 @@ struct WrenFiber
 {
   Obj obj;
   
+  // The VM owning this fiber.
+  WrenVM* vm;
+  
   // The stack of value slots. This is used for holding local variables and
   // temporaries while the fiber is executing. It heap-allocated and grown as
   // needed.
