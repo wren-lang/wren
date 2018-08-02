@@ -647,23 +647,23 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 WrenFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure);
 
 // Ensures [fiber]'s frames has at least [needed] entries.
-void wrenGrowFrames(WrenVM* vm, WrenFiber* fiber, int needed);
+void wrenGrowFrames(WrenFiber* fiber, int needed);
 
-static inline void wrenGrowFramesInline(WrenVM* vm, WrenFiber* fiber, int needed)
+static inline void wrenGrowFramesInline(WrenFiber* fiber, int needed)
 {
   if (fiber->frameCapacity >= needed) return;
 
-  wrenGrowFrames(vm, fiber, needed);
+  wrenGrowFrames(fiber, needed);
 }
 
 // Ensures [fiber]'s stack has at least [needed] slots.
-void wrenGrowStack(WrenVM* vm, WrenFiber* fiber, int needed);
+void wrenGrowStack(WrenFiber* fiber, int needed);
 
-static inline void wrenGrowStackInline(WrenVM* vm, WrenFiber* fiber, int needed)
+static inline void wrenGrowStackInline(WrenFiber* fiber, int needed)
 {
   if (fiber->stackCapacity >= needed) return;
 
-  wrenGrowStack(vm, fiber, needed);
+  wrenGrowStack(fiber, needed);
 }
 
 // Adds a new [CallFrame] to [fiber] invoking [closure] whose stack starts at
@@ -672,7 +672,7 @@ static inline void wrenPushCallFrame(WrenVM* vm, WrenFiber* fiber,
                                      ObjClosure* closure, Value* stackStart)
 {
   // Grow the call frame array if needed.
-  wrenGrowFramesInline(vm, fiber, fiber->numFrames + 1);
+  wrenGrowFramesInline(fiber, fiber->numFrames + 1);
 
   // The caller should have ensured we already have enough capacity.
   ASSERT(fiber->frameCapacity > fiber->numFrames, "No memory for call frame.");

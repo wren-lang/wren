@@ -1550,7 +1550,7 @@ void wrenSetSlotCount(WrenVM* vm, int numSlots)
   
   // Grow the stack if needed.
   int needed = (int)(vm->fiber->stackStart - vm->fiber->stack) + numSlots;
-  wrenGrowStackInline(vm, vm->fiber, needed);
+  wrenGrowStackInline(vm->fiber, needed);
   
   // Avoid the gc to access invalidated values, and user to access unwanted
   // bread crumbs.

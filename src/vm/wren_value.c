@@ -192,26 +192,26 @@ WrenVM* wrenGetVM(WrenFiber* fiber)
   return fiber->vm;
 }
 
-void wrenGrowFrames(WrenVM* vm, WrenFiber* fiber, int needed)
+void wrenGrowFrames(WrenFiber* fiber, int needed)
 {
   if (fiber->frameCapacity >= needed) return;
 
   int capacity = wrenPowerOf2Ceil(needed);
 
-  fiber->frames = (CallFrame*)wrenReallocate(vm, fiber->frames,
+  fiber->frames = (CallFrame*)wrenReallocate(fiber->vm, fiber->frames,
       sizeof(CallFrame) * fiber->frameCapacity,
       sizeof(CallFrame) * capacity);
   fiber->frameCapacity = capacity;
 }
 
-void wrenGrowStack(WrenVM* vm, WrenFiber* fiber, int needed)
+void wrenGrowStack(WrenFiber* fiber, int needed)
 {
   if (fiber->stackCapacity >= needed) return;
   
   int capacity = wrenPowerOf2Ceil(needed);
   
   Value* oldStack = fiber->stack;
-  fiber->stack = (Value*)wrenReallocate(vm, fiber->stack,
+  fiber->stack = (Value*)wrenReallocate(fiber->vm, fiber->stack,
                                         sizeof(Value) * fiber->stackCapacity,
                                         sizeof(Value) * capacity);
   fiber->stackCapacity = capacity;
