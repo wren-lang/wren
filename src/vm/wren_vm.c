@@ -108,6 +108,11 @@ void wrenFreeVM(WrenVM* vm)
   DEALLOCATE(vm, vm);
 }
 
+WrenFiber* wrenGetCurrentFiber(WrenVM* vm)
+{
+  return vm->fiber;
+}
+
 void wrenCollectGarbage(WrenVM* vm)
 {
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC

@@ -288,6 +288,15 @@ WrenVM* wrenNewVM(WrenConfiguration* configuration);
 // call to [wrenNewVM].
 void wrenFreeVM(WrenVM* vm);
 
+// Returns the current fiber.
+//
+// FIXME: Create a new one if there is none ?
+// FIXME: Temporary ?
+WrenFiber* wrenGetCurrentFiber(WrenVM* vm);
+
+// Return the VM for the fiber.
+WrenVM* wrenGetVM(WrenFiber* fiber);
+
 // Immediately run the garbage collector to free unused memory.
 void wrenCollectGarbage(WrenVM* vm);
 

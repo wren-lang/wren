@@ -187,6 +187,11 @@ WrenFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   return fiber;
 }
 
+WrenVM* wrenGetVM(WrenFiber* fiber)
+{
+  return fiber->vm;
+}
+
 void wrenGrowFrames(WrenVM* vm, WrenFiber* fiber, int needed)
 {
   if (fiber->frameCapacity >= needed) return;
