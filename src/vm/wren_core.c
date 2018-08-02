@@ -77,7 +77,7 @@ DEF_PRIMITIVE(fiber_abort)
 //
 // [hasValue] is true if a value in [args] is being passed to the new fiber.
 // Otherwise, `null` is implicitly being passed.
-static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
+static bool runFiber(WrenVM* vm, WrenFiber* fiber, Value* args, bool isCall,
                      bool hasValue, const char* verb)
 {
 
@@ -153,7 +153,7 @@ DEF_PRIMITIVE(fiber_error)
 
 DEF_PRIMITIVE(fiber_isDone)
 {
-  ObjFiber* runFiber = AS_FIBER(args[0]);
+  WrenFiber* runFiber = AS_FIBER(args[0]);
   RETURN_BOOL(runFiber->numFrames == 0 || !IS_NULL(runFiber->error));
 }
 
@@ -192,7 +192,7 @@ DEF_PRIMITIVE(fiber_try)
 
 DEF_PRIMITIVE(fiber_yield)
 {
-  ObjFiber* current = vm->fiber;
+  WrenFiber* current = vm->fiber;
   vm->fiber = current->caller;
 
   // Unhook this fiber from the one that called it.
@@ -210,7 +210,7 @@ DEF_PRIMITIVE(fiber_yield)
 
 DEF_PRIMITIVE(fiber_yield1)
 {
-  ObjFiber* current = vm->fiber;
+  WrenFiber* current = vm->fiber;
   vm->fiber = current->caller;
 
   // Unhook this fiber from the one that called it.

@@ -18,7 +18,7 @@ void metaCompile(WrenVM* vm)
   // up the callstack assuming that the meta module has one level of
   // indirection before hitting the user's code. Any change to meta may require
   // this constant to be tweaked.
-  ObjFiber* currentFiber = vm->fiber;
+  WrenFiber* currentFiber = vm->fiber;
   ObjFn* fn = currentFiber->frames[currentFiber->numFrames - 3].closure->fn;
   ObjString* module = fn->module->name;
 

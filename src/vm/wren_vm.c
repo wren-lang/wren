@@ -227,7 +227,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
 // ensure that multiple closures closing over the same variable actually see
 // the same variable.) Otherwise, it will create a new open upvalue and add it
 // the fiber's list of upvalues.
-static ObjUpvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
+static ObjUpvalue* captureUpvalue(WrenVM* vm, WrenFiber* fiber, Value* local)
 {
   // If there are no open upvalues at all, we must need a new one.
   if (fiber->openUpvalues == NULL)
@@ -270,7 +270,7 @@ static ObjUpvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
 
 // Closes any open upvates that have been created for stack slots at [last] and
 // above.
-static void closeUpvalues(ObjFiber* fiber, Value* last)
+static void closeUpvalues(WrenFiber* fiber, Value* last)
 {
   while (fiber->openUpvalues != NULL &&
          fiber->openUpvalues->value >= last)
@@ -367,7 +367,7 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
   wrenBindMethod(vm, classObj, symbol, method);
 }
 
-static void callForeign(WrenVM* vm, ObjFiber* fiber,
+static void callForeign(WrenVM* vm, WrenFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
   // Save the current state so we can restore it when done.
@@ -389,7 +389,7 @@ static void runtimeError(WrenVM* vm)
 {
   ASSERT(!IS_NULL(vm->fiber->error), "Should only call this after an error.");
 
-  ObjFiber* current = vm->fiber;
+  WrenFiber* current = vm->fiber;
   Value error = current->error;
   
   while (current != NULL)
@@ -407,7 +407,7 @@ static void runtimeError(WrenVM* vm)
     }
     
     // Otherwise, unhook the caller since we will never resume and return to it.
-    ObjFiber* caller = current->caller;
+    WrenFiber* caller = current->caller;
     current->caller = NULL;
     current = caller;
   }
@@ -608,7 +608,7 @@ static void createClass(WrenVM* vm, int numFields, ObjModule* module)
   if (numFields == -1) bindForeignClass(vm, classObj, module);
 }
 
-static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
+static void createForeign(WrenVM* vm, WrenFiber* fiber, Value* stack)
 {
   ObjClass* classObj = AS_CLASS(stack[0]);
   ASSERT(classObj->numFields == -1, "Class must be a foreign class.");
@@ -662,7 +662,7 @@ static Value resolveModule(WrenVM* vm, Value name)
   // If the host doesn't care to resolve, leave the name alone.
   if (vm->config.resolveModuleFn == NULL) return name;
 
-  ObjFiber* fiber = vm->fiber;
+  WrenFiber* fiber = vm->fiber;
   ObjFn* fn = fiber->frames[fiber->numFrames - 1].closure->fn;
   ObjString* importer = fn->module->name;
   
@@ -770,11 +770,11 @@ static Value getModuleVariable(WrenVM* vm, ObjModule* module,
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical.
-static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
+static WrenInterpretResult runInterpreter(WrenVM* vm, register WrenFiber* fiber)
 {
   // Remember the current fiber so we can find it if a GC happens.
   vm->fiber = fiber;
-  ObjFiber* calling_fiber = fiber;
+  WrenFiber* calling_fiber = fiber;
   fiber->state = FIBER_ROOT;
 
   // Hoist these into local variables. They are accessed frequently in the loop
@@ -1173,7 +1173,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           return WREN_RESULT_SUCCESS;
         }
         
-        ObjFiber* resumingFiber = fiber->caller;
+        WrenFiber* resumingFiber = fiber->caller;
         fiber->caller = NULL;
         fiber = resumingFiber;
         vm->fiber = resumingFiber;
@@ -1381,7 +1381,7 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   ASSERT(IS_CLOSURE(method->value), "Method must be a method handle.");
   ASSERT(vm->fiber != NULL, "Must set up arguments for call first.");
   
-  ObjFiber* fiber = vm->fiber;
+  WrenFiber* fiber = vm->fiber;
   ObjClosure* closure = AS_CLOSURE(method->value);
   
   ASSERT(wrenGetSlotCount(vm) >= closure->fn->arity + 1,
@@ -1439,7 +1439,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
   if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;
   
   wrenPushRoot(vm, (Obj*)closure);
-  ObjFiber* fiber = wrenNewFiber(vm, closure);
+  WrenFiber* fiber = wrenNewFiber(vm, closure);
   wrenPopRoot(vm); // closure.
   
   return runInterpreter(vm, fiber);

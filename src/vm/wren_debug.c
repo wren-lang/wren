@@ -7,7 +7,7 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
   // Bail if the host doesn't enable printing errors.
   if (vm->config.errorFn == NULL) return;
   
-  ObjFiber* fiber = vm->fiber;
+  WrenFiber* fiber = vm->fiber;
   if (IS_STRING(fiber->error))
   {
     vm->config.errorFn(vm, WREN_ERROR_RUNTIME,
@@ -379,7 +379,7 @@ void wrenDumpCode(WrenVM* vm, ObjFn* fn)
   printf("\n");
 }
 
-void wrenDumpStack(ObjFiber* fiber)
+void wrenDumpStack(WrenFiber* fiber)
 {
   printf("(fiber %p) ", fiber);
   for (Value* slot = fiber->stack; slot < fiber->stackTop; slot++)

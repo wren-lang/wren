@@ -25,6 +25,9 @@
 // here.
 typedef struct WrenVM WrenVM;
 
+// A fiber executing Wren code.
+typedef struct WrenFiber WrenFiber;
+
 // A handle to a Wren object.
 //
 // This lets code outside of the VM hold a persistent reference to an object.

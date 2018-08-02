@@ -22,6 +22,6 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i);
 void wrenDumpCode(WrenVM* vm, ObjFn* fn);
 
 // Prints the contents of the current stack for [fiber] to stdout.
-void wrenDumpStack(ObjFiber* fiber);
+void wrenDumpStack(WrenFiber* fiber);
 
 #endif

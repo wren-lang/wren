@@ -47,7 +47,7 @@
 // ensured to be the right type.
 #define AS_CLASS(value)     ((ObjClass*)AS_OBJ(value))          // ObjClass*
 #define AS_CLOSURE(value)   ((ObjClosure*)AS_OBJ(value))        // ObjClosure*
-#define AS_FIBER(v)         ((ObjFiber*)AS_OBJ(v))              // ObjFiber*
+#define AS_FIBER(v)         ((WrenFiber*)AS_OBJ(v))             // WrenFiber*
 #define AS_FN(value)        ((ObjFn*)AS_OBJ(value))             // ObjFn*
 #define AS_FOREIGN(v)       ((ObjForeign*)AS_OBJ(v))            // ObjForeign*
 #define AS_INSTANCE(value)  ((ObjInstance*)AS_OBJ(value))       // ObjInstance*
@@ -71,7 +71,7 @@
 #define IS_BOOL(value) (wrenIsBool(value))                      // Bool
 #define IS_CLASS(value) (wrenIsObjType(value, OBJ_CLASS))       // ObjClass
 #define IS_CLOSURE(value) (wrenIsObjType(value, OBJ_CLOSURE))   // ObjClosure
-#define IS_FIBER(value) (wrenIsObjType(value, OBJ_FIBER))       // ObjFiber
+#define IS_FIBER(value) (wrenIsObjType(value, OBJ_FIBER))       // WrenFiber
 #define IS_FN(value) (wrenIsObjType(value, OBJ_FN))             // ObjFn
 #define IS_FOREIGN(value) (wrenIsObjType(value, OBJ_FOREIGN))   // ObjForeign
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
@@ -311,7 +311,7 @@ typedef enum
   FIBER_OTHER,
 } FiberState;
 
-typedef struct sObjFiber
+struct WrenFiber
 {
   Obj obj;
   
@@ -346,14 +346,14 @@ typedef struct sObjFiber
   
   // The fiber that ran this one. If this fiber is yielded, control will resume
   // to this one. May be `NULL`.
-  struct sObjFiber* caller;
+  WrenFiber* caller;
   
   // If the fiber failed because of a runtime error, this will contain the
   // error object. Otherwise, it will be null.
   Value error;
   
   FiberState state;
-} ObjFiber;
+};
 
 typedef enum
 {
@@ -641,12 +641,12 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
 
 // Creates a new fiber object that will invoke [closure].
-ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure);
+WrenFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure);
 
 // Ensures [fiber]'s frames has at least [needed] entries.
-void wrenGrowFrames(WrenVM* vm, ObjFiber* fiber, int needed);
+void wrenGrowFrames(WrenVM* vm, WrenFiber* fiber, int needed);
 
-static inline void wrenGrowFramesInline(WrenVM* vm, ObjFiber* fiber, int needed)
+static inline void wrenGrowFramesInline(WrenVM* vm, WrenFiber* fiber, int needed)
 {
   if (fiber->frameCapacity >= needed) return;
 
@@ -654,9 +654,9 @@ static inline void wrenGrowFramesInline(WrenVM* vm, ObjFiber* fiber, int needed)
 }
 
 // Ensures [fiber]'s stack has at least [needed] slots.
-void wrenGrowStack(WrenVM* vm, ObjFiber* fiber, int needed);
+void wrenGrowStack(WrenVM* vm, WrenFiber* fiber, int needed);
 
-static inline void wrenGrowStackInline(WrenVM* vm, ObjFiber* fiber, int needed)
+static inline void wrenGrowStackInline(WrenVM* vm, WrenFiber* fiber, int needed)
 {
   if (fiber->stackCapacity >= needed) return;
 
@@ -665,7 +665,7 @@ static inline void wrenGrowStackInline(WrenVM* vm, ObjFiber* fiber, int needed)
 
 // Adds a new [CallFrame] to [fiber] invoking [closure] whose stack starts at
 // [stackStart].
-static inline void wrenPushCallFrame(WrenVM* vm, ObjFiber* fiber,
+static inline void wrenPushCallFrame(WrenVM* vm, WrenFiber* fiber,
                                      ObjClosure* closure, Value* stackStart)
 {
   // Grow the call frame array if needed.
@@ -680,7 +680,7 @@ static inline void wrenPushCallFrame(WrenVM* vm, ObjFiber* fiber,
   frame->ip = closure != NULL ? closure->fn->code.data : 0;
 }
 
-static inline void wrenPopCallFrame(WrenVM* vm, ObjFiber* fiber)
+static inline void wrenPopCallFrame(WrenVM* vm, WrenFiber* fiber)
 {
   ASSERT(fiber->numFrames > 0, "Frame stack underflow.");
 

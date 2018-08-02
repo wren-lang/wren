@@ -145,7 +145,7 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
   return closure;
 }
 
-ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
+WrenFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
 {
   // Allocate the arrays before the fiber in case it triggers a GC.
   CallFrame* frames = ALLOCATE_ARRAY(vm, CallFrame, INITIAL_CALL_FRAMES);
@@ -157,7 +157,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
       : wrenPowerOf2Ceil(closure->fn->maxSlots + 1);
   Value* stack = ALLOCATE_ARRAY(vm, Value, stackCapacity);
   
-  ObjFiber* fiber = ALLOCATE(vm, ObjFiber);
+  WrenFiber* fiber = ALLOCATE(vm, WrenFiber);
   initObj(vm, &fiber->obj, OBJ_FIBER, vm->fiberClass);
 
   fiber->stack = fiber->stackStart = fiber->stackTop = stack;
@@ -185,7 +185,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   return fiber;
 }
 
-void wrenGrowFrames(WrenVM* vm, ObjFiber* fiber, int needed)
+void wrenGrowFrames(WrenVM* vm, WrenFiber* fiber, int needed)
 {
   if (fiber->frameCapacity >= needed) return;
 
@@ -197,7 +197,7 @@ void wrenGrowFrames(WrenVM* vm, ObjFiber* fiber, int needed)
   fiber->frameCapacity = capacity;
 }
 
-void wrenGrowStack(WrenVM* vm, ObjFiber* fiber, int needed)
+void wrenGrowStack(WrenVM* vm, WrenFiber* fiber, int needed)
 {
   if (fiber->stackCapacity >= needed) return;
   
@@ -1041,7 +1041,7 @@ static void blackenClosure(WrenVM* vm, ObjClosure* closure)
   vm->bytesAllocated += sizeof(ObjUpvalue*) * closure->fn->numUpvalues;
 }
 
-static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
+static void blackenFiber(WrenVM* vm, WrenFiber* fiber)
 {
   // Stack functions.
   for (int i = 0; i < fiber->numFrames; i++)
@@ -1068,7 +1068,7 @@ static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
   wrenGrayValue(vm, fiber->error);
 
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjFiber);
+  vm->bytesAllocated += sizeof(WrenFiber);
   vm->bytesAllocated += fiber->frameCapacity * sizeof(CallFrame);
   vm->bytesAllocated += fiber->stackCapacity * sizeof(Value);
 }
@@ -1189,7 +1189,7 @@ static void blackenObject(WrenVM* vm, Obj* obj)
   {
     case OBJ_CLASS:    blackenClass(   vm, (ObjClass*)   obj); break;
     case OBJ_CLOSURE:  blackenClosure( vm, (ObjClosure*) obj); break;
-    case OBJ_FIBER:    blackenFiber(   vm, (ObjFiber*)   obj); break;
+    case OBJ_FIBER:    blackenFiber(   vm, (WrenFiber*)   obj); break;
     case OBJ_FN:       blackenFn(      vm, (ObjFn*)      obj); break;
     case OBJ_FOREIGN:  blackenForeign( vm, (ObjForeign*) obj); break;
     case OBJ_INSTANCE: blackenInstance(vm, (ObjInstance*)obj); break;
@@ -1228,7 +1228,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
 
     case OBJ_FIBER:
     {
-      ObjFiber* fiber = (ObjFiber*)obj;
+      WrenFiber* fiber = (WrenFiber*)obj;
       DEALLOCATE(vm, fiber->frames);
       DEALLOCATE(vm, fiber->stack);
       break;
