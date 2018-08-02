@@ -372,13 +372,13 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
   wrenBindMethod(vm, classObj, symbol, method);
 }
 
-static void callForeign(WrenVM* vm, WrenFiber* fiber,
+static void callForeign(WrenFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
   // Save the current state so we can restore it when done.
   wrenPushCallFrame(fiber, NULL, fiber->stackTop - numArgs);
 
-  foreign(vm);
+  foreign(fiber->vm);
 
   // Discard the stack slots for the arguments and temporaries but leave one
   // for the result.
@@ -1016,7 +1016,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register WrenFiber* fiber)
           break;
 
         case METHOD_FOREIGN:
-          callForeign(vm, fiber, method->as.foreign, numArgs);
+          callForeign(fiber, method->as.foreign, numArgs);
           if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
           break;
 
