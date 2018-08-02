@@ -775,8 +775,10 @@ static Value getModuleVariable(WrenVM* vm, ObjModule* module,
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical.
-static WrenInterpretResult runInterpreter(WrenVM* vm, register WrenFiber* fiber)
+static WrenInterpretResult runInterpreter(register WrenFiber* fiber)
 {
+  WrenVM* vm = fiber->vm;
+  
   // Remember the current fiber so we can find it if a GC happens.
   vm->fiber = fiber;
   WrenFiber* calling_fiber = fiber;
@@ -1396,7 +1398,7 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   wrenPushCallFrame(fiber, NULL, vm->fiber->stackStart);
   
   wrenCallFunction(fiber, closure, closure->fn->arity + 1);
-  return runInterpreter(vm, fiber);
+  return runInterpreter(fiber);
 }
 
 WrenHandle* wrenMakeHandle(WrenVM* vm, Value value)
@@ -1447,7 +1449,7 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
   WrenFiber* fiber = wrenNewFiber(vm, closure);
   wrenPopRoot(vm); // closure.
   
-  return runInterpreter(vm, fiber);
+  return runInterpreter(fiber);
 }
 
 ObjClosure* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
