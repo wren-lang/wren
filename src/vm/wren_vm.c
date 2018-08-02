@@ -1763,12 +1763,11 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   wrenSetSlot(fiber, slot, moduleObj->variables.data[variableSlot]);
 }
 
-void wrenAbortFiber(WrenVM* vm, int slot)
+void wrenAbortFiber(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value value = wrenGetSlot(fiber, slot);
 
-  vm->fiber->error = value;
+  fiber->error = value;
 }
 
 void* wrenGetUserData(WrenVM* vm)

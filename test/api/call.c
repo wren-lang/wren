@@ -162,7 +162,7 @@ static void factorial(WrenFiber* fiber)
   {
     wrenSetSlotCount(fiber, 3);
     wrenSetSlotString(fiber, 2, "Not a valid number!");
-    wrenAbortFiber(vm, 2);
+    wrenAbortFiber(fiber, 2);
   }
   wrenReleaseHandle(vm, recursiveFactorial);
 }

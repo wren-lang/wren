@@ -5,10 +5,9 @@
 
 static void runtimeError(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(fiber, 1);
   wrenSetSlotString(fiber, 0, "Error!");
-  wrenAbortFiber(vm, 0);
+  wrenAbortFiber(fiber, 0);
 }
 
 WrenForeignMethodFn errorBindMethod(const char* signature)
