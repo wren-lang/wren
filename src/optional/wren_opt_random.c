@@ -39,15 +39,13 @@ static uint32_t advanceState(Well512* well)
 
 static void randomAllocate(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  Well512* well = (Well512*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Well512));
+  Well512* well = (Well512*)wrenSetSlotNewForeign(fiber, 0, 0, sizeof(Well512));
   well->index = 0;
 }
 
 static void randomSeed0(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(fiber, 0);
 
   srand((uint32_t)time(NULL));
   for (int i = 0; i < 16; i++)
@@ -58,8 +56,7 @@ static void randomSeed0(WrenFiber* fiber)
 
 static void randomSeed1(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(fiber, 0);
 
   srand((uint32_t)wrenGetSlotDouble(fiber, 1));
   for (int i = 0; i < 16; i++)
@@ -70,8 +67,7 @@ static void randomSeed1(WrenFiber* fiber)
 
 static void randomSeed16(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(fiber, 0);
 
   for (int i = 0; i < 16; i++)
   {
@@ -81,8 +77,7 @@ static void randomSeed16(WrenFiber* fiber)
 
 static void randomFloat(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(fiber, 0);
 
   // A double has 53 bits of precision in its mantissa, and we'd like to take
   // full advantage of that, so we need 53 bits of random source data.
@@ -102,8 +97,7 @@ static void randomFloat(WrenFiber* fiber)
 
 static void randomInt0(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
+  Well512* well = (Well512*)wrenGetSlotForeign(fiber, 0);
 
   wrenSetSlotDouble(fiber, 0, (double)advanceState(well));
 }

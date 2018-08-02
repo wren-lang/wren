@@ -1624,9 +1624,8 @@ double wrenGetSlotDouble(WrenFiber* fiber, int slot)
   return AS_NUM(value);
 }
 
-void* wrenGetSlotForeign(WrenVM* vm, int slot)
+void* wrenGetSlotForeign(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_FOREIGN(value), "Slot must hold a foreign instance.");
 
@@ -1666,16 +1665,15 @@ void wrenSetSlotDouble(WrenFiber* fiber, int slot, double value)
   wrenSetSlot(fiber, slot, NUM_VAL(value));
 }
 
-void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size)
+void* wrenSetSlotNewForeign(WrenFiber* fiber, int slot, int classSlot, size_t size)
 {
-  WrenFiber* fiber = vm->fiber;
   Value classValue = wrenGetSlot(fiber, classSlot);
   ASSERT(IS_CLASS(classValue), "Slot must hold a class.");
   
   ObjClass* classObj = AS_CLASS(classValue);
   ASSERT(classObj->numFields == -1, "Class must be a foreign class.");
   
-  ObjForeign* foreign = wrenNewForeign(vm, classObj, size);
+  ObjForeign* foreign = wrenNewForeign(fiber->vm, classObj, size);
   wrenSetSlot(fiber, slot, OBJ_VAL(foreign));
   
   return (void*)foreign->data;

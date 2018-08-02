@@ -149,10 +149,9 @@ void directoryList(WrenFiber* fiber)
 
 void fileAllocate(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   // Store the file descriptor in the foreign data, so that we can get to it
   // in the finalizer.
-  int* fd = (int*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(int));
+  int* fd = (int*)wrenSetSlotNewForeign(fiber, 0, 0, sizeof(int));
   *fd = (int)wrenGetSlotDouble(fiber, 1);
 }
 
@@ -257,7 +256,7 @@ static void fileCloseCallback(uv_fs_t* request)
 void fileClose(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  int* foreign = (int*)wrenGetSlotForeign(vm, 0);
+  int* foreign = (int*)wrenGetSlotForeign(fiber, 0);
   int fd = *foreign;
 
   // If it's already closed, we're done.
@@ -277,8 +276,7 @@ void fileClose(WrenFiber* fiber)
 
 void fileDescriptor(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  int* foreign = (int*)wrenGetSlotForeign(vm, 0);
+  int* foreign = (int*)wrenGetSlotForeign(fiber, 0);
   int fd = *foreign;
   wrenSetSlotDouble(fiber, 0, fd);
 }
@@ -309,7 +307,7 @@ void fileReadBytes(WrenFiber* fiber)
   WrenVM* vm = wrenGetVM(fiber);
   uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 3));
 
-  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  int fd = *(int*)wrenGetSlotForeign(fiber, 0);
   // TODO: Assert fd != -1.
 
   FileRequestData* data = (FileRequestData*)request->data;
@@ -362,10 +360,10 @@ static void statCallback(uv_fs_t* request)
   
   // Create a foreign Stat object to store the stat struct.
   wrenSetSlotHandle(vm, 2, statClass);
-  wrenSetSlotNewForeign(vm, 2, 2, sizeof(uv_stat_t));
+  wrenSetSlotNewForeign(fiber, 2, 2, sizeof(uv_stat_t));
   
   // Copy the stat data.
-  uv_stat_t* data = (uv_stat_t*)wrenGetSlotForeign(vm, 2);
+  uv_stat_t* data = (uv_stat_t*)wrenGetSlotForeign(fiber, 2);
   *data = request->statbuf;
   
   schedulerResume(freeRequest(request), true);
@@ -375,7 +373,7 @@ static void statCallback(uv_fs_t* request)
 void fileStat(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  int fd = *(int*)wrenGetSlotForeign(fiber, 0);
   uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 1));
   uv_fs_fstat(getLoop(), request, fd, statCallback);
 }
@@ -383,7 +381,7 @@ void fileStat(WrenFiber* fiber)
 void fileSize(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  int fd = *(int*)wrenGetSlotForeign(fiber, 0);
   uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 1));
   uv_fs_fstat(getLoop(), request, fd, fileSizeCallback);
 }
@@ -401,7 +399,7 @@ static void fileWriteBytesCallback(uv_fs_t* request)
 void fileWriteBytes(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  int fd = *(int*)wrenGetSlotForeign(vm, 0);
+  int fd = *(int*)wrenGetSlotForeign(fiber, 0);
   int length;
   const char* bytes = wrenGetSlotBytes(fiber, 1, &length);
   size_t offset = (size_t)wrenGetSlotDouble(fiber, 2);
@@ -430,85 +428,73 @@ void statPath(WrenFiber* fiber)
 
 void statBlockCount(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_blocks);
 }
 
 void statBlockSize(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_blksize);
 }
 
 void statDevice(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_dev);
 }
 
 void statGroup(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_gid);
 }
 
 void statInode(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_ino);
 }
 
 void statLinkCount(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_nlink);
 }
 
 void statMode(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_mode);
 }
 
 void statSize(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_size);
 }
 
 void statSpecialDevice(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_rdev);
 }
 
 void statUser(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, (double)stat->st_uid);
 }
 
 void statIsDirectory(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotBool(fiber, 0, S_ISDIR(stat->st_mode));
 }
 
 void statIsFile(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
+  uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotBool(fiber, 0, S_ISREG(stat->st_mode));
 }
 

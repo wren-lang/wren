@@ -12,15 +12,13 @@ static void apiFinalized(WrenFiber* fiber)
 
 static void counterAllocate(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  double* value = (double*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(double));
+  double* value = (double*)wrenSetSlotNewForeign(fiber, 0, 0, sizeof(double));
   *value = 0;
 }
 
 static void counterIncrement(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  double* value = (double*)wrenGetSlotForeign(vm, 0);
+  double* value = (double*)wrenGetSlotForeign(fiber, 0);
   double increment = wrenGetSlotDouble(fiber, 1);
 
   *value += increment;
@@ -28,15 +26,13 @@ static void counterIncrement(WrenFiber* fiber)
 
 static void counterValue(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  double value = *(double*)wrenGetSlotForeign(vm, 0);
+  double value = *(double*)wrenGetSlotForeign(fiber, 0);
   wrenSetSlotDouble(fiber, 0, value);
 }
 
 static void pointAllocate(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  double* coordinates = (double*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(double[3]));
+  double* coordinates = (double*)wrenSetSlotNewForeign(fiber, 0, 0, sizeof(double[3]));
 
   // This gets called by both constructors, so sniff the slot count to see
   // which one was invoked.
@@ -56,8 +52,7 @@ static void pointAllocate(WrenFiber* fiber)
 
 static void pointTranslate(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  double* coordinates = (double*)wrenGetSlotForeign(vm, 0);
+  double* coordinates = (double*)wrenGetSlotForeign(fiber, 0);
   coordinates[0] += wrenGetSlotDouble(fiber, 1);
   coordinates[1] += wrenGetSlotDouble(fiber, 2);
   coordinates[2] += wrenGetSlotDouble(fiber, 3);
@@ -66,7 +61,7 @@ static void pointTranslate(WrenFiber* fiber)
 static void pointToString(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  double* coordinates = (double*)wrenGetSlotForeign(vm, 0);
+  double* coordinates = (double*)wrenGetSlotForeign(fiber, 0);
   char result[100];
   sprintf(result, "(%g, %g, %g)",
       coordinates[0], coordinates[1], coordinates[2]);
@@ -75,8 +70,7 @@ static void pointToString(WrenFiber* fiber)
 
 static void resourceAllocate(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  int* value = (int*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(int));
+  int* value = (int*)wrenSetSlotNewForeign(fiber, 0, 0, sizeof(int));
   *value = 123;
 }
 

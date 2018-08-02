@@ -5,8 +5,7 @@
 
 static void counterAllocate(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  double* counter = (double*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(double));
+  double* counter = (double*)wrenSetSlotNewForeign(fiber, 0, 0, sizeof(double));
   *counter = wrenGetSlotDouble(fiber, 1);
 }
 

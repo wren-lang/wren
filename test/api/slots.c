@@ -157,8 +157,7 @@ static void ensureOutsideForeign(WrenFiber* fiber)
 
 static void foreignClassAllocate(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotNewForeign(vm, 0, 0, 4);
+  wrenSetSlotNewForeign(fiber, 0, 0, 4);
 }
 
 static void getListCount(WrenFiber* fiber)

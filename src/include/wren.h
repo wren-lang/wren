@@ -423,7 +423,7 @@ double wrenGetSlotDouble(WrenFiber* fiber, int slot);
 //
 // It is an error to call this if the slot does not contain an instance of a
 // foreign class.
-void* wrenGetSlotForeign(WrenVM* vm, int slot);
+void* wrenGetSlotForeign(WrenFiber* fiber, int slot);
 
 // Reads a string from [slot].
 //
@@ -461,7 +461,7 @@ void wrenSetSlotDouble(WrenFiber* fiber, int slot, double value);
 // and then the constructor will be invoked when the allocator returns.
 //
 // Returns a pointer to the foreign object's data.
-void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size);
+void* wrenSetSlotNewForeign(WrenFiber* fiber, int slot, int classSlot, size_t size);
 
 // Stores a new empty list in [slot].
 void wrenSetSlotNewList(WrenVM* vm, int slot);
