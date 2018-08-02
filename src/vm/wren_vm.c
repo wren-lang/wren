@@ -1021,7 +1021,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register WrenFiber* fiber)
           break;
 
         case METHOD_BLOCK:
-          wrenCallFunction(vm, fiber, (ObjClosure*)method->as.closure, numArgs);
+          wrenCallFunction(fiber, (ObjClosure*)method->as.closure, numArgs);
           break;
 
         case METHOD_NONE:
@@ -1291,7 +1291,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register WrenFiber* fiber)
       {
         STORE_FRAME();
         ObjClosure* closure = AS_CLOSURE(PEEK());
-        wrenCallFunction(vm, fiber, closure, 1);
+        wrenCallFunction(fiber, closure, 1);
         LOAD_FRAME();
       }
       else
@@ -1395,7 +1395,7 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   // Protect native call frame.
   wrenPushCallFrame(fiber, NULL, vm->fiber->stackStart);
   
-  wrenCallFunction(vm, fiber, closure, closure->fn->arity + 1);
+  wrenCallFunction(fiber, closure, closure->fn->arity + 1);
   return runInterpreter(vm, fiber);
 }
 

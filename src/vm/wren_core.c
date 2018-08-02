@@ -245,23 +245,23 @@ DEF_PRIMITIVE(fn_arity)
   RETURN_NUM(AS_CLOSURE(args[0])->fn->arity);
 }
 
-static void call(WrenVM* vm, Value* args, int numArgs)
+static void call(WrenFiber* fiber, Value* args, int numArgs)
 {
   // We only care about missing arguments, not extras.
   if (AS_CLOSURE(args[0])->fn->arity > numArgs)
   {
-    vm->fiber->error = CONST_STRING(vm, "Function expects more arguments.");
+    fiber->error = CONST_STRING(fiber->vm, "Function expects more arguments.");
     return;
   }
   
   // +1 to include the function itself.
-  wrenCallFunction(vm, vm->fiber, AS_CLOSURE(args[0]), numArgs + 1);
+  wrenCallFunction(fiber, AS_CLOSURE(args[0]), numArgs + 1);
 }
 
 #define DEF_FN_CALL(numArgs) \
     DEF_PRIMITIVE(fn_call##numArgs) \
     { \
-      call(vm, args, numArgs); \
+      call(vm->fiber, args, numArgs); \
       return false; \
     } \
 
