@@ -4,23 +4,20 @@
 
 static void newList(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotNewList(vm, 0);
+  wrenSetSlotNewList(fiber, 0);
 }
 
 // Helper function to store a double in a slot then insert it into the list at
 // slot zero.
 static void insertNumber(WrenFiber* fiber, int index, double value)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotDouble(fiber, 1, value);
-  wrenInsertInList(vm, 0, index, 1);
+  wrenInsertInList(fiber, 0, index, 1);
 }
 
 static void insert(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotNewList(vm, 0);
+  wrenSetSlotNewList(fiber, 0);
   
   wrenSetSlotCount(fiber, 2);
   

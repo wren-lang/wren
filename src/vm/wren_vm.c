@@ -1679,10 +1679,9 @@ void* wrenSetSlotNewForeign(WrenFiber* fiber, int slot, int classSlot, size_t si
   return (void*)foreign->data;
 }
 
-void wrenSetSlotNewList(WrenVM* vm, int slot)
+void wrenSetSlotNewList(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
-  wrenSetSlot(fiber, slot, OBJ_VAL(wrenNewList(vm, 0)));
+  wrenSetSlot(fiber, slot, OBJ_VAL(wrenNewList(fiber->vm, 0)));
 }
 
 void wrenSetSlotNull(WrenVM* vm, int slot)
@@ -1707,9 +1706,8 @@ void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle)
   wrenSetSlot(fiber, slot, handle->value);
 }
 
-int wrenGetListCount(WrenVM* vm, int slot)
+int wrenGetListCount(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value valueList = wrenGetSlot(fiber, slot);
   ASSERT(IS_LIST(valueList), "Slot must hold a list.");
   
@@ -1717,9 +1715,8 @@ int wrenGetListCount(WrenVM* vm, int slot)
   return elements.count;
 }
 
-void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
+void wrenGetListElement(WrenFiber* fiber, int listSlot, int index, int elementSlot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value valueList = wrenGetSlot(fiber, listSlot);
   ASSERT(IS_LIST(valueList), "Slot must hold a list.");
   
@@ -1733,9 +1730,8 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
   wrenSetSlot(fiber, elementSlot, list->elements.data[index]);
 }
 
-void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
+void wrenInsertInList(WrenFiber* fiber, int listSlot, int index, int elementSlot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value valueList = wrenGetSlot(fiber, listSlot);
   Value value = wrenGetSlot(fiber, elementSlot);
   ASSERT(IS_LIST(valueList), "Must insert into a list.");
@@ -1747,7 +1743,7 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   
   ASSERT(index <= list->elements.count, "Index out of bounds.");
   
-  wrenListInsert(vm, list, value, index);
+  wrenListInsert(fiber->vm, list, value, index);
 }
 
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,

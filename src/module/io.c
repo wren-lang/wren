@@ -125,12 +125,12 @@ static void directoryListCallback(uv_fs_t* request)
   WrenVM* vm = getVM();
   WrenFiber* fiber = wrenGetCurrentFiber(vm);
   wrenSetSlotCount(fiber, 3);
-  wrenSetSlotNewList(vm, 2);
+  wrenSetSlotNewList(fiber, 2);
   
   while (uv_fs_scandir_next(request, &entry) != UV_EOF)
   {
     wrenSetSlotString(vm, 1, entry.name);
-    wrenInsertInList(vm, 2, -1, 1);
+    wrenInsertInList(fiber, 2, -1, 1);
   }
   
   schedulerResume(freeRequest(request), true);

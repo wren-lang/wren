@@ -162,15 +162,13 @@ static void foreignClassAllocate(WrenFiber* fiber)
 
 static void getListCount(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotDouble(fiber, 0, wrenGetListCount(vm, 1));
+  wrenSetSlotDouble(fiber, 0, wrenGetListCount(fiber, 1));
 }
 
 static void getListElement(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   int index = (int)wrenGetSlotDouble(fiber, 2);
-  wrenGetListElement(vm, 1, index, 0);
+  wrenGetListElement(fiber, 1, index, 0);
 }
 
 WrenForeignMethodFn slotsBindMethod(const char* signature)

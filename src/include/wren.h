@@ -464,7 +464,7 @@ void wrenSetSlotDouble(WrenFiber* fiber, int slot, double value);
 void* wrenSetSlotNewForeign(WrenFiber* fiber, int slot, int classSlot, size_t size);
 
 // Stores a new empty list in [slot].
-void wrenSetSlotNewList(WrenVM* vm, int slot);
+void wrenSetSlotNewList(WrenFiber* fiber, int slot);
 
 // Stores null in [slot].
 void wrenSetSlotNull(WrenVM* vm, int slot);
@@ -483,18 +483,18 @@ void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
 void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
 
 // Returns the number of elements in the list stored in [slot].
-int wrenGetListCount(WrenVM* vm, int slot);
+int wrenGetListCount(WrenFiber* fiber, int slot);
 
 // Reads element [index] from the list in [listSlot] and stores it in
 // [elementSlot].
-void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
+void wrenGetListElement(WrenFiber* fiber, int listSlot, int index, int elementSlot);
 
 // Takes the value stored at [elementSlot] and inserts it into the list stored
 // at [listSlot] at [index].
 //
 // As in Wren, negative indexes can be used to insert from the end. To append
 // an element, use `-1` for the index.
-void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
+void wrenInsertInList(WrenFiber* fiber, int listSlot, int index, int elementSlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot].

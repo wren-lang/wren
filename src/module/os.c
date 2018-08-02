@@ -63,11 +63,11 @@ void processAllArguments(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(fiber, 2);
-  wrenSetSlotNewList(vm, 0);
+  wrenSetSlotNewList(fiber, 0);
 
   for (int i = 0; i < numArgs; i++)
   {
     wrenSetSlotString(vm, 1, args[i]);
-    wrenInsertInList(vm, 0, -1, 1);
+    wrenInsertInList(fiber, 0, -1, 1);
   }
 }
