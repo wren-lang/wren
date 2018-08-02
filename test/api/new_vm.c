@@ -2,8 +2,9 @@
 
 #include "new_vm.h"
 
-static void nullConfig(WrenVM* vm)
+static void nullConfig(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   WrenVM* otherVM = wrenNewVM(NULL);
   
   // We should be able to execute code.

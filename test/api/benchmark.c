@@ -3,8 +3,9 @@
 
 #include "benchmark.h"
 
-static void arguments(WrenVM* vm)
+static void arguments(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   double result = 0;
 
   result += wrenGetSlotDouble(vm, 1);
@@ -20,8 +21,9 @@ const char* testScript =
 "  static method(a, b, c, d) { a + b + c + d }\n"
 "}\n";
 
-static void call(WrenVM* vm)
+static void call(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   int iterations = (int)wrenGetSlotDouble(vm, 1);
   
   // Since the VM is not re-entrant, we can't call from within this foreign

@@ -3,13 +3,14 @@
 
 #include "slots.h"
 
-static void noSet(WrenVM* vm)
+static void noSet(WrenFiber* fiber)
 {
   // Do nothing.
 }
 
-static void getSlots(WrenVM* vm)
+static void getSlots(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   bool result = true;
   if (wrenGetSlotBool(vm, 1) != true) result = false;
   
@@ -37,8 +38,9 @@ static void getSlots(WrenVM* vm)
   wrenReleaseHandle(vm, handle);
 }
 
-static void setSlots(WrenVM* vm)
+static void setSlots(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   WrenHandle* handle = wrenGetSlotHandle(vm, 1);
   
   wrenSetSlotBool(vm, 1, true);
@@ -76,8 +78,9 @@ static void setSlots(WrenVM* vm)
   wrenReleaseHandle(vm, handle);
 }
 
-static void slotTypes(WrenVM* vm)
+static void slotTypes(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   bool result =
       wrenGetSlotType(vm, 1) == WREN_TYPE_BOOL &&
       wrenGetSlotType(vm, 2) == WREN_TYPE_FOREIGN &&
@@ -90,8 +93,9 @@ static void slotTypes(WrenVM* vm)
   wrenSetSlotBool(vm, 0, result);
 }
 
-static void ensure(WrenVM* vm)
+static void ensure(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   int before = wrenGetSlotCount(vm);
   
   wrenSetSlotCount(vm, 20);
@@ -116,8 +120,9 @@ static void ensure(WrenVM* vm)
   wrenSetSlotString(vm, 0, result);
 }
 
-static void ensureOutsideForeign(WrenVM* vm)
+static void ensureOutsideForeign(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   // To test the behavior outside of a foreign method (which we're currently
   // in), create a new separate VM.
   WrenConfiguration config;
@@ -150,18 +155,21 @@ static void ensureOutsideForeign(WrenVM* vm)
   wrenSetSlotString(vm, 0, result);
 }
 
-static void foreignClassAllocate(WrenVM* vm)
+static void foreignClassAllocate(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotNewForeign(vm, 0, 0, 4);
 }
 
-static void getListCount(WrenVM* vm)
+static void getListCount(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotDouble(vm, 0, wrenGetListCount(vm, 1));
 }
 
-static void getListElement(WrenVM* vm)
+static void getListElement(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   int index = (int)wrenGetSlotDouble(vm, 2);
   wrenGetListElement(vm, 1, index, 0);
 }

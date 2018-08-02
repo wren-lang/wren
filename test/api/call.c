@@ -135,8 +135,9 @@ void callRunTests(WrenVM* vm)
   wrenReleaseHandle(vm, call);
 }
 
-static void factorial(WrenVM* vm)
+static void factorial(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   WrenHandle* recursiveFactorial = wrenMakeCallHandle(vm, "call(_)");
   double num = wrenGetSlotDouble(vm, 1);
 

@@ -2,23 +2,27 @@
 
 #include "get_variable.h"
 
-static void beforeDefined(WrenVM* vm)
+static void beforeDefined(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenGetVariable(vm, "./test/api/get_variable", "A", 0);
 }
 
-static void afterDefined(WrenVM* vm)
+static void afterDefined(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenGetVariable(vm, "./test/api/get_variable", "A", 0);
 }
 
-static void afterAssigned(WrenVM* vm)
+static void afterAssigned(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenGetVariable(vm, "./test/api/get_variable", "A", 0);
 }
 
-static void otherSlot(WrenVM* vm)
+static void otherSlot(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(vm, 3);
   wrenGetVariable(vm, "./test/api/get_variable", "B", 2);
   
@@ -27,8 +31,9 @@ static void otherSlot(WrenVM* vm)
   wrenSetSlotString(vm, 0, string);
 }
 
-static void otherModule(WrenVM* vm)
+static void otherModule(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenGetVariable(vm, "./test/api/get_variable_module", "Variable", 0);
 }
 

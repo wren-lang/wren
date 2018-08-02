@@ -7,9 +7,9 @@
 #include "wren_vm.h"
 #include "wren_opt_meta.wren.inc"
 
-void metaCompile(WrenVM* vm)
+void metaCompile(WrenFiber* fiber)
 {
-  WrenFiber* fiber = wrenGetCurrentFiber(vm);
+  WrenVM* vm = wrenGetVM(fiber);
   const char* source = wrenGetSlotString(vm, 1);
   bool isExpression = wrenGetSlotBool(vm, 2);
   bool printErrors = wrenGetSlotBool(vm, 3);
@@ -30,8 +30,9 @@ void metaCompile(WrenVM* vm)
   wrenSetSlot(vm, 0, closure != NULL ? OBJ_VAL(closure) : NULL_VAL);
 }
 
-void metaGetModuleVariables(WrenVM* vm)
+void metaGetModuleVariables(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(vm, 3);
   
   Value moduleValue = wrenMapGet(vm->modules, wrenGetSlot(vm, 1));

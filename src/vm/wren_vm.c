@@ -378,7 +378,7 @@ static void callForeign(WrenFiber* fiber,
   // Save the current state so we can restore it when done.
   wrenPushCallFrame(fiber, NULL, fiber->stackTop - numArgs);
 
-  foreign(fiber->vm);
+  foreign(fiber);
 
   // Discard the stack slots for the arguments and temporaries but leave one
   // for the result.
@@ -632,7 +632,7 @@ static void createForeign(WrenFiber* fiber, Value* stack)
 #ifdef DEBUG
   int numSlots = wrenGetSlotCount(fiber->vm);
 #endif
-  method->as.foreign(fiber->vm);
+  method->as.foreign(fiber);
   ASSERT(numSlots == wrenGetSlotCount(fiber->vm), "Foreign creator altered slot count.");
 
   wrenPopCallFrame(fiber);

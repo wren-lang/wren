@@ -2,8 +2,9 @@
 
 #include "lists.h"
 
-static void newList(WrenVM* vm)
+static void newList(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotNewList(vm, 0);
 }
 
@@ -15,8 +16,9 @@ static void insertNumber(WrenVM* vm, int index, double value)
   wrenInsertInList(vm, 0, index, 1);
 }
 
-static void insert(WrenVM* vm)
+static void insert(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotNewList(vm, 0);
   
   wrenSetSlotCount(vm, 2);

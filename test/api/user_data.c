@@ -5,8 +5,9 @@
 static const char* data = "my user data";
 static const char* otherData = "other user data";
 
-static void test(WrenVM* vm)
+static void test(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
   

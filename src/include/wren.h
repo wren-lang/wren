@@ -53,7 +53,7 @@ typedef struct WrenHandle WrenHandle;
 typedef void* (*WrenReallocateFn)(void* memory, size_t newSize);
 
 // A function callable from Wren code, but implemented in C.
-typedef void (*WrenForeignMethodFn)(WrenVM* vm);
+typedef void (*WrenForeignMethodFn)(WrenFiber* fiber);
 
 // A finalizer function for freeing resources owned by an instance of a foreign
 // class. Unlike most foreign methods, finalizers do not have access to the VM

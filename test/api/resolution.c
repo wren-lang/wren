@@ -33,9 +33,10 @@ static char* loadModule(WrenVM* vm, const char* module)
   return string;
 }
 
-static void runTestVM(WrenVM* vm, WrenConfiguration* configuration,
+static void runTestVM(WrenFiber* fiber, WrenConfiguration* configuration,
                       const char* source)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   configuration->writeFn = write;
   configuration->errorFn = reportError;
   configuration->loadModuleFn = loadModule;
@@ -56,8 +57,9 @@ static void runTestVM(WrenVM* vm, WrenConfiguration* configuration,
   wrenFreeVM(otherVM);
 }
 
-static void noResolver(WrenVM* vm)
+static void noResolver(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
   
@@ -68,7 +70,7 @@ static void noResolver(WrenVM* vm)
     return;
   }
   
-  runTestVM(vm, &configuration, "import \"foo/bar\"");
+  runTestVM(fiber, &configuration, "import \"foo/bar\"");
 }
 
 static const char* resolveToNull(WrenVM* vm, const char* importer,
@@ -77,13 +79,13 @@ static const char* resolveToNull(WrenVM* vm, const char* importer,
   return NULL;
 }
 
-static void returnsNull(WrenVM* vm)
+static void returnsNull(WrenFiber* fiber)
 {
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
   
   configuration.resolveModuleFn = resolveToNull;
-  runTestVM(vm, &configuration, "import \"foo/bar\"");
+  runTestVM(fiber, &configuration, "import \"foo/bar\"");
 }
 
 static const char* resolveChange(WrenVM* vm, const char* importer,
@@ -105,31 +107,31 @@ static const char* resolveChange(WrenVM* vm, const char* importer,
   return result;
 }
 
-static void changesString(WrenVM* vm)
+static void changesString(WrenFiber* fiber)
 {
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
   
   configuration.resolveModuleFn = resolveChange;
-  runTestVM(vm, &configuration, "import \"foo|bar\"");
+  runTestVM(fiber, &configuration, "import \"foo|bar\"");
 }
 
-static void shared(WrenVM* vm)
+static void shared(WrenFiber* fiber)
 {
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
   
   configuration.resolveModuleFn = resolveChange;
-  runTestVM(vm, &configuration, "import \"foo|bar\"\nimport \"foo/bar\"");
+  runTestVM(fiber, &configuration, "import \"foo|bar\"\nimport \"foo/bar\"");
 }
 
-static void importer(WrenVM* vm)
+static void importer(WrenFiber* fiber)
 {
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
   
   configuration.resolveModuleFn = resolveChange;
-  runTestVM(vm, &configuration, "import \"baz|bang\"");
+  runTestVM(fiber, &configuration, "import \"baz|bang\"");
 }
 
 WrenForeignMethodFn resolutionBindMethod(const char* signature)

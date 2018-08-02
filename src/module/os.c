@@ -14,8 +14,9 @@ void osSetArguments(int argc, const char* argv[])
   args = argv;
 }
 
-void platformName(WrenVM* vm)
+void platformName(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(vm, 1);
   
   #ifdef _WIN32
@@ -39,8 +40,9 @@ void platformName(WrenVM* vm)
   #endif
 }
 
-void platformIsPosix(WrenVM* vm)
+void platformIsPosix(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(vm, 1);
   
   #ifdef _WIN32
@@ -58,8 +60,9 @@ void platformIsPosix(WrenVM* vm)
   #endif
 }
 
-void processAllArguments(WrenVM* vm)
+void processAllArguments(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(vm, 2);
   wrenSetSlotNewList(vm, 0);
 

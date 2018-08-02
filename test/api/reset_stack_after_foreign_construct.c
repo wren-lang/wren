@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "wren.h"
+#include "reset_stack_after_foreign_construct.h"
 
-static void counterAllocate(WrenVM* vm)
+static void counterAllocate(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   double* counter = (double*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(double));
   *counter = wrenGetSlotDouble(vm, 1);
 }

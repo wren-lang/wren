@@ -30,8 +30,9 @@ static void resume(WrenHandle* method)
   }
 }
 
-void schedulerCaptureMethods(WrenVM* vm)
+void schedulerCaptureMethods(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(vm, 1);
   wrenGetVariable(vm, "scheduler", "Scheduler", 0);
   schedulerClass = wrenGetSlotHandle(vm, 0);
