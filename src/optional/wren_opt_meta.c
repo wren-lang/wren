@@ -27,7 +27,7 @@ void metaCompile(WrenFiber* fiber)
   
   // Return the result. We can't use the public API for this since we have a
   // bare ObjClosure*.
-  wrenSetSlot(vm, 0, closure != NULL ? OBJ_VAL(closure) : NULL_VAL);
+  wrenSetSlot(fiber, 0, closure != NULL ? OBJ_VAL(closure) : NULL_VAL);
 }
 
 void metaGetModuleVariables(WrenFiber* fiber)
@@ -35,7 +35,7 @@ void metaGetModuleVariables(WrenFiber* fiber)
   WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(vm, 3);
   
-  Value moduleValue = wrenMapGet(vm->modules, wrenGetSlot(vm, 1));
+  Value moduleValue = wrenMapGet(vm->modules, wrenGetSlot(fiber, 1));
   if (IS_UNDEFINED(moduleValue))
   {
     wrenSetSlotNull(vm, 0);
@@ -44,7 +44,7 @@ void metaGetModuleVariables(WrenFiber* fiber)
     
   ObjModule* module = AS_MODULE(moduleValue);
   ObjList* names = wrenNewList(vm, module->variableNames.count);
-  wrenSetSlot(vm, 0, OBJ_VAL(names));
+  wrenSetSlot(fiber, 0, OBJ_VAL(names));
 
   // Initialize the elements to null in case a collection happens when we
   // allocate the strings below.

@@ -127,15 +127,15 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 
 // Return value in [slot] in the foreign call stack.
 inline static
-Value wrenGetSlot(WrenVM* vm, int srcSlot);
+Value wrenGetSlot(WrenFiber* fiber, int srcSlot);
 
 // Stores [value] in [slot] in the foreign call stack.
 inline static
-void wrenSetSlot(WrenVM* vm, int dstSlot, Value value);
+void wrenSetSlot(WrenFiber* fiber, int dstSlot, Value value);
 
 // Stores [value] in [slot] in the foreign call stack.
 inline static
-void wrenSetSlots(WrenVM* vm, int dstSlot, Value value, size_t size);
+void wrenSetSlots(WrenFiber* fiber, int dstSlot, Value value, size_t size);
 
 // Creates a new [WrenHandle] for [value].
 WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
@@ -228,29 +228,29 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 
 // Ensures that [slot] is a valid index into the API's stack of slots.
 static inline
-void validateApiSlot(WrenVM* vm, int slot)
+void validateApiSlot(WrenFiber* fiber, int slot)
 {
   ASSERT(slot >= 0, "Slot cannot be negative.");
-  ASSERT(slot < wrenGetSlotCount(vm), "Not that many slots.");
+  ASSERT(slot < wrenGetSlotCount(fiber->vm), "Not that many slots.");
 }
 
-Value wrenGetSlot(WrenVM* vm, int srcSlot)
+Value wrenGetSlot(WrenFiber* fiber, int srcSlot)
 {
-  validateApiSlot(vm, srcSlot);
-  return vm->fiber->stackStart[srcSlot];
+  validateApiSlot(fiber, srcSlot);
+  return fiber->stackStart[srcSlot];
 }
 
-void wrenSetSlot(WrenVM* vm, int dstSlot, Value value)
+void wrenSetSlot(WrenFiber* fiber, int dstSlot, Value value)
 {
-  validateApiSlot(vm, dstSlot);
-  vm->fiber->stackStart[dstSlot] = value;
+  validateApiSlot(fiber, dstSlot);
+  fiber->stackStart[dstSlot] = value;
 }
 
-void wrenSetSlots(WrenVM* vm, int dstSlot, Value value, size_t size)
+void wrenSetSlots(WrenFiber* fiber, int dstSlot, Value value, size_t size)
 {
   for (size_t i = 0; i < size; ++i)
   {
-    wrenSetSlot(vm, dstSlot + i, value);
+    wrenSetSlot(fiber, dstSlot + i, value);
   }
 }
 

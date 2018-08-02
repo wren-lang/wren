@@ -1567,21 +1567,24 @@ void wrenSetSlotCount(WrenVM* vm, int numSlots)
 
 void wrenCopySlots(WrenVM *vm, int dstSlot, int srcSlot, int size)
 {
+  WrenFiber* fiber = vm->fiber;
   for (int i = 0; i < size; ++i)
   {
-    wrenSetSlot(vm, dstSlot + i, wrenGetSlot(vm, srcSlot + i));
+    wrenSetSlot(fiber, dstSlot + i, wrenGetSlot(fiber, srcSlot + i));
   }
 }
 
 void wrenFillSlots(WrenVM *vm, int dstSlot, int srcSlot, int size)
 {
-  wrenSetSlots(vm, dstSlot, wrenGetSlot(vm, srcSlot), size);
+  WrenFiber* fiber = vm->fiber;
+  wrenSetSlots(fiber, dstSlot, wrenGetSlot(fiber, srcSlot), size);
 }
 
 // Gets the type of the object in [slot].
 WrenType wrenGetSlotType(WrenVM* vm, int slot)
 {
-  Value value = wrenGetSlot(vm, slot);
+  WrenFiber* fiber = vm->fiber;
+  Value value = wrenGetSlot(fiber, slot);
 
   if (IS_BOOL(value)) return WREN_TYPE_BOOL;
   if (IS_NUM(value)) return WREN_TYPE_NUM;
@@ -1595,7 +1598,8 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
 
 bool wrenGetSlotBool(WrenVM* vm, int slot)
 {
-  Value value = wrenGetSlot(vm, slot);
+  WrenFiber* fiber = vm->fiber;
+  Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_BOOL(value), "Slot must hold a bool.");
 
   return AS_BOOL(value);
@@ -1603,7 +1607,8 @@ bool wrenGetSlotBool(WrenVM* vm, int slot)
 
 const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length)
 {
-  Value value = wrenGetSlot(vm, slot);
+  WrenFiber* fiber = vm->fiber;
+  Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_STRING(value), "Slot must hold a string.");
   
   ObjString* string = AS_STRING(value);
@@ -1613,7 +1618,8 @@ const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length)
 
 double wrenGetSlotDouble(WrenVM* vm, int slot)
 {
-  Value value = wrenGetSlot(vm, slot);
+  WrenFiber* fiber = vm->fiber;
+  Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_NUM(value), "Slot must hold a number.");
 
   return AS_NUM(value);
@@ -1621,7 +1627,8 @@ double wrenGetSlotDouble(WrenVM* vm, int slot)
 
 void* wrenGetSlotForeign(WrenVM* vm, int slot)
 {
-  Value value = wrenGetSlot(vm, slot);
+  WrenFiber* fiber = vm->fiber;
+  Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_FOREIGN(value), "Slot must hold a foreign instance.");
 
   return AS_FOREIGN(value)->data;
@@ -1629,7 +1636,8 @@ void* wrenGetSlotForeign(WrenVM* vm, int slot)
 
 const char* wrenGetSlotString(WrenVM* vm, int slot)
 {
-  Value value = wrenGetSlot(vm, slot);
+  WrenFiber* fiber = vm->fiber;
+  Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_STRING(value), "Slot must hold a string.");
 
   return AS_CSTRING(value);
@@ -1637,68 +1645,78 @@ const char* wrenGetSlotString(WrenVM* vm, int slot)
 
 WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot)
 {
-  Value value = wrenGetSlot(vm, slot);
+  WrenFiber* fiber = vm->fiber;
+  Value value = wrenGetSlot(fiber, slot);
 
   return wrenMakeHandle(vm, value);
 }
 
 void wrenSetSlotBool(WrenVM* vm, int slot, bool value)
 {
-  wrenSetSlot(vm, slot, BOOL_VAL(value));
+  WrenFiber* fiber = vm->fiber;
+  wrenSetSlot(fiber, slot, BOOL_VAL(value));
 }
 
 void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length)
 {
   ASSERT(bytes != NULL, "Byte array cannot be NULL.");
-  wrenSetSlot(vm, slot, wrenNewStringLength(vm, bytes, length));
+  WrenFiber* fiber = vm->fiber;
+  wrenSetSlot(fiber, slot, wrenNewStringLength(vm, bytes, length));
 }
 
 void wrenSetSlotDouble(WrenVM* vm, int slot, double value)
 {
-  wrenSetSlot(vm, slot, NUM_VAL(value));
+  WrenFiber* fiber = vm->fiber;
+  wrenSetSlot(fiber, slot, NUM_VAL(value));
 }
 
 void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size)
 {
-  Value classValue = wrenGetSlot(vm, classSlot);
+  WrenFiber* fiber = vm->fiber;
+  Value classValue = wrenGetSlot(fiber, classSlot);
   ASSERT(IS_CLASS(classValue), "Slot must hold a class.");
   
   ObjClass* classObj = AS_CLASS(classValue);
   ASSERT(classObj->numFields == -1, "Class must be a foreign class.");
   
   ObjForeign* foreign = wrenNewForeign(vm, classObj, size);
-  wrenSetSlot(vm, slot, OBJ_VAL(foreign));
+  wrenSetSlot(fiber, slot, OBJ_VAL(foreign));
   
   return (void*)foreign->data;
 }
 
 void wrenSetSlotNewList(WrenVM* vm, int slot)
 {
-  wrenSetSlot(vm, slot, OBJ_VAL(wrenNewList(vm, 0)));
+  WrenFiber* fiber = vm->fiber;
+  wrenSetSlot(fiber, slot, OBJ_VAL(wrenNewList(vm, 0)));
 }
 
 void wrenSetSlotNull(WrenVM* vm, int slot)
 {
-  wrenSetSlot(vm, slot, NULL_VAL);
+  WrenFiber* fiber = vm->fiber;
+  wrenSetSlot(fiber, slot, NULL_VAL);
 }
 
 void wrenSetSlotString(WrenVM* vm, int slot, const char* text)
 {
   ASSERT(text != NULL, "String cannot be NULL.");
+  WrenFiber* fiber = vm->fiber;
   
-  wrenSetSlot(vm, slot, wrenNewString(vm, text));
+  wrenSetSlot(fiber, slot, wrenNewString(vm, text));
 }
 
 void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle)
 {
   ASSERT(handle != NULL, "Handle cannot be NULL.");
-
-  wrenSetSlot(vm, slot, handle->value);
+  WrenFiber* fiber = vm->fiber;
+  
+  wrenSetSlot(fiber, slot, handle->value);
 }
 
 int wrenGetListCount(WrenVM* vm, int slot)
 {
-  Value valueList = wrenGetSlot(vm, slot);
+  WrenFiber* fiber = vm->fiber;
+  Value valueList = wrenGetSlot(fiber, slot);
   ASSERT(IS_LIST(valueList), "Slot must hold a list.");
   
   ValueBuffer elements = AS_LIST(valueList)->elements;
@@ -1707,7 +1725,8 @@ int wrenGetListCount(WrenVM* vm, int slot)
 
 void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
 {
-  Value valueList = wrenGetSlot(vm, listSlot);
+  WrenFiber* fiber = vm->fiber;
+  Value valueList = wrenGetSlot(fiber, listSlot);
   ASSERT(IS_LIST(valueList), "Slot must hold a list.");
   
   ObjList* list = AS_LIST(valueList);
@@ -1717,13 +1736,14 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
 
   ASSERT(index <= list->elements.count, "Index out of bounds.");
 
-  wrenSetSlot(vm, elementSlot, list->elements.data[index]);
+  wrenSetSlot(fiber, elementSlot, list->elements.data[index]);
 }
 
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
 {
-  Value valueList = wrenGetSlot(vm, listSlot);
-  Value value = wrenGetSlot(vm, elementSlot);
+  WrenFiber* fiber = vm->fiber;
+  Value valueList = wrenGetSlot(fiber, listSlot);
+  Value value = wrenGetSlot(fiber, elementSlot);
   ASSERT(IS_LIST(valueList), "Must insert into a list.");
   
   ObjList* list = AS_LIST(valueList);
@@ -1742,6 +1762,7 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   ASSERT(module != NULL, "Module cannot be NULL.");
   ASSERT(name != NULL, "Variable name cannot be NULL.");  
   
+  WrenFiber* fiber = vm->fiber;
   Value moduleName = wrenStringFormat(vm, "$", module);
   wrenPushRoot(vm, AS_OBJ(moduleName));
   
@@ -1754,12 +1775,13 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                                          name, strlen(name));
   ASSERT(variableSlot != -1, "Could not find variable.");
   
-  wrenSetSlot(vm, slot, moduleObj->variables.data[variableSlot]);
+  wrenSetSlot(fiber, slot, moduleObj->variables.data[variableSlot]);
 }
 
 void wrenAbortFiber(WrenVM* vm, int slot)
 {
-  Value value = wrenGetSlot(vm, slot);
+  WrenFiber* fiber = vm->fiber;
+  Value value = wrenGetSlot(fiber, slot);
 
   vm->fiber->error = value;
 }
