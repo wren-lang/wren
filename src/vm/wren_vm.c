@@ -1606,9 +1606,8 @@ bool wrenGetSlotBool(WrenFiber* fiber, int slot)
   return AS_BOOL(value);
 }
 
-const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length)
+const char* wrenGetSlotBytes(WrenFiber* fiber, int slot, int* length)
 {
-  WrenFiber* fiber = vm->fiber;
   Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_STRING(value), "Slot must hold a string.");
   
@@ -1657,11 +1656,10 @@ void wrenSetSlotBool(WrenFiber* fiber, int slot, bool value)
   wrenSetSlot(fiber, slot, BOOL_VAL(value));
 }
 
-void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length)
+void wrenSetSlotBytes(WrenFiber* fiber, int slot, const char* bytes, size_t length)
 {
   ASSERT(bytes != NULL, "Byte array cannot be NULL.");
-  WrenFiber* fiber = vm->fiber;
-  wrenSetSlot(fiber, slot, wrenNewStringLength(vm, bytes, length));
+  wrenSetSlot(fiber, slot, wrenNewStringLength(fiber->vm, bytes, length));
 }
 
 void wrenSetSlotDouble(WrenVM* vm, int slot, double value)

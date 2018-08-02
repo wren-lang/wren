@@ -99,8 +99,8 @@ void callRunTests(WrenVM* vm)
   // Truncate a string, or allow null bytes.
   wrenSetSlotCount(fiber, 3);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotBytes(vm, 1, "string", 3);
-  wrenSetSlotBytes(vm, 2, "b\0y\0t\0e", 7);
+  wrenSetSlotBytes(fiber, 1, "string", 3);
+  wrenSetSlotBytes(fiber, 2, "b\0y\0t\0e", 7);
   wrenCall(fiber, two);
   
   // Call ignores extra temporary slots on stack.

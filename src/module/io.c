@@ -291,7 +291,9 @@ static void fileReadBytesCallback(uv_fs_t* request)
   // embedding API supported a way to *give* it bytes that were previously
   // allocated using Wren's own allocator.
   schedulerResume(freeRequest(request), true);
-  wrenSetSlotBytes(getVM(), 2, buffer.base, count);
+  WrenVM* vm = getVM();
+  WrenFiber* fiber = wrenGetCurrentFiber(vm);
+  wrenSetSlotBytes(fiber, 2, buffer.base, count);
   schedulerFinishResume();
 
   // TODO: Likewise, freeing this after we resume is lame.
@@ -397,7 +399,7 @@ void fileWriteBytes(WrenFiber* fiber)
   WrenVM* vm = wrenGetVM(fiber);
   int fd = *(int*)wrenGetSlotForeign(vm, 0);
   int length;
-  const char* bytes = wrenGetSlotBytes(vm, 1, &length);
+  const char* bytes = wrenGetSlotBytes(fiber, 1, &length);
   size_t offset = (size_t)wrenGetSlotDouble(vm, 2);
   uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 3));
   
@@ -611,7 +613,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   // allocated using Wren's own allocator.
   wrenSetSlotCount(fiber, 2);
   wrenSetSlotHandle(vm, 0, stdinClass);
-  wrenSetSlotBytes(vm, 1, buffer->base, numRead);
+  wrenSetSlotBytes(fiber, 1, buffer->base, numRead);
   wrenCall(fiber, stdinOnData);
 
   // TODO: Likewise, freeing this after we resume is lame.

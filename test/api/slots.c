@@ -15,7 +15,7 @@ static void getSlots(WrenFiber* fiber)
   if (wrenGetSlotBool(fiber, 1) != true) result = false;
   
   int length;
-  const char* bytes = wrenGetSlotBytes(vm, 2, &length);
+  const char* bytes = wrenGetSlotBytes(fiber, 2, &length);
   if (length != 5) result = false;
   if (memcmp(bytes, "by\0te", length) != 0) result = false;
 
@@ -44,7 +44,7 @@ static void setSlots(WrenFiber* fiber)
   WrenHandle* handle = wrenGetSlotHandle(vm, 1);
   
   wrenSetSlotBool(fiber, 1, true);
-  wrenSetSlotBytes(vm, 2, "by\0te", 5);
+  wrenSetSlotBytes(fiber, 2, "by\0te", 5);
   wrenSetSlotDouble(vm, 3, 1.5);
   wrenSetSlotString(vm, 4, "str");
   wrenSetSlotNull(vm, 5);
@@ -55,7 +55,7 @@ static void setSlots(WrenFiber* fiber)
   if (wrenGetSlotBool(fiber, 1) != true) result = false;
   
   int length;
-  const char* bytes = wrenGetSlotBytes(vm, 2, &length);
+  const char* bytes = wrenGetSlotBytes(fiber, 2, &length);
   if (length != 5) result = false;
   if (memcmp(bytes, "by\0te", length) != 0) result = false;
 

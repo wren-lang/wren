@@ -411,7 +411,7 @@ bool wrenGetSlotBool(WrenFiber* fiber, int slot);
 // number of bytes in the array.
 //
 // It is an error to call this if the slot does not contain a string.
-const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length);
+const char* wrenGetSlotBytes(WrenFiber* fiber, int slot, int* length);
 
 // Reads a number from [slot].
 //
@@ -447,7 +447,7 @@ void wrenSetSlotBool(WrenFiber* vm, int slot, bool value);
 //
 // The bytes are copied to a new string within Wren's heap, so you can free
 // memory used by them after this is called.
-void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length);
+void wrenSetSlotBytes(WrenFiber* fiber, int slot, const char* bytes, size_t length);
 
 // Stores the numeric [value] in [slot].
 void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
