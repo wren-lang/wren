@@ -96,11 +96,11 @@ static void slotTypes(WrenFiber* fiber)
 static void ensure(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  int before = wrenGetSlotCount(vm);
+  int before = wrenGetSlotCount(fiber);
   
   wrenSetSlotCount(vm, 20);
   
-  int after = wrenGetSlotCount(vm);
+  int after = wrenGetSlotCount(fiber);
   
   // Use the slots to make sure they're available.
   for (int i = 0; i < 20; i++)
@@ -128,12 +128,13 @@ static void ensureOutsideForeign(WrenFiber* fiber)
   WrenConfiguration config;
   wrenInitConfiguration(&config);
   WrenVM* otherVM = wrenNewVM(&config);
+  WrenFiber* otherFiber = wrenGetCurrentFiber(otherVM);
 
-  int before = wrenGetSlotCount(otherVM);
+  int before = wrenGetSlotCount(otherFiber);
 
   wrenSetSlotCount(otherVM, 20);
 
-  int after = wrenGetSlotCount(otherVM);
+  int after = wrenGetSlotCount(otherFiber);
 
   // Use the slots to make sure they're available.
   for (int i = 0; i < 20; i++)

@@ -41,7 +41,7 @@ static void pointAllocate(WrenFiber* fiber)
 
   // This gets called by both constructors, so sniff the slot count to see
   // which one was invoked.
-  if (wrenGetSlotCount(vm) == 1)
+  if (wrenGetSlotCount(fiber) == 1)
   {
     coordinates[0] = 0.0;
     coordinates[1] = 0.0;

@@ -103,6 +103,7 @@ void callRunTests(WrenVM* vm)
   wrenSetSlotBytes(vm, 2, "b\0y\0t\0e", 7);
   wrenCall(fiber, two);
   
+  fiber = wrenGetCurrentFiber(vm);
   // Call ignores extra temporary slots on stack.
   wrenSetSlotCount(vm, 10);
   for (int i = 0; i < 10; i++)
@@ -111,7 +112,7 @@ void callRunTests(WrenVM* vm)
   }
   wrenSetSlotHandle(vm, 8, callClass);
   wrenCall(fiber, one);
-  int after = wrenGetSlotCount(vm);
+  int after = wrenGetSlotCount(fiber);
 
   // Ensure stack size after a call
   wrenSetSlotCount(vm, 2);

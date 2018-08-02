@@ -231,7 +231,7 @@ static inline
 void validateApiSlot(WrenFiber* fiber, int slot)
 {
   ASSERT(slot >= 0, "Slot cannot be negative.");
-  ASSERT(slot < wrenGetSlotCount(fiber->vm), "Not that many slots.");
+  ASSERT(slot < wrenGetSlotCount(fiber), "Not that many slots.");
 }
 
 Value wrenGetSlot(WrenFiber* fiber, int srcSlot)

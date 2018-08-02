@@ -636,10 +636,10 @@ static void createForeign(WrenFiber* fiber, Value* stack)
   wrenPushCallFrame(fiber, NULL, stack);
 
 #ifdef DEBUG
-  int numSlots = wrenGetSlotCount(fiber->vm);
+  int numSlots = wrenGetSlotCount(fiber);
 #endif
   method->as.foreign(fiber);
-  ASSERT(numSlots == wrenGetSlotCount(fiber->vm), "Foreign creator altered slot count.");
+  ASSERT(numSlots == wrenGetSlotCount(fiber), "Foreign creator altered slot count.");
 
   wrenPopCallFrame(fiber);
   // TODO: Check that allocateForeign was called.
@@ -1397,7 +1397,7 @@ WrenInterpretResult wrenCall(WrenFiber* fiber, WrenHandle* method)
   
   ObjClosure* closure = AS_CLOSURE(method->value);
   
-  ASSERT(wrenGetSlotCount(fiber->vm) >= closure->fn->arity + 1,
+  ASSERT(wrenGetSlotCount(fiber) >= closure->fn->arity + 1,
          "Stack must have enough arguments for method.");
   
   // Protect native call frame.
@@ -1541,11 +1541,13 @@ void wrenPopRoot(WrenVM* vm)
   vm->numTempRoots--;
 }
 
-int wrenGetSlotCount(WrenVM* vm)
+int wrenGetSlotCount(WrenFiber* fiber)
 {
-  if (vm->fiber == NULL) return 0;
+  ASSERT(fiber != NULL, "Fiber must exist.");
   
-  return (int)(vm->fiber->stackTop - vm->fiber->stackStart);
+  if (fiber == NULL) return 0;
+  
+  return (int)(fiber->stackTop - fiber->stackStart);
 }
 
 void wrenSetSlotCount(WrenVM* vm, int numSlots)

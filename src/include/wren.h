@@ -369,7 +369,7 @@ void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle);
 // return, you get a very fast FFI.
 
 // Returns the number of slots available to the current foreign method.
-int wrenGetSlotCount(WrenVM* vm);
+int wrenGetSlotCount(WrenFiber* fiber);
 
 // Ensures that the foreign method stack has [numSlots] available for use,
 // growing the stack if needed.
