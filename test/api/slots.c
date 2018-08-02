@@ -47,7 +47,7 @@ static void setSlots(WrenFiber* fiber)
   wrenSetSlotBytes(fiber, 2, "by\0te", 5);
   wrenSetSlotDouble(fiber, 3, 1.5);
   wrenSetSlotString(vm, 4, "str");
-  wrenSetSlotNull(vm, 5);
+  wrenSetSlotNull(fiber, 5);
   
   // Read the slots back to make sure they were set correctly.
   

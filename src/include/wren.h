@@ -467,7 +467,7 @@ void* wrenSetSlotNewForeign(WrenFiber* fiber, int slot, int classSlot, size_t si
 void wrenSetSlotNewList(WrenFiber* fiber, int slot);
 
 // Stores null in [slot].
-void wrenSetSlotNull(WrenVM* vm, int slot);
+void wrenSetSlotNull(WrenFiber* fiber, int slot);
 
 // Stores the string [text] in [slot].
 //

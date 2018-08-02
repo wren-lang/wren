@@ -553,9 +553,8 @@ void stdinIsTerminal(WrenFiber* fiber)
 
 void stdoutFlush(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   fflush(stdout);
-  wrenSetSlotNull(vm, 0);
+  wrenSetSlotNull(fiber, 0);
 }
 
 static void allocCallback(uv_handle_t* handle, size_t suggestedSize,
@@ -589,7 +588,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   {
     wrenSetSlotCount(fiber, 2);
     wrenSetSlotHandle(vm, 0, stdinClass);
-    wrenSetSlotNull(vm, 1);
+    wrenSetSlotNull(fiber, 1);
     wrenCall(fiber, stdinOnData);
     
     shutdownStdin();

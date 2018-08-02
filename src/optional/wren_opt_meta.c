@@ -38,7 +38,7 @@ void metaGetModuleVariables(WrenFiber* fiber)
   Value moduleValue = wrenMapGet(vm->modules, wrenGetSlot(fiber, 1));
   if (IS_UNDEFINED(moduleValue))
   {
-    wrenSetSlotNull(vm, 0);
+    wrenSetSlotNull(fiber, 0);
     return;
   }
     

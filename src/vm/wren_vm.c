@@ -1684,9 +1684,8 @@ void wrenSetSlotNewList(WrenFiber* fiber, int slot)
   wrenSetSlot(fiber, slot, OBJ_VAL(wrenNewList(fiber->vm, 0)));
 }
 
-void wrenSetSlotNull(WrenVM* vm, int slot)
+void wrenSetSlotNull(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
   wrenSetSlot(fiber, slot, NULL_VAL);
 }
 

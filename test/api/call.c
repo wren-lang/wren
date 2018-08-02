@@ -92,7 +92,7 @@ void callRunTests(WrenVM* vm)
   
   wrenSetSlotCount(fiber, 3);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotNull(vm, 1);
+  wrenSetSlotNull(fiber, 1);
   wrenSetSlotHandle(vm, 2, value);
   wrenCall(fiber, two);
   
