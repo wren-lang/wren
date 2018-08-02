@@ -22,44 +22,40 @@ const char* testScript =
 
 static void call(WrenFiber* fiber)
 {
+  WrenVM* vm = wrenGetVM(fiber);
   int iterations = (int)wrenGetSlotDouble(fiber, 1);
   
   // Since the VM is re-entrant, we can call from within this foreign method.
-  WrenConfiguration config;
-  wrenInitConfiguration(&config);
-  WrenVM* otherVM = wrenNewVM(&config);
   
-  wrenInterpret(otherVM, "main", testScript);
+  wrenInterpret(vm, "main", testScript);
   
-  WrenHandle* method = wrenMakeCallHandle(otherVM, "method(_,_,_,_)");
+  WrenHandle* method = wrenMakeCallHandle(vm, "method(_,_,_,_)");
   
-  WrenFiber* otherFiber = wrenGetCurrentFiber(otherVM);
-  wrenSetSlotCount(otherFiber, 1);
-  wrenGetVariable(otherVM, "main", "Test", 0);
-  WrenHandle* testClass = wrenGetSlotHandle(otherFiber, 0);
+  wrenSetSlotCount(fiber, 1);
+  wrenGetVariable(vm, "main", "Test", 0);
+  WrenHandle* testClass = wrenGetSlotHandle(fiber, 0);
   
   double startTime = (double)clock() / CLOCKS_PER_SEC;
   
   double result = 0;
   for (int i = 0; i < iterations; i++)
   {
-    wrenSetSlotCount(otherFiber, 5);
-    wrenSetSlotHandle(otherFiber, 0, testClass);
-    wrenSetSlotDouble(otherFiber, 1, 1.0);
-    wrenSetSlotDouble(otherFiber, 2, 2.0);
-    wrenSetSlotDouble(otherFiber, 3, 3.0);
-    wrenSetSlotDouble(otherFiber, 4, 4.0);
+    wrenSetSlotCount(fiber, 5);
+    wrenSetSlotHandle(fiber, 0, testClass);
+    wrenSetSlotDouble(fiber, 1, 1.0);
+    wrenSetSlotDouble(fiber, 2, 2.0);
+    wrenSetSlotDouble(fiber, 3, 3.0);
+    wrenSetSlotDouble(fiber, 4, 4.0);
     
-    wrenCall(otherFiber, method);
+    wrenCall(fiber, method);
     
-    result += wrenGetSlotDouble(otherFiber, 0);
+    result += wrenGetSlotDouble(fiber, 0);
   }
   
   double elapsed = (double)clock() / CLOCKS_PER_SEC - startTime;
   
-  wrenReleaseHandle(otherVM, testClass);
-  wrenReleaseHandle(otherVM, method);
-  wrenFreeVM(otherVM);
+  wrenReleaseHandle(vm, testClass);
+  wrenReleaseHandle(vm, method);
   
   if (result == (1.0 + 2.0 + 3.0 + 4.0) * iterations)
   {
