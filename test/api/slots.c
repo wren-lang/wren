@@ -22,12 +22,12 @@ static void getSlots(WrenFiber* fiber)
   if (wrenGetSlotDouble(fiber, 3) != 1.5) result = false;
   if (strcmp(wrenGetSlotString(fiber, 4), "str") != 0) result = false;
   
-  WrenHandle* handle = wrenGetSlotHandle(vm, 5);
+  WrenHandle* handle = wrenGetSlotHandle(fiber, 5);
 
   if (result)
   {
     // Otherwise, return the value so we can tell if we captured it correctly.
-    wrenSetSlotHandle(vm, 0, handle);
+    wrenSetSlotHandle(fiber, 0, handle);
   }
   else
   {
@@ -41,7 +41,7 @@ static void getSlots(WrenFiber* fiber)
 static void setSlots(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  WrenHandle* handle = wrenGetSlotHandle(vm, 1);
+  WrenHandle* handle = wrenGetSlotHandle(fiber, 1);
   
   wrenSetSlotBool(fiber, 1, true);
   wrenSetSlotBytes(fiber, 2, "by\0te", 5);
@@ -67,7 +67,7 @@ static void setSlots(WrenFiber* fiber)
   if (result)
   {
     // Move the value into the return position.
-    wrenSetSlotHandle(vm, 0, handle);
+    wrenSetSlotHandle(fiber, 0, handle);
   }
   else
   {

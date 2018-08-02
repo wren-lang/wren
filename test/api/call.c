@@ -9,7 +9,7 @@ void callRunTests(WrenVM* vm)
   
   wrenSetSlotCount(fiber, 1);
   wrenGetVariable(vm, "./test/api/call", "Call", 0);
-  WrenHandle* callClass = wrenGetSlotHandle(vm, 0);
+  WrenHandle* callClass = wrenGetSlotHandle(fiber, 0);
   
   WrenHandle* noParams = wrenMakeCallHandle(vm, "noParams");
   WrenHandle* zero = wrenMakeCallHandle(vm, "zero()");
@@ -23,42 +23,42 @@ void callRunTests(WrenVM* vm)
 
   // Different arity.
   wrenSetSlotCount(fiber, 1);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenCall(fiber, noParams);
   
   wrenSetSlotCount(fiber, 1);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenCall(fiber, zero);
   
   wrenSetSlotCount(fiber, 2);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotDouble(fiber, 1, 1.0);
   wrenCall(fiber, one);
   
   wrenSetSlotCount(fiber, 3);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotDouble(fiber, 1, 1.0);
   wrenSetSlotDouble(fiber, 2, 2.0);
   wrenCall(fiber, two);
   
   // Operators.
   wrenSetSlotCount(fiber, 1);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenCall(fiber, unary);
 
   wrenSetSlotCount(fiber, 2);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotDouble(fiber, 1, 1.0);
   wrenCall(fiber, binary);
   
   wrenSetSlotCount(fiber, 3);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotDouble(fiber, 1, 1.0);
   wrenSetSlotDouble(fiber, 2, 2.0);
   wrenCall(fiber, subscript);
   
   wrenSetSlotCount(fiber, 4);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotDouble(fiber, 1, 1.0);
   wrenSetSlotDouble(fiber, 2, 2.0);
   wrenSetSlotDouble(fiber, 3, 3.0);
@@ -67,38 +67,38 @@ void callRunTests(WrenVM* vm)
   // Returning a value.
   WrenHandle* getValue = wrenMakeCallHandle(vm, "getValue()");
   wrenSetSlotCount(fiber, 1);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenCall(fiber, getValue);
-  WrenHandle* value = wrenGetSlotHandle(vm, 0);
+  WrenHandle* value = wrenGetSlotHandle(fiber, 0);
   
   // Different argument types.
   wrenSetSlotCount(fiber, 3);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotBool(fiber, 1, true);
   wrenSetSlotBool(fiber, 2, false);
   wrenCall(fiber, two);
 
   wrenSetSlotCount(fiber, 3);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotDouble(fiber, 1, 1.2);
   wrenSetSlotDouble(fiber, 2, 3.4);
   wrenCall(fiber, two);
   
   wrenSetSlotCount(fiber, 3);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotString(fiber, 1, "string");
   wrenSetSlotString(fiber, 2, "another");
   wrenCall(fiber, two);
   
   wrenSetSlotCount(fiber, 3);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotNull(fiber, 1);
-  wrenSetSlotHandle(vm, 2, value);
+  wrenSetSlotHandle(fiber, 2, value);
   wrenCall(fiber, two);
   
   // Truncate a string, or allow null bytes.
   wrenSetSlotCount(fiber, 3);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotBytes(fiber, 1, "string", 3);
   wrenSetSlotBytes(fiber, 2, "b\0y\0t\0e", 7);
   wrenCall(fiber, two);
@@ -109,13 +109,13 @@ void callRunTests(WrenVM* vm)
   {
     wrenSetSlotDouble(fiber, i, i * 0.1);
   }
-  wrenSetSlotHandle(vm, 8, callClass);
+  wrenSetSlotHandle(fiber, 8, callClass);
   wrenCall(fiber, one);
   int after = wrenGetSlotCount(fiber);
 
   // Ensure stack size after a call
   wrenSetSlotCount(fiber, 2);
-  wrenSetSlotHandle(vm, 0, callClass);
+  wrenSetSlotHandle(fiber, 0, callClass);
   wrenSetSlotDouble(fiber, 1, after);
   wrenCall(fiber, one);
   

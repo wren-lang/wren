@@ -1640,12 +1640,11 @@ const char* wrenGetSlotString(WrenFiber* fiber, int slot)
   return AS_CSTRING(value);
 }
 
-WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot)
+WrenHandle* wrenGetSlotHandle(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value value = wrenGetSlot(fiber, slot);
 
-  return wrenMakeHandle(vm, value);
+  return wrenMakeHandle(fiber->vm, value);
 }
 
 void wrenSetSlotBool(WrenFiber* fiber, int slot, bool value)
@@ -1695,10 +1694,9 @@ void wrenSetSlotString(WrenFiber* fiber, int slot, const char* text)
   wrenSetSlot(fiber, slot, wrenNewString(fiber->vm, text));
 }
 
-void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle)
+void wrenSetSlotHandle(WrenFiber* fiber, int slot, WrenHandle* handle)
 {
   ASSERT(handle != NULL, "Handle cannot be NULL.");
-  WrenFiber* fiber = vm->fiber;
   
   wrenSetSlot(fiber, slot, handle->value);
 }

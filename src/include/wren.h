@@ -438,7 +438,7 @@ const char* wrenGetSlotString(WrenFiber* fiber, int slot);
 //
 // This will prevent the object that is referred to from being garbage collected
 // until the handle is released by calling [wrenReleaseHandle()].
-WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
+WrenHandle* wrenGetSlotHandle(WrenFiber* fiber, int slot);
 
 // Stores the boolean [value] in [slot].
 void wrenSetSlotBool(WrenFiber* vm, int slot, bool value);
@@ -480,7 +480,7 @@ void wrenSetSlotString(WrenFiber* fiber, int slot, const char* text);
 // Stores the value captured in [handle] in [slot].
 //
 // This does not release the handle for the value.
-void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
+void wrenSetSlotHandle(WrenFiber* fiber, int slot, WrenHandle* handle);
 
 // Returns the number of elements in the list stored in [slot].
 int wrenGetListCount(WrenFiber* fiber, int slot);

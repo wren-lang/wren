@@ -37,7 +37,7 @@ static void call(WrenFiber* fiber)
   WrenFiber* otherFiber = wrenGetCurrentFiber(otherVM);
   wrenSetSlotCount(otherFiber, 1);
   wrenGetVariable(otherVM, "main", "Test", 0);
-  WrenHandle* testClass = wrenGetSlotHandle(otherVM, 0);
+  WrenHandle* testClass = wrenGetSlotHandle(otherFiber, 0);
   
   double startTime = (double)clock() / CLOCKS_PER_SEC;
   
@@ -45,7 +45,7 @@ static void call(WrenFiber* fiber)
   for (int i = 0; i < iterations; i++)
   {
     wrenSetSlotCount(otherFiber, 5);
-    wrenSetSlotHandle(otherVM, 0, testClass);
+    wrenSetSlotHandle(otherFiber, 0, testClass);
     wrenSetSlotDouble(otherFiber, 1, 1.0);
     wrenSetSlotDouble(otherFiber, 2, 2.0);
     wrenSetSlotDouble(otherFiber, 3, 3.0);

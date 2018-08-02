@@ -6,14 +6,13 @@ static WrenHandle* handle;
 
 static void setValue(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  handle = wrenGetSlotHandle(vm, 1);
+  handle = wrenGetSlotHandle(fiber, 1);
 }
 
 static void getValue(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotHandle(vm, 0, handle);
+  wrenSetSlotHandle(fiber, 0, handle);
   wrenReleaseHandle(vm, handle);
 }
 

@@ -139,9 +139,8 @@ static void directoryListCallback(uv_fs_t* request)
 
 void directoryList(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   const char* path = wrenGetSlotString(fiber, 1);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 2));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 2));
   
   // TODO: Check return.
   uv_fs_scandir(getLoop(), request, path, 0, directoryListCallback);
@@ -175,9 +174,8 @@ static void fileDeleteCallback(uv_fs_t* request)
 
 void fileDelete(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   const char* path = wrenGetSlotString(fiber, 1);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 2));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 2));
   
   // TODO: Check return.
   uv_fs_unlink(getLoop(), request, path, fileDeleteCallback);
@@ -215,10 +213,9 @@ static int mapFileFlags(int flags)
 
 void fileOpen(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   const char* path = wrenGetSlotString(fiber, 1);
   int flags = (int)wrenGetSlotDouble(fiber, 2);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 3));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 3));
 
   // TODO: Allow controlling access.
   uv_fs_open(getLoop(), request, path, mapFileFlags(flags), S_IRUSR | S_IWUSR,
@@ -240,9 +237,8 @@ static void fileSizeCallback(uv_fs_t* request)
 
 void fileSizePath(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   const char* path = wrenGetSlotString(fiber, 1);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 2));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 2));
   uv_fs_stat(getLoop(), request, path, fileSizeCallback);
 }
 
@@ -255,7 +251,6 @@ static void fileCloseCallback(uv_fs_t* request)
 
 void fileClose(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   int* foreign = (int*)wrenGetSlotForeign(fiber, 0);
   int fd = *foreign;
 
@@ -269,7 +264,7 @@ void fileClose(WrenFiber* fiber)
   // Mark it closed immediately.
   *foreign = -1;
 
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 1));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 1));
   uv_fs_close(getLoop(), request, fd, fileCloseCallback);
   wrenSetSlotBool(fiber, 0, false);
 }
@@ -304,8 +299,7 @@ static void fileReadBytesCallback(uv_fs_t* request)
 
 void fileReadBytes(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 3));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 3));
 
   int fd = *(int*)wrenGetSlotForeign(fiber, 0);
   // TODO: Assert fd != -1.
@@ -335,9 +329,8 @@ static void realPathCallback(uv_fs_t* request)
 
 void fileRealPath(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   const char* path = wrenGetSlotString(fiber, 1);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 2));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 2));
   uv_fs_realpath(getLoop(), request, path, realPathCallback);
 }
 
@@ -355,11 +348,11 @@ static void statCallback(uv_fs_t* request)
   if (statClass == NULL)
   {
     wrenGetVariable(vm, "io", "Stat", 0);
-    statClass = wrenGetSlotHandle(vm, 0);
+    statClass = wrenGetSlotHandle(fiber, 0);
   }
   
   // Create a foreign Stat object to store the stat struct.
-  wrenSetSlotHandle(vm, 2, statClass);
+  wrenSetSlotHandle(fiber, 2, statClass);
   wrenSetSlotNewForeign(fiber, 2, 2, sizeof(uv_stat_t));
   
   // Copy the stat data.
@@ -372,17 +365,15 @@ static void statCallback(uv_fs_t* request)
 
 void fileStat(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   int fd = *(int*)wrenGetSlotForeign(fiber, 0);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 1));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 1));
   uv_fs_fstat(getLoop(), request, fd, statCallback);
 }
 
 void fileSize(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   int fd = *(int*)wrenGetSlotForeign(fiber, 0);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 1));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 1));
   uv_fs_fstat(getLoop(), request, fd, fileSizeCallback);
 }
 
@@ -398,12 +389,11 @@ static void fileWriteBytesCallback(uv_fs_t* request)
 
 void fileWriteBytes(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   int fd = *(int*)wrenGetSlotForeign(fiber, 0);
   int length;
   const char* bytes = wrenGetSlotBytes(fiber, 1, &length);
   size_t offset = (size_t)wrenGetSlotDouble(fiber, 2);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 3));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 3));
   
   FileRequestData* data = (FileRequestData*)request->data;
 
@@ -420,9 +410,8 @@ void fileWriteBytes(WrenFiber* fiber)
 
 void statPath(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   const char* path = wrenGetSlotString(fiber, 1);
-  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 2));
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(fiber, 2));
   uv_fs_stat(getLoop(), request, path, statCallback);
 }
 
@@ -575,7 +564,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   {
     wrenSetSlotCount(fiber, 1);
     wrenGetVariable(vm, "io", "Stdin", 0);
-    stdinClass = wrenGetSlotHandle(vm, 0);
+    stdinClass = wrenGetSlotHandle(fiber, 0);
   }
   
   if (stdinOnData == NULL)
@@ -587,7 +576,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   if (numRead == UV_EOF)
   {
     wrenSetSlotCount(fiber, 2);
-    wrenSetSlotHandle(vm, 0, stdinClass);
+    wrenSetSlotHandle(fiber, 0, stdinClass);
     wrenSetSlotNull(fiber, 1);
     wrenCall(fiber, stdinOnData);
     
@@ -601,7 +590,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   // embedding API supported a way to *give* it bytes that were previously
   // allocated using Wren's own allocator.
   wrenSetSlotCount(fiber, 2);
-  wrenSetSlotHandle(vm, 0, stdinClass);
+  wrenSetSlotHandle(fiber, 0, stdinClass);
   wrenSetSlotBytes(fiber, 1, buffer->base, numRead);
   wrenCall(fiber, stdinOnData);
 
