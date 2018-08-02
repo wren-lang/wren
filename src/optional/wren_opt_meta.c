@@ -10,7 +10,7 @@
 void metaCompile(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  const char* source = wrenGetSlotString(vm, 1);
+  const char* source = wrenGetSlotString(fiber, 1);
   bool isExpression = wrenGetSlotBool(fiber, 2);
   bool printErrors = wrenGetSlotBool(fiber, 3);
 

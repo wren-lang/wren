@@ -65,10 +65,12 @@ void schedulerFinishResume()
   resume(resume2);
 }
 
-void schedulerResumeError(WrenHandle* fiber, const char* error)
+void schedulerResumeError(WrenHandle* resumedFiber, const char* error)
 {
-  schedulerResume(fiber, true);
-  wrenSetSlotString(getVM(), 2, error);
+  schedulerResume(resumedFiber, true);
+  WrenVM* vm = getVM();
+  WrenFiber* fiber = wrenGetCurrentFiber(vm);
+  wrenSetSlotString(fiber, 2, error);
   resume(resumeError);
 }
 

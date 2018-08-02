@@ -20,7 +20,7 @@ static void getSlots(WrenFiber* fiber)
   if (memcmp(bytes, "by\0te", length) != 0) result = false;
 
   if (wrenGetSlotDouble(fiber, 3) != 1.5) result = false;
-  if (strcmp(wrenGetSlotString(vm, 4), "str") != 0) result = false;
+  if (strcmp(wrenGetSlotString(fiber, 4), "str") != 0) result = false;
   
   WrenHandle* handle = wrenGetSlotHandle(vm, 5);
 
@@ -46,7 +46,7 @@ static void setSlots(WrenFiber* fiber)
   wrenSetSlotBool(fiber, 1, true);
   wrenSetSlotBytes(fiber, 2, "by\0te", 5);
   wrenSetSlotDouble(fiber, 3, 1.5);
-  wrenSetSlotString(vm, 4, "str");
+  wrenSetSlotString(fiber, 4, "str");
   wrenSetSlotNull(fiber, 5);
   
   // Read the slots back to make sure they were set correctly.
@@ -60,7 +60,7 @@ static void setSlots(WrenFiber* fiber)
   if (memcmp(bytes, "by\0te", length) != 0) result = false;
 
   if (wrenGetSlotDouble(fiber, 3) != 1.5) result = false;
-  if (strcmp(wrenGetSlotString(vm, 4), "str") != 0) result = false;
+  if (strcmp(wrenGetSlotString(fiber, 4), "str") != 0) result = false;
 
   if (wrenGetSlotType(fiber, 5) != WREN_TYPE_NULL) result = false;
   
@@ -94,7 +94,6 @@ static void slotTypes(WrenFiber* fiber)
 
 static void ensure(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   int before = wrenGetSlotCount(fiber);
   
   wrenSetSlotCount(fiber, 20);
@@ -116,12 +115,11 @@ static void ensure(WrenFiber* fiber)
 
   char result[100];
   sprintf(result, "%d -> %d (%d)", before, after, sum);
-  wrenSetSlotString(vm, 0, result);
+  wrenSetSlotString(fiber, 0, result);
 }
 
 static void ensureOutsideForeign(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   // To test the behavior outside of a foreign method (which we're currently
   // in), create a new separate VM.
   WrenConfiguration config;
@@ -152,7 +150,7 @@ static void ensureOutsideForeign(WrenFiber* fiber)
 
   char result[100];
   sprintf(result, "%d -> %d (%d)", before, after, sum);
-  wrenSetSlotString(vm, 0, result);
+  wrenSetSlotString(fiber, 0, result);
 }
 
 static void foreignClassAllocate(WrenFiber* fiber)

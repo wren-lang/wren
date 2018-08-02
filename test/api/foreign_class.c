@@ -60,12 +60,11 @@ static void pointTranslate(WrenFiber* fiber)
 
 static void pointToString(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   double* coordinates = (double*)wrenGetSlotForeign(fiber, 0);
   char result[100];
   sprintf(result, "(%g, %g, %g)",
       coordinates[0], coordinates[1], coordinates[2]);
-  wrenSetSlotString(vm, 0, result);
+  wrenSetSlotString(fiber, 0, result);
 }
 
 static void resourceAllocate(WrenFiber* fiber)

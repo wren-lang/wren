@@ -432,7 +432,7 @@ void* wrenGetSlotForeign(WrenFiber* fiber, int slot);
 // function returns, since the garbage collector may reclaim it.
 //
 // It is an error to call this if the slot does not contain a string.
-const char* wrenGetSlotString(WrenVM* vm, int slot);
+const char* wrenGetSlotString(WrenFiber* fiber, int slot);
 
 // Creates a handle for the value stored in [slot].
 //
@@ -475,7 +475,7 @@ void wrenSetSlotNull(WrenFiber* fiber, int slot);
 // memory used by it after this is called. The length is calculated using
 // [strlen()]. If the string may contain any null bytes in the middle, then you
 // should use [wrenSetSlotBytes()] instead.
-void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
+void wrenSetSlotString(WrenFiber* fiber, int slot, const char* text);
 
 // Stores the value captured in [handle] in [slot].
 //

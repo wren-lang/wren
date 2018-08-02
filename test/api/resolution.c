@@ -36,7 +36,6 @@ static char* loadModule(WrenVM* vm, const char* module)
 static void runTestVM(WrenFiber* fiber, WrenConfiguration* configuration,
                       const char* source)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   configuration->writeFn = write;
   configuration->errorFn = reportError;
   configuration->loadModuleFn = loadModule;
@@ -47,11 +46,11 @@ static void runTestVM(WrenFiber* fiber, WrenConfiguration* configuration,
   WrenInterpretResult result = wrenInterpret(otherVM, "main", source);
   if (result != WREN_RESULT_SUCCESS)
   {
-    wrenSetSlotString(vm, 0, "error");
+    wrenSetSlotString(fiber, 0, "error");
   }
   else
   {
-    wrenSetSlotString(vm, 0, "success");
+    wrenSetSlotString(fiber, 0, "success");
   }
   
   wrenFreeVM(otherVM);
@@ -59,14 +58,13 @@ static void runTestVM(WrenFiber* fiber, WrenConfiguration* configuration,
 
 static void noResolver(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
   
   // Should default to no resolution function.
   if (configuration.resolveModuleFn != NULL)
   {
-    wrenSetSlotString(vm, 0, "Did not have null resolve function.");
+    wrenSetSlotString(fiber, 0, "Did not have null resolve function.");
     return;
   }
   

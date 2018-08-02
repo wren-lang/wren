@@ -86,8 +86,8 @@ void callRunTests(WrenVM* vm)
   
   wrenSetSlotCount(fiber, 3);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotString(vm, 1, "string");
-  wrenSetSlotString(vm, 2, "another");
+  wrenSetSlotString(fiber, 1, "string");
+  wrenSetSlotString(fiber, 2, "another");
   wrenCall(fiber, two);
   
   wrenSetSlotCount(fiber, 3);
@@ -161,7 +161,7 @@ static void factorial(WrenFiber* fiber)
   else
   {
     wrenSetSlotCount(fiber, 3);
-    wrenSetSlotString(vm, 2, "Not a valid number!");
+    wrenSetSlotString(fiber, 2, "Not a valid number!");
     wrenAbortFiber(vm, 2);
   }
   wrenReleaseHandle(vm, recursiveFactorial);

@@ -27,8 +27,8 @@ static void otherSlot(WrenFiber* fiber)
   wrenGetVariable(vm, "./test/api/get_variable", "B", 2);
   
   // Move it into return position.
-  const char* string = wrenGetSlotString(vm, 2);
-  wrenSetSlotString(vm, 0, string);
+  const char* string = wrenGetSlotString(fiber, 2);
+  wrenSetSlotString(fiber, 0, string);
 }
 
 static void otherModule(WrenFiber* fiber)

@@ -16,27 +16,26 @@ void osSetArguments(int argc, const char* argv[])
 
 void platformName(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(fiber, 1);
   
   #ifdef _WIN32
-    wrenSetSlotString(vm, 0, "Windows");
+    wrenSetSlotString(fiber, 0, "Windows");
   #elif __APPLE__
     #if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
-      wrenSetSlotString(vm, 0, "iOS");
+      wrenSetSlotString(fiber, 0, "iOS");
     #elif TARGET_OS_MAC
-      wrenSetSlotString(vm, 0, "OS X");
+      wrenSetSlotString(fiber, 0, "OS X");
     #else
-      wrenSetSlotString(vm, 0, "Unknown");
+      wrenSetSlotString(fiber, 0, "Unknown");
     #endif
   #elif __linux__
-    wrenSetSlotString(vm, 0, "Linux");
+    wrenSetSlotString(fiber, 0, "Linux");
   #elif __unix__
-    wrenSetSlotString(vm, 0, "Unix");
+    wrenSetSlotString(fiber, 0, "Unix");
   #elif defined(_POSIX_VERSION)
-    wrenSetSlotString(vm, 0, "POSIX");
+    wrenSetSlotString(fiber, 0, "POSIX");
   #else
-    wrenSetSlotString(vm, 0, "Unknown");
+    wrenSetSlotString(fiber, 0, "Unknown");
   #endif
 }
 
@@ -61,13 +60,12 @@ void platformIsPosix(WrenFiber* fiber)
 
 void processAllArguments(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(fiber, 2);
   wrenSetSlotNewList(fiber, 0);
 
   for (int i = 0; i < numArgs; i++)
   {
-    wrenSetSlotString(vm, 1, args[i]);
+    wrenSetSlotString(fiber, 1, args[i]);
     wrenInsertInList(fiber, 0, -1, 1);
   }
 }

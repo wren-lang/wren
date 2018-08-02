@@ -1632,9 +1632,8 @@ void* wrenGetSlotForeign(WrenFiber* fiber, int slot)
   return AS_FOREIGN(value)->data;
 }
 
-const char* wrenGetSlotString(WrenVM* vm, int slot)
+const char* wrenGetSlotString(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_STRING(value), "Slot must hold a string.");
 
@@ -1689,12 +1688,11 @@ void wrenSetSlotNull(WrenFiber* fiber, int slot)
   wrenSetSlot(fiber, slot, NULL_VAL);
 }
 
-void wrenSetSlotString(WrenVM* vm, int slot, const char* text)
+void wrenSetSlotString(WrenFiber* fiber, int slot, const char* text)
 {
   ASSERT(text != NULL, "String cannot be NULL.");
-  WrenFiber* fiber = vm->fiber;
   
-  wrenSetSlot(fiber, slot, wrenNewString(vm, text));
+  wrenSetSlot(fiber, slot, wrenNewString(fiber->vm, text));
 }
 
 void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle)
