@@ -110,6 +110,12 @@ void wrenFreeVM(WrenVM* vm)
 
 WrenFiber* wrenGetCurrentFiber(WrenVM* vm)
 {
+  // If we don't have a fiber accessible, create one for the API to use.
+  if (vm->fiber == NULL)
+  {
+    vm->fiber = wrenNewFiber(vm, NULL);
+  }
+  
   return vm->fiber;
 }
 
@@ -1382,20 +1388,20 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   return value;
 }
 
-WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
+WrenInterpretResult wrenCall(WrenFiber* fiber, WrenHandle* method)
 {
+  ASSERT(fiber != NULL, "Fiber cannot be NULL.");
   ASSERT(method != NULL, "Method cannot be NULL.");
   ASSERT(IS_CLOSURE(method->value), "Method must be a method handle.");
-  ASSERT(vm->fiber != NULL, "Must set up arguments for call first.");
+  ASSERT(fiber == fiber->vm->fiber, "Fiber out of sync.");
   
-  WrenFiber* fiber = vm->fiber;
   ObjClosure* closure = AS_CLOSURE(method->value);
   
-  ASSERT(wrenGetSlotCount(vm) >= closure->fn->arity + 1,
+  ASSERT(wrenGetSlotCount(fiber->vm) >= closure->fn->arity + 1,
          "Stack must have enough arguments for method.");
   
   // Protect native call frame.
-  wrenPushCallFrame(fiber, NULL, vm->fiber->stackStart);
+  wrenPushCallFrame(fiber, NULL, fiber->stackStart);
   
   wrenCallFunction(fiber, closure, closure->fn->arity + 1);
   return runInterpreter(fiber);

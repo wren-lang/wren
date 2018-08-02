@@ -12,9 +12,10 @@ void callWrenCallRootRunTests(WrenVM* vm)
 
   WrenHandle* run = wrenMakeCallHandle(vm, "run()");
 
+  WrenFiber* fiber = wrenGetCurrentFiber(vm);
   wrenSetSlotCount(vm, 1);
   wrenSetSlotHandle(vm, 0, testClass);
-  WrenInterpretResult result = wrenCall(vm, run);
+  WrenInterpretResult result = wrenCall(fiber, run);
   if (result == WREN_RESULT_RUNTIME_ERROR)
   {
     setExitCode(70);

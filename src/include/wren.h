@@ -325,7 +325,7 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
 // signature.
 //
 // After this returns, you can access the return value from slot 0 on the stack.
-WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
+WrenInterpretResult wrenCall(WrenFiber* fiber, WrenHandle* method);
 
 // Releases the reference stored in [handle]. After calling this, [handle] can
 // no longer be used.

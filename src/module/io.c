@@ -577,6 +577,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
                               const uv_buf_t* buffer)
 {
   WrenVM* vm = getVM();
+  WrenFiber* fiber = wrenGetCurrentFiber(vm);
   
   if (stdinClass == NULL)
   {
@@ -596,7 +597,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
     wrenSetSlotCount(vm, 2);
     wrenSetSlotHandle(vm, 0, stdinClass);
     wrenSetSlotNull(vm, 1);
-    wrenCall(vm, stdinOnData);
+    wrenCall(fiber, stdinOnData);
     
     shutdownStdin();
     return;
@@ -610,7 +611,7 @@ static void stdinReadCallback(uv_stream_t* stream, ssize_t numRead,
   wrenSetSlotCount(vm, 2);
   wrenSetSlotHandle(vm, 0, stdinClass);
   wrenSetSlotBytes(vm, 1, buffer->base, numRead);
-  wrenCall(vm, stdinOnData);
+  wrenCall(fiber, stdinOnData);
 
   // TODO: Likewise, freeing this after we resume is lame.
   free(buffer->base);

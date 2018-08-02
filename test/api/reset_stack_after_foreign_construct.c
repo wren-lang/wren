@@ -22,6 +22,8 @@ void resetStackAfterForeignConstructBindClass(
 
 void resetStackAfterForeignConstructRunTests(WrenVM* vm)
 {
+  WrenFiber* fiber = wrenGetCurrentFiber(vm);
+  
   wrenSetSlotCount(vm, 1);
   wrenGetVariable(vm,
       "./test/api/reset_stack_after_foreign_construct", "Test", 0);
@@ -32,13 +34,13 @@ void resetStackAfterForeignConstructRunTests(WrenVM* vm)
   
   wrenSetSlotCount(vm, 1);
   wrenSetSlotHandle(vm, 0, testClass);
-  wrenCall(vm, callConstruct);
+  wrenCall(fiber, callConstruct);
 
   wrenSetSlotCount(vm, 3);
   wrenSetSlotHandle(vm, 0, testClass);
   wrenSetSlotDouble(vm, 1, 1.0);
   wrenSetSlotDouble(vm, 2, 2.0);
-  wrenCall(vm, afterConstruct);
+  wrenCall(fiber, afterConstruct);
   
   wrenReleaseHandle(vm, testClass);
   wrenReleaseHandle(vm, callConstruct);

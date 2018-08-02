@@ -19,7 +19,9 @@ static WrenHandle* resumeError;
 
 static void resume(WrenHandle* method)
 {
-  WrenInterpretResult result = wrenCall(getVM(), method);
+  WrenVM* vm = getVM();
+  WrenFiber* fiber = wrenGetCurrentFiber(vm);
+  WrenInterpretResult result = wrenCall(fiber, method);
   
   // If a runtime error occurs in response to an async operation and nothing
   // catches the error in the fiber, then exit the CLI.
