@@ -10,9 +10,10 @@ static void newList(WrenFiber* fiber)
 
 // Helper function to store a double in a slot then insert it into the list at
 // slot zero.
-static void insertNumber(WrenVM* vm, int index, double value)
+static void insertNumber(WrenFiber* fiber, int index, double value)
 {
-  wrenSetSlotDouble(vm, 1, value);
+  WrenVM* vm = wrenGetVM(fiber);
+  wrenSetSlotDouble(fiber, 1, value);
   wrenInsertInList(vm, 0, index, 1);
 }
 
@@ -24,19 +25,19 @@ static void insert(WrenFiber* fiber)
   wrenSetSlotCount(fiber, 2);
   
   // Appending.
-  insertNumber(vm, 0, 1.0);
-  insertNumber(vm, 1, 2.0);
-  insertNumber(vm, 2, 3.0);
+  insertNumber(fiber, 0, 1.0);
+  insertNumber(fiber, 1, 2.0);
+  insertNumber(fiber, 2, 3.0);
   
   // Inserting.
-  insertNumber(vm, 0, 4.0);
-  insertNumber(vm, 1, 5.0);
-  insertNumber(vm, 2, 6.0);
+  insertNumber(fiber, 0, 4.0);
+  insertNumber(fiber, 1, 5.0);
+  insertNumber(fiber, 2, 6.0);
   
   // Negative indexes.
-  insertNumber(vm, -1, 7.0);
-  insertNumber(vm, -2, 8.0);
-  insertNumber(vm, -3, 9.0);
+  insertNumber(fiber, -1, 7.0);
+  insertNumber(fiber, -2, 8.0);
+  insertNumber(fiber, -3, 9.0);
 }
 
 WrenForeignMethodFn listsBindMethod(const char* signature)

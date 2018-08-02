@@ -1616,9 +1616,8 @@ const char* wrenGetSlotBytes(WrenFiber* fiber, int slot, int* length)
   return string->value;
 }
 
-double wrenGetSlotDouble(WrenVM* vm, int slot)
+double wrenGetSlotDouble(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_NUM(value), "Slot must hold a number.");
 
@@ -1662,9 +1661,8 @@ void wrenSetSlotBytes(WrenFiber* fiber, int slot, const char* bytes, size_t leng
   wrenSetSlot(fiber, slot, wrenNewStringLength(fiber->vm, bytes, length));
 }
 
-void wrenSetSlotDouble(WrenVM* vm, int slot, double value)
+void wrenSetSlotDouble(WrenFiber* fiber, int slot, double value)
 {
-  WrenFiber* fiber = vm->fiber;
   wrenSetSlot(fiber, slot, NUM_VAL(value));
 }
 

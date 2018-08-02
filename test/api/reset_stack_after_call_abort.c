@@ -22,8 +22,8 @@ void resetStackAfterCallAbortRunTests(WrenVM* vm)
   fiber = wrenGetCurrentFiber(vm);
   wrenSetSlotCount(fiber, 3);
   wrenSetSlotHandle(vm, 0, testClass);
-  wrenSetSlotDouble(vm, 1, 1.0);
-  wrenSetSlotDouble(vm, 2, 2.0);
+  wrenSetSlotDouble(fiber, 1, 1.0);
+  wrenSetSlotDouble(fiber, 2, 2.0);
   wrenCall(fiber, afterConstruct);
   
   wrenReleaseHandle(vm, testClass);

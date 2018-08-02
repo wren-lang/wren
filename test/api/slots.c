@@ -19,7 +19,7 @@ static void getSlots(WrenFiber* fiber)
   if (length != 5) result = false;
   if (memcmp(bytes, "by\0te", length) != 0) result = false;
 
-  if (wrenGetSlotDouble(vm, 3) != 1.5) result = false;
+  if (wrenGetSlotDouble(fiber, 3) != 1.5) result = false;
   if (strcmp(wrenGetSlotString(vm, 4), "str") != 0) result = false;
   
   WrenHandle* handle = wrenGetSlotHandle(vm, 5);
@@ -45,7 +45,7 @@ static void setSlots(WrenFiber* fiber)
   
   wrenSetSlotBool(fiber, 1, true);
   wrenSetSlotBytes(fiber, 2, "by\0te", 5);
-  wrenSetSlotDouble(vm, 3, 1.5);
+  wrenSetSlotDouble(fiber, 3, 1.5);
   wrenSetSlotString(vm, 4, "str");
   wrenSetSlotNull(vm, 5);
   
@@ -59,7 +59,7 @@ static void setSlots(WrenFiber* fiber)
   if (length != 5) result = false;
   if (memcmp(bytes, "by\0te", length) != 0) result = false;
 
-  if (wrenGetSlotDouble(vm, 3) != 1.5) result = false;
+  if (wrenGetSlotDouble(fiber, 3) != 1.5) result = false;
   if (strcmp(wrenGetSlotString(vm, 4), "str") != 0) result = false;
 
   if (wrenGetSlotType(fiber, 5) != WREN_TYPE_NULL) result = false;
@@ -104,14 +104,14 @@ static void ensure(WrenFiber* fiber)
   // Use the slots to make sure they're available.
   for (int i = 0; i < 20; i++)
   {
-    wrenSetSlotDouble(vm, i, i);
+    wrenSetSlotDouble(fiber, i, i);
   }
   
   int sum = 0;
 
   for (int i = 0; i < 20; i++)
   {
-    sum += (int)wrenGetSlotDouble(vm, i);
+    sum += (int)wrenGetSlotDouble(fiber, i);
   }
 
   char result[100];
@@ -138,14 +138,14 @@ static void ensureOutsideForeign(WrenFiber* fiber)
   // Use the slots to make sure they're available.
   for (int i = 0; i < 20; i++)
   {
-    wrenSetSlotDouble(otherVM, i, i);
+    wrenSetSlotDouble(otherFiber, i, i);
   }
 
   int sum = 0;
 
   for (int i = 0; i < 20; i++)
   {
-    sum += (int)wrenGetSlotDouble(otherVM, i);
+    sum += (int)wrenGetSlotDouble(otherFiber, i);
   }
 
   wrenFreeVM(otherVM);
@@ -164,13 +164,13 @@ static void foreignClassAllocate(WrenFiber* fiber)
 static void getListCount(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotDouble(vm, 0, wrenGetListCount(vm, 1));
+  wrenSetSlotDouble(fiber, 0, wrenGetListCount(vm, 1));
 }
 
 static void getListElement(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
-  int index = (int)wrenGetSlotDouble(vm, 2);
+  int index = (int)wrenGetSlotDouble(fiber, 2);
   wrenGetListElement(vm, 1, index, 0);
 }
 

@@ -61,7 +61,7 @@ static void randomSeed1(WrenFiber* fiber)
   WrenVM* vm = wrenGetVM(fiber);
   Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
 
-  srand((uint32_t)wrenGetSlotDouble(vm, 1));
+  srand((uint32_t)wrenGetSlotDouble(fiber, 1));
   for (int i = 0; i < 16; i++)
   {
     well->state[i] = rand();
@@ -75,7 +75,7 @@ static void randomSeed16(WrenFiber* fiber)
 
   for (int i = 0; i < 16; i++)
   {
-    well->state[i] = (uint32_t)wrenGetSlotDouble(vm, i + 1);
+    well->state[i] = (uint32_t)wrenGetSlotDouble(fiber, i + 1);
   }
 }
 
@@ -97,7 +97,7 @@ static void randomFloat(WrenFiber* fiber)
   // from 0 to 1.0 (half-inclusive).
   result /= 9007199254740992.0;
 
-  wrenSetSlotDouble(vm, 0, result);
+  wrenSetSlotDouble(fiber, 0, result);
 }
 
 static void randomInt0(WrenFiber* fiber)
@@ -105,7 +105,7 @@ static void randomInt0(WrenFiber* fiber)
   WrenVM* vm = wrenGetVM(fiber);
   Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
 
-  wrenSetSlotDouble(vm, 0, (double)advanceState(well));
+  wrenSetSlotDouble(fiber, 0, (double)advanceState(well));
 }
 
 const char* wrenRandomSource()

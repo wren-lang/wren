@@ -32,13 +32,13 @@ void callRunTests(WrenVM* vm)
   
   wrenSetSlotCount(fiber, 2);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotDouble(vm, 1, 1.0);
+  wrenSetSlotDouble(fiber, 1, 1.0);
   wrenCall(fiber, one);
   
   wrenSetSlotCount(fiber, 3);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotDouble(vm, 1, 1.0);
-  wrenSetSlotDouble(vm, 2, 2.0);
+  wrenSetSlotDouble(fiber, 1, 1.0);
+  wrenSetSlotDouble(fiber, 2, 2.0);
   wrenCall(fiber, two);
   
   // Operators.
@@ -48,20 +48,20 @@ void callRunTests(WrenVM* vm)
 
   wrenSetSlotCount(fiber, 2);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotDouble(vm, 1, 1.0);
+  wrenSetSlotDouble(fiber, 1, 1.0);
   wrenCall(fiber, binary);
   
   wrenSetSlotCount(fiber, 3);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotDouble(vm, 1, 1.0);
-  wrenSetSlotDouble(vm, 2, 2.0);
+  wrenSetSlotDouble(fiber, 1, 1.0);
+  wrenSetSlotDouble(fiber, 2, 2.0);
   wrenCall(fiber, subscript);
   
   wrenSetSlotCount(fiber, 4);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotDouble(vm, 1, 1.0);
-  wrenSetSlotDouble(vm, 2, 2.0);
-  wrenSetSlotDouble(vm, 3, 3.0);
+  wrenSetSlotDouble(fiber, 1, 1.0);
+  wrenSetSlotDouble(fiber, 2, 2.0);
+  wrenSetSlotDouble(fiber, 3, 3.0);
   wrenCall(fiber, subscriptSet);
 
   // Returning a value.
@@ -80,8 +80,8 @@ void callRunTests(WrenVM* vm)
 
   wrenSetSlotCount(fiber, 3);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotDouble(vm, 1, 1.2);
-  wrenSetSlotDouble(vm, 2, 3.4);
+  wrenSetSlotDouble(fiber, 1, 1.2);
+  wrenSetSlotDouble(fiber, 2, 3.4);
   wrenCall(fiber, two);
   
   wrenSetSlotCount(fiber, 3);
@@ -107,7 +107,7 @@ void callRunTests(WrenVM* vm)
   wrenSetSlotCount(fiber, 10);
   for (int i = 0; i < 10; i++)
   {
-    wrenSetSlotDouble(vm, i, i * 0.1);
+    wrenSetSlotDouble(fiber, i, i * 0.1);
   }
   wrenSetSlotHandle(vm, 8, callClass);
   wrenCall(fiber, one);
@@ -116,7 +116,7 @@ void callRunTests(WrenVM* vm)
   // Ensure stack size after a call
   wrenSetSlotCount(fiber, 2);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotDouble(vm, 1, after);
+  wrenSetSlotDouble(fiber, 1, after);
   wrenCall(fiber, one);
   
   wrenSetSlotCount(fiber, 1);
@@ -141,22 +141,22 @@ static void factorial(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   WrenHandle* recursiveFactorial = wrenMakeCallHandle(vm, "call(_)");
-  double num = wrenGetSlotDouble(vm, 1);
+  double num = wrenGetSlotDouble(fiber, 1);
 
   if (num > 1)
   {
     wrenSetSlotCount(fiber, 4);
     wrenCopySlot(fiber, 2, 0);
-    wrenSetSlotDouble(vm, 3, num - 1);
+    wrenSetSlotDouble(fiber, 3, num - 1);
     
     if (wrenCall(fiber, recursiveFactorial) == WREN_RESULT_SUCCESS)
     {
-      wrenSetSlotDouble(vm, 0, num * wrenGetSlotDouble(vm, 2));
+      wrenSetSlotDouble(fiber, 0, num * wrenGetSlotDouble(fiber, 2));
     }
   }
   else if (num == 1)
   {
-    wrenSetSlotDouble(vm, 0, 1);
+    wrenSetSlotDouble(fiber, 0, 1);
   }
   else
   {

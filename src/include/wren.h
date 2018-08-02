@@ -416,7 +416,7 @@ const char* wrenGetSlotBytes(WrenFiber* fiber, int slot, int* length);
 // Reads a number from [slot].
 //
 // It is an error to call this if the slot does not contain a number.
-double wrenGetSlotDouble(WrenVM* vm, int slot);
+double wrenGetSlotDouble(WrenFiber* fiber, int slot);
 
 // Reads a foreign object from [slot] and returns a pointer to the foreign data
 // stored with it.
@@ -450,7 +450,7 @@ void wrenSetSlotBool(WrenFiber* vm, int slot, bool value);
 void wrenSetSlotBytes(WrenFiber* fiber, int slot, const char* bytes, size_t length);
 
 // Stores the numeric [value] in [slot].
-void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
+void wrenSetSlotDouble(WrenFiber* fiber, int slot, double value);
 
 // Creates a new instance of the foreign class stored in [classSlot] with [size]
 // bytes of raw storage and places the resulting object in [slot].

@@ -7,8 +7,7 @@ static int finalized = 0;
 
 static void apiFinalized(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotDouble(vm, 0, finalized);
+  wrenSetSlotDouble(fiber, 0, finalized);
 }
 
 static void counterAllocate(WrenFiber* fiber)
@@ -22,7 +21,7 @@ static void counterIncrement(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   double* value = (double*)wrenGetSlotForeign(vm, 0);
-  double increment = wrenGetSlotDouble(vm, 1);
+  double increment = wrenGetSlotDouble(fiber, 1);
 
   *value += increment;
 }
@@ -31,7 +30,7 @@ static void counterValue(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   double value = *(double*)wrenGetSlotForeign(vm, 0);
-  wrenSetSlotDouble(vm, 0, value);
+  wrenSetSlotDouble(fiber, 0, value);
 }
 
 static void pointAllocate(WrenFiber* fiber)
@@ -49,9 +48,9 @@ static void pointAllocate(WrenFiber* fiber)
   }
   else
   {
-    coordinates[0] = wrenGetSlotDouble(vm, 1);
-    coordinates[1] = wrenGetSlotDouble(vm, 2);
-    coordinates[2] = wrenGetSlotDouble(vm, 3);
+    coordinates[0] = wrenGetSlotDouble(fiber, 1);
+    coordinates[1] = wrenGetSlotDouble(fiber, 2);
+    coordinates[2] = wrenGetSlotDouble(fiber, 3);
   }
 }
 
@@ -59,9 +58,9 @@ static void pointTranslate(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   double* coordinates = (double*)wrenGetSlotForeign(vm, 0);
-  coordinates[0] += wrenGetSlotDouble(vm, 1);
-  coordinates[1] += wrenGetSlotDouble(vm, 2);
-  coordinates[2] += wrenGetSlotDouble(vm, 3);
+  coordinates[0] += wrenGetSlotDouble(fiber, 1);
+  coordinates[1] += wrenGetSlotDouble(fiber, 2);
+  coordinates[2] += wrenGetSlotDouble(fiber, 3);
 }
 
 static void pointToString(WrenFiber* fiber)
