@@ -7,14 +7,13 @@ static const char* otherData = "other user data";
 
 static void test(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
   
   // Should default to NULL.
   if (configuration.userData != NULL)
   {
-    wrenSetSlotBool(vm, 0, false);
+    wrenSetSlotBool(fiber, 0, false);
     return;
   }
   
@@ -25,7 +24,7 @@ static void test(WrenFiber* fiber)
   // Should be able to get it.
   if (wrenGetUserData(otherVM) != data)
   {
-    wrenSetSlotBool(vm, 0, false);
+    wrenSetSlotBool(fiber, 0, false);
     wrenFreeVM(otherVM);
     return;
   }
@@ -35,12 +34,12 @@ static void test(WrenFiber* fiber)
   
   if (wrenGetUserData(otherVM) != otherData)
   {
-    wrenSetSlotBool(vm, 0, false);
+    wrenSetSlotBool(fiber, 0, false);
     wrenFreeVM(otherVM);
     return;
   }
 
-  wrenSetSlotBool(vm, 0, true);
+  wrenSetSlotBool(fiber, 0, true);
   wrenFreeVM(otherVM);
 }
 

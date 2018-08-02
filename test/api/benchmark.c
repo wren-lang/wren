@@ -71,7 +71,7 @@ static void call(WrenFiber* fiber)
   else
   {
     // Got the wrong result.
-    wrenSetSlotBool(vm, 0, false);
+    wrenSetSlotBool(fiber, 0, false);
   }
 }
 

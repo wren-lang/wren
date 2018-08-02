@@ -259,7 +259,7 @@ void fileClose(WrenFiber* fiber)
   // If it's already closed, we're done.
   if (fd == -1)
   {
-    wrenSetSlotBool(vm, 0, true);
+    wrenSetSlotBool(fiber, 0, true);
     return;
   }
 
@@ -268,7 +268,7 @@ void fileClose(WrenFiber* fiber)
 
   uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 1));
   uv_fs_close(getLoop(), request, fd, fileCloseCallback);
-  wrenSetSlotBool(vm, 0, false);
+  wrenSetSlotBool(fiber, 0, false);
 }
 
 void fileDescriptor(WrenFiber* fiber)
@@ -496,14 +496,14 @@ void statIsDirectory(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
-  wrenSetSlotBool(vm, 0, S_ISDIR(stat->st_mode));
+  wrenSetSlotBool(fiber, 0, S_ISDIR(stat->st_mode));
 }
 
 void statIsFile(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   uv_stat_t* stat = (uv_stat_t*)wrenGetSlotForeign(vm, 0);
-  wrenSetSlotBool(vm, 0, S_ISREG(stat->st_mode));
+  wrenSetSlotBool(fiber, 0, S_ISREG(stat->st_mode));
 }
 
 // Sets up the stdin stream if not already initialized.
@@ -532,16 +532,14 @@ static void initStdin()
 
 void stdinIsRaw(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
-  wrenSetSlotBool(vm, 0, isStdinRaw);
+  wrenSetSlotBool(fiber, 0, isStdinRaw);
 }
 
 void stdinIsRawSet(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   initStdin();
   
-  isStdinRaw = wrenGetSlotBool(vm, 1);
+  isStdinRaw = wrenGetSlotBool(fiber, 1);
   
   if (uv_guess_handle(stdinDescriptor) == UV_TTY)
   {
@@ -557,9 +555,8 @@ void stdinIsRawSet(WrenFiber* fiber)
 
 void stdinIsTerminal(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   initStdin();
-  wrenSetSlotBool(vm, 0, uv_guess_handle(stdinDescriptor) == UV_TTY);
+  wrenSetSlotBool(fiber, 0, uv_guess_handle(stdinDescriptor) == UV_TTY);
 }
 
 void stdoutFlush(WrenFiber* fiber)

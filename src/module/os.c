@@ -42,21 +42,20 @@ void platformName(WrenFiber* fiber)
 
 void platformIsPosix(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   wrenSetSlotCount(fiber, 1);
   
   #ifdef _WIN32
-    wrenSetSlotBool(vm, 0, false);
+    wrenSetSlotBool(fiber, 0, false);
   #elif __APPLE__
-    wrenSetSlotBool(vm, 0, true);
+    wrenSetSlotBool(fiber, 0, true);
   #elif __linux__
-    wrenSetSlotBool(vm, 0, true);
+    wrenSetSlotBool(fiber, 0, true);
   #elif __unix__
-    wrenSetSlotBool(vm, 0, true);
+    wrenSetSlotBool(fiber, 0, true);
   #elif defined(_POSIX_VERSION)
-    wrenSetSlotBool(vm, 0, true);
+    wrenSetSlotBool(fiber, 0, true);
   #else
-    wrenSetSlotString(vm, 0, false);
+    wrenSetSlotBool(fiber, 0, false);
   #endif
 }
 

@@ -11,8 +11,8 @@ void metaCompile(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   const char* source = wrenGetSlotString(vm, 1);
-  bool isExpression = wrenGetSlotBool(vm, 2);
-  bool printErrors = wrenGetSlotBool(vm, 3);
+  bool isExpression = wrenGetSlotBool(fiber, 2);
+  bool printErrors = wrenGetSlotBool(fiber, 3);
 
   // TODO: Allow passing in module?
   // Look up the module surrounding the callsite. This is brittle. The -3 walks

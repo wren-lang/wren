@@ -399,7 +399,7 @@ WrenType wrenGetSlotType(WrenFiber* fiber, int slot);
 // Reads a boolean value from [slot].
 //
 // It is an error to call this if the slot does not contain a boolean value.
-bool wrenGetSlotBool(WrenVM* vm, int slot);
+bool wrenGetSlotBool(WrenFiber* fiber, int slot);
 
 // Reads a byte array from [slot].
 //
@@ -441,7 +441,7 @@ const char* wrenGetSlotString(WrenVM* vm, int slot);
 WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
 
 // Stores the boolean [value] in [slot].
-void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
+void wrenSetSlotBool(WrenFiber* vm, int slot, bool value);
 
 // Stores the array [length] of [bytes] in [slot].
 //

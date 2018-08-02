@@ -1598,9 +1598,8 @@ WrenType wrenGetSlotType(WrenFiber* fiber, int slot)
   return WREN_TYPE_UNKNOWN;
 }
 
-bool wrenGetSlotBool(WrenVM* vm, int slot)
+bool wrenGetSlotBool(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value value = wrenGetSlot(fiber, slot);
   ASSERT(IS_BOOL(value), "Slot must hold a bool.");
 
@@ -1653,9 +1652,8 @@ WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot)
   return wrenMakeHandle(vm, value);
 }
 
-void wrenSetSlotBool(WrenVM* vm, int slot, bool value)
+void wrenSetSlotBool(WrenFiber* fiber, int slot, bool value)
 {
-  WrenFiber* fiber = vm->fiber;
   wrenSetSlot(fiber, slot, BOOL_VAL(value));
 }
 

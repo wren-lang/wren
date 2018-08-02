@@ -74,8 +74,8 @@ void callRunTests(WrenVM* vm)
   // Different argument types.
   wrenSetSlotCount(fiber, 3);
   wrenSetSlotHandle(vm, 0, callClass);
-  wrenSetSlotBool(vm, 1, true);
-  wrenSetSlotBool(vm, 2, false);
+  wrenSetSlotBool(fiber, 1, true);
+  wrenSetSlotBool(fiber, 2, false);
   wrenCall(fiber, two);
 
   wrenSetSlotCount(fiber, 3);

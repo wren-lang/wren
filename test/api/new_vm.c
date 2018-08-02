@@ -4,12 +4,11 @@
 
 static void nullConfig(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   WrenVM* otherVM = wrenNewVM(NULL);
   
   // We should be able to execute code.
   WrenInterpretResult result = wrenInterpret(otherVM, "main", "1 + 2");
-  wrenSetSlotBool(vm, 0, result == WREN_RESULT_SUCCESS);
+  wrenSetSlotBool(fiber, 0, result == WREN_RESULT_SUCCESS);
   
   wrenFreeVM(otherVM);
 }

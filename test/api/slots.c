@@ -12,7 +12,7 @@ static void getSlots(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   bool result = true;
-  if (wrenGetSlotBool(vm, 1) != true) result = false;
+  if (wrenGetSlotBool(fiber, 1) != true) result = false;
   
   int length;
   const char* bytes = wrenGetSlotBytes(vm, 2, &length);
@@ -32,7 +32,7 @@ static void getSlots(WrenFiber* fiber)
   else
   {
     // If anything failed, return false.
-    wrenSetSlotBool(vm, 0, false);
+    wrenSetSlotBool(fiber, 0, false);
   }
 
   wrenReleaseHandle(vm, handle);
@@ -43,7 +43,7 @@ static void setSlots(WrenFiber* fiber)
   WrenVM* vm = wrenGetVM(fiber);
   WrenHandle* handle = wrenGetSlotHandle(vm, 1);
   
-  wrenSetSlotBool(vm, 1, true);
+  wrenSetSlotBool(fiber, 1, true);
   wrenSetSlotBytes(vm, 2, "by\0te", 5);
   wrenSetSlotDouble(vm, 3, 1.5);
   wrenSetSlotString(vm, 4, "str");
@@ -52,7 +52,7 @@ static void setSlots(WrenFiber* fiber)
   // Read the slots back to make sure they were set correctly.
   
   bool result = true;
-  if (wrenGetSlotBool(vm, 1) != true) result = false;
+  if (wrenGetSlotBool(fiber, 1) != true) result = false;
   
   int length;
   const char* bytes = wrenGetSlotBytes(vm, 2, &length);
@@ -72,7 +72,7 @@ static void setSlots(WrenFiber* fiber)
   else
   {
     // If anything failed, return false.
-    wrenSetSlotBool(vm, 0, false);
+    wrenSetSlotBool(fiber, 0, false);
   }
 
   wrenReleaseHandle(vm, handle);
@@ -80,7 +80,6 @@ static void setSlots(WrenFiber* fiber)
 
 static void slotTypes(WrenFiber* fiber)
 {
-  WrenVM* vm = wrenGetVM(fiber);
   bool result =
       wrenGetSlotType(fiber, 1) == WREN_TYPE_BOOL &&
       wrenGetSlotType(fiber, 2) == WREN_TYPE_FOREIGN &&
@@ -90,7 +89,7 @@ static void slotTypes(WrenFiber* fiber)
       wrenGetSlotType(fiber, 6) == WREN_TYPE_STRING &&
       wrenGetSlotType(fiber, 7) == WREN_TYPE_UNKNOWN;
   
-  wrenSetSlotBool(vm, 0, result);
+  wrenSetSlotBool(fiber, 0, result);
 }
 
 static void ensure(WrenFiber* fiber)
