@@ -394,7 +394,7 @@ void wrenCopySlots(WrenFiber* fiber, int dstSlot, int srcSlot, int size);
 void wrenFillSlots(WrenFiber* fiber, int dstSlot, int srcSlot, int size);
 
 // Gets the type of the object in [slot].
-WrenType wrenGetSlotType(WrenVM* vm, int slot);
+WrenType wrenGetSlotType(WrenFiber* fiber, int slot);
 
 // Reads a boolean value from [slot].
 //

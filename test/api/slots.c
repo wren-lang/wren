@@ -62,7 +62,7 @@ static void setSlots(WrenFiber* fiber)
   if (wrenGetSlotDouble(vm, 3) != 1.5) result = false;
   if (strcmp(wrenGetSlotString(vm, 4), "str") != 0) result = false;
 
-  if (wrenGetSlotType(vm, 5) != WREN_TYPE_NULL) result = false;
+  if (wrenGetSlotType(fiber, 5) != WREN_TYPE_NULL) result = false;
   
   if (result)
   {
@@ -82,13 +82,13 @@ static void slotTypes(WrenFiber* fiber)
 {
   WrenVM* vm = wrenGetVM(fiber);
   bool result =
-      wrenGetSlotType(vm, 1) == WREN_TYPE_BOOL &&
-      wrenGetSlotType(vm, 2) == WREN_TYPE_FOREIGN &&
-      wrenGetSlotType(vm, 3) == WREN_TYPE_LIST &&
-      wrenGetSlotType(vm, 4) == WREN_TYPE_NULL &&
-      wrenGetSlotType(vm, 5) == WREN_TYPE_NUM &&
-      wrenGetSlotType(vm, 6) == WREN_TYPE_STRING &&
-      wrenGetSlotType(vm, 7) == WREN_TYPE_UNKNOWN;
+      wrenGetSlotType(fiber, 1) == WREN_TYPE_BOOL &&
+      wrenGetSlotType(fiber, 2) == WREN_TYPE_FOREIGN &&
+      wrenGetSlotType(fiber, 3) == WREN_TYPE_LIST &&
+      wrenGetSlotType(fiber, 4) == WREN_TYPE_NULL &&
+      wrenGetSlotType(fiber, 5) == WREN_TYPE_NUM &&
+      wrenGetSlotType(fiber, 6) == WREN_TYPE_STRING &&
+      wrenGetSlotType(fiber, 7) == WREN_TYPE_UNKNOWN;
   
   wrenSetSlotBool(vm, 0, result);
 }

@@ -1584,9 +1584,8 @@ void wrenFillSlots(WrenFiber *fiber, int dstSlot, int srcSlot, int size)
 }
 
 // Gets the type of the object in [slot].
-WrenType wrenGetSlotType(WrenVM* vm, int slot)
+WrenType wrenGetSlotType(WrenFiber* fiber, int slot)
 {
-  WrenFiber* fiber = vm->fiber;
   Value value = wrenGetSlot(fiber, slot);
 
   if (IS_BOOL(value)) return WREN_TYPE_BOOL;
