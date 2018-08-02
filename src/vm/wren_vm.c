@@ -1570,18 +1570,16 @@ void wrenSetSlotCount(WrenFiber* fiber, int numSlots)
   fiber->stackTop = pend;
 }
 
-void wrenCopySlots(WrenVM *vm, int dstSlot, int srcSlot, int size)
+void wrenCopySlots(WrenFiber *fiber, int dstSlot, int srcSlot, int size)
 {
-  WrenFiber* fiber = vm->fiber;
   for (int i = 0; i < size; ++i)
   {
     wrenSetSlot(fiber, dstSlot + i, wrenGetSlot(fiber, srcSlot + i));
   }
 }
 
-void wrenFillSlots(WrenVM *vm, int dstSlot, int srcSlot, int size)
+void wrenFillSlots(WrenFiber *fiber, int dstSlot, int srcSlot, int size)
 {
-  WrenFiber* fiber = vm->fiber;
   wrenSetSlots(fiber, dstSlot, wrenGetSlot(fiber, srcSlot), size);
 }
 

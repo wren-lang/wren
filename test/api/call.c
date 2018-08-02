@@ -146,7 +146,7 @@ static void factorial(WrenFiber* fiber)
   if (num > 1)
   {
     wrenSetSlotCount(fiber, 4);
-    wrenCopySlot(vm, 2, 0);
+    wrenCopySlot(fiber, 2, 0);
     wrenSetSlotDouble(vm, 3, num - 1);
     
     if (wrenCall(fiber, recursiveFactorial) == WREN_RESULT_SUCCESS)
