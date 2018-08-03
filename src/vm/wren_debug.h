@@ -7,7 +7,7 @@
 // Prints the stack trace for the current fiber.
 //
 // Used when a fiber throws a runtime error which is not caught.
-void wrenDebugPrintStackTrace(WrenVM* vm);
+void wrenDebugPrintStackTrace(WrenFiber* fiber);
 
 // The "dump" functions are used for debugging Wren itself. Normal code paths
 // will not call them unless one of the various DEBUG_ flags is enabled.

@@ -2,23 +2,23 @@
 
 #include "wren_debug.h"
 
-void wrenDebugPrintStackTrace(WrenVM* vm)
+void wrenDebugPrintStackTrace(WrenFiber* fiber)
 {
-  // Bail if the host doesn't enable printing errors.
-  if (vm->config.errorFn == NULL) return;
+  WrenVM* vm = fiber->vm;
+  WrenErrorFn errorFn = vm->config.errorFn;
   
-  WrenFiber* fiber = vm->fiber;
+  // Bail if the host doesn't enable printing errors.
+  if (errorFn == NULL) return;
+  
   if (IS_STRING(fiber->error))
   {
-    vm->config.errorFn(vm, WREN_ERROR_RUNTIME,
-                       NULL, -1, AS_CSTRING(fiber->error));
+    errorFn(vm, WREN_ERROR_RUNTIME, NULL, -1, AS_CSTRING(fiber->error));
   }
   else
   {
     // TODO: Print something a little useful here. Maybe the name of the error's
     // class?
-    vm->config.errorFn(vm, WREN_ERROR_RUNTIME,
-                       NULL, -1, "[error object]");
+    errorFn(vm, WREN_ERROR_RUNTIME, NULL, -1, "[error object]");
   }
 
   for (int i = fiber->numFrames - 1; i >= 0; i--)
@@ -40,9 +40,8 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
     
     // -1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
-    vm->config.errorFn(vm, WREN_ERROR_STACK_TRACE,
-                       fn->module->name->value, line,
-                       fn->debug->name);
+    errorFn(vm, WREN_ERROR_STACK_TRACE,
+            fn->module->name->value, line, fn->debug->name);
   }
 }
 

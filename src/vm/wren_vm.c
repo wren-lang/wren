@@ -418,7 +418,7 @@ static void runtimeError(WrenVM* vm)
   }
 
   // If we got here, nothing caught the error, so show the stack trace.
-  wrenDebugPrintStackTrace(vm);
+  wrenDebugPrintStackTrace(vm->fiber);
   vm->fiber = NULL;
 }
 
