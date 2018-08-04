@@ -149,11 +149,6 @@ ObjClosure* wrenCompileSource(WrenVM* vm, const char* module,
                               const char* source, bool isExpression,
                               bool printErrors);
 
-// Looks up a variable from a previously-loaded module.
-//
-// Aborts the current fiber if the module or variable could not be found.
-Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName);
-
 // Returns the value of the module-level variable named [name] in the main
 // module.
 Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name);

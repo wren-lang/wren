@@ -1455,19 +1455,6 @@ ObjClosure* wrenCompileSource(WrenVM* vm, const char* module, const char* source
   return closure;
 }
 
-Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName)
-{
-  ObjModule* module = getModule(vm, moduleName);
-  if (module == NULL)
-  {
-    vm->fiber->error = wrenStringFormat(vm, "Module '@' is not loaded.",
-                                        moduleName);
-    return NULL_VAL;
-  }
-  
-  return getModuleVariable(vm, module, variableName);
-}
-
 Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name)
 {
   int symbol = wrenSymbolTableFind(&module->variableNames, name, strlen(name));
