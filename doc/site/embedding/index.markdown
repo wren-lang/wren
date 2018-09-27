@@ -131,7 +131,7 @@ VM, waiting to run some code!
 You execute a string of Wren source code like so:
 
     :::c
-    WrenInterpretResult result = wrenInterpret(vm,
+    WrenInterpretResult result = wrenInterpret(vm, NULL,
         "System.print(\"I am running in a VM!\")");
 
 The string is a series of one or more statements separated by newlines. Wren
