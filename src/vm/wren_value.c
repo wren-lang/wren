@@ -784,7 +784,7 @@ Value wrenNumToString(WrenVM* vm, double value)
   // + 1 char for "\0"
   // = 24
   char buffer[24];
-  int length = sprintf(buffer, "%.14g", value);
+  int length = snprintf(buffer, sizeof(buffer), "%.14g", value);
   return wrenNewStringLength(vm, buffer, length);
 }
 
