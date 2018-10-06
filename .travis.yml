@@ -6,7 +6,7 @@ compiler:
   - gcc
   - clang
 env:
-  - WREN_OPTIONS="" CI_ARCHS="ci_32 ci_64"
+  - WREN_OPTIONS="" CI_ARCHS="ci_64"
   - WREN_OPTIONS="-DWREN_NAN_TAGGING=0" CI_ARCHS="ci_64"
 
 # Automatically build and deploy docs.
