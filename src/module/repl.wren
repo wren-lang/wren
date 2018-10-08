@@ -828,7 +828,7 @@ class Lexer {
 
       if (c == Chars.backslash) {
         // TODO: Process specific escapes and validate them.
-        advance()
+        if (!isAtEnd) advance()
       } else if (c == Chars.percent) {
         // Consume the '('.
         if (!isAtEnd) advance()

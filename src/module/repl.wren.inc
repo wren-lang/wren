@@ -830,7 +830,7 @@ static const char* replModuleSource =
 "\n"
 "      if (c == Chars.backslash) {\n"
 "        // TODO: Process specific escapes and validate them.\n"
-"        advance()\n"
+"        if (!isAtEnd) advance()\n"
 "      } else if (c == Chars.percent) {\n"
 "        // Consume the '('.\n"
 "        if (!isAtEnd) advance()\n"
