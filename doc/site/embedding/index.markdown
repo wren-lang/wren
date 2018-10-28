@@ -131,7 +131,7 @@ VM, waiting to run some code!
 You execute a string of Wren source code like so:
 
     :::c
-    WrenInterpretResult result = wrenInterpret(vm,
+    WrenInterpretResult result = wrenInterpret(vm, NULL,
         "System.print(\"I am running in a VM!\")");
 
 The string is a series of one or more statements separated by newlines. Wren
@@ -143,8 +143,11 @@ Otherwise, Wren spins up a new [fiber][] and executes the code in that. Your
 code can in turn spawn whatever other fibers it wants. It keeps running fibers
 until they all complete or one [suspends].
 
+The above example with `System.print()` won't print anything to the terminal without defining a `writeFn` for the `WrenConfiguration`, which you can read about in [Configuring the VM][configuration].
+
 [fiber]: ../concurrency.html
 [suspends]: ../modules/core/fiber.html#fiber.suspend()
+[configuration]: configuring-the-vm.html
 
 If a [runtime error][] occurs (and another fiber doesn't handle it), Wren aborts
 fibers all the way back to the main one and returns `WREN_RESULT_RUNTIME_ERROR`.
