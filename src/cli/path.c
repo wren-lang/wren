@@ -75,7 +75,7 @@ static size_t absolutePrefixLength(const char* path)
   // Drive letter.
   if (isDriveLetter(path[0]) && path[1] == ':')
   {
-    if (isSeparator(path->chars[2]))
+    if (isSeparator(path[2]))
     {
       // Fully absolute path.
       return 3;
