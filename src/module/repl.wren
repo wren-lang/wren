@@ -67,7 +67,7 @@ class Repl {
       }
     } else if (byte == Chars.carriageReturn) {
       executeInput()
-    } else if (byte == Chars.delete) {
+    } else if (byte == Chars.delete || byte == Chars.backspace) {
       deleteLeft()
     } else if (byte >= Chars.space && byte <= Chars.tilde) {
       insertChar(byte)
@@ -395,6 +395,7 @@ class Chars {
   static ctrlD { 0x04 }
   static ctrlE { 0x05 }
   static ctrlF { 0x06 }
+  static backspace { 0x08 }
   static tab { 0x09 }
   static lineFeed { 0x0a }
   static ctrlK { 0x0b }
