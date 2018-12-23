@@ -1,0 +1,29 @@
+name: wren
+version: 0.1.0 
+summary: wren
+description: |
+    Wren is a small, fast, class-based concurrent scripting language
+
+confinement: strict
+grade: stable
+
+apps:
+  wren:
+    command: wren
+    plugs:
+    - home
+
+parts:
+   wren:
+    source-type: git
+    source: https://github.com/wren-lang/wren
+    source-tag: 0.1.0
+    plugin: make
+    artifacts: 
+    - bin/wren
+
+    build-packages:
+    - gcc
+    - g++
+    - make
+    - python
