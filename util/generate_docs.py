@@ -126,7 +126,7 @@ def format_file(path, skip_up_to_date):
           # visible.
           contents += line
 
-  html = markdown.markdown(contents, ['def_list', 'codehilite', 'smarty'])
+  html = markdown.markdown(contents, extensions=['def_list', 'codehilite', 'smarty'])
 
   # Use special formatting for example output and errors.
   html = html.replace('<span class="c1">//&gt; ', '<span class="output">')
