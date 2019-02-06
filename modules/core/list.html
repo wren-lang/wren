@@ -20,6 +20,7 @@
 </header>
 <div class="page">
   <nav class="big">
+    <a href="./"><img src="../../wren.svg" class="logo"></a>
     <ul>
       <li><a href="../">Modules</a></li>
       <li><a href="./">core</a></li>
@@ -161,16 +162,23 @@ backwards from the end of the list where <code>-1</code> is the last element. </
 
 
 <p>It is a runtime error if the index is not an integer or is out of bounds. </p>
+<h2><strong>+</strong>(other) operator <a href="#+(other)-operator" name="+(other)-operator" class="header-anchor">#</a></h2>
+<p>Appends a list to the end of the list (concatenation). <code>other</code> must be a <code>List</code>. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span> 
+<span class="k">var</span> <span class="n">other</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;d&quot;</span><span class="p">,</span> <span class="s">&quot;e&quot;</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">]</span> 
+<span class="k">var</span> <span class="n">combined</span> <span class="o">=</span> <span class="n">letters</span> <span class="o">+</span> <span class="n">other</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>  <span class="output">[a, b, c, d, e, f]</span>
+</pre></div>
   </main>
 </div>
 <footer>
   <div class="page">
     <div class="main-column">
     <p>Wren lives
-      <a href="https://github.com/munificent/wren">on GitHub</a>
+      <a href="https://github.com/wren-lang/wren">on GitHub</a>
       &mdash; Made with &#x2764; by
       <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
-      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+      <a href="https://github.com/wren-lang/wren/blob/master/AUTHORS">friends</a>.
     </p>
     <div class="main-column">
   </div>

@@ -134,7 +134,7 @@ write. In return, you get an API that is quite fast. </p>
 </li>
 </ol>
 <p>In either case, you also want to add <code>src/include</code> to your include path so you 
-can find the <a href="https://github.com/munificent/wren/blob/master/src/include/wren.h">public header for Wren</a>: </p>
+can find the <a href="https://github.com/wren-lang/wren/blob/master/src/include/wren.h">public header for Wren</a>: </p>
 <div class="codehilite"><pre><span class="cp">#include &quot;wren.h&quot;</span>
 </pre></div>
 
@@ -186,7 +186,7 @@ occurs, it returns immediately with <code>WREN_RESULT_COMPILE_ERROR</code>. </p>
 <p>Otherwise, Wren spins up a new <a href="../concurrency.html">fiber</a> and executes the code in that. Your 
 code can in turn spawn whatever other fibers it wants. It keeps running fibers 
 until they all complete or one <a href="../modules/core/fiber.html#fiber.suspend()">suspends</a>. </p>
-<p>If a <a href="error-handling.html">runtime error</a> occurs (and another fiber doesn&rsquo;t handle it), Wren aborts 
+<p>If a <a href="../error-handling.html">runtime error</a> occurs (and another fiber doesn&rsquo;t handle it), Wren aborts 
 fibers all the way back to the main one and returns <code>WREN_RESULT_RUNTIME_ERROR</code>. 
 Otherwise, when the last fiber successfully returns, it returns 
 <code>WREN_RESULT_SUCCESS</code>. </p>
@@ -214,10 +214,10 @@ been freed. </p>
   <div class="page">
     <div class="main-column">
     <p>Wren lives
-      <a href="https://github.com/munificent/wren">on GitHub</a>
+      <a href="https://github.com/wren-lang/wren">on GitHub</a>
       &mdash; Made with &#x2764; by
       <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
-      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+      <a href="https://github.com/wren-lang/wren/blob/master/AUTHORS">friends</a>.
     </p>
     <div class="main-column">
   </div>

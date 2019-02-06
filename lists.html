@@ -14,18 +14,20 @@
   <div class="page">
     <div class="main-column">
       <h1><a href="./">wren</a></h1>
-      <h2>a classy little scripting language</h2>
+      <h2>a classy little scripting language</h2>      
     </div>
   </div>
 </header>
 <div class="page">
   <nav class="big">
+    <a href="./"><img src="./wren.svg" class="logo"></a>
     <ul>
       <li><a href="getting-started.html">Getting Started</a></li>
       <li><a href="contributing.html">Contributing</a></li>
+      <li><a href="blog">Blog</a></li>
     </ul>
     <section>
-      <h2>language guide</h2>
+      <h2>guides</h2>
       <ul>
         <li><a href="syntax.html">Syntax</a></li>
         <li><a href="values.html">Values</a></li>
@@ -58,7 +60,7 @@
         <td><a href="contributing.html">Contributing</a></td>
       </tr>
       <tr>
-        <td colspan="2"><h2>language guide</h2></td>
+        <td colspan="2"><h2>guides</h2></td>
         <td><h2>reference</h2></td>
       </tr>
       <tr>
@@ -94,7 +96,7 @@
     </table>
   </nav>
   <main>
-    <h1>Lists</h1>
+    <h2>Lists</h2>
     <p>A list is a compound object that holds a collection of elements identified by 
 integer index. You can create a list by placing a sequence of comma-separated 
 expressions inside square brackets: </p>
@@ -176,6 +178,15 @@ back. Doing so counts back from the size of the list <em>after</em> it&rsquo;s g
 </pre></div>
 
 
+<h2>Adding lists together <a href="#adding-lists-together" name="adding-lists-together" class="header-anchor">#</a></h2>
+<p>Lists have the ability to be added together via the <code>+</code> operator. This is often known as concatenation. </p>
+<div class="codehilite"><pre><span class="k">var</span> <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">]</span> 
+<span class="k">var</span> <span class="n">other</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;d&quot;</span><span class="p">,</span> <span class="s">&quot;e&quot;</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">]</span> 
+<span class="k">var</span> <span class="n">combined</span> <span class="o">=</span> <span class="n">letters</span> <span class="o">+</span> <span class="n">other</span> 
+<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>  <span class="output">[a, b, c, d, e, f]</span>
+</pre></div>
+
+
 <h2>Removing elements <a href="#removing-elements" name="removing-elements" class="header-anchor">#</a></h2>
 <p>The opposite of <code>insert</code> is <code>removeAt</code>. It removes a single element from a 
 given position in the list. All following items are shifted up to fill in the 
@@ -197,7 +208,8 @@ gap: </p>
 </pre></div>
 
 
-<p><a class="right" href="maps.html">Maps &rarr;</a> 
+<p><br><hr> 
+<a class="right" href="maps.html">Maps &rarr;</a> 
 <a href="values.html">&larr; Values</a> </p>
   </main>
 </div>
@@ -205,10 +217,10 @@ gap: </p>
   <div class="page">
     <div class="main-column">
     <p>Wren lives
-      <a href="https://github.com/munificent/wren">on GitHub</a>
+      <a href="https://github.com/wren-lang/wren">on GitHub</a>
       &mdash; Made with &#x2764; by
       <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
-      <a href="https://github.com/munificent/wren/blob/master/AUTHORS">friends</a>.
+      <a href="https://github.com/wren-lang/wren/blob/master/AUTHORS">friends</a>.
     </p>
     <div class="main-column">
   </div>
