@@ -25,7 +25,7 @@ Wren attracted me as a language because of what it _is_, not because it isn't {_
 
 So, Wren is going to be changing in ways that align with it's existing design intentions. Staying small, simple, learnable and hackable is all vital to what makes Wren valuable, and will remain. 
 
-We're just as excited as you are to get to longer term changes and fun tweaks (we have lots of work done already in a local projects like [the debugger](https://i.imgur.com/dazexnY.gifv)). There's plenty of ideas we've tried since we've been [using Wren full time](https://luxeengine.com) the last 2.5+ years and a lot I can't wait to get started with bring those into master and optional modules. There's a lot to do!
+We're just as excited as you are to get to longer term changes and fun tweaks (we have lots of work done already in local projects like [the debugger](https://i.imgur.com/dazexnY.gifv)). There's plenty of ideas we've tried since we've been [using Wren full time](https://luxeengine.com) the last 2.5+ years, and can't wait to get started with bring those into master (and optional modules). There's a lot to do!
 
 In the next blog I want to try talk a bit more about the short to medium term goals and roadmap (rather than mixing it here with the meta/hello world post). Be sure to keep an eye out for that one, as it has more juicy details on what we're gonna get up to.
 
