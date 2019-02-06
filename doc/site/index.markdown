@@ -51,8 +51,8 @@ it [in your browser][browser]! Excited? Well, come on and [get
 involved][contribute]!
 
 [syntax]: syntax.html
-[src]: https://github.com/munificent/wren/tree/master/src
-[nan]: https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
+[src]: https://github.com/wren-lang/wren/tree/master/src
+[nan]: https://github.com/wren-lang/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
 [perf]: performance.html
 [classes]: classes.html
 [fibers]: concurrency.html

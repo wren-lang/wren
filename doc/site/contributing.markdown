@@ -17,7 +17,7 @@ editor. Share that stuff and it will help the next Wren user to come along.
 If you do any of the above, let us know by adding it to [the wiki][wiki]. We
 like to keep track of:
 
-[wiki]: https://github.com/munificent/wren/wiki
+[wiki]: https://github.com/wren-lang/wren/wiki
 
 * [Applications][] that host Wren as a scripting language.
 * [Modules][] written in Wren that others can use.
@@ -25,10 +25,10 @@ like to keep track of:
   languages.
 * Other [tools and utilities][] that make it easier to be a Wren programmer.
 
-[applications]: https://github.com/munificent/wren/wiki/Applications
-[modules]: https://github.com/munificent/wren/wiki/Modules
-[language bindings]: https://github.com/munificent/wren/wiki/Language-Bindings
-[tools and utilities]: https://github.com/munificent/wren/wiki/Tools
+[applications]: https://github.com/wren-lang/wren/wiki/Applications
+[modules]: https://github.com/wren-lang/wren/wiki/Modules
+[language bindings]: https://github.com/wren-lang/wren/wiki/Language-Bindings
+[tools and utilities]: https://github.com/wren-lang/wren/wiki/Tools
 
 ## Contributing to Wren
 
@@ -130,13 +130,13 @@ on the [mailing list][list]. If you're a Redditor, try the
 `stuffwithstuff.com`) if you want something less public.
 
 [mit]: http://opensource.org/licenses/MIT
-[github]: https://github.com/munificent/wren
+[github]: https://github.com/wren-lang/wren
 [fork]: https://help.github.com/articles/fork-a-repo/
-[docs]: https://github.com/munificent/wren/tree/master/doc/site
-[issue]: https://github.com/munificent/wren/issues
-[proposal]: https://github.com/munificent/wren/labels/proposal
+[docs]: https://github.com/wren-lang/wren/tree/master/doc/site
+[issue]: https://github.com/wren-lang/wren/issues
+[proposal]: https://github.com/wren-lang/wren/labels/proposal
 [feature branches]: https://www.atlassian.com/git/tutorials/comparing-workflows/centralized-workflow
-[authors]: https://github.com/munificent/wren/tree/master/AUTHORS
-[pull request]: https://github.com/munificent/wren/pulls
+[authors]: https://github.com/wren-lang/wren/tree/master/AUTHORS
+[pull request]: https://github.com/wren-lang/wren/pulls
 [list]: https://groups.google.com/forum/#!forum/wren-lang
 [subreddit]: https://www.reddit.com/r/wren_lang/

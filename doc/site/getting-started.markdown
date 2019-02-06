@@ -21,7 +21,7 @@ few dependencies are nice that way. "Wren" encompasses two separate artifacts:
 If you're on a Unix or Mac and you can rock a command line, it's just:
 
     :::sh
-    $ git clone https://github.com/munificent/wren.git
+    $ git clone https://github.com/wren-lang/wren.git
     $ cd wren
     $ make
     $ ./wren
@@ -103,5 +103,5 @@ the following work:
 
 [list]: https://groups.google.com/forum/#!forum/wren-lang
 [twitter]: https://twitter.com/intent/user?screen_name=munificentbob
-[issue]: https://github.com/munificent/wren/issues
-[repo]: https://github.com/munificent/wren
+[issue]: https://github.com/wren-lang/wren/issues
+[repo]: https://github.com/wren-lang/wren

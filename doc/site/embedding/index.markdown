@@ -79,7 +79,7 @@ There are two (well, three) ways to get the Wren VM into your program:
 In either case, you also want to add `src/include` to your include path so you
 can find the [public header for Wren][wren.h]:
 
-[wren.h]: https://github.com/munificent/wren/blob/master/src/include/wren.h
+[wren.h]: https://github.com/wren-lang/wren/blob/master/src/include/wren.h
 
     :::c
     #include "wren.h"

@@ -44,11 +44,11 @@ If you like the sound of this, [let's get started][started]. You can even try
 it [in your browser][browser]! Excited? Well, come on and [get
 involved][contribute]!
 
-[![Build Status](https://travis-ci.org/munificent/wren.svg)](https://travis-ci.org/munificent/wren)
+[![Build Status](https://travis-ci.org/wren-lang/wren.svg)](https://travis-ci.org/wren-lang/wren)
 
 [syntax]: http://wren.io/syntax.html
-[src]: https://github.com/munificent/wren/tree/master/src
-[nan]: https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
+[src]: https://github.com/wren-lang/wren/tree/master/src
+[nan]: https://github.com/wren-lang/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
 [perf]: http://wren.io/performance.html
 [classes]: http://wren.io/classes.html
 [fibers]: http://wren.io/concurrency.html
