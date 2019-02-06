@@ -177,5 +177,6 @@ These are equivalent to method calls whose signature is `[_]=(_)` and whose
 arguments are both the subscript (or subscripts) and the value on the right-hand
 side.
 
+<br><hr>
 <a class="right" href="control-flow.html">Control Flow &rarr;</a>
 <a href="maps.html">&larr; Maps</a>

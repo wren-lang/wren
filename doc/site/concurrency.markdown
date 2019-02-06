@@ -181,5 +181,6 @@ functions, `transfer()` works more like an unstructured goto. It lets you freely
 switch control between a number of fibers, all of which act as peers to one
 another.
 
+<br><hr>
 <a class="right" href="error-handling.html">Error Handling &rarr;</a>
 <a href="classes.html">&larr; Classes</a>

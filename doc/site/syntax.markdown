@@ -265,5 +265,6 @@ tightest to loosest, is:
   </tbody>
 </table>
 
+<br><hr>
 <a class="right" href="values.html">Values &rarr;</a>
 <a href="getting-started.html">&larr; Getting Started</a>

@@ -286,4 +286,5 @@ This sounds super hairy, but that's because cyclic dependencies are hairy in
 general. The key point here is that Wren *can* handle them in the rare cases
 where you need them.
 
+<br><hr>
 <a href="error-handling.html">&larr; Error Handling</a>

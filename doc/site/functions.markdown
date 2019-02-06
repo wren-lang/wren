@@ -163,5 +163,6 @@ to`i`:
     System.print(counter.call()) //> 2
     System.print(counter.call()) //> 3
 
+<br><hr>
 <a class="right" href="classes.html">Classes &rarr;</a>
 <a href="variables.html">&larr; Variables</a>

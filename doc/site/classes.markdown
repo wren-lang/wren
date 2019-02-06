@@ -554,5 +554,6 @@ base class constructor:
       }
     }
 
+<br><hr>
 <a class="right" href="concurrency.html">Concurrency &rarr;</a>
 <a href="functions.html">&larr; Functions</a>
