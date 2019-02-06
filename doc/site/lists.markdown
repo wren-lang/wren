@@ -89,6 +89,16 @@ back. Doing so counts back from the size of the list *after* it's grown by one:
     letters.insert(-2, "e")  // Counts back from size after insert.
     System.print(letters)    //> [a, b, c, e, d]
 
+## Adding lists together
+
+Lists have the ability to be added together via the `+` operator. This is often known as concatenation.
+
+    :::wren
+    var letters = ["a", "b", "c"]
+    var other = ["d", "e", "f"]
+    var combined = letters + other
+    System.print(combined)  //> [a, b, c, d, e, f]
+
 ## Removing elements
 
 The opposite of `insert` is `removeAt`. It removes a single element from a
@@ -111,5 +121,6 @@ If you want to remove everything from the list, you can clear it:
     hirsute.clear()
     System.print(hirsute) //> []
 
+<br><hr>
 <a class="right" href="maps.html">Maps &rarr;</a>
 <a href="values.html">&larr; Values</a>

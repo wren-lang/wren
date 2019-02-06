@@ -110,3 +110,13 @@ backwards from the end of the list where `-1` is the last element.
     System.print(list) //> [a, new, c]
 
 It is a runtime error if the index is not an integer or is out of bounds.
+
+##  **+**(other) operator
+
+ Appends a list to the end of the list (concatenation). `other` must be a `List`.
+
+    :::wren
+    var letters = ["a", "b", "c"]
+    var other = ["d", "e", "f"]
+    var combined = letters + other
+    System.print(combined)  //> [a, b, c, d, e, f]
