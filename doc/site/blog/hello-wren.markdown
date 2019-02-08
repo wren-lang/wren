@@ -62,7 +62,7 @@ I hope you'll join us on the journey!
 
 - [The Wren Blog RSS](http://wren.io/blog/rss.xml)
 - Visit the [wren-lang organization](https://github.com/wren-lang) on Github.
-- Follow [@munificent](https://twitter.com/munificent) or [@___discovery](https://twitter.com/___discovery) on twitter
+- Follow [@munificentbob](https://twitter.com/munificentbob) or [@___discovery](https://twitter.com/___discovery) on twitter
 
 
 
