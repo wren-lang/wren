@@ -76,8 +76,7 @@ clean:
 	$(V) rm -rf lib
 
 # Run the tests against the debug build of Wren.
-test: debug
-	$(V) $(MAKE) -f util/wren.mk MODE=debug api_test
+test: api_test debug
 	$(V) ./util/test.py $(suite)
 
 benchmark: release
@@ -91,6 +90,10 @@ benchmark_baseline: release
 unit_test:
 	$(V) $(MAKE) -f util/wren.mk MODE=debug unit_test
 	$(V) ./build/debug/test/unit_wrend
+
+# Build API tests.
+api_test:
+	$(V) $(MAKE) -f util/wren.mk MODE=debug api_test
 
 # Generate the Wren site.
 docs:
@@ -113,4 +116,4 @@ gh-pages: docs
 amalgamation: src/include/wren.h src/vm/*.h src/vm/*.c
 	./util/generate_amalgamation.py > build/wren.c
 
-.PHONY: all amalgamation benchmark builtin clean debug docs gh-pages release test vm watchdocs ci ci_32 ci_64
+.PHONY: all amalgamation api_test benchmark builtin clean debug docs gh-pages release test vm watchdocs ci ci_32 ci_64

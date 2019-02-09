@@ -10,7 +10,7 @@ void resetStackAfterCallAbortRunTests(WrenVM* vm)
   WrenHandle* testClass = wrenGetSlotHandle(vm, 0);
   
   WrenHandle* abortFiber = wrenMakeCallHandle(vm, "abortFiber()");
-  WrenHandle* afterConstruct = wrenMakeCallHandle(vm, "afterAbort(_,_)");
+  WrenHandle* afterAbort = wrenMakeCallHandle(vm, "afterAbort(_,_)");
   
   wrenEnsureSlots(vm, 1);
   wrenSetSlotHandle(vm, 0, testClass);
@@ -20,9 +20,9 @@ void resetStackAfterCallAbortRunTests(WrenVM* vm)
   wrenSetSlotHandle(vm, 0, testClass);
   wrenSetSlotDouble(vm, 1, 1.0);
   wrenSetSlotDouble(vm, 2, 2.0);
-  wrenCall(vm, afterConstruct);
+  wrenCall(vm, afterAbort);
   
   wrenReleaseHandle(vm, testClass);
   wrenReleaseHandle(vm, abortFiber);
-  wrenReleaseHandle(vm, afterConstruct);
+  wrenReleaseHandle(vm, afterAbort);
 }
