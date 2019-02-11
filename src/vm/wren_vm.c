@@ -268,8 +268,8 @@ static ObjUpvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
   return createdUpvalue;
 }
 
-// Closes any open upvates that have been created for stack slots at [last] and
-// above.
+// Closes any open upvalues that have been created for stack slots at [last]
+// and above.
 static void closeUpvalues(ObjFiber* fiber, Value* last)
 {
   while (fiber->openUpvalues != NULL &&
@@ -370,8 +370,7 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
 static void callForeign(WrenVM* vm, ObjFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
-  // Save the current state so we can restore it when done.
-  Value* apiStack = vm->apiStack;
+  ASSERT(vm->apiStack == NULL, "Cannot already be in foreign call.");
   vm->apiStack = fiber->stackTop - numArgs;
 
   foreign(vm);
@@ -379,7 +378,8 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
   // Discard the stack slots for the arguments and temporaries but leave one
   // for the result.
   fiber->stackTop = vm->apiStack + 1;
-  vm->apiStack = apiStack;
+
+  vm->apiStack = NULL;
 }
 
 // Handles the current fiber having aborted because of an error.
@@ -624,13 +624,12 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
 
   // Pass the constructor arguments to the allocator as well.
-  Value* oldApiStack = vm->apiStack;
+  ASSERT(vm->apiStack == NULL, "Cannot already be in foreign call.");
   vm->apiStack = stack;
 
   method->as.foreign(vm);
 
-  vm->apiStack = oldApiStack;
-  // TODO: Check that allocateForeign was called.
+  vm->apiStack = NULL;
 }
 
 void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
@@ -1379,12 +1378,24 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   ASSERT(vm->fiber->stackTop - vm->fiber->stack >= closure->fn->arity,
          "Stack must have enough arguments for method.");
   
+  // Clear the API stack. Now that wrenCall() has control, we no longer need
+  // it. We use this being non-null to tell if re-entrant calls to foreign
+  // methods are happening, so it's important to clear it out now so that you
+  // can call foreign methods from within calls to wrenCall().
+  vm->apiStack = NULL;
+
   // Discard any extra temporary slots. We take for granted that the stub
   // function has exactly one slot for each argument.
   vm->fiber->stackTop = &vm->fiber->stack[closure->fn->maxSlots];
   
   wrenCallFunction(vm, vm->fiber, closure, 0);
-  return runInterpreter(vm, vm->fiber);
+  WrenInterpretResult result = runInterpreter(vm, vm->fiber);
+  
+  // If the call didn't abort, then set up the API stack to point to the
+  // beginning of the stack so the host can access the call's return value.
+  if (vm->fiber != NULL) vm->apiStack = vm->fiber->stack;
+  
+  return result;
 }
 
 WrenHandle* wrenMakeHandle(WrenVM* vm, Value value)

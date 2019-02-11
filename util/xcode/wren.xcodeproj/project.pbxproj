@@ -35,6 +35,7 @@
 		2986F6D71ACF93BA00BCE26C /* wren_primitive.c in Sources */ = {isa = PBXBuildFile; fileRef = 2986F6D51ACF93BA00BCE26C /* wren_primitive.c */; };
 		29932D511C20D8C900099DEE /* benchmark.c in Sources */ = {isa = PBXBuildFile; fileRef = 29932D4F1C20D8C900099DEE /* benchmark.c */; };
 		29932D541C210F8D00099DEE /* lists.c in Sources */ = {isa = PBXBuildFile; fileRef = 29932D521C210F8D00099DEE /* lists.c */; };
+		2993ED1D2111FD6D000F0D49 /* call_calls_foreign.c in Sources */ = {isa = PBXBuildFile; fileRef = 2993ED1C2111FD6D000F0D49 /* call_calls_foreign.c */; };
 		29A427341BDBE435001E6E22 /* wren_opt_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */; };
 		29A427351BDBE435001E6E22 /* wren_opt_meta.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */; };
 		29A427361BDBE435001E6E22 /* wren_opt_meta.wren.inc in Sources */ = {isa = PBXBuildFile; fileRef = 29A427301BDBE435001E6E22 /* wren_opt_meta.wren.inc */; };
@@ -152,6 +153,8 @@
 		29932D501C20D8C900099DEE /* benchmark.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = benchmark.h; path = ../../test/api/benchmark.h; sourceTree = "<group>"; };
 		29932D521C210F8D00099DEE /* lists.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lists.c; path = ../../test/api/lists.c; sourceTree = "<group>"; };
 		29932D531C210F8D00099DEE /* lists.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lists.h; path = ../../test/api/lists.h; sourceTree = "<group>"; };
+		2993ED1B2111FD6D000F0D49 /* call_calls_foreign.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = call_calls_foreign.h; path = ../../test/api/call_calls_foreign.h; sourceTree = "<group>"; };
+		2993ED1C2111FD6D000F0D49 /* call_calls_foreign.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = call_calls_foreign.c; path = ../../test/api/call_calls_foreign.c; sourceTree = "<group>"; };
 		29A4272E1BDBE435001E6E22 /* wren_opt_meta.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wren_opt_meta.c; path = ../../src/optional/wren_opt_meta.c; sourceTree = "<group>"; };
 		29A4272F1BDBE435001E6E22 /* wren_opt_meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wren_opt_meta.h; path = ../../src/optional/wren_opt_meta.h; sourceTree = "<group>"; };
 		29A427301BDBE435001E6E22 /* wren_opt_meta.wren.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; name = wren_opt_meta.wren.inc; path = ../../src/optional/wren_opt_meta.wren.inc; sourceTree = "<group>"; };
@@ -340,9 +343,10 @@
 			children = (
 				29932D4F1C20D8C900099DEE /* benchmark.c */,
 				29932D501C20D8C900099DEE /* benchmark.h */,
+				2993ED1C2111FD6D000F0D49 /* call_calls_foreign.c */,
+				2993ED1B2111FD6D000F0D49 /* call_calls_foreign.h */,
 				29F3D08021039A630082DD88 /* call_wren_call_root.c */,
 				29F3D07F21039A630082DD88 /* call_wren_call_root.h */,
-				29D009A61B7E3993000CE58C /* main.c */,
 				293D46941BB43F9900200083 /* call.c */,
 				293D46951BB43F9900200083 /* call.h */,
 				29AD965F1D0A57F800C4DFE7 /* error.c */,
@@ -355,6 +359,7 @@
 				29D009AD1B7E39A8000CE58C /* handle.h */,
 				29932D521C210F8D00099DEE /* lists.c */,
 				29932D531C210F8D00099DEE /* lists.h */,
+				29D009A61B7E3993000CE58C /* main.c */,
 				29C946961C88F14F00B4A4F3 /* new_vm.c */,
 				29C946971C88F14F00B4A4F3 /* new_vm.h */,
 				29D880641DC8ECF600025364 /* reset_stack_after_call_abort.c */,
@@ -527,6 +532,7 @@
 				29D24DB21E82C0A2006618CC /* user_data.c in Sources */,
 				29DC14A61BBA3017008A8274 /* wren_primitive.c in Sources */,
 				29DC14A71BBA301A008A8274 /* wren_utils.c in Sources */,
+				2993ED1D2111FD6D000F0D49 /* call_calls_foreign.c in Sources */,
 				29DC14A81BBA301D008A8274 /* wren_value.c in Sources */,
 				29A4273B1BDBE435001E6E22 /* wren_opt_random.wren.inc in Sources */,
 				29D025E61C19CD1000A3BB28 /* os.wren.inc in Sources */,

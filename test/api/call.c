@@ -66,6 +66,7 @@ void callRunTests(WrenVM* vm)
   wrenEnsureSlots(vm, 1);
   wrenSetSlotHandle(vm, 0, callClass);
   wrenCall(vm, getValue);
+  printf("slots after call: %d\n", wrenGetSlotCount(vm));
   WrenHandle* value = wrenGetSlotHandle(vm, 0);
   
   // Different argument types.
