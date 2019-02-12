@@ -240,7 +240,7 @@ gets closed if the user forgets to and the GC cleans up the object. </p>
   <span class="n">config</span><span class="p">.</span><span class="n">bindForeignMethodFn</span> <span class="o">=</span> <span class="n">bindForeignMethod</span><span class="p">;</span>
 
   <span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span> <span class="o">=</span> <span class="n">wrenNewVM</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span> 
-  <span class="n">wrenInterpret</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;some code...&quot;</span><span class="p">);</span>
+  <span class="n">wrenInterpret</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;my_module&quot;</span><span class="p">,</span> <span class="s">&quot;some code...&quot;</span><span class="p">);</span>
 
   <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> 
 <span class="p">}</span>
