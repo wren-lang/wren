@@ -207,7 +207,7 @@ Over in the host, first we'll set up the VM:
       config.bindForeignMethodFn = bindForeignMethod;
 
       WrenVM* vm = wrenNewVM(&config);
-      wrenInterpret(vm, "some code...");
+      wrenInterpret(vm, "my_module", "some code...");
 
       return 0;
     }
