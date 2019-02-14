@@ -519,6 +519,8 @@ static bool findEntry(MapEntry* entries, uint32_t capacity, Value key,
 static bool insertEntry(MapEntry* entries, uint32_t capacity,
                         Value key, Value value)
 {
+  ASSERT(entries != NULL, "Should ensure capacity before inserting.");
+  
   MapEntry* entry;
   if (findEntry(entries, capacity, key, &entry))
   {
@@ -528,7 +530,6 @@ static bool insertEntry(MapEntry* entries, uint32_t capacity,
   }
   else
   {
-    ASSERT(entry != NULL, "Should ensure capacity before inserting.");
     entry->key = key;
     entry->value = value;
     return true;
