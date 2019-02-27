@@ -738,6 +738,9 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...);
 // Creates a new string containing the UTF-8 encoding of [value].
 Value wrenStringFromCodePoint(WrenVM* vm, int value);
 
+// Creates a new string from the integer representation of a byte
+Value wrenStringFromByte(WrenVM* vm, uint8_t value);
+
 // Creates a new string containing the code point in [string] starting at byte
 // [index]. If [index] points into the middle of a UTF-8 sequence, returns an
 // empty string.

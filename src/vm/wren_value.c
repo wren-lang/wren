@@ -802,6 +802,15 @@ Value wrenStringFromCodePoint(WrenVM* vm, int value)
   return OBJ_VAL(string);
 }
 
+Value wrenStringFromByte(WrenVM *vm, uint8_t value)
+{
+  int length = 1;
+  ObjString* string = allocateString(vm, length);
+  string->value[0] = value;
+  hashString(string);
+  return OBJ_VAL(string);
+}
+
 Value wrenStringFormat(WrenVM* vm, const char* format, ...)
 {
   va_list argList;

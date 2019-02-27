@@ -920,6 +920,21 @@ DEF_PRIMITIVE(string_fromCodePoint)
   RETURN_VAL(wrenStringFromCodePoint(vm, codePoint));
 }
 
+DEF_PRIMITIVE(string_fromByte)
+{
+  if (!validateInt(vm, args[1], "Byte")) return false;
+  int byte = (int) AS_NUM(args[1]);
+  if (byte < 0)
+  {
+    RETURN_ERROR("Byte cannot be negative.");
+  }
+  else if (byte > 0xff)
+  {
+    RETURN_ERROR("Byte cannot be greater than 0xff.");
+  }
+  RETURN_VAL(wrenStringFromByte(vm, (uint8_t) byte));
+}
+
 DEF_PRIMITIVE(string_byteAt)
 {
   ObjString* string = AS_STRING(args[0]);
@@ -1305,6 +1320,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->stringClass = AS_CLASS(wrenFindVariable(vm, coreModule, "String"));
   PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
+  PRIMITIVE(vm->stringClass->obj.classObj, "fromByte(_)", string_fromByte);
   PRIMITIVE(vm->stringClass, "+(_)", string_plus);
   PRIMITIVE(vm->stringClass, "[_]", string_subscript);
   PRIMITIVE(vm->stringClass, "byteAt_(_)", string_byteAt);
