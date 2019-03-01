@@ -57,6 +57,15 @@ Creates a new string containing the UTF-8 encoding of `codePoint`.
 It is a runtime error if `codePoint` is not an integer between `0` and
 `0x10ffff`, inclusive.
 
+### String.**fromByte**(byte)
+
+Creates a new string containing the single byte `byte`.
+
+    :::wren
+    String.fromByte(255) //> �
+
+It is a runtime error if `byte` is not an integer between `0` and `0xff`, inclusive.
+
 ## Methods
 
 ### **bytes**
