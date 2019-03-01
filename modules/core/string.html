@@ -133,6 +133,13 @@ ignores any UTF-8 encoding and works directly at the byte level. </p>
 
 <p>It is a runtime error if <code>codePoint</code> is not an integer between <code>0</code> and 
 <code>0x10ffff</code>, inclusive. </p>
+<h3>String.<strong>fromByte</strong>(byte) <a href="#string.frombyte(byte)" name="string.frombyte(byte)" class="header-anchor">#</a></h3>
+<p>Creates a new string containing the single byte <code>byte</code>. </p>
+<div class="codehilite"><pre><span class="vg">String</span><span class="o">.</span><span class="n">fromByte</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span> <span class="output">�</span>
+</pre></div>
+
+
+<p>It is a runtime error if <code>byte</code> is not an integer between <code>0</code> and <code>0xff</code>, inclusive. </p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>bytes</strong> <a href="#bytes" name="bytes" class="header-anchor">#</a></h3>
 <p>Gets a <a href="sequence.html"><code>Sequence</code></a> that can be used to access the raw bytes of 
