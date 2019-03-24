@@ -31,7 +31,7 @@ into the repo's top level directory. Binaries for other configurations are built
 to `bin/`. Static and shared libraries for embedding Wren get built in `lib/`.
 
 For Mac users, there is also an XCode project under `util/xcode`. For
-Windows brethren, `util/msvc2013` contains a Visual Studio solution. Note
+Windows brethren, `util/vs2017` contains a Visual Studio solution. Note
 that these may not have the exact same build settings as the makefile. The
 makefile is the "official" way to compile Wren.
 
