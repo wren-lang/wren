@@ -48,7 +48,7 @@ involved][contribute]!
 
 [syntax]: http://wren.io/syntax.html
 [src]: https://github.com/wren-lang/wren/tree/master/src
-[nan]: https://github.com/wren-lang/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
+[nan]: https://github.com/wren-lang/wren/blob/93dac9132773c5bc0bbe92df5ccbff14da9d25a6/src/vm/wren_value.h#L486-L541
 [perf]: http://wren.io/performance.html
 [classes]: http://wren.io/classes.html
 [fibers]: http://wren.io/concurrency.html
