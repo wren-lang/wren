@@ -11,7 +11,7 @@ import sys
 
 from util import clean_dir, remove_dir, replace_in_file, run
 
-LIB_UV_VERSION = "v1.10.0"
+LIB_UV_VERSION = "v1.13.0"
 LIB_UV_DIR = "deps/libuv"
 
 
