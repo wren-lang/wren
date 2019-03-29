@@ -50,7 +50,6 @@ def main(args):
   # We don't need all of libuv and gyp's various support files.
   print("Deleting unneeded files...")
   remove_dir("deps/libuv/build/gyp/buildbot")
-  remove_dir("deps/libuv/build/gyp/infra")
   remove_dir("deps/libuv/build/gyp/samples")
   remove_dir("deps/libuv/build/gyp/test")
   remove_dir("deps/libuv/build/gyp/tools")
