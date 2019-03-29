@@ -5,7 +5,7 @@
 
 // Windows doesn't define all of the Unix permission and mode flags by default,
 // so map them ourselves.
-#if defined(WIN32) || defined(WIN64)
+#if defined(_WIN32) || defined(_WIN64)
   #include <sys\stat.h>
 
   // Map to Windows permission flags.
