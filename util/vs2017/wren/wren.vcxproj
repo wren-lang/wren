@@ -191,6 +191,8 @@ python ../../build_libuv.py -64</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\cli\modules.h" />
+    <ClInclude Include="..\..\..\src\cli\path.h" />
+    <ClInclude Include="..\..\..\src\cli\stat.h" />
     <ClInclude Include="..\..\..\src\cli\vm.h" />
     <ClInclude Include="..\..\..\src\include\wren.h" />
     <ClInclude Include="..\..\..\src\module\io.h" />
@@ -212,6 +214,7 @@ python ../../build_libuv.py -64</Command>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\cli\main.c" />
     <ClCompile Include="..\..\..\src\cli\modules.c" />
+    <ClCompile Include="..\..\..\src\cli\path.c" />
     <ClCompile Include="..\..\..\src\cli\vm.c" />
     <ClCompile Include="..\..\..\src\module\io.c" />
     <ClCompile Include="..\..\..\src\module\os.c" />

@@ -72,6 +72,12 @@
     <ClInclude Include="..\..\..\src\vm\wren_vm.h">
       <Filter>vm</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\cli\path.h">
+      <Filter>cli</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\cli\stat.h">
+      <Filter>cli</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\cli\main.c">
@@ -124,6 +130,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\vm\wren_vm.c">
       <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cli\path.c">
+      <Filter>cli</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
