@@ -52,7 +52,7 @@ def build_libuv_windows(arch):
     args.append("x86")
   elif arch == "-64":
     args.append("x64")
-  run(args, cwd=LIB_UV_DIR)
+  run(args, cwd= "../../../" + LIB_UV_DIR)
 
 
 def build_libuv(arch, out):
@@ -80,6 +80,7 @@ def main(args):
   arch = "" if len(args) < 2 else args[1]
   out = os.path.join("build", "libuv" + arch + ".a")
 
+  print("Building libuv...")
   build_libuv(arch, out)
 
 
