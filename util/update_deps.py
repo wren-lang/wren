@@ -56,7 +56,6 @@ def main(args):
   remove_dir("deps/libuv/docs")
   remove_dir("deps/libuv/img")
   remove_dir("deps/libuv/samples")
-  remove_dir("deps/libuv/test")
 
   # We are going to commit libuv and GYP in the main Wren repo, so we don't
   # want them to be their own repos.
