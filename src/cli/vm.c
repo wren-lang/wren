@@ -67,9 +67,13 @@ static bool isDirectory(Path* path)
 {
   uv_fs_t request;
   uv_fs_stat(loop, &request, path->chars, NULL);
-  // TODO: Check request.result value?
-  
-  bool result = request.result == 0 && S_ISDIR(request.statbuf.st_mode);
+
+  bool result = 0;
+  if (request.result < 0 && !path->suppress_error) {
+      fprintf(stderr, "Unable to open directory \"%s\". Error: \"%s\"\n", path->chars, uv_strerror((int)request.result));
+  } else {
+      result = S_ISDIR(request.statbuf.st_mode);
+  }
   
   uv_fs_req_cleanup(&request);
   return result;
@@ -102,6 +106,7 @@ static void findModulesDirectory()
   for (;;)
   {
     Path* modulesDirectory = pathNew(searchDirectory->chars);
+    modulesDirectory->suppress_error = true;
     pathJoin(modulesDirectory, "wren_modules");
     
     if (isDirectory(modulesDirectory))

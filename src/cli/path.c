@@ -119,6 +119,7 @@ Path* pathNew(const char* string)
   path->chars[0] = '\0';
   path->length = 0;
   path->capacity = 0;
+  path->suppress_error = false;
 
   pathAppendString(path, string);
 

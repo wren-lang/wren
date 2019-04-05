@@ -14,6 +14,9 @@ typedef struct
 
   // Size of the allocated [chars] buffer.
   size_t capacity;
+
+  // Suppress error when checking patch
+  bool suppress_error;
 } Path;
 
 // Categorizes what form a path is.
