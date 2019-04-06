@@ -11,6 +11,7 @@
 #include "error.h"
 #include "get_variable.h"
 #include "foreign_class.h"
+#include "foreign_constructor.h"
 #include "handle.h"
 #include "lists.h"
 #include "new_vm.h"
@@ -55,6 +56,9 @@ static WrenForeignMethodFn bindForeignMethod(
   method = foreignClassBindMethod(fullName);
   if (method != NULL) return method;
   
+  method = foreignConstructorBindMethod(fullName);
+  if (method != NULL) return method;
+  
   method = handleBindMethod(fullName);
   if (method != NULL) return method;
 
@@ -86,6 +90,9 @@ static WrenForeignClassMethods bindForeignClass(
   if (strncmp(module, "./test/", 7) != 0) return methods;
 
   foreignClassBindClass(className, &methods);
+  if (methods.allocate != NULL) return methods;
+  
+  foreignConstructorBindClass(className, &methods);
   if (methods.allocate != NULL) return methods;
   
   resetStackAfterForeignConstructBindClass(className, &methods);
