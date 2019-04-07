@@ -12,4 +12,6 @@ static const char* osModuleSource =
 "  static arguments { allArguments[2..-1] }\n"
 "\n"
 "  foreign static allArguments\n"
+"  foreign static getPid\n"
+"  foreign static getPPid\n"
 "}\n";
