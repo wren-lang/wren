@@ -68,7 +68,7 @@ static bool isDirectory(Path* path)
   uv_fs_t request;
   uv_fs_stat(loop, &request, path->chars, NULL);
 
-  bool result = 0;
+  bool result = false;
   if (request.result < 0 && !path->suppress_error) {
       fprintf(stderr, "Unable to open directory \"%s\". Error: \"%s\"\n", path->chars, uv_strerror((int)request.result));
   } else {
