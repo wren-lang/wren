@@ -56,13 +56,15 @@ def main(args):
   try_remove_dir("deps/libuv/build/gyp/tools")
   try_remove_dir("deps/libuv/docs")
   try_remove_dir("deps/libuv/img")
-  try_remove_dir("deps/libuv/samples")
   try_remove_dir("deps/libuv/test")
+  try_remove_dir("deps/libuv/samples")
 
   # We are going to commit libuv and GYP in the main Wren repo, so we don't
   # want them to be their own repos.
   remove_dir("deps/libuv/.git")
   remove_dir("deps/libuv/build/gyp/.git")
+
+  replace_in_file("deps/libuv/gyp_uv.py", '-I common.gypi test/test.gyp', '-I common.gypi')
 
   # Libuv's .gitignore ignores GYP, but we want to commit it.
   if os.path.isfile("deps/libuv/.gitignore"):
