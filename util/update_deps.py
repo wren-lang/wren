@@ -7,11 +7,11 @@
 
 from __future__ import print_function
 
-import sys
+import sys, os
 
-from util import clean_dir, remove_dir, replace_in_file, run
+from util import clean_dir, remove_dir, try_remove_dir, replace_in_file, run
 
-LIB_UV_VERSION = "v1.10.0"
+LIB_UV_VERSION = "v1.27.0"
 LIB_UV_DIR = "deps/libuv"
 
 
@@ -49,15 +49,15 @@ def main(args):
 
   # We don't need all of libuv and gyp's various support files.
   print("Deleting unneeded files...")
-  remove_dir("deps/libuv/build/gyp/buildbot")
-  remove_dir("deps/libuv/build/gyp/infra")
-  remove_dir("deps/libuv/build/gyp/samples")
-  remove_dir("deps/libuv/build/gyp/test")
-  remove_dir("deps/libuv/build/gyp/tools")
-  remove_dir("deps/libuv/docs")
-  remove_dir("deps/libuv/img")
-  remove_dir("deps/libuv/samples")
-  remove_dir("deps/libuv/test")
+  try_remove_dir("deps/libuv/build/gyp/buildbot")
+  try_remove_dir("deps/libuv/build/gyp/infra")
+  try_remove_dir("deps/libuv/build/gyp/samples")
+  try_remove_dir("deps/libuv/build/gyp/test")
+  try_remove_dir("deps/libuv/build/gyp/tools")
+  try_remove_dir("deps/libuv/docs")
+  try_remove_dir("deps/libuv/img")
+  try_remove_dir("deps/libuv/samples")
+  try_remove_dir("deps/libuv/test")
 
   # We are going to commit libuv and GYP in the main Wren repo, so we don't
   # want them to be their own repos.
@@ -65,9 +65,9 @@ def main(args):
   remove_dir("deps/libuv/build/gyp/.git")
 
   # Libuv's .gitignore ignores GYP, but we want to commit it.
-  replace_in_file("deps/libuv/.gitignore",
-      "/build/gyp",
-      "# /build/gyp (We do want to commit GYP in Wren's repo)")
+  if os.path.isfile("deps/libuv/.gitignore"):
+    with open("deps/libuv/.gitignore", "a") as libuv_ignore:
+      libuv_ignore.write("!build/gyp")
 
 
 main(sys.argv)

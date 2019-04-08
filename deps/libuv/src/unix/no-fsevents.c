@@ -19,9 +19,24 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UV_MVS_H
-#define UV_MVS_H
+#include "uv.h"
+#include "internal.h"
 
-#define UV_PLATFORM_SEM_T int
+#include <errno.h>
 
-#endif /* UV_MVS_H */
+int uv_fs_event_init(uv_loop_t* loop, uv_fs_event_t* handle) {
+  return UV_ENOSYS;
+}
+
+int uv_fs_event_start(uv_fs_event_t* handle, uv_fs_event_cb cb,
+                      const char* filename, unsigned int flags) {
+  return UV_ENOSYS;
+}
+
+int uv_fs_event_stop(uv_fs_event_t* handle) {
+  return UV_ENOSYS;
+}
+
+void uv__fs_event_close(uv_fs_event_t* handle) {
+  UNREACHABLE();
+}

@@ -1,4 +1,4 @@
-/* Copyright Joyent, Inc. and other Node contributors. All rights reserved.
+/* Copyright libuv project contributors. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -19,25 +19,15 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UV_VERSION_H
-#define UV_VERSION_H
+#ifndef UV_MVS_H
+#define UV_MVS_H
 
- /*
- * Versions with the same major number are ABI stable. API is allowed to
- * evolve between minor releases, but only in a backwards compatible way.
- * Make sure you update the -soname directives in configure.ac
- * and uv.gyp whenever you bump UV_VERSION_MAJOR or UV_VERSION_MINOR (but
- * not UV_VERSION_PATCH.)
- */
+#define UV_PLATFORM_SEM_T long
 
-#define UV_VERSION_MAJOR 1
-#define UV_VERSION_MINOR 10
-#define UV_VERSION_PATCH 0
-#define UV_VERSION_IS_RELEASE 1
-#define UV_VERSION_SUFFIX ""
+#define UV_PLATFORM_LOOP_FIELDS                                               \
+  void* ep;                                                                   \
 
-#define UV_VERSION_HEX  ((UV_VERSION_MAJOR << 16) | \
-                         (UV_VERSION_MINOR <<  8) | \
-                         (UV_VERSION_PATCH))
+#define UV_PLATFORM_FS_EVENT_FIELDS                                           \
+  char rfis_rftok[8];                                                         \
 
-#endif /* UV_VERSION_H */
+#endif /* UV_MVS_H */

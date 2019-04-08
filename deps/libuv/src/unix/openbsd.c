@@ -28,23 +28,12 @@
 #include <sys/time.h>
 #include <sys/sysctl.h>
 
-#include <ifaddrs.h>
-#include <net/if.h>
-#include <net/if_dl.h>
-
 #include <errno.h>
 #include <fcntl.h>
-#include <kvm.h>
 #include <paths.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#undef NANOSEC
-#define NANOSEC ((uint64_t) 1e9)
-
-
-static char *process_title;
 
 
 int uv__platform_loop_init(uv_loop_t* loop) {
@@ -53,13 +42,6 @@ int uv__platform_loop_init(uv_loop_t* loop) {
 
 
 void uv__platform_loop_delete(uv_loop_t* loop) {
-}
-
-
-uint64_t uv__hrtime(uv_clocktype_t type) {
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return (((uint64_t) ts.tv_sec) * NANOSEC + ts.tv_nsec);
 }
 
 
@@ -86,11 +68,11 @@ int uv_exepath(char* buffer, size_t* size) {
   int err;
 
   if (buffer == NULL || size == NULL || *size == 0)
-    return -EINVAL;
+    return UV_EINVAL;
 
   mypid = getpid();
   for (;;) {
-    err = -ENOMEM;
+    err = UV_ENOMEM;
     argsbuf_tmp = uv__realloc(argsbuf, argsbuf_size);
     if (argsbuf_tmp == NULL)
       goto out;
@@ -103,14 +85,14 @@ int uv_exepath(char* buffer, size_t* size) {
       break;
     }
     if (errno != ENOMEM) {
-      err = -errno;
+      err = UV__ERR(errno);
       goto out;
     }
     argsbuf_size *= 2U;
   }
 
   if (argsbuf[0] == NULL) {
-    err = -EINVAL;  /* FIXME(bnoordhuis) More appropriate error. */
+    err = UV_EINVAL;  /* FIXME(bnoordhuis) More appropriate error. */
     goto out;
   }
 
@@ -136,7 +118,7 @@ uint64_t uv_get_free_memory(void) {
   int which[] = {CTL_VM, VM_UVMEXP};
 
   if (sysctl(which, 2, &info, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
   return (uint64_t) info.free * sysconf(_SC_PAGESIZE);
 }
@@ -148,46 +130,9 @@ uint64_t uv_get_total_memory(void) {
   size_t size = sizeof(info);
 
   if (sysctl(which, 2, &info, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
   return (uint64_t) info;
-}
-
-
-char** uv_setup_args(int argc, char** argv) {
-  process_title = argc ? uv__strdup(argv[0]) : NULL;
-  return argv;
-}
-
-
-int uv_set_process_title(const char* title) {
-  uv__free(process_title);
-  process_title = uv__strdup(title);
-  setproctitle(title);
-  return 0;
-}
-
-
-int uv_get_process_title(char* buffer, size_t size) {
-  size_t len;
-
-  if (buffer == NULL || size == 0)
-    return -EINVAL;
-
-  if (process_title) {
-    len = strlen(process_title) + 1;
-
-    if (size < len)
-      return -ENOBUFS;
-
-    memcpy(buffer, process_title, len);
-  } else {
-    len = 0;
-  }
-
-  buffer[len] = '\0';
-
-  return 0;
 }
 
 
@@ -205,7 +150,7 @@ int uv_resident_set_memory(size_t* rss) {
   mib[5] = 1;
 
   if (sysctl(mib, 6, &kinfo, &size, NULL, 0) < 0)
-    return -errno;
+    return UV__ERR(errno);
 
   *rss = kinfo.p_vm_rssize * page_size;
   return 0;
@@ -219,7 +164,7 @@ int uv_uptime(double* uptime) {
   static int which[] = {CTL_KERN, KERN_BOOTTIME};
 
   if (sysctl(which, 2, &info, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
   now = time(NULL);
 
@@ -241,16 +186,16 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
 
   size = sizeof(model);
   if (sysctl(which, 2, &model, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
   which[1] = HW_NCPU;
   size = sizeof(numcpus);
   if (sysctl(which, 2, &numcpus, &size, NULL, 0))
-    return -errno;
+    return UV__ERR(errno);
 
   *cpu_infos = uv__malloc(numcpus * sizeof(**cpu_infos));
   if (!(*cpu_infos))
-    return -ENOMEM;
+    return UV_ENOMEM;
 
   *count = numcpus;
 
@@ -258,7 +203,7 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
   size = sizeof(cpuspeed);
   if (sysctl(which, 2, &cpuspeed, &size, NULL, 0)) {
     uv__free(*cpu_infos);
-    return -errno;
+    return UV__ERR(errno);
   }
 
   size = sizeof(info);
@@ -269,7 +214,7 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
     size = sizeof(info);
     if (sysctl(which, 3, &info, &size, NULL, 0)) {
       uv__free(*cpu_infos);
-      return -errno;
+      return UV__ERR(errno);
     }
 
     cpu_info = &(*cpu_infos)[i];
@@ -296,101 +241,4 @@ void uv_free_cpu_info(uv_cpu_info_t* cpu_infos, int count) {
   }
 
   uv__free(cpu_infos);
-}
-
-
-int uv_interface_addresses(uv_interface_address_t** addresses,
-  int* count) {
-  struct ifaddrs *addrs, *ent;
-  uv_interface_address_t* address;
-  int i;
-  struct sockaddr_dl *sa_addr;
-
-  if (getifaddrs(&addrs) != 0)
-    return -errno;
-
-   *count = 0;
-
-  /* Count the number of interfaces */
-  for (ent = addrs; ent != NULL; ent = ent->ifa_next) {
-    if (!((ent->ifa_flags & IFF_UP) && (ent->ifa_flags & IFF_RUNNING)) ||
-        (ent->ifa_addr == NULL) ||
-        (ent->ifa_addr->sa_family != PF_INET)) {
-      continue;
-    }
-    (*count)++;
-  }
-
-  *addresses = uv__malloc(*count * sizeof(**addresses));
-
-  if (!(*addresses)) {
-    freeifaddrs(addrs);
-    return -ENOMEM;
-  }
-
-  address = *addresses;
-
-  for (ent = addrs; ent != NULL; ent = ent->ifa_next) {
-    if (!((ent->ifa_flags & IFF_UP) && (ent->ifa_flags & IFF_RUNNING)))
-      continue;
-
-    if (ent->ifa_addr == NULL)
-      continue;
-
-    if (ent->ifa_addr->sa_family != PF_INET)
-      continue;
-
-    address->name = uv__strdup(ent->ifa_name);
-
-    if (ent->ifa_addr->sa_family == AF_INET6) {
-      address->address.address6 = *((struct sockaddr_in6*) ent->ifa_addr);
-    } else {
-      address->address.address4 = *((struct sockaddr_in*) ent->ifa_addr);
-    }
-
-    if (ent->ifa_netmask->sa_family == AF_INET6) {
-      address->netmask.netmask6 = *((struct sockaddr_in6*) ent->ifa_netmask);
-    } else {
-      address->netmask.netmask4 = *((struct sockaddr_in*) ent->ifa_netmask);
-    }
-
-    address->is_internal = !!(ent->ifa_flags & IFF_LOOPBACK);
-
-    address++;
-  }
-
-  /* Fill in physical addresses for each interface */
-  for (ent = addrs; ent != NULL; ent = ent->ifa_next) {
-    if (!((ent->ifa_flags & IFF_UP) && (ent->ifa_flags & IFF_RUNNING)) ||
-        (ent->ifa_addr == NULL) ||
-        (ent->ifa_addr->sa_family != AF_LINK)) {
-      continue;
-    }
-
-    address = *addresses;
-
-    for (i = 0; i < (*count); i++) {
-      if (strcmp(address->name, ent->ifa_name) == 0) {
-        sa_addr = (struct sockaddr_dl*)(ent->ifa_addr);
-        memcpy(address->phys_addr, LLADDR(sa_addr), sizeof(address->phys_addr));
-      }
-      address++;
-    }
-  }
-
-  freeifaddrs(addrs);
-
-  return 0;
-}
-
-
-void uv_free_interface_addresses(uv_interface_address_t* addresses,
-  int count) {
-  int i;
-
-  for (i = 0; i < count; i++) {
-    uv__free(addresses[i].name);
-  }
-
-  uv__free(addresses);
 }

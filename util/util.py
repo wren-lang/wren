@@ -47,6 +47,13 @@ def remove_dir(dir):
   else:
     shutil.rmtree(dir)
 
+def try_remove_dir(dir):
+  """ Tries to remove dir. If directory does not exists does not exists but prints exception """
+  try:
+    remove_dir(dir)
+  except Exception as e:
+    print("Unable to delete %s. Reason: %s" % (dir, str(e)))
+
 
 def replace_in_file(path, text, replace):
   """Replaces all occurrences of `text` in the file at `path` with `replace`."""

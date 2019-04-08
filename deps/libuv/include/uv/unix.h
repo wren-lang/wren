@@ -31,35 +31,42 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include <netdb.h>
+#include <netdb.h>  /* MAXHOSTNAMELEN on Solaris */
 
 #include <termios.h>
 #include <pwd.h>
 
+#if !defined(__MVS__)
 #include <semaphore.h>
+#include <sys/param.h> /* MAXHOSTNAMELEN on Linux and the BSDs */
+#endif
 #include <pthread.h>
 #include <signal.h>
 
-#include "uv-threadpool.h"
+#include "uv/threadpool.h"
 
 #if defined(__linux__)
-# include "uv-linux.h"
+# include "uv/linux.h"
+#elif defined (__MVS__)
+# include "uv/os390.h"
+#elif defined(__PASE__)
+# include "uv/posix.h"
 #elif defined(_AIX)
-# include "uv-aix.h"
+# include "uv/aix.h"
 #elif defined(__sun)
-# include "uv-sunos.h"
+# include "uv/sunos.h"
 #elif defined(__APPLE__)
-# include "uv-darwin.h"
+# include "uv/darwin.h"
 #elif defined(__DragonFly__)       || \
       defined(__FreeBSD__)         || \
       defined(__FreeBSD_kernel__)  || \
       defined(__OpenBSD__)         || \
       defined(__NetBSD__)
-# include "uv-bsd.h"
-#endif
-
-#ifndef PTHREAD_BARRIER_SERIAL_THREAD
-# include "pthread-barrier.h"
+# include "uv/bsd.h"
+#elif defined(__CYGWIN__) || defined(__MSYS__)
+# include "uv/posix.h"
+#elif defined(__GNU__)
+# include "uv/posix.h"
 #endif
 
 #ifndef NI_MAXHOST
@@ -75,7 +82,6 @@
 #endif
 
 struct uv__io_s;
-struct uv__async;
 struct uv_loop_s;
 
 typedef void (*uv__io_cb)(struct uv_loop_s* loop,
@@ -91,16 +97,6 @@ struct uv__io_s {
   unsigned int events;  /* Current event mask. */
   int fd;
   UV_IO_PRIVATE_PLATFORM_FIELDS
-};
-
-typedef void (*uv__async_cb)(struct uv_loop_s* loop,
-                             struct uv__async* w,
-                             unsigned int nevents);
-
-struct uv__async {
-  uv__async_cb cb;
-  uv__io_t io_watcher;
-  int wfd;
 };
 
 #ifndef UV_PLATFORM_SEM_T
@@ -128,6 +124,7 @@ typedef struct uv_buf_t {
 typedef int uv_file;
 typedef int uv_os_sock_t;
 typedef int uv_os_fd_t;
+typedef pid_t uv_pid_t;
 
 #define UV_ONCE_INIT PTHREAD_ONCE_INIT
 
@@ -138,8 +135,30 @@ typedef pthread_rwlock_t uv_rwlock_t;
 typedef UV_PLATFORM_SEM_T uv_sem_t;
 typedef pthread_cond_t uv_cond_t;
 typedef pthread_key_t uv_key_t;
-typedef pthread_barrier_t uv_barrier_t;
 
+/* Note: guard clauses should match uv_barrier_init's in src/unix/thread.c. */
+#if defined(_AIX) || \
+    defined(__OpenBSD__) || \
+    !defined(PTHREAD_BARRIER_SERIAL_THREAD)
+/* TODO(bnoordhuis) Merge into uv_barrier_t in v2. */
+struct _uv_barrier {
+  uv_mutex_t mutex;
+  uv_cond_t cond;
+  unsigned threshold;
+  unsigned in;
+  unsigned out;
+};
+
+typedef struct {
+  struct _uv_barrier* b;
+# if defined(PTHREAD_BARRIER_SERIAL_THREAD)
+  /* TODO(bnoordhuis) Remove padding in v2. */
+  char pad[sizeof(pthread_barrier_t) - sizeof(struct _uv_barrier*)];
+# endif
+} uv_barrier_t;
+#else
+typedef pthread_barrier_t uv_barrier_t;
+#endif
 
 /* Platform-specific definitions for uv_spawn support. */
 typedef gid_t uv_gid_t;
@@ -212,7 +231,9 @@ typedef struct {
   void* check_handles[2];                                                     \
   void* idle_handles[2];                                                      \
   void* async_handles[2];                                                     \
-  struct uv__async async_watcher;                                             \
+  void (*async_unused)(void);  /* TODO(bnoordhuis) Remove in libuv v2. */     \
+  uv__io_t async_io_watcher;                                                  \
+  int async_wfd;                                                              \
   struct {                                                                    \
     void* min;                                                                \
     unsigned int nelts;                                                       \
@@ -367,5 +388,98 @@ typedef struct {
 #define UV_FS_EVENT_PRIVATE_FIELDS                                            \
   uv_fs_event_cb cb;                                                          \
   UV_PLATFORM_FS_EVENT_FIELDS                                                 \
+
+/* fs open() flags supported on this platform: */
+#if defined(O_APPEND)
+# define UV_FS_O_APPEND       O_APPEND
+#else
+# define UV_FS_O_APPEND       0
+#endif
+#if defined(O_CREAT)
+# define UV_FS_O_CREAT        O_CREAT
+#else
+# define UV_FS_O_CREAT        0
+#endif
+#if defined(O_DIRECT)
+# define UV_FS_O_DIRECT       O_DIRECT
+#else
+# define UV_FS_O_DIRECT       0
+#endif
+#if defined(O_DIRECTORY)
+# define UV_FS_O_DIRECTORY    O_DIRECTORY
+#else
+# define UV_FS_O_DIRECTORY    0
+#endif
+#if defined(O_DSYNC)
+# define UV_FS_O_DSYNC        O_DSYNC
+#else
+# define UV_FS_O_DSYNC        0
+#endif
+#if defined(O_EXCL)
+# define UV_FS_O_EXCL         O_EXCL
+#else
+# define UV_FS_O_EXCL         0
+#endif
+#if defined(O_EXLOCK)
+# define UV_FS_O_EXLOCK       O_EXLOCK
+#else
+# define UV_FS_O_EXLOCK       0
+#endif
+#if defined(O_NOATIME)
+# define UV_FS_O_NOATIME      O_NOATIME
+#else
+# define UV_FS_O_NOATIME      0
+#endif
+#if defined(O_NOCTTY)
+# define UV_FS_O_NOCTTY       O_NOCTTY
+#else
+# define UV_FS_O_NOCTTY       0
+#endif
+#if defined(O_NOFOLLOW)
+# define UV_FS_O_NOFOLLOW     O_NOFOLLOW
+#else
+# define UV_FS_O_NOFOLLOW     0
+#endif
+#if defined(O_NONBLOCK)
+# define UV_FS_O_NONBLOCK     O_NONBLOCK
+#else
+# define UV_FS_O_NONBLOCK     0
+#endif
+#if defined(O_RDONLY)
+# define UV_FS_O_RDONLY       O_RDONLY
+#else
+# define UV_FS_O_RDONLY       0
+#endif
+#if defined(O_RDWR)
+# define UV_FS_O_RDWR         O_RDWR
+#else
+# define UV_FS_O_RDWR         0
+#endif
+#if defined(O_SYMLINK)
+# define UV_FS_O_SYMLINK      O_SYMLINK
+#else
+# define UV_FS_O_SYMLINK      0
+#endif
+#if defined(O_SYNC)
+# define UV_FS_O_SYNC         O_SYNC
+#else
+# define UV_FS_O_SYNC         0
+#endif
+#if defined(O_TRUNC)
+# define UV_FS_O_TRUNC        O_TRUNC
+#else
+# define UV_FS_O_TRUNC        0
+#endif
+#if defined(O_WRONLY)
+# define UV_FS_O_WRONLY       O_WRONLY
+#else
+# define UV_FS_O_WRONLY       0
+#endif
+
+/* fs open() flags supported on other platforms: */
+#define UV_FS_O_RANDOM        0
+#define UV_FS_O_SHORT_LIVED   0
+#define UV_FS_O_SEQUENTIAL    0
+#define UV_FS_O_TEMPORARY     0
 
 #endif /* UV_UNIX_H */
