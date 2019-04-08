@@ -18,8 +18,8 @@ LIB_UV_DIR = "deps/libuv"
 def build_libuv_mac():
   # Create the XCode project.
   run([
-    python2_binary(), LIB_UV_DIR + "/gyp_uv.py", "-f", "xcode"
-  ])
+    python2_binary(), "gyp_uv.py", "-f", "xcode"
+  ], cwd=LIB_UV_DIR)
 
   # Compile it.
   # TODO: Support debug builds too.
