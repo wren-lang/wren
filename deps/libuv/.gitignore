@@ -42,7 +42,7 @@ Makefile.in
 /android-toolchain
 
 /out/
-# /build/ (We do want to commit GYP in Wren's repo)
+/build/
 
 /test/.libs/
 /test/run-tests
@@ -67,7 +67,7 @@ Release
 ipch
 
 # sphinx generated files
-/docs# /build/ (We do want to commit GYP in Wren's repo)
+/docs/build/
 
 # Clion / IntelliJ project files
 /.idea/
@@ -77,3 +77,4 @@ ipch
 
 # make dist output
 libuv-*.tar.*
+!build/gyp
