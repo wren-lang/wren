@@ -11,15 +11,15 @@ import sys
 
 from util import ensure_dir, python2_binary, run
 
-LIB_UV_VERSION = "v1.10.0"
+LIB_UV_VERSION = "v1.27.0"
 LIB_UV_DIR = "deps/libuv"
 
 
 def build_libuv_mac():
   # Create the XCode project.
   run([
-    python2_binary(), LIB_UV_DIR + "/gyp_uv.py", "-f", "xcode"
-  ])
+    python2_binary(), "gyp_uv.py", "-f", "xcode"
+  ], cwd=LIB_UV_DIR)
 
   # Compile it.
   # TODO: Support debug builds too.
@@ -28,7 +28,7 @@ def build_libuv_mac():
     # Build a 32-bit + 64-bit universal binary:
     "ARCHS=x86_64", "ONLY_ACTIVE_ARCH=NO",
     "BUILD_DIR=out",
-    "-project", LIB_UV_DIR + "/uv.xcodeproj",
+    "-project", LIB_UV_DIR + "/out/uv.xcodeproj",
     "-configuration", "Release",
     "-target", "libuv"
   ])

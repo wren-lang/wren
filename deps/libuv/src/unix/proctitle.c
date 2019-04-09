@@ -24,14 +24,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern void uv__set_process_title_platform_init(void);
 extern void uv__set_process_title(const char* title);
 
+static uv_mutex_t process_title_mutex;
+static uv_once_t process_title_mutex_once = UV_ONCE_INIT;
 static void* args_mem;
 
 static struct {
   char* str;
   size_t len;
 } process_title;
+
+
+static void init_process_title_mutex_once(void) {
+  uv_mutex_init(&process_title_mutex);
+#ifdef __APPLE__
+  uv__set_process_title_platform_init();
+#endif
+}
 
 
 char** uv_setup_args(int argc, char** argv) {
@@ -48,9 +59,15 @@ char** uv_setup_args(int argc, char** argv) {
   for (i = 0; i < argc; i++)
     size += strlen(argv[i]) + 1;
 
+#if defined(__MVS__)
+  /* argv is not adjacent. So just use argv[0] */
+  process_title.str = argv[0];
+  process_title.len = strlen(argv[0]);
+#else
   process_title.str = argv[0];
   process_title.len = argv[argc - 1] + strlen(argv[argc - 1]) - argv[0];
   assert(process_title.len + 1 == size);  /* argv memory should be adjacent. */
+#endif
 
   /* Add space for the argv pointers. */
   size += (argc + 1) * sizeof(char*);
@@ -75,12 +92,16 @@ char** uv_setup_args(int argc, char** argv) {
 
 
 int uv_set_process_title(const char* title) {
-  if (process_title.len == 0)
-    return 0;
+  uv_once(&process_title_mutex_once, init_process_title_mutex_once);
+  uv_mutex_lock(&process_title_mutex);
 
-  /* No need to terminate, byte after is always '\0'. */
-  strncpy(process_title.str, title, process_title.len);
-  uv__set_process_title(title);
+  if (process_title.len != 0) {
+    /* No need to terminate, byte after is always '\0'. */
+    strncpy(process_title.str, title, process_title.len);
+    uv__set_process_title(title);
+  }
+
+  uv_mutex_unlock(&process_title_mutex);
 
   return 0;
 }
@@ -88,12 +109,22 @@ int uv_set_process_title(const char* title) {
 
 int uv_get_process_title(char* buffer, size_t size) {
   if (buffer == NULL || size == 0)
-    return -EINVAL;
-  else if (size <= process_title.len)
-    return -ENOBUFS;
+    return UV_EINVAL;
 
-  memcpy(buffer, process_title.str, process_title.len + 1);
+  uv_once(&process_title_mutex_once, init_process_title_mutex_once);
+  uv_mutex_lock(&process_title_mutex);
+
+  if (size <= process_title.len) {
+    uv_mutex_unlock(&process_title_mutex);
+    return UV_ENOBUFS;
+  }
+
+  if (process_title.len != 0)
+    memcpy(buffer, process_title.str, process_title.len + 1);
+
   buffer[process_title.len] = '\0';
+
+  uv_mutex_unlock(&process_title_mutex);
 
   return 0;
 }
