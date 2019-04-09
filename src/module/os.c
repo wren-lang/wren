@@ -1,6 +1,8 @@
 #include "os.h"
 #include "wren.h"
 
+#include "uv.h"
+
 #if __APPLE__
   #include "TargetConditionals.h"
 #endif
@@ -14,11 +16,6 @@
 #elif defined(_POSIX_VERSION)
   #define WREN_ON_POSIX 1
 #endif
-
-#ifdef WREN_ON_POSIX
-  #include <unistd.h>
-#endif
-
 
 int numArgs;
 const char** args;
@@ -67,21 +64,13 @@ void platformIsPosix(WrenVM* vm)
 void processGetPid(WrenVM* vm)
 {
   wrenEnsureSlots(vm, 1);
-#ifdef WREN_ON_POSIX
-  wrenSetSlotDouble(vm, 0, (int)getpid());
-#else
-  wrenSetSlotDouble(vm, 0, -1);
-#endif
+  wrenSetSlotDouble(vm, 0, (int)uv_os_getpid());
 }
 
 void processGetPPid(WrenVM* vm)
 {
   wrenEnsureSlots(vm, 1);
-#ifdef WREN_ON_POSIX
-  wrenSetSlotDouble(vm, 0, (int)getppid());
-#else
-  wrenSetSlotDouble(vm, 0, -1);
-#endif
+  wrenSetSlotDouble(vm, 0, (int)uv_os_getppid());
 }
 
 void processAllArguments(WrenVM* vm)

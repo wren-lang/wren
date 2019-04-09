@@ -42,3 +42,6 @@ ipch/
 
 # macOS XCode build cache
 deps/libuv/build/XCBuildData/
+
+#CLion files
+.idea
