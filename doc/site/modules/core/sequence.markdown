@@ -134,6 +134,17 @@ The returned sequence is *lazy*. The first `count` elements are only skipped
 once you start to iterate the returned sequence. Changes to the original
 sequence will be reflected in the filtered sequence.
 
+### **sum**
+
+Returns the sum of the sequence elements.
+
+    :::wren
+    System.print([1, 3.14].sum)  //> 4.14
+    System.print((1..3).sum)  //> 6
+    System.print([].sum)  //> 0
+
+It is a runtime error to call this on a sequence containing non-numeric values.
+
 ### **take**(count)
 
 Creates a new sequence that iterates only the first `count` elements of the
