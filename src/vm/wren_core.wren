@@ -64,6 +64,20 @@ class Sequence {
     return SkipSequence.new(this, count)
   }
 
+  sum {
+    if (any { |element| !(element is Num) }) {
+      Fiber.abort("Can't sum non-numeric values")
+    }
+
+    var result = 0
+
+    for (element in this) {
+      result = result + element
+    }
+
+    return result
+  }
+
   take(count) {
     if (!(count is Num) || !count.isInteger || count < 0) {
       Fiber.abort("Count must be a non-negative integer.")
