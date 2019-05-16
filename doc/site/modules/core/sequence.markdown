@@ -138,12 +138,20 @@ sequence will be reflected in the filtered sequence.
 
 Returns the sum of the sequence elements.
 
+Behaves as an algebraic sum for numeric sequences:
+
     :::wren
     System.print([1, 3.14].sum)  //> 4.14
     System.print((1..3).sum)  //> 6
-    System.print([].sum)  //> 0
 
-It is a runtime error to call this on a sequence containing non-numeric values.
+For string sequences it acts like [join][]:
+
+[join]: #join()
+
+    :::wren
+    System.print(["Hello", ", ", "world!"].sum)  //> "Hello, world!"
+
+It is a runtime error to call this on an empty sequence.
 
 ### **take**(count)
 
