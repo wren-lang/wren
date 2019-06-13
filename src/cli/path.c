@@ -299,6 +299,8 @@ void pathNormalize(Path* path)
   path->capacity = result->capacity;
   path->chars = result->chars;
   path->length = result->length;
+  
+  free(result);
 }
 
 char* pathToString(Path* path)
