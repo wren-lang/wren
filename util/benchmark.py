@@ -86,7 +86,7 @@ BENCHMARK("for", r"""499999500000""")
 BENCHMARK("method_call", r"""true
 false""")
 
-BENCHMARK("map_numeric", r"""500000500000""")
+BENCHMARK("map_numeric", r"""2000001000000""")
 
 BENCHMARK("map_string", r"""12799920000""")
 
