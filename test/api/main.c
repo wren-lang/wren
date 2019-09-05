@@ -6,6 +6,7 @@
 
 #include "benchmark.h"
 #include "call.h"
+#include "call_calls_foreign.h"
 #include "call_wren_call_root.h"
 #include "error.h"
 #include "get_variable.h"
@@ -40,6 +41,9 @@ static WrenForeignMethodFn bindForeignMethod(
   WrenForeignMethodFn method = NULL;
   
   method = benchmarkBindMethod(fullName);
+  if (method != NULL) return method;
+  
+  method = callCallsForeignBindMethod(fullName);
   if (method != NULL) return method;
   
   method = errorBindMethod(fullName);
@@ -101,6 +105,10 @@ static void afterLoad(WrenVM* vm)
   if (strstr(testName, "/call.wren") != NULL)
   {
     callRunTests(vm);
+  }
+  else if (strstr(testName, "/call_calls_foreign.wren") != NULL)
+  {
+    callCallsForeignRunTests(vm);
   }
   else if (strstr(testName, "/call_wren_call_root.wren") != NULL)
   {

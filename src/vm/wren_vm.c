@@ -268,8 +268,8 @@ static ObjUpvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
   return createdUpvalue;
 }
 
-// Closes any open upvates that have been created for stack slots at [last] and
-// above.
+// Closes any open upvalues that have been created for stack slots at [last]
+// and above.
 static void closeUpvalues(ObjFiber* fiber, Value* last)
 {
   while (fiber->openUpvalues != NULL &&
@@ -370,8 +370,7 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
 static void callForeign(WrenVM* vm, ObjFiber* fiber,
                         WrenForeignMethodFn foreign, int numArgs)
 {
-  // Save the current state so we can restore it when done.
-  Value* apiStack = vm->apiStack;
+  ASSERT(vm->apiStack == NULL, "Cannot already be in foreign call.");
   vm->apiStack = fiber->stackTop - numArgs;
 
   foreign(vm);
@@ -379,7 +378,8 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
   // Discard the stack slots for the arguments and temporaries but leave one
   // for the result.
   fiber->stackTop = vm->apiStack + 1;
-  vm->apiStack = apiStack;
+
+  vm->apiStack = NULL;
 }
 
 // Handles the current fiber having aborted because of an error.
@@ -388,7 +388,7 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber,
 // handles the error. If none do, tells the VM to stop.
 static void runtimeError(WrenVM* vm)
 {
-  ASSERT(!IS_NULL(vm->fiber->error), "Should only call this after an error.");
+  ASSERT(wrenHasError(vm->fiber), "Should only call this after an error.");
 
   ObjFiber* current = vm->fiber;
   Value error = current->error;
@@ -601,7 +601,7 @@ static void createClass(WrenVM* vm, int numFields, ObjModule* module)
   vm->fiber->stackTop--;
 
   vm->fiber->error = validateSuperclass(vm, name, superclass, numFields);
-  if (!IS_NULL(vm->fiber->error)) return;
+  if (wrenHasError(vm->fiber)) return;
 
   ObjClass* classObj = wrenNewClass(vm, AS_CLASS(superclass), numFields,
                                     AS_STRING(name));
@@ -624,13 +624,12 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
 
   // Pass the constructor arguments to the allocator as well.
-  Value* oldApiStack = vm->apiStack;
+  ASSERT(vm->apiStack == NULL, "Cannot already be in foreign call.");
   vm->apiStack = stack;
 
   method->as.foreign(vm);
 
-  vm->apiStack = oldApiStack;
-  // TODO: Check that allocateForeign was called.
+  vm->apiStack = NULL;
 }
 
 void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
@@ -1003,14 +1002,14 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
             // If we don't have a fiber to switch to, stop interpreting.
             fiber = vm->fiber;
             if (fiber == NULL) return WREN_RESULT_SUCCESS;
-            if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+            if (wrenHasError(fiber)) RUNTIME_ERROR();
             LOAD_FRAME();
           }
           break;
 
         case METHOD_FOREIGN:
           callForeign(vm, fiber, method->as.foreign, numArgs);
-          if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+          if (wrenHasError(fiber)) RUNTIME_ERROR();
           break;
 
         case METHOD_BLOCK:
@@ -1232,14 +1231,14 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     CASE_CODE(CLASS):
     {
       createClass(vm, READ_BYTE(), NULL);
-      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
     }
 
     CASE_CODE(FOREIGN_CLASS):
     {
       createClass(vm, -1, fn->module);
-      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
     }
 
@@ -1250,7 +1249,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       ObjClass* classObj = AS_CLASS(PEEK());
       Value method = PEEK2();
       bindMethod(vm, instruction, symbol, fn->module, classObj, method);
-      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
       DROP();
       DROP();
       DISPATCH();
@@ -1270,7 +1269,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       // imported module's closure in the slot in case a GC happens when
       // invoking the closure.
       PUSH(importModule(vm, fn->constants.data[READ_SHORT()]));
-      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
       
       // If we get a closure, call it to execute the module body.
       if (IS_CLOSURE(PEEK()))
@@ -1295,7 +1294,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       Value variable = fn->constants.data[READ_SHORT()];
       ASSERT(vm->lastModule != NULL, "Should have already imported module.");
       Value result = getModuleVariable(vm, vm->lastModule, variable);
-      if (!IS_NULL(fiber->error)) RUNTIME_ERROR();
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
 
       PUSH(result);
       DISPATCH();
@@ -1379,12 +1378,24 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
   ASSERT(vm->fiber->stackTop - vm->fiber->stack >= closure->fn->arity,
          "Stack must have enough arguments for method.");
   
+  // Clear the API stack. Now that wrenCall() has control, we no longer need
+  // it. We use this being non-null to tell if re-entrant calls to foreign
+  // methods are happening, so it's important to clear it out now so that you
+  // can call foreign methods from within calls to wrenCall().
+  vm->apiStack = NULL;
+
   // Discard any extra temporary slots. We take for granted that the stub
   // function has exactly one slot for each argument.
   vm->fiber->stackTop = &vm->fiber->stack[closure->fn->maxSlots];
   
   wrenCallFunction(vm, vm->fiber, closure, 0);
-  return runInterpreter(vm, vm->fiber);
+  WrenInterpretResult result = runInterpreter(vm, vm->fiber);
+  
+  // If the call didn't abort, then set up the API stack to point to the
+  // beginning of the stack so the host can access the call's return value.
+  if (vm->fiber != NULL) vm->apiStack = vm->fiber->stack;
+  
+  return result;
 }
 
 WrenHandle* wrenMakeHandle(WrenVM* vm, Value value)

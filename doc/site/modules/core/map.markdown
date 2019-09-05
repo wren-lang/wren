@@ -1,6 +1,6 @@
 ^title Map Class
 
-An associative collection that maps keys to values. More details [here](../maps.html).
+An associative collection that maps keys to values. More details [here](../../maps.html).
 
 ## Methods
 

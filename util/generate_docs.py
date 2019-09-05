@@ -126,10 +126,11 @@ def format_file(path, skip_up_to_date):
           # visible.
           contents += line
 
-  html = markdown.markdown(contents, ['def_list', 'codehilite', 'smarty'])
+  html = markdown.markdown(contents, extensions=['def_list', 'codehilite', 'smarty'])
 
   # Use special formatting for example output and errors.
   html = html.replace('<span class="c1">//&gt; ', '<span class="output">')
+  html = html.replace('<span class="c1">//&amp;gt; ', '<span class="output">')
   html = html.replace('<span class="c1">//! ', '<span class="error">')
 
   modified = datetime.fromtimestamp(os.path.getmtime(in_path))
@@ -167,6 +168,24 @@ def check_sass():
     print("Built build/docs/style.css")
 
 
+def copy_static():
+  shutil.copy2("doc/site/blog/rss.xml", "build/docs/blog/rss.xml")
+
+  for root, dirnames, filenames in os.walk('doc/site/static'):
+    for filename in filenames:
+      source = os.path.join(root, filename)
+      source_mod = os.path.getmtime(source)
+      dest = os.path.join("build/docs", filename)
+      dest_mod = 0
+      if os.path.exists(dest):
+        dest_mod = os.path.getmtime('build/docs/style.css')
+
+      if source_mod < dest_mod:
+        return
+
+      shutil.copy2(source, dest)
+      print('Copied ' + filename)
+
 def format_files(skip_up_to_date):
   check_sass()
 
@@ -175,6 +194,7 @@ def format_files(skip_up_to_date):
       f = os.path.relpath(os.path.join(root, filename), 'doc/site')
       format_file(f, skip_up_to_date)
 
+  copy_static()
 
 def run_server():
   port = 8000

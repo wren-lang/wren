@@ -39,3 +39,6 @@ ipch/
 *.user
 *.userosscache
 *.sln.docstates
+
+# macOS XCode build cache
+deps/libuv/build/XCBuildData/

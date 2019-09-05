@@ -3,9 +3,11 @@ $subheader: "Lato", helvetica, arial, sans-serif;
 $body: "Source Sans Pro", georgia, serif;
 $code: "Source Code Pro", Menlo, Monaco, Consolas, monospace;
 
+$header_h: 8em;
 $dark: hsl(210, 10%, 25%);
 $darker: hsl(210, 20%, 10%);
 $light: hsl(0, 0%, 100%);
+$gray-5: mix($dark, $light, 5%);
 $gray-10: mix($dark, $light, 10%);
 $gray-20: mix($dark, $light, 20%);
 $gray-30: mix($dark, $light, 30%);
@@ -16,8 +18,8 @@ $gray-80: mix($dark, $light, 80%);
 
 $text: mix($light, #000, 20%);
 
-$code-color: hsl(210, 20%, 40%);
-$code-bg:    hsl(210, 20%, 98%);
+$code-color: hsl(210, 20%, 30%);
+$code-bg:    hsl(210, 0%, 99%);
 
 $link:        hsl(200, 60%, 50%);
 $link-hover:  hsl(210, 100%, 80%);
@@ -34,20 +36,48 @@ $module-link-glow:  hsla(130, 90%, 50%, 0.4);
   box-sizing: border-box;
 }
 
-body, code, h1, h2, h3, p, pre {
+body, code, h1, h2, h3, p, pre, html {
   margin: 0;
   padding: 0;
+}
+
+html {
+  height: 100%;
+  min-height: 100%;
 }
 
 body {
   background: $light;
   color: $text;
   font: 16px/25px $body;
+  height: 100%;
+  min-height: 100%;  
+}
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid $gray-5;
+    margin: 1em 0;
+    padding: 0; 
+}
+
+blockquote {
+  color: $gray-50;
+  margin: 0;
+  max-width: 24em;
+  margin-left: 0.5em;
+}
+
+date {
+  color: $gray-80;
 }
 
 .page {
   margin: 0 auto;
   width: 800px;
+  min-height: calc(100% - 16.75em);
 
   // Clear contents.
   &:after {
@@ -62,20 +92,28 @@ body {
   width: 560px;
 }
 
+.logo {
+  height: 7em;
+  position: relative;
+  margin: auto;
+  display: block;
+  left: -1em;
+  margin-bottom: 2em;
+}
+
 header {
-  text-shadow: 0 1px 1px $darker;
 
   .page {
-    height: 120px;
+    height: $header_h;
   }
 
-  background: $dark;
-  border-bottom: solid 1px $darker;
+  background: $light;
+  border-bottom: solid 1px $gray-10;
 
   h1 {
     position: absolute;
-    left: 0;
-    top: 63px;
+    left: -8px;
+    top: ($header_h / 3) - 1.15em;
     padding: 0;
     font: 400 48px $header;
     letter-spacing: 2px;
@@ -83,8 +121,8 @@ header {
 
   h2 {
     position: absolute;
-    right: 0;
-    top: 72px;
+    left: 0;
+    top: $header_h + 0.5em;
     padding: 0;
     font: 500 13px $subheader;
     text-transform: uppercase;
@@ -93,23 +131,23 @@ header {
   }
 
   a {
-    color: $gray-20;
+    color: $gray-80;
   }
 
   a:hover {
     color: $link-hover;
-    text-shadow: 0 0 6px $link-glow;
+    /*text-shadow: 0 0 6px $link-glow;*/
   }
 }
 
 nav {
   float: right;
   width: 160px;
-  padding-top: 109px;
+  margin-top: 2em;
 
   h2 {
-    color: $gray-30;
-    font: 500 11px $subheader;
+    color: $gray-80;
+    font: 500 13px $subheader;
     text-transform: uppercase;
     letter-spacing: 2px;
     margin: 0;
@@ -121,7 +159,7 @@ nav {
   }
 
   li {
-    font: 15px $body;
+    font: 17px $body;
     color: $gray-30;
     list-style-type: none;
     margin: 0 0 4px 0;
@@ -194,8 +232,20 @@ a {
 
 main {
   @extend .main-column;
-  padding-top: 12px;
+  margin-top: 2em;
   float: left;
+
+  .intro { 
+    border-bottom: solid 1px $gray-10;
+    margin-bottom: -0.5em;
+  }
+
+  h2 {
+    display: block;
+    position: relative;
+    max-width: 16em;    
+  }
+  
 }
 
 a:hover {
@@ -229,8 +279,7 @@ code, pre {
   font: 13px $code;
   background: $code-bg;
   border-radius: 2px;
-  border: solid 1px hsl(200, 20%, 95%);
-  border-bottom: solid 1px hsl(200, 20%, 90%);
+  border: solid 1px hsl(200, 20%, 88%);
 }
 
 code {
@@ -250,7 +299,7 @@ pre {
 }
 
 footer {
-  margin-top: 40px;
+  margin-top: 4em;
   padding: 20px 0 40px 0;
   font: 14px $body;
   background: $dark;
@@ -334,12 +383,11 @@ footer {
 body.module {
   header {
     a {
-      color: $gray-20;
+      color: $gray-80;
     }
 
     a:hover {
       color: $module-link-hover;
-      text-shadow: 0 0 6px $module-link-glow;
     }
   }
 

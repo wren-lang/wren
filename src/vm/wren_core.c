@@ -81,7 +81,7 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
                      bool hasValue, const char* verb)
 {
 
-  if (!IS_NULL(fiber->error))
+  if (wrenHasError(fiber))
   {
     RETURN_ERROR_FMT("Cannot $ an aborted fiber.", verb);
   }
@@ -154,7 +154,7 @@ DEF_PRIMITIVE(fiber_error)
 DEF_PRIMITIVE(fiber_isDone)
 {
   ObjFiber* runFiber = AS_FIBER(args[0]);
-  RETURN_BOOL(runFiber->numFrames == 0 || !IS_NULL(runFiber->error));
+  RETURN_BOOL(runFiber->numFrames == 0 || wrenHasError(runFiber));
 }
 
 DEF_PRIMITIVE(fiber_suspend)
@@ -187,7 +187,7 @@ DEF_PRIMITIVE(fiber_try)
   runFiber(vm, AS_FIBER(args[0]), args, true, false, "try");
   
   // If we're switching to a valid fiber to try, remember that we're trying it.
-  if (IS_NULL(vm->fiber->error)) vm->fiber->state = FIBER_TRY;
+  if (!wrenHasError(vm->fiber)) vm->fiber->state = FIBER_TRY;
   return false;
 }
 
@@ -920,6 +920,21 @@ DEF_PRIMITIVE(string_fromCodePoint)
   RETURN_VAL(wrenStringFromCodePoint(vm, codePoint));
 }
 
+DEF_PRIMITIVE(string_fromByte)
+{
+  if (!validateInt(vm, args[1], "Byte")) return false;
+  int byte = (int) AS_NUM(args[1]);
+  if (byte < 0)
+  {
+    RETURN_ERROR("Byte cannot be negative.");
+  }
+  else if (byte > 0xff)
+  {
+    RETURN_ERROR("Byte cannot be greater than 0xff.");
+  }
+  RETURN_VAL(wrenStringFromByte(vm, (uint8_t) byte));
+}
+
 DEF_PRIMITIVE(string_byteAt)
 {
   ObjString* string = AS_STRING(args[0]);
@@ -1305,6 +1320,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->stringClass = AS_CLASS(wrenFindVariable(vm, coreModule, "String"));
   PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
+  PRIMITIVE(vm->stringClass->obj.classObj, "fromByte(_)", string_fromByte);
   PRIMITIVE(vm->stringClass, "+(_)", string_plus);
   PRIMITIVE(vm->stringClass, "[_]", string_subscript);
   PRIMITIVE(vm->stringClass, "byteAt_(_)", string_byteAt);

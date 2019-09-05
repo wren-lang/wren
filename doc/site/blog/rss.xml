@@ -1,0 +1,14 @@
+<rss version="2.0">
+  <channel><title>Wren - development blog</title>
+    <link>https://wren.io/</link>
+    <description>The development blog of the Wren programming language.</description>
+    <language>en-us</language>
+    <item>
+      <title>System.print("hello wren")</title>
+      <link>https://wren.io/blog/hello-wren.html</link>
+      <description>A short post introducing the blog, the new maintainer, and the immediate term plans for Wren.</description>
+      <guid>https://wren.io/blog/hello-wren.html</guid>
+      <pubDate>Mon, 04 Feb 2019 00:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

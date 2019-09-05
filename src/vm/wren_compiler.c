@@ -446,7 +446,7 @@ static void error(Compiler* compiler, const char* format, ...)
   else
   {
     // Make sure we don't exceed the buffer with a very long token.
-    char label[ERROR_MESSAGE_SIZE];
+    char label[10 + MAX_VARIABLE_NAME + 4 + 1];
     if (token->length <= MAX_VARIABLE_NAME)
     {
       sprintf(label, "Error at '%.*s'", token->length, token->start);

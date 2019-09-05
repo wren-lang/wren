@@ -79,7 +79,7 @@ There are two (well, three) ways to get the Wren VM into your program:
 In either case, you also want to add `src/include` to your include path so you
 can find the [public header for Wren][wren.h]:
 
-[wren.h]: https://github.com/munificent/wren/blob/master/src/include/wren.h
+[wren.h]: https://github.com/wren-lang/wren/blob/master/src/include/wren.h
 
     :::c
     #include "wren.h"
@@ -131,7 +131,9 @@ VM, waiting to run some code!
 You execute a string of Wren source code like so:
 
     :::c
-    WrenInterpretResult result = wrenInterpret(vm,
+    WrenInterpretResult result = wrenInterpret(
+        vm,
+        "my_module",
         "System.print(\"I am running in a VM!\")");
 
 The string is a series of one or more statements separated by newlines. Wren
@@ -151,7 +153,7 @@ fibers all the way back to the main one and returns `WREN_RESULT_RUNTIME_ERROR`.
 Otherwise, when the last fiber successfully returns, it returns
 `WREN_RESULT_SUCCESS`.
 
-[runtime error]: error-handling.html
+[runtime error]: ../error-handling.html
 
 All code passed to `wrenInterpret()` runs in a special "main" module. That way,
 top-level names defined in one call can be accessed in later ones. It's similar

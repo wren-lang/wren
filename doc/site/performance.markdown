@@ -92,7 +92,7 @@ languages benchmarked, including Wren, because Mike Pall is a robot from the
 future.
 
 The benchmark harness and programs are
-[here](https://github.com/munificent/wren/tree/master/test/benchmark).
+[here](https://github.com/wren-lang/wren/tree/master/test/benchmark).
 
 ## Why is Wren fast?
 

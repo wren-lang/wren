@@ -657,6 +657,11 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
 // Ensures [fiber]'s stack has at least [needed] slots.
 void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed);
 
+static inline bool wrenHasError(const ObjFiber* fiber)
+{
+  return !IS_NULL(fiber->error);
+}
+
 ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
 // Creates a new empty function. Before being used, it must have code,
@@ -732,6 +737,9 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...);
 
 // Creates a new string containing the UTF-8 encoding of [value].
 Value wrenStringFromCodePoint(WrenVM* vm, int value);
+
+// Creates a new string from the integer representation of a byte
+Value wrenStringFromByte(WrenVM* vm, uint8_t value);
 
 // Creates a new string containing the code point in [string] starting at byte
 // [index]. If [index] points into the middle of a UTF-8 sequence, returns an

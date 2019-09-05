@@ -132,5 +132,6 @@ that they are printed isn't defined. Wren makes no promises about what order
 keys and values are iterated in when you use these methods. All it promises is
 that every entry will appear exactly once.
 
+<br><hr>
 <a class="right" href="method-calls.html">Method Calls &rarr;</a>
 <a href="lists.html">&larr; Lists</a>

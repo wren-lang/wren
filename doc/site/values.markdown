@@ -137,5 +137,6 @@ doesn't return anything and get its returned value, you get `null` back.
 
 [null]: modules/core/null.html
 
+<br><hr>
 <a class="right" href="lists.html">Lists &rarr;</a>
 <a href="syntax.html">&larr; Syntax</a>

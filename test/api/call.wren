@@ -48,6 +48,7 @@ class Call {
 // expect: subscript 1 2
 // expect: subscript set 1 2 3
 
+// expect: slots after call: 1
 // expect: two true false
 // expect: two 1.2 3.4
 // expect: two string another

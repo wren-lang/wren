@@ -356,24 +356,18 @@ ObjMap* wrenNewMap(WrenVM* vm)
   return map;
 }
 
-static inline uint32_t hashBits(DoubleBits bits)
+static inline uint32_t hashBits(uint64_t hash)
 {
-  uint32_t result = bits.bits32[0] ^ bits.bits32[1];
-  
-  // Slosh the bits around some. Due to the way doubles are represented, small
-  // integers will have most of low bits of the double respresentation set to
-  // zero. For example, the above result for 5 is 43d00600.
-  //
-  // We map that to an entry index by masking off the high bits which means
-  // most small integers would all end up in entry zero. That's bad. To avoid
-  // that, push a bunch of the high bits lower down so they affect the lower
-  // bits too.
-  //
-  // The specific mixing function here was pulled from Java's HashMap
-  // implementation.
-  result ^= (result >> 20) ^ (result >> 12);
-  result ^= (result >> 7) ^ (result >> 4);
-  return result;
+  // From v8's ComputeLongHash() which in turn cites:
+  // Thomas Wang, Integer Hash Functions.
+  // http://www.concentric.net/~Ttwang/tech/inthash.htm
+  hash = ~hash + (hash << 18);  // hash = (hash << 18) - hash - 1;
+  hash = hash ^ (hash >> 31);
+  hash = hash * 21;  // hash = (hash + (hash << 2)) + (hash << 4);
+  hash = hash ^ (hash >> 11);
+  hash = hash + (hash << 6);
+  hash = hash ^ (hash >> 22);
+  return (uint32_t)(hash & 0x3fffffff);
 }
 
 // Generates a hash code for [num].
@@ -382,7 +376,7 @@ static inline uint32_t hashNumber(double num)
   // Hash the raw bits of the value.
   DoubleBits bits;
   bits.num = num;
-  return hashBits(bits);
+  return hashBits(bits.bits64);
 }
 
 // Generates a hash code for [object].
@@ -429,9 +423,7 @@ static uint32_t hashValue(Value value)
   if (IS_OBJ(value)) return hashObject(AS_OBJ(value));
 
   // Hash the raw bits of the unboxed value.
-  DoubleBits bits;
-  bits.bits64 = value;
-  return hashBits(bits);
+  return hashBits(value);
 #else
   switch (value.type)
   {
@@ -519,6 +511,8 @@ static bool findEntry(MapEntry* entries, uint32_t capacity, Value key,
 static bool insertEntry(MapEntry* entries, uint32_t capacity,
                         Value key, Value value)
 {
+  ASSERT(entries != NULL, "Should ensure capacity before inserting.");
+  
   MapEntry* entry;
   if (findEntry(entries, capacity, key, &entry))
   {
@@ -528,7 +522,6 @@ static bool insertEntry(MapEntry* entries, uint32_t capacity,
   }
   else
   {
-    ASSERT(entry != NULL, "Should ensure capacity before inserting.");
     entry->key = key;
     entry->value = value;
     return true;
@@ -798,6 +791,15 @@ Value wrenStringFromCodePoint(WrenVM* vm, int value)
   wrenUtf8Encode(value, (uint8_t*)string->value);
   hashString(string);
 
+  return OBJ_VAL(string);
+}
+
+Value wrenStringFromByte(WrenVM *vm, uint8_t value)
+{
+  int length = 1;
+  ObjString* string = allocateString(vm, length);
+  string->value[0] = value;
+  hashString(string);
   return OBJ_VAL(string);
 }
 

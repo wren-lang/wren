@@ -44,15 +44,15 @@ If you like the sound of this, [let's get started][started]. You can even try
 it [in your browser][browser]! Excited? Well, come on and [get
 involved][contribute]!
 
-[![Build Status](https://travis-ci.org/munificent/wren.svg)](https://travis-ci.org/munificent/wren)
+[![Build Status](https://travis-ci.org/wren-lang/wren.svg)](https://travis-ci.org/wren-lang/wren)
 
-[syntax]: http://munificent.github.io/wren/syntax.html
-[src]: https://github.com/munificent/wren/tree/master/src
-[nan]: https://github.com/munificent/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
-[perf]: http://munificent.github.io/wren/performance.html
-[classes]: http://munificent.github.io/wren/classes.html
-[fibers]: http://munificent.github.io/wren/concurrency.html
-[embedding]: http://munificent.github.io/wren/embedding/
-[started]: http://munificent.github.io/wren/getting-started.html
+[syntax]: http://wren.io/syntax.html
+[src]: https://github.com/wren-lang/wren/tree/master/src
+[nan]: https://github.com/wren-lang/wren/blob/93dac9132773c5bc0bbe92df5ccbff14da9d25a6/src/vm/wren_value.h#L486-L541
+[perf]: http://wren.io/performance.html
+[classes]: http://wren.io/classes.html
+[fibers]: http://wren.io/concurrency.html
+[embedding]: http://wren.io/embedding/
+[started]: http://wren.io/getting-started.html
 [browser]: http://ppvk.github.io/wren-nest/
-[contribute]: http://munificent.github.io/wren/contributing.html
+[contribute]: http://wren.io/contributing.html

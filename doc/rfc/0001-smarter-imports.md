@@ -17,9 +17,9 @@ This proposal aims to improve that. It doesn't intend to fix *everything* about
 imports and the module system, but should leave the door open for later
 improvements.
 
-[210]: https://github.com/munificent/wren/issues/210
-[325]: https://github.com/munificent/wren/issues/325
-[346]: https://github.com/munificent/wren/issues/346
+[210]: https://github.com/wren-lang/wren/issues/210
+[325]: https://github.com/wren-lang/wren/issues/325
+[346]: https://github.com/wren-lang/wren/issues/346
 
 ### Relative imports
 
