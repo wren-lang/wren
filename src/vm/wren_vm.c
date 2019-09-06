@@ -444,7 +444,8 @@ static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
   if (module == NULL)
   {
     module = wrenNewModule(vm, AS_STRING(name));
-
+    if(!module) return NULL;
+    
     // Store it in the VM's module registry so we don't load the same module
     // multiple times.
     wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
@@ -685,6 +686,11 @@ static Value resolveModule(WrenVM* vm, Value name)
 
 static Value importModule(WrenVM* vm, Value name)
 {
+  //may be objFn object...
+  if(!IS_STRING(name)){
+    return name;
+  }
+    
   name = resolveModule(vm, name);
   
   // If the module is already loaded, we don't need to do anything.
@@ -701,7 +707,7 @@ static Value importModule(WrenVM* vm, Value name)
   {
     source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
   }
-  
+
   // If the host didn't provide it, see if it's a built in optional module.
   if (source == NULL)
   {
@@ -1272,11 +1278,24 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       if (wrenHasError(fiber)) RUNTIME_ERROR();
       
       // If we get a closure, call it to execute the module body.
-      if (IS_CLOSURE(PEEK()))
+      if(IS_CLOSURE(PEEK()))
       {
         STORE_FRAME();
         ObjClosure* closure = AS_CLOSURE(PEEK());
         wrenCallFunction(vm, fiber, closure, 1);
+        LOAD_FRAME();
+      }
+      else if (IS_FN(PEEK())) //added w.hu
+      {
+        STORE_FRAME();
+        ObjClosure* closure = wrenNewClosure(vm, AS_FN(PEEK()) );
+        if (closure == NULL) {
+            vm->fiber->error = wrenStringFormat(vm, "Could not compile module '@'.", AS_FN(PEEK())->module->name);
+        }
+        else{
+            wrenCallFunction(vm, fiber, closure, 1);
+        }
+        
         LOAD_FRAME();
       }
       else

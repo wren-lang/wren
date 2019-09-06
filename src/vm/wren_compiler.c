@@ -7,6 +7,14 @@
 #include "wren_compiler.h"
 #include "wren_vm.h"
 
+
+#if WREN_OPT_META
+  #include "wren_opt_meta.h"
+#endif
+#if WREN_OPT_RANDOM
+  #include "wren_opt_random.h"
+#endif
+
 #if WREN_DEBUG_DUMP_COMPILED_CODE
   #include "wren_debug.h"
 #endif
@@ -3315,6 +3323,108 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   popScope(compiler);
 }
 
+//compiling the module to import, the parameter name may return the module object objFn. w.hu
+//--------------------->
+static ObjModule* importCompileModule(Compiler* compiler, Value* name, const char*msource)
+{  
+  Value namev = *name;
+  const char* source = msource;
+  const char* resolved = NULL;
+  WrenVM* vm = compiler->parser->vm;
+
+  if( compiler->parser->module->name ){    
+    if( strcmp(compiler->parser->module->name->value, AS_CSTRING(namev) ) == 0 ){      
+        return NULL;
+    }
+  }
+     
+  if(source == NULL){
+      if (vm->config.resolveModuleFn ){    	  
+          resolved = vm->config.resolveModuleFn(vm, compiler->parser->module->name->value,
+                                                        AS_CSTRING(namev));
+      }
+      if (resolved == NULL) {
+        vm->fiber->error = wrenStringFormat(vm,
+            "Could not resolve module '@' imported from '@'.",
+            namev, OBJ_VAL(compiler->parser->module->name));
+        return NULL;//NULL_VAL;
+      }
+  
+      // If they resolved to the exact same string, we don't need to copy it.
+      if (resolved != AS_CSTRING(namev)) {
+          // Copy the string into a Wren String object.
+          namev = wrenNewString(vm, resolved);
+          
+          DEALLOCATE(vm, (char*)resolved);
+      }
+  }
+  
+  // If the module is already loaded, we don't need to do anything.
+  Value moduleValue = wrenMapGet(vm->modules, namev);
+  if (!IS_UNDEFINED(moduleValue)){
+     return AS_MODULE(moduleValue);
+  }
+   
+  wrenPushRoot(vm, AS_OBJ(namev));
+  
+  // Let the host try to provide the module.
+  if(source == NULL && vm->config.loadModuleFn){      
+      source = vm->config.loadModuleFn(vm, AS_CSTRING(namev));      
+  }
+  
+  if (source == NULL)  {
+    ObjString* nameString = AS_STRING(namev);
+#if WREN_OPT_META
+    if (strcmp(nameString->value, "meta") == 0) source = wrenMetaSource();
+#endif
+#if WREN_OPT_RANDOM
+    if (strcmp(nameString->value, "random") == 0) source = wrenRandomSource();
+#endif
+  }
+  
+  if (source == NULL)  {    
+    vm->fiber->error = wrenStringFormat(vm, "Could not load module '@'.", namev);
+    wrenPopRoot(vm); // name. 
+    return  NULL;
+  }
+
+  ObjModule*  module = wrenNewModule(vm, AS_STRING(namev));
+  if (module ) {
+      // Store it in the VM's module registry so we don't load the same module
+      // multiple times.
+      //the module name is the same as imported.
+      wrenMapSet(vm, vm->modules, namev, OBJ_VAL(module));
+
+      // Implicitly import the core module.    
+      moduleValue = wrenMapGet(vm->modules, NULL_VAL);
+
+      ObjModule* coreModule =  AS_MODULE(moduleValue) ;
+      if(coreModule){
+		  for (int i = 0; i < coreModule->variables.count; i++) {
+			wrenDefineVariable(vm, module,
+							  coreModule->variableNames.data[i]->value,
+							  coreModule->variableNames.data[i]->length,
+							  coreModule->variables.data[i]);
+		  }
+      }
+  }
+  
+  ObjFn* fn = wrenCompile(vm, module, source, false, true);
+  
+  if(source != msource) DEALLOCATE(vm, (char*)source);
+
+  wrenPopRoot(vm); // name.
+  
+  if (fn == NULL) {        
+    return NULL;
+  }
+  
+  *name = OBJ_VAL(fn);
+  
+  return module;
+}
+//<---------------------------------------------------------------
+
 // Compiles an "import" statement.
 //
 // An import compiles to a series of instructions. Given:
@@ -3333,35 +3443,72 @@ static void import(Compiler* compiler)
 {
   ignoreNewlines(compiler);
   consume(compiler, TOKEN_STRING, "Expect a string after 'import'.");
-  int moduleConstant = addConstant(compiler, compiler->parser->previous.value);
-
+  Value moduleNameV = compiler->parser->previous.value;
+  ObjModule* module = importCompileModule(compiler, &moduleNameV, NULL);
+  int moduleConstant = addConstant(compiler, moduleNameV);
   // Load the module.
-  emitShortArg(compiler, CODE_IMPORT_MODULE, moduleConstant);
+  if(moduleConstant >=0){
+      emitShortArg(compiler, CODE_IMPORT_MODULE, moduleConstant);
+      // Discard the unused result value from calling the module body's closure.
+      emitOp(compiler, CODE_POP);
+  }
+  // The 'for' clause is optional.
+  if (!match(compiler, TOKEN_FOR)) {
+    
+     //imported module variables to the importer. w.hu 
+     if(module){
+        Token token={0};
+        for (int i = 0; i < module->variables.count; i++)  {        
+          
+          token.start = module->variableNames.data[i]->value;
+          token.length = module->variableNames.data[i]->length;
+          int slot = wrenSymbolTableFind(&compiler->parser->module->variableNames, token.start, token.length);
+                   
+          //if no declared, then define it.
+          if(slot == -1){           
+              slot = declareVariable(compiler, &token);
+              if(slot >=0){          
+                  // Define a string constant for the variable name.
+                  int variableConstant = addConstant(compiler,
+                             wrenNewStringLength(compiler->parser->vm,token.start,token.length));                    
+                  // Load the variable from the other module.
+                  if(variableConstant >=0){
+                      emitShortArg(compiler, CODE_IMPORT_VARIABLE, variableConstant);
+                      
+                      // Store the result in the variable here.
+                      defineVariable(compiler, slot);    
 
-  // Discard the unused result value from calling the module body's closure.
-  emitOp(compiler, CODE_POP);
-  
-  // The for clause is optional.
-  if (!match(compiler, TOKEN_FOR)) return;
+                      //for compiler get method's argument arity. 
+                      //compiler->parser->module->variables.data[slot] = module->variables.data[i]; 
+                  }                           
+              }
+          }
+        }      
+    }
+    
+    return;
+  }
 
   // Compile the comma-separated list of variables to import.
   do
   {
     ignoreNewlines(compiler);
     int slot = declareNamedVariable(compiler);
-    
-    // Define a string constant for the variable name.
-    int variableConstant = addConstant(compiler,
-        wrenNewStringLength(compiler->parser->vm,
-                            compiler->parser->previous.start,
-                            compiler->parser->previous.length));
-    
-    // Load the variable from the other module.
-    emitShortArg(compiler, CODE_IMPORT_VARIABLE, variableConstant);
-    
-    // Store the result in the variable here.
-    defineVariable(compiler, slot);
-  } while (match(compiler, TOKEN_COMMA));
+    if(slot != -1){
+        // Define a string constant for the variable name.
+        int variableConstant = addConstant(compiler,
+            wrenNewStringLength(compiler->parser->vm,
+                                compiler->parser->previous.start,
+                                compiler->parser->previous.length));
+        if(variableConstant>=0){
+            // Load the variable from the other module.
+            emitShortArg(compiler, CODE_IMPORT_VARIABLE, variableConstant);
+            
+            // Store the result in the variable here.
+            defineVariable(compiler, slot);
+        }
+    }
+  } while (match(compiler, TOKEN_COMMA));  
 }
 
 // Compiles a "var" variable definition statement.
