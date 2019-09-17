@@ -75,3 +75,13 @@ resources.clear()
 
 System.gc()
 System.print(ForeignClass.finalized) // expect: 3
+
+// Class that aborts fiber
+foreign class BadClass {
+  construct new() {}
+}
+
+error = Fiber.new {
+  BadClass.new()
+}.try()
+System.print(error) // expect: Something went wrong

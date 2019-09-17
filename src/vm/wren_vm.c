@@ -1198,6 +1198,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     CASE_CODE(FOREIGN_CONSTRUCT):
       ASSERT(IS_CLASS(stackStart[0]), "'this' should be a class.");
       createForeign(vm, fiber, stackStart);
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
 
     CASE_CODE(CLOSURE):
