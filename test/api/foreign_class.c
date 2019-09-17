@@ -82,6 +82,13 @@ static void resourceFinalize(void* data)
   finalized++;
 }
 
+static void badClassAllocate(WrenVM* vm)
+{
+  wrenEnsureSlots(vm, 1);
+  wrenSetSlotString(vm, 0, "Something went wrong");
+  wrenAbortFiber(vm, 0);
+}
+
 WrenForeignMethodFn foreignClassBindMethod(const char* signature)
 {
   if (strcmp(signature, "static ForeignClass.finalized") == 0) return apiFinalized;
@@ -112,6 +119,12 @@ void foreignClassBindClass(
   {
     methods->allocate = resourceAllocate;
     methods->finalize = resourceFinalize;
+    return;
+  }
+
+  if (strcmp(className, "BadClass") == 0)
+  {
+    methods->allocate = badClassAllocate;
     return;
   }
 }
