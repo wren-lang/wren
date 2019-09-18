@@ -422,8 +422,8 @@ value is <code>null</code>. </p>
 <h3>Encapsulation <a href="#encapsulation" name="encapsulation" class="header-anchor">#</a></h3>
 <p>All fields are <em>private</em> in Wren&mdash;an object&rsquo;s fields can only be directly 
 accessed from within methods defined on the object&rsquo;s class. </p>
-<p>In short, if you want to make a property of an object visible, <strong>you need to define a 
-getter to expose it</strong>: </p>
+<p>In short, if you want to make a property of an object visible, 
+<strong>you need to define a getter to expose it</strong>: </p>
 <div class="codehilite"><pre><span class="k">class</span> <span class="vg">Rectangle</span> <span class="p">{</span> 
   <span class="n">width</span> <span class="p">{</span> <span class="vi">_width</span> <span class="p">}</span> 
   <span class="n">height</span> <span class="p">{</span> <span class="vi">_height</span> <span class="p">}</span>
@@ -433,7 +433,8 @@ getter to expose it</strong>: </p>
 </pre></div>
 
 
-<p>To allow outside code to modify the field, <strong>you need to provide setters to provide access</strong>: </p>
+<p>To allow outside code to modify the field, 
+<strong>you need to provide setters to provide access</strong>: </p>
 <div class="codehilite"><pre><span class="k">class</span> <span class="vg">Rectangle</span> <span class="p">{</span> 
   <span class="n">width</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_width</span> <span class="o">=</span> <span class="n">value</span> <span class="p">}</span> 
   <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_height</span> <span class="o">=</span> <span class="n">value</span> <span class="p">}</span> 
@@ -443,8 +444,8 @@ getter to expose it</strong>: </p>
 
 <p>This might be different from what you&rsquo;re used to, so here are two important facts: </p>
 <ul>
-<li>You can&rsquo;t access fields on another instance of your own class (unlike C++ and Java). </li>
 <li>You can&rsquo;t access fields from a base class. </li>
+<li>You can&rsquo;t access fields on another instance of your own class. </li>
 </ul>
 <p>Here is an example in code: </p>
 <div class="codehilite"><pre><span class="k">class</span> <span class="vg">Shape</span> <span class="p">{</span> 
@@ -455,14 +456,17 @@ getter to expose it</strong>: </p>
 
 <span class="k">class</span> <span class="vg">Rectangle</span> <span class="k">is</span> <span class="vg">Shape</span> <span class="p">{</span> 
   <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="c1">//This will print null! _shape from the parent class is private,</span>
-    <span class="c1">//so we are really just reading `_shape` from `this`, which has not been set.</span>
+    <span class="c1">//This will print null!</span>
+    <span class="c1">//_shape from the parent class is private,</span>
+    <span class="c1">//we are reading `_shape` from `this`,</span>
+    <span class="c1">//which has not been set, so returns null.</span>
     <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I am a </span><span class="si">%(</span><span class="vi">_shape</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
 
     <span class="c1">//a local variable, all variables are private</span>
     <span class="vi">_width</span> <span class="o">=</span> <span class="mi">10</span> 
-    <span class="k">var</span> <span class="n">other</span> <span class="o">=</span> <span class="vg">Rectangle</span><span class="o">.</span><span class="n">new</span><span class="p">()</span> 
-    <span class="c1">//other._width is not accessible from here, </span>
+    <span class="k">var</span> <span class="n">other</span> <span class="o">=</span> <span class="vg">Rectangle</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+
+    <span class="c1">//other._width is not accessible from here,</span>
     <span class="c1">//even though we are also a rectangle. The field</span>
     <span class="c1">//is private, and other._width is invalid syntax!</span>
   <span class="p">}</span> 
