@@ -171,7 +171,9 @@ numbers to determine the quadrant of the result. </p>
 floating point arithmetic. It is a runtime error if the right-hand operand is 
 not a number. Wren doesn&rsquo;t roll with implicit conversions. </p>
 <h3><strong>%</strong>(denominator) operator <a href="#%(denominator)-operator" name="%(denominator)-operator" class="header-anchor">#</a></h3>
-<p>The floating-point remainder of this number divided by <code>denominator</code>. </p>
+<p>Also known as mod or modulus. 
+The floating-point remainder of this number divided by <code>denominator</code>. </p>
+<p>The returned value has the same sign as <code>this</code> (internally calls <code>fmod</code> from C). </p>
 <p>It is a runtime error if <code>denominator</code> is not a number. </p>
 <h3><strong>&lt;</strong>(other), <strong>&gt;</strong>(other), <strong>&lt;=</strong>(other), <strong>&gt;=</strong>(other) operators <a href="#&lt;(other),-&gt;(other),-&lt;=(other),-&gt;=(other)-operators" name="&lt;(other),-&gt;(other),-&lt;=(other),-&gt;=(other)-operators" class="header-anchor">#</a></h3>
 <p>Compares this and <code>other</code>, returning <code>true</code> or <code>false</code> based on how the numbers 
