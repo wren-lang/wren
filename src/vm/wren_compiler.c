@@ -712,7 +712,7 @@ static void makeNumber(Parser* parser, bool isHex)
 
   if (isHex)
   {
-    parser->current.value = NUM_VAL(strtoll(parser->tokenStart, NULL, 16));
+    parser->current.value = NUM_VAL((double)strtoll(parser->tokenStart, NULL, 16));
   }
   else
   {
