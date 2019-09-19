@@ -456,7 +456,7 @@ static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
       wrenDefineVariable(vm, module,
                          coreModule->variableNames.data[i]->value,
                          coreModule->variableNames.data[i]->length,
-                         coreModule->variables.data[i]);
+                         coreModule->variables.data[i], NULL);
     }
   }
 
@@ -1498,8 +1498,15 @@ int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
   return wrenSymbolTableAdd(vm, &module->variableNames, name, length);
 }
 
+// Returns `true` if [name] is a local variable name (starts with a lowercase
+// letter).
+static bool isLocalName(const char* name)
+{
+	return name[0] >= 'a' && name[0] <= 'z';
+}
+
 int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
-                       size_t length, Value value)
+                       size_t length, Value value, int* line)
 {
   if (module->variables.count == MAX_MODULE_VARS) return -2;
 
@@ -1516,9 +1523,14 @@ int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
   }
   else if (IS_NUM(module->variables.data[symbol]))
   {
-    // An implicitly declared variable's value will always be a number. Now we
-    // have a real definition.
+    // An implicitly declared variable's value will always be a number.
+    // Now we have a real definition.
+    if(line) *line = AS_NUM(module->variables.data[symbol]);
     module->variables.data[symbol] = value;
+
+	// If this was a localname we want to error if it was 
+	// referenced before this definition.
+	if (isLocalName(name)) symbol = -3;
   }
   else
   {

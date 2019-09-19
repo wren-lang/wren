@@ -1253,9 +1253,11 @@ static int declareVariable(Compiler* compiler, Token* token)
   // Top-level module scope.
   if (compiler->scopeDepth == -1)
   {
+    int line = -1;
     int symbol = wrenDefineVariable(compiler->parser->vm,
                                     compiler->parser->module,
-                                    token->start, token->length, NULL_VAL);
+                                    token->start, token->length,
+                                    NULL_VAL, &line);
 
     if (symbol == -1)
     {
@@ -1264,6 +1266,12 @@ static int declareVariable(Compiler* compiler, Token* token)
     else if (symbol == -2)
     {
       error(compiler, "Too many module variables defined.");
+    }
+    else if (symbol == -3)
+    {
+      error(compiler,
+        "Variable '%.*s' referenced before this definition (first use at line %d).",
+        token->length, token->start, line);
     }
 
     return symbol;
@@ -2236,13 +2244,7 @@ static void name(Compiler* compiler, bool canAssign)
                                        token->start, token->length);
   if (variable.index == -1)
   {
-    if (isLocalName(token->start))
-    {
-      error(compiler, "Undefined variable.");
-      return;
-    }
-
-    // If it's a nonlocal name, implicitly define a module-level variable in
+    // Implicitly define a module-level variable in
     // the hopes that we get a real definition later.
     variable.index = wrenDeclareVariable(compiler->parser->vm,
                                          compiler->parser->module,
