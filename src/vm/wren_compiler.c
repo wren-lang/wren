@@ -393,18 +393,21 @@ static void printError(Parser* parser, int line, const char* label,
 {
   parser->hasError = true;
   if (!parser->printErrors) return;
-  
+
   // Only report errors if there is a WrenErrorFn to handle them.
   if (parser->vm->config.errorFn == NULL) return;
-  
+
   // Format the label and message.
   char message[ERROR_MESSAGE_SIZE];
   int length = sprintf(message, "%s: ", label);
   length += vsprintf(message + length, format, args);
   ASSERT(length < ERROR_MESSAGE_SIZE, "Error should not exceed buffer.");
-  
+
+  ObjString* module = parser->module->name;
+  const char* module_name = module ? module->value : "<unknown>";
+
   parser->vm->config.errorFn(parser->vm, WREN_ERROR_COMPILE,
-                             parser->module->name->value, line, message);
+                             module_name, line, message);
 }
 
 // Outputs a lexical error.
