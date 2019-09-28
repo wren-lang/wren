@@ -68,6 +68,10 @@ typedef enum
   TOKEN_PERCENT,
   TOKEN_PLUS,
   TOKEN_MINUS,
+  TOKEN_PLUSEQ,
+  TOKEN_MINUSEQ,
+  TOKEN_STAREQ,
+  TOKEN_SLASHEQ,
   TOKEN_LTLT,
   TOKEN_GTGT,
   TOKEN_PIPE,
@@ -965,11 +969,11 @@ static void nextToken(Parser* parser)
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
       case ':': makeToken(parser, TOKEN_COLON); return;
       case ',': makeToken(parser, TOKEN_COMMA); return;
-      case '*': makeToken(parser, TOKEN_STAR); return;
+      case '*': twoCharToken(parser, '=', TOKEN_STAREQ, TOKEN_STAR); return;
       case '%': makeToken(parser, TOKEN_PERCENT); return;
       case '^': makeToken(parser, TOKEN_CARET); return;
-      case '+': makeToken(parser, TOKEN_PLUS); return;
-      case '-': makeToken(parser, TOKEN_MINUS); return;
+      case '+': twoCharToken(parser, '=', TOKEN_PLUSEQ, TOKEN_PLUS); return;
+      case '-': twoCharToken(parser, '=', TOKEN_MINUSEQ, TOKEN_MINUS); return;
       case '~': makeToken(parser, TOKEN_TILDE); return;
       case '?': makeToken(parser, TOKEN_QUESTION); return;
         
@@ -1001,7 +1005,7 @@ static void nextToken(Parser* parser)
           break;
         }
 
-        makeToken(parser, TOKEN_SLASH);
+        twoCharToken(parser, '=', TOKEN_SLASHEQ, TOKEN_SLASH);
         return;
 
       case '<':
@@ -1591,6 +1595,21 @@ static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
 static void definition(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
+//Compound assignment forward declares and helpers
+static void fieldAssignment(Compiler* compiler, int field, bool insideMethod);
+static void variableAssignment(Compiler* compiler, Variable variable);
+static void setterAssignment(Compiler* compiler, Code instruction, Signature signature);
+static void subscriptSetterAssignment(Compiler* compiler, Signature signature);
+static inline bool isAssignment(Compiler* compiler)
+{
+  TokenType next = peek(compiler);
+  return
+    next == TOKEN_EQ      ||
+    next == TOKEN_PLUSEQ  ||
+    next == TOKEN_MINUSEQ ||
+    next == TOKEN_STAREQ  ||
+    next == TOKEN_SLASHEQ;
+}
 
 // Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
 // instruction with an offset that jumps to the current end of bytecode.
@@ -1919,16 +1938,17 @@ static void namedCall(Compiler* compiler, bool canAssign, Code instruction)
   // Get the token for the method name.
   Signature signature = signatureFromToken(compiler, SIG_GETTER);
 
-  if (canAssign && match(compiler, TOKEN_EQ))
+  if (canAssign && isAssignment(compiler))
   {
     ignoreNewlines(compiler);
+
+    // Compile the assignment and right-hand side.
+    setterAssignment(compiler, instruction, signature);
 
     // Build the setter signature.
     signature.type = SIG_SETTER;
     signature.arity = 1;
 
-    // Compile the assigned value.
-    expression(compiler);
     callSignature(compiler, instruction, &signature);
   }
   else
@@ -2109,18 +2129,20 @@ static void field(Compiler* compiler, bool canAssign)
     }
   }
 
+  bool insideMethod = compiler->parent != NULL &&
+                      compiler->parent->enclosingClass == enclosingClass;
+
   // If there's an "=" after a field name, it's an assignment.
   bool isLoad = true;
-  if (canAssign && match(compiler, TOKEN_EQ))
+  if (canAssign && isAssignment(compiler))
   {
-    // Compile the right-hand side.
-    expression(compiler);
+    // Compile the assignment and right-hand side.
+    fieldAssignment(compiler, field, insideMethod);
     isLoad = false;
   }
 
   // If we're directly inside a method, use a more optimal instruction.
-  if (compiler->parent != NULL &&
-      compiler->parent->enclosingClass == enclosingClass)
+  if (insideMethod)
   {
     emitByteArg(compiler, isLoad ? CODE_LOAD_FIELD_THIS : CODE_STORE_FIELD_THIS,
                 field);
@@ -2136,10 +2158,10 @@ static void field(Compiler* compiler, bool canAssign)
 static void bareName(Compiler* compiler, bool canAssign, Variable variable)
 {
   // If there's an "=" after a bare name, it's a variable assignment.
-  if (canAssign && match(compiler, TOKEN_EQ))
+  if (canAssign && isAssignment(compiler))
   {
-    // Compile the right-hand side.
-    expression(compiler);
+    // Compile the assignment and right-hand side.
+    variableAssignment(compiler, variable);
 
     // Emit the store instruction.
     switch (variable.scope)
@@ -2358,13 +2380,14 @@ static void subscript(Compiler* compiler, bool canAssign)
   finishArgumentList(compiler, &signature);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
 
-  if (canAssign && match(compiler, TOKEN_EQ))
+  if (canAssign && isAssignment(compiler))
   {
-    signature.type = SIG_SUBSCRIPT_SETTER;
+    // Compile the assignment and right-hand side.
+    validateNumParameters(compiler, signature.arity + 1);
+    subscriptSetterAssignment(compiler, signature);
 
-    // Compile the assigned value.
-    validateNumParameters(compiler, ++signature.arity);
-    expression(compiler);
+    signature.arity++;
+    signature.type = SIG_SUBSCRIPT_SETTER;
   }
 
   callSignature(compiler, CODE_CALL_0, &signature);
@@ -2424,10 +2447,8 @@ static void conditional(Compiler* compiler, bool canAssign)
   patchJump(compiler, elseJump);
 }
 
-void infixOp(Compiler* compiler, bool canAssign)
+void infixOpWithRule(Compiler* compiler, GrammarRule* rule)
 {
-  GrammarRule* rule = getRule(compiler->parser->previous.type);
-
   // An infix operator cannot end an expression.
   ignoreNewlines(compiler);
 
@@ -2438,6 +2459,13 @@ void infixOp(Compiler* compiler, bool canAssign)
   Signature signature = { rule->name, (int)strlen(rule->name), SIG_METHOD, 1 };
   callSignature(compiler, CODE_CALL_0, &signature);
 }
+
+void infixOp(Compiler* compiler, bool canAssign)
+{
+  GrammarRule* rule = getRule(compiler->parser->previous.type);
+  infixOpWithRule(compiler, rule);
+}
+
 
 // Compiles a method signature for an infix operator.
 void infixSignature(Compiler* compiler, Signature* signature)
@@ -2605,6 +2633,10 @@ GrammarRule rules[] =
   /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_FACTOR, "%"),
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+"),
   /* TOKEN_MINUS         */ OPERATOR("-"),
+  /* TOKEN_PLUSEQ        */ UNUSED,
+  /* TOKEN_MINUSEQ       */ UNUSED,
+  /* TOKEN_STAREQ        */ UNUSED,
+  /* TOKEN_SLASHEQ       */ UNUSED,
   /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, "<<"),
   /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">>"),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "|"),
@@ -2694,6 +2726,92 @@ void expression(Compiler* compiler)
 {
   parsePrecedence(compiler, PREC_LOWEST);
 }
+
+//Compound assigment handling
+TokenType compoundAssignmentStart(Compiler* compiler)
+{
+  //Consume the compound assign token
+  nextToken(compiler->parser);
+  switch(compiler->parser->previous.type)
+  {
+    //For the case of a normal = we handle the RHS
+    case TOKEN_EQ: {
+      expression(compiler);
+      return TOKEN_EQ;
+    } break;
+
+    case TOKEN_PLUSEQ:  return TOKEN_PLUS;
+    case TOKEN_MINUSEQ: return TOKEN_MINUS;
+    case TOKEN_STAREQ:  return TOKEN_STAR;
+    case TOKEN_SLASHEQ: return TOKEN_SLASH;
+    default: break;
+  };
+
+  UNREACHABLE();
+  return TOKEN_ERROR;
+}
+
+static void variableAssignment(Compiler* compiler, Variable variable)
+{
+  TokenType infixToken = compoundAssignmentStart(compiler);
+  if(infixToken == TOKEN_EQ) return;
+
+  //We're doing somevar = somevar + ...
+  //so we load the variable again as the arg to the infix
+  loadVariable(compiler, variable);
+  infixOpWithRule(compiler, getRule(infixToken));
+}
+
+static void fieldAssignment(Compiler* compiler, int field, bool insideMethod)
+{
+  TokenType infixToken = compoundAssignmentStart(compiler);
+  if(infixToken == TOKEN_EQ) return;
+
+  //We're doing _field = _field + ...
+  //so we load the field as the arg for the infix
+  if(insideMethod) {
+    emitByteArg(compiler, CODE_LOAD_FIELD_THIS, field);
+  } else {
+    loadThis(compiler);
+    emitByteArg(compiler, CODE_LOAD_FIELD, field);
+  }
+  //Then call the op which handles the RHS
+  infixOpWithRule(compiler, getRule(infixToken));
+}
+
+static void setterAssignment(Compiler* compiler, Code instruction, Signature signature)
+{
+  TokenType infixToken = compoundAssignmentStart(compiler);
+  if(infixToken == TOKEN_EQ) return;
+
+  //We're doing self.setter = self.getter + ...
+  //so to call the getter, we duplicate the self on the stack
+  emitOp(compiler, CODE_LOAD_LOCAL_0);
+  callSignature(compiler, instruction, &signature);
+  //Then call the op which handles the RHS
+  infixOpWithRule(compiler, getRule(infixToken));
+
+}
+
+static void subscriptSetterAssignment(Compiler* compiler, Signature signature)
+{
+  TokenType infixToken = compoundAssignmentStart(compiler);
+  if(infixToken == TOKEN_EQ) return;
+
+  //We're doing self[_,_] = self[_,_] + ...
+  //so to call the getter, we duplicate the
+  //subscript self + args on the stack
+  emitOp(compiler, CODE_LOAD_LOCAL_0);
+  for(int i = 0; i < signature.arity; ++i) {
+    emitOp(compiler, CODE_LOAD_LOCAL_1+i);
+  }
+  //Then call the getter part
+  callSignature(compiler, CODE_CALL_0, &signature);
+  //Then call the op which handles the RHS
+  infixOpWithRule(compiler, getRule(infixToken));
+
+}
+
 
 // Returns the number of arguments to the instruction at [ip] in [fn]'s
 // bytecode.
