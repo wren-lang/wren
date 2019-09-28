@@ -2803,7 +2803,7 @@ static void subscriptSetterAssignment(Compiler* compiler, Signature signature)
   //subscript self + args on the stack
   emitOp(compiler, CODE_LOAD_LOCAL_0);
   for(int i = 0; i < signature.arity; ++i) {
-    emitOp(compiler, CODE_LOAD_LOCAL_1+i);
+    emitOp(compiler, (Code)(CODE_LOAD_LOCAL_1 + i));
   }
   //Then call the getter part
   callSignature(compiler, CODE_CALL_0, &signature);
