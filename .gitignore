@@ -10,6 +10,7 @@
 *.pyc
 /util/vs2017/build
 /util/vs2017/lib/obj
+/util/vs2017/wren/obj
 
 # I leave a temporary Wren script at the top level so that I can quickly test
 # stuff.
