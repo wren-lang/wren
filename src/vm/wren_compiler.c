@@ -2854,6 +2854,7 @@ static int getNumArguments(const uint8_t* bytecode, const Value* constants,
     case CODE_LOAD_FIELD:
     case CODE_STORE_FIELD:
     case CODE_CLASS:
+    case CODE_PUSH:
       return 1;
 
     case CODE_CONSTANT:
