@@ -77,6 +77,9 @@ OPCODE(STORE_FIELD, -1)
 // Pop and discard the top of stack.
 OPCODE(POP, -1)
 
+// Push N values to the stack, from the stack. The number is unused.
+OPCODE(PUSH, 0)
+
 // Invoke the method with symbol [arg]. The number indicates the number of
 // arguments (not including the receiver).
 OPCODE(CALL_0, 0)

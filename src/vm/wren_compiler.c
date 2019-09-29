@@ -1173,6 +1173,12 @@ static int emitByte(Compiler* compiler, int byte)
   return compiler->fn->code.count - 1;
 }
 
+static void emitPush(Compiler* compiler, int count)
+{
+  emitByte(compiler, CODE_PUSH);
+  emitByte(compiler, count);
+}
+
 // Emits one bytecode instruction.
 static void emitOp(Compiler* compiler, Code instruction)
 {
@@ -2786,7 +2792,7 @@ static void setterAssignment(Compiler* compiler, Code instruction, Signature sig
 
   //We're doing self.setter = self.getter + ...
   //so to call the getter, we duplicate the self on the stack
-  emitOp(compiler, CODE_LOAD_LOCAL_0);
+  emitPush(compiler, 1);
   callSignature(compiler, instruction, &signature);
   //Then call the op which handles the RHS
   infixOpWithRule(compiler, getRule(infixToken));
@@ -2801,11 +2807,7 @@ static void subscriptSetterAssignment(Compiler* compiler, Signature signature)
   //We're doing self[_,_] = self[_,_] + ...
   //so to call the getter, we duplicate the
   //subscript self + args on the stack
-  emitOp(compiler, CODE_LOAD_LOCAL_0);
-  for(int i = 0; i < signature.arity; ++i) {
-    emitOp(compiler, (Code)(CODE_LOAD_LOCAL_1 + i));
-  }
-  //Then call the getter part
+  emitPush(compiler, signature.arity + 1);
   callSignature(compiler, CODE_CALL_0, &signature);
   //Then call the op which handles the RHS
   infixOpWithRule(compiler, getRule(infixToken));
