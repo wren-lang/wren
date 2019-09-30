@@ -1148,9 +1148,10 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(PUSH):
     {
-      Value* stackTopBefore = fiber->stackTop;
       uint8_t count = READ_BYTE();
-      for(uint8_t i = count; i > 0; --i) 
+      wrenEnsureStack(vm, fiber, fiber->stackCapacity + count);
+      Value* stackTopBefore = fiber->stackTop;
+      for(uint8_t i = count; i > 0; --i)
       {
         Value* value = stackTopBefore - i;
         PUSH(*value);
