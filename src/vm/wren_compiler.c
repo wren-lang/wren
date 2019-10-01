@@ -1646,6 +1646,7 @@ static inline bool isAssignment(Compiler* compiler)
     case TOKEN_PIPEEQ:
     case TOKEN_AMPEQ:
       return true;
+    default: break;
   }
   return false;
 }
