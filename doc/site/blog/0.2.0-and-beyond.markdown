@@ -8,10 +8,10 @@
 It's time to tag a release!
 Let's check our goals from [the last blog post](http://wren.io/blog/hello-wren.html):
 
-- ~~We're gonna clear out a bit of backlog, tidying up issues and PRs~~
-- ~~Tidy up the website a bit, visually and structurally~~
-- ~~Make sure all documentation is up to date with the current development~~
-- ~~Tag 0.2.0 with a list of relevant changes since 0.1.0~~
+- <s>We're gonna clear out a bit of backlog, tidying up issues and PRs</s>
+- <s>Tidy up the website a bit, visually and structurally</s>
+- <s>Make sure all documentation is up to date with the current development</s>
+- <s>Tag 0.2.0 with a list of relevant changes since 0.1.0</s>
 
 So far so good.
 
@@ -23,16 +23,16 @@ Many issues are outdated (or unrelated), and some need a proper response. Some a
 
 The good news is the issue list has been drastically reduced, 70+ issues being closed (or resolved). Around 21 of those are marked for future consideration, and 23 moved to the Wren CLI repository. More consolidation will still continue.
 
-**The goal is to have the active issues be as relevant as possible to the immediate term goals.**
+**The goal is that the active issues are as relevant as possible in the immediate term.**
 
-The one tricky but important aspect to mention here is the perception of closing an issue...
+A tricky but important aspect to mention here is the perception of closing an issue...
 A closed issue doesn't necessarily mean anything final, it's just a categorization tool!
 
 The other categorization tool which operates _within_ open/closed categories, is the _label_. Labels allow us to distinguish clearly the different types of issues, which makes open/closed less binary and more nuanced and rich. We rely on both to make sense of the list.
 
 For example, discussions of future tasks, ideas or goals [are tagged `future`](https://github.com/wren-lang/wren/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3Afuture+). Now we can refer to them later, and re-open them when they become active and relevant again.
 
-**We're in this together**
+**We're in this together.**   
 Please don't be discouraged if an issue is closed! Discussion is absolutely encouraged and ideas, proposals and input is very necessary. Feel free to keep a discussion going, even if the issue it's attached to has been marked as closed.
 
 ### 0.2.0
@@ -41,7 +41,7 @@ We've been hammering away on Wren since 0.1.0 for quite a while. The [change lis
 
 Most importantly, before we start iterating on the language further, I wanted to make sure we had a checkpoint to look back to. That's largely what 0.2.0 is about.
 
-There's quite a lot of good changes in here, with0 **290 commits from 41 contributors!**
+There's quite a lot of good changes, with **290 commits from 41 contributors!**
 Thanks to everyone getting involved, every little bit has helped Wren, no matter how small the contribution.
 
 ### 0.3.0
