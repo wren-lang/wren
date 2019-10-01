@@ -12,3 +12,9 @@ System.print(list[2]) // expect: 27
 list[3] /= 2
 System.print(list[3]) // expect: 2
 
+list[0] <<= 2
+System.print(list[0]) // expect: 44
+
+list[2] >>= 1
+System.print(list[2]) // expect: 13
+

@@ -24,6 +24,10 @@ a[0,1,2] *= 4
 System.print(a[0,1,2]) // expect: 16
 a[0,1,2] /= 2
 System.print(a[0,1,2]) // expect: 8
+a[0,1,2] <<= 3
+System.print(a[0,1,2]) // expect: 64
+a[0,1,2] >>= 2
+System.print(a[0,1,2]) // expect: 16
 
 a.other = Compound.new()
 a.other[0,1,2] = 4
@@ -36,6 +40,10 @@ a.other[0,1,2] *= 2
 System.print(a.other[0,1,2]) // expect: 24
 a.other[0,1,2] /= 6
 System.print(a.other[0,1,2]) // expect: 4
+a.other[0,1,2] <<= 6
+System.print(a.other[0,1,2]) // expect: 256
+a.other[0,1,2] >>= 3
+System.print(a.other[0,1,2]) // expect: 32
 
 a.other.other = Compound.new()
 a.other.other[1,2,3] = 2
@@ -48,5 +56,9 @@ a.other.other[1,2,3] -= 1
 System.print(a.other.other[1,2,3]) // expect: 99
 a.other.other[1,2,3] /= 3
 System.print(a.other.other[1,2,3]) // expect: 33
+a.other.other[1,2,3] <<= 1
+System.print(a.other.other[1,2,3]) // expect: 66
+a.other.other[1,2,3] >>= 4
+System.print(a.other.other[1,2,3]) // expect: 4
 
 

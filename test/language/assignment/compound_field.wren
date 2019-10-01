@@ -16,6 +16,12 @@ class Compound {
   slash() {
     _value /= 2
   }
+  ltlt() {
+    _value <<= 2
+  }
+  gtgt() {
+    _value >>= 1
+  }
 }
 
 var a = Compound.new()
@@ -28,3 +34,7 @@ a.star()
 System.print(a.value) // expect: 16
 a.slash()
 System.print(a.value) // expect: 8
+a.ltlt()
+System.print(a.value) // expect: 32
+a.gtgt()
+System.print(a.value) // expect: 16

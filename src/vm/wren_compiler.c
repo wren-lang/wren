@@ -74,6 +74,8 @@ typedef enum
   TOKEN_SLASHEQ,
   TOKEN_LTLT,
   TOKEN_GTGT,
+  TOKEN_LTLTEQ,
+  TOKEN_GTGTEQ,
   TOKEN_PIPE,
   TOKEN_PIPEPIPE,
   TOKEN_CARET,
@@ -1011,7 +1013,7 @@ static void nextToken(Parser* parser)
       case '<':
         if (matchChar(parser, '<'))
         {
-          makeToken(parser, TOKEN_LTLT);
+          twoCharToken(parser, '=', TOKEN_LTLTEQ, TOKEN_LTLT);
         }
         else
         {
@@ -1022,7 +1024,7 @@ static void nextToken(Parser* parser)
       case '>':
         if (matchChar(parser, '>'))
         {
-          makeToken(parser, TOKEN_GTGT);
+          twoCharToken(parser, '=', TOKEN_GTGTEQ, TOKEN_GTGT);
         }
         else
         {
@@ -1614,7 +1616,9 @@ static inline bool isAssignment(Compiler* compiler)
     next == TOKEN_PLUSEQ  ||
     next == TOKEN_MINUSEQ ||
     next == TOKEN_STAREQ  ||
-    next == TOKEN_SLASHEQ;
+    next == TOKEN_SLASHEQ ||
+    next == TOKEN_LTLTEQ  ||
+    next == TOKEN_GTGTEQ;
 }
 
 // Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
@@ -2645,6 +2649,8 @@ GrammarRule rules[] =
   /* TOKEN_SLASHEQ       */ UNUSED,
   /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, "<<"),
   /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">>"),
+  /* TOKEN_LTLTEQ        */ UNUSED,
+  /* TOKEN_GTGTEQ        */ UNUSED,
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "|"),
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGICAL_OR, or_),
   /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE_XOR, "^"),
@@ -2750,6 +2756,8 @@ TokenType compoundAssignmentStart(Compiler* compiler)
     case TOKEN_MINUSEQ: return TOKEN_MINUS;
     case TOKEN_STAREQ:  return TOKEN_STAR;
     case TOKEN_SLASHEQ: return TOKEN_SLASH;
+    case TOKEN_LTLTEQ:  return TOKEN_LTLT;
+    case TOKEN_GTGTEQ:  return TOKEN_GTGT;
     default: break;
   };
 
