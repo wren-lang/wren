@@ -66,6 +66,7 @@ typedef enum
   TOKEN_STAR,
   TOKEN_SLASH,
   TOKEN_PERCENT,
+  TOKEN_PERCENTEQ,
   TOKEN_PLUS,
   TOKEN_MINUS,
   TOKEN_PLUSEQ,
@@ -78,9 +79,12 @@ typedef enum
   TOKEN_GTGTEQ,
   TOKEN_PIPE,
   TOKEN_PIPEPIPE,
+  TOKEN_PIPEEQ,
   TOKEN_CARET,
+  TOKEN_CARETEQ,
   TOKEN_AMP,
   TOKEN_AMPAMP,
+  TOKEN_AMPEQ,
   TOKEN_BANG,
   TOKEN_TILDE,
   TOKEN_QUESTION,
@@ -972,15 +976,33 @@ static void nextToken(Parser* parser)
       case ':': makeToken(parser, TOKEN_COLON); return;
       case ',': makeToken(parser, TOKEN_COMMA); return;
       case '*': twoCharToken(parser, '=', TOKEN_STAREQ, TOKEN_STAR); return;
-      case '%': makeToken(parser, TOKEN_PERCENT); return;
-      case '^': makeToken(parser, TOKEN_CARET); return;
+      case '%': twoCharToken(parser, '=', TOKEN_PERCENTEQ, TOKEN_PERCENT); return;
+      case '^': twoCharToken(parser, '=', TOKEN_CARETEQ, TOKEN_CARET); return;
       case '+': twoCharToken(parser, '=', TOKEN_PLUSEQ, TOKEN_PLUS); return;
       case '-': twoCharToken(parser, '=', TOKEN_MINUSEQ, TOKEN_MINUS); return;
       case '~': makeToken(parser, TOKEN_TILDE); return;
       case '?': makeToken(parser, TOKEN_QUESTION); return;
         
-      case '|': twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE); return;
-      case '&': twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP); return;
+      case '|':
+        if (matchChar(parser, '|'))
+        {
+          makeToken(parser, TOKEN_PIPEPIPE);
+          return;
+        }
+
+        twoCharToken(parser, '=', TOKEN_PIPEEQ, TOKEN_PIPE);
+        return;
+
+      case '&':
+        if (matchChar(parser, '&'))
+        {
+          makeToken(parser, TOKEN_AMPAMP);
+          return;
+        }
+
+        twoCharToken(parser, '=', TOKEN_AMPEQ, TOKEN_AMP);
+        return;
+
       case '=': twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ); return;
       case '!': twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG); return;
         
@@ -1611,14 +1633,21 @@ static void subscriptSetterAssignment(Compiler* compiler, Signature signature);
 static inline bool isAssignment(Compiler* compiler)
 {
   TokenType next = peek(compiler);
-  return
-    next == TOKEN_EQ      ||
-    next == TOKEN_PLUSEQ  ||
-    next == TOKEN_MINUSEQ ||
-    next == TOKEN_STAREQ  ||
-    next == TOKEN_SLASHEQ ||
-    next == TOKEN_LTLTEQ  ||
-    next == TOKEN_GTGTEQ;
+  switch(next) {
+    case TOKEN_EQ:
+    case TOKEN_PLUSEQ:
+    case TOKEN_MINUSEQ:
+    case TOKEN_STAREQ:
+    case TOKEN_SLASHEQ:
+    case TOKEN_LTLTEQ:
+    case TOKEN_GTGTEQ:
+    case TOKEN_PERCENTEQ:
+    case TOKEN_CARETEQ:
+    case TOKEN_PIPEEQ:
+    case TOKEN_AMPEQ:
+      return true;
+  }
+  return false;
 }
 
 // Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
@@ -2641,6 +2670,7 @@ GrammarRule rules[] =
   /* TOKEN_STAR          */ INFIX_OPERATOR(PREC_FACTOR, "*"),
   /* TOKEN_SLASH         */ INFIX_OPERATOR(PREC_FACTOR, "/"),
   /* TOKEN_PERCENT       */ INFIX_OPERATOR(PREC_FACTOR, "%"),
+  /* TOKEN_PERCENTEQ     */ UNUSED,
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+"),
   /* TOKEN_MINUS         */ OPERATOR("-"),
   /* TOKEN_PLUSEQ        */ UNUSED,
@@ -2653,9 +2683,12 @@ GrammarRule rules[] =
   /* TOKEN_GTGTEQ        */ UNUSED,
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "|"),
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGICAL_OR, or_),
+  /* TOKEN_PIPEEQ        */ UNUSED,
   /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE_XOR, "^"),
+  /* TOKEN_CARETEQ       */ UNUSED,
   /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE_AND, "&"),
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGICAL_AND, and_),
+  /* TOKEN_AMPEQ         */ UNUSED,
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_TILDE         */ PREFIX_OPERATOR("~"),
   /* TOKEN_QUESTION      */ INFIX(PREC_ASSIGNMENT, conditional),
@@ -2752,12 +2785,16 @@ TokenType compoundAssignmentStart(Compiler* compiler)
       return TOKEN_EQ;
     } break;
 
-    case TOKEN_PLUSEQ:  return TOKEN_PLUS;
-    case TOKEN_MINUSEQ: return TOKEN_MINUS;
-    case TOKEN_STAREQ:  return TOKEN_STAR;
-    case TOKEN_SLASHEQ: return TOKEN_SLASH;
-    case TOKEN_LTLTEQ:  return TOKEN_LTLT;
-    case TOKEN_GTGTEQ:  return TOKEN_GTGT;
+    case TOKEN_PLUSEQ:    return TOKEN_PLUS;
+    case TOKEN_MINUSEQ:   return TOKEN_MINUS;
+    case TOKEN_STAREQ:    return TOKEN_STAR;
+    case TOKEN_SLASHEQ:   return TOKEN_SLASH;
+    case TOKEN_LTLTEQ:    return TOKEN_LTLT;
+    case TOKEN_GTGTEQ:    return TOKEN_GTGT;
+    case TOKEN_PERCENTEQ: return TOKEN_PERCENT;
+    case TOKEN_PIPEEQ:    return TOKEN_PIPE;
+    case TOKEN_AMPEQ:     return TOKEN_AMP;
+    case TOKEN_CARETEQ:   return TOKEN_CARET;
     default: break;
   };
 

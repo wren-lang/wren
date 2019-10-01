@@ -12,3 +12,11 @@ a <<= 8
 System.print(a) // expect: 2048
 a >>= 6
 System.print(a) // expect: 32
+a %= 3
+System.print(a) // expect: 2
+a ^= 4
+System.print(a) // expect: 6
+a |= 8
+System.print(a) // expect: 14
+a &= 6
+System.print(a) // expect: 6
