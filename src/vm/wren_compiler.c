@@ -2197,7 +2197,7 @@ static void field(Compiler* compiler, bool canAssign)
 // Compiles a read or assignment to [variable].
 static void bareName(Compiler* compiler, bool canAssign, Variable variable)
 {
-  // If there's an "=" after a bare name, it's a variable assignment.
+  // If there's an assignment after a bare name, it's a variable assignment.
   if (canAssign && isAssignment(compiler))
   {
     // Compile the assignment and right-hand side.
