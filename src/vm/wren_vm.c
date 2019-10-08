@@ -1525,7 +1525,7 @@ int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
   {
     // An implicitly declared variable's value will always be a number.
     // Now we have a real definition.
-    if(line) *line = AS_NUM(module->variables.data[symbol]);
+    if(line) *line = (int)AS_NUM(module->variables.data[symbol]);
     module->variables.data[symbol] = value;
 
 	// If this was a localname we want to error if it was 
