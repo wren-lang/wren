@@ -7,3 +7,4 @@ System.print(2.55e-2 is Num) // expect: true
 System.print(x is Num) // expect: true
 System.print(-2.55e2) // expect: -255
 System.print(-25500e-2) // expect: -255
+System.print(2.55e+2) // expect: 255

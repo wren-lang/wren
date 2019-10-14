@@ -26,6 +26,8 @@ from other languages:
     3.14159
     1.0
     -12.34
+    0.0314159e02
+    314.159e-02
 
 Numbers are instances of the [Num][] class.
 
