@@ -369,11 +369,10 @@ value is `null`.
 ### Encapsulation
 
 All fields are *private* in Wren&mdash;an object's fields can only be directly
-accessed from within methods defined on the object's class. You cannot even
-access fields on another instance of your own class, unlike C++ and Java.
+accessed from within methods defined on the object's class. 
 
-If you want to make a property of an object visible, you need to define a
-getter to expose it:
+In short, if you want to make a property of an object visible,
+**you need to define a getter to expose it**:
 
     :::wren
     class Rectangle {
@@ -383,13 +382,47 @@ getter to expose it:
       // ...
     }
 
-To allow outside code to modify the field, you'll also need to provide setters:
+To allow outside code to modify the field,
+**you need to provide setters to provide access**:
 
     :::wren
     class Rectangle {
       width=(value) { _width = value }
       height=(value) { _height = value }
     }
+
+This might be different from what you're used to, so here are two important facts:
+
+- You can't access fields from a base class.
+- You can't access fields on another instance of your own class.
+
+Here is an example in code:
+
+    :::wren
+    class Shape {
+      construct new() {
+        _shape = "none"
+      }
+    }
+    
+    class Rectangle is Shape {
+      construct new() {
+        //This will print null!
+        //_shape from the parent class is private,
+        //we are reading `_shape` from `this`,
+        //which has not been set, so returns null.
+        System.print("I am a %(_shape)")
+        
+        //a local variable, all variables are private
+        _width = 10
+        var other = Rectangle.new()
+
+        //other._width is not accessible from here,
+        //even though we are also a rectangle. The field
+        //is private, and other._width is invalid syntax!
+      }
+    }
+    ...
 
 One thing we've learned in the past forty years of software engineering is that
 encapsulating state tends to make code easier to maintain, so Wren defaults to

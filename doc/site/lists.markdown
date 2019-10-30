@@ -67,7 +67,7 @@ use `add` to append a single item to the end:
 
     :::wren
     hirsute.add("goatee")
-    System.print(hirsute.count) //> 4
+    System.print(hirsute.count) //> 5
 
 You can insert a new element at a specific position using `insert`:
 

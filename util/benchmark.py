@@ -288,7 +288,10 @@ def read_baseline():
         name, best = line.split(",")
         for benchmark in BENCHMARKS:
           if benchmark[0] == name:
-            benchmark[2] = float(best)
+            if not best.startswith("None"):
+              benchmark[2] = float(best)
+            else:
+              benchmark[2] = 0.0
 
 
 def generate_baseline():
