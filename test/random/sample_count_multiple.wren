@@ -3,20 +3,25 @@ import "random" for Random
 var random = Random.new(12345)
 
 // Should choose all elements with roughly equal probability.
-var list = ["a", "b", "c", "d", "e", "f"]
-var histogram = {}
-for (i in 1..5000) {
-  var sample = random.sample(list, 4)
-  // Represent the samples with an unordered set.
-  var map = {}
-  sample.each {|s| map[s] = 1 }
-  var string = map.toString
-  if (!histogram.containsKey(string)) histogram[string] = 0
-  histogram[string] = histogram[string] + 1
-}
+var list = (0...10).toList
+var binom = [1, 10, 45, 120, 210, 252, 210, 120, 45, 10, 1]
 
-System.print(histogram.count) // expect: 15
-for (key in histogram.keys) {
-  var error = (histogram[key] / (5000 / 15) - 1).abs
-  if (error > 0.2) System.print("!!! %(error)")
+for (k in 0..10) {
+  var count = binom[k]
+
+  var histogram = {}
+  for (i in 1..count * 100) {
+    var sample = random.sample(list, k)
+    // Create a bitmask to represent the unordered set.
+    var bitmask = 0
+    sample.each {|s| bitmask = bitmask | (1 << s) }
+    if (!histogram.containsKey(bitmask)) histogram[bitmask] = 0
+    histogram[bitmask] = histogram[bitmask] + 1
+  }
+
+  if (histogram.count != count) System.print("!!! %(count) %(histogram.count)")
+  for (key in histogram.keys) {
+    var error = (histogram[key] - 100).abs
+    if (error > 50) System.print("!!! %(error)")
+  }
 }
