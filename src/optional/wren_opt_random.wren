@@ -47,7 +47,10 @@ foreign class Random {
   int(end) { (float() * end).floor }
   int(start, end) { (float() * (end - start)).floor + start }
 
-  sample(list) { sample(list, 1)[0] }
+  sample(list) {
+    if (list.count == 0) Fiber.abort("Not enough elements to sample.")
+    return list[int(list.count)]
+  }
   sample(list, count) {
     if (count > list.count) Fiber.abort("Not enough elements to sample.")
 
@@ -59,17 +62,17 @@ foreign class Random {
     // performance for large sample sizes as well as reduces memory usage.
     if (count * 4 < list.count) {
       var picked = {}
-      for (i in list.count - count + 1...list.count + 1) {
-        var index = int(i)
-        if (picked.containsKey(index)) index = i - 1
+      for (i in list.count - count...list.count) {
+        var index = int(i + 1)
+        if (picked.containsKey(index)) index = i
         picked[index] = true
         result.add(list[index])
       }
     } else {
       var picked = List.filled(list.count, false)
-      for (i in list.count - count + 1...list.count + 1) {
-        var index = int(i)
-        if (picked[index]) index = i - 1
+      for (i in list.count - count...list.count) {
+        var index = int(i + 1)
+        if (picked[index]) index = i
         picked[index] = true
         result.add(list[index])
       }
