@@ -471,8 +471,8 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
-// it in [slot].
-void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
+// it in [slot]. Returns -1 if the variable couldn't be found.
+int wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot);
 
 // Sets the current fiber to be aborted, and uses the value in [slot] as the

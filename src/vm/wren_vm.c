@@ -1751,7 +1751,7 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
 }
 
-void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
+int wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {
   ASSERT(module != NULL, "Module cannot be NULL.");
@@ -1768,9 +1768,13 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
 
   int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
                                          name, strlen(name));
-  ASSERT(variableSlot != -1, "Could not find variable.");
-  
+  if (variableSlot == -1) {
+    // Could not find variable
+    return -1;
+  }
+
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
+  return 0;
 }
 
 void wrenAbortFiber(WrenVM* vm, int slot)
