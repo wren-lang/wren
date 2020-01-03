@@ -9,6 +9,9 @@ A directory on the file system.
 Tries to create a directory at `path` with `permissions`.
 Returns `true` if the directory was created, `false` if the directory already exists.
 
+    :::wren
+    Directory.create("output", UserPerm.read | UserPerm.write)
+
 ### Directory.**delete**(path)
 
 Removes an *empty* directory at `path`. 
