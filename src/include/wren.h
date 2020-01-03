@@ -253,6 +253,13 @@ typedef enum
   WREN_RESULT_RUNTIME_ERROR
 } WrenInterpretResult;
 
+typedef enum
+{
+  WREN_VARIABLE_SUCCESS,
+  WREN_VARIABLE_MODULE_MISSING,
+  WREN_VARIABLE_UNDEFINED
+} WrenGetVariableResult;
+
 // The type of an object stored in a slot.
 //
 // This is not necessarily the object's *class*, but instead its low level
@@ -472,7 +479,7 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot]. Returns -1 if the variable couldn't be found.
-int wrenGetVariable(WrenVM* vm, const char* module, const char* name,
+WrenGetVariableResult  wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot);
 
 // Sets the current fiber to be aborted, and uses the value in [slot] as the

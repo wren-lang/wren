@@ -1751,30 +1751,32 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
 }
 
-int wrenGetVariable(WrenVM* vm, const char* module, const char* name,
+WrenGetVariableResult wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {
   ASSERT(module != NULL, "Module cannot be NULL.");
-  ASSERT(name != NULL, "Variable name cannot be NULL.");  
+  ASSERT(name != NULL, "Variable name cannot be NULL.");
   validateApiSlot(vm, slot);
   
   Value moduleName = wrenStringFormat(vm, "$", module);
   wrenPushRoot(vm, AS_OBJ(moduleName));
   
   ObjModule* moduleObj = getModule(vm, moduleName);
-  ASSERT(moduleObj != NULL, "Could not find module.");
-  
+  if (moduleObj == NULL) {
+    return WREN_VARIABLE_MODULE_MISSING;
+  }
+
   wrenPopRoot(vm); // moduleName.
 
   int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
                                          name, strlen(name));
   if (variableSlot == -1) {
     // Could not find variable
-    return -1;
+    return WREN_VARIABLE_UNDEFINED;
   }
 
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
-  return 0;
+  return WREN_VARIABLE_SUCCESS;
 }
 
 void wrenAbortFiber(WrenVM* vm, int slot)
