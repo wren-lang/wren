@@ -282,6 +282,22 @@ void fileOpen(WrenVM* vm)
              fileOpenCallback);
 }
 
+static void fileRenameCallback(uv_fs_t* request)
+{
+  if (handleRequestError(request)) return;
+  schedulerResume(freeRequest(request), false);
+}
+
+void fileRename(WrenVM* vm)
+{
+  const char* oldpath = wrenGetSlotString(vm, 1);
+  const char* newpath = wrenGetSlotString(vm, 2);
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 3));
+  
+  // TODO: Check return.
+  uv_fs_rename(getLoop(), request, oldpath, newpath, fileRenameCallback);
+}
+
 // Called by libuv when the stat call for size completes.
 static void fileSizeCallback(uv_fs_t* request)
 {

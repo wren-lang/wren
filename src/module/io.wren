@@ -76,6 +76,13 @@ foreign class File {
     return stat.isFile
   }
 
+  static rename(oldpath, newpath) {
+    ensurePath_(oldpath)
+    ensurePath_(newpath)
+    rename_(oldpath, newpath, Fiber.current)
+    return Scheduler.runNextScheduled_()
+  }
+
   static open(path) { openWithFlags(path, FileFlags.readOnly) }
 
   static open(path, fn) { openWithFlags(path, FileFlags.readOnly, fn) }
@@ -182,6 +189,7 @@ foreign class File {
 
   foreign static delete_(path, fiber)
   foreign static open_(path, flags, fiber)
+  foreign static rename_(oldpath, newpath, fiber)
   foreign static realPath_(path, fiber)
   foreign static sizePath_(path, fiber)
 

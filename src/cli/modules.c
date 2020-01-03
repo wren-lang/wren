@@ -16,6 +16,7 @@ extern void fileAllocate(WrenVM* vm);
 extern void fileFinalize(void* data);
 extern void fileDelete(WrenVM* vm);
 extern void fileOpen(WrenVM* vm);
+extern void fileRename(WrenVM* vm);
 extern void fileSizePath(WrenVM* vm);
 extern void fileClose(WrenVM* vm);
 extern void fileDescriptor(WrenVM* vm);
@@ -127,6 +128,7 @@ static ModuleRegistry modules[] =
       FINALIZER(fileFinalize)
       STATIC_METHOD("delete_(_,_)", fileDelete)
       STATIC_METHOD("open_(_,_,_)", fileOpen)
+      STATIC_METHOD("rename_(_,_,_)", fileRename)
       STATIC_METHOD("realPath_(_,_)", fileRealPath)
       STATIC_METHOD("sizePath_(_,_)", fileSizePath)
       METHOD("close_(_)", fileClose)
