@@ -25,6 +25,10 @@ automatically closed.
 
 Deletes the file at `path`.
 
+### File.**rename**(oldpath, newpath)
+
+Changes the name of the file at `oldpath` to `newpath`.
+
 ### File.**exists**(path)
 
 Whether a regular file exists at `path`. This returns `false` for directories

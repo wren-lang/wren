@@ -6,10 +6,10 @@ class Directory {
     if (!(path is String)) Fiber.abort("Path must be a string.")
   }
 
-  static create(path, flags) {
+  static create(path, permissions) {
     ensurePath_(path)
-    File.ensureInt_(flags, "Flags")
-    create_(path, flags, Fiber.current)
+    File.ensureInt_(permissions, "permissions")
+    create_(path, permissions, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
