@@ -6,7 +6,7 @@ A directory on the file system.
 
 ### Directory.**create**(path, permissions)
 
-Tries to createa directory exists at `path` with `permissions`.
+Tries to create a directory at `path` with `permissions`.
 Returns `true` if the directory was created, `false` if the directory already exists.
 
 ### Directory.**delete**(path)
