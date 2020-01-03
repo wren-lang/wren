@@ -145,6 +145,46 @@ void directoryList(WrenVM* vm)
   uv_fs_scandir(getLoop(), request, path, 0, directoryListCallback);
 }
 
+// The UNIX file flags have specified names but not values. So we define our
+// own values in FileFlags and remap them to the host OS's values here.
+static int mapFilePermissions(int flags)
+{
+  int result = 0;
+  
+  // Note: These must be kept in sync with FilePermission in io.wren.
+  if (flags & 0x0700) result |= S_IRWXU;	/* RWX mask for owner */
+  if (flags & 0x0400) result |= S_IRUSR;	/* R for owner */
+  if (flags & 0x0200) result |= S_IWUSR;	/* W for owner */
+  if (flags & 0x0100) result |= S_IXUSR;	/* X for owner */
+
+  if (flags & 0x0070) result |= S_IRWXG;	/* RWX mask for group */
+  if (flags & 0x0040) result |= S_IRGRP;	/* R for group */
+  if (flags & 0x0020) result |= S_IWGRP;	/* W for group */
+  if (flags & 0x0010) result |= S_IXGRP;	/* X for group */
+
+  if (flags & 0x0007) result |= S_IRWXO;	/* RWX mask for other */
+  if (flags & 0x0004) result |= S_IROTH;	/* R for other */
+  if (flags & 0x0002) result |= S_IWOTH;	/* W for other */
+  if (flags & 0x0001) result |= S_IXOTH;	/* X for other */
+  
+  return result;
+}
+
+static void directoryCreateCallback(uv_fs_t* request)
+{
+  if (handleRequestError(request)) return;
+  schedulerResume(freeRequest(request), false);
+}
+
+void directoryCreate(WrenVM* vm)
+{
+  const char* path = wrenGetSlotString(vm, 1);
+  int flags = (int)wrenGetSlotDouble(vm, 2);
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 3));
+
+  uv_fs_mkdir(getLoop(), request, path, mapFilePermissions(flags), directoryCreateCallback);
+}
+
 void fileAllocate(WrenVM* vm)
 {
   // Store the file descriptor in the foreign data, so that we can get to it

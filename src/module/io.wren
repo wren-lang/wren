@@ -6,6 +6,13 @@ class Directory {
     if (!(path is String)) Fiber.abort("Path must be a string.")
   }
 
+  static create(path, flags) {
+    ensurePath_(path)
+    File.ensureInt_(flags, "Flags")
+    create_(path, flags, Fiber.current)
+    return Scheduler.runNextScheduled_()
+  }
+
   static exists(path) {
     ensurePath_(path)
     var stat
@@ -24,8 +31,11 @@ class Directory {
     return Scheduler.runNextScheduled_()
   }
 
+  foreign static create_(path, flags, fiber)
   foreign static list_(path, fiber)
 }
+
+
 
 foreign class File {
   static create(path) {
@@ -174,6 +184,25 @@ foreign class File {
   foreign size_(fiber)
   foreign stat_(fiber)
   foreign writeBytes_(bytes, offset, fiber)
+}
+
+class FilePermission {
+  // Note: These must be kept in sync with mapFilePermissions() in io.c.
+
+  static userMask { 0x0700 }	// RWX mask for owner
+  static userR { 0x0400 }			// R for owner
+  static userW { 0x0200 }			// W for owner
+  static userX { 0x0100 }			// X for owner
+
+  static groupMask { 0x0070 }	// RWX mask for group
+  static groupR { 0x0040 }			// R for group
+  static groupW { 0x0020 }			// W for group
+  static groupX { 0x0010 }			// X for group
+
+  static otherMask { 0x0007 }		// RWX mask for other
+  static otherR { 0x0004 }			// R for other
+  static otherW { 0x0002 }			// W for other
+  static otherX { 0x0001 }			// X for other
 }
 
 class FileFlags {
