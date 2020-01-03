@@ -120,7 +120,7 @@ static ModuleRegistry modules[] =
   MODULE(io)
     CLASS(Directory)
       STATIC_METHOD("list_(_,_)", directoryList)
-      STATIC_METHOD("create_(_,_,_)", directoryCreate)
+      STATIC_METHOD("create_(_,_)", directoryCreate)
       STATIC_METHOD("delete_(_,_)", directoryDelete)
     END_CLASS
     CLASS(File)

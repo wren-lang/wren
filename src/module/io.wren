@@ -6,10 +6,9 @@ class Directory {
     if (!(path is String)) Fiber.abort("Path must be a string.")
   }
 
-  static create(path, permissions) {
+  static create(path) {
     ensurePath_(path)
-    File.ensureInt_(permissions, "permissions")
-    create_(path, permissions, Fiber.current)
+    create_(path, Fiber.current)
     return Scheduler.runNextScheduled_()
   }
 
@@ -37,7 +36,7 @@ class Directory {
     return Scheduler.runNextScheduled_()
   }
 
-  foreign static create_(path, flags, fiber)
+  foreign static create_(path, fiber)
   foreign static delete_(path, fiber)
   foreign static list_(path, fiber)
 }
@@ -198,30 +197,6 @@ foreign class File {
   foreign size_(fiber)
   foreign stat_(fiber)
   foreign writeBytes_(bytes, offset, fiber)
-}
-
-// Note: These must be kept in sync with mapFilePermissions() in io.c.
-class UserPerm {
-  static mask { 0x0700 }	// RWX mask for owner
-  static read { 0x0400 }			// R for owner
-  static write { 0x0200 }			// W for owner
-  static execute { 0x0100 }			// X for owner
-}
-
-// Note: These must be kept in sync with mapFilePermissions() in io.c.
-class GroupPerm {
-  static mask { 0x0070 }	// RWX mask for group
-  static read { 0x0040 }			// R for group
-  static write { 0x0020 }			// W for group
-  static execute { 0x0010 }			// X for group
-}
-
-// Note: These must be kept in sync with mapFilePermissions() in io.c.
-class OtherPerm {
-  static mask { 0x0007 }		// RWX mask for other
-  static read { 0x0004 }			// R for other
-  static write { 0x0002 }			// W for other
-  static execute { 0x0001 }			// X for other
 }
 
 class FileFlags {
