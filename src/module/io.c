@@ -194,6 +194,20 @@ void directoryCreate(WrenVM* vm)
   uv_fs_mkdir(getLoop(), request, path, mapFilePermissions(flags), directoryCreateCallback);
 }
 
+static void directoryDeleteCallback(uv_fs_t* request)
+{
+  if (handleRequestError(request)) return;
+  schedulerResume(freeRequest(request), false);
+}
+
+void directoryDelete(WrenVM* vm)
+{
+  const char* path = wrenGetSlotString(vm, 1);
+  uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 2));
+
+  uv_fs_rmdir(getLoop(), request, path, directoryDeleteCallback);
+}
+
 void fileAllocate(WrenVM* vm)
 {
   // Store the file descriptor in the foreign data, so that we can get to it

@@ -13,6 +13,12 @@ class Directory {
     return Scheduler.runNextScheduled_()
   }
 
+  static delete(path) {
+    ensurePath_(path)
+    delete_(path, Fiber.current)
+    return Scheduler.runNextScheduled_()
+  }
+
   static exists(path) {
     ensurePath_(path)
     var stat
@@ -32,9 +38,9 @@ class Directory {
   }
 
   foreign static create_(path, flags, fiber)
+  foreign static delete_(path, fiber)
   foreign static list_(path, fiber)
 }
-
 
 
 foreign class File {
