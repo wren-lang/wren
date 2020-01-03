@@ -146,7 +146,7 @@ void directoryList(WrenVM* vm)
 }
 
 // The UNIX file flags have specified names but not values. So we define our
-// own values in FileFlags and remap them to the host OS's values here.
+// own values in FilePermission and remap them to the host OS's values here.
 static int mapFilePermissions(int flags)
 {
   int result = 0;
@@ -172,8 +172,17 @@ static int mapFilePermissions(int flags)
 
 static void directoryCreateCallback(uv_fs_t* request)
 {
-  if (handleRequestError(request)) return;
-  schedulerResume(freeRequest(request), false);
+  int error = (int)request->result;
+  if (error < 0 && error != -EEXIST) 
+  {
+    handleRequestError(request);
+    return;
+  }
+  
+  // return TRUE if the directory was created, FALSE if the folder already exists
+  schedulerResume(freeRequest(request), true);
+  wrenSetSlotBool(getVM(), 2, error == 0); 
+  schedulerFinishResume();
 }
 
 void directoryCreate(WrenVM* vm)
