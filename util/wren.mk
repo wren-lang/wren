@@ -116,6 +116,8 @@ else
 	# Link in the right libraries needed by libuv on Windows and Linux.
 	ifeq ($(OS),mingw32)
 		LIBUV_LIBS := -lws2_32 -liphlpapi -lpsapi -luserenv
+	else ifeq ($(OS),freebsd12.0)
+		LIBUV_LIBS := -lpthread -lrt -lkvm
 	else
 		LIBUV_LIBS := -lpthread -lrt
 	endif

@@ -45,6 +45,16 @@ def build_libuv_linux(arch):
   run(args, cwd=LIB_UV_DIR)
   run(["make", "-C", "out", "BUILDTYPE=Release", "libuv"], cwd=LIB_UV_DIR)
 
+def build_libuv_freebsd(arch):
+  # Set up the Makefile to build for the right architecture.
+  args = [python2_binary(), "gyp_uv.py", "-f", "make"]
+  if arch == "-32":
+    args.append("-Dtarget_arch=ia32")
+  elif arch == "-64":
+    args.append("-Dtarget_arch=x64")
+
+  run(args, cwd=LIB_UV_DIR)
+  run(["gmake", "-C", "out", "BUILDTYPE=Release", "libuv"], cwd=LIB_UV_DIR)
 
 def build_libuv_windows(arch):
   args = ["cmd", "/c", "vcbuild.bat", "release", "vs2017"]
@@ -62,6 +72,8 @@ def build_libuv(arch, out):
     build_libuv_linux(arch)
   elif platform.system() == "Windows":
     build_libuv_windows(arch)
+  elif platform.system() == "FreeBSD":
+    build_libuv_freebsd(arch)
   else:
     print("Unsupported platform: " + platform.system())
     sys.exit(1)
