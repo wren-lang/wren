@@ -478,7 +478,7 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
-// it in [slot]. Returns -1 if the variable couldn't be found.
+// it in [slot]. The slot is only set when WREN_VARIABLE_SUCCESS is returned.
 WrenGetVariableResult  wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot);
 
