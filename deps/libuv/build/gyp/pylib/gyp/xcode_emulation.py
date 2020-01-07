@@ -73,7 +73,7 @@ class XcodeArchsDefault(object):
             if arch not in expanded_archs:
               expanded_archs.append(arch)
         except KeyError as e:
-          print 'Warning: Ignoring unsupported variable "%s".' % variable
+          print( 'Warning: Ignoring unsupported variable "%s".' % variable )
       elif arch not in expanded_archs:
         expanded_archs.append(arch)
     return expanded_archs
@@ -197,8 +197,8 @@ class XcodeSettings(object):
           new_key = key.split("[")[0]
           settings[new_key] = settings[key]
       else:
-        print 'Warning: Conditional keys not implemented, ignoring:', \
-              ' '.join(conditional_keys)
+        print( 'Warning: Conditional keys not implemented, ignoring:', \
+              ' '.join(conditional_keys) )
       del settings[key]
 
   def _Settings(self):
@@ -216,7 +216,7 @@ class XcodeSettings(object):
 
   def _WarnUnimplemented(self, test_key):
     if test_key in self._Settings():
-      print 'Warning: Ignoring not yet implemented key "%s".' % test_key
+      print( 'Warning: Ignoring not yet implemented key "%s".' % test_key )
 
   def IsBinaryOutputFormat(self, configname):
     default = "binary" if self.isIOS else "xml"
@@ -1084,8 +1084,8 @@ class XcodeSettings(object):
     unimpl = ['OTHER_CODE_SIGN_FLAGS']
     unimpl = set(unimpl) & set(self.xcode_settings[configname].keys())
     if unimpl:
-      print 'Warning: Some codesign keys not implemented, ignoring: %s' % (
-          ', '.join(sorted(unimpl)))
+      print( 'Warning: Some codesign keys not implemented, ignoring: %s' % (
+          ', '.join(sorted(unimpl))) )
 
     if self._IsXCTest():
       # For device xctests, Xcode copies two extra frameworks into $TEST_HOST.

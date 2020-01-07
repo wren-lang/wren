@@ -155,7 +155,7 @@ def _AddSources(sources, base_path, base_path_components, result):
       continue
     result.append(base_path + source)
     if debug:
-      print 'AddSource', org_source, result[len(result) - 1]
+      print( 'AddSource', org_source, result[len(result) - 1])
 
 
 def _ExtractSourcesFromAction(action, base_path, base_path_components,
@@ -185,7 +185,7 @@ def _ExtractSources(target, target_dict, toplevel_dir):
     base_path += '/'
 
   if debug:
-    print 'ExtractSources', target, base_path
+    print( 'ExtractSources', target, base_path )
 
   results = []
   if 'sources' in target_dict:

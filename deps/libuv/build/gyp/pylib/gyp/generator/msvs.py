@@ -1977,7 +1977,7 @@ def PerformBuild(data, configurations, params):
 
   for config in configurations:
     arguments = [devenv, sln_path, '/Build', config]
-    print 'Building [%s]: %s' % (config, arguments)
+    print( 'Building [%s]: %s' % (config, arguments) )
     rtn = subprocess.check_call(arguments)
 
 
@@ -2831,7 +2831,7 @@ def _ConvertMSVSBuildAttributes(spec, config, build_file):
     elif a == 'ConfigurationType':
       msbuild_attributes[a] = _ConvertMSVSConfigurationType(msvs_attributes[a])
     else:
-      print 'Warning: Do not know how to convert MSVS attribute ' + a
+      print( 'Warning: Do not know how to convert MSVS attribute ' + a )
   return msbuild_attributes
 
 

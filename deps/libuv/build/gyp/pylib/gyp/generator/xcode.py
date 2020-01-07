@@ -577,7 +577,7 @@ def PerformBuild(data, configurations, params):
   for config in configurations:
     arguments = ['xcodebuild', '-project', xcodeproj_path]
     arguments += ['-configuration', config]
-    print "Building [%s]: %s" % (config, arguments)
+    print( "Building [%s]: %s" % (config, arguments) )
     subprocess.check_call(arguments)
 
 
