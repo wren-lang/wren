@@ -59,6 +59,7 @@ typedef enum
   TOKEN_LEFT_BRACE,
   TOKEN_RIGHT_BRACE,
   TOKEN_COLON,
+  TOKEN_SEMICOLON,
   TOKEN_DOT,
   TOKEN_DOTDOT,
   TOKEN_DOTDOTDOT,
@@ -964,6 +965,7 @@ static void nextToken(Parser* parser)
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
       case ':': makeToken(parser, TOKEN_COLON); return;
+      case ';': makeToken(parser, TOKEN_SEMICOLON); return;
       case ',': makeToken(parser, TOKEN_COMMA); return;
       case '*': makeToken(parser, TOKEN_STAR); return;
       case '%': makeToken(parser, TOKEN_PERCENT); return;
@@ -1130,6 +1132,12 @@ static void consume(Compiler* compiler, TokenType expected,
     // spurious error and discard it to minimize the number of cascaded errors.
     if (compiler->parser->current.type == expected) nextToken(compiler->parser);
   }
+}
+
+// Consumes the current token if it matches.
+static void consumeIfMatch(Compiler* compiler, TokenType expected)
+{
+  if (peek(compiler) == expected) nextToken(compiler->parser);
 }
 
 // Matches one or more newlines. Returns true if at least one was found.
@@ -1637,6 +1645,8 @@ static bool finishBlock(Compiler* compiler)
   do
   {
     definition(compiler);
+    //consume optional semicolon
+    consumeIfMatch(compiler, TOKEN_SEMICOLON);
     consumeLine(compiler, "Expect newline after statement.");
   }
   while (peek(compiler) != TOKEN_RIGHT_BRACE && peek(compiler) != TOKEN_EOF);
@@ -2598,6 +2608,7 @@ GrammarRule rules[] =
   /* TOKEN_LEFT_BRACE    */ PREFIX(map),
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
   /* TOKEN_COLON         */ UNUSED,
+  /* TOKEN_SEMICOLON     */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
   /* TOKEN_DOTDOT        */ INFIX_OPERATOR(PREC_RANGE, ".."),
   /* TOKEN_DOTDOTDOT     */ INFIX_OPERATOR(PREC_RANGE, "..."),
@@ -3020,6 +3031,9 @@ void statement(Compiler* compiler)
       error(compiler, "Cannot use 'break' outside of a loop.");
       return;
     }
+    
+    //consume optional semicolon
+    consumeIfMatch(compiler, TOKEN_SEMICOLON);
 
     // Since we will be jumping out of the scope, make sure any locals in it
     // are discarded first.
@@ -3481,6 +3495,9 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
     {
       definition(&compiler);
       
+      //consume optional semicolon
+      consumeIfMatch(&compiler, TOKEN_SEMICOLON);
+
       // If there is no newline, it must be the end of file on the same line.
       if (!matchLine(&compiler))
       {
