@@ -164,8 +164,9 @@ void directoryCreate(WrenVM* vm)
 {
   const char* path = wrenGetSlotString(vm, 1);
   uv_fs_t* request = createRequest(wrenGetSlotHandle(vm, 2));
-
-  uv_fs_mkdir(getLoop(), request, path, S_IRUSR | S_IWUSR, directoryCreateCallback);
+  // create with 0777 (all permissions) and let UMASK adjust it on *nix
+  // only the user read/write bits will be used on Windows, other bits are ignored anyway
+  uv_fs_mkdir(getLoop(), request, path, 0777, directoryCreateCallback);
 }
 
 static void directoryDeleteCallback(uv_fs_t* request)
