@@ -48,3 +48,4 @@ var capitals = {
 
 System.print(Slots.getMapValue(capitals, "England")) // expect: London
 System.print(Slots.getMapValue(capitals, "Wales")) // expect: Cardiff
+System.print(Slots.getMapValue(capitals, "S. Ireland")) // expect: null

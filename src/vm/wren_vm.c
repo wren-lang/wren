@@ -1762,7 +1762,12 @@ void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
   ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Slot must hold a map.");
 
   ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
-  vm->apiStack[valueSlot] = wrenMapGet(map, vm->apiStack[keySlot]);
+  Value value = wrenMapGet(map, vm->apiStack[keySlot]);
+  if (IS_UNDEFINED(value)) {
+    value = NULL_VAL;
+  }
+  
+  vm->apiStack[valueSlot] = value;
 }
 
 void wrenInsertInMap(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
