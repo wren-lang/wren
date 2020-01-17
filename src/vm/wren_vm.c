@@ -1759,7 +1759,7 @@ void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
   validateApiSlot(vm, mapSlot);
   validateApiSlot(vm, keySlot);
   validateApiSlot(vm, valueSlot);
-  ASSERT(IS_MAP(vm->apiStack[listSlot]), "Slot must hold a map.");
+  ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Slot must hold a map.");
 
   ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
   vm->apiStack[valueSlot] = wrenMapGet(map, vm->apiStack[keySlot]);
