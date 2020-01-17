@@ -5,6 +5,7 @@
 #include "wren_common.h"
 #include "wren_compiler.h"
 #include "wren_core.h"
+#include "wren_primitive.h"
 #include "wren_debug.h"
 #include "wren_vm.h"
 
@@ -1766,7 +1767,7 @@ void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
   if (IS_UNDEFINED(value)) {
     value = NULL_VAL;
   }
-  
+
   vm->apiStack[valueSlot] = value;
 }
 
@@ -1776,10 +1777,16 @@ void wrenInsertInMap(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
   validateApiSlot(vm, keySlot);
   validateApiSlot(vm, valueSlot);
   ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must insert into a map.");
+  
+  Value key = vm->apiStack[keySlot];
+  if (!validateKey(vm, key)) {
+    return;
+  }
 
+  Value value = vm->apiStack[valueSlot];
   ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
-
-  wrenMapSet(vm, map, vm->apiStack[keySlot], vm->apiStack[valueSlot]);
+  
+  wrenMapSet(vm, map, key, value);
 }
 
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
