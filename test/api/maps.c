@@ -7,6 +7,16 @@ static void newMap(WrenVM* vm)
   wrenSetSlotNewMap(vm, 0);
 }
 
+static void invalidInsert(WrenVM* vm)
+{
+  wrenSetSlotNewMap(vm, 0);
+  
+  wrenEnsureSlots(vm, 3);
+  // Foreign Class is in slot 1
+  wrenSetSlotString(vm, 2, "England");
+  wrenInsertInMap(vm, 0, 1, 2); // expect this to cause errors
+}
+
 static void insert(WrenVM* vm)
 {
   wrenSetSlotNewMap(vm, 0);
@@ -43,6 +53,21 @@ WrenForeignMethodFn mapsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Maps.newMap()") == 0) return newMap;
   if (strcmp(signature, "static Maps.insert()") == 0) return insert;
+  if (strcmp(signature, "static Maps.invalidInsert(_)") == 0) return invalidInsert;
 
   return NULL;
+}
+
+void foreignAllocate(WrenVM* vm) {
+  wrenSetSlotNewForeign(vm, 0, 0, 0);
+}
+
+void mapBindClass(
+    const char* className, WrenForeignClassMethods* methods)
+{
+  if (strcmp(className, "ForeignClass") == 0)
+  {
+    methods->allocate = foreignAllocate;
+    return;
+  }
 }
