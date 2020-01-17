@@ -82,10 +82,11 @@ static void slotTypes(WrenVM* vm)
       wrenGetSlotType(vm, 1) == WREN_TYPE_BOOL &&
       wrenGetSlotType(vm, 2) == WREN_TYPE_FOREIGN &&
       wrenGetSlotType(vm, 3) == WREN_TYPE_LIST &&
-      wrenGetSlotType(vm, 4) == WREN_TYPE_NULL &&
-      wrenGetSlotType(vm, 5) == WREN_TYPE_NUM &&
-      wrenGetSlotType(vm, 6) == WREN_TYPE_STRING &&
-      wrenGetSlotType(vm, 7) == WREN_TYPE_UNKNOWN;
+      wrenGetSlotType(vm, 4) == WREN_TYPE_MAP &&
+      wrenGetSlotType(vm, 5) == WREN_TYPE_NULL &&
+      wrenGetSlotType(vm, 6) == WREN_TYPE_NUM &&
+      wrenGetSlotType(vm, 7) == WREN_TYPE_STRING &&
+      wrenGetSlotType(vm, 8) == WREN_TYPE_UNKNOWN;
 
   wrenSetSlotBool(vm, 0, result);
 }
@@ -166,16 +167,22 @@ static void getListElement(WrenVM* vm)
   wrenGetListElement(vm, 1, index, 0);
 }
 
+static void getMapValue(WrenVM* vm)
+{
+  wrenGetMapValue(vm, 1, 2, 0);
+}
+
 WrenForeignMethodFn slotsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Slots.noSet") == 0) return noSet;
   if (strcmp(signature, "static Slots.getSlots(_,_,_,_,_)") == 0) return getSlots;
   if (strcmp(signature, "static Slots.setSlots(_,_,_,_,_)") == 0) return setSlots;
-  if (strcmp(signature, "static Slots.slotTypes(_,_,_,_,_,_,_)") == 0) return slotTypes;
+  if (strcmp(signature, "static Slots.slotTypes(_,_,_,_,_,_,_,_)") == 0) return slotTypes;
   if (strcmp(signature, "static Slots.ensure()") == 0) return ensure;
   if (strcmp(signature, "static Slots.ensureOutsideForeign()") == 0) return ensureOutsideForeign;
   if (strcmp(signature, "static Slots.getListCount(_)") == 0) return getListCount;
   if (strcmp(signature, "static Slots.getListElement(_,_)") == 0) return getListElement;
+  if (strcmp(signature, "static Slots.getMapValue(_,_)") == 0) return getMapValue;
 
   return NULL;
 }
