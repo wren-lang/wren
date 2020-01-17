@@ -17,7 +17,7 @@ var data = Maps.insert()
 System.print(data["England"]) // expect: London
 System.print(data["Empty"])   // expect: []
 System.print(data[1.0])       // expect: 42
-System.print(data[false]) // expect: true
-System.print(data[null]) // expect: null
+System.print(data[false])     // expect: true
+System.print(data[null])      // expect: null
 
 Maps.invalidInsert(ForeignClass.new()) // expect handled runtime error: Key must be a value type.

@@ -14,7 +14,7 @@ static void invalidInsert(WrenVM* vm)
   wrenEnsureSlots(vm, 3);
   // Foreign Class is in slot 1
   wrenSetSlotString(vm, 2, "England");
-  wrenInsertInMap(vm, 0, 1, 2); // expect this to cause errors
+  wrenSetMapValue(vm, 0, 1, 2); // expect this to cause errors
 }
 
 static void insert(WrenVM* vm)
@@ -26,27 +26,27 @@ static void insert(WrenVM* vm)
   // Insert String
   wrenSetSlotString(vm, 1, "England");
   wrenSetSlotString(vm, 2, "London");
-  wrenInsertInMap(vm, 0, 1, 2);
+  wrenSetMapValue(vm, 0, 1, 2);
 
   // Insert Double
   wrenSetSlotDouble(vm, 1, 1.0);
   wrenSetSlotDouble(vm, 2, 42.0);
-  wrenInsertInMap(vm, 0, 1, 2);
+  wrenSetMapValue(vm, 0, 1, 2);
 
   // Insert Boolean
   wrenSetSlotBool(vm, 1, false);
   wrenSetSlotBool(vm, 2, true);
-  wrenInsertInMap(vm, 0, 1, 2);
+  wrenSetMapValue(vm, 0, 1, 2);
 
   // Insert Null
   wrenSetSlotNull(vm, 1);
   wrenSetSlotNull(vm, 2);
-  wrenInsertInMap(vm, 0, 1, 2);
+  wrenSetMapValue(vm, 0, 1, 2);
 
   // Insert List
   wrenSetSlotString(vm, 1, "Empty");
   wrenSetSlotNewList(vm, 2);
-  wrenInsertInMap(vm, 0, 1, 2);
+  wrenSetMapValue(vm, 0, 1, 2);
 }
 
 WrenForeignMethodFn mapsBindMethod(const char* signature)

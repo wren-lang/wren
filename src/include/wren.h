@@ -480,7 +480,7 @@ void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
 
 // Takes the value stored at [valueSlot] and inserts it into the map stored
 // at [mapSlot] with key [keySlot].
-void wrenInsertInMap(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
+void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot].
