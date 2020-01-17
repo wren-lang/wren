@@ -5,8 +5,8 @@
 #include "wren_common.h"
 #include "wren_compiler.h"
 #include "wren_core.h"
-#include "wren_primitive.h"
 #include "wren_debug.h"
+#include "wren_primitive.h"
 #include "wren_vm.h"
 
 #if WREN_OPT_META
