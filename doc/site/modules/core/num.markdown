@@ -106,6 +106,10 @@ Rounds the number to the nearest integer.
     System.print((-3.2).round) //> -3
     System.print((-3.7).round) //> -4
 
+### **sign**
+
+The sign of the number, expressed as a -1, 1 or 0, for negative and positive numbers, and zero.
+
 ### **sin**
 
 The sine of the number.
