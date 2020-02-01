@@ -51,7 +51,7 @@ foreign class Random {
   sample(list, count) {
     if (count > list.count) Fiber.abort("Not enough elements to sample.")
 
-    // There at (at least) two simple algorithms for choosing a number of
+    // There are (at least) two simple algorithms for choosing a number of
     // samples from a list without replacement -- where we don't pick the same
     // element more than once.
     //
@@ -76,7 +76,7 @@ foreign class Random {
         // Find an index that we haven't already selected.
         var index
         while (true) {
-          index = int(count)
+          index = int(list.count)
           if (!picked.containsKey(index)) break
         }
 

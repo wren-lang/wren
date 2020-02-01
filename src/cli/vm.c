@@ -108,7 +108,6 @@ static void findModulesDirectory()
     {
       pathNormalize(modulesDirectory);
       wrenModulesDirectory = modulesDirectory;
-      pathFree(lastPath);
       break;
     }
     
@@ -128,6 +127,7 @@ static void findModulesDirectory()
     lastPath = thisPath;
   }
   
+  pathFree(lastPath);
   pathFree(searchDirectory);
 }
 

@@ -393,18 +393,21 @@ static void printError(Parser* parser, int line, const char* label,
 {
   parser->hasError = true;
   if (!parser->printErrors) return;
-  
+
   // Only report errors if there is a WrenErrorFn to handle them.
   if (parser->vm->config.errorFn == NULL) return;
-  
+
   // Format the label and message.
   char message[ERROR_MESSAGE_SIZE];
   int length = sprintf(message, "%s: ", label);
   length += vsprintf(message + length, format, args);
   ASSERT(length < ERROR_MESSAGE_SIZE, "Error should not exceed buffer.");
-  
+
+  ObjString* module = parser->module->name;
+  const char* module_name = module ? module->value : "<unknown>";
+
   parser->vm->config.errorFn(parser->vm, WREN_ERROR_COMPILE,
-                             parser->module->name->value, line, message);
+                             module_name, line, message);
 }
 
 // Outputs a lexical error.
@@ -712,7 +715,7 @@ static void makeNumber(Parser* parser, bool isHex)
 
   if (isHex)
   {
-    parser->current.value = NUM_VAL(strtoll(parser->tokenStart, NULL, 16));
+    parser->current.value = NUM_VAL((double)strtoll(parser->tokenStart, NULL, 16));
   }
   else
   {
@@ -1250,9 +1253,11 @@ static int declareVariable(Compiler* compiler, Token* token)
   // Top-level module scope.
   if (compiler->scopeDepth == -1)
   {
+    int line = -1;
     int symbol = wrenDefineVariable(compiler->parser->vm,
                                     compiler->parser->module,
-                                    token->start, token->length, NULL_VAL);
+                                    token->start, token->length,
+                                    NULL_VAL, &line);
 
     if (symbol == -1)
     {
@@ -1261,6 +1266,12 @@ static int declareVariable(Compiler* compiler, Token* token)
     else if (symbol == -2)
     {
       error(compiler, "Too many module variables defined.");
+    }
+    else if (symbol == -3)
+    {
+      error(compiler,
+        "Variable '%.*s' referenced before this definition (first use at line %d).",
+        token->length, token->start, line);
     }
 
     return symbol;
@@ -2233,13 +2244,7 @@ static void name(Compiler* compiler, bool canAssign)
                                        token->start, token->length);
   if (variable.index == -1)
   {
-    if (isLocalName(token->start))
-    {
-      error(compiler, "Undefined variable.");
-      return;
-    }
-
-    // If it's a nonlocal name, implicitly define a module-level variable in
+    // Implicitly define a module-level variable in
     // the hopes that we get a real definition later.
     variable.index = wrenDeclareVariable(compiler->parser->vm,
                                          compiler->parser->module,
@@ -2903,6 +2908,16 @@ static void forStatement(Compiler* compiler)
   // The space in the variable name ensures it won't collide with a user-defined
   // variable.
   expression(compiler);
+
+  // Verify that there is space to hidden local variables.
+  // Note that we expect only two addLocal calls next to each other in the
+  // following code.
+  if (compiler->numLocals + 2 > MAX_LOCALS)
+  {
+    error(compiler, "Cannot declare more than %d variables in one scope. (Not enough space for for-loops internal variables)",
+          MAX_LOCALS);
+    return;
+  }
   int seqSlot = addLocal(compiler, "seq ", 4);
 
   // Create another hidden local for the iterator object.

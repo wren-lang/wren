@@ -107,7 +107,7 @@ of the body, like so:
       System.print("Hi, " + first + " " + last + "!")
     }
 
-Here we're passing a function to `greet` that takes two parameters, `first` and
+Here we're passing a function to `callMe` that takes two parameters, `first` and
 `last`. They are passed to the function when it's called:
 
     :::wren

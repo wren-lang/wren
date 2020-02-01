@@ -134,7 +134,10 @@ not a number. Wren doesn't roll with implicit conversions.
 
 ### **%**(denominator) operator
 
-The floating-point remainder of this number divided by `denominator`.
+Also known as mod or modulus.   
+The floating-point remainder of this number divided by `denominator`. 
+
+The returned value has the same sign as `this` (internally calls `fmod` from C).
 
 It is a runtime error if `denominator` is not a number.
 
