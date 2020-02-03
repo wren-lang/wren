@@ -194,3 +194,8 @@ int wrenPowerOf2Ceil(int n)
   
   return n;
 }
+
+bool wrenIsLocalName(const char* name)
+{
+  return name[0] >= 'a' && name[0] <= 'z';
+}

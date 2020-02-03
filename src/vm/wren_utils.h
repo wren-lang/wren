@@ -118,4 +118,8 @@ int wrenUtf8DecodeNumBytes(uint8_t byte);
 // Returns the smallest power of two that is equal to or greater than [n].
 int wrenPowerOf2Ceil(int n);
 
+// Returns `true` if [name] is a local variable name (starts with a lowercase
+// letter).
+bool wrenIsLocalName(const char* name);
+
 #endif

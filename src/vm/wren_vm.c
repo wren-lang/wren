@@ -1498,13 +1498,6 @@ int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
   return wrenSymbolTableAdd(vm, &module->variableNames, name, length);
 }
 
-// Returns `true` if [name] is a local variable name (starts with a lowercase
-// letter).
-static bool isLocalName(const char* name)
-{
-	return name[0] >= 'a' && name[0] <= 'z';
-}
-
 int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
                        size_t length, Value value, int* line)
 {
@@ -1530,7 +1523,7 @@ int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
 
 	// If this was a localname we want to error if it was 
 	// referenced before this definition.
-	if (isLocalName(name)) symbol = -3;
+	if (wrenIsLocalName(name)) symbol = -3;
   }
   else
   {
