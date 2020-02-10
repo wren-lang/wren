@@ -23,23 +23,23 @@ const char* testScript =
 static void call(WrenVM* vm)
 {
   int iterations = (int)wrenGetSlotDouble(vm, 1);
-  
+
   // Since the VM is not re-entrant, we can't call from within this foreign
   // method. Instead, make a new VM to run the call test in.
   WrenConfiguration config;
   wrenInitConfiguration(&config);
   WrenVM* otherVM = wrenNewVM(&config);
-  
+
   wrenInterpret(otherVM, "main", testScript);
-  
+
   WrenHandle* method = wrenMakeCallHandle(otherVM, "method(_,_,_,_)");
-  
+
   wrenEnsureSlots(otherVM, 1);
   wrenGetVariable(otherVM, "main", "Test", 0);
   WrenHandle* testClass = wrenGetSlotHandle(otherVM, 0);
-  
+
   double startTime = (double)clock() / CLOCKS_PER_SEC;
-  
+
   double result = 0;
   for (int i = 0; i < iterations; i++)
   {
@@ -49,18 +49,18 @@ static void call(WrenVM* vm)
     wrenSetSlotDouble(otherVM, 2, 2.0);
     wrenSetSlotDouble(otherVM, 3, 3.0);
     wrenSetSlotDouble(otherVM, 4, 4.0);
-    
+
     wrenCall(otherVM, method);
-    
+
     result += wrenGetSlotDouble(otherVM, 0);
   }
-  
+
   double elapsed = (double)clock() / CLOCKS_PER_SEC - startTime;
-  
+
   wrenReleaseHandle(otherVM, testClass);
   wrenReleaseHandle(otherVM, method);
   wrenFreeVM(otherVM);
-  
+
   if (result == (1.0 + 2.0 + 3.0 + 4.0) * iterations)
   {
     wrenSetSlotDouble(vm, 0, elapsed);
