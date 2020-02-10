@@ -2,6 +2,9 @@
 /bin
 /lib
 /wren
+*.obj
+Debug/
+Release/
 
 # Intermediate files.
 /build
