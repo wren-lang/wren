@@ -1446,8 +1446,12 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
   wrenPushRoot(vm, (Obj*)closure);
   ObjFiber* fiber = wrenNewFiber(vm, closure);
   wrenPopRoot(vm); // closure.
-  
-  return runInterpreter(vm, fiber);
+
+  WrenInterpretResult result = runInterpreter(vm, fiber);
+
+  vm->fiber = NULL;
+  vm->apiStack = NULL;
+  return result;
 }
 
 ObjClosure* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
