@@ -20,9 +20,12 @@ workspace "wren"
   filter "platforms:64bit"
     architecture "x86_64"
 
-  filter "system:Windows"
+  filter "system:windows"
     systemversion "latest"
     defines { "_CRT_SECURE_NO_WARNINGS" }
+
+  filter "system:linux"
+    links { "m" }
 
 project "wren"
   kind "StaticLib"
@@ -65,9 +68,10 @@ project "wren_test"
   cdialect "C99"
   targetdir "../../bin"
   dependson "wren"
-  links "wren"
+  links { "wren" }
 
   files {
+    "../../test/main.c",
     "../../test/test.c",
     "../../test/test.h",
     "../../test/api/*.c",
