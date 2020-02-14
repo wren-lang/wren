@@ -14,6 +14,14 @@ workspace "wren"
     defines { "NDEBUG" }
     optimize "On"
 
+  --the 'xcode4' and 'gmake2' folder names
+  --are simply confusing, so, simplify then
+  filter "action:xcode4"
+    location ("../xcode")
+
+  filter "action:gmake2"
+    location ("../gmake")
+
   filter "platforms:32bit"
     architecture "x86"
 
