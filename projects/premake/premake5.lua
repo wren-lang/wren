@@ -21,6 +21,8 @@ workspace "wren"
 
   filter "action:gmake2"
     location ("../gmake")
+    filter "system:bsd"
+      location ("../gmake.bsd")
 
   filter "platforms:32bit"
     architecture "x86"
