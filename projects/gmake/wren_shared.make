@@ -23,7 +23,7 @@ INCLUDES += -I../../src/include -I../../src/vm -I../../src/optional
 FORCE_INCLUDE +=
 ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
 ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
-LIBS +=
+LIBS += -lm
 LDDEPS +=
 LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
 define PREBUILDCMDS
@@ -35,39 +35,39 @@ endef
 
 ifeq ($(config),release_64bit)
 TARGETDIR = ../../lib
-TARGET = $(TARGETDIR)/wren.dll
+TARGET = $(TARGETDIR)/libwren.so
 OBJDIR = obj/64bit/Release/wren_shared
-DEFINES += -DNDEBUG -D_CRT_SECURE_NO_WARNINGS
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -std=c99
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -shared -Wl,--out-implib="../../lib/wren.lib" -s
+DEFINES += -DNDEBUG
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -fPIC -std=c99
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -fPIC
+ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -shared -Wl,-soname=libwren.so -s
 
 else ifeq ($(config),release_32bit)
 TARGETDIR = ../../lib
-TARGET = $(TARGETDIR)/wren.dll
+TARGET = $(TARGETDIR)/libwren.so
 OBJDIR = obj/32bit/Release/wren_shared
-DEFINES += -DNDEBUG -D_CRT_SECURE_NO_WARNINGS
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -std=c99
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -shared -Wl,--out-implib="../../lib/wren.lib" -s
+DEFINES += -DNDEBUG
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -fPIC -std=c99
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -fPIC
+ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -shared -Wl,-soname=libwren.so -s
 
 else ifeq ($(config),debug_64bit)
 TARGETDIR = ../../lib
-TARGET = $(TARGETDIR)/wren_d.dll
+TARGET = $(TARGETDIR)/libwren_d.so
 OBJDIR = obj/64bit/Debug/wren_shared
-DEFINES += -DDEBUG -D_CRT_SECURE_NO_WARNINGS
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g -std=c99
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -shared -Wl,--out-implib="../../lib/wren_d.lib"
+DEFINES += -DDEBUG
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -fPIC -g -std=c99
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -fPIC -g
+ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -shared -Wl,-soname=libwren_d.so
 
 else ifeq ($(config),debug_32bit)
 TARGETDIR = ../../lib
-TARGET = $(TARGETDIR)/wren_d.dll
+TARGET = $(TARGETDIR)/libwren_d.so
 OBJDIR = obj/32bit/Debug/wren_shared
-DEFINES += -DDEBUG -D_CRT_SECURE_NO_WARNINGS
-ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -g -std=c99
-ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g
-ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -shared -Wl,--out-implib="../../lib/wren_d.lib"
+DEFINES += -DDEBUG
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -fPIC -g -std=c99
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -fPIC -g
+ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -shared -Wl,-soname=libwren_d.so
 
 else
   $(error "invalid configuration $(config)")

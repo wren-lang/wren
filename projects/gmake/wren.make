@@ -23,7 +23,7 @@ INCLUDES += -I../../src/include -I../../src/vm -I../../src/optional
 FORCE_INCLUDE +=
 ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
 ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
-LIBS +=
+LIBS += -lm
 LDDEPS +=
 LINKCMD = $(AR) -rcs "$@" $(OBJECTS)
 define PREBUILDCMDS
@@ -35,36 +35,36 @@ endef
 
 ifeq ($(config),release_64bit)
 TARGETDIR = ../../lib
-TARGET = $(TARGETDIR)/wren.lib
+TARGET = $(TARGETDIR)/libwren.a
 OBJDIR = obj/64bit/Release/wren
-DEFINES += -DNDEBUG -D_CRT_SECURE_NO_WARNINGS
+DEFINES += -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -std=c99
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -s
 
 else ifeq ($(config),release_32bit)
 TARGETDIR = ../../lib
-TARGET = $(TARGETDIR)/wren.lib
+TARGET = $(TARGETDIR)/libwren.a
 OBJDIR = obj/32bit/Release/wren
-DEFINES += -DNDEBUG -D_CRT_SECURE_NO_WARNINGS
+DEFINES += -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -std=c99
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -s
 
 else ifeq ($(config),debug_64bit)
 TARGETDIR = ../../lib
-TARGET = $(TARGETDIR)/wren_d.lib
+TARGET = $(TARGETDIR)/libwren_d.a
 OBJDIR = obj/64bit/Debug/wren
-DEFINES += -DDEBUG -D_CRT_SECURE_NO_WARNINGS
+DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g -std=c99
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
 
 else ifeq ($(config),debug_32bit)
 TARGETDIR = ../../lib
-TARGET = $(TARGETDIR)/wren_d.lib
+TARGET = $(TARGETDIR)/libwren_d.a
 OBJDIR = obj/32bit/Debug/wren
-DEFINES += -DDEBUG -D_CRT_SECURE_NO_WARNINGS
+DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -g -std=c99
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32

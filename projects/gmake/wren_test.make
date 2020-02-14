@@ -33,46 +33,46 @@ endef
 
 ifeq ($(config),release_64bit)
 TARGETDIR = ../../bin
-TARGET = $(TARGETDIR)/wren_test.exe
+TARGET = $(TARGETDIR)/wren_test
 OBJDIR = obj/64bit/Release/wren_test
-DEFINES += -DNDEBUG -D_CRT_SECURE_NO_WARNINGS
+DEFINES += -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -std=c99
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2
-LIBS += ../../lib/wren.lib
-LDDEPS += ../../lib/wren.lib
+LIBS += ../../lib/libwren.a -lm
+LDDEPS += ../../lib/libwren.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -s
 
 else ifeq ($(config),release_32bit)
 TARGETDIR = ../../bin
-TARGET = $(TARGETDIR)/wren_test.exe
+TARGET = $(TARGETDIR)/wren_test
 OBJDIR = obj/32bit/Release/wren_test
-DEFINES += -DNDEBUG -D_CRT_SECURE_NO_WARNINGS
+DEFINES += -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -O2 -std=c99
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2
-LIBS += ../../lib/wren.lib
-LDDEPS += ../../lib/wren.lib
+LIBS += ../../lib/libwren.a -lm
+LDDEPS += ../../lib/libwren.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32 -s
 
 else ifeq ($(config),debug_64bit)
 TARGETDIR = ../../bin
-TARGET = $(TARGETDIR)/wren_test_d.exe
+TARGET = $(TARGETDIR)/wren_test_d
 OBJDIR = obj/64bit/Debug/wren_test
-DEFINES += -DDEBUG -D_CRT_SECURE_NO_WARNINGS
+DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -g -std=c99
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g
-LIBS += ../../lib/wren_d.lib
-LDDEPS += ../../lib/wren_d.lib
+LIBS += ../../lib/libwren_d.a -lm
+LDDEPS += ../../lib/libwren_d.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
 
 else ifeq ($(config),debug_32bit)
 TARGETDIR = ../../bin
-TARGET = $(TARGETDIR)/wren_test_d.exe
+TARGET = $(TARGETDIR)/wren_test_d
 OBJDIR = obj/32bit/Debug/wren_test
-DEFINES += -DDEBUG -D_CRT_SECURE_NO_WARNINGS
+DEFINES += -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m32 -g -std=c99
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g
-LIBS += ../../lib/wren_d.lib
-LDDEPS += ../../lib/wren_d.lib
+LIBS += ../../lib/libwren_d.a -lm
+LDDEPS += ../../lib/libwren_d.a
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib32 -m32
 
 else
