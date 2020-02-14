@@ -194,6 +194,7 @@
     <ClInclude Include="..\..\test\test.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\test\api\api_tests.c" />
     <ClCompile Include="..\..\test\api\benchmark.c" />
     <ClCompile Include="..\..\test\api\call.c" />
     <ClCompile Include="..\..\test\api\call_calls_foreign.c" />
@@ -209,6 +210,7 @@
     <ClCompile Include="..\..\test\api\resolution.c" />
     <ClCompile Include="..\..\test\api\slots.c" />
     <ClCompile Include="..\..\test\api\user_data.c" />
+    <ClCompile Include="..\..\test\main.c" />
     <ClCompile Include="..\..\test\test.c" />
   </ItemGroup>
   <ItemGroup>

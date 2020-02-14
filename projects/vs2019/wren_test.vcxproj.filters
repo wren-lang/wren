@@ -57,6 +57,9 @@
     <ClInclude Include="..\..\test\test.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\test\api\api_tests.c">
+      <Filter>api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\test\api\benchmark.c">
       <Filter>api</Filter>
     </ClCompile>
@@ -102,6 +105,7 @@
     <ClCompile Include="..\..\test\api\user_data.c">
       <Filter>api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\main.c" />
     <ClCompile Include="..\..\test\test.c" />
   </ItemGroup>
 </Project>
