@@ -27,6 +27,9 @@ workspace "wren"
   filter "system:linux"
     links { "m" }
 
+  filter "system:bsd"
+    links { "m" }
+
 project "wren"
   kind "StaticLib"
   language "C"
