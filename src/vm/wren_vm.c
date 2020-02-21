@@ -1760,6 +1760,17 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
 }
 
+void wrenRemoveFromList(WrenVM* vm, int listSlot, int index)
+{
+   validateApiSlot(vm, listSlot);
+   ASSERT(IS_LIST(vm->apiStack[listSlot]), "Must insert into a list.");
+
+   ObjList* list = AS_LIST(vm->apiStack[listSlot]);
+   ASSERT(index < list->elements.count, "Index out of bounds.");
+
+   wrenListRemoveAt(vm, list, index);
+}
+
 void wrenInsertInMap(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
 {
   validateApiSlot(vm, mapSlot);

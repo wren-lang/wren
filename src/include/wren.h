@@ -474,6 +474,9 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 // an element, use `-1` for the index.
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
+// Removes the element [index] from the list stored in [listSlot]
+void wrenRemoveFromList(WrenVM* vm, int listSlot, int index);
+
 // Takes the value stored at [valueSlot] and inserts it into the map stored
 // at [mapSlot] associated with the key at [keySlot].
 void wrenInsertInMap(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
