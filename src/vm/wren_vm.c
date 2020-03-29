@@ -1751,6 +1751,19 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
 }
 
+void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
+{
+  validateApiSlot(vm, listSlot);
+  validateApiSlot(vm, elementSlot);
+  ASSERT(IS_LIST(vm->apiStack[listSlot]), "Must insert into a list.");
+  
+  ObjList* list = AS_LIST(vm->apiStack[listSlot]);
+   
+  ASSERT(index <= list->elements.count, "Index out of bounds.");
+  
+  wrenListSet(vm, list, vm->apiStack[elementSlot], index);
+}
+
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {
