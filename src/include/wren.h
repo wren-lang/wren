@@ -463,6 +463,12 @@ int wrenGetListCount(WrenVM* vm, int slot);
 // [elementSlot].
 void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 
+// Takes the value stored at [elementSlot] and replaces list element at [index] of the list stored
+// at [listSlot].
+//
+// This assumes the index being in the range between 0 and listCount-1
+void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
+
 // Takes the value stored at [elementSlot] and inserts it into the list stored
 // at [listSlot] at [index].
 //

@@ -319,6 +319,10 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index)
   list->elements.data[index] = value;
 }
 
+void wrenListSet(WrenVM* vm, ObjList* list, Value value, uint32_t index){
+  list->elements.data[index] = value;
+}
+
 Value wrenListRemoveAt(WrenVM* vm, ObjList* list, uint32_t index)
 {
   Value removed = list->elements.data[index];
