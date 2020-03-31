@@ -680,6 +680,9 @@ ObjList* wrenNewList(WrenVM* vm, uint32_t numElements);
 // Inserts [value] in [list] at [index], shifting down the other elements.
 void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index);
 
+// Sets [value] in [list] at [index].
+void wrenListSet(WrenVM* vm, ObjList* list, Value value, uint32_t index);
+
 // Removes and returns the item at [index] from [list].
 Value wrenListRemoveAt(WrenVM* vm, ObjList* list, uint32_t index);
 
