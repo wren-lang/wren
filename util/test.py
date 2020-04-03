@@ -27,15 +27,15 @@ WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wren' + args.suffix)
 TEST_APP = join(WREN_DIR, 'build', config_dir, 'test', 'api_wren' + args.suffix)
 
-EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
-EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
-EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
-EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect (handled )?runtime error: (.+)')
-ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
-STACK_TRACE_PATTERN = re.compile(r'\[\./test/.* line (\d+)\] in')
-STDIN_PATTERN = re.compile(r'// stdin: (.*)')
-SKIP_PATTERN = re.compile(r'// skip: (.*)')
-NONTEST_PATTERN = re.compile(r'// nontest')
+EXPECT_PATTERN = re.compile(br'// expect: ?(.*)')
+EXPECT_ERROR_PATTERN = re.compile(br'// expect error(?! line)')
+EXPECT_ERROR_LINE_PATTERN = re.compile(br'// expect error line (\d+)')
+EXPECT_RUNTIME_ERROR_PATTERN = re.compile(br'// expect (handled )?runtime error: (.+)')
+ERROR_PATTERN = re.compile(br'\[.* line (\d+)\] Error')
+STACK_TRACE_PATTERN = re.compile(br'\[\./test/.* line (\d+)\] in')
+STDIN_PATTERN = re.compile(br'// stdin: (.*)')
+SKIP_PATTERN = re.compile(br'// skip: (.*)')
+NONTEST_PATTERN = re.compile(br'// nontest')
 
 passed = 0
 failed = 0
@@ -63,7 +63,7 @@ class Test:
 
     input_lines = []
     line_num = 1
-    with open(self.path, 'r') as file:
+    with open(self.path, 'rb') as file:
       for line in file:
         match = EXPECT_PATTERN.search(line)
         if match:
@@ -91,7 +91,7 @@ class Test:
           self.runtime_error_line = line_num
           self.runtime_error_message = match.group(2)
           # If the runtime error isn't handled, it should exit with EX_SOFTWARE.
-          if match.group(1) != "handled ":
+          if match.group(1) != b"handled ":
             self.exit_code = 70
           expectations += 1
 
@@ -115,7 +115,7 @@ class Test:
 
     # If any input is fed to the test in stdin, concatenate it into one string.
     if input_lines:
-      self.input_bytes = "\n".join(input_lines).encode("utf-8")
+      self.input_bytes = b"\n".join(input_lines)
 
     # If we got here, it's a valid test.
     return True
@@ -154,13 +154,7 @@ class Test:
       self.fail("Test error: Cannot expect both compile and runtime errors.")
       return
 
-    try:
-      out = out.decode("utf-8").replace('\r\n', '\n')
-      err = err.decode("utf-8").replace('\r\n', '\n')
-    except:
-      self.fail('Error decoding output.')
-
-    error_lines = err.split('\n')
+    error_lines = err.split(b'\n')
 
     # Validate that an expected runtime error occurred.
     if self.runtime_error_message:
@@ -224,7 +218,7 @@ class Test:
         else:
           self.fail('Unexpected error:')
           self.fail(line)
-      elif line != '':
+      elif line != b'':
         self.fail('Unexpected output on stderr:')
         self.fail(line)
 
@@ -238,20 +232,17 @@ class Test:
 
     self.fail('Expected return code {0} and got {1}. Stderr:',
         self.exit_code, exit_code)
-    self.failures += error_lines
+    self.failures += [line.decode() for line in error_lines]
 
 
   def validate_output(self, out):
     # Remove the trailing last empty line.
-    out_lines = out.split('\n')
-    if out_lines[-1] == '':
+    out_lines = out.splitlines()
+    if len(out_lines) > 0 and out_lines[-1] == b'':
       del out_lines[-1]
 
     index = 0
     for line in out_lines:
-      if sys.version_info < (3, 0):
-        line = line.encode('utf-8')
-
       if index >= len(self.output):
         self.fail('Got output "{0}" when none was expected.', line)
       elif self.output[index][0] != line:
@@ -267,6 +258,7 @@ class Test:
 
   def fail(self, message, *args):
     if args:
+      args = [arg.decode("utf-8") if type(arg) is bytes else arg for arg in args]
       message = message.format(*args)
     self.failures.append(message)
 
