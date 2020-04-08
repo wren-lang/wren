@@ -505,7 +505,9 @@ void wrenSwapSlot(WrenVM* vm, int slotX, int slotY);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot].
-void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
+// return true if the variable was found in the module,
+// false if the module or the variable or both were not found.
+bool wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot);
 
 // Create a variable named [name] in module named [module], and assign it

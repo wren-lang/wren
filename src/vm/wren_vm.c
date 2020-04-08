@@ -1857,7 +1857,7 @@ void wrenSwapSlot(WrenVM* vm, int slotX, int slotY)
   vm->apiStack[slotY] = old;
 }
 
-void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
+bool wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {
   ASSERT(module != NULL, "Module cannot be NULL.");
@@ -1868,15 +1868,17 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   wrenPushRoot(vm, AS_OBJ(moduleName));
   
   ObjModule* moduleObj = getModule(vm, moduleName);
-  ASSERT(moduleObj != NULL, "Could not find module.");
-  
+  if (moduleObj == NULL)
+    return false;
   wrenPopRoot(vm); // moduleName.
 
   int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
                                          name, strlen(name));
-  ASSERT(variableSlot != -1, "Could not find variable.");
+  if (variableSlot == -1)
+    return false;
   
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
+  return true;
 }
 
 void wrenSetVariable(WrenVM* vm, const char* module, const char* name,
