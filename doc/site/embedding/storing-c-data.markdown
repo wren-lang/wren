@@ -225,14 +225,14 @@ itself:
 
       if (strcmp(className, "File") == 0)
       {
-        methods->allocate = fileAllocate;
-        methods->finalize = fileFinalize;
+        methods.allocate = fileAllocate;
+        methods.finalize = fileFinalize;
       }
       else
       {
         // Unknown class.
-        methods->allocate = NULL;
-        methods->finalize = NULL;
+        methods.allocate = NULL;
+        methods.finalize = NULL;
       }
 
       return methods;
