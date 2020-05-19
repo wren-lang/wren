@@ -182,7 +182,7 @@ typedef struct sObjUpvalue
   // Pointer to the variable this upvalue is referencing.
   Value* value;
 
-  // If the upvalue is closed (i.e. the local variable it was pointing too has
+  // If the upvalue is closed (i.e. the local variable it was pointing to has
   // been popped off the stack) then the closed-over value will be hoisted out
   // of the stack into here. [value] will then be changed to point to this.
   Value closed;
