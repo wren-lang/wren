@@ -316,8 +316,8 @@ typedef struct sObjFiber
   Obj obj;
   
   // The stack of value slots. This is used for holding local variables and
-  // temporaries while the fiber is executing. It heap-allocated and grown as
-  // needed.
+  // temporaries while the fiber is executing. It is heap-allocated and grown
+  // as needed.
   Value* stack;
   
   // A pointer to one past the top-most value on the stack.
