@@ -35,4 +35,4 @@ addons:
 sudo: required
 dist: trusty
 
-script: .travis.sh
+script: ./.travis.sh
