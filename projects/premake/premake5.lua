@@ -23,6 +23,8 @@ workspace "wren"
     location ("../gmake")
     filter "system:bsd"
       location ("../gmake.bsd")
+    filter "system:macosx"
+      location ("../gmake.mac")
 
   filter "platforms:32bit"
     architecture "x86"
