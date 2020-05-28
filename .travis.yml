@@ -37,4 +37,4 @@ addons:
 sudo: required
 dist: trusty
 
-script: make ${WREN_OPTIONS} ${CI_ARCHS}
+script: cd projects/gmake && make ${WREN_OPTIONS} ${CI_ARCHS}
