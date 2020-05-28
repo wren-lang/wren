@@ -61,6 +61,17 @@ LIBS += ../../lib/libwren.a
 LDDEPS += ../../lib/libwren.a
 ALL_LDFLAGS += $(LDFLAGS) -m32
 
+else ifeq ($(config),release_64bit-no-nan-tagging)
+TARGETDIR = ../../bin
+TARGET = $(TARGETDIR)/wren_test
+OBJDIR = obj/64bit-no-nan-tagging/Release/wren_test
+DEFINES += -DNDEBUG -DWREN_NAN_TAGGING=0
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -std=c99
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2
+LIBS += ../../lib/libwren.a
+LDDEPS += ../../lib/libwren.a
+ALL_LDFLAGS += $(LDFLAGS)
+
 else ifeq ($(config),debug_64bit)
 TARGETDIR = ../../bin
 TARGET = $(TARGETDIR)/wren_test_d
@@ -82,6 +93,17 @@ ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g
 LIBS += ../../lib/libwren_d.a
 LDDEPS += ../../lib/libwren_d.a
 ALL_LDFLAGS += $(LDFLAGS) -m32
+
+else ifeq ($(config),debug_64bit-no-nan-tagging)
+TARGETDIR = ../../bin
+TARGET = $(TARGETDIR)/wren_test_d
+OBJDIR = obj/64bit-no-nan-tagging/Debug/wren_test
+DEFINES += -DDEBUG -DWREN_NAN_TAGGING=0
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -g -std=c99
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -g
+LIBS += ../../lib/libwren_d.a
+LDDEPS += ../../lib/libwren_d.a
+ALL_LDFLAGS += $(LDFLAGS)
 
 else
   $(error "invalid configuration $(config)")

@@ -18,6 +18,11 @@ else ifeq ($(config),release_32bit)
   wren_shared_config = release_32bit
   wren_test_config = release_32bit
 
+else ifeq ($(config),release_64bit-no-nan-tagging)
+  wren_config = release_64bit-no-nan-tagging
+  wren_shared_config = release_64bit-no-nan-tagging
+  wren_test_config = release_64bit-no-nan-tagging
+
 else ifeq ($(config),debug_64bit)
   wren_config = debug_64bit
   wren_shared_config = debug_64bit
@@ -27,6 +32,11 @@ else ifeq ($(config),debug_32bit)
   wren_config = debug_32bit
   wren_shared_config = debug_32bit
   wren_test_config = debug_32bit
+
+else ifeq ($(config),debug_64bit-no-nan-tagging)
+  wren_config = debug_64bit-no-nan-tagging
+  wren_shared_config = debug_64bit-no-nan-tagging
+  wren_test_config = debug_64bit-no-nan-tagging
 
 else
   $(error "invalid configuration $(config)")
@@ -67,8 +77,10 @@ help:
 	@echo "CONFIGURATIONS:"
 	@echo "  release_64bit"
 	@echo "  release_32bit"
+	@echo "  release_64bit-no-nan-tagging"
 	@echo "  debug_64bit"
 	@echo "  debug_32bit"
+	@echo "  debug_64bit-no-nan-tagging"
 	@echo ""
 	@echo "TARGETS:"
 	@echo "   all (default)"

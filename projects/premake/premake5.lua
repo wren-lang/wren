@@ -1,6 +1,6 @@
 workspace "wren"
   configurations { "Release", "Debug" }
-  platforms { "64bit", "32bit" }
+  platforms { "64bit", "32bit", "64bit-no-nan-tagging" }
   defaultplatform "64bit"
   startproject "wren_test"
   location ("../" .. _ACTION)
@@ -13,6 +13,9 @@ workspace "wren"
   filter "configurations:Release"
     defines { "NDEBUG" }
     optimize "On"
+
+  filter "platforms:64bit-no-nan-tagging"
+    defines { "WREN_NAN_TAGGING=0" }
 
   --the 'xcode4' and 'gmake2' folder names
   --are simply confusing, so, simplify then

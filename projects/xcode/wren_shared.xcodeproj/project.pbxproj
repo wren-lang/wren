@@ -194,11 +194,12 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					NDEBUG,
+					"WREN_NAN_TAGGING=0",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				OBJROOT = obj/32bit/Release/wren_shared;
+				OBJROOT = "obj/64bit-no-nan-tagging/Release/wren_shared";
 				ONLY_ACTIVE_ARCH = NO;
 				SYMROOT = ../../lib;
 				USER_HEADER_SEARCH_PATHS = (
@@ -246,11 +247,12 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					DEBUG,
+					"WREN_NAN_TAGGING=0",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				OBJROOT = obj/32bit/Debug/wren_shared;
+				OBJROOT = "obj/64bit-no-nan-tagging/Debug/wren_shared";
 				ONLY_ACTIVE_ARCH = YES;
 				SYMROOT = ../../lib;
 				USER_HEADER_SEARCH_PATHS = (
@@ -269,6 +271,8 @@
 			buildConfigurations = (
 				9328E01B361706CDC53CE65B /* Release */,
 				9328E01B361706CDC53CE65B /* Release */,
+				9328E01B361706CDC53CE65B /* Release */,
+				F95419A1FCC4EBD37E318FE1 /* Debug */,
 				F95419A1FCC4EBD37E318FE1 /* Debug */,
 				F95419A1FCC4EBD37E318FE1 /* Debug */,
 			);
@@ -280,6 +284,8 @@
 			buildConfigurations = (
 				E8D95F2DAC4520DFEAE8C56D /* Release */,
 				E8D95F2DAC4520DFEAE8C56D /* Release */,
+				E8D95F2DAC4520DFEAE8C56D /* Release */,
+				CB419B73ED0D48A529C271B3 /* Debug */,
 				CB419B73ED0D48A529C271B3 /* Debug */,
 				CB419B73ED0D48A529C271B3 /* Debug */,
 			);
