@@ -7,7 +7,7 @@ compiler:
   - clang
 env:
   - WREN_OPTIONS="" CI_ARCHS="ci_64"
-  - WREN_OPTIONS="-DWREN_NAN_TAGGING=0" CI_ARCHS="ci_64"
+  - WREN_OPTIONS="config=release_64bit-no-nan-tagging" CI_ARCHS="ci_64"
 
 # Automatically build and deploy docs.
 jobs:
@@ -37,4 +37,4 @@ addons:
 sudo: required
 dist: trusty
 
-script: make WREN_CFLAGS=${WREN_OPTIONS} ${CI_ARCHS}
+script: make ${WREN_OPTIONS} ${CI_ARCHS}
