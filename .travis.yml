@@ -1,7 +1,11 @@
 language: c
+
+# https://docs.travis-ci.com/user/languages/c/#gcc-on-macos
+# On mac, gcc is aliased to clang, so we only have one row 
+# in build the matrix, not two like on linux
 compiler:
-  - gcc
   - clang
+  - gcc
 
 # Automatically build and deploy docs.
 jobs:
