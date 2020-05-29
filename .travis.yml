@@ -15,7 +15,7 @@ jobs:
       env: WREN_TARGET_MAC=1
 
     - stage: deploy
-      script: bash util/deploy_docs_from_travis.sh
+      script: ./util/deploy_docs_from_travis.sh
       # Only deploy commits that land on master.
       if: branch = master and type = push
 
