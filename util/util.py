@@ -9,16 +9,6 @@ import shutil
 import subprocess
 import sys
 
-def python2_binary():
-  """Tries to find a python 2 executable."""
-
-  # Using [0] instead of .major here to support Python 2.6.
-  if sys.version_info[0] == 2:
-    return sys.executable or "python"
-  else:
-    return "python2"
-
-
 def clean_dir(dir):
   """If dir exists, deletes it and recreates it, otherwise creates it."""
   if os.path.isdir(dir):

@@ -1,3 +1,14 @@
+## 0.3.0
+
+### Language/VM
+
+
+
+### CLI
+
+The CLI has been split to it's own repo!
+https://github.com/wren-lang/wren-cli/
+
 ## 0.2.0
 
 0.2.0 spans a pretty wide time period with [around 290 commits](https://github.com/wren-lang/wren/compare/0.1.0...master).
