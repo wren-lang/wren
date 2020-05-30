@@ -2201,13 +2201,6 @@ static void staticField(Compiler* compiler, bool canAssign)
   bareName(compiler, canAssign, variable);
 }
 
-// Returns `true` if [name] is a local variable name (starts with a lowercase
-// letter).
-static bool isLocalName(const char* name)
-{
-  return name[0] >= 'a' && name[0] <= 'z';
-}
-
 // Compiles a variable name or method call with an implicit receiver.
 static void name(Compiler* compiler, bool canAssign)
 {
@@ -2231,7 +2224,7 @@ static void name(Compiler* compiler, bool canAssign)
 
   // If we're inside a method and the name is lowercase, treat it as a method
   // on this.
-  if (isLocalName(token->start) && getEnclosingClass(compiler) != NULL)
+  if (wrenIsLocalName(token->start) && getEnclosingClass(compiler) != NULL)
   {
     loadThis(compiler);
     namedCall(compiler, canAssign, CODE_CALL_0);
