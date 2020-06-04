@@ -1,49 +1,30 @@
 ^title Modules
 
-Because Wren can be used both as an embedded scripting language, and as a
-general purpose programming language run from the command line, the definition
-of a "built-in" module is a little complicated. They are organized into three
-categories:
+Wren comes with built-in modules that are always available and not optional.
+Every host that embeds Wren _should_ have these modules available.
 
-## Core
+## Core module
 
-There is one core module. It is built directly into the VM and is implicitly
-imported by every other module. It contains the classes for the objects built
-directly into the language itself: [numbers][], [strings][], etc.
+The core module is built directly into the VM and is implicitly
+imported by every other module. You don't need to `import` anything to use it.
+It contains objects and types for the language itself like [numbers][] and [strings][].
 
 [numbers]: core/num.html
 [strings]: core/string.html
 
-The core module is always available and can't be removed.
+* [core docs](core)
 
-* [core](core)
+## Optional modules
 
-## Optional
+Optional modules are available in the Wren project, but whether they are included is up to the host.
+They are written in Wren and C, with no external dependencies, so including them in
+your application is as easy as a simple compile flag.
 
-Optional modules are available in the command line Wren interpreter. When you
-embed Wren in your own host application, you can also include them too. They are
-written in Wren and C, but have no external dependencies, so including them in
-your application doesn't force you to bring in any other third-party code.
+Since they aren't *needed* by the VM itself to function, you can
+disable some or all of them, so check if your host has them available.
 
-At the same time, they aren't *needed* by the VM itself to function, so you can
-disable some or all of them if you want to keep your app as small and
-constrained as possible.
+So far there are a few optional modules:
 
-There are a couple of optional modules:
+* [meta docs](meta)
+* [random docs](random)
 
-* [meta](meta)
-* [random](random)
-
-## CLI
-
-The CLI modules are only available in the standalone command-line Wren
-interpreter. They are deeply tied to [libuv][], each other, and other internals
-of the command-line app, so can't be separated out and pulled into host
-applications that want to embed Wren.
-
-[libuv]: http://libuv.org
-
-* [io](io)
-* [os](os)
-* [scheduler](scheduler)
-* [timer](timer)

@@ -5,10 +5,13 @@
 If you'd like to try Wren, you have a few options.
 
  *  **In your browser.** You can try Wren **[right here](./try/)**!
- *  **On your computer.** The [Wren CLI](https://github.com/wren-lang/wren-cli) has releases to [download](https://github.com/wren-lang/wren-cli/releases).   
- Grab the latest release for your OS, and [see the usage details](#using-the-wren-cli).
+ *  **On your computer.** The [Wren CLI](cli) project is a downloadable executable
+      to run scripts with access to file io and more. See the [Wren CLI docs](cli).
  * **Embedded in your code.** See how to [build and embed Wren](#embed-the-vm) below.   
     And then read the [embedding guide](embedding)!
+
+Once you have somewhere to explore, it's time to [learn the
+language](syntax.html).
 
 ---
 
@@ -28,7 +31,7 @@ In here you'll find ready to go projects for `Visual Studio`, `XCode` and tools 
 
  * **Windows** Open `wren.sln` inside `projects/vs2019/` (or `vs2017`), hit build.
  * **Mac** Open `wren.xcworkspace` inside `projects/xcode/`, hit build.
- * **Linux** Run `make` inside of `make/`.
+ * **Linux** Run `make` inside of `projects/make/`.
 
 In each case, **there will be library files generated into the root `lib/` folder**.   
 These are what you'll link into your project, based on your needs.
@@ -45,7 +48,7 @@ These are what you'll link into your project, based on your needs.
 
 **all source files**   
 The alternative to building via the provided projects is to include the wren source code in your project.
-Since It has no dependencies this is simple, all the code in `src/` comes along. There's a readme in `src/` for details.
+Since it has no dependencies this is simple, all the code in `src/` comes along. There's a readme in `src/` for details.
 
 **'amalgamated' build**   
 If you want an even simpler way, there's an 'amalgamated' build (often called `blob`, or `unity` builds.).
@@ -57,69 +60,7 @@ Include `build/wren.c` and `src/include/wren.h` in your project code and you're 
 
 ---
 
-## Using the Wren CLI
-
-**The Wren Command-Line Interface** is a tool you can run which gives you a way to run Wren code, and
-    also includes modules for talking to the operating system&mdash;file IO,
-    networking, stuff like that. It depends on [libuv][] for that
-    functionality.
-
-You can [download a build for your OS from the releases page](https://github.com/wren-lang/wren-cli/releases).
-
-### Interactive mode
-
-If you just run `wren` without any arguments, it starts the interpreter in
-interactive mode, where you can type in a line of code, and it immediately executes
-it. You can exit the interpreter using good old Ctrl-C or Ctrl-D.
-
-Here's something to try:
-
-<pre class="snippet">
-System.print("Hello, world!")
-</pre>
-
-Or a little more exciting:
-
-<pre class="snippet">
-for (i in 1..10) System.print("Counting up %(i)")
-</pre>
-
-### Running scripts
-
-The standalone interpreter can also load scripts from files and run them. Just
-pass the name of the script to `wren`. Create a file named "my_script.wren" in
-your favorite text editor and paste this into it:
-
-<pre class="snippet">
-for (yPixel in 0...24) {
-  var y = yPixel / 12 - 1
-  for (xPixel in 0...80) {
-    var x = xPixel / 30 - 2
-    var x0 = x
-    var y0 = y
-    var iter = 0
-    while (iter < 11 && x0 * x0 + y0 * y0 <= 4) {
-      var x1 = (x0 * x0) - (y0 * y0) + x
-      var y1 = 2 * x0 * y0 + y
-      x0 = x1
-      y0 = y1
-      iter = iter + 1
-    }
-    System.write(" .-:;+=xX$& "[iter])
-  }
-  System.print("")
-}
-</pre>
-
-Now run:
-
-    $ ./wren my_script.wren
-
-Neat, right? You're a Wren programmer now! The next step is to [learn the
-language](syntax.html).
-
 [embedded]: embedding
-[libuv]: http://libuv.org/
 
 If you run into bugs, or have ideas or questions, any of
 the following work:

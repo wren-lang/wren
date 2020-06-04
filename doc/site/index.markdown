@@ -46,9 +46,9 @@ while (!adjectives.isDone) System.print(adjectives.call())
 
 ---
 
-If you like the sound of this, [let's get started][started]. You can even try
-it [in your browser][browser]! Excited? Well, come on and [get
-involved][contribute]!
+You can try it [in your browser][browser]!   
+If you like the sound of this, [let's get started][started].    
+Excited? Well, come on and [get involved][contribute]!
 
 [syntax]: syntax.html
 [src]: https://github.com/wren-lang/wren/tree/master/src
