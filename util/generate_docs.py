@@ -59,7 +59,7 @@ class RootedHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 def ensure_dir(path):
   if not os.path.exists(path):
-    os.mkdir(path)
+    os.makedirs(path, exist_ok=True)
 
 
 def is_up_to_date(path, out_path):
