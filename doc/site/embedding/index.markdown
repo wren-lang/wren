@@ -81,8 +81,9 @@ can find the [public header for Wren][wren.h]:
 
 [wren.h]: https://github.com/wren-lang/wren/blob/master/src/include/wren.h
 
-    :::c
-    #include "wren.h"
+<pre class="snippet" data-lang="c">
+#include "wren.h"
+</pre>
 
 Wren depends only on the C standard library, so you don't usually need to link
 to anything else. On some platforms (at least BSD and Linux) some of the math
@@ -94,15 +95,14 @@ have to explicitly link to.
 If your program is in C++ but you are linking to the Wren library compiled as C,
 this header handles the differences in calling conventions between C and C++:
 
-    :::c
-    #include "wren.hpp"
+<pre class="snippet" data-lang="c">
+#include "wren.hpp"
+</pre>
 
 ## Creating a Wren VM
 
 Once you've integrated the code into your executable, you need to create a
-virtual machine. To do that, you create a WrenConfiguration:
-
-    :::c
+virtual machine. To do that, you create a 
     WrenConfiguration config;
     wrenInitConfiguration(&config);
 
@@ -114,8 +114,9 @@ everything. If you don't need to tweak stuff, you can leave it at that. We'll
 
 With this ready, you can create the VM:
 
-    :::c
-    WrenVM* vm = wrenNewVM(&config);
+<pre class="snippet" data-lang="c">
+WrenVM* vm = wrenNewVM(&config);
+</pre>
 
 This allocates memory for a new VM and initializes it. The Wren C implementation
 has no global state, so every single bit of data Wren uses is bundled up inside
@@ -130,11 +131,12 @@ VM, waiting to run some code!
 
 You execute a string of Wren source code like so:
 
-    :::c
-    WrenInterpretResult result = wrenInterpret(
-        vm,
-        "my_module",
-        "System.print(\"I am running in a VM!\")");
+<pre class="snippet" data-lang="c">
+WrenInterpretResult result = wrenInterpret(
+    vm,
+    "my_module",
+    "System.print(\"I am running in a VM!\")");
+</pre>
 
 The string is a series of one or more statements separated by newlines. Wren
 copies the string, so you can free it after calling this. When you call
@@ -164,8 +166,9 @@ to a REPL session.
 Once the party is over and you're ready to end your relationship with a VM, you
 need to free any memory it allocated. You do that like so:
 
-    :::c
-    wrenFreeVM(vm);
+<pre class="snippet" data-lang="c">
+wrenFreeVM(vm);
+</pre>
 
 After calling that, you obviously cannot use the `WrenVM*` you passed to it
 again. It's dead.

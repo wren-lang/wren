@@ -17,8 +17,9 @@ stored in each instance.
 
 Classes are created using the `class` keyword, unsurprisingly:
 
-    :::wren
-    class Unicorn {}
+<pre class="snippet">
+class Unicorn {}
+</pre>
 
 This creates a class named `Unicorn` with no methods or fields.
 
@@ -26,42 +27,45 @@ This creates a class named `Unicorn` with no methods or fields.
 
 To let our unicorn do stuff, we need to give it methods.
 
-    :::wren
-    class Unicorn {
-      prance() {
-        System.print("The unicorn prances in a fancy manner!")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  prance() {
+    System.print("The unicorn prances in a fancy manner!")
+  }
+}
+</pre>
 
 This defines a `prance()` method that takes no arguments. To add parameters, put
 their names inside the parentheses:
 
-    :::wren
-    class Unicorn {
-      prance(where, when) {
-        System.print("The unicorn prances in %(where) at %(when).")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  prance(where, when) {
+    System.print("The unicorn prances in %(where) at %(when).")
+  }
+}
+</pre>
 
 Since the number of parameters is part of a method's [signature][] a class can
 define multiple methods with the same name:
 
 [signature]: method-calls.html#signature
 
-    :::wren
-    class Unicorn {
-      prance() {
-        System.print("The unicorn prances in a fancy manner!")
-      }
+<pre class="snippet">
+class Unicorn {
+  prance() {
+    System.print("The unicorn prances in a fancy manner!")
+  }
 
-      prance(where) {
-        System.print("The unicorn prances in %(where).")
-      }
+  prance(where) {
+    System.print("The unicorn prances in %(where).")
+  }
 
-      prance(where, when) {
-        System.print("The unicorn prances in %(where) at %(when).")
-      }
-    }
+  prance(where, when) {
+    System.print("The unicorn prances in %(where) at %(when).")
+  }
+}
+</pre>
 
 It's often natural to have the same conceptual operation work with different
 sets of arguments. In other languages, you'd define a single method for the
@@ -75,22 +79,24 @@ different syntaxes for methods. Your classes can define all of them.
 
 A getter leaves off the parameter list and the parentheses:
 
-    :::wren
-    class Unicorn {
-      // Unicorns are always fancy.
-      isFancy { true }
-    }
+<pre class="snippet">
+class Unicorn {
+  // Unicorns are always fancy.
+  isFancy { true }
+}
+</pre>
 
 ### Setters
 
 A setter has `=` after the name, followed by a single parenthesized parameter:
 
-    :::wren
-    class Unicorn {
-      rider=(value) {
-        System.print("I am being ridden by %(value).")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  rider=(value) {
+    System.print("I am being ridden by %(value).")
+  }
+}
+</pre>
 
 By convention, the parameter is usually named `value` but you can call it
 whatever makes your heart flutter.
@@ -99,36 +105,39 @@ whatever makes your heart flutter.
 
 Prefix operators, like getters, have no parameter list:
 
-    :::wren
-    class Unicorn {
-      - {
-        System.print("Negating a unicorn is weird.")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  - {
+    System.print("Negating a unicorn is weird.")
+  }
+}
+</pre>
 
 Infix operators, like setters, have a single parenthesized parameter for the
 right-hand operand:
 
-    :::wren
-    class Unicorn {
-      -(other) {
-        System.print("Subtracting %(other) from a unicorn is weird.")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  -(other) {
+    System.print("Subtracting %(other) from a unicorn is weird.")
+  }
+}
+</pre>
 
 A subscript operator puts the parameters inside square brackets and can have
 more than one:
 
-    :::wren
-    class Unicorn {
-      [index] {
-        System.print("Unicorns are not lists!")
-      }
+<pre class="snippet">
+class Unicorn {
+  [index] {
+    System.print("Unicorns are not lists!")
+  }
 
-      [x, y] {
-        System.print("Unicorns are not matrices either!")
-      }
-    }
+  [x, y] {
+    System.print("Unicorns are not matrices either!")
+  }
+}
+</pre>
 
 Unlike with named methods, you can't define a subscript operator with an empty
 parameter list.
@@ -136,12 +145,13 @@ parameter list.
 As the name implies, a subscript setter looks like a combination of a subscript
 operator and a setter:
 
-    :::wren
-    class Unicorn {
-      [index]=(value) {
-        System.print("You can't stuff %(value) into me at %(index)!")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  [index]=(value) {
+    System.print("You can't stuff %(value) into me at %(index)!")
+  }
+}
+</pre>
 
 ## Method Scope
 
@@ -154,8 +164,9 @@ are available on an object. When you write:
 [scope]: variables.html#scope
 [variables]: variables.html
 
-    :::wren
-    unicorn.isFancy
+<pre class="snippet">
+unicorn.isFancy
+</pre>
 
 You're saying "look up the method `isFancy` in the scope of the object
 `unicorn`&rdquo;. In this case, the fact that you want to look up a *method*
@@ -169,14 +180,15 @@ Things get more interesting when you're inside the body of a method. When the
 method is called on some object and the body is being executed, you often need
 to access that object itself. You can do that using `this`.
 
-    :::wren
-    class Unicorn {
-      name { "Francis" }
+<pre class="snippet">
+class Unicorn {
+  name { "Francis" }
 
-      printName() {
-        System.print(this.name) //> Francis
-      }
-    }
+  printName() {
+    System.print(this.name) //> Francis
+  }
+}
+</pre>
 
 The `this` keyword works sort of like a variable, but has special behavior. It
 always refers to the instance whose method is currently being executed. This
@@ -186,17 +198,18 @@ It's an error to refer to `this` outside of a method. However, it's perfectly
 fine to use it inside a [function][] declared *inside* a method. When you do,
 `this` still refers to the instance whose *method* is being called:
 
-    :::wren
-    class Unicorn {
-      name { "Francis" }
+<pre class="snippet">
+class Unicorn {
+  name { "Francis" }
 
-      printNameThrice() {
-        (1..3).each {
-          // Use "this" inside the function passed to each().
-          System.print(this.name) //> Francis
-        } //> Francis
-      } //> Francis
-    }
+  printNameThrice() {
+    (1..3).each {
+      // Use "this" inside the function passed to each().
+      System.print(this.name) //> Francis
+    } //> Francis
+  } //> Francis
+}
+</pre>
 
 [function]: functions.html
 
@@ -214,28 +227,30 @@ tedious and verbose, which is why some languages don't require it. You can do a
 "self send" by calling a method (or getter or setter) without any explicit
 receiver:
 
-    :::wren
-    class Unicorn {
-      name { "Francis" }
+<pre class="snippet">
+class Unicorn {
+  name { "Francis" }
 
-      printName() {
-        System.print(name) //> Francis
-      }
-    }
+  printName() {
+    System.print(name) //> Francis
+  }
+}
+</pre>
 
 Code like this gets tricky when there is also a variable outside of the class
 with the same name. Consider:
 
-    :::wren
-    var name = "variable"
+<pre class="snippet">
+var name = "variable"
 
-    class Unicorn {
-      name { "Francis" }
+class Unicorn {
+  name { "Francis" }
 
-      printName() {
-        System.print(name) // ???
-      }
-    }
+  printName() {
+    System.print(name) // ???
+  }
+}
+</pre>
 
 Should `printName()` print "variable" or "Francis"? A method body has a foot in
 each of two worlds. It is surrounded by the lexical scope where it's defined in
@@ -261,24 +276,25 @@ work.
 
 Here's an example that shows all three cases:
 
-    :::wren
-    var shadowed = "surrounding"
-    var lowercase = "surrounding"
-    var Capitalized = "surrounding"
+<pre class="snippet">
+var shadowed = "surrounding"
+var lowercase = "surrounding"
+var Capitalized = "surrounding"
 
-    class Scope {
-      shadowed { "object" }
-      lowercase { "object" }
-      Capitalized { "object" }
+class Scope {
+  shadowed { "object" }
+  lowercase { "object" }
+  Capitalized { "object" }
 
-      test() {
-        var shadowed = "local"
+  test() {
+    var shadowed = "local"
 
-        System.print(shadowed) //> local
-        System.print(lowercase) //> object
-        System.print(Capitalized) //> surrounding
-      }
-    }
+    System.print(shadowed) //> local
+    System.print(lowercase) //> object
+    System.print(Capitalized) //> surrounding
+  }
+}
+</pre>
 
 It's a bit of a strange rule, but Ruby works more or less the same way.
 
@@ -289,12 +305,13 @@ Our unicorns can prance around, but we don't actually *have* any unicorns to do
 it. To create *instances* of a class, we need a *constructor*. You define one
 like so:
 
-    :::wren
-    class Unicorn {
-      construct new(name, color) {
-        System.print("My name is " + name + " and I am " + color + ".")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  construct new(name, color) {
+    System.print("My name is " + name + " and I am " + color + ".")
+  }
+}
+</pre>
 
 The `construct` keyword says we're defining a constructor, and `new` is its
 name. In Wren, all constructors have names. The word "new" isn't special to
@@ -302,20 +319,22 @@ Wren, it's just a common constructor name.
 
 To make a unicorn now, we call the constructor method on the class itself:
 
-    :::wren
-    var fred = Unicorn.new("Fred", "palomino")
+<pre class="snippet">
+var fred = Unicorn.new("Fred", "palomino")
+</pre>
 
 Giving constructors names is handy because it means you can have more than one,
 and each can clarify how it creates the instance:
 
-    :::wren
-    class Unicorn {
-      construct brown(name) {
-        System.print("My name is " + name + " and I am brown.")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  construct brown(name) {
+    System.print("My name is " + name + " and I am brown.")
+  }
+}
 
-    var dave = Unicorn.brown("Dave")
+var dave = Unicorn.brown("Dave")
+</pre>
 
 Note that we have to declare a constructor because, unlike some other
 languages, Wren doesn't give you a default one. This is useful because some
@@ -330,8 +349,9 @@ constructors.
 
 A constructor is actually a pair of methods. You get a method on the class:
 
-    :::wren
-    Unicorn.brown("Dave")
+<pre class="snippet">
+Unicorn.brown("Dave")
+</pre>
 
 That creates the new instance, then it invokes the *initializer* on that
 instance. This is where the constructor body you defined gets run.
@@ -345,12 +365,13 @@ constructors, etc.
 All state stored in instances is stored in *fields*. Each field has a name
 that starts with an underscore.
 
-    :::wren
-    class Rectangle {
-      area { _width * _height }
+<pre class="snippet">
+class Rectangle {
+  area { _width * _height }
 
-      // Other stuff...
-    }
+  // Other stuff...
+}
+</pre>
 
 Here, `_width` and `_height` in the `area` [getter](classes.html#methods) refer
 to fields on the rectangle instance. You can think of them like `this.width`
@@ -374,22 +395,24 @@ accessed from within methods defined on the object's class.
 In short, if you want to make a property of an object visible,
 **you need to define a getter to expose it**:
 
-    :::wren
-    class Rectangle {
-      width { _width }
-      height { _height }
+<pre class="snippet">
+class Rectangle {
+  width { _width }
+  height { _height }
 
-      // ...
-    }
+  // ...
+}
+</pre>
 
 To allow outside code to modify the field,
 **you need to provide setters to provide access**:
 
-    :::wren
-    class Rectangle {
-      width=(value) { _width = value }
-      height=(value) { _height = value }
-    }
+<pre class="snippet">
+class Rectangle {
+  width=(value) { _width = value }
+  height=(value) { _height = value }
+}
+</pre>
 
 This might be different from what you're used to, so here are two important facts:
 
@@ -398,31 +421,32 @@ This might be different from what you're used to, so here are two important fact
 
 Here is an example in code:
 
-    :::wren
-    class Shape {
-      construct new() {
-        _shape = "none"
-      }
-    }
-    
-    class Rectangle is Shape {
-      construct new() {
-        //This will print null!
-        //_shape from the parent class is private,
-        //we are reading `_shape` from `this`,
-        //which has not been set, so returns null.
-        System.print("I am a %(_shape)")
-        
-        //a local variable, all variables are private
-        _width = 10
-        var other = Rectangle.new()
+<pre class="snippet">
+class Shape {
+  construct new() {
+    _shape = "none"
+  }
+}
 
-        //other._width is not accessible from here,
-        //even though we are also a rectangle. The field
-        //is private, and other._width is invalid syntax!
-      }
-    }
-    ...
+class Rectangle is Shape {
+  construct new() {
+    //This will print null!
+    //_shape from the parent class is private,
+    //we are reading `_shape` from `this`,
+    //which has not been set, so returns null.
+    System.print("I am a %(_shape)")
+
+    //a local variable, all variables are private
+    _width = 10
+    var other = Rectangle.new()
+
+    //other._width is not accessible from here,
+    //even though we are also a rectangle. The field
+    //is private, and other._width is invalid syntax!
+  }
+}
+...
+</pre>
 
 One thing we've learned in the past forty years of software engineering is that
 encapsulating state tends to make code easier to maintain, so Wren defaults to
@@ -439,42 +463,46 @@ A name that starts with *two* underscores is a *static* field. They work
 similar to [fields](#fields) except the data is stored on the class itself, and
 not the instance. They can be used in *both* instance and static methods.
 
-    :::wren
-    class Foo {
-      construct new() {}
+<pre class="snippet">
+class Foo {
+  construct new() {}
 
-      static setFromStatic(a) { __a = a }
-      setFromInstance(a) { __a = a }
+  static setFromStatic(a) { __a = a }
+  setFromInstance(a) { __a = a }
 
-      static printFromStatic() {
-        System.print(__a)
-      }
+  static printFromStatic() {
+    System.print(__a)
+  }
 
-      printFromInstance() {
-        System.print(__a)
-      }
-    }
+  printFromInstance() {
+    System.print(__a)
+  }
+}
+</pre>
 
 Just like instance fields, static fields are initially `null`:
 
-    :::wren
-    Foo.printFromStatic() //> null
+<pre class="snippet">
+Foo.printFromStatic() //> null
+</pre>
 
 They can be used from static methods:
 
-    :::wren
-    Foo.setFromStatic("first")
-    Foo.printFromStatic() //> first
+<pre class="snippet">
+Foo.setFromStatic("first")
+Foo.printFromStatic() //> first
+</pre>
 
 And also instance methods. When you do so, there is still only one static field
 shared among all instances of the class:
 
-    :::wren
-    var foo1 = Foo.new()
-    var foo2 = Foo.new()
+<pre class="snippet">
+var foo1 = Foo.new()
+var foo2 = Foo.new()
 
-    foo1.setFromInstance("second")
-    foo2.printFromInstance() //> second
+foo1.setFromInstance("second")
+foo2.printFromInstance() //> second
+</pre>
 
 ## Inheritance
 
@@ -486,8 +514,9 @@ By default, any new class inherits from Object, which is the superclass from
 which all other classes ultimately descend. You can specify a different parent
 class using `is` when you declare the class:
 
-    :::wren
-    class Pegasus is Unicorn {}
+<pre class="snippet">
+class Pegasus is Unicorn {}
+</pre>
 
 This declares a new class Pegasus that inherits from Unicorn.
 
@@ -501,28 +530,30 @@ Pegasus inherits from Unicorn, Pegasus's metaclass does not inherit from
 Unicorn's metaclass. In more prosaic terms, this means that static methods are
 not inherited.
 
-    :::wren
-    class Unicorn {
-      // Unicorns cannot fly. :(
-      static canFly { false }
-    }
+<pre class="snippet">
+class Unicorn {
+  // Unicorns cannot fly. :(
+  static canFly { false }
+}
 
-    class Pegasus is Unicorn {}
+class Pegasus is Unicorn {}
 
-    Pegasus.canFly //! Static methods are not inherited.
+Pegasus.canFly //! Static methods are not inherited.
+</pre>
 
 This also means constructors are not inherited:
 
-    :::wren
-    class Unicorn {
-      construct new(name) {
-        System.print("My name is " + name + ".")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  construct new(name) {
+    System.print("My name is " + name + ".")
+  }
+}
 
-    class Pegasus is Unicorn {}
+class Pegasus is Unicorn {}
 
-    Pegasus.new("Fred") //! Pegasus does not define new().
+Pegasus.new("Fred") //! Pegasus does not define new().
+</pre>
 
 Each class gets to control how it may be constructed independently of its base
 classes. However, constructor *initializers* are inherited since those are
@@ -530,20 +561,21 @@ instance methods on the new object.
 
 This means you can do `super` calls inside a constructor:
 
-    :::wren
-    class Unicorn {
-      construct new(name) {
-        System.print("My name is " + name + ".")
-      }
-    }
+<pre class="snippet">
+class Unicorn {
+  construct new(name) {
+    System.print("My name is " + name + ".")
+  }
+}
 
-    class Pegasus is Unicorn {
-      construct new(name) {
-        super(name)
-      }
-    }
+class Pegasus is Unicorn {
+  construct new(name) {
+    super(name)
+  }
+}
 
-    Pegasus.new("Fred") //> My name is Fred
+Pegasus.new("Fred") //> My name is Fred
+</pre>
 
 ## Super
 
@@ -558,34 +590,36 @@ overridden.
 To do that, you can use the special `super` keyword as the receiver in a method
 call:
 
-    :::wren
-    class Base {
-      method() {
-        System.print("base method")
-      }
-    }
+<pre class="snippet">
+class Base {
+  method() {
+    System.print("base method")
+  }
+}
 
-    class Derived is Base {
-      method() {
-        super.method() //> base method
-      }
-    }
+class Derived is Base {
+  method() {
+    super.method() //> base method
+  }
+}
+</pre>
 
 You can also use `super` without a method name inside a constructor to invoke a
 base class constructor:
 
-    :::wren
-    class Base {
-      construct new(arg) {
-        System.print("base got " + arg)
-      }
-    }
+<pre class="snippet">
+class Base {
+  construct new(arg) {
+    System.print("base got " + arg)
+  }
+}
 
-    class Derived is Base {
-      construct new() {
-        super("value") //> base got value
-      }
-    }
+class Derived is Base {
+  construct new() {
+    super("value") //> base got value
+  }
+}
+</pre>
 
 <br><hr>
 <a class="right" href="concurrency.html">Concurrency &rarr;</a>

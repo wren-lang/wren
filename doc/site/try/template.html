@@ -3,10 +3,12 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>{title} &ndash; Wren</title>
-<script type="application/javascript" src="prism.js" data-manual></script>
-<script type="application/javascript" src="wren.js"></script>
-<link rel="stylesheet" type="text/css" href="prism.css" />
-<link rel="stylesheet" type="text/css" href="style.css" />
+<script type="application/javascript" src="../prism.js" data-manual></script>
+<script src="../prism-live.js?load=lua" charset="utf-8"></script>
+<script type="application/javascript" src="../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../prism.css" />
+<link rel="stylesheet" type="text/css" href="../prism-live.css" />
+<link rel="stylesheet" type="text/css" href="../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -16,44 +18,44 @@
 <header>
   <div class="page">
     <div class="main-column">
-      <h1><a href="./">wren</a></h1>
+      <h1><a href="../">wren</a></h1>
       <h2>a classy little scripting language</h2>
     </div>
   </div>
 </header>
 <div class="page">
   <nav class="big">
-    <a href="./"><img src="./wren.svg" class="logo"></a>
+    <a href="../"><img src="../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="getting-started.html">Getting Started</a></li>
-      <li><a href="contributing.html">Contributing</a></li>
-      <li><a href="blog">Blog</a></li>
-      <li><a href="try">Try it!</a></li>
+      <li><a href="../getting-started.html">Getting Started</a></li>
+      <li><a href="../contributing.html">Contributing</a></li>
+      <li><a href="../blog">Blog</a></li>
+      <li><a href="./">Try it!</a></li>
     </ul>
     <section>
       <h2>guides</h2>
       <ul>
-        <li><a href="syntax.html">Syntax</a></li>
-        <li><a href="values.html">Values</a></li>
-        <li><a href="lists.html">Lists</a></li>
-        <li><a href="maps.html">Maps</a></li>
-        <li><a href="method-calls.html">Method Calls</a></li>
-        <li><a href="control-flow.html">Control Flow</a></li>
-        <li><a href="variables.html">Variables</a></li>
-        <li><a href="functions.html">Functions</a></li>
-        <li><a href="classes.html">Classes</a></li>
-        <li><a href="concurrency.html">Concurrency</a></li>
-        <li><a href="error-handling.html">Error Handling</a></li>
-        <li><a href="modularity.html">Modularity</a></li>
+        <li><a href="../syntax.html">Syntax</a></li>
+        <li><a href="../values.html">Values</a></li>
+        <li><a href="../lists.html">Lists</a></li>
+        <li><a href="../maps.html">Maps</a></li>
+        <li><a href="../method-calls.html">Method Calls</a></li>
+        <li><a href="../control-flow.html">Control Flow</a></li>
+        <li><a href="../variables.html">Variables</a></li>
+        <li><a href="../functions.html">Functions</a></li>
+        <li><a href="../classes.html">Classes</a></li>
+        <li><a href="../concurrency.html">Concurrency</a></li>
+        <li><a href="../error-handling.html">Error Handling</a></li>
+        <li><a href="../modularity.html">Modularity</a></li>
       </ul>
     </section>
     <section>
       <h2>reference</h2>
       <ul>
-        <li><a href="modules">Modules</a></li>
-        <li><a href="embedding">Embedding</a></li>
-        <li><a href="performance.html">Performance</a></li>
-        <li><a href="qa.html">Q &amp; A</a></li>
+        <li><a href="../modules">Modules</a></li>
+        <li><a href="../embedding">Embedding</a></li>
+        <li><a href="../performance.html">Performance</a></li>
+        <li><a href="../qa.html">Q &amp; A</a></li>
       </ul>
     </section>
   </nav>
@@ -117,5 +119,27 @@
     <div class="main-column">
   </div>
 </footer>
+<script type='text/javascript'>
+  var Module = {{
+    print: (function(text) {{
+      console.log(text);
+      var element = document.getElementById('try-output');
+      if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+      element.innerText += text + "\n";
+      element.scrollTop = element.scrollHeight;
+    }}),
+    printErr: function(text) {{
+      console.error(text);
+      var element = document.getElementById('try-output');
+      if(!element.getAttribute('ready')) return;
+      if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+      element.innerText += text + "\n";
+      element.scrollTop = element.scrollHeight;
+    }}
+  }};
+</script>
+<script async type="text/javascript" src="../wren_try.js"></script>
+
+
 </body>
 </html>

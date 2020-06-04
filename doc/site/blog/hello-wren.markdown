@@ -7,7 +7,7 @@ Welcome to the new Wren development blog!
 
 Around November 2018 on the Wren mailing list, munificent announced that a new maintainer is taking over the development and maintainence of the Wren language. [The original post is here, with all the details.](https://groups.google.com/forum/#!topic/wren-lang/cMUwij-NIn0)
 
-In short, [I'm (underscorediscovery)](https://github.com/underscorediscovery) taking over from [Bob (munificent)](https://github.com/munificent) as maintainer, but Bob is sticking around as a contributor!
+In short, [I'm (ruby0x1)](https://github.com/ruby0x1) taking over from [Bob (munificent)](https://github.com/munificent) as maintainer, but Bob is sticking around as a contributor!
 
 ### The Wren blog
 
@@ -62,7 +62,7 @@ I hope you'll join us on the journey!
 
 - [The Wren Blog RSS](http://wren.io/blog/rss.xml)
 - Visit the [wren-lang organization](https://github.com/wren-lang) on Github.
-- Follow [@munificentbob](https://twitter.com/munificentbob) or [@___discovery](https://twitter.com/___discovery) on twitter
+- Follow [@munificentbob](https://twitter.com/munificentbob) or [@ruby0x1](https://twitter.com/ruby0x1) on twitter
 
 
 

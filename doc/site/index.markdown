@@ -7,21 +7,21 @@
 Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in
 a familiar, modern [syntax][].
 
-    :::wren
-    System.print("Hello, world!")
+<pre class="snippet">
+System.print("Hello, world!")
 
-    class Wren {
-      flyTo(city) {
-        System.print("Flying to %(city)")
-      }
-    }
+class Wren {
+  flyTo(city) {
+    System.print("Flying to %(city)")
+  }
+}
 
-    var adjectives = Fiber.new {
-      ["small", "clean", "fast"].each {|word| Fiber.yield(word) }
-    }
+var adjectives = Fiber.new {
+  ["small", "clean", "fast"].each {|word| Fiber.yield(word) }
+}
 
-    while (!adjectives.isDone) System.print(adjectives.call())
-
+while (!adjectives.isDone) System.print(adjectives.call())
+</pre>
 
  *  **Wren is small.** The VM implementation is under [4,000 semicolons][src].
     You can skim the whole thing in an afternoon. It's *small*, but not
@@ -58,5 +58,5 @@ involved][contribute]!
 [fibers]: concurrency.html
 [embedding]: embedding
 [started]: getting-started.html
-[browser]: http://ppvk.github.io/wren-nest/
+[browser]: try
 [contribute]: contributing.html

@@ -14,22 +14,25 @@ bytecode for [efficiency][], but that's an implementation detail.)
 
 Line comments start with `//` and end at the end of the line:
 
-    :::wren
-    // This is a comment.
+<pre class="snippet">
+// This is a comment.
+</pre>
 
 Block comments start with `/*` and end with `*/`. They can span multiple lines:
 
-    :::wren
-    /* This
-       is
-       a
-       multi-line
-       comment. */
+<pre class="snippet">
+/* This
+   is
+   a
+   multi-line
+   comment. */
+</pre>
 
 Unlike C, block comments can nest in Wren:
 
-    :::wren
-    /* This is /* a nested */ comment. */
+<pre class="snippet">
+/* This is /* a nested */ comment. */
+</pre>
 
 This is handy because it lets you easily comment out an entire block of code,
 even if the code already contains block comments.
@@ -39,9 +42,10 @@ even if the code already contains block comments.
 One way to get a quick feel for a language's style is to see what words it
 reserves. Here's what Wren has:
 
-    :::wren
-    break class construct else false for foreign if import
-    in is null return static super this true var while
+<pre class="snippet">
+break class construct else false for foreign if import
+in is null return static super this true var while
+</pre>
 
 ## Identifiers
 
@@ -49,13 +53,14 @@ Naming rules are similar to other programming languages. Identifiers start with
 a letter or underscore and may contain letters, digits, and underscores. Case
 is sensitive.
 
-    :::wren
-    hi
-    camelCase
-    PascalCase
-    _under_score
-    abc123
-    ALL_CAPS
+<pre class="snippet">
+hi
+camelCase
+PascalCase
+_under_score
+abc123
+ALL_CAPS
+</pre>
 
 Identifiers that start with underscore (`_`) are special in Wren. They are used
 to indicate [fields](classes.html#fields) in classes.
@@ -64,18 +69,20 @@ to indicate [fields](classes.html#fields) in classes.
 
 Newlines (`\n`) are meaningful in Wren. They are used to separate statements:
 
-    :::wren
-    // Two statements:
-    System.print("hi") // Newline.
-    System.print("bye")
+<pre class="snippet">
+// Two statements:
+System.print("hi") // Newline.
+System.print("bye")
+</pre>
 
 Sometimes, though, a statement doesn't fit on a single line and jamming a
 newline in the middle would trip it up. To handle that, Wren has a very simple
 rule: It ignores a newline following any token that can't end a statement.
 
-    :::wren
-    System.print( // Newline here is ignored.
-        "hi")
+<pre class="snippet">
+System.print( // Newline here is ignored.
+    "hi")
+</pre>
 
 In practice, this means you can put each statement on its own line and wrap
 them across lines as needed without too much trouble.
@@ -88,20 +95,22 @@ statement is allowed, like in [control flow](control-flow.html) statements.
 blocks. For example, here we have a block for the then case, and a single
 statement for the else:
 
-    :::wren
-    if (happy && knowIt) {
-      hands.clap()
-    } else System.print("sad")
+<pre class="snippet">
+if (happy && knowIt) {
+  hands.clap()
+} else System.print("sad")
+</pre>
 
 Blocks have two similar but not identical forms. Typically, blocks contain a
 series of statements like:
 
-    :::wren
-    {
-      System.print("one")
-      System.print("two")
-      System.print("three")
-    }
+<pre class="snippet">
+{
+  System.print("one")
+  System.print("two")
+  System.print("three")
+}
+</pre>
 
 Blocks of this form when used for method and function bodies automatically
 return `null` after the block has completed. If you want to return a different
@@ -111,38 +120,42 @@ However, it's pretty common to have a method or function that just evaluates and
 returns the result of a single expression. Some other languages use `=>` to
 define these. Wren uses:
 
-    :::wren
-    { "single expression" }
+<pre class="snippet">
+{ "single expression" }
+</pre>
 
 If there is no newline after the `{` (or after the parameter list in a
 [function](functions.html)), then the block may only contain a single
 expression, and it automatically returns the result of it. It's exactly the same
 as doing:
 
-    :::wren
-    {
-      return "single expression"
-    }
+<pre class="snippet">
+{
+  return "single expression"
+}
+</pre>
 
 Statements are not allowed in this form (since they don't produce values), which
 means nothing starting with `class`, `for`, `if`, `import`,  `return`,
 `var`, or `while`. If you want a block that contains a single statement,
 put a newline in there:
 
-    :::wren
-    {
-      if (happy) {
-        System.print("I'm feelin' it!")
-      }
-    }
+<pre class="snippet">
+{
+  if (happy) {
+    System.print("I'm feelin' it!")
+  }
+}
+</pre>
 
 Using an initial newline after the `{` does feel a little weird or magical, but
 newlines are already significant in Wren, so it's not totally crazy. The nice
 thing about this syntax as opposed to something like `=>` is that the *end* of
 the block has an explicit delimiter. That helps when chaining:
 
-    :::wren
-    numbers.map {|n| n * 2 }.where {|n| n < 100 }
+<pre class="snippet">
+numbers.map {|n| n * 2 }.where {|n| n < 100 }
+</pre>
 
 ## Precedence and Associativity
 
