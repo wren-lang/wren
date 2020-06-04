@@ -36,30 +36,34 @@ The number of elements in the list.
 
 Inserts the `item` at `index` in the list.
 
-    :::wren
-    var list = ["a", "b", "c", "d"]
-    list.insert(1, "e")
-    System.print(list) //> [a, e, b, c, d]
+<pre class="snippet">
+var list = ["a", "b", "c", "d"]
+list.insert(1, "e")
+System.print(list) //> [a, e, b, c, d]
+</pre>
 
 The `index` may be one past the last index in the list to append an element.
 
-    :::wren
-    var list = ["a", "b", "c"]
-    list.insert(3, "d")
-    System.print(list) //> [a, b, c, d]
+<pre class="snippet">
+var list = ["a", "b", "c"]
+list.insert(3, "d")
+System.print(list) //> [a, b, c, d]
+</pre>
 
 If `index` is negative, it counts backwards from the end of the list. It bases this on the length of the list *after* inserted the element, so that `-1` will append the element, not insert it before the last element.
 
-    :::wren
-    var list = ["a", "b"]
-    list.insert(-1, "d")
-    list.insert(-2, "c")
-    System.print(list) //> [a, b, c, d]
+<pre class="snippet">
+var list = ["a", "b"]
+list.insert(-1, "d")
+list.insert(-2, "c")
+System.print(list) //> [a, b, c, d]
+</pre>
 
 Returns the inserted item.
 
-    :::wren
-    System.print(["a", "c"].insert(1, "b")) //> b
+<pre class="snippet">
+System.print(["a", "c"].insert(1, "b")) //> b
+</pre>
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
@@ -76,15 +80,17 @@ Removes the element at `index`. If `index` is negative, it counts backwards
 from the end of the list where `-1` is the last element. All trailing elements
 are shifted up to fill in where the removed element was.
 
-    :::wren
-    var list = ["a", "b", "c", "d"]
-    list.removeAt(1)
-    System.print(list) //> [a, c, d]
+<pre class="snippet">
+var list = ["a", "b", "c", "d"]
+list.removeAt(1)
+System.print(list) //> [a, c, d]
+</pre>
 
 Returns the removed item.
 
-    :::wren
-    System.print(["a", "b", "c"].removeAt(1)) //> b
+<pre class="snippet">
+System.print(["a", "b", "c"].removeAt(1)) //> b
+</pre>
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
@@ -93,9 +99,10 @@ It is a runtime error if the index is not an integer or is out of bounds.
 Gets the element at `index`. If `index` is negative, it counts backwards from
 the end of the list where `-1` is the last element.
 
-    :::wren
-    var list = ["a", "b", "c"]
-    System.print(list[1]) //> b
+<pre class="snippet">
+var list = ["a", "b", "c"]
+System.print(list[1]) //> b
+</pre>
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
@@ -104,10 +111,11 @@ It is a runtime error if the index is not an integer or is out of bounds.
 Replaces the element at `index` with `item`. If `index` is negative, it counts
 backwards from the end of the list where `-1` is the last element.
 
-    :::wren
-    var list = ["a", "b", "c"]
-    list[1] = "new"
-    System.print(list) //> [a, new, c]
+<pre class="snippet">
+var list = ["a", "b", "c"]
+list[1] = "new"
+System.print(list) //> [a, new, c]
+</pre>
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
@@ -115,8 +123,9 @@ It is a runtime error if the index is not an integer or is out of bounds.
 
  Appends a list to the end of the list (concatenation). `other` must be a `List`.
 
-    :::wren
-    var letters = ["a", "b", "c"]
-    var other = ["d", "e", "f"]
-    var combined = letters + other
-    System.print(combined)  //> [a, b, c, d, e, f]
+<pre class="snippet">
+var letters = ["a", "b", "c"]
+var other = ["d", "e", "f"]
+var combined = letters + other
+System.print(combined)  //> [a, b, c, d, e, f]
+</pre>

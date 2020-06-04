@@ -12,18 +12,21 @@ The name of the class.
 
 The superclass of this class.
 
-    :::wren
-    class Crustacean {}
-    class Crab is Crustacean {}
+<pre class="snippet">
+class Crustacean {}
+class Crab is Crustacean {}
 
-    System.print(Crab.supertype) //> Crustacean
+System.print(Crab.supertype) //> Crustacean
+</pre>
 
 A class with no explicit superclass implicitly inherits Object:
 
-    :::wren
-    System.print(Crustacean.supertype) //> Object
+<pre class="snippet">
+System.print(Crustacean.supertype) //> Object
+</pre>
 
 Object forms the root of the class hierarchy and has no supertype:
 
-    :::wren
-    System.print(Object.supertype) //> null
+<pre class="snippet">
+System.print(Object.supertype) //> null
+</pre>

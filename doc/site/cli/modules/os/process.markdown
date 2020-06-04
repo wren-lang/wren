@@ -13,13 +13,13 @@ run (if any), and any other options passed to Wren itself.
 
 If you run:
 
-    :::bash
     $ wren file.wren arg
 
 This returns:
 
-    :::wren
-    System.print(Process.allArguments) //> ["wren", "file.wren", "arg"]
+<pre class="snippet">
+System.print(Process.allArguments) //> ["wren", "file.wren", "arg"]
+</pre>
 
 ### **arguments**
 
@@ -29,10 +29,10 @@ itself.
 
 If you run:
 
-    :::bash
     $ wren file.wren arg
 
 This returns:
 
-    :::wren
-    System.print(Process.arguments) //> ["arg"]
+<pre class="snippet">
+System.print(Process.arguments) //> ["arg"]
+</pre>

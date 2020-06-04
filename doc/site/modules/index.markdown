@@ -1,7 +1,7 @@
 ^title Modules
 
-Wren comes with built-in modules that are always available and not optional.
-Every host that embeds Wren _should_ have these modules available.
+Wren comes with two kinds of modules, the core module (built-in),
+and a few optional modules that the host embedding Wren can enable.
 
 ## Core module
 
@@ -9,10 +9,13 @@ The core module is built directly into the VM and is implicitly
 imported by every other module. You don't need to `import` anything to use it.
 It contains objects and types for the language itself like [numbers][] and [strings][].
 
+Because Wren is designed for [embedding in applications][embedding], its core
+module is minimal and is focused on working with objects within Wren. For
+stuff like file IO, graphics, etc., it is up to the host application to provide
+interfaces for this.
+
 [numbers]: core/num.html
 [strings]: core/string.html
-
-* [core docs](core)
 
 ## Optional modules
 
