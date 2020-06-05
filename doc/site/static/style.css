@@ -530,9 +530,8 @@ table.precedence td {
 
 @media only screen and (max-width: 639px) {
   .page { width: 100%; }
-  .buttons {
-    margin-right: 1em;
-  }
+  .buttons { margin-right: 1em; }
+  #try-result { margin-right: 1.5em; }
 
   /* Switch to the mobile navigation.*/
   nav.big { display: none; }
