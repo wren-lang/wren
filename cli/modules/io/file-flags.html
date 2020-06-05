@@ -3,7 +3,10 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>FileFlags Class &ndash; Wren</title>
-<link rel="stylesheet" type="text/css" href="../../style.css" />
+<script type="application/javascript" src="../../../prism.js" data-manual></script>
+<script type="application/javascript" src="../../../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../../../prism.css" />
+<link rel="stylesheet" type="text/css" href="../../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -13,17 +16,18 @@
 <header>
   <div class="page">
     <div class="main-column">
-      <h1><a href="../../">wren</a></h1>
+      <h1><a href="../../../">wren</a></h1>
       <h2>a classy little scripting language</h2>
     </div>
   </div>
 </header>
 <div class="page">
   <nav class="big">
-    <a href="./"><img src="../../wren.svg" class="logo"></a>
+    <a href="../../../"><img src="../../../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="../">Modules</a></li>
-      <li><a href="./">io</a></li>
+      <li><a href="../../">Back to Wren CLI</a></li>
+      <li><a href="../">Back to CLI Modules</a></li>
+      <li><a href="./">io module</a></li>
     </ul>
     <section>
       <h2>io classes</h2>
@@ -40,8 +44,8 @@
   <nav class="small">
     <table>
       <tr>
-        <td><a href="../">Modules</a></td>
-        <td><a href="./">io</a></td>
+        <td><a href="../">Back to CLI Modules</a></td>
+        <td><a href="./">io module</a></td>
       </tr>
       <tr>
         <td colspan="2"><h2>io classes</h2></td>
@@ -66,33 +70,33 @@
   </nav>
   <main>
     <h1>FileFlags Class</h1>
-    <p>Contains constants for the various file flags used to open or create a file. 
-These correspond directly to the flags that can be passed to the POSIX 
-<a href="http://linux.die.net/man/2/open"><code>open()</code></a> syscall. </p>
-<p>They are integers and can be bitwise or&rsquo;ed together to produce a composite 
-flag. </p>
+    <p>Contains constants for the various file flags used to open or create a file.
+These correspond directly to the flags that can be passed to the POSIX
+<a href="http://linux.die.net/man/2/open"><code>open()</code></a> syscall.</p>
+<p>They are integers and can be bitwise or&rsquo;ed together to produce a composite
+flag.</p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3>FileFlags.<strong>readOnly</strong> <a href="#fileflags.readonly" name="fileflags.readonly" class="header-anchor">#</a></h3>
-<p>The file can be read from but not written. Equivalent to <code>O_RDONLY</code>. </p>
+<p>The file can be read from but not written. Equivalent to <code>O_RDONLY</code>.</p>
 <h3>FileFlags.<strong>writeOnly</strong> <a href="#fileflags.writeonly" name="fileflags.writeonly" class="header-anchor">#</a></h3>
-<p>The file can be written but not read from. Equivalent to <code>O_WRONLY</code>. </p>
+<p>The file can be written but not read from. Equivalent to <code>O_WRONLY</code>.</p>
 <h3>FileFlags.<strong>readWrite</strong> <a href="#fileflags.readwrite" name="fileflags.readwrite" class="header-anchor">#</a></h3>
-<p>The file can be both read from and written to. Equivalent to <code>O_RDWR</code>. </p>
+<p>The file can be both read from and written to. Equivalent to <code>O_RDWR</code>.</p>
 <h3>FileFlags.<strong>sync</strong> <a href="#fileflags.sync" name="fileflags.sync" class="header-anchor">#</a></h3>
-<p>Writes will block until the data has been physically written to the underling 
-hardware. This does <em>not</em> affect whether or the file API is synchronous. File 
-operations are always asynchronous in Wren and may allow other scheduled fibers 
-to run. </p>
-<p>This is a lower-level flag that ensures that when a write completes, it has 
-been flushed all the way to disc. </p>
+<p>Writes will block until the data has been physically written to the underling
+hardware. This does <em>not</em> affect whether or the file API is synchronous. File
+operations are always asynchronous in Wren and may allow other scheduled fibers
+to run.</p>
+<p>This is a lower-level flag that ensures that when a write completes, it has
+been flushed all the way to disc.</p>
 <h3>FileFlags.<strong>create</strong> <a href="#fileflags.create" name="fileflags.create" class="header-anchor">#</a></h3>
-<p>Creates a new file if a file at the given path does not already exist. </p>
+<p>Creates a new file if a file at the given path does not already exist.</p>
 <h3>FileFlags.<strong>truncate</strong> <a href="#fileflags.truncate" name="fileflags.truncate" class="header-anchor">#</a></h3>
-<p>If the file already exists and can be written to, its previous contents are 
-discarded. </p>
+<p>If the file already exists and can be written to, its previous contents are
+discarded.</p>
 <h3>FileFlags.<strong>exclusive</strong> <a href="#fileflags.exclusive" name="fileflags.exclusive" class="header-anchor">#</a></h3>
-<p>Ensures that a new file must be created. If a file already exists at the given 
-path, this flag will cause the operation to fail. </p>
+<p>Ensures that a new file must be created. If a file already exists at the given
+path, this flag will cause the operation to fail.</p>
   </main>
 </div>
 <footer>

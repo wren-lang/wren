@@ -4,17 +4,24 @@
     <description>The development blog of the Wren programming language.</description>
     <language>en-us</language>
     <item>
+      <title>0.3.0 released</title>
+      <link>https://wren.io/blog/2-0.3.0-released.html</link>
+      <description>0.3.0 release info! Plus some notes and goals for the next release, 0.4.0.</description>
+      <guid>https://wren.io/blog/2-0.3.0-released.html</guid>
+      <pubDate>Mon, 30 Sep 2019 00:00:00 GMT</pubDate>
+    </item>
+    <item>
       <title>0.2.0 and beyond</title>
-      <link>https://wren.io/blog/0.2.0-and-beyond.html</link>
+      <link>https://wren.io/blog/1-0.2.0-and-beyond.html</link>
       <description>Checkpoints, and the plans for 0.3.0.</description>
-      <guid>https://wren.io/blog/0.2.0-and-beyond.html</guid>
+      <guid>https://wren.io/blog/1-0.2.0-and-beyond.html</guid>
       <pubDate>Mon, 30 Sep 2019 00:00:00 GMT</pubDate>
     </item>
     <item>
       <title>System.print("hello wren")</title>
-      <link>https://wren.io/blog/hello-wren.html</link>
+      <link>https://wren.io/blog/0-hello-wren.html</link>
       <description>A short post introducing the blog, the new maintainer, and the immediate term plans for Wren.</description>
-      <guid>https://wren.io/blog/hello-wren.html</guid>
+      <guid>https://wren.io/blog/0-hello-wren.html</guid>
       <pubDate>Mon, 04 Feb 2019 00:00:00 GMT</pubDate>
     </item>
   </channel>

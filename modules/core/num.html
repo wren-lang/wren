@@ -3,6 +3,9 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Num Class &ndash; Wren</title>
+<script type="application/javascript" src="../../prism.js" data-manual></script>
+<script type="application/javascript" src="../../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../../prism.css" />
 <link rel="stylesheet" type="text/css" href="../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -20,10 +23,9 @@
 </header>
 <div class="page">
   <nav class="big">
-    <a href="./"><img src="../../wren.svg" class="logo"></a>
+    <a href="../../"><img src="../../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="../">Modules</a></li>
-      <li><a href="./">core</a></li>
+      <li><a href="../">Back to Modules</a></li>
     </ul>
     <section>
       <h2>core classes</h2>
@@ -82,134 +84,137 @@
     <h1>Num Class</h1>
     <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3>Num.<strong>fromString</strong>(value) <a href="#num.fromstring(value)" name="num.fromstring(value)" class="header-anchor">#</a></h3>
-<p>Attempts to parse <code>value</code> as a decimal literal and return it as an instance of 
-<code>Num</code>. If the number cannot be parsed <code>null</code> will be returned. </p>
-<p>It is a runtime error if <code>value</code> is not a string. </p>
+<p>Attempts to parse <code>value</code> as a decimal literal and return it as an instance of
+<code>Num</code>. If the number cannot be parsed <code>null</code> will be returned.</p>
+<p>It is a runtime error if <code>value</code> is not a string.</p>
 <h3>Num.<strong>pi</strong> <a href="#num.pi" name="num.pi" class="header-anchor">#</a></h3>
-<p>The value of &pi;. </p>
+<p>The value of &pi;.</p>
 <h3>Num.<strong>largest</strong> <a href="#num.largest" name="num.largest" class="header-anchor">#</a></h3>
-<p>The largest representable numeric value. </p>
+<p>The largest representable numeric value.</p>
 <h3>Num.<strong>smallest</strong> <a href="#num.smallest" name="num.smallest" class="header-anchor">#</a></h3>
-<p>The smallest positive representable numeric value. </p>
+<p>The smallest positive representable numeric value.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>abs</strong> <a href="#abs" name="abs" class="header-anchor">#</a></h3>
-<p>The absolute value of the number. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span> <span class="p">(</span><span class="o">-</span><span class="mi">123</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span> <span class="p">)</span> <span class="output">123</span>
-</pre></div>
-
+<p>The absolute value of the number.</p>
+<pre class="snippet">
+System.print( (-123).abs ) //> 123
+</pre>
 
 <h3><strong>acos</strong> <a href="#acos" name="acos" class="header-anchor">#</a></h3>
-<p>The arc cosine of the number. </p>
+<p>The arc cosine of the number.</p>
 <h3><strong>asin</strong> <a href="#asin" name="asin" class="header-anchor">#</a></h3>
-<p>The arc sine of the number. </p>
+<p>The arc sine of the number.</p>
 <h3><strong>atan</strong> <a href="#atan" name="atan" class="header-anchor">#</a></h3>
-<p>The arc tangent of the number. </p>
+<p>The arc tangent of the number.</p>
 <h3><strong>atan</strong>(x) <a href="#atan(x)" name="atan(x)" class="header-anchor">#</a></h3>
-<p>The arc tangent of the number when divided by <code>x</code>, using the signs of the two 
-numbers to determine the quadrant of the result. </p>
+<p>The arc tangent of the number when divided by <code>x</code>, using the signs of the two
+numbers to determine the quadrant of the result.</p>
 <h3><strong>ceil</strong> <a href="#ceil" name="ceil" class="header-anchor">#</a></h3>
-<p>Rounds the number up to the nearest integer. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mf">1.5</span><span class="o">.</span><span class="n">ceil</span><span class="p">)</span>    <span class="output">2</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="o">-</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">ceil</span><span class="p">)</span> <span class="output">-3</span>
-</pre></div>
-
+<p>Rounds the number up to the nearest integer.</p>
+<pre class="snippet">
+System.print(1.5.ceil)    //> 2
+System.print((-3.2).ceil) //> -3
+</pre>
 
 <h3><strong>cos</strong> <a href="#cos" name="cos" class="header-anchor">#</a></h3>
-<p>The cosine of the number. </p>
+<p>The cosine of the number.</p>
 <h3><strong>floor</strong> <a href="#floor" name="floor" class="header-anchor">#</a></h3>
-<p>Rounds the number down to the nearest integer. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mf">1.5</span><span class="o">.</span><span class="n">floor</span><span class="p">)</span>    <span class="output">1</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="o">-</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">)</span> <span class="output">-4</span>
-</pre></div>
-
+<p>Rounds the number down to the nearest integer.</p>
+<pre class="snippet">
+System.print(1.5.floor)    //> 1
+System.print((-3.2).floor) //> -4
+</pre>
 
 <h3><strong>isInfinity</strong> <a href="#isinfinity" name="isinfinity" class="header-anchor">#</a></h3>
-<p>Whether the number is positive or negative infinity or not. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mi">99999</span><span class="o">.</span><span class="n">isInfinity</span><span class="p">)</span>  <span class="output">false</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">isInfinity</span><span class="p">)</span>  <span class="output">true</span>
-</pre></div>
-
+<p>Whether the number is positive or negative infinity or not.</p>
+<pre class="snippet">
+System.print(99999.isInfinity)  //> false
+System.print((1/0).isInfinity)  //> true
+</pre>
 
 <h3><strong>isInteger</strong> <a href="#isinteger" name="isinteger" class="header-anchor">#</a></h3>
-<p>Whether the number is an integer or has some fractional component. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mi">2</span><span class="o">.</span><span class="n">isInteger</span><span class="p">)</span>   <span class="output">true</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mf">2.3</span><span class="o">.</span><span class="n">isInteger</span><span class="p">)</span> <span class="output">false</span>
-</pre></div>
-
+<p>Whether the number is an integer or has some fractional component.</p>
+<pre class="snippet">
+System.print(2.isInteger)   //> true
+System.print(2.3.isInteger) //> false
+</pre>
 
 <h3><strong>isNan</strong> <a href="#isnan" name="isnan" class="header-anchor">#</a></h3>
 <p>Whether the number is <a href="http://en.wikipedia.org/wiki/NaN">not a number</a>. This is
-<code>false</code> for normal number values and infinities, and <code>true</code> for the result of 
-<code>0/0</code>, the square root of a negative number, etc. </p>
+<code>false</code> for normal number values and infinities, and <code>true</code> for the result of
+<code>0/0</code>, the square root of a negative number, etc.</p>
 <h3><strong>log</strong> <a href="#log" name="log" class="header-anchor">#</a></h3>
-<p>The natural logarithm of the number. </p>
+<p>The natural logarithm of the number.</p>
 <h3><strong>pow</strong>(power) <a href="#pow(power)" name="pow(power)" class="header-anchor">#</a></h3>
-<p>Raises this number (the base) to <code>power</code>. Returns <code>nan</code> if the base is negative. </p>
+<p>Raises this number (the base) to <code>power</code>. Returns <code>nan</code> if the base is negative.</p>
 <h3><strong>round</strong> <a href="#round" name="round" class="header-anchor">#</a></h3>
-<p>Rounds the number to the nearest integer. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mf">1.5</span><span class="o">.</span><span class="n">round</span><span class="p">)</span>    <span class="output">2</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="o">-</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">)</span> <span class="output">-3</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">((</span><span class="o">-</span><span class="mf">3.7</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">)</span> <span class="output">-4</span>
-</pre></div>
+<p>Rounds the number to the nearest integer.</p>
+<pre class="snippet">
+System.print(1.5.round)    //> 2
+System.print((-3.2).round) //> -3
+System.print((-3.7).round) //> -4
+</pre>
 
-
+<h3><strong>sign</strong> <a href="#sign" name="sign" class="header-anchor">#</a></h3>
+<p>The sign of the number, expressed as a -1, 1 or 0, for negative and positive numbers, and zero.</p>
 <h3><strong>sin</strong> <a href="#sin" name="sin" class="header-anchor">#</a></h3>
-<p>The sine of the number. </p>
+<p>The sine of the number.</p>
 <h3><strong>sqrt</strong> <a href="#sqrt" name="sqrt" class="header-anchor">#</a></h3>
-<p>The square root of the number. Returns <code>nan</code> if the number is negative. </p>
+<p>The square root of the number. Returns <code>nan</code> if the number is negative.</p>
 <h3><strong>tan</strong> <a href="#tan" name="tan" class="header-anchor">#</a></h3>
-<p>The tangent of the number. </p>
+<p>The tangent of the number.</p>
 <h3><strong>-</strong> operator <a href="#--operator" name="--operator" class="header-anchor">#</a></h3>
-<p>Negates the number. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="mi">123</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="o">-</span><span class="err">a</span><span class="p">)</span> <span class="output">-123</span>
-</pre></div>
-
+<p>Negates the number.</p>
+<pre class="snippet">
+var a = 123
+System.print(-a) //> -123
+</pre>
 
 <h3><strong>-</strong>(other), <strong>+</strong>(other), <strong>/</strong>(other), <strong>*</strong>(other) operators <a href="#-(other),-+(other),-(other),-\(other)-operators" name="-(other),-+(other),-(other),-\(other)-operators" class="header-anchor">#</a></h3>
-<p>The usual arithmetic operators you know and love. All of them do 64-bit 
-floating point arithmetic. It is a runtime error if the right-hand operand is 
-not a number. Wren doesn&rsquo;t roll with implicit conversions. </p>
+<p>The usual arithmetic operators you know and love. All of them do 64-bit
+floating point arithmetic. It is a runtime error if the right-hand operand is
+not a number. Wren doesn&rsquo;t roll with implicit conversions.</p>
 <h3><strong>%</strong>(denominator) operator <a href="#%(denominator)-operator" name="%(denominator)-operator" class="header-anchor">#</a></h3>
-<p>Also known as mod or modulus. 
+<p>Also known as mod or modulus. <br />
 The floating-point remainder of this number divided by <code>denominator</code>. </p>
-<p>The returned value has the same sign as <code>this</code> (internally calls <code>fmod</code> from C). </p>
-<p>It is a runtime error if <code>denominator</code> is not a number. </p>
+<p>The returned value has the same sign as <code>this</code> (internally calls <code>fmod</code> from C).</p>
+<p>It is a runtime error if <code>denominator</code> is not a number.</p>
 <h3><strong>&lt;</strong>(other), <strong>&gt;</strong>(other), <strong>&lt;=</strong>(other), <strong>&gt;=</strong>(other) operators <a href="#&lt;(other),-&gt;(other),-&lt;=(other),-&gt;=(other)-operators" name="&lt;(other),-&gt;(other),-&lt;=(other),-&gt;=(other)-operators" class="header-anchor">#</a></h3>
-<p>Compares this and <code>other</code>, returning <code>true</code> or <code>false</code> based on how the numbers 
-are ordered. It is a runtime error if <code>other</code> is not a number. </p>
+<p>Compares this and <code>other</code>, returning <code>true</code> or <code>false</code> based on how the numbers
+are ordered. It is a runtime error if <code>other</code> is not a number.</p>
 <h3><strong>~</strong> operator <a href="#~-operator" name="~-operator" class="header-anchor">#</a></h3>
-<p>Performs <em>bitwise</em> negation on the number. The number is first converted to a 
-32-bit unsigned value, which will truncate any floating point value. The bits 
-of the result of that are then negated, yielding the result. </p>
+<p>Performs <em>bitwise</em> negation on the number. The number is first converted to a
+32-bit unsigned value, which will truncate any floating point value. The bits
+of the result of that are then negated, yielding the result.</p>
 <h3><strong>&amp;</strong>(other) operator <a href="#&(other)-operator" name="&(other)-operator" class="header-anchor">#</a></h3>
-<p>Performs bitwise and on the number. Both numbers are first converted to 32-bit 
-unsigned values. The result is then a 32-bit unsigned number where each bit is 
-<code>true</code> only where the corresponding bits of both inputs were <code>true</code>. </p>
-<p>It is a runtime error if <code>other</code> is not a number. </p>
+<p>Performs bitwise and on the number. Both numbers are first converted to 32-bit
+unsigned values. The result is then a 32-bit unsigned number where each bit is
+<code>true</code> only where the corresponding bits of both inputs were <code>true</code>.</p>
+<p>It is a runtime error if <code>other</code> is not a number.</p>
 <h3><strong>|</strong>(other) operator <a href="#|(other)-operator" name="|(other)-operator" class="header-anchor">#</a></h3>
-<p>Performs bitwise or on the number. Both numbers are first converted to 32-bit 
-unsigned values. The result is then a 32-bit unsigned number where each bit is 
-<code>true</code> only where the corresponding bits of one or both inputs were <code>true</code>. </p>
-<p>It is a runtime error if <code>other</code> is not a number. </p>
+<p>Performs bitwise or on the number. Both numbers are first converted to 32-bit
+unsigned values. The result is then a 32-bit unsigned number where each bit is
+<code>true</code> only where the corresponding bits of one or both inputs were <code>true</code>.</p>
+<p>It is a runtime error if <code>other</code> is not a number.</p>
 <h3><strong>..</strong>(other) operator <a href="#..(other)-operator" name="..(other)-operator" class="header-anchor">#</a></h3>
-<p>Creates a <a href="range.html">Range</a> representing a consecutive range of numbers 
-from the beginning number to the ending number. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">range</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">..</span><span class="mf">3.4</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>         <span class="output">1.2</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>         <span class="output">3.4</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="output">true</span>
-</pre></div>
-
+<p>Creates a <a href="range.html">Range</a> representing a consecutive range of numbers
+from the beginning number to the ending number.</p>
+<pre class="snippet">
+var range = 1.2..3.4
+System.print(range.min)         //> 1.2
+System.print(range.max)         //> 3.4
+System.print(range.isInclusive) //> true
+</pre>
 
 <h3><strong>&hellip;</strong>(other) operator <a href="#...(other)-operator" name="...(other)-operator" class="header-anchor">#</a></h3>
-<p>Creates a <a href="range.html">Range</a> representing a consecutive range of numbers 
-from the beginning number to the ending number not including the ending number. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">range</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">...</span><span class="mf">3.4</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>         <span class="output">1.2</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>         <span class="output">3.4</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">range</span><span class="o">.</span><span class="n">isInclusive</span><span class="p">)</span> <span class="output">false</span>
-</pre></div>
+<p>Creates a <a href="range.html">Range</a> representing a consecutive range of numbers
+from the beginning number to the ending number not including the ending number.</p>
+<pre class="snippet">
+var range = 1.2...3.4
+System.print(range.min)         //> 1.2
+System.print(range.max)         //> 3.4
+System.print(range.isInclusive) //> false
+</pre>
   </main>
 </div>
 <footer>

@@ -3,6 +3,10 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Variables &ndash; Wren</title>
+<script type="application/javascript" src="prism.js" data-manual></script>
+<script type="application/javascript" src="codejar.js"></script>
+<script type="application/javascript" src="wren.js"></script>
+<link rel="stylesheet" type="text/css" href="prism.css" />
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -14,7 +18,7 @@
   <div class="page">
     <div class="main-column">
       <h1><a href="./">wren</a></h1>
-      <h2>a classy little scripting language</h2>      
+      <h2>a classy little scripting language</h2>
     </div>
   </div>
 </header>
@@ -25,6 +29,7 @@
       <li><a href="getting-started.html">Getting Started</a></li>
       <li><a href="contributing.html">Contributing</a></li>
       <li><a href="blog">Blog</a></li>
+      <li><a href="try">Try it!</a></li>
     </ul>
     <section>
       <h2>guides</h2>
@@ -44,9 +49,15 @@
       </ul>
     </section>
     <section>
-      <h2>reference</h2>
+      <h2>API docs</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="cli">Wren CLI</a></li>
         <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
@@ -59,6 +70,7 @@
         <div><a href="getting-started.html">Getting Started</a></div>
         <div><a href="contributing.html">Contributing</a></div>
         <div><a href="blog">Blog</a></div>
+        <div><a href="try">Try it!</a></div>
       </tr>
       <tr>
         <td colspan="2"><h2>guides</h2></td>
@@ -87,7 +99,7 @@
         </td>
         <td>
           <ul>
-            <li><a href="modules">Modules</a></li>
+            <li><a href="modules">API/Modules</a></li>
             <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
@@ -98,74 +110,74 @@
   </nav>
   <main>
     <h2>Variables</h2>
-    <p>Variables are named slots for storing values. You define a new variable in Wren 
-using a <code>var</code> statement, like so: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span>
-</pre></div>
+    <p>Variables are named slots for storing values. You define a new variable in Wren
+using a <code>var</code> statement, like so:</p>
+<pre class="snippet">
+var a = 1 + 2
+</pre>
 
-
-<p>This creates a new variable <code>a</code> in the current scope and initializes it with 
-the result of the expression following the <code>=</code>. Once a variable has been 
-defined, it can be accessed by name as you would expect. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">animal</span> <span class="o">=</span> <span class="s">&quot;Slow Loris&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">animal</span><span class="p">)</span> <span class="output">Slow Loris</span>
-</pre></div>
-
+<p>This creates a new variable <code>a</code> in the current scope and initializes it with
+the result of the expression following the <code>=</code>. Once a variable has been
+defined, it can be accessed by name as you would expect.</p>
+<pre class="snippet">
+var animal = "Slow Loris"
+System.print(animal) //> Slow Loris
+</pre>
 
 <h2>Scope <a href="#scope" name="scope" class="header-anchor">#</a></h2>
-<p>Wren has true block scope: a variable exists from the point where it is defined 
-until the end of the <a href="syntax.html#blocks">block</a> where that definition appears. </p>
-<div class="codehilite"><pre><span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="error">&quot;a&quot; doesn&#39;t exist yet.</span>
-  <span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="mi">123</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="output">123</span>
-<span class="p">}</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="error">&quot;a&quot; doesn&#39;t exist anymore.</span>
-</pre></div>
+<p>Wren has true block scope: a variable exists from the point where it is defined
+until the end of the <a href="syntax.html#blocks">block</a> where that definition appears.</p>
+<pre class="snippet">
+{
+  System.print(a) //! "a" doesn't exist yet.
+  var a = 123
+  System.print(a) //> 123
+}
+System.print(a) //! "a" doesn't exist anymore.
+</pre>
 
+<p>Variables defined at the top level of a script are <em>top-level</em> and are visible
+to the <a href="modules.html">module</a> system. All other variables are <em>local</em>.
+Declaring a variable in an inner scope with the same name as an outer one is
+called <em>shadowing</em> and is not an error (although it&rsquo;s not something you likely
+intend to do much).</p>
+<pre class="snippet">
+var a = "outer"
+{
+  var a = "inner"
+  System.print(a) //> inner
+}
+System.print(a) //> outer
+</pre>
 
-<p>Variables defined at the top level of a script are <em>top-level</em> and are visible 
-to the <a href="modules.html">module</a> system. All other variables are <em>local</em>. 
-Declaring a variable in an inner scope with the same name as an outer one is 
-called <em>shadowing</em> and is not an error (although it&rsquo;s not something you likely 
-intend to do much). </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;outer&quot;</span> 
-<span class="p">{</span> 
-  <span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;inner&quot;</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="output">inner</span>
-<span class="p">}</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="output">outer</span>
-</pre></div>
-
-
-<p>Declaring a variable with the same name in the <em>same</em> scope <em>is</em> an error. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;hi&quot;</span> 
-<span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;again&quot;</span> <span class="error">&quot;a&quot; is already declared.</span>
-</pre></div>
-
+<p>Declaring a variable with the same name in the <em>same</em> scope <em>is</em> an error.</p>
+<pre class="snippet">
+var a = "hi"
+var a = "again" //! "a" is already declared.
+</pre>
 
 <h2>Assignment <a href="#assignment" name="assignment" class="header-anchor">#</a></h2>
-<p>After a variable has been declared, you can assign to it using <code>=</code>: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="mi">123</span> 
-<span class="err">a</span> <span class="o">=</span> <span class="mi">234</span>
-</pre></div>
+<p>After a variable has been declared, you can assign to it using <code>=</code>:</p>
+<pre class="snippet">
+var a = 123
+a = 234
+</pre>
 
+<p>An assignment walks up the scope stack to find where the named variable is
+declared. It&rsquo;s an error to assign to a variable that isn&rsquo;t defined. Wren
+doesn&rsquo;t roll with implicit variable definition.</p>
+<p>When used in a larger expression, an assignment expression evaluates to the
+assigned value.</p>
+<pre class="snippet">
+var a = "before"
+System.print(a = "after") //> after
+</pre>
 
-<p>An assignment walks up the scope stack to find where the named variable is 
-declared. It&rsquo;s an error to assign to a variable that isn&rsquo;t defined. Wren 
-doesn&rsquo;t roll with implicit variable definition. </p>
-<p>When used in a larger expression, an assignment expression evaluates to the 
-assigned value. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="err">a</span> <span class="o">=</span> <span class="s">&quot;before&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="err">a</span> <span class="o">=</span> <span class="s">&quot;after&quot;</span><span class="p">)</span> <span class="output">after</span>
-</pre></div>
-
-
-<p>If the left-hand side is some more complex expression than a bare variable name, 
-then it isn&rsquo;t an assignment. Instead, it&rsquo;s calling a <a href="method-calls.html#setters">setter method</a>. </p>
-<p><br><hr> 
-<a class="right" href="functions.html">Functions &rarr;</a> 
-<a href="control-flow.html">&larr; Control Flow</a> </p>
+<p>If the left-hand side is some more complex expression than a bare variable name,
+then it isn&rsquo;t an assignment. Instead, it&rsquo;s calling a <a href="method-calls.html#setters">setter method</a>.</p>
+<p><br><hr>
+<a class="right" href="functions.html">Functions &rarr;</a>
+<a href="control-flow.html">&larr; Control Flow</a></p>
   </main>
 </div>
 <footer>

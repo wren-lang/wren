@@ -3,6 +3,9 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>String Class &ndash; Wren</title>
+<script type="application/javascript" src="../../prism.js" data-manual></script>
+<script type="application/javascript" src="../../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../../prism.css" />
 <link rel="stylesheet" type="text/css" href="../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -20,10 +23,9 @@
 </header>
 <div class="page">
   <nav class="big">
-    <a href="./"><img src="../../wren.svg" class="logo"></a>
+    <a href="../../"><img src="../../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="../">Modules</a></li>
-      <li><a href="./">core</a></li>
+      <li><a href="../">Back to Modules</a></li>
     </ul>
     <section>
       <h2>core classes</h2>
@@ -80,212 +82,212 @@
   </nav>
   <main>
     <h1>String Class</h1>
-    <p>A string is an immutable array of bytes. Strings usually store text, in which 
-case the bytes are the UTF-8 encoding of the text&rsquo;s code points. But you can put 
-any kind of byte values in there you want, including null bytes or invalid 
-UTF-8. </p>
-<p>There are a few ways to think of a string: </p>
+    <p>A string is an immutable array of bytes. Strings usually store text, in which
+case the bytes are the UTF-8 encoding of the text&rsquo;s code points. But you can put
+any kind of byte values in there you want, including null bytes or invalid
+UTF-8.</p>
+<p>There are a few ways to think of a string:</p>
 <ul>
 <li>
-<p>As a searchable chunk of text composed of a sequence of textual code points. </p>
+<p>As a searchable chunk of text composed of a sequence of textual code points.</p>
 </li>
 <li>
-<p>As an iterable sequence of code point numbers. </p>
+<p>As an iterable sequence of code point numbers.</p>
 </li>
 <li>
-<p>As a flat array of directly indexable bytes. </p>
+<p>As a flat array of directly indexable bytes.</p>
 </li>
 </ul>
-<p>All of those are useful for some problems, so the string API supports all three. 
-The first one is the most common, so that&rsquo;s what methods directly on the string 
-class cater to. </p>
-<p>In UTF-8, a single Unicode code point&mdash;very roughly a single 
-&ldquo;character&rdquo;&mdash;may encode to one or more bytes. This means you can&rsquo;t 
-efficiently index by code point. There&rsquo;s no way to jump directly to, say, the 
-fifth code point in a string without walking the string from the beginning and 
-counting them as you go. </p>
-<p>Because counting code points is relatively slow, the indexes passed to string 
-methods are <em>byte</em> offsets, not <em>code point</em> offsets. When you do: </p>
-<div class="codehilite"><pre><span class="n">someString</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-</pre></div>
+<p>All of those are useful for some problems, so the string API supports all three.
+The first one is the most common, so that&rsquo;s what methods directly on the string
+class cater to.</p>
+<p>In UTF-8, a single Unicode code point&mdash;very roughly a single
+&ldquo;character&rdquo;&mdash;may encode to one or more bytes. This means you can&rsquo;t
+efficiently index by code point. There&rsquo;s no way to jump directly to, say, the
+fifth code point in a string without walking the string from the beginning and
+counting them as you go.</p>
+<p>Because counting code points is relatively slow, the indexes passed to string
+methods are <em>byte</em> offsets, not <em>code point</em> offsets. When you do:</p>
+<pre class="snippet">
+someString[3]
+</pre>
 
+<p>That means &ldquo;get the code point starting at <em>byte</em> three&rdquo;, not &ldquo;get the third
+code point in the string&rdquo;. This sounds scary, but keep in mind that the methods
+on strings <em>return</em> byte indexes too. So, for example, this does what you want:</p>
+<pre class="snippet">
+var metalBand = "Fäcëhämmër"
+var hPosition = metalBand.indexOf("h")
+System.print(metalBand[hPosition]) //> h
+</pre>
 
-<p>That means &ldquo;get the code point starting at <em>byte</em> three&rdquo;, not &ldquo;get the third 
-code point in the string&rdquo;. This sounds scary, but keep in mind that the methods 
-on strings <em>return</em> byte indexes too. So, for example, this does what you want: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">metalBand</span> <span class="o">=</span> <span class="s">&quot;Fäcëhämmër&quot;</span> 
-<span class="k">var</span> <span class="n">hPosition</span> <span class="o">=</span> <span class="n">metalBand</span><span class="o">.</span><span class="n">indexOf</span><span class="p">(</span><span class="s">&quot;h&quot;</span><span class="p">)</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">metalBand</span><span class="p">[</span><span class="n">hPosition</span><span class="p">])</span> <span class="output">h</span>
-</pre></div>
-
-
-<p>If you want to work with a string as a sequence numeric code points, call the 
-<code>codePoints</code> getter. It returns a <a href="sequence.html">Sequence</a> that decodes UTF-8 
-and iterates over the code points, returning each as a number. </p>
-<p>If you want to get at the raw bytes, call <code>bytes</code>. This returns a Sequence that 
-ignores any UTF-8 encoding and works directly at the byte level. </p>
+<p>If you want to work with a string as a sequence numeric code points, call the
+<code>codePoints</code> getter. It returns a <a href="sequence.html">Sequence</a> that decodes UTF-8
+and iterates over the code points, returning each as a number.</p>
+<p>If you want to get at the raw bytes, call <code>bytes</code>. This returns a Sequence that
+ignores any UTF-8 encoding and works directly at the byte level.</p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3>String.<strong>fromCodePoint</strong>(codePoint) <a href="#string.fromcodepoint(codepoint)" name="string.fromcodepoint(codepoint)" class="header-anchor">#</a></h3>
-<p>Creates a new string containing the UTF-8 encoding of <code>codePoint</code>. </p>
-<div class="codehilite"><pre><span class="vg">String</span><span class="o">.</span><span class="n">fromCodePoint</span><span class="p">(</span><span class="mi">8225</span><span class="p">)</span> <span class="output">‡</span>
-</pre></div>
+<p>Creates a new string containing the UTF-8 encoding of <code>codePoint</code>.</p>
+<pre class="snippet">
+String.fromCodePoint(8225) //> ‡
+</pre>
 
-
-<p>It is a runtime error if <code>codePoint</code> is not an integer between <code>0</code> and 
-<code>0x10ffff</code>, inclusive. </p>
+<p>It is a runtime error if <code>codePoint</code> is not an integer between <code>0</code> and
+<code>0x10ffff</code>, inclusive.</p>
 <h3>String.<strong>fromByte</strong>(byte) <a href="#string.frombyte(byte)" name="string.frombyte(byte)" class="header-anchor">#</a></h3>
-<p>Creates a new string containing the single byte <code>byte</code>. </p>
-<div class="codehilite"><pre><span class="vg">String</span><span class="o">.</span><span class="n">fromByte</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span> <span class="output">�</span>
-</pre></div>
+<p>Creates a new string containing the single byte <code>byte</code>.</p>
+<pre class="snippet">
+String.fromByte(255) //> �
+</pre>
 
-
-<p>It is a runtime error if <code>byte</code> is not an integer between <code>0</code> and <code>0xff</code>, inclusive. </p>
+<p>It is a runtime error if <code>byte</code> is not an integer between <code>0</code> and <code>0xff</code>, inclusive.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>bytes</strong> <a href="#bytes" name="bytes" class="header-anchor">#</a></h3>
-<p>Gets a <a href="sequence.html"><code>Sequence</code></a> that can be used to access the raw bytes of 
-the string and ignore any UTF-8 encoding. In addition to the normal sequence 
-methods, the returned object also has a subscript operator that can be used to 
-directly index bytes. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="o">.</span><span class="n">bytes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="output">101 (for &quot;e&quot;)</span>
-</pre></div>
+<p>Gets a <a href="sequence.html"><code>Sequence</code></a> that can be used to access the raw bytes of
+the string and ignore any UTF-8 encoding. In addition to the normal sequence
+methods, the returned object also has a subscript operator that can be used to
+directly index bytes.</p>
+<pre class="snippet">
+System.print("hello".bytes[1]) //> 101 (for "e")
+</pre>
 
-
-<p>The <code>count</code> method on the returned sequence returns the number of bytes in the 
-string. Unlike <code>count</code> on the string itself, it does not have to iterate over 
-the string, and runs in constant time instead. </p>
+<p>The <code>count</code> method on the returned sequence returns the number of bytes in the
+string. Unlike <code>count</code> on the string itself, it does not have to iterate over
+the string, and runs in constant time instead.</p>
 <h3><strong>codePoints</strong> <a href="#codepoints" name="codepoints" class="header-anchor">#</a></h3>
-<p>Gets a <a href="sequence.html"><code>Sequence</code></a> that can be used to access the UTF-8 decode 
-code points of the string <em>as numbers</em>. Iteration and subscripting work similar 
-to the string itself. The difference is that instead of returning 
-single-character strings, this returns the numeric code point values. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="output">40 (for &quot;(&quot;)</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="output">7461 (for &quot;ᴥ&quot;)</span>
-</pre></div>
+<p>Gets a <a href="sequence.html"><code>Sequence</code></a> that can be used to access the UTF-8 decode
+code points of the string <em>as numbers</em>. Iteration and subscripting work similar
+to the string itself. The difference is that instead of returning
+single-character strings, this returns the numeric code point values.</p>
+<pre class="snippet">
+var string = "(ᵔᴥᵔ)"
+System.print(string.codePoints[0]) //> 40 (for "(")
+System.print(string.codePoints[4]) //> 7461 (for "ᴥ")
+</pre>
 
-
-<p>If the byte at <code>index</code> does not begin a valid UTF-8 sequence, or the end of the 
-string is reached before the sequence is complete, returns <code>-1</code>. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">codePoints</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="output">-1 (in the middle of &quot;ᵔ&quot;)</span>
-</pre></div>
-
+<p>If the byte at <code>index</code> does not begin a valid UTF-8 sequence, or the end of the
+string is reached before the sequence is complete, returns <code>-1</code>.</p>
+<pre class="snippet">
+var string = "(ᵔᴥᵔ)"
+System.print(string.codePoints[2]) //> -1 (in the middle of "ᵔ")
+</pre>
 
 <h3><strong>contains</strong>(other) <a href="#contains(other)" name="contains(other)" class="header-anchor">#</a></h3>
-<p>Checks if <code>other</code> is a substring of the string. </p>
-<p>It is a runtime error if <code>other</code> is not a string. </p>
+<p>Checks if <code>other</code> is a substring of the string.</p>
+<p>It is a runtime error if <code>other</code> is not a string.</p>
 <h3><strong>count</strong> <a href="#count" name="count" class="header-anchor">#</a></h3>
-<p>Returns the number of code points in the string. Since UTF-8 is a 
-variable-length encoding, this requires iterating over the entire string, which 
-is relatively slow. </p>
-<p>If the string contains bytes that are invalid UTF-8, each byte adds one to the 
-count as well. </p>
+<p>Returns the number of code points in the string. Since UTF-8 is a
+variable-length encoding, this requires iterating over the entire string, which
+is relatively slow.</p>
+<p>If the string contains bytes that are invalid UTF-8, each byte adds one to the
+count as well.</p>
 <h3><strong>endsWith</strong>(suffix) <a href="#endswith(suffix)" name="endswith(suffix)" class="header-anchor">#</a></h3>
-<p>Checks if the string ends with <code>suffix</code>. </p>
-<p>It is a runtime error if <code>suffix</code> is not a string. </p>
+<p>Checks if the string ends with <code>suffix</code>.</p>
+<p>It is a runtime error if <code>suffix</code> is not a string.</p>
 <h3><strong>indexOf</strong>(search) <a href="#indexof(search)" name="indexof(search)" class="header-anchor">#</a></h3>
-<p>Returns the index of the first byte matching <code>search</code> in the string or <code>-1</code> if 
-<code>search</code> was not found. </p>
-<p>It is a runtime error if <code>search</code> is not a string. </p>
+<p>Returns the index of the first byte matching <code>search</code> in the string or <code>-1</code> if
+<code>search</code> was not found.</p>
+<p>It is a runtime error if <code>search</code> is not a string.</p>
 <h3><strong>indexOf</strong>(search, start) <a href="#indexof(search,-start)" name="indexof(search,-start)" class="header-anchor">#</a></h3>
-<p>Returns the index of the first byte matching <code>search</code> in the string or <code>-1</code> if 
-<code>search</code> was not found, starting a byte offset <code>start</code>. The start can be 
-negative to count backwards from the end of the string. </p>
-<p>It is a runtime error if <code>search</code> is not a string or <code>start</code> is not an integer 
-index within the string&rsquo;s byte length. </p>
+<p>Returns the index of the first byte matching <code>search</code> in the string or <code>-1</code> if
+<code>search</code> was not found, starting a byte offset <code>start</code>. The start can be
+negative to count backwards from the end of the string.</p>
+<p>It is a runtime error if <code>search</code> is not a string or <code>start</code> is not an integer
+index within the string&rsquo;s byte length.</p>
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
-<p>Implements the <a href="../../control-flow.html#the-iterator-protocol">iterator protocol</a> for iterating over the <em>code points</em> in the 
-string: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">codePoints</span> <span class="o">=</span> <span class="p">[]</span> 
-<span class="k">for</span> <span class="p">(</span><span class="err">c</span> <span class="k">in</span> <span class="s">&quot;(ᵔᴥᵔ)&quot;</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="n">codePoints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="err">c</span><span class="p">)</span> 
-<span class="p">}</span>
+<p>Implements the <a href="../../control-flow.html#the-iterator-protocol">iterator protocol</a> for iterating over the <em>code points</em> in the
+string:</p>
+<pre class="snippet">
+var codePoints = []
+for (c in "(ᵔᴥᵔ)") {
+  codePoints.add(c)
+}
 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">codePoints</span><span class="p">)</span> <span class="output">[(, ᵔ, ᴥ, ᵔ, )]</span>
-</pre></div>
+System.print(codePoints) //> [(, ᵔ, ᴥ, ᵔ, )]
+</pre>
 
-
-<p>If the string contains any bytes that are not valid UTF-8, this iterates over 
-those too, one byte at a time. </p>
+<p>If the string contains any bytes that are not valid UTF-8, this iterates over
+those too, one byte at a time.</p>
 <h3><strong>replace</strong>(old, swap) <a href="#replace(old,-swap)" name="replace(old,-swap)" class="header-anchor">#</a></h3>
-<p>Returns a new string with all occurrences of <code>old</code> replaced with <code>swap</code>. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;abc abc abc&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">))</span> <span class="output">abcabcabc</span>
-</pre></div>
-
+<p>Returns a new string with all occurrences of <code>old</code> replaced with <code>swap</code>.</p>
+<pre class="snippet">
+var string = "abc abc abc"
+System.print(string.replace(" ", "")) //> abcabcabc
+</pre>
 
 <h3><strong>split</strong>(separator) <a href="#split(separator)" name="split(separator)" class="header-anchor">#</a></h3>
-<p>Returns a list of one or more strings separated by <code>separator</code>. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;abc abc abc&quot;</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">))</span> <span class="output">[abc, abc, abc]</span>
-</pre></div>
+<p>Returns a list of one or more strings separated by <code>separator</code>.</p>
+<pre class="snippet">
+var string = "abc abc abc"
+System.print(string.split(" ")) //> [abc, abc, abc]
+</pre>
 
-
-<p>It is a runtime error if <code>separator</code> is not a string or is an empty string. </p>
+<p>It is a runtime error if <code>separator</code> is not a string or is an empty string.</p>
 <h3><strong>startsWith</strong>(prefix) <a href="#startswith(prefix)" name="startswith(prefix)" class="header-anchor">#</a></h3>
-<p>Checks if the string starts with <code>prefix</code>. </p>
-<p>It is a runtime error if <code>prefix</code> is not a string. </p>
+<p>Checks if the string starts with <code>prefix</code>.</p>
+<p>It is a runtime error if <code>prefix</code> is not a string.</p>
 <h3><strong>trim</strong>() <a href="#trim()" name="trim()" class="header-anchor">#</a></h3>
-<p>Returns a new string with whitespace removed from the beginning and end of this 
-string. &ldquo;Whitespace&rdquo; is space, tab, carriage return, and line feed characters. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot; </span><span class="se">\n</span><span class="s">stuff</span><span class="se">\r\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">trim</span><span class="p">())</span> <span class="output">stuff</span>
-</pre></div>
-
+<p>Returns a new string with whitespace removed from the beginning and end of this
+string. &ldquo;Whitespace&rdquo; is space, tab, carriage return, and line feed characters.</p>
+<pre class="snippet">
+System.print(" \nstuff\r\t".trim()) //> stuff
+</pre>
 
 <h3><strong>trim</strong>(chars) <a href="#trim(chars)" name="trim(chars)" class="header-anchor">#</a></h3>
-<p>Returns a new string with all code points in <code>chars</code> removed from the beginning 
-and end of this string. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ&quot;</span><span class="o">.</span><span class="n">trim</span><span class="p">(</span><span class="s">&quot;ᵔᴥ&quot;</span><span class="p">))</span> <span class="output">bear</span>
-</pre></div>
-
+<p>Returns a new string with all code points in <code>chars</code> removed from the beginning
+and end of this string.</p>
+<pre class="snippet">
+System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trim("ᵔᴥ")) //> bear
+</pre>
 
 <h3><strong>trimEnd</strong>() <a href="#trimend()" name="trimend()" class="header-anchor">#</a></h3>
-<p>Like <code>trim()</code> but only removes from the end of the string. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot; </span><span class="se">\n</span><span class="s">stuff</span><span class="se">\r\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">trimEnd</span><span class="p">())</span> <span class="output">&quot; \nstuff&quot;</span>
-</pre></div>
-
+<p>Like <code>trim()</code> but only removes from the end of the string.</p>
+<pre class="snippet">
+System.print(" \nstuff\r\t".trimEnd()) //> " \nstuff"
+</pre>
 
 <h3><strong>trimEnd</strong>(chars) <a href="#trimend(chars)" name="trimend(chars)" class="header-anchor">#</a></h3>
-<p>Like <code>trim()</code> but only removes from the end of the string. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ&quot;</span><span class="o">.</span><span class="n">trimEnd</span><span class="p">(</span><span class="s">&quot;ᵔᴥ&quot;</span><span class="p">))</span> <span class="output">ᵔᴥᵔᴥᵔbear</span>
-</pre></div>
-
+<p>Like <code>trim()</code> but only removes from the end of the string.</p>
+<pre class="snippet">
+System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimEnd("ᵔᴥ")) //> ᵔᴥᵔᴥᵔbear
+</pre>
 
 <h3><strong>trimStart</strong>() <a href="#trimstart()" name="trimstart()" class="header-anchor">#</a></h3>
-<p>Like <code>trim()</code> but only removes from the beginning of the string. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot; </span><span class="se">\n</span><span class="s">stuff</span><span class="se">\r\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">trimStart</span><span class="p">())</span> <span class="output">&quot;stuff\r\t&quot;</span>
-</pre></div>
-
+<p>Like <code>trim()</code> but only removes from the beginning of the string.</p>
+<pre class="snippet">
+System.print(" \nstuff\r\t".trimStart()) //> "stuff\r\t"
+</pre>
 
 <h3><strong>trimStart</strong>(chars) <a href="#trimstart(chars)" name="trimstart(chars)" class="header-anchor">#</a></h3>
-<p>Like <code>trim()</code> but only removes from the beginning of the string. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ&quot;</span><span class="o">.</span><span class="n">trimStart</span><span class="p">(</span><span class="s">&quot;ᵔᴥ&quot;</span><span class="p">))</span> <span class="output">bearᵔᴥᴥᵔᵔ</span>
-</pre></div>
-
+<p>Like <code>trim()</code> but only removes from the beginning of the string.</p>
+<pre class="snippet">
+System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimStart("ᵔᴥ")) //> bearᵔᴥᴥᵔᵔ
+</pre>
 
 <h3><strong>+</strong>(other) operator <a href="#+(other)-operator" name="+(other)-operator" class="header-anchor">#</a></h3>
-<p>Returns a new string that concatenates this string and <code>other</code>. </p>
-<p>It is a runtime error if <code>other</code> is not a string. </p>
+<p>Returns a new string that concatenates this string and <code>other</code>.</p>
+<p>It is a runtime error if <code>other</code> is not a string.</p>
 <h3><strong>==</strong>(other) operator <a href="#==(other)-operator" name="==(other)-operator" class="header-anchor">#</a></h3>
-<p>Checks if the string is equal to <code>other</code>. </p>
+<p>Checks if the string is equal to <code>other</code>.</p>
 <h3><strong>!=</strong>(other) operator <a href="#=(other)-operator" name="=(other)-operator" class="header-anchor">#</a></h3>
-<p>Check if the string is not equal to <code>other</code>. </p>
+<p>Check if the string is not equal to <code>other</code>.</p>
 <h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
-<p>Returns a string containing the code point starting at byte <code>index</code>. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;ʕ•ᴥ•ʔ&quot;</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="output">ᴥ</span>
-</pre></div>
+<p>Returns a string containing the code point starting at byte <code>index</code>.</p>
+<pre class="snippet">
+System.print("ʕ•ᴥ•ʔ"[5]) //> ᴥ
+</pre>
 
+<p>Since <code>ʕ</code> is two bytes in UTF-8 and <code>•</code> is three, the fifth byte points to the
+bear&rsquo;s nose.</p>
+<p>If <code>index</code> points into the middle of a UTF-8 sequence or at otherwise invalid
+UTF-8, this returns a one-byte string containing the byte at that index:</p>
+<pre class="snippet">
+System.print("I ♥ NY"[3]) //> (one-byte string [153])
+</pre>
 
-<p>Since <code>ʕ</code> is two bytes in UTF-8 and <code>•</code> is three, the fifth byte points to the 
-bear&rsquo;s nose. </p>
-<p>If <code>index</code> points into the middle of a UTF-8 sequence or at otherwise invalid 
-UTF-8, this returns a one-byte string containing the byte at that index: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I ♥ NY&quot;</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="output">(one-byte string [153])</span>
-</pre></div>
-
-
-<p>It is a runtime error if <code>index</code> is greater than the number of bytes in the 
-string. </p>
+<p>It is a runtime error if <code>index</code> is greater than the number of bytes in the
+string.</p>
   </main>
 </div>
 <footer>

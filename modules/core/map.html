@@ -3,6 +3,9 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Map Class &ndash; Wren</title>
+<script type="application/javascript" src="../../prism.js" data-manual></script>
+<script type="application/javascript" src="../../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../../prism.css" />
 <link rel="stylesheet" type="text/css" href="../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -20,10 +23,9 @@
 </header>
 <div class="page">
   <nav class="big">
-    <a href="./"><img src="../../wren.svg" class="logo"></a>
+    <a href="../../"><img src="../../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="../">Modules</a></li>
-      <li><a href="./">core</a></li>
+      <li><a href="../">Back to Modules</a></li>
     </ul>
     <section>
       <h2>core classes</h2>
@@ -80,42 +82,42 @@
   </nav>
   <main>
     <h1>Map Class</h1>
-    <p>An associative collection that maps keys to values. More details <a href="../../maps.html">here</a>. </p>
+    <p>An associative collection that maps keys to values. More details <a href="../../maps.html">here</a>.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>clear</strong>() <a href="#clear()" name="clear()" class="header-anchor">#</a></h3>
-<p>Removes all entries from the map. </p>
+<p>Removes all entries from the map.</p>
 <h3><strong>containsKey</strong>(key) <a href="#containskey(key)" name="containskey(key)" class="header-anchor">#</a></h3>
-<p>Returns <code>true</code> if the map contains <code>key</code> or <code>false</code> otherwise. </p>
+<p>Returns <code>true</code> if the map contains <code>key</code> or <code>false</code> otherwise.</p>
 <h3><strong>count</strong> <a href="#count" name="count" class="header-anchor">#</a></h3>
-<p>The number of entries in the map. </p>
+<p>The number of entries in the map.</p>
 <h3><strong>keys</strong> <a href="#keys" name="keys" class="header-anchor">#</a></h3>
-<p>A <a href="sequence.html">Sequence</a> that can be used to iterate over the keys in the 
-map. Note that iteration order is undefined. All keys will be iterated over, 
-but may be in any order, and may even change between invocations of Wren. </p>
+<p>A <a href="sequence.html">Sequence</a> that can be used to iterate over the keys in the
+map. Note that iteration order is undefined. All keys will be iterated over,
+but may be in any order, and may even change between invocations of Wren.</p>
 <h3><strong>remove</strong>(key) <a href="#remove(key)" name="remove(key)" class="header-anchor">#</a></h3>
-<p>Removes <code>key</code> and the value associated with it from the map. Returns the value. </p>
-<p>If the key was not present, returns <code>null</code>. </p>
+<p>Removes <code>key</code> and the value associated with it from the map. Returns the value.</p>
+<p>If the key was not present, returns <code>null</code>.</p>
 <h3><strong>values</strong> <a href="#values" name="values" class="header-anchor">#</a></h3>
-<p>A <a href="sequence.html">Sequence</a> that can be used to iterate over the values in the 
-map. Note that iteration order is undefined. All values will be iterated over, 
-but may be in any order, and may even change between invocations of Wren. </p>
-<p>If multiple keys are associated with the same value, the value will appear 
-multiple times in the sequence. </p>
+<p>A <a href="sequence.html">Sequence</a> that can be used to iterate over the values in the
+map. Note that iteration order is undefined. All values will be iterated over,
+but may be in any order, and may even change between invocations of Wren.</p>
+<p>If multiple keys are associated with the same value, the value will appear
+multiple times in the sequence.</p>
 <h3><strong>[</strong>key<strong>]</strong> operator <a href="#[key]-operator" name="[key]-operator" class="header-anchor">#</a></h3>
-<p>Gets the value associated with <code>key</code> in the map. If <code>key</code> is not present in the 
-map, returns <code>null</code>. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">map</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;george&quot;</span><span class="o">:</span> <span class="s">&quot;harrison&quot;</span><span class="p">,</span> <span class="s">&quot;ringo&quot;</span><span class="o">:</span> <span class="s">&quot;starr&quot;</span><span class="p">}</span> 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">map</span><span class="p">[</span><span class="s">&quot;ringo&quot;</span><span class="p">])</span> <span class="output">starr</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">map</span><span class="p">[</span><span class="s">&quot;pete&quot;</span><span class="p">])</span>  <span class="output">null</span>
-</pre></div>
-
+<p>Gets the value associated with <code>key</code> in the map. If <code>key</code> is not present in the
+map, returns <code>null</code>.</p>
+<pre class="snippet">
+var map = {"george": "harrison", "ringo": "starr"}
+System.print(map["ringo"]) //> starr
+System.print(map["pete"])  //> null
+</pre>
 
 <h3><strong>[</strong>key<strong>]=</strong>(value) operator <a href="#[key]=(value)-operator" name="[key]=(value)-operator" class="header-anchor">#</a></h3>
-<p>Associates <code>value</code> with <code>key</code> in the map. If <code>key</code> was already in the map, this 
-replaces the previous association. </p>
-<p>It is a runtime error if the key is not a <a href="bool.html">Bool</a>, 
-<a href="class.html">Class</a>, <a href="null.html">Null</a>, <a href="num.html">Num</a>, <a href="range.html">Range</a>, 
-or <a href="string.html">String</a>. </p>
+<p>Associates <code>value</code> with <code>key</code> in the map. If <code>key</code> was already in the map, this
+replaces the previous association.</p>
+<p>It is a runtime error if the key is not a <a href="bool.html">Bool</a>,
+<a href="class.html">Class</a>, <a href="null.html">Null</a>, <a href="num.html">Num</a>, <a href="range.html">Range</a>,
+or <a href="string.html">String</a>.</p>
   </main>
 </div>
 <footer>

@@ -3,7 +3,10 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Platform Class &ndash; Wren</title>
-<link rel="stylesheet" type="text/css" href="../../style.css" />
+<script type="application/javascript" src="../../../prism.js" data-manual></script>
+<script type="application/javascript" src="../../../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../../../prism.css" />
+<link rel="stylesheet" type="text/css" href="../../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -13,17 +16,18 @@
 <header>
   <div class="page">
     <div class="main-column">
-      <h1><a href="../../">wren</a></h1>
+      <h1><a href="../../../">wren</a></h1>
       <h2>a classy little scripting language</h2>
     </div>
   </div>
 </header>
 <div class="page">
   <nav class="big">
-    <a href="./"><img src="../../wren.svg" class="logo"></a>
+    <a href="../../../"><img src="../../../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="../">Modules</a></li>
-      <li><a href="./">os</a></li>
+      <li><a href="../../">Back to Wren CLI</a></li>
+      <li><a href="../">Back to CLI Modules</a></li>
+      <li><a href="./">os module</a></li>
     </ul>
     <section>
       <h2>os classes</h2>
@@ -36,8 +40,8 @@
   <nav class="small">
     <table>
       <tr>
-        <td><a href="../">Modules</a></td>
-        <td><a href="./">os</a></td>
+        <td><a href="../">Back to CLI Modules</a></td>
+        <td><a href="./">os module</a></td>
       </tr>
       <tr>
         <td colspan="2"><h2>os classes</h2></td>
@@ -58,27 +62,27 @@
   </nav>
   <main>
     <h1>Platform Class</h1>
-    <p>The Platform class exposes basic information about the operating system Wren is 
-running on top of. </p>
+    <p>The Platform class exposes basic information about the operating system Wren is
+running on top of.</p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3><strong>name</strong> <a href="#name" name="name" class="header-anchor">#</a></h3>
-<p>The name of the platform. This roughly describes the operating system, and is 
-usually one of: </p>
+<p>The name of the platform. This roughly describes the operating system, and is
+usually one of:</p>
 <ul>
-<li>&ldquo;iOS&rdquo; </li>
-<li>&ldquo;Linux&rdquo; </li>
-<li>&ldquo;OS X&rdquo; </li>
-<li>&ldquo;POSIX&rdquo; </li>
-<li>&ldquo;Unix&rdquo; </li>
-<li>&ldquo;Windows&rdquo; </li>
+<li>&ldquo;iOS&rdquo;</li>
+<li>&ldquo;Linux&rdquo;</li>
+<li>&ldquo;OS X&rdquo;</li>
+<li>&ldquo;POSIX&rdquo;</li>
+<li>&ldquo;Unix&rdquo;</li>
+<li>&ldquo;Windows&rdquo;</li>
 </ul>
-<p>If Wren was compiled for an unknown operating system, returns &ldquo;Unknown&rdquo;. </p>
+<p>If Wren was compiled for an unknown operating system, returns &ldquo;Unknown&rdquo;.</p>
 <h3><strong>isPosix</strong> <a href="#isposix" name="isposix" class="header-anchor">#</a></h3>
-<p>Returns <code>true</code> if the host operating system is known to support the POSIX 
-standard. This is true for Linux and other Unices, as well as the various Apple 
-operating systems. </p>
+<p>Returns <code>true</code> if the host operating system is known to support the POSIX
+standard. This is true for Linux and other Unices, as well as the various Apple
+operating systems.</p>
 <h3><strong>isWindows</strong> <a href="#iswindows" name="iswindows" class="header-anchor">#</a></h3>
-<p>Returns <code>true</code> if the host operating system is some flavor of Windows. </p>
+<p>Returns <code>true</code> if the host operating system is some flavor of Windows.</p>
   </main>
 </div>
 <footer>

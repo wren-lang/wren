@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Wren CLI Usage &ndash; Wren</title>
+<script type="application/javascript" src="../prism.js" data-manual></script>
+<script type="application/javascript" src="../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../prism.css" />
+<link rel="stylesheet" type="text/css" href="../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <a href="../"><img src="../wren.svg" class="logo"></a>
+    <ul>
+      <li><a href="../">Back to Wren</a></li>
+    </ul>
+    <section>
+      <h2>Wren CLI</h2>
+      <ul>
+        <li><a href="./">About</a></li>
+        <li><a target="_blank" href="https://github.com/wren-lang/wren-cli/releases">Downloads</a></li>
+        <li><a href="usage.html">Usage</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>API docs</h2>
+      <ul>
+        <li><a href="modules">CLI Modules</a></li>
+      </ul>
+    </section>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <div><a href="../">Back to Wren</a></div>
+      </tr>
+      <tr>
+        <td><h2>CLI</h2></td>
+        <td><h2>API</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="./">About</a></li>
+            <li><a target="_blank" href="https://github.com/wren-lang/wren-cli/releases">Downloads</a></li>
+            <li><a href="usage.html">Usage</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">CLI Modules</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h2>Wren CLI Usage</h2>
+    <hr />
+<p>You can <a href="https://github.com/wren-lang/wren-cli/releases">download a build for your OS from the releases page</a>.</p>
+<h3>Interactive mode <a href="#interactive-mode" name="interactive-mode" class="header-anchor">#</a></h3>
+<p>If you just run <code>wren</code> without any arguments, it starts the interpreter in
+interactive mode, where you can type in a line of code, and it immediately executes
+it. You can exit the interpreter using good old Ctrl-C or Ctrl-D.</p>
+<p>Here&rsquo;s something to try:</p>
+<pre class="snippet">
+System.print("Hello, world!")
+</pre>
+
+<p>Or a little more exciting:</p>
+<pre class="snippet">
+for (i in 1..10) System.print("Counting up %(i)")
+</pre>
+
+<h3>Running scripts <a href="#running-scripts" name="running-scripts" class="header-anchor">#</a></h3>
+<p>The standalone interpreter can also load scripts from files and run them. Just
+pass the name of the script to <code>wren</code>. Create a file named &ldquo;my_script.wren&rdquo; in
+your favorite text editor and paste this into it:</p>
+<pre class="snippet">
+for (yPixel in 0...24) {
+  var y = yPixel / 12 - 1
+  for (xPixel in 0...80) {
+    var x = xPixel / 30 - 2
+    var x0 = x
+    var y0 = y
+    var iter = 0
+    while (iter < 11 && x0 * x0 + y0 * y0 <= 4) {
+      var x1 = (x0 * x0) - (y0 * y0) + x
+      var y1 = 2 * x0 * y0 + y
+      x0 = x1
+      y0 = y1
+      iter = iter + 1
+    }
+    System.write(" .-:;+=xX$& "[iter])
+  }
+  System.print("")
+}
+</pre>
+
+<p>Now run:</p>
+<pre><code>$ ./wren my_script.wren
+</code></pre>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/wren-lang/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/wren-lang/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

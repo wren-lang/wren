@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>File Class &ndash; Wren</title>
+<script type="application/javascript" src="../../../prism.js" data-manual></script>
+<script type="application/javascript" src="../../../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../../../prism.css" />
+<link rel="stylesheet" type="text/css" href="../../../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top" class="module">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../../../">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <a href="../../../"><img src="../../../wren.svg" class="logo"></a>
+    <ul>
+      <li><a href="../../">Back to Wren CLI</a></li>
+      <li><a href="../">Back to CLI Modules</a></li>
+      <li><a href="./">io module</a></li>
+    </ul>
+    <section>
+      <h2>io classes</h2>
+      <ul>
+        <li><a href="directory.html">Directory</a></li>
+        <li><a href="file.html">File</a></li>
+        <li><a href="file-flags.html">FileFlags</a></li>
+        <li><a href="stat.html">Stat</a></li>
+        <li><a href="stdin.html">Stdin</a></li>
+        <li><a href="stdout.html">Stdout</a></li>
+      </ul>
+    </section>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="../">Back to CLI Modules</a></td>
+        <td><a href="./">io module</a></td>
+      </tr>
+      <tr>
+        <td colspan="2"><h2>io classes</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="directory.html">Directory</a></li>
+            <li><a href="file.html">File</a></li>
+            <li><a href="file-flags.html">FileFlags</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="stat.html">Stat</a></li>
+            <li><a href="stdin.html">Stdin</a></li>
+            <li><a href="stdout.html">Stdout</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h1>File Class</h1>
+    <p>Lets you work with files on the file system. An instance of this class
+represents an open file with a file descriptor.</p>
+<p>When you are done with a file object, it&rsquo;s a good idea to explicitly close it.
+If you don&rsquo;t, the GC will close it when the file is no longer used and gets
+finalized, but that may take a while. In the meantime, leaving it open wastes
+a file descriptor.</p>
+<h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
+<h3>File.<strong>create</strong>(path, fn) <a href="#file.create(path,-fn)" name="file.create(path,-fn)" class="header-anchor">#</a></h3>
+<p>Opens the file at <code>path</code> for writing and passes it to <code>fn</code>. If there is already
+a file at that path, it is truncated. After the function returns, the file is
+automatically closed.</p>
+<pre class="snippet">
+File.create("numbers.txt") {|file|
+  file.writeBytes("one two three")
+}
+</pre>
+
+<h3>File.<strong>delete</strong>(path) <a href="#file.delete(path)" name="file.delete(path)" class="header-anchor">#</a></h3>
+<p>Deletes the file at <code>path</code>.</p>
+<h3>File.<strong>exists</strong>(path) <a href="#file.exists(path)" name="file.exists(path)" class="header-anchor">#</a></h3>
+<p>Whether a regular file exists at <code>path</code>. This returns <code>false</code> for directories
+or other special file system entities.</p>
+<h3>File.<strong>open</strong>(path, fn) <a href="#file.open(path,-fn)" name="file.open(path,-fn)" class="header-anchor">#</a></h3>
+<p>Opens the file at <code>path</code> for reading and passes it to <code>fn</code>. After the function
+returns, the file is automatically closed.</p>
+<pre class="snippet">
+File.open("words.txt") {|file|
+  file.readBytes(5)
+}
+</pre>
+
+<h3>File.<strong>read</strong>(path) <a href="#file.read(path)" name="file.read(path)" class="header-anchor">#</a></h3>
+<p>Reads the entire contents of the file at <code>path</code> and returns it as a string.</p>
+<pre class="snippet">
+File.read("words.txt")
+</pre>
+
+<p>No encoding or decoding is done. If the file is UTF-8, then the resulting
+string will be a UTF-8 string. Otherwise, it will be a string of bytes in
+whatever encoding the file uses.</p>
+<h3>File.<strong>realPath</strong>(path) <a href="#file.realpath(path)" name="file.realpath(path)" class="header-anchor">#</a></h3>
+<p>Resolves <code>path</code>, traversing symlinks and removining any unneeded <code>./</code> and <code>../</code>
+components. Returns the canonical absolute path to the file.</p>
+<pre class="snippet">
+var path = "/some/./symlink/a/../b/file.txt"
+System.print(File.realPath(path)) //> /real/path/a/file.txt
+</pre>
+
+<h3>File.<strong>size</strong>(path) <a href="#file.size(path)" name="file.size(path)" class="header-anchor">#</a></h3>
+<p>Returns the size in bytes of the contents of the file at <code>path</code>.</p>
+<h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
+<h3>File.<strong>create</strong>(path) <a href="#file.create(path)" name="file.create(path)" class="header-anchor">#</a></h3>
+<p>Opens the file at <code>path</code> for writing. If there is already a file at that path,
+it is truncated.</p>
+<pre class="snippet">
+var file = File.create("colors.txt")
+file.writeBytes("chartreuse lime teal")
+file.close()
+</pre>
+
+<h3>File.<strong>open</strong>(path) <a href="#file.open(path)" name="file.open(path)" class="header-anchor">#</a></h3>
+<p>Opens the file at <code>path</code> for reading. You are responsible for closing it when
+done with it.</p>
+<h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
+<h3><strong>descriptor</strong> <a href="#descriptor" name="descriptor" class="header-anchor">#</a></h3>
+<p>The numeric file descriptor used to access the file.</p>
+<h3><strong>isOpen</strong> <a href="#isopen" name="isopen" class="header-anchor">#</a></h3>
+<p>Whether the file is still open or has been closed.</p>
+<h3><strong>size</strong> <a href="#size" name="size" class="header-anchor">#</a></h3>
+<p>The size of the contents of the file in bytes.</p>
+<h3><strong>close</strong>() <a href="#close()" name="close()" class="header-anchor">#</a></h3>
+<p>Closes the file. After calling this, you can&rsquo;t read or write from it.</p>
+<h3><strong>readBytes</strong>(count) <a href="#readbytes(count)" name="readbytes(count)" class="header-anchor">#</a></h3>
+<p>Reads up to <code>count</code> bytes starting from the beginning of the file.</p>
+<pre class="snippet">
+// Assume this file contains "I am a file!".
+File.open("example.txt") {|file|
+  System.print(file.readBytes(6)) //> I am a
+}
+</pre>
+
+<h3><strong>readBytes</strong>(count, offset) <a href="#readbytes(count,-offset)" name="readbytes(count,-offset)" class="header-anchor">#</a></h3>
+<p>Reads up to <code>count</code> bytes starting at <code>offset</code> bytes from the beginning of
+the file.</p>
+<pre class="snippet">
+// Assume this file contains "I am a file!".
+File.open("example.txt") {|file|
+  System.print(file.readBytes(6, 2)) //> am a f
+}
+</pre>
+
+<h3><strong>writeBytes</strong>(bytes) <a href="#writebytes(bytes)" name="writebytes(bytes)" class="header-anchor">#</a></h3>
+<p>Writes the raw bytes of the string <code>bytes</code> to the end of the file.</p>
+<h3><strong>writeBytes</strong>(bytes, offset) <a href="#writebytes(bytes,-offset)" name="writebytes(bytes,-offset)" class="header-anchor">#</a></h3>
+<p>Writes the raw bytes of the string <code>bytes</code> to the to the file, starting at
+<code>offset</code>. Any overlapping bytes already in the file at the offset are
+overwritten.</p>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/wren-lang/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/wren-lang/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

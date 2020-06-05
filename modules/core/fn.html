@@ -3,6 +3,9 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Fn Class &ndash; Wren</title>
+<script type="application/javascript" src="../../prism.js" data-manual></script>
+<script type="application/javascript" src="../../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../../prism.css" />
 <link rel="stylesheet" type="text/css" href="../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -20,10 +23,9 @@
 </header>
 <div class="page">
   <nav class="big">
-    <a href="./"><img src="../../wren.svg" class="logo"></a>
+    <a href="../../"><img src="../../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="../">Modules</a></li>
-      <li><a href="./">core</a></li>
+      <li><a href="../">Back to Modules</a></li>
     </ul>
     <section>
       <h2>core classes</h2>
@@ -80,42 +82,42 @@
   </nav>
   <main>
     <h1>Fn Class</h1>
-    <p>A first class function&mdash;an object that wraps an executable chunk of code. 
-<a href="../../functions.html">Here</a> is a friendly introduction. </p>
+    <p>A first class function&mdash;an object that wraps an executable chunk of code.
+<a href="../../functions.html">Here</a> is a friendly introduction.</p>
 <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3>Fn.<strong>new</strong>(function) <a href="#fn.new(function)" name="fn.new(function)" class="header-anchor">#</a></h3>
-<p>Creates a new function from&hellip; <code>function</code>. Of course, <code>function</code> is already a 
-function, so this really just returns the argument. It exists mainly to let you 
-create a &ldquo;bare&rdquo; function when you don&rsquo;t want to immediately pass it as a <a href="../functions.html#block-arguments">block 
-argument</a> to some other method. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The body&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
+<p>Creates a new function from&hellip; <code>function</code>. Of course, <code>function</code> is already a
+function, so this really just returns the argument. It exists mainly to let you
+create a &ldquo;bare&rdquo; function when you don&rsquo;t want to immediately pass it as a <a href="../functions.html#block-arguments">block
+argument</a> to some other method.</p>
+<pre class="snippet">
+var fn = Fn.new {
+  System.print("The body")
+}
+</pre>
 
-
-<p>It is a runtime error if <code>function</code> is not a function. </p>
+<p>It is a runtime error if <code>function</code> is not a function.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>arity</strong> <a href="#arity" name="arity" class="header-anchor">#</a></h3>
-<p>The number of arguments the function requires. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{}</span><span class="o">.</span><span class="n">arity</span><span class="p">)</span>             <span class="output">0</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span><span class="o">|</span><span class="err">a</span><span class="p">,</span> <span class="err">b</span><span class="p">,</span> <span class="err">c</span><span class="o">|</span> <span class="err">a</span> <span class="p">}</span><span class="o">.</span><span class="n">arity</span><span class="p">)</span> <span class="output">3</span>
-</pre></div>
-
+<p>The number of arguments the function requires.</p>
+<pre class="snippet">
+System.print(Fn.new {}.arity)             //> 0
+System.print(Fn.new {|a, b, c| a }.arity) //> 3
+</pre>
 
 <h3><strong>call</strong>(args&hellip;) <a href="#call(args...)" name="call(args...)" class="header-anchor">#</a></h3>
-<p>Invokes the function with the given arguments. </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">fn</span> <span class="o">=</span> <span class="vg">Fn</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="o">|</span><span class="n">arg</span><span class="o">|</span> 
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>     <span class="output">Hello world</span>
-<span class="p">}</span>
+<p>Invokes the function with the given arguments.</p>
+<pre class="snippet">
+var fn = Fn.new { |arg|
+  System.print(arg)     //> Hello world
+}
 
-<span class="n">fn</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s">&quot;Hello world&quot;</span><span class="p">)</span>
-</pre></div>
+fn.call("Hello world")
+</pre>
 
-
-<p>It is a runtime error if the number of arguments given is less than the arity 
-of the function. If more arguments are given than the function&rsquo;s arity they are 
-ignored. </p>
+<p>It is a runtime error if the number of arguments given is less than the arity
+of the function. If more arguments are given than the function&rsquo;s arity they are
+ignored.</p>
   </main>
 </div>
 <footer>

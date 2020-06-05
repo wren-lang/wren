@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>0.2.0 and beyond &ndash; Wren</title>
+<script type="application/javascript" src="../prism.js" data-manual></script>
+<script type="application/javascript" src="../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../prism.css" />
+<link rel="stylesheet" type="text/css" href="../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../">wren</a></h1>
+      <h2>a classy little scripting language</h2>      
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <a href="../"><img src="../wren.svg" class="logo"></a>
+    <ul>
+      <li><a href="../getting-started.html">Getting Started</a></li>
+      <li><a href="../contributing.html">Contributing</a></li>
+      <li><a href="../blog">Blog</a></li>
+      <li><a href="../try">Try it!</a></li>
+    </ul>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h2>0.2.0 and beyond</h2>
+    <p>30 Sep 2019</p>
+<hr />
+<h3>0.2.0 is here <a href="#0.2.0-is-here" name="0.2.0-is-here" class="header-anchor">#</a></h3>
+<p>It&rsquo;s time to tag a release!
+Let&rsquo;s check our goals from <a href="0-hello-wren.html">the last blog post</a>:</p>
+<ul>
+<li><s>We&rsquo;re gonna clear out a bit of backlog, tidying up issues and PRs</s></li>
+<li><s>Tidy up the website a bit, visually and structurally</s></li>
+<li><s>Make sure all documentation is up to date with the current development</s></li>
+<li><s>Tag 0.2.0 with a list of relevant changes since 0.1.0</s></li>
+</ul>
+<p>So far so good.</p>
+<h3>Backlog <a href="#backlog" name="backlog" class="header-anchor">#</a></h3>
+<p>Clearing out the issues on a repo after some time has passed is always a bit tricky. </p>
+<p>Many issues are outdated (or unrelated), and some need a proper response. Some are related to future ideals, things that will take a while to get to. Some are related to the Wren CLI. It can be difficult to reason about the state of the tasks when they&rsquo;re all over the place, so we&rsquo;ve been consolidating.</p>
+<p>The good news is the issue list has been drastically reduced, 70+ issues being closed (or resolved). Around 21 of those are marked for future consideration, and 23 moved to the Wren CLI repository. More consolidation will still continue.</p>
+<p><strong>The goal is that the active issues are as relevant as possible in the immediate term.</strong></p>
+<p>A tricky but important aspect to mention here is the perception of closing an issue&hellip;
+A closed issue doesn&rsquo;t necessarily mean anything final, it&rsquo;s just a categorization tool!</p>
+<p>The other categorization tool which operates <em>within</em> open/closed categories, is the <em>label</em>. Labels allow us to distinguish clearly the different types of issues, which makes open/closed less binary and more nuanced and rich. We rely on both to make sense of the list.</p>
+<p>For example, discussions of future tasks, ideas or goals <a href="https://github.com/wren-lang/wren/issues?utf8=%E2%9C%93&amp;q=is%3Aissue+label%3Afuture+">are tagged <code>future</code></a>. Now we can refer to them later, and re-open them when they become active and relevant again.</p>
+<p><strong>We&rsquo;re in this together.</strong> <br />
+Please don&rsquo;t be discouraged if an issue is closed! Discussion is absolutely encouraged and ideas, proposals and input is very necessary. Feel free to keep a discussion going, even if the issue it&rsquo;s attached to has been marked as closed.</p>
+<h3>0.2.0 <a href="#0.2.0" name="0.2.0" class="header-anchor">#</a></h3>
+<p>We&rsquo;ve been hammering away on Wren since 0.1.0 for quite a while. The <a href="https://github.com/wren-lang/wren/compare/0.1.0...5338275dcdd97fd8d9fc614f420a645500836a59">change list on GitHub</a> is too long to display!</p>
+<p>Most importantly, before we start iterating on the language further, I wanted to make sure we had a checkpoint to look back to. That&rsquo;s largely what 0.2.0 is about.</p>
+<p>There&rsquo;s quite a lot of good changes, with <strong>290 commits from 41 contributors!</strong>
+Thanks to everyone getting involved, every little bit has helped Wren, no matter how small the contribution.</p>
+<h3>0.3.0 <a href="#0.3.0" name="0.3.0" class="header-anchor">#</a></h3>
+<p>With 0.2.0 wrapped up, our next release won&rsquo;t be as far away this time.</p>
+<p><strong>The primary goal for 0.3.0 is separating the VM from the CLI.</strong></p>
+<p>This includes updated documentation, splitting the source repos, migrating all the tests, issues and more.
+All the code and documentation will still be easy to access in one place, but clarity around Wren as a project will improve a lot.</p>
+<p>The migration has already started, you can <a href="https://github.com/wren-lang/wren-cli">find the wren-cli repository here</a>.
+I&rsquo;m working on some of the refactoring on the <a href="https://github.com/wren-lang/wren/tree/wren-cli-refactor">wren-cli-refactor branch.</a></p>
+<p>With that, we&rsquo;ll also have a cleaner build process for the CLI.
+On some platforms (Windows especially), there have been several pain points, these will be addressed.
+There&rsquo;s also gonna be an additional build target, namely emscripten, so we can easily run Wren examples on the Wren website and documentation.</p>
+<p>And finally, we&rsquo;ll have some proper prebuilt releases with 0.3.0.
+I know many people have just wanted to grab an executable and give the language a go, but that hasn&rsquo;t been an option.
+We&rsquo;ll fix that with 0.3.0.</p>
+<p>The 0.3.0 goals in simple form:
+- VM / CLI split
+- Build consistency/reliablity
+- Web build for embedding in docs
+- Prebuilt releases</p>
+<h3>Beyond <a href="#beyond" name="beyond" class="header-anchor">#</a></h3>
+<p>I don&rsquo;t have any concrete plans for 0.4.0 right now, but once the dust settles from 0.3.0 we&rsquo;ll have a clearer view.</p>
+<p>There&rsquo;s definitely things in the pipeline though, I&rsquo;ve been playing with <a href="https://github.com/wren-lang/wren/pull/701">adding compound assignments like <code>+=</code></a>.</p>
+<p>More details about in development features and fixes can be found on the repo in the meantime.</p>
+<p>Thanks for reading!</p>
+<h3>More <a href="#more" name="more" class="header-anchor">#</a></h3>
+<ul>
+<li><a href="http://wren.io/blog/rss.xml">The Wren Blog RSS</a></li>
+<li>Join the <a href="https://discord.gg/Kx6PxSX">discord community</a></li>
+<li>Visit the <a href="https://github.com/wren-lang">wren-lang organization</a> on GitHub to get involved.</li>
+<li>Follow the developers <a href="https://twitter.com/munificentbob">@munificentbob</a> or <a href="https://twitter.com/ruby0x1">@ruby0x1</a> on twitter</li>
+</ul>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/wren-lang/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/wren-lang/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

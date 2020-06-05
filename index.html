@@ -3,6 +3,10 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title> &ndash; Wren</title>
+<script type="application/javascript" src="prism.js" data-manual></script>
+<script type="application/javascript" src="codejar.js"></script>
+<script type="application/javascript" src="wren.js"></script>
+<link rel="stylesheet" type="text/css" href="prism.css" />
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -14,7 +18,7 @@
   <div class="page">
     <div class="main-column">
       <h1><a href="./">wren</a></h1>
-      <h2>a classy little scripting language</h2>      
+      <h2>a classy little scripting language</h2>
     </div>
   </div>
 </header>
@@ -25,6 +29,7 @@
       <li><a href="getting-started.html">Getting Started</a></li>
       <li><a href="contributing.html">Contributing</a></li>
       <li><a href="blog">Blog</a></li>
+      <li><a href="try">Try it!</a></li>
     </ul>
     <section>
       <h2>guides</h2>
@@ -44,9 +49,15 @@
       </ul>
     </section>
     <section>
-      <h2>reference</h2>
+      <h2>API docs</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="cli">Wren CLI</a></li>
         <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
@@ -59,6 +70,7 @@
         <div><a href="getting-started.html">Getting Started</a></div>
         <div><a href="contributing.html">Contributing</a></div>
         <div><a href="blog">Blog</a></div>
+        <div><a href="try">Try it!</a></div>
       </tr>
       <tr>
         <td colspan="2"><h2>guides</h2></td>
@@ -87,7 +99,7 @@
         </td>
         <td>
           <ul>
-            <li><a href="modules">Modules</a></li>
+            <li><a href="modules">API/Modules</a></li>
             <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
@@ -100,56 +112,56 @@
     <h2></h2>
     <h2>Wren is a small, fast, class-based concurrent scripting language <a href="#wren-is-a-small,-fast,-class-based-concurrent-scripting-language" name="wren-is-a-small,-fast,-class-based-concurrent-scripting-language" class="header-anchor">#</a></h2>
 <hr />
-<p>Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in 
-a familiar, modern <a href="syntax.html">syntax</a>. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello, world!&quot;</span><span class="p">)</span>
+<p>Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in
+a familiar, modern <a href="syntax.html">syntax</a>.</p>
+<pre class="snippet">
+System.print("Hello, world!")
 
-<span class="k">class</span> <span class="vg">Wren</span> <span class="p">{</span> 
-  <span class="n">flyTo</span><span class="p">(</span><span class="n">city</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Flying to </span><span class="si">%(</span><span class="n">city</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
+class Wren {
+  flyTo(city) {
+    System.print("Flying to %(city)")
+  }
+}
 
-<span class="k">var</span> <span class="n">adjectives</span> <span class="o">=</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> 
-  <span class="p">[</span><span class="s">&quot;small&quot;</span><span class="p">,</span> <span class="s">&quot;clean&quot;</span><span class="p">,</span> <span class="s">&quot;fast&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span><span class="o">|</span><span class="n">word</span><span class="o">|</span> <span class="vg">Fiber</span><span class="o">.</span><span class="n">yield</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="p">}</span> 
-<span class="p">}</span>
+var adjectives = Fiber.new {
+  ["small", "clean", "fast"].each {|word| Fiber.yield(word) }
+}
 
-<span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">adjectives</span><span class="o">.</span><span class="n">isDone</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">adjectives</span><span class="o">.</span><span class="n">call</span><span class="p">())</span>
-</pre></div>
-
+while (!adjectives.isDone) System.print(adjectives.call())
+</pre>
 
 <ul>
 <li>
-<p><strong>Wren is small.</strong> The VM implementation is under <a href="https://github.com/wren-lang/wren/tree/master/src">4,000 semicolons</a>. 
-    You can skim the whole thing in an afternoon. It&rsquo;s <em>small</em>, but not 
-    <em>dense</em>. It is readable and <a href="https://github.com/wren-lang/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433">lovingly-commented</a>. </p>
+<p><strong>Wren is small.</strong> The VM implementation is under <a href="https://github.com/wren-lang/wren/tree/master/src">4,000 semicolons</a>.
+    You can skim the whole thing in an afternoon. It&rsquo;s <em>small</em>, but not
+    <em>dense</em>. It is readable and <a href="https://github.com/wren-lang/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433">lovingly-commented</a>.</p>
 </li>
 <li>
-<p><strong>Wren is fast.</strong> A fast single-pass compiler to tight bytecode, and a 
-    compact object representation help Wren <a href="performance.html">compete with other dynamic 
-    languages</a>. </p>
+<p><strong>Wren is fast.</strong> A fast single-pass compiler to tight bytecode, and a
+    compact object representation help Wren <a href="performance.html">compete with other dynamic
+    languages</a>.</p>
 </li>
 <li>
-<p><strong>Wren is class-based.</strong> There are lots of scripting languages out there, 
-    but many have unusual or non-existent object models. Wren places 
-    <a href="classes.html">classes</a> front and center. </p>
+<p><strong>Wren is class-based.</strong> There are lots of scripting languages out there,
+    but many have unusual or non-existent object models. Wren places
+    <a href="classes.html">classes</a> front and center.</p>
 </li>
 <li>
-<p><strong>Wren is concurrent.</strong> Lightweight <a href="concurrency.html">fibers</a> are core to the execution 
-    model and let you organize your program into an army of communicating 
-    coroutines. </p>
+<p><strong>Wren is concurrent.</strong> Lightweight <a href="concurrency.html">fibers</a> are core to the execution
+    model and let you organize your program into a flock of communicating
+    coroutines.</p>
 </li>
 <li>
-<p><strong>Wren is a scripting language.</strong> Wren is intended for embedding in 
-    applications. It has no dependencies, a small standard library, 
-    and <a href="embedding">an easy-to-use C API</a>. It compiles cleanly as C99, C++98 
-    or anything later. </p>
+<p><strong>Wren is a scripting language.</strong> Wren is intended for embedding in
+    applications. It has no dependencies, a small standard library,
+    and <a href="embedding">an easy-to-use C API</a>. It compiles cleanly as C99, C++98
+    or anything later.</p>
 </li>
 </ul>
 <hr />
-<p>If you like the sound of this, <a href="getting-started.html">let&rsquo;s get started</a>. You can even try 
-it <a href="http://ppvk.github.io/wren-nest/">in your browser</a>! Excited? Well, come on and <a href="contributing.html">get 
-involved</a>! </p>
+<p>You can try it <a href="try">in your browser</a>! <br />
+If you like the sound of this, <a href="getting-started.html">let&rsquo;s get started</a>.  <br />
+Excited? You&rsquo;re also welcome to <a href="contributing.html">get involved</a>!</p>
   </main>
 </div>
 <footer>

@@ -3,6 +3,10 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Getting Started &ndash; Wren</title>
+<script type="application/javascript" src="prism.js" data-manual></script>
+<script type="application/javascript" src="codejar.js"></script>
+<script type="application/javascript" src="wren.js"></script>
+<link rel="stylesheet" type="text/css" href="prism.css" />
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -14,7 +18,7 @@
   <div class="page">
     <div class="main-column">
       <h1><a href="./">wren</a></h1>
-      <h2>a classy little scripting language</h2>      
+      <h2>a classy little scripting language</h2>
     </div>
   </div>
 </header>
@@ -25,6 +29,7 @@
       <li><a href="getting-started.html">Getting Started</a></li>
       <li><a href="contributing.html">Contributing</a></li>
       <li><a href="blog">Blog</a></li>
+      <li><a href="try">Try it!</a></li>
     </ul>
     <section>
       <h2>guides</h2>
@@ -44,9 +49,15 @@
       </ul>
     </section>
     <section>
-      <h2>reference</h2>
+      <h2>API docs</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="cli">Wren CLI</a></li>
         <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
@@ -59,6 +70,7 @@
         <div><a href="getting-started.html">Getting Started</a></div>
         <div><a href="contributing.html">Contributing</a></div>
         <div><a href="blog">Blog</a></div>
+        <div><a href="try">Try it!</a></div>
       </tr>
       <tr>
         <td colspan="2"><h2>guides</h2></td>
@@ -87,7 +99,7 @@
         </td>
         <td>
           <ul>
-            <li><a href="modules">Modules</a></li>
+            <li><a href="modules">API/Modules</a></li>
             <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
@@ -98,100 +110,66 @@
   </nav>
   <main>
     <h2>Getting Started</h2>
-    <p>Getting Wren running on your machine is straightforward. Tiny C programs with 
-few dependencies are nice that way. &ldquo;Wren&rdquo; encompasses two separate artifacts: </p>
+    <h2>Trying out the language <a href="#trying-out-the-language" name="trying-out-the-language" class="header-anchor">#</a></h2>
+<p>If you&rsquo;d like to try Wren, you have a few options.</p>
 <ul>
-<li>
-<p><strong>The virtual machine.</strong> This is the core chunk of C that executes Wren 
-    source code. It is just a library, not a standalone application. It&rsquo;s 
-    designed to be <a href="embedding">embedded</a> in a larger host application. It has no 
-    dependencies beyond the C standard library. You can use it as a static 
-    library, shared library, or simply compile the source into your app. </p>
-</li>
-<li>
-<p><strong>The command line executable.</strong> Wren also ships with a CLI wrapper around 
-    the VM. This gives you a way to run Wren code from the command-line, and 
-    also includes modules for talking to the operating system&mdash;file IO, 
-    networking, stuff like that. It depends on <a href="http://libuv.org/">libuv</a> for that 
-    functionality. </p>
-</li>
+<li><strong>In your browser.</strong> You can try Wren <strong><a href="./try/">right here</a></strong>!</li>
+<li><strong>On your computer.</strong> The <a href="cli">Wren CLI</a> project is a downloadable executable
+      to run scripts with access to file io and more. See the <a href="cli">Wren CLI docs</a>.</li>
+<li><strong>Embedded in your code.</strong> See how to <a href="#embed-the-vm">build and embed Wren</a> below. <br />
+    And then read the <a href="embedding">embedding guide</a>!</li>
 </ul>
-<p>If you&rsquo;re on a Unix or Mac and you can rock a command line, it&rsquo;s just: </p>
-<div class="codehilite"><pre><span class="nv">$ </span>git clone https://github.com/wren-lang/wren.git
-<span class="nv">$ </span><span class="nb">cd </span>wren 
-<span class="nv">$ </span>make 
-<span class="nv">$ </span>./wren
-</pre></div>
-
-
-<p>This builds both the VM and the CLI. The release build of the CLI goes right 
-into the repo&rsquo;s top level directory. Binaries for other configurations are built 
-to <code>bin/</code>. Static and shared libraries for embedding Wren get built in <code>lib/</code>. </p>
-<p>For Mac users, there is also an XCode project under <code>util/xcode</code>. For 
-Windows brethren, <code>util/vs2017</code> contains a Visual Studio solution. Note 
-that these may not have the exact same build settings as the makefile. The 
-makefile is the &ldquo;official&rdquo; way to compile Wren. </p>
-<p>If you only want to build the VM, you can do: </p>
-<div class="codehilite"><pre><span class="nv">$ </span>make vm
-</pre></div>
-
-
-<p>This compiles the VM to static and shared libraries. </p>
-<h2>Interactive mode <a href="#interactive-mode" name="interactive-mode" class="header-anchor">#</a></h2>
-<p>If you just run <code>wren</code> without any arguments, it starts the interpreter in 
-interactive mode. You can type in a line of code, and it immediately executes 
-it. Here&rsquo;s something to try: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello, world!&quot;</span><span class="p">)</span>
-</pre></div>
-
-
-<p>Or a little more exciting: </p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="err">i</span> <span class="k">in</span> <span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">)</span> <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Counting up </span><span class="si">%(</span><span class="err">i</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
-</pre></div>
-
-
-<p>You can exit the interpreter using good old Ctrl-C or Ctrl-D, or just throw 
-your computer to the ground and storm off. </p>
-<h2>Running scripts <a href="#running-scripts" name="running-scripts" class="header-anchor">#</a></h2>
-<p>The standalone interpreter can also load scripts from files and run them. Just 
-pass the name of the script to <code>wren</code>. Create a file named &ldquo;my_script.wren&rdquo; in 
-your favorite text editor and paste this into it: </p>
-<div class="codehilite"><pre><span class="k">for</span> <span class="p">(</span><span class="n">yPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">24</span><span class="p">)</span> <span class="p">{</span> 
-  <span class="k">var</span> <span class="err">y</span> <span class="o">=</span> <span class="n">yPixel</span> <span class="o">/</span> <span class="mi">12</span> <span class="o">-</span> <span class="mi">1</span> 
-  <span class="k">for</span> <span class="p">(</span><span class="n">xPixel</span> <span class="k">in</span> <span class="mi">0</span><span class="o">...</span><span class="mi">80</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="k">var</span> <span class="err">x</span> <span class="o">=</span> <span class="n">xPixel</span> <span class="o">/</span> <span class="mi">30</span> <span class="o">-</span> <span class="mi">2</span> 
-    <span class="k">var</span> <span class="n">x0</span> <span class="o">=</span> <span class="err">x</span> 
-    <span class="k">var</span> <span class="n">y0</span> <span class="o">=</span> <span class="err">y</span> 
-    <span class="k">var</span> <span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span> 
-    <span class="k">while</span> <span class="p">(</span><span class="n">iter</span> <span class="o">&lt;</span> <span class="mi">11</span> <span class="o">&amp;&amp;</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span> 
-      <span class="k">var</span> <span class="n">x1</span> <span class="o">=</span> <span class="p">(</span><span class="n">x0</span> <span class="o">*</span> <span class="n">x0</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">y0</span> <span class="o">*</span> <span class="n">y0</span><span class="p">)</span> <span class="o">+</span> <span class="err">x</span> 
-      <span class="k">var</span> <span class="n">y1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">y0</span> <span class="o">+</span> <span class="err">y</span> 
-      <span class="n">x0</span> <span class="o">=</span> <span class="n">x1</span> 
-      <span class="n">y0</span> <span class="o">=</span> <span class="n">y1</span> 
-      <span class="n">iter</span> <span class="o">=</span> <span class="n">iter</span> <span class="o">+</span> <span class="mi">1</span> 
-    <span class="p">}</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot; .-:;+=xX$&amp; &quot;</span><span class="p">[</span><span class="n">iter</span><span class="p">])</span> 
-  <span class="p">}</span>
-
-  <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span> 
-<span class="p">}</span>
-</pre></div>
-
-
-<p>Now run: </p>
-<div class="codehilite"><pre><span class="nv">$ </span>./wren my_script.wren
-</pre></div>
-
-
-<p>Neat, right? You&rsquo;re a Wren programmer now! The next step is to <a href="syntax.html">learn the 
-language</a>. If you run into bugs, or have ideas or questions, any of 
-the following work: </p>
+<p>Once you have somewhere to explore, it&rsquo;s time to <a href="syntax.html">learn the
+language</a>.</p>
+<hr />
+<h2>Embed the VM <a href="#embed-the-vm" name="embed-the-vm" class="header-anchor">#</a></h2>
+<p><strong>The Wren Virtual Machine</strong> is the core of the language that executes Wren
+    source code. It is just a library, not a standalone application. It&rsquo;s
+    designed to be <a href="embedding">embedded</a> in a larger host application.</p>
+<p>It has no dependencies beyond the C standard library.
+You can use it as a static library, shared library, or simply compile the source into your app.</p>
+<h3>Building Wren <a href="#building-wren" name="building-wren" class="header-anchor">#</a></h3>
+<p>To build the Wren library, we look inside the <code>projects/</code> folder.
+In here you&rsquo;ll find ready to go projects for <code>Visual Studio</code>, <code>XCode</code> and tools like <code>make</code>.</p>
 <ul>
-<li><strong>Ask on the <a href="https://groups.google.com/forum/#!forum/wren-lang">Wren mailing list</a>.</strong> </li>
-<li>Tell me on twitter at <a href="https://twitter.com/intent/user?screen_name=munificentbob">@munificentbob</a>. </li>
-<li><a href="https://github.com/wren-lang/wren/issues">File a ticket</a> at <a href="https://github.com/wren-lang/wren">the GitHub repo</a>. </li>
-<li>Send a pull request. </li>
-<li>Email me at <a href="mailto:robert@stuffwithstuff.com"><code>robert@stuffwithstuff.com</code></a>. </li>
+<li><strong>Windows</strong> Open <code>wren.sln</code> inside <code>projects/vs2019/</code> (or <code>vs2017</code>), hit build.</li>
+<li><strong>Mac</strong> Open <code>wren.xcworkspace</code> inside <code>projects/xcode/</code>, hit build.</li>
+<li><strong>Linux</strong> Run <code>make</code> inside of <code>projects/make/</code>.</li>
+</ul>
+<p>In each case, <strong>there will be library files generated into the root <code>lib/</code> folder</strong>. <br />
+These are what you&rsquo;ll link into your project, based on your needs.</p>
+<ul>
+<li><strong>Static Linking</strong> <code>wren.lib</code> on Windows, <code>libwren.a</code> elsewhere.</li>
+<li><strong>Dynamic Linking</strong> <code>wren.dll</code> on Windows, <code>libwren.so</code> on Linux, and <code>libwren.dylib</code> on Mac.</li>
+</ul>
+<p><small>
+  Note that the default build will also generate <code>wren_test</code> inside of <code>bin/</code>, <br />
+  a binary that is used to run the language tests. It can execute simple scripts.
+</small></p>
+<p><strong>Other platforms</strong> <br />
+If your platform isn&rsquo;t explicitly supported,
+it is recommended that you include the Wren source
+in your project for a portable experience.</p>
+<h3>Including the code in your project <a href="#including-the-code-in-your-project" name="including-the-code-in-your-project" class="header-anchor">#</a></h3>
+<p><strong>all source files</strong> <br />
+The alternative to building via the provided projects is to include the wren source code in your project.
+Since it has no dependencies this is simple, all the code in <code>src/</code> comes along. There&rsquo;s a readme in <code>src/</code> for details.</p>
+<p><strong>&rsquo;amalgamated&rsquo; build</strong> <br />
+If you want an even simpler way, there&rsquo;s an &lsquo;amalgamated&rsquo; build (often called <code>blob</code>, or <code>unity</code> builds.).
+This is <em>all of the wren source code in one file</em>.</p>
+<p>This file can be generated by running <code>python3 util/generate_amalgamation.py</code>, and the generated output will be in <code>build/wren.c</code>.
+Include <code>build/wren.c</code> and <code>src/include/wren.h</code> in your project code and you&rsquo;re good to go.
+<small>Ideally later we can automate generating this and include it in the repo.</small></p>
+<hr />
+<p>If you run into bugs, or have ideas or questions, any of
+the following work:</p>
+<ul>
+<li>Join the <a href="https://discord.gg/Kx6PxSX">discord community</a>.</li>
+<li>Ask on the <a href="https://groups.google.com/forum/#!forum/wren-lang">Wren mailing list</a> (which is pretty quiet).</li>
+<li>Tell us on twitter at <a href="https://twitter.com/intent/user?screen_name=munificentbob">@munificentbob</a> or <a href="https://twitter.com/intent/user?screen_name=ruby0x1">@ruby0x1</a>.</li>
+<li><a href="https://github.com/wren-lang/wren/issues">File a ticket</a> at <a href="https://github.com/wren-lang/wren">the GitHub repo</a>.</li>
+<li>The CLI also has <a href="https://github.com/wren-lang/wren-cli/issues">tickets</a> and a <a href="https://github.com/wren-lang/wren-cli">GitHub repo</a> too.</li>
+<li>Pull requests are welcome.</li>
 </ul>
   </main>
 </div>

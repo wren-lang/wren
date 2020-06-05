@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>Wren CLI &ndash; Wren</title>
+<script type="application/javascript" src="../prism.js" data-manual></script>
+<script type="application/javascript" src="../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../prism.css" />
+<link rel="stylesheet" type="text/css" href="../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../">wren</a></h1>
+      <h2>a classy little scripting language</h2>
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <a href="../"><img src="../wren.svg" class="logo"></a>
+    <ul>
+      <li><a href="../">Back to Wren</a></li>
+    </ul>
+    <section>
+      <h2>Wren CLI</h2>
+      <ul>
+        <li><a href="./">About</a></li>
+        <li><a target="_blank" href="https://github.com/wren-lang/wren-cli/releases">Downloads</a></li>
+        <li><a href="usage.html">Usage</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>API docs</h2>
+      <ul>
+        <li><a href="modules">CLI Modules</a></li>
+      </ul>
+    </section>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <div><a href="../">Back to Wren</a></div>
+      </tr>
+      <tr>
+        <td><h2>CLI</h2></td>
+        <td><h2>API</h2></td>
+      </tr>
+      <tr>
+        <td>
+          <ul>
+            <li><a href="./">About</a></li>
+            <li><a target="_blank" href="https://github.com/wren-lang/wren-cli/releases">Downloads</a></li>
+            <li><a href="usage.html">Usage</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="modules">CLI Modules</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h2>Wren CLI</h2>
+    <hr />
+<h2>What is it? <a href="#what-is-it" name="what-is-it" class="header-anchor">#</a></h2>
+<p><strong>The Wren Command-Line Interface</strong> is a tool you can run which gives you a way to run Wren code, and
+    also includes modules for talking to the operating system&mdash;file IO,
+    networking, stuff like that. It depends on <a href="http://libuv.org/">libuv</a> for that
+    functionality.</p>
+<p>Wren as a language is intentionally designed to be minimal. <br />
+That includes the built in language features, the standard library and the VM itself.</p>
+<p>In order to access files, networks and other IO, you&rsquo;d need to make a tool <em>using</em> the language VM. 
+That&rsquo;s what the CLI project is! It is not bundled as part of the wren project,
+instead it is it&rsquo;s own project as a standalone tool you can run.
+It exposes it&rsquo;s own standard library and modules that may be of interest
+if looking for a general purpose single binary scriptable tool.</p>
+<p>Wren CLI is a work in progress, and contributions are welcome to make it more useful over time.</p>
+<h2>Why does it exist? <a href="#why-does-it-exist" name="why-does-it-exist" class="header-anchor">#</a></h2>
+<ul>
+<li>It&rsquo;s fun to make things.</li>
+<li>It&rsquo;s always a good idea to test the language you&rsquo;re making!</li>
+<li>Interest was expressed in a scriptable tool using the Wren language.</li>
+<li>It&rsquo;s helpful for others to learn from, since it is a real world usage example showing several concepts.</li>
+</ul>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/wren-lang/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/wren-lang/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

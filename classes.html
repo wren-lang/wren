@@ -3,6 +3,10 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Classes &ndash; Wren</title>
+<script type="application/javascript" src="prism.js" data-manual></script>
+<script type="application/javascript" src="codejar.js"></script>
+<script type="application/javascript" src="wren.js"></script>
+<link rel="stylesheet" type="text/css" href="prism.css" />
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -14,7 +18,7 @@
   <div class="page">
     <div class="main-column">
       <h1><a href="./">wren</a></h1>
-      <h2>a classy little scripting language</h2>      
+      <h2>a classy little scripting language</h2>
     </div>
   </div>
 </header>
@@ -25,6 +29,7 @@
       <li><a href="getting-started.html">Getting Started</a></li>
       <li><a href="contributing.html">Contributing</a></li>
       <li><a href="blog">Blog</a></li>
+      <li><a href="try">Try it!</a></li>
     </ul>
     <section>
       <h2>guides</h2>
@@ -44,9 +49,15 @@
       </ul>
     </section>
     <section>
-      <h2>reference</h2>
+      <h2>API docs</h2>
       <ul>
         <li><a href="modules">Modules</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>reference</h2>
+      <ul>
+        <li><a href="cli">Wren CLI</a></li>
         <li><a href="embedding">Embedding</a></li>
         <li><a href="performance.html">Performance</a></li>
         <li><a href="qa.html">Q &amp; A</a></li>
@@ -59,6 +70,7 @@
         <div><a href="getting-started.html">Getting Started</a></div>
         <div><a href="contributing.html">Contributing</a></div>
         <div><a href="blog">Blog</a></div>
+        <div><a href="try">Try it!</a></div>
       </tr>
       <tr>
         <td colspan="2"><h2>guides</h2></td>
@@ -87,7 +99,7 @@
         </td>
         <td>
           <ul>
-            <li><a href="modules">Modules</a></li>
+            <li><a href="modules">API/Modules</a></li>
             <li><a href="embedding">Embedding</a></li>
             <li><a href="performance.html">Performance</a></li>
             <li><a href="qa.html">Q &amp; A</a></li>
@@ -98,538 +110,538 @@
   </nav>
   <main>
     <h2>Classes</h2>
-    <p>Every value in Wren is an object, and every object is an instance of a class. 
-Even <code>true</code> and <code>false</code> are full-featured objects&mdash;instances of the 
-<a href="modules/core/bool.html">Bool</a> class. </p>
-<p>Classes define an objects <em>behavior</em> and <em>state</em>. Behavior is defined by 
-<a href="method-calls.html"><em>methods</em></a> which live in the class. Every object of the same 
-class supports the same methods. State is defined in <em>fields</em>, whose values are 
-stored in each instance. </p>
+    <p>Every value in Wren is an object, and every object is an instance of a class.
+Even <code>true</code> and <code>false</code> are full-featured objects&mdash;instances of the
+<a href="modules/core/bool.html">Bool</a> class.</p>
+<p>Classes define an objects <em>behavior</em> and <em>state</em>. Behavior is defined by
+<a href="method-calls.html"><em>methods</em></a> which live in the class. Every object of the same
+class supports the same methods. State is defined in <em>fields</em>, whose values are
+stored in each instance.</p>
 <h2>Defining a class <a href="#defining-a-class" name="defining-a-class" class="header-anchor">#</a></h2>
-<p>Classes are created using the <code>class</code> keyword, unsurprisingly: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{}</span>
-</pre></div>
+<p>Classes are created using the <code>class</code> keyword, unsurprisingly:</p>
+<pre class="snippet">
+class Unicorn {}
+</pre>
 
-
-<p>This creates a class named <code>Unicorn</code> with no methods or fields. </p>
+<p>This creates a class named <code>Unicorn</code> with no methods or fields.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
-<p>To let our unicorn do stuff, we need to give it methods. </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="n">prance</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in a fancy manner!&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<p>To let our unicorn do stuff, we need to give it methods.</p>
+<pre class="snippet">
+class Unicorn {
+  prance() {
+    System.print("The unicorn prances in a fancy manner!")
+  }
+}
+</pre>
 
+<p>This defines a <code>prance()</code> method that takes no arguments. To add parameters, put
+their names inside the parentheses:</p>
+<pre class="snippet">
+class Unicorn {
+  prance(where, when) {
+    System.print("The unicorn prances in %(where) at %(when).")
+  }
+}
+</pre>
 
-<p>This defines a <code>prance()</code> method that takes no arguments. To add parameters, put 
-their names inside the parentheses: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">when</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in </span><span class="si">%(</span><span class="n">where</span><span class="si">)</span><span class="s"> at </span><span class="si">%(</span><span class="n">when</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<p>Since the number of parameters is part of a method&rsquo;s <a href="method-calls.html#signature">signature</a> a class can
+define multiple methods with the same name:</p>
+<pre class="snippet">
+class Unicorn {
+  prance() {
+    System.print("The unicorn prances in a fancy manner!")
+  }
 
+  prance(where) {
+    System.print("The unicorn prances in %(where).")
+  }
 
-<p>Since the number of parameters is part of a method&rsquo;s <a href="method-calls.html#signature">signature</a> a class can 
-define multiple methods with the same name: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="n">prance</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in a fancy manner!&quot;</span><span class="p">)</span> 
-  <span class="p">}</span>
+  prance(where, when) {
+    System.print("The unicorn prances in %(where) at %(when).")
+  }
+}
+</pre>
 
-  <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in </span><span class="si">%(</span><span class="n">where</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span>
-
-  <span class="n">prance</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">when</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;The unicorn prances in </span><span class="si">%(</span><span class="n">where</span><span class="si">)</span><span class="s"> at </span><span class="si">%(</span><span class="n">when</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
-
-
-<p>It&rsquo;s often natural to have the same conceptual operation work with different 
-sets of arguments. In other languages, you&rsquo;d define a single method for the 
-operation and have to check for missing optional arguments. In Wren, they are 
-different methods that you implement separately. </p>
-<p>In addition to named methods with parameter lists, Wren has a bunch of other 
-different syntaxes for methods. Your classes can define all of them. </p>
+<p>It&rsquo;s often natural to have the same conceptual operation work with different
+sets of arguments. In other languages, you&rsquo;d define a single method for the
+operation and have to check for missing optional arguments. In Wren, they are
+different methods that you implement separately.</p>
+<p>In addition to named methods with parameter lists, Wren has a bunch of other
+different syntaxes for methods. Your classes can define all of them.</p>
 <h3>Getters <a href="#getters" name="getters" class="header-anchor">#</a></h3>
-<p>A getter leaves off the parameter list and the parentheses: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="c1">// Unicorns are always fancy.</span>
-  <span class="n">isFancy</span> <span class="p">{</span> <span class="kc">true</span> <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
-
+<p>A getter leaves off the parameter list and the parentheses:</p>
+<pre class="snippet">
+class Unicorn {
+  // Unicorns are always fancy.
+  isFancy { true }
+}
+</pre>
 
 <h3>Setters <a href="#setters" name="setters" class="header-anchor">#</a></h3>
-<p>A setter has <code>=</code> after the name, followed by a single parenthesized parameter: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="n">rider</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I am being ridden by </span><span class="si">%(</span><span class="n">value</span><span class="si">)</span><span class="s">.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<p>A setter has <code>=</code> after the name, followed by a single parenthesized parameter:</p>
+<pre class="snippet">
+class Unicorn {
+  rider=(value) {
+    System.print("I am being ridden by %(value).")
+  }
+}
+</pre>
 
-
-<p>By convention, the parameter is usually named <code>value</code> but you can call it 
-whatever makes your heart flutter. </p>
+<p>By convention, the parameter is usually named <code>value</code> but you can call it
+whatever makes your heart flutter.</p>
 <h3>Operators <a href="#operators" name="operators" class="header-anchor">#</a></h3>
-<p>Prefix operators, like getters, have no parameter list: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="o">-</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Negating a unicorn is weird.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<p>Prefix operators, like getters, have no parameter list:</p>
+<pre class="snippet">
+class Unicorn {
+  - {
+    System.print("Negating a unicorn is weird.")
+  }
+}
+</pre>
 
+<p>Infix operators, like setters, have a single parenthesized parameter for the
+right-hand operand:</p>
+<pre class="snippet">
+class Unicorn {
+  -(other) {
+    System.print("Subtracting %(other) from a unicorn is weird.")
+  }
+}
+</pre>
 
-<p>Infix operators, like setters, have a single parenthesized parameter for the 
-right-hand operand: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="o">-</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Subtracting </span><span class="si">%(</span><span class="n">other</span><span class="si">)</span><span class="s"> from a unicorn is weird.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<p>A subscript operator puts the parameters inside square brackets and can have
+more than one:</p>
+<pre class="snippet">
+class Unicorn {
+  [index] {
+    System.print("Unicorns are not lists!")
+  }
 
+  [x, y] {
+    System.print("Unicorns are not matrices either!")
+  }
+}
+</pre>
 
-<p>A subscript operator puts the parameters inside square brackets and can have 
-more than one: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Unicorns are not lists!&quot;</span><span class="p">)</span> 
-  <span class="p">}</span>
-
-  <span class="p">[</span><span class="err">x</span><span class="p">,</span> <span class="err">y</span><span class="p">]</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Unicorns are not matrices either!&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
-
-
-<p>Unlike with named methods, you can&rsquo;t define a subscript operator with an empty 
-parameter list. </p>
-<p>As the name implies, a subscript setter looks like a combination of a subscript 
-operator and a setter: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;You can&#39;t stuff </span><span class="si">%(</span><span class="n">value</span><span class="si">)</span><span class="s"> into me at </span><span class="si">%(</span><span class="n">index</span><span class="si">)</span><span class="s">!&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
-
+<p>Unlike with named methods, you can&rsquo;t define a subscript operator with an empty
+parameter list.</p>
+<p>As the name implies, a subscript setter looks like a combination of a subscript
+operator and a setter:</p>
+<pre class="snippet">
+class Unicorn {
+  [index]=(value) {
+    System.print("You can't stuff %(value) into me at %(index)!")
+  }
+}
+</pre>
 
 <h2>Method Scope <a href="#method-scope" name="method-scope" class="header-anchor">#</a></h2>
-<p>Up to this point, &ldquo;<a href="variables.html#scope">scope</a>&rdquo; has been used to talk exclusively about 
-<a href="variables.html">variables</a>. In a procedural language like C, or a functional one like Scheme, 
-that&rsquo;s the only kind of scope there is. But object-oriented languages like Wren 
-introduce another kind of scope: <em>object scope</em>. It contains the methods that 
-are available on an object. When you write: </p>
-<div class="codehilite"><pre><span class="n">unicorn</span><span class="o">.</span><span class="n">isFancy</span>
-</pre></div>
+<p>Up to this point, &ldquo;<a href="variables.html#scope">scope</a>&rdquo; has been used to talk exclusively about
+<a href="variables.html">variables</a>. In a procedural language like C, or a functional one like Scheme,
+that&rsquo;s the only kind of scope there is. But object-oriented languages like Wren
+introduce another kind of scope: <em>object scope</em>. It contains the methods that
+are available on an object. When you write:</p>
+<pre class="snippet">
+unicorn.isFancy
+</pre>
 
-
-<p>You&rsquo;re saying &ldquo;look up the method <code>isFancy</code> in the scope of the object 
-<code>unicorn</code>&rdquo;. In this case, the fact that you want to look up a <em>method</em> 
-<code>isFancy</code> and not a <em>variable</em> <code>isFancy</code> is explicit. That&rsquo;s what <code>.</code> does and 
-the object to the left of the period is the object you want to look up the 
-method on. </p>
+<p>You&rsquo;re saying &ldquo;look up the method <code>isFancy</code> in the scope of the object
+<code>unicorn</code>&rdquo;. In this case, the fact that you want to look up a <em>method</em>
+<code>isFancy</code> and not a <em>variable</em> <code>isFancy</code> is explicit. That&rsquo;s what <code>.</code> does and
+the object to the left of the period is the object you want to look up the
+method on.</p>
 <h3><code>this</code> <a href="#this" name="this" class="header-anchor">#</a></h3>
-<p>Things get more interesting when you&rsquo;re inside the body of a method. When the 
-method is called on some object and the body is being executed, you often need 
-to access that object itself. You can do that using <code>this</code>. </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
+<p>Things get more interesting when you&rsquo;re inside the body of a method. When the
+method is called on some object and the body is being executed, you often need
+to access that object itself. You can do that using <code>this</code>.</p>
+<pre class="snippet">
+class Unicorn {
+  name { "Francis" }
 
-  <span class="n">printName</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="nb">this</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="output">Francis</span>
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+  printName() {
+    System.print(this.name) //> Francis
+  }
+}
+</pre>
 
+<p>The <code>this</code> keyword works sort of like a variable, but has special behavior. It
+always refers to the instance whose method is currently being executed. This
+lets you invoke methods on &ldquo;yourself&rdquo;.</p>
+<p>It&rsquo;s an error to refer to <code>this</code> outside of a method. However, it&rsquo;s perfectly
+fine to use it inside a <a href="functions.html">function</a> declared <em>inside</em> a method. When you do,
+<code>this</code> still refers to the instance whose <em>method</em> is being called:</p>
+<pre class="snippet">
+class Unicorn {
+  name { "Francis" }
 
-<p>The <code>this</code> keyword works sort of like a variable, but has special behavior. It 
-always refers to the instance whose method is currently being executed. This 
-lets you invoke methods on &ldquo;yourself&rdquo;. </p>
-<p>It&rsquo;s an error to refer to <code>this</code> outside of a method. However, it&rsquo;s perfectly 
-fine to use it inside a <a href="functions.html">function</a> declared <em>inside</em> a method. When you do, 
-<code>this</code> still refers to the instance whose <em>method</em> is being called: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
+  printNameThrice() {
+    (1..3).each {
+      // Use "this" inside the function passed to each().
+      System.print(this.name) //> Francis
+    } //> Francis
+  } //> Francis
+}
+</pre>
 
-  <span class="n">printNameThrice</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="p">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span> 
-      <span class="c1">// Use &quot;this&quot; inside the function passed to each().</span>
-      <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="nb">this</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="output">Francis</span>
-    <span class="p">}</span> <span class="output">Francis</span>
-  <span class="p">}</span> <span class="output">Francis</span>
-<span class="p">}</span>
-</pre></div>
-
-
-<p>This is unlike Lua and JavaScript which can &ldquo;forget&rdquo; <code>this</code> when you create a 
-callback inside a method. Wren does what you want here and retains the 
-reference to the original object. </p>
-<p>(In technical terms, a function&rsquo;s closure includes <code>this</code>. Wren can do this 
-because it makes a distinction between methods and functions.) </p>
+<p>This is unlike Lua and JavaScript which can &ldquo;forget&rdquo; <code>this</code> when you create a
+callback inside a method. Wren does what you want here and retains the
+reference to the original object.</p>
+<p>(In technical terms, a function&rsquo;s closure includes <code>this</code>. Wren can do this
+because it makes a distinction between methods and functions.)</p>
 <h3>Implicit <code>this</code> <a href="#implicit-this" name="implicit-this" class="header-anchor">#</a></h3>
-<p>Using <code>this.</code> every time you want to call a method on yourself works, but it&rsquo;s 
-tedious and verbose, which is why some languages don&rsquo;t require it. You can do a 
-&ldquo;self send&rdquo; by calling a method (or getter or setter) without any explicit 
-receiver: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
+<p>Using <code>this.</code> every time you want to call a method on yourself works, but it&rsquo;s
+tedious and verbose, which is why some languages don&rsquo;t require it. You can do a
+&ldquo;self send&rdquo; by calling a method (or getter or setter) without any explicit
+receiver:</p>
+<pre class="snippet">
+class Unicorn {
+  name { "Francis" }
 
-  <span class="n">printName</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="output">Francis</span>
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+  printName() {
+    System.print(name) //> Francis
+  }
+}
+</pre>
 
+<p>Code like this gets tricky when there is also a variable outside of the class
+with the same name. Consider:</p>
+<pre class="snippet">
+var name = "variable"
 
-<p>Code like this gets tricky when there is also a variable outside of the class 
-with the same name. Consider: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;variable&quot;</span>
+class Unicorn {
+  name { "Francis" }
 
-<span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="n">name</span> <span class="p">{</span> <span class="s">&quot;Francis&quot;</span> <span class="p">}</span>
+  printName() {
+    System.print(name) // ???
+  }
+}
+</pre>
 
-  <span class="n">printName</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="c1">// ???</span>
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
-
-
-<p>Should <code>printName()</code> print &ldquo;variable&rdquo; or &ldquo;Francis&rdquo;? A method body has a foot in 
-each of two worlds. It is surrounded by the lexical scope where it&rsquo;s defined in 
-the program, but it also has the object scope of the methods on <code>this</code>. </p>
-<p>Which scope wins? Every language has to decide how to handle this and there 
-is a surprising plethora of approaches. Wren&rsquo;s approach to resolving a name 
-inside a method works like this: </p>
+<p>Should <code>printName()</code> print &ldquo;variable&rdquo; or &ldquo;Francis&rdquo;? A method body has a foot in
+each of two worlds. It is surrounded by the lexical scope where it&rsquo;s defined in
+the program, but it also has the object scope of the methods on <code>this</code>.</p>
+<p>Which scope wins? Every language has to decide how to handle this and there
+is a surprising plethora of approaches. Wren&rsquo;s approach to resolving a name
+inside a method works like this:</p>
 <ol>
-<li>If there is a local variable inside the method with that name, that wins. </li>
-<li>Else, if the name starts with a lowercase letter, treat it like a method on 
-    <code>this</code>. </li>
-<li>Otherwise, look for a variable with that name in the surrounding scope. </li>
+<li>If there is a local variable inside the method with that name, that wins.</li>
+<li>Else, if the name starts with a lowercase letter, treat it like a method on
+    <code>this</code>.</li>
+<li>Otherwise, look for a variable with that name in the surrounding scope.</li>
 </ol>
-<p>So, in the above example, we hit case #2 and it prints &ldquo;Francis&rdquo;. Distinguishing 
-self sends from outer variables based on the <em>case</em> of the first letter in the 
-name probably seems crazy but it works surprisingly well. Method names are 
-lowercase in Wren. Class names are capitalized. </p>
-<p>Most of the time, when you&rsquo;re in a method and want to access a name from outside 
-of the class, it&rsquo;s usually the name of some other class. This rule makes that 
-work. </p>
-<p>Here&rsquo;s an example that shows all three cases: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">shadowed</span> <span class="o">=</span> <span class="s">&quot;surrounding&quot;</span> 
-<span class="k">var</span> <span class="n">lowercase</span> <span class="o">=</span> <span class="s">&quot;surrounding&quot;</span> 
-<span class="k">var</span> <span class="vg">Capitalized</span> <span class="o">=</span> <span class="s">&quot;surrounding&quot;</span>
+<p>So, in the above example, we hit case #2 and it prints &ldquo;Francis&rdquo;. Distinguishing
+self sends from outer variables based on the <em>case</em> of the first letter in the
+name probably seems crazy but it works surprisingly well. Method names are
+lowercase in Wren. Class names are capitalized.</p>
+<p>Most of the time, when you&rsquo;re in a method and want to access a name from outside
+of the class, it&rsquo;s usually the name of some other class. This rule makes that
+work.</p>
+<p>Here&rsquo;s an example that shows all three cases:</p>
+<pre class="snippet">
+var shadowed = "surrounding"
+var lowercase = "surrounding"
+var Capitalized = "surrounding"
 
-<span class="k">class</span> <span class="vg">Scope</span> <span class="p">{</span> 
-  <span class="n">shadowed</span> <span class="p">{</span> <span class="s">&quot;object&quot;</span> <span class="p">}</span> 
-  <span class="n">lowercase</span> <span class="p">{</span> <span class="s">&quot;object&quot;</span> <span class="p">}</span> 
-  <span class="vg">Capitalized</span> <span class="p">{</span> <span class="s">&quot;object&quot;</span> <span class="p">}</span>
+class Scope {
+  shadowed { "object" }
+  lowercase { "object" }
+  Capitalized { "object" }
 
-  <span class="n">test</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="k">var</span> <span class="n">shadowed</span> <span class="o">=</span> <span class="s">&quot;local&quot;</span>
+  test() {
+    var shadowed = "local"
 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">shadowed</span><span class="p">)</span> <span class="output">local</span>
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">lowercase</span><span class="p">)</span> <span class="output">object</span>
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Capitalized</span><span class="p">)</span> <span class="output">surrounding</span>
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+    System.print(shadowed) //> local
+    System.print(lowercase) //> object
+    System.print(Capitalized) //> surrounding
+  }
+}
+</pre>
 
-
-<p>It&rsquo;s a bit of a strange rule, but Ruby works more or less the same way. </p>
+<p>It&rsquo;s a bit of a strange rule, but Ruby works more or less the same way.</p>
 <h2>Constructors <a href="#constructors" name="constructors" class="header-anchor">#</a></h2>
-<p>We&rsquo;ve seen how to define kinds of objects and how to declare methods on them. 
-Our unicorns can prance around, but we don&rsquo;t actually <em>have</em> any unicorns to do 
-it. To create <em>instances</em> of a class, we need a <em>constructor</em>. You define one 
-like so: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot; and I am &quot;</span> <span class="o">+</span> <span class="n">color</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<p>We&rsquo;ve seen how to define kinds of objects and how to declare methods on them.
+Our unicorns can prance around, but we don&rsquo;t actually <em>have</em> any unicorns to do
+it. To create <em>instances</em> of a class, we need a <em>constructor</em>. You define one
+like so:</p>
+<pre class="snippet">
+class Unicorn {
+  construct new(name, color) {
+    System.print("My name is " + name + " and I am " + color + ".")
+  }
+}
+</pre>
 
+<p>The <code>construct</code> keyword says we&rsquo;re defining a constructor, and <code>new</code> is its
+name. In Wren, all constructors have names. The word &ldquo;new&rdquo; isn&rsquo;t special to
+Wren, it&rsquo;s just a common constructor name.</p>
+<p>To make a unicorn now, we call the constructor method on the class itself:</p>
+<pre class="snippet">
+var fred = Unicorn.new("Fred", "palomino")
+</pre>
 
-<p>The <code>construct</code> keyword says we&rsquo;re defining a constructor, and <code>new</code> is its 
-name. In Wren, all constructors have names. The word &ldquo;new&rdquo; isn&rsquo;t special to 
-Wren, it&rsquo;s just a common constructor name. </p>
-<p>To make a unicorn now, we call the constructor method on the class itself: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">fred</span> <span class="o">=</span> <span class="vg">Unicorn</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">&quot;Fred&quot;</span><span class="p">,</span> <span class="s">&quot;palomino&quot;</span><span class="p">)</span>
-</pre></div>
+<p>Giving constructors names is handy because it means you can have more than one,
+and each can clarify how it creates the instance:</p>
+<pre class="snippet">
+class Unicorn {
+  construct brown(name) {
+    System.print("My name is " + name + " and I am brown.")
+  }
+}
 
+var dave = Unicorn.brown("Dave")
+</pre>
 
-<p>Giving constructors names is handy because it means you can have more than one, 
-and each can clarify how it creates the instance: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">brown</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot; and I am brown.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
+<p>Note that we have to declare a constructor because, unlike some other
+languages, Wren doesn&rsquo;t give you a default one. This is useful because some
+classes aren&rsquo;t designed to be constructed. If you have an abstract base class
+that just contains methods to be inherited by other classes, it doesn&rsquo;t need
+and won&rsquo;t have a constructor.</p>
+<p>Like other methods, constructors can obviously have arguments, and can be
+overloaded by <a href="#signature">arity</a>. A constructor <em>must</em> be a named method with
+a (possibly empty) argument list. Operators, getters, and setters cannot be
+constructors.</p>
+<p>A constructor is actually a pair of methods. You get a method on the class:</p>
+<pre class="snippet">
+Unicorn.brown("Dave")
+</pre>
 
-<span class="k">var</span> <span class="n">dave</span> <span class="o">=</span> <span class="vg">Unicorn</span><span class="o">.</span><span class="n">brown</span><span class="p">(</span><span class="s">&quot;Dave&quot;</span><span class="p">)</span>
-</pre></div>
-
-
-<p>Note that we have to declare a constructor because, unlike some other 
-languages, Wren doesn&rsquo;t give you a default one. This is useful because some 
-classes aren&rsquo;t designed to be constructed. If you have an abstract base class 
-that just contains methods to be inherited by other classes, it doesn&rsquo;t need 
-and won&rsquo;t have a constructor. </p>
-<p>Like other methods, constructors can obviously have arguments, and can be 
-overloaded by <a href="#signature">arity</a>. A constructor <em>must</em> be a named method with 
-a (possibly empty) argument list. Operators, getters, and setters cannot be 
-constructors. </p>
-<p>A constructor is actually a pair of methods. You get a method on the class: </p>
-<div class="codehilite"><pre><span class="vg">Unicorn</span><span class="o">.</span><span class="n">brown</span><span class="p">(</span><span class="s">&quot;Dave&quot;</span><span class="p">)</span>
-</pre></div>
-
-
-<p>That creates the new instance, then it invokes the <em>initializer</em> on that 
-instance. This is where the constructor body you defined gets run. </p>
-<p>This distinction is important because it means inside the body of the 
-constructor, you can access <code>this</code>, assign <a href="#fields">fields</a>, call superclass 
-constructors, etc. </p>
+<p>That creates the new instance, then it invokes the <em>initializer</em> on that
+instance. This is where the constructor body you defined gets run.</p>
+<p>This distinction is important because it means inside the body of the
+constructor, you can access <code>this</code>, assign <a href="#fields">fields</a>, call superclass
+constructors, etc.</p>
 <h2>Fields <a href="#fields" name="fields" class="header-anchor">#</a></h2>
-<p>All state stored in instances is stored in <em>fields</em>. Each field has a name 
-that starts with an underscore. </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Rectangle</span> <span class="p">{</span> 
-  <span class="n">area</span> <span class="p">{</span> <span class="vi">_width</span> <span class="o">*</span> <span class="vi">_height</span> <span class="p">}</span>
+<p>All state stored in instances is stored in <em>fields</em>. Each field has a name
+that starts with an underscore.</p>
+<pre class="snippet">
+class Rectangle {
+  area { _width * _height }
 
-  <span class="c1">// Other stuff...</span>
-<span class="p">}</span>
-</pre></div>
+  // Other stuff...
+}
+</pre>
 
-
-<p>Here, <code>_width</code> and <code>_height</code> in the <code>area</code> <a href="classes.html#methods">getter</a> refer 
-to fields on the rectangle instance. You can think of them like <code>this.width</code> 
-and <code>this.height</code> in other languages. </p>
-<p>When a field name appears, Wren looks for the nearest enclosing class and looks 
-up the field on the instance of that class. Field names cannot be used outside 
-of an instance method. They <em>can</em> be used inside a <a href="functions.html">function</a> 
-in a method. Wren will look outside any nested functions until it finds an 
-enclosing method. </p>
-<p>Unlike <a href="variables.html">variables</a>, fields are implicitly declared by simply 
-assigning to them. If you access a field before it has been initialized, its 
-value is <code>null</code>. </p>
+<p>Here, <code>_width</code> and <code>_height</code> in the <code>area</code> <a href="classes.html#methods">getter</a> refer
+to fields on the rectangle instance. You can think of them like <code>this.width</code>
+and <code>this.height</code> in other languages.</p>
+<p>When a field name appears, Wren looks for the nearest enclosing class and looks
+up the field on the instance of that class. Field names cannot be used outside
+of an instance method. They <em>can</em> be used inside a <a href="functions.html">function</a>
+in a method. Wren will look outside any nested functions until it finds an
+enclosing method.</p>
+<p>Unlike <a href="variables.html">variables</a>, fields are implicitly declared by simply
+assigning to them. If you access a field before it has been initialized, its
+value is <code>null</code>.</p>
 <h3>Encapsulation <a href="#encapsulation" name="encapsulation" class="header-anchor">#</a></h3>
-<p>All fields are <em>private</em> in Wren&mdash;an object&rsquo;s fields can only be directly 
+<p>All fields are <em>private</em> in Wren&mdash;an object&rsquo;s fields can only be directly
 accessed from within methods defined on the object&rsquo;s class. </p>
-<p>In short, if you want to make a property of an object visible, 
-<strong>you need to define a getter to expose it</strong>: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Rectangle</span> <span class="p">{</span> 
-  <span class="n">width</span> <span class="p">{</span> <span class="vi">_width</span> <span class="p">}</span> 
-  <span class="n">height</span> <span class="p">{</span> <span class="vi">_height</span> <span class="p">}</span>
+<p>In short, if you want to make a property of an object visible,
+<strong>you need to define a getter to expose it</strong>:</p>
+<pre class="snippet">
+class Rectangle {
+  width { _width }
+  height { _height }
 
-  <span class="c1">// ...</span>
-<span class="p">}</span>
-</pre></div>
+  // ...
+}
+</pre>
 
+<p>To allow outside code to modify the field,
+<strong>you need to provide setters to provide access</strong>:</p>
+<pre class="snippet">
+class Rectangle {
+  width=(value) { _width = value }
+  height=(value) { _height = value }
+}
+</pre>
 
-<p>To allow outside code to modify the field, 
-<strong>you need to provide setters to provide access</strong>: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Rectangle</span> <span class="p">{</span> 
-  <span class="n">width</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_width</span> <span class="o">=</span> <span class="n">value</span> <span class="p">}</span> 
-  <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="vi">_height</span> <span class="o">=</span> <span class="n">value</span> <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
-
-
-<p>This might be different from what you&rsquo;re used to, so here are two important facts: </p>
+<p>This might be different from what you&rsquo;re used to, so here are two important facts:</p>
 <ul>
-<li>You can&rsquo;t access fields from a base class. </li>
-<li>You can&rsquo;t access fields on another instance of your own class. </li>
+<li>You can&rsquo;t access fields from a base class.</li>
+<li>You can&rsquo;t access fields on another instance of your own class.</li>
 </ul>
-<p>Here is an example in code: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Shape</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="vi">_shape</span> <span class="o">=</span> <span class="s">&quot;none&quot;</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
+<p>Here is an example in code:</p>
+<pre class="snippet">
+class Shape {
+  construct new() {
+    _shape = "none"
+  }
+}
 
-<span class="k">class</span> <span class="vg">Rectangle</span> <span class="k">is</span> <span class="vg">Shape</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="c1">//This will print null!</span>
-    <span class="c1">//_shape from the parent class is private,</span>
-    <span class="c1">//we are reading `_shape` from `this`,</span>
-    <span class="c1">//which has not been set, so returns null.</span>
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;I am a </span><span class="si">%(</span><span class="vi">_shape</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+class Rectangle is Shape {
+  construct new() {
+    //This will print null!
+    //_shape from the parent class is private,
+    //we are reading `_shape` from `this`,
+    //which has not been set, so returns null.
+    System.print("I am a %(_shape)")
 
-    <span class="c1">//a local variable, all variables are private</span>
-    <span class="vi">_width</span> <span class="o">=</span> <span class="mi">10</span> 
-    <span class="k">var</span> <span class="n">other</span> <span class="o">=</span> <span class="vg">Rectangle</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+    //a local variable, all variables are private
+    _width = 10
+    var other = Rectangle.new()
 
-    <span class="c1">//other._width is not accessible from here,</span>
-    <span class="c1">//even though we are also a rectangle. The field</span>
-    <span class="c1">//is private, and other._width is invalid syntax!</span>
-  <span class="p">}</span> 
-<span class="p">}</span> 
-<span class="o">...</span>
-</pre></div>
+    //other._width is not accessible from here,
+    //even though we are also a rectangle. The field
+    //is private, and other._width is invalid syntax!
+  }
+}
+...
+</pre>
 
-
-<p>One thing we&rsquo;ve learned in the past forty years of software engineering is that 
-encapsulating state tends to make code easier to maintain, so Wren defaults to 
-keeping your object&rsquo;s state pretty tightly bundled up. Don&rsquo;t feel that you have 
-to or even should define getters or setters for most of your object&rsquo;s fields. </p>
+<p>One thing we&rsquo;ve learned in the past forty years of software engineering is that
+encapsulating state tends to make code easier to maintain, so Wren defaults to
+keeping your object&rsquo;s state pretty tightly bundled up. Don&rsquo;t feel that you have
+to or even should define getters or setters for most of your object&rsquo;s fields.</p>
 <h2>Metaclasses and static members <a href="#metaclasses-and-static-members" name="metaclasses-and-static-members" class="header-anchor">#</a></h2>
-<p><strong>TODO</strong> </p>
+<p><strong>TODO</strong></p>
 <h3>Static fields <a href="#static-fields" name="static-fields" class="header-anchor">#</a></h3>
-<p>A name that starts with <em>two</em> underscores is a <em>static</em> field. They work 
-similar to <a href="#fields">fields</a> except the data is stored on the class itself, and 
-not the instance. They can be used in <em>both</em> instance and static methods. </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Foo</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{}</span>
+<p>A name that starts with <em>two</em> underscores is a <em>static</em> field. They work
+similar to <a href="#fields">fields</a> except the data is stored on the class itself, and
+not the instance. They can be used in <em>both</em> instance and static methods.</p>
+<pre class="snippet">
+class Foo {
+  construct new() {}
 
-  <span class="k">static</span> <span class="n">setFromStatic</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="p">{</span> <span class="vc">__a</span> <span class="o">=</span> <span class="err">a</span> <span class="p">}</span> 
-  <span class="n">setFromInstance</span><span class="p">(</span><span class="err">a</span><span class="p">)</span> <span class="p">{</span> <span class="vc">__a</span> <span class="o">=</span> <span class="err">a</span> <span class="p">}</span>
+  static setFromStatic(a) { __a = a }
+  setFromInstance(a) { __a = a }
 
-  <span class="k">static</span> <span class="n">printFromStatic</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vc">__a</span><span class="p">)</span> 
-  <span class="p">}</span>
+  static printFromStatic() {
+    System.print(__a)
+  }
 
-  <span class="n">printFromInstance</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vc">__a</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+  printFromInstance() {
+    System.print(__a)
+  }
+}
+</pre>
 
+<p>Just like instance fields, static fields are initially <code>null</code>:</p>
+<pre class="snippet">
+Foo.printFromStatic() //> null
+</pre>
 
-<p>Just like instance fields, static fields are initially <code>null</code>: </p>
-<div class="codehilite"><pre><span class="vg">Foo</span><span class="o">.</span><span class="n">printFromStatic</span><span class="p">()</span> <span class="output">null</span>
-</pre></div>
+<p>They can be used from static methods:</p>
+<pre class="snippet">
+Foo.setFromStatic("first")
+Foo.printFromStatic() //> first
+</pre>
 
+<p>And also instance methods. When you do so, there is still only one static field
+shared among all instances of the class:</p>
+<pre class="snippet">
+var foo1 = Foo.new()
+var foo2 = Foo.new()
 
-<p>They can be used from static methods: </p>
-<div class="codehilite"><pre><span class="vg">Foo</span><span class="o">.</span><span class="n">setFromStatic</span><span class="p">(</span><span class="s">&quot;first&quot;</span><span class="p">)</span> 
-<span class="vg">Foo</span><span class="o">.</span><span class="n">printFromStatic</span><span class="p">()</span> <span class="output">first</span>
-</pre></div>
-
-
-<p>And also instance methods. When you do so, there is still only one static field 
-shared among all instances of the class: </p>
-<div class="codehilite"><pre><span class="k">var</span> <span class="n">foo1</span> <span class="o">=</span> <span class="vg">Foo</span><span class="o">.</span><span class="n">new</span><span class="p">()</span> 
-<span class="k">var</span> <span class="n">foo2</span> <span class="o">=</span> <span class="vg">Foo</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-
-<span class="n">foo1</span><span class="o">.</span><span class="n">setFromInstance</span><span class="p">(</span><span class="s">&quot;second&quot;</span><span class="p">)</span> 
-<span class="n">foo2</span><span class="o">.</span><span class="n">printFromInstance</span><span class="p">()</span> <span class="output">second</span>
-</pre></div>
-
+foo1.setFromInstance("second")
+foo2.printFromInstance() //> second
+</pre>
 
 <h2>Inheritance <a href="#inheritance" name="inheritance" class="header-anchor">#</a></h2>
-<p>A class can inherit from a &ldquo;parent&rdquo; or <em>superclass</em>. When you invoke a method 
-on an object of some class, if it can&rsquo;t be found, it walks up the chain of 
-superclasses looking for it there. </p>
-<p>By default, any new class inherits from Object, which is the superclass from 
-which all other classes ultimately descend. You can specify a different parent 
-class using <code>is</code> when you declare the class: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Pegasus</span> <span class="k">is</span> <span class="vg">Unicorn</span> <span class="p">{}</span>
-</pre></div>
+<p>A class can inherit from a &ldquo;parent&rdquo; or <em>superclass</em>. When you invoke a method
+on an object of some class, if it can&rsquo;t be found, it walks up the chain of
+superclasses looking for it there.</p>
+<p>By default, any new class inherits from Object, which is the superclass from
+which all other classes ultimately descend. You can specify a different parent
+class using <code>is</code> when you declare the class:</p>
+<pre class="snippet">
+class Pegasus is Unicorn {}
+</pre>
 
+<p>This declares a new class Pegasus that inherits from Unicorn.</p>
+<p>Note that you should not create classes that inherit from the built-in types
+(Bool, Num, String, Range, List). The built-in types expect their internal bit
+representation to be very specific and get horribly confused when you invoke one
+of the inherited built-in methods on the derived type.</p>
+<p>The metaclass hierarchy does <em>not</em> parallel the regular class hierarchy. So, if
+Pegasus inherits from Unicorn, Pegasus&rsquo;s metaclass does not inherit from
+Unicorn&rsquo;s metaclass. In more prosaic terms, this means that static methods are
+not inherited.</p>
+<pre class="snippet">
+class Unicorn {
+  // Unicorns cannot fly. :(
+  static canFly { false }
+}
 
-<p>This declares a new class Pegasus that inherits from Unicorn. </p>
-<p>Note that you should not create classes that inherit from the built-in types 
-(Bool, Num, String, Range, List). The built-in types expect their internal bit 
-representation to be very specific and get horribly confused when you invoke one 
-of the inherited built-in methods on the derived type. </p>
-<p>The metaclass hierarchy does <em>not</em> parallel the regular class hierarchy. So, if 
-Pegasus inherits from Unicorn, Pegasus&rsquo;s metaclass does not inherit from 
-Unicorn&rsquo;s metaclass. In more prosaic terms, this means that static methods are 
-not inherited. </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="c1">// Unicorns cannot fly. :(</span>
-  <span class="k">static</span> <span class="n">canFly</span> <span class="p">{</span> <span class="kc">false</span> <span class="p">}</span> 
-<span class="p">}</span>
+class Pegasus is Unicorn {}
 
-<span class="k">class</span> <span class="vg">Pegasus</span> <span class="k">is</span> <span class="vg">Unicorn</span> <span class="p">{}</span>
+Pegasus.canFly //! Static methods are not inherited.
+</pre>
 
-<span class="vg">Pegasus</span><span class="o">.</span><span class="n">canFly</span> <span class="error">Static methods are not inherited.</span>
-</pre></div>
+<p>This also means constructors are not inherited:</p>
+<pre class="snippet">
+class Unicorn {
+  construct new(name) {
+    System.print("My name is " + name + ".")
+  }
+}
 
+class Pegasus is Unicorn {}
 
-<p>This also means constructors are not inherited: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
+Pegasus.new("Fred") //! Pegasus does not define new().
+</pre>
 
-<span class="k">class</span> <span class="vg">Pegasus</span> <span class="k">is</span> <span class="vg">Unicorn</span> <span class="p">{}</span>
+<p>Each class gets to control how it may be constructed independently of its base
+classes. However, constructor <em>initializers</em> are inherited since those are
+instance methods on the new object.</p>
+<p>This means you can do <code>super</code> calls inside a constructor:</p>
+<pre class="snippet">
+class Unicorn {
+  construct new(name) {
+    System.print("My name is " + name + ".")
+  }
+}
 
-<span class="vg">Pegasus</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">&quot;Fred&quot;</span><span class="p">)</span> <span class="error">Pegasus does not define new().</span>
-</pre></div>
+class Pegasus is Unicorn {
+  construct new(name) {
+    super(name)
+  }
+}
 
-
-<p>Each class gets to control how it may be constructed independently of its base 
-classes. However, constructor <em>initializers</em> are inherited since those are 
-instance methods on the new object. </p>
-<p>This means you can do <code>super</code> calls inside a constructor: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;.&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-
-<span class="k">class</span> <span class="vg">Pegasus</span> <span class="k">is</span> <span class="vg">Unicorn</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="k">super</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
-
-<span class="vg">Pegasus</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s">&quot;Fred&quot;</span><span class="p">)</span> <span class="output">My name is Fred</span>
-</pre></div>
-
+Pegasus.new("Fred") //> My name is Fred
+</pre>
 
 <h2>Super <a href="#super" name="super" class="header-anchor">#</a></h2>
-<p><strong>TODO: Integrate better into page. Should explain this before mentioning 
-super above.</strong> </p>
-<p>Sometimes you want to invoke a method on yourself, but using methods defined in 
-one of your <a href="classes.html#inheritance">superclasses</a>. You typically do this in 
-an overridden method when you want to access the original method being 
-overridden. </p>
-<p>To do that, you can use the special <code>super</code> keyword as the receiver in a method 
-call: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Base</span> <span class="p">{</span> 
-  <span class="n">method</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;base method&quot;</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
+<p><strong>TODO: Integrate better into page. Should explain this before mentioning
+super above.</strong></p>
+<p>Sometimes you want to invoke a method on yourself, but using methods defined in
+one of your <a href="classes.html#inheritance">superclasses</a>. You typically do this in
+an overridden method when you want to access the original method being
+overridden.</p>
+<p>To do that, you can use the special <code>super</code> keyword as the receiver in a method
+call:</p>
+<pre class="snippet">
+class Base {
+  method() {
+    System.print("base method")
+  }
+}
 
-<span class="k">class</span> <span class="vg">Derived</span> <span class="k">is</span> <span class="vg">Base</span> <span class="p">{</span> 
-  <span class="n">method</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="k">super</span><span class="o">.</span><span class="n">method</span><span class="p">()</span> <span class="output">base method</span>
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+class Derived is Base {
+  method() {
+    super.method() //> base method
+  }
+}
+</pre>
 
+<p>You can also use <code>super</code> without a method name inside a constructor to invoke a
+base class constructor:</p>
+<pre class="snippet">
+class Base {
+  construct new(arg) {
+    System.print("base got " + arg)
+  }
+}
 
-<p>You can also use <code>super</code> without a method name inside a constructor to invoke a 
-base class constructor: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Base</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;base got &quot;</span> <span class="o">+</span> <span class="n">arg</span><span class="p">)</span> 
-  <span class="p">}</span> 
-<span class="p">}</span>
+class Derived is Base {
+  construct new() {
+    super("value") //> base got value
+  }
+}
+</pre>
 
-<span class="k">class</span> <span class="vg">Derived</span> <span class="k">is</span> <span class="vg">Base</span> <span class="p">{</span> 
-  <span class="k">construct</span> <span class="n">new</span><span class="p">()</span> <span class="p">{</span> 
-    <span class="k">super</span><span class="p">(</span><span class="s">&quot;value&quot;</span><span class="p">)</span> <span class="output">base got value</span>
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
-
-
-<p><br><hr> 
-<a class="right" href="concurrency.html">Concurrency &rarr;</a> 
-<a href="functions.html">&larr; Functions</a> </p>
+<p><br><hr>
+<a class="right" href="concurrency.html">Concurrency &rarr;</a>
+<a href="functions.html">&larr; Functions</a></p>
   </main>
 </div>
 <footer>

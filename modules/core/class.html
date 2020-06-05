@@ -3,6 +3,9 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Class Class &ndash; Wren</title>
+<script type="application/javascript" src="../../prism.js" data-manual></script>
+<script type="application/javascript" src="../../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../../prism.css" />
 <link rel="stylesheet" type="text/css" href="../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -20,10 +23,9 @@
 </header>
 <div class="page">
   <nav class="big">
-    <a href="./"><img src="../../wren.svg" class="logo"></a>
+    <a href="../../"><img src="../../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="../">Modules</a></li>
-      <li><a href="./">core</a></li>
+      <li><a href="../">Back to Modules</a></li>
     </ul>
     <section>
       <h2>core classes</h2>
@@ -80,27 +82,28 @@
   </nav>
   <main>
     <h1>Class Class</h1>
-    <p><strong>TODO</strong> </p>
+    <p><strong>TODO</strong></p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>name</strong> <a href="#name" name="name" class="header-anchor">#</a></h3>
-<p>The name of the class. </p>
+<p>The name of the class.</p>
 <h3><strong>supertype</strong> <a href="#supertype" name="supertype" class="header-anchor">#</a></h3>
-<p>The superclass of this class. </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">Crustacean</span> <span class="p">{}</span> 
-<span class="k">class</span> <span class="vg">Crab</span> <span class="k">is</span> <span class="vg">Crustacean</span> <span class="p">{}</span>
+<p>The superclass of this class.</p>
+<pre class="snippet">
+class Crustacean {}
+class Crab is Crustacean {}
 
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Crab</span><span class="o">.</span><span class="n">supertype</span><span class="p">)</span> <span class="output">Crustacean</span>
-</pre></div>
+System.print(Crab.supertype) //> Crustacean
+</pre>
 
+<p>A class with no explicit superclass implicitly inherits Object:</p>
+<pre class="snippet">
+System.print(Crustacean.supertype) //> Object
+</pre>
 
-<p>A class with no explicit superclass implicitly inherits Object: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Crustacean</span><span class="o">.</span><span class="n">supertype</span><span class="p">)</span> <span class="output">Object</span>
-</pre></div>
-
-
-<p>Object forms the root of the class hierarchy and has no supertype: </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="vg">Object</span><span class="o">.</span><span class="n">supertype</span><span class="p">)</span> <span class="output">null</span>
-</pre></div>
+<p>Object forms the root of the class hierarchy and has no supertype:</p>
+<pre class="snippet">
+System.print(Object.supertype) //> null
+</pre>
   </main>
 </div>
 <footer>

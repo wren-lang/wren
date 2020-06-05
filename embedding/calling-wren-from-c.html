@@ -3,6 +3,9 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Calling Wren from C &ndash; Wren</title>
+<script type="application/javascript" src="../prism.js" data-manual></script>
+<script type="application/javascript" src="../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../prism.css" />
 <link rel="stylesheet" type="text/css" href="../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -20,6 +23,10 @@
 </header>
 <div class="page">
   <nav class="big">
+    <a href="../"><img src="../wren.svg" class="logo"></a>
+    <ul>
+      <li><a href="../">Back to Wren</a></li>
+    </ul>
     <section>
       <h2>embedding</h2>
       <ul>
@@ -63,155 +70,155 @@
   </nav>
   <main>
     <h1>Calling Wren from C</h1>
-    <p>From C, we can tell Wren to do stuff by calling <code>wrenInterpret()</code>, but that&rsquo;s 
-not always the ideal way to drive the VM. First of all, it&rsquo;s slow. It has to 
-parse and compile the string of source code you give it. Wren has a pretty fast 
-compiler, but that&rsquo;s still a good bit of work. </p>
-<p>It&rsquo;s also not an effective way to communicate. You can&rsquo;t pass arguments to 
-Wren&mdash;at least, not without doing something nasty like converting them to 
-literals in a string of source code&mdash;and you can&rsquo;t get a result value back. </p>
-<p><code>wrenInterpret()</code> is great for loading code into the VM, but it&rsquo;s not the best 
-way to execute code that&rsquo;s already been loaded. What we want to do is invoke 
-some already compiled chunk of code. Since Wren is an object-oriented language, 
-&ldquo;chunk of code&rdquo; means a <a href="../method-calls.html">method</a>, not a <a href="../functions.html">function</a>. </p>
-<p>The C API for doing this is <code>wrenCall()</code>. In order to invoke a Wren method from 
-C, we need a few things: </p>
+    <p>From C, we can tell Wren to do stuff by calling <code>wrenInterpret()</code>, but that&rsquo;s
+not always the ideal way to drive the VM. First of all, it&rsquo;s slow. It has to
+parse and compile the string of source code you give it. Wren has a pretty fast
+compiler, but that&rsquo;s still a good bit of work.</p>
+<p>It&rsquo;s also not an effective way to communicate. You can&rsquo;t pass arguments to
+Wren&mdash;at least, not without doing something nasty like converting them to
+literals in a string of source code&mdash;and you can&rsquo;t get a result value back.</p>
+<p><code>wrenInterpret()</code> is great for loading code into the VM, but it&rsquo;s not the best
+way to execute code that&rsquo;s already been loaded. What we want to do is invoke
+some already compiled chunk of code. Since Wren is an object-oriented language,
+&ldquo;chunk of code&rdquo; means a <a href="../method-calls.html">method</a>, not a <a href="../functions.html">function</a>.</p>
+<p>The C API for doing this is <code>wrenCall()</code>. In order to invoke a Wren method from
+C, we need a few things:</p>
 <ul>
 <li>
-<p><strong>The method to call.</strong> Wren is dynamically typed, so this means we&rsquo;ll look it 
-  up by name. Further, since Wren supports overloading by arity, we actually 
-  need its entire <a href="../method-calls.html#signature">signature</a>. </p>
+<p><strong>The method to call.</strong> Wren is dynamically typed, so this means we&rsquo;ll look it
+  up by name. Further, since Wren supports overloading by arity, we actually
+  need its entire <a href="../method-calls.html#signature">signature</a>.</p>
 </li>
 <li>
-<p><strong>The receiver object to invoke the method on.</strong> The receiver&rsquo;s class 
-  determines which method is actually called. </p>
+<p><strong>The receiver object to invoke the method on.</strong> The receiver&rsquo;s class
+  determines which method is actually called.</p>
 </li>
 <li>
-<p><strong>The arguments to pass to the method.</strong> </p>
+<p><strong>The arguments to pass to the method.</strong></p>
 </li>
 </ul>
-<p>We&rsquo;ll tackle these one at a time. </p>
+<p>We&rsquo;ll tackle these one at a time.</p>
 <h3>Getting a Method Handle <a href="#getting-a-method-handle" name="getting-a-method-handle" class="header-anchor">#</a></h3>
-<p>When you run a chunk of Wren code like this: </p>
-<div class="codehilite"><pre><span class="n">object</span><span class="o">.</span><span class="n">someMethod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-</pre></div>
+<p>When you run a chunk of Wren code like this:</p>
+<pre class="snippet">
+object.someMethod(1, 2, 3)
+</pre>
 
+<p>At runtime, the VM has to look up the class of <code>object</code> and find a method there
+whose signature is <code>someMethod(_,_,_)</code>. This sounds like it&rsquo;s doing some string
+manipulation&mdash;at the very least hashing the signature&mdash;every time a
+method is called. That&rsquo;s how many dynamic languages work.</p>
+<p>But, as you can imagine, that&rsquo;s pretty slow. So, instead, Wren does as much of
+that work at compile time as it can. When it&rsquo;s compiling the above code to
+bytecode, it takes that method signature a converts it to a <em>method symbol</em>, a
+number that uniquely identifes that method. That&rsquo;s the only part of the process
+that requires treating a signature as a string.</p>
+<p>At runtime, the VM just looks for the method <em>symbol</em> in the receiver&rsquo;s class&rsquo;s
+method table. In fact, the way it&rsquo;s implemented today, the symbol is simply the
+array index into the table. That&rsquo;s <a href="../performance.html">why method calls are so fast</a> in Wren.</p>
+<p>It would be a shame if calling a method from C didn&rsquo;t have that same speed
+benefit. To achieve that, we split the process of calling a method into two
+steps. First, we create a handle that represents a &ldquo;compiled&rdquo; method signature:</p>
+<pre class="snippet" data-lang="c">
+WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
+</pre>
 
-<p>At runtime, the VM has to look up the class of <code>object</code> and find a method there 
-whose signature is <code>someMethod(_,_,_)</code>. This sounds like it&rsquo;s doing some string 
-manipulation&mdash;at the very least hashing the signature&mdash;every time a 
-method is called. That&rsquo;s how many dynamic languages work. </p>
-<p>But, as you can imagine, that&rsquo;s pretty slow. So, instead, Wren does as much of 
-that work at compile time as it can. When it&rsquo;s compiling the above code to 
-bytecode, it takes that method signature a converts it to a <em>method symbol</em>, a 
-number that uniquely identifes that method. That&rsquo;s the only part of the process 
-that requires treating a signature as a string. </p>
-<p>At runtime, the VM just looks for the method <em>symbol</em> in the receiver&rsquo;s class&rsquo;s 
-method table. In fact, the way it&rsquo;s implemented today, the symbol is simply the 
-array index into the table. That&rsquo;s <a href="../performance.html">why method calls are so fast</a> in Wren. </p>
-<p>It would be a shame if calling a method from C didn&rsquo;t have that same speed 
-benefit. To achieve that, we split the process of calling a method into two 
-steps. First, we create a handle that represents a &ldquo;compiled&rdquo; method signature: </p>
-<div class="codehilite"><pre><span class="n">WrenHandle</span><span class="o">*</span> <span class="nf">wrenMakeCallHandle</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">signature</span><span class="p">);</span>
-</pre></div>
-
-
-<p>That takes a method signature as a string and gives you back an opaque handle 
-that represents the compiled method symbol. Now you have a <em>reusable</em> handle 
-that can be used to very quickly call a certain method given a receiver and some 
-arguments. </p>
-<p>This is just a regular WrenHandle, which means you can hold onto it as long as 
-you like. Typically, you&rsquo;d call this once outside of your application&rsquo;s 
-performance critical loops and reuse it as long as you need. It is us up to you 
-to release it when you no longer need it by calling <code>wrenReleaseHandle()</code>. </p>
+<p>That takes a method signature as a string and gives you back an opaque handle
+that represents the compiled method symbol. Now you have a <em>reusable</em> handle
+that can be used to very quickly call a certain method given a receiver and some
+arguments.</p>
+<p>This is just a regular WrenHandle, which means you can hold onto it as long as
+you like. Typically, you&rsquo;d call this once outside of your application&rsquo;s
+performance critical loops and reuse it as long as you need. It is us up to you
+to release it when you no longer need it by calling <code>wrenReleaseHandle()</code>.</p>
 <h2>Setting Up a Receiver <a href="#setting-up-a-receiver" name="setting-up-a-receiver" class="header-anchor">#</a></h2>
-<p>OK, we have a method, but who are we calling it on? We need a receiver, and as 
-you can probably guess after reading the <a href="slots-and-handles.html">last section</a>, we give that to Wren 
-by storing it in a slot. In particular, <strong>the receiver for a method call goes in 
-slot zero.</strong> </p>
-<p>Any object you store in that slot can be used as a receiver. You could even call 
-<code>+</code> on a number by storing a number in there if you felt like it. </p>
-<p>Needing a receiver to call some Wren code from C might feel strange. C is 
-procedural, so it&rsquo;s natural to want to just invoke a bare <em>function</em> from Wren, 
-but Wren isn&rsquo;t procedural. Instead, if you want to define some executable 
-operation that isn&rsquo;t logically tied to a specific object, the natural way is to 
-define a static method on an appropriate class. </p>
-<p>For example, say we&rsquo;re making a game engine. From C, we want to tell the game 
-engine to update all of the entities each frame. We&rsquo;ll keep track of the list of 
-entities within Wren, so from C, there&rsquo;s no obvious object to call <code>update(_)</code> 
-on. Instead, we&rsquo;ll just make it a static method: </p>
-<div class="codehilite"><pre><span class="k">class</span> <span class="vg">GameEngine</span> <span class="p">{</span> 
-  <span class="k">static</span> <span class="n">update</span><span class="p">(</span><span class="n">elapsedTime</span><span class="p">)</span> <span class="p">{</span> 
-    <span class="c1">// ...</span>
-  <span class="p">}</span> 
-<span class="p">}</span>
-</pre></div>
+<p>OK, we have a method, but who are we calling it on? We need a receiver, and as
+you can probably guess after reading the <a href="slots-and-handles.html">last section</a>, we give that to Wren
+by storing it in a slot. In particular, <strong>the receiver for a method call goes in
+slot zero.</strong></p>
+<p>Any object you store in that slot can be used as a receiver. You could even call
+<code>+</code> on a number by storing a number in there if you felt like it.</p>
+<p>Needing a receiver to call some Wren code from C might feel strange. C is
+procedural, so it&rsquo;s natural to want to just invoke a bare <em>function</em> from Wren,
+but Wren isn&rsquo;t procedural. Instead, if you want to define some executable
+operation that isn&rsquo;t logically tied to a specific object, the natural way is to
+define a static method on an appropriate class.</p>
+<p>For example, say we&rsquo;re making a game engine. From C, we want to tell the game
+engine to update all of the entities each frame. We&rsquo;ll keep track of the list of
+entities within Wren, so from C, there&rsquo;s no obvious object to call <code>update(_)</code>
+on. Instead, we&rsquo;ll just make it a static method:</p>
+<pre class="snippet">
+class GameEngine {
+  static update(elapsedTime) {
+    // ...
+  }
+}
+</pre>
 
+<p>Often, when you call a Wren method from C, you&rsquo;ll be calling a static method.
+But, even then, you need a receiver. Now, though, the receiver is the <em>class
+itself</em>. Classes are first class objects in Wren, and when you define a named
+class, you&rsquo;re really declaring a variable with the class&rsquo;s name and storing a
+reference to the class object in it.</p>
+<p>Assuming you declared that class at the top level, the C API <a href="slots-and-handles.html#looking-up-variables">gives you a way to
+look it up</a>. We can get a handle to the above class like so:</p>
+<pre class="snippet" data-lang="c">
+// Load the class into slot 0.
+wrenEnsureSlots(vm, 1);
+wrenGetVariable(vm, "main", "GameEngine", 0);
+</pre>
 
-<p>Often, when you call a Wren method from C, you&rsquo;ll be calling a static method. 
-But, even then, you need a receiver. Now, though, the receiver is the <em>class 
-itself</em>. Classes are first class objects in Wren, and when you define a named 
-class, you&rsquo;re really declaring a variable with the class&rsquo;s name and storing a 
-reference to the class object in it. </p>
-<p>Assuming you declared that class at the top level, the C API <a href="slots-and-handles.html#looking-up-variables">gives you a way to 
-look it up</a>. We can get a handle to the above class like so: </p>
-<div class="codehilite"><pre><span class="c1">// Load the class into slot 0.</span>
-<span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> 
-<span class="n">wrenGetVariable</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;main&quot;</span><span class="p">,</span> <span class="s">&quot;GameEngine&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</pre></div>
+<p>We could do this every time we call <code>update()</code>, but, again, that&rsquo;s kind of slow
+because we&rsquo;re looking up &ldquo;GameEngine&rdquo; by name each time. A faster solution is to
+create a handle to the class once and use it each time:</p>
+<pre class="snippet" data-lang="c">
+// Load the class into slot 0.
+wrenEnsureSlots(vm, 1);
+wrenGetVariable(vm, "main", "GameEngine", 0);
+WrenHandle* gameEngineClass = wrenGetSlotHandle(vm, 0);
+</pre>
 
+<p>Now, each time we want to call a method on GameEngine, we store that value back
+in slot zero:</p>
+<pre class="snippet" data-lang="c">
+wrenSetSlotHandle(vm, 0, gameEngineClass);
+</pre>
 
-<p>We could do this every time we call <code>update()</code>, but, again, that&rsquo;s kind of slow 
-because we&rsquo;re looking up &ldquo;GameEngine&rdquo; by name each time. A faster solution is to 
-create a handle to the class once and use it each time: </p>
-<div class="codehilite"><pre><span class="c1">// Load the class into slot 0.</span>
-<span class="n">wrenEnsureSlots</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> 
-<span class="n">wrenGetVariable</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="s">&quot;main&quot;</span><span class="p">,</span> <span class="s">&quot;GameEngine&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> 
-<span class="n">WrenHandle</span><span class="o">*</span> <span class="n">gameEngineClass</span> <span class="o">=</span> <span class="n">wrenGetSlotHandle</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</pre></div>
-
-
-<p>Now, each time we want to call a method on GameEngine, we store that value back 
-in slot zero: </p>
-<div class="codehilite"><pre><span class="n">wrenSetSlotHandle</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">gameEngineClass</span><span class="p">);</span>
-</pre></div>
-
-
-<p>Just like we hoisted <code>wrenMakeCallHandle()</code> out of our performance critical 
-loop, we can hoist the call to <code>wrenGetVariable()</code> out. Of course, if your code 
-isn&rsquo;t performance critical, you don&rsquo;t have to do this. </p>
+<p>Just like we hoisted <code>wrenMakeCallHandle()</code> out of our performance critical
+loop, we can hoist the call to <code>wrenGetVariable()</code> out. Of course, if your code
+isn&rsquo;t performance critical, you don&rsquo;t have to do this.</p>
 <h2>Passing Arguments <a href="#passing-arguments" name="passing-arguments" class="header-anchor">#</a></h2>
-<p>We&rsquo;ve got a receiver in slot zero now, next we need to pass in any other 
-arguments. In our GameEngine example, that&rsquo;s just the elapsed time. Method 
-arguments go in consecutive slots after the receiver. So the elapsed time goes 
-into slot one. You can use any of the slot functions to set this up. For the 
-example, it&rsquo;s just: </p>
-<div class="codehilite"><pre><span class="n">wrenSetSlotDouble</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">elapsedTime</span><span class="p">);</span>
-</pre></div>
-
+<p>We&rsquo;ve got a receiver in slot zero now, next we need to pass in any other
+arguments. In our GameEngine example, that&rsquo;s just the elapsed time. Method
+arguments go in consecutive slots after the receiver. So the elapsed time goes
+into slot one. You can use any of the slot functions to set this up. For the
+example, it&rsquo;s just:</p>
+<pre class="snippet" data-lang="c">
+wrenSetSlotDouble(vm, 1, elapsedTime);
+</pre>
 
 <h2>Calling the Method <a href="#calling-the-method" name="calling-the-method" class="header-anchor">#</a></h2>
-<p>We have all of the data in place, so all that&rsquo;s left is to pull the trigger and 
-tell the VM to start running some code: </p>
-<div class="codehilite"><pre><span class="n">WrenInterpretResult</span> <span class="nf">wrenCall</span><span class="p">(</span><span class="n">WrenVM</span><span class="o">*</span> <span class="n">vm</span><span class="p">,</span> <span class="n">WrenHandle</span><span class="o">*</span> <span class="n">method</span><span class="p">);</span>
-</pre></div>
+<p>We have all of the data in place, so all that&rsquo;s left is to pull the trigger and
+tell the VM to start running some code:</p>
+<pre class="snippet" data-lang="c">
+WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
+</pre>
 
-
-<p>It takes the method handle we created using <code>wrenMakeCallHandle()</code>. Now Wren 
-starts running code. It looks up the method on the receiver, executes it and 
-keeps running until either the method returns or a fiber <a href="../modules/core/fiber.html#fiber.suspend()">suspends</a>. </p>
-<p><code>wrenCall()</code> returns the same WrenInterpretResult enum as <code>wrenInterpret()</code> to 
-tell you if the method completed successfully or a runtime error occurred. 
-(<code>wrenCall()</code> never returns <code>WREN_ERROR_COMPILE</code> since it doesn&rsquo;t compile 
-anything.) </p>
+<p>It takes the method handle we created using <code>wrenMakeCallHandle()</code>. Now Wren
+starts running code. It looks up the method on the receiver, executes it and
+keeps running until either the method returns or a fiber <a href="../modules/core/fiber.html#fiber.suspend()">suspends</a>.</p>
+<p><code>wrenCall()</code> returns the same WrenInterpretResult enum as <code>wrenInterpret()</code> to
+tell you if the method completed successfully or a runtime error occurred.
+(<code>wrenCall()</code> never returns <code>WREN_ERROR_COMPILE</code> since it doesn&rsquo;t compile
+anything.)</p>
 <h2>Getting the Return Value <a href="#getting-the-return-value" name="getting-the-return-value" class="header-anchor">#</a></h2>
-<p>When <code>wrenCall()</code> returns, it leaves the slot array in place. In slot zero, you 
-can find the method&rsquo;s return value, which you can access using any of the slot 
-reading functions. If you don&rsquo;t need the return value, you can ignore it. </p>
-<p>This is how you drive Wren from C, but how do you put control in Wren&rsquo;s hands? 
-For that, you&rsquo;ll need the next section&hellip; </p>
-<p><a class="right" href="calling-c-from-wren.html">Calling C From Wren &rarr;</a> 
-<a href="slots-and-handles.html">&larr; Slots and Handles</a> </p>
+<p>When <code>wrenCall()</code> returns, it leaves the slot array in place. In slot zero, you
+can find the method&rsquo;s return value, which you can access using any of the slot
+reading functions. If you don&rsquo;t need the return value, you can ignore it.</p>
+<p>This is how you drive Wren from C, but how do you put control in Wren&rsquo;s hands?
+For that, you&rsquo;ll need the next section&hellip;</p>
+<p><a class="right" href="calling-c-from-wren.html">Calling C From Wren &rarr;</a>
+<a href="slots-and-handles.html">&larr; Slots and Handles</a></p>
   </main>
 </div>
 <footer>

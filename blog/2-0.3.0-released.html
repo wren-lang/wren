@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>0.3.0 released! &ndash; Wren</title>
+<script type="application/javascript" src="../prism.js" data-manual></script>
+<script type="application/javascript" src="../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../prism.css" />
+<link rel="stylesheet" type="text/css" href="../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../">wren</a></h1>
+      <h2>a classy little scripting language</h2>      
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <a href="../"><img src="../wren.svg" class="logo"></a>
+    <ul>
+      <li><a href="../getting-started.html">Getting Started</a></li>
+      <li><a href="../contributing.html">Contributing</a></li>
+      <li><a href="../blog">Blog</a></li>
+      <li><a href="../try">Try it!</a></li>
+    </ul>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td><a href="getting-started.html">Getting Started</a></td>
+        <td><a href="contributing.html">Contributing</a></td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h2>0.3.0 released!</h2>
+    <p>5 June 2020</p>
+<hr />
+<p>In this post we&rsquo;ll cover 0.3.0 and the goals for 0.4.0 <a href="#goals-for-0.4.0">#</a>.</p>
+<h2>About the 0.3.0 release <a href="#about-the-0.3.0-release" name="about-the-0.3.0-release" class="header-anchor">#</a></h2>
+<p>Let&rsquo;s revisit our goals from <a href="1-0.2.0-and-beyond.html">the last blog post</a>, <br />
+and mark what we managed to get done:</p>
+<ul>
+<li><s>VM / CLI split</s> <a href="#vm--cli-split">#</a></li>
+<li><s>Build consistency/reliablity</s> <a href="#build-consistencyreliability">#</a></li>
+<li><s>Web build for embedding in docs</s> <a href="#web-build-for-embedding-in-docs">#</a></li>
+<li><s>Prebuilt releases</s> <a href="#prebuilt-releases">#</a></li>
+</ul>
+<h2>The details <a href="#the-details" name="the-details" class="header-anchor">#</a></h2>
+<h3>VM / CLI split <a href="#vm--cli-split" name="vm--cli-split" class="header-anchor">#</a></h3>
+<p>With 0.3.0 we&rsquo;ve separated the CLI from the Wren repo,
+and updated the docs to make the distinction clearer.</p>
+<p>The <a href="../cli">CLI now has it&rsquo;s own corner of the docs</a>, so that the modules
+and API docs aren&rsquo;t overlapped like before. This opens up space for the
+CLI to get better, fuller documentation, and removes confusion about
+built in modules vs ones that are in the CLI only.</p>
+<p>The code structure is clearer, too, and all the tests and utils are now specific.</p>
+<h3>Build consistency/reliability <a href="#build-consistencyreliability" name="build-consistencyreliability" class="header-anchor">#</a></h3>
+<p>Previously, builds on Windows could be a little fickle, and there was sometimes
+issues with the dependencies on the CLI side.</p>
+<p>To solve this, premake is now used to generate platform specific project files that
+&lsquo;just work&rsquo;, making it a one step process to build the VM or CLI. Both projects
+now have a <code>projects/</code> folder which includes ready to go project files for primary platforms.</p>
+<p><small>The original <code>Makefile</code> and <code>util/wren.mk</code> no longer exist, so there might be some work needed
+to reintegrate if you relied on those. You can find the updated makefile in <code>projects/make/</code>, or <code>projects/make.mac/</code>.</small></p>
+<p>The <strong>amalgamated build</strong> was fixed too, so that embedding in your own project is as simple as
+including a single c file (and the <code>wren.h</code> header).</p>
+<p>On the <strong>CLI</strong> side, the pre-build steps were removed and dependencies vendored in repo,
+so that the project just builds with less potential points of error, especially across platforms.</p>
+<p>And finally the <strong>docs</strong>! Previously <a href="https://sass-lang.com/">SASS</a> was used, and code highlighting
+was done at generation time using pygments, a python code highlighter. Both of these dependencies
+have been removed, code highlighting is now done on the client side instead (see another reason why below).
+The benefit here that it is now <em>easy</em> to edit the docs, just a simple python command, no setup!</p>
+<h3>Web build for embedding in docs <a href="#web-build-for-embedding-in-docs" name="web-build-for-embedding-in-docs" class="header-anchor">#</a></h3>
+<p>The goal was two part here, one is to have a page to just try out Wren.
+Type in some code, run it. That&rsquo;s the first big step and we&rsquo;ve now got that on the docs page.</p>
+<h4><a href="../try" target="_blank" class="dark-link">Try Wren directly in your browser!</a></h4>
+
+<p>This should work on desktop or mobile, and will continue to be improved over time.</p>
+<p>The second part of that goal is having the VM available to make examples on each page interactive.
+This is implemented, <em>but not activated on any pages yet</em>.</p>
+<p>In the near future inline doc examples will have a small button that you can 
+press to see the code result right there, live. Since there&rsquo;s a lot of examples,
+and sometimes they&rsquo;re fragments of code that don&rsquo;t run in isolation,
+it will take time to propagate it through the pages.</p>
+<p>Mainly, I didn&rsquo;t want this to hold up 0.3.0, but expect to start seeing it soon.</p>
+<h3>Prebuilt releases <a href="#prebuilt-releases" name="prebuilt-releases" class="header-anchor">#</a></h3>
+<p>In addition to the browser based build that removes a barrier to trying out Wren,
+Wren CLI has prebuilt binaries for Mac, Windows and Linux now! This gives
+an easy path to just tinkering with Wren before embedding it.</p>
+<hr />
+<h2>Goals for 0.4.0 <a href="#goals-for-0.4.0" name="goals-for-0.4.0" class="header-anchor">#</a></h2>
+<p>With 0.4.0 the goal is to address a couple of bigger todos, but also to push the language
+itself, and the embedding experience forward.</p>
+<p>You can see some of the <a href="https://github.com/wren-lang/wren/pulls?q=is%3Apr+is%3Aopen+label%3A0.4.0">work in progress tasks</a> here, 
+but there&rsquo;s a few things I&rsquo;d like to resolve in 0.4.0.</p>
+<p><strong>Compound operators</strong> <br />
+I&rsquo;ve really missed having <code>+=</code> and friends, <br />
+so I&rsquo;ve been working on a (broken, wip) <a href="https://github.com/wren-lang/wren/pull/701">PR here</a>.
+I&rsquo;ve since had a better idea to implement it and will hope to address that in 0.4.0.</p>
+<p><strong>Chained methods (&lsquo;fluent interfaces&rsquo;)</strong> <br />
+Currently in Wren it&rsquo;s required that the period (<code>.</code>) be on the same line as the method.
+<pre class="snippet">
+  example.
+    some().
+    functions().
+    here()
+</pre>
+This isn&rsquo;t as elegant as we&rsquo;d want for this form of API,
+so <strong>in 0.4.0 the goal is</strong> allowing a newline, as you&rsquo;d expect:
+<pre class="snippet">
+  example
+    .some()
+    .functions()
+    .here()
+</pre>
+This doesn&rsquo;t seem like a big deal but when your calls are wider,
+longer and possibly accept block functions. It&rsquo;s hard to read,
+and can be less fun to track down a missing <code>.</code> in a big chunk of code.
+<pre class="snippet">
+  example.
+    some {|args, and, stuff|
+      &hellip;
+    }.
+    here()
+</pre></p>
+<p><strong>C Side APIs</strong> <br />
+Some APIs for dealing with <code>Map</code> have been proposed several times,
+it&rsquo;s time to bring that into the API. There&rsquo;s some additions for <code>List</code> as well,
+like a helper to set an element in a list.</p>
+<p><strong>Other goals</strong> <br />
+There&rsquo;s a few more things but I&rsquo;m still exploring their viability. <br />
+Keep an eye on the <a href="https://github.com/wren-lang/wren">PRs/issues</a> or the <a href="https://github.com/wren-lang/wren/pulls?q=is%3Apr+is%3Aopen+label%3A0.4.0">0.4.0 label</a> to see when they&rsquo;re discussed.</p>
+<h2>Till next time <a href="#till-next-time" name="till-next-time" class="header-anchor">#</a></h2>
+<hr />
+<ul>
+<li><a href="http://wren.io/blog/rss.xml">The Wren Blog RSS</a></li>
+<li>Join the <a href="https://discord.gg/Kx6PxSX">discord community</a></li>
+<li>Visit the <a href="https://github.com/wren-lang">wren-lang organization</a> on GitHub to get involved.</li>
+<li>Follow the developers <a href="https://twitter.com/munificentbob">@munificentbob</a> or <a href="https://twitter.com/ruby0x1">@ruby0x1</a> on twitter</li>
+</ul>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/wren-lang/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/wren-lang/wren/blob/master/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Meta Class &ndash; Wren</title>
+<title>CLI Modules &ndash; Wren</title>
 <script type="application/javascript" src="../../prism.js" data-manual></script>
 <script type="application/javascript" src="../../wren.js"></script>
 <link rel="stylesheet" type="text/css" href="../../prism.css" />
@@ -25,43 +25,68 @@
   <nav class="big">
     <a href="../../"><img src="../../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="../">Back to Modules</a></li>
-      <li><a href="./">meta module</a></li>
+      <li><a href="../">Back to Wren CLI</a></li>
     </ul>
     <section>
-      <h2>meta classes</h2>
+      <h2>Built In</h2>
       <ul>
-        <li><a href="meta.html">Meta</a></li>
+        <li><a href="../../modules">Wren modules</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>CLI modules</h2>
+      <ul>
+        <li><a href="io">io</a></li>
+        <li><a href="os">os</a></li>
+        <li><a href="scheduler">scheduler</a></li>
+        <li><a href="timer">timer</a></li>
       </ul>
     </section>
   </nav>
   <nav class="small">
     <table>
       <tr>
-        <td><a href="../">Modules</a></td>
-        <td><a href="./">meta</a></td>
-      </tr>
-      <tr>
-        <td colspan="2"><h2>meta classes</h2></td>
+        <td><h2>core</h2></td>
+        <td><h2>optional</h2></td>
+        <td><h2>cli</h2></td>
       </tr>
       <tr>
         <td>
           <ul>
-            <li><a href="meta.html">Meta</a></li>
+            <li><a href="core">core</a></li>
           </ul>
         </td>
         <td>
           <ul>
+            <li><a href="meta">meta</a></li>
+            <li><a href="random">random</a></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li><a href="io">io</a></li>
+            <li><a href="os">os</a></li>
+            <li><a href="scheduler">scheduler</a></li>
+            <li><a href="timer">timer</a></li>
           </ul>
         </td>
       </tr>
     </table>
   </nav>
   <main>
-    <h1>Meta Class</h1>
-    <p><strong>TODO</strong></p>
-<h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
-<p><strong>TODO</strong></p>
+    <h1>CLI Modules</h1>
+    <p>The Wren CLI executable extends the built in language modules with it&rsquo;s own,
+which offer access to IO and other facilities for scripting.</p>
+<p>The CLI modules are deeply tied to <a href="http://libuv.org">libuv</a>, each other, and other internals
+of the command-line app, so can&rsquo;t easily be separated out and pulled into host
+applications that want to embed Wren. Scripts written for the CLI then,
+are specific to the CLI unless another host implements the same API.</p>
+<ul>
+<li><a href="io">io</a></li>
+<li><a href="os">os</a></li>
+<li><a href="scheduler">scheduler</a></li>
+<li><a href="timer">timer</a></li>
+</ul>
   </main>
 </div>
 <footer>

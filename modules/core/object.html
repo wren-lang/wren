@@ -3,6 +3,9 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>Object Class &ndash; Wren</title>
+<script type="application/javascript" src="../../prism.js" data-manual></script>
+<script type="application/javascript" src="../../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../../prism.css" />
 <link rel="stylesheet" type="text/css" href="../../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -20,10 +23,9 @@
 </header>
 <div class="page">
   <nav class="big">
-    <a href="./"><img src="../../wren.svg" class="logo"></a>
+    <a href="../../"><img src="../../wren.svg" class="logo"></a>
     <ul>
-      <li><a href="../">Modules</a></li>
-      <li><a href="./">core</a></li>
+      <li><a href="../">Back to Modules</a></li>
     </ul>
     <section>
       <h2>core classes</h2>
@@ -82,36 +84,36 @@
     <h1>Object Class</h1>
     <h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
 <h3><strong>same</strong>(obj1, obj2) <a href="#same(obj1,-obj2)" name="same(obj1,-obj2)" class="header-anchor">#</a></h3>
-<p>Returns <code>true</code> if <em>obj1</em> and <em>obj2</em> are the same. For <a href="../values.html">value 
-types</a>, this returns <code>true</code> if the objects have equivalent 
-state. In other words, numbers, strings, booleans, and ranges compare by value. </p>
-<p>For all other objects, this returns <code>true</code> only if <em>obj1</em> and <em>obj2</em> refer to 
-the exact same object in memory. </p>
-<p>This is similar to the built in <code>==</code> operator in Object except that this cannot 
-be overriden. It allows you to reliably access the built-in equality semantics 
-even on user-defined classes. </p>
+<p>Returns <code>true</code> if <em>obj1</em> and <em>obj2</em> are the same. For <a href="../values.html">value
+types</a>, this returns <code>true</code> if the objects have equivalent
+state. In other words, numbers, strings, booleans, and ranges compare by value.</p>
+<p>For all other objects, this returns <code>true</code> only if <em>obj1</em> and <em>obj2</em> refer to
+the exact same object in memory.</p>
+<p>This is similar to the built in <code>==</code> operator in Object except that this cannot
+be overriden. It allows you to reliably access the built-in equality semantics
+even on user-defined classes.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>!</strong> operator <a href="#-operator" name="-operator" class="header-anchor">#</a></h3>
-<p>Returns <code>false</code>, since most objects are considered <a href="control-flow.html#truth">true</a>. </p>
+<p>Returns <code>false</code>, since most objects are considered <a href="control-flow.html#truth">true</a>.</p>
 <h3><strong>==</strong>(other) and <strong>!=</strong>(other) operators <a href="#==(other)-and-=(other)-operators" name="==(other)-and-=(other)-operators" class="header-anchor">#</a></h3>
-<p>Compares two objects using built-in equality. This compares <a href="../values.html">value 
-types</a> by value, and all other objects are compared by 
-identity&mdash;two objects are equal only if they are the exact same object. </p>
+<p>Compares two objects using built-in equality. This compares <a href="../values.html">value
+types</a> by value, and all other objects are compared by
+identity&mdash;two objects are equal only if they are the exact same object.</p>
 <h3><strong>is</strong>(class) operator <a href="#is(class)-operator" name="is(class)-operator" class="header-anchor">#</a></h3>
-<p>Returns <code>true</code> if this object&rsquo;s class or one of its superclasses is <code>class</code>. </p>
-<div class="codehilite"><pre><span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mi">123</span> <span class="k">is</span> <span class="vg">Num</span><span class="p">)</span>     <span class="output">true</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;s&quot;</span> <span class="k">is</span> <span class="vg">Num</span><span class="p">)</span>     <span class="output">false</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="kc">null</span> <span class="k">is</span> <span class="vg">String</span><span class="p">)</span> <span class="output">false</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([]</span> <span class="k">is</span> <span class="vg">List</span><span class="p">)</span>     <span class="output">true</span>
-<span class="vg">System</span><span class="o">.</span><span class="n">print</span><span class="p">([]</span> <span class="k">is</span> <span class="vg">Sequence</span><span class="p">)</span> <span class="output">true</span>
-</pre></div>
+<p>Returns <code>true</code> if this object&rsquo;s class or one of its superclasses is <code>class</code>.</p>
+<pre class="snippet">
+System.print(123 is Num)     //> true
+System.print("s" is Num)     //> false
+System.print(null is String) //> false
+System.print([] is List)     //> true
+System.print([] is Sequence) //> true
+</pre>
 
-
-<p>It is a runtime error if <code>class</code> is not a <a href="class.html">Class</a>. </p>
+<p>It is a runtime error if <code>class</code> is not a <a href="class.html">Class</a>.</p>
 <h3><strong>toString</strong> <a href="#tostring" name="tostring" class="header-anchor">#</a></h3>
-<p>A default string representation of the object. </p>
+<p>A default string representation of the object.</p>
 <h3><strong>type</strong> <a href="#type" name="type" class="header-anchor">#</a></h3>
-<p>The <a href="class.html">Class</a> of the object. </p>
+<p>The <a href="class.html">Class</a> of the object.</p>
   </main>
 </div>
 <footer>
