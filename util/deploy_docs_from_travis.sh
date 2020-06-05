@@ -7,11 +7,6 @@ then
   WREN_PY="$WREN_PY_BINARY"
 fi
 
-# Install the Wren Pygments lexer.
-cd util/pygments-lexer
-sudo $WREN_PY setup.py develop
-cd ../..
-
 # Build the docs.
 mkdir -p build
 $WREN_PY ./util/generate_docs.py
