@@ -236,4 +236,11 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
   return NULL;
 }
 
+// Returns `true` if [name] is a local variable name (starts with a lowercase
+// letter).
+static inline bool wrenIsLocalName(const char* name)
+{
+  return name[0] >= 'a' && name[0] <= 'z';
+}
+
 #endif

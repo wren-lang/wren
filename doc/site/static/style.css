@@ -1,0 +1,574 @@
+
+:root {
+  --header-h: 8em;
+  --header: "Sanchez", helvetica, arial, sans-serif;
+  --subheader: "Lato", helvetica, arial, sans-serif;
+  --code: "Source Code Pro", Menlo, Monaco, Consolas, monospace;
+  --body: "Source Sans Pro", georgia, serif;
+  --code-bg: hsl(210, 0%, 99%);
+  --dark: hsl(210, 10%, 25%);
+  --darker: hsl(210, 20%, 10%);
+  --light: hsl(0, 0%, 100%);
+  --code-color: hsl(210, 20%, 30%);
+  --text: #333333;
+  --gray-5: whitesmoke;
+  --gray-10: #ebebec;
+  --gray-20: #d7d8da;
+  --gray-30: #c3c5c7;
+  --gray-50: #9c9fa2;
+  --gray-60: #888c90;
+  --gray-80: #60666a;
+  --link: hsl(200, 60%, 50%);
+  --link-dark: hsl(210, 60%, 20%);
+  --link-hover: hsl(210, 100%, 80%);
+  --link: hsl(200, 60%, 50%);
+  --module-link-dark:   hsl(160, 60%, 25%);
+  --module-link-hover:  hsl(130, 70%, 70%);
+  --module-link:        hsl(150, 70%, 40%);
+}
+
+* {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+body, code, h1, h2, h3, p, pre, html {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--light);
+  color: var(--text);
+  font: 16px/25px var(--body);
+  height: 100%;
+  min-height: 100%;
+}
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid var(--gray-5);
+    margin: 1em 0;
+    padding: 0;
+}
+
+blockquote {
+  color: var(--gray-50);
+  margin: 0;
+  max-width: 24em;
+  margin-left: 0.5em;
+}
+
+date {
+  color: var(--gray-80);
+}
+
+.page {
+  margin: 0 auto;
+  width: 800px;
+  min-height: calc(100% - 16.75em);
+}
+/* Clear contents.*/
+.page::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.main-column, main {
+  position: relative;
+  width: 560px;
+}
+
+.logo {
+  height: 7em;
+  position: relative;
+  margin: auto;
+  display: block;
+  left: -1em;
+  margin-bottom: 2em;
+}
+
+header {
+  background: var(--light);
+  border-bottom: solid 1px var(--gray-10);
+}
+
+header h1 {
+  position: absolute;
+  left: -8px;
+  top: calc((var(--header-h) / 3) - 1.15em);
+  padding: 0;
+  font-weight: 400;
+  font-size: 48px;
+  font-family: "Sanchez", helvetica, arial, sans-serif;
+  letter-spacing: 2px;
+}
+
+header h2 {
+  position: absolute;
+  left: 0;
+  top: calc(var(--header-h) + 0.5em);
+  padding: 0;
+  font: 500 13px var(--subheader);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gray-50);
+}
+
+header a {
+  color: var(--gray-80);
+}
+
+header a:hover {
+  color: var(--link-hover);
+}
+
+header .page {
+  height: var(--header-h);
+}
+
+nav {
+  float: right;
+  width: 160px;
+  margin-top: 2em;
+}
+
+nav h2 {
+  color: var(--gray-80);
+  font: 500 13px var(--subheader);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0;
+}
+
+nav ul {
+  padding: 0;
+  margin: 6px 0 20px 0;
+}
+
+nav li {
+  font: 17px var(--body);
+  color: var(--gray-30);
+  list-style-type: none;
+  margin: 0 0 4px 0;
+}
+
+nav.small {
+   /*Only show the mobile navigation on small screens.*/
+  display: none;
+
+  float: none;
+  width: 100%;
+
+  padding: 16px 0 0 0;
+  margin: 0;
+  background: var(--gray-10);
+
+}
+
+nav.small div:not(table) { padding-left: 1em; }
+
+nav.small table {
+  width: 100%;
+
+  border-collapse: separate;
+  border-spacing: 16px 0;
+}
+
+nav.small h2 {
+  margin: 16px 0 0 0;
+  padding: 0 0 1px 0;
+  border-bottom: solid 1px var(--gray-20);
+}
+
+h1 {
+  padding-top: 30px;
+  font: 500 36px/60px var(--header);
+  color: var(--link);
+}
+
+h2 {
+  font-weight: 500;
+  font-size: 24px;
+  font-family: var(--header);
+  margin: 24px 0 0 0;
+  color: var(--link);
+}
+
+h2 code {
+  border: none;
+  background: inherit;
+  color: inherit;
+  font-size: 24px;
+}
+
+h3 {
+  font: 20px var(--body);
+  margin: 24px 0 0 0;
+  color: var(--link);
+}
+
+h3 code {
+  border: none;
+  background: inherit;
+  color: inherit;
+  font-size: 20px;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  transition: color 0.2s, text-shadow 0.2s;
+  outline: none;
+  cursor: pointer;
+}
+
+main {
+  margin-top: 2em;
+  float: left;
+}
+
+main .intro {
+  border-bottom: solid 1px var(--gray-10);
+  margin-bottom: -0.5em;
+}
+
+main h2 {
+  display: block;
+  position: relative;
+  max-width: 16em;
+}
+
+a:hover {
+  color: var(--link-dark);
+}
+
+.header-anchor {
+  color: var(--light);
+}
+
+h2:hover > .header-anchor,
+h3:hover > .header-anchor {
+  color: var(--gray-10);
+}
+
+h2:hover > .header-anchor:hover,
+h3:hover > .header-anchor:hover {
+  color: var(--link-dark);
+}
+
+p {
+  margin: 10px 0;
+}
+
+p + p {
+  margin-top: 20px;
+}
+
+code, pre {
+  background-color: var(--code-bg) !important;
+  color: var(--code-color) !important;
+  font-family: var(--code) !important;
+  font-size: 13px !important;
+}
+
+code {
+  white-space: pre;
+}
+
+pre {
+  border-radius: 2px;
+  border: solid 1px hsl(200, 20%, 88%);
+  overflow: auto;
+  white-space: pre-wrap;
+  padding: 1em;
+}
+
+footer {
+  margin-top: 4em;
+  padding: 20px 0 40px 0;
+  font: 14px var(--body);
+  background: var(--dark);
+  color: var(--gray-20);
+  border-top: solid 1px var(--darker);
+  text-align: center;
+  text-shadow: 0 1px 1px var(--darker);
+}
+
+footer a {
+  color: var(--link-hover);
+}
+
+footer a:hover {
+  color: var(--link);
+}
+
+.right {
+  float: right;
+}
+
+/* Have a different primary color for the module docs.*/
+body.module header a {
+  color: var(--gray-80);
+}
+
+body.module header a:hover {
+  color: var(--module-link-hover);
+}
+
+body.module a {
+  color: var(--module-link);
+}
+
+body.module a:hover {
+  color: var(--module-link-dark);
+}
+
+body.module .header-anchor {
+  color: var(--light);
+}
+
+body.module footer a {
+  color: var(--module-link-hover);
+}
+
+body.module footer a:hover {
+  color: var(--module-link);
+}
+
+body.module main h1 { color: var(--module-link); }
+body.module main h2 { color: var(--module-link); }
+body.module main h3 { color: var(--module-link); }
+
+body.module main h2:hover > .header-anchor:hover,
+body.module main h3:hover > .header-anchor:hover {
+  color: var(--module-link-dark);
+}
+
+/* Try related stuff */
+
+.buttons {
+  z-index: 2;
+  right: 0;
+  display: block;
+  position: absolute;
+  font-size: 1.3em;
+  letter-spacing: 0.05em;
+  margin-top: -1.25em;
+}
+.button {
+  margin-right: 0.25em;
+  display: inline-block;
+  text-align: right;
+}
+
+#examples {
+  margin-bottom: 1em;
+}
+
+#try-area {
+  margin-bottom: 1em;
+}
+
+#try-area p {
+  margin-left: 0.2em;
+  color: var(--gray-50);
+  font-size: 0.9em;
+  margin-bottom: -0.1em;
+}
+
+#try-output {
+  scrollbar-width: thin;
+  white-space: pre;
+  overflow-x: auto;
+  font-family: var(--code);
+  font-size: 1em;
+  line-height: 1.25em;
+}
+
+#try-result {
+  display: block;
+  margin-top: 1.4em;
+  position: absolute;
+  right: 0;
+}
+
+#try-result.error {
+  color: #c00;
+  font-weight: bold;
+}
+
+span.token.error {
+  color: #c00;
+}
+
+.codejar-linenumbers {
+  background-color: #f9f9f9 !important;
+  border-left: solid 1px hsl(200, 20%, 88%);
+  border-top: solid 1px hsl(200, 20%, 88%);
+  border-bottom: solid 1px hsl(200, 20%, 88%);
+  color: #d9d9d9 !important;
+  mix-blend-mode: normal !important;
+  width: 2.5em !important;
+  text-align: right !important;
+  padding-left: 0 !important;
+  padding-right: 0.5em !important;
+}
+
+#try-code {
+  scrollbar-width: thin;
+  border-radius: 0.01em;
+  border: solid 1px hsl(200, 20%, 88%);
+  font-family: 'Source Code Pro', monospace;
+  font-size: 14px;
+  font-weight: 400;
+  height: auto;
+  letter-spacing: normal;
+  line-height: 1.5em;
+  padding: 1em;
+  tab-size: 2;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+tr {
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+}
+
+th, td {
+  font-size: 14px;
+  line-height: 20px;
+  text-align: left;
+}
+
+/* Bar charts on the performance page.*/
+table.chart {
+  margin: 4px 0 0 0;
+  padding: 5px 0 5px 25px;
+}
+
+table.chart td, th {
+  line-height: 14px;
+  margin: 0;
+  padding: 1px 0;
+}
+
+table.chart th {
+  font-size: 14px;
+  width: 100px;
+}
+
+table.chart .chart-bar {
+  display: inline-block;
+  font: 13px var(--body);
+  color: var(--light);
+  background: var(--link);
+  border-bottom: solid 1px var(--link-dark);
+  text-align: right;
+  border-radius: 2px;
+}
+
+table.chart .chart-bar.wren {
+  background: #1d5176;
+  border-bottom: solid 1px var(--link-dark);
+}
+
+/* Precedence table on expressions page.*/
+table.precedence th {
+  font: 500 11px var(--subheader);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray-60);
+
+  padding: 6px 0;
+  border-bottom: solid 1px var(--gray-10);
+}
+
+table.precedence td {
+  padding: 3px 0;
+  border-bottom: solid 1px var(--gray-10);
+}
+
+@media only screen and (max-width: 839px) {
+  /* 36 pixel columns.*/
+  .page { width: 720px; }
+  nav { width: 144px; }
+  .main-column, main { width: 504px; }
+}
+
+@media only screen and (max-width: 759px) {
+  /* 32 pixel columns.*/
+  .page { width: 640px; }
+  nav { width: 128px; }
+  .main-column, main { width: 448px; }
+}
+
+@media only screen and (max-width: 679px) {
+  /* 28 pixel columns.*/
+  .page { width: 560px; }
+  nav { width: 112px; }
+  .main-column, main { width: 392px; }
+
+  header h2 {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+}
+
+@media only screen and (max-width: 639px) {
+  .page { width: 100%; }
+  .buttons { margin-right: 1em; }
+  #try-result { margin-right: 1.5em; }
+
+  /* Switch to the mobile navigation.*/
+  nav.big { display: none; }
+  nav.small { display: block; }
+  nav.small div:not(table) { padding-left: 1em; }
+
+  .main-column, main {
+    padding: 0 20px;
+    width: 100%;
+  }
+
+  header h1 {
+    position: relative;
+    top: 10px;
+    left: 0;
+    text-align: center;
+  }
+
+  header h2 {
+    position: relative;
+    top: 0;
+    right: 0;
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+
+  main {
+    float: none;
+    width: 100%;
+  }
+
+  pre {
+    font-size: 13px;
+  }
+
+  footer {
+    padding: 20px 20px 40px 20px;
+  }
+}

@@ -7,21 +7,21 @@
 Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in
 a familiar, modern [syntax][].
 
-    :::wren
-    System.print("Hello, world!")
+<pre class="snippet">
+System.print("Hello, world!")
 
-    class Wren {
-      flyTo(city) {
-        System.print("Flying to %(city)")
-      }
-    }
+class Wren {
+  flyTo(city) {
+    System.print("Flying to %(city)")
+  }
+}
 
-    var adjectives = Fiber.new {
-      ["small", "clean", "fast"].each {|word| Fiber.yield(word) }
-    }
+var adjectives = Fiber.new {
+  ["small", "clean", "fast"].each {|word| Fiber.yield(word) }
+}
 
-    while (!adjectives.isDone) System.print(adjectives.call())
-
+while (!adjectives.isDone) System.print(adjectives.call())
+</pre>
 
  *  **Wren is small.** The VM implementation is under [4,000 semicolons][src].
     You can skim the whole thing in an afternoon. It's *small*, but not
@@ -36,7 +36,7 @@ a familiar, modern [syntax][].
     [classes][] front and center.
 
  *  **Wren is concurrent.** Lightweight [fibers][] are core to the execution
-    model and let you organize your program into an army of communicating
+    model and let you organize your program into a flock of communicating
     coroutines.
 
  *  **Wren is a scripting language.** Wren is intended for embedding in
@@ -46,9 +46,9 @@ a familiar, modern [syntax][].
 
 ---
 
-If you like the sound of this, [let's get started][started]. You can even try
-it [in your browser][browser]! Excited? Well, come on and [get
-involved][contribute]!
+You can try it [in your browser][browser]!   
+If you like the sound of this, [let's get started][started].    
+Excited? You're also welcome to [get involved][contribute]!
 
 [syntax]: syntax.html
 [src]: https://github.com/wren-lang/wren/tree/master/src
@@ -58,5 +58,5 @@ involved][contribute]!
 [fibers]: concurrency.html
 [embedding]: embedding
 [started]: getting-started.html
-[browser]: http://ppvk.github.io/wren-nest/
+[browser]: try
 [contribute]: contributing.html

@@ -33,12 +33,13 @@ identity&mdash;two objects are equal only if they are the exact same object.
 
 Returns `true` if this object's class or one of its superclasses is `class`.
 
-    :::wren
-    System.print(123 is Num)     //> true
-    System.print("s" is Num)     //> false
-    System.print(null is String) //> false
-    System.print([] is List)     //> true
-    System.print([] is Sequence) //> true
+<pre class="snippet">
+System.print(123 is Num)     //> true
+System.print("s" is Num)     //> false
+System.print(null is String) //> false
+System.print([] is List)     //> true
+System.print([] is Sequence) //> true
+</pre>
 
 It is a runtime error if `class` is not a [Class][].
 

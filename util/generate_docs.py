@@ -59,7 +59,7 @@ class RootedHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 def ensure_dir(path):
   if not os.path.exists(path):
-    os.mkdir(path)
+    os.makedirs(path, exist_ok=True)
 
 
 def is_up_to_date(path, out_path):
@@ -115,18 +115,9 @@ def format_file(path, skip_up_to_date):
         contents += '{1} <a href="#{0}" name="{0}" class="header-anchor">#</a>\n'.format(anchor, header)
 
       else:
-        # Forcibly add a space to the end of each line. Works around a bug in
-        # the smartypants extension that removes some newlines that are needed.
-        # https://github.com/waylan/Python-Markdown/issues/439
-        if "//" not in line:
-          contents = contents + line.rstrip() + ' \n'
-        else:
-          # Don't add a trailing space on comment lines since they may be
-          # output lines which have a trailing ">" which makes the extra space
-          # visible.
-          contents += line
+        contents += line
 
-  html = markdown.markdown(contents, extensions=['def_list', 'codehilite', 'smarty'])
+  html = markdown.markdown(contents, extensions=['def_list', 'smarty'])
 
   # Use special formatting for example output and errors.
   html = html.replace('<span class="c1">//&gt; ', '<span class="output">')
@@ -153,21 +144,6 @@ def format_file(path, skip_up_to_date):
 
   print("Built " + path)
 
-
-def check_sass():
-    source_mod = os.path.getmtime('doc/site/style.scss')
-
-    dest_mod = 0
-    if os.path.exists('build/docs/style.css'):
-      dest_mod = os.path.getmtime('build/docs/style.css')
-
-    if source_mod < dest_mod:
-        return
-
-    subprocess.call(['sass', 'doc/site/style.scss', 'build/docs/style.css'])
-    print("Built build/docs/style.css")
-
-
 def copy_static():
   shutil.copy2("doc/site/blog/rss.xml", "build/docs/blog/rss.xml")
 
@@ -187,7 +163,6 @@ def copy_static():
       print('Copied ' + filename)
 
 def format_files(skip_up_to_date):
-  check_sass()
 
   for root, dirnames, filenames in os.walk('doc/site'):
     for filename in fnmatch.filter(filenames, '*.markdown'):

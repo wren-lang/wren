@@ -7,11 +7,11 @@
 
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
-#define WREN_VERSION_MINOR 2
+#define WREN_VERSION_MINOR 3
 #define WREN_VERSION_PATCH 0
 
 // A human-friendly string representation of the version.
-#define WREN_VERSION_STRING "0.2.0"
+#define WREN_VERSION_STRING "0.3.0"
 
 // A monotonically increasing numeric representation of the version number. Use
 // this if you want to do range checks over versions.

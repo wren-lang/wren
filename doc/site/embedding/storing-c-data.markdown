@@ -18,10 +18,11 @@ but accessible from C.
 
 You define one like so:
 
-    :::wren
-    foreign class Point {
-      // ...
-    }
+<pre class="snippet">
+foreign class Point {
+  // ...
+}
+</pre>
 
 The `foreign` keyword tells Wren to loop in the host application when it
 constructs instances of the class. The host tells Wren how many bytes of extra
@@ -37,29 +38,32 @@ to a C callback you define. Its signature must be:
 [bind]: calling-c-from-wren.html#binding-foreign-methods
 [configure the vm]: configuring-the-vm.html
 
-    :::c
-    WrenForeignClassMethods bindForeignClass(
-        WrenVM* vm, const char* module, const char* className);
+<pre class="snippet" data-lang="c">
+WrenForeignClassMethods bindForeignClass(
+    WrenVM* vm, const char* module, const char* className);
+</pre>
 
 Wren invokes this callback once when a foreign class declaration is executed.
 Wren passes in the name of the module containing the foreign class, and the name
 of the class being declared. The host's responsibility is to return one of these
 structs:
 
-    :::c
-    typedef struct
-    {
-      WrenForeignMethodFn allocate;
-      WrenFinalizerFn finalize;
-    } WrenForeignClassMethods;
+<pre class="snippet" data-lang="c">
+typedef struct
+{
+  WrenForeignMethodFn allocate;
+  WrenFinalizerFn finalize;
+} WrenForeignClassMethods;
+</pre>
 
 It's a pair of function pointers. The first, `allocate`, is called by Wren
 whenever an instance of the foreign class is created. (We'll get to the optional
 `finalize` callback later.) The allocation callback has the same signature as a
 foreign method:
 
-    :::c
-    void allocate(WrenVM* vm);
+<pre class="snippet" data-lang="c">
+void allocate(WrenVM* vm);
+</pre>
 
 ## Initializing an Instance
 
@@ -70,9 +74,10 @@ how many bytes of raw memory you need. You do that by calling:
 
 [constructors]: ../classes.html#constructors
 
-    :::c
-    void* wrenSetSlotNewForeign(WrenVM* vm,
-        int slot, int classSlot, size_t size);
+<pre class="snippet" data-lang="c">
+void* wrenSetSlotNewForeign(WrenVM* vm,
+    int slot, int classSlot, size_t size);
+</pre>
 
 Like other [slot manipulation functions][slot], it both reads from and writes to
 the slot array. It has a few parameters to make it more general purpose since it
@@ -96,8 +101,9 @@ can also be used in other foreign methods:
 So, for example, if you wanted to create a foreign instance that contains eight
 bytes of C data, you'd call:
 
-    :::c
-    void* data = wrenSetSlotNewForeign(vm, 0, 0, 8);
+<pre class="snippet" data-lang="c">
+void* data = wrenSetSlotNewForeign(vm, 0, 0, 8);
+</pre>
 
 The value returned by `wrenSetSlotNewForeign()` is the raw pointer to the
 requested bytes. You can cast that to whatever C type makes sense (as long as it
@@ -121,8 +127,9 @@ foreign class, but can be defined on other classes as well. Wren doesn't care.
 Once you have a foreign instance in a slot, you can access the raw bytes it
 stores by calling:
 
-    :::c
-    void* wrenGetSlotForeign(WrenVM* vm, int slot);
+<pre class="snippet" data-lang="c">
+void* wrenGetSlotForeign(WrenVM* vm, int slot);
+</pre>
 
 You pass in the slot index containing the foreign object and it gives you back a
 pointer to the raw memory the object wraps. As usual, the C API doesn't do any
@@ -164,8 +171,9 @@ running could leave Wren in a weird state.
 
 Instead, the finalize callback's signature is only:
 
-    :::c
-    void finalize(void* data);
+<pre class="snippet" data-lang="c">
+void finalize(void* data);
+</pre>
 
 Wren gives you the pointer to your foreign function's memory, and that's it. The
 *only* thing you should do inside a finalizer is release any external resources
@@ -179,13 +187,14 @@ C standard file API.
 
 In Wren, the class we want looks like this:
 
-    :::wren
-    foreign class File {
-      construct create(path) {}
+<pre class="snippet">
+foreign class File {
+  construct create(path) {}
 
-      foreign write(text)
-      foreign close()
-    }
+  foreign write(text)
+  foreign close()
+}
+</pre>
 
 So you can create a new file given a path. Once you have one, you can write to
 it and then explicitly close it if you want. We also need to make sure the file
@@ -195,63 +204,66 @@ gets closed if the user forgets to and the GC cleans up the object.
 
 Over in the host, first we'll set up the VM:
 
-    :::c
-    #include "wren.h"
+<pre class="snippet" data-lang="c">
+#include "wren.h"
 
-    int main(int argc, const char* argv[])
-    {
-      WrenConfiguration config;
-      wrenInitConfiguration(&config);
+int main(int argc, const char* argv[])
+{
+  WrenConfiguration config;
+  wrenInitConfiguration(&config);
 
-      config.bindForeignClassFn = bindForeignClass;
-      config.bindForeignMethodFn = bindForeignMethod;
+  config.bindForeignClassFn = bindForeignClass;
+  config.bindForeignMethodFn = bindForeignMethod;
 
-      WrenVM* vm = wrenNewVM(&config);
-      wrenInterpret(vm, "my_module", "some code...");
+  WrenVM* vm = wrenNewVM(&config);
+  wrenInterpret(vm, "my_module", "some code...");
 
-      return 0;
-    }
+  return 0;
+}
+</pre>
 
 ### Binding the foreign class
 
 We give the VM two callbacks. The first is for wiring up the foreign class
 itself:
 
-    :::c
-    WrenForeignClassMethods bindForeignClass(
-        WrenVM* vm, const char* module, const char* className)
-    {
-      WrenForeignClassMethods methods;
+<pre class="snippet" data-lang="c">
+WrenForeignClassMethods bindForeignClass(
+    WrenVM* vm, const char* module, const char* className)
+{
+  WrenForeignClassMethods methods;
 
-      if (strcmp(className, "File") == 0)
-      {
-        methods.allocate = fileAllocate;
-        methods.finalize = fileFinalize;
-      }
-      else
-      {
-        // Unknown class.
-        methods.allocate = NULL;
-        methods.finalize = NULL;
-      }
+  if (strcmp(className, "File") == 0)
+  {
+    methods.allocate = fileAllocate;
+    methods.finalize = fileFinalize;
+  }
+  else
+  {
+    // Unknown class.
+    methods.allocate = NULL;
+    methods.finalize = NULL;
+  }
 
-      return methods;
-    }
+  return methods;
+}
+</pre>
 
 When our binding callback is invoked for the File class, we return the allocate
 and finalize functions the VM should call. Allocation looks like:
 
-    :::c
-    #include <stdio.h>
-    #include "wren.h"
+<pre class="snippet" data-lang="c">
+#include &lt;stdio.h>
+#include "wren.h"
 
-    void fileAllocate(WrenVM* vm)
-    {
-      FILE** file = (FILE**)wrenSetSlotNewForeign(vm,
-          0, 0, sizeof(FILE*));
-      const char* path = wrenGetSlotString(vm, 1);
-      *file = fopen(path, "w");
-    }
+void fileAllocate(WrenVM* vm)
+{
+  FILE** file = (FILE**)wrenSetSlotNewForeign(vm,
+      0, 0, sizeof(FILE*));
+  const char* path = wrenGetSlotString(vm, 1);
+  *file = fopen(path, "w");
+}
+</pre>
 
 First we create the instance by calling `wrenSetSlotNewForeign()`. We tell it to
 add enough extra bytes to store a `FILE*` in it, which is C's representation of
@@ -267,23 +279,25 @@ object that wraps an open file handle.
 The finalizer simply casts the foreign instance's data back to the proper type
 and closes the file:
 
-    :::c
-    void fileFinalize(void* data)
-    {
-      closeFile((FILE**) data);
-    }
+<pre class="snippet" data-lang="c">
+void fileFinalize(void* data)
+{
+  closeFile((FILE**) data);
+}
+</pre>
 
 It uses this little utility function:
 
-    :::c
-    static void closeFile(FILE** file)
-    {
-      // Already closed.
-      if (*file == NULL) return;
+<pre class="snippet" data-lang="c">
+static void closeFile(FILE** file)
+{
+  // Already closed.
+  if (*file == NULL) return;
 
-      fclose(*file);
-      *file = NULL;
-    }
+  fclose(*file);
+  *file = NULL;
+}
+</pre>
 
 This closes the file (if it's not already closed) and also nulls out the file
 handle so that we don't try to use the file after it's been closed.
@@ -294,47 +308,49 @@ That's the foreign *class* part. Now we have a couple of foreign *methods* to
 handle. The host tells the VM how to find them by giving Wren a pointer to this
 function:
 
-    :::c
-    WrenForeignMethodFn bindForeignMethod(WrenVM* vm, const char* module,
-        const char* className, bool isStatic, const char* signature)
+<pre class="snippet" data-lang="c">
+WrenForeignMethodFn bindForeignMethod(WrenVM* vm, const char* module,
+    const char* className, bool isStatic, const char* signature)
+{
+  if (strcmp(className, "File") == 0)
+  {
+    if (!isStatic && strcmp(signature, "write(_)") == 0)
     {
-      if (strcmp(className, "File") == 0)
-      {
-        if (!isStatic && strcmp(signature, "write(_)") == 0)
-        {
-          return fileWrite;
-        }
-
-        if (!isStatic && strcmp(signature, "close()") == 0)
-        {
-          return fileClose;
-        }
-      }
-
-      // Unknown method.
-      return NULL;
+      return fileWrite;
     }
+
+    if (!isStatic && strcmp(signature, "close()") == 0)
+    {
+      return fileClose;
+    }
+  }
+
+  // Unknown method.
+  return NULL;
+}
+</pre>
 
 When Wren calls this, we look at the class and method name to figure out which
 method it's binding, and then return a pointer to the appropriate function. The
 foreign method for writing to the file is:
 
-    :::c
-    void fileWrite(WrenVM* vm)
-    {
-      FILE** file = (FILE**)wrenGetSlotForeign(vm, 0);
+<pre class="snippet" data-lang="c">
+void fileWrite(WrenVM* vm)
+{
+  FILE** file = (FILE**)wrenGetSlotForeign(vm, 0);
 
-      // Make sure the file is still open.
-      if (*file == NULL)
-      {
-        wrenSetSlotString(vm, 0, "Cannot write to a closed file.");
-        wrenAbortFiber(vm, 0);
-        return;
-      }
+  // Make sure the file is still open.
+  if (*file == NULL)
+  {
+    wrenSetSlotString(vm, 0, "Cannot write to a closed file.");
+    wrenAbortFiber(vm, 0);
+    return;
+  }
 
-      const char* text = wrenGetSlotString(vm, 1);
-      fwrite(text, sizeof(char), strlen(text), *file);
-    }
+  const char* text = wrenGetSlotString(vm, 1);
+  fwrite(text, sizeof(char), strlen(text), *file);
+}
+</pre>
 
 We use `wrenGetSlotForeign()` to pull the foreign data out of the slot array.
 Since this method is called on the file itself, the foreign object is in slot
@@ -347,21 +363,23 @@ they already closed. If not, we call `fwrite()` to write to the file.
 
 The other method is `close()` to let them explicitly close the file:
 
-    :::c
-    void fileClose(WrenVM* vm)
-    {
-      FILE** file = (FILE**)wrenGetSlotForeign(vm, 0);
-      closeFile(file);
-    }
+<pre class="snippet" data-lang="c">
+void fileClose(WrenVM* vm)
+{
+  FILE** file = (FILE**)wrenGetSlotForeign(vm, 0);
+  closeFile(file);
+}
+</pre>
 
 It uses the same helper we defined above. And that's it, a complete foreign
 class with a finalizer and a couple of foreign methods. In Wren, you can use it
 like so:
 
-    :::wren
-    var file = File.create("some/path.txt")
-    file.write("some text")
-    file.close()
+<pre class="snippet">
+var file = File.create("some/path.txt")
+file.write("some text")
+file.close()
+</pre>
 
 Pretty neat, right? The resulting class looks and feels like a normal Wren
 class, but it has the functionality and much of the performance of native C

@@ -1,3 +1,36 @@
+## 0.3.0
+
+0.3.0 is a fairly specific release, aimed at fixing build issues across platforms,
+streamlining the process for new users and making embedding easier.
+This is a stepping stone for working on language features and improving the VM,
+hacking on the docs and the VM is simpler than ever!
+
+Builds now work out of the box on all primary platforms.
+Previously there was issues on Windows and other platforms due to unix-ey workflows being the default.
+
+All the python scripts have also been fixed and updated (to python 3), and work consistently
+across all platforms out of the box too (including the tests, benchmarks, metrics etc).
+Like before, there was some things that didn't hold up on Windows or Mac. Fixed!
+
+A lot of work has been done to also clarify the distinction between the CLI project and the VM,
+as well as [move the CLI to it's own repo](https://github.com/wren-lang/wren-cli/)!
+This removes a lot of code that wasn't being used, and also been clarified the project structure.
+
+Docs have also had a clean up, and a new page to try Wren directly on the doc page was added.
+
+### Language/VM
+
+- CLI moved to own repo
+- Use premake for project generation, see projects/
+- Fix builds across platforms. "Just works" on all primary platforms.
+- Fix amalgamated script generator and amalgamated build
+- Fix unicode parsing and other issues in all python scripts
+- All python scripts are python3 now, and run on all platforms correctly
+- Test runner isolated and unified for VM tests
+- Remove SASS and Pygments requirements from docs, just python now
+- Updated docs to clarify VM/CLI split
+- Added Try page for running wren code in the docs
+
 ## 0.2.0
 
 0.2.0 spans a pretty wide time period with [around 290 commits](https://github.com/wren-lang/wren/compare/0.1.0...master).
