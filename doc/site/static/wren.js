@@ -12,10 +12,12 @@ window.onload = function() {
   });
   Prism.highlightAll();
 
-
   var try_code = document.querySelector("#try-code")
   if(try_code) {
+    var jar_options = { tab: ' '.repeat(2) }
+    var jar = CodeJar(try_code, withLineNumbers(Prism.highlightElement), jar_options)
     var output = document.querySelector("#try-output")
+    var result = document.querySelector("#try-result")
     Module.print = function(text) { output.innerText += text + "\n"; }
     Module.printErr = function(text) { output.innerText += text + "\n"; }
 
@@ -25,38 +27,34 @@ window.onload = function() {
     var loop = document.querySelector("#try-loop")
     var compile = Module.cwrap('wren_compile', 'number', ['string'])
 
-    var set_input = function(content) {
+    var set_input = (content) => {
       output.innerText = '...';
-      var input = document.querySelector('.prism-live code.language-lua');
-      input.innerHTML = content;
-      Prism.highlightElement(input)
+      result.removeAttribute('class');
+      result.innerText = 'no errors';
+      jar.updateCode(content);
     }
 
-    run.onclick = function(e) {
+    run.onclick = (e) => {
       console.log("run")
-      output.setAttribute('ready', '')
-      output.innerText = ''
-      var input = document.querySelector('.prism-live code.language-lua');
-      var result = compile(input.innerText)
-      var message = "All good!"
-      if(result == 1) { //WREN_RESULT_COMPILE_ERROR
+      output.setAttribute('ready', '');
+      output.innerText = '';
+      var res = compile(jar.toString())
+      var message = "no errors!"
+      result.removeAttribute('class');
+      if(res == 1) { //WREN_RESULT_COMPILE_ERROR
         message = "Compile error!"
-      } else if(result == 2) { //WREN_RESULT_RUNTIME_ERROR
+        result.setAttribute('class', 'error');
+      } else if(res == 2) { //WREN_RESULT_RUNTIME_ERROR
         message = "Runtime error!"
+        result.setAttribute('class', 'error');
       }
-      // Module.print('\n\n---\n' + message)
+      result.innerText = message;
       console.log(result);
     }
 
-    hello.onclick = function(e) {
-      set_input('System.print("hello wren")')
-    }
-
-    loop.onclick = function(e) {
-      set_input(`for (i in 1..10) System.print("Counting up %(i)")`);
-    }
-
-    fractal.onclick = function(e) {
+    hello.onclick = (e) => { set_input('System.print("hello wren")') }
+    loop.onclick = (e) => { set_input(`for (i in 1..10) System.print("Counting up %(i)")`); }
+    fractal.onclick = (e) => {
       set_input(`for (yPixel in 0...24) {
   var y = yPixel / 12 - 1
   for (xPixel in 0...80) {
@@ -75,7 +73,7 @@ window.onload = function() {
   }
   System.print("")
 }`);
-    }
+    } //fractal
 
-  }
+  } //if try_code
 }

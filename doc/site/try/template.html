@@ -4,10 +4,10 @@
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 <title>{title} &ndash; Wren</title>
 <script type="application/javascript" src="../prism.js" data-manual></script>
-<script src="../prism-live.js?load=lua" charset="utf-8"></script>
+<script type="application/javascript" src="../codejar.js"></script>
+<script type="application/javascript" src="../codejar-linenumbers.js"></script>
 <script type="application/javascript" src="../wren.js"></script>
 <link rel="stylesheet" type="text/css" href="../prism.css" />
-<link rel="stylesheet" type="text/css" href="../prism-live.css" />
 <link rel="stylesheet" type="text/css" href="../style.css" />
 <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
@@ -136,11 +136,11 @@
       element.scrollTop = element.scrollHeight;
     }}),
     printErr: function(text) {{
-      console.error(text);
+      console.warn(text);
       var element = document.getElementById('try-output');
-      if(!element.getAttribute('ready')) return;
+      if(element.getAttribute('ready') === null) return;
       if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-      element.innerText += text + "\n";
+      element.innerHTML += `<span class="token error">${{text}}</span>\n`;
       element.scrollTop = element.scrollHeight;
     }}
   }};

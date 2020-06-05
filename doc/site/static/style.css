@@ -289,15 +289,7 @@ pre {
   border: solid 1px hsl(200, 20%, 88%);
   overflow: auto;
   white-space: pre-wrap;
-}
-
-pre:not(.prism-live) {
   padding: 1em;
-}
-
-.prism-live code {
-  display: block;
-  margin-bottom: -0.25em;
 }
 
 footer {
@@ -394,11 +386,55 @@ body.module main h3:hover > .header-anchor:hover {
 }
 
 #try-output {
+  scrollbar-width: thin;
   white-space: pre;
   overflow-x: auto;
   font-family: var(--code);
-  font-size: 0.85em;
+  font-size: 1em;
   line-height: 1.25em;
+}
+
+#try-result {
+  display: block;
+  margin-top: 1.4em;
+  position: absolute;
+  right: 0;
+}
+
+#try-result.error {
+  color: #c00;
+  font-weight: bold;
+}
+
+span.token.error {
+  color: #c00;
+}
+
+.codejar-linenumbers {
+  background-color: #f9f9f9 !important;
+  border-left: solid 1px hsl(200, 20%, 88%);
+  border-top: solid 1px hsl(200, 20%, 88%);
+  border-bottom: solid 1px hsl(200, 20%, 88%);
+  color: #d9d9d9 !important;
+  mix-blend-mode: normal !important;
+  width: 2.5em !important;
+  text-align: right !important;
+  padding-left: 0 !important;
+  padding-right: 0.5em !important;
+}
+
+#try-code {
+  scrollbar-width: thin;
+  border-radius: 0.01em;
+  border: solid 1px hsl(200, 20%, 88%);
+  font-family: 'Source Code Pro', monospace;
+  font-size: 14px;
+  font-weight: 400;
+  height: auto;
+  letter-spacing: normal;
+  line-height: 1.5em;
+  padding: 1em;
+  tab-size: 2;
 }
 
 table {

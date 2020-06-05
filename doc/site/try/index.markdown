@@ -17,9 +17,10 @@ examples: &nbsp;
     <a class="button" id="try-run">run</a>
   </div>
 
-<textarea id="try-code" spellcheck="false" class="prism-live language-lua">System.print("hello wren")</textarea>
 
+<div id="try-code" class="language-lua">System.print("hello wren")</div>
 
+<p id="try-result">no errors</p>
 <p>code output</p>
 <pre><div id="try-output">...</div></pre>
 
