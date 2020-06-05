@@ -6,7 +6,7 @@
 ### 0.2.0 is here
 
 It's time to tag a release!
-Let's check our goals from [the last blog post](http://wren.io/blog/hello-wren.html):
+Let's check our goals from [the last blog post](0-hello-wren.html):
 
 - <s>We're gonna clear out a bit of backlog, tidying up issues and PRs</s>
 - <s>Tidy up the website a bit, visually and structurally</s>
@@ -37,7 +37,7 @@ Please don't be discouraged if an issue is closed! Discussion is absolutely enco
 
 ### 0.2.0
 
-We've been hammering away on Wren since 0.1.0 for quite a while. The [change list on Github](https://github.com/wren-lang/wren/compare/0.1.0...5338275dcdd97fd8d9fc614f420a645500836a59) is too long to display!
+We've been hammering away on Wren since 0.1.0 for quite a while. The [change list on GitHub](https://github.com/wren-lang/wren/compare/0.1.0...5338275dcdd97fd8d9fc614f420a645500836a59) is too long to display!
 
 Most importantly, before we start iterating on the language further, I wanted to make sure we had a checkpoint to look back to. That's largely what 0.2.0 is about.
 
@@ -83,7 +83,8 @@ Thanks for reading!
 ### More
 
 - [The Wren Blog RSS](http://wren.io/blog/rss.xml)
-- Visit the [wren-lang organization](https://github.com/wren-lang) on Github to get involved.
+- Join the [discord community](https://discord.gg/Kx6PxSX)
+- Visit the [wren-lang organization](https://github.com/wren-lang) on GitHub to get involved.
 - Follow the developers [@munificentbob](https://twitter.com/munificentbob) or [@ruby0x1](https://twitter.com/ruby0x1) on twitter
 
 
