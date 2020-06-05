@@ -2088,7 +2088,7 @@ static void field(Compiler* compiler, bool canAssign)
 {
   // Initialize it with a fake value so we can keep parsing and minimize the
   // number of cascaded errors.
-  int field = 255;
+  int field = MAX_FIELDS;
 
   ClassInfo* enclosingClass = getEnclosingClass(compiler);
 
