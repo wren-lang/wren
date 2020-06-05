@@ -6,25 +6,27 @@ each VM differently if your application happens to run multiple.
 
 The struct looks like:
 
-    :::c
-    typedef struct
-    {
-      WrenReallocateFn reallocateFn;
-      WrenLoadModuleFn loadModuleFn;
-      WrenBindForeignMethodFn bindForeignMethodFn;
-      WrenBindForeignClassFn bindForeignClassFn;
-      WrenWriteFn writeFn;
-      WrenErrorFn errorFn;
-      size_t initialHeapSize;
-      size_t minHeapSize;
-      int heapGrowthPercent;
-    } WrenConfiguration;
+<pre class="snippet" data-lang="c">
+typedef struct
+{
+  WrenReallocateFn reallocateFn;
+  WrenLoadModuleFn loadModuleFn;
+  WrenBindForeignMethodFn bindForeignMethodFn;
+  WrenBindForeignClassFn bindForeignClassFn;
+  WrenWriteFn writeFn;
+  WrenErrorFn errorFn;
+  size_t initialHeapSize;
+  size_t minHeapSize;
+  int heapGrowthPercent;
+} WrenConfiguration;
+</pre>
 
 Most fields have useful defaults, which you can (and should) initialize by
 calling:
 
-    :::c
-    wrenInitConfiguration(&configuration);
+<pre class="snippet" data-lang="c">
+wrenInitConfiguration(&configuration);
+</pre>
 
 Calling this ensures that your VM doesn't get uninitialized configuration when
 new fields are added to WrenConfiguration. Here is what each field does, roughly
@@ -35,7 +37,7 @@ categorized:
 The VM is isolated from the outside world. These callbacks let the VM request
 access to imported code and foreign functionality.
 
-### `loadModuleFn`
+### **`loadModuleFn`**
 
 This is the callback Wren uses to load an imported module. The VM itself does
 not know how to talk to the file system, so when an `import` statement is
@@ -44,8 +46,9 @@ for a module.
 
 The signature of this function is:
 
-    :::c
-    char* loadModule(WrenVM* vm, const char* name)
+<pre class="snippet" data-lang="c">
+char* loadModule(WrenVM* vm, const char* name)
+</pre>
 
 When a module is imported, Wren calls this and passes in the module's name. The
 host should return the source code for that module. Memory for the source should
@@ -61,7 +64,7 @@ return `NULL` and Wren will report that as a runtime error.
 
 If you don't use any `import` statements, you can leave this `NULL`.
 
-### `bindForeignMethodFn`
+### **`bindForeignMethodFn`**
 
 The callback Wren uses to find a foreign method and bind it to a class. See
 [this page][foreign method] for details. If your application defines no foreign
@@ -69,7 +72,7 @@ methods, you can leave this `NULL`.
 
 [foreign method]: /embedding/calling-c-from-wren.html
 
-### `bindForeignClassFn`
+### **`bindForeignClassFn`**
 
 The callback Wren uses to find a foreign class and get its foreign methods. See
 [this page][foreign class] for details. If your application defines no foreign
@@ -82,46 +85,49 @@ classes, you can leave this `NULL`.
 These let you wire up some minimal output so you can tell if your code is doing
 what you expect.
 
-### `writeFn`
+### **`writeFn`**
 
 This is the callback Wren uses to output text when `System.print()` or the other
 related functions are called. This is the minimal connection the VM has with the
 outside world and lets you do rudimentary "printf debugging". Its signature is:
 
-    :::c
-    void write(WrenVM* vm, const char* text)
+<pre class="snippet" data-lang="c">
+void write(WrenVM* vm, const char* text)
+</pre>
 
 Wren does *not* have a default implementation for this. It's up to you to wire
 it up to `printf()` or some other way to show the text. If you leave it `NULL`,
 calls to `System.print()` and others silently do nothing.
 
-### `errorFn`
+### **`errorFn`**
 
 Wren uses this callback to report compile time and runtime errors. Its signature
 is:
 
-    :::c
-    void error(
-          WrenVM* vm, 
-          WrenErrorType type,
-          const char* module,
-          int line,
-          const char* message)
+<pre class="snippet" data-lang="c">
+void error(
+      WrenVM* vm, 
+      WrenErrorType type,
+      const char* module,
+      int line,
+      const char* message)
+</pre>
 
 The `type` parameter is one of:
 
-    :::c
-    typedef enum
-    {
-      // A syntax or resolution error detected at compile time.
-      WREN_ERROR_COMPILE,
+<pre class="snippet" data-lang="c">
+typedef enum
+{
+  // A syntax or resolution error detected at compile time.
+  WREN_ERROR_COMPILE,
 
-      // The error message for a runtime error.
-      WREN_ERROR_RUNTIME,
+  // The error message for a runtime error.
+  WREN_ERROR_RUNTIME,
 
-      // One entry of a runtime error's stack trace.
-      WREN_ERROR_STACK_TRACE
-    } WrenErrorType;
+  // One entry of a runtime error's stack trace.
+  WREN_ERROR_STACK_TRACE
+} WrenErrorType;
+</pre>
 
 When a compile error occurs, `errorFn` is called once with type
 `WREN_ERROR_COMPILE`, the name of the module and line where the error occurs,
@@ -140,12 +146,13 @@ If you leave this `NULL`, Wren does not report any errors.
 
 These fields control how the VM allocates and manages memory.
 
-### `reallocateFn`
+### **`reallocateFn`**
 
 This lets you provide a custom memory allocation function. Its signature is:
 
-    :::c
-    void* reallocate(void* memory, size_t newSize)
+<pre class="snippet" data-lang="c">
+void* reallocate(void* memory, size_t newSize)
+</pre>
 
 Wren uses this one function to allocate, grow, shrink, and deallocate memory.
 When called, `memory` is the existing pointer to the block of memory if an
@@ -159,7 +166,7 @@ and return it.
 If you don't provide a custom allocator, the VM uses a default one that relies
 on `realloc` and `free`.
 
-### `initialHeapSize`
+### **`initialHeapSize`**
 
 This defines the total number of bytes of memory the VM will allocate before
 triggering the first garbage collection. Setting this to a smaller number
@@ -168,7 +175,7 @@ to collect garbage more frequently.
 
 If you set this to zero, Wren uses a default size of 10MB.
 
-### `minHeapSize`
+### **`minHeapSize`**
 
 After a garbage collection occurs, the threshold for the *next* collection is
 determined based on the number of bytes remaining in use. This allows Wren to
@@ -181,7 +188,7 @@ back to a usable size.
 
 If zero, this defaults to 1MB.
 
-### `heapGrowthPercent`
+### **`heapGrowthPercent`**
 
 Wren tunes the rate of garbage collection based on how much memory is still in
 use after a collection. This number controls that. It determines the amount of

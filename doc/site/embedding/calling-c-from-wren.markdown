@@ -20,10 +20,11 @@ The only difference is that the *body* of the method is written in C.
 
 A foreign method is declared in Wren like so:
 
-    :::wren
-    class Math {
-      foreign static add(a, b)
-    }
+<pre class="snippet">
+class Math {
+  foreign static add(a, b)
+}
+</pre>
 
 The `foreign` keyword tells Wren that the method `add()` is declared on `Math`,
 but implemented in C. Both static and instance methods can be foreign.
@@ -44,48 +45,51 @@ It's the binding function your app uses to *look up* foreign methods.
 
 Its signature is:
 
-    :::c
-    WrenForeignMethodFn bindForeignMethodFn(
-        WrenVM* vm,
-        const char* module,
-        const char* className,
-        bool isStatic,
-        const char* signature);
+<pre class="snippet" data-lang="c">
+WrenForeignMethodFn bindForeignMethodFn(
+    WrenVM* vm,
+    const char* module,
+    const char* className,
+    bool isStatic,
+    const char* signature);
+</pre>
 
 Every time a foreign method is first declared, the VM invokes this callback. It
 passes in the module containing the class declaration, the name of the class
 containing the method, the method's signature, and whether or not it's a static
 method. In the above example, it would pass something like:
 
-    :::c
-    bindForeignMethodFn(vm, "main", "Math", true, "add(_,_)");
+<pre class="snippet" data-lang="c">
+bindForeignMethodFn(vm, "main", "Math", true, "add(_,_)");
+</pre>
 
 When you configure the VM, you give it a C callback that looks up the
 appropriate function for the given foreign method and returns a pointer to it.
 Something like:
 
-    :::c
-    WrenForeignMethodFn bindForeignMethod(
-        WrenVM* vm,
-        const char* module,
-        const char* className,
-        bool isStatic,
-        const char* signature)
+<pre class="snippet" data-lang="c">
+WrenForeignMethodFn bindForeignMethod(
+    WrenVM* vm,
+    const char* module,
+    const char* className,
+    bool isStatic,
+    const char* signature)
+{
+  if (strcmp(module, "main") == 0)
+  {
+    if (strcmp(className, "Math") == 0)
     {
-      if (strcmp(module, "main") == 0)
+      if (isStatic && strcmp(signature, "add(_,_)") == 0)
       {
-        if (strcmp(className, "Math") == 0)
-        {
-          if (isStatic && strcmp(signature, "add(_,_)") == 0)
-          {
-            return mathAdd; // C function for Math.add(_,_).
-          }
-          // Other foreign methods on Math...
-        }
-        // Other classes in main...
+        return mathAdd; // C function for Math.add(_,_).
       }
-      // Other modules...
+      // Other foreign methods on Math...
     }
+    // Other classes in main...
+  }
+  // Other modules...
+}
+</pre>
 
 This implementation is pretty tedious, but you get the idea. Feel free to do
 something more clever here in your host application.
@@ -99,8 +103,9 @@ with that method. This way, *calls* to the foreign method are fast.
 
 All C functions for foreign methods have the same signature:
 
-    :::c
-    void foreignMethod(WrenVM* vm);
+<pre class="snippet" data-lang="c">
+void foreignMethod(WrenVM* vm);
+</pre>
 
 Arguments passed from Wren are not passed as C arguments, and the method's
 return value is not a C return value. Instead -- you guessed it -- we go through
@@ -116,13 +121,14 @@ You use the slot API to read those arguments, and then perform whatever work you
 want to in C. If you want the foreign method to return a value, place it in slot
 zero. Like so:
 
-    :::c
-    void mathAdd(WrenVM* vm)
-    {
-      double a = wrenGetSlotDouble(vm, 1);
-      double b = wrenGetSlotDouble(vm, 2);
-      wrenSetSlotDouble(vm, 0, a + b);
-    }
+<pre class="snippet" data-lang="c">
+void mathAdd(WrenVM* vm)
+{
+  double a = wrenGetSlotDouble(vm, 1);
+  double b = wrenGetSlotDouble(vm, 2);
+  wrenSetSlotDouble(vm, 0, a + b);
+}
+</pre>
 
 While your foreign method is executing, the VM is completely suspended. No other
 fibers run until your foreign method returns. You should *not* try to resume the

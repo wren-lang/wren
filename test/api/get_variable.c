@@ -21,7 +21,7 @@ static void otherSlot(WrenVM* vm)
 {
   wrenEnsureSlots(vm, 3);
   wrenGetVariable(vm, "./test/api/get_variable", "B", 2);
-  
+
   // Move it into return position.
   const char* string = wrenGetSlotString(vm, 2);
   wrenSetSlotString(vm, 0, string);

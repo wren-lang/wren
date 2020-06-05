@@ -14,25 +14,27 @@ from threading import Timer
 # Runs the tests.
 
 parser = ArgumentParser()
-parser.add_argument('--suffix', default='d')
+parser.add_argument('--suffix', default='')
 parser.add_argument('suite', nargs='?')
 
 args = parser.parse_args(sys.argv[1:])
 
-config = args.suffix.lstrip('d')
-is_debug = args.suffix.startswith('d')
+config = args.suffix.lstrip('_d')
+is_debug = args.suffix.startswith('_d')
 config_dir = ("debug" if is_debug else "release") + config
 
 WREN_DIR = dirname(dirname(realpath(__file__)))
-WREN_APP = join(WREN_DIR, 'bin', 'wren' + args.suffix)
-TEST_APP = join(WREN_DIR, 'build', config_dir, 'test', 'api_wren' + args.suffix)
+WREN_APP = join(WREN_DIR, 'bin', 'wren_test' + args.suffix)
+
+# print("Wren Test Directory - " + WREN_DIR)
+# print("Wren Test App - " + WREN_APP)
 
 EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
 EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
 EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect (handled )?runtime error: (.+)')
 ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
-STACK_TRACE_PATTERN = re.compile(r'\[\./test/.* line (\d+)\] in')
+STACK_TRACE_PATTERN = re.compile(r'(?:\[\./)?test/.* line (\d+)\] in')
 STDIN_PATTERN = re.compile(r'// stdin: (.*)')
 SKIP_PATTERN = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
@@ -63,8 +65,23 @@ class Test:
 
     input_lines = []
     line_num = 1
-    with open(self.path, 'r') as file:
-      for line in file:
+
+    # Note #1: we have unicode tests that require utf-8 decoding.
+    # Note #2: python `open` on 3.x modifies contents regarding newlines.
+    # To prevent this, we specify newline='' and we don't use the
+    # readlines/splitlines/etc family of functions, these
+    # employ the universal newlines concept which does this.
+    # We have tests that embed \r and \r\n for validation, all of which
+    # get manipulated in a not helpful way by these APIs.
+
+    with open(self.path, 'r', encoding="utf-8", newline='', errors='replace') as file:
+      data = file.read()
+      lines = re.split('\n|\r\n', data)
+      for line in lines:
+        if len(line) <= 0:
+          line_num += 1
+          continue
+
         match = EXPECT_PATTERN.search(line)
         if match:
           self.output.append((match.group(1), line_num))
@@ -105,9 +122,9 @@ class Test:
           skipped[match.group(1)] += 1
           return False
 
+        # Not a test file at all, so ignore it.
         match = NONTEST_PATTERN.search(line)
         if match:
-          # Not a test file at all, so ignore it.
           return False
 
         line_num += 1
@@ -366,7 +383,7 @@ def run_test(path, example=False):
 
 
 def run_api_test(path):
-  run_script(TEST_APP, path, "api test")
+  run_script(WREN_APP, path, "api test")
 
 
 def run_example(path):

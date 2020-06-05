@@ -7,13 +7,14 @@ other languages: hash table, dictionary, association, table, etc.
 You can create a map by placing a series of comma-separated entries inside
 curly braces. Each entry is a key and a value separated by a colon:
 
-    :::wren
-    {
-      "George": "Harrison",
-      "John":   "Lennon",
-      "Paul":   "McCartney",
-      "Ringo":  "Starr"
-    }
+<pre class="snippet">
+{
+  "George": "Harrison",
+  "John":   "Lennon",
+  "Paul":   "McCartney",
+  "Ringo":  "Starr"
+}
+</pre>
 
 This creates a map that associates the first name of each Beatle with his last
 name. Syntactically, in a map literal, keys can be any literal, a variable
@@ -40,11 +41,12 @@ You add new key-value pairs to the map using the [subscript operator][]:
 
 [subscript operator]: method-calls.html#subscripts
 
-    :::wren
-    var capitals = {}
+<pre class="snippet">
+var capitals = {}
     capitals["Georgia"] = "Atlanta"
     capitals["Idaho"] = "Boise"
     capitals["Maine"] = "Augusta"
+</pre>
 
 If the key isn't already present, this adds it and associates it with the given
 value. If the key is already there, this just replaces its value.
@@ -54,8 +56,9 @@ value. If the key is already there, this just replaces its value.
 To find the value associated with some key, again you use your friend the
 subscript operator:
 
-    :::wren
-    System.print(capitals["Idaho"]) //> Boise
+<pre class="snippet">
+System.print(capitals["Idaho"]) //> Boise
+</pre>
 
 If the key is present, this returns its value. Otherwise, it returns `null`. Of
 course, `null` itself can also be used as a value, so seeing `null` here
@@ -63,32 +66,36 @@ doesn't necessarily mean the key wasn't found.
 
 To tell definitively if a key exists, you can call `containsKey()`:
 
-    :::wren
-    var belief = {"nihilism": null}
+<pre class="snippet">
+var belief = {"nihilism": null}
 
-    System.print(belief["nihilism"]) //> null (though key exists)
-    System.print(belief["solipsism"]) //> null
-    System.print(belief.containsKey("nihilism")) //> true
-    System.print(belief.containsKey("solipsism")) //> false
+System.print(belief["nihilism"]) //> null (though key exists)
+System.print(belief["solipsism"]) //> null
+System.print(belief.containsKey("nihilism")) //> true
+System.print(belief.containsKey("solipsism")) //> false
+</pre>
 
 You can see how many entries a map contains using `count`:
 
-    :::wren
-    System.print(capitals.count) //> 3
+<pre class="snippet">
+System.print(capitals.count) //> 3
+</pre>
 
 ## Removing entries
 
 To remove an entry from a map, call `remove()` and pass in the key for the
 entry you want to delete:
 
-    :::wren
-    capitals.remove("Maine")
-    System.print(capitals.containsKey("Maine")) //> false
+<pre class="snippet">
+capitals.remove("Maine")
+System.print(capitals.containsKey("Maine")) //> false
+</pre>
 
 If the key was found, this returns the value that was associated with it:
 
-    :::wren
-    System.print(capitals.remove("Georgia")) //> Atlanta
+<pre class="snippet">
+System.print(capitals.remove("Georgia")) //> Atlanta
+</pre>
 
 If the key wasn't in the map to begin with, `remove()` just returns `null`.
 
@@ -97,9 +104,10 @@ If you want to remove *everything* from the map, like with [lists][], you call
 
 [lists]: lists.html
 
-    :::wren
-    capitals.clear()
-    System.print(capitals.count) //> 0
+<pre class="snippet">
+capitals.clear()
+System.print(capitals.count) //> 0
+</pre>
 
 ## Iterating over the contents
 
@@ -116,16 +124,17 @@ map, and the second returns one that iterates over the values.
 If you want to see all of the key-value pairs in a map, the easiest way is to
 iterate over the keys and use each to look up its value:
 
-    :::wren
-    var birds = {
-      "Arizona": "Cactus wren",
-      "Hawaii": "Nēnē",
-      "Ohio": "Northern Cardinal"
-    }
+<pre class="snippet">
+var birds = {
+  "Arizona": "Cactus wren",
+  "Hawaii": "Nēnē",
+  "Ohio": "Northern Cardinal"
+}
 
-    for (state in birds.keys) {
-      System.print("The state bird of " + state + " is " + birds[state])
-    }
+for (state in birds.keys) {
+  System.print("The state bird of " + state + " is " + birds[state])
+}
+</pre>
 
 This program prints the three states and their birds. However, the *order*
 that they are printed isn't defined. Wren makes no promises about what order

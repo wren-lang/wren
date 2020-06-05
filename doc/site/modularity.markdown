@@ -25,8 +25,9 @@ When you run Wren and give it a file name to execute, the contents of that file
 define the "main" module that execution starts at. To load and execute other
 modules, you use an import statement:
 
-    :::wren
-    import "beverages" for Coffee, Tea
+<pre class="snippet">
+import "beverages" for Coffee, Tea
+</pre>
 
 This finds a module named "beverages" and executes its source code. Then, it
 looks up two top-level variables, `Coffee` and `Tea` in *that* module and
@@ -35,16 +36,18 @@ creates new variables in *this* module with their values.
 This statement can appear anywhere a variable declaration is allowed, even
 inside blocks:
 
-    :::wren
-    if (thirsty) {
-      import "beverages" for Coffee, Tea
-    }
+<pre class="snippet">
+if (thirsty) {
+  import "beverages" for Coffee, Tea
+}
+</pre>
 
 If you want to load a module, but not bind any variables from it, you can omit
 the `for` clause:
 
-    :::wren
-    import "some_imperative_code"
+<pre class="snippet">
+import "some_imperative_code"
+</pre>
 
 That's the basic idea. Now let's break it down into each of the steps it
 performs:
@@ -66,18 +69,20 @@ string is used to locate a blob of source code.
 When the host application creates a new Wren VM, it provides a module loader
 function:
 
-    :::c
-    WrenConfiguration config;
-    config.loadModuleFn = loadModule;
+<pre class="snippet" data-lang="c">
+WrenConfiguration config;
+config.loadModuleFn = loadModule;
 
-    // Other configuration...
+// Other configuration...
 
-    WrenVM* vm = wrenNewVM(&config);
+WrenVM* vm = wrenNewVM(&config);
+</pre>
 
 That function has this signature:
 
-    :::c
-    char* WrenLoadModuleFn(WrenVM* vm, const char* name);
+<pre class="snippet" data-lang="c">
+char* WrenLoadModuleFn(WrenVM* vm, const char* name);
+</pre>
 
 Whenever a module is imported, the VM calls this and passes it the name of the
 module. The embedder is expected to return the source code contents of the
@@ -90,17 +95,17 @@ found. When you do this, Wren will report it as a runtime error.
 
 ### The command-line loader
 
-The default little command-line VM that comes with Wren has a very simple
+The [Wren CLI command-line tool](getting-started.html#using-the-wren-cli) has a very simple
 lookup process. It appends the module name and ".wren" to the directory where
 the main module was loaded and looks for that file. So, let's say you run:
 
-    :::bash
-    $ wren /code/my_program.wren
+    $ wren code/my_program.wren
 
 And that main module has:
 
-    :::wren
-    import "some/module"
+<pre class="snippet">
+import "some/module"
+</pre>
 
 Then the command-line VM will try to find `/code/some/module.wren`. By
 convention, forward slashes should be used as path separators, even on Windows,
@@ -139,8 +144,9 @@ These are simply variables declared outside of any
 These are visible to anything inside the module, but they can also be
 *exported* and used by other modules. When Wren executes an import like:
 
-    :::wren
-    import "beverages" for Coffee, Tea
+<pre class="snippet">
+import "beverages" for Coffee, Tea
+</pre>
 
 First it runs the "beverages" module. Then it goes through each of the variable
 names in the `for` clause. For each one, it looks for a top-level variable with
@@ -163,19 +169,20 @@ Earlier, I described a program's set of modules as a tree. Of course, it's only
 a *tree* of modules if there are no *shared imports*. But consider a program
 like:
 
-    :::wren
-    // main.wren
-    import "a"
-    import "b"
+<pre class="snippet">
+// main.wren
+import "a"
+import "b"
 
-    // a.wren
-    import "shared"
+// a.wren
+import "shared"
 
-    // b.wren
-    import "shared"
+// b.wren
+import "shared"
 
-    // shared.wren
-    System.print("Shared!")
+// shared.wren
+System.print("Shared!")
+</pre>
 
 Here, "a" and "b" both want to use "shared". If "shared" defines some top-level
 state, we only want a single copy of that in memory. To handle this, a module's
@@ -208,23 +215,23 @@ it will be found in the registry and the cycle is short-circuited.
 
 For example:
 
-    :::wren
-    // main.wren
-    import "a"
+<pre class="snippet">
+// main.wren
+import "a"
 
-    // a.wren
-    System.print("start a")
-    import "b"
-    System.print("end a")
+// a.wren
+System.print("start a")
+import "b"
+System.print("end a")
 
-    // b.wren
-    System.print("start b")
-    import "a"
-    System.print("end b")
+// b.wren
+System.print("start b")
+import "a"
+System.print("end b")
+</pre>
 
 This program runs successfully and prints:
 
-    :::text
     start a
     start b
     end b
@@ -232,17 +239,18 @@ This program runs successfully and prints:
 
 Where you have to be careful is binding variables. Consider:
 
-    :::wren
-    // main.wren
-    import "a"
+<pre class="snippet">
+// main.wren
+import "a"
 
-    // a.wren
-    import "b" for B
-    var A = "a variable"
+// a.wren
+import "b" for B
+var A = "a variable"
 
-    // b.wren
-    import "a" for A
-    var B = "b variable"
+// b.wren
+import "a" for A
+var B = "b variable"
+</pre>
 
 The import of "a" in b.wren will fail here. If you trace the execution, you
 get:
@@ -257,17 +265,18 @@ defined yet since "a.wren" is still sitting on the `import "b" for B` line
 before the declaration. To get this to work, you would need to move the
 variable declaration above the import:
 
-    :::wren
-    // main.wren
-    import "a"
+<pre class="snippet">
+// main.wren
+import "a"
 
-    // a.wren
-    var A = "a variable"
-    import "b" for B
+// a.wren
+var A = "a variable"
+import "b" for B
 
-    // b.wren
-    import "a" for A
-    var B = "b variable"
+// b.wren
+import "a" for A
+var B = "b variable"
+</pre>
 
 Now when we run it, we get:
 

@@ -17,7 +17,7 @@ static void reportError(WrenVM* vm, WrenErrorType type,
 static char* loadModule(WrenVM* vm, const char* module)
 {
   printf("loading %s\n", module);
-  
+
   const char* source;
   if (strcmp(module, "main/baz/bang") == 0)
   {
@@ -27,7 +27,7 @@ static char* loadModule(WrenVM* vm, const char* module)
   {
     source = "System.print(\"ok\")";
   }
-  
+
   char* string = (char*)malloc(strlen(source) + 1);
   strcpy(string, source);
   return string;
@@ -39,9 +39,9 @@ static void runTestVM(WrenVM* vm, WrenConfiguration* configuration,
   configuration->writeFn = write;
   configuration->errorFn = reportError;
   configuration->loadModuleFn = loadModule;
-  
+
   WrenVM* otherVM = wrenNewVM(configuration);
-  
+
   // We should be able to execute code.
   WrenInterpretResult result = wrenInterpret(otherVM, "main", source);
   if (result != WREN_RESULT_SUCCESS)
@@ -52,7 +52,7 @@ static void runTestVM(WrenVM* vm, WrenConfiguration* configuration,
   {
     wrenSetSlotString(vm, 0, "success");
   }
-  
+
   wrenFreeVM(otherVM);
 }
 
@@ -60,14 +60,14 @@ static void noResolver(WrenVM* vm)
 {
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
-  
+
   // Should default to no resolution function.
   if (configuration.resolveModuleFn != NULL)
   {
     wrenSetSlotString(vm, 0, "Did not have null resolve function.");
     return;
   }
-  
+
   runTestVM(vm, &configuration, "import \"foo/bar\"");
 }
 
@@ -81,7 +81,7 @@ static void returnsNull(WrenVM* vm)
 {
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
-  
+
   configuration.resolveModuleFn = resolveToNull;
   runTestVM(vm, &configuration, "import \"foo/bar\"");
 }
@@ -95,13 +95,13 @@ static const char* resolveChange(WrenVM* vm, const char* importer,
   strcpy(result, importer);
   strcat(result, "/");
   strcat(result, name);
-  
+
   // Replace "|" with "/".
   for (size_t i = 0; i < length; i++)
   {
     if (result[i] == '|') result[i] = '/';
   }
-  
+
   return result;
 }
 
@@ -109,7 +109,7 @@ static void changesString(WrenVM* vm)
 {
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
-  
+
   configuration.resolveModuleFn = resolveChange;
   runTestVM(vm, &configuration, "import \"foo|bar\"");
 }
@@ -118,7 +118,7 @@ static void shared(WrenVM* vm)
 {
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
-  
+
   configuration.resolveModuleFn = resolveChange;
   runTestVM(vm, &configuration, "import \"foo|bar\"\nimport \"foo/bar\"");
 }
@@ -127,7 +127,7 @@ static void importer(WrenVM* vm)
 {
   WrenConfiguration configuration;
   wrenInitConfiguration(&configuration);
-  
+
   configuration.resolveModuleFn = resolveChange;
   runTestVM(vm, &configuration, "import \"baz|bang\"");
 }
