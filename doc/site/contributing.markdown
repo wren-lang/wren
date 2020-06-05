@@ -55,7 +55,7 @@ means often having to say "no" to language additions, even really cool ones.
 The [documentation][] is one of the easiest&mdash;and most
 important!&mdash;parts of Wren to contribute to. The source for the site is
 written in [Markdown][] and lives under `doc/site`. A
-simple Python script, `util/generate_docs.py`, converts that to HTML and CSS.
+simple Python 3 script, `util/generate_docs.py`, converts that to HTML and CSS.
 
 [documentation]: /
 [markdown]: http://daringfireball.net/projects/markdown/
@@ -66,7 +66,7 @@ This generates the site in `build/docs/`. You can run any simple static web
 server from there. Python includes one:
 
     $ cd build/docs
-    $ python3 -m http.server
+    $ python -m http.server
 
 Running that script every time you change a line of Markdown can be slow,
 so there is also a file watching version that will automatically regenerate the
@@ -80,7 +80,8 @@ The basic process is simple:
 
 1. **Make sure you can build and run the tests locally.** It's good to ensure
    you're starting from a happy place before you poke at the code. Running the
-   tests is as simple as [building the vm project](getting-started.html#building-wren), which generates `bin/wren_test` and then running:
+   tests is as simple as [building the vm project](getting-started.html#building-wren),
+   which generates `bin/wren_test` and then running the following python 3 script:
 
         $ python util/test.py
 

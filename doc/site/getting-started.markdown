@@ -44,6 +44,11 @@ These are what you'll link into your project, based on your needs.
   a binary that is used to run the language tests. It can execute simple scripts.
 </small>
 
+**Other platforms**   
+If your platform isn't explicitly supported,
+it is recommended that you include the Wren source
+in your project for a portable experience.
+
 ### Including the code in your project
 
 **all source files**   

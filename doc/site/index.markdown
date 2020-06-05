@@ -36,7 +36,7 @@ while (!adjectives.isDone) System.print(adjectives.call())
     [classes][] front and center.
 
  *  **Wren is concurrent.** Lightweight [fibers][] are core to the execution
-    model and let you organize your program into an army of communicating
+    model and let you organize your program into a flock of communicating
     coroutines.
 
  *  **Wren is a scripting language.** Wren is intended for embedding in
@@ -48,7 +48,7 @@ while (!adjectives.isDone) System.print(adjectives.call())
 
 You can try it [in your browser][browser]!   
 If you like the sound of this, [let's get started][started].    
-Excited? Well, come on and [get involved][contribute]!
+Excited? You're also welcome to [get involved][contribute]!
 
 [syntax]: syntax.html
 [src]: https://github.com/wren-lang/wren/tree/master/src
