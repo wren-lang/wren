@@ -22,7 +22,7 @@ and mark what we managed to get done:
 With 0.3.0 we've separated the CLI from the Wren repo,
 and updated the docs to make the distinction clearer.
 
-The [CLI now has it's own corner of the docs](../cli), so that the modules
+The [CLI now has its own corner of the docs](../cli), so that the modules
 and API docs aren't overlapped like before. This opens up space for the
 CLI to get better, fuller documentation, and removes confusion about
 built in modules vs ones that are in the CLI only.

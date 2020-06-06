@@ -14,8 +14,8 @@ That includes the built in language features, the standard library and the VM it
 
 In order to access files, networks and other IO, you'd need to make a tool _using_ the language VM. 
 That's what the CLI project is! It is not bundled as part of the wren project,
-instead it is it's own project as a standalone tool you can run.
-It exposes it's own standard library and modules that may be of interest
+instead it is its own project as a standalone tool you can run.
+It exposes its own standard library and modules that may be of interest
 if looking for a general purpose single binary scriptable tool.
 
 Wren CLI is a work in progress, and contributions are welcome to make it more useful over time.

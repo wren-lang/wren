@@ -1,6 +1,6 @@
 ^title CLI Modules
 
-The Wren CLI executable extends the built in language modules with it's own,
+The Wren CLI executable extends the built in language modules with its own,
 which offer access to IO and other facilities for scripting.
 
 The CLI modules are deeply tied to [libuv][], each other, and other internals
