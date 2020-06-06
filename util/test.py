@@ -10,7 +10,7 @@ import re
 from subprocess import Popen, PIPE
 import sys
 from threading import Timer
-
+import platform
 # Runs the tests.
 
 parser = ArgumentParser()
@@ -25,7 +25,11 @@ is_debug = args.suffix.startswith('_d')
 WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wren_test' + args.suffix)
 
-if not isfile(WREN_APP):
+WREN_APP_WITH_EXT = WREN_APP
+if platform.system() == "Windows":
+  WREN_APP_WITH_EXT += ".exe"
+
+if not isfile(WREN_APP_WITH_EXT):
   print("The binary file 'wren_test' was not found, expected it to be at " + WREN_APP)
   print("In order to run the tests, you need to build Wren first!")
   sys.exit(1)
