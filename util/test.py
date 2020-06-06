@@ -21,10 +21,14 @@ args = parser.parse_args(sys.argv[1:])
 
 config = args.suffix.lstrip('_d')
 is_debug = args.suffix.startswith('_d')
-config_dir = ("debug" if is_debug else "release") + config
 
 WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wren_test' + args.suffix)
+
+if not isfile(WREN_APP):
+  print("The binary file 'wren_test' was not found, expected it to be at " + WREN_APP)
+  print("In order to run the tests, you need to build Wren first!")
+  sys.exit(1)
 
 # print("Wren Test Directory - " + WREN_DIR)
 # print("Wren Test App - " + WREN_APP)
