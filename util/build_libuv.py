@@ -16,22 +16,10 @@ LIB_UV_DIR = "deps/libuv"
 
 
 def build_libuv_mac():
-  # Create the XCode project.
-  run([
-    python2_binary(), LIB_UV_DIR + "/gyp_uv.py", "-f", "xcode"
-  ])
-
-  # Compile it.
+  args = [python2_binary(), "gyp_uv.py", "-f", "make", "-Dtarget_arch=x86_64"]
+  run(args, cwd=LIB_UV_DIR)
   # TODO: Support debug builds too.
-  run([
-    "xcodebuild",
-    # Build a 32-bit + 64-bit universal binary:
-    "ARCHS=x86_64", "ONLY_ACTIVE_ARCH=NO",
-    "BUILD_DIR=out",
-    "-project", LIB_UV_DIR + "/uv.xcodeproj",
-    "-configuration", "Release",
-    "-target", "libuv"
-  ])
+  run(["make", "-C", "out", "BUILDTYPE=Release", "libuv"], cwd=LIB_UV_DIR)
 
 
 def build_libuv_linux(arch):
