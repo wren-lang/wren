@@ -43,17 +43,12 @@ def main(args):
   print("Downloading gyp...")
   run([
     "git", "clone", "--quiet", "--depth=1",
-    "https://chromium.googlesource.com/external/gyp.git",
+    "https://github.com/libuv/gyp.git",
     LIB_UV_DIR + "/build/gyp"
   ])
 
   # We don't need all of libuv and gyp's various support files.
   print("Deleting unneeded files...")
-  remove_dir("deps/libuv/build/gyp/buildbot")
-  remove_dir("deps/libuv/build/gyp/infra")
-  remove_dir("deps/libuv/build/gyp/samples")
-  remove_dir("deps/libuv/build/gyp/test")
-  remove_dir("deps/libuv/build/gyp/tools")
   remove_dir("deps/libuv/docs")
   remove_dir("deps/libuv/img")
   remove_dir("deps/libuv/samples")

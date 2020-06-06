@@ -7,6 +7,8 @@ This module contains classes that help to emulate xcodebuild behavior on top of
 other build systems, such as make and ninja.
 """
 
+from __future__ import print_function
+
 import copy
 import gyp.common
 import os
@@ -17,6 +19,8 @@ import subprocess
 import sys
 import tempfile
 from gyp.common import GypError
+
+PY3 = bytes != str
 
 # Populated lazily by XcodeVersion, for efficiency, and to fix an issue when
 # "xcodebuild" is called too quickly (it has been found to return incorrect
@@ -73,7 +77,7 @@ class XcodeArchsDefault(object):
             if arch not in expanded_archs:
               expanded_archs.append(arch)
         except KeyError as e:
-          print 'Warning: Ignoring unsupported variable "%s".' % variable
+          print('Warning: Ignoring unsupported variable "%s".' % variable)
       elif arch not in expanded_archs:
         expanded_archs.append(arch)
     return expanded_archs
@@ -171,7 +175,7 @@ class XcodeSettings(object):
     # the same for all configs are implicitly per-target settings.
     self.xcode_settings = {}
     configs = spec['configurations']
-    for configname, config in configs.iteritems():
+    for configname, config in configs.items():
       self.xcode_settings[configname] = config.get('xcode_settings', {})
       self._ConvertConditionalKeys(configname)
       if self.xcode_settings[configname].get('IPHONEOS_DEPLOYMENT_TARGET',
@@ -197,8 +201,8 @@ class XcodeSettings(object):
           new_key = key.split("[")[0]
           settings[new_key] = settings[key]
       else:
-        print 'Warning: Conditional keys not implemented, ignoring:', \
-              ' '.join(conditional_keys)
+        print('Warning: Conditional keys not implemented, ignoring:',
+              ' '.join(conditional_keys))
       del settings[key]
 
   def _Settings(self):
@@ -216,7 +220,7 @@ class XcodeSettings(object):
 
   def _WarnUnimplemented(self, test_key):
     if test_key in self._Settings():
-      print 'Warning: Ignoring not yet implemented key "%s".' % test_key
+      print('Warning: Ignoring not yet implemented key "%s".' % test_key)
 
   def IsBinaryOutputFormat(self, configname):
     default = "binary" if self.isIOS else "xml"
@@ -495,8 +499,8 @@ class XcodeSettings(object):
     # Since the CLT has no SDK paths anyway, returning None is the
     # most sensible route and should still do the right thing.
     try:
-      return GetStdout(['xcrun', '--sdk', sdk, infoitem])
-    except:
+      return GetStdoutQuiet(['xcrun', '--sdk', sdk, infoitem])
+    except GypError:
       pass
 
   def _SdkRoot(self, configname):
@@ -645,9 +649,10 @@ class XcodeSettings(object):
 
     cflags += self._Settings().get('WARNING_CFLAGS', [])
 
-    platform_root = self._XcodePlatformPath(configname)
-    if platform_root and self._IsXCTest():
-      cflags.append('-F' + platform_root + '/Developer/Library/Frameworks/')
+    if self._IsXCTest():
+      platform_root = self._XcodePlatformPath(configname)
+      if platform_root:
+        cflags.append('-F' + platform_root + '/Developer/Library/Frameworks/')
 
     if sdk_root:
       framework_root = sdk_root
@@ -913,10 +918,11 @@ class XcodeSettings(object):
     for directory in framework_dirs:
       ldflags.append('-F' + directory.replace('$(SDKROOT)', sdk_root))
 
-    platform_root = self._XcodePlatformPath(configname)
-    if sdk_root and platform_root and self._IsXCTest():
-      ldflags.append('-F' + platform_root + '/Developer/Library/Frameworks/')
-      ldflags.append('-framework XCTest')
+    if self._IsXCTest():
+      platform_root = self._XcodePlatformPath(configname)
+      if sdk_root and platform_root:
+        ldflags.append('-F' + platform_root + '/Developer/Library/Frameworks/')
+        ldflags.append('-framework XCTest')
 
     is_extension = self._IsIosAppExtension() or self._IsIosWatchKitExtension()
     if sdk_root and is_extension:
@@ -924,7 +930,8 @@ class XcodeSettings(object):
       # extensions and provide loader and main function.
       # These flags reflect the compilation options used by xcode to compile
       # extensions.
-      if XcodeVersion() < '0900':
+      xcode_version, _ = XcodeVersion()
+      if xcode_version < '0900':
         ldflags.append('-lpkstart')
         ldflags.append(sdk_root +
             '/System/Library/PrivateFrameworks/PlugInKit.framework/PlugInKit')
@@ -963,7 +970,7 @@ class XcodeSettings(object):
         result = dict(self.xcode_settings[configname])
         first_pass = False
       else:
-        for key, value in self.xcode_settings[configname].iteritems():
+        for key, value in self.xcode_settings[configname].items():
           if key not in result:
             continue
           elif result[key] != value:
@@ -1072,7 +1079,7 @@ class XcodeSettings(object):
     # Xcode expects XCTests to be copied into the TEST_HOST dir.
     if self._IsXCTest():
       source = os.path.join("${BUILT_PRODUCTS_DIR}", product_name)
-      test_host = os.path.dirname(settings.get('TEST_HOST'));
+      test_host = os.path.dirname(settings.get('TEST_HOST'))
       xctest_destination = os.path.join(test_host, 'PlugIns', product_name)
       postbuilds.extend(['ditto %s %s' % (source, xctest_destination)])
 
@@ -1084,12 +1091,12 @@ class XcodeSettings(object):
     unimpl = ['OTHER_CODE_SIGN_FLAGS']
     unimpl = set(unimpl) & set(self.xcode_settings[configname].keys())
     if unimpl:
-      print 'Warning: Some codesign keys not implemented, ignoring: %s' % (
-          ', '.join(sorted(unimpl)))
+      print('Warning: Some codesign keys not implemented, ignoring: %s' %
+            ', '.join(sorted(unimpl)))
 
     if self._IsXCTest():
       # For device xctests, Xcode copies two extra frameworks into $TEST_HOST.
-      test_host = os.path.dirname(settings.get('TEST_HOST'));
+      test_host = os.path.dirname(settings.get('TEST_HOST'))
       frameworks_dir = os.path.join(test_host, 'Frameworks')
       platform_root = self._XcodePlatformPath(configname)
       frameworks = \
@@ -1200,8 +1207,8 @@ class XcodeSettings(object):
       cache = {}
       cache['BuildMachineOSBuild'] = self._BuildMachineOSBuild()
 
-      xcode, xcode_build = XcodeVersion()
-      cache['DTXcode'] = xcode
+      xcode_version, xcode_build = XcodeVersion()
+      cache['DTXcode'] = xcode_version
       cache['DTXcodeBuild'] = xcode_build
       compiler = self.xcode_settings[configname].get('GCC_VERSION')
       if compiler is not None:
@@ -1212,10 +1219,10 @@ class XcodeSettings(object):
         sdk_root = self._DefaultSdkRoot()
       sdk_version = self._GetSdkVersionInfoItem(sdk_root, '--show-sdk-version')
       cache['DTSDKName'] = sdk_root + (sdk_version or '')
-      if xcode >= '0720':
+      if xcode_version >= '0720':
         cache['DTSDKBuild'] = self._GetSdkVersionInfoItem(
             sdk_root, '--show-sdk-build-version')
-      elif xcode >= '0430':
+      elif xcode_version >= '0430':
         cache['DTSDKBuild'] = sdk_version
       else:
         cache['DTSDKBuild'] = cache['BuildMachineOSBuild']
@@ -1250,7 +1257,7 @@ class XcodeSettings(object):
     project, then the environment variable was empty. Starting with this
     version, Xcode uses the name of the newest SDK installed.
     """
-    xcode_version, xcode_build = XcodeVersion()
+    xcode_version, _ = XcodeVersion()
     if xcode_version < '0500':
       return ''
     default_sdk_path = self._XcodeSdkPath('')
@@ -1259,7 +1266,7 @@ class XcodeSettings(object):
       return default_sdk_root
     try:
       all_sdks = GetStdout(['xcodebuild', '-showsdks'])
-    except:
+    except GypError:
       # If xcodebuild fails, there will be no valid SDKs
       return ''
     for line in all_sdks.splitlines():
@@ -1387,12 +1394,14 @@ def XcodeVersion():
   #    Xcode 3.2.6
   #    Component versions: DevToolsCore-1809.0; DevToolsSupport-1806.0
   #    BuildVersion: 10M2518
-  # Convert that to '0463', '4H1503'.
+  # Convert that to ('0463', '4H1503') or ('0326', '10M2518').
   global XCODE_VERSION_CACHE
   if XCODE_VERSION_CACHE:
     return XCODE_VERSION_CACHE
+  version = ""
+  build = ""
   try:
-    version_list = GetStdout(['xcodebuild', '-version']).splitlines()
+    version_list = GetStdoutQuiet(['xcodebuild', '-version']).splitlines()
     # In some circumstances xcodebuild exits 0 but doesn't return
     # the right results; for example, a user on 10.7 or 10.8 with
     # a bogus path set via xcode-select
@@ -1400,21 +1409,16 @@ def XcodeVersion():
     # checking that version.
     if len(version_list) < 2:
       raise GypError("xcodebuild returned unexpected results")
-  except:
-    version = CLTVersion()
-    if version:
-      version = re.match(r'(\d\.\d\.?\d*)', version).groups()[0]
-    else:
+    version = version_list[0].split()[-1]  # Last word on first line
+    build = version_list[-1].split()[-1]   # Last word on last line
+  except GypError:  # Xcode not installed so look for XCode Command Line Tools
+    version = CLTVersion()  # macOS Catalina returns 11.0.0.0.1.1567737322
+    if not version:
       raise GypError("No Xcode or CLT version detected!")
-    # The CLT has no build information, so we return an empty string.
-    version_list = [version, '']
-  version = version_list[0]
-  build = version_list[-1]
-  # Be careful to convert "4.2" to "0420":
-  version = version.split()[-1].replace('.', '')
-  version = (version + '0' * (3 - len(version))).zfill(4)
-  if build:
-    build = build.split()[-1]
+  # Be careful to convert "4.2.3" to "0423" and "11.0.0" to "1100":
+  version = version.split(".")[:3]  # Just major, minor, micro
+  version[0] = version[0].zfill(2)  # Add a leading zero if major is one digit
+  version = ("".join(version) + "00")[:4]  # Limit to exactly four characters
   XCODE_VERSION_CACHE = (version, build)
   return XCODE_VERSION_CACHE
 
@@ -1438,8 +1442,22 @@ def CLTVersion():
     try:
       output = GetStdout(['/usr/sbin/pkgutil', '--pkg-info', key])
       return re.search(regex, output).groupdict()['version']
-    except:
+    except GypError:
       continue
+
+
+def GetStdoutQuiet(cmdlist):
+  """Returns the content of standard output returned by invoking |cmdlist|.
+  Ignores the stderr.
+  Raises |GypError| if the command return with a non-zero return code."""
+  job = subprocess.Popen(cmdlist, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+  out = job.communicate()[0]
+  if PY3:
+    out = out.decode("utf-8")
+  if job.returncode != 0:
+    raise GypError('Error %d running %s' % (job.returncode, cmdlist[0]))
+  return out.rstrip('\n')
 
 
 def GetStdout(cmdlist):
@@ -1447,6 +1465,8 @@ def GetStdout(cmdlist):
   Raises |GypError| if the command return with a non-zero return code."""
   job = subprocess.Popen(cmdlist, stdout=subprocess.PIPE)
   out = job.communicate()[0]
+  if PY3:
+    out = out.decode("utf-8")
   if job.returncode != 0:
     sys.stderr.write(out + '\n')
     raise GypError('Error %d running %s' % (job.returncode, cmdlist[0]))
@@ -1658,10 +1678,13 @@ def _GetXcodeEnv(xcode_settings, built_products_dir, srcroot, configuration,
   install_name_base = xcode_settings.GetInstallNameBase()
   if install_name_base:
     env['DYLIB_INSTALL_NAME_BASE'] = install_name_base
-  if XcodeVersion() >= '0500' and not env.get('SDKROOT'):
+  xcode_version, _ = XcodeVersion()
+  if xcode_version >= '0500' and not env.get('SDKROOT'):
     sdk_root = xcode_settings._SdkRoot(configuration)
     if not sdk_root:
       sdk_root = xcode_settings._XcodeSdkPath('')
+    if sdk_root is None:
+      sdk_root = ''
     env['SDKROOT'] = sdk_root
 
   if not additional_settings:
@@ -1737,7 +1760,7 @@ def _TopologicallySortedEnvVarKeys(env):
     order = gyp.common.TopologicallySorted(env.keys(), GetEdges)
     order.reverse()
     return order
-  except gyp.common.CycleError, e:
+  except gyp.common.CycleError as e:
     raise GypError(
         'Xcode environment variables are cyclically dependent: ' + str(e.nodes))
 
@@ -1774,10 +1797,10 @@ def _HasIOSTarget(targets):
 def _AddIOSDeviceConfigurations(targets):
   """Clone all targets and append -iphoneos to the name. Configure these targets
   to build for iOS devices and use correct architectures for those builds."""
-  for target_dict in targets.itervalues():
+  for target_dict in targets.values():
     toolset = target_dict['toolset']
     configs = target_dict['configurations']
-    for config_name, simulator_config_dict in dict(configs).iteritems():
+    for config_name, simulator_config_dict in dict(configs).items():
       iphoneos_config_dict = copy.deepcopy(simulator_config_dict)
       configs[config_name + '-iphoneos'] = iphoneos_config_dict
       configs[config_name + '-iphonesimulator'] = simulator_config_dict

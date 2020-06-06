@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+from __future__ import print_function
+
 import collections
 import copy
 import hashlib
@@ -18,7 +20,10 @@ from gyp.common import OrderedSet
 import gyp.msvs_emulation
 import gyp.MSVSUtil as MSVSUtil
 import gyp.xcode_emulation
-from cStringIO import StringIO
+try:
+  from cStringIO import StringIO
+except ImportError:
+  from io import StringIO
 
 from gyp.common import GetEnvironFallback
 import gyp.ninja_syntax as ninja_syntax
@@ -140,7 +145,7 @@ class Target(object):
     # On Windows, incremental linking requires linking against all the .objs
     # that compose a .lib (rather than the .lib itself). That list is stored
     # here. In this case, we also need to save the compile_deps for the target,
-    # so that the the target that directly depends on the .objs can also depend
+    # so that the target that directly depends on the .objs can also depend
     # on those.
     self.component_objs = None
     self.compile_deps = None
@@ -350,7 +355,7 @@ class NinjaWriter(object):
 
     Uses a stamp file if necessary."""
 
-    assert targets == filter(None, targets), targets
+    assert targets == [item for item in targets if item], targets
     if len(targets) == 0:
       assert not order_only
       return None
@@ -427,8 +432,8 @@ class NinjaWriter(object):
           compile_depends.append(target.PreCompileInput())
           if target.uses_cpp:
             self.target.uses_cpp = True
-      actions_depends = filter(None, actions_depends)
-      compile_depends = filter(None, compile_depends)
+      actions_depends = [item for item in actions_depends if item]
+      compile_depends = [item for item in compile_depends if item]
       actions_depends = self.WriteCollapsedDependencies('actions_depends',
                                                         actions_depends)
       compile_depends = self.WriteCollapsedDependencies('compile_depends',
@@ -455,8 +460,8 @@ class NinjaWriter(object):
     try:
       sources = extra_sources + spec.get('sources', [])
     except TypeError:
-      print 'extra_sources: ', str(extra_sources)
-      print 'spec.get("sources"): ', str(spec.get('sources'))
+      print('extra_sources: ', str(extra_sources))
+      print('spec.get("sources"): ', str(spec.get('sources')))
       raise
     if sources:
       if self.flavor == 'mac' and len(self.archs) > 1:
@@ -485,8 +490,8 @@ class NinjaWriter(object):
         if self.flavor != 'mac' or len(self.archs) == 1:
           link_deps += [self.GypPathToNinja(o) for o in obj_outputs]
         else:
-          print "Warning: Actions/rules writing object files don't work with " \
-                "multiarch targets, dropping. (target %s)" % spec['target_name']
+          print("Warning: Actions/rules writing object files don't work with "
+                "multiarch targets, dropping. (target %s)" % spec['target_name'])
     elif self.flavor == 'mac' and len(self.archs) > 1:
       link_deps = collections.defaultdict(list)
 
@@ -838,7 +843,7 @@ class NinjaWriter(object):
         'XCASSETS_LAUNCH_IMAGE': 'launch-image',
     }
     settings = self.xcode_settings.xcode_settings[self.config_name]
-    for settings_key, arg_name in settings_to_arg.iteritems():
+    for settings_key, arg_name in settings_to_arg.items():
       value = settings.get(settings_key)
       if value:
         extra_arguments[arg_name] = value
@@ -1195,10 +1200,7 @@ class NinjaWriter(object):
     is_executable = spec['type'] == 'executable'
     # The ldflags config key is not used on mac or win. On those platforms
     # linker flags are set via xcode_settings and msvs_settings, respectively.
-    if self.toolset == 'target':
-      env_ldflags = os.environ.get('LDFLAGS', '').split()
-    elif self.toolset == 'host':
-      env_ldflags = os.environ.get('LDFLAGS_host', '').split()
+    env_ldflags = os.environ.get('LDFLAGS', '').split()
     if self.flavor == 'mac':
       ldflags = self.xcode_settings.GetLdflags(config_name,
           self.ExpandSpecial(generator_default_variables['PRODUCT_DIR']),
@@ -1934,6 +1936,10 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
       ld = os.path.join(build_to_root, value)
     if key == 'LD.host':
       ld_host = os.path.join(build_to_root, value)
+    if key == 'LDXX':
+      ldxx = os.path.join(build_to_root, value)
+    if key == 'LDXX.host':
+      ldxx_host = os.path.join(build_to_root, value)
     if key == 'NM':
       nm = os.path.join(build_to_root, value)
     if key == 'NM.host':
@@ -1946,7 +1952,7 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
       wrappers[key[:-len('_wrapper')]] = os.path.join(build_to_root, value)
 
   # Support wrappers from environment variables too.
-  for key, value in os.environ.iteritems():
+  for key, value in os.environ.items():
     if key.lower().endswith('_wrapper'):
       key_prefix = key[:-len('_wrapper')]
       key_prefix = re.sub(r'\.HOST$', '.host', key_prefix)
@@ -1966,7 +1972,7 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
               configs, generator_flags)
     cl_paths = gyp.msvs_emulation.GenerateEnvironmentFiles(
         toplevel_build, generator_flags, shared_system_includes, OpenOutput)
-    for arch, path in sorted(cl_paths.iteritems()):
+    for arch, path in sorted(cl_paths.items()):
       if clang_cl:
         # If we have selected clang-cl, use that instead.
         path = clang_cl
@@ -2027,6 +2033,7 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
                           CommandWithWrapper('CXX.host', wrappers, cxx_host))
     if flavor == 'win':
       master_ninja.variable('ld_host', ld_host)
+      master_ninja.variable('ldxx_host', ldxx_host)
     else:
       master_ninja.variable('ld_host', CommandWithWrapper(
           'LINK', wrappers, ld_host))
@@ -2151,13 +2158,13 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
       restat=True,
       command=mtime_preserving_solink_base % {'suffix': '@$link_file_list'},
       rspfile='$link_file_list',
-      rspfile_content='-Wl,--start-group $in -Wl,--end-group $solibs $libs',
+      rspfile_content='-Wl,--start-group $in $solibs $libs -Wl,--end-group',
       pool='link_pool')
     master_ninja.rule(
       'link',
       description='LINK $out',
       command=('$ld $ldflags -o $out '
-               '-Wl,--start-group $in -Wl,--end-group $solibs $libs'),
+               '-Wl,--start-group $in $solibs $libs -Wl,--end-group'),
       pool='link_pool')
   elif flavor == 'win':
     master_ninja.rule(
@@ -2314,22 +2321,15 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
       'stamp',
       description='STAMP $out',
       command='%s gyp-win-tool stamp $out' % sys.executable)
+    master_ninja.rule(
+      'copy',
+      description='COPY $in $out',
+      command='%s gyp-win-tool recursive-mirror $in $out' % sys.executable)
   else:
     master_ninja.rule(
       'stamp',
       description='STAMP $out',
       command='${postbuilds}touch $out')
-  if flavor == 'win':
-    master_ninja.rule(
-      'copy',
-      description='COPY $in $out',
-      command='%s gyp-win-tool recursive-mirror $in $out' % sys.executable)
-  elif flavor == 'zos':
-    master_ninja.rule(
-      'copy',
-      description='COPY $in $out',
-      command='rm -rf $out && cp -fRP $in $out')
-  else:
     master_ninja.rule(
       'copy',
       description='COPY $in $out',
@@ -2381,6 +2381,7 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
 
     qualified_target_for_hash = gyp.common.QualifiedTarget(build_file, name,
                                                            toolset)
+    qualified_target_for_hash = qualified_target_for_hash.encode('utf-8')
     hash_for_rules = hashlib.md5(qualified_target_for_hash).hexdigest()
 
     base_path = os.path.dirname(build_file)
@@ -2447,7 +2448,7 @@ def PerformBuild(data, configurations, params):
   for config in configurations:
     builddir = os.path.join(options.toplevel_dir, 'out', config)
     arguments = ['ninja', '-C', builddir]
-    print 'Building [%s]: %s' % (config, arguments)
+    print('Building [%s]: %s' % (config, arguments))
     subprocess.check_call(arguments)
 
 
@@ -2484,7 +2485,7 @@ def GenerateOutput(target_list, target_dicts, data, params):
           arglists.append(
               (target_list, target_dicts, data, params, config_name))
         pool.map(CallGenerateOutputForConfig, arglists)
-      except KeyboardInterrupt, e:
+      except KeyboardInterrupt as e:
         pool.terminate()
         raise e
     else:

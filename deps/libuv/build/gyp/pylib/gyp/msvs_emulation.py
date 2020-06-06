@@ -209,7 +209,7 @@ class MsvsSettings(object):
     configs = spec['configurations']
     for field, default in supported_fields:
       setattr(self, field, {})
-      for configname, config in configs.iteritems():
+      for configname, config in configs.items():
         getattr(self, field)[configname] = config.get(field, default())
 
     self.msvs_cygwin_dirs = spec.get('msvs_cygwin_dirs', ['.'])
@@ -273,8 +273,8 @@ class MsvsSettings(object):
   def AdjustLibraries(self, libraries):
     """Strip -l from library if it's specified with that."""
     libs = [lib[2:] if lib.startswith('-l') else lib for lib in libraries]
-    return [lib + '.lib' if not lib.lower().endswith('.lib') else lib
-            for lib in libs]
+    return [lib + '.lib' if not lib.lower().endswith('.lib') \
+            and not lib.lower().endswith('.obj') else lib for lib in libs]
 
   def _GetAndMunge(self, field, path, default, prefix, append, map):
     """Retrieve a value from |field| at |path| or return |default|. If
@@ -953,7 +953,7 @@ def ExpandMacros(string, expansions):
   """Expand $(Variable) per expansions dict. See MsvsSettings.GetVSMacroEnv
   for the canonical way to retrieve a suitable dict."""
   if '$' in string:
-    for old, new in expansions.iteritems():
+    for old, new in expansions.items():
       assert '$(' not in new, new
       string = string.replace(old, new)
   return string
@@ -1001,7 +1001,7 @@ def _FormatAsEnvironmentBlock(envvar_dict):
   CreateProcess documentation for more details."""
   block = ''
   nul = '\0'
-  for key, value in envvar_dict.iteritems():
+  for key, value in envvar_dict.items():
     block += key + '=' + value + nul
   block += nul
   return block

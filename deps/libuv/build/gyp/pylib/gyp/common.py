@@ -2,15 +2,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from __future__ import with_statement
-
-import collections
 import errno
 import filecmp
 import os.path
 import re
 import tempfile
 import sys
+
+try:
+  from collections.abc import MutableSet
+except ImportError:
+  from collections import MutableSet
 
 
 # A minimal memoizing decorator. It'll blow up if the args aren't immutable,
@@ -363,7 +365,7 @@ def WriteOnDiff(filename):
         same = False
         try:
           same = filecmp.cmp(self.tmp_path, filename, False)
-        except OSError, e:
+        except OSError as e:
           if e.errno != errno.ENOENT:
             raise
 
@@ -382,9 +384,9 @@ def WriteOnDiff(filename):
           #
           # No way to get the umask without setting a new one?  Set a safe one
           # and then set it back to the old value.
-          umask = os.umask(077)
+          umask = os.umask(0o77)
           os.umask(umask)
-          os.chmod(self.tmp_path, 0666 & ~umask)
+          os.chmod(self.tmp_path, 0o666 & ~umask)
           if sys.platform == 'win32' and os.path.exists(filename):
             # NOTE: on windows (but not cygwin) rename will not replace an
             # existing file, so it must be preceded with a remove. Sadly there
@@ -395,6 +397,9 @@ def WriteOnDiff(filename):
         # Don't leave turds behind.
         os.unlink(self.tmp_path)
         raise
+
+    def write(self, s):
+      self.tmp_file.write(s.encode('utf-8'))
 
   return Writer()
 
@@ -423,16 +428,14 @@ def GetFlavor(params):
     return 'solaris'
   if sys.platform.startswith('freebsd'):
     return 'freebsd'
+  if sys.platform.startswith('dragonfly'):
+    return 'freebsd'
   if sys.platform.startswith('openbsd'):
     return 'openbsd'
   if sys.platform.startswith('netbsd'):
     return 'netbsd'
   if sys.platform.startswith('aix'):
     return 'aix'
-  if sys.platform.startswith('zos'):
-    return 'zos'
-  if sys.platform.startswith('os390'):
-    return 'zos'
 
   return 'linux'
 
@@ -471,7 +474,7 @@ def CopyTool(flavor, out_path, generator_flags={}):
         ''.join([source[0], header] + source[1:]))
 
   # Make file executable.
-  os.chmod(tool_path, 0755)
+  os.chmod(tool_path, 0o755)
 
 
 # From Alex Martelli,
@@ -494,7 +497,7 @@ def uniquer(seq, idfun=None):
 
 
 # Based on http://code.activestate.com/recipes/576694/.
-class OrderedSet(collections.MutableSet):
+class OrderedSet(MutableSet):
   def __init__(self, iterable=None):
     self.end = end = []
     end += [None, end, end]         # sentinel node for doubly linked list
