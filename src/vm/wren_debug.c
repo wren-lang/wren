@@ -121,9 +121,9 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
   #define READ_BYTE() (bytecode[i++])
   #define READ_SHORT() (i += 2, (bytecode[i - 2] << 8) | bytecode[i - 1])
 
-  #define BYTE_INSTRUCTION(name) \
-      printf("%-16s %5d\n", name, READ_BYTE()); \
-      break; \
+  #define BYTE_INSTRUCTION(name)                                               \
+      printf("%-16s %5d\n", name, READ_BYTE());                                \
+      break
 
   switch (code)
   {

@@ -15,8 +15,8 @@
 
 // A monotonically increasing numeric representation of the version number. Use
 // this if you want to do range checks over versions.
-#define WREN_VERSION_NUMBER (WREN_VERSION_MAJOR * 1000000 + \
-                             WREN_VERSION_MINOR * 1000 + \
+#define WREN_VERSION_NUMBER (WREN_VERSION_MAJOR * 1000000 +                    \
+                             WREN_VERSION_MINOR * 1000 +                       \
                              WREN_VERSION_PATCH)
 
 // A single virtual machine for executing Wren code.
