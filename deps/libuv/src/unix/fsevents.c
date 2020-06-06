@@ -21,9 +21,10 @@
 #include "uv.h"
 #include "internal.h"
 
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE || MAC_OS_X_VERSION_MAX_ALLOWED < 1070
 
 /* iOS (currently) doesn't provide the FSEvents-API (nor CoreServices) */
+/* macOS prior to 10.7 doesn't provide the full FSEvents API so use kqueue */
 
 int uv__fsevents_init(uv_fs_event_t* handle) {
   return 0;
@@ -230,6 +231,7 @@ static void uv__fsevents_event_cb(ConstFSEventStreamRef streamRef,
   uv_loop_t* loop;
   uv__cf_loop_state_t* state;
   uv__fsevents_event_t* event;
+  FSEventStreamEventFlags flags;
   QUEUE head;
 
   loop = info;
@@ -245,45 +247,65 @@ static void uv__fsevents_event_cb(ConstFSEventStreamRef streamRef,
 
     /* Process and filter out events */
     for (i = 0; i < numEvents; i++) {
+      flags = eventFlags[i];
+
       /* Ignore system events */
-      if (eventFlags[i] & kFSEventsSystem)
+      if (flags & kFSEventsSystem)
         continue;
 
       path = paths[i];
       len = strlen(path);
 
+      if (handle->realpath_len == 0)
+        continue; /* This should be unreachable */
+
       /* Filter out paths that are outside handle's request */
-      if (strncmp(path, handle->realpath, handle->realpath_len) != 0)
+      if (len < handle->realpath_len)
         continue;
 
-      if (handle->realpath_len > 1 || *handle->realpath != '/') {
+      /* Make sure that realpath actually named a directory,
+       * (unless watching root, which alone keeps a trailing slash on the realpath)
+       * or that we matched the whole string */
+      if (handle->realpath_len != len &&
+          handle->realpath_len > 1 &&
+          path[handle->realpath_len] != '/')
+        continue;
+
+      if (memcmp(path, handle->realpath, handle->realpath_len) != 0)
+        continue;
+
+      if (!(handle->realpath_len == 1 && handle->realpath[0] == '/')) {
+        /* Remove common prefix, unless the watched folder is "/" */
         path += handle->realpath_len;
         len -= handle->realpath_len;
 
-        /* Skip forward slash */
-        if (*path != '\0') {
+        /* Ignore events with path equal to directory itself */
+        if (len <= 1 && (flags & kFSEventStreamEventFlagItemIsDir))
+          continue;
+
+        if (len == 0) {
+          /* Since we're using fsevents to watch the file itself,
+           * realpath == path, and we now need to get the basename of the file back
+           * (for commonality with other codepaths and platforms). */
+          while (len < handle->realpath_len && path[-1] != '/') {
+            path--;
+            len++;
+          }
+          /* Created and Removed seem to be always set, but don't make sense */
+          flags &= ~kFSEventsRenamed;
+        } else {
+          /* Skip forward slash */
           path++;
           len--;
         }
       }
 
-#ifdef MAC_OS_X_VERSION_10_7
-      /* Ignore events with path equal to directory itself */
-      if (len == 0)
-        continue;
-#endif /* MAC_OS_X_VERSION_10_7 */
-
       /* Do not emit events from subdirectories (without option set) */
-      if ((handle->cf_flags & UV_FS_EVENT_RECURSIVE) == 0 && *path != 0) {
+      if ((handle->cf_flags & UV_FS_EVENT_RECURSIVE) == 0 && *path != '\0') {
         pos = strchr(path + 1, '/');
         if (pos != NULL)
           continue;
       }
-
-#ifndef MAC_OS_X_VERSION_10_7
-      path = "";
-      len = 0;
-#endif /* MAC_OS_X_VERSION_10_7 */
 
       event = uv__malloc(sizeof(*event) + len);
       if (event == NULL)
@@ -291,12 +313,13 @@ static void uv__fsevents_event_cb(ConstFSEventStreamRef streamRef,
 
       memset(event, 0, sizeof(*event));
       memcpy(event->path, path, len + 1);
+      event->events = UV_RENAME;
 
-      if ((eventFlags[i] & kFSEventsModified) != 0 &&
-          (eventFlags[i] & kFSEventsRenamed) == 0)
-        event->events = UV_CHANGE;
-      else
-        event->events = UV_RENAME;
+      if (0 == (flags & kFSEventsRenamed)) {
+        if (0 != (flags & kFSEventsModified) ||
+            0 == (flags & kFSEventStreamEventFlagItemIsDir))
+          event->events = UV_CHANGE;
+      }
 
       QUEUE_INSERT_TAIL(&head, &event->member);
     }
@@ -361,7 +384,7 @@ static int uv__fsevents_create_stream(uv_loop_t* loop, CFArrayRef paths) {
   if (!pFSEventStreamStart(ref)) {
     pFSEventStreamInvalidate(ref);
     pFSEventStreamRelease(ref);
-    return -EMFILE;
+    return UV_EMFILE;
   }
 
   state->fsevent_stream = ref;
@@ -377,9 +400,6 @@ static void uv__fsevents_destroy_stream(uv_loop_t* loop) {
 
   if (state->fsevent_stream == NULL)
     return;
-
-  /* Flush all accumulated events */
-  pFSEventStreamFlushSync(state->fsevent_stream);
 
   /* Stop emitting events */
   pFSEventStreamStop(state->fsevent_stream);
@@ -425,7 +445,7 @@ static void uv__fsevents_reschedule(uv_fs_event_t* handle,
   uv__fsevents_destroy_stream(handle->loop);
 
   /* Any failure below will be a memory failure */
-  err = -ENOMEM;
+  err = UV_ENOMEM;
 
   /* Create list of all watched paths */
   uv_mutex_lock(&state->fsevent_mutex);
@@ -459,7 +479,7 @@ static void uv__fsevents_reschedule(uv_fs_event_t* handle,
     /* Create new FSEventStream */
     cf_paths = pCFArrayCreate(NULL, (const void**) paths, path_count, NULL);
     if (cf_paths == NULL) {
-      err = -ENOMEM;
+      err = UV_ENOMEM;
       goto final;
     }
     err = uv__fsevents_create_stream(handle->loop, cf_paths);
@@ -513,7 +533,7 @@ static int uv__fsevents_global_init(void) {
    * but if it ever becomes one, we can turn the dynamic library handles into
    * per-event loop properties and have the dynamic linker keep track for us.
    */
-  err = -ENOSYS;
+  err = UV_ENOSYS;
   core_foundation_handle = dlopen("/System/Library/Frameworks/"
                                   "CoreFoundation.framework/"
                                   "Versions/A/CoreFoundation",
@@ -528,7 +548,7 @@ static int uv__fsevents_global_init(void) {
   if (core_services_handle == NULL)
     goto out;
 
-  err = -ENOENT;
+  err = UV_ENOENT;
 #define V(handle, symbol)                                                     \
   do {                                                                        \
     *(void **)(&p ## symbol) = dlsym((handle), #symbol);                      \
@@ -592,7 +612,7 @@ static int uv__fsevents_loop_init(uv_loop_t* loop) {
 
   state = uv__calloc(1, sizeof(*state));
   if (state == NULL)
-    return -ENOMEM;
+    return UV_ENOMEM;
 
   err = uv_mutex_init(&loop->cf_mutex);
   if (err)
@@ -621,7 +641,7 @@ static int uv__fsevents_loop_init(uv_loop_t* loop) {
   ctx.perform = uv__cf_loop_cb;
   state->signal_source = pCFRunLoopSourceCreate(NULL, 0, &ctx);
   if (state->signal_source == NULL) {
-    err = -ENOMEM;
+    err = UV_ENOMEM;
     goto fail_signal_source_create;
   }
 
@@ -640,7 +660,7 @@ static int uv__fsevents_loop_init(uv_loop_t* loop) {
   loop->cf_state = state;
 
   /* uv_thread_t is an alias for pthread_t. */
-  err = -pthread_create(&loop->cf_thread, attr, uv__cf_loop_runner, loop);
+  err = UV__ERR(pthread_create(&loop->cf_thread, attr, uv__cf_loop_runner, loop));
 
   if (attr != NULL)
     pthread_attr_destroy(attr);
@@ -727,6 +747,8 @@ static void* uv__cf_loop_runner(void* arg) {
                          state->signal_source,
                          *pkCFRunLoopDefaultMode);
 
+  state->loop = NULL;
+
   return NULL;
 }
 
@@ -772,19 +794,20 @@ int uv__cf_loop_signal(uv_loop_t* loop,
 
   item = uv__malloc(sizeof(*item));
   if (item == NULL)
-    return -ENOMEM;
+    return UV_ENOMEM;
 
   item->handle = handle;
   item->type = type;
 
   uv_mutex_lock(&loop->cf_mutex);
   QUEUE_INSERT_TAIL(&loop->cf_signals, &item->member);
-  uv_mutex_unlock(&loop->cf_mutex);
 
   state = loop->cf_state;
   assert(state != NULL);
   pCFRunLoopSourceSignal(state->signal_source);
   pCFRunLoopWakeUp(state->loop);
+
+  uv_mutex_unlock(&loop->cf_mutex);
 
   return 0;
 }
@@ -802,7 +825,7 @@ int uv__fsevents_init(uv_fs_event_t* handle) {
   /* Get absolute path to file */
   handle->realpath = realpath(handle->path, NULL);
   if (handle->realpath == NULL)
-    return -errno;
+    return UV__ERR(errno);
   handle->realpath_len = strlen(handle->realpath);
 
   /* Initialize event queue */
@@ -815,13 +838,13 @@ int uv__fsevents_init(uv_fs_event_t* handle) {
    */
   handle->cf_cb = uv__malloc(sizeof(*handle->cf_cb));
   if (handle->cf_cb == NULL) {
-    err = -ENOMEM;
+    err = UV_ENOMEM;
     goto fail_cf_cb_malloc;
   }
 
   handle->cf_cb->data = handle;
   uv_async_init(handle->loop, handle->cf_cb, uv__fsevents_cb);
-  handle->cf_cb->flags |= UV__HANDLE_INTERNAL;
+  handle->cf_cb->flags |= UV_HANDLE_INTERNAL;
   uv_unref((uv_handle_t*) handle->cf_cb);
 
   err = uv_mutex_init(&handle->cf_mutex);
@@ -866,7 +889,7 @@ int uv__fsevents_close(uv_fs_event_t* handle) {
   uv__cf_loop_state_t* state;
 
   if (handle->cf_cb == NULL)
-    return -EINVAL;
+    return UV_EINVAL;
 
   /* Remove handle from  the list */
   state = handle->loop->cf_state;
@@ -880,7 +903,7 @@ int uv__fsevents_close(uv_fs_event_t* handle) {
   assert(handle != NULL);
   err = uv__cf_loop_signal(handle->loop, handle, kUVCFLoopSignalClosing);
   if (err)
-    return -err;
+    return UV__ERR(err);
 
   /* Wait for deinitialization */
   uv_sem_wait(&state->fsevent_sem);

@@ -11,7 +11,7 @@ import sys
 
 from util import clean_dir, remove_dir, replace_in_file, run
 
-LIB_UV_VERSION = "v1.10.0"
+LIB_UV_VERSION = "v1.35.0"
 LIB_UV_DIR = "deps/libuv"
 
 
@@ -51,8 +51,6 @@ def main(args):
   print("Deleting unneeded files...")
   remove_dir("deps/libuv/docs")
   remove_dir("deps/libuv/img")
-  remove_dir("deps/libuv/samples")
-  remove_dir("deps/libuv/test")
 
   # We are going to commit libuv and GYP in the main Wren repo, so we don't
   # want them to be their own repos.

@@ -11,7 +11,7 @@ import sys
 
 from util import ensure_dir, python2_binary, run
 
-LIB_UV_VERSION = "v1.10.0"
+LIB_UV_VERSION = "v1.35.0"
 LIB_UV_DIR = "deps/libuv"
 
 
