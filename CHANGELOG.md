@@ -13,7 +13,7 @@ across all platforms out of the box too (including the tests, benchmarks, metric
 Like before, there was some things that didn't hold up on Windows or Mac. Fixed!
 
 A lot of work has been done to also clarify the distinction between the CLI project and the VM,
-as well as [move the CLI to it's own repo](https://github.com/wren-lang/wren-cli/)!
+as well as [move the CLI to its own repo](https://github.com/wren-lang/wren-cli/)!
 This removes a lot of code that wasn't being used, and also been clarified the project structure.
 
 Docs have also had a clean up, and a new page to try Wren directly on the doc page was added.
