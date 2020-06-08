@@ -157,7 +157,8 @@
   #include <stdio.h>
 
   #define ASSERT(condition, message)                                           \
-      do {                                                                     \
+      do                                                                       \
+      {                                                                        \
         if (!(condition))                                                      \
         {                                                                      \
           fprintf(stderr, "[%s:%d] Assert failed in %s(): %s\n",               \
@@ -174,7 +175,8 @@
   // in some cases and also lets it perform some optimizations by assuming the
   // code is never reached.
   #define UNREACHABLE()                                                        \
-      do {                                                                     \
+      do                                                                       \
+      {                                                                        \
         fprintf(stderr, "[%s:%d] This code should not be reached in %s()\n",   \
             __FILE__, __LINE__, __func__);                                     \
         abort();                                                               \

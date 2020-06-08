@@ -798,7 +798,8 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   // Use this after a CallFrame has been pushed or popped to refresh the local
   // variables.
   #define LOAD_FRAME()                                                         \
-      do {                                                                     \
+      do                                                                       \
+      {                                                                        \
         frame = &fiber->frames[fiber->numFrames - 1];                          \
         stackStart = frame->stackStart;                                        \
         ip = frame->ip;                                                        \
@@ -809,7 +810,8 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   // fiber is willing to catch the error, transfers control to it, otherwise
   // exits the interpreter.
   #define RUNTIME_ERROR()                                                      \
-      do {                                                                     \
+      do                                                                       \
+      {                                                                        \
         STORE_FRAME();                                                         \
         runtimeError(vm);                                                      \
         if (vm->fiber == NULL) return WREN_RESULT_RUNTIME_ERROR;               \
@@ -821,7 +823,8 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #if WREN_DEBUG_TRACE_INSTRUCTIONS
     // Prints the stack and instruction before each instruction is executed.
     #define DEBUG_TRACE_INSTRUCTIONS()                                         \
-        do {                                                                   \
+        do                                                                     \
+        {                                                                      \
           wrenDumpStack(fiber);                                                \
           wrenDumpInstruction(vm, fn, (int)(ip - fn->code.data));              \
         } while (false)
@@ -841,7 +844,8 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #define CASE_CODE(name)   code_##name
 
   #define DISPATCH()                                                           \
-      do {                                                                     \
+      do                                                                       \
+      {                                                                        \
         DEBUG_TRACE_INSTRUCTIONS();                                            \
         goto *dispatchTable[instruction = (Code)READ_BYTE()];                  \
       } while (false)

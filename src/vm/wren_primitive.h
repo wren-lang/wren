@@ -6,7 +6,8 @@
 // Binds a primitive method named [name] (in Wren) implemented using C function
 // [fn] to `ObjClass` [cls].
 #define PRIMITIVE(cls, name, function)                                         \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
       int symbol = wrenSymbolTableEnsure(vm,                                   \
           &vm->methodNames, name, strlen(name));                               \
       Method method;                                                           \
@@ -22,7 +23,8 @@
     static bool prim_##name(WrenVM* vm, Value* args)
 
 #define RETURN_VAL(value)                                                      \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
       args[0] = value;                                                         \
       return true;                                                             \
     } while (false)
@@ -35,19 +37,22 @@
 #define RETURN_TRUE         RETURN_VAL(TRUE_VAL)
 
 #define RETURN_ERROR(msg)                                                      \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
       vm->fiber->error = wrenNewStringLength(vm, msg, sizeof(msg) - 1);        \
       return false;                                                            \
     } while (false)
 
 #define RETURN_ERROR_FMT(msg, arg)                                             \
-    do {                                                                       \
+    do                                                                         \
+    {                                                                          \
       vm->fiber->error = wrenStringFormat(vm, msg, arg);                       \
       return false;                                                            \
     } while (false)
 
 // Validates that the given [arg] is a function. Returns true if it is. If not,
 // reports an error and returns false.
+bool validateFn(WrenVM* vm, Value arg, const char* argName);
 bool validateFn(WrenVM* vm, Value arg, const char* argName);
 
 // Validates that the given [arg] is a Num. Returns true if it is. If not,
