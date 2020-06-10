@@ -1169,6 +1169,12 @@ static void consumeLine(Compiler* compiler, const char* errorMessage)
   ignoreNewlines(compiler);
 }
 
+static void allowLineBeforeDot(Compiler* compiler) {
+  if (peek(compiler) == TOKEN_LINE && peekNext(compiler) == TOKEN_DOT) {
+    nextToken(compiler->parser);
+  }
+}
+
 // Variables and scopes --------------------------------------------------------
 
 // Emits one single-byte argument. Returns its index.
@@ -1956,6 +1962,7 @@ static void namedCall(Compiler* compiler, bool canAssign, Code instruction)
   else
   {
     methodCall(compiler, instruction, &signature);
+    allowLineBeforeDot(compiler);
   }
 }
 
@@ -2152,6 +2159,8 @@ static void field(Compiler* compiler, bool canAssign)
     loadThis(compiler);
     emitByteArg(compiler, isLoad ? CODE_LOAD_FIELD : CODE_STORE_FIELD, field);
   }
+
+  allowLineBeforeDot(compiler);
 }
 
 // Compiles a read or assignment to [variable].
@@ -2183,6 +2192,8 @@ static void bareName(Compiler* compiler, bool canAssign, Variable variable)
 
   // Emit the load instruction.
   loadVariable(compiler, variable);
+
+  allowLineBeforeDot(compiler);
 }
 
 static void staticField(Compiler* compiler, bool canAssign)
