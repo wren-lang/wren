@@ -171,6 +171,9 @@ typedef struct
   // The 1-based line number of [currentChar].
   int currentLine;
 
+  // The upcoming token.
+  Token next;
+
   // The most recently lexed token.
   Token current;
 
@@ -635,13 +638,13 @@ static bool matchChar(Parser* parser, char c)
 // range.
 static void makeToken(Parser* parser, TokenType type)
 {
-  parser->current.type = type;
-  parser->current.start = parser->tokenStart;
-  parser->current.length = (int)(parser->currentChar - parser->tokenStart);
-  parser->current.line = parser->currentLine;
+  parser->next.type = type;
+  parser->next.start = parser->tokenStart;
+  parser->next.length = (int)(parser->currentChar - parser->tokenStart);
+  parser->next.line = parser->currentLine;
   
   // Make line tokens appear on the line containing the "\n".
-  if (type == TOKEN_LINE) parser->current.line--;
+  if (type == TOKEN_LINE) parser->next.line--;
 }
 
 // If the current character is [c], then consumes it and makes a token of type
@@ -715,17 +718,17 @@ static void makeNumber(Parser* parser, bool isHex)
 
   if (isHex)
   {
-    parser->current.value = NUM_VAL((double)strtoll(parser->tokenStart, NULL, 16));
+    parser->next.value = NUM_VAL((double)strtoll(parser->tokenStart, NULL, 16));
   }
   else
   {
-    parser->current.value = NUM_VAL(strtod(parser->tokenStart, NULL));
+    parser->next.value = NUM_VAL(strtod(parser->tokenStart, NULL));
   }
   
   if (errno == ERANGE)
   {
     lexError(parser, "Number literal was too large (%d).", sizeof(long int));
-    parser->current.value = NUM_VAL(0);
+    parser->next.value = NUM_VAL(0);
   }
   
   // We don't check that the entire token is consumed after calling strtoll()
@@ -917,21 +920,23 @@ static void readString(Parser* parser)
     }
   }
 
-  parser->current.value = wrenNewStringLength(parser->vm,
+  parser->next.value = wrenNewStringLength(parser->vm,
                                               (char*)string.data, string.count);
   
   wrenByteBufferClear(parser->vm, &string);
   makeToken(parser, type);
 }
 
-// Lex the next token and store it in [parser.current].
+// Lex the next token and store it in [parser.next].
 static void nextToken(Parser* parser)
 {
   parser->previous = parser->current;
+  parser->current = parser->next;
 
   // If we are out of tokens, don't try to tokenize any more. We *do* still
   // copy the TOKEN_EOF to previous so that code that expects it to be consumed
   // will still work.
+  if (parser->next.type == TOKEN_EOF) return;
   if (parser->current.type == TOKEN_EOF) return;
   
   while (peekChar(parser) != '\0')
@@ -1090,8 +1095,8 @@ static void nextToken(Parser* parser)
             // even though the source code and console output are UTF-8.
             lexError(parser, "Invalid byte 0x%x.", (uint8_t)c);
           }
-          parser->current.type = TOKEN_ERROR;
-          parser->current.length = 0;
+          parser->next.type = TOKEN_ERROR;
+          parser->next.length = 0;
         }
         return;
     }
@@ -1108,6 +1113,12 @@ static void nextToken(Parser* parser)
 static TokenType peek(Compiler* compiler)
 {
   return compiler->parser->current.type;
+}
+
+// Returns the type of the current token.
+static TokenType peekNext(Compiler* compiler)
+{
+  return compiler->parser->next.type;
 }
 
 // Consumes the current token if its type is [expected]. Returns true if a
@@ -3445,19 +3456,21 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   parser.numParens = 0;
 
   // Zero-init the current token. This will get copied to previous when
-  // advance() is called below.
-  parser.current.type = TOKEN_ERROR;
-  parser.current.start = source;
-  parser.current.length = 0;
-  parser.current.line = 0;
-  parser.current.value = UNDEFINED_VAL;
+  // nextToken() is called below.
+  parser.next.type = TOKEN_ERROR;
+  parser.next.start = source;
+  parser.next.length = 0;
+  parser.next.line = 0;
+  parser.next.value = UNDEFINED_VAL;
 
   // Ignore leading newlines.
   parser.skipNewlines = true;
   parser.printErrors = printErrors;
   parser.hasError = false;
 
-  // Read the first token.
+  // Read the first token into next
+  nextToken(&parser);
+  // Copy next -> current
   nextToken(&parser);
 
   int numExistingVariables = module->variables.count;
