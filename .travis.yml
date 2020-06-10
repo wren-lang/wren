@@ -1,19 +1,21 @@
 language: c
-os:
- - linux
- - osx
+
+# https://docs.travis-ci.com/user/languages/c/#gcc-on-macos
+# On mac, gcc is aliased to clang, so we only have one row 
+# in build the matrix, not two like on linux
 compiler:
-  - gcc
   - clang
-env:
-  - WREN_OPTIONS="" CI_ARCHS="ci_64"
-  - WREN_OPTIONS="-DWREN_NAN_TAGGING=0" CI_ARCHS="ci_64"
+  - gcc
 
 # Automatically build and deploy docs.
 jobs:
   include:
+    - os: linux
+    - os: osx
+      env: WREN_TARGET_MAC=1
+
     - stage: deploy
-      script: bash util/deploy_docs_from_travis.sh
+      script: ./util/deploy_docs_from_travis.sh
       # Only deploy commits that land on master.
       if: branch = master and type = push
 
@@ -37,4 +39,4 @@ addons:
 sudo: required
 dist: trusty
 
-script: make WREN_CFLAGS=${WREN_OPTIONS} ${CI_ARCHS}
+script: ./.travis.sh

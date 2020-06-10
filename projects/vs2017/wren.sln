@@ -1,0 +1,65 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wren_test", "wren_test.vcxproj", "{60BC8FB3-CC26-442A-1565-F5CF810E227F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0143A07C-ED79-A10D-9666-8710827C1D0F} = {0143A07C-ED79-A10D-9666-8710827C1D0F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wren", "wren.vcxproj", "{0143A07C-ED79-A10D-9666-8710827C1D0F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wren_shared", "wren_shared.vcxproj", "{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|64bit = Debug|64bit
+		Release|64bit = Release|64bit
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|32bit = Debug|32bit
+		Debug|64bit-no-nan-tagging = Debug|64bit-no-nan-tagging
+		Release|32bit = Release|32bit
+		Release|64bit-no-nan-tagging = Release|64bit-no-nan-tagging
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Debug|32bit.ActiveCfg = Debug 32bit|Win32
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Debug|32bit.Build.0 = Debug 32bit|Win32
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Debug|64bit.ActiveCfg = Debug 64bit|x64
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Debug|64bit.Build.0 = Debug 64bit|x64
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Debug|64bit-no-nan-tagging.ActiveCfg = Debug 64bit-no-nan-tagging|Win32
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Debug|64bit-no-nan-tagging.Build.0 = Debug 64bit-no-nan-tagging|Win32
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Release|32bit.ActiveCfg = Release 32bit|Win32
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Release|32bit.Build.0 = Release 32bit|Win32
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Release|64bit.ActiveCfg = Release 64bit|x64
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Release|64bit.Build.0 = Release 64bit|x64
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Release|64bit-no-nan-tagging.ActiveCfg = Release 64bit-no-nan-tagging|Win32
+		{60BC8FB3-CC26-442A-1565-F5CF810E227F}.Release|64bit-no-nan-tagging.Build.0 = Release 64bit-no-nan-tagging|Win32
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Debug|32bit.ActiveCfg = Debug 32bit|Win32
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Debug|32bit.Build.0 = Debug 32bit|Win32
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Debug|64bit.ActiveCfg = Debug 64bit|x64
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Debug|64bit.Build.0 = Debug 64bit|x64
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Debug|64bit-no-nan-tagging.ActiveCfg = Debug 64bit-no-nan-tagging|Win32
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Debug|64bit-no-nan-tagging.Build.0 = Debug 64bit-no-nan-tagging|Win32
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Release|32bit.ActiveCfg = Release 32bit|Win32
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Release|32bit.Build.0 = Release 32bit|Win32
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Release|64bit.ActiveCfg = Release 64bit|x64
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Release|64bit.Build.0 = Release 64bit|x64
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Release|64bit-no-nan-tagging.ActiveCfg = Release 64bit-no-nan-tagging|Win32
+		{0143A07C-ED79-A10D-9666-8710827C1D0F}.Release|64bit-no-nan-tagging.Build.0 = Release 64bit-no-nan-tagging|Win32
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Debug|32bit.ActiveCfg = Debug 32bit|Win32
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Debug|32bit.Build.0 = Debug 32bit|Win32
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Debug|64bit.ActiveCfg = Debug 64bit|x64
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Debug|64bit.Build.0 = Debug 64bit|x64
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Debug|64bit-no-nan-tagging.ActiveCfg = Debug 64bit-no-nan-tagging|Win32
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Debug|64bit-no-nan-tagging.Build.0 = Debug 64bit-no-nan-tagging|Win32
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Release|32bit.ActiveCfg = Release 32bit|Win32
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Release|32bit.Build.0 = Release 32bit|Win32
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Release|64bit.ActiveCfg = Release 64bit|x64
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Release|64bit.Build.0 = Release 64bit|x64
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Release|64bit-no-nan-tagging.ActiveCfg = Release 64bit-no-nan-tagging|Win32
+		{579B47D4-C350-C0C9-4C45-BAA0B8F9B6CD}.Release|64bit-no-nan-tagging.Build.0 = Release 64bit-no-nan-tagging|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

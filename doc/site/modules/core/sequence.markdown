@@ -15,9 +15,10 @@ Iterates over the sequence, passing each element to the function `predicate`.
 If it returns something [false](../control-flow.html#truth), stops iterating
 and returns the value. Otherwise, returns `true`.
 
-    :::wren
-    System.print([1, 2, 3].all {|n| n > 2}) //> false
-    System.print([1, 2, 3].all {|n| n < 4}) //> true
+<pre class="snippet">
+System.print([1, 2, 3].all {|n| n > 2}) //> false
+System.print([1, 2, 3].all {|n| n < 4}) //> true
+</pre>
 
 ### **any**(predicate)
 
@@ -29,9 +30,10 @@ returns that value. Otherwise, returns `false`.
 
 [true]: ../../control-flow.html#truth
 
-    :::wren
-    System.print([1, 2, 3].any {|n| n < 1}) //> false
-    System.print([1, 2, 3].any {|n| n > 2}) //> true
+<pre class="snippet">
+System.print([1, 2, 3].any {|n| n < 1}) //> false
+System.print([1, 2, 3].any {|n| n > 2}) //> true
+</pre>
 
 ### **contains**(element)
 
@@ -51,16 +53,18 @@ Returns the number of elements in the sequence that pass the `predicate`.
 Iterates over the sequence, passing each element to the function `predicate`
 and counting the number of times the returned value evaluates to `true`.
 
-    :::wren
-    System.print([1, 2, 3].count {|n| n > 2}) //> 1
-    System.print([1, 2, 3].count {|n| n < 4}) //> 3
+<pre class="snippet">
+System.print([1, 2, 3].count {|n| n > 2}) //> 1
+System.print([1, 2, 3].count {|n| n < 4}) //> 3
+</pre>
 
 ### **each**(function)
 
 Iterates over the sequence, passing each element to the given `function`.
 
-    :::wren
-    ["one", "two", "three"].each {|word| System.print(word) }
+<pre class="snippet">
+["one", "two", "three"].each {|word| System.print(word) }
+</pre>
 
 ### **isEmpty**
 
@@ -86,13 +90,14 @@ together into a single string.
 Creates a new sequence that applies the `transformation` to each element in the
 original sequence while it is iterated.
 
-    :::wren
-    var doubles = [1, 2, 3].map {|n| n * 2 }
-    for (n in doubles) {
-      System.print(n) //> 2
-                      //> 4
-                      //> 6
-    }
+<pre class="snippet">
+var doubles = [1, 2, 3].map {|n| n * 2 }
+for (n in doubles) {
+  System.print(n) //> 2
+                  //> 4
+                  //> 6
+}
+</pre>
 
 The returned sequence is *lazy*. It only applies the mapping when you iterate
 over the sequence, and it does so by holding a reference to the original
@@ -104,11 +109,12 @@ changes to the original sequence will be reflected in the mapped sequence.
 
 To force eager evaluation, just call `.toList` on the result.
 
-    :::wren
-    var numbers = [1, 2, 3]
-    var doubles = numbers.map {|n| n * 2 }.toList
-    numbers.add(4)
-    System.print(doubles) //> [2, 4, 6]
+<pre class="snippet">
+var numbers = [1, 2, 3]
+var doubles = numbers.map {|n| n * 2 }.toList
+numbers.add(4)
+System.print(doubles) //> [2, 4, 6]
+</pre>
 
 ### **reduce**(function)
 
@@ -148,8 +154,9 @@ Creates a [list][] containing all the elements in the sequence.
 
 [list]: list.html
 
-    :::wren
-    System.print((1..3).toList)  //> [1, 2, 3]
+<pre class="snippet">
+System.print((1..3).toList)  //> [1, 2, 3]
+</pre>
 
 If the sequence is already a list, this creates a copy of it.
 
@@ -161,13 +168,14 @@ that pass the `predicate`.
 During iteration, each element in the original sequence is passed to the
 function `predicate`. If it returns `false`, the element is skipped.
 
-    :::wren
-    var odds = (1..6).where {|n| n % 2 == 1 }
-    for (n in odds) {
-        System.print(n) //> 1
-                        //> 3
-                        //> 5
-    }
+<pre class="snippet">
+var odds = (1..6).where {|n| n % 2 == 1 }
+for (n in odds) {
+    System.print(n) //> 1
+                    //> 3
+                    //> 5
+}
+</pre>
 
 The returned sequence is *lazy*. It only applies the filtering when you iterate
 over the sequence, and it does so by holding a reference to the original
@@ -180,8 +188,9 @@ sequence.
 
 To force eager evaluation, just call `.toList` on the result.
 
-    :::wren
-    var numbers = [1, 2, 3, 4, 5, 6]
-    var odds = numbers.where {|n| n % 2 == 1 }.toList
-    numbers.add(7)
-    System.print(odds) //> [1, 3, 5]
+<pre class="snippet">
+var numbers = [1, 2, 3, 4, 5, 6]
+var odds = numbers.where {|n| n % 2 == 1 }.toList
+numbers.add(7)
+System.print(odds) //> [1, 3, 5]
+</pre>

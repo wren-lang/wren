@@ -259,12 +259,12 @@ static void call_fn(WrenVM* vm, Value* args, int numArgs)
   wrenCallFunction(vm, vm->fiber, AS_CLOSURE(args[0]), numArgs + 1);
 }
 
-#define DEF_FN_CALL(numArgs) \
-    DEF_PRIMITIVE(fn_call##numArgs) \
-    { \
-      call_fn(vm, args, numArgs); \
-      return false; \
-    } \
+#define DEF_FN_CALL(numArgs)                                                   \
+    DEF_PRIMITIVE(fn_call##numArgs)                                            \
+    {                                                                          \
+      call_fn(vm, args, numArgs);                                              \
+      return false;                                                            \
+    }
 
 DEF_FN_CALL(0)
 DEF_FN_CALL(1)
@@ -600,11 +600,11 @@ DEF_PRIMITIVE(num_pi)
 }
 
 // Defines a primitive on Num that calls infix [op] and returns [type].
-#define DEF_NUM_INFIX(name, op, type) \
-    DEF_PRIMITIVE(num_##name) \
-    { \
-      if (!validateNum(vm, args[1], "Right operand")) return false; \
-      RETURN_##type(AS_NUM(args[0]) op AS_NUM(args[1])); \
+#define DEF_NUM_INFIX(name, op, type)                                          \
+    DEF_PRIMITIVE(num_##name)                                                  \
+    {                                                                          \
+      if (!validateNum(vm, args[1], "Right operand")) return false;            \
+      RETURN_##type(AS_NUM(args[0]) op AS_NUM(args[1]));                       \
     }
 
 DEF_NUM_INFIX(minus,    -,  NUM)
@@ -617,13 +617,13 @@ DEF_NUM_INFIX(lte,      <=, BOOL)
 DEF_NUM_INFIX(gte,      >=, BOOL)
 
 // Defines a primitive on Num that call infix bitwise [op].
-#define DEF_NUM_BITWISE(name, op) \
-    DEF_PRIMITIVE(num_bitwise##name) \
-    { \
-      if (!validateNum(vm, args[1], "Right operand")) return false; \
-      uint32_t left = (uint32_t)AS_NUM(args[0]); \
-      uint32_t right = (uint32_t)AS_NUM(args[1]); \
-      RETURN_NUM(left op right); \
+#define DEF_NUM_BITWISE(name, op)                                              \
+    DEF_PRIMITIVE(num_bitwise##name)                                           \
+    {                                                                          \
+      if (!validateNum(vm, args[1], "Right operand")) return false;            \
+      uint32_t left = (uint32_t)AS_NUM(args[0]);                               \
+      uint32_t right = (uint32_t)AS_NUM(args[1]);                              \
+      RETURN_NUM(left op right);                                               \
     }
 
 DEF_NUM_BITWISE(And,        &)
@@ -633,10 +633,10 @@ DEF_NUM_BITWISE(LeftShift,  <<)
 DEF_NUM_BITWISE(RightShift, >>)
 
 // Defines a primitive method on Num that returns the result of [fn].
-#define DEF_NUM_FN(name, fn) \
-    DEF_PRIMITIVE(num_##name) \
-    { \
-      RETURN_NUM(fn(AS_NUM(args[0]))); \
+#define DEF_NUM_FN(name, fn)                                                   \
+    DEF_PRIMITIVE(num_##name)                                                  \
+    {                                                                          \
+      RETURN_NUM(fn(AS_NUM(args[0])));                                         \
     }
 
 DEF_NUM_FN(abs,     fabs)

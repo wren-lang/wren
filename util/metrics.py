@@ -45,7 +45,7 @@ def c_metrics(label, directories):
     for source_path in files:
       num_files += 1
 
-      with open(source_path, "r") as input:
+      with open(source_path, "r", encoding="utf-8") as input:
         for line in input:
           num_semicolons += line.count(';')
           match = TODO_PATTERN.match(line)
@@ -84,10 +84,17 @@ def wren_metrics(label, directories):
   for directory in directories:
     for dir_path, dir_names, file_names in os.walk(directory):
       for file_name in fnmatch.filter(file_names, "*.wren"):
+        file_path = os.path.join(dir_path, file_name)
+        file_path = file_path.replace('\\', '/')
+
+        # print(file_path)
+
         num_files += 1
 
-        with open(os.path.join(dir_path, file_name), "r") as input:
-          for line in input:
+        with open(file_path, "r", encoding="utf-8", newline='', errors='replace') as input:
+          data = input.read()
+          lines = re.split('\n|\r\n', data)
+          for line in lines:
             if line.strip() == "":
               num_empty += 1
               continue
