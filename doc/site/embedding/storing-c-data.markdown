@@ -12,7 +12,7 @@ written in C. It produces real Wren objects that you can pass around, do `is`
 checks on, etc. But it also wraps a blob of raw memory that is opaque to Wren
 but accessible from C.
 
-[foreign methods]: http://localhost:8000/embedding/calling-c-from-wren.html
+[foreign methods]: calling-c-from-wren.html
 
 ## Defining a Foreign Class
 
