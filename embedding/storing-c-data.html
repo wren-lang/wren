@@ -76,7 +76,7 @@ of data more efficiently than Wren&rsquo;s dynamism allows. You may want a Wren 
 that represents a native resource like a file handle or database connection.</p>
 <p>For those cases, you can define a <strong>foreign class</strong>, a chimera whose state is
 half Wren and half C. It is a real Wren class with a name, constructor, and
-methods. You can define methods on it written in Wren, or <a href="http://localhost:8000/embedding/calling-c-from-wren.html">foreign methods</a>
+methods. You can define methods on it written in Wren, or <a href="calling-c-from-wren.html">foreign methods</a>
 written in C. It produces real Wren objects that you can pass around, do <code>is</code>
 checks on, etc. But it also wraps a blob of raw memory that is opaque to Wren
 but accessible from C.</p>
