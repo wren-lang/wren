@@ -1690,6 +1690,11 @@ void wrenSetSlotNewList(WrenVM* vm, int slot)
   setSlot(vm, slot, OBJ_VAL(wrenNewList(vm, 0)));
 }
 
+void wrenSetSlotNewMap(WrenVM* vm, int slot)
+{
+  setSlot(vm, slot, OBJ_VAL(wrenNewMap(vm)));
+}
+
 void wrenSetSlotNull(WrenVM* vm, int slot)
 {
   setSlot(vm, slot, NULL_VAL);
@@ -1742,6 +1747,37 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   ASSERT(index <= list->elements.count, "Index out of bounds.");
   
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
+}
+
+int wrenGetMapCount(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+  ASSERT(IS_MAP(vm->apiStack[slot]), "Slot must hold a map.");
+
+  ObjMap* map = AS_MAP(vm->apiStack[slot]);
+  return map->count;
+}
+
+void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
+{
+  validateApiSlot(vm, mapSlot);
+  validateApiSlot(vm, keySlot);
+  validateApiSlot(vm, valueSlot);
+  ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Slot must hold a map.");
+
+  ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+  vm->apiStack[valueSlot] = wrenMapGet(map, vm->apiStack[keySlot]);
+}
+
+void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
+{
+  validateApiSlot(vm, mapSlot);
+  validateApiSlot(vm, keySlot);
+  validateApiSlot(vm, valueSlot);
+  ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Slot must hold a map.");
+
+  ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+  wrenMapSet(vm, map, vm->apiStack[keySlot], vm->apiStack[valueSlot]);
 }
 
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,

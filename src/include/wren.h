@@ -440,6 +440,9 @@ void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size);
 // Stores a new empty list in [slot].
 void wrenSetSlotNewList(WrenVM* vm, int slot);
 
+// Stores a new empty map in [slot].
+void wrenSetSlotNewMap(WrenVM* vm, int slot);
+
 // Stores null in [slot].
 void wrenSetSlotNull(WrenVM* vm, int slot);
 
@@ -469,6 +472,17 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 // As in Wren, negative indexes can be used to insert from the end. To append
 // an element, use `-1` for the index.
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
+
+// Returns the number of entries in the map stored in [slot].
+int wrenGetMapCount(WrenVM* vm, int slot);
+
+// Reads the value of [keySlot] from the map in [mapSlot] and stores it in
+// [valueSlot].
+void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
+
+// Takes the value of [valueSlot] and sets it as the value of [keySlot]
+// inside the map stored in [mapSlot]
+void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot].
