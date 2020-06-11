@@ -43,10 +43,10 @@
       return false;                                                            \
     } while (false)
 
-#define RETURN_ERROR_FMT(msg, arg)                                             \
+#define RETURN_ERROR_FMT(...)                                                  \
     do                                                                         \
     {                                                                          \
-      vm->fiber->error = wrenStringFormat(vm, msg, arg);                       \
+      vm->fiber->error = wrenStringFormat(vm, __VA_ARGS__);                    \
       return false;                                                            \
     } while (false)
 
