@@ -33,7 +33,7 @@ Docs have also had a clean up, and a new page to try Wren directly on the doc pa
 
 ## 0.2.0
 
-0.2.0 spans a pretty wide time period with [around 290 commits](https://github.com/wren-lang/wren/compare/0.1.0...master).
+0.2.0 spans a pretty wide time period with [around 290 commits](https://github.com/wren-lang/wren/compare/0.1.0...main).
 This includes many bug fixes, improvements, clarity in the
 code and documentation and so on. There's too many to explicitly list.
 Below is the obvious user facing stuff that was easy to spot in the history.

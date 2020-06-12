@@ -118,11 +118,11 @@ on the [discord community][discord] (or the [mailing list][list]). If you're a R
 [mit]: http://opensource.org/licenses/MIT
 [github]: https://github.com/wren-lang/
 [fork]: https://help.github.com/articles/fork-a-repo/
-[docs]: https://github.com/wren-lang/wren/tree/master/doc/site
+[docs]: https://github.com/wren-lang/wren/tree/main/doc/site
 [issue]: https://github.com/wren-lang/wren/issues
 [proposal]: https://github.com/wren-lang/wren/labels/proposal
 [feature branches]: https://www.atlassian.com/git/tutorials/comparing-workflows/centralized-workflow
-[authors]: https://github.com/wren-lang/wren/tree/master/AUTHORS
+[authors]: https://github.com/wren-lang/wren/tree/main/AUTHORS
 [pull request]: https://github.com/wren-lang/wren/pulls
 [list]: https://groups.google.com/forum/#!forum/wren-lang
 [subreddit]: https://www.reddit.com/r/wren_lang/

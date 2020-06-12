@@ -410,7 +410,7 @@ import strings will mean something different. We definitely *can* and will make
 breaking changes in Wren, so that's OK, but I'd like to minimize the pain. Right
 now, Wren is currently at version 0.1.0. I'll probably consider the commit right
 before I start landing this to be the "official" 0.1.0 release and then the
-import changes will land in "0.2.0". I'll work in a branch off master until
+import changes will land in "0.2.0". I'll work in a branch off main until
 everything looks solid and then merge it in.
 
 If you have existing Wren code that you run on the CLI and that contains

@@ -16,8 +16,8 @@ jobs:
 
     - stage: deploy
       script: ./util/deploy_docs_from_travis.sh
-      # Only deploy commits that land on master.
-      if: branch = master and type = push
+      # Only deploy commits that land on main.
+      if: branch = main and type = push
 
 # Travis VMs are 64-bit but we compile both for 32 and 64 bit. To enable the
 # 32-bit builds to work, we need gcc-multilib.

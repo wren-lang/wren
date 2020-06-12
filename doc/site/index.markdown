@@ -51,7 +51,7 @@ If you like the sound of this, [let's get started][started].
 Excited? You're also welcome to [get involved][contribute]!
 
 [syntax]: syntax.html
-[src]: https://github.com/wren-lang/wren/tree/master/src
+[src]: https://github.com/wren-lang/wren/tree/main/src
 [nan]: https://github.com/wren-lang/wren/blob/46c1ba92492e9257aba6418403161072d640cb29/src/wren_value.h#L378-L433
 [perf]: performance.html
 [classes]: classes.html
