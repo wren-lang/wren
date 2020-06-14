@@ -16,6 +16,9 @@ Release/
 # The baseline file is machine-specific
 /test/benchmark/baseline.txt
 
+# VSCode project files.
+.vscode
+
 # XCode user-specific stuff
 xcuserdata/
 
@@ -33,3 +36,6 @@ ipch/
 *.user
 *.userosscache
 *.sln.docstates
+
+# macOS
+.DS_Store
