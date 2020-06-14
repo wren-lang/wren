@@ -49,10 +49,67 @@ static void insert(WrenVM* vm)
   wrenSetMapValue(vm, 0, 1, 2);
 }
 
+static void remove(WrenVM* vm)
+{
+  wrenEnsureSlots(vm, 3);
+
+  wrenSetSlotString(vm, 2, "key");
+  wrenRemoveMapValue(vm, 1, 2, 0);
+}
+
+static void countWren(WrenVM* vm)
+{
+  int count = wrenGetMapCount(vm, 1);
+  wrenSetSlotDouble(vm, 0, count);
+}
+
+static void countAPI(WrenVM* vm)
+{
+  insert(vm);
+  int count = wrenGetMapCount(vm, 0);
+  wrenSetSlotDouble(vm, 0, count);
+}
+
+static void containsWren(WrenVM* vm)
+{
+  bool result = wrenGetMapContainsKey(vm, 1, 2);
+  wrenSetSlotBool(vm, 0, result);
+}
+
+
+static void containsAPI(WrenVM* vm)
+{
+  insert(vm);
+  
+  wrenEnsureSlots(vm, 1);
+  wrenSetSlotString(vm, 1, "England");
+
+  bool result = wrenGetMapContainsKey(vm, 0, 1);
+  wrenSetSlotBool(vm, 0, result);
+}
+
+static void containsAPIFalse(WrenVM* vm)
+{
+  insert(vm);
+
+  wrenEnsureSlots(vm, 1);
+  wrenSetSlotString(vm, 1, "DefinitelyNotARealKey");
+
+  bool result = wrenGetMapContainsKey(vm, 0, 1);
+  wrenSetSlotBool(vm, 0, result);
+}
+
+
 WrenForeignMethodFn mapsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Maps.newMap()") == 0) return newMap;
   if (strcmp(signature, "static Maps.insert()") == 0) return insert;
+  if (strcmp(signature, "static Maps.remove(_)") == 0) return remove;
+  if (strcmp(signature, "static Maps.count(_)") == 0) return countWren;
+  if (strcmp(signature, "static Maps.count()") == 0) return countAPI;
+  if (strcmp(signature, "static Maps.contains()") == 0) return containsAPI;
+  if (strcmp(signature, "static Maps.containsFalse()") == 0) return containsAPIFalse;
+  if (strcmp(signature, "static Maps.contains(_,_)") == 0) return containsWren;
   if (strcmp(signature, "static Maps.invalidInsert(_)") == 0) return invalidInsert;
 
   return NULL;

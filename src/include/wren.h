@@ -474,13 +474,25 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 // an element, use `-1` for the index.
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
-// Retrieves a value with the key in [keySlot] from the map in [mapSlot] and stores it in
-// [valueSlot].
+// Returns the number of entries in the map stored in [slot].
+int wrenGetMapCount(WrenVM* vm, int slot);
+
+// Returns true if the key in [keySlot] is found in the map placed in [mapSlot].
+bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot);
+
+// Retrieves a value with the key in [keySlot] from the map in [mapSlot] and
+// stores it in [valueSlot].
 void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
 
 // Takes the value stored at [valueSlot] and inserts it into the map stored
 // at [mapSlot] with key [keySlot].
 void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
+
+// Removes a value from the map in [mapSlot], with the key from [keySlot],
+// and place it in [removedValueSlot]. If not found, [removedValueSlot] is
+// set to null, the same behaviour as the Wren Map API.
+void wrenRemoveMapValue(WrenVM* vm, int mapSlot, int keySlot,
+                        int removedValueSlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot].
