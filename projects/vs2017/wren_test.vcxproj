@@ -265,6 +265,7 @@
     <ClInclude Include="..\..\test\api\get_variable.h" />
     <ClInclude Include="..\..\test\api\handle.h" />
     <ClInclude Include="..\..\test\api\lists.h" />
+    <ClInclude Include="..\..\test\api\maps.h" />
     <ClInclude Include="..\..\test\api\new_vm.h" />
     <ClInclude Include="..\..\test\api\reset_stack_after_call_abort.h" />
     <ClInclude Include="..\..\test\api\reset_stack_after_foreign_construct.h" />
@@ -284,6 +285,7 @@
     <ClCompile Include="..\..\test\api\get_variable.c" />
     <ClCompile Include="..\..\test\api\handle.c" />
     <ClCompile Include="..\..\test\api\lists.c" />
+    <ClCompile Include="..\..\test\api\maps.c" />
     <ClCompile Include="..\..\test\api\new_vm.c" />
     <ClCompile Include="..\..\test\api\reset_stack_after_call_abort.c" />
     <ClCompile Include="..\..\test\api\reset_stack_after_foreign_construct.c" />

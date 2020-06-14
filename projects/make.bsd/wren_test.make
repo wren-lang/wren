@@ -121,6 +121,7 @@ OBJECTS += $(OBJDIR)/get_variable.o
 OBJECTS += $(OBJDIR)/handle.o
 OBJECTS += $(OBJDIR)/lists.o
 OBJECTS += $(OBJDIR)/main.o
+OBJECTS += $(OBJDIR)/maps.o
 OBJECTS += $(OBJDIR)/new_vm.o
 OBJECTS += $(OBJDIR)/reset_stack_after_call_abort.o
 OBJECTS += $(OBJDIR)/reset_stack_after_foreign_construct.o
@@ -217,6 +218,9 @@ $(OBJDIR)/handle.o: ../../test/api/handle.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/lists.o: ../../test/api/lists.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/maps.o: ../../test/api/maps.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/new_vm.o: ../../test/api/new_vm.c
