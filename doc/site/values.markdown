@@ -19,6 +19,7 @@ Like other scripting languages, Wren has a single numeric type:
 double-precision floating point. Number literals look like you expect coming
 from other languages:
 
+
 <pre class="snippet">
 0
 1234
@@ -26,6 +27,9 @@ from other languages:
 3.14159
 1.0
 -12.34
+0.0314159e02
+0.0314159e+02
+314.159e-02
 </pre>
 
 Numbers are instances of the [Num][] class.

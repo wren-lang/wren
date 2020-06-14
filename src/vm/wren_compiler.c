@@ -758,18 +758,21 @@ static void readNumber(Parser* parser)
     nextChar(parser);
     while (isDigit(peekChar(parser))) nextChar(parser);
   }
-  
+
   // See if the number is in scientific notation.
   if (matchChar(parser, 'e') || matchChar(parser, 'E'))
   {
-    // Allow a negative exponent.
-    matchChar(parser, '-');
-    
+    // Allow a single positive/negative exponent symbol.
+    if(!matchChar(parser, '+'))
+    {
+      matchChar(parser, '-');
+    }
+
     if (!isDigit(peekChar(parser)))
     {
       lexError(parser, "Unterminated scientific notation.");
     }
-    
+
     while (isDigit(peekChar(parser))) nextChar(parser);
   }
 
