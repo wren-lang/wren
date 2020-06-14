@@ -182,7 +182,7 @@ typedef struct sObjUpvalue
   // Pointer to the variable this upvalue is referencing.
   Value* value;
 
-  // If the upvalue is closed (i.e. the local variable it was pointing too has
+  // If the upvalue is closed (i.e. the local variable it was pointing to has
   // been popped off the stack) then the closed-over value will be hoisted out
   // of the stack into here. [value] will then be changed to point to this.
   Value closed;
@@ -316,8 +316,8 @@ typedef struct sObjFiber
   Obj obj;
   
   // The stack of value slots. This is used for holding local variables and
-  // temporaries while the fiber is executing. It heap-allocated and grown as
-  // needed.
+  // temporaries while the fiber is executing. It is heap-allocated and grown
+  // as needed.
   Value* stack;
   
   // A pointer to one past the top-most value on the stack.

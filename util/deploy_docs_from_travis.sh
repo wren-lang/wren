@@ -1,13 +1,16 @@
 #!/bin/bash
 set -e
 
-# Install the Wren Pygments lexer.
-cd util/pygments-lexer
-sudo python3 setup.py develop
-cd ../..
+WREN_PY="python3"
+if [ -n "$WREN_PY_BINARY" ]
+then
+  WREN_PY="$WREN_PY_BINARY"
+fi
 
 # Build the docs.
-make gh-pages
+mkdir -p build
+$WREN_PY ./util/generate_docs.py
+cp -r build/docs/. build/gh-pages
 
 # Clone the repo at the gh-pages branch.
 git clone https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG} gh-pages-repo \

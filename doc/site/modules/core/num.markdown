@@ -27,8 +27,9 @@ The smallest positive representable numeric value.
 
 The absolute value of the number.
 
-    :::wren
-    System.print( (-123).abs ) //> 123
+<pre class="snippet">
+System.print( (-123).abs ) //> 123
+</pre>
 
 ### **acos**
 
@@ -51,9 +52,10 @@ numbers to determine the quadrant of the result.
 
 Rounds the number up to the nearest integer.
 
-    :::wren
-    System.print(1.5.ceil)    //> 2
-    System.print((-3.2).ceil) //> -3
+<pre class="snippet">
+System.print(1.5.ceil)    //> 2
+System.print((-3.2).ceil) //> -3
+</pre>
 
 ### **cos**
 
@@ -63,25 +65,28 @@ The cosine of the number.
 
 Rounds the number down to the nearest integer.
 
-    :::wren
-    System.print(1.5.floor)    //> 1
-    System.print((-3.2).floor) //> -4
+<pre class="snippet">
+System.print(1.5.floor)    //> 1
+System.print((-3.2).floor) //> -4
+</pre>
 
 ### **isInfinity**
 
 Whether the number is positive or negative infinity or not.
 
-    :::wren
-    System.print(99999.isInfinity)  //> false
-    System.print((1/0).isInfinity)  //> true
+<pre class="snippet">
+System.print(99999.isInfinity)  //> false
+System.print((1/0).isInfinity)  //> true
+</pre>
 
 ### **isInteger**
 
 Whether the number is an integer or has some fractional component.
 
-    :::wren
-    System.print(2.isInteger)   //> true
-    System.print(2.3.isInteger) //> false
+<pre class="snippet">
+System.print(2.isInteger)   //> true
+System.print(2.3.isInteger) //> false
+</pre>
 
 ### **isNan**
 
@@ -101,10 +106,15 @@ Raises this number (the base) to `power`. Returns `nan` if the base is negative.
 
 Rounds the number to the nearest integer.
 
-    :::wren
-    System.print(1.5.round)    //> 2
-    System.print((-3.2).round) //> -3
-    System.print((-3.7).round) //> -4
+<pre class="snippet">
+System.print(1.5.round)    //> 2
+System.print((-3.2).round) //> -3
+System.print((-3.7).round) //> -4
+</pre>
+
+### **sign**
+
+The sign of the number, expressed as a -1, 1 or 0, for negative and positive numbers, and zero.
 
 ### **sin**
 
@@ -122,9 +132,10 @@ The tangent of the number.
 
 Negates the number.
 
-    :::wren
-    var a = 123
-    System.print(-a) //> -123
+<pre class="snippet">
+var a = 123
+System.print(-a) //> -123
+</pre>
 
 ### **-**(other), **+**(other), **/**(other), **\***(other) operators
 
@@ -173,19 +184,21 @@ It is a runtime error if `other` is not a number.
 Creates a [Range](range.html) representing a consecutive range of numbers
 from the beginning number to the ending number.
 
-    :::wren
-    var range = 1.2..3.4
-    System.print(range.min)         //> 1.2
-    System.print(range.max)         //> 3.4
-    System.print(range.isInclusive) //> true
+<pre class="snippet">
+var range = 1.2..3.4
+System.print(range.min)         //> 1.2
+System.print(range.max)         //> 3.4
+System.print(range.isInclusive) //> true
+</pre>
 
 ### **...**(other) operator
 
 Creates a [Range](range.html) representing a consecutive range of numbers
 from the beginning number to the ending number not including the ending number.
 
-    :::wren
-    var range = 1.2...3.4
-    System.print(range.min)         //> 1.2
-    System.print(range.max)         //> 3.4
-    System.print(range.isInclusive) //> false
+<pre class="snippet">
+var range = 1.2...3.4
+System.print(range.min)         //> 1.2
+System.print(range.max)         //> 3.4
+System.print(range.isInclusive) //> false
+</pre>

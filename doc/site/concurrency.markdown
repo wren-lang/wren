@@ -25,10 +25,11 @@ All Wren code runs within the context of a fiber. When you first start a Wren
 script, a main fiber is created for you automatically. You can spawn new fibers
 using the Fiber class's constructor:
 
-    :::wren
-    var fiber = Fiber.new {
-      System.print("This runs in a separate fiber.")
-    }
+<pre class="snippet">
+var fiber = Fiber.new {
+  System.print("This runs in a separate fiber.")
+}
+</pre>
 
 It takes a [function][] containing the code the fiber should execute. The
 function can take zero or one parameter, but no more than that. Creating the
@@ -41,21 +42,23 @@ waiting to be activated.
 
 Once you've created a fiber, you run it by calling its `call()` method:
 
-    :::wren
-    fiber.call()
+<pre class="snippet">
+fiber.call()
+</pre>
 
 This suspends the current fiber and executes the called one until it reaches the
 end of its body or until it passes control to yet another fiber. If it reaches
 the end of its body, it is considered *done*:
 
-    :::wren
-    var fiber = Fiber.new {
-      System.print("It's alive!")
-    }
+<pre class="snippet">
+var fiber = Fiber.new {
+  System.print("It's alive!")
+}
 
-    System.print(fiber.isDone) //> false
-    fiber.call() //> It's alive!
-    System.print(fiber.isDone) //> true
+System.print(fiber.isDone) //> false
+fiber.call() //> It's alive!
+System.print(fiber.isDone) //> true
+</pre>
 
 When a called fiber finishes, it automatically passes control *back* to the
 fiber that called it. It's a runtime error to try to call a fiber that is
@@ -74,18 +77,19 @@ fiber is called, it picks up right where it left off and keeps going.
 
 You make a fiber yield by calling the static `yield()` method on Fiber:
 
-    :::wren
-    var fiber = Fiber.new {
-      System.print("Before yield")
-      Fiber.yield()
-      System.print("Resumed")
-    }
+<pre class="snippet">
+var fiber = Fiber.new {
+  System.print("Before yield")
+  Fiber.yield()
+  System.print("Resumed")
+}
 
-    System.print("Before call") //> Before call
-    fiber.call() //> Before yield
-    System.print("Calling again") //> Calling again
-    fiber.call() //> Resumed
-    System.print("All done") //> All done
+System.print("Before call") //> Before call
+fiber.call() //> Before yield
+System.print("Calling again") //> Calling again
+fiber.call() //> Resumed
+System.print("All done") //> All done
+</pre>
 
 Note that even though this program uses *concurrency*, it is still
 *deterministic*. You can reason precisely about what it's doing and aren't at
@@ -99,36 +103,39 @@ Calling and yielding fibers is used for passing control, but it can also pass
 If you create a fiber using a function that takes a parameter, you can pass a
 value to it through `call()`:
 
-    :::wren
-    var fiber = Fiber.new {|param|
-      System.print(param)
-    }
+<pre class="snippet">
+var fiber = Fiber.new {|param|
+  System.print(param)
+}
 
-    fiber.call("Here you go") //> Here you go
+fiber.call("Here you go") //> Here you go
+</pre>
 
 If the fiber has yielded and is waiting to resume, the value you pass to call
 becomes the return value of the `yield()` call when it resumes:
 
-    :::wren
-    var fiber = Fiber.new {|param|
-      System.print(param)
-      var result = Fiber.yield()
-      System.print(result)
-    }
+<pre class="snippet">
+var fiber = Fiber.new {|param|
+  System.print(param)
+  var result = Fiber.yield()
+  System.print(result)
+}
 
-    fiber.call("First") //> First
-    fiber.call("Second") //> Second
+fiber.call("First") //> First
+fiber.call("Second") //> Second
+</pre>
 
 Fibers can also pass values *back* when they yield. If you pass an argument to
 `yield()`, that will become the return value of the `call()` that was used to
 invoke the fiber:
 
-    :::wren
-    var fiber = Fiber.new {
-      Fiber.yield("Reply")
-    }
+<pre class="snippet">
+var fiber = Fiber.new {
+  Fiber.yield("Reply")
+}
 
-    System.print(fiber.call()) //> Reply
+System.print(fiber.call()) //> Reply
+</pre>
 
 This is sort of like how a function call may return a value, except that a fiber
 may return a whole sequence of values, one every time it yields.
@@ -146,12 +153,13 @@ you use to create a fiber can call a method that calls another method that calls
 some third method which finally calls yield. When that happens, *all* of those
 method calls &mdash; the entire callstack &mdash; gets suspended. For example:
 
-    :::wren
-    var fiber = Fiber.new {
-      (1..10).each {|i|
-        Fiber.yield(i)
-      }
-    }
+<pre class="snippet">
+var fiber = Fiber.new {
+  (1..10).each {|i|
+    Fiber.yield(i)
+  }
+}
+</pre>
 
 Here, we're calling `yield()` from within a [function](functions.html) being
 passed to the `each()` method. This works fine in Wren because that inner

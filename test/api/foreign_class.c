@@ -78,7 +78,7 @@ static void resourceFinalize(void* data)
   // Make sure we get the right data back.
   int* value = (int*)data;
   if (*value != 123) exit(1);
-  
+
   finalized++;
 }
 

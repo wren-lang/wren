@@ -7,26 +7,26 @@ Errors come in a few fun flavors.
 The first errors you're likely to run into are syntax errors. These include
 simple bugs where your code doesn't follow the language's grammar, like:
 
-    :::wren
-    1 + * 2
+<pre class="snippet">
+1 + * 2
+</pre>
 
 Wren detects these errors as soon as it tries to read your code. When it hits
 one, you get a friendly error message, like:
 
-    :::text
     [main line 1] Error on '*': Unexpected token for expression.
 
 Some slightly more "semantic" errors fall into this bucket too. Things like
 using a variable that hasn't been defined, or declaring two variables with the
 same name in the same scope. So if you do:
 
-    :::wren
-    var a = "once"
-    var a = "twice"
+<pre class="snippet">
+var a = "once"
+var a = "twice"
+</pre>
 
 Wren tells you:
 
-    :::text
     [main line 2] Error on 'a': Top-level variable is already defined.
 
 Note that it does this before it executes *any* code. Unlike some other
@@ -48,17 +48,17 @@ perform an operation that the VM can't do. The most common error is a "method
 not found" one. If you call a method on an object and its class (and all of its
 superclasses) don't define that method, there's nothing Wren can do:
 
-    :::wren
-    class Foo {
-      construct new() {}
-    }
+<pre class="snippet">
+class Foo {
+  construct new() {}
+}
 
-    var foo = Foo.new()
-    foo.someRandomMethod
+var foo = Foo.new()
+foo.someRandomMethod
+</pre>
 
 If you run this, Wren will print:
 
-    :::text
     Foo does not implement method 'someRandomMethod'.
 
 Then it stops executing code. Unlike some other languages, Wren doesn't keep
@@ -71,13 +71,13 @@ Another common runtime error is passing an argument of the wrong type to a
 method. For example, lists are indexed using a number. If you try to pass some
 other type, it's an error:
 
-    :::wren
-    var list = ["a", "b", "c"]
-    list["1"]
+<pre class="snippet">
+var list = ["a", "b", "c"]
+list["1"]
+</pre>
 
 This exits with:
 
-    :::text
     Subscript must be a number or a range.
     [main line 2] in (script)
 
@@ -104,29 +104,29 @@ error message as a string.
 
 For example, if you run this program:
 
-    :::wren
-    var fiber = Fiber.new {
-      123.badMethod
-    }
+<pre class="snippet">
+var fiber = Fiber.new {
+  123.badMethod
+}
 
-    var error = fiber.try()
-    System.print("Caught error: " + error)
+var error = fiber.try()
+System.print("Caught error: " + error)
+</pre>
 
 It prints:
 
-    :::text
     Caught error: Num does not implement method 'badMethod'.
 
 The called fiber can no longer be used, but any other fibers can proceed as
 usual. When a fiber has been aborted because of a runtime error, you can also
 get the error from the fiber object. Continuing the above example:
 
-    :::wren
-    System.print(fiber.error)
+<pre class="snippet">
+System.print(fiber.error)
+</pre>
 
 This also prints:
 
-    :::text
     Num does not implement method 'badMethod'.
 
 If you have a chain of fiber calls and a runtime error occurs, it will walk the
@@ -139,8 +139,9 @@ Most runtime errors come from within the Wren VM, but you may want to be able
 to cause your own runtime errors to occur. This can be done by calling the
 `abort()` static method on `Fiber`:
 
-    :::wren
-    Fiber.abort("Something bad happened")
+<pre class="snippet">
+Fiber.abort("Something bad happened")
+</pre>
 
 You must pass in an error message, and it must be a string.
 

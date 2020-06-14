@@ -18,19 +18,19 @@ static void insertNumber(WrenVM* vm, int index, double value)
 static void insert(WrenVM* vm)
 {
   wrenSetSlotNewList(vm, 0);
-  
+
   wrenEnsureSlots(vm, 2);
-  
+
   // Appending.
   insertNumber(vm, 0, 1.0);
   insertNumber(vm, 1, 2.0);
   insertNumber(vm, 2, 3.0);
-  
+
   // Inserting.
   insertNumber(vm, 0, 4.0);
   insertNumber(vm, 1, 5.0);
   insertNumber(vm, 2, 6.0);
-  
+
   // Negative indexes.
   insertNumber(vm, -1, 7.0);
   insertNumber(vm, -2, 8.0);

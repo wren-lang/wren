@@ -47,65 +47,38 @@ foreign class Random {
   int(end) { (float() * end).floor }
   int(start, end) { (float() * (end - start)).floor + start }
 
-  sample(list) { sample(list, 1)[0] }
+  sample(list) {
+    if (list.count == 0) Fiber.abort("Not enough elements to sample.")
+    return list[int(list.count)]
+  }
   sample(list, count) {
     if (count > list.count) Fiber.abort("Not enough elements to sample.")
 
-    // There at (at least) two simple algorithms for choosing a number of
-    // samples from a list without replacement -- where we don't pick the same
-    // element more than once.
-    //
-    // The first is faster when the number of samples is small relative to the
-    // size of the collection. In many cases, it avoids scanning the entire
-    // list. In the common case of just wanting one sample, it's a single
-    // random index lookup.
-    //
-    // However, its performance degrades badly as the sample size increases.
-    // Vitter's algorithm always scans the entire list, but it's also always
-    // O(n).
-    //
-    // The cutoff point between the two follows a quadratic curve on the same
-    // size. Based on some empirical testing, scaling that by 5 seems to fit
-    // pretty closely and chooses the fastest one for the given sample and
-    // collection size.
-    if (count * count * 5 < list.count) {
-      // Pick random elements and retry if you hit a previously chosen one.
-      var picked = {}
-      var result = []
-      for (i in 0...count) {
-        // Find an index that we haven't already selected.
-        var index
-        while (true) {
-          index = int(count)
-          if (!picked.containsKey(index)) break
-        }
+    var result = []
 
+    // The algorithm described in "Programming pearls: a sample of brilliance".
+    // Use a hash map for sample sizes less than 1/4 of the population size and
+    // an array of booleans for larger samples. This simple heuristic improves
+    // performance for large sample sizes as well as reduces memory usage.
+    if (count * 4 < list.count) {
+      var picked = {}
+      for (i in list.count - count...list.count) {
+        var index = int(i + 1)
+        if (picked.containsKey(index)) index = i
         picked[index] = true
         result.add(list[index])
       }
-
-      return result
     } else {
-      // Jeffrey Vitter's Algorithm R.
-
-      // Fill the reservoir with the first elements in the list.
-      var result = list[0...count]
-
-      // We want to ensure the results are always in random order, so shuffle
-      // them. In cases where the sample size is the entire collection, this
-      // devolves to running Fisher-Yates on a copy of the list.
-      shuffle(result)
-
-      // Now walk the rest of the list. For each element, randomly consider
-      // replacing one of the reservoir elements with it. The probability here
-      // works out such that it does this uniformly.
-      for (i in count...list.count) {
-        var slot = int(0, i + 1)
-        if (slot < count) result[slot] = list[i]
+      var picked = List.filled(list.count, false)
+      for (i in list.count - count...list.count) {
+        var index = int(i + 1)
+        if (picked[index]) index = i
+        picked[index] = true
+        result.add(list[index])
       }
-
-      return result
     }
+
+    return result
   }
 
   shuffle(list) {
