@@ -36,6 +36,9 @@
     <ClInclude Include="..\..\test\api\lists.h">
       <Filter>api</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\test\api\maps.h">
+      <Filter>api</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\test\api\new_vm.h">
       <Filter>api</Filter>
     </ClInclude>
@@ -85,6 +88,9 @@
       <Filter>api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\api\lists.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\maps.c">
       <Filter>api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\api\new_vm.c">

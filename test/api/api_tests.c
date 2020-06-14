@@ -40,6 +40,9 @@ WrenForeignMethodFn APITest_bindForeignMethod(
   method = listsBindMethod(fullName);
   if (method != NULL) return method;
 
+  method = mapsBindMethod(fullName);
+  if (method != NULL) return method;
+
   method = newVMBindMethod(fullName);
   if (method != NULL) return method;
 
