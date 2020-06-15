@@ -1835,8 +1835,7 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
 {
   ASSERT(module != NULL, "Module cannot be NULL.");
   ASSERT(name != NULL, "Variable name cannot be NULL.");  
-  validateApiSlot(vm, slot);
-  
+
   Value moduleName = wrenStringFormat(vm, "$", module);
   wrenPushRoot(vm, AS_OBJ(moduleName));
   

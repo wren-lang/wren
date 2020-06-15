@@ -43,16 +43,15 @@
       return false;                                                            \
     } while (false)
 
-#define RETURN_ERROR_FMT(msg, arg)                                             \
+#define RETURN_ERROR_FMT(...)                                                  \
     do                                                                         \
     {                                                                          \
-      vm->fiber->error = wrenStringFormat(vm, msg, arg);                       \
+      vm->fiber->error = wrenStringFormat(vm, __VA_ARGS__);                    \
       return false;                                                            \
     } while (false)
 
 // Validates that the given [arg] is a function. Returns true if it is. If not,
 // reports an error and returns false.
-bool validateFn(WrenVM* vm, Value arg, const char* argName);
 bool validateFn(WrenVM* vm, Value arg, const char* argName);
 
 // Validates that the given [arg] is a Num. Returns true if it is. If not,
