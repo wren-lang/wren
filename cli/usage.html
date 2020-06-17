@@ -72,7 +72,7 @@
     <hr />
 <p>You can <a href="https://github.com/wren-lang/wren-cli/releases">download a build for your OS from the releases page</a>.</p>
 <h3>Interactive mode <a href="#interactive-mode" name="interactive-mode" class="header-anchor">#</a></h3>
-<p>If you just run <code>wren</code> without any arguments, it starts the interpreter in
+<p>If you just run <code>wren_cli</code> without any arguments, it starts the interpreter in
 interactive mode, where you can type in a line of code, and it immediately executes
 it. You can exit the interpreter using good old Ctrl-C or Ctrl-D.</p>
 <p>Here&rsquo;s something to try:</p>
@@ -87,7 +87,7 @@ for (i in 1..10) System.print("Counting up %(i)")
 
 <h3>Running scripts <a href="#running-scripts" name="running-scripts" class="header-anchor">#</a></h3>
 <p>The standalone interpreter can also load scripts from files and run them. Just
-pass the name of the script to <code>wren</code>. Create a file named &ldquo;my_script.wren&rdquo; in
+pass the name of the script to <code>wren_cli</code>. Create a file named &ldquo;my_script.wren&rdquo; in
 your favorite text editor and paste this into it:</p>
 <pre class="snippet">
 for (yPixel in 0...24) {
@@ -111,7 +111,7 @@ for (yPixel in 0...24) {
 </pre>
 
 <p>Now run:</p>
-<pre><code>$ ./wren my_script.wren
+<pre><code>$ ./wren_cli my_script.wren
 </code></pre>
   </main>
 </div>
