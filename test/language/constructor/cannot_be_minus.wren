@@ -1,5 +1,5 @@
 class Foo {
-  this -(value) { // expect error
+  construct -(value) { // expect error
     System.print("ok")
   }
 }
