@@ -594,6 +594,7 @@ DEF_PRIMITIVE(num_fromString)
       RETURN_NUM(value);                                                       \
     }
 
+DEF_NUM_CONSTANT(infinity, INFINITY)
 DEF_NUM_CONSTANT(pi,       3.14159265358979323846)
 
 DEF_NUM_CONSTANT(largest,  DBL_MAX)
@@ -1264,6 +1265,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->numClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Num"));
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
+  PRIMITIVE(vm->numClass->obj.classObj, "infinity", num_infinity);
   PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
   PRIMITIVE(vm->numClass->obj.classObj, "largest", num_largest);
   PRIMITIVE(vm->numClass->obj.classObj, "smallest", num_smallest);
