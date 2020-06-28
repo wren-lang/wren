@@ -587,10 +587,17 @@ DEF_PRIMITIVE(num_fromString)
   RETURN_NUM(number);
 }
 
-DEF_PRIMITIVE(num_pi)
-{
-  RETURN_NUM(3.14159265358979323846);
-}
+// Defines a primitive on Num that calls infix [op] and returns [type].
+#define DEF_NUM_CONSTANT(name, value)                                          \
+    DEF_PRIMITIVE(num_##name)                                                  \
+    {                                                                          \
+      RETURN_NUM(value);                                                       \
+    }
+
+DEF_NUM_CONSTANT(pi,       3.14159265358979323846)
+
+DEF_NUM_CONSTANT(largest,  DBL_MAX)
+DEF_NUM_CONSTANT(smallest, DBL_MIN)
 
 // Defines a primitive on Num that calls infix [op] and returns [type].
 #define DEF_NUM_INFIX(name, op, type)                                          \
@@ -738,16 +745,6 @@ DEF_PRIMITIVE(num_sign)
   {
     RETURN_NUM(0);
   }
-}
-
-DEF_PRIMITIVE(num_largest)
-{
-  RETURN_NUM(DBL_MAX);
-}
-
-DEF_PRIMITIVE(num_smallest)
-{
-  RETURN_NUM(DBL_MIN);
 }
 
 DEF_PRIMITIVE(num_toString)
