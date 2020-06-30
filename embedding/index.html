@@ -158,12 +158,32 @@ this header handles the differences in calling conventions between C and C++:</p
 
 <h2>Creating a Wren VM <a href="#creating-a-wren-vm" name="creating-a-wren-vm" class="header-anchor">#</a></h2>
 <p>Once you&rsquo;ve integrated the code into your executable, you need to create a
-virtual machine. To do that, you create a 
+virtual machine. To do that, you create a <code>WrenConfiguration</code> object and
+initialize it.</p>
+<pre class="snippet" data-lang="c">
     WrenConfiguration config;
-    wrenInitConfiguration(&amp;config);</p>
+    wrenInitConfiguration(&config);
+</pre>
+
 <p>This gives you a basic configuration that has reasonable defaults for
-everything. If you don&rsquo;t need to tweak stuff, you can leave it at that. We&rsquo;ll
-<a href="configuring-the-vm.html">learn more</a> about what you can configure later.</p>
+everything. We&rsquo;ll <a href="configuring-the-vm.html">learn more</a> about what you can configure later,
+but for now we&rsquo;ll just add the <code>writeFn</code>, so that we can print text.</p>
+<p>First we need a function that will do something with the output
+that Wren sends us from <code>System.print</code> (or <code>System.write</code>). <em>Note that it doesn&rsquo;t
+include a newline in the output.</em></p>
+<pre class="snippet" data-lang="c">
+void writeFn(WrenVM* vm, const char* text) {
+  printf("%s", text);
+}
+</pre>
+
+<p>And then, we update the configuration to point to it.</p>
+<pre class="snippet" data-lang="c">
+  WrenConfiguration config;
+    config.writeFn = &writeFn;
+  wrenInitConfiguration(&config);
+</pre>
+
 <p>With this ready, you can create the VM:</p>
 <pre class="snippet" data-lang="c">
 WrenVM* vm = wrenNewVM(&config);
