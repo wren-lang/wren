@@ -213,7 +213,7 @@ class Unicorn {
 
 [function]: functions.html
 
-This is unlike Lua and JavaScript which can "forget" `this` when you create a
+This is unlike JavaScript which can "forget" `this` when you create a
 callback inside a method. Wren does what you want here and retains the
 reference to the original object.
 
