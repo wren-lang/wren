@@ -441,6 +441,7 @@
     WrenInterpretResult result = wrenInterpret(vm, module->chars, source);
 
     pathFree(module);
+    free(source);
 
     return result;
   }
