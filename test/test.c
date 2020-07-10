@@ -452,7 +452,7 @@
     if (argc < 2)
     {
       printf("This is a Wren test runner.\nUsage: wren_test [file]\n");
-      return 64; // EX_USAGE.
+      return WREN_EX_USAGE;
     }
 
     if (argc == 2 && strcmp(argv[1], "--version") == 0)

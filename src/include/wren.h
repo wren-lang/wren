@@ -509,4 +509,9 @@ void* wrenGetUserData(WrenVM* vm);
 // Sets user data associated with the WrenVM.
 void wrenSetUserData(WrenVM* vm, void* userData);
 
+// Exit codes used by the wren binaries
+#define WREN_EX_USAGE 64;
+#define WREN_EX_DATAERR 65;
+#define WREN_EX_SOFTWARE 70;
+
 #endif
