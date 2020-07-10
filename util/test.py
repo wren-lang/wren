@@ -53,7 +53,6 @@ num_skipped = 0
 skipped = defaultdict(int)
 expectations = 0
 
-
 class Test:
   def __init__(self, path):
     self.path = path
@@ -99,7 +98,7 @@ class Test:
         if match:
           self.compile_errors.add(line_num)
 
-          # If we expect a compile error, it should exit with EX_DATAERR.
+          # If we expect a compile error, it should exit with WREN_EX_DATAERR.
           self.exit_code = 65
           expectations += 1
 
@@ -107,7 +106,7 @@ class Test:
         if match:
           self.compile_errors.add(int(match.group(1)))
 
-          # If we expect a compile error, it should exit with EX_DATAERR.
+          # If we expect a compile error, it should exit with WREN_EX_DATAERR.
           self.exit_code = 65
           expectations += 1
 
@@ -115,7 +114,7 @@ class Test:
         if match:
           self.runtime_error_line = line_num
           self.runtime_error_message = match.group(2)
-          # If the runtime error isn't handled, it should exit with EX_SOFTWARE.
+          # If the runtime error isn't handled, it should exit with WREN_EX_SOFTWARE.
           if match.group(1) != "handled ":
             self.exit_code = 70
           expectations += 1
