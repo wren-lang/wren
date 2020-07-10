@@ -12,6 +12,17 @@
 // at least two characters, "/", and a single-letter directory name.
 #define MAX_COMPONENTS 2048
 
+// Exit codes used by the wren binaries, following the BSD standard
+//
+// The interpreter was used with an incorrect number of arguments
+#define WREN_EX_USAGE 64;
+
+// Compilation error
+#define WREN_EX_DATAERR 65;
+
+// Runtime error
+#define WREN_EX_SOFTWARE 70;
+
 typedef struct {
   const char* start;
   const char* end;
