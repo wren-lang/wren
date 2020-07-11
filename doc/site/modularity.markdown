@@ -42,6 +42,17 @@ if (thirsty) {
 }
 </pre>
 
+If you need to import a variable via a different name, you can use 
+`import "..." for Name as OtherName`. This looks up the top-level variable
+`Name` in *that* module, but declares a variable called `OtherName` in *this* module
+with it's value.
+
+<pre class="snippet">
+import "liquids" for Water //Water is now taken
+import "beverages" for Coffee, Water as H2O, Tea
+// var water = H2O.new()
+</pre>
+
 If you want to load a module, but not bind any variables from it, you can omit
 the `for` clause:
 
