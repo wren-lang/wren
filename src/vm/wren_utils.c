@@ -62,8 +62,6 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
 {
     ObjString* symbol = AS_STRING(wrenNewStringLength(vm, name, length));
 
-    wrenPushRoot(vm, &symbol->obj);
-
     // Compute the true index and the hash index
     size_t buffIdx = symbols->objs.count;
     size_t hashIdx = wrenHashDjb2(name, length) % symbols->hCapacity;
@@ -73,7 +71,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
         hashIdx++;
 
     symbols->hSize++;
-    if (symbols->hSize == symbols->hCapacity)
+    if (symbols->hSize == symbols->hCapacity || hashIdx >= symbols->hCapacity)
         wrenSymbolTableGrow(vm, symbols);
 
     // "Initialize" the element in the set
@@ -81,6 +79,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
     symbols->bitset[hashIdx].idx = buffIdx;
 
     // Add the name to the buffer
+    wrenPushRoot(vm, &symbol->obj);
     wrenStringBufferWrite(vm, &symbols->objs, symbol);
     wrenPopRoot(vm);
 
@@ -90,12 +89,12 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
 int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
                           const char* name, size_t length)
 {
-  // See if the symbol is already defined.
-  int existing = wrenSymbolTableFind(symbols, name, length);
-  if (existing != -1) return existing;
+    // See if the symbol is already defined.
+    int existing = wrenSymbolTableFind(symbols, name, length);
+    if (existing != -1) return existing;
 
-  // New symbol, so add it.
-  return wrenSymbolTableAdd(vm, symbols, name, length);
+    // New symbol, so add it.
+    return wrenSymbolTableAdd(vm, symbols, name, length);
 }
 
 int wrenSymbolTableFind(const SymbolTable* symbols,
@@ -103,14 +102,14 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
 {
     size_t hashIdx = wrenHashDjb2(name, length) % symbols->hCapacity;
 
-    while (true)
+    while (hashIdx < symbols->hCapacity)
     {
         // The element does not exist, and there's no collision
         if (!symbols->bitset[hashIdx].set)
             return -1;
 
         size_t buffIdx = symbols->bitset[hashIdx].idx;
-        if (!strncmp(symbols->objs.data[buffIdx]->value, name, length))
+        if (wrenStringEqualsCString(symbols->objs.data[buffIdx], name, length))
             return buffIdx;
 
         // Maybe there was a collision and we haven't found the correct element
