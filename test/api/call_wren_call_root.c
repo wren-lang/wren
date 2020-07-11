@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "wren.h"
-#include "test.h"
+#include "../test.h"
 
 int callWrenCallRootRunTests(WrenVM* vm)
 {
