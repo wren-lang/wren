@@ -8,7 +8,7 @@
 
 // The maximum number of temporary objects that can be made visible to the GC
 // at one time.
-#define WREN_MAX_TEMP_ROOTS 5
+#define WREN_MAX_TEMP_ROOTS 8
 
 typedef enum
 {
