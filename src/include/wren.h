@@ -81,6 +81,7 @@ typedef struct WrenLoadModuleResult
   long long length;
   const char* source;
   WrenLoadModuleCompleteFn onComplete;
+  void* userData;
 } WrenLoadModuleResult;
 
 // Loads and returns the source code for the module [name].
