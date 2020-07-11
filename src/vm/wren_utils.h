@@ -67,8 +67,24 @@ DECLARE_BUFFER(Byte, uint8_t);
 DECLARE_BUFFER(Int, int);
 DECLARE_BUFFER(String, ObjString*);
 
-// TODO: Change this to use a map.
-typedef StringBuffer SymbolTable;
+
+// Default capacity for the symbol table
+#define WREN_ST_DEFAULT_CAPACITY 64
+
+// Hashet for the symbol table
+typedef struct {
+    size_t hSize;
+    size_t hCapacity;
+
+    // Array of booleans representing the hashet
+    struct {
+        bool set;
+        size_t idx;
+    } *bitset;
+
+    // Object names contained in the symbol table
+    StringBuffer objs;
+} SymbolTable;
 
 // Initializes the symbol table.
 void wrenSymbolTableInit(SymbolTable* symbols);
