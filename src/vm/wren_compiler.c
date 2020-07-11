@@ -2695,8 +2695,8 @@ void expression(Compiler* compiler)
 
 // Returns the number of arguments to the instruction at [ip] in [fn]'s
 // bytecode.
-static int getNumArguments(const uint8_t* bytecode, const Value* constants,
-                           int ip)
+static int getByteCountForArguments(const uint8_t* bytecode,
+                            const Value* constants, int ip)
 {
   Code instruction = (Code)bytecode[ip];
   switch (instruction)
@@ -2849,7 +2849,7 @@ static void endLoop(Compiler* compiler)
     else
     {
       // Skip this instruction and its arguments.
-      i += 1 + getNumArguments(compiler->fn->code.data,
+      i += 1 + getByteCountForArguments(compiler->fn->code.data,
                                compiler->fn->constants.data, i);
     }
   }
@@ -3566,7 +3566,7 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
         // Other instructions are unaffected, so just skip over them.
         break;
     }
-    ip += 1 + getNumArguments(fn->code.data, fn->constants.data, ip);
+    ip += 1 + getByteCountForArguments(fn->code.data, fn->constants.data, ip);
   }
 }
 
