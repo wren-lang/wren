@@ -446,20 +446,16 @@ static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
   {
     module = wrenNewModule(vm, AS_STRING(name));
 
-    // It's possible for the map set call below to resize the modules map,
-    // and trigger a GC while doing so. When this happens and there are enough
-    // objects and modules, it will collect the module we've just created.
-    // wrenPushRoot isn't an option when there are enough modules to exhaust
-    // WREN_MAX_TEMP_ROOTS, however handles are also not collected by GC.
-    // Note that this only affects the module until it's in the map, because
-    // then it has a reference to it, and won't be collected.
-    WrenHandle* moduleHandle = wrenMakeHandle(vm, OBJ_VAL(module));
+    // It's possible for the wrenMapSet below to resize the modules map,
+    // and trigger a GC while doing so. When this happens it will collect
+    // the module we've just created. Once in the map it is safe.
+    wrenPushRoot(vm, (Obj*)module);
 
     // Store it in the VM's module registry so we don't load the same module
     // multiple times.
     wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
 
-    wrenReleaseHandle(vm, moduleHandle);
+    wrenPopRoot(vm);
 
     // Implicitly import the core module.
     ObjModule* coreModule = getModule(vm, NULL_VAL);
