@@ -99,5 +99,6 @@ project "wren_test"
   }
 
   includedirs {
-    "../../src/include"
+    "../../src/include",
+    "../../test"
   }

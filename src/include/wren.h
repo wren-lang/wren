@@ -19,23 +19,6 @@
                              WREN_VERSION_MINOR * 1000 +                       \
                              WREN_VERSION_PATCH)
 
-// Exit codes used by the wren binaries, following the BSD standard
-//
-// The interpreter was used with an incorrect number of arguments
-#define WREN_EX_USAGE 64
-
-// Compilation error
-#define WREN_EX_DATAERR 65
-
-// Runtime error
-#define WREN_EX_SOFTWARE 70
-
-// Cannot open input file
-#define WREN_EX_NOINPUT 66
-
-// I/O Error
-#define WREN_EX_IOERR 74
-
 // A single virtual machine for executing Wren code.
 //
 // Wren has no global state, so all state stored by a running interpreter lives
