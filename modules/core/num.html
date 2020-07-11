@@ -144,7 +144,11 @@ System.print(2.3.isInteger) //> false
 <code>false</code> for normal number values and infinities, and <code>true</code> for the result of
 <code>0/0</code>, the square root of a negative number, etc.</p>
 <h3><strong>log</strong> <a href="#log" name="log" class="header-anchor">#</a></h3>
-<p>The natural logarithm of the number.</p>
+<p>The natural logarithm of the number. Returns <code>nan</code> if the base is negative.</p>
+<h3><strong>log2</strong> <a href="#log2" name="log2" class="header-anchor">#</a></h3>
+<p>The binary (base-2) logarithm of the number. Returns <code>nan</code> if the base is negative.</p>
+<h3><strong>exp</strong> <a href="#exp" name="exp" class="header-anchor">#</a></h3>
+<p>The exponential <code>e</code> (Euler’s number) raised to the number. This: <code>eⁿ</code>. </p>
 <h3><strong>pow</strong>(power) <a href="#pow(power)" name="pow(power)" class="header-anchor">#</a></h3>
 <p>Raises this number (the base) to <code>power</code>. Returns <code>nan</code> if the base is negative.</p>
 <h3><strong>round</strong> <a href="#round" name="round" class="header-anchor">#</a></h3>
