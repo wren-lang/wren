@@ -42,7 +42,7 @@ if (thirsty) {
 }
 </pre>
 
-If you need to import a variable via a different name, you can use 
+If you need to import a variable under a different name, you can use 
 `import "..." for Name as OtherName`. This looks up the top-level variable
 `Name` in *that* module, but declares a variable called `OtherName` in *this* module
 with it's value.
