@@ -10,25 +10,81 @@ DEFINE_BUFFER(String, ObjString*);
 void wrenSymbolTableInit(SymbolTable* symbols)
 {
     symbols->hSize = 0;
-    symbols->hCapacity = 0;
+    symbols->hCapacity = WREN_ST_DEFAULT_CAPACITY;
+
+    // Nothing is set at first, so call calloc() to initialize the bitset
+    symbols->bitset = calloc(WREN_ST_DEFAULT_CAPACITY, sizeof(BitSymbol));
+
     wrenStringBufferInit(&symbols->objs);
+}
+
+static void wrenSymbolTableClearBitset(SymbolTable *symbols)
+{
+    memset(symbols->bitset, 0, symbols->hCapacity * sizeof(BitSymbol));
 }
 
 void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
 {
-  wrenStringBufferClear(vm, &symbols->objs);
+    // Clear the bitset, then the buffer
+    wrenSymbolTableClearBitset(symbols);
+    wrenStringBufferClear(vm, &symbols->objs);
+}
+
+static unsigned long wrenHashDjb2(const char *key, size_t length)
+{
+    unsigned long hash = 5381; // Magic starting point
+
+    for (size_t i = 0; i < length; i++)
+        hash = ((hash << 5) + hash) + key[i];
+
+    return hash;
+}
+
+static void wrenSymbolTableGrow(WrenVM *vm, SymbolTable *symbols)
+{
+    // We need to clear the bitset and re-hash all symbols
+    wrenSymbolTableClearBitset(symbols);
+
+    symbols->hCapacity *= 2;
+    symbols->bitset = realloc(symbols->bitset, symbols->hCapacity * sizeof(BitSymbol));
+
+    for (size_t i = 0; i < symbols->objs.count; i++)
+    {
+        size_t newIdx = wrenHashDjb2(symbols->objs.data[i]->value, symbols->objs.data[i]->length) % symbols->hCapacity;
+
+        symbols->bitset[newIdx].set = true;
+        symbols->bitset[newIdx].idx = i;
+    }
 }
 
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
                        const char* name, size_t length)
 {
-  ObjString* symbol = AS_STRING(wrenNewStringLength(vm, name, length));
-  
-  wrenPushRoot(vm, &symbol->obj);
-  wrenStringBufferWrite(vm, &symbols->objs, symbol);
-  wrenPopRoot(vm);
-  
-  return symbols->objs.count - 1;
+    ObjString* symbol = AS_STRING(wrenNewStringLength(vm, name, length));
+
+    wrenPushRoot(vm, &symbol->obj);
+
+    // Compute the true index and the hash index
+    size_t buffIdx = symbols->objs.count;
+    size_t hashIdx = wrenHashDjb2(name, length) % symbols->hCapacity;
+
+    // Locate the first free slot in the bitset
+    while (symbols->bitset[hashIdx].set)
+        hashIdx++;
+
+    symbols->hSize++;
+    if (symbols->hSize == symbols->hCapacity)
+        wrenSymbolTableGrow(vm, symbols);
+
+    // "Initialize" the element in the set
+    symbols->bitset[hashIdx].set = true;
+    symbols->bitset[hashIdx].idx = buffIdx;
+
+    // Add the name to the buffer
+    wrenStringBufferWrite(vm, &symbols->objs, symbol);
+    wrenPopRoot(vm);
+
+    return buffIdx;
 }
 
 int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
@@ -45,14 +101,24 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
 int wrenSymbolTableFind(const SymbolTable* symbols,
                         const char* name, size_t length)
 {
-  // See if the symbol is already defined.
-  // TODO: O(n). Do something better.
-  for (int i = 0; i < symbols->objs.count; i++)
-  {
-    if (wrenStringEqualsCString(symbols->objs.data[i], name, length)) return i;
-  }
+    size_t hashIdx = wrenHashDjb2(name, length) % symbols->hCapacity;
 
-  return -1;
+    while (true)
+    {
+        // The element does not exist, and there's no collision
+        if (!symbols->bitset[hashIdx].set)
+            return -1;
+
+        size_t buffIdx = symbols->bitset[hashIdx].idx;
+        if (!strncmp(symbols->objs.data[buffIdx]->value, name, length))
+            return buffIdx;
+
+        // Maybe there was a collision and we haven't found the correct element
+        // yet. Increase the hashIndex and compare the names again
+        hashIdx++;
+    }
+
+    return -1;
 }
 
 void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable)
