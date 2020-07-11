@@ -2762,6 +2762,7 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_METHOD_INSTANCE:
     case CODE_METHOD_STATIC:
     case CODE_IMPORT_MODULE:
+    case CODE_IMPORT_VARIABLE:
       return 2;
 
     case CODE_SUPER_0:
@@ -2781,7 +2782,6 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_SUPER_14:
     case CODE_SUPER_15:
     case CODE_SUPER_16:
-    case CODE_IMPORT_VARIABLE:
       return 4;
 
     case CODE_CLOSURE:
