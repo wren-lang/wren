@@ -71,9 +71,11 @@ DECLARE_BUFFER(String, ObjString*);
 #define WREN_ST_DEFAULT_CAPACITY 2
 
 // "Symbols" containing a boolean and an index in the buffer
-typedef struct {
+typedef struct BitSymbol {
     bool set;
     size_t idx;
+
+    struct BitSymbol *next;
 } BitSymbol;
 
 // Hashet for the symbol table
@@ -82,7 +84,7 @@ typedef struct {
     size_t hCapacity;
 
     // Array of booleans representing the hashet
-    BitSymbol *bitset;
+    BitSymbol **bitset;
 
     // Object names contained in the symbol table
     StringBuffer objs;
