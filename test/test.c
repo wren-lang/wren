@@ -320,7 +320,7 @@
     if (buffer == NULL)
     {
       fprintf(stderr, "Could not read file \"%s\".\n", path);
-      exit(74);
+      exit(WREN_EX_IOERR);
     }
 
     // Read the entire file.
@@ -328,7 +328,7 @@
     if (bytesRead < fileSize)
     {
       fprintf(stderr, "Could not read file \"%s\".\n", path);
-      exit(74);
+      exit(WREN_EX_IOERR);
     }
 
     // Terminate the string.
@@ -421,7 +421,7 @@
     if (source == NULL)
     {
       fprintf(stderr, "Could not find file \"%s\".\n", path);
-      exit(66);
+      exit(WREN_EX_NOINPUT);
     }
 
     // If it looks like a relative path, make it explicitly relative so that we
