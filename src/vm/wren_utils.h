@@ -72,7 +72,6 @@ DECLARE_BUFFER(String, ObjString*);
 
 // "Symbols" containing a boolean and an index in the buffer
 typedef struct BitSymbol {
-    bool set;
     size_t idx;
 
     struct BitSymbol *next;

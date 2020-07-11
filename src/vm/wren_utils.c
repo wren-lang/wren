@@ -25,6 +25,9 @@ static void wrenSymbolTableClearBitset(SymbolTable *symbols)
 
 void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
 {
+    // Reset the number of hashes to 0
+    symbols->hSize = 0;
+
     // Clear the bitset, then the buffer
     wrenSymbolTableClearBitset(symbols);
     wrenStringBufferClear(vm, &symbols->objs);
@@ -44,7 +47,6 @@ static BitSymbol *wrenSymbolInit(size_t buffIdx, BitSymbol *next)
 {
     BitSymbol *newSymbol = calloc(1, sizeof(BitSymbol));
 
-    newSymbol->set = true;
     newSymbol->idx = buffIdx;
     newSymbol->next = next;
 
@@ -126,7 +128,7 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
 {
     size_t hashIdx = wrenHashDjb2(name, length) % symbols->hCapacity;
 
-    if (!symbols->bitset[hashIdx]->set)
+    if (!symbols->bitset[hashIdx])
         return -1;
 
     return wrenSymbolTableFindCollision(symbols, symbols->bitset[hashIdx], name, length);
