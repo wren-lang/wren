@@ -1281,7 +1281,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       // value. It will be popped after this fiber is resumed. Store the
       // imported module's closure in the slot in case a GC happens when
       // invoking the closure.
-      PUSH(importModule(vm, fn->constants.data[READ_SHORT()]));
+      PUSH(importModule(vm, POP()));
       if (wrenHasError(fiber)) RUNTIME_ERROR();
       
       // If we get a closure, call it to execute the module body.

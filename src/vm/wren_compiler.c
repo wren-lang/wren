@@ -2721,6 +2721,7 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_FOREIGN_CONSTRUCT:
     case CODE_FOREIGN_CLASS:
     case CODE_END_MODULE:
+    case CODE_IMPORT_MODULE:
       return 0;
 
     case CODE_LOAD_LOCAL:
@@ -2761,7 +2762,6 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_OR:
     case CODE_METHOD_INSTANCE:
     case CODE_METHOD_STATIC:
-    case CODE_IMPORT_MODULE:
     case CODE_IMPORT_VARIABLE:
       return 2;
 
@@ -3343,11 +3343,18 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 static void import(Compiler* compiler)
 {
   ignoreNewlines(compiler);
-  consume(compiler, TOKEN_STRING, "Expect a string after 'import'.");
-  int moduleConstant = addConstant(compiler, compiler->parser->previous.value);
 
+  if(match(compiler, TOKEN_STRING)) {
+    int constant = addConstant(compiler, compiler->parser->previous.value);
+    emitShortArg(compiler, CODE_CONSTANT, constant);
+  } else if(match(compiler, TOKEN_INTERPOLATION)) {
+    stringInterpolation(compiler, false);
+  } else {
+    error(compiler, "Expect a string after 'import'");
+  }
+ 
   // Load the module.
-  emitShortArg(compiler, CODE_IMPORT_MODULE, moduleConstant);
+  emitOp(compiler, CODE_IMPORT_MODULE);
 
   // Discard the unused result value from calling the module body's closure.
   emitOp(compiler, CODE_POP);
