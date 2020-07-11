@@ -96,7 +96,15 @@ Whether the number is [not a number](http://en.wikipedia.org/wiki/NaN). This is
 
 ### **log**
 
-The natural logarithm of the number.
+The natural logarithm of the number. Returns `nan` if the base is negative.
+
+### **log2**
+
+The binary (base-2) logarithm of the number. Returns `nan` if the base is negative.
+
+### **exp**
+
+The exponential `e` (Euler’s number) raised to the number. This: `eⁿ`. 
 
 ### **pow**(power)
 
