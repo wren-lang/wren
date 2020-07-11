@@ -20,7 +20,11 @@ void wrenSymbolTableInit(SymbolTable* symbols)
 
 static void wrenSymbolTableClearBitset(SymbolTable *symbols)
 {
-    memset(symbols->bitset, 0, symbols->hCapacity * sizeof(BitSymbol*));
+    for (size_t i = 0; i < symbols->hCapacity; i++)
+    {
+        free(symbols->bitset[i]);
+        symbols->bitset[i] = NULL;
+    }
 }
 
 void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
@@ -78,8 +82,12 @@ static void wrenSymbolTableGrow(WrenVM *vm, SymbolTable *symbols)
     // We need to clear the bitset and re-hash all symbols
     wrenSymbolTableClearBitset(symbols);
 
+    size_t oldCap = symbols->hCapacity;
     symbols->hCapacity *= 2;
     symbols->bitset = realloc(symbols->bitset, symbols->hCapacity * sizeof(BitSymbol*));
+
+    for (size_t i = oldCap; i < symbols->hCapacity; i++)
+        symbols->bitset[i] = NULL;
 
     for (size_t i = 0; i < symbols->objs.count; i++)
         wrenSymbolTableInsertHash(vm, symbols, symbols->objs.data[i]);
@@ -90,11 +98,13 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
 {
     ObjString* symbol = AS_STRING(wrenNewStringLength(vm, name, length));
 
+    wrenPushRoot(vm, &symbol->obj);
+
     size_t buffIdx = wrenSymbolTableInsertHash(vm, symbols, symbol);
 
     // Add the name to the buffer
-    wrenPushRoot(vm, &symbol->obj);
     wrenStringBufferWrite(vm, &symbols->objs, symbol);
+
     wrenPopRoot(vm);
 
     return buffIdx;
@@ -111,7 +121,7 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
     return wrenSymbolTableAdd(vm, symbols, name, length);
 }
 
-int wrenSymbolTableFindCollision(const SymbolTable *symbols, const BitSymbol *head,
+static int wrenSymbolTableFindCollision(const SymbolTable *symbols, const BitSymbol *head,
                                  const char *name, size_t length)
 {
     if (!head)
@@ -128,16 +138,16 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
 {
     size_t hashIdx = wrenHashDjb2(name, length) % symbols->hCapacity;
 
+    /*
     if (!symbols->bitset[hashIdx])
         return -1;
 
     return wrenSymbolTableFindCollision(symbols, symbols->bitset[hashIdx], name, length);
+    */
 
-    /*
     for (size_t i = 0; i < symbols->objs.count; i++)
         if (wrenStringEqualsCString(symbols->objs.data[i], name, length))
             return i;
-    */
 
     return -1;
 }
