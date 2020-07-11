@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "wren.h"
+#include "../test.h"
 
 int callWrenCallRootRunTests(WrenVM* vm)
 {
@@ -17,7 +18,7 @@ int callWrenCallRootRunTests(WrenVM* vm)
   WrenInterpretResult result = wrenCall(vm, run);
   if (result == WREN_RESULT_RUNTIME_ERROR)
   {
-    exitCode = 70;
+    exitCode = WREN_EX_SOFTWARE;
   }
   else
   {

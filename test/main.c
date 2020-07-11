@@ -47,8 +47,8 @@ int main(int argc, const char* argv[]) {
     exitCode = APITest_Run(vm, testName);
   }
 
-  if (result == WREN_RESULT_COMPILE_ERROR) return 65; // EX_DATAERR.
-  if (result == WREN_RESULT_RUNTIME_ERROR) return 70; // EX_SOFTWARE.
+  if (result == WREN_RESULT_COMPILE_ERROR) return WREN_EX_DATAERR;
+  if (result == WREN_RESULT_RUNTIME_ERROR) return WREN_EX_SOFTWARE;
 
   wrenFreeVM(vm);
 
