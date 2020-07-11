@@ -701,44 +701,40 @@ static Value importModule(WrenVM* vm, Value name)
 
   wrenPushRoot(vm, AS_OBJ(name));
 
+  WrenLoadModuleResult result = {0};
   const char* source = NULL;
-  bool allocatedSource = true;
   
   // Let the host try to provide the module.
   if (vm->config.loadModuleFn != NULL)
   {
-    source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
+    result = vm->config.loadModuleFn(vm, AS_CSTRING(name));
   }
   
   // If the host didn't provide it, see if it's a built in optional module.
-  if (source == NULL)
+  if (result.source == NULL)
   {
+    result.length = 0;
+    result.onComplete = NULL;
     ObjString* nameString = AS_STRING(name);
 #if WREN_OPT_META
-    if (strcmp(nameString->value, "meta") == 0) source = wrenMetaSource();
+    if (strcmp(nameString->value, "meta") == 0) result.source = wrenMetaSource();
 #endif
 #if WREN_OPT_RANDOM
-    if (strcmp(nameString->value, "random") == 0) source = wrenRandomSource();
+    if (strcmp(nameString->value, "random") == 0) result.source = wrenRandomSource();
 #endif
-    
-    // TODO: Should we give the host the ability to provide strings that don't
-    // need to be freed?
-    allocatedSource = false;
   }
   
-  if (source == NULL)
+  if (result.source == NULL)
   {
     vm->fiber->error = wrenStringFormat(vm, "Could not load module '@'.", name);
     wrenPopRoot(vm); // name.
     return NULL_VAL;
   }
   
-  ObjClosure* moduleClosure = compileInModule(vm, name, source, false, true);
+  ObjClosure* moduleClosure = compileInModule(vm, name, result.source, false, true);
   
-  // Modules loaded by the host are expected to be dynamically allocated with
-  // ownership given to the VM, which will free it. The built in optional
-  // modules are constant strings which don't need to be freed.
-  if (allocatedSource) DEALLOCATE(vm, (char*)source);
+  // Now that we're done, give the result back in case there's cleanup to do.
+  if(result.onComplete) result.onComplete(vm, AS_CSTRING(name), result);
   
   if (moduleClosure == NULL)
   {
