@@ -33,7 +33,7 @@
 // http://gcc.gnu.org/onlinedocs/gcc-3.1.1/gcc/Labels-as-Values.html
 // Enabling this speeds up the main dispatch loop a bit, but requires compiler
 // support.
-//
+// see https://bullno1.com/blog/switched-goto for alternative
 // Defaults to true on supported compilers.
 #ifndef WREN_COMPUTED_GOTO
   #ifdef _MSC_VER
