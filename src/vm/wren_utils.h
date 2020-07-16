@@ -68,7 +68,7 @@ DECLARE_BUFFER(Int, int);
 DECLARE_BUFFER(String, ObjString*);
 
 // Default capacity for the symbol table
-#define WREN_ST_DEFAULT_CAPACITY 2
+#define WREN_ST_DEFAULT_CAPACITY 1
 
 // "Symbols" containing a boolean and an index in the buffer
 typedef struct BitSymbol {
