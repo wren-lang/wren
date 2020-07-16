@@ -94,9 +94,10 @@ static void wrenSymbolTableGrow(WrenVM *vm, SymbolTable *symbols)
     symbols->hCapacity *= 2;
     symbols->bitset = realloc(symbols->bitset, symbols->hCapacity * sizeof(BitSymbol*));
 
-    for (size_t i = oldCap; i < symbols->hCapacity; i++)
-        symbols->bitset[i] = NULL;
+    // Initialize the new elements in the bitset
+    memset(symbols->bitset + oldCap, 0x0, (symbols->hCapacity - oldCap) * sizeof(BitSymbol*));
 
+    // Re-hash all the symbols
     for (size_t i = 0; i < symbols->objs.count; i++)
         wrenSymbolTableInsertHashIdx(vm, symbols, symbols->objs.data[i], i);
 }
