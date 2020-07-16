@@ -12,8 +12,8 @@ void wrenSymbolTableInit(SymbolTable* symbols)
     symbols->hSize = 0;
     symbols->hCapacity = WREN_ST_DEFAULT_CAPACITY;
 
-    // Nothing is set at first, so call calloc() to initialize the bitset
-    symbols->bitset = calloc(WREN_ST_DEFAULT_CAPACITY, sizeof(BitSymbol*));
+    // Nothing is set at first, so call calloc() to initialize the hashSet
+    symbols->hashSet = calloc(WREN_ST_DEFAULT_CAPACITY, sizeof(HashIdx*));
 
     wrenStringBufferInit(&symbols->objs);
 }
@@ -22,8 +22,8 @@ static void wrenSymbolTableClearBitset(SymbolTable *symbols)
 {
     for (size_t i = 0; i < symbols->hCapacity; i++)
     {
-        free(symbols->bitset[i]);
-        symbols->bitset[i] = NULL;
+        free(symbols->hashSet[i]);
+        symbols->hashSet[i] = NULL;
     }
 
     symbols->hSize = 0;
@@ -34,7 +34,7 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
     // Reset the number of hashes to 0
     symbols->hSize = 0;
 
-    // Clear the bitset, then the buffer
+    // Clear the hashSet, then the buffer
     wrenSymbolTableClearBitset(symbols);
     wrenStringBufferClear(vm, &symbols->objs);
 }
@@ -49,9 +49,9 @@ static unsigned long wrenHashDjb2(const char *key, size_t length)
     return hash;
 }
 
-static BitSymbol *wrenSymbolInit(size_t buffIdx, BitSymbol *next)
+static HashIdx *wrenSymbolInit(size_t buffIdx, HashIdx *next)
 {
-    BitSymbol *newSymbol = malloc(sizeof(BitSymbol));
+    HashIdx *newSymbol = malloc(sizeof(HashIdx));
 
     newSymbol->idx = buffIdx;
     newSymbol->next = next;
@@ -62,7 +62,7 @@ static BitSymbol *wrenSymbolInit(size_t buffIdx, BitSymbol *next)
 //Forward declare Grow() since InsertHash() might call it
 static void wrenSymbolTableGrow(WrenVM *vm, SymbolTable *symbols);
 
-// Insert a symbol in the bitset with a specific index
+// Insert a symbol in the hashSet with a specific index
 static size_t wrenSymbolTableInsertHashIdx(WrenVM *vm, SymbolTable *symbols,
                                            ObjString *symbol, size_t idx)
 {
@@ -71,7 +71,7 @@ static size_t wrenSymbolTableInsertHashIdx(WrenVM *vm, SymbolTable *symbols,
     symbols->hSize++;
 
     // "Initialize" the element in the set
-    symbols->bitset[hashIdx] = wrenSymbolInit(idx, symbols->bitset[hashIdx]);
+    symbols->hashSet[hashIdx] = wrenSymbolInit(idx, symbols->hashSet[hashIdx]);
 
     return idx;
 }
@@ -87,15 +87,15 @@ static size_t wrenSymbolTableInsertHash(WrenVM *vm, SymbolTable *symbols,
 
 static void wrenSymbolTableGrow(WrenVM *vm, SymbolTable *symbols)
 {
-    // We need to clear the bitset and re-hash all symbols
+    // We need to clear the hashSet and re-hash all symbols
     wrenSymbolTableClearBitset(symbols);
 
     size_t oldCap = symbols->hCapacity;
     symbols->hCapacity *= 2;
-    symbols->bitset = realloc(symbols->bitset, symbols->hCapacity * sizeof(BitSymbol*));
+    symbols->hashSet = realloc(symbols->hashSet, symbols->hCapacity * sizeof(HashIdx*));
 
-    // Initialize the new elements in the bitset
-    memset(symbols->bitset + oldCap, 0x0, (symbols->hCapacity - oldCap) * sizeof(BitSymbol*));
+    // Initialize the new elements in the hashSet
+    memset(symbols->hashSet + oldCap, 0x0, (symbols->hCapacity - oldCap) * sizeof(HashIdx*));
 
     // Re-hash all the symbols
     for (size_t i = 0; i < symbols->objs.count; i++)
@@ -133,7 +133,7 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
     return wrenSymbolTableAdd(vm, symbols, name, length);
 }
 
-static int wrenSymbolTableFindCollision(const SymbolTable *symbols, const BitSymbol *head,
+static int wrenSymbolTableFindCollision(const SymbolTable *symbols, const HashIdx *head,
                                  const char *name, size_t length)
 {
     if (!head)
@@ -150,10 +150,10 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
 {
     size_t hashIdx = wrenHashDjb2(name, length) % symbols->hCapacity;
 
-    if (!symbols->bitset[hashIdx])
+    if (!symbols->hashSet[hashIdx])
         return -1;
 
-    return wrenSymbolTableFindCollision(symbols, symbols->bitset[hashIdx], name, length);
+    return wrenSymbolTableFindCollision(symbols, symbols->hashSet[hashIdx], name, length);
 }
 
 void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable)
