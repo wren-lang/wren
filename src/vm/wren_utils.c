@@ -51,7 +51,7 @@ static unsigned long wrenHashDjb2(const char *key, size_t length)
 
 static BitSymbol *wrenSymbolInit(size_t buffIdx, BitSymbol *next)
 {
-    BitSymbol *newSymbol = calloc(1, sizeof(BitSymbol));
+    BitSymbol *newSymbol = malloc(sizeof(BitSymbol));
 
     newSymbol->idx = buffIdx;
     newSymbol->next = next;
