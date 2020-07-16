@@ -64,7 +64,7 @@ static void wrenSymbolTableGrow(WrenVM *vm, SymbolTable *symbols);
 
 // Insert a symbol in the bitset with a specific index
 static size_t wrenSymbolTableInsertHashIdx(WrenVM *vm, SymbolTable *symbols,
-        ObjString *symbol, size_t idx)
+                                           ObjString *symbol, size_t idx)
 {
     size_t hashIdx = wrenHashDjb2(symbol->value, symbol->length) % symbols->hCapacity;
 
