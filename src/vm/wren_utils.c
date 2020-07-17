@@ -91,7 +91,7 @@ static void wrenSymbolTableGrow(WrenVM *vm, SymbolTable *symbols)
     wrenSymbolTableClearBitset(symbols);
 
     size_t oldCap = symbols->hCapacity;
-    symbols->hCapacity = wrenPowerOf2Ceil(symbols->hCapacity);
+    symbols->hCapacity *= 2;
     symbols->hashSet = realloc(symbols->hashSet, symbols->hCapacity * sizeof(HashIdx*));
 
     // Initialize the new elements in the hashSet
