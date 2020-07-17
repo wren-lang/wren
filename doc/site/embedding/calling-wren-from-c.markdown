@@ -37,8 +37,9 @@ We'll tackle these one at a time.
 
 When you run a chunk of Wren code like this:
 
-    :::wren
-    object.someMethod(1, 2, 3)
+<pre class="snippet">
+object.someMethod(1, 2, 3)
+</pre>
 
 At runtime, the VM has to look up the class of `object` and find a method there
 whose signature is `someMethod(_,_,_)`. This sounds like it's doing some string
@@ -61,8 +62,9 @@ It would be a shame if calling a method from C didn't have that same speed
 benefit. To achieve that, we split the process of calling a method into two
 steps. First, we create a handle that represents a "compiled" method signature:
 
-    :::c
-    WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
+<pre class="snippet" data-lang="c">
+WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
+</pre>
 
 That takes a method signature as a string and gives you back an opaque handle
 that represents the compiled method symbol. Now you have a *reusable* handle
@@ -97,12 +99,13 @@ engine to update all of the entities each frame. We'll keep track of the list of
 entities within Wren, so from C, there's no obvious object to call `update(_)`
 on. Instead, we'll just make it a static method:
 
-    :::wren
-    class GameEngine {
-      static update(elapsedTime) {
-        // ...
-      }
-    }
+<pre class="snippet">
+class GameEngine {
+  static update(elapsedTime) {
+    // ...
+  }
+}
+</pre>
 
 Often, when you call a Wren method from C, you'll be calling a static method.
 But, even then, you need a receiver. Now, though, the receiver is the *class
@@ -115,26 +118,29 @@ look it up][variable]. We can get a handle to the above class like so:
 
 [variable]: slots-and-handles.html#looking-up-variables
 
-    :::c
-    // Load the class into slot 0.
-    wrenEnsureSlots(vm, 1);
-    wrenGetVariable(vm, "main", "GameEngine", 0);
+<pre class="snippet" data-lang="c">
+// Load the class into slot 0.
+wrenEnsureSlots(vm, 1);
+wrenGetVariable(vm, "main", "GameEngine", 0);
+</pre>
 
 We could do this every time we call `update()`, but, again, that's kind of slow
 because we're looking up "GameEngine" by name each time. A faster solution is to
 create a handle to the class once and use it each time:
 
-    :::c
-    // Load the class into slot 0.
-    wrenEnsureSlots(vm, 1);
-    wrenGetVariable(vm, "main", "GameEngine", 0);
-    WrenHandle* gameEngineClass = wrenGetSlotHandle(vm, 0);
+<pre class="snippet" data-lang="c">
+// Load the class into slot 0.
+wrenEnsureSlots(vm, 1);
+wrenGetVariable(vm, "main", "GameEngine", 0);
+WrenHandle* gameEngineClass = wrenGetSlotHandle(vm, 0);
+</pre>
 
 Now, each time we want to call a method on GameEngine, we store that value back
 in slot zero:
 
-    :::c
-    wrenSetSlotHandle(vm, 0, gameEngineClass);
+<pre class="snippet" data-lang="c">
+wrenSetSlotHandle(vm, 0, gameEngineClass);
+</pre>
 
 Just like we hoisted `wrenMakeCallHandle()` out of our performance critical
 loop, we can hoist the call to `wrenGetVariable()` out. Of course, if your code
@@ -148,16 +154,18 @@ arguments go in consecutive slots after the receiver. So the elapsed time goes
 into slot one. You can use any of the slot functions to set this up. For the
 example, it's just:
 
-    :::c
-    wrenSetSlotDouble(vm, 1, elapsedTime);
+<pre class="snippet" data-lang="c">
+wrenSetSlotDouble(vm, 1, elapsedTime);
+</pre>
 
 ## Calling the Method
 
 We have all of the data in place, so all that's left is to pull the trigger and
 tell the VM to start running some code:
 
-    :::c
-    WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
+<pre class="snippet" data-lang="c">
+WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
+</pre>
 
 It takes the method handle we created using `wrenMakeCallHandle()`. Now Wren
 starts running code. It looks up the method on the receiver, executes it and

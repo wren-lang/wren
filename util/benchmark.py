@@ -9,6 +9,7 @@ import os.path
 import re
 import subprocess
 import sys
+from os.path import relpath
 
 # Runs the benchmarks.
 #
@@ -41,6 +42,7 @@ import sys
 WREN_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 WREN_BIN = os.path.join(WREN_DIR, 'bin')
 BENCHMARK_DIR = os.path.join('test', 'benchmark')
+BENCHMARK_DIR = relpath(BENCHMARK_DIR).replace("\\", "/")
 
 # How many times to run a given benchmark.
 NUM_TRIALS = 10
@@ -93,12 +95,11 @@ BENCHMARK("map_string", r"""12799920000""")
 BENCHMARK("string_equals", r"""3000000""")
 
 LANGUAGES = [
-  ("wren",           [os.path.join(WREN_BIN, 'wren')], ".wren"),
+  ("wren",           [os.path.join(WREN_BIN, 'wren_test')], ".wren"),
   ("dart",           ["fletch", "run"],                ".dart"),
   ("lua",            ["lua"],                          ".lua"),
   ("luajit (-joff)", ["luajit", "-joff"],              ".lua"),
   ("python",         ["python"],                       ".py"),
-  ("python3",        ["python3"],                      ".py"),
   ("ruby",           ["ruby"],                         ".rb")
 ]
 
@@ -149,17 +150,12 @@ def run_trial(benchmark, language):
   """Runs one benchmark one time for one language."""
   executable_args = language[1]
 
-  # Hackish. If the benchmark name starts with "api_", it's testing the Wren
-  # C API, so run the test_api executable which has those test methods instead
-  # of the normal Wren build.
-  if benchmark[0].startswith("api_"):
-    executable_args = [
-      os.path.join(WREN_DIR, "build", "release", "test", "api_wren")
-    ]
+  benchmark_path = os.path.join(BENCHMARK_DIR, benchmark[0] + language[2])
+  benchmark_path = relpath(benchmark_path).replace("\\", "/")
 
   args = []
   args.extend(executable_args)
-  args.append(os.path.join(BENCHMARK_DIR, benchmark[0] + language[2]))
+  args.append(benchmark_path)
 
   try:
     out = subprocess.check_output(args, universal_newlines=True)

@@ -1,0 +1,91 @@
+^title 0.2.0 and beyond
+30 Sep 2019
+
+---
+
+### 0.2.0 is here
+
+It's time to tag a release!
+Let's check our goals from [the last blog post](0-hello-wren.html):
+
+- <s>We're gonna clear out a bit of backlog, tidying up issues and PRs</s>
+- <s>Tidy up the website a bit, visually and structurally</s>
+- <s>Make sure all documentation is up to date with the current development</s>
+- <s>Tag 0.2.0 with a list of relevant changes since 0.1.0</s>
+
+So far so good.
+
+### Backlog
+
+Clearing out the issues on a repo after some time has passed is always a bit tricky. 
+
+Many issues are outdated (or unrelated), and some need a proper response. Some are related to future ideals, things that will take a while to get to. Some are related to the Wren CLI. It can be difficult to reason about the state of the tasks when they're all over the place, so we've been consolidating.
+
+The good news is the issue list has been drastically reduced, 70+ issues being closed (or resolved). Around 21 of those are marked for future consideration, and 23 moved to the Wren CLI repository. More consolidation will still continue.
+
+**The goal is that the active issues are as relevant as possible in the immediate term.**
+
+A tricky but important aspect to mention here is the perception of closing an issue...
+A closed issue doesn't necessarily mean anything final, it's just a categorization tool!
+
+The other categorization tool which operates _within_ open/closed categories, is the _label_. Labels allow us to distinguish clearly the different types of issues, which makes open/closed less binary and more nuanced and rich. We rely on both to make sense of the list.
+
+For example, discussions of future tasks, ideas or goals [are tagged `future`](https://github.com/wren-lang/wren/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3Afuture+). Now we can refer to them later, and re-open them when they become active and relevant again.
+
+**We're in this together.**   
+Please don't be discouraged if an issue is closed! Discussion is absolutely encouraged and ideas, proposals and input is very necessary. Feel free to keep a discussion going, even if the issue it's attached to has been marked as closed.
+
+### 0.2.0
+
+We've been hammering away on Wren since 0.1.0 for quite a while. The [change list on GitHub](https://github.com/wren-lang/wren/compare/0.1.0...5338275dcdd97fd8d9fc614f420a645500836a59) is too long to display!
+
+Most importantly, before we start iterating on the language further, I wanted to make sure we had a checkpoint to look back to. That's largely what 0.2.0 is about.
+
+There's quite a lot of good changes, with **290 commits from 41 contributors!**
+Thanks to everyone getting involved, every little bit has helped Wren, no matter how small the contribution.
+
+### 0.3.0
+
+With 0.2.0 wrapped up, our next release won't be as far away this time.
+
+**The primary goal for 0.3.0 is separating the VM from the CLI.**
+
+This includes updated documentation, splitting the source repos, migrating all the tests, issues and more.
+All the code and documentation will still be easy to access in one place, but clarity around Wren as a project will improve a lot.
+
+The migration has already started, you can [find the wren-cli repository here](https://github.com/wren-lang/wren-cli).
+I'm working on some of the refactoring on the [wren-cli-refactor branch.](https://github.com/wren-lang/wren/tree/wren-cli-refactor)
+
+With that, we'll also have a cleaner build process for the CLI.
+On some platforms (Windows especially), there have been several pain points, these will be addressed.
+There's also gonna be an additional build target, namely emscripten, so we can easily run Wren examples on the Wren website and documentation.
+
+And finally, we'll have some proper prebuilt releases with 0.3.0.
+I know many people have just wanted to grab an executable and give the language a go, but that hasn't been an option.
+We'll fix that with 0.3.0.
+
+The 0.3.0 goals in simple form:
+- VM / CLI split
+- Build consistency/reliablity
+- Web build for embedding in docs
+- Prebuilt releases
+
+### Beyond
+
+I don't have any concrete plans for 0.4.0 right now, but once the dust settles from 0.3.0 we'll have a clearer view.
+
+There's definitely things in the pipeline though, I've been playing with [adding compound assignments like `+=`](https://github.com/wren-lang/wren/pull/701).
+
+More details about in development features and fixes can be found on the repo in the meantime.
+
+Thanks for reading!
+
+### More
+
+- [The Wren Blog RSS](http://wren.io/blog/rss.xml)
+- Join the [discord community](https://discord.gg/Kx6PxSX)
+- Visit the [wren-lang organization](https://github.com/wren-lang) on GitHub to get involved.
+- Follow the developers [@munificentbob](https://twitter.com/munificentbob) or [@ruby0x1](https://twitter.com/ruby0x1) on twitter
+
+
+

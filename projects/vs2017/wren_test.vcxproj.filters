@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="api">
+      <UniqueIdentifier>{5F5E880B-CB67-887C-54E3-9E7CC0EB937C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\test\api\api_tests.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\benchmark.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\call.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\call_calls_foreign.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\call_wren_call_root.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\error.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\foreign_class.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\get_variable.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\handle.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\lists.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\maps.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\new_vm.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\reset_stack_after_call_abort.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\reset_stack_after_foreign_construct.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\resolution.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\slots.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\api\user_data.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\test\test.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\test\api\api_tests.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\benchmark.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\call.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\call_calls_foreign.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\call_wren_call_root.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\error.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\foreign_class.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\get_variable.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\handle.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\lists.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\maps.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\new_vm.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\reset_stack_after_call_abort.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\reset_stack_after_foreign_construct.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\resolution.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\slots.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\user_data.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\main.c" />
+    <ClCompile Include="..\..\test\test.c" />
+  </ItemGroup>
+</Project>

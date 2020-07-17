@@ -14,10 +14,11 @@ function, so this really just returns the argument. It exists mainly to let you
 create a "bare" function when you don't want to immediately pass it as a [block
 argument](../functions.html#block-arguments) to some other method.
 
-    :::wren
-    var fn = Fn.new {
-      System.print("The body")
-    }
+<pre class="snippet">
+var fn = Fn.new {
+  System.print("The body")
+}
+</pre>
 
 It is a runtime error if `function` is not a function.
 
@@ -27,20 +28,22 @@ It is a runtime error if `function` is not a function.
 
 The number of arguments the function requires.
 
-    :::wren
-    System.print(Fn.new {}.arity)             //> 0
-    System.print(Fn.new {|a, b, c| a }.arity) //> 3
+<pre class="snippet">
+System.print(Fn.new {}.arity)             //> 0
+System.print(Fn.new {|a, b, c| a }.arity) //> 3
+</pre>
 
 ### **call**(args...)
 
 Invokes the function with the given arguments.
 
-    :::wren
-    var fn = Fn.new { |arg|
-      System.print(arg)     //> Hello world
-    }
+<pre class="snippet">
+var fn = Fn.new { |arg|
+  System.print(arg)     //> Hello world
+}
 
-    fn.call("Hello world")
+fn.call("Hello world")
+</pre>
 
 It is a runtime error if the number of arguments given is less than the arity
 of the function. If more arguments are given than the function's arity they are

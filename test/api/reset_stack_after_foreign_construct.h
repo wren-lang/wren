@@ -2,4 +2,4 @@
 
 void resetStackAfterForeignConstructBindClass(
     const char* className, WrenForeignClassMethods* methods);
-void resetStackAfterForeignConstructRunTests(WrenVM* vm);
+int resetStackAfterForeignConstructRunTests(WrenVM* vm);

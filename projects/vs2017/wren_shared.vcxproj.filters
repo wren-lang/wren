@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{89AF369E-F58E-B539-FEA6-40106A051C9B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="optional">
+      <UniqueIdentifier>{CB60FAAF-B72D-55BB-E046-4363CC728A49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vm">
+      <UniqueIdentifier>{E8795900-D405-880B-3DB4-880B295F880B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\include\wren.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\optional\wren_opt_meta.h">
+      <Filter>optional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\optional\wren_opt_random.h">
+      <Filter>optional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_common.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_compiler.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_core.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_debug.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_opcodes.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_primitive.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_utils.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_value.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_vm.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\optional\wren_opt_meta.c">
+      <Filter>optional</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\optional\wren_opt_random.c">
+      <Filter>optional</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vm\wren_compiler.c">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vm\wren_core.c">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vm\wren_debug.c">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vm\wren_primitive.c">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vm\wren_utils.c">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vm\wren_value.c">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vm\wren_vm.c">
+      <Filter>vm</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

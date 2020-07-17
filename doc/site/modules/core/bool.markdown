@@ -10,9 +10,10 @@ Boolean [values][]. There are two instances, `true` and `false`.
 
 Returns the logical complement of the value.
 
-    :::wren
-    System.print(!true) //> false
-    System.print(!false) //> true
+<pre class="snippet">
+System.print(!true) //> false
+System.print(!false) //> true
+</pre>
 
 ### toString
 

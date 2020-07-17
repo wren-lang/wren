@@ -13,7 +13,7 @@ numbers.
 
 It must be imported from the [random][] module:
 
-    :::wren
+<pre class="snippet">
     import "random" for Random
 
 [random]: ../
@@ -24,8 +24,9 @@ It must be imported from the [random][] module:
 
 Creates a new generator whose state is seeded based on the current time.
 
-    :::wren
-    var random = Random.new()
+<pre class="snippet">
+var random = Random.new()
+</pre>
 
 ### Random.**new**(seed)
 
@@ -34,9 +35,10 @@ number, or a non-empty sequence of numbers. If the sequnce has more than 16
 elements, only the first 16 are used. If it has fewer, the elements are cycled
 to generate 16 seed values.
 
-    :::wren
-    Random.new(12345)
-    Random.new("appleseed".codePoints)
+<pre class="snippet">
+Random.new(12345)
+Random.new("appleseed".codePoints)
+</pre>
 
 ## Methods
 
@@ -45,54 +47,59 @@ to generate 16 seed values.
 Returns a floating point value between 0.0 and 1.0, including 0.0, but excluding
 1.0.
 
-    :::wren
-    var random = Random.new(12345)
-    System.print(random.float()) //> 0.53178795980617
-    System.print(random.float()) //> 0.20180515043262
-    System.print(random.float()) //> 0.43371948658705
+<pre class="snippet">
+var random = Random.new(12345)
+System.print(random.float()) //> 0.53178795980617
+System.print(random.float()) //> 0.20180515043262
+System.print(random.float()) //> 0.43371948658705
+</pre>
 
 ### **float**(end)
 
 Returns a floating point value between 0.0 and `end`, including 0.0 but
 excluding `end`.
 
-    :::wren
-    var random = Random.new(12345)
-    System.print(random.float(0))     //> 0
-    System.print(random.float(100))   //> 20.180515043262
-    System.print(random.float(-100))  //> -43.371948658705
+<pre class="snippet">
+var random = Random.new(12345)
+System.print(random.float(0))     //> 0
+System.print(random.float(100))   //> 20.180515043262
+System.print(random.float(-100))  //> -43.371948658705
+</pre>
 
 ### **float**(start, end)
 
 Returns a floating point value between `start` and `end`, including `start` but
 excluding `end`.
 
-    :::wren
-    var random = Random.new(12345)
-    System.print(random.float(3, 4))    //> 3.5317879598062
-    System.print(random.float(-10, 10)) //> -5.9638969913476
-    System.print(random.float(-4, 2))   //> -1.3976830804777
+<pre class="snippet">
+var random = Random.new(12345)
+System.print(random.float(3, 4))    //> 3.5317879598062
+System.print(random.float(-10, 10)) //> -5.9638969913476
+System.print(random.float(-4, 2))   //> -1.3976830804777
+</pre>
 
 ### **int**(end)
 
 Returns an integer between 0 and `end`, including 0 but excluding `end`.
 
-    :::wren
-    var random = Random.new(12345)
-    System.print(random.int(1))    //> 0
-    System.print(random.int(10))   //> 2
-    System.print(random.int(-50))  //> -22
+<pre class="snippet">
+var random = Random.new(12345)
+System.print(random.int(1))    //> 0
+System.print(random.int(10))   //> 2
+System.print(random.int(-50))  //> -22
+</pre>
 
 ### **int**(start, end)
 
 Returns an integer between `start` and `end`, including `start` but excluding
 `end`.
 
-    :::wren
-    var random = Random.new(12345)
-    System.print(random.int(3, 4))    //> 3
-    System.print(random.int(-10, 10)) //> -6
-    System.print(random.int(-4, 2))   //> -2
+<pre class="snippet">
+var random = Random.new(12345)
+System.print(random.int(3, 4))    //> 3
+System.print(random.int(-10, 10)) //> -6
+System.print(random.int(-4, 2))   //> -2
+</pre>
 
 ### **sample**(list)
 
@@ -114,11 +121,12 @@ It is an error if `count` is greater than the number of elements in the list.
 Randomly shuffles the elements in `list`. The items are randomly re-ordered in
 place.
 
-    :::wren
-    var random = Random.new(12345)
-    var list = (1..5).toList
-    random.shuffle(list)
-    System.print(list) //> [3, 2, 4, 1, 5]
+<pre class="snippet">
+var random = Random.new(12345)
+var list = (1..5).toList
+random.shuffle(list)
+System.print(list) //> [3, 2, 4, 1, 5]
+</pre>
 
 Uses the Fisher-Yates algorithm to ensure that all permutations are chosen
 with equal probability.
