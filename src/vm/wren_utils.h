@@ -92,6 +92,8 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
 
 int wrenSymbolTableCount(const SymbolTable* symbols);
 
+ObjString* wrenSymbolTableGet(const SymbolTable* symbols, int symbol);
+
 void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable);
 
 // Returns the number of bytes needed to encode [value] in UTF-8.

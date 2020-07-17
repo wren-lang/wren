@@ -61,7 +61,7 @@ void metaGetModuleVariables(WrenVM* vm)
   
   for (int i = 0; i < names->elements.count; i++)
   {
-    names->elements.data[i] = OBJ_VAL(module->variableNames.data[i]);
+    names->elements.data[i] = OBJ_VAL(wrenSymbolTableGet(&module->variableNames, i));
   }
 }
 

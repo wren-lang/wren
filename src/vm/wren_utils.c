@@ -58,6 +58,13 @@ int wrenSymbolTableCount(const SymbolTable* symbols)
   return symbols->count;
 }
 
+ObjString* wrenSymbolTableGet(const SymbolTable* symbols, int symbol)
+{
+  if (symbol < 0 || symbol >= wrenSymbolTableCount(symbols)) return NULL;
+
+  return symbols->data[symbol];
+}
+
 void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable)
 {
   for (int i = 0; i < wrenSymbolTableCount(symbolTable); i++)

@@ -3829,9 +3829,11 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
     if (IS_NUM(parser.module->variables.data[i]))
     {
       // Synthesize a token for the original use site.
+      ObjString* variableName = wrenSymbolTableGet(&parser.module->variableNames, i);
+
       parser.previous.type = TOKEN_NAME;
-      parser.previous.start = parser.module->variableNames.data[i]->value;
-      parser.previous.length = parser.module->variableNames.data[i]->length;
+      parser.previous.start = variableName->value;
+      parser.previous.length = variableName->length;
       parser.previous.line = (int)AS_NUM(parser.module->variables.data[i]);
       error(&compiler, "Variable is used but not defined.");
     }
