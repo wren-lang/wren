@@ -18,22 +18,22 @@ void wrenSymbolTableInit(SymbolTable* symbols)
     wrenStringBufferInit(&symbols->objs);
 }
 
-inline static void freeHashIdx(HashIdx *symbol)
+inline static void freeHashIdx(WrenVM *vm, HashIdx *symbol)
 {
     if (!symbol) return;
 
     HashIdx *next = symbol->next;
 
-    free(symbol);
+    DEALLOCATE(vm, symbol);
 
-    if (next) freeHashIdx(next);
+    if (next) freeHashIdx(vm, next);
 }
 
-static void wrenSymbolTableClearBitset(SymbolTable *symbols)
+static void wrenSymbolTableClearBitset(WrenVM *vm, SymbolTable *symbols)
 {
     for (size_t i = 0; i < symbols->hCapacity; i++)
     {
-        freeHashIdx(symbols->hashSet[i]);
+        freeHashIdx(vm, symbols->hashSet[i]);
         symbols->hashSet[i] = NULL;
     }
 
@@ -46,10 +46,10 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
     symbols->hSize = 0;
 
     // Clear the hashSet, then the buffer
-    wrenSymbolTableClearBitset(symbols);
+    wrenSymbolTableClearBitset(vm, symbols);
     wrenStringBufferClear(vm, &symbols->objs);
 
-    wrenReallocate(vm, symbols->hashSet, 0, 0);
+    DEALLOCATE(vm, symbols->hashSet);
 }
 
 static unsigned long wrenHashDjb2(const char *key, size_t length)
@@ -64,7 +64,7 @@ static unsigned long wrenHashDjb2(const char *key, size_t length)
 
 static HashIdx *wrenSymbolInit(WrenVM *vm, size_t buffIdx, HashIdx *next)
 {
-    HashIdx *newSymbol = wrenReallocate(vm, NULL, 0, sizeof(HashIdx));
+    HashIdx *newSymbol = ALLOCATE(vm, HashIdx);
 
     newSymbol->idx = buffIdx;
     newSymbol->next = next;
@@ -101,7 +101,7 @@ static size_t wrenSymbolTableInsertHash(WrenVM *vm, SymbolTable *symbols,
 static void wrenSymbolTableGrow(WrenVM *vm, SymbolTable *symbols)
 {
     // We need to clear the hashSet and re-hash all symbols
-    wrenSymbolTableClearBitset(symbols);
+    wrenSymbolTableClearBitset(vm, symbols);
 
     size_t oldCap = symbols->hCapacity;
     symbols->hCapacity *= 2;
