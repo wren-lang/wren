@@ -62,9 +62,9 @@ static unsigned long wrenHashDjb2(const char *key, size_t length)
     return hash;
 }
 
-static HashIdx *wrenSymbolInit(size_t buffIdx, HashIdx *next)
+static HashIdx *wrenSymbolInit(WrenVM *vm, size_t buffIdx, HashIdx *next)
 {
-    HashIdx *newSymbol = malloc(sizeof(HashIdx));
+    HashIdx *newSymbol = wrenReallocate(vm, NULL, 0, sizeof(HashIdx));
 
     newSymbol->idx = buffIdx;
     newSymbol->next = next;
@@ -84,7 +84,7 @@ static size_t wrenSymbolTableInsertHashIdx(WrenVM *vm, SymbolTable *symbols,
     symbols->hSize++;
 
     // "Initialize" the element in the set
-    symbols->hashSet[hashIdx] = wrenSymbolInit(idx, symbols->hashSet[hashIdx]);
+    symbols->hashSet[hashIdx] = wrenSymbolInit(vm, idx, symbols->hashSet[hashIdx]);
 
     return idx;
 }
@@ -105,7 +105,10 @@ static void wrenSymbolTableGrow(WrenVM *vm, SymbolTable *symbols)
 
     size_t oldCap = symbols->hCapacity;
     symbols->hCapacity *= 2;
-    symbols->hashSet = realloc(symbols->hashSet, symbols->hCapacity * sizeof(HashIdx*));
+    symbols->hashSet = wrenReallocate(vm,
+                                      symbols->hashSet,
+                                      oldCap * sizeof(HashIdx *),
+                                      symbols->hCapacity * sizeof(HashIdx*));
 
     // Initialize the new elements in the hashSet
     memset(symbols->hashSet + oldCap, 0x0, (symbols->hCapacity - oldCap) * sizeof(HashIdx*));
