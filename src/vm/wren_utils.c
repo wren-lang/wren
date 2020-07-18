@@ -9,12 +9,12 @@ DEFINE_BUFFER(String, ObjString*);
 
 void wrenSymbolTableInit(SymbolTable* symbols)
 {
-  wrenStringBufferInit(symbols);
+  wrenStringBufferInit(&symbols->array);
 }
 
 void wrenSymbolTableFini(WrenVM* vm, SymbolTable* symbols)
 {
-  wrenStringBufferClear(vm, symbols);
+  wrenStringBufferClear(vm, &symbols->array);
 }
 
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
@@ -23,7 +23,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
   ObjString* symbol = AS_STRING(wrenNewStringLength(vm, name, length));
   
   wrenPushRoot(vm, &symbol->obj);
-  wrenStringBufferWrite(vm, symbols, symbol);
+  wrenStringBufferWrite(vm, &symbols->array, symbol);
   wrenPopRoot(vm);
   
   return wrenSymbolTableCount(symbols) - 1;
@@ -47,7 +47,7 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
   // TODO: O(n). Do something better.
   for (int i = 0; i < wrenSymbolTableCount(symbols); i++)
   {
-    if (wrenStringEqualsCString(symbols->data[i], name, length)) return i;
+    if (wrenStringEqualsCString(symbols->array.data[i], name, length)) return i;
   }
 
   return -1;
@@ -55,25 +55,25 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
 
 int wrenSymbolTableCount(const SymbolTable* symbols)
 {
-  return symbols->count;
+  return symbols->array.count;
 }
 
 ObjString* wrenSymbolTableGet(const SymbolTable* symbols, int symbol)
 {
   if (symbol < 0 || symbol >= wrenSymbolTableCount(symbols)) return NULL;
 
-  return symbols->data[symbol];
+  return symbols->array.data[symbol];
 }
 
 void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable)
 {
   for (int i = 0; i < wrenSymbolTableCount(symbolTable); i++)
   {
-    wrenGrayObj(vm, &symbolTable->data[i]->obj);
+    wrenGrayObj(vm, &symbolTable->array.data[i]->obj);
   }
   
   // Keep track of how much memory is still in use.
-  vm->bytesAllocated += symbolTable->capacity * sizeof(*symbolTable->data);
+  vm->bytesAllocated += symbolTable->array.capacity * sizeof(*symbolTable->array.data);
 }
 
 int wrenUtf8EncodeNumBytes(int value)

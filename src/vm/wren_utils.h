@@ -68,7 +68,9 @@ DECLARE_BUFFER(Int, int);
 DECLARE_BUFFER(String, ObjString*);
 
 // TODO: Change this to use a map.
-typedef StringBuffer SymbolTable;
+typedef struct {
+  StringBuffer array;
+} SymbolTable;
 
 // Initializes the symbol table.
 void wrenSymbolTableInit(SymbolTable* symbols);
