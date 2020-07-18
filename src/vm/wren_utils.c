@@ -18,11 +18,22 @@ void wrenSymbolTableInit(SymbolTable* symbols)
     wrenStringBufferInit(&symbols->objs);
 }
 
+inline static void freeHashIdx(HashIdx *symbol)
+{
+    if (!symbol) return;
+
+    HashIdx *next = symbol->next;
+
+    free(symbol);
+
+    if (next) freeHashIdx(next);
+}
+
 static void wrenSymbolTableClearBitset(SymbolTable *symbols)
 {
     for (size_t i = 0; i < symbols->hCapacity; i++)
     {
-        free(symbols->hashSet[i]);
+        freeHashIdx(symbols->hashSet[i]);
         symbols->hashSet[i] = NULL;
     }
 
@@ -37,6 +48,8 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
     // Clear the hashSet, then the buffer
     wrenSymbolTableClearBitset(symbols);
     wrenStringBufferClear(vm, &symbols->objs);
+
+    wrenReallocate(vm, symbols->hashSet, 0, 0);
 }
 
 static unsigned long wrenHashDjb2(const char *key, size_t length)
