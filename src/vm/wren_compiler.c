@@ -3576,7 +3576,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // them to slots starting at zero. When the method is bound to the class, the
   // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
   // into account.
-  wrenSymbolTableInit(&classInfo.fields);
+  wrenSymbolTableInit(compiler->parser->vm, &classInfo.fields);
   
   // Set up symbol buffers to track duplicate static and instance methods.
   wrenIntBufferInit(&classInfo.methods);

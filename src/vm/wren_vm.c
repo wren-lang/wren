@@ -89,7 +89,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->gray = (Obj**)reallocate(NULL, vm->grayCapacity * sizeof(Obj*), userData);
   vm->nextGC = vm->config.initialHeapSize;
 
-  wrenSymbolTableInit(&vm->methodNames);
+  wrenSymbolTableInit(vm, &vm->methodNames);
 
   vm->modules = wrenNewMap(vm);
   wrenInitializeCore(vm);

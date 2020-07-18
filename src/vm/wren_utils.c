@@ -1,20 +1,23 @@
 #include <string.h>
 
 #include "wren_utils.h"
+#include "wren_value.h"
 #include "wren_vm.h"
 
 DEFINE_BUFFER(Byte, uint8_t);
 DEFINE_BUFFER(Int, int);
 DEFINE_BUFFER(String, ObjString*);
 
-void wrenSymbolTableInit(SymbolTable* symbols)
+void wrenSymbolTableInit(WrenVM* vm, SymbolTable* symbols)
 {
   wrenStringBufferInit(&symbols->array);
+  symbols->symbol_to_index_map = wrenNewMap(vm);
 }
 
 void wrenSymbolTableFini(WrenVM* vm, SymbolTable* symbols)
 {
   wrenStringBufferClear(vm, &symbols->array);
+  symbols->symbol_to_index_map = NULL;
 }
 
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
@@ -25,8 +28,12 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
   wrenPushRoot(vm, &symbol->obj);
   wrenStringBufferWrite(vm, &symbols->array, symbol);
   wrenPopRoot(vm);
-  
-  return wrenSymbolTableCount(symbols) - 1;
+
+  int index = wrenSymbolTableCount(symbols) - 1;
+
+  wrenMapSet(vm, symbols->symbol_to_index_map, OBJ_VAL(symbol), NUM_VAL(index));
+
+  return index;
 }
 
 int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
@@ -44,13 +51,9 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
                         const char* name, size_t length)
 {
   // See if the symbol is already defined.
-  // TODO: O(n). Do something better.
-  for (int i = 0; i < wrenSymbolTableCount(symbols); i++)
-  {
-    if (wrenStringEqualsCString(symbols->array.data[i], name, length)) return i;
-  }
+  Value value = wrenMapGetStrLength(symbols->symbol_to_index_map, name, length);
 
-  return -1;
+  return IS_NUM(value) ? AS_NUM(value) : -1;
 }
 
 int wrenSymbolTableCount(const SymbolTable* symbols)
@@ -71,6 +74,8 @@ void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable)
   {
     wrenGrayObj(vm, &symbolTable->array.data[i]->obj);
   }
+  
+  wrenGrayObj(vm, &symbolTable->symbol_to_index_map->obj);
   
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += symbolTable->array.capacity * sizeof(*symbolTable->array.data);

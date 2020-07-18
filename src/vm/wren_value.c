@@ -732,7 +732,7 @@ ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
 
   wrenPushRoot(vm, (Obj*)module);
 
-  wrenSymbolTableInit(&module->variableNames);
+  wrenSymbolTableInit(vm, &module->variableNames);
   wrenValueBufferInit(&module->variables);
 
   module->name = name;

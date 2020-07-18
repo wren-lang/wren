@@ -70,10 +70,11 @@ DECLARE_BUFFER(String, ObjString*);
 // TODO: Change this to use a map.
 typedef struct {
   StringBuffer array;
+  struct sObjMap *symbol_to_index_map;
 } SymbolTable;
 
 // Initializes the symbol table.
-void wrenSymbolTableInit(SymbolTable* symbols);
+void wrenSymbolTableInit(WrenVM* vm, SymbolTable* symbols);
 
 // Frees all dynamically allocated memory used by the symbol table, but not the
 // SymbolTable itself.
