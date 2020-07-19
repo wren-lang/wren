@@ -650,8 +650,14 @@ MapEntry* wrenMapFindStrLength(ObjMap* map, const char* text, size_t length)
 {
   MapEntry* entry;
   if (findEntryStrLength(map->entries, map->capacity, text, length, &entry)) return entry;
-
   return NULL;
+}
+
+Value wrenMapGetStrLength(ObjMap* map, const char* text, size_t length)
+{
+  MapEntry* entry = wrenMapFindStrLength(map, text, length);
+  return entry != NULL ? entry->value :
+                         UNDEFINED_VAL;
 }
 
 void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value)
