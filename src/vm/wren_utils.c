@@ -205,3 +205,21 @@ uint32_t wrenValidateIndex(uint32_t count, int64_t value)
 
   return UINT32_MAX;
 }
+
+// Calculates and stores the hash code for memory at [ptr] of size [size].
+uint32_t wrenHashMemory(const void *ptr, size_t size)
+{
+  // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
+  uint32_t hash = 2166136261u;
+
+  // This is O(n) on the length of the string, but we only call this when a new
+  // string is created. Since the creation is also O(n) (to copy/initialize all
+  // the bytes), we allow this here.
+  for (uint32_t i = 0; i < size; i++)
+  {
+    hash ^= ((const uint8_t *)ptr)[i];
+    hash *= 16777619;
+  }
+
+  return hash;
+}

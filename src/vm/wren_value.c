@@ -689,19 +689,7 @@ static ObjString* allocateString(WrenVM* vm, size_t length)
 // Calculates and stores the hash code for [string].
 static void hashString(ObjString* string)
 {
-  // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
-  uint32_t hash = 2166136261u;
-
-  // This is O(n) on the length of the string, but we only call this when a new
-  // string is created. Since the creation is also O(n) (to copy/initialize all
-  // the bytes), we allow this here.
-  for (uint32_t i = 0; i < string->length; i++)
-  {
-    hash ^= string->value[i];
-    hash *= 16777619;
-  }
-
-  string->hash = hash;
+  string->hash = wrenHashMemory(string->value, string->length);
 }
 
 Value wrenNewString(WrenVM* vm, const char* text)

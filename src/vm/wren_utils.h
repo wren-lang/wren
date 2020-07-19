@@ -123,4 +123,6 @@ int wrenPowerOf2Ceil(int n);
 // index value. If invalid, returns `UINT32_MAX`.
 uint32_t wrenValidateIndex(uint32_t count, int64_t value);
 
+uint32_t wrenHashMemory(const void *ptr, size_t size);
+
 #endif
