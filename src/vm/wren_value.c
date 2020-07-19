@@ -516,6 +516,73 @@ static bool findEntry(MapEntry* entries, uint32_t capacity, Value key,
   return false;
 }
 
+// Looks for an entry with [key] in an array of [capacity] [entries].
+//
+// If found, sets [result] to point to it and returns `true`. Otherwise,
+// returns `false` and points [result] to the entry where the key/value pair
+// should be inserted.
+static bool findEntryStrLength(MapEntry* entries, uint32_t capacity,
+                               const char* text, size_t length,
+                               MapEntry** result)
+{
+  // If there is no entry array (an empty map), we definitely won't find it.
+  if (capacity == 0) return false;
+  
+  // Figure out where to insert it in the table. Use open addressing and
+  // basic linear probing.
+  uint32_t startIndex = wrenHashMemory(text, length) % capacity;
+  uint32_t index = startIndex;
+  
+  // If we pass a tombstone and don't end up finding the key, its entry will
+  // be re-used for the insert.
+  MapEntry* tombstone = NULL;
+  
+  // Walk the probe sequence until we've tried every slot.
+  do
+  {
+    MapEntry* entry = &entries[index];
+    
+    if (IS_UNDEFINED(entry->key))
+    {
+      // If we found an empty slot, the key is not in the table. If we found a
+      // slot that contains a deleted key, we have to keep looking.
+      if (IS_FALSE(entry->value))
+      {
+        // We found an empty slot, so we've reached the end of the probe
+        // sequence without finding the key. If we passed a tombstone, then
+        // that's where we should insert the item, otherwise, put it here at
+        // the end of the sequence.
+        *result = tombstone != NULL ? tombstone : entry;
+        return false;
+      }
+      else
+      {
+        // We found a tombstone. We need to keep looking in case the key is
+        // after it, but we'll use this entry as the insertion point if the
+        // key ends up not being found.
+        if (tombstone == NULL) tombstone = entry;
+      }
+    }
+    else if (IS_STRING(entry->key) &&
+             wrenStringEqualsCString(AS_STRING(entry->key), text, length))
+    {
+      // We found the key.
+      *result = entry;
+      return true;
+    }
+    
+    // Try the next slot.
+    index = (index + 1) % capacity;
+  }
+  while (index != startIndex);
+  
+  // If we get here, the table is full of tombstones. Return the first one we
+  // found.
+  ASSERT(tombstone != NULL, "Map should have tombstones or empty entries.");
+  *result = tombstone;
+  return false;
+}
+
 // Inserts [key] and [value] in the array of [entries] with the given
 // [capacity].
 //
@@ -577,6 +644,14 @@ Value wrenMapGet(ObjMap* map, Value key)
   if (findEntry(map->entries, map->capacity, key, &entry)) return entry->value;
 
   return UNDEFINED_VAL;
+}
+
+MapEntry* wrenMapFindStrLength(ObjMap* map, const char* text, size_t length)
+{
+  MapEntry* entry;
+  if (findEntryStrLength(map->entries, map->capacity, text, length, &entry)) return entry;
+
+  return NULL;
 }
 
 void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value)

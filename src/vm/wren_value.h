@@ -698,6 +698,8 @@ static inline bool wrenMapIsValidKey(Value arg);
 // `UNDEFINED_VAL`.
 Value wrenMapGet(ObjMap* map, Value key);
 
+MapEntry* wrenMapFindStrLength(ObjMap* map, const char *text, size_t length);
+
 // Associates [key] with [value] in [map].
 void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value);
 
