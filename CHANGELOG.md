@@ -1,3 +1,21 @@
+## 0.4.0
+
+- Fix some stack corruption with multiple wrenInterpret calls
+- WREN_MAX_TEMP_ROOTS default is 8 (instead of 5)
+- Add `Num.log2` and `Num.exp`
+- Fixed crash when GC collects module during import 2ce421ea
+- Fixed bug with `import` (28ad8aa9)
+- Map API support:
+  - wrenSetSlotNewMap
+  - wrenGetMapCount
+  - wrenGetMapContainsKey
+  - wrenGetMapValue
+  - wrenSetMapValue
+  - wrenRemoveMapValue
+- Add util/generate_projects.py (expects premake binary in projects/premake/)
+- Support positive sign (+) in scientific notation
+- Optional Random.Sample optimization (#716)
+
 ## 0.3.0
 
 0.3.0 is a fairly specific release, aimed at fixing build issues across platforms,
