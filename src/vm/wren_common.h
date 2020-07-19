@@ -36,7 +36,7 @@
 // see https://bullno1.com/blog/switched-goto for alternative
 // Defaults to true on supported compilers.
 #ifndef WREN_COMPUTED_GOTO
-  #ifdef _MSC_VER
+  #if defined(_MSC_VER) && !defined(__clang__)
     // No computed gotos in Visual Studio.
     #define WREN_COMPUTED_GOTO 0
   #else
