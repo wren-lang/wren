@@ -626,10 +626,11 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   // TODO: Don't look up every time.
   int symbol = wrenSymbolTableFind(&vm->methodNames, "<allocate>", 10);
   ASSERT(symbol != -1, "Should have defined <allocate> symbol.");
-
-  ASSERT(classObj->methods.count > symbol, "Class should have allocator.");
+  
+  // ASSERT(classObj->methods.count > symbol, "Class should have allocator.");
   Method* method = &classObj->methods.data[symbol];
-  ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
+  // ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
+  if(method->as.foreign == NULL) return;
 
   // Pass the constructor arguments to the allocator as well.
   ASSERT(vm->apiStack == NULL, "Cannot already be in foreign call.");
