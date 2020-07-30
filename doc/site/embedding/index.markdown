@@ -128,8 +128,8 @@ And then, we update the configuration to point to it.
 
 <pre class="snippet" data-lang="c">
   WrenConfiguration config;
-    config.writeFn = &writeFn;
   wrenInitConfiguration(&config);
+    config.writeFn = &writeFn;
 </pre>
 
 [configuration]: configuring-the-vm.html
@@ -199,6 +199,59 @@ Note that Wren will yell at you if you still have any live [WrenHandle][handle]
 objects when you call this. This makes sure you haven't lost track of any of
 them (which leaks memory) and you don't try to use any of them after the VM has
 been freed.
+
+## A complete example
+
+Below is a complete example of the above.
+You can find this file in the [example](https://github.com/wren-lang/wren/tree/main/example/embedding) folder.
+
+<pre class="snippet" data-lang="c">
+//For more details, visit https://wren.io/embedding/
+
+#include <stdio.h>
+#include "wren.h"
+
+static void writeFn(WrenVM* vm, const char* text) {
+  printf("%s", text);
+}
+
+void errorFn(WrenVM* vm, WrenErrorType errorType, const char* module, const int line, const char* msg) {
+  switch (errorType) {
+    case WREN_ERROR_COMPILE: {
+      printf("[%s line %d] [Error] %s\n", module, line, msg);
+    } break;
+    case WREN_ERROR_STACK_TRACE: {
+      printf("[%s line %d] in %s\n", module, line, msg);
+    } break;
+    case WREN_ERROR_RUNTIME: {
+      printf("[Runtime Error] %s\n", msg);
+    } break;
+  }
+}
+
+int main() {
+
+  WrenConfiguration config;
+  wrenInitConfiguration(&config);
+    config.writeFn = &writeFn;
+    config.errorFn = &errorFn;
+  WrenVM* vm = wrenNewVM(&config);
+
+  const char* module = "main";
+  const char* script = "System.print(\"I am running in a VM!\")";
+
+  WrenInterpretResult result = wrenInterpret(vm, module, script);
+
+  switch (result) {
+    case WREN_RESULT_COMPILE_ERROR: { printf("Compile Error!\n"); } break;
+    case WREN_RESULT_RUNTIME_ERROR: { printf("Runtime Error!\n"); } break;
+    case WREN_RESULT_SUCCESS:       { printf("Success!\n");       } break;
+  }
+
+  wrenFreeVM(vm);
+
+}
+</pre>
 
 [handle]: slots-and-handles.html#handles
 
