@@ -203,7 +203,7 @@ been freed.
 ## A complete example
 
 Below is a complete example of the above.
-You can find this file in the [example](https://github.com/wren-lang/wren/tree/main/example/embedding) folder.
+You can find this file in the [example](https://github.com/wren-lang/wren/blob/main/example/embedding/main.c) folder.
 
 <pre class="snippet" data-lang="c">
 //For more details, visit https://wren.io/embedding/
@@ -211,25 +211,34 @@ You can find this file in the [example](https://github.com/wren-lang/wren/tree/m
 #include <stdio.h>
 #include "wren.h"
 
-static void writeFn(WrenVM* vm, const char* text) {
+static void writeFn(WrenVM* vm, const char* text)
+{
   printf("%s", text);
 }
 
-void errorFn(WrenVM* vm, WrenErrorType errorType, const char* module, const int line, const char* msg) {
-  switch (errorType) {
-    case WREN_ERROR_COMPILE: {
+void errorFn(WrenVM* vm, WrenErrorType errorType,
+             const char* module, const int line,
+             const char* msg)
+{
+  switch (errorType)
+  {
+    case WREN_ERROR_COMPILE:
+    {
       printf("[%s line %d] [Error] %s\n", module, line, msg);
     } break;
-    case WREN_ERROR_STACK_TRACE: {
+    case WREN_ERROR_STACK_TRACE:
+    {
       printf("[%s line %d] in %s\n", module, line, msg);
     } break;
-    case WREN_ERROR_RUNTIME: {
+    case WREN_ERROR_RUNTIME:
+    {
       printf("[Runtime Error] %s\n", msg);
     } break;
   }
 }
 
-int main() {
+int main()
+{
 
   WrenConfiguration config;
   wrenInitConfiguration(&config);
@@ -243,9 +252,12 @@ int main() {
   WrenInterpretResult result = wrenInterpret(vm, module, script);
 
   switch (result) {
-    case WREN_RESULT_COMPILE_ERROR: { printf("Compile Error!\n"); } break;
-    case WREN_RESULT_RUNTIME_ERROR: { printf("Runtime Error!\n"); } break;
-    case WREN_RESULT_SUCCESS:       { printf("Success!\n");       } break;
+    case WREN_RESULT_COMPILE_ERROR:
+      { printf("Compile Error!\n"); } break;
+    case WREN_RESULT_RUNTIME_ERROR:
+      { printf("Runtime Error!\n"); } break;
+    case WREN_RESULT_SUCCESS:
+      { printf("Success!\n"); } break;
   }
 
   wrenFreeVM(vm);
