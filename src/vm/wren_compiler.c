@@ -1047,9 +1047,20 @@ static void nextToken(Parser* parser)
 
       case '"': readString(parser); return;
       case '_':
-        readName(parser,
-                 peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD);
+      {
+        if (!isName(peekChar(parser)) || (nextChar(parser) == '_' && !isName(peekChar(parser))))
+        {
+          lexError(parser, "Field names cannot be only '_' or '__'.");
+          parser->current.type = TOKEN_ERROR;
+          parser->current.length = 0;
+        }
+        else
+        {
+          readName(parser,
+                   peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD);
+        }
         return;
+      }
 
       case '0':
         if (peekChar(parser) == 'x')
