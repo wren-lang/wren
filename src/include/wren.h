@@ -10,8 +10,13 @@
 #define WREN_VERSION_MINOR 3
 #define WREN_VERSION_PATCH 0
 
+// Stringifies its parameter. Used to stringify constants. See https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html#Stringizing.
+#define WREN_STRINGIFY_HELPER(s) WREN_STRINGIFY_HELPER2(s)
+#define WREN_STRINGIFY_HELPER2(s) #s
 // A human-friendly string representation of the version.
-#define WREN_VERSION_STRING "0.3.0"
+#define WREN_VERSION_STRING (WREN_STRINGIFY_HELPER(WREN_VERSION_MAJOR) "."     \
+                             WREN_STRINGIFY_HELPER(WREN_VERSION_MINOR) "."     \
+                             WREN_STRINGIFY_HELPER(WREN_VERSION_PATCH))
 
 // A monotonically increasing numeric representation of the version number. Use
 // this if you want to do range checks over versions.
