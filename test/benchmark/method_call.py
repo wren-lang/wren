@@ -34,7 +34,7 @@ class NthToggle(Toggle):
 
 
 def main():
-    start = time.clock()
+    start = time.perf_counter()
 
     NUM = 100000
 
@@ -74,7 +74,7 @@ def main():
     else:
         print("false")
 
-    print("elapsed: " + str(time.clock() - start))
+    print("elapsed: " + str(time.perf_counter() - start))
 
 
 main()
