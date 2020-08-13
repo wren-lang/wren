@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import time
 
-start = time.clock()
+start = time.perf_counter()
 
 map = {}
 
@@ -17,4 +17,4 @@ print(sum)
 for i in range(1, 2000001):
   del map[i]
 
-print("elapsed: " + str(time.clock() - start))
+print("elapsed: " + str(time.perf_counter() - start))
