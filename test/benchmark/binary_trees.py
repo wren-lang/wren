@@ -29,7 +29,7 @@ min_depth = 4
 max_depth = 12
 stretch_depth = max_depth + 1
 
-start = time.clock()
+start = time.perf_counter()
 print("stretch tree of depth %d check:" % stretch_depth, check_tree(make_tree(0, stretch_depth)))
 
 long_lived_tree = make_tree(0, max_depth)
@@ -45,4 +45,4 @@ for depth in range(min_depth, stretch_depth, 2):
     iterations //= 4
 
 print("long lived tree of depth %d check:" % max_depth, check_tree(long_lived_tree))
-print("elapsed: " + str(time.clock() - start))
+print("elapsed: " + str(time.perf_counter() - start))
