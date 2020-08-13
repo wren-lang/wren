@@ -8,7 +8,7 @@ try:
 except NameError:
     pass
 
-start = time.clock()
+start = time.perf_counter()
 list = []
 for i in range(0, 1000000):
   list.append(i)
@@ -17,4 +17,4 @@ sum = 0
 for i in list:
   sum += i
 print(sum)
-print("elapsed: " + str(time.clock() - start))
+print("elapsed: " + str(time.perf_counter() - start))
