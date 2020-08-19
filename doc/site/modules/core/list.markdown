@@ -94,6 +94,24 @@ System.print(["a", "b", "c"].removeAt(1)) //> b
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
+### **sort**(comp)
+
+Sorts the elements of a list in-place.
+
+<pre class="snippet">
+var list = [4, 1, 3, 2]
+list.sort {|a, b| a < b}
+System.print(list) //> [1, 2, 3, 4]
+</pre>
+
+It is a runtime error if `comp` is not a function.
+
+<pre class="snippet">
+System.print(["a", "b", "c"].removeAt(1)) //> b
+</pre>
+
+It is a runtime error if the index is not an integer or is out of bounds.
+
 ### **[**index**]** operator
 
 Gets the element at `index`. If `index` is negative, it counts backwards from
