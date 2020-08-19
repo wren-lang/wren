@@ -323,6 +323,10 @@ class List is Sequence {
     return other
   }
 
+  sort() {
+    sort {|a, b| a < b }
+  }
+
   sort(comp) {
     if (!(comp is Fn)) {
       Fiber.abort("Comp must be a function.")
