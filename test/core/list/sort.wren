@@ -1,3 +1,6 @@
+var list = [4, 1, 3, 2].sort()
+System.print([4, 1, 3, 2].sort()) // expect: [1, 2, 3, 4]
+
 var l = [10, 7, 8, 9, 1, 5]
 l.sort{|a, b| a < b }
 System.print(l) // expect: [1, 5, 7, 8, 9, 10]

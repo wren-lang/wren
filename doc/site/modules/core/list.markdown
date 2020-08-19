@@ -94,14 +94,21 @@ System.print(["a", "b", "c"].removeAt(1)) //> b
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
-### **sort**(comp)
+### **sort**(), **sort**(comp)
 
-Sorts the elements of a list in-place.
+Sorts the elements of a list in-place; altering the list.
 
 <pre class="snippet">
-var list = [4, 1, 3, 2]
-list.sort {|a, b| a < b}
+var list = [4, 1, 3, 2].sort()
 System.print(list) //> [1, 2, 3, 4]
+</pre>
+
+A comparison function `comp` can be provided to customise the element sorting. The comparison function must return a boolean value specifying the order in which elements should appear in the list. The default behaviour uses a `<` comparison.
+
+<pre class="snippet">
+var list = [9, 6, 8, 7]
+list.sort {|a, b| a < b}
+System.print(list) //> [6, 7, 8, 9]
 </pre>
 
 It is a runtime error if `comp` is not a function.
