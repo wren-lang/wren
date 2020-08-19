@@ -323,6 +323,38 @@ class List is Sequence {
     return other
   }
 
+  sort(comp) {
+    if (!(comp is Fn)) {
+      Fiber.abort("Comp must be a function.")
+    }
+    quicksort_(0, count - 1, comp)
+  }
+
+  quicksort_(a, b, comp) {
+    if (a < b) {
+      var p = partition_(a, b, comp)
+      quicksort_(a, p - 1, comp)
+      quicksort_(p + 1, b, comp)
+    }
+  }
+
+  partition_(a, b, comp) {
+    var p = this[b]
+    var i = a - 1
+    for (j in a..(b-1)) {
+      if (comp.call(this[j], p)) {  
+        i = i + 1
+        var t = this[i]
+        this[i] = this[j]
+        this[j] = t
+      }
+    }
+    var t = this[i+1]
+    this[i+1] = this[b]
+    this[b] = t
+    return i+1
+  }
+
   toString { "[%(join(", "))]" }
 
   +(other) {
