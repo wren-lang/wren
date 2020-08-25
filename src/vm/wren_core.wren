@@ -323,28 +323,31 @@ class List is Sequence {
     return other
   }
 
-  sort() { sort {|a, b| a < b } }
-
-  sort(comp) {
-    if (!(comp is Fn)) {
-      Fiber.abort("Comp must be a function.")
-    }
-    quicksort_(0, count - 1, comp)
+  sort() {
+    sort {|a, b| a < b }
+    return this
   }
 
-  quicksort_(a, b, comp) {
+  sort(comparer) {
+    if (!(comparer is Fn)) {
+      Fiber.abort("Comparer must be a function.")
+    }
+    quicksort_(0, count - 1, comparer)
+  }
+
+  quicksort_(a, b, comparer) {
     if (a < b) {
-      var p = partition_(a, b, comp)
-      quicksort_(a, p - 1, comp)
-      quicksort_(p + 1, b, comp)
+      var p = partition_(a, b, comparer)
+      quicksort_(a, p - 1, comparer)
+      quicksort_(p + 1, b, comparer)
     }
   }
 
-  partition_(a, b, comp) {
+  partition_(a, b, comparer) {
     var p = this[b]
     var i = a - 1
     for (j in a..(b-1)) {
-      if (comp.call(this[j], p)) {  
+      if (comparer.call(this[j], p)) {  
         i = i + 1
         var t = this[i]
         this[i] = this[j]
