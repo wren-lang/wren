@@ -323,16 +323,14 @@ class List is Sequence {
     return other
   }
 
-  sort() {
-    sort {|a, b| a < b }
-    return this
-  }
+  sort() { sort {|a, b| a < b } }
 
   sort(comparer) {
     if (!(comparer is Fn)) {
       Fiber.abort("Comparer must be a function.")
     }
     quicksort_(0, count - 1, comparer)
+    return this
   }
 
   quicksort_(a, b, comparer) {
