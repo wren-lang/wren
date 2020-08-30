@@ -6,21 +6,19 @@ class Num {}
 
 class Sequence {
   all(f) {
-    var result = true
     for (element in this) {
-      result = f.call(element)
-      if (!result) return result
+      var result = f.call(element)
+      if (!result) return false
     }
-    return result
+    return true
   }
 
   any(f) {
-    var result = false
     for (element in this) {
-      result = f.call(element)
-      if (result) return result
+      var result = f.call(element)
+      if (result) return true
     }
-    return result
+    return false
   }
 
   contains(element) {
