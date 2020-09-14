@@ -33,6 +33,8 @@ lib = both_libraries('wren', source,
 
 install_headers(include / 'wren.h', include / 'wren.hpp')
 
+libwren_dep = declare_dependency(include_directories: include_directories(include), link_with: lib)
+
 test = 'test'
 api = test / 'api'
 
