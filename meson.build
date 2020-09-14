@@ -1,4 +1,4 @@
-project('wren', 'c', default_options: ['c_std=c99'])
+project('wren', 'c', version: '0.4.0', default_options: ['c_std=c99'])
 
 cc = meson.get_compiler('c')
 
@@ -33,7 +33,11 @@ lib = both_libraries('wren', source,
 
 install_headers(include / 'wren.h', include / 'wren.hpp')
 
+pkg = import('pkgconfig')
+
 libwren_dep = declare_dependency(include_directories: include_directories(include), link_with: lib)
+
+pkg.generate(lib)
 
 test = 'test'
 api = test / 'api'
