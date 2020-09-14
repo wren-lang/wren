@@ -56,6 +56,13 @@ in your project for a portable experience.
 The alternative to building via the provided projects is to include the wren source code in your project.
 Since it has no dependencies this is simple, all the code in `src/` comes along. There's a readme in `src/` for details.
 
+If you use Meson as your build system, you can include the Wren source tree in your `subprojects` directory.
+Then, you can get a dependency object with the following line in your `meson.build`:
+
+```
+libwren_dep = dependency('wren', fallback : ['wren', 'libwren_dep'])
+```
+
 **'amalgamated' build**   
 If you want an even simpler way, there's an 'amalgamated' build (often called `blob`, or `unity` builds.).
 This is _all of the wren source code in one file_.
