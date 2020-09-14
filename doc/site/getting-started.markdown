@@ -32,6 +32,7 @@ In here you'll find ready to go projects for `Visual Studio`, `XCode` and tools 
  * **Windows** Open `wren.sln` inside `projects/vs2019/` (or `vs2017`), hit build.
  * **Mac** Open `wren.xcworkspace` inside `projects/xcode/`, hit build.
  * **Linux** Run `make` inside of `projects/make/`.
+ * **Cross-platform** Run `meson build` inside of the root of the project, then run `ninja` in `build/`
 
 In each case, **there will be library files generated into the root `lib/` folder**.   
 These are what you'll link into your project, based on your needs.
