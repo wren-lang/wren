@@ -35,7 +35,7 @@ install_headers(include / 'wren.h', include / 'wren.hpp')
 
 pkg = import('pkgconfig')
 
-libwren_dep = declare_dependency(include_directories: include_directories(include), link_with: lib)
+libwren_dep = declare_dependency(include_directories: include_directories(include), link_with: lib.get_static_lib())
 
 pkg.generate(lib)
 
