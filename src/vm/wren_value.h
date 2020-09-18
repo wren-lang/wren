@@ -359,6 +359,9 @@ typedef enum
   // this can directly manipulate the fiber's stack.
   METHOD_PRIMITIVE,
 
+  // A primitive that handles .call on Fn.
+  METHOD_FUNCTION_CALL,
+
   // A externally-defined C method.
   METHOD_FOREIGN,
 
