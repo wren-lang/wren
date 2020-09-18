@@ -774,6 +774,21 @@ static Value getModuleVariable(WrenVM* vm, ObjModule* module,
   return NULL_VAL;
 }
 
+inline static bool checkArity(WrenVM* vm, Value value, int numArgs)
+{
+  ASSERT(IS_CLOSURE(value), "Receiver must be a closure.");
+  ObjFn* fn = AS_CLOSURE(value)->fn;
+
+  // We only care about missing arguments, not extras. The "- 1" is because
+  // numArgs includes the receiver, the function itself, which we don't want to
+  // count.
+  if (numArgs - 1 >= fn->arity) return true;
+
+  vm->fiber->error = CONST_STRING(vm, "Function expects more arguments.");
+  return false;
+}
+
+
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical.
 static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
@@ -1016,9 +1031,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           break;
 
         case METHOD_FUNCTION_CALL: 
+          if (!checkArity(vm, args[0], numArgs)) {
+            RUNTIME_ERROR();
+            break;
+          }
+
           STORE_FRAME();
           method->as.primitive(vm, args);
-          if (wrenHasError(fiber)) RUNTIME_ERROR();
           LOAD_FRAME();
           break;
 

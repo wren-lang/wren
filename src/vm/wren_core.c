@@ -248,13 +248,6 @@ DEF_PRIMITIVE(fn_arity)
 
 static void call_fn(WrenVM* vm, Value* args, int numArgs)
 {
-  // We only care about missing arguments, not extras.
-  if (AS_CLOSURE(args[0])->fn->arity > numArgs)
-  {
-    vm->fiber->error = CONST_STRING(vm, "Function expects more arguments.");
-    return;
-  }
-
   // +1 to include the function itself.
   wrenCallFunction(vm, vm->fiber, AS_CLOSURE(args[0]), numArgs + 1);
 }
