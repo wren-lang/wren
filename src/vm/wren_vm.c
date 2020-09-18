@@ -1018,6 +1018,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         case METHOD_FUNCTION_CALL: 
           STORE_FRAME();
           method->as.primitive(vm, args);
+          if (wrenHasError(fiber)) RUNTIME_ERROR();
           LOAD_FRAME();
           break;
 
