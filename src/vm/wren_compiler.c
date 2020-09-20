@@ -2378,6 +2378,8 @@ static void subscript(Compiler* compiler, bool canAssign)
   finishArgumentList(compiler, &signature);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
 
+  allowLineBeforeDot(compiler);
+
   if (canAssign && match(compiler, TOKEN_EQ))
   {
     signature.type = SIG_SUBSCRIPT_SETTER;
