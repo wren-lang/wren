@@ -805,6 +805,8 @@ static void readName(Parser* parser, TokenType type)
 // Reads [digits] hex digits in a string literal and returns their number value.
 static uint32_t readHexEscape(Parser* parser, int digits, const char* description)
 {
+  ASSERT(digits <= 8, "Cannot parse more than 8 digits since the result would overflow.");
+
   uint32_t value = 0;
   for (int i = 0; i < digits; i++)
   {
