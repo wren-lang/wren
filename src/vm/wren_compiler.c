@@ -803,9 +803,9 @@ static void readName(Parser* parser, TokenType type)
 }
 
 // Reads [digits] hex digits in a string literal and returns their number value.
-static int readHexEscape(Parser* parser, int digits, const char* description)
+static uint32_t readHexEscape(Parser* parser, int digits, const char* description)
 {
-  int value = 0;
+  uint32_t value = 0;
   for (int i = 0; i < digits; i++)
   {
     if (peekChar(parser) == '"' || peekChar(parser) == '\0')
@@ -834,7 +834,7 @@ static int readHexEscape(Parser* parser, int digits, const char* description)
 // Reads a hex digit Unicode escape sequence in a string literal.
 static void readUnicodeEscape(Parser* parser, ByteBuffer* string, int length)
 {
-  int value = readHexEscape(parser, length, "Unicode");
+  uint32_t value = readHexEscape(parser, length, "Unicode");
 
   // Grow the buffer enough for the encoded result.
   int numBytes = wrenUtf8EncodeNumBytes(value);
