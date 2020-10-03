@@ -87,6 +87,7 @@ typedef enum
   TOKEN_BANGEQ,
 
   TOKEN_BREAK,
+  TOKEN_CONTINUE,
   TOKEN_CLASS,
   TOKEN_CONSTRUCT,
   TOKEN_ELSE,
@@ -105,6 +106,7 @@ typedef enum
   TOKEN_TRUE,
   TOKEN_VAR,
   TOKEN_WHILE,
+  TOKEN_DO,
 
   TOKEN_FIELD,
   TOKEN_STATIC_FIELD,
@@ -236,6 +238,9 @@ typedef struct sLoop
 {
   // Index of the instruction that the loop should jump back to.
   int start;
+
+  // Index of the instruction that a continue statement should jump to
+  int continueJump;
 
   // Index of the argument for the CODE_JUMP_IF instruction used to exit the
   // loop. Stored so we can patch it once we know where the loop ends.
@@ -567,6 +572,7 @@ typedef struct
 static Keyword keywords[] =
 {
   {"break",     5, TOKEN_BREAK},
+  {"continue",  8, TOKEN_CONTINUE},
   {"class",     5, TOKEN_CLASS},
   {"construct", 9, TOKEN_CONSTRUCT},
   {"else",      4, TOKEN_ELSE},
@@ -585,6 +591,7 @@ static Keyword keywords[] =
   {"true",      4, TOKEN_TRUE},
   {"var",       3, TOKEN_VAR},
   {"while",     5, TOKEN_WHILE},
+  {"do",        2, TOKEN_DO},
   {NULL,        0, TOKEN_EOF} // Sentinel to mark the end of the array.
 };
 
@@ -1615,6 +1622,30 @@ static void patchJump(Compiler* compiler, int offset)
   compiler->fn->code.data[offset + 1] = jump & 0xff;
 }
 
+// Replaces the placeholder argument for a jump placeholder to be either a JUMP or LOOP,
+// pointing to a given target location
+static void patchJumpTo(Compiler* compiler, int offset, int target)
+{
+    int jump;
+
+    if (target < offset) {
+        // emit a LOOP
+        // +3 to adjust for the bytecode for the jump offset itself
+        jump = offset - target + 3;
+        compiler->fn->code.data[offset] = CODE_LOOP;
+    }
+    else {
+        // -3 to adjust for the bytecode for the jump offset itself.
+        jump = target - offset - 3;
+        compiler->fn->code.data[offset] = CODE_JUMP;
+    }
+
+    if (jump > MAX_JUMP) error(compiler, "Too much code to jump over.");
+
+    compiler->fn->code.data[offset + 1] = (jump >> 8) & 0xff;
+    compiler->fn->code.data[offset + 2] = jump & 0xff;
+}
+
 // Parses a block body, after the initial "{" has been consumed.
 //
 // Returns true if it was a expression body, false if it was a statement body.
@@ -2621,6 +2652,7 @@ GrammarRule rules[] =
   /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "=="),
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!="),
   /* TOKEN_BREAK         */ UNUSED,
+  /* TOKEN_CONTINUE      */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
   /* TOKEN_CONSTRUCT     */ { NULL, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_ELSE          */ UNUSED,
@@ -2639,6 +2671,7 @@ GrammarRule rules[] =
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_WHILE         */ UNUSED,
+  /* TOKEN_DO            */ UNUSED,
   /* TOKEN_FIELD         */ PREFIX(field),
   /* TOKEN_STATIC_FIELD  */ PREFIX(staticField),
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
@@ -2804,6 +2837,7 @@ static void startLoop(Compiler* compiler, Loop* loop)
 {
   loop->enclosing = compiler->loop;
   loop->start = compiler->fn->code.count - 1;
+  loop->continueJump = compiler->fn->code.count;
   loop->scopeDepth = compiler->scopeDepth;
   compiler->loop = loop;
 }
@@ -2835,15 +2869,20 @@ static void endLoop(Compiler* compiler)
 
   patchJump(compiler, compiler->loop->exitJump);
 
-  // Find any break placeholder instructions (which will be CODE_END in the
-  // bytecode) and replace them with real jumps.
+  // Find any break or continue placeholder instructions (which will be CODE_BREAK/CONTINUE in the
+  // bytecode) and replace them with real jumps/loops
   int i = compiler->loop->body;
   while (i < compiler->fn->code.count)
   {
-    if (compiler->fn->code.data[i] == CODE_END)
+    if (compiler->fn->code.data[i] == CODE_BREAK)
     {
       compiler->fn->code.data[i] = CODE_JUMP;
       patchJump(compiler, i + 1);
+      i += 3;
+    }
+    else if (compiler->fn->code.data[i] == CODE_CONTINUE)
+    {
+      patchJumpTo(compiler, i, compiler->loop->continueJump);
       i += 3;
     }
     else
@@ -3001,6 +3040,33 @@ static void whileStatement(Compiler* compiler)
   endLoop(compiler);
 }
 
+static void doWhileStatement(Compiler* compiler)
+{
+  Loop loop;
+  startLoop(compiler, &loop);
+
+  // in a do-while, the body comes first, and the condition comes after.
+  loopBody(compiler);
+
+  // if a continue is emitted, it should loop to the end of the body just before the condition
+  loop.continueJump = compiler->fn->code.count;
+
+  // if a "while" token comes after the body, then compile the condition
+  if (match(compiler, TOKEN_WHILE)) {
+    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    expression(compiler);
+    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
+
+    testExitLoop(compiler);
+  }
+  // otherwise, omitting the "while" is treated like an implicit do { } while(false)
+  else {
+    compiler->loop->exitJump = emitJump(compiler, CODE_JUMP);
+  }
+
+  endLoop(compiler);
+}
+
 // Compiles a simple statement. These can only appear at the top-level or
 // within curly blocks. Simple statements exclude variable binding statements
 // like "var" and "class" which are not allowed directly in places like the
@@ -3024,9 +3090,25 @@ void statement(Compiler* compiler)
     // Emit a placeholder instruction for the jump to the end of the body. When
     // we're done compiling the loop body and know where the end is, we'll
     // replace these with `CODE_JUMP` instructions with appropriate offsets.
-    // We use `CODE_END` here because that can't occur in the middle of
-    // bytecode.
-    emitJump(compiler, CODE_END);
+    // `CODE_BREAK` here is just a placeholder - the real opcode will be patched in later
+    emitJump(compiler, CODE_BREAK);
+  }
+  else if (match(compiler, TOKEN_CONTINUE))
+  {
+    if (compiler->loop == NULL)
+    {
+        error(compiler, "Cannot use 'continue' outside of a loop.");
+        return;
+    }
+
+    // Since we will be jumping out of the scope, make sure any locals in it
+    // are discarded first.
+    discardLocals(compiler, compiler->loop->scopeDepth + 1);
+
+    // Same as above, but with a different placeholder that, instead of being patched
+    // with the loop *end*, will be patched to point at the loop condition check
+    // that way continue will immediately skip to checking the condition for the next iteration
+    emitJump(compiler, CODE_CONTINUE);
   }
   else if (match(compiler, TOKEN_FOR))
   {
@@ -3054,6 +3136,10 @@ void statement(Compiler* compiler)
   else if (match(compiler, TOKEN_WHILE))
   {
     whileStatement(compiler);
+  }
+  else if (match(compiler, TOKEN_DO))
+  {
+    doWhileStatement(compiler);
   }
   else if (match(compiler, TOKEN_LEFT_BRACE))
   {

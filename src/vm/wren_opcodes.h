@@ -211,3 +211,11 @@ OPCODE(IMPORT_VARIABLE, 1)
 // This pseudo-instruction indicates the end of the bytecode. It should
 // always be preceded by a `CODE_RETURN`, so is never actually executed.
 OPCODE(END, 0)
+
+// Psuedo-instruction used to store a break instruction to be patched after a loop has been emitted
+// It should never be directly executed.
+OPCODE(BREAK, 0)
+
+// Psuedo-instruction used to store a continue instruction to be patched after a loop has been emitted
+// It should never be directly executed.
+OPCODE(CONTINUE, 0)
