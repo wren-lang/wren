@@ -245,7 +245,7 @@ sequence. (Or, in the case where the iterator is `null`, to advance it to the
 *first* element). It then returns either the new iterator, or `false` to
 indicate that there are no more elements.
 
-If `false` is returned, Wren exits out of the loop and we're done. If anything
+If a falsy value (`false` or `null`) is returned, Wren exits out of the loop and we're done. If anything
 else is returned, that means that we have advanced to a new valid element. To
 get that, Wren then calls `iteratorValue()` on the sequence and passes in the
 iterator value that it just got from calling `iterate()`. The sequence uses
