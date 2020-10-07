@@ -13,6 +13,12 @@ It is a runtime error if `value` is not a string.
 
 The value of &infinity;.
 
+### Num.**nan**
+
+One value representing a NaN.
+
+Provides a default sane NaN number suitable for the vm internal values.
+
 ### Num.**pi**
 
 The value of &pi;.
