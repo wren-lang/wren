@@ -3027,7 +3027,8 @@ void statement(Compiler* compiler)
     // Emit a placeholder instruction for the jump to the end of the body. When
     // we're done compiling the loop body and know where the end is, we'll
     // replace these with `CODE_JUMP` instructions with appropriate offsets.
-    // `CODE_END` here is just a placeholder - the real opcode will be patched in later
+    // We use `CODE_END` here because that can't occur in the middle of
+    // bytecode.
     emitJump(compiler, CODE_END);
   }
   else if (match(compiler, TOKEN_CONTINUE))
