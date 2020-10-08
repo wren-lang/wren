@@ -106,7 +106,6 @@ typedef enum
   TOKEN_TRUE,
   TOKEN_VAR,
   TOKEN_WHILE,
-  TOKEN_DO,
 
   TOKEN_FIELD,
   TOKEN_STATIC_FIELD,
@@ -238,9 +237,6 @@ typedef struct sLoop
 {
   // Index of the instruction that the loop should jump back to.
   int start;
-
-  // Index of the instruction that a continue statement should jump to
-  int continueJump;
 
   // Index of the argument for the CODE_JUMP_IF instruction used to exit the
   // loop. Stored so we can patch it once we know where the loop ends.
@@ -591,7 +587,6 @@ static Keyword keywords[] =
   {"true",      4, TOKEN_TRUE},
   {"var",       3, TOKEN_VAR},
   {"while",     5, TOKEN_WHILE},
-  {"do",        2, TOKEN_DO},
   {NULL,        0, TOKEN_EOF} // Sentinel to mark the end of the array.
 };
 
@@ -2671,7 +2666,6 @@ GrammarRule rules[] =
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_WHILE         */ UNUSED,
-  /* TOKEN_DO            */ UNUSED,
   /* TOKEN_FIELD         */ PREFIX(field),
   /* TOKEN_STATIC_FIELD  */ PREFIX(staticField),
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
@@ -2837,7 +2831,6 @@ static void startLoop(Compiler* compiler, Loop* loop)
 {
   loop->enclosing = compiler->loop;
   loop->start = compiler->fn->code.count - 1;
-  loop->continueJump = compiler->fn->code.count;
   loop->scopeDepth = compiler->scopeDepth;
   compiler->loop = loop;
 }
@@ -2882,7 +2875,7 @@ static void endLoop(Compiler* compiler)
     }
     else if (compiler->fn->code.data[i] == CODE_CONTINUE)
     {
-      patchJumpTo(compiler, i, compiler->loop->continueJump);
+      patchJumpTo(compiler, i, compiler->loop->start + 1);
       i += 3;
     }
     else
@@ -3040,33 +3033,6 @@ static void whileStatement(Compiler* compiler)
   endLoop(compiler);
 }
 
-static void doWhileStatement(Compiler* compiler)
-{
-  Loop loop;
-  startLoop(compiler, &loop);
-
-  // in a do-while, the body comes first, and the condition comes after.
-  loopBody(compiler);
-
-  // if a continue is emitted, it should loop to the end of the body just before the condition
-  loop.continueJump = compiler->fn->code.count;
-
-  // if a "while" token comes after the body, then compile the condition
-  if (match(compiler, TOKEN_WHILE)) {
-    consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
-    expression(compiler);
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after while condition.");
-
-    testExitLoop(compiler);
-  }
-  // otherwise, omitting the "while" is treated like an implicit do { } while(false)
-  else {
-    compiler->loop->exitJump = emitJump(compiler, CODE_JUMP);
-  }
-
-  endLoop(compiler);
-}
-
 // Compiles a simple statement. These can only appear at the top-level or
 // within curly blocks. Simple statements exclude variable binding statements
 // like "var" and "class" which are not allowed directly in places like the
@@ -3136,10 +3102,6 @@ void statement(Compiler* compiler)
   else if (match(compiler, TOKEN_WHILE))
   {
     whileStatement(compiler);
-  }
-  else if (match(compiler, TOKEN_DO))
-  {
-    doWhileStatement(compiler);
   }
   else if (match(compiler, TOKEN_LEFT_BRACE))
   {
