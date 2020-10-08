@@ -1617,30 +1617,6 @@ static void patchJump(Compiler* compiler, int offset)
   compiler->fn->code.data[offset + 1] = jump & 0xff;
 }
 
-// Replaces the placeholder argument for a jump placeholder to be either a JUMP or LOOP,
-// pointing to a given target location
-static void patchJumpTo(Compiler* compiler, int offset, int target)
-{
-    int jump;
-
-    if (target < offset) {
-        // emit a LOOP
-        // +3 to adjust for the bytecode for the jump offset itself
-        jump = offset - target + 3;
-        compiler->fn->code.data[offset] = CODE_LOOP;
-    }
-    else {
-        // -3 to adjust for the bytecode for the jump offset itself.
-        jump = target - offset - 3;
-        compiler->fn->code.data[offset] = CODE_JUMP;
-    }
-
-    if (jump > MAX_JUMP) error(compiler, "Too much code to jump over.");
-
-    compiler->fn->code.data[offset + 1] = (jump >> 8) & 0xff;
-    compiler->fn->code.data[offset + 2] = jump & 0xff;
-}
-
 // Parses a block body, after the initial "{" has been consumed.
 //
 // Returns true if it was a expression body, false if it was a statement body.
@@ -2867,15 +2843,10 @@ static void endLoop(Compiler* compiler)
   int i = compiler->loop->body;
   while (i < compiler->fn->code.count)
   {
-    if (compiler->fn->code.data[i] == CODE_BREAK)
+    if (compiler->fn->code.data[i] == CODE_END)
     {
       compiler->fn->code.data[i] = CODE_JUMP;
       patchJump(compiler, i + 1);
-      i += 3;
-    }
-    else if (compiler->fn->code.data[i] == CODE_CONTINUE)
-    {
-      patchJumpTo(compiler, i, compiler->loop->start + 1);
       i += 3;
     }
     else
@@ -3056,8 +3027,8 @@ void statement(Compiler* compiler)
     // Emit a placeholder instruction for the jump to the end of the body. When
     // we're done compiling the loop body and know where the end is, we'll
     // replace these with `CODE_JUMP` instructions with appropriate offsets.
-    // `CODE_BREAK` here is just a placeholder - the real opcode will be patched in later
-    emitJump(compiler, CODE_BREAK);
+    // `CODE_END` here is just a placeholder - the real opcode will be patched in later
+    emitJump(compiler, CODE_END);
   }
   else if (match(compiler, TOKEN_CONTINUE))
   {
@@ -3071,10 +3042,9 @@ void statement(Compiler* compiler)
     // are discarded first.
     discardLocals(compiler, compiler->loop->scopeDepth + 1);
 
-    // Same as above, but with a different placeholder that, instead of being patched
-    // with the loop *end*, will be patched to point at the loop condition check
-    // that way continue will immediately skip to checking the condition for the next iteration
-    emitJump(compiler, CODE_CONTINUE);
+    // emit a jump back to the top of the loop
+    int loopOffset = compiler->fn->code.count - compiler->loop->start + 2;
+    emitShortArg(compiler, CODE_LOOP, loopOffset);
   }
   else if (match(compiler, TOKEN_FOR))
   {
