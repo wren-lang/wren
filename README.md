@@ -44,7 +44,7 @@ If you like the sound of this, [let's get started][started]. You can even try
 it [in your browser][browser]! Excited? Well, come on and [get
 involved][contribute]!
 
-[![Build Status](https://travis-ci.org/wren-lang/wren.svg)](https://travis-ci.org/wren-lang/wren)
+[![Build Status](https://travis-ci.org/wren-lang/wren.svg?branch=main)](https://travis-ci.org/wren-lang/wren)
 
 [syntax]: http://wren.io/syntax.html
 [src]: https://github.com/wren-lang/wren/tree/main/src
