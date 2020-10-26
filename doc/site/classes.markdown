@@ -6,9 +6,9 @@ Even `true` and `false` are full-featured objects&mdash;instances of the
 
 [bool]: modules/core/bool.html
 
-Classes define an objects *behavior* and *state*. Behavior is defined by
-[*methods*][method calls] which live in the class. Every object of the same
-class supports the same methods. State is defined in *fields*, whose values are
+Classes define an object's *behavior* and *state*. Behavior is defined by
+[*methods*][method calls] that live in the class. Every object of the same
+class supports the same methods. The state is defined in *fields*, whose values are
 stored in each instance.
 
 [method calls]: method-calls.html
@@ -156,7 +156,7 @@ class Unicorn {
 ## Method Scope
 
 Up to this point, "[scope][]" has been used to talk exclusively about
-[variables][]. In a procedural language like C, or a functional one like Scheme,
+[variables][]. In a procedural language like C or a functional one like Scheme,
 that's the only kind of scope there is. But object-oriented languages like Wren
 introduce another kind of scope: *object scope*. It contains the methods that
 are available on an object. When you write:
@@ -190,7 +190,7 @@ class Unicorn {
 }
 </pre>
 
-The `this` keyword works sort of like a variable, but has special behavior. It
+The `this` keyword works sort of like a variable but has special behavior. It
 always refers to the instance whose method is currently being executed. This
 lets you invoke methods on "yourself".
 
@@ -342,12 +342,12 @@ classes aren't designed to be constructed. If you have an abstract base class
 that just contains methods to be inherited by other classes, it doesn't need
 and won't have a constructor.
 
-Like other methods, constructors can obviously have arguments, and can be
+Like other methods, constructors can obviously have arguments and can be
 overloaded by [arity](#signature). A constructor *must* be a named method with
 a (possibly empty) argument list. Operators, getters, and setters cannot be
 constructors.
 
-A constructor is actually a pair of methods. You get a method on the class:
+A constructor is actually a pair of methods. You get a method in the class:
 
 <pre class="snippet">
 Unicorn.brown("Dave")
@@ -460,7 +460,7 @@ to or even should define getters or setters for most of your object's fields.
 ### Static fields
 
 A name that starts with *two* underscores is a *static* field. They work
-similar to [fields](#fields) except the data is stored on the class itself, and
+similarly to [fields](#fields) except the data is stored on the class itself, and
 not the instance. They can be used in *both* instance and static methods.
 
 <pre class="snippet">
