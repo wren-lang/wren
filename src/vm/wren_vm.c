@@ -512,7 +512,10 @@ static Value validateSuperclass(WrenVM* vm, Value name, Value superclassValue,
       superclass == vm->listClass ||
       superclass == vm->mapClass ||
       superclass == vm->rangeClass ||
-      superclass == vm->stringClass)
+      superclass == vm->stringClass ||
+      superclass == vm->boolClass ||
+      superclass == vm->nullClass ||
+      superclass == vm->numClass)
   {
     return wrenStringFormat(vm,
         "Class '@' cannot inherit from built-in class '@'.",
