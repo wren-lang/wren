@@ -19,7 +19,7 @@ consider a module effectively a class. Consider:
     }
   }
 
-Looking at this, though, I think there's already a question how referring to an
+Looking at this, though, I think there's already a question about how referring to an
 outer field would work. Having an instance of Inner doesn't imply you also have
 an instance of Outer. We definitely don't want to recapitulate inner classes
 in Java.
