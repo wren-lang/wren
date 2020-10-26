@@ -32,7 +32,7 @@ try again.
 --
 
 After thinking about it, maybe resuming is a bridge too far. Erlang's model is
-that a failure just kills the process. I'll note that Erlang does have try and
+that a failure just kills the process. I'll note that Erlang does have to try and
 catch, though.
 
 The goals for error-handling in a scripting language are:
@@ -41,7 +41,7 @@ The goals for error-handling in a scripting language are:
 
 1. Make it easy for developers to track down programmatic errors so they can
    fix them. This means bugs like wrong argument types should fail immediately
-   and loudly, and should provide context (a callstack) about where the error
+   and loudly, and should provide context (a call stack) about where the error
    occurred.
 
 2. For runtime errors like parsing an invalid string or opening a missing file,
@@ -64,7 +64,7 @@ The goals for error-handling in a scripting language are:
 
 Given those, I'm thinking:
 
-1. Programmatic errors take down the entire fiber and dump a callstack.
+1. Programmatic errors take down the entire fiber and dump a call stack.
    Normally, they will also take down the parent fiber and so on until the
    entire program goes down.
 
@@ -74,5 +74,5 @@ Given those, I'm thinking:
 
 3. When handing off control to a fiber, there is a "guarded run" method that
    will run the fiber. If it fails with a programmatic error, the invoked fiber
-   dies, but the parent does not. It gets the callstack and error as some sort
+   dies, but the parent does not. It gets the call stack and error as some sort
    of object it can poke at.
