@@ -323,7 +323,7 @@ class List is Sequence {
     return other
   }
 
-  sort() { sort {|a, b| a < b } }
+  sort() { sort {|low, high| low < high } }
 
   sort(comparer) {
     if (!(comparer is Fn)) {
@@ -333,18 +333,18 @@ class List is Sequence {
     return this
   }
 
-  quicksort_(a, b, comparer) {
-    if (a < b) {
-      var p = partition_(a, b, comparer)
-      quicksort_(a, p - 1, comparer)
-      quicksort_(p + 1, b, comparer)
+  quicksort_(low, high, comparer) {
+    if (low < high) {
+      var p = partition_(low, high, comparer)
+      quicksort_(low, p - 1, comparer)
+      quicksort_(p + 1, high, comparer)
     }
   }
 
-  partition_(a, b, comparer) {
-    var p = this[b]
-    var i = a - 1
-    for (j in a..(b-1)) {
+  partition_(low, high, comparer) {
+    var p = this[high]
+    var i = low - 1
+    for (j in low..(high-1)) {
       if (comparer.call(this[j], p)) {  
         i = i + 1
         var t = this[i]
@@ -353,8 +353,8 @@ class List is Sequence {
       }
     }
     var t = this[i+1]
-    this[i+1] = this[b]
-    this[b] = t
+    this[i+1] = this[high]
+    this[high] = t
     return i+1
   }
 
