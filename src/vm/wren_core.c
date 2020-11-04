@@ -191,6 +191,15 @@ DEF_PRIMITIVE(fiber_try)
   return false;
 }
 
+DEF_PRIMITIVE(fiber_try1)
+{
+  runFiber(vm, AS_FIBER(args[0]), args, true, true, "try");
+  
+  // If we're switching to a valid fiber to try, remember that we're trying it.
+  if (!wrenHasError(vm->fiber)) vm->fiber->state = FIBER_TRY;
+  return false;
+}
+
 DEF_PRIMITIVE(fiber_yield)
 {
   ObjFiber* current = vm->fiber;
@@ -1235,6 +1244,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "transfer(_)", fiber_transfer1);
   PRIMITIVE(vm->fiberClass, "transferError(_)", fiber_transferError);
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
+  PRIMITIVE(vm->fiberClass, "try(_)", fiber_try1);
 
   vm->fnClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fn"));
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
