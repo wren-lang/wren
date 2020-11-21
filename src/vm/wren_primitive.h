@@ -5,23 +5,42 @@
 
 // Binds a primitive method named [name] (in Wren) implemented using C function
 // [fn] to `ObjClass` [cls].
-#define PRIMITIVE(cls, name, function) \
-    { \
-      int symbol = wrenSymbolTableEnsure(vm, \
-          &vm->methodNames, name, strlen(name)); \
-      Method method; \
-      method.type = METHOD_PRIMITIVE; \
-      method.as.primitive = prim_##function; \
-      wrenBindMethod(vm, cls, symbol, method); \
-    }
+#define PRIMITIVE(cls, name, function)                                         \
+    do                                                                         \
+    {                                                                          \
+      int symbol = wrenSymbolTableEnsure(vm,                                   \
+          &vm->methodNames, name, strlen(name));                               \
+      Method method;                                                           \
+      method.type = METHOD_PRIMITIVE;                                          \
+      method.as.primitive = prim_##function;                                   \
+      wrenBindMethod(vm, cls, symbol, method);                                 \
+    } while (false)
+
+// Binds a primitive method named [name] (in Wren) implemented using C function
+// [fn] to `ObjClass` [cls], but as a FN call.
+#define FUNCTION_CALL(cls, name, function)                                     \
+    do                                                                         \
+    {                                                                          \
+      int symbol = wrenSymbolTableEnsure(vm,                                   \
+          &vm->methodNames, name, strlen(name));                               \
+      Method method;                                                           \
+      method.type = METHOD_FUNCTION_CALL;                                      \
+      method.as.primitive = prim_##function;                                   \
+      wrenBindMethod(vm, cls, symbol, method);                                 \
+    } while (false)
 
 // Defines a primitive method whose C function name is [name]. This abstracts
 // the actual type signature of a primitive function and makes it clear which C
 // functions are invoked as primitives.
-#define DEF_PRIMITIVE(name) \
+#define DEF_PRIMITIVE(name)                                                    \
     static bool prim_##name(WrenVM* vm, Value* args)
 
-#define RETURN_VAL(value)   do { args[0] = value; return true; } while (0)
+#define RETURN_VAL(value)                                                      \
+    do                                                                         \
+    {                                                                          \
+      args[0] = value;                                                         \
+      return true;                                                             \
+    } while (false)
 
 #define RETURN_OBJ(obj)     RETURN_VAL(OBJ_VAL(obj))
 #define RETURN_BOOL(value)  RETURN_VAL(BOOL_VAL(value))
@@ -30,17 +49,19 @@
 #define RETURN_NUM(value)   RETURN_VAL(NUM_VAL(value))
 #define RETURN_TRUE         RETURN_VAL(TRUE_VAL)
 
-#define RETURN_ERROR(msg) \
-    do { \
-      vm->fiber->error = wrenNewStringLength(vm, msg, sizeof(msg) - 1); \
-      return false; \
-    } while (0);
+#define RETURN_ERROR(msg)                                                      \
+    do                                                                         \
+    {                                                                          \
+      vm->fiber->error = wrenNewStringLength(vm, msg, sizeof(msg) - 1);        \
+      return false;                                                            \
+    } while (false)
 
-#define RETURN_ERROR_FMT(msg, arg) \
-    do { \
-      vm->fiber->error = wrenStringFormat(vm, msg, arg); \
-      return false; \
-    } while (0);
+#define RETURN_ERROR_FMT(...)                                                  \
+    do                                                                         \
+    {                                                                          \
+      vm->fiber->error = wrenStringFormat(vm, __VA_ARGS__);                    \
+      return false;                                                            \
+    } while (false)
 
 // Validates that the given [arg] is a function. Returns true if it is. If not,
 // reports an error and returns false.

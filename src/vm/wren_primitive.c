@@ -23,9 +23,7 @@ static uint32_t validateIndexValue(WrenVM* vm, uint32_t count, double value,
 bool validateFn(WrenVM* vm, Value arg, const char* argName)
 {
   if (IS_CLOSURE(arg)) return true;
-
-  vm->fiber->error = wrenStringFormat(vm, "$ must be a function.", argName);
-  return false;
+  RETURN_ERROR_FMT("$ must be a function.", argName);
 }
 
 bool validateNum(WrenVM* vm, Value arg, const char* argName)

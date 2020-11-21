@@ -1,3 +1,3 @@
 #include "wren.h"
 
-void resetStackAfterCallAbortRunTests(WrenVM* vm);
+int resetStackAfterCallAbortRunTests(WrenVM* vm);

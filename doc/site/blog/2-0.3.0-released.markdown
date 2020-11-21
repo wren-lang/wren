@@ -1,0 +1,135 @@
+^title 0.3.0 released!
+5 June 2020
+
+---
+
+In this post we'll cover 0.3.0 and the goals for 0.4.0 [#](#goals-for-0.4.0).
+
+## About the 0.3.0 release
+
+Let's revisit our goals from [the last blog post](1-0.2.0-and-beyond.html),   
+and mark what we managed to get done:
+
+- <s>VM / CLI split</s> [#](#vm--cli-split)
+- <s>Build consistency/reliablity</s> [#](#build-consistencyreliability)
+- <s>Web build for embedding in docs</s> [#](#web-build-for-embedding-in-docs)
+- <s>Prebuilt releases</s> [#](#prebuilt-releases)
+
+## The details
+
+### VM / CLI split
+
+With 0.3.0 we've separated the CLI from the Wren repo,
+and updated the docs to make the distinction clearer.
+
+The [CLI now has its own corner of the docs](../cli), so that the modules
+and API docs aren't overlapped like before. This opens up space for the
+CLI to get better, fuller documentation, and removes confusion about
+built in modules vs ones that are in the CLI only.
+
+The code structure is clearer, too, and all the tests and utils are now specific.
+
+### Build consistency/reliability
+
+Previously, builds on Windows could be a little fickle, and there was sometimes
+issues with the dependencies on the CLI side.
+
+To solve this, premake is now used to generate platform specific project files that
+'just work', making it a one step process to build the VM or CLI. Both projects
+now have a `projects/` folder which includes ready to go project files for primary platforms.
+
+<small>The original `Makefile` and `util/wren.mk` no longer exist, so there might be some work needed
+to reintegrate if you relied on those. You can find the updated makefile in `projects/make/`, or `projects/make.mac/`.</small>
+
+The **amalgamated build** was fixed too, so that embedding in your own project is as simple as
+including a single c file (and the `wren.h` header).
+
+On the **CLI** side, the pre-build steps were removed and dependencies vendored in repo,
+so that the project just builds with less potential points of error, especially across platforms.
+
+And finally the **docs**! Previously [SASS](https://sass-lang.com/) was used, and code highlighting
+was done at generation time using pygments, a python code highlighter. Both of these dependencies
+have been removed, code highlighting is now done on the client side instead (see another reason why below).
+The benefit here that it is now _easy_ to edit the docs, just a simple python command, no setup!
+
+### Web build for embedding in docs
+The goal was two part here, one is to have a page to just try out Wren.
+Type in some code, run it. That's the first big step and we've now got that on the docs page.
+
+<h4><a href="../try" target="_blank" class="dark-link">Try Wren directly in your browser!</a></h4>
+This should work on desktop or mobile, and will continue to be improved over time.
+
+The second part of that goal is having the VM available to make examples on each page interactive.
+This is implemented, _but not activated on any pages yet_.
+
+In the near future inline doc examples will have a small button that you can 
+press to see the code result right there, live. Since there's a lot of examples,
+and sometimes they're fragments of code that don't run in isolation,
+it will take time to propagate it through the pages.
+
+Mainly, I didn't want this to hold up 0.3.0, but expect to start seeing it soon.
+
+### Prebuilt releases
+In addition to the browser based build that removes a barrier to trying out Wren,
+Wren CLI has prebuilt binaries for Mac, Windows and Linux now! This gives
+an easy path to just tinkering with Wren before embedding it.
+
+---
+
+## Goals for 0.4.0
+
+With 0.4.0 the goal is to address a couple of bigger todos, but also to push the language
+itself, and the embedding experience forward.
+
+You can see some of the [work in progress tasks](https://github.com/wren-lang/wren/pulls?q=is%3Apr+is%3Aopen+label%3A0.4.0) here, 
+but there's a few things I'd like to resolve in 0.4.0.
+
+**Compound operators**   
+I've really missed having `+=` and friends,   
+so I've been working on a (broken, wip) [PR here](https://github.com/wren-lang/wren/pull/701).
+I've since had a better idea to implement it and will hope to address that in 0.4.0.
+
+**Chained methods ('fluent interfaces')**   
+Currently in Wren it's required that the period (`.`) be on the same line as the method.
+<pre class="snippet">
+  example.
+    some().
+    functions().
+    here()
+</pre>
+This isn't as elegant as we'd want for this form of API,
+so **in 0.4.0 the goal is** allowing a newline, as you'd expect:
+<pre class="snippet">
+  example
+    .some()
+    .functions()
+    .here()
+</pre>
+This doesn't seem like a big deal but when your calls are wider,
+longer and possibly accept block functions. It's hard to read,
+and can be less fun to track down a missing `.` in a big chunk of code.
+<pre class="snippet">
+  example.
+    some {|args, and, stuff|
+      ...
+    }.
+    here()
+</pre>
+
+**C Side APIs**   
+Some APIs for dealing with `Map` have been proposed several times,
+it's time to bring that into the API. There's some additions for `List` as well,
+like a helper to set an element in a list.
+
+**Other goals**   
+There's a few more things but I'm still exploring their viability.   
+Keep an eye on the [PRs/issues](https://github.com/wren-lang/wren) or the [0.4.0 label](https://github.com/wren-lang/wren/pulls?q=is%3Apr+is%3Aopen+label%3A0.4.0) to see when they're discussed.
+
+## Till next time
+
+---
+
+- [The Wren Blog RSS](http://wren.io/blog/rss.xml)
+- Join the [discord community](https://discord.gg/Kx6PxSX)
+- Visit the [wren-lang organization](https://github.com/wren-lang) on GitHub to get involved.
+- Follow the developers [@munificentbob](https://twitter.com/munificentbob) or [@ruby0x1](https://twitter.com/ruby0x1) on twitter

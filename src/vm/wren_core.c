@@ -248,23 +248,16 @@ DEF_PRIMITIVE(fn_arity)
 
 static void call_fn(WrenVM* vm, Value* args, int numArgs)
 {
-  // We only care about missing arguments, not extras.
-  if (AS_CLOSURE(args[0])->fn->arity > numArgs)
-  {
-    vm->fiber->error = CONST_STRING(vm, "Function expects more arguments.");
-    return;
-  }
-
   // +1 to include the function itself.
   wrenCallFunction(vm, vm->fiber, AS_CLOSURE(args[0]), numArgs + 1);
 }
 
-#define DEF_FN_CALL(numArgs) \
-    DEF_PRIMITIVE(fn_call##numArgs) \
-    { \
-      call_fn(vm, args, numArgs); \
-      return false; \
-    } \
+#define DEF_FN_CALL(numArgs)                                                   \
+    DEF_PRIMITIVE(fn_call##numArgs)                                            \
+    {                                                                          \
+      call_fn(vm, args, numArgs);                                              \
+      return false;                                                            \
+    }
 
 DEF_FN_CALL(0)
 DEF_FN_CALL(1)
@@ -600,11 +593,11 @@ DEF_PRIMITIVE(num_pi)
 }
 
 // Defines a primitive on Num that calls infix [op] and returns [type].
-#define DEF_NUM_INFIX(name, op, type) \
-    DEF_PRIMITIVE(num_##name) \
-    { \
-      if (!validateNum(vm, args[1], "Right operand")) return false; \
-      RETURN_##type(AS_NUM(args[0]) op AS_NUM(args[1])); \
+#define DEF_NUM_INFIX(name, op, type)                                          \
+    DEF_PRIMITIVE(num_##name)                                                  \
+    {                                                                          \
+      if (!validateNum(vm, args[1], "Right operand")) return false;            \
+      RETURN_##type(AS_NUM(args[0]) op AS_NUM(args[1]));                       \
     }
 
 DEF_NUM_INFIX(minus,    -,  NUM)
@@ -617,13 +610,13 @@ DEF_NUM_INFIX(lte,      <=, BOOL)
 DEF_NUM_INFIX(gte,      >=, BOOL)
 
 // Defines a primitive on Num that call infix bitwise [op].
-#define DEF_NUM_BITWISE(name, op) \
-    DEF_PRIMITIVE(num_bitwise##name) \
-    { \
-      if (!validateNum(vm, args[1], "Right operand")) return false; \
-      uint32_t left = (uint32_t)AS_NUM(args[0]); \
-      uint32_t right = (uint32_t)AS_NUM(args[1]); \
-      RETURN_NUM(left op right); \
+#define DEF_NUM_BITWISE(name, op)                                              \
+    DEF_PRIMITIVE(num_bitwise##name)                                           \
+    {                                                                          \
+      if (!validateNum(vm, args[1], "Right operand")) return false;            \
+      uint32_t left = (uint32_t)AS_NUM(args[0]);                               \
+      uint32_t right = (uint32_t)AS_NUM(args[1]);                              \
+      RETURN_NUM(left op right);                                               \
     }
 
 DEF_NUM_BITWISE(And,        &)
@@ -633,10 +626,10 @@ DEF_NUM_BITWISE(LeftShift,  <<)
 DEF_NUM_BITWISE(RightShift, >>)
 
 // Defines a primitive method on Num that returns the result of [fn].
-#define DEF_NUM_FN(name, fn) \
-    DEF_PRIMITIVE(num_##name) \
-    { \
-      RETURN_NUM(fn(AS_NUM(args[0]))); \
+#define DEF_NUM_FN(name, fn)                                                   \
+    DEF_PRIMITIVE(num_##name)                                                  \
+    {                                                                          \
+      RETURN_NUM(fn(AS_NUM(args[0])));                                         \
     }
 
 DEF_NUM_FN(abs,     fabs)
@@ -652,6 +645,8 @@ DEF_NUM_FN(sin,     sin)
 DEF_NUM_FN(sqrt,    sqrt)
 DEF_NUM_FN(tan,     tan)
 DEF_NUM_FN(log,     log)
+DEF_NUM_FN(log2,    log2)
+DEF_NUM_FN(exp,     exp)
 
 DEF_PRIMITIVE(num_mod)
 {
@@ -1245,23 +1240,25 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
-  PRIMITIVE(vm->fnClass, "call()", fn_call0);
-  PRIMITIVE(vm->fnClass, "call(_)", fn_call1);
-  PRIMITIVE(vm->fnClass, "call(_,_)", fn_call2);
-  PRIMITIVE(vm->fnClass, "call(_,_,_)", fn_call3);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_)", fn_call4);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_)", fn_call5);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_)", fn_call6);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_)", fn_call7);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_)", fn_call8);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_)", fn_call9);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_)", fn_call10);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
+
+  FUNCTION_CALL(vm->fnClass, "call()", fn_call0);
+  FUNCTION_CALL(vm->fnClass, "call(_)", fn_call1);
+  FUNCTION_CALL(vm->fnClass, "call(_,_)", fn_call2);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_)", fn_call3);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_)", fn_call4);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_)", fn_call5);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_)", fn_call6);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_)", fn_call7);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_)", fn_call8);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_)", fn_call9);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_)", fn_call10);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
+  
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Null"));
@@ -1299,6 +1296,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
   PRIMITIVE(vm->numClass, "tan", num_tan);
   PRIMITIVE(vm->numClass, "log", num_log);
+  PRIMITIVE(vm->numClass, "log2", num_log2);
+  PRIMITIVE(vm->numClass, "exp", num_exp);
   PRIMITIVE(vm->numClass, "%(_)", num_mod);
   PRIMITIVE(vm->numClass, "~", num_bitwiseNot);
   PRIMITIVE(vm->numClass, "..(_)", num_dotDot);

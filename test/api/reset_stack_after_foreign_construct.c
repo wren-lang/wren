@@ -19,16 +19,16 @@ void resetStackAfterForeignConstructBindClass(
   }
 }
 
-void resetStackAfterForeignConstructRunTests(WrenVM* vm)
+int resetStackAfterForeignConstructRunTests(WrenVM* vm)
 {
   wrenEnsureSlots(vm, 1);
   wrenGetVariable(vm,
       "./test/api/reset_stack_after_foreign_construct", "Test", 0);
   WrenHandle* testClass = wrenGetSlotHandle(vm, 0);
-  
+
   WrenHandle* callConstruct = wrenMakeCallHandle(vm, "callConstruct()");
   WrenHandle* afterConstruct = wrenMakeCallHandle(vm, "afterConstruct(_,_)");
-  
+
   wrenEnsureSlots(vm, 1);
   wrenSetSlotHandle(vm, 0, testClass);
   wrenCall(vm, callConstruct);
@@ -38,8 +38,10 @@ void resetStackAfterForeignConstructRunTests(WrenVM* vm)
   wrenSetSlotDouble(vm, 1, 1.0);
   wrenSetSlotDouble(vm, 2, 2.0);
   wrenCall(vm, afterConstruct);
-  
+
   wrenReleaseHandle(vm, testClass);
   wrenReleaseHandle(vm, callConstruct);
   wrenReleaseHandle(vm, afterConstruct);
+
+  return 0;
 }

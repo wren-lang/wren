@@ -1,3 +1,3 @@
 #include "wren.h"
 
-void callWrenCallRootRunTests(WrenVM* vm);
+int callWrenCallRootRunTests(WrenVM* vm);

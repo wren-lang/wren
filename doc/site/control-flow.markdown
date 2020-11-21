@@ -29,33 +29,37 @@ values.
 The simplest branching statement, `if` lets you conditionally skip a chunk of
 code. It looks like this:
 
-    :::wren
-    if (ready) System.print("go!")
+<pre class="snippet">
+if (ready) System.print("go!")
+</pre>
 
 That evaluates the parenthesized expression after `if`. If it's true, then the
 statement after the condition is evaluated. Otherwise it is skipped. Instead of
 a statement, you can have a [block](syntax.html#blocks):
 
-    :::wren
-    if (ready) {
-      System.print("getSet")
-      System.print("go!")
-    }
+<pre class="snippet">
+if (ready) {
+  System.print("getSet")
+  System.print("go!")
+}
+</pre>
 
 You may also provide an `else` branch. It will be executed if the condition is
 false:
 
-    :::wren
-    if (ready) System.print("go!") else System.print("not ready!")
+<pre class="snippet">
+if (ready) System.print("go!") else System.print("not ready!")
+</pre>
 
 And, of course, it can take a block too:
 
-    :::wren
-    if (ready) {
-      System.print("go!")
-    } else {
-      System.print("not ready!")
-    }
+<pre class="snippet">
+if (ready) {
+  System.print("go!")
+} else {
+  System.print("not ready!")
+}
+</pre>
 
 ## Logical operators
 
@@ -70,17 +74,19 @@ A `&&` ("logical and") expression evaluates the left-hand argument. If it's
 false, it returns that value. Otherwise it evaluates and returns the right-hand
 argument.
 
-    :::wren
-    System.print(false && 1)  //> false
-    System.print(1 && 2)      //> 2
+<pre class="snippet">
+System.print(false && 1)  //> false
+System.print(1 && 2)      //> 2
+</pre>
 
 A `||` ("logical or") expression is reversed. If the left-hand argument is
 *true*, it's returned, otherwise the right-hand argument is evaluated and
 returned:
 
-    :::wren
-    System.print(false || 1)  //> 1
-    System.print(1 || 2)      //> 1
+<pre class="snippet">
+System.print(false || 1)  //> 1
+System.print(1 || 2)      //> 1
+</pre>
 
 ## The conditional operator `?:`
 
@@ -88,8 +94,9 @@ Also known as the "ternary" operator since it takes three arguments, Wren has
 the little "if statement in the form of an expression" you know and love from C
 and its brethren.
 
-    :::wren
-    System.print(1 != 2 ? "math is sane" : "math is not sane!")
+<pre class="snippet">
+System.print(1 != 2 ? "math is sane" : "math is not sane!")
+</pre>
 
 It takes a condition expression, followed by `?`, followed by a then
 expression, a `:`, then an else expression. Just like `if`, it evaluates the
@@ -105,16 +112,17 @@ they should be familiar if you've used other imperative languages.
 The simplest, a `while` statement executes a chunk of code as long as a
 condition continues to hold. For example:
 
-    :::wren
-    // Hailstone sequence.
-    var n = 27
-    while (n != 1) {
-      if (n % 2 == 0) {
-        n = n / 2
-      } else {
-        n = 3 * n + 1
-      }
-    }
+<pre class="snippet">
+// Hailstone sequence.
+var n = 27
+while (n != 1) {
+  if (n % 2 == 0) {
+    n = n / 2
+  } else {
+    n = 3 * n + 1
+  }
+}
+</pre>
 
 This evaluates the expression `n != 1`. If it is true, then it executes the
 following body. After that, it loops back to the top, and evaluates the
@@ -125,9 +133,10 @@ The condition for a while loop can be any expression, and must be surrounded by
 parentheses. The body of the loop is usually a curly block but can also be a
 single statement:
 
-    :::wren
-    var n = 27
-    while (n != 1) if (n % 2 == 0) n = n / 2 else n = 3 * n + 1
+<pre class="snippet">
+var n = 27
+while (n != 1) if (n % 2 == 0) n = n / 2 else n = 3 * n + 1
+</pre>
 
 ## For statements
 
@@ -136,10 +145,11 @@ some complex condition. But in most cases, you're looping through
 a [list](lists.html), a series of numbers, or some other "sequence" object.
 That's what `for` is, uh, for. It looks like this:
 
-    :::wren
-    for (beatle in ["george", "john", "paul", "ringo"]) {
-      System.print(beatle)
-    }
+<pre class="snippet">
+for (beatle in ["george", "john", "paul", "ringo"]) {
+  System.print(beatle)
+}
+</pre>
 
 A `for` loop has three components:
 
@@ -160,11 +170,12 @@ and stop. To do that, you can use a `break` statement. It's just the `break`
 keyword all by itself. That immediately exits out of the nearest enclosing
 `while` or `for` loop.
 
-    :::wren
-    for (i in [1, 2, 3, 4]) {
-      System.print(i)           //> 1
-      if (i == 3) break         //> 2
-    }                           //> 3
+<pre class="snippet">
+for (i in [1, 2, 3, 4]) {
+  System.print(i)           //> 1
+  if (i == 3) break         //> 2
+}                           //> 3
+</pre>
 
 ## Numeric ranges
 
@@ -172,18 +183,20 @@ Lists are one common use for `for` loops, but sometimes you want to walk over a
 sequence of numbers, or loop a number of times. For that, you can create a
 [range](values.html#ranges), like so:
 
-    :::wren
-    for (i in 1..100) {
-      System.print(i)
-    }
+<pre class="snippet">
+for (i in 1..100) {
+  System.print(i)
+}
+</pre>
 
 This loops over the numbers from 1 to 100, including 100 itself. If you want to
 leave off the last value, use three dots instead of two:
 
-    :::wren
-    for (i in 1...100) {
-      System.print(i)
-    }
+<pre class="snippet">
+for (i in 1...100) {
+  System.print(i)
+}
+</pre>
 
 This looks like some special "range" syntax in the `for` loop, but it's actually
 just a pair of operators. The `..` and `...` syntax are infix "range" operators.
@@ -203,20 +216,22 @@ methods on the object that resulted from evaluating the sequence expression.
 
 When you write a loop like this:
 
-    :::wren
-    for (i in 1..100) {
-      System.print(i)
-    }
+<pre class="snippet">
+for (i in 1..100) {
+  System.print(i)
+}
+</pre>
 
 Wren sees it something like this:
 
-    :::wren
-    var iter_ = null
-    var seq_ = 1..100
-    while (iter_ = seq_.iterate(iter_)) {
-      var i = seq_.iteratorValue(iter_)
-      System.print(i)
-    }
+<pre class="snippet">
+var iter_ = null
+var seq_ = 1..100
+while (iter_ = seq_.iterate(iter_)) {
+  var i = seq_.iteratorValue(iter_)
+  System.print(i)
+}
+</pre>
 
 First, Wren evaluates the sequence expression and stores it in a hidden
 variable (written `seq_` in the example but in reality it doesn't have a name

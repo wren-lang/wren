@@ -79,10 +79,11 @@ There are two (well, three) ways to get the Wren VM into your program:
 In either case, you also want to add `src/include` to your include path so you
 can find the [public header for Wren][wren.h]:
 
-[wren.h]: https://github.com/wren-lang/wren/blob/master/src/include/wren.h
+[wren.h]: https://github.com/wren-lang/wren/blob/main/src/include/wren.h
 
-    :::c
-    #include "wren.h"
+<pre class="snippet" data-lang="c">
+#include "wren.h"
+</pre>
 
 Wren depends only on the C standard library, so you don't usually need to link
 to anything else. On some platforms (at least BSD and Linux) some of the math
@@ -94,28 +95,50 @@ have to explicitly link to.
 If your program is in C++ but you are linking to the Wren library compiled as C,
 this header handles the differences in calling conventions between C and C++:
 
-    :::c
-    #include "wren.hpp"
+<pre class="snippet" data-lang="c">
+#include "wren.hpp"
+</pre>
 
 ## Creating a Wren VM
 
 Once you've integrated the code into your executable, you need to create a
-virtual machine. To do that, you create a WrenConfiguration:
+virtual machine. To do that, you create a `WrenConfiguration` object and
+initialize it.
 
-    :::c
+<pre class="snippet" data-lang="c">
     WrenConfiguration config;
     wrenInitConfiguration(&config);
+</pre>
 
 This gives you a basic configuration that has reasonable defaults for
-everything. If you don't need to tweak stuff, you can leave it at that. We'll
-[learn more][configuration] about what you can configure later.
+everything. We'll [learn more][configuration] about what you can configure later,
+but for now we'll just add the `writeFn`, so that we can print text.
+
+First we need a function that will do something with the output
+that Wren sends us from `System.print` (or `System.write`). *Note that it doesn't
+include a newline in the output.*
+
+<pre class="snippet" data-lang="c">
+void writeFn(WrenVM* vm, const char* text) {
+  printf("%s", text);
+}
+</pre>
+
+And then, we update the configuration to point to it.
+
+<pre class="snippet" data-lang="c">
+  WrenConfiguration config;
+  wrenInitConfiguration(&config);
+    config.writeFn = &writeFn;
+</pre>
 
 [configuration]: configuring-the-vm.html
 
 With this ready, you can create the VM:
 
-    :::c
-    WrenVM* vm = wrenNewVM(&config);
+<pre class="snippet" data-lang="c">
+WrenVM* vm = wrenNewVM(&config);
+</pre>
 
 This allocates memory for a new VM and initializes it. The Wren C implementation
 has no global state, so every single bit of data Wren uses is bundled up inside
@@ -130,11 +153,12 @@ VM, waiting to run some code!
 
 You execute a string of Wren source code like so:
 
-    :::c
-    WrenInterpretResult result = wrenInterpret(
-        vm,
-        "my_module",
-        "System.print(\"I am running in a VM!\")");
+<pre class="snippet" data-lang="c">
+WrenInterpretResult result = wrenInterpret(
+    vm,
+    "my_module",
+    "System.print(\"I am running in a VM!\")");
+</pre>
 
 The string is a series of one or more statements separated by newlines. Wren
 copies the string, so you can free it after calling this. When you call
@@ -164,8 +188,9 @@ to a REPL session.
 Once the party is over and you're ready to end your relationship with a VM, you
 need to free any memory it allocated. You do that like so:
 
-    :::c
-    wrenFreeVM(vm);
+<pre class="snippet" data-lang="c">
+wrenFreeVM(vm);
+</pre>
 
 After calling that, you obviously cannot use the `WrenVM*` you passed to it
 again. It's dead.
@@ -174,6 +199,71 @@ Note that Wren will yell at you if you still have any live [WrenHandle][handle]
 objects when you call this. This makes sure you haven't lost track of any of
 them (which leaks memory) and you don't try to use any of them after the VM has
 been freed.
+
+## A complete example
+
+Below is a complete example of the above.
+You can find this file in the [example](https://github.com/wren-lang/wren/blob/main/example/embedding/main.c) folder.
+
+<pre class="snippet" data-lang="c">
+//For more details, visit https://wren.io/embedding/
+
+#include <stdio.h>
+#include "wren.h"
+
+static void writeFn(WrenVM* vm, const char* text)
+{
+  printf("%s", text);
+}
+
+void errorFn(WrenVM* vm, WrenErrorType errorType,
+             const char* module, const int line,
+             const char* msg)
+{
+  switch (errorType)
+  {
+    case WREN_ERROR_COMPILE:
+    {
+      printf("[%s line %d] [Error] %s\n", module, line, msg);
+    } break;
+    case WREN_ERROR_STACK_TRACE:
+    {
+      printf("[%s line %d] in %s\n", module, line, msg);
+    } break;
+    case WREN_ERROR_RUNTIME:
+    {
+      printf("[Runtime Error] %s\n", msg);
+    } break;
+  }
+}
+
+int main()
+{
+
+  WrenConfiguration config;
+  wrenInitConfiguration(&config);
+    config.writeFn = &writeFn;
+    config.errorFn = &errorFn;
+  WrenVM* vm = wrenNewVM(&config);
+
+  const char* module = "main";
+  const char* script = "System.print(\"I am running in a VM!\")";
+
+  WrenInterpretResult result = wrenInterpret(vm, module, script);
+
+  switch (result) {
+    case WREN_RESULT_COMPILE_ERROR:
+      { printf("Compile Error!\n"); } break;
+    case WREN_RESULT_RUNTIME_ERROR:
+      { printf("Runtime Error!\n"); } break;
+    case WREN_RESULT_SUCCESS:
+      { printf("Success!\n"); } break;
+  }
+
+  wrenFreeVM(vm);
+
+}
+</pre>
 
 [handle]: slots-and-handles.html#handles
 

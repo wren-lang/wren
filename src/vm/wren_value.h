@@ -76,6 +76,7 @@
 #define IS_FOREIGN(value) (wrenIsObjType(value, OBJ_FOREIGN))   // ObjForeign
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
+#define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
 
@@ -182,7 +183,7 @@ typedef struct sObjUpvalue
   // Pointer to the variable this upvalue is referencing.
   Value* value;
 
-  // If the upvalue is closed (i.e. the local variable it was pointing too has
+  // If the upvalue is closed (i.e. the local variable it was pointing to has
   // been popped off the stack) then the closed-over value will be hoisted out
   // of the stack into here. [value] will then be changed to point to this.
   Value closed;
@@ -316,8 +317,8 @@ typedef struct sObjFiber
   Obj obj;
   
   // The stack of value slots. This is used for holding local variables and
-  // temporaries while the fiber is executing. It heap-allocated and grown as
-  // needed.
+  // temporaries while the fiber is executing. It is heap-allocated and grown
+  // as needed.
   Value* stack;
   
   // A pointer to one past the top-most value on the stack.
@@ -357,6 +358,9 @@ typedef enum
   // A primitive method implemented in C in the VM. Unlike foreign methods,
   // this can directly manipulate the fiber's stack.
   METHOD_PRIMITIVE,
+
+  // A primitive that handles .call on Fn.
+  METHOD_FUNCTION_CALL,
 
   // A externally-defined C method.
   METHOD_FOREIGN,
