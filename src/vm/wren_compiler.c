@@ -354,6 +354,8 @@ struct sCompiler
   ObjFn* fn;
   
   ObjMap* constants;
+
+  bool isInitializer;
 };
 
 // Describes where a variable is declared.
@@ -512,6 +514,8 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   // the middle of initializing the compiler.
   compiler->fn = NULL;
   compiler->constants = NULL;
+
+  compiler->isInitializer = false;
 
   parser->vm->compiler = compiler;
 
@@ -1650,13 +1654,13 @@ static bool finishBlock(Compiler* compiler)
 
 // Parses a method or function body, after the initial "{" has been consumed.
 //
-// It [isInitializer] is `true`, this is the body of a constructor initializer.
-// In that case, this adds the code to ensure it returns `this`.
-static void finishBody(Compiler* compiler, bool isInitializer)
+// If [Compiler->isInitializer] is `true`, this is the body of a constructor
+// initializer. In that case, this adds the code to ensure it returns `this`.
+static void finishBody(Compiler* compiler)
 {
   bool isExpressionBody = finishBlock(compiler);
 
-  if (isInitializer)
+  if (compiler->isInitializer)
   {
     // If the initializer body evaluates to a value, discard it.
     if (isExpressionBody) emitOp(compiler, CODE_POP);
@@ -3041,11 +3045,25 @@ void statement(Compiler* compiler)
     // Compile the return value.
     if (peek(compiler) == TOKEN_LINE)
     {
-      // Implicitly return null if there is no value.
-      emitOp(compiler, CODE_NULL);
+      if (compiler->isInitializer)
+      {
+        // Initializers should return the new instance. It is always at
+        // index 0 (receiver).
+        emitOp(compiler, CODE_LOAD_LOCAL_0);
+      }
+      else
+      {
+        // Implicitly return null if there is no value.
+        emitOp(compiler, CODE_NULL);
+      }
     }
     else
     {
+      if (compiler->isInitializer)
+      {
+        error(compiler, "Cannot return a value from constructor.");
+      }
+
       expression(compiler);
     }
 
@@ -3182,6 +3200,8 @@ static bool method(Compiler* compiler, Variable classVariable)
 
   // Compile the method signature.
   signatureFn(&methodCompiler, &signature);
+
+  methodCompiler.isInitializer = signature.type == SIG_INITIALIZER;
   
   if (isStatic && signature.type == SIG_INITIALIZER)
   {
