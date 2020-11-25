@@ -360,9 +360,8 @@ static inline uint32_t hashBits(uint64_t hash)
 {
   // From v8's ComputeLongHash() which in turn cites:
   // Thomas Wang, Integer Hash Functions.
-  // http://www.concentric.net/~Ttwang/tech/inthash.htm
+  // https://web.archive.org/web/20071223173210/http://www.concentric.net/~Ttwang/tech/inthash.htm
   // V8 version masks off top bit, whilst Wang's version does not:
-  // https://gist.github.com/badboy/6267743
   hash = ~hash + (hash << 18);  // hash = (hash << 18) - hash - 1;
   hash = hash ^ (hash >> 31);
   hash = hash * 21;  // hash = (hash + (hash << 2)) + (hash << 4);
