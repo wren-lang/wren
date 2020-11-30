@@ -1299,7 +1299,7 @@ static int declareVariable(Compiler* compiler, Token* token)
 
   if (compiler->numLocals == MAX_LOCALS)
   {
-    error(compiler, "Cannot declare more than %d variables in one scope.",
+    error(compiler, "Cannot declare more than %d variables in one function.",
           MAX_LOCALS);
     return -1;
   }
@@ -2910,7 +2910,7 @@ static void forStatement(Compiler* compiler)
   // following code.
   if (compiler->numLocals + 2 > MAX_LOCALS)
   {
-    error(compiler, "Cannot declare more than %d variables in one scope. (Not enough space for for-loops internal variables)",
+    error(compiler, "Cannot declare more than %d variables in one function. (Not enough space for for-loops internal variables)",
           MAX_LOCALS);
     return;
   }
