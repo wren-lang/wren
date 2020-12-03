@@ -66,11 +66,11 @@ typedef const char* (*WrenResolveModuleFn)(WrenVM* vm,
     const char* importer, const char* name);
 
 // Forward declare
-typedef struct WrenLoadModuleResult WrenLoadModuleResult;
+struct WrenLoadModuleResult;
 
 // Called after loadModuleFn is called for module [name]. The original returned result
 // is handed back to you in this callback, so that you can free memory if appropriate.
-typedef void (*WrenLoadModuleCompleteFn)(WrenVM* vm, const char* name, WrenLoadModuleResult result);
+typedef void (*WrenLoadModuleCompleteFn)(WrenVM* vm, const char* name, struct WrenLoadModuleResult result);
 
 // The result of a loadModuleFn call. 
 // [source] is the source code for the module, or NULL if the module is not found.
