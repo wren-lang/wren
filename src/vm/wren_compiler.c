@@ -87,6 +87,7 @@ typedef enum
   TOKEN_BANGEQ,
 
   TOKEN_BREAK,
+  TOKEN_CONTINUE,
   TOKEN_CLASS,
   TOKEN_CONSTRUCT,
   TOKEN_ELSE,
@@ -567,6 +568,7 @@ typedef struct
 static Keyword keywords[] =
 {
   {"break",     5, TOKEN_BREAK},
+  {"continue",  8, TOKEN_CONTINUE},
   {"class",     5, TOKEN_CLASS},
   {"construct", 9, TOKEN_CONSTRUCT},
   {"else",      4, TOKEN_ELSE},
@@ -2621,6 +2623,7 @@ GrammarRule rules[] =
   /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "=="),
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!="),
   /* TOKEN_BREAK         */ UNUSED,
+  /* TOKEN_CONTINUE      */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
   /* TOKEN_CONSTRUCT     */ { NULL, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_ELSE          */ UNUSED,
@@ -3027,6 +3030,22 @@ void statement(Compiler* compiler)
     // We use `CODE_END` here because that can't occur in the middle of
     // bytecode.
     emitJump(compiler, CODE_END);
+  }
+  else if (match(compiler, TOKEN_CONTINUE))
+  {
+    if (compiler->loop == NULL)
+    {
+        error(compiler, "Cannot use 'continue' outside of a loop.");
+        return;
+    }
+
+    // Since we will be jumping out of the scope, make sure any locals in it
+    // are discarded first.
+    discardLocals(compiler, compiler->loop->scopeDepth + 1);
+
+    // emit a jump back to the top of the loop
+    int loopOffset = compiler->fn->code.count - compiler->loop->start + 2;
+    emitShortArg(compiler, CODE_LOOP, loopOffset);
   }
   else if (match(compiler, TOKEN_FOR))
   {
