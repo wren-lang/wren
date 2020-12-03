@@ -680,6 +680,9 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index);
 // Removes and returns the item at [index] from [list].
 Value wrenListRemoveAt(WrenVM* vm, ObjList* list, uint32_t index);
 
+// Searches for [value] in [list], returns the index or -1 if not found.
+int wrenListIndexOf(WrenVM* vm, ObjList* list, Value value);
+
 // Creates a new empty map.
 ObjMap* wrenNewMap(WrenVM* vm);
 

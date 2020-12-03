@@ -32,6 +32,16 @@ Removes all elements from the list.
 
 The number of elements in the list.
 
+### **indexOf(value)**
+
+Returns the index of `value` in the list, if found. If not found, returns -1.
+
+<pre class="snippet">
+var list = [0, 1, 2, 3, 4]
+System.print(list.indexOf(3)) //> 3
+System.print(list.indexOf(20)) //> -1
+</pre>
+
 ### **insert**(index, item)
 
 Inserts the `item` at `index` in the list.

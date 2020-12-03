@@ -394,6 +394,12 @@ DEF_PRIMITIVE(list_removeAt)
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
 }
 
+DEF_PRIMITIVE(list_indexOf)
+{
+  ObjList* list = AS_LIST(args[0]);
+  RETURN_NUM(wrenListIndexOf(vm, list, args[1]));
+}
+
 DEF_PRIMITIVE(list_subscript)
 {
   ObjList* list = AS_LIST(args[0]);
@@ -1360,6 +1366,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "iterate(_)", list_iterate);
   PRIMITIVE(vm->listClass, "iteratorValue(_)", list_iteratorValue);
   PRIMITIVE(vm->listClass, "removeAt(_)", list_removeAt);
+  PRIMITIVE(vm->listClass, "indexOf(_)", list_indexOf);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Map"));
   PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);
