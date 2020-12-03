@@ -31,9 +31,9 @@ System.print(Foo - "a") // expect: infix Foo - a
 System.print(Foo * "a") // expect: infix Foo * a
 System.print(Foo / "a") // expect: infix Foo / a
 System.print(Foo % "a") // expect: infix Foo % a
-System.print(Foo < "a") // expec%(this) t: infix Foo < a
-System.print(Foo > "a") // expect:%(this)  infix Foo > a
-System.print(Foo <= "a") // expec%(this) t: infix Foo <= a
+System.print(Foo < "a") // expect: infix Foo < a
+System.print(Foo > "a") // expect: infix Foo > a
+System.print(Foo <= "a") // expect: infix Foo <= a
 System.print(Foo >= "a") // expect: infix Foo >= a
 System.print(Foo == "a") // expect: infix Foo == a
 System.print(Foo != "a") // expect: infix Foo != a
