@@ -87,6 +87,7 @@ typedef enum
   TOKEN_BANGEQ,
 
   TOKEN_BREAK,
+  TOKEN_CONTINUE,
   TOKEN_CLASS,
   TOKEN_CONSTRUCT,
   TOKEN_ELSE,
@@ -95,6 +96,7 @@ typedef enum
   TOKEN_FOREIGN,
   TOKEN_IF,
   TOKEN_IMPORT,
+  TOKEN_AS,
   TOKEN_IN,
   TOKEN_IS,
   TOKEN_NULL,
@@ -567,6 +569,7 @@ typedef struct
 static Keyword keywords[] =
 {
   {"break",     5, TOKEN_BREAK},
+  {"continue",  8, TOKEN_CONTINUE},
   {"class",     5, TOKEN_CLASS},
   {"construct", 9, TOKEN_CONSTRUCT},
   {"else",      4, TOKEN_ELSE},
@@ -575,6 +578,7 @@ static Keyword keywords[] =
   {"foreign",   7, TOKEN_FOREIGN},
   {"if",        2, TOKEN_IF},
   {"import",    6, TOKEN_IMPORT},
+  {"as",        2, TOKEN_AS},
   {"in",        2, TOKEN_IN},
   {"is",        2, TOKEN_IS},
   {"null",      4, TOKEN_NULL},
@@ -2621,6 +2625,7 @@ GrammarRule rules[] =
   /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "=="),
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!="),
   /* TOKEN_BREAK         */ UNUSED,
+  /* TOKEN_CONTINUE      */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
   /* TOKEN_CONSTRUCT     */ { NULL, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_ELSE          */ UNUSED,
@@ -2629,6 +2634,7 @@ GrammarRule rules[] =
   /* TOKEN_FOREIGN       */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IMPORT        */ UNUSED,
+  /* TOKEN_AS            */ UNUSED,
   /* TOKEN_IN            */ UNUSED,
   /* TOKEN_IS            */ INFIX_OPERATOR(PREC_IS, "is"),
   /* TOKEN_NULL          */ PREFIX(null),
@@ -3028,6 +3034,22 @@ void statement(Compiler* compiler)
     // bytecode.
     emitJump(compiler, CODE_END);
   }
+  else if (match(compiler, TOKEN_CONTINUE))
+  {
+    if (compiler->loop == NULL)
+    {
+        error(compiler, "Cannot use 'continue' outside of a loop.");
+        return;
+    }
+
+    // Since we will be jumping out of the scope, make sure any locals in it
+    // are discarded first.
+    discardLocals(compiler, compiler->loop->scopeDepth + 1);
+
+    // emit a jump back to the top of the loop
+    int loopOffset = compiler->fn->code.count - compiler->loop->start + 2;
+    emitShortArg(compiler, CODE_LOOP, loopOffset);
+  }
   else if (match(compiler, TOKEN_FOR))
   {
     forStatement(compiler);
@@ -3359,17 +3381,38 @@ static void import(Compiler* compiler)
   do
   {
     ignoreNewlines(compiler);
-    int slot = declareNamedVariable(compiler);
     
-    // Define a string constant for the variable name.
-    int variableConstant = addConstant(compiler,
-        wrenNewStringLength(compiler->parser->vm,
-                            compiler->parser->previous.start,
-                            compiler->parser->previous.length));
+    consume(compiler, TOKEN_NAME, "Expect variable name.");
     
+    // We need to hold onto the source variable, 
+    // in order to reference it in the import later
+    Token sourceVariableToken = compiler->parser->previous;
+
+    // Define a string constant for the original variable name.
+    int sourceVariableConstant = addConstant(compiler,
+          wrenNewStringLength(compiler->parser->vm,
+                        sourceVariableToken.start,
+                        sourceVariableToken.length));
+
+    // Store the symbol we care about for the variable
+    int slot = -1;
+    if(match(compiler, TOKEN_AS))
+    {
+      //import "module" for Source as Dest
+      //Use 'Dest' as the name by declaring a new variable for it.
+      //This parses a name after the 'as' and defines it.
+      slot = declareNamedVariable(compiler);
+    }
+    else
+    {
+      //import "module" for Source
+      //Uses 'Source' as the name directly
+      slot = declareVariable(compiler, &sourceVariableToken);
+    }
+
     // Load the variable from the other module.
-    emitShortArg(compiler, CODE_IMPORT_VARIABLE, variableConstant);
-    
+    emitShortArg(compiler, CODE_IMPORT_VARIABLE, sourceVariableConstant);
+
     // Store the result in the variable here.
     defineVariable(compiler, slot);
   } while (match(compiler, TOKEN_COMMA));

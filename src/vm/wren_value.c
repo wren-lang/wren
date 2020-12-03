@@ -374,9 +374,7 @@ static inline uint32_t hashBits(uint64_t hash)
 static inline uint32_t hashNumber(double num)
 {
   // Hash the raw bits of the value.
-  DoubleBits bits;
-  bits.num = num;
-  return hashBits(bits.bits64);
+  return hashBits(wrenDoubleToBits(num));
 }
 
 // Generates a hash code for [object].

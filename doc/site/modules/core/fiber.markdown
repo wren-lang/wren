@@ -174,6 +174,24 @@ System.print("Caught error: " + error)
 
 If the called fiber raises an error, it can no longer be used.
 
+### **try**(value)
+Tries to run the fiber. If a runtime error occurs
+in the called fiber, the error is captured and is returned as a string.
+If the fiber is being
+started for the first time, and its function takes a parameter, `value` is
+passed to it.
+
+<pre class="snippet">
+var fiber = Fiber.new {|value|
+  value.badMethod
+}
+
+var error = fiber.try("just a string")
+System.print("Caught error: " + error)
+</pre>
+
+If the called fiber raises an error, it can no longer be used.
+
 ### **transfer**()
 
 **TODO**

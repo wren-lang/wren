@@ -7,6 +7,7 @@
 
 #include "wren_common.h"
 #include "wren_core.h"
+#include "wren_math.h"
 #include "wren_primitive.h"
 #include "wren_value.h"
 
@@ -191,6 +192,15 @@ DEF_PRIMITIVE(fiber_try)
   return false;
 }
 
+DEF_PRIMITIVE(fiber_try1)
+{
+  runFiber(vm, AS_FIBER(args[0]), args, true, true, "try");
+  
+  // If we're switching to a valid fiber to try, remember that we're trying it.
+  if (!wrenHasError(vm->fiber)) vm->fiber->state = FIBER_TRY;
+  return false;
+}
+
 DEF_PRIMITIVE(fiber_yield)
 {
   ObjFiber* current = vm->fiber;
@@ -248,13 +258,6 @@ DEF_PRIMITIVE(fn_arity)
 
 static void call_fn(WrenVM* vm, Value* args, int numArgs)
 {
-  // We only care about missing arguments, not extras.
-  if (AS_CLOSURE(args[0])->fn->arity > numArgs)
-  {
-    vm->fiber->error = CONST_STRING(vm, "Function expects more arguments.");
-    return;
-  }
-
   // +1 to include the function itself.
   wrenCallFunction(vm, vm->fiber, AS_CLOSURE(args[0]), numArgs + 1);
 }
@@ -594,10 +597,19 @@ DEF_PRIMITIVE(num_fromString)
   RETURN_NUM(number);
 }
 
-DEF_PRIMITIVE(num_pi)
-{
-  RETURN_NUM(3.14159265358979323846);
-}
+// Defines a primitive on Num that calls infix [op] and returns [type].
+#define DEF_NUM_CONSTANT(name, value)                                          \
+    DEF_PRIMITIVE(num_##name)                                                  \
+    {                                                                          \
+      RETURN_NUM(value);                                                       \
+    }
+
+DEF_NUM_CONSTANT(infinity, INFINITY)
+DEF_NUM_CONSTANT(nan,      WREN_DOUBLE_NAN)
+DEF_NUM_CONSTANT(pi,       3.14159265358979323846)
+
+DEF_NUM_CONSTANT(largest,  DBL_MAX)
+DEF_NUM_CONSTANT(smallest, DBL_MIN)
 
 // Defines a primitive on Num that calls infix [op] and returns [type].
 #define DEF_NUM_INFIX(name, op, type)                                          \
@@ -745,16 +757,6 @@ DEF_PRIMITIVE(num_sign)
   {
     RETURN_NUM(0);
   }
-}
-
-DEF_PRIMITIVE(num_largest)
-{
-  RETURN_NUM(DBL_MAX);
-}
-
-DEF_PRIMITIVE(num_smallest)
-{
-  RETURN_NUM(DBL_MIN);
 }
 
 DEF_PRIMITIVE(num_toString)
@@ -1242,28 +1244,31 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "transfer(_)", fiber_transfer1);
   PRIMITIVE(vm->fiberClass, "transferError(_)", fiber_transferError);
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
+  PRIMITIVE(vm->fiberClass, "try(_)", fiber_try1);
 
   vm->fnClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fn"));
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
-  PRIMITIVE(vm->fnClass, "call()", fn_call0);
-  PRIMITIVE(vm->fnClass, "call(_)", fn_call1);
-  PRIMITIVE(vm->fnClass, "call(_,_)", fn_call2);
-  PRIMITIVE(vm->fnClass, "call(_,_,_)", fn_call3);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_)", fn_call4);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_)", fn_call5);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_)", fn_call6);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_)", fn_call7);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_)", fn_call8);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_)", fn_call9);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_)", fn_call10);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
-  PRIMITIVE(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
+
+  FUNCTION_CALL(vm->fnClass, "call()", fn_call0);
+  FUNCTION_CALL(vm->fnClass, "call(_)", fn_call1);
+  FUNCTION_CALL(vm->fnClass, "call(_,_)", fn_call2);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_)", fn_call3);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_)", fn_call4);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_)", fn_call5);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_)", fn_call6);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_)", fn_call7);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_)", fn_call8);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_)", fn_call9);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_)", fn_call10);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_)", fn_call11);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_)", fn_call12);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
+  
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
   vm->nullClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Null"));
@@ -1272,6 +1277,8 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->numClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Num"));
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
+  PRIMITIVE(vm->numClass->obj.classObj, "infinity", num_infinity);
+  PRIMITIVE(vm->numClass->obj.classObj, "nan", num_nan);
   PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
   PRIMITIVE(vm->numClass->obj.classObj, "largest", num_largest);
   PRIMITIVE(vm->numClass->obj.classObj, "smallest", num_smallest);
