@@ -400,6 +400,21 @@ DEF_PRIMITIVE(list_indexOf)
   RETURN_NUM(wrenListIndexOf(vm, list, args[1]));
 }
 
+DEF_PRIMITIVE(list_swap)
+{
+  ObjList* list = AS_LIST(args[0]);
+  uint32_t indexA = validateIndex(vm, args[1], list->elements.count, "Index 0");
+  if (indexA == UINT32_MAX) return false;
+  uint32_t indexB = validateIndex(vm, args[2], list->elements.count, "Index 1");
+  if (indexB == UINT32_MAX) return false;
+
+  Value a = list->elements.data[indexA];
+  list->elements.data[indexA] = list->elements.data[indexB];
+  list->elements.data[indexB] = a;
+
+  RETURN_NULL;
+}
+
 DEF_PRIMITIVE(list_subscript)
 {
   ObjList* list = AS_LIST(args[0]);
@@ -1367,6 +1382,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "iteratorValue(_)", list_iteratorValue);
   PRIMITIVE(vm->listClass, "removeAt(_)", list_removeAt);
   PRIMITIVE(vm->listClass, "indexOf(_)", list_indexOf);
+  PRIMITIVE(vm->listClass, "swap(_,_)", list_swap);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Map"));
   PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);

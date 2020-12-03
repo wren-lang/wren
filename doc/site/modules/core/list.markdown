@@ -127,6 +127,17 @@ System.print(list) //> [6, 7, 8, 9]
 
 It is a runtime error if `comparer` is not a function.
 
+### **swap**(index0, index1)
+
+Swaps values inside the list around. Puts the value from `index0` in `index1`,
+and the value from `index1` at `index0` in the list.
+
+<pre class="snippet">
+var list = [0, 1, 2, 3, 4]
+list.swap(0, 3)
+System.print(list) //> [3, 1, 2, 0, 4]
+</pre>
+
 ### **[**index**]** operator
 
 Gets the element at `index`. If `index` is negative, it counts backwards from
