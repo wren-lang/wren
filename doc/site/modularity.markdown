@@ -81,17 +81,17 @@ WrenVM* vm = wrenNewVM(&config);
 That function has this signature:
 
 <pre class="snippet" data-lang="c">
-char* WrenLoadModuleFn(WrenVM* vm, const char* name);
+WrenLoadModuleResult WrenLoadModuleFn(WrenVM* vm, const char* name);
 </pre>
 
 Whenever a module is imported, the VM calls this and passes it the name of the
 module. The embedder is expected to return the source code contents of the
-module. When you embed Wren in your app, you can handle this however you want:
-reach out to the file system, look inside resources bundled into your app,
-whatever.
+module in a `WrenLoadModuleResult`. When you embed Wren in your app, you can handle
+this however you want: reach out to the file system, look inside resources bundled
+into your app, whatever.
 
-You can return `NULL` from this function to indicate that a module couldn't be
-found. When you do this, Wren will report it as a runtime error.
+You can return the source field as `NULL` from this function to indicate that a module
+couldn't be found. When you do this, Wren will report it as a runtime error.
 
 ### The command-line loader
 
