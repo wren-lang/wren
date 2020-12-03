@@ -182,7 +182,7 @@ for (i in [1, 2, 3, 4]) {
 During the execution of a loop body, you might decide that you want to skip the 
 rest of this iteration and move on to the next one. You can use a `continue` 
 statement to do that. It's just the `continue` keyword all by itself. Execution
-will immediately jump to the beginning of the next loop iteraction (and check the
+will immediately jump to the beginning of the next loop iteration (and check the
 loop conditions).
 
 <pre class="snippet">
