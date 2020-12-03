@@ -23,6 +23,10 @@ Provides a default sane NaN number suitable for the vm internal values.
 
 The value of &pi;.
 
+### Num.**tau**
+
+The value of &tau;.
+
 ### Num.**largest**
 
 The largest representable numeric value.
