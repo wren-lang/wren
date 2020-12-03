@@ -73,7 +73,6 @@ typedef struct WrenLoadModuleResult WrenLoadModuleResult;
 typedef void (*WrenLoadModuleCompleteFn)(WrenVM* vm, const char* name, WrenLoadModuleResult result);
 
 // The result of a loadModuleFn call. 
-// [length] is optional, a value of 0 means length is ignored.
 // [source] is the source code for the module, or NULL if the module is not found.
 // [onComplete] an optional callback that will be called once Wren is done with the result.
 typedef struct WrenLoadModuleResult
