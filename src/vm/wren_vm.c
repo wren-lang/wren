@@ -1898,6 +1898,40 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
 }
 
+bool wrenHasVariable(WrenVM* vm, const char* module, const char* name)
+{
+  ASSERT(module != NULL, "Module cannot be NULL.");
+  ASSERT(name != NULL, "Variable name cannot be NULL.");
+
+  Value moduleName = wrenStringFormat(vm, "$", module);
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+
+  //We don't use wrenHasModule since we want to use the module object.
+  ObjModule* moduleObj = getModule(vm, moduleName);
+  ASSERT(moduleObj != NULL, "Could not find module.");
+
+  wrenPopRoot(vm); // moduleName.
+
+  int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
+    name, strlen(name));
+
+  return variableSlot != -1;
+}
+
+bool wrenHasModule(WrenVM* vm, const char* module)
+{
+  ASSERT(module != NULL, "Module cannot be NULL.");
+  
+  Value moduleName = wrenStringFormat(vm, "$", module);
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+
+  ObjModule* moduleObj = getModule(vm, moduleName);
+  
+  wrenPopRoot(vm); // moduleName.
+
+  return moduleObj != NULL;
+}
+
 void wrenAbortFiber(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);

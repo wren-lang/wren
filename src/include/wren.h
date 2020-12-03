@@ -520,6 +520,14 @@ void wrenRemoveMapValue(WrenVM* vm, int mapSlot, int keySlot,
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot);
 
+// Looks up the top level variable with [name] in resolved [module], 
+// returns false if not found. The module must be imported at the time, 
+// use wrenHasModule to ensure that before calling.
+bool wrenHasVariable(WrenVM* vm, const char* module, const char* name);
+
+// Returns true if [module] has been imported/resolved before, false if not.
+bool wrenHasModule(WrenVM* vm, const char* module);
+
 // Sets the current fiber to be aborted, and uses the value in [slot] as the
 // runtime error object.
 void wrenAbortFiber(WrenVM* vm, int slot);
