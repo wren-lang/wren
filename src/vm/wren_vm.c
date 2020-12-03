@@ -713,7 +713,6 @@ static Value importModule(WrenVM* vm, Value name)
   // If the host didn't provide it, see if it's a built in optional module.
   if (result.source == NULL)
   {
-    result.length = 0;
     result.onComplete = NULL;
     ObjString* nameString = AS_STRING(name);
 #if WREN_OPT_META

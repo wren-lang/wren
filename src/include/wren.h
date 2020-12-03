@@ -78,7 +78,6 @@ typedef void (*WrenLoadModuleCompleteFn)(WrenVM* vm, const char* name, WrenLoadM
 // [onComplete] an optional callback that will be called once Wren is done with the result.
 typedef struct WrenLoadModuleResult
 {
-  long long length;
   const char* source;
   WrenLoadModuleCompleteFn onComplete;
   void* userData;
