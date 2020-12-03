@@ -364,7 +364,15 @@
     }
   }
 
-  char* readModule(WrenVM* vm, const char* module) 
+  void readModuleComplete(WrenVM* vm, const char* module, WrenLoadModuleResult result)
+  {
+    if (result.source) {
+      free((void*)result.source);
+      result.source = NULL;
+    }
+  }
+
+  WrenLoadModuleResult readModule(WrenVM* vm, const char* module) 
   {
 
     Path* filePath = pathNew(module);
@@ -375,8 +383,11 @@
     char* source = readFile(filePath->chars);
     pathFree(filePath);
 
-    //may or may not be null
-    return source;
+    //source may or may not be null
+    WrenLoadModuleResult result;
+      result.source = source;
+      result.onComplete = readModuleComplete;
+    return result;
 
   }
 

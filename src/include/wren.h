@@ -65,8 +65,26 @@ typedef void (*WrenFinalizerFn)(void* data);
 typedef const char* (*WrenResolveModuleFn)(WrenVM* vm,
     const char* importer, const char* name);
 
+// Forward declare
+typedef struct WrenLoadModuleResult WrenLoadModuleResult;
+
+// Called after loadModuleFn is called for module [name]. The original returned result
+// is handed back to you in this callback, so that you can free memory if appropriate.
+typedef void (*WrenLoadModuleCompleteFn)(WrenVM* vm, const char* name, WrenLoadModuleResult result);
+
+// The result of a loadModuleFn call. 
+// [length] is optional, a value of 0 means length is ignored.
+// [source] is the source code for the module, or NULL if the module is not found.
+// [onComplete] an optional callback that will be called once Wren is done with the result.
+typedef struct WrenLoadModuleResult
+{
+  const char* source;
+  WrenLoadModuleCompleteFn onComplete;
+  void* userData;
+} WrenLoadModuleResult;
+
 // Loads and returns the source code for the module [name].
-typedef char* (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
+typedef WrenLoadModuleResult (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
 
 // Returns a pointer to a foreign method on [className] in [module] with
 // [signature].
