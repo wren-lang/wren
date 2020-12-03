@@ -182,7 +182,7 @@ These fields control how the VM allocates and manages memory.
 This lets you provide a custom memory allocation function. Its signature is:
 
 <pre class="snippet" data-lang="c">
-void* reallocate(void* memory, size_t newSize)
+void* reallocate(void* memory, size_t newSize, void* userData)
 </pre>
 
 Wren uses this one function to allocate, grow, shrink, and deallocate memory.
