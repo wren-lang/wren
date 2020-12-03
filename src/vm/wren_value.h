@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "wren_common.h"
+#include "wren_math.h"
 #include "wren_utils.h"
 
 // This defines the built-in types and their core representations in memory.
@@ -613,14 +614,6 @@ typedef struct
 
 #endif
 
-// A union to let us reinterpret a double as raw bits and back.
-typedef union
-{
-  uint64_t bits64;
-  uint32_t bits32[2];
-  double num;
-} DoubleBits;
-
 // Creates a new "raw" class. It has no metaclass or superclass whatsoever.
 // This is only used for bootstrapping the initial Object and Class classes,
 // which are a little special.
@@ -854,9 +847,7 @@ static inline Value wrenObjectToValue(Obj* obj)
 static inline double wrenValueToNum(Value value)
 {
 #if WREN_NAN_TAGGING
-  DoubleBits data;
-  data.bits64 = value;
-  return data.num;
+  return wrenDoubleFromBits(value);
 #else
   return value.as.num;
 #endif
@@ -866,9 +857,7 @@ static inline double wrenValueToNum(Value value)
 static inline Value wrenNumToValue(double num)
 {
 #if WREN_NAN_TAGGING
-  DoubleBits data;
-  data.num = num;
-  return data.bits64;
+  return wrenDoubleToBits(num);
 #else
   Value value;
   value.type = VAL_NUM;
