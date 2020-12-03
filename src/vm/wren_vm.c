@@ -1762,9 +1762,27 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
   validateApiSlot(vm, listSlot);
   validateApiSlot(vm, elementSlot);
   ASSERT(IS_LIST(vm->apiStack[listSlot]), "Slot must hold a list.");
-  
+
   ValueBuffer elements = AS_LIST(vm->apiStack[listSlot])->elements;
-  vm->apiStack[elementSlot] = elements.data[index];
+
+  uint32_t usedIndex = wrenValidateIndex(elements.count, index);
+  ASSERT(usedIndex != UINT32_MAX, "Index out of bounds.");
+
+  vm->apiStack[elementSlot] = elements.data[usedIndex];
+}
+
+void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
+{
+  validateApiSlot(vm, listSlot);
+  validateApiSlot(vm, elementSlot);
+  ASSERT(IS_LIST(vm->apiStack[listSlot]), "Slot must hold a list.");
+
+  ObjList* list = AS_LIST(vm->apiStack[listSlot]);
+
+  uint32_t usedIndex = wrenValidateIndex(list->elements.count, index);
+  ASSERT(usedIndex != UINT32_MAX, "Index out of bounds.");
+  
+  list->elements.data[usedIndex] = vm->apiStack[elementSlot];
 }
 
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
@@ -1775,7 +1793,8 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   
   ObjList* list = AS_LIST(vm->apiStack[listSlot]);
   
-  // Negative indices count from the end.
+  // Negative indices count from the end. 
+  // We don't use wrenValidateIndex here because insert allows 1 past the end.
   if (index < 0) index = list->elements.count + 1 + index;
   
   ASSERT(index <= list->elements.count, "Index out of bounds.");

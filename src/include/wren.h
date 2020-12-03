@@ -484,6 +484,10 @@ int wrenGetListCount(WrenVM* vm, int slot);
 // [elementSlot].
 void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 
+// Sets the value stored at [index] in the list at [listSlot], 
+// to the value from [elementSlot]. 
+void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
+
 // Takes the value stored at [elementSlot] and inserts it into the list stored
 // at [listSlot] at [index].
 //
