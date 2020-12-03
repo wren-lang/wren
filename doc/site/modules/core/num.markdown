@@ -116,6 +116,20 @@ The binary (base-2) logarithm of the number. Returns `nan` if the base is negati
 
 The exponential `e` (Euler’s number) raised to the number. This: `eⁿ`. 
 
+### **min**(other)
+
+Returns the minimum value when comparing this number and `other`.
+
+### **max**(other)
+
+Returns the maximum value when comparing this number and `other`.
+
+### **clamp**(min, max)
+
+Clamps a number into the range of `min` and `max`. If this number is less than min, 
+`min` is returned. If bigger than `max`, `max` is returned. Otherwise, the number 
+itself is returned.
+
 ### **pow**(power)
 
 Raises this number (the base) to `power`. Returns `nan` if the base is negative.

@@ -735,6 +735,29 @@ DEF_PRIMITIVE(num_atan2)
   RETURN_NUM(atan2(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
+DEF_PRIMITIVE(num_min)
+{
+  double value = AS_NUM(args[0]);
+  double other = AS_NUM(args[1]);
+  RETURN_NUM(value <= other ? value : other);
+}
+
+DEF_PRIMITIVE(num_max)
+{
+  double value = AS_NUM(args[0]);
+  double other = AS_NUM(args[1]);
+  RETURN_NUM(value > other ? value : other);
+}
+
+DEF_PRIMITIVE(num_clamp)
+{
+  double value = AS_NUM(args[0]);
+  double min = AS_NUM(args[1]);
+  double max = AS_NUM(args[2]);
+  double result = (value < min) ? min : ((value > max) ? max : value);
+  RETURN_NUM(result);
+}
+
 DEF_PRIMITIVE(num_pow)
 {
   RETURN_NUM(pow(AS_NUM(args[0]), AS_NUM(args[1])));
@@ -1325,6 +1348,9 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "floor", num_floor);
   PRIMITIVE(vm->numClass, "-", num_negate);
   PRIMITIVE(vm->numClass, "round", num_round);
+  PRIMITIVE(vm->numClass, "min(_)", num_min);
+  PRIMITIVE(vm->numClass, "max(_)", num_max);
+  PRIMITIVE(vm->numClass, "clamp(_,_)", num_clamp);
   PRIMITIVE(vm->numClass, "sin", num_sin);
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
   PRIMITIVE(vm->numClass, "tan", num_tan);
