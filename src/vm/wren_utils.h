@@ -118,4 +118,9 @@ int wrenUtf8DecodeNumBytes(uint8_t byte);
 // Returns the smallest power of two that is equal to or greater than [n].
 int wrenPowerOf2Ceil(int n);
 
+// Validates that [value] is within `[0, count)`. Also allows
+// negative indices which map backwards from the end. Returns the valid positive
+// index value. If invalid, returns `UINT32_MAX`.
+uint32_t wrenValidateIndex(uint32_t count, int64_t value);
+
 #endif

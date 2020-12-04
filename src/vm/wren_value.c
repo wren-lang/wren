@@ -319,6 +319,19 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index)
   list->elements.data[index] = value;
 }
 
+int wrenListIndexOf(WrenVM* vm, ObjList* list, Value value)
+{
+  int count = list->elements.count;
+  for (int i = 0; i < count; i++)
+  {
+    Value item = list->elements.data[i];
+    if(wrenValuesEqual(item, value)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 Value wrenListRemoveAt(WrenVM* vm, ObjList* list, uint32_t index)
 {
   Value removed = list->elements.data[index];
@@ -374,9 +387,7 @@ static inline uint32_t hashBits(uint64_t hash)
 static inline uint32_t hashNumber(double num)
 {
   // Hash the raw bits of the value.
-  DoubleBits bits;
-  bits.num = num;
-  return hashBits(bits.bits64);
+  return hashBits(wrenDoubleToBits(num));
 }
 
 // Generates a hash code for [object].
@@ -977,7 +988,8 @@ void wrenGrayObj(WrenVM* vm, Obj* obj)
   {
     vm->grayCapacity = vm->grayCount * 2;
     vm->gray = (Obj**)vm->config.reallocateFn(vm->gray,
-                                              vm->grayCapacity * sizeof(Obj*));
+                                              vm->grayCapacity * sizeof(Obj*),
+                                              vm->config.userData);
   }
 
   vm->gray[vm->grayCount++] = obj;
