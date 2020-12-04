@@ -32,7 +32,7 @@ Removes all elements from the list.
 
 The number of elements in the list.
 
-### **indexOf(value)**
+### **indexOf**(value)
 
 Returns the index of `value` in the list, if found. If not found, returns -1.
 
