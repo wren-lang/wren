@@ -197,9 +197,6 @@ typedef struct
   // unmatched "(" that are waiting to be closed.
   int parens[MAX_INTERPOLATION_NESTING];
   int numParens;
-  
-  // If subsequent newline tokens should be discarded.
-  bool skipNewlines;
 
   // Whether compile errors should be printed to stderr or discarded.
   bool printErrors;
@@ -3519,8 +3516,6 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   parser.next.line = 0;
   parser.next.value = UNDEFINED_VAL;
 
-  // Ignore leading newlines.
-  parser.skipNewlines = true;
   parser.printErrors = printErrors;
   parser.hasError = false;
 
