@@ -4,6 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <stdio.h>
 
 #include "wren_common.h"
 #include "wren_core.h"
@@ -149,6 +150,43 @@ DEF_PRIMITIVE(fiber_current)
 DEF_PRIMITIVE(fiber_error)
 {
   RETURN_VAL(AS_FIBER(args[0])->error);
+}
+
+DEF_PRIMITIVE(fiber_stackTrace)
+{
+  ObjFiber* runFiber = AS_FIBER(args[0]);
+
+  // Allocate 16kb for our output string
+  char outputBuffer[1024*16];
+  
+  // Allocate 512byte for one line int the output
+  const char lineBuffer[512];
+
+  for (int i = runFiber->numFrames - 1; i >= 0; i--)
+  {
+    CallFrame* frame = &runFiber->frames[i];
+    ObjFn* fn = frame->closure->fn;
+
+    // Skip over stub functions for calling methods from the C API.
+    if (fn->module == NULL) continue;
+    
+    // The built-in core module has no name. We explicitly omit it from stack
+    // traces since we don't want to highlight to a user the implementation
+    // detail of what part of the core module is written in C and what is Wren.
+    if (fn->module->name == NULL) continue;    
+
+    // -1 because IP has advanced past the instruction that it just executed.
+    int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
+
+    // Format into our line buffer
+  	snprintf((char*)&lineBuffer[0], 512, "In module '%s' at %i: %s\n", fn->module->name->value, line, fn->debug->name); 
+
+    // Append to our output buffer if there is size left
+    strcat(outputBuffer, &lineBuffer[0]);   
+  }
+  // Copy our string to managed memory
+  Value returnVal = wrenNewString(vm, outputBuffer);
+  RETURN_VAL(returnVal);
 }
 
 DEF_PRIMITIVE(fiber_isDone)
@@ -1239,6 +1277,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "call()", fiber_call);
   PRIMITIVE(vm->fiberClass, "call(_)", fiber_call1);
   PRIMITIVE(vm->fiberClass, "error", fiber_error);
+  PRIMITIVE(vm->fiberClass, "stackTrace", fiber_stackTrace);
   PRIMITIVE(vm->fiberClass, "isDone", fiber_isDone);
   PRIMITIVE(vm->fiberClass, "transfer()", fiber_transfer);
   PRIMITIVE(vm->fiberClass, "transfer(_)", fiber_transfer1);
