@@ -97,6 +97,14 @@
 <p>Removes all elements from the list.</p>
 <h3><strong>count</strong> <a href="#count" name="count" class="header-anchor">#</a></h3>
 <p>The number of elements in the list.</p>
+<h3><strong>indexOf(value)</strong> <a href="#indexof(value)" name="indexof(value)" class="header-anchor">#</a></h3>
+<p>Returns the index of <code>value</code> in the list, if found. If not found, returns -1.</p>
+<pre class="snippet">
+var list = [0, 1, 2, 3, 4]
+System.print(list.indexOf(3)) //> 3
+System.print(list.indexOf(20)) //> -1
+</pre>
+
 <h3><strong>insert</strong>(index, item) <a href="#insert(index,-item)" name="insert(index,-item)" class="header-anchor">#</a></h3>
 <p>Inserts the <code>item</code> at <code>index</code> in the list.</p>
 <pre class="snippet">
@@ -145,6 +153,32 @@ System.print(["a", "b", "c"].removeAt(1)) //> b
 </pre>
 
 <p>It is a runtime error if the index is not an integer or is out of bounds.</p>
+<h3><strong>sort</strong>(), <strong>sort</strong>(comparer) <a href="#sort(),-sort(comparer)" name="sort(),-sort(comparer)" class="header-anchor">#</a></h3>
+<p>Sorts the elements of a list in-place; altering the list. The default sort is implemented using the quicksort algorithm.</p>
+<pre class="snippet">
+var list = [4, 1, 3, 2].sort()
+System.print(list) //> [1, 2, 3, 4]
+</pre>
+
+<p>A comparison function <code>comparer</code> can be provided to customise the element sorting. The comparison function must return a boolean value specifying the order in which elements should appear in the list.</p>
+<p>The comparison function accepts two arguments <code>a</code> and <code>b</code>, two values to compare, and must return a boolean indicating the inequality between the arguments. If the function returns true, the first argument <code>a</code> will appear before the second <code>b</code> in the sorted results.</p>
+<p>A compare function like <code>{|a, b| true }</code> will always put <code>a</code> before <code>b</code>. The default compare function is <code>{|a, b| a &lt; b }</code>.</p>
+<pre class="snippet">
+var list = [9, 6, 8, 7]
+list.sort {|a, b| a < b}
+System.print(list) //> [6, 7, 8, 9]
+</pre>
+
+<p>It is a runtime error if <code>comparer</code> is not a function.</p>
+<h3><strong>swap</strong>(index0, index1) <a href="#swap(index0,-index1)" name="swap(index0,-index1)" class="header-anchor">#</a></h3>
+<p>Swaps values inside the list around. Puts the value from <code>index0</code> in <code>index1</code>,
+and the value from <code>index1</code> at <code>index0</code> in the list.</p>
+<pre class="snippet">
+var list = [0, 1, 2, 3, 4]
+list.swap(0, 3)
+System.print(list) //> [3, 1, 2, 0, 4]
+</pre>
+
 <h3><strong>[</strong>index<strong>]</strong> operator <a href="#[index]-operator" name="[index]-operator" class="header-anchor">#</a></h3>
 <p>Gets the element at <code>index</code>. If <code>index</code> is negative, it counts backwards from
 the end of the list where <code>-1</code> is the last element.</p>

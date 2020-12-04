@@ -149,6 +149,16 @@ if (thirsty) {
 }
 </pre>
 
+<p>If you need to import a variable under a different name, you can use 
+<code>import "..." for Name as OtherName</code>. This looks up the top-level variable
+<code>Name</code> in <em>that</em> module, but declares a variable called <code>OtherName</code> in <em>this</em> module
+with its value.</p>
+<pre class="snippet">
+import "liquids" for Water //Water is now taken
+import "beverages" for Coffee, Water as H2O, Tea
+// var water = H2O.new()
+</pre>
+
 <p>If you want to load a module, but not bind any variables from it, you can omit
 the <code>for</code> clause:</p>
 <pre class="snippet">
@@ -182,16 +192,16 @@ WrenVM* vm = wrenNewVM(&config);
 
 <p>That function has this signature:</p>
 <pre class="snippet" data-lang="c">
-char* WrenLoadModuleFn(WrenVM* vm, const char* name);
+WrenLoadModuleResult WrenLoadModuleFn(WrenVM* vm, const char* name);
 </pre>
 
 <p>Whenever a module is imported, the VM calls this and passes it the name of the
 module. The embedder is expected to return the source code contents of the
-module. When you embed Wren in your app, you can handle this however you want:
-reach out to the file system, look inside resources bundled into your app,
-whatever.</p>
-<p>You can return <code>NULL</code> from this function to indicate that a module couldn&rsquo;t be
-found. When you do this, Wren will report it as a runtime error.</p>
+module in a <code>WrenLoadModuleResult</code>. When you embed Wren in your app, you can handle
+this however you want: reach out to the file system, look inside resources bundled
+into your app, whatever.</p>
+<p>You can return the source field as <code>NULL</code> from this function to indicate that a module
+couldn&rsquo;t be found. When you do this, Wren will report it as a runtime error.</p>
 <h3>The command-line loader <a href="#the-command-line-loader" name="the-command-line-loader" class="header-anchor">#</a></h3>
 <p>The <a href="getting-started.html#using-the-wren-cli">Wren CLI command-line tool</a> has a very simple
 lookup process. It appends the module name and &ldquo;.wren&rdquo; to the directory where

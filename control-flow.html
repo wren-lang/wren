@@ -263,6 +263,19 @@ for (i in [1, 2, 3, 4]) {
 }                           //> 3
 </pre>
 
+<h2>Continue statements <a href="#continue-statements" name="continue-statements" class="header-anchor">#</a></h2>
+<p>During the execution of a loop body, you might decide that you want to skip the 
+rest of this iteration and move on to the next one. You can use a <code>continue</code> 
+statement to do that. It&rsquo;s just the <code>continue</code> keyword all by itself. Execution
+will immediately jump to the beginning of the next loop iteration (and check the
+loop conditions).</p>
+<pre class="snippet">
+for (i in [1, 2, 3, 4]) {
+  System.print(i)           //> 1
+  if (i == 2) continue      //> 3
+}                           //> 4
+</pre>
+
 <h2>Numeric ranges <a href="#numeric-ranges" name="numeric-ranges" class="header-anchor">#</a></h2>
 <p>Lists are one common use for <code>for</code> loops, but sometimes you want to walk over a
 sequence of numbers, or loop a number of times. For that, you can create a

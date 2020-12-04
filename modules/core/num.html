@@ -87,8 +87,15 @@
 <p>Attempts to parse <code>value</code> as a decimal literal and return it as an instance of
 <code>Num</code>. If the number cannot be parsed <code>null</code> will be returned.</p>
 <p>It is a runtime error if <code>value</code> is not a string.</p>
+<h3>Num.<strong>infinity</strong> <a href="#num.infinity" name="num.infinity" class="header-anchor">#</a></h3>
+<p>The value of &infinity;.</p>
+<h3>Num.<strong>nan</strong> <a href="#num.nan" name="num.nan" class="header-anchor">#</a></h3>
+<p>One value representing a NaN.</p>
+<p>Provides a default sane NaN number suitable for the vm internal values.</p>
 <h3>Num.<strong>pi</strong> <a href="#num.pi" name="num.pi" class="header-anchor">#</a></h3>
 <p>The value of &pi;.</p>
+<h3>Num.<strong>tau</strong> <a href="#num.tau" name="num.tau" class="header-anchor">#</a></h3>
+<p>The value of &tau;.</p>
 <h3>Num.<strong>largest</strong> <a href="#num.largest" name="num.largest" class="header-anchor">#</a></h3>
 <p>The largest representable numeric value.</p>
 <h3>Num.<strong>smallest</strong> <a href="#num.smallest" name="num.smallest" class="header-anchor">#</a></h3>
@@ -149,6 +156,14 @@ System.print(2.3.isInteger) //> false
 <p>The binary (base-2) logarithm of the number. Returns <code>nan</code> if the base is negative.</p>
 <h3><strong>exp</strong> <a href="#exp" name="exp" class="header-anchor">#</a></h3>
 <p>The exponential <code>e</code> (Euler’s number) raised to the number. This: <code>eⁿ</code>. </p>
+<h3><strong>min</strong>(other) <a href="#min(other)" name="min(other)" class="header-anchor">#</a></h3>
+<p>Returns the minimum value when comparing this number and <code>other</code>.</p>
+<h3><strong>max</strong>(other) <a href="#max(other)" name="max(other)" class="header-anchor">#</a></h3>
+<p>Returns the maximum value when comparing this number and <code>other</code>.</p>
+<h3><strong>clamp</strong>(min, max) <a href="#clamp(min,-max)" name="clamp(min,-max)" class="header-anchor">#</a></h3>
+<p>Clamps a number into the range of <code>min</code> and <code>max</code>. If this number is less than min, 
+<code>min</code> is returned. If bigger than <code>max</code>, <code>max</code> is returned. Otherwise, the number 
+itself is returned.</p>
 <h3><strong>pow</strong>(power) <a href="#pow(power)" name="pow(power)" class="header-anchor">#</a></h3>
 <p>Raises this number (the base) to <code>power</code>. Returns <code>nan</code> if the base is negative.</p>
 <h3><strong>round</strong> <a href="#round" name="round" class="header-anchor">#</a></h3>

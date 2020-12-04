@@ -218,6 +218,22 @@ System.print("Caught error: " + error)
 </pre>
 
 <p>If the called fiber raises an error, it can no longer be used.</p>
+<h3><strong>try</strong>(value) <a href="#try(value)" name="try(value)" class="header-anchor">#</a></h3>
+<p>Tries to run the fiber. If a runtime error occurs
+in the called fiber, the error is captured and is returned as a string.
+If the fiber is being
+started for the first time, and its function takes a parameter, <code>value</code> is
+passed to it.</p>
+<pre class="snippet">
+var fiber = Fiber.new {|value|
+  value.badMethod
+}
+
+var error = fiber.try("just a string")
+System.print("Caught error: " + error)
+</pre>
+
+<p>If the called fiber raises an error, it can no longer be used.</p>
 <h3><strong>transfer</strong>() <a href="#transfer()" name="transfer()" class="header-anchor">#</a></h3>
 <p><strong>TODO</strong></p>
 <h3><strong>transfer</strong>(value) <a href="#transfer(value)" name="transfer(value)" class="header-anchor">#</a></h3>

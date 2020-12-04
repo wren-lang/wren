@@ -108,19 +108,49 @@ executed, it relies on the host application to locate and read the source code
 for a module.</p>
 <p>The signature of this function is:</p>
 <pre class="snippet" data-lang="c">
-char* loadModule(WrenVM* vm, const char* name)
+WrenLoadModuleResult loadModule(WrenVM* vm, const char* name)
 </pre>
 
 <p>When a module is imported, Wren calls this and passes in the module&rsquo;s name. The
-host should return the source code for that module. Memory for the source should
-be allocated using the same allocator that the VM uses for other allocation (see
-below). Wren will take ownership of the returned string and free it later.</p>
+host should return the source code for that module in a <code>WrenLoadModuleResult</code> struct.</p>
+<pre class="snippet" data-lang="c">
+WrenLoadModuleResult myLoadModule(WrenVM* vm, const char* name) {
+  WrenLoadModuleResult result = {0};
+    result.source = getSourceForModule(name);
+  return result;
+}
+</pre>
+
 <p>The module loader is only be called once for any given module name. Wren caches
 the result internally so subsequent imports of the same module use the
 previously loaded code.</p>
 <p>If your host application isn&rsquo;t able to load a module with some name, it should
-return <code>NULL</code> and Wren will report that as a runtime error.</p>
-<p>If you don&rsquo;t use any <code>import</code> statements, you can leave this <code>NULL</code>.</p>
+make sure the <code>source</code> value is <code>NULL</code> when returned. Wren will then report that as a runtime error.</p>
+<p>If you don&rsquo;t use any <code>import</code> statements, you can leave the <code>loadModuleFn</code> field in
+the configuration set to <code>NULL</code> (the default).</p>
+<p>Additionally, the <code>WrenLoadModuleResult</code> allows us to add a callback for when Wren is 
+done with the <code>source</code>, so we can free the memory if needed.</p>
+<pre class="snippet" data-lang="c">
+
+static void loadModuleComplete(WrenVM* vm, 
+                               const char* module,
+                               WrenLoadModuleResult result) 
+{
+  if(result.source) {
+    //for example, if we used malloc to allocate
+    our source string, we use free to release it.
+    free((void*)result.source);
+  }
+}
+
+WrenLoadModuleResult myLoadModule(WrenVM* vm, const char* name) {
+  WrenLoadModuleResult result = {0};
+    result.onComplete = loadModuleComplete;
+    result.source = getSourceForModule(name);
+  return result;
+}
+</pre>
+
 <h3><strong><code>bindForeignMethodFn</code></strong> <a href="#bindforeignmethodfn" name="bindforeignmethodfn" class="header-anchor">#</a></h3>
 <p>The callback Wren uses to find a foreign method and bind it to a class. See
 <a href="/embedding/calling-c-from-wren.html">this page</a> for details. If your application defines no foreign
@@ -185,7 +215,7 @@ or function.</p>
 <h3><strong><code>reallocateFn</code></strong> <a href="#reallocatefn" name="reallocatefn" class="header-anchor">#</a></h3>
 <p>This lets you provide a custom memory allocation function. Its signature is:</p>
 <pre class="snippet" data-lang="c">
-void* reallocate(void* memory, size_t newSize)
+void* reallocate(void* memory, size_t newSize, void* userData)
 </pre>
 
 <p>Wren uses this one function to allocate, grow, shrink, and deallocate memory.
