@@ -43,7 +43,7 @@ One way to get a quick feel for a language's style is to see what words it
 reserves. Here's what Wren has:
 
 <pre class="snippet">
-as break class construct else false for foreign if import
+as break class construct continue else false for foreign if import
 in is null return static super this true var while
 </pre>
 
