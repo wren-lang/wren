@@ -11,7 +11,7 @@ It is a runtime error if `value` is not a string.
 
 ### Num.**infinity**
 
-The value of &infinity;.
+The value of &infin;.
 
 ### Num.**nan**
 
