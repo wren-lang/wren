@@ -82,7 +82,7 @@ static void loadModuleComplete(WrenVM* vm,
 {
   if(result.source) {
     //for example, if we used malloc to allocate
-    our source string, we use free to release it.
+    //our source string, we use free to release it.
     free((void*)result.source);
   }
 }
