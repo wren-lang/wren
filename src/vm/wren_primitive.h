@@ -16,6 +16,19 @@
       wrenBindMethod(vm, cls, symbol, method);                                 \
     } while (false)
 
+// Binds a primitive method named [name] (in Wren) implemented using C function
+// [fn] to `ObjClass` [cls], but as a FN call.
+#define FUNCTION_CALL(cls, name, function)                                     \
+    do                                                                         \
+    {                                                                          \
+      int symbol = wrenSymbolTableEnsure(vm,                                   \
+          &vm->methodNames, name, strlen(name));                               \
+      Method method;                                                           \
+      method.type = METHOD_FUNCTION_CALL;                                      \
+      method.as.primitive = prim_##function;                                   \
+      wrenBindMethod(vm, cls, symbol, method);                                 \
+    } while (false)
+
 // Defines a primitive method whose C function name is [name]. This abstracts
 // the actual type signature of a primitive function and makes it clear which C
 // functions are invoked as primitives.

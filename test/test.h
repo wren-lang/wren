@@ -76,7 +76,7 @@ typedef struct
   PathType pathType(const char* path);
 //file helpers
   char* readFile(const char* path);
-  char* readModule(WrenVM* vm, const char* module);
+  WrenLoadModuleResult readModule(WrenVM* vm, const char* module);
 //vm helpers
   void vm_write(WrenVM* vm, const char* text);
   void reportError(WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message);

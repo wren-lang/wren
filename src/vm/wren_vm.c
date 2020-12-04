@@ -25,7 +25,7 @@
 // may return a non-NULL pointer which must not be dereferenced but nevertheless
 // should be freed. To prevent that, we avoid calling realloc() with a zero
 // size.
-static void* defaultReallocate(void* ptr, size_t newSize)
+static void* defaultReallocate(void* ptr, size_t newSize, void* _)
 {
   if (newSize == 0)
   {
@@ -54,9 +54,13 @@ void wrenInitConfiguration(WrenConfiguration* config)
 WrenVM* wrenNewVM(WrenConfiguration* config)
 {
   WrenReallocateFn reallocate = defaultReallocate;
-  if (config != NULL) reallocate = config->reallocateFn;
+  void* userData = NULL;
+  if (config != NULL) {
+    reallocate = config->reallocateFn;
+    userData = config->userData;
+  }
   
-  WrenVM* vm = (WrenVM*)reallocate(NULL, sizeof(*vm));
+  WrenVM* vm = (WrenVM*)reallocate(NULL, sizeof(*vm), userData);
   memset(vm, 0, sizeof(WrenVM));
 
   // Copy the configuration if given one.
@@ -73,7 +77,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->grayCount = 0;
   // TODO: Tune this.
   vm->grayCapacity = 4;
-  vm->gray = (Obj**)reallocate(NULL, vm->grayCapacity * sizeof(Obj*));
+  vm->gray = (Obj**)reallocate(NULL, vm->grayCapacity * sizeof(Obj*), userData);
   vm->nextGC = vm->config.initialHeapSize;
 
   wrenSymbolTableInit(&vm->methodNames);
@@ -97,7 +101,7 @@ void wrenFreeVM(WrenVM* vm)
   }
 
   // Free up the GC gray set.
-  vm->gray = (Obj**)vm->config.reallocateFn(vm->gray, 0);
+  vm->gray = (Obj**)vm->config.reallocateFn(vm->gray, 0, vm->config.userData);
 
   // Tell the user if they didn't free any handles. We don't want to just free
   // them here because the host app may still have pointers to them that they
@@ -220,7 +224,7 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   if (newSize > 0 && vm->bytesAllocated > vm->nextGC) wrenCollectGarbage(vm);
 #endif
 
-  return vm->config.reallocateFn(memory, newSize);
+  return vm->config.reallocateFn(memory, newSize, vm->config.userData);
 }
 
 // Captures the local variable [local] into an [Upvalue]. If that local is
@@ -512,7 +516,10 @@ static Value validateSuperclass(WrenVM* vm, Value name, Value superclassValue,
       superclass == vm->listClass ||
       superclass == vm->mapClass ||
       superclass == vm->rangeClass ||
-      superclass == vm->stringClass)
+      superclass == vm->stringClass ||
+      superclass == vm->boolClass ||
+      superclass == vm->nullClass ||
+      superclass == vm->numClass)
   {
     return wrenStringFormat(vm,
         "Class '@' cannot inherit from built-in class '@'.",
@@ -701,44 +708,39 @@ static Value importModule(WrenVM* vm, Value name)
 
   wrenPushRoot(vm, AS_OBJ(name));
 
+  WrenLoadModuleResult result = {0};
   const char* source = NULL;
-  bool allocatedSource = true;
   
   // Let the host try to provide the module.
   if (vm->config.loadModuleFn != NULL)
   {
-    source = vm->config.loadModuleFn(vm, AS_CSTRING(name));
+    result = vm->config.loadModuleFn(vm, AS_CSTRING(name));
   }
   
   // If the host didn't provide it, see if it's a built in optional module.
-  if (source == NULL)
+  if (result.source == NULL)
   {
+    result.onComplete = NULL;
     ObjString* nameString = AS_STRING(name);
 #if WREN_OPT_META
-    if (strcmp(nameString->value, "meta") == 0) source = wrenMetaSource();
+    if (strcmp(nameString->value, "meta") == 0) result.source = wrenMetaSource();
 #endif
 #if WREN_OPT_RANDOM
-    if (strcmp(nameString->value, "random") == 0) source = wrenRandomSource();
+    if (strcmp(nameString->value, "random") == 0) result.source = wrenRandomSource();
 #endif
-    
-    // TODO: Should we give the host the ability to provide strings that don't
-    // need to be freed?
-    allocatedSource = false;
   }
   
-  if (source == NULL)
+  if (result.source == NULL)
   {
     vm->fiber->error = wrenStringFormat(vm, "Could not load module '@'.", name);
     wrenPopRoot(vm); // name.
     return NULL_VAL;
   }
   
-  ObjClosure* moduleClosure = compileInModule(vm, name, source, false, true);
+  ObjClosure* moduleClosure = compileInModule(vm, name, result.source, false, true);
   
-  // Modules loaded by the host are expected to be dynamically allocated with
-  // ownership given to the VM, which will free it. The built in optional
-  // modules are constant strings which don't need to be freed.
-  if (allocatedSource) DEALLOCATE(vm, (char*)source);
+  // Now that we're done, give the result back in case there's cleanup to do.
+  if(result.onComplete) result.onComplete(vm, AS_CSTRING(name), result);
   
   if (moduleClosure == NULL)
   {
@@ -773,6 +775,21 @@ static Value getModuleVariable(WrenVM* vm, ObjModule* module,
       variableName, OBJ_VAL(module->name));
   return NULL_VAL;
 }
+
+inline static bool checkArity(WrenVM* vm, Value value, int numArgs)
+{
+  ASSERT(IS_CLOSURE(value), "Receiver must be a closure.");
+  ObjFn* fn = AS_CLOSURE(value)->fn;
+
+  // We only care about missing arguments, not extras. The "- 1" is because
+  // numArgs includes the receiver, the function itself, which we don't want to
+  // count.
+  if (numArgs - 1 >= fn->arity) return true;
+
+  vm->fiber->error = CONST_STRING(vm, "Function expects more arguments.");
+  return false;
+}
+
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical.
@@ -1013,6 +1030,17 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
             if (wrenHasError(fiber)) RUNTIME_ERROR();
             LOAD_FRAME();
           }
+          break;
+
+        case METHOD_FUNCTION_CALL: 
+          if (!checkArity(vm, args[0], numArgs)) {
+            RUNTIME_ERROR();
+            break;
+          }
+
+          STORE_FRAME();
+          method->as.primitive(vm, args);
+          LOAD_FRAME();
           break;
 
         case METHOD_FOREIGN:
@@ -1738,9 +1766,27 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
   validateApiSlot(vm, listSlot);
   validateApiSlot(vm, elementSlot);
   ASSERT(IS_LIST(vm->apiStack[listSlot]), "Slot must hold a list.");
-  
+
   ValueBuffer elements = AS_LIST(vm->apiStack[listSlot])->elements;
-  vm->apiStack[elementSlot] = elements.data[index];
+
+  uint32_t usedIndex = wrenValidateIndex(elements.count, index);
+  ASSERT(usedIndex != UINT32_MAX, "Index out of bounds.");
+
+  vm->apiStack[elementSlot] = elements.data[usedIndex];
+}
+
+void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
+{
+  validateApiSlot(vm, listSlot);
+  validateApiSlot(vm, elementSlot);
+  ASSERT(IS_LIST(vm->apiStack[listSlot]), "Slot must hold a list.");
+
+  ObjList* list = AS_LIST(vm->apiStack[listSlot]);
+
+  uint32_t usedIndex = wrenValidateIndex(list->elements.count, index);
+  ASSERT(usedIndex != UINT32_MAX, "Index out of bounds.");
+  
+  list->elements.data[usedIndex] = vm->apiStack[elementSlot];
 }
 
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
@@ -1751,7 +1797,8 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   
   ObjList* list = AS_LIST(vm->apiStack[listSlot]);
   
-  // Negative indices count from the end.
+  // Negative indices count from the end. 
+  // We don't use wrenValidateIndex here because insert allows 1 past the end.
   if (index < 0) index = list->elements.count + 1 + index;
   
   ASSERT(index <= list->elements.count, "Index out of bounds.");
@@ -1853,6 +1900,40 @@ void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
   ASSERT(variableSlot != -1, "Could not find variable.");
   
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
+}
+
+bool wrenHasVariable(WrenVM* vm, const char* module, const char* name)
+{
+  ASSERT(module != NULL, "Module cannot be NULL.");
+  ASSERT(name != NULL, "Variable name cannot be NULL.");
+
+  Value moduleName = wrenStringFormat(vm, "$", module);
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+
+  //We don't use wrenHasModule since we want to use the module object.
+  ObjModule* moduleObj = getModule(vm, moduleName);
+  ASSERT(moduleObj != NULL, "Could not find module.");
+
+  wrenPopRoot(vm); // moduleName.
+
+  int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
+    name, strlen(name));
+
+  return variableSlot != -1;
+}
+
+bool wrenHasModule(WrenVM* vm, const char* module)
+{
+  ASSERT(module != NULL, "Module cannot be NULL.");
+  
+  Value moduleName = wrenStringFormat(vm, "$", module);
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+
+  ObjModule* moduleObj = getModule(vm, moduleName);
+  
+  wrenPopRoot(vm); // moduleName.
+
+  return moduleObj != NULL;
 }
 
 void wrenAbortFiber(WrenVM* vm, int slot)

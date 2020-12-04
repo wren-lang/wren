@@ -47,22 +47,53 @@ for a module.
 The signature of this function is:
 
 <pre class="snippet" data-lang="c">
-char* loadModule(WrenVM* vm, const char* name)
+WrenLoadModuleResult loadModule(WrenVM* vm, const char* name)
 </pre>
 
 When a module is imported, Wren calls this and passes in the module's name. The
-host should return the source code for that module. Memory for the source should
-be allocated using the same allocator that the VM uses for other allocation (see
-below). Wren will take ownership of the returned string and free it later.
+host should return the source code for that module in a `WrenLoadModuleResult` struct.
+
+<pre class="snippet" data-lang="c">
+WrenLoadModuleResult myLoadModule(WrenVM* vm, const char* name) {
+  WrenLoadModuleResult result = {0};
+    result.source = getSourceForModule(name);
+  return result;
+}
+</pre>
 
 The module loader is only be called once for any given module name. Wren caches
 the result internally so subsequent imports of the same module use the
 previously loaded code.
 
 If your host application isn't able to load a module with some name, it should
-return `NULL` and Wren will report that as a runtime error.
+make sure the `source` value is `NULL` when returned. Wren will then report that as a runtime error.
 
-If you don't use any `import` statements, you can leave this `NULL`.
+If you don't use any `import` statements, you can leave the `loadModuleFn` field in
+the configuration set to `NULL` (the default).
+
+Additionally, the `WrenLoadModuleResult` allows us to add a callback for when Wren is 
+done with the `source`, so we can free the memory if needed.
+
+<pre class="snippet" data-lang="c">
+
+static void loadModuleComplete(WrenVM* vm, 
+                               const char* module,
+                               WrenLoadModuleResult result) 
+{
+  if(result.source) {
+    //for example, if we used malloc to allocate
+    //our source string, we use free to release it.
+    free((void*)result.source);
+  }
+}
+
+WrenLoadModuleResult myLoadModule(WrenVM* vm, const char* name) {
+  WrenLoadModuleResult result = {0};
+    result.onComplete = loadModuleComplete;
+    result.source = getSourceForModule(name);
+  return result;
+}
+</pre>
 
 ### **`bindForeignMethodFn`**
 
@@ -151,7 +182,7 @@ These fields control how the VM allocates and manages memory.
 This lets you provide a custom memory allocation function. Its signature is:
 
 <pre class="snippet" data-lang="c">
-void* reallocate(void* memory, size_t newSize)
+void* reallocate(void* memory, size_t newSize, void* userData)
 </pre>
 
 Wren uses this one function to allocate, grow, shrink, and deallocate memory.

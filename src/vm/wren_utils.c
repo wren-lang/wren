@@ -194,3 +194,14 @@ int wrenPowerOf2Ceil(int n)
   
   return n;
 }
+
+uint32_t wrenValidateIndex(uint32_t count, int64_t value)
+{
+  // Negative indices count from the end.
+  if (value < 0) value = count + value;
+
+  // Check bounds.
+  if (value >= 0 && value < count) return (uint32_t)value;
+
+  return UINT32_MAX;
+}

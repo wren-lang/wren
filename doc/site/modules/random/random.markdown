@@ -15,6 +15,7 @@ It must be imported from the [random][] module:
 
 <pre class="snippet">
     import "random" for Random
+</pre>
 
 [random]: ../
 

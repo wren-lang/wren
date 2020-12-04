@@ -7,7 +7,7 @@
 
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
-#define WREN_VERSION_MINOR 3
+#define WREN_VERSION_MINOR 4
 #define WREN_VERSION_PATCH 0
 
 // Stringifies its parameter. Used to stringify constants. See https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html#Stringizing.
@@ -52,7 +52,7 @@ typedef struct WrenHandle WrenHandle;
 //
 // - To free memory, [memory] will be the memory to free and [newSize] will be
 //   zero. It should return NULL.
-typedef void* (*WrenReallocateFn)(void* memory, size_t newSize);
+typedef void* (*WrenReallocateFn)(void* memory, size_t newSize, void* userData);
 
 // A function callable from Wren code, but implemented in C.
 typedef void (*WrenForeignMethodFn)(WrenVM* vm);
@@ -70,8 +70,25 @@ typedef void (*WrenFinalizerFn)(void* data);
 typedef const char* (*WrenResolveModuleFn)(WrenVM* vm,
     const char* importer, const char* name);
 
+// Forward declare
+struct WrenLoadModuleResult;
+
+// Called after loadModuleFn is called for module [name]. The original returned result
+// is handed back to you in this callback, so that you can free memory if appropriate.
+typedef void (*WrenLoadModuleCompleteFn)(WrenVM* vm, const char* name, struct WrenLoadModuleResult result);
+
+// The result of a loadModuleFn call. 
+// [source] is the source code for the module, or NULL if the module is not found.
+// [onComplete] an optional callback that will be called once Wren is done with the result.
+typedef struct WrenLoadModuleResult
+{
+  const char* source;
+  WrenLoadModuleCompleteFn onComplete;
+  void* userData;
+} WrenLoadModuleResult;
+
 // Loads and returns the source code for the module [name].
-typedef char* (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
+typedef WrenLoadModuleResult (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
 
 // Returns a pointer to a foreign method on [className] in [module] with
 // [signature].
@@ -472,6 +489,10 @@ int wrenGetListCount(WrenVM* vm, int slot);
 // [elementSlot].
 void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 
+// Sets the value stored at [index] in the list at [listSlot], 
+// to the value from [elementSlot]. 
+void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
+
 // Takes the value stored at [elementSlot] and inserts it into the list stored
 // at [listSlot] at [index].
 //
@@ -503,6 +524,14 @@ void wrenRemoveMapValue(WrenVM* vm, int mapSlot, int keySlot,
 // it in [slot].
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot);
+
+// Looks up the top level variable with [name] in resolved [module], 
+// returns false if not found. The module must be imported at the time, 
+// use wrenHasModule to ensure that before calling.
+bool wrenHasVariable(WrenVM* vm, const char* module, const char* name);
+
+// Returns true if [module] has been imported/resolved before, false if not.
+bool wrenHasModule(WrenVM* vm, const char* module);
 
 // Sets the current fiber to be aborted, and uses the value in [slot] as the
 // runtime error object.

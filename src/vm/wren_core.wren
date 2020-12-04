@@ -323,6 +323,41 @@ class List is Sequence {
     return other
   }
 
+  sort() { sort {|low, high| low < high } }
+
+  sort(comparer) {
+    if (!(comparer is Fn)) {
+      Fiber.abort("Comparer must be a function.")
+    }
+    quicksort_(0, count - 1, comparer)
+    return this
+  }
+
+  quicksort_(low, high, comparer) {
+    if (low < high) {
+      var p = partition_(low, high, comparer)
+      quicksort_(low, p - 1, comparer)
+      quicksort_(p + 1, high, comparer)
+    }
+  }
+
+  partition_(low, high, comparer) {
+    var p = this[high]
+    var i = low - 1
+    for (j in low..(high-1)) {
+      if (comparer.call(this[j], p)) {  
+        i = i + 1
+        var t = this[i]
+        this[i] = this[j]
+        this[j] = t
+      }
+    }
+    var t = this[i+1]
+    this[i+1] = this[high]
+    this[high] = t
+    return i+1
+  }
+
   toString { "[%(join(", "))]" }
 
   +(other) {

@@ -14,7 +14,12 @@ static void reportError(WrenVM* vm, WrenErrorType type,
   if (type == WREN_ERROR_RUNTIME) printf("%s\n", message);
 }
 
-static char* loadModule(WrenVM* vm, const char* module)
+static void loadModuleComplete(WrenVM* vm, const char* module, WrenLoadModuleResult result)
+{
+  free((void*)result.source);
+}
+
+static WrenLoadModuleResult loadModule(WrenVM* vm, const char* module)
 {
   printf("loading %s\n", module);
 
@@ -27,10 +32,14 @@ static char* loadModule(WrenVM* vm, const char* module)
   {
     source = "System.print(\"ok\")";
   }
-
+   
   char* string = (char*)malloc(strlen(source) + 1);
   strcpy(string, source);
-  return string;
+
+  WrenLoadModuleResult result = {0};
+    result.onComplete = loadModuleComplete;
+    result.source = string;
+  return result;
 }
 
 static void runTestVM(WrenVM* vm, WrenConfiguration* configuration,

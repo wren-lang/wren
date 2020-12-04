@@ -87,6 +87,7 @@ typedef enum
   TOKEN_BANGEQ,
 
   TOKEN_BREAK,
+  TOKEN_CONTINUE,
   TOKEN_CLASS,
   TOKEN_CONSTRUCT,
   TOKEN_ELSE,
@@ -95,6 +96,7 @@ typedef enum
   TOKEN_FOREIGN,
   TOKEN_IF,
   TOKEN_IMPORT,
+  TOKEN_AS,
   TOKEN_IN,
   TOKEN_IS,
   TOKEN_NULL,
@@ -171,6 +173,9 @@ typedef struct
   // The 1-based line number of [currentChar].
   int currentLine;
 
+  // The upcoming token.
+  Token next;
+
   // The most recently lexed token.
   Token current;
 
@@ -192,9 +197,6 @@ typedef struct
   // unmatched "(" that are waiting to be closed.
   int parens[MAX_INTERPOLATION_NESTING];
   int numParens;
-  
-  // If subsequent newline tokens should be discarded.
-  bool skipNewlines;
 
   // Whether compile errors should be printed to stderr or discarded.
   bool printErrors;
@@ -567,6 +569,7 @@ typedef struct
 static Keyword keywords[] =
 {
   {"break",     5, TOKEN_BREAK},
+  {"continue",  8, TOKEN_CONTINUE},
   {"class",     5, TOKEN_CLASS},
   {"construct", 9, TOKEN_CONSTRUCT},
   {"else",      4, TOKEN_ELSE},
@@ -575,6 +578,7 @@ static Keyword keywords[] =
   {"foreign",   7, TOKEN_FOREIGN},
   {"if",        2, TOKEN_IF},
   {"import",    6, TOKEN_IMPORT},
+  {"as",        2, TOKEN_AS},
   {"in",        2, TOKEN_IN},
   {"is",        2, TOKEN_IS},
   {"null",      4, TOKEN_NULL},
@@ -635,13 +639,13 @@ static bool matchChar(Parser* parser, char c)
 // range.
 static void makeToken(Parser* parser, TokenType type)
 {
-  parser->current.type = type;
-  parser->current.start = parser->tokenStart;
-  parser->current.length = (int)(parser->currentChar - parser->tokenStart);
-  parser->current.line = parser->currentLine;
+  parser->next.type = type;
+  parser->next.start = parser->tokenStart;
+  parser->next.length = (int)(parser->currentChar - parser->tokenStart);
+  parser->next.line = parser->currentLine;
   
   // Make line tokens appear on the line containing the "\n".
-  if (type == TOKEN_LINE) parser->current.line--;
+  if (type == TOKEN_LINE) parser->next.line--;
 }
 
 // If the current character is [c], then consumes it and makes a token of type
@@ -715,17 +719,17 @@ static void makeNumber(Parser* parser, bool isHex)
 
   if (isHex)
   {
-    parser->current.value = NUM_VAL((double)strtoll(parser->tokenStart, NULL, 16));
+    parser->next.value = NUM_VAL((double)strtoll(parser->tokenStart, NULL, 16));
   }
   else
   {
-    parser->current.value = NUM_VAL(strtod(parser->tokenStart, NULL));
+    parser->next.value = NUM_VAL(strtod(parser->tokenStart, NULL));
   }
   
   if (errno == ERANGE)
   {
     lexError(parser, "Number literal was too large (%d).", sizeof(long int));
-    parser->current.value = NUM_VAL(0);
+    parser->next.value = NUM_VAL(0);
   }
   
   // We don't check that the entire token is consumed after calling strtoll()
@@ -917,21 +921,23 @@ static void readString(Parser* parser)
     }
   }
 
-  parser->current.value = wrenNewStringLength(parser->vm,
+  parser->next.value = wrenNewStringLength(parser->vm,
                                               (char*)string.data, string.count);
   
   wrenByteBufferClear(parser->vm, &string);
   makeToken(parser, type);
 }
 
-// Lex the next token and store it in [parser.current].
+// Lex the next token and store it in [parser.next].
 static void nextToken(Parser* parser)
 {
   parser->previous = parser->current;
+  parser->current = parser->next;
 
   // If we are out of tokens, don't try to tokenize any more. We *do* still
   // copy the TOKEN_EOF to previous so that code that expects it to be consumed
   // will still work.
+  if (parser->next.type == TOKEN_EOF) return;
   if (parser->current.type == TOKEN_EOF) return;
   
   while (peekChar(parser) != '\0')
@@ -1090,8 +1096,8 @@ static void nextToken(Parser* parser)
             // even though the source code and console output are UTF-8.
             lexError(parser, "Invalid byte 0x%x.", (uint8_t)c);
           }
-          parser->current.type = TOKEN_ERROR;
-          parser->current.length = 0;
+          parser->next.type = TOKEN_ERROR;
+          parser->next.length = 0;
         }
         return;
     }
@@ -1108,6 +1114,12 @@ static void nextToken(Parser* parser)
 static TokenType peek(Compiler* compiler)
 {
   return compiler->parser->current.type;
+}
+
+// Returns the type of the current token.
+static TokenType peekNext(Compiler* compiler)
+{
+  return compiler->parser->next.type;
 }
 
 // Consumes the current token if its type is [expected]. Returns true if a
@@ -1156,6 +1168,12 @@ static void consumeLine(Compiler* compiler, const char* errorMessage)
 {
   consume(compiler, TOKEN_LINE, errorMessage);
   ignoreNewlines(compiler);
+}
+
+static void allowLineBeforeDot(Compiler* compiler) {
+  if (peek(compiler) == TOKEN_LINE && peekNext(compiler) == TOKEN_DOT) {
+    nextToken(compiler->parser);
+  }
 }
 
 // Variables and scopes --------------------------------------------------------
@@ -1945,6 +1963,7 @@ static void namedCall(Compiler* compiler, bool canAssign, Code instruction)
   else
   {
     methodCall(compiler, instruction, &signature);
+    allowLineBeforeDot(compiler);
   }
 }
 
@@ -2141,6 +2160,8 @@ static void field(Compiler* compiler, bool canAssign)
     loadThis(compiler);
     emitByteArg(compiler, isLoad ? CODE_LOAD_FIELD : CODE_STORE_FIELD, field);
   }
+
+  allowLineBeforeDot(compiler);
 }
 
 // Compiles a read or assignment to [variable].
@@ -2172,6 +2193,8 @@ static void bareName(Compiler* compiler, bool canAssign, Variable variable)
 
   // Emit the load instruction.
   loadVariable(compiler, variable);
+
+  allowLineBeforeDot(compiler);
 }
 
 static void staticField(Compiler* compiler, bool canAssign)
@@ -2355,6 +2378,8 @@ static void subscript(Compiler* compiler, bool canAssign)
   // Parse the argument list.
   finishArgumentList(compiler, &signature);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
+
+  allowLineBeforeDot(compiler);
 
   if (canAssign && match(compiler, TOKEN_EQ))
   {
@@ -2621,6 +2646,7 @@ GrammarRule rules[] =
   /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "=="),
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!="),
   /* TOKEN_BREAK         */ UNUSED,
+  /* TOKEN_CONTINUE      */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
   /* TOKEN_CONSTRUCT     */ { NULL, NULL, constructorSignature, PREC_NONE, NULL },
   /* TOKEN_ELSE          */ UNUSED,
@@ -2629,6 +2655,7 @@ GrammarRule rules[] =
   /* TOKEN_FOREIGN       */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
   /* TOKEN_IMPORT        */ UNUSED,
+  /* TOKEN_AS            */ UNUSED,
   /* TOKEN_IN            */ UNUSED,
   /* TOKEN_IS            */ INFIX_OPERATOR(PREC_IS, "is"),
   /* TOKEN_NULL          */ PREFIX(null),
@@ -3028,6 +3055,22 @@ void statement(Compiler* compiler)
     // bytecode.
     emitJump(compiler, CODE_END);
   }
+  else if (match(compiler, TOKEN_CONTINUE))
+  {
+    if (compiler->loop == NULL)
+    {
+        error(compiler, "Cannot use 'continue' outside of a loop.");
+        return;
+    }
+
+    // Since we will be jumping out of the scope, make sure any locals in it
+    // are discarded first.
+    discardLocals(compiler, compiler->loop->scopeDepth + 1);
+
+    // emit a jump back to the top of the loop
+    int loopOffset = compiler->fn->code.count - compiler->loop->start + 2;
+    emitShortArg(compiler, CODE_LOOP, loopOffset);
+  }
   else if (match(compiler, TOKEN_FOR))
   {
     forStatement(compiler);
@@ -3359,17 +3402,38 @@ static void import(Compiler* compiler)
   do
   {
     ignoreNewlines(compiler);
-    int slot = declareNamedVariable(compiler);
     
-    // Define a string constant for the variable name.
-    int variableConstant = addConstant(compiler,
-        wrenNewStringLength(compiler->parser->vm,
-                            compiler->parser->previous.start,
-                            compiler->parser->previous.length));
+    consume(compiler, TOKEN_NAME, "Expect variable name.");
     
+    // We need to hold onto the source variable, 
+    // in order to reference it in the import later
+    Token sourceVariableToken = compiler->parser->previous;
+
+    // Define a string constant for the original variable name.
+    int sourceVariableConstant = addConstant(compiler,
+          wrenNewStringLength(compiler->parser->vm,
+                        sourceVariableToken.start,
+                        sourceVariableToken.length));
+
+    // Store the symbol we care about for the variable
+    int slot = -1;
+    if(match(compiler, TOKEN_AS))
+    {
+      //import "module" for Source as Dest
+      //Use 'Dest' as the name by declaring a new variable for it.
+      //This parses a name after the 'as' and defines it.
+      slot = declareNamedVariable(compiler);
+    }
+    else
+    {
+      //import "module" for Source
+      //Uses 'Source' as the name directly
+      slot = declareVariable(compiler, &sourceVariableToken);
+    }
+
     // Load the variable from the other module.
-    emitShortArg(compiler, CODE_IMPORT_VARIABLE, variableConstant);
-    
+    emitShortArg(compiler, CODE_IMPORT_VARIABLE, sourceVariableConstant);
+
     // Store the result in the variable here.
     defineVariable(compiler, slot);
   } while (match(compiler, TOKEN_COMMA));
@@ -3445,19 +3509,19 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   parser.numParens = 0;
 
   // Zero-init the current token. This will get copied to previous when
-  // advance() is called below.
-  parser.current.type = TOKEN_ERROR;
-  parser.current.start = source;
-  parser.current.length = 0;
-  parser.current.line = 0;
-  parser.current.value = UNDEFINED_VAL;
+  // nextToken() is called below.
+  parser.next.type = TOKEN_ERROR;
+  parser.next.start = source;
+  parser.next.length = 0;
+  parser.next.line = 0;
+  parser.next.value = UNDEFINED_VAL;
 
-  // Ignore leading newlines.
-  parser.skipNewlines = true;
   parser.printErrors = printErrors;
   parser.hasError = false;
 
-  // Read the first token.
+  // Read the first token into next
+  nextToken(&parser);
+  // Copy next -> current
   nextToken(&parser);
 
   int numExistingVariables = module->variables.count;
