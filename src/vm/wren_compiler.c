@@ -3638,6 +3638,7 @@ void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 {
   wrenGrayValue(vm, compiler->parser->current.value);
   wrenGrayValue(vm, compiler->parser->previous.value);
+  wrenGrayValue(vm, compiler->parser->next.value);
 
   // Walk up the parent chain to mark the outer compilers too. The VM only
   // tracks the innermost one.
