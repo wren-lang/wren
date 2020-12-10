@@ -9,9 +9,23 @@ Attempts to parse `value` as a decimal literal and return it as an instance of
 
 It is a runtime error if `value` is not a string.
 
+### Num.**infinity**
+
+The value of &infin;.
+
+### Num.**nan**
+
+One value representing a NaN.
+
+Provides a default sane NaN number suitable for the vm internal values.
+
 ### Num.**pi**
 
 The value of &pi;.
+
+### Num.**tau**
+
+The value of &tau;.
 
 ### Num.**largest**
 
@@ -105,6 +119,20 @@ The binary (base-2) logarithm of the number. Returns `nan` if the base is negati
 ### **exp**
 
 The exponential `e` (Euler’s number) raised to the number. This: `eⁿ`. 
+
+### **min**(other)
+
+Returns the minimum value when comparing this number and `other`.
+
+### **max**(other)
+
+Returns the maximum value when comparing this number and `other`.
+
+### **clamp**(min, max)
+
+Clamps a number into the range of `min` and `max`. If this number is less than min, 
+`min` is returned. If bigger than `max`, `max` is returned. Otherwise, the number 
+itself is returned.
 
 ### **pow**(power)
 

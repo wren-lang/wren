@@ -7,6 +7,7 @@
 
 #include "wren_common.h"
 #include "wren_core.h"
+#include "wren_math.h"
 #include "wren_primitive.h"
 #include "wren_value.h"
 
@@ -185,6 +186,15 @@ DEF_PRIMITIVE(fiber_transferError)
 DEF_PRIMITIVE(fiber_try)
 {
   runFiber(vm, AS_FIBER(args[0]), args, true, false, "try");
+  
+  // If we're switching to a valid fiber to try, remember that we're trying it.
+  if (!wrenHasError(vm->fiber)) vm->fiber->state = FIBER_TRY;
+  return false;
+}
+
+DEF_PRIMITIVE(fiber_try1)
+{
+  runFiber(vm, AS_FIBER(args[0]), args, true, true, "try");
   
   // If we're switching to a valid fiber to try, remember that we're trying it.
   if (!wrenHasError(vm->fiber)) vm->fiber->state = FIBER_TRY;
@@ -382,6 +392,27 @@ DEF_PRIMITIVE(list_removeAt)
   if (index == UINT32_MAX) return false;
 
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
+}
+
+DEF_PRIMITIVE(list_indexOf)
+{
+  ObjList* list = AS_LIST(args[0]);
+  RETURN_NUM(wrenListIndexOf(vm, list, args[1]));
+}
+
+DEF_PRIMITIVE(list_swap)
+{
+  ObjList* list = AS_LIST(args[0]);
+  uint32_t indexA = validateIndex(vm, args[1], list->elements.count, "Index 0");
+  if (indexA == UINT32_MAX) return false;
+  uint32_t indexB = validateIndex(vm, args[2], list->elements.count, "Index 1");
+  if (indexB == UINT32_MAX) return false;
+
+  Value a = list->elements.data[indexA];
+  list->elements.data[indexA] = list->elements.data[indexB];
+  list->elements.data[indexB] = a;
+
+  RETURN_NULL;
 }
 
 DEF_PRIMITIVE(list_subscript)
@@ -587,10 +618,20 @@ DEF_PRIMITIVE(num_fromString)
   RETURN_NUM(number);
 }
 
-DEF_PRIMITIVE(num_pi)
-{
-  RETURN_NUM(3.14159265358979323846);
-}
+// Defines a primitive on Num that calls infix [op] and returns [type].
+#define DEF_NUM_CONSTANT(name, value)                                          \
+    DEF_PRIMITIVE(num_##name)                                                  \
+    {                                                                          \
+      RETURN_NUM(value);                                                       \
+    }
+
+DEF_NUM_CONSTANT(infinity, INFINITY)
+DEF_NUM_CONSTANT(nan,      WREN_DOUBLE_NAN)
+DEF_NUM_CONSTANT(pi,       3.14159265358979323846264338327950288)
+DEF_NUM_CONSTANT(tau,      6.28318530717958647692528676655900577)
+
+DEF_NUM_CONSTANT(largest,  DBL_MAX)
+DEF_NUM_CONSTANT(smallest, DBL_MIN)
 
 // Defines a primitive on Num that calls infix [op] and returns [type].
 #define DEF_NUM_INFIX(name, op, type)                                          \
@@ -695,6 +736,29 @@ DEF_PRIMITIVE(num_atan2)
   RETURN_NUM(atan2(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
+DEF_PRIMITIVE(num_min)
+{
+  double value = AS_NUM(args[0]);
+  double other = AS_NUM(args[1]);
+  RETURN_NUM(value <= other ? value : other);
+}
+
+DEF_PRIMITIVE(num_max)
+{
+  double value = AS_NUM(args[0]);
+  double other = AS_NUM(args[1]);
+  RETURN_NUM(value > other ? value : other);
+}
+
+DEF_PRIMITIVE(num_clamp)
+{
+  double value = AS_NUM(args[0]);
+  double min = AS_NUM(args[1]);
+  double max = AS_NUM(args[2]);
+  double result = (value < min) ? min : ((value > max) ? max : value);
+  RETURN_NUM(result);
+}
+
 DEF_PRIMITIVE(num_pow)
 {
   RETURN_NUM(pow(AS_NUM(args[0]), AS_NUM(args[1])));
@@ -738,16 +802,6 @@ DEF_PRIMITIVE(num_sign)
   {
     RETURN_NUM(0);
   }
-}
-
-DEF_PRIMITIVE(num_largest)
-{
-  RETURN_NUM(DBL_MAX);
-}
-
-DEF_PRIMITIVE(num_smallest)
-{
-  RETURN_NUM(DBL_MIN);
 }
 
 DEF_PRIMITIVE(num_toString)
@@ -1235,6 +1289,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "transfer(_)", fiber_transfer1);
   PRIMITIVE(vm->fiberClass, "transferError(_)", fiber_transferError);
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
+  PRIMITIVE(vm->fiberClass, "try(_)", fiber_try1);
 
   vm->fnClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fn"));
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
@@ -1267,7 +1322,10 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->numClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Num"));
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
+  PRIMITIVE(vm->numClass->obj.classObj, "infinity", num_infinity);
+  PRIMITIVE(vm->numClass->obj.classObj, "nan", num_nan);
   PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
+  PRIMITIVE(vm->numClass->obj.classObj, "tau", num_tau);
   PRIMITIVE(vm->numClass->obj.classObj, "largest", num_largest);
   PRIMITIVE(vm->numClass->obj.classObj, "smallest", num_smallest);
   PRIMITIVE(vm->numClass, "-(_)", num_minus);
@@ -1292,6 +1350,9 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "floor", num_floor);
   PRIMITIVE(vm->numClass, "-", num_negate);
   PRIMITIVE(vm->numClass, "round", num_round);
+  PRIMITIVE(vm->numClass, "min(_)", num_min);
+  PRIMITIVE(vm->numClass, "max(_)", num_max);
+  PRIMITIVE(vm->numClass, "clamp(_,_)", num_clamp);
   PRIMITIVE(vm->numClass, "sin", num_sin);
   PRIMITIVE(vm->numClass, "sqrt", num_sqrt);
   PRIMITIVE(vm->numClass, "tan", num_tan);
@@ -1348,6 +1409,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "iterate(_)", list_iterate);
   PRIMITIVE(vm->listClass, "iteratorValue(_)", list_iteratorValue);
   PRIMITIVE(vm->listClass, "removeAt(_)", list_removeAt);
+  PRIMITIVE(vm->listClass, "indexOf(_)", list_indexOf);
+  PRIMITIVE(vm->listClass, "swap(_,_)", list_swap);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Map"));
   PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);
