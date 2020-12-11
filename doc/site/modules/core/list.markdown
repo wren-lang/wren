@@ -148,7 +148,17 @@ var list = ["a", "b", "c"]
 System.print(list[1]) //> b
 </pre>
 
-It is a runtime error if the index is not an integer or is out of bounds.
+If `index` is a [Range](range.html), a new list is populated from the elements
+in the range.
+
+<pre class="snippet">
+var list = ["a", "b", "c"]
+System.print(list[0..1]) //> [a, b]
+</pre>
+
+You can use `list[0..-1]` to shallow-copy a list.
+
+It is a runtime error if the index is not an integer or range, or is out of bounds.
 
 ### **[**index**]=**(item) operator
 
