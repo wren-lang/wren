@@ -163,7 +163,7 @@ System.print(list) //> [a, new, c]
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
-##  **+**(other) operator
+### **+**(other) operator
 
  Appends a list to the end of the list (concatenation). `other` must be a `List`.
 
