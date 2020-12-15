@@ -35,6 +35,14 @@ The largest representable numeric value.
 
 The smallest positive representable numeric value.
 
+### Num.**maxSafeInteger**
+
+The largest integer that all integers below it can be represented without precision loss.
+
+### Num.**minSafeInteger**
+
+The smallest integer that all integers above it can be represented without precision loss.
+
 ## Methods
 
 ### **abs**
