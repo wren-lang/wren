@@ -1706,17 +1706,24 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
 
 // Parses the rest of a comma-separated parameter list after the opening
 // delimeter. Updates `arity` in [signature] with the number of parameters.
-static void finishParameterList(Compiler* compiler, Signature* signature)
+static void finishParameterList(Compiler* compiler, Signature* signature,
+                                TokenType delimiter)
 {
   do
   {
     ignoreNewlines(compiler);
+
+    // Stop if we hit the end of the parameters list.
+    if (peek(compiler) == delimiter) break;
+
     validateNumParameters(compiler, ++signature->arity);
 
     // Define a local variable in the method for the parameter.
     declareNamedVariable(compiler);
-  }
-  while (match(compiler, TOKEN_COMMA));
+  } while (match(compiler, TOKEN_COMMA));
+
+  // Allow a newline before the closing delimiter.
+  ignoreNewlines(compiler);
 }
 
 // Gets the symbol for a method [name] with [length].
@@ -1826,11 +1833,16 @@ static Signature signatureFromToken(Compiler* compiler, SignatureType type)
 
 // Parses a comma-separated list of arguments. Modifies [signature] to include
 // the arity of the argument list.
-static void finishArgumentList(Compiler* compiler, Signature* signature)
+static void finishArgumentList(Compiler* compiler, Signature* signature,
+                               TokenType delimiter)
 {
   do
   {
     ignoreNewlines(compiler);
+
+    // Stop if we hit the end of the arguments list.
+    if (peek(compiler) == delimiter) break;
+
     validateNumParameters(compiler, ++signature->arity);
     expression(compiler);
   }
@@ -1883,11 +1895,7 @@ static void methodCall(Compiler* compiler, Code instruction,
   {
     called.type = SIG_METHOD;
 
-    // Allow empty an argument list.
-    if (peek(compiler) != TOKEN_RIGHT_PAREN)
-    {
-      finishArgumentList(compiler, &called);
-    }
+    finishArgumentList(compiler, &called, TOKEN_RIGHT_PAREN);
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
@@ -1907,8 +1915,15 @@ static void methodCall(Compiler* compiler, Code instruction,
     // Parse the parameter list, if any.
     if (match(compiler, TOKEN_PIPE))
     {
-      finishParameterList(&fnCompiler, &fnSignature);
-      consume(compiler, TOKEN_PIPE, "Expect '|' after function parameters.");
+      if (match(compiler, TOKEN_PIPE))
+      {
+        error(compiler, "The parameters list of a block argument cannot be empty.");
+      }
+      else
+      {
+        finishParameterList(&fnCompiler, &fnSignature, TOKEN_PIPE);
+        consume(compiler, TOKEN_PIPE, "Expect '|' after function parameters.");
+      }
     }
 
     fnCompiler.fn->arity = fnSignature.arity;
@@ -2376,8 +2391,15 @@ static void subscript(Compiler* compiler, bool canAssign)
   Signature signature = { "", 0, SIG_SUBSCRIPT, 0 };
 
   // Parse the argument list.
-  finishArgumentList(compiler, &signature);
-  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
+  if (match(compiler, TOKEN_RIGHT_BRACKET))
+  {
+    error(compiler, "The arguments list of a subscript operator cannot be empty.");
+  }
+  else
+  {
+    finishArgumentList(compiler, &signature, TOKEN_RIGHT_BRACKET);
+    consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
+  }
 
   allowLineBeforeDot(compiler);
 
@@ -2539,8 +2561,15 @@ void subscriptSignature(Compiler* compiler, Signature* signature)
   signature->length = 0;
 
   // Parse the parameters inside the subscript.
-  finishParameterList(compiler, signature);
-  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after parameters.");
+  if (match(compiler, TOKEN_RIGHT_BRACKET))
+  {
+    error(compiler, "The parameters list of a subscript operator cannot be empty.");
+  }
+  else
+  {
+    finishParameterList(compiler, signature, TOKEN_RIGHT_BRACKET);
+    consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after parameters.");
+  }
 
   maybeSetter(compiler, signature);
 }
@@ -2554,10 +2583,7 @@ static void parameterList(Compiler* compiler, Signature* signature)
   
   signature->type = SIG_METHOD;
   
-  // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
-
-  finishParameterList(compiler, signature);
+  finishParameterList(compiler, signature, TOKEN_RIGHT_PAREN);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
 }
 
@@ -2591,11 +2617,8 @@ void constructorSignature(Compiler* compiler, Signature* signature)
     error(compiler, "A constructor cannot be a getter.");
     return;
   }
-  
-  // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
-  
-  finishParameterList(compiler, signature);
+
+  finishParameterList(compiler, signature, TOKEN_RIGHT_PAREN);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
 }
 
