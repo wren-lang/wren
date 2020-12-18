@@ -1,6 +1,14 @@
 ^title Map Class
 
+Extends [Sequence](sequence.html).
+
 An associative collection that maps keys to values. More details [here](../../maps.html).
+
+## Static Method
+
+### Map.**new**()
+
+Creates a new empty map. Equivalent to `{}`.
 
 ## Methods
 
@@ -56,3 +64,22 @@ replaces the previous association.
 It is a runtime error if the key is not a [Bool](bool.html),
 [Class](class.html), [Null](null.html), [Num](num.html), [Range](range.html),
 or [String](string.html).
+
+### **iterate**(iterator), **iteratorValue**(iterator)
+
+Implements the [iterator protocol][] for iterating over the keys and values of a map at the same time.
+
+[iterator protocol]: ../../control-flow.html#the-iterator-protocol
+
+When a map (as opposed to its keys or values separately) is iterated over, each key/value pair is wrapped in a `MapEntry` object. `MapEntry` is a small helper class which has read-only `key` and `value` properties and a familiar `toString` representation.
+
+<pre class="snippet">
+var map = {"paul": "mccartney"}
+for (entry in map) {
+  System.print(entry.type)                    // MapEntry
+  System.print(entry.key + " " + entry.value) // paul mccartney
+  System.print(entry)                         // paul:mccartney
+}
+</pre>
+
+All map entries will be iterated over, but may be in any order, and may even change between invocations of Wren.
