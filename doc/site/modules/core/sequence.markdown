@@ -13,7 +13,7 @@ Tests whether all the elements in the sequence pass the `predicate`.
 
 Iterates over the sequence, passing each element to the function `predicate`.
 If it returns something [false](../control-flow.html#truth), stops iterating
-and returns the value. Otherwise, returns `true`.
+and returns `false`. Otherwise, returns `true`.
 
 <pre class="snippet">
 System.print([1, 2, 3].all {|n| n > 2}) //> false
@@ -26,7 +26,7 @@ Tests whether any element in the sequence passes the `predicate`.
 
 Iterates over the sequence, passing each element to the function `predicate`.
 If it returns something [true][], stops iterating and
-returns that value. Otherwise, returns `false`.
+returns `true`. Otherwise, returns `false`.
 
 [true]: ../../control-flow.html#truth
 
