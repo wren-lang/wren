@@ -7,6 +7,8 @@ System.print([1, 2, 3].join("")) // expect: 123
 // Handle a simple list with no separator.
 System.print([1, 2, 3].join()) // expect: 123
 
+System.print([1, 2, 3].join) // expect: 123
+
 // Does not quote strings.
 System.print([1, "2", true].join(",")) // expect: 1,2,true
 
