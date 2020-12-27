@@ -194,3 +194,15 @@ var odds = numbers.where {|n| n % 2 == 1 }.toList
 numbers.add(7)
 System.print(odds) //> [1, 3, 5]
 </pre>
+
+### **get**(predicate)
+
+Iterates each element. It will return the first element that pass the `predicate`.
+If no element is found it will return [null][].
+
+<pre class="snippet">
+var numbers  = [1, 2, 3]
+System.print(numbers.get {|item| item > 1}) //> 2
+
+System.print([numbers.get {|item| item > 3}) //> null
+</pre>

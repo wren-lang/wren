@@ -74,6 +74,14 @@ class Sequence {
 
   where(predicate) { WhereSequence.new(this, predicate) }
 
+  get(predicate) { 
+    var result = any(predicate) ? where(predicate).take(1) : false
+    if (result && result.count > 0) {
+      return result.toList[0]
+    }
+    return null
+  }
+
   reduce(acc, f) {
     for (element in this) {
       acc = f.call(acc, element)

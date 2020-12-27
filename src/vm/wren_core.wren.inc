@@ -1,4 +1,4 @@
-// Generated automatically from src/vm/wren_core.wren. Do not edit.
+// Generated automatically from ../src/vm/wren_core.wren. Do not edit.
 static const char* coreModuleSource =
 "class Bool {}\n"
 "class Fiber {}\n"
@@ -75,6 +75,14 @@ static const char* coreModuleSource =
 "  }\n"
 "\n"
 "  where(predicate) { WhereSequence.new(this, predicate) }\n"
+"\n"
+"  get(predicate) { \n"
+"    var result = any(predicate) ? where(predicate).take(1) : false\n"
+"    if (result && result.count > 0) {\n"
+"      return result.toList[0]\n"
+"    }\n"
+"    return null\n"
+"  }\n"
 "\n"
 "  reduce(acc, f) {\n"
 "    for (element in this) {\n"
