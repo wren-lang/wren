@@ -96,6 +96,8 @@ static const char* coreModuleSource =
 "    return result\n"
 "  }\n"
 "\n"
+"  join { join() }\n"
+"\n"
 "  join() { join(\"\") }\n"
 "\n"
 "  join(sep) {\n"
