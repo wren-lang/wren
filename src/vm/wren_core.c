@@ -677,6 +677,7 @@ DEF_NUM_FN(abs,     fabs)
 DEF_NUM_FN(acos,    acos)
 DEF_NUM_FN(asin,    asin)
 DEF_NUM_FN(atan,    atan)
+DEF_NUM_FN(cbrt,    cbrt)
 DEF_NUM_FN(ceil,    ceil)
 DEF_NUM_FN(cos,     cos)
 DEF_NUM_FN(floor,   floor)
@@ -1345,6 +1346,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "acos", num_acos);
   PRIMITIVE(vm->numClass, "asin", num_asin);
   PRIMITIVE(vm->numClass, "atan", num_atan);
+  PRIMITIVE(vm->numClass, "cbrt", num_cbrt);
   PRIMITIVE(vm->numClass, "ceil", num_ceil);
   PRIMITIVE(vm->numClass, "cos", num_cos);
   PRIMITIVE(vm->numClass, "floor", num_floor);
