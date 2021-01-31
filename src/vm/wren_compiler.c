@@ -713,18 +713,11 @@ static int readHexDigit(Parser* parser)
 }
 
 // Parses the numeric value of the current token.
-static void makeNumber(Parser* parser, bool isHex)
+static void makeNumber(Parser* parser)
 {
   errno = 0;
 
-  if (isHex)
-  {
-    parser->next.value = NUM_VAL((double)strtoll(parser->tokenStart, NULL, 16));
-  }
-  else
-  {
-    parser->next.value = NUM_VAL(strtod(parser->tokenStart, NULL));
-  }
+  parser->current.value = NUM_VAL(strtod(parser->tokenStart, NULL));
   
   if (errno == ERANGE)
   {
@@ -747,7 +740,7 @@ static void readHexNumber(Parser* parser)
   // Iterate over all the valid hexadecimal digits found.
   while (readHexDigit(parser) != -1) continue;
 
-  makeNumber(parser, true);
+  makeNumber(parser);
 }
 
 // Finishes lexing a number literal.
@@ -780,7 +773,7 @@ static void readNumber(Parser* parser)
     while (isDigit(peekChar(parser))) nextChar(parser);
   }
 
-  makeNumber(parser, false);
+  makeNumber(parser);
 }
 
 // Finishes lexing an identifier. Handles reserved words.
