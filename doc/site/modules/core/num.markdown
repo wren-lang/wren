@@ -84,6 +84,17 @@ System.print(1.5.floor)    //> 1
 System.print((-3.2).floor) //> -4
 </pre>
 
+### **fraction**
+
+The fractional part of a number i.e. the part after any decimal point.
+
+The returned value has the same sign as `this`.
+
+<pre class="snippet">
+System.print(1.5.fraction)    //> 0.5
+System.print((-3.2).fraction) //> -0.2
+</pre>
+
 ### **isInfinity**
 
 Whether the number is positive or negative infinity or not.
@@ -163,6 +174,21 @@ The square root of the number. Returns `nan` if the number is negative.
 ### **tan**
 
 The tangent of the number.
+
+### **toString**
+
+The string representation of the number.
+
+### **truncate**
+
+Rounds the number to the nearest integer towards zero.
+
+It is therefore equivalent to `floor` if the number is non-negative or `ceil` if it is negative.
+
+<pre class="snippet">
+System.print(1.5.truncate)    //> 1
+System.print((-3.2).truncate) //> -3
+</pre>
 
 ### **-** operator
 
