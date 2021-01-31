@@ -62,6 +62,10 @@ The arc tangent of the number.
 The arc tangent of the number when divided by `x`, using the signs of the two
 numbers to determine the quadrant of the result.
 
+### **cbrt**
+
+The cube root of the number.
+
 ### **ceil**
 
 Rounds the number up to the nearest integer.
