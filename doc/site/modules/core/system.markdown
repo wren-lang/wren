@@ -48,3 +48,8 @@ System.write(4 + 5) //> 9
 
 In the above example, the result of `4 + 5` is printed, and then the prompt is
 printed on the same line because no newline character was printed afterwards.
+
+### System.**writeAll**(sequence)
+
+Iterates over `sequence` and prints each element, but does not print a newline
+character afterwards. Each element is converted to a string by calling `toString` on it.
