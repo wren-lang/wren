@@ -25,7 +25,7 @@ The value of &pi;.
 
 ### Num.**tau**
 
-The value of &tau;.
+The value of &tau;. This is equivalent to ```2 * Num.pi```.
 
 ### Num.**largest**
 
@@ -238,6 +238,24 @@ It is a runtime error if `other` is not a number.
 Performs bitwise or on the number. Both numbers are first converted to 32-bit
 unsigned values. The result is then a 32-bit unsigned number where each bit is
 `true` only where the corresponding bits of one or both inputs were `true`.
+
+It is a runtime error if `other` is not a number.
+
+### **^**(other) operator
+
+Performs bitwise exclusive or on the number. Both numbers are first converted to 32-bit unsigned values. The result is then a 32-bit unsigned number where each bit is `true` only where the corresponding bits of one (but not both) inputs were `true`. Each bit is therefore `false` if the corresponding bits of both inputs were either both `true` or both `false`.
+
+It is a runtime error if `other` is not a number.
+
+### **<<**(other) operator
+
+Performs a bitwise left shift on the number. Internally, both numbers are first converted to 32-bit unsigned values and C's left shift operator is then applied to them.
+
+It is a runtime error if `other` is not a number.
+
+### **>>**(other) operator
+
+Performs a bitwise right shift on the number. Internally, both numbers are first converted to 32-bit unsigned values and C's right shift operator is then applied to them.
 
 It is a runtime error if `other` is not a number.
 
