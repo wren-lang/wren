@@ -182,9 +182,9 @@ def run_benchmark_language(benchmark, language, benchmark_result):
   name = "{0} - {1}".format(benchmark[0], language[0])
   print("{0:30s}".format(name), end=' ')
 
-  if not os.path.exists(os.path.join(
-      BENCHMARK_DIR, benchmark[0] + language[2])):
-    print("No implementation for this language")
+  bpath = os.path.join(BENCHMARK_DIR, benchmark[0] + language[2])
+  if not os.path.exists(bpath):
+    print("No implementation for this language: " + bpath)
     return
 
   times = []

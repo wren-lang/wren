@@ -78,7 +78,7 @@ for animal in animals:
     for adverb in adverbs:
       keys.append(adverb + " " + adjective + " " + animal)
 
-start = time.clock()
+start = time.process_time()
 
 map = {}
 i = 0
@@ -94,4 +94,4 @@ for key in keys:
   del map[key]
 
 print(sum)
-print("elapsed: " + str(time.clock() - start))
+print("elapsed: " + str(time.process_time() - start))

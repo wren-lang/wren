@@ -625,12 +625,12 @@ planner = None
 
 def delta_blue():
     global total
-    start = time.clock()
+    start = time.process_time()
     for i in range(40):
         chain_test(100)
         projection_test(100)
     print(total)
-    print("elapsed: " + str(time.clock() - start))
+    print("elapsed: " + str(time.process_time() - start))
 
 
 if __name__ == '__main__':
