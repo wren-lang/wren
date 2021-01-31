@@ -177,7 +177,7 @@ It is a runtime error if the index is not an integer or is out of bounds.
 
 ### **+**(other) operator
 
- Appends a list to the end of the list (concatenation). `other` must be a `List`.
+ Appends a list to the end of the list (concatenation). `other` must be [an iterable](../../control-flow.html#the-iterator-protocol).
 
 <pre class="snippet">
 var letters = ["a", "b", "c"]
