@@ -1822,7 +1822,6 @@ bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot)
   ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Slot must hold a map.");
 
   Value key = vm->apiStack[keySlot];
-  if (!validateKey(vm, key)) return false;
 
   ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
   Value value = wrenMapGet(map, key);
