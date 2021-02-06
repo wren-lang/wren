@@ -717,7 +717,7 @@ static void makeNumber(Parser* parser)
 {
   errno = 0;
 
-  parser->current.value = NUM_VAL(strtod(parser->tokenStart, NULL));
+  parser->next.value = NUM_VAL(strtod(parser->tokenStart, NULL));
   
   if (errno == ERANGE)
   {
