@@ -92,7 +92,16 @@
 <p>Creates a new empty list. Equivalent to <code>[]</code>.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>add</strong>(item) <a href="#add(item)" name="add(item)" class="header-anchor">#</a></h3>
-<p>Appends <code>item</code> to the end of the list.</p>
+<p>Appends <code>item</code> to the end of the list. Returns the added item.</p>
+<h3><strong>addAll</strong>(other) <a href="#addall(other)" name="addall(other)" class="header-anchor">#</a></h3>
+<p>Appends each element of <code>other</code> in the same order to the end of the list. <code>other</code> must be <a href="../../control-flow.html#the-iterator-protocol">an iterable</a>.</p>
+<pre class="snippet">
+var list = [0, 1, 2, 3, 4]
+list.addAll([5, 6])
+System.print(list) //> [0, 1, 2, 3, 4, 5, 6]
+</pre>
+
+<p>Returns the added items.</p>
 <h3><strong>clear</strong>() <a href="#clear()" name="clear()" class="header-anchor">#</a></h3>
 <p>Removes all elements from the list.</p>
 <h3><strong>count</strong> <a href="#count" name="count" class="header-anchor">#</a></h3>
@@ -187,7 +196,15 @@ var list = ["a", "b", "c"]
 System.print(list[1]) //> b
 </pre>
 
-<p>It is a runtime error if the index is not an integer or is out of bounds.</p>
+<p>If <code>index</code> is a <a href="range.html">Range</a>, a new list is populated from the elements
+in the range.</p>
+<pre class="snippet">
+var list = ["a", "b", "c"]
+System.print(list[0..1]) //> [a, b]
+</pre>
+
+<p>You can use <code>list[0..-1]</code> to shallow-copy a list.</p>
+<p>It is a runtime error if the index is not an integer or range, or is out of bounds.</p>
 <h3><strong>[</strong>index<strong>]=</strong>(item) operator <a href="#[index]=(item)-operator" name="[index]=(item)-operator" class="header-anchor">#</a></h3>
 <p>Replaces the element at <code>index</code> with <code>item</code>. If <code>index</code> is negative, it counts
 backwards from the end of the list where <code>-1</code> is the last element.</p>
@@ -199,12 +216,20 @@ System.print(list) //> [a, new, c]
 
 <p>It is a runtime error if the index is not an integer or is out of bounds.</p>
 <h3><strong>+</strong>(other) operator <a href="#+(other)-operator" name="+(other)-operator" class="header-anchor">#</a></h3>
-<p>Appends a list to the end of the list (concatenation). <code>other</code> must be a <code>List</code>.</p>
+<p>Appends a list to the end of the list (concatenation). <code>other</code> must be <a href="../../control-flow.html#the-iterator-protocol">an iterable</a>.</p>
 <pre class="snippet">
 var letters = ["a", "b", "c"]
 var other = ["d", "e", "f"]
 var combined = letters + other
 System.print(combined)  //> [a, b, c, d, e, f]
+</pre>
+
+<h3><strong>*</strong>(count) operator <a href="#\(count)-operator" name="\(count)-operator" class="header-anchor">#</a></h3>
+<p>Creates a new list by repeating this one <code>count</code> times. It is a runtime error if <code>count</code> is not a non-negative integer.</p>
+<pre class="snippet">
+var digits = [1, 2]
+var tripleDigits = digits * 3
+System.print(tripleDigits) //> [1, 2, 1, 2, 1, 2] 
 </pre>
   </main>
 </div>

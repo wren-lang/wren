@@ -82,7 +82,11 @@
   </nav>
   <main>
     <h1>Map Class</h1>
-    <p>An associative collection that maps keys to values. More details <a href="../../maps.html">here</a>.</p>
+    <p>Extends <a href="sequence.html">Sequence</a>.</p>
+<p>An associative collection that maps keys to values. More details <a href="../../maps.html">here</a>.</p>
+<h2>Static Method <a href="#static-method" name="static-method" class="header-anchor">#</a></h2>
+<h3>Map.<strong>new</strong>() <a href="#map.new()" name="map.new()" class="header-anchor">#</a></h3>
+<p>Creates a new empty map. Equivalent to <code>{}</code>.</p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>clear</strong>() <a href="#clear()" name="clear()" class="header-anchor">#</a></h3>
 <p>Removes all entries from the map.</p>
@@ -118,6 +122,19 @@ replaces the previous association.</p>
 <p>It is a runtime error if the key is not a <a href="bool.html">Bool</a>,
 <a href="class.html">Class</a>, <a href="null.html">Null</a>, <a href="num.html">Num</a>, <a href="range.html">Range</a>,
 or <a href="string.html">String</a>.</p>
+<h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
+<p>Implements the <a href="../../control-flow.html#the-iterator-protocol">iterator protocol</a> for iterating over the keys and values of a map at the same time.</p>
+<p>When a map (as opposed to its keys or values separately) is iterated over, each key/value pair is wrapped in a <code>MapEntry</code> object. <code>MapEntry</code> is a small helper class which has read-only <code>key</code> and <code>value</code> properties and a familiar <code>toString</code> representation.</p>
+<pre class="snippet">
+var map = {"paul": "mccartney"}
+for (entry in map) {
+  System.print(entry.type)                    // MapEntry
+  System.print(entry.key + " " + entry.value) // paul mccartney
+  System.print(entry)                         // paul:mccartney
+}
+</pre>
+
+<p>All map entries will be iterated over, but may be in any order, and may even change between invocations of Wren.</p>
   </main>
 </div>
 <footer>

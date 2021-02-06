@@ -60,9 +60,11 @@
   </nav>
   <main>
     <h1>Timer Class</h1>
-    <p><strong>TODO</strong></p>
-<h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
-<p><strong>TODO</strong></p>
+    <h2>Static Method <a href="#static-method" name="static-method" class="header-anchor">#</a></h2>
+<h3>Timer.<strong>sleep</strong>(milliseconds) <a href="#timer.sleep(milliseconds)" name="timer.sleep(milliseconds)" class="header-anchor">#</a></h3>
+<p>Suspends the current fiber for the given number of milliseconds. It is a runtime error if this is not a non-negative number.</p>
+<p>This method is often used in conjunction with the Scheduler class which runs any scheduled tasks in separate fibers whilst the current fiber is sleeping.</p>
+<p>Note that this method also suspends the System.clock method which will not give the correct running time for a program as a result.</p>
   </main>
 </div>
 <footer>

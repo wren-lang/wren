@@ -95,7 +95,7 @@
 <h3>Num.<strong>pi</strong> <a href="#num.pi" name="num.pi" class="header-anchor">#</a></h3>
 <p>The value of &pi;.</p>
 <h3>Num.<strong>tau</strong> <a href="#num.tau" name="num.tau" class="header-anchor">#</a></h3>
-<p>The value of &tau;.</p>
+<p>The value of &tau;. This is equivalent to <code>2 * Num.pi</code>.</p>
 <h3>Num.<strong>largest</strong> <a href="#num.largest" name="num.largest" class="header-anchor">#</a></h3>
 <p>The largest representable numeric value.</p>
 <h3>Num.<strong>smallest</strong> <a href="#num.smallest" name="num.smallest" class="header-anchor">#</a></h3>
@@ -116,6 +116,8 @@ System.print( (-123).abs ) //> 123
 <h3><strong>atan</strong>(x) <a href="#atan(x)" name="atan(x)" class="header-anchor">#</a></h3>
 <p>The arc tangent of the number when divided by <code>x</code>, using the signs of the two
 numbers to determine the quadrant of the result.</p>
+<h3><strong>cbrt</strong> <a href="#cbrt" name="cbrt" class="header-anchor">#</a></h3>
+<p>The cube root of the number.</p>
 <h3><strong>ceil</strong> <a href="#ceil" name="ceil" class="header-anchor">#</a></h3>
 <p>Rounds the number up to the nearest integer.</p>
 <pre class="snippet">
@@ -130,6 +132,14 @@ System.print((-3.2).ceil) //> -3
 <pre class="snippet">
 System.print(1.5.floor)    //> 1
 System.print((-3.2).floor) //> -4
+</pre>
+
+<h3><strong>fraction</strong> <a href="#fraction" name="fraction" class="header-anchor">#</a></h3>
+<p>The fractional part of a number i.e. the part after any decimal point.</p>
+<p>The returned value has the same sign as <code>this</code>.</p>
+<pre class="snippet">
+System.print(1.5.fraction)    //> 0.5
+System.print((-3.2).fraction) //> -0.2
 </pre>
 
 <h3><strong>isInfinity</strong> <a href="#isinfinity" name="isinfinity" class="header-anchor">#</a></h3>
@@ -182,6 +192,16 @@ System.print((-3.7).round) //> -4
 <p>The square root of the number. Returns <code>nan</code> if the number is negative.</p>
 <h3><strong>tan</strong> <a href="#tan" name="tan" class="header-anchor">#</a></h3>
 <p>The tangent of the number.</p>
+<h3><strong>toString</strong> <a href="#tostring" name="tostring" class="header-anchor">#</a></h3>
+<p>The string representation of the number.</p>
+<h3><strong>truncate</strong> <a href="#truncate" name="truncate" class="header-anchor">#</a></h3>
+<p>Rounds the number to the nearest integer towards zero.</p>
+<p>It is therefore equivalent to <code>floor</code> if the number is non-negative or <code>ceil</code> if it is negative.</p>
+<pre class="snippet">
+System.print(1.5.truncate)    //> 1
+System.print((-3.2).truncate) //> -3
+</pre>
+
 <h3><strong>-</strong> operator <a href="#--operator" name="--operator" class="header-anchor">#</a></h3>
 <p>Negates the number.</p>
 <pre class="snippet">
@@ -214,6 +234,15 @@ unsigned values. The result is then a 32-bit unsigned number where each bit is
 <p>Performs bitwise or on the number. Both numbers are first converted to 32-bit
 unsigned values. The result is then a 32-bit unsigned number where each bit is
 <code>true</code> only where the corresponding bits of one or both inputs were <code>true</code>.</p>
+<p>It is a runtime error if <code>other</code> is not a number.</p>
+<h3><strong>^</strong>(other) operator <a href="#^(other)-operator" name="^(other)-operator" class="header-anchor">#</a></h3>
+<p>Performs bitwise exclusive or on the number. Both numbers are first converted to 32-bit unsigned values. The result is then a 32-bit unsigned number where each bit is <code>true</code> only where the corresponding bits of one (but not both) inputs were <code>true</code>. Each bit is therefore <code>false</code> if the corresponding bits of both inputs were either both <code>true</code> or both <code>false</code>.</p>
+<p>It is a runtime error if <code>other</code> is not a number.</p>
+<h3><strong>&lt;&lt;</strong>(other) operator <a href="#<<(other)-operator" name="<<(other)-operator" class="header-anchor">#</a></h3>
+<p>Performs a bitwise left shift on the number. Internally, both numbers are first converted to 32-bit unsigned values and C&rsquo;s left shift operator is then applied to them.</p>
+<p>It is a runtime error if <code>other</code> is not a number.</p>
+<h3><strong>&gt;&gt;</strong>(other) operator <a href="#>&gt;(other)-operator&rdquo; name=&rdquo;&gt;&gt;(other)-operator&rdquo; class=&rdquo;header-anchor&rdquo;&gt;#</a></h3>
+<p>Performs a bitwise right shift on the number. Internally, both numbers are first converted to 32-bit unsigned values and C&rsquo;s right shift operator is then applied to them.</p>
 <p>It is a runtime error if <code>other</code> is not a number.</p>
 <h3><strong>..</strong>(other) operator <a href="#..(other)-operator" name="..(other)-operator" class="header-anchor">#</a></h3>
 <p>Creates a <a href="range.html">Range</a> representing a consecutive range of numbers

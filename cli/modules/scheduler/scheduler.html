@@ -60,9 +60,26 @@
   </nav>
   <main>
     <h1>Scheduler Class</h1>
-    <p><strong>TODO</strong></p>
-<h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
-<p><strong>TODO</strong></p>
+    <p>The Scheduler class maintains a list of fibers, to be started one after the other, when a signal to do so is received. The signal (a private method call) is typically transmitted by <em>long running</em> methods in the File or Timer classes which suspend the current fiber so that Wren can carry out other tasks in the meantime.</p>
+<h2>Static Method <a href="#static-method" name="static-method" class="header-anchor">#</a></h2>
+<h3>Scheduler.<strong>add</strong>(callable) <a href="#scheduler.add(callable)" name="scheduler.add(callable)" class="header-anchor">#</a></h3>
+<p>Adds a new fiber to the scheduler&rsquo;s fibers list. This fiber calls <code>callable</code> and then transfers to the next fiber in the list, if there is one.</p>
+<p><code>callable</code> is a function or other object which has a call() method.</p>
+<pre class="snippet">
+var a = 3
+
+Scheduler.add {
+  a = a * a
+}
+
+Scheduler.add {
+  a = a + 1
+}
+
+System.print(a)        // still 3
+Timer.sleep(3000)      // wait 3 seconds
+System.print(a)        // now 3 * 3 + 1 = 10
+</pre>
   </main>
 </div>
 <footer>
