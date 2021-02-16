@@ -27,7 +27,7 @@ one of the input is `true`, and `false` otherwise.
 
 It is a runtime error if `other` is not a boolean.
 
-### **!** operator
+### **!**, **~** operators
 
 Returns the logical complement of the value.
 

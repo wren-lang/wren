@@ -1318,6 +1318,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->boolClass, "|(_)", bool_bitwiseOr);
   PRIMITIVE(vm->boolClass, "^(_)", bool_bitwiseXor);
   PRIMITIVE(vm->boolClass, "!", bool_not);
+  PRIMITIVE(vm->boolClass, "~", bool_not);
 
   vm->fiberClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fiber"));
   PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
