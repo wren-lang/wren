@@ -246,6 +246,12 @@ Returns a new string that concatenates this string and `other`.
 
 It is a runtime error if `other` is not a string.
 
+### *****(count) operator
+
+Returns a new string that contains this string repeated `count` times.
+
+It is a runtime error if `count` is not a positive integer.
+
 ### **==**(other) operator
 
 Checks if the string is equal to `other`.
