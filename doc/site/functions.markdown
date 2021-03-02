@@ -72,8 +72,8 @@ var someFn = Fn.new {
 }
 </pre>
 
-As you can see it takes a block argument too! All the constructor does it
-return that, so this exists purely as a convenience method for you.
+As you can see it takes a block argument too! All the constructor does is
+return that argument, so this exists purely as a convenience method for you.
 
 ## Calling functions
 
