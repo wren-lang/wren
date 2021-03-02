@@ -251,13 +251,13 @@ Performs bitwise exclusive or on the number. Both numbers are first converted to
 
 It is a runtime error if `other` is not a number.
 
-### **<<**(other) operator
+### **&lt;&lt;**(other) operator
 
 Performs a bitwise left shift on the number. Internally, both numbers are first converted to 32-bit unsigned values and C's left shift operator is then applied to them.
 
 It is a runtime error if `other` is not a number.
 
-### **>>**(other) operator
+### **&gt;&gt;**(other) operator
 
 Performs a bitwise right shift on the number. Internally, both numbers are first converted to 32-bit unsigned values and C's right shift operator is then applied to them.
 
