@@ -3,7 +3,7 @@
 
 #include "resolution.h"
 
-static void write(WrenVM* vm, const char* text)
+static void writeFn(WrenVM* vm, const char* text)
 {
   printf("%s", text);
 }
@@ -45,7 +45,7 @@ static WrenLoadModuleResult loadModule(WrenVM* vm, const char* module)
 static void runTestVM(WrenVM* vm, WrenConfiguration* configuration,
                       const char* source)
 {
-  configuration->writeFn = write;
+  configuration->writeFn = writeFn;
   configuration->errorFn = reportError;
   configuration->loadModuleFn = loadModule;
 
