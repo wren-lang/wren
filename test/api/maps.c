@@ -49,7 +49,7 @@ static void insert(WrenVM* vm)
   wrenSetMapValue(vm, 0, 1, 2);
 }
 
-static void removeWren(WrenVM* vm)
+static void removeKey(WrenVM* vm)
 {
   wrenEnsureSlots(vm, 3);
 
@@ -104,7 +104,7 @@ WrenForeignMethodFn mapsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Maps.newMap()") == 0) return newMap;
   if (strcmp(signature, "static Maps.insert()") == 0) return insert;
-  if (strcmp(signature, "static Maps.remove(_)") == 0) return removeWren;
+  if (strcmp(signature, "static Maps.remove(_)") == 0) return removeKey;
   if (strcmp(signature, "static Maps.count(_)") == 0) return countWren;
   if (strcmp(signature, "static Maps.count()") == 0) return countAPI;
   if (strcmp(signature, "static Maps.contains()") == 0) return containsAPI;
