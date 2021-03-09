@@ -403,7 +403,7 @@ bool wrenGetSlotBool(WrenVM* vm, int slot);
 // number of bytes in the array.
 //
 // It is an error to call this if the slot does not contain a string.
-const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length);
+const char* wrenGetSlotBytes(WrenVM* vm, int slot, size_t* length);
 
 // Reads a number from [slot].
 //

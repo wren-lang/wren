@@ -1644,7 +1644,7 @@ bool wrenGetSlotBool(WrenVM* vm, int slot)
   return AS_BOOL(vm->apiStack[slot]);
 }
 
-const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length)
+const char* wrenGetSlotBytes(WrenVM* vm, int slot, size_t* length)
 {
   validateApiSlot(vm, slot);
   ASSERT(IS_STRING(vm->apiStack[slot]), "Slot must hold a string.");

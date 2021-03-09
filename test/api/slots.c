@@ -13,7 +13,7 @@ static void getSlots(WrenVM* vm)
   bool result = true;
   if (wrenGetSlotBool(vm, 1) != true) result = false;
 
-  int length;
+  size_t length;
   const char* bytes = wrenGetSlotBytes(vm, 2, &length);
   if (length != 5) result = false;
   if (memcmp(bytes, "by\0te", length) != 0) result = false;
@@ -52,7 +52,7 @@ static void setSlots(WrenVM* vm)
   bool result = true;
   if (wrenGetSlotBool(vm, 1) != true) result = false;
 
-  int length;
+  size_t length;
   const char* bytes = wrenGetSlotBytes(vm, 2, &length);
   if (length != 5) result = false;
   if (memcmp(bytes, "by\0te", length) != 0) result = false;
