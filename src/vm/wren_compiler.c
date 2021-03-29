@@ -85,6 +85,7 @@ typedef enum
   TOKEN_GTEQ,
   TOKEN_EQEQ,
   TOKEN_BANGEQ,
+  TOKEN_COLONEQ,
 
   TOKEN_BREAK,
   TOKEN_CONTINUE,
@@ -972,7 +973,6 @@ static void nextToken(Parser* parser)
       case ']': makeToken(parser, TOKEN_RIGHT_BRACKET); return;
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
-      case ':': makeToken(parser, TOKEN_COLON); return;
       case ',': makeToken(parser, TOKEN_COMMA); return;
       case '*': makeToken(parser, TOKEN_STAR); return;
       case '%': makeToken(parser, TOKEN_PERCENT); return;
@@ -986,6 +986,7 @@ static void nextToken(Parser* parser)
       case '&': twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP); return;
       case '=': twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ); return;
       case '!': twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG); return;
+      case ':': twoCharToken(parser, '=', TOKEN_COLONEQ, TOKEN_COLON); return;
         
       case '.':
         if (matchChar(parser, '.'))
@@ -2645,6 +2646,7 @@ GrammarRule rules[] =
   /* TOKEN_GTEQ          */ INFIX_OPERATOR(PREC_COMPARISON, ">="),
   /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "=="),
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!="),
+  /* TOKEN_COLONEQ       */ UNUSED,
   /* TOKEN_BREAK         */ UNUSED,
   /* TOKEN_CONTINUE      */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,
@@ -3440,7 +3442,7 @@ static void import(Compiler* compiler)
 }
 
 // Compiles a "var" variable definition statement.
-static void variableDefinition(Compiler* compiler)
+static void variableDefinition(Compiler* compiler, bool colonEq)
 {
   // Grab its name, but don't declare it yet. A (local) variable shouldn't be
   // in scope in its own initializer.
@@ -3448,7 +3450,7 @@ static void variableDefinition(Compiler* compiler)
   Token nameToken = compiler->parser->previous;
 
   // Compile the initializer.
-  if (match(compiler, TOKEN_EQ))
+  if (match(compiler, colonEq ? TOKEN_COLONEQ : TOKEN_EQ))
   {
     ignoreNewlines(compiler);
     expression(compiler);
@@ -3484,7 +3486,11 @@ void definition(Compiler* compiler)
   }
   else if (match(compiler, TOKEN_VAR))
   {
-    variableDefinition(compiler);
+    variableDefinition(compiler, false);
+  }
+  else if(peek(compiler) == TOKEN_NAME && peekNext(compiler) == TOKEN_COLONEQ) 
+  {
+    variableDefinition(compiler, true);
   }
   else
   {
