@@ -3488,7 +3488,7 @@ void definition(Compiler* compiler)
   {
     variableDefinition(compiler, false);
   }
-  else if(peek(compiler) == TOKEN_NAME && peekNext(compiler) == TOKEN_COLONEQ) 
+  else if (peek(compiler) == TOKEN_NAME && peekNext(compiler) == TOKEN_COLONEQ) 
   {
     variableDefinition(compiler, true);
   }
