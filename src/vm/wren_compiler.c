@@ -1228,7 +1228,7 @@ static void nextToken(Parser* parser)
       case '0':
         switch (peekChar(parser))
         {
-          case 'x': 
+          case 'x':
             readHexNumber(parser);
             return;
           case 'o':
