@@ -731,6 +731,47 @@ static int readBinDigit(Parser* parser)
   return -1;
 }
 
+#include <limits.h>
+static unsigned long wrenStrToUL(Parser* parser, int base) {
+  unsigned long num = 0;
+  unsigned long cutoff = ULLONG_MAX, cutlimit = cutoff % base;
+  bool tooBig = false;
+  cutoff /= base;
+  for(char c;;)
+  {
+    c = nextChar(parser);
+    if(c >= '0' && c <= '9') c -= '0';
+    else if(c >= 'a' && c <= 'z') c -= 'a' - 10;
+    else if(c >= 'A' && c <= 'Z') c -= 'A' - 10;
+    else if(c == '_') continue;
+    else
+    {
+      parser->currentChar--;
+      break;
+    }
+    if(c >= base) 
+    {
+      parser->currentChar--;
+      break;
+    }
+    if(num > cutoff || (num == cutoff && c > cutlimit)) tooBig = true;
+    if(!tooBig)
+    {
+      num *= base;
+      num += c;
+    }
+  }
+  if(tooBig)
+  {
+    errno = ERANGE;
+    return ULONG_MAX;
+  }
+  return num;
+}
+
+static double wrenStrToD(Parser* parser) {
+  // TODO: replace strtod with wrenStrToD which allows for `_` to seperate numbers
+}
 // Parses the numeric value of the current token.
 static void makeNumber(Parser* parser, bool isDeci, int base)
 {
@@ -742,7 +783,7 @@ static void makeNumber(Parser* parser, bool isDeci, int base)
   }
   else
   {
-    parser->next.value = NUM_VAL((double)strtoll(parser->tokenStart + 2, NULL, base));
+    parser->next.value = NUM_VAL((double)wrenStrToUL(parser, base));
   }
   if (errno == ERANGE)
   {
@@ -754,36 +795,6 @@ static void makeNumber(Parser* parser, bool isDeci, int base)
   // or strtod() because we've already scanned it ourselves and know it's valid.
 
   makeToken(parser, TOKEN_NUMBER);
-}
-
-// Finishes lexing a hexadecimal number literal.
-static void readHexNumber(Parser* parser)
-{
-  // Skip past the `x` used to denote a hexadecimal literal.
-  nextChar(parser);
-
-  // Iterate over all the valid hexadecimal digits found.
-  while (readHexDigit(parser) != -1) continue;
-
-  makeNumber(parser, false, 16);
-}
-
-static void readOctNumber(Parser* parser)
-{
-  // Skip past the `o` used to denote an octal literal.
-  nextChar(parser);
-
-  while(readOctDigit(parser) != -1) continue;
-  makeNumber(parser, false, 8);
-}
-
-static void readBinNumber(Parser* parser)
-{
-  // Skip past the `b` used to denote an binary literal.
-  nextChar(parser);
-
-  while(readBinDigit(parser) != -1) continue;
-  makeNumber(parser, false, 2);
 }
 
 // Finishes lexing a number literal.
@@ -1097,13 +1108,16 @@ static void nextToken(Parser* parser)
         switch (peekChar(parser))
         {
           case 'x':
-            readHexNumber(parser);
+            nextChar(parser);
+            makeNumber(parser, false, 16);
             return;
           case 'o':
-            readOctNumber(parser);
+            nextChar(parser);
+            makeNumber(parser, false, 8);
             return;
           case 'b':
-            readBinNumber(parser);
+            nextChar(parser);
+            makeNumber(parser, false, 2);
             return;
         }
 
