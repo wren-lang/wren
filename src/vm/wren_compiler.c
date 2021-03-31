@@ -1228,13 +1228,16 @@ static void nextToken(Parser* parser)
       case '0':
         switch (peekChar(parser))
         {
-          case 'x': 
+          case 'x':
+          case 'X':
             readHexNumber(parser);
             return;
           case 'o':
+          case 'O':
             readOctNumber(parser);
             return;
           case 'b':
+          case 'B':
             readBinNumber(parser);
             return;
         }
