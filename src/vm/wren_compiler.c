@@ -594,11 +594,13 @@ static Keyword keywords[] =
 
 
 // Add support for the extended characters as a valid name
+// Small subset of https://en.wikipedia.org/wiki/ISO/IEC_8859-1
 static bool isUTF8Name(char c) {
   uint8_t ch = (uint8_t) c;
   switch (ch) {
     case 0xc2: // initial
     case 0xc3: // initial
+    case 0xc5: // initial
     case 0xce: // initial
     case 0xcf: // initial
     case 0xe2: // initial
@@ -648,7 +650,24 @@ static bool isUTF8Name(char c) {
     case 0x87: // Ç
     case 0xb7: // ·
     case 0xb0: // °
-    case '$':  // $
+    case 0xb5: // µ õ
+    case 0x86: // Æ
+    case 0xa6: // æ
+    case 0x85: // Å
+    case 0xa5: // å
+    case 0x83: // Ã
+    case 0xa3: // ã
+    case 0x95: // Õ
+    case 0x98: // Ø
+    case 0xb8: // ø Ÿ
+    case 0x90: // Ð
+    case 0x9f: // ð ß
+    case 0x9d: // Ý
+    case 0xbd: // ý
+    case 0xbf: // ÿ
+    case 0x9e: // Þ
+    case 0xbe: // þ
+    case '$':  // $ ¥ ¢ £ ¤ €
     case '@':  // @
     // 0xe2 0x88 0x91 (∑)
     // 0xce 0xb1 (α)

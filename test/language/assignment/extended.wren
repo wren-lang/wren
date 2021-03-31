@@ -1,4 +1,4 @@
-
+// Subset of https://en.wikipedia.org/wiki/ISO/IEC_8859-1
 var á
 var é
 var í
@@ -55,7 +55,14 @@ var Ç
 // Special Symbols
 var ·
 var °
+
 var $
+var ¥
+var ¢
+var £
+var ¤
+var €
+
 var @
 var ∑
 var α
@@ -63,6 +70,36 @@ var Ω
 var π
 var Δ
 var γ
+
+var µ
+
+var Æ
+var æ
+
+var Å
+var å
+
+var Ã
+var ã
+
+var Õ
+var õ
+
+var Ø
+var ø
+
+var Ð
+var ð
+var ß
+
+var Ý
+var ý
+
+var Ÿ
+var ÿ
+
+var Þ
+var þ
 
 class Ñandú {
     static ñandú { "Ñandú" }
