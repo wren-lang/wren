@@ -1163,7 +1163,7 @@ static void nextToken(Parser* parser)
             // bytes. Since there are no non-ASCII byte values that are
             // meaningful code units in Wren, the lexer works on raw bytes,
             // even though the source code and console output are UTF-8.
-            lexError(parser, "Invalid byte 0x%x.", (uint8_t)c;
+            lexError(parser, "Invalid byte 0x%x.", (uint8_t)c);
           }
           parser->next.type = TOKEN_ERROR;
           parser->next.length = 0;
