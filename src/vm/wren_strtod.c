@@ -1941,32 +1941,3 @@ done:
     Bfree(delta);
     return result;
 }
-
-static char *rv_alloc(int i) {
-    int j, k, *r;
-
-    j = sizeof(ULong);
-    for (k = 0;
-         sizeof(Bigint) - sizeof(ULong) - sizeof(int) + j <= (unsigned)i;
-         j <<= 1)
-        k++;
-    r = (int *)Balloc(k);
-    if (r == NULL)
-        return NULL;
-    *r = k;
-    return (char *)(r + 1);
-}
-
-static char *nrv_alloc(const char *s, char **rve, int n) {
-    char *rv, *t;
-
-    rv = rv_alloc(n);
-    if (rv == NULL)
-        return NULL;
-    t = rv;
-    while ((*t = *s++))
-        t++;
-    if (rve)
-        *rve = t;
-    return rv;
-}
