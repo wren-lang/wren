@@ -594,33 +594,22 @@ static Keyword keywords[] =
 
 
 // Returns true if [c] is a valid (non-initial) identifier character.
-// Add support for the extended characters as a valid name
 static bool isAsciiName(uint8_t c)
 {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
+// Adds Utf8 support the traditional Ascii only identifiers
+// Assume is a valid Utf8 character if it fits in the valid range
 static bool isUtf8Name(int c)
 {
-  if (c < 0 || c > 0x10ffff) {
-    return false;
-  }
-  
-  // Support the traditional Ascii only identifiers
-  if (c <= 0x7f && isAsciiName(c)) {
-    return true;
-  }
-
-  // Assume is a valid utf8 character
-  // If the value is above 127 (Ascii) and below maximum Utf8 value (bytes are lower than 4)
-  return (c > 0x7f && c <= 0x10ffff);
+  return isAsciiName(c) || (c > 0x7f && c <= 0x10ffff);
 }
 
 static bool isName(uint8_t c)
 {
   return isUtf8Name(c);
 }
-
 
 // Returns true if [c] is a digit.
 static bool isDigit(char c)
