@@ -194,11 +194,34 @@ If the called fiber raises an error, it can no longer be used.
 
 ### **transfer**()
 
-**TODO**
+Pauses execution of the current running fiber, and transfers control to another fiber.
+Equivalent to:
+
+<pre class="snippet">
+fiber.transfer(null)
+</pre>
 
 ### **transfer**(value)
 
-**TODO**
+Pauses execution of the current running fiber, and transfers control to another fiber.
+
+If a fiber A transfers control to another fiber B, and fiber B was paused because of a
+call to `transfer`, then fiber B will continue to execute, and the result of the transfer
+call in fiber B will be the `value` passed by fiber A.
+
+<pre class="snippet">
+var main = Fiber.current
+
+var fiber = Fiber.new {
+    System.print("Fiber")
+    System.print(main.transfer())
+}
+
+fiber.transfer()                    //> Fiber
+System.print("Main")                //> Main
+fiber.transfer("Transferred value") //> Transferred value
+System.print("Not called")          // This code is never reached
+</pre>
 
 ### **transferError**(error)
 
