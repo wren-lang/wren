@@ -737,7 +737,7 @@ static unsigned long wrenStrToUL(Parser* parser, int base) {
   unsigned long cutoff = ULLONG_MAX, cutlimit = cutoff % base;
   bool tooBig = false;
   cutoff /= base;
-  for(char c;;)
+  for(unsigned char c;;)
   {
     c = nextChar(parser);
     if(c >= '0' && c <= '9') c -= '0';
@@ -769,9 +769,71 @@ static unsigned long wrenStrToUL(Parser* parser, int base) {
   return num;
 }
 
-static double wrenStrToD(Parser* parser) {
-  // TODO: replace strtod with wrenStrToD which allows for `_` to seperate numbers
+static double wrenStrToD(const char* str, void* v) {
+  double num = 0;
+  char c;
+  for(;;)
+  {
+    c = *str++;
+    if(c >= '0' && c <= '9') c -= '0';
+    else if(c == '_') continue;
+    else
+    {
+      str--;
+      break;
+    }
+    num *= 10;
+    num += c;
+  }
+  int e = 0;
+  if(*str++ == '.') 
+  {
+    for(;;)
+    {
+      c = *str++;
+      if(c >= '0' && c <= '9') c -= '0';
+      else if(c == '_') continue;
+      else
+      {
+        str--;
+        break;
+      }
+      num *= 10;
+      num += c;
+      e--;
+    }
+  }
+  else str--;
+  c = *str++;
+  if(c == 'E' || c == 'e')
+  {
+    int e2 = 0;
+    bool neg = false;
+    c = *str++;
+    if(c == '-') neg = true;
+    else if(c == '+') neg = false;
+    else str--;
+    for(;;)
+    {
+      c = *str++;
+      if(c >= '0' && c <= '9') c -= '0';
+      else if(c == '_') continue;
+      else
+      {
+        str--;
+        break;
+      }
+      e2 *= 10;
+      e2 += c;
+    }
+    if(neg) e2 *= -1;
+    e += e2;
+  }
+  else str--;
+  num *= pow(10.0, (double)(e));
+  return num;
 }
+
 // Parses the numeric value of the current token.
 static void makeNumber(Parser* parser, bool isDeci, int base)
 {
@@ -779,7 +841,7 @@ static void makeNumber(Parser* parser, bool isDeci, int base)
 
   if (isDeci)
   {
-    parser->next.value = NUM_VAL(strtod(parser->tokenStart, NULL));
+    parser->next.value = NUM_VAL(wrenStrToD(parser->tokenStart, NULL));
   }
   else
   {
@@ -800,14 +862,14 @@ static void makeNumber(Parser* parser, bool isDeci, int base)
 // Finishes lexing a number literal.
 static void readNumber(Parser* parser)
 {
-  while (isDigit(peekChar(parser))) nextChar(parser);
+  while (isDigit(peekChar(parser)) || peekChar(parser) == '_') nextChar(parser);
 
   // See if it has a floating point. Make sure there is a digit after the "."
   // so we don't get confused by method calls on number literals.
-  if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
+  if (peekChar(parser) == '.' && (isDigit(peekNextChar(parser)) || peekNextChar(parser) == '_'))
   {
     nextChar(parser);
-    while (isDigit(peekChar(parser))) nextChar(parser);
+    while (isDigit(peekChar(parser)) || peekChar(parser) == '_') nextChar(parser);
   }
 
   // See if the number is in scientific notation.
@@ -819,12 +881,12 @@ static void readNumber(Parser* parser)
       matchChar(parser, '-');
     }
 
-    if (!isDigit(peekChar(parser)))
+    if (!isDigit(peekChar(parser)) || peekChar(parser) == '_')
     {
       lexError(parser, "Unterminated scientific notation.");
     }
 
-    while (isDigit(peekChar(parser))) nextChar(parser);
+    while (isDigit(peekChar(parser)) || peekChar(parser) == '_') nextChar(parser);
   }
 
   makeNumber(parser, true, 10);
