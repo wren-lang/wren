@@ -1,4 +1,4 @@
-// Subset of https://en.wikipedia.org/wiki/ISO/IEC_8859-1
+
 var á
 var é
 var í
@@ -56,14 +56,12 @@ var Ç
 var ·
 var °
 
-var $
 var ¥
 var ¢
 var £
 var ¤
 var €
 
-var @
 var ∑
 var α
 var Ω
@@ -101,10 +99,15 @@ var ÿ
 var Þ
 var þ
 
+var 🐦 = "Wren"
+
 class Ñandú {
     static ñandú { "Ñandú" }
+    static 🇨🇱 { "Chile" }
 }
 
-var @Çlass$ = Ñandú
+var Çlass = Ñandú
 
-System.print(@Çlass$.ñandú) // expect: Ñandú
+System.print(Çlass.ñandú) // expect: Ñandú
+System.print(Ñandú.🇨🇱) // expect: Chile
+System.print(🐦) // expect: Wren

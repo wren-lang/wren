@@ -593,98 +593,34 @@ static Keyword keywords[] =
 };
 
 
-// Add support for the extended characters as a valid name
-// Small subset of https://en.wikipedia.org/wiki/ISO/IEC_8859-1
-static bool isUTF8Name(char c) {
-  uint8_t ch = (uint8_t) c;
-  switch (ch) {
-    case 0xc2: // initial
-    case 0xc3: // initial
-    case 0xc5: // initial
-    case 0xce: // initial
-    case 0xcf: // initial
-    case 0xe2: // initial
-    case 0xa1: // á
-    case 0xa9: // é
-    case 0xad: // í
-    case 0xb3: // ó
-    case 0xba: // ú
-    case 0xa0: // à
-    case 0xa8: // è
-    case 0xac: // ì
-    case 0xb2: // ò
-    case 0xb9: // ù
-    case 0xa2: // â
-    case 0xaa: // ê
-    case 0xae: // î
-    case 0xb4: // ô
-    case 0xbb: // û
-    case 0xa4: // ä
-    case 0xab: // ë
-    case 0xaf: // ï
-    case 0xb6: // ö
-    case 0xbc: // ü
-    case 0x81: // Á
-    case 0x89: // É
-    case 0x8d: // Í
-    case 0x93: // Ó
-    case 0x9a: // Ú
-    case 0x80: // À
-    case 0x88: // È
-    case 0x8c: // Ì
-    case 0x92: // Ò
-    case 0x99: // Ù
-    case 0x82: // Â
-    case 0x8a: // Ê
-    case 0x8e: // Î
-    case 0x94: // Ô
-    case 0x9b: // Û
-    case 0x84: // Ä
-    case 0x8b: // Ë
-    case 0x8f: // Ï
-    case 0x96: // Ö
-    case 0x9c: // Ü
-    case 0xb1: // ñ
-    case 0xa7: // ç
-    case 0x91: // Ñ
-    case 0x87: // Ç
-    case 0xb7: // ·
-    case 0xb0: // °
-    case 0xb5: // µ õ
-    case 0x86: // Æ
-    case 0xa6: // æ
-    case 0x85: // Å
-    case 0xa5: // å
-    case 0x83: // Ã
-    case 0xa3: // ã
-    case 0x95: // Õ
-    case 0x98: // Ø
-    case 0xb8: // ø Ÿ
-    case 0x90: // Ð
-    case 0x9f: // ð ß
-    case 0x9d: // Ý
-    case 0xbd: // ý
-    case 0xbf: // ÿ
-    case 0x9e: // Þ
-    case 0xbe: // þ
-    case '$':  // $ ¥ ¢ £ ¤ €
-    case '@':  // @
-    // 0xe2 0x88 0x91 (∑)
-    // 0xce 0xb1 (α)
-    // 0xce 0xa9 (Ω)
-    // 0xcf 0x80 (π)
-    // 0xce 0x94 (Δ)
-    // 0xce 0xb3 (γ)
-      return true;
-    default:
-      return false;
-  }
-}
 // Returns true if [c] is a valid (non-initial) identifier character.
-static bool isName(char c)
+// Add support for the extended characters as a valid name
+static bool isAsciiName(uint8_t c)
 {
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || isUTF8Name(c);
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
+
+static bool isUtf8Name(int c)
+{
+  if (c < 0 || c > 0x10ffff) {
+    return false;
+  }
+  
+  // Support the traditional Ascii only identifiers
+  if (c <= 0x7f && isAsciiName(c)) {
+    return true;
+  }
+
+  // Assume is a valid utf8 character
+  // If the value is above 127 (Ascii) and below maximum Utf8 value (bytes are lower than 4)
+  return (c > 0x7f && c <= 0x10ffff);
+}
+
+static bool isName(uint8_t c)
+{
+  return isUtf8Name(c);
+}
+
 
 // Returns true if [c] is a digit.
 static bool isDigit(char c)
