@@ -849,12 +849,51 @@ static void readUnicodeEscape(Parser* parser, ByteBuffer* string, int length)
   }
 }
 
+
+// An atom is a string literal that starts with $
+// Just syntax sugar. Helpful for map keys
+static void readAtom(Parser* parser)
+{
+  ByteBuffer string;
+  TokenType type = TOKEN_STRING;
+  wrenByteBufferInit(&string);
+
+  for (;;)
+  {
+    char c = nextChar(parser);
+
+    if (!isName(c)) {
+        parser->currentChar--;
+        break;
+    }
+
+    if (c == '\0')
+    {
+      lexError(parser, "Unterminated atom.");
+
+      // Don't consume it if it isn't expected. Keeps us from reading past the
+      // end of an unterminated string.
+      parser->currentChar--;
+      break;
+    }
+
+    wrenByteBufferWrite(parser->vm, &string, c);
+  }
+
+  parser->next.value = wrenNewStringLength(parser->vm,
+                                              (char*)string.data, string.count);
+  
+  wrenByteBufferClear(parser->vm, &string);
+  makeToken(parser, type);
+}
+
 // Finishes lexing a string literal.
 static void readString(Parser* parser)
 {
   ByteBuffer string;
   TokenType type = TOKEN_STRING;
   wrenByteBufferInit(&string);
+
   
   for (;;)
   {
@@ -972,7 +1011,7 @@ static void nextToken(Parser* parser)
       case ']': makeToken(parser, TOKEN_RIGHT_BRACKET); return;
       case '{': makeToken(parser, TOKEN_LEFT_BRACE); return;
       case '}': makeToken(parser, TOKEN_RIGHT_BRACE); return;
-      case ':': makeToken(parser, TOKEN_COLON); return;
+      case ':': makeToken(parser, TOKEN_COLON);return;
       case ',': makeToken(parser, TOKEN_COMMA); return;
       case '*': makeToken(parser, TOKEN_STAR); return;
       case '%': makeToken(parser, TOKEN_PERCENT); return;
@@ -1052,6 +1091,7 @@ static void nextToken(Parser* parser)
         break;
 
       case '"': readString(parser); return;
+      case '$': readAtom(parser); return;
       case '_':
         readName(parser,
                  peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD);
