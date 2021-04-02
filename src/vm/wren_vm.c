@@ -1558,9 +1558,9 @@ int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
     if(line) *line = (int)AS_NUM(module->variables.data[symbol]);
     module->variables.data[symbol] = value;
 
-	// If this was a localname we want to error if it was 
-	// referenced before this definition.
-	if (wrenIsLocalName(name)) symbol = -3;
+  // If this was a localname we want to error if it was 
+  // referenced before this definition.
+  if (wrenIsLocalName(name)) symbol = -3;
   }
   else
   {
@@ -1632,7 +1632,10 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
   if (IS_MAP(vm->apiStack[slot])) return WREN_TYPE_MAP;
   if (IS_NULL(vm->apiStack[slot])) return WREN_TYPE_NULL;
   if (IS_STRING(vm->apiStack[slot])) return WREN_TYPE_STRING;
-  
+  if (IS_CLASS(vm->apiStack[slot])) return WREN_TYPE_CLASS;
+  if (IS_INSTANCE(vm->apiStack[slot])) return WREN_TYPE_INSTANCE;
+  if (IS_FN(vm->apiStack[slot])) return WREN_TYPE_FN;
+
   return WREN_TYPE_UNKNOWN;
 }
 
@@ -1944,10 +1947,10 @@ void wrenAbortFiber(WrenVM* vm, int slot)
 
 void* wrenGetUserData(WrenVM* vm)
 {
-	return vm->config.userData;
+  return vm->config.userData;
 }
 
 void wrenSetUserData(WrenVM* vm, void* userData)
 {
-	vm->config.userData = userData;
+  vm->config.userData = userData;
 }
