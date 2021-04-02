@@ -572,6 +572,8 @@ static Keyword keywords[] =
   {"continue",  8, TOKEN_CONTINUE},
   {"class",     5, TOKEN_CLASS},
   {"construct", 9, TOKEN_CONSTRUCT},
+  {"do",        2, TOKEN_LEFT_BRACE},
+  {"end",       3, TOKEN_RIGHT_BRACE},
   {"else",      4, TOKEN_ELSE},
   {"false",     5, TOKEN_FALSE},
   {"for",       3, TOKEN_FOR},
@@ -786,7 +788,7 @@ static void readNumber(Parser* parser)
 // Finishes lexing an identifier. Handles reserved words.
 static void readName(Parser* parser, TokenType type)
 {
-  while (isName(peekChar(parser)) || isDigit(peekChar(parser)))
+  while (isName(peekChar(parser)) || isDigit(peekChar(parser)) || peekChar(parser) == '$')
   {
     nextChar(parser);
   }
@@ -1074,7 +1076,7 @@ static void nextToken(Parser* parser)
           skipLineComment(parser);
           break;
         }
-        if (isName(c))
+        if (isName(c) || c == '$')
         {
           readName(parser, TOKEN_NAME);
         }

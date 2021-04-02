@@ -261,21 +261,21 @@ class String is Sequence {
       start = 0
     }
 
-    var end
+    var finish
     if (trimEnd) {
-      end = byteCount_ - 1
-      while (end >= start) {
-        var codePoint = codePointAt_(end)
+      finish = byteCount_ - 1
+      while (finish >= start) {
+        var codePoint = codePointAt_(finish)
         if (codePoint != -1 && !codePoints.contains(codePoint)) break
-        end = end - 1
+        finish = finish - 1
       }
 
-      if (end < start) return ""
+      if (finish < start) return ""
     } else {
-      end = -1
+      finish = -1
     }
 
-    return this[start..end]
+    return this[start..finish]
   }
 
   *(count) {
