@@ -6,4 +6,4 @@ System.print(b == 255) // expect: true
 System.print(0b11111111 is Num) // expect: true
 System.print(b is Num) // expect: true
 System.print(-0b11111111) // expect: -255
-System.print(0b0111111111111111111111111111111111111111111111111111111111111111) // expect: 9.2233720368548e+18
+System.print(0b11111111111111111111111111111111) // expect: 4294967295

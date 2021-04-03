@@ -732,9 +732,9 @@ static int readBinDigit(Parser* parser)
 }
 
 #include <limits.h>
-static unsigned long wrenStrToUL(Parser* parser, int base) {
-  unsigned long num = 0;
-  unsigned long cutoff = ULLONG_MAX, cutlimit = cutoff % base;
+static long long wrenStrToLL(Parser* parser, int base) {
+  long long num = 0;
+  long long cutoff = LLONG_MAX, cutlimit = cutoff % base;
   bool tooBig = false;
   cutoff /= base;
   for(unsigned char c;;)
@@ -764,14 +764,19 @@ static unsigned long wrenStrToUL(Parser* parser, int base) {
   if(tooBig)
   {
     errno = ERANGE;
-    return ULONG_MAX;
+    return LLONG_MAX;
   }
   return num;
 }
 
+#include <float.h>
+// The most amount of significant denary digits that can fit in a 52-bit number (the size of a double's mantissa)
+#define DBL_MAX_SIGNIFICAND_DIGITS 16
 static double wrenStrToD(const char* str, void* v) {
   double num = 0;
+  int digits = 0;
   char c;
+  int e = 0;
   for(;;)
   {
     c = *str++;
@@ -782,10 +787,15 @@ static double wrenStrToD(const char* str, void* v) {
       str--;
       break;
     }
-    num *= 10;
-    num += c;
+    if(digits <= DBL_MAX_SIGNIFICAND_DIGITS)
+    {
+      if(num > 0) ++digits;
+      num *= 10;
+      num += c;
+    }
+    else e++;
+    
   }
-  int e = 0;
   if(*str++ == '.') 
   {
     for(;;)
@@ -798,9 +808,13 @@ static double wrenStrToD(const char* str, void* v) {
         str--;
         break;
       }
-      num *= 10;
-      num += c;
-      e--;
+      if(digits <= DBL_MAX_SIGNIFICAND_DIGITS)
+      {
+        if(num > 0) ++digits;
+        num *= 10;
+        num += c;
+        e--;
+      }
     }
   }
   else str--;
@@ -830,8 +844,16 @@ static double wrenStrToD(const char* str, void* v) {
     e += e2;
   }
   else str--;
-  num *= pow(10.0, (double)(e));
-  return num;
+  if(digits + e >= DBL_MAX_10_EXP)
+  {
+    errno = ERANGE;
+    return INFINITY;
+  }
+  if(digits + e <= DBL_MIN_10_EXP)
+  {
+    return 0;
+  }
+  return num * pow(10.0, (double)(e));;
 }
 
 // Parses the numeric value of the current token.
@@ -845,7 +867,7 @@ static void makeNumber(Parser* parser, bool isDeci, int base)
   }
   else
   {
-    parser->next.value = NUM_VAL((double)wrenStrToUL(parser, base));
+    parser->next.value = NUM_VAL((double)wrenStrToLL(parser, base));
   }
   if (errno == ERANGE)
   {
