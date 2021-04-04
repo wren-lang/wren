@@ -50,6 +50,16 @@ String literals are surrounded in double quotes:
 "hi there"
 </pre>
 
+They can also span multiple lines:
+
+<pre class="snippet">
+"hi
+there,
+again"
+</pre>
+
+### Escaping
+
 A handful of escape characters are supported:
 
 <pre class="snippet">
@@ -108,6 +118,59 @@ System.print("wow %((1..3).map {|n| n * n}.join())") //> wow 149
 
 An interpolated expression can even contain a string literal which in turn has
 its own nested interpolations, but doing that gets unreadable pretty quickly.
+
+### Raw strings
+
+A string literal can also be created using triple quotes `"""` which is
+parsed as a raw string. A raw string is no different
+from any other string, it's just parsed in a different way.
+
+**Raw strings do not process escapes and do not apply any interpolation**.
+
+<pre class="snippet">
+"""hi there"""
+</pre>
+
+When a raw string spans multiple lines, the newline immediately 
+after the triple quote will be ignored, and any whitespace after 
+the last newline (before the closing triple quote) will be ignored too.
+
+<pre class="snippet">
+  """
+    Hello world
+  """
+</pre>
+
+The value in the string above is `    Hello world`, it contains no newlines.
+The newline after `"""` and the whitespace on the closing line are ignored.
+Note that the whitespace on the line is preserved.
+
+A raw string will be parsed exactly as is in the file, unmodified.
+This means it can contain quotes, invalid syntax, other data formats 
+and so on without being modified by Wren.
+
+<pre class="snippet">
+"""
+  {
+    "hello": "wren",
+    "from" : "json"
+  }
+"""
+</pre>
+
+One more example, embedding wren code inside a string safely.
+
+<pre class="snippet">
+"""
+A markdown string with embedded wren code example.
+
+    class Example {
+      construct code() {
+        //
+      }
+    }
+"""
+</pre>
 
 ## Ranges
 

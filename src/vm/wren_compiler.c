@@ -849,6 +849,65 @@ static void readUnicodeEscape(Parser* parser, ByteBuffer* string, int length)
   }
 }
 
+static void readRawString(Parser* parser)
+{
+  ByteBuffer string;
+  wrenByteBufferInit(&string);
+  TokenType type = TOKEN_STRING;
+
+  //consume the second and third "
+  nextChar(parser);
+  nextChar(parser);
+
+  //if there's a newline immediately after, 
+  //discard it so it's not part of the literal
+  if(peekChar(parser) == '\n') nextChar(parser);
+  
+  int lastNewline = -1;
+  int whitespace = -1;
+
+  for (;;)
+  {
+    char c = nextChar(parser);
+    char c1 = peekChar(parser);
+    char c2 = peekNextChar(parser);
+
+    if(c == '\n') {
+      lastNewline = string.count;
+      whitespace = lastNewline;
+    }
+
+    if(c == '"' && c1 == '"' && c2 == '"') break;
+    
+    if(c != '\n' && c != ' ' && c != '\t') whitespace = -1;
+
+    if (c == '\0' || c1 == '\0' || c2 == '\0')
+    {
+      lexError(parser, "Unterminated raw string.");
+
+      // Don't consume it if it isn't expected. Keeps us from reading past the
+      // end of an unterminated string.
+      parser->currentChar--;
+      break;
+    }
+ 
+    wrenByteBufferWrite(parser->vm, &string, c);
+  }
+
+  //consume the second and third "
+  nextChar(parser);
+  nextChar(parser);
+
+  int count = string.count;
+  if(lastNewline != -1 && whitespace == lastNewline) count = lastNewline;
+
+  parser->next.value = wrenNewStringLength(parser->vm,
+                                              (char*)string.data, count);
+  
+  wrenByteBufferClear(parser->vm, &string);
+  makeToken(parser, type);
+}
+
 // Finishes lexing a string literal.
 static void readString(Parser* parser)
 {
@@ -1051,7 +1110,13 @@ static void nextToken(Parser* parser)
         }
         break;
 
-      case '"': readString(parser); return;
+      case '"': {
+        if(peekChar(parser) == '"' && peekNextChar(parser)  == '"') {
+          readRawString(parser);
+          return;
+        }
+        readString(parser); return;
+      }
       case '_':
         readName(parser,
                  peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD);
