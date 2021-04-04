@@ -56,13 +56,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   WrenReallocateFn reallocate = defaultReallocate;
   void* userData = NULL;
   if (config != NULL) {
-    
-    // ensure config has a reallocate function
-    if (config->reallocateFn == NULL) {
-      config->reallocateFn = defaultReallocate;
-    }
-
-    reallocate = config->reallocateFn;
+    reallocate = config->reallocateFn ? config->reallocateFn : defaultReallocate;
     userData = config->userData;
   }
   
@@ -73,6 +67,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   if (config != NULL)
   {
     memcpy(&vm->config, config, sizeof(WrenConfiguration));
+    vm->config.reallocateFn = reallocate;
   }
   else
   {
