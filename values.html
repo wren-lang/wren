@@ -212,7 +212,7 @@ from any other string, it&rsquo;s just parsed in a different way.</p>
 </pre>
 
 <p>When a raw string spans multiple lines, the newline immediately 
-after the triple quote will be ignored, and any whitespace after 
+after the triple quote will be ignored, and any spaces or tabs after 
 the last newline (before the closing triple quote) will be ignored too.</p>
 <pre class="snippet">
   """
@@ -220,9 +220,12 @@ the last newline (before the closing triple quote) will be ignored too.</p>
   """
 </pre>
 
-<p>The value in the string above is <code>Hello world</code>, it contains no newlines.
-The newline after <code>"""</code> and the whitespace on the closing line are ignored.
-Note that the whitespace on the line is preserved.</p>
+<p>The value in the string above has no newlines, but the spaces in front
+are preserved. The newline after <code>"""</code> and the whitespace on the closing line are ignored.</p>
+<pre class="snippet">
+    Hello world
+</pre>
+
 <p>A raw string will be parsed exactly as is in the file, unmodified.
 This means it can contain quotes, invalid syntax, other data formats 
 and so on without being modified by Wren.</p>
