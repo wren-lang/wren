@@ -235,11 +235,67 @@ System.print("Caught error: " + error)
 
 <p>If the called fiber raises an error, it can no longer be used.</p>
 <h3><strong>transfer</strong>() <a href="#transfer()" name="transfer()" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Pauses execution of the current running fiber, and transfers control to this fiber.</p>
+<p>[Read more][../../concurrency.html#transferring-control] about the difference 
+between <code>call</code> and <code>transfer</code>. Unlike <code>call</code>, <code>transfer</code> doesn&rsquo;t track the origin of the transfer.</p>
+<pre class="snippet">
+// keep hold of the fiber we start in
+var main = Fiber.current
+
+// create a new fiber, note it doesn't execute yet!
+var fiber = Fiber.new {
+  System.print("inside 'fiber'") //> #2: from #1
+  main.transfer()                //> #3: go back to 'main'
+}
+
+fiber.transfer()      //> #1: print "inside 'fiber'" via #2
+                      //> this fiber is now paused by #1
+
+System.print("main")  //> #4: prints "main", unpaused by #3
+</pre>
+
 <h3><strong>transfer</strong>(value) <a href="#transfer(value)" name="transfer(value)" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Pauses execution of the current running fiber, and transfers control to this fiber.</p>
+<p>Similar to <code>transfer</code>, but a value can be passed between the fibers.</p>
+<pre class="snippet">
+// keep hold of the fiber we start in
+var main = Fiber.current
+
+// create a new fiber, note it doesn't execute yet
+// also note that we're accepting a 'value' parameter
+var fiber = Fiber.new {|value|
+  System.print("in 'fiber' = %(value)")   //> #2: in 'fiber' = 5
+  var result = main.transfer("hello?")    //> #3: send to 'message'
+  System.print("end 'fiber' = %(result)") //> #6: end 'fiber' = 32
+}
+
+var message = fiber.transfer(5)   //> #1: send to 'value'
+System.print("... %(message)")    //> #4: ... hello?
+fiber.transfer(32)                //> #5: send to 'result'
+</pre>
+
 <h3><strong>transferError</strong>(error) <a href="#transfererror(error)" name="transfererror(error)" class="header-anchor">#</a></h3>
-<p><strong>TODO</strong></p>
+<p>Transfer to this fiber, but set this fiber into an error state. 
+The <code>fiber.error</code> value will be populated with the value in <code>error</code>.</p>
+<pre class="snippet">
+var A = Fiber.new {
+  System.print("transferred to A")     //> #4
+  B.transferError("error!")            //> #5
+}
+
+var B = Fiber.new {
+  System.print("started B")            //> #2 
+  A.transfer()                         //> #3
+  System.print("should not get here")
+}
+
+B.try()                   //> #1
+System.print(B.error)     //> #6: prints "error!" from #5
+
+// B fiber can no longer be used
+
+B.call()                  //> #7: Cannot call an aborted fiber.
+</pre>
   </main>
 </div>
 <footer>
