@@ -607,8 +607,8 @@ var wasmMemory;
 // In the wasm backend, we polyfill the WebAssembly object,
 // so this creates a (non-native-wasm) table for us.
 var wasmTable = new WebAssembly.Table({
-  'initial': 205,
-  'maximum': 205 + 0,
+  'initial': 203,
+  'maximum': 203 + 0,
   'element': 'anyfunc'
 });
 
@@ -1229,11 +1229,11 @@ function updateGlobalBufferAndViews(buf) {
 }
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 5271616,
+    STACK_BASE = 5271552,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 28736,
-    DYNAMIC_BASE = 5271616,
-    DYNAMICTOP_PTR = 28576;
+    STACK_MAX = 28672,
+    DYNAMIC_BASE = 5271552,
+    DYNAMICTOP_PTR = 28512;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -1817,7 +1817,7 @@ var ASM_CONSTS = {
 
 
 
-// STATICTOP = STATIC_BASE + 27712;
+// STATICTOP = STATIC_BASE + 27648;
 /* global initializers */  __ATINIT__.push({ func: function() { ___wasm_call_ctors() } });
 
 
@@ -1869,12 +1869,36 @@ var ASM_CONSTS = {
       abort('stack overflow')
     }
 
-  
-  function ___setErrNo(value) {
-      if (Module['___errno_location']) HEAP32[((Module['___errno_location']())>>2)]=value;
-      else err('failed to set errno from JS');
-      return value;
+  function _clock() {
+      if (_clock.start === undefined) _clock.start = Date.now();
+      return ((Date.now() - _clock.start) * (1000000 / 1000))|0;
     }
+
+  function _emscripten_get_sbrk_ptr() {
+      return 28512;
+    }
+
+  function _emscripten_memcpy_big(dest, src, num) {
+      HEAPU8.copyWithin(dest, src, src + num);
+    }
+
+  
+  function _emscripten_get_heap_size() {
+      return HEAPU8.length;
+    }
+  
+  function abortOnCannotGrowMemory(requestedSize) {
+      abort('Cannot enlarge memory arrays to size ' + requestedSize + ' bytes (OOM). Either (1) compile with  -s INITIAL_MEMORY=X  with X higher than the current value ' + HEAP8.length + ', (2) compile with  -s ALLOW_MEMORY_GROWTH=1  which allows increasing the size at runtime, or (3) if you want malloc to return NULL (0) instead of this abort, compile with  -s ABORTING_MALLOC=0 ');
+    }function _emscripten_resize_heap(requestedSize) {
+      abortOnCannotGrowMemory(requestedSize);
+    }
+
+  function _exit(status) {
+      // void _exit(int status);
+      // http://pubs.opengroup.org/onlinepubs/000095399/functions/exit.html
+      exit(status);
+    }
+
   
   
   var PATH={splitPath:function(filename) {
@@ -1963,59 +1987,8 @@ var ASM_CONSTS = {
         if (low >= 0) assert(high === 0);
         else assert(high === -1);
         return low;
-      }};function ___sys_fcntl64(fd, cmd, varargs) {SYSCALLS.varargs = varargs;
-  
-      return 0;
-    }
-
-  function ___sys_ioctl(fd, op, varargs) {SYSCALLS.varargs = varargs;
-  
-      return 0;
-    }
-
-  function ___sys_open(path, flags, varargs) {SYSCALLS.varargs = varargs;
-  
-  abort('it should not be possible to operate on streams when !SYSCALLS_REQUIRE_FILESYSTEM')}
-
-  function _clock() {
-      if (_clock.start === undefined) _clock.start = Date.now();
-      return ((Date.now() - _clock.start) * (1000000 / 1000))|0;
-    }
-
-  function _emscripten_get_sbrk_ptr() {
-      return 28576;
-    }
-
-  function _emscripten_memcpy_big(dest, src, num) {
-      HEAPU8.copyWithin(dest, src, src + num);
-    }
-
-  
-  function _emscripten_get_heap_size() {
-      return HEAPU8.length;
-    }
-  
-  function abortOnCannotGrowMemory(requestedSize) {
-      abort('Cannot enlarge memory arrays to size ' + requestedSize + ' bytes (OOM). Either (1) compile with  -s INITIAL_MEMORY=X  with X higher than the current value ' + HEAP8.length + ', (2) compile with  -s ALLOW_MEMORY_GROWTH=1  which allows increasing the size at runtime, or (3) if you want malloc to return NULL (0) instead of this abort, compile with  -s ABORTING_MALLOC=0 ');
-    }function _emscripten_resize_heap(requestedSize) {
-      abortOnCannotGrowMemory(requestedSize);
-    }
-
-  function _exit(status) {
-      // void _exit(int status);
-      // http://pubs.opengroup.org/onlinepubs/000095399/functions/exit.html
-      exit(status);
-    }
-
-  function _fd_close(fd) {
+      }};function _fd_close(fd) {
       abort('it should not be possible to operate on streams when !SYSCALLS_REQUIRE_FILESYSTEM');
-      return 0;
-    }
-
-  function _fd_read(fd, iov, iovcnt, pnum) {
-      var stream = SYSCALLS.getStreamFromFD(fd);
-      var num = SYSCALLS.doReadv(stream, iov, iovcnt);
-      HEAP32[((pnum)>>2)]=num
       return 0;
     }
 
@@ -2097,7 +2070,7 @@ function intArrayToString(array) {
 // ASM_LIBRARY EXTERN PRIMITIVES: Math_floor,Math_ceil
 
 var asmGlobalArg = {};
-var asmLibraryArg = { "__handle_stack_overflow": ___handle_stack_overflow, "__sys_fcntl64": ___sys_fcntl64, "__sys_ioctl": ___sys_ioctl, "__sys_open": ___sys_open, "clock": _clock, "emscripten_get_sbrk_ptr": _emscripten_get_sbrk_ptr, "emscripten_memcpy_big": _emscripten_memcpy_big, "emscripten_resize_heap": _emscripten_resize_heap, "exit": _exit, "fd_close": _fd_close, "fd_read": _fd_read, "fd_seek": _fd_seek, "fd_write": _fd_write, "memory": wasmMemory, "round": _round, "setTempRet0": _setTempRet0, "table": wasmTable, "time": _time };
+var asmLibraryArg = { "__handle_stack_overflow": ___handle_stack_overflow, "clock": _clock, "emscripten_get_sbrk_ptr": _emscripten_get_sbrk_ptr, "emscripten_memcpy_big": _emscripten_memcpy_big, "emscripten_resize_heap": _emscripten_resize_heap, "exit": _exit, "fd_close": _fd_close, "fd_seek": _fd_seek, "fd_write": _fd_write, "memory": wasmMemory, "round": _round, "setTempRet0": _setTempRet0, "table": wasmTable, "time": _time };
 var asm = createWasm();
 Module["asm"] = asm;
 /** @type {function(...*):?} */
@@ -2213,17 +2186,17 @@ var dynCall_vi = Module["dynCall_vi"] = function() {
 };
 
 /** @type {function(...*):?} */
-var dynCall_jiji = Module["dynCall_jiji"] = function() {
-  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
-  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return Module["asm"]["dynCall_jiji"].apply(null, arguments)
-};
-
-/** @type {function(...*):?} */
 var dynCall_ii = Module["dynCall_ii"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["dynCall_ii"].apply(null, arguments)
+};
+
+/** @type {function(...*):?} */
+var dynCall_jiji = Module["dynCall_jiji"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["dynCall_jiji"].apply(null, arguments)
 };
 
 /** @type {function(...*):?} */
