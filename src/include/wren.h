@@ -296,6 +296,11 @@ typedef enum
   WREN_TYPE_UNKNOWN
 } WrenType;
 
+// Get the current wren version number.
+//
+// Can be used to range checks over versions.
+WREN_API int wrenGetVersionNumber();
+
 // Initializes [configuration] with all of its default values.
 //
 // Call this before setting the particular fields you care about.

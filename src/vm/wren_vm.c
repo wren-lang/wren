@@ -36,6 +36,11 @@ static void* defaultReallocate(void* ptr, size_t newSize, void* _)
   return realloc(ptr, newSize);
 }
 
+int wrenGetVersionNumber() 
+{ 
+  return WREN_VERSION_NUMBER;
+}
+
 void wrenInitConfiguration(WrenConfiguration* config)
 {
   config->reallocateFn = defaultReallocate;
