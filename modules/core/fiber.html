@@ -236,8 +236,8 @@ System.print("Caught error: " + error)
 <p>If the called fiber raises an error, it can no longer be used.</p>
 <h3><strong>transfer</strong>() <a href="#transfer()" name="transfer()" class="header-anchor">#</a></h3>
 <p>Pauses execution of the current running fiber, and transfers control to this fiber.</p>
-<p>[Read more][../../concurrency.html#transferring-control] about the difference 
-between <code>call</code> and <code>transfer</code>. Unlike <code>call</code>, <code>transfer</code> doesn&rsquo;t track the origin of the transfer.</p>
+<p><a href="../../concurrency.html#transferring-control">Read more</a> about the difference between <code>call</code> and <code>transfer</code>. 
+Unlike <code>call</code>, <code>transfer</code> doesn&rsquo;t track the origin of the transfer.</p>
 <pre class="snippet">
 // keep hold of the fiber we start in
 var main = Fiber.current
