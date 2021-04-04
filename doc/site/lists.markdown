@@ -113,19 +113,31 @@ System.print(combined)  //> [a, b, c, d, e, f]
 ## Removing elements
 
 The opposite of `insert` is `removeAt`. It removes a single element from a
-given position in the list. All following items are shifted up to fill in the
-gap:
+given position in the list. 
+
+To remove a specific _value_ instead, use `remove`. The first value that 
+matches using regular equality will be removed.
+
+In both cases, all following items are shifted up to fill in the gap.
 
 <pre class="snippet">
 var letters = ["a", "b", "c", "d"]
 letters.removeAt(1)
 System.print(letters) //> [a, c, d]
+letters.remove("a")
+System.print(letters) //> [c, d]
 </pre>
 
-The `removeAt` method returns the removed item:
+Both the `remove` and `removeAt` method return the removed item:
 
 <pre class="snippet">
 System.print(letters.removeAt(1)) //> c
+</pre>
+
+If `remove` couldn't find the value in the list, it returns null:
+
+<pre class="snippet">
+System.print(letters.remove("not found")) //> null
 </pre>
 
 If you want to remove everything from the list, you can clear it:

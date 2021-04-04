@@ -96,6 +96,26 @@ list.
 
 [iterator protocol]: ../../control-flow.html#the-iterator-protocol
 
+### **remove**(value)
+
+Removes the first value found in the list that matches the given `value`, 
+using regular equality to compare them. All trailing elements
+are shifted up to fill in where the removed element was.
+
+<pre class="snippet">
+var list = ["a", "b", "c", "d"]
+list.remove("b")
+System.print(list) //> [a, c, d]
+</pre>
+
+Returns the removed value, if found.
+If the value is not found in the list, returns null.
+
+<pre class="snippet">
+System.print(["a", "b", "c"].remove("b")) //> b
+System.print(["a", "b", "c"].remove("not found")) //> null
+</pre>
+
 ### **removeAt**(index)
 
 Removes the element at `index`. If `index` is negative, it counts backwards
