@@ -146,6 +146,23 @@ System.print(["a", "c"].insert(1, "b")) //> b
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
 <p>Implements the <a href="../../control-flow.html#the-iterator-protocol">iterator protocol</a> for iterating over the elements in the
 list.</p>
+<h3><strong>remove</strong>(value) <a href="#remove(value)" name="remove(value)" class="header-anchor">#</a></h3>
+<p>Removes the first value found in the list that matches the given <code>value</code>, 
+using regular equality to compare them. All trailing elements
+are shifted up to fill in where the removed element was.</p>
+<pre class="snippet">
+var list = ["a", "b", "c", "d"]
+list.remove("b")
+System.print(list) //> [a, c, d]
+</pre>
+
+<p>Returns the removed value, if found.
+If the value is not found in the list, returns null.</p>
+<pre class="snippet">
+System.print(["a", "b", "c"].remove("b")) //> b
+System.print(["a", "b", "c"].remove("not found")) //> null
+</pre>
+
 <h3><strong>removeAt</strong>(index) <a href="#removeat(index)" name="removeat(index)" class="header-anchor">#</a></h3>
 <p>Removes the element at <code>index</code>. If <code>index</code> is negative, it counts backwards
 from the end of the list where <code>-1</code> is the last element. All trailing elements
