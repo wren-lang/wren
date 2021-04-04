@@ -194,35 +194,71 @@ If the called fiber raises an error, it can no longer be used.
 
 ### **transfer**()
 
-Pauses execution of the current running fiber, and transfers control to another fiber.
-Equivalent to:
+Pauses execution of the current running fiber, and transfers control to this fiber.
+
+[Read more][../../concurrency.html#transferring-control] about the difference 
+between `call` and `transfer`. Unlike `call`, `transfer` doesn't track the origin of the transfer.
 
 <pre class="snippet">
-fiber.transfer(null)
+// keep hold of the fiber we start in
+var main = Fiber.current
+
+// create a new fiber, note it doesn't execute yet!
+var fiber = Fiber.new {
+  System.print("inside 'fiber'") //> #2: from #1
+  main.transfer()                //> #3: go back to 'main'
+}
+
+fiber.transfer()      //> #1: print "inside 'fiber'" via #2
+                      //> this fiber is now paused by #1
+
+System.print("main")  //> #4: prints "main", unpaused by #3
 </pre>
 
 ### **transfer**(value)
 
-Pauses execution of the current running fiber, and transfers control to another fiber.
+Pauses execution of the current running fiber, and transfers control to this fiber.
 
-If a fiber A transfers control to another fiber B, and fiber B was paused because of a
-call to `transfer`, then fiber B will continue to execute, and the result of the transfer
-call in fiber B will be the `value` passed by fiber A.
+Similar to `transfer`, but a value can be passed between the fibers.
 
 <pre class="snippet">
+// keep hold of the fiber we start in
 var main = Fiber.current
 
-var fiber = Fiber.new {
-    System.print("Fiber")
-    System.print(main.transfer())
+// create a new fiber, note it doesn't execute yet
+// also note that we're accepting a 'value' parameter
+var fiber = Fiber.new {|value|
+  System.print("in 'fiber' = %(value)")   //> #2: in 'fiber' = 5
+  var result = main.transfer("hello?")    //> #3: send to 'message'
+  System.print("end 'fiber' = %(result)") //> #6: end 'fiber' = 32
 }
 
-fiber.transfer()                    //> Fiber
-System.print("Main")                //> Main
-fiber.transfer("Transferred value") //> Transferred value
-System.print("Not called")          // This code is never reached
+var message = fiber.transfer(5)   //> #1: send to 'value'
+System.print("... %(message)")    //> #4: ... hello?
+fiber.transfer(32)                //> #5: send to 'result'
 </pre>
 
 ### **transferError**(error)
 
-**TODO**
+Transfer to this fiber, but set this fiber into an error state. 
+The `fiber.error` value will be populated with the value in `error`.
+
+<pre class="snippet">
+var A = Fiber.new {
+  System.print("transferred to A")     //> #4
+  B.transferError("error!")            //> #5
+}
+
+var B = Fiber.new {
+  System.print("started B")            //> #2 
+  A.transfer()                         //> #3
+  System.print("should not get here")
+}
+
+B.try()                   //> #1
+System.print(B.error)     //> #6: prints "error!" from #5
+
+// B fiber can no longer be used
+
+B.call()                  //> #7: Cannot call an aborted fiber.
+</pre>
