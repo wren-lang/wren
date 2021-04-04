@@ -132,7 +132,7 @@ from any other string, it's just parsed in a different way.
 </pre>
 
 When a raw string spans multiple lines, the newline immediately 
-after the triple quote will be ignored, and any whitespace after 
+after the triple quote will be ignored, and any spaces or tabs after 
 the last newline (before the closing triple quote) will be ignored too.
 
 <pre class="snippet">
@@ -141,9 +141,12 @@ the last newline (before the closing triple quote) will be ignored too.
   """
 </pre>
 
-The value in the string above is `    Hello world`, it contains no newlines.
-The newline after `"""` and the whitespace on the closing line are ignored.
-Note that the whitespace on the line is preserved.
+The value in the string above has no newlines, but the spaces in front
+are preserved. The newline after `"""` and the whitespace on the closing line are ignored.
+
+<pre class="snippet">
+    Hello world
+</pre>
 
 A raw string will be parsed exactly as is in the file, unmodified.
 This means it can contain quotes, invalid syntax, other data formats 
