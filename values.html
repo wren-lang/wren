@@ -146,6 +146,14 @@ though.)</p>
 "hi there"
 </pre>
 
+<p>They can also span multiple lines:</p>
+<pre class="snippet">
+"hi
+there,
+again"
+</pre>
+
+<h3>Escaping <a href="#escaping" name="escaping" class="header-anchor">#</a></h3>
 <p>A handful of escape characters are supported:</p>
 <pre class="snippet">
 "\0" // The NUL byte: 0.
@@ -194,6 +202,52 @@ System.print("wow %((1..3).map {|n| n * n}.join())") //> wow 149
 
 <p>An interpolated expression can even contain a string literal which in turn has
 its own nested interpolations, but doing that gets unreadable pretty quickly.</p>
+<h3>Raw strings <a href="#raw-strings" name="raw-strings" class="header-anchor">#</a></h3>
+<p>A string literal can also be created using triple quotes <code>"""</code> which is
+parsed as a raw string. A raw string is no different
+from any other string, it&rsquo;s just parsed in a different way.</p>
+<p><strong>Raw strings do not process escapes and do not apply any interpolation</strong>.</p>
+<pre class="snippet">
+"""hi there"""
+</pre>
+
+<p>When a raw string spans multiple lines, the newline immediately 
+after the triple quote will be ignored, and any whitespace after 
+the last newline (before the closing triple quote) will be ignored too.</p>
+<pre class="snippet">
+  """
+    Hello world
+  """
+</pre>
+
+<p>The value in the string above is <code>Hello world</code>, it contains no newlines.
+The newline after <code>"""</code> and the whitespace on the closing line are ignored.
+Note that the whitespace on the line is preserved.</p>
+<p>A raw string will be parsed exactly as is in the file, unmodified.
+This means it can contain quotes, invalid syntax, other data formats 
+and so on without being modified by Wren.</p>
+<pre class="snippet">
+"""
+  {
+    "hello": "wren",
+    "from" : "json"
+  }
+"""
+</pre>
+
+<p>One more example, embedding wren code inside a string safely.</p>
+<pre class="snippet">
+"""
+A markdown string with embedded wren code example.
+
+    class Example {
+      construct code() {
+        //
+      }
+    }
+"""
+</pre>
+
 <h2>Ranges <a href="#ranges" name="ranges" class="header-anchor">#</a></h2>
 <p>A range is a little object that represents a consecutive range of numbers. They
 don&rsquo;t have their own dedicated literal syntax. Instead, the number class
