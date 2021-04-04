@@ -196,8 +196,10 @@ If the called fiber raises an error, it can no longer be used.
 
 Pauses execution of the current running fiber, and transfers control to this fiber.
 
-[Read more][../../concurrency.html#transferring-control] about the difference 
-between `call` and `transfer`. Unlike `call`, `transfer` doesn't track the origin of the transfer.
+[Read more][transfers] about the difference between `call` and `transfer`. 
+Unlike `call`, `transfer` doesn't track the origin of the transfer.
+
+[transfers]: ../../concurrency.html#transferring-control
 
 <pre class="snippet">
 // keep hold of the fiber we start in
