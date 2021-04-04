@@ -314,6 +314,24 @@ WREN_API void wrenFreeVM(WrenVM* vm);
 // Immediately run the garbage collector to free unused memory.
 WREN_API void wrenCollectGarbage(WrenVM* vm);
 
+// A generic allocation function that handles all explicit memory management.
+// It's used like so:
+//
+// - To allocate new memory, [memory] is NULL and [oldSize] is zero. It should
+//   return the allocated memory or NULL on failure.
+//
+// - To attempt to grow an existing allocation, [memory] is the memory,
+//   [oldSize] is its previous size, and [newSize] is the desired size.
+//   It should return [memory] if it was able to grow it in place, or a new
+//   pointer if it had to move it.
+//
+// - To shrink memory, [memory], [oldSize], and [newSize] are the same as above
+//   but it will always return [memory].
+//
+// - To free memory, [memory] will be the memory to free and [newSize] and
+//   [oldSize] will be zero. It should return NULL.
+WREN_API void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
+
 // Runs [source], a string of Wren source code in a new fiber in [vm] in the
 // context of resolved [module].
 WREN_API WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
