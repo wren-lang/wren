@@ -1,6 +1,6 @@
 # Copied from projects/make and modified for emscripten
 
-DEFINES += -D WREN_OPT_RANDOM -D WREN_OPT_META
+DEFINES += -DWREN_OPT_RANDOM -DWREN_OPT_META -DWREN_TRY
 LDFLAGS += -s WASM=1 -s FILESYSTEM=0 -s EXIT_RUNTIME=0 -s ENVIRONMENT='web'
 LDFLAGS += -s EXPORTED_FUNCTIONS='["_main", "_wren_compile"]'
 LDFLAGS += -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]'

@@ -374,6 +374,12 @@
 
   WrenLoadModuleResult readModule(WrenVM* vm, const char* module) 
   {
+    //source may or may not be null
+    WrenLoadModuleResult result = {0};
+
+    #ifdef WREN_TRY
+      return result;
+    #endif
 
     Path* filePath = pathNew(module);
 
@@ -383,8 +389,6 @@
     char* source = readFile(filePath->chars);
     pathFree(filePath);
 
-    //source may or may not be null
-    WrenLoadModuleResult result;
       result.source = source;
       result.onComplete = readModuleComplete;
     return result;

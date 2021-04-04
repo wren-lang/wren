@@ -1,6 +1,6 @@
 # Copied from projects/make and modified for emscripten
 
-DEFINES += -D WREN_OPT_RANDOM -D WREN_OPT_META
+DEFINES += -DWREN_OPT_RANDOM -DWREN_OPT_META
 LDFLAGS += " -s WASM=1 -s FILESYSTEM=0"
 
 ifndef config
