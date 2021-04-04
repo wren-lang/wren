@@ -20,7 +20,7 @@
                              WREN_VERSION_PATCH)
 
 #ifndef WREN_API
-  #if defined(_MSC_VER) || defined(WREN_API_DLLEXPORT)
+  #if defined(_MSC_VER) && defined(WREN_API_DLLEXPORT)
     #define WREN_API __declspec( dllexport )
   #else
     #define WREN_API
