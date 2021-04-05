@@ -131,9 +131,10 @@ from any other string, it's just parsed in a different way.
 """hi there"""
 </pre>
 
-When a raw string spans multiple lines, the newline immediately 
-after the triple quote will be ignored, and any spaces or tabs after 
-the last newline (before the closing triple quote) will be ignored too.
+When a raw string spans multiple lines and a triple quote is on it's own line,
+any whitespace on that line will be ignored. This means the opening and closing
+lines are not counted as part of the string when the triple quotes are separate lines,
+as long as they only contain whitespace (spaces + tabs).
 
 <pre class="snippet">
   """
@@ -141,8 +142,8 @@ the last newline (before the closing triple quote) will be ignored too.
   """
 </pre>
 
-The value in the string above has no newlines, but the spaces in front
-are preserved. The newline after `"""` and the whitespace on the closing line are ignored.
+The resulting value in the string above has no newlines or trailing whitespace. 
+Note the spaces in front of the Hello are preserved. 
 
 <pre class="snippet">
     Hello world

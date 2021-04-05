@@ -859,12 +859,11 @@ static void readRawString(Parser* parser)
   nextChar(parser);
   nextChar(parser);
 
-  //if there's a newline immediately after, 
-  //discard it so it's not part of the literal
-  if(peekChar(parser) == '\n') nextChar(parser);
-  
+  int skipStart = 0;
+  int firstNewline = -1;
+
+  int skipEnd = -1;
   int lastNewline = -1;
-  int whitespace = -1;
 
   for (;;)
   {
@@ -874,12 +873,24 @@ static void readRawString(Parser* parser)
 
     if(c == '\n') {
       lastNewline = string.count;
-      whitespace = lastNewline;
+      skipEnd = lastNewline;
+      firstNewline = firstNewline == -1 ? string.count : firstNewline;
     }
 
     if(c == '"' && c1 == '"' && c2 == '"') break;
     
-    if(c != '\n' && c != ' ' && c != '\t') whitespace = -1;
+    bool isWhitespace = c == ' ' || c == '\t';
+    skipEnd = c == '\n' || isWhitespace ? skipEnd : -1;
+
+    // If we haven't seen a newline or other character yet, 
+    // and still seeing whitespace, count the characters 
+    // as skippable till we know otherwise
+    bool skippable = skipStart != -1 && isWhitespace && firstNewline == -1;
+    skipStart = skippable ? string.count + 1 : skipStart;
+    
+    // We've counted leading whitespace till we hit something else, 
+    // but it's not a newline, so we reset skipStart since we need these characters
+    if (firstNewline == -1 && !isWhitespace && c != '\n') skipStart = -1;
 
     if (c == '\0' || c1 == '\0' || c2 == '\0')
     {
@@ -898,11 +909,16 @@ static void readRawString(Parser* parser)
   nextChar(parser);
   nextChar(parser);
 
+  int offset = 0;
   int count = string.count;
-  if(lastNewline != -1 && whitespace == lastNewline) count = lastNewline;
 
-  parser->next.value = wrenNewStringLength(parser->vm,
-                                              (char*)string.data, count);
+  if(firstNewline != -1 && skipStart == firstNewline) offset = firstNewline + 1;
+  if(lastNewline != -1 && skipEnd == lastNewline) count = lastNewline;
+
+  count -= (offset > count) ? count : offset;
+
+  parser->next.value = wrenNewStringLength(parser->vm, 
+                         ((char*)string.data) + offset, count);
   
   wrenByteBufferClear(parser->vm, &string);
   makeToken(parser, type);

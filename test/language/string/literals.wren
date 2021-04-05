@@ -6,6 +6,8 @@ System.print("A~¶Þॐஃ") // expect: A~¶Þॐஃ
 
 // Raw strings.
 System.print("""A raw string""") // expect: A raw string
+System.print("""   A raw string""") // expect:    A raw string
+System.print("""A raw string   """) // expect: A raw string   
 
 var long = "
   A
@@ -28,3 +30,30 @@ System.print(raw) // expect:   A if*(<invalid>)*
                   // expect:   multi line /{}()
                   // expect:   raw string [\]/
                   // expect:   "json": "value"
+
+// Raw strings ignore whitespace on the line with the """
+
+var noNewlines = """
+no newlines
+"""
+System.print(noNewlines) // expect: no newlines
+
+// Spaces after the """ but before the \n
+var noLeadingSpaces = """    
+no leading spaces
+"""
+System.print(noLeadingSpaces) // expect: no leading spaces
+
+// Spaces before the end """ after the \n
+var noTrailingSpaces = """    
+no trailing spaces
+       """
+System.print(noTrailingSpaces) // expect: no trailing spaces
+
+var newlineBefore = """    
+newline before"""
+System.print(newlineBefore) // expect: newline before
+
+var newlineAfter = """newline after
+"""
+System.print(newlineAfter) // expect: newline after
