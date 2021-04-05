@@ -746,16 +746,12 @@ DEF_PRIMITIVE(num_atan2)
 
 DEF_PRIMITIVE(num_min)
 {
-  double value = AS_NUM(args[0]);
-  double other = AS_NUM(args[1]);
-  RETURN_NUM(value <= other ? value : other);
+  RETURN_NUM(fmin(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_max)
 {
-  double value = AS_NUM(args[0]);
-  double other = AS_NUM(args[1]);
-  RETURN_NUM(value > other ? value : other);
+  RETURN_NUM(fmax(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_clamp)
