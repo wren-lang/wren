@@ -3325,6 +3325,7 @@ static Value consumeLiteral(Compiler* compiler, const char* message)
 
 static bool matchAttribute(Compiler* compiler) {
   if(match(compiler, TOKEN_HASH)) {
+    bool runtimeAccess = match(compiler, TOKEN_BANG);
     if(match(compiler, TOKEN_NAME)) {
       Value group = compiler->parser->previous.value;
       TokenType ahead = peek(compiler);
@@ -3334,7 +3335,7 @@ static bool matchAttribute(Compiler* compiler) {
         if(match(compiler, TOKEN_EQ)) {
           value = consumeLiteral(compiler, "Expect a Bool, Num, String or Identifier literal for a meta attribute value.");
         }
-        addToAttributeGroup(compiler, NULL_VAL, key, value);
+        if(runtimeAccess) addToAttributeGroup(compiler, NULL_VAL, key, value);
       } else if(match(compiler, TOKEN_LEFT_PAREN)) {
         ignoreNewlines(compiler);
         if(match(compiler, TOKEN_RIGHT_PAREN)) {
@@ -3347,7 +3348,7 @@ static bool matchAttribute(Compiler* compiler) {
             if(match(compiler, TOKEN_EQ)) {
               value = consumeLiteral(compiler, "Expect a Bool, Num, String or Identifier literal for a meta attribute value.");
             }
-            addToAttributeGroup(compiler, group, key, value);
+            if(runtimeAccess) addToAttributeGroup(compiler, group, key, value);
             ignoreNewlines(compiler);
             if(!match(compiler, TOKEN_COMMA)) break;
             ignoreNewlines(compiler);

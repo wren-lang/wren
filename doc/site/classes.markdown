@@ -636,7 +636,7 @@ class Example {}
 </pre>
 
 These attributes are metadata, they give you a way to annotate and store
-any additional information about a class, which you can then access at runtime.
+any additional information about a class, which you can optionally access at runtime.
 This information can also be used by external tools, to provide additional
 hints and information from code to the tool.
 
@@ -644,13 +644,15 @@ hints and information from code to the tool.
 Since this feature has just been introduced, **take note**.
 
 **Currently** there are no attributes with a built-in meaning. 
-Attributes are user-defined metadata. Note that this may not remain 
+Attributes are user-defined metadata. This may not remain 
 true as some may become well defined through convention or potentially
 through use by Wren itself. 
 </small>
 
 Attributes are placed before a class or method definition,
-and use the `#` hash/pound symbol. They can be 
+and use the `#` hash/pound symbol. 
+
+They can be 
 
 - a `#key` on it's own
 - a `#key = value`
@@ -683,9 +685,20 @@ class Example {
 
 ### Accessing attributes at runtime
 
-Attributes are stored on the class. You can access them via 
+By default, attributes are compiled out and ignored.
+
+For an attribute to be visible at runtime, mark it for runtime
+access using an exclamation:
+
+<pre class="snippet">
+#doc = "not runtime data"
+#!runtimeAccess = true
+#!maxIterations = 16
+</pre>
+
+Attributes at runtime are stored on the class. You can access them via 
 `YourClass.attributes`. The `attributes` field on a class will 
-be null if a class has no attributes.
+be null if a class has no attributes or if it's attributes aren't marked.
 
 If the class contains class or method attributes, it will be an object with
 two getters:
@@ -712,22 +725,23 @@ Let's see what that looks like:
 //   group: { "key":[value, 32, false] }
 // }
 
-#key
-#group(key=value, key=32, key=false)
+#!key
+#ignored //compiled out
+#!group(key=value, key=32, key=false)
 class Example {
-  #getter
+  #!getter
   getter {}
 
   // { regular(_,_): { regular:[null] } }
-  #regular
+  #!regular
   regular(arg0, arg1) {}
 
   // { static other(): { isStatic:[true] } }
-  #isStatic = true
+  #!isStatic = true
   static other()
   
   // { foreign static example(): { isForeignStatic:[32] } }
-  #isForeignStatic=32
+  #!isForeignStatic=32
   foreign static example()
 }
 </pre>

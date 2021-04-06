@@ -4,11 +4,20 @@
 class Without {}
 System.print(Without.attributes == null)    // expect: true
 
+// Attributes without a ! shouldn't be 
+// passed to the runtime, they're compiled out
+
+#compileonly
+class WithNonRuntime {
+  #unused
+  method() {}
+}
+System.print(WithNonRuntime.attributes == null)    // expect: true
 
 // Test the basic states. Keys without a group
 // go into a group with null as the key
 
-#key
+#!key
 class Attr {}
 
 System.print(Attr.attributes != null)         // expect: true
@@ -29,11 +38,11 @@ System.print(keyItems[0])                   // expect: null
 
 // Keys must be a name, and values can be any literal value
 
-#name = name
-#string = "string"
-#integer = 32
-#number = 2.5
-#bool = true
+#!name = name
+#!string = "string"
+#!integer = 32
+#!number = 2.5
+#!bool = true
 class Literals {}
 
 var literalGroup = Literals.attributes.self[null]
@@ -50,9 +59,9 @@ System.print(literalGroup["bool"][0])             // expect: true
 
 // Duplicate keys add multiple values to 
 // the attribute's key, in parse order 
-#key
-#key = value
-#key=other
+#!key
+#!key = value
+#!key=other
 class DuplicateKeys {}
 
 var dupeGroup = DuplicateKeys.attributes.self[null]
@@ -62,9 +71,9 @@ System.print(dupeGroup["key"])              // expect: [null, value, other]
 
 // Groups store attributes by named group
 
-#key //not combined
-#group(key=combined)
-#group(key=value, key=2, key=false)
+#!key //not combined
+#!group(key=combined)
+#!group(key=value, key=2, key=false)
 class GroupedKeys {}
 
 var ungroupedKeys = GroupedKeys.attributes.self[null]
@@ -80,16 +89,16 @@ System.print(groupedKey)                        // expect: [combined, value, 2, 
 
 class Methods {
 
-  #getter
+  #!getter
   method {}
 
   method() {}
 
-  #regular = 2
-  #group(key, other=value, string="hello")
+  #!regular = 2
+  #!group(key, other=value, string="hello")
   method(arg0, arg1) {}
 
-  #is_static = true
+  #!is_static = true
   static method() {}
 
 }
