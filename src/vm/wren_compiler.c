@@ -294,10 +294,10 @@ typedef struct
   // The name of the class.
   ObjString* name;
   
-  // Meta attributes for the class itself
-  ObjMap* attributes_self;
-  // Meta attributes for methods in this class
-  ObjMap* attributes_methods;
+  // Attributes for the class itself
+  ObjMap* classAttributes;
+  // Attributes for methods in this class
+  ObjMap* methodAttributes;
 
   // Symbol table for the fields of the class.
   SymbolTable fields;
@@ -3333,20 +3333,20 @@ static bool matchAttribute(Compiler* compiler) {
         Value key = group;
         Value value = NULL_VAL;
         if(match(compiler, TOKEN_EQ)) {
-          value = consumeLiteral(compiler, "Expect a Bool, Num, String or Identifier literal for a meta attribute value.");
+          value = consumeLiteral(compiler, "Expect a Bool, Num, String or Identifier literal for an attribute value.");
         }
         if(runtimeAccess) addToAttributeGroup(compiler, NULL_VAL, key, value);
       } else if(match(compiler, TOKEN_LEFT_PAREN)) {
         ignoreNewlines(compiler);
         if(match(compiler, TOKEN_RIGHT_PAREN)) {
-          error(compiler, "Expected meta attributes in group, group cannot be empty.");
+          error(compiler, "Expected attributes in group, group cannot be empty.");
         } else {
           while(peek(compiler) != TOKEN_RIGHT_PAREN) {
-            consume(compiler, TOKEN_NAME, "Expect name for meta attribute key.");
+            consume(compiler, TOKEN_NAME, "Expect name for attribute key.");
             Value key = compiler->parser->previous.value;
             Value value = NULL_VAL;
             if(match(compiler, TOKEN_EQ)) {
-              value = consumeLiteral(compiler, "Expect a Bool, Num, String or Identifier literal for a meta attribute value.");
+              value = consumeLiteral(compiler, "Expect a Bool, Num, String or Identifier literal for an attribute value.");
             }
             if(runtimeAccess) addToAttributeGroup(compiler, group, key, value);
             ignoreNewlines(compiler);
@@ -3355,15 +3355,15 @@ static bool matchAttribute(Compiler* compiler) {
           }
 
           ignoreNewlines(compiler);
-          consume(compiler, TOKEN_RIGHT_PAREN, "Expected ')' after grouped meta attributes.");
+          consume(compiler, TOKEN_RIGHT_PAREN, "Expected ')' after grouped attributes.");
         }
       } else {
-        error(compiler, "Expect an equal, newline or grouping after a meta attribute key.");
+        error(compiler, "Expect an equal, newline or grouping after an attribute key.");
       }
     } else {
-      error(compiler, "Expect a meta attribute definition after #.");
+      error(compiler, "Expect an attribute definition after #.");
     }
-    consumeLine(compiler, "Expect newline after meta attribute.");
+    consumeLine(compiler, "Expect newline after attribute.");
     return true;
   }
   return false;
@@ -3512,12 +3512,12 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
   // Allocate attribute maps if necessary. 
   // A method will allocate the methods one if needed
-  classInfo.attributes_self = compiler->attributes->count > 0 
+  classInfo.classAttributes = compiler->attributes->count > 0 
         ? wrenNewMap(compiler->parser->vm) 
         : NULL;
-  classInfo.attributes_methods = NULL;
+  classInfo.methodAttributes = NULL;
   // Copy any existing attributes into the class
-  copyAttributes(compiler, classInfo.attributes_self);
+  copyAttributes(compiler, classInfo.classAttributes);
 
   // Set up a symbol table for the class's fields. We'll initially compile
   // them to slots starting at zero. When the method is bound to the class, the
@@ -3547,8 +3547,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // If any attributes are present, 
   // instantiate a ClassAttributes instance for the class
   // and send it over to CODE_END_CLASS
-  bool hasAttr = classInfo.attributes_self != NULL || 
-                 classInfo.attributes_methods != NULL;
+  bool hasAttr = classInfo.classAttributes != NULL || 
+                 classInfo.methodAttributes != NULL;
   if(hasAttr) {
     emitClassAttributes(compiler, &classInfo);
     loadVariable(compiler, classVariable);
@@ -3861,13 +3861,13 @@ void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
     {
       wrenBlackenSymbolTable(vm, &compiler->enclosingClass->fields);
 
-      if(compiler->enclosingClass->attributes_methods != NULL) 
+      if(compiler->enclosingClass->methodAttributes != NULL) 
       {
-        wrenGrayObj(vm, (Obj*)compiler->enclosingClass->attributes_methods);
+        wrenGrayObj(vm, (Obj*)compiler->enclosingClass->methodAttributes);
       }
-      if(compiler->enclosingClass->attributes_self != NULL) 
+      if(compiler->enclosingClass->classAttributes != NULL) 
       {
-        wrenGrayObj(vm, (Obj*)compiler->enclosingClass->attributes_self);
+        wrenGrayObj(vm, (Obj*)compiler->enclosingClass->classAttributes);
       }
     }
     
@@ -3983,12 +3983,12 @@ static void emitClassAttributes(Compiler* compiler, ClassInfo* classInfo)
 {
   loadCoreVariable(compiler, "ClassAttributes");
 
-  classInfo->attributes_self 
-    ? emitAttributes(compiler, classInfo->attributes_self) 
+  classInfo->classAttributes 
+    ? emitAttributes(compiler, classInfo->classAttributes) 
     : null(compiler, false);
 
-  classInfo->attributes_methods 
-    ? emitAttributeMethods(compiler, classInfo->attributes_methods) 
+  classInfo->methodAttributes 
+    ? emitAttributeMethods(compiler, classInfo->methodAttributes) 
     : null(compiler, false);
 
   callMethod(compiler, 2, "new(_,_)", 8);
@@ -4038,13 +4038,13 @@ static void copyMethodAttributes(Compiler* compiler, bool isForeign,
   fullSignatureWithPrefix[fullLength] = '\0';
 
 
-  if(compiler->enclosingClass->attributes_methods == NULL) {
-    compiler->enclosingClass->attributes_methods = wrenNewMap(vm);
+  if(compiler->enclosingClass->methodAttributes == NULL) {
+    compiler->enclosingClass->methodAttributes = wrenNewMap(vm);
   }
   
   // Store the method attributes in the class map
   Value key = wrenNewStringLength(vm, fullSignatureWithPrefix, fullLength);
-  wrenMapSet(vm, compiler->enclosingClass->attributes_methods, key, OBJ_VAL(methodAttr));
+  wrenMapSet(vm, compiler->enclosingClass->methodAttributes, key, OBJ_VAL(methodAttr));
 
   wrenPopRoot(vm);
 }
