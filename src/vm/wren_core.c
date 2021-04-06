@@ -50,6 +50,11 @@ DEF_PRIMITIVE(class_toString)
   RETURN_OBJ(AS_CLASS(args[0])->name);
 }
 
+DEF_PRIMITIVE(class_attributes)
+{
+  RETURN_VAL(AS_CLASS(args[0])->attributes);
+}
+
 DEF_PRIMITIVE(fiber_new)
 {
   if (!validateFn(vm, args[1], "Argument")) return false;
@@ -1238,6 +1243,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->classClass, "name", class_name);
   PRIMITIVE(vm->classClass, "supertype", class_supertype);
   PRIMITIVE(vm->classClass, "toString", class_toString);
+  PRIMITIVE(vm->classClass, "attributes", class_attributes);
 
   // Finally, we can define Object's metaclass which is a subclass of Class.
   ObjClass* objectMetaclass = defineClass(vm, coreModule, "Object metaclass");

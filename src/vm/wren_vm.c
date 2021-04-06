@@ -602,6 +602,27 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   }
 }
 
+// Completes the process for creating a new class.
+//
+// The class attributes instance and the class itself should be on the 
+// top of the fiber's stack. 
+//
+// This process handles moving the attribute data for a class from
+// compile time to runtime, since it now has all the attributes associated
+// with a class, including for methods.
+static void endClass(WrenVM* vm) 
+{
+  // Pull the attributes and class off the stack
+  Value attributes = vm->fiber->stackTop[-2];
+  Value classValue = vm->fiber->stackTop[-1];
+
+  // Remove the stack items
+  vm->fiber->stackTop -= 2;
+
+  ObjClass* classObj = AS_CLASS(classValue);
+    classObj->attributes = attributes;
+}
+
 // Creates a new class.
 //
 // If [numFields] is -1, the class is a foreign class. The name and superclass
@@ -1266,6 +1287,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           closure->upvalues[i] = frame->closure->upvalues[index];
         }
       }
+      DISPATCH();
+    }
+
+    CASE_CODE(END_CLASS):
+    {
+      endClass(vm);
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
     }
 

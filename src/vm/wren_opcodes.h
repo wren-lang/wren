@@ -169,6 +169,10 @@ OPCODE(FOREIGN_CONSTRUCT, 0)
 // the name of the class. Byte [arg] is the number of fields in the class.
 OPCODE(CLASS, -1)
 
+// Ends a class. 
+// Atm the stack contains the class and the ClassAttributes (or null).
+OPCODE(END_CLASS, -2)
+
 // Creates a foreign class. Top of stack is the superclass. Below that is a
 // string for the name of the class.
 OPCODE(FOREIGN_CLASS, -1)

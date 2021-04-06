@@ -296,6 +296,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     }
 
     case CODE_FOREIGN_CLASS: printf("FOREIGN_CLASS\n"); break;
+    case CODE_END_CLASS: printf("END_CLASS\n"); break;
 
     case CODE_METHOD_INSTANCE:
     {
