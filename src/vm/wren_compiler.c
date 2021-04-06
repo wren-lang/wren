@@ -972,6 +972,7 @@ static void readString(Parser* parser)
         case '0':  wrenByteBufferWrite(parser->vm, &string, '\0'); break;
         case 'a':  wrenByteBufferWrite(parser->vm, &string, '\a'); break;
         case 'b':  wrenByteBufferWrite(parser->vm, &string, '\b'); break;
+        case 'e':  wrenByteBufferWrite(parser->vm, &string, '\33'); break;
         case 'f':  wrenByteBufferWrite(parser->vm, &string, '\f'); break;
         case 'n':  wrenByteBufferWrite(parser->vm, &string, '\n'); break;
         case 'r':  wrenByteBufferWrite(parser->vm, &string, '\r'); break;
