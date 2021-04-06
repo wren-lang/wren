@@ -1078,13 +1078,13 @@ static void nextToken(Parser* parser)
       case '*': makeToken(parser, TOKEN_STAR); return;
       case '%': makeToken(parser, TOKEN_PERCENT); return;
       case '#': {
-        if (parser->currentLine == 1 && peekChar(parser) == '!')
+        // Ignore shebang on the first line.
+        if (parser->currentLine == 1 && peekChar(parser) == '!' && peekNextChar(parser) == '/')
         {
-          // Ignore shebang on the first line.
           skipLineComment(parser);
           break;
         }
-        // Otherwise it's a token
+        // Otherwise we treat it as a token a token
         makeToken(parser, TOKEN_HASH); 
         return;
       }
