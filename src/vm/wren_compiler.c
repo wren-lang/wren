@@ -2840,6 +2840,7 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_LOAD_FIELD:
     case CODE_STORE_FIELD:
     case CODE_CLASS:
+    case CODE_RETURN_MULTIPLE:
       return 1;
 
     case CODE_CONSTANT:
@@ -3163,6 +3164,7 @@ void statement(Compiler* compiler)
   else if (match(compiler, TOKEN_RETURN))
   {
     // Compile the return value.
+    int returnValues = 0;
     if (peek(compiler) == TOKEN_LINE)
     {
       // Implicitly return null if there is no value.
@@ -3170,10 +3172,22 @@ void statement(Compiler* compiler)
     }
     else
     {
-      expression(compiler);
+      // support multiple return values
+      do
+      {
+        expression(compiler);
+        returnValues++;
+      } while (match(compiler, TOKEN_COMMA));
     }
 
-    emitOp(compiler, CODE_RETURN);
+    if (returnValues <= 1)
+    {
+      emitOp(compiler, CODE_RETURN);
+    }
+    else
+    {
+      emitByteArg(compiler, CODE_RETURN_MULTIPLE, returnValues);
+    }
   }
   else if (match(compiler, TOKEN_WHILE))
   {
@@ -3523,26 +3537,52 @@ static void import(Compiler* compiler)
 // Compiles a "var" variable definition statement.
 static void variableDefinition(Compiler* compiler)
 {
-  // Grab its name, but don't declare it yet. A (local) variable shouldn't be
+  Token nameTokens[MAX_RETURN_VALUES];
+
+  // Grab all names, but don't declare them yet. A (local) variable shouldn't be
   // in scope in its own initializer.
-  consume(compiler, TOKEN_NAME, "Expect variable name.");
-  Token nameToken = compiler->parser->previous;
+  int numVars = 0;
+  do
+  {
+    if (numVars >= MAX_RETURN_VALUES) {
+      error(compiler, "Too many variable declarations, only %d supported.", MAX_RETURN_VALUES);
+      break;
+    }
+    consume(compiler, TOKEN_NAME, "Expect variable name.");
+    nameTokens[numVars] = compiler->parser->previous;
+    numVars++;
+  } while (match(compiler, TOKEN_COMMA));
 
   // Compile the initializer.
   if (match(compiler, TOKEN_EQ))
   {
     ignoreNewlines(compiler);
-    expression(compiler);
+    // support multiple assignments, these don't have to match nr of variables above
+    // because each expression can leave multiple values on the stack.
+    do
+    {
+      expression(compiler);
+    } while (match(compiler, TOKEN_COMMA));
   }
   else
   {
-    // Default initialize it to null.
-    null(compiler, false);
+    // Default initialize to null.
+    for (int i = 0; i < numVars; i++)
+    {
+      null(compiler, false);
+    }
   }
 
-  // Now put it in scope.
-  int symbol = declareVariable(compiler, &nameToken);
-  defineVariable(compiler, symbol);
+  // Now put all in scope.
+  // Local variables are stored on the stack.
+  // Module variables are pop:ed from the stack.
+  bool localScope = compiler->scopeDepth >= 0;
+  for (int i = 0; i < numVars; i++)
+  {
+    int index = localScope ? i : numVars - 1 - i;
+    int symbol = declareVariable(compiler, &nameTokens[index]);
+    defineVariable(compiler, symbol);
+  }
 }
 
 // Compiles a "definition". These are the statements that bind new variables.
