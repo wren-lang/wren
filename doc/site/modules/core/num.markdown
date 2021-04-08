@@ -17,7 +17,7 @@ The value of &infin;.
 
 One value representing a NaN.
 
-Provides a default sane NaN number suitable for the vm internal values.
+Provides a default NaN number suitable for the vm internal values.
 
 ### Num.**pi**
 
