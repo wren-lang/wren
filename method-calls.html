@@ -152,7 +152,8 @@ random.int(4)
 method, which has some kind of &ldquo;optional&rdquo; parameter. The body of the method
 figures out how many arguments were passed and uses control flow to handle the
 two different behaviors. That means first parameter represents &ldquo;max unless
-another parameter was passed, in which case it&rsquo;s min&rdquo;. Kind of gross.</p>
+another parameter was passed, in which case it&rsquo;s min&rdquo;. </p>
+<p>This type of &lsquo;variadic&rsquo; code isn&rsquo;t ideal, so Wren doesn&rsquo;t encourage it.</p>
 <p>In Wren, these are calls to two entirely separate methods, <code>int(_,_)</code> and
 <code>int(_)</code>. This makes it easier to define &ldquo;overloads&rdquo; like this since you don&rsquo;t
 need optional parameters or any kind of control flow to handle the different
@@ -242,7 +243,7 @@ it to tell if an object is an instance of a given class. You&rsquo;ll rarely nee
 but you can override <code>is</code> in your own classes. That can be useful for things
 like mocks or proxies where you want an object to masquerade as a certain class.</p>
 <h2>Subscripts <a href="#subscripts" name="subscripts" class="header-anchor">#</a></h2>
-<p>Another familiar syntax from math class is <em>subscripting</em> using square brackets
+<p>Another familiar syntax from math is <em>subscripting</em> using square brackets
 (<code>[]</code>). It&rsquo;s handy for working with collection-like objects. For example:</p>
 <pre class="snippet">
 list[0]    // Get the first item in a list.

@@ -165,7 +165,7 @@ if (ready) {
 <h2>Logical operators <a href="#logical-operators" name="logical-operators" class="header-anchor">#</a></h2>
 <p>Unlike most other <a href="method-calls.html#operators">operators</a> in Wren which are just a special syntax for
 <a href="method-calls.html">method calls</a>, the <code>&amp;&amp;</code> and <code>||</code> operators are special. This is because they
-only conditionally evaluate right operand&mdash;they short-circuit.</p>
+only conditionally evaluate the right operand&mdash;they short-circuit.</p>
 <p>A <code>&amp;&amp;</code> (&ldquo;logical and&rdquo;) expression evaluates the left-hand argument. If it&rsquo;s
 false, it returns that value. Otherwise it evaluates and returns the right-hand
 argument.</p>
@@ -185,7 +185,7 @@ System.print(1 || 2)      //> 1
 <h2>The conditional operator <code>?:</code> <a href="#the-conditional-operator-" name="the-conditional-operator-" class="header-anchor">#</a></h2>
 <p>Also known as the &ldquo;ternary&rdquo; operator since it takes three arguments, Wren has
 the little &ldquo;if statement in the form of an expression&rdquo; you know and love from C
-and its brethren.</p>
+and similar languages.</p>
 <pre class="snippet">
 System.print(1 != 2 ? "math is sane" : "math is not sane!")
 </pre>

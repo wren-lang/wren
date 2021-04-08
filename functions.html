@@ -110,113 +110,34 @@
   </nav>
   <main>
     <h2>Functions</h2>
-    <p>No self-respecting language today can get by without functions&mdash;first
-class little bundles of code. Since Wren is object-oriented, most of your code
-will live in methods on classes, but free-floating functions are still
-eminently handy.</p>
+    <p>Like many languages today, functions in Wren are little bundles of code 
+you can store in a variable, or pass as an argument to a method. </p>
+<p>Notice there&rsquo;s a difference between <em>function</em> and <em>method</em>.</p>
+<p>Since Wren is object-oriented, most of your code will live in methods on
+classes, but free-floating functions are still eminently handy. </p>
 <p>Functions are objects like everything else in Wren, instances of the <code>Fn</code>
 class.</p>
-<h2>Block arguments <a href="#block-arguments" name="block-arguments" class="header-anchor">#</a></h2>
-<p>Most of the time you create a function just to pass it to some method. For
-example, if you want to filter a <a href="lists.html">list</a> by some criteria, you&rsquo;ll
-call its <code>where</code> method, passing in a function that defines the predicate
-you&rsquo;re filtering on.</p>
-<p>Since that&rsquo;s the most common usage pattern, Wren&rsquo;s syntax optimizes for that.
-Taking a page from Ruby, a function is created by passing a <em>block argument</em> to
-a method. At its simplest, it looks like this:</p>
+<h2>Creating a function <a href="#creating-a-function" name="creating-a-function" class="header-anchor">#</a></h2>
+<p>To create a function, we call <code>Fn.new</code>, which takes a block to execute.
+To call the function, we use <code>.call()</code> on the function instance.</p>
 <pre class="snippet">
-blondie.callMe {
-  System.print("This is the body!")
-}
+var sayHello = Fn.new { System.print("hello") }
+
+sayHello.call() //> hello
 </pre>
 
-<p>Here we&rsquo;re invoking the <code>callMe</code> method on <code>blondie</code>. We&rsquo;re passing one
-argument, a function whose body is the
-following <a href="syntax.html#blocks">block</a>&mdash;everything between that pair of
-curly braces.</p>
-<p>Methods that take a block argument receive it as a normal parameter. <code>callMe</code>
-could be defined like so:</p>
-<pre class="snippet">
-class Blondie {
-  callMe(fn) {
-    // Call it...
-  }
-}
-
-var blondie = Blondie.new()
-</pre>
-
-<p>A method can take other arguments in addition to the block. They appear before
-the block just like a regular argument list. For example:</p>
-<pre class="snippet">
-blondie.callMeAt(867, 5309) {
-  System.print("This is the body!")
-}
-</pre>
-
-<p>Of course, you don&rsquo;t <em>have</em> to use a block argument to pass a function to a
-method. If you already have a function object, you can pass it like a regular
-argument:</p>
-<pre class="snippet">
-var someFn = // Get a function...
-blondie.callMe(someFn)
-</pre>
-
-<p>Block arguments are purely sugar for creating a function and passing it in one
-little blob of syntax. There are some times when you want to create a function
-but <em>don&rsquo;t</em> need to pass it to a method. For that, you can call the <code>Fn</code>
-class&rsquo;s constructor:</p>
-<pre class="snippet">
-var someFn = Fn.new {
-  System.print("Hi!")
-}
-</pre>
-
-<p>As you can see it takes a block argument too! All the constructor does is
-return that argument, so this exists purely as a convenience method for you.</p>
-<h2>Calling functions <a href="#calling-functions" name="calling-functions" class="header-anchor">#</a></h2>
-<p>Once you have a function, how do you invoke it? Like everything in Wren, you do
-so by calling a method on it:</p>
-<pre class="snippet">
-class Blondie {
-  callMe(fn) {
-    fn.call()
-  }
-}
-</pre>
-
-<p>Functions expose a <code>call()</code> method that executes the body of the function. This
-method is dynamically-dispatched like any other, so you can define your own
-&ldquo;function-like&rdquo; classes and pass them to methods that expect &ldquo;real&rdquo; functions.</p>
-<pre class="snippet">
-class FakeFn {
-  call() {
-    System.print("I'm feeling functional!")
-  }
-}
-
-blondie.callMe(FakeFn.new())
-</pre>
-
+<p>Note that we&rsquo;ll see a shorthand syntax for creating a function below.</p>
 <h2>Function parameters <a href="#function-parameters" name="function-parameters" class="header-anchor">#</a></h2>
 <p>Of course, functions aren&rsquo;t very useful if you can&rsquo;t pass values to them. The
-functions that we&rsquo;ve seen so far take no arguments. To change that, you can
-provide a parameter list surrounded by <code>|</code> immediately after the opening brace
-of the body, like so:</p>
+function above takes no arguments. To change that, you can provide a parameter
+list surrounded by <code>|</code> immediately after the opening brace of the body.</p>
+<p>To pass arguments to the function, pass them to the <code>call</code> method:</p>
 <pre class="snippet">
-blondie.callMe {|first, last|
-  System.print("Hi, " + first + " " + last + "!")
+var sayMessage {|recipient, message|
+  System.print("message for %(recipient): %(message)")
 }
-</pre>
 
-<p>Here we&rsquo;re passing a function to <code>callMe</code> that takes two parameters, <code>first</code> and
-<code>last</code>. They are passed to the function when it&rsquo;s called:</p>
-<pre class="snippet">
-class Blondie {
-  callMe(fn) {
-    fn.call("Debbie", "Harry")
-  }
-}
+sayMessage.call("Bob", "Good day!")
 </pre>
 
 <p>It&rsquo;s an error to call a function with fewer arguments than its parameter list
@@ -235,6 +156,13 @@ Fn.new { "return value" }
 Fn.new {
   return "return value"
 }
+</pre>
+
+<p>The return value is handed back to you when using <code>call</code>:</p>
+<pre class="snippet">
+var fn = Fn.new { "some value" }
+var result = fn.call()
+System.print(result) //> some value
 </pre>
 
 <h2>Closures <a href="#closures" name="closures" class="header-anchor">#</a></h2>
@@ -261,6 +189,130 @@ System.print(counter.call()) //> 2
 System.print(counter.call()) //> 3
 </pre>
 
+<h2>Callable classes <a href="#callable-classes" name="callable-classes" class="header-anchor">#</a></h2>
+<p>Because <code>Fn</code> is a class, and responds to <code>call()</code>, any class can respond to 
+<code>call()</code> and be used in place of a function. This is particularly handy when 
+the function is passed to a method to be called, like a callback or event.</p>
+<pre class="snippet">
+class Callable {
+  construct new() {}
+  call(name, version) {
+    System.print("called %(name) with version %(version)")
+  }
+}
+
+var fn = Callable.new()
+fn.call("wren", "0.4.0")
+</pre>
+
+<h2>Block arguments <a href="#block-arguments" name="block-arguments" class="header-anchor">#</a></h2>
+<p>Very frequently, functions are passed to methods to be called. There are 
+countless examples of this in Wren, like <a href="lists.html">list</a> can be filtered
+using a method <code>where</code> which accepts a function:</p>
+<pre class="snippet">
+var list = [1, 2, 3, 4, 5]
+var filtered = list.where(Fn.new {|value| value > 3 }) 
+System.print(filtered.toList) //> [4, 5]
+</pre>
+
+<p>This syntax is a bit less fun to read and write, so Wren implements the 
+<em>block argument</em> concept. When a function is being passed to a method, 
+and is the last argument to the method, it can use a shorter syntax: 
+<em>just the block part</em>.</p>
+<p>Let&rsquo;s use a block argument for <code>list.where</code>, it&rsquo;s the last (only) argument:</p>
+<pre class="snippet">
+var list = [1, 2, 3, 4, 5]
+var filtered = list.where {|value| value > 3 } 
+System.print(filtered.toList) //> [4, 5]
+</pre>
+
+<p>We&rsquo;ve seen this before in a previous page using <code>map</code> and <code>where</code>:</p>
+<pre class="snippet">
+numbers.map {|n| n * 2 }.where {|n| n < 100 }
+</pre>
+
+<h2>Block argument example <a href="#block-argument-example" name="block-argument-example" class="header-anchor">#</a></h2>
+<p>Let&rsquo;s look at a complete example, so we can see both ends.</p>
+<p>This may be a bit of a spoiler for <a href="classes.html">classes</a>, so feel free
+to read that page first and come back.</p>
+<p>Here&rsquo;s a fictional class for something that will call a function
+when a click event is sent to it. It allows us to pass just a 
+function and assume the left mouse button, or to pass a button and a function.</p>
+<pre class="snippet">
+class Clickable {
+  construct new() {
+    _fn = null
+    _button = 0
+  }
+
+  onClick(fn) {
+    _fn = fn
+  }
+
+  onClick(button, fn) {
+    _button = button
+    _fn = fn
+  }
+
+  fireEvent(button) {
+    if(_fn && button == _button) {
+      _fn.call(button)
+    }
+  }
+}
+</pre>
+
+<p>Now that we&rsquo;ve got the clickable class, let&rsquo;s use it.
+We&rsquo;ll start by using the method that accepts just a function
+because we&rsquo;re fine with it just being the default left mouse button.</p>
+<pre class="snippet">
+var link = Clickable.new()
+
+link.onClick {|button|
+  System.print("I was clicked by button %(button)")
+}
+
+// send a left mouse click
+// normally this would happen from elsewhere
+
+link.fireEvent(0)  //> I was clicked by button 0
+</pre>
+
+<p>Now let&rsquo;s try with the extra button argument:</p>
+<pre class="snippet">
+var contextMenu = Clickable.new()
+
+contextMenu.onClick(1) {|button|
+  System.print("I was right-clicked")
+}
+
+link.fireEvent(0)  //> (nothing happened)
+link.fireEvent(1)  //> I was right-clicked
+</pre>
+
+<p>Notice that we still pass the other arguments normally, 
+it&rsquo;s only the last argument that is special.</p>
+<p><strong>Just a regular function</strong>   </p>
+<p>Block arguments are purely syntax sugar for creating a function and passing it
+in one little blob of syntax. These two are equivalent:</p>
+<pre class="snippet">
+onClick(Fn.new { System.print("clicked") })
+onClick { System.print("clicked") }
+</pre>
+
+<p>And this is just as valid:</p>
+<pre class="snippet">
+var onEvent = Fn.new {|button|
+  System.print("clicked by button %(button)")
+}
+
+onClick(onEvent)
+onClick(1, onEvent)
+</pre>
+
+<p><strong>Fn.new</strong> <br />
+As you may have noticed by now, <code>Fn</code> accepts a block argument for the <code>Fn.new</code>.
+All the constructor does is return that argument right back to you!</p>
 <p><br><hr>
 <a class="right" href="classes.html">Classes &rarr;</a>
 <a href="variables.html">&larr; Variables</a></p>
