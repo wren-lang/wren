@@ -400,6 +400,19 @@ and won&rsquo;t have a constructor.</p>
 overloaded by <a href="#signature">arity</a>. A constructor <em>must</em> be a named method with
 a (possibly empty) argument list. Operators, getters, and setters cannot be
 constructors.</p>
+<p>A constructor returns the instance of the class being created, even if you 
+don&rsquo;t explicitly use <code>return</code>. It is valid to use <code>return</code> inside of a 
+constructor, but it is an error to have an expression after the return.
+That rule applies to <code>return this</code> as well, return handles that implicitly inside
+a constructor, so just <code>return</code> is enough.</p>
+<pre class="snippet">
+return          //> valid, returns 'this'
+
+return variable //> invalid
+return null     //> invalid
+return this     //> also invalid
+</pre>
+
 <p>A constructor is actually a pair of methods. You get a method on the class:</p>
 <pre class="snippet">
 Unicorn.brown("Dave")
