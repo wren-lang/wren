@@ -100,6 +100,12 @@
 <p>The largest representable numeric value.</p>
 <h3>Num.<strong>smallest</strong> <a href="#num.smallest" name="num.smallest" class="header-anchor">#</a></h3>
 <p>The smallest positive representable numeric value.</p>
+<h3>Num.<strong>maxSafeInteger</strong> <a href="#num.maxsafeinteger" name="num.maxsafeinteger" class="header-anchor">#</a></h3>
+<p>The largest integer that Wren can safely represent. It&rsquo;s a constant value of <code>9007199254740991</code>.</p>
+<p>This is relevant because Wren uses double precision <a href="https://en.wikipedia.org/wiki/IEEE_floating_point">floating-point format</a>
+ for numbers, which can only safely represent integers between <code>-(2<sup>53</sup> - 1)</code> and <code>2<sup>53</sup> - 1</code>.</p>
+<h3>Num.<strong>minSafeInteger</strong> <a href="#num.minsafeinteger" name="num.minsafeinteger" class="header-anchor">#</a></h3>
+<p>The smallest integer Wren can safely represent. It&rsquo;s a constant value of <code>-9007199254740991</code>. </p>
 <h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
 <h3><strong>abs</strong> <a href="#abs" name="abs" class="header-anchor">#</a></h3>
 <p>The absolute value of the number.</p>
