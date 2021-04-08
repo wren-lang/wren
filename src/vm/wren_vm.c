@@ -1140,7 +1140,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       uint16_t offset = READ_SHORT();
       Value condition = POP();
 
-      if (IS_FALSE(condition) || IS_NULL(condition)) ip += offset;
+      if (wrenIsFalsyValue(condition)) ip += offset;
       DISPATCH();
     }
 
@@ -1149,7 +1149,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       uint16_t offset = READ_SHORT();
       Value condition = PEEK();
 
-      if (IS_FALSE(condition) || IS_NULL(condition))
+      if (wrenIsFalsyValue(condition))
       {
         // Short-circuit the right hand side.
         ip += offset;
@@ -1167,7 +1167,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       uint16_t offset = READ_SHORT();
       Value condition = PEEK();
 
-      if (IS_FALSE(condition) || IS_NULL(condition))
+      if (wrenIsFalsyValue(condition))
       {
         // Discard the condition and evaluate the right hand side.
         DROP();
