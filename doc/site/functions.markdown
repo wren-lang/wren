@@ -33,7 +33,7 @@ list surrounded by `|` immediately after the opening brace of the body.
 To pass arguments to the function, pass them to the `call` method:
 
 <pre class="snippet">
-var sayMessage {|recipient, message|
+var sayMessage = Fn.new {|recipient, message|
   System.print("message for %(recipient): %(message)")
 }
 
@@ -149,9 +149,6 @@ numbers.map {|n| n * 2 }.where {|n| n < 100 }
 ## Block argument example
 
 Let's look at a complete example, so we can see both ends.
-
-This may be a bit of a spoiler for [classes](classes.html), so feel free
-to read that page first and come back.
 
 Here's a fictional class for something that will call a function
 when a click event is sent to it. It allows us to pass just a 
