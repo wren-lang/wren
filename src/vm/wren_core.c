@@ -733,12 +733,14 @@ DEF_PRIMITIVE(num_dotDotDot)
 
 DEF_PRIMITIVE(num_atan2)
 {
+  if (!validateNum(vm, args[1], "x value")) return false;
+
   RETURN_NUM(atan2(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_min)
 {
-  if (!validateNum(vm, args[1], "Right operand")) return false;
+  if (!validateNum(vm, args[1], "Other value")) return false;
 
   double value = AS_NUM(args[0]);
   double other = AS_NUM(args[1]);
@@ -747,7 +749,7 @@ DEF_PRIMITIVE(num_min)
 
 DEF_PRIMITIVE(num_max)
 {
-  if (!validateNum(vm, args[1], "Right operand")) return false;
+  if (!validateNum(vm, args[1], "Other value")) return false;
 
   double value = AS_NUM(args[0]);
   double other = AS_NUM(args[1]);
@@ -768,6 +770,8 @@ DEF_PRIMITIVE(num_clamp)
 
 DEF_PRIMITIVE(num_pow)
 {
+  if (!validateNum(vm, args[1], "Power value")) return false;
+
   RETURN_NUM(pow(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
