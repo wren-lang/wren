@@ -188,9 +188,9 @@ typedef struct
   // Since Wren does not talk directly to the file system, it relies on the
   // embedder to physically locate and read the source code for a module. The
   // first time an import appears, Wren will call this and pass in the name of
-  // the module being imported. The VM should return the soure code for that
-  // module. Memory for the source should be allocated using [reallocateFn] and
-  // Wren will take ownership over it.
+  // the module being imported. The method will return a result, which contains
+  // the source code for that module. Memory for the source is owned by the 
+  // host application, and can be freed using the onComplete callback.
   //
   // This will only be called once for any given module name. Wren caches the
   // result internally so subsequent imports of the same module will use the
@@ -295,6 +295,11 @@ typedef enum
   // The object is of a type that isn't accessible by the C API.
   WREN_TYPE_UNKNOWN
 } WrenType;
+
+// Get the current wren version number.
+//
+// Can be used to range checks over versions.
+WREN_API int wrenGetVersionNumber();
 
 // Initializes [configuration] with all of its default values.
 //

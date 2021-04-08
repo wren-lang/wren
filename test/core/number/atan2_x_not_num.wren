@@ -1,0 +1,1 @@
+0.atan(false) // expect runtime error: x value must be a number.

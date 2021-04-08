@@ -149,7 +149,7 @@ put a newline in there:
 </pre>
 
 Using an initial newline after the `{` does feel a little weird or magical, but
-newlines are already significant in Wren, so it's not totally crazy. The nice
+newlines are already significant in Wren, so it's not totally unreasonable. The nice
 thing about this syntax as opposed to something like `=>` is that the *end* of
 the block has an explicit delimiter. That helps when chaining:
 

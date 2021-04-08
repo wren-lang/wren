@@ -689,6 +689,11 @@ int wrenListIndexOf(WrenVM* vm, ObjList* list, Value value);
 // Creates a new empty map.
 ObjMap* wrenNewMap(WrenVM* vm);
 
+// Validates that [arg] is a valid object for use as a map key. Returns true if
+// it is and returns false otherwise. Use validateKey usually, for a runtime error.
+// This separation exists to aid the API in surfacing errors to the developer as well.
+static inline bool wrenMapIsValidKey(Value arg);
+
 // Looks up [key] in [map]. If found, returns the value. Otherwise, returns
 // `UNDEFINED_VAL`.
 Value wrenMapGet(ObjMap* map, Value key);
@@ -870,6 +875,16 @@ static inline Value wrenNumToValue(double num)
   value.as.num = num;
   return value;
 #endif
+}
+
+static inline bool wrenMapIsValidKey(Value arg)
+{
+  return IS_BOOL(arg)
+      || IS_CLASS(arg)
+      || IS_NULL(arg)
+      || IS_NUM(arg)
+      || IS_RANGE(arg)
+      || IS_STRING(arg);
 }
 
 #endif

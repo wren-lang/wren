@@ -12,7 +12,7 @@ An indexable contiguous collection of elements. More details [here][lists].
 
 Creates a new list with `size` elements, all set to `element`.
 
-It is a runtime error if `size` is not a nonnegative integer.
+It is a runtime error if `size` is not a non-negative integer.
 
 ### List.**new**()
 

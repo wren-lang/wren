@@ -36,6 +36,11 @@ static void* defaultReallocate(void* ptr, size_t newSize, void* _)
   return realloc(ptr, newSize);
 }
 
+int wrenGetVersionNumber() 
+{ 
+  return WREN_VERSION_NUMBER;
+}
+
 void wrenInitConfiguration(WrenConfiguration* config)
 {
   config->reallocateFn = defaultReallocate;
@@ -1161,7 +1166,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       uint16_t offset = READ_SHORT();
       Value condition = POP();
 
-      if (IS_FALSE(condition) || IS_NULL(condition)) ip += offset;
+      if (wrenIsFalsyValue(condition)) ip += offset;
       DISPATCH();
     }
 
@@ -1170,7 +1175,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       uint16_t offset = READ_SHORT();
       Value condition = PEEK();
 
-      if (IS_FALSE(condition) || IS_NULL(condition))
+      if (wrenIsFalsyValue(condition))
       {
         // Short-circuit the right hand side.
         ip += offset;
@@ -1188,7 +1193,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       uint16_t offset = READ_SHORT();
       Value condition = PEEK();
 
-      if (IS_FALSE(condition) || IS_NULL(condition))
+      if (wrenIsFalsyValue(condition))
       {
         // Discard the condition and evaluate the right hand side.
         DROP();
@@ -1854,6 +1859,7 @@ bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot)
   ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Slot must hold a map.");
 
   Value key = vm->apiStack[keySlot];
+  ASSERT(wrenMapIsValidKey(key), "Key must be a value type");
   if (!validateKey(vm, key)) return false;
 
   ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
@@ -1886,6 +1892,8 @@ void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
   ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must insert into a map.");
   
   Value key = vm->apiStack[keySlot];
+  ASSERT(wrenMapIsValidKey(key), "Key must be a value type");
+
   if (!validateKey(vm, key)) {
     return;
   }

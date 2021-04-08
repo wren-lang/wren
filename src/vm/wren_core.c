@@ -645,6 +645,9 @@ DEF_NUM_CONSTANT(tau,      6.28318530717958647692528676655900577)
 DEF_NUM_CONSTANT(largest,  DBL_MAX)
 DEF_NUM_CONSTANT(smallest, DBL_MIN)
 
+DEF_NUM_CONSTANT(maxSafeInteger, 9007199254740991.0)
+DEF_NUM_CONSTANT(minSafeInteger, -9007199254740991.0)
+
 // Defines a primitive on Num that calls infix [op] and returns [type].
 #define DEF_NUM_INFIX(name, op, type)                                          \
     DEF_PRIMITIVE(num_##name)                                                  \
@@ -746,11 +749,15 @@ DEF_PRIMITIVE(num_dotDotDot)
 
 DEF_PRIMITIVE(num_atan2)
 {
+  if (!validateNum(vm, args[1], "x value")) return false;
+
   RETURN_NUM(atan2(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_min)
 {
+  if (!validateNum(vm, args[1], "Other value")) return false;
+
   double value = AS_NUM(args[0]);
   double other = AS_NUM(args[1]);
   RETURN_NUM(value <= other ? value : other);
@@ -758,6 +765,8 @@ DEF_PRIMITIVE(num_min)
 
 DEF_PRIMITIVE(num_max)
 {
+  if (!validateNum(vm, args[1], "Other value")) return false;
+
   double value = AS_NUM(args[0]);
   double other = AS_NUM(args[1]);
   RETURN_NUM(value > other ? value : other);
@@ -765,6 +774,9 @@ DEF_PRIMITIVE(num_max)
 
 DEF_PRIMITIVE(num_clamp)
 {
+  if (!validateNum(vm, args[1], "Min value")) return false;
+  if (!validateNum(vm, args[2], "Max value")) return false;
+
   double value = AS_NUM(args[0]);
   double min = AS_NUM(args[1]);
   double max = AS_NUM(args[2]);
@@ -774,13 +786,15 @@ DEF_PRIMITIVE(num_clamp)
 
 DEF_PRIMITIVE(num_pow)
 {
+  if (!validateNum(vm, args[1], "Power value")) return false;
+
   RETURN_NUM(pow(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_fraction)
 {
-  double dummy;
-  RETURN_NUM(modf(AS_NUM(args[0]) , &dummy));
+  double unused;
+  RETURN_NUM(modf(AS_NUM(args[0]) , &unused));
 }
 
 DEF_PRIMITIVE(num_isInfinity)
@@ -1342,6 +1356,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass->obj.classObj, "tau", num_tau);
   PRIMITIVE(vm->numClass->obj.classObj, "largest", num_largest);
   PRIMITIVE(vm->numClass->obj.classObj, "smallest", num_smallest);
+  PRIMITIVE(vm->numClass->obj.classObj, "maxSafeInteger", num_maxSafeInteger);
+  PRIMITIVE(vm->numClass->obj.classObj, "minSafeInteger", num_minSafeInteger);
   PRIMITIVE(vm->numClass, "-(_)", num_minus);
   PRIMITIVE(vm->numClass, "+(_)", num_plus);
   PRIMITIVE(vm->numClass, "*(_)", num_multiply);
