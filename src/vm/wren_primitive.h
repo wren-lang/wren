@@ -80,8 +80,13 @@ bool validateIntValue(WrenVM* vm, double value, const char* argName);
 bool validateInt(WrenVM* vm, Value arg, const char* argName);
 
 // Validates that [arg] is a valid object for use as a map key. Returns true if
+// it is and returns false otherwise. Use validateKey usually, for a runtime error.
+// This separation exists to aid the API in surfacing errors to the developer as well.
+bool validateKeyType(WrenVM * vm, Value arg);
+
+// Validates that [arg] is a valid object for use as a map key. Returns true if
 // it is. If not, reports an error and returns false.
-bool validateKey(WrenVM* vm, Value arg);
+bool validateKey(WrenVM * vm, Value arg);
 
 // Validates that the argument at [argIndex] is an integer within `[0, count)`.
 // Also allows negative indices which map backwards from the end. Returns the
