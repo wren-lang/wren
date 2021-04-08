@@ -267,7 +267,7 @@ inside a method works like this:
 
 So, in the above example, we hit case #2 and it prints "Francis". Distinguishing
 self sends from outer variables based on the *case* of the first letter in the
-name probably seems crazy but it works surprisingly well. Method names are
+name probably seems weird but it works surprisingly well. Method names are
 lowercase in Wren. Class names are capitalized.
 
 Most of the time, when you're in a method and want to access a name from outside

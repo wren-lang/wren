@@ -9,22 +9,26 @@ curly braces. Each entry is a key and a value separated by a colon:
 
 <pre class="snippet">
 {
-  "George": "Harrison",
-  "John":   "Lennon",
-  "Paul":   "McCartney",
-  "Ringo":  "Starr"
+  "maple":  "Sugar Maple (Acer Saccharum)",
+  "larch":  "Alpine Larch (Larix Lyallii)",
+  "oak":    "Red Oak (Quercus Rubra)",
+  "fir":    "Fraser Fir (Abies Fraseri)"
 }
 </pre>
 
-This creates a map that associates the first name of each Beatle with his last
-name. Syntactically, in a map literal, keys can be any literal, a variable
-name, or a parenthesized expression. Values can be any expression. Here, we're
-using string literals for both keys and values.
+This creates a map that associates a type of tree (key) to a specific 
+tree within that family (value). Syntactically, in a map literal, keys 
+can be any literal, a variable name, or a parenthesized expression. 
+Values can be any expression. Here, we're using string literals for both keys 
+and values.
 
 *Semantically*, values can be any object, and multiple keys may map to the same
-value. Keys have a few limitations. They must be one of the immutable built-in
+value. 
+
+Keys have a few limitations. They must be one of the immutable built-in
 [value types][] in Wren. That means a number, string, range, bool, or `null`.
-You can also use a [class object][] as a key.
+You can also use a [class object][] as a key (not an instance of that class, 
+the actual class itself).
 
 [value types]: values.html
 [class object]: classes.html
@@ -67,12 +71,12 @@ doesn't necessarily mean the key wasn't found.
 To tell definitively if a key exists, you can call `containsKey()`:
 
 <pre class="snippet">
-var belief = {"nihilism": null}
+var capitals = {"Georgia": null}
 
-System.print(belief["nihilism"]) //> null (though key exists)
-System.print(belief["solipsism"]) //> null
-System.print(belief.containsKey("nihilism")) //> true
-System.print(belief.containsKey("solipsism")) //> false
+System.print(capitals["Georgia"]) //> null (though key exists)
+System.print(capitals["Idaho"])   //> null 
+System.print(capitals.containsKey("Georgia")) //> true
+System.print(capitals.containsKey("Idaho"))   //> false
 </pre>
 
 You can see how many entries a map contains using `count`:
@@ -113,16 +117,38 @@ System.print(capitals.count) //> 0
 
 The subscript operator works well for finding values when you know the key
 you're looking for, but sometimes you want to see everything that's in the map.
-For that, map exposes two methods: `keys` and `values`.
+You can use a regular for loop to iterate the contents, and map exposes two 
+additional methods to access the contents: `keys` and `values`. 
 
-The first returns a [Sequence][] that [iterates][] over all of the keys in the
-map, and the second returns one that iterates over the values.
+The `keys` method on a map returns a [Sequence][] that [iterates][] over all of
+the keys in the map, and the `values` method returns one that iterates over the values.
 
 [sequence]: modules/core/sequence.html
 [iterates]: control-flow.html#the-iterator-protocol
 
-If you want to see all of the key-value pairs in a map, the easiest way is to
-iterate over the keys and use each to look up its value:
+Regardless of how you iterate, the *order* that things are iterated in 
+isn't defined. Wren makes no promises about what order keys and values are 
+iterated. All it promises is that every entry will appear exactly once.
+
+**Iterating with for(entry in map)**   
+When you iterate a map with `for`, you'll be handed an _entry_, which contains
+a `key` and a `value` field. That gives you the info for each element in the map.
+
+<pre class="snippet">
+var birds = {
+  "Arizona": "Cactus wren",
+  "Hawaii": "Nēnē",
+  "Ohio": "Northern Cardinal"
+}
+
+for (bird in birds) {
+  System.print("The state bird of %(bird.key) is %(bird.value)")
+}
+</pre>
+
+**Iterating using the keys**   
+
+You can also iterate over the keys and use each to look up its value:
 
 <pre class="snippet">
 var birds = {
@@ -132,14 +158,9 @@ var birds = {
 }
 
 for (state in birds.keys) {
-  System.print("The state bird of " + state + " is " + birds[state])
+  System.print("The state bird of %(state) is " + birds[state])
 }
 </pre>
-
-This program prints the three states and their birds. However, the *order*
-that they are printed isn't defined. Wren makes no promises about what order
-keys and values are iterated in when you use these methods. All it promises is
-that every entry will appear exactly once.
 
 <br><hr>
 <a class="right" href="method-calls.html">Method Calls &rarr;</a>

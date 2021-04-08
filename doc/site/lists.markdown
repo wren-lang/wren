@@ -20,23 +20,23 @@ element you want. Like most languages, indexes start at zero:
 [subscript operator]: method-calls.html#subscripts
 
 <pre class="snippet">
-var hirsute = ["sideburns", "porkchops", "'stache", "goatee"]
-System.print(hirsute[0]) //> sideburns
-System.print(hirsute[1]) //> porkchops
+var trees = ["cedar", "birch", "oak", "willow"]
+System.print(trees[0]) //> cedar
+System.print(trees[1]) //> birch
 </pre>
 
 Negative indices counts backwards from the end:
 
 <pre class="snippet">
-System.print(hirsute[-1]) //> goatee
-System.print(hirsute[-2]) //> 'stache
+System.print(trees[-1]) //> willow
+System.print(trees[-2]) //> oak
 </pre>
 
 It's a runtime error to pass an index outside of the bounds of the list. If you
 don't know what those bounds are, you can find out using count:
 
 <pre class="snippet">
-System.print(hirsute.count) //> 4
+System.print(trees.count) //> 4
 </pre>
 
 ## Slices and ranges
@@ -45,7 +45,7 @@ Sometimes you want to copy a chunk of elements from a list. You can do that by
 passing a [range](values.html#ranges) to the subscript operator, like so:
 
 <pre class="snippet">
-System.print(hirsute[1..2]) //> [porkchops, 'stache]
+System.print(trees[1..2]) //> [birch, oak]
 </pre>
 
 This returns a new list containing the elements of the original list whose
@@ -56,7 +56,7 @@ Negative bounds also work like they do when passing a single number, so to copy
 a list, you can just do:
 
 <pre class="snippet">
-hirsute[0..-1]
+trees[0..-1]
 </pre>
 
 ## Adding elements
@@ -65,22 +65,22 @@ Lists are *mutable*, meaning their contents can be changed. You can swap out an
 existing element in the list using the subscript setter:
 
 <pre class="snippet">
-hirsute[1] = "muttonchops"
-System.print(hirsute[1]) //> muttonchops
+trees[1] = "spruce"
+System.print(trees[1]) //> spruce
 </pre>
 
 It's an error to set an element that's out of bounds. To grow a list, you can
 use `add` to append a single item to the end:
 
 <pre class="snippet">
-hirsute.add("goatee")
-System.print(hirsute.count) //> 5
+trees.add("maple")
+System.print(trees.count) //> 5
 </pre>
 
 You can insert a new element at a specific position using `insert`:
 
 <pre class="snippet">
-hirsute.insert(2, "soul patch")
+trees.insert(2, "hickory")
 </pre>
 
 The first argument is the index to insert at, and the second is the value to
@@ -143,8 +143,8 @@ System.print(letters.remove("not found")) //> null
 If you want to remove everything from the list, you can clear it:
 
 <pre class="snippet">
-hirsute.clear()
-System.print(hirsute) //> []
+trees.clear()
+System.print(trees) //> []
 </pre>
 
 <br><hr>
