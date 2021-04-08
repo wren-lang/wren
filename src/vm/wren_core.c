@@ -640,6 +640,9 @@ DEF_NUM_CONSTANT(tau,      6.28318530717958647692528676655900577)
 DEF_NUM_CONSTANT(largest,  DBL_MAX)
 DEF_NUM_CONSTANT(smallest, DBL_MIN)
 
+DEF_NUM_CONSTANT(maxSafeInteger, 9007199254740991.0)
+DEF_NUM_CONSTANT(minSafeInteger, -9007199254740991.0)
+
 // Defines a primitive on Num that calls infix [op] and returns [type].
 #define DEF_NUM_INFIX(name, op, type)                                          \
     DEF_PRIMITIVE(num_##name)                                                  \
@@ -1336,6 +1339,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass->obj.classObj, "tau", num_tau);
   PRIMITIVE(vm->numClass->obj.classObj, "largest", num_largest);
   PRIMITIVE(vm->numClass->obj.classObj, "smallest", num_smallest);
+  PRIMITIVE(vm->numClass->obj.classObj, "maxSafeInteger", num_maxSafeInteger);
+  PRIMITIVE(vm->numClass->obj.classObj, "minSafeInteger", num_minSafeInteger);
   PRIMITIVE(vm->numClass, "-(_)", num_minus);
   PRIMITIVE(vm->numClass, "+(_)", num_plus);
   PRIMITIVE(vm->numClass, "*(_)", num_multiply);
