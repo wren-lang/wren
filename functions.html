@@ -41,8 +41,8 @@
         <li><a href="method-calls.html">Method Calls</a></li>
         <li><a href="control-flow.html">Control Flow</a></li>
         <li><a href="variables.html">Variables</a></li>
-        <li><a href="functions.html">Functions</a></li>
         <li><a href="classes.html">Classes</a></li>
+        <li><a href="functions.html">Functions</a></li>
         <li><a href="concurrency.html">Concurrency</a></li>
         <li><a href="error-handling.html">Error Handling</a></li>
         <li><a href="modularity.html">Modularity</a></li>
@@ -90,8 +90,8 @@
         <td>
           <ul>
             <li><a href="variables.html">Variables</a></li>
-            <li><a href="functions.html">Functions</a></li>
             <li><a href="classes.html">Classes</a></li>
+            <li><a href="functions.html">Functions</a></li>
             <li><a href="concurrency.html">Concurrency</a></li>
             <li><a href="error-handling.html">Error Handling</a></li>
             <li><a href="modularity.html">Modularity</a></li>
@@ -133,7 +133,7 @@ function above takes no arguments. To change that, you can provide a parameter
 list surrounded by <code>|</code> immediately after the opening brace of the body.</p>
 <p>To pass arguments to the function, pass them to the <code>call</code> method:</p>
 <pre class="snippet">
-var sayMessage {|recipient, message|
+var sayMessage = Fn.new {|recipient, message|
   System.print("message for %(recipient): %(message)")
 }
 
@@ -233,8 +233,6 @@ numbers.map {|n| n * 2 }.where {|n| n < 100 }
 
 <h2>Block argument example <a href="#block-argument-example" name="block-argument-example" class="header-anchor">#</a></h2>
 <p>Let&rsquo;s look at a complete example, so we can see both ends.</p>
-<p>This may be a bit of a spoiler for <a href="classes.html">classes</a>, so feel free
-to read that page first and come back.</p>
 <p>Here&rsquo;s a fictional class for something that will call a function
 when a click event is sent to it. It allows us to pass just a 
 function and assume the left mouse button, or to pass a button and a function.</p>
