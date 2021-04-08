@@ -2801,8 +2801,8 @@ void expression(Compiler* compiler)
   parsePrecedence(compiler, PREC_LOWEST);
 }
 
-// Returns the number of arguments to the instruction at [ip] in [fn]'s
-// bytecode.
+// Returns the number of bytes for the arguments to the instruction 
+// at [ip] in [fn]'s bytecode.
 static int getByteCountForArguments(const uint8_t* bytecode,
                             const Value* constants, int ip)
 {
