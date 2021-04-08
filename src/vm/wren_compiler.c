@@ -363,7 +363,13 @@ struct sCompiler
   
   ObjMap* constants;
 
-  // Attributes for the next class or method, or NULL if not applicable
+  // The number of attributes seen while parsing.
+  // We track this separately as compile time attributes 
+  // are not stored, so we can't rely on attributes->count
+  // to enforce an error message when attributes are used
+  // anywhere other than methods or classes.
+  int numAttributes;
+  // Attributes for the next class or method.
   ObjMap* attributes;
 };
 
@@ -392,6 +398,7 @@ typedef struct
 } Variable;
 
 // Forward declarations
+static void disallowAttributes(Compiler* compiler);
 static void addToAttributeGroup(Compiler* compiler, Value group, Value key, Value value);
 static void emitClassAttributes(Compiler* compiler, ClassInfo* classInfo);
 static void copyAttributes(Compiler* compiler, ObjMap* into);
@@ -568,6 +575,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
     compiler->scopeDepth = 0;
   }
   
+  compiler->numAttributes = 0;
   compiler->attributes = wrenNewMap(parser->vm);
   compiler->fn = wrenNewFunction(parser->vm, parser->module,
                                  compiler->numLocals);
@@ -3325,6 +3333,7 @@ static Value consumeLiteral(Compiler* compiler, const char* message)
 
 static bool matchAttribute(Compiler* compiler) {
   if(match(compiler, TOKEN_HASH)) {
+    compiler->numAttributes++;
     bool runtimeAccess = match(compiler, TOKEN_BANG);
     if(match(compiler, TOKEN_NAME)) {
       Value group = compiler->parser->previous.value;
@@ -3681,13 +3690,18 @@ void definition(Compiler* compiler)
   if (match(compiler, TOKEN_CLASS))
   {
     classDefinition(compiler, false);
+    return;
   }
   else if (match(compiler, TOKEN_FOREIGN))
   {
     consume(compiler, TOKEN_CLASS, "Expect 'class' after 'foreign'.");
     classDefinition(compiler, true);
+    return;
   }
-  else if (match(compiler, TOKEN_IMPORT))
+
+  disallowAttributes(compiler);
+
+  if (match(compiler, TOKEN_IMPORT))
   {
     import(compiler);
   }
@@ -3878,6 +3892,18 @@ void wrenMarkCompiler(WrenVM* vm, Compiler* compiler)
 
 // Helpers for Attributes
 
+// Throw an error if any attributes were found preceding, 
+// and clear the attributes so the error doesn't keep happening.
+static void disallowAttributes(Compiler* compiler)
+{
+  if (compiler->numAttributes > 0)
+  {
+    error(compiler, "Attributes can only specified before a class or a method");
+    wrenMapClear(compiler->parser->vm, compiler->attributes);
+    compiler->numAttributes = 0;
+  }
+}
+
 // Add an attribute to a given group in the compiler attribues map
 static void addToAttributeGroup(Compiler* compiler, Value group, Value key, Value value) 
 {
@@ -3995,8 +4021,11 @@ static void emitClassAttributes(Compiler* compiler, ClassInfo* classInfo)
 }
 
 // Copy the current attributes stored in the compiler into a destination map
+// This also resets the counter, since the intention is to consume the attributes
 static void copyAttributes(Compiler* compiler, ObjMap* into)
 {
+  compiler->numAttributes = 0;
+
   if(compiler->attributes->count == 0) return;
   if(into == NULL) return;
 
@@ -4014,10 +4043,13 @@ static void copyAttributes(Compiler* compiler, ObjMap* into)
 }
 
 // Copy the current attributes stored in the compiler into the method specific
-// attributes for the current enclosingClass
-static void copyMethodAttributes(Compiler* compiler, bool isForeign, 
+// attributes for the current enclosingClass.
+// This also resets the counter, since the intention is to consume the attributes
+static void copyMethodAttributes(Compiler* compiler, bool isForeign,
             bool isStatic, const char* fullSignature, int32_t length) 
 {
+  compiler->numAttributes = 0;
+
   if(compiler->attributes->count == 0) return;
 
   WrenVM* vm = compiler->parser->vm;
