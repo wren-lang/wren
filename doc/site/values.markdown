@@ -69,6 +69,7 @@ A handful of escape characters are supported:
 "\%" // A percent sign.
 "\a" // Alarm beep. (Who uses this?)
 "\b" // Backspace.
+"\e" // ESC character.
 "\f" // Formfeed.
 "\n" // Newline.
 "\r" // Carriage return.
