@@ -199,12 +199,16 @@ This creates a range from four to six *not* including six itself. Ranges are
 commonly used for [iterating](control-flow.html#for-statements) over a
 sequences of numbers, but are useful in other places too. You can pass them to
 a [list](lists.html)'s subscript operator to return a subset of the list, for
-example:
+example, or on a String, the substring in that range:
 
 <pre class="snippet">
 var list = ["a", "b", "c", "d", "e"]
 var slice = list[1..3]
 System.print(slice) //> [b, c, d]
+
+var string = "hello wren"
+var wren = string[-4..-1]
+System.print(wren) //> wren
 </pre>
 
 Their class is [Range][].

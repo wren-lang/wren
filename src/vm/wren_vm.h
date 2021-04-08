@@ -246,4 +246,9 @@ static inline bool wrenIsLocalName(const char* name)
   return name[0] >= 'a' && name[0] <= 'z';
 }
 
+static inline bool wrenIsFalsyValue(Value value)
+{
+  return IS_FALSE(value) || IS_NULL(value);
+}
+
 #endif

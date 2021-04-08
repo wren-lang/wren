@@ -17,7 +17,7 @@ The value of &infin;.
 
 One value representing a NaN.
 
-Provides a default sane NaN number suitable for the vm internal values.
+Provides a default NaN number suitable for the vm internal values.
 
 ### Num.**pi**
 
@@ -34,6 +34,17 @@ The largest representable numeric value.
 ### Num.**smallest**
 
 The smallest positive representable numeric value.
+
+### Num.**maxSafeInteger**
+
+The largest integer that Wren can safely represent. It's a constant value of `9007199254740991`.
+
+ This is relevant because Wren uses double precision [floating-point format](https://en.wikipedia.org/wiki/IEEE_floating_point)
+ for numbers, which can only safely represent integers between <code>-(2<sup>53</sup> - 1)</code> and <code>2<sup>53</sup> - 1</code>.
+
+### Num.**minSafeInteger**
+
+The smallest integer Wren can safely represent. It's a constant value of `-9007199254740991`. 
 
 ## Methods
 
