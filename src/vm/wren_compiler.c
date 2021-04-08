@@ -1969,6 +1969,9 @@ static void methodCall(Compiler* compiler, Code instruction,
   {
     called.type = SIG_METHOD;
 
+    // Allow new line before an empty argument list
+    ignoreNewlines(compiler);
+
     // Allow empty an argument list.
     if (peek(compiler) != TOKEN_RIGHT_PAREN)
     {
@@ -2640,6 +2643,9 @@ static void parameterList(Compiler* compiler, Signature* signature)
   
   signature->type = SIG_METHOD;
   
+  // Allow new line before an empty argument list
+  ignoreNewlines(compiler);
+
   // Allow an empty parameter list.
   if (match(compiler, TOKEN_RIGHT_PAREN)) return;
 
