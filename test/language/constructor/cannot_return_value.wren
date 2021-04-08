@@ -1,5 +1,5 @@
 class Foo {
   construct new() {
-    return 1 // expect error: Cannot return a value from constructor.
+    return 1 // expect error: A constructor cannot return a value.
   }
 }
