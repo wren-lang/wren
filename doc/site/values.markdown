@@ -74,6 +74,17 @@ A handful of escape characters are supported:
 "\r" // Carriage return.
 "\t" // Tab.
 "\v" // Vertical tab.
+
+
+"\x48"        // Unencoded byte     (2 hex digits)
+"\u0041"      // Unicode code point (4 hex digits)
+"\U0001F64A"  // Unicode code point (8 hex digits)
+</pre>
+
+A `\x` followed by two hex digits specifies a single unencoded byte:
+
+<pre class="snippet">
+System.print("\x48\x69\x2e") //> Hi.
 </pre>
 
 A `\u` followed by four hex digits can be used to specify a Unicode code point:
@@ -87,12 +98,6 @@ of the basic multilingual plane, like all-important emoji:
 
 <pre class="snippet">
 System.print("\U0001F64A\U0001F680") //> 🙊🚀
-</pre>
-
-A `\x` followed by two hex digits specifies a single unencoded byte:
-
-<pre class="snippet">
-System.print("\x48\x69\x2e") //> Hi.
 </pre>
 
 Strings are instances of class [String][].
