@@ -45,20 +45,9 @@ bool validateInt(WrenVM* vm, Value arg, const char* argName)
   return validateIntValue(vm, AS_NUM(arg), argName);
 }
 
-inline bool validateKeyType(WrenVM* vm, Value arg)
-{
-  if (IS_BOOL(arg) || IS_CLASS(arg) || IS_NULL(arg) ||
-      IS_NUM(arg) || IS_RANGE(arg) || IS_STRING(arg))
-  {
-    return true;
-  }
-
-  return false;
-}
-
 bool validateKey(WrenVM* vm, Value arg)
 {
-  if (validateKeyType(vm, arg)) return true;
+  if (wrenMapIsValidKey(arg)) return true;
 
   RETURN_ERROR("Key must be a value type.");
 }
