@@ -347,6 +347,20 @@ overloaded by [arity](#signature). A constructor *must* be a named method with
 a (possibly empty) argument list. Operators, getters, and setters cannot be
 constructors.
 
+A constructor returns the instance of the class being created, even if you 
+don't explicitly use `return`. It is valid to use `return` inside of a 
+constructor, but it is an error to have an expression after the return.
+That rule applies to `return this` as well, return handles that implicitly inside
+a constructor, so just `return` is enough.
+
+<pre class="snippet">
+return          //> valid, returns 'this'
+
+return variable //> invalid
+return null     //> invalid
+return this     //> also invalid
+</pre>
+
 A constructor is actually a pair of methods. You get a method on the class:
 
 <pre class="snippet">
