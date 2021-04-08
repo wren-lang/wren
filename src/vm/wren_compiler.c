@@ -3544,7 +3544,8 @@ static void variableDefinition(Compiler* compiler)
   int numVars = 0;
   do
   {
-    if (numVars >= MAX_RETURN_VALUES) {
+    if (numVars >= MAX_RETURN_VALUES) 
+    {
       error(compiler, "Too many variable declarations, only %d supported.", MAX_RETURN_VALUES);
       break;
     }
@@ -3559,9 +3560,16 @@ static void variableDefinition(Compiler* compiler)
     ignoreNewlines(compiler);
     // support multiple assignments, these don't have to match nr of variables above
     // because each expression can leave multiple values on the stack.
+    int values = 0;
     do
     {
       expression(compiler);
+      if (++values > numVars) 
+      {
+        // we can now be sure that we have too many values
+        error(compiler, "Too many values in variable declaration, expect max %d.", numVars);
+        break;
+      }
     } while (match(compiler, TOKEN_COMMA));
   }
   else
