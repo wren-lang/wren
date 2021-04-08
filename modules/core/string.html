@@ -121,6 +121,14 @@ var hPosition = metalBand.indexOf("h")
 System.print(metalBand[hPosition]) //> h
 </pre>
 
+<p>A string can also be indexed with a <a href="range.html">Range</a>, which will return a 
+new string as a substring of the original. </p>
+<pre class="snippet">
+var example = "hello wren"
+System.print(example[0...5])   //> hello
+System.print(example[-4..-1])  //> wren
+</pre>
+
 <p>If you want to work with a string as a sequence numeric code points, call the
 <code>codePoints</code> getter. It returns a <a href="sequence.html">Sequence</a> that decodes UTF-8
 and iterates over the code points, returning each as a number.</p>
