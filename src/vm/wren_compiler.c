@@ -3351,29 +3351,41 @@ static Value consumeLiteral(Compiler* compiler, const char* message)
 }
 
 static bool matchAttribute(Compiler* compiler) {
-  if(match(compiler, TOKEN_HASH)) {
+
+  if(match(compiler, TOKEN_HASH)) 
+  {
     compiler->numAttributes++;
     bool runtimeAccess = match(compiler, TOKEN_BANG);
-    if(match(compiler, TOKEN_NAME)) {
+    if(match(compiler, TOKEN_NAME)) 
+    {
       Value group = compiler->parser->previous.value;
       TokenType ahead = peek(compiler);
-      if(ahead == TOKEN_EQ || ahead == TOKEN_LINE) {
+      if(ahead == TOKEN_EQ || ahead == TOKEN_LINE)
+      {
         Value key = group;
         Value value = NULL_VAL;
-        if(match(compiler, TOKEN_EQ)) {
+        if(match(compiler, TOKEN_EQ)) 
+        {
           value = consumeLiteral(compiler, "Expect a Bool, Num, String or Identifier literal for an attribute value.");
         }
         if(runtimeAccess) addToAttributeGroup(compiler, NULL_VAL, key, value);
-      } else if(match(compiler, TOKEN_LEFT_PAREN)) {
+      }
+      else if(match(compiler, TOKEN_LEFT_PAREN))
+      {
         ignoreNewlines(compiler);
-        if(match(compiler, TOKEN_RIGHT_PAREN)) {
+        if(match(compiler, TOKEN_RIGHT_PAREN))
+        {
           error(compiler, "Expected attributes in group, group cannot be empty.");
-        } else {
-          while(peek(compiler) != TOKEN_RIGHT_PAREN) {
+        } 
+        else 
+        {
+          while(peek(compiler) != TOKEN_RIGHT_PAREN)
+          {
             consume(compiler, TOKEN_NAME, "Expect name for attribute key.");
             Value key = compiler->parser->previous.value;
             Value value = NULL_VAL;
-            if(match(compiler, TOKEN_EQ)) {
+            if(match(compiler, TOKEN_EQ))
+            {
               value = consumeLiteral(compiler, "Expect a Bool, Num, String or Identifier literal for an attribute value.");
             }
             if(runtimeAccess) addToAttributeGroup(compiler, group, key, value);
@@ -3383,17 +3395,24 @@ static bool matchAttribute(Compiler* compiler) {
           }
 
           ignoreNewlines(compiler);
-          consume(compiler, TOKEN_RIGHT_PAREN, "Expected ')' after grouped attributes.");
+          consume(compiler, TOKEN_RIGHT_PAREN, 
+            "Expected ')' after grouped attributes.");
         }
-      } else {
+      }
+      else
+      {
         error(compiler, "Expect an equal, newline or grouping after an attribute key.");
       }
-    } else {
+    }
+    else 
+    {
       error(compiler, "Expect an attribute definition after #.");
     }
+
     consumeLine(compiler, "Expect newline after attribute.");
     return true;
   }
+
   return false;
 }
 
@@ -3926,7 +3945,8 @@ static void disallowAttributes(Compiler* compiler)
 }
 
 // Add an attribute to a given group in the compiler attribues map
-static void addToAttributeGroup(Compiler* compiler, Value group, Value key, Value value) 
+static void addToAttributeGroup(Compiler* compiler, 
+                                Value group, Value key, Value value) 
 {
   WrenVM* vm = compiler->parser->vm;
 
@@ -3935,7 +3955,8 @@ static void addToAttributeGroup(Compiler* compiler, Value group, Value key, Valu
   if(IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
   Value groupMapValue = wrenMapGet(compiler->attributes, group);
-  if(groupMapValue == UNDEFINED_VAL) {
+  if(groupMapValue == UNDEFINED_VAL) 
+  {
     groupMapValue = OBJ_VAL(wrenNewMap(vm));
     wrenMapSet(vm, compiler->attributes, group, groupMapValue);
   }
@@ -3947,7 +3968,8 @@ static void addToAttributeGroup(Compiler* compiler, Value group, Value key, Valu
   //var keyItems = group[key]
   //if(!keyItems) keyItems = group[key] = [] 
   Value keyItemsValue = wrenMapGet(groupMap, key);
-  if(keyItemsValue == UNDEFINED_VAL) {
+  if(keyItemsValue == UNDEFINED_VAL) 
+  {
     keyItemsValue = OBJ_VAL(wrenNewList(vm, 0));
     wrenMapSet(vm, groupMap, key, keyItemsValue);
   }
@@ -3971,7 +3993,8 @@ static void emitAttributes(Compiler* compiler, ObjMap* attributes)
 
   // The attributes are stored as group = { key:[value, value, ...] }
   // so our first level is the group map
-  for(uint32_t groupIdx = 0; groupIdx < attributes->capacity; groupIdx++) {
+  for(uint32_t groupIdx = 0; groupIdx < attributes->capacity; groupIdx++)
+  {
     const MapEntry* groupEntry = &attributes->entries[groupIdx];
     if(groupEntry->key == UNDEFINED_VAL) continue;
     //group key
@@ -3982,7 +4005,8 @@ static void emitAttributes(Compiler* compiler, ObjMap* attributes)
     callMethod(compiler, 0, "new()", 5);
 
     ObjMap* groupItems = AS_MAP(groupEntry->value);
-    for(uint32_t itemIdx = 0; itemIdx < groupItems->capacity; itemIdx++) {
+    for(uint32_t itemIdx = 0; itemIdx < groupItems->capacity; itemIdx++)
+    {
       const MapEntry* itemEntry = &groupItems->entries[itemIdx];
       if(itemEntry->key == UNDEFINED_VAL) continue;
 
@@ -3992,7 +4016,8 @@ static void emitAttributes(Compiler* compiler, ObjMap* attributes)
       callMethod(compiler, 0, "new()", 5);
       // Add the items to the key list
       ObjList* items = AS_LIST(itemEntry->value);
-      for(int itemIdx = 0; itemIdx < items->elements.count; ++itemIdx) {
+      for(int itemIdx = 0; itemIdx < items->elements.count; ++itemIdx)
+      {
         emitConstant(compiler, items->elements.data[itemIdx]);
         callMethod(compiler, 1, "addCore_(_)", 11);
       }
@@ -4014,7 +4039,8 @@ static void emitAttributeMethods(Compiler* compiler, ObjMap* attributes)
   loadCoreVariable(compiler, "Map");
   callMethod(compiler, 0, "new()", 5);
 
-  for(uint32_t methodIdx = 0; methodIdx < attributes->capacity; methodIdx++) {
+  for(uint32_t methodIdx = 0; methodIdx < attributes->capacity; methodIdx++)
+  {
     const MapEntry* methodEntry = &attributes->entries[methodIdx];
     if(methodEntry->key == UNDEFINED_VAL) continue;
     emitConstant(compiler, methodEntry->key);
@@ -4042,7 +4068,7 @@ static void emitClassAttributes(Compiler* compiler, ClassInfo* classInfo)
 }
 
 // Copy the current attributes stored in the compiler into a destination map
-// This also resets the counter, since the intention is to consume the attributes
+// This also resets the counter, since the intent is to consume the attributes
 static void copyAttributes(Compiler* compiler, ObjMap* into)
 {
   compiler->numAttributes = 0;
@@ -4054,7 +4080,8 @@ static void copyAttributes(Compiler* compiler, ObjMap* into)
   
   // Note we copy the actual values as is since we'll take ownership 
   // and clear the original map
-  for(uint32_t attrIdx = 0; attrIdx < compiler->attributes->capacity; attrIdx++) {
+  for(uint32_t attrIdx = 0; attrIdx < compiler->attributes->capacity; attrIdx++)
+  {
     const MapEntry* attrEntry = &compiler->attributes->entries[attrIdx];
     if(attrEntry->key == UNDEFINED_VAL) continue;
     wrenMapSet(vm, into, attrEntry->key, attrEntry->value);
@@ -4065,7 +4092,7 @@ static void copyAttributes(Compiler* compiler, ObjMap* into)
 
 // Copy the current attributes stored in the compiler into the method specific
 // attributes for the current enclosingClass.
-// This also resets the counter, since the intention is to consume the attributes
+// This also resets the counter, since the intent is to consume the attributes
 static void copyMethodAttributes(Compiler* compiler, bool isForeign,
             bool isStatic, const char* fullSignature, int32_t length) 
 {
@@ -4087,9 +4114,9 @@ static void copyMethodAttributes(Compiler* compiler, bool isForeign,
   char fullSignatureWithPrefix[MAX_METHOD_SIGNATURE + 8 + 7];
   const char* foreignPrefix = isForeign ? "foreign " : "";
   const char* staticPrefix = isStatic ? "static " : "";
-  sprintf(fullSignatureWithPrefix, "%s%s%.*s", foreignPrefix, staticPrefix, length, fullSignature);
+  sprintf(fullSignatureWithPrefix, "%s%s%.*s", foreignPrefix, staticPrefix, 
+                                               length, fullSignature);
   fullSignatureWithPrefix[fullLength] = '\0';
-
 
   if(compiler->enclosingClass->methodAttributes == NULL) {
     compiler->enclosingClass->methodAttributes = wrenNewMap(vm);
