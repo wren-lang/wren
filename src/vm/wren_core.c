@@ -777,8 +777,8 @@ DEF_PRIMITIVE(num_pow)
 
 DEF_PRIMITIVE(num_fraction)
 {
-  double dummy;
-  RETURN_NUM(modf(AS_NUM(args[0]) , &dummy));
+  double unused;
+  RETURN_NUM(modf(AS_NUM(args[0]) , &unused));
 }
 
 DEF_PRIMITIVE(num_isInfinity)
