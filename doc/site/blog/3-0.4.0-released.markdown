@@ -90,9 +90,9 @@ class Example {}
 
 They can be:
 
-- a #key on it's own
-- a #key = value
-- a #group(with, multiple = true, keys = "value")
+- a `#key` on it's own
+- a `#key = value`
+- a `#group(with, multiple = true, keys = "value")`
 
 **Example**   
 
