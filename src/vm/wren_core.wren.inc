@@ -472,4 +472,15 @@ static const char* coreModuleSource =
 "      writeString_(\"[invalid toString]\")\n"
 "    }\n"
 "  }\n"
+"}\n"
+"\n"
+"class ClassAttributes {\n"
+"  self { _attributes }\n"
+"  methods { _methods }\n"
+"  construct new(attributes, methods) {\n"
+"    _attributes = attributes\n"
+"    _methods = methods\n"
+"  }\n"
+"  toString { \"attributes:%(_attributes) methods:%(_methods)\" }\n"
 "}\n";
+

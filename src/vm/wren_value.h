@@ -410,6 +410,9 @@ struct sObjClass
 
   // The name of the class.
   ObjString* name;
+  
+  // The ClassAttribute for the class, if any
+  Value attributes;
 };
 
 typedef struct
