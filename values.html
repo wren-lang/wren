@@ -162,11 +162,21 @@ again"
 "\%" // A percent sign.
 "\a" // Alarm beep. (Who uses this?)
 "\b" // Backspace.
+"\e" // ESC character.
 "\f" // Formfeed.
 "\n" // Newline.
 "\r" // Carriage return.
 "\t" // Tab.
 "\v" // Vertical tab.
+
+"\x48"        // Unencoded byte     (2 hex digits)
+"\u0041"      // Unicode code point (4 hex digits)
+"\U0001F64A"  // Unicode code point (8 hex digits)
+</pre>
+
+<p>A <code>\x</code> followed by two hex digits specifies a single unencoded byte:</p>
+<pre class="snippet">
+System.print("\x48\x69\x2e") //> Hi.
 </pre>
 
 <p>A <code>\u</code> followed by four hex digits can be used to specify a Unicode code point:</p>
@@ -178,11 +188,6 @@ System.print("\u0041\u0b83\u00DE") //> AஃÞ
 of the basic multilingual plane, like all-important emoji:</p>
 <pre class="snippet">
 System.print("\U0001F64A\U0001F680") //> 🙊🚀
-</pre>
-
-<p>A <code>\x</code> followed by two hex digits specifies a single unencoded byte:</p>
-<pre class="snippet">
-System.print("\x48\x69\x2e") //> Hi.
 </pre>
 
 <p>Strings are instances of class <a href="modules/core/string.html">String</a>.</p>
