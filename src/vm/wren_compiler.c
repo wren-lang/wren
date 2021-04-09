@@ -1719,21 +1719,29 @@ static void patchJump(Compiler* compiler, int offset)
 // Returns true if it was a expression body, false if it was a statement body.
 // (More precisely, returns true if a value was left on the stack. An empty
 // block returns false.)
-static bool finishBlock(Compiler* compiler)
+
+// Returns number of return values, zero for empty block.
+static int finishBlock(Compiler* compiler)
 {
   // Empty blocks do nothing.
-  if (match(compiler, TOKEN_RIGHT_BRACE)) return false;
+  if (match(compiler, TOKEN_RIGHT_BRACE)) return 0;
 
   // If there's no line after the "{", it's a single-expression body.
   if (!matchLine(compiler))
   {
-    expression(compiler);
+    int returnValues = 0;
+    do
+    {
+      expression(compiler);
+      returnValues++;
+    } while (match(compiler, TOKEN_COMMA));
+
     consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' at end of block.");
-    return true;
+    return returnValues;
   }
 
   // Empty blocks (with just a newline inside) do nothing.
-  if (match(compiler, TOKEN_RIGHT_BRACE)) return false;
+  if (match(compiler, TOKEN_RIGHT_BRACE)) return 0;
 
   // Compile the definition list.
   do
@@ -1744,7 +1752,7 @@ static bool finishBlock(Compiler* compiler)
   while (peek(compiler) != TOKEN_RIGHT_BRACE && peek(compiler) != TOKEN_EOF);
   
   consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' at end of block.");
-  return false;
+  return 0;
 }
 
 // Parses a method or function body, after the initial "{" has been consumed.
@@ -1753,23 +1761,34 @@ static bool finishBlock(Compiler* compiler)
 // In that case, this adds the code to ensure it returns `this`.
 static void finishBody(Compiler* compiler, bool isInitializer)
 {
-  bool isExpressionBody = finishBlock(compiler);
+  int returnValues = finishBlock(compiler);
 
   if (isInitializer)
   {
-    // If the initializer body evaluates to a value, discard it.
-    if (isExpressionBody) emitOp(compiler, CODE_POP);
+    // If the initializer body evaluates to values, discard them.
+    for (int i = 0; i < returnValues; i++)
+    {
+      emitOp(compiler, CODE_POP);
+    }
 
     // The receiver is always stored in the first local slot.
     emitOp(compiler, CODE_LOAD_LOCAL_0);
+    returnValues = 1;
   }
-  else if (!isExpressionBody)
+  else if (returnValues == 0)
   {
     // Implicitly return null in statement bodies.
     emitOp(compiler, CODE_NULL);
   }
 
-  emitOp(compiler, CODE_RETURN);
+  if (returnValues <= 1)
+  {
+    emitOp(compiler, CODE_RETURN);
+  }
+  else
+  {
+    emitByteArg(compiler, CODE_RETURN_MULTIPLE, returnValues);
+  }
 }
 
 // The VM can only handle a certain number of parameters, so check that we
@@ -3197,10 +3216,14 @@ void statement(Compiler* compiler)
   {
     // Block statement.
     pushScope(compiler);
-    if (finishBlock(compiler))
+    int returnValues = finishBlock(compiler);
+    if (returnValues > 0)
     {
-      // Block was an expression, so discard it.
-      emitOp(compiler, CODE_POP);
+      // Block was an expression, discard pushed values.
+      for (int i = 0; i < returnValues; i++)
+      {
+        emitOp(compiler, CODE_POP);
+      }
     }
     popScope(compiler);
   }
