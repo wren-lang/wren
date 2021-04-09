@@ -3,7 +3,7 @@
 
 ---
 
-This post is all about the 0.4.0 release since it's a big one!
+This post is all about the 0.4.0 release since it's a big one!   
 <small>(A separate post for 0.5.0 goals would likely come later.)</small>
 
 ## 0.4.0 details
@@ -13,8 +13,8 @@ This post is all about the 0.4.0 release since it's a big one!
 The [full release notes](https://github.com/wren-lang/wren/releases/tag/0.4.0)
 link to each PR or commit, and contains a lot more details than this post.
 
-**Goals**
-As usual, let's revisit the goals from the [0.3.0 post](3-0.4.0-released.html#goals-for-0.4.0).
+**Goals**   
+As usual, let's revisit the goals from the [0.3.0 post](2-0.3.0-released.html#goals-for-0.4.0).
 
 Most importantly - compound operators didn't land in 0.4.0 for various reasons.
 Still working on it, it's just a fun and nuanced problem and I don't want to
@@ -30,7 +30,7 @@ Below we'll highlight some key features, fixes and improvements from the release
 
 You can find all the details and the contributions in the [release notes](https://github.com/wren-lang/wren/releases/tag/0.4.0).
 
-**Take note!**. There are two minor breaking changes in the API on the release notes. 
+**Take note!** There are two minor breaking changes in the API on the release notes. 
 
 --- 
 
@@ -45,11 +45,11 @@ A lot of work has gone into documentation this release, revising, fixing, adding
 and closing gaps that were left. For example, Wren supports multi-line strings 
 but this was never mentioned anywhere! 
 
-### New `continue` keyword
+### New **continue** keyword
 
 Loops can now use continue, which is a welcome addition.
 
-### New `as` keyword
+### New **as** keyword
 
 You can now use `import "..." for Name as OtherName` to avoid name conflicts,
 or to use aliases/shorthand for imported variables.
@@ -88,14 +88,15 @@ can be used at runtime, by external tools (and potentially by Wren itself).
 class Example {}
 </pre>
 
-They can be
- - a #key on it's own
- - a #key = value
- - a #group(with, multiple = true, keys = "value")
+They can be:
+
+- a #key on it's own
+- a #key = value
+- a #group(with, multiple = true, keys = "value")
 
 **Example**   
 
-Below you can one obvious use case, a wip version where attributes for docs are 
+Below you can one obvious use case, a wip version where attributes for docs were 
 parsed and sent over to [vscode](https://code.visualstudio.com/) to display.
 
 <video preload="auto" controls="" loop="loop" style="max-width:100%; width:auto; margin:auto; display:block;">  
@@ -121,7 +122,7 @@ Attributes at runtime are stored on the class itself. You can access them via
 
 All the details for [Attributes can be found here](https://wren.io/classes.html#attributes).
 
-### chained methods fixes ('fluent interfaces')
+### Chained methods fixes ('fluent interfaces')
 
 Mentioned in the last post, you can now use this pattern in code as intended, 
 the same-line requirement for the `.` has been removed.
