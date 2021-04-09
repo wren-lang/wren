@@ -49,14 +49,14 @@
     <h2>0.4.0 released!</h2>
     <p>8 April 2021</p>
 <hr />
-<p>This post is all about the 0.4.0 release since it&rsquo;s a big one!
+<p>This post is all about the 0.4.0 release since it&rsquo;s a big one! <br />
 <small>(A separate post for 0.5.0 goals would likely come later.)</small></p>
 <h2>0.4.0 details <a href="#0.4.0-details" name="0.4.0-details" class="header-anchor">#</a></h2>
 <p><strong>0.4.0 contains 145 commits from 28 contributors.</strong></p>
 <p>The <a href="https://github.com/wren-lang/wren/releases/tag/0.4.0">full release notes</a>
 link to each PR or commit, and contains a lot more details than this post.</p>
-<p><strong>Goals</strong>
-As usual, let&rsquo;s revisit the goals from the <a href="3-0.4.0-released.html#goals-for-0.4.0">0.3.0 post</a>.</p>
+<p><strong>Goals</strong> <br />
+As usual, let&rsquo;s revisit the goals from the <a href="2-0.3.0-released.html#goals-for-0.4.0">0.3.0 post</a>.</p>
 <p>Most importantly - compound operators didn&rsquo;t land in 0.4.0 for various reasons.
 Still working on it, it&rsquo;s just a fun and nuanced problem and I don&rsquo;t want to
 keep 0.4.0 back cos of it.</p>
@@ -65,7 +65,7 @@ keep 0.4.0 back cos of it.</p>
 <p>Below we&rsquo;ll highlight some key features, fixes and improvements from the release. </p>
 <p><strong>A lot of work came from the community, much thanks to everyone contributing!</strong></p>
 <p>You can find all the details and the contributions in the <a href="https://github.com/wren-lang/wren/releases/tag/0.4.0">release notes</a>.</p>
-<p><strong>Take note!</strong>. There are two minor breaking changes in the API on the release notes. </p>
+<p><strong>Take note!</strong> There are two minor breaking changes in the API on the release notes. </p>
 <hr />
 <h3>Bug fixes <a href="#bug-fixes" name="bug-fixes" class="header-anchor">#</a></h3>
 <p>Several important bugs have been fixed, sneaky stack corruptions and some user
@@ -74,9 +74,9 @@ experience fixes that clarify confusing states. </p>
 <p>A lot of work has gone into documentation this release, revising, fixing, adding
 and closing gaps that were left. For example, Wren supports multi-line strings 
 but this was never mentioned anywhere! </p>
-<h3>New <code>continue</code> keyword <a href="#new-continue-keyword" name="new-continue-keyword" class="header-anchor">#</a></h3>
+<h3>New <strong>continue</strong> keyword <a href="#new-continue-keyword" name="new-continue-keyword" class="header-anchor">#</a></h3>
 <p>Loops can now use continue, which is a welcome addition.</p>
-<h3>New <code>as</code> keyword <a href="#new-as-keyword" name="new-as-keyword" class="header-anchor">#</a></h3>
+<h3>New <strong>as</strong> keyword <a href="#new-as-keyword" name="new-as-keyword" class="header-anchor">#</a></h3>
 <p>You can now use <code>import "..." for Name as OtherName</code> to avoid name conflicts,
 or to use aliases/shorthand for imported variables.</p>
 <h3>Raw strings <a href="#raw-strings" name="raw-strings" class="header-anchor">#</a></h3>
@@ -106,12 +106,14 @@ can be used at runtime, by external tools (and potentially by Wren itself).</p>
 class Example {}
 </pre>
 
-<p>They can be
- - a #key on it&rsquo;s own
- - a #key = value
- - a #group(with, multiple = true, keys = &ldquo;value&rdquo;)</p>
+<p>They can be:</p>
+<ul>
+<li>a #key on it&rsquo;s own</li>
+<li>a #key = value</li>
+<li>a #group(with, multiple = true, keys = &ldquo;value&rdquo;)</li>
+</ul>
 <p><strong>Example</strong>   </p>
-<p>Below you can one obvious use case, a wip version where attributes for docs are 
+<p>Below you can one obvious use case, a wip version where attributes for docs were 
 parsed and sent over to <a href="https://code.visualstudio.com/">vscode</a> to display.</p>
 <video preload="auto" controls="" loop="loop" style="max-width:100%; width:auto; margin:auto; display:block;">  
     <source src="https://i.imgur.com/W9DWysP.mp4" type="video/mp4">
@@ -134,7 +136,7 @@ exclamation:</p>
 <li><code>YourClass.attributes.methods</code> for the method attributes</li>
 </ul>
 <p>All the details for <a href="https://wren.io/classes.html#attributes">Attributes can be found here</a>.</p>
-<h3>chained methods fixes (&lsquo;fluent interfaces&rsquo;) <a href="#chained-methods-fixes-('fluent-interfaces')" name="chained-methods-fixes-('fluent-interfaces')" class="header-anchor">#</a></h3>
+<h3>Chained methods fixes (&lsquo;fluent interfaces&rsquo;) <a href="#chained-methods-fixes-('fluent-interfaces')" name="chained-methods-fixes-('fluent-interfaces')" class="header-anchor">#</a></h3>
 <p>Mentioned in the last post, you can now use this pattern in code as intended, 
 the same-line requirement for the <code>.</code> has been removed.</p>
 <pre class="snippet">
