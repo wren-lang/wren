@@ -54,7 +54,7 @@ var a = "again" //! "a" is already declared.
 
 ## Assignment
 
-After a variable has been declared, you can assign to it using `=`:
+After a variable has been declared, you can assign to it using `=`
 
 <pre class="snippet">
 var a = 123

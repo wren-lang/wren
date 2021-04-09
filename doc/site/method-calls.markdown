@@ -52,7 +52,9 @@ In a language like Python or JavaScript, these would both call a single `int()`
 method, which has some kind of "optional" parameter. The body of the method
 figures out how many arguments were passed and uses control flow to handle the
 two different behaviors. That means first parameter represents "max unless
-another parameter was passed, in which case it's min". Kind of gross.
+another parameter was passed, in which case it's min". 
+
+This type of 'variadic' code isn't ideal, so Wren doesn't encourage it.
 
 In Wren, these are calls to two entirely separate methods, `int(_,_)` and
 `int(_)`. This makes it easier to define "overloads" like this since you don't
@@ -163,7 +165,7 @@ like mocks or proxies where you want an object to masquerade as a certain class.
 
 ## Subscripts
 
-Another familiar syntax from math class is *subscripting* using square brackets
+Another familiar syntax from math is *subscripting* using square brackets
 (`[]`). It's handy for working with collection-like objects. For example:
 
 <pre class="snippet">

@@ -267,7 +267,7 @@ inside a method works like this:
 
 So, in the above example, we hit case #2 and it prints "Francis". Distinguishing
 self sends from outer variables based on the *case* of the first letter in the
-name probably seems crazy but it works surprisingly well. Method names are
+name probably seems weird but it works surprisingly well. Method names are
 lowercase in Wren. Class names are capitalized.
 
 Most of the time, when you're in a method and want to access a name from outside
@@ -346,6 +346,20 @@ Like other methods, constructors can obviously have arguments, and can be
 overloaded by [arity](#signature). A constructor *must* be a named method with
 a (possibly empty) argument list. Operators, getters, and setters cannot be
 constructors.
+
+A constructor returns the instance of the class being created, even if you 
+don't explicitly use `return`. It is valid to use `return` inside of a 
+constructor, but it is an error to have an expression after the return.
+That rule applies to `return this` as well, return handles that implicitly inside
+a constructor, so just `return` is enough.
+
+<pre class="snippet">
+return          //> valid, returns 'this'
+
+return variable //> invalid
+return null     //> invalid
+return this     //> also invalid
+</pre>
 
 A constructor is actually a pair of methods. You get a method on the class:
 

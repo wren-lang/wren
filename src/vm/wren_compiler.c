@@ -355,7 +355,11 @@ struct sCompiler
   // The function being compiled.
   ObjFn* fn;
   
+  // The constants for the function being compiled.
   ObjMap* constants;
+
+  // Whether or not the compiler is for a constructor initializer
+  bool isInitializer;
 };
 
 // Describes where a variable is declared.
@@ -509,6 +513,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   compiler->parent = parent;
   compiler->loop = NULL;
   compiler->enclosingClass = NULL;
+  compiler->isInitializer = false;
   
   // Initialize these to NULL before allocating in case a GC gets triggered in
   // the middle of initializing the compiler.
@@ -1757,13 +1762,13 @@ static int finishBlock(Compiler* compiler)
 
 // Parses a method or function body, after the initial "{" has been consumed.
 //
-// It [isInitializer] is `true`, this is the body of a constructor initializer.
-// In that case, this adds the code to ensure it returns `this`.
-static void finishBody(Compiler* compiler, bool isInitializer)
+// If [Compiler->isInitializer] is `true`, this is the body of a constructor
+// initializer. In that case, this adds the code to ensure it returns `this`.
+static void finishBody(Compiler* compiler)
 {
   int returnValues = finishBlock(compiler);
 
-  if (isInitializer)
+  if (compiler->isInitializer)
   {
     // If the initializer body evaluates to values, discard them.
     for (int i = 0; i < returnValues; i++)
@@ -1983,6 +1988,9 @@ static void methodCall(Compiler* compiler, Code instruction,
   {
     called.type = SIG_METHOD;
 
+    // Allow new line before an empty argument list
+    ignoreNewlines(compiler);
+
     // Allow empty an argument list.
     if (peek(compiler) != TOKEN_RIGHT_PAREN)
     {
@@ -2013,7 +2021,7 @@ static void methodCall(Compiler* compiler, Code instruction,
 
     fnCompiler.fn->arity = fnSignature.arity;
 
-    finishBody(&fnCompiler, false);
+    finishBody(&fnCompiler);
 
     // Name the function based on the method its passed to.
     char blockName[MAX_METHOD_SIGNATURE + 15];
@@ -2654,6 +2662,9 @@ static void parameterList(Compiler* compiler, Signature* signature)
   
   signature->type = SIG_METHOD;
   
+  // Allow new line before an empty argument list
+  ignoreNewlines(compiler);
+
   // Allow an empty parameter list.
   if (match(compiler, TOKEN_RIGHT_PAREN)) return;
 
@@ -2820,8 +2831,8 @@ void expression(Compiler* compiler)
   parsePrecedence(compiler, PREC_LOWEST);
 }
 
-// Returns the number of arguments to the instruction at [ip] in [fn]'s
-// bytecode.
+// Returns the number of bytes for the arguments to the instruction 
+// at [ip] in [fn]'s bytecode.
 static int getByteCountForArguments(const uint8_t* bytecode,
                             const Value* constants, int ip)
 {
@@ -3186,11 +3197,18 @@ void statement(Compiler* compiler)
     int returnValues = 0;
     if (peek(compiler) == TOKEN_LINE)
     {
-      // Implicitly return null if there is no value.
-      emitOp(compiler, CODE_NULL);
+      // If there's no expression after return, initializers should 
+      // return 'this' and regular methods should return null
+      Code result = compiler->isInitializer ? CODE_LOAD_LOCAL_0 : CODE_NULL;
+      emitOp(compiler, result);
     }
     else
     {
+      if (compiler->isInitializer)
+      {
+        error(compiler, "A constructor cannot return a value.");
+      }
+
       // support multiple return values
       do
       {
@@ -3343,6 +3361,8 @@ static bool method(Compiler* compiler, Variable classVariable)
 
   // Compile the method signature.
   signatureFn(&methodCompiler, &signature);
+
+  methodCompiler.isInitializer = signature.type == SIG_INITIALIZER;
   
   if (isStatic && signature.type == SIG_INITIALIZER)
   {
@@ -3372,7 +3392,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   else
   {
     consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
-    finishBody(&methodCompiler, signature.type == SIG_INITIALIZER);
+    finishBody(&methodCompiler);
     endCompiler(&methodCompiler, fullSignature, length);
   }
   

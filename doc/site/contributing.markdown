@@ -88,8 +88,7 @@ The basic process is simple:
     If there are no failures, you're good to go.
 
 2. **[Fork the repo][fork] so you can change it locally.** Please make your
-   changes in separate [feature branches][] to make things a little easier on
-   me.
+   changes in separate [feature branches][] to make things a little easier.
 
 3. **Change the code.** Please follow the style of the surrounding code. That
    basically means `camelCase` names, `{` on the next line, keep within 80
@@ -105,8 +104,7 @@ The basic process is simple:
 6. **Add your name and email to the [AUTHORS][] file if you haven't already.**
 
 7. **Send a [pull request][].** Pat yourself on the back for contributing to a
-   fun open source project! I'll take it from here and hopefully we'll get it
-   landed smoothly.
+   fun open source project! 
 
 ## Getting help
 
