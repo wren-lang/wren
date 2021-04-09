@@ -1721,11 +1721,8 @@ static void patchJump(Compiler* compiler, int offset)
 
 // Parses a block body, after the initial "{" has been consumed.
 //
-// Returns true if it was a expression body, false if it was a statement body.
-// (More precisely, returns true if a value was left on the stack. An empty
-// block returns false.)
-
-// Returns number of return values, zero for empty block.
+// Returns number of values left on the stack, zero for empty block.
+// A value >= 1 was an expression body, zero if it was a statement body.
 static int finishBlock(Compiler* compiler)
 {
   // Empty blocks do nothing.
