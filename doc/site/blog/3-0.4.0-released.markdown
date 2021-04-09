@@ -1,0 +1,182 @@
+^title 0.4.0 released!
+8 April 2021
+
+---
+
+This post is all about the 0.4.0 release since it's a big one!
+<small>(A separate post for 0.5.0 goals would likely come later.)</small>
+
+## 0.4.0 details
+
+**0.4.0 contains 145 commits from 28 contributors.**
+
+The [full release notes](https://github.com/wren-lang/wren/releases/tag/0.4.0)
+link to each PR or commit, and contains a lot more details than this post.
+
+**Goals**
+As usual, let's revisit the goals from the [0.3.0 post](3-0.4.0-released.html#goals-for-0.4.0).
+
+Most importantly - compound operators didn't land in 0.4.0 for various reasons.
+Still working on it, it's just a fun and nuanced problem and I don't want to
+keep 0.4.0 back cos of it.
+
+With that out the way, let's see what 0.4.0 contains! 
+
+## 0.4.0 highlights
+
+Below we'll highlight some key features, fixes and improvements from the release. 
+
+**A lot of work came from the community, much thanks to everyone contributing!**
+
+You can find all the details and the contributions in the [release notes](https://github.com/wren-lang/wren/releases/tag/0.4.0).
+
+**Take note!**. There are two minor breaking changes in the API on the release notes. 
+
+--- 
+
+### Bug fixes
+
+Several important bugs have been fixed, sneaky stack corruptions and some user
+experience fixes that clarify confusing states. 
+
+### Documentation
+
+A lot of work has gone into documentation this release, revising, fixing, adding
+and closing gaps that were left. For example, Wren supports multi-line strings 
+but this was never mentioned anywhere! 
+
+### New `continue` keyword
+
+Loops can now use continue, which is a welcome addition.
+
+### New `as` keyword
+
+You can now use `import "..." for Name as OtherName` to avoid name conflicts,
+or to use aliases/shorthand for imported variables.
+
+### Raw strings
+
+Wren now supports triple quotes for a string `"""`.
+
+This type of string is only unique in how it's parsed, the content of the 
+string is ignored (no interpolation or escapes are processed), which allows 
+complex strings to be expressed without needing to escape things. 
+
+A common example is json or regex, where there's a lot of escaping that obscures
+the string content and makes it hard to read and maintain. 
+
+If they span multiple lines, the string ignores the open and closing newlines 
+and whitespace and preserves anything in between.
+
+<pre class="snippet">
+var json = """
+  {
+    "hello": "wren",
+    "from" : "json"
+  }
+"""
+</pre>
+
+### Attributes
+
+Attributes are user-defined metadata associated with a class or method that
+can be used at runtime, by external tools (and potentially by Wren itself).
+
+<pre class="snippet">
+#hidden = true
+#doc = "A simple example class"
+class Example {}
+</pre>
+
+They can be
+ - a #key on it's own
+ - a #key = value
+ - a #group(with, multiple = true, keys = "value")
+
+**Example**   
+
+Below you can one obvious use case, a wip version where attributes for docs are 
+parsed and sent over to [vscode](https://code.visualstudio.com/) to display.
+
+<video preload="auto" controls="" loop="loop" style="max-width:100%; width:auto; margin:auto; display:block;">  
+    <source src="https://i.imgur.com/W9DWysP.mp4" type="video/mp4">
+</video>
+
+**Runtime access**   
+By default, attributes are compiled out and ignored.
+For an attribute to be visible at runtime, mark it for runtime access using an 
+exclamation:
+
+<pre class="snippet">
+#doc = "not runtime data"
+#!runtimeAccess = true
+#!maxIterations = 16
+</pre>
+
+Attributes at runtime are stored on the class itself. You can access them via 
+`YourClass.attributes`. If any attributes are made available, they'll be found here:
+
+- `YourClass.attributes.self` for the class attributes
+- `YourClass.attributes.methods` for the method attributes
+
+All the details for [Attributes can be found here](https://wren.io/classes.html#attributes).
+
+### chained methods fixes ('fluent interfaces')
+
+Mentioned in the last post, you can now use this pattern in code as intended, 
+the same-line requirement for the `.` has been removed.
+
+<pre class="snippet">
+  example
+    .some()
+    .functions()
+    .here()
+</pre>
+
+### List additions
+
+Lists are now sortable via `list.sort()` and `list.sort {|a, b| ... }`.
+You can find an index of something via `list.indexOf(value)`, and remove a value
+via `list.remove(value)`. There's also `list.swap(index0, index1)` for moving 
+items around within a list.
+
+For the API, `wrenSetListElement` now exists, and both set and
+`wrenGetListElement` now accept negative indices same as the language side.
+
+### Num additions
+
+A few new constants:
+
+- `Num.tau`
+- `Num.nan` 
+- `Num.infinity`
+- `Num.minSafeInteger`/`Num.maxSafeInteger`
+
+And some new methods on a number:
+
+- `num.min(other)`
+- `num.max(other)`
+- `num.clamp(min, max)`
+- `num.cbrt`
+- `num.exp`
+- `num.log2`
+
+### Map access from the API 
+
+You can now create and access maps from the API:
+
+- `wrenSetSlotNewMap`
+- `wrenGetMapCount`
+- `wrenGetMapContainsKey`
+- `wrenGetMapValue`
+- `wrenSetMapValue`
+- `wrenRemoveMapValue`
+
+## Till next time
+
+---
+
+- [The Wren Blog RSS](http://wren.io/blog/rss.xml)
+- Join the [discord community](https://discord.gg/Kx6PxSX)
+- Visit the [wren-lang organization](https://github.com/wren-lang) on GitHub to get involved.
+- Follow the developers [@munificentbob](https://twitter.com/munificentbob) or [@ruby0x1](https://twitter.com/ruby0x1) on twitter
