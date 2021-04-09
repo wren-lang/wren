@@ -1098,7 +1098,7 @@ static void nextToken(Parser* parser)
           skipLineComment(parser);
           break;
         }
-        // Otherwise we treat it as a token a token
+        // Otherwise we treat it as a token
         makeToken(parser, TOKEN_HASH); 
         return;
       }
