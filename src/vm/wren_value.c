@@ -1029,7 +1029,7 @@ static void blackenClass(WrenVM* vm, ObjClass* classObj)
 
   wrenGrayObj(vm, (Obj*)classObj->name);
 
-  if(classObj->attributes != NULL_VAL) wrenGrayObj(vm, AS_OBJ(classObj->attributes));
+  if(!IS_NULL(classObj->attributes)) wrenGrayObj(vm, AS_OBJ(classObj->attributes));
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjClass);
