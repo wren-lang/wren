@@ -3955,7 +3955,7 @@ static void addToAttributeGroup(Compiler* compiler,
   if(IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
   Value groupMapValue = wrenMapGet(compiler->attributes, group);
-  if(groupMapValue == UNDEFINED_VAL) 
+  if(IS_UNDEFINED(groupMapValue)) 
   {
     groupMapValue = OBJ_VAL(wrenNewMap(vm));
     wrenMapSet(vm, compiler->attributes, group, groupMapValue);
@@ -3968,7 +3968,7 @@ static void addToAttributeGroup(Compiler* compiler,
   //var keyItems = group[key]
   //if(!keyItems) keyItems = group[key] = [] 
   Value keyItemsValue = wrenMapGet(groupMap, key);
-  if(keyItemsValue == UNDEFINED_VAL) 
+  if(IS_UNDEFINED(keyItemsValue)) 
   {
     keyItemsValue = OBJ_VAL(wrenNewList(vm, 0));
     wrenMapSet(vm, groupMap, key, keyItemsValue);
@@ -3996,7 +3996,7 @@ static void emitAttributes(Compiler* compiler, ObjMap* attributes)
   for(uint32_t groupIdx = 0; groupIdx < attributes->capacity; groupIdx++)
   {
     const MapEntry* groupEntry = &attributes->entries[groupIdx];
-    if(groupEntry->key == UNDEFINED_VAL) continue;
+    if(IS_UNDEFINED(groupEntry->key)) continue;
     //group key
     emitConstant(compiler, groupEntry->key);
 
@@ -4008,7 +4008,7 @@ static void emitAttributes(Compiler* compiler, ObjMap* attributes)
     for(uint32_t itemIdx = 0; itemIdx < groupItems->capacity; itemIdx++)
     {
       const MapEntry* itemEntry = &groupItems->entries[itemIdx];
-      if(itemEntry->key == UNDEFINED_VAL) continue;
+      if(IS_UNDEFINED(itemEntry->key)) continue;
 
       emitConstant(compiler, itemEntry->key);
       // Attribute key value, key = []
@@ -4042,7 +4042,7 @@ static void emitAttributeMethods(Compiler* compiler, ObjMap* attributes)
   for(uint32_t methodIdx = 0; methodIdx < attributes->capacity; methodIdx++)
   {
     const MapEntry* methodEntry = &attributes->entries[methodIdx];
-    if(methodEntry->key == UNDEFINED_VAL) continue;
+    if(IS_UNDEFINED(methodEntry->key)) continue;
     emitConstant(compiler, methodEntry->key);
     ObjMap* attributeMap = AS_MAP(methodEntry->value);
     emitAttributes(compiler, attributeMap);
@@ -4083,7 +4083,7 @@ static void copyAttributes(Compiler* compiler, ObjMap* into)
   for(uint32_t attrIdx = 0; attrIdx < compiler->attributes->capacity; attrIdx++)
   {
     const MapEntry* attrEntry = &compiler->attributes->entries[attrIdx];
-    if(attrEntry->key == UNDEFINED_VAL) continue;
+    if(IS_UNDEFINED(attrEntry->key)) continue;
     wrenMapSet(vm, into, attrEntry->key, attrEntry->value);
   }
   
