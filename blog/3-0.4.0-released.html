@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+<title>0.4.0 released! &ndash; Wren</title>
+<script type="application/javascript" src="../prism.js" data-manual></script>
+<script type="application/javascript" src="../wren.js"></script>
+<link rel="stylesheet" type="text/css" href="../prism.css" />
+<link rel="stylesheet" type="text/css" href="../style.css" />
+<link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic|Source+Code+Pro:400|Lato:400|Sanchez:400italic,400' rel='stylesheet' type='text/css'>
+<!-- Tell mobile browsers we're optimized for them and they don't need to crop
+     the viewport. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+</head>
+<body id="top">
+<header>
+  <div class="page">
+    <div class="main-column">
+      <h1><a href="../">wren</a></h1>
+      <h2>a classy little scripting language</h2>      
+    </div>
+  </div>
+</header>
+<div class="page">
+  <nav class="big">
+    <a href="../"><img src="../wren.svg" class="logo"></a>
+    <ul>
+      <li><a href="../getting-started.html">Getting Started</a></li>
+      <li><a href="../contributing.html">Contributing</a></li>
+      <li><a href="../blog">Blog</a></li>
+      <li><a href="../try">Try it!</a></li>
+    </ul>
+  </nav>
+  <nav class="small">
+    <table>
+      <tr>
+        <td>
+        <ul>
+          <li><a href="../getting-started.html">Getting Started</a></li>
+          <li><a href="../contributing.html">Contributing</a></li>
+          <li><a href="../blog">Blog</a></li>
+          <li><a href="../try">Try it!</a></li>
+        </ul>
+        </td>
+      </tr>
+    </table>
+  </nav>
+  <main>
+    <h2>0.4.0 released!</h2>
+    <p>8 April 2021</p>
+<hr />
+<p>This post is all about the 0.4.0 release since it&rsquo;s a big one!
+<small>(A separate post for 0.5.0 goals would likely come later.)</small></p>
+<h2>0.4.0 details <a href="#0.4.0-details" name="0.4.0-details" class="header-anchor">#</a></h2>
+<p><strong>0.4.0 contains 145 commits from 28 contributors.</strong></p>
+<p>The <a href="https://github.com/wren-lang/wren/releases/tag/0.4.0">full release notes</a>
+link to each PR or commit, and contains a lot more details than this post.</p>
+<p><strong>Goals</strong>
+As usual, let&rsquo;s revisit the goals from the <a href="3-0.4.0-released.html#goals-for-0.4.0">0.3.0 post</a>.</p>
+<p>Most importantly - compound operators didn&rsquo;t land in 0.4.0 for various reasons.
+Still working on it, it&rsquo;s just a fun and nuanced problem and I don&rsquo;t want to
+keep 0.4.0 back cos of it.</p>
+<p>With that out the way, let&rsquo;s see what 0.4.0 contains! </p>
+<h2>0.4.0 highlights <a href="#0.4.0-highlights" name="0.4.0-highlights" class="header-anchor">#</a></h2>
+<p>Below we&rsquo;ll highlight some key features, fixes and improvements from the release. </p>
+<p><strong>A lot of work came from the community, much thanks to everyone contributing!</strong></p>
+<p>You can find all the details and the contributions in the <a href="https://github.com/wren-lang/wren/releases/tag/0.4.0">release notes</a>.</p>
+<p><strong>Take note!</strong>. There are two minor breaking changes in the API on the release notes. </p>
+<hr />
+<h3>Bug fixes <a href="#bug-fixes" name="bug-fixes" class="header-anchor">#</a></h3>
+<p>Several important bugs have been fixed, sneaky stack corruptions and some user
+experience fixes that clarify confusing states. </p>
+<h3>Documentation <a href="#documentation" name="documentation" class="header-anchor">#</a></h3>
+<p>A lot of work has gone into documentation this release, revising, fixing, adding
+and closing gaps that were left. For example, Wren supports multi-line strings 
+but this was never mentioned anywhere! </p>
+<h3>New <code>continue</code> keyword <a href="#new-continue-keyword" name="new-continue-keyword" class="header-anchor">#</a></h3>
+<p>Loops can now use continue, which is a welcome addition.</p>
+<h3>New <code>as</code> keyword <a href="#new-as-keyword" name="new-as-keyword" class="header-anchor">#</a></h3>
+<p>You can now use <code>import "..." for Name as OtherName</code> to avoid name conflicts,
+or to use aliases/shorthand for imported variables.</p>
+<h3>Raw strings <a href="#raw-strings" name="raw-strings" class="header-anchor">#</a></h3>
+<p>Wren now supports triple quotes for a string <code>"""</code>.</p>
+<p>This type of string is only unique in how it&rsquo;s parsed, the content of the 
+string is ignored (no interpolation or escapes are processed), which allows 
+complex strings to be expressed without needing to escape things. </p>
+<p>A common example is json or regex, where there&rsquo;s a lot of escaping that obscures
+the string content and makes it hard to read and maintain. </p>
+<p>If they span multiple lines, the string ignores the open and closing newlines 
+and whitespace and preserves anything in between.</p>
+<pre class="snippet">
+var json = """
+  {
+    "hello": "wren",
+    "from" : "json"
+  }
+"""
+</pre>
+
+<h3>Attributes <a href="#attributes" name="attributes" class="header-anchor">#</a></h3>
+<p>Attributes are user-defined metadata associated with a class or method that
+can be used at runtime, by external tools (and potentially by Wren itself).</p>
+<pre class="snippet">
+#hidden = true
+#doc = "A simple example class"
+class Example {}
+</pre>
+
+<p>They can be
+ - a #key on it&rsquo;s own
+ - a #key = value
+ - a #group(with, multiple = true, keys = &ldquo;value&rdquo;)</p>
+<p><strong>Example</strong>   </p>
+<p>Below you can one obvious use case, a wip version where attributes for docs are 
+parsed and sent over to <a href="https://code.visualstudio.com/">vscode</a> to display.</p>
+<video preload="auto" controls="" loop="loop" style="max-width:100%; width:auto; margin:auto; display:block;">  
+    <source src="https://i.imgur.com/W9DWysP.mp4" type="video/mp4">
+</video>
+
+<p><strong>Runtime access</strong> <br />
+By default, attributes are compiled out and ignored.
+For an attribute to be visible at runtime, mark it for runtime access using an 
+exclamation:</p>
+<pre class="snippet">
+#doc = "not runtime data"
+#!runtimeAccess = true
+#!maxIterations = 16
+</pre>
+
+<p>Attributes at runtime are stored on the class itself. You can access them via 
+<code>YourClass.attributes</code>. If any attributes are made available, they&rsquo;ll be found here:</p>
+<ul>
+<li><code>YourClass.attributes.self</code> for the class attributes</li>
+<li><code>YourClass.attributes.methods</code> for the method attributes</li>
+</ul>
+<p>All the details for <a href="https://wren.io/classes.html#attributes">Attributes can be found here</a>.</p>
+<h3>chained methods fixes (&lsquo;fluent interfaces&rsquo;) <a href="#chained-methods-fixes-('fluent-interfaces')" name="chained-methods-fixes-('fluent-interfaces')" class="header-anchor">#</a></h3>
+<p>Mentioned in the last post, you can now use this pattern in code as intended, 
+the same-line requirement for the <code>.</code> has been removed.</p>
+<pre class="snippet">
+  example
+    .some()
+    .functions()
+    .here()
+</pre>
+
+<h3>List additions <a href="#list-additions" name="list-additions" class="header-anchor">#</a></h3>
+<p>Lists are now sortable via <code>list.sort()</code> and <code>list.sort {|a, b| ... }</code>.
+You can find an index of something via <code>list.indexOf(value)</code>, and remove a value
+via <code>list.remove(value)</code>. There&rsquo;s also <code>list.swap(index0, index1)</code> for moving 
+items around within a list.</p>
+<p>For the API, <code>wrenSetListElement</code> now exists, and both set and
+<code>wrenGetListElement</code> now accept negative indices same as the language side.</p>
+<h3>Num additions <a href="#num-additions" name="num-additions" class="header-anchor">#</a></h3>
+<p>A few new constants:</p>
+<ul>
+<li><code>Num.tau</code></li>
+<li><code>Num.nan</code> </li>
+<li><code>Num.infinity</code></li>
+<li><code>Num.minSafeInteger</code>/<code>Num.maxSafeInteger</code></li>
+</ul>
+<p>And some new methods on a number:</p>
+<ul>
+<li><code>num.min(other)</code></li>
+<li><code>num.max(other)</code></li>
+<li><code>num.clamp(min, max)</code></li>
+<li><code>num.cbrt</code></li>
+<li><code>num.exp</code></li>
+<li><code>num.log2</code></li>
+</ul>
+<h3>Map access from the API <a href="#map-access-from-the-api" name="map-access-from-the-api" class="header-anchor">#</a></h3>
+<p>You can now create and access maps from the API:</p>
+<ul>
+<li><code>wrenSetSlotNewMap</code></li>
+<li><code>wrenGetMapCount</code></li>
+<li><code>wrenGetMapContainsKey</code></li>
+<li><code>wrenGetMapValue</code></li>
+<li><code>wrenSetMapValue</code></li>
+<li><code>wrenRemoveMapValue</code></li>
+</ul>
+<h2>Till next time <a href="#till-next-time" name="till-next-time" class="header-anchor">#</a></h2>
+<hr />
+<ul>
+<li><a href="http://wren.io/blog/rss.xml">The Wren Blog RSS</a></li>
+<li>Join the <a href="https://discord.gg/Kx6PxSX">discord community</a></li>
+<li>Visit the <a href="https://github.com/wren-lang">wren-lang organization</a> on GitHub to get involved.</li>
+<li>Follow the developers <a href="https://twitter.com/munificentbob">@munificentbob</a> or <a href="https://twitter.com/ruby0x1">@ruby0x1</a> on twitter</li>
+</ul>
+  </main>
+</div>
+<footer>
+  <div class="page">
+    <div class="main-column">
+    <p>Wren lives
+      <a href="https://github.com/wren-lang/wren">on GitHub</a>
+      &mdash; Made with &#x2764; by
+      <a href="http://journal.stuffwithstuff.com/">Bob Nystrom</a> and
+      <a href="https://github.com/wren-lang/wren/blob/main/AUTHORS">friends</a>.
+    </p>
+    <div class="main-column">
+  </div>
+</footer>
+</body>
+</html>

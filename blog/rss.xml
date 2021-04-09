@@ -4,11 +4,18 @@
     <description>The development blog of the Wren programming language.</description>
     <language>en-us</language>
     <item>
+      <title>0.4.0 released</title>
+      <link>https://wren.io/blog/3-0.4.0-released.html</link>
+      <description>0.4.0 is a big release, here's all the info!</description>
+      <guid>https://wren.io/blog/3-0.4.0-released.html</guid>
+      <pubDate>Thu, 08 Apr 2021 00:00:00 GMT</pubDate>
+    </item>
+    <item>
       <title>0.3.0 released</title>
       <link>https://wren.io/blog/2-0.3.0-released.html</link>
       <description>0.3.0 release info! Plus some notes and goals for the next release, 0.4.0.</description>
       <guid>https://wren.io/blog/2-0.3.0-released.html</guid>
-      <pubDate>Mon, 30 Sep 2019 00:00:00 GMT</pubDate>
+      <pubDate>Mon, 05 Jun 2020 00:00:00 GMT</pubDate>
     </item>
     <item>
       <title>0.2.0 and beyond</title>
