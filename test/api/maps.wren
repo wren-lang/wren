@@ -62,7 +62,3 @@ System.print(Maps.contains(containsMap, "other")) // expect: false
 
 System.print(Maps.contains()) // expect: true
 System.print(Maps.containsFalse()) // expect: false
-
-//
-
-Maps.invalidInsert(ForeignClass.new()) // expect runtime error: Key must be a value type.
