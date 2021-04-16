@@ -59,9 +59,123 @@
   </nav>
   <main>
     <h1>Meta Class</h1>
-    <p><strong>TODO</strong></p>
-<h2>Methods <a href="#methods" name="methods" class="header-anchor">#</a></h2>
-<p><strong>TODO</strong></p>
+    <p>This class contains static methods to list a module&rsquo;s top-level variables and to compile Wren expressions and source code into closures (i.e. <a href="functions.html">functions</a>) at runtime.</p>
+<p>It must be imported from the <a href="meta.html">meta</a> module:</p>
+<pre class="snippet">
+    import "meta" for Meta
+</pre>
+
+<h2>Static Methods <a href="#static-methods" name="static-methods" class="header-anchor">#</a></h2>
+<h3><strong>getModuleVariables</strong>(module) <a href="#getmodulevariables(module)" name="getmodulevariables(module)" class="header-anchor">#</a></h3>
+<p>Returns a list of all module level variables defined or visible in <code>module</code>.</p>
+<p>This includes any variables explicitly imported from other modules or implicitly imported from the built-in modules. For example if we create this module:</p>
+<pre class="snippet">
+/* module.wren */
+var M = 1
+</pre>
+
+<p>and then import it into this module:</p>
+<pre class="snippet">
+/* get_mod_vars.wren */
+import "meta" for Meta
+import "./module" for M
+
+var v = 42
+
+var f = Fn.new {
+  var g = 2
+}
+
+class C {}
+
+System.print(Meta.getModuleVariables("./get_mod_vars"))
+
+var w = 43 // still returned even though defined later
+</pre>
+
+<p>the output when the latter module is run is:</p>
+<pre class="snippet">
+[Object, Class, Object metaclass, Bool, Fiber, Fn, Null, Num, Sequence, MapSequence, SkipSequence, TakeSequence, WhereSequence, List, String, StringByteSequence, StringCodePointSequence, Map, MapKeySequence, MapValueSequence, MapEntry, Range, System, Meta, M, v, f, C, w]
+</pre>
+
+<p>Notice that <code>g</code> is not included in this list as it is a local variable rather than a module variable.</p>
+<p>It is a runtime error if <code>module</code> is not a string or cannot be found.</p>
+<h3><strong>eval</strong>(source) <a href="#eval(source)" name="eval(source)" class="header-anchor">#</a></h3>
+<p>Compiles Wren source code into a closure and then executes the closure automatically.</p>
+<p>It is a runtime error if <code>source</code> is not a string.</p>
+<p>It is also an error if the source code cannot be compiled though the compilation errors themselves are not printed.</p>
+<p>For example:</p>
+<pre class="snippet">
+import "meta" for Meta
+
+var a = 2
+var b = 3
+var source = """
+  var c = a * b
+  System.print(c)
+"""
+Meta.eval(source)  //> 6
+</pre>
+
+<h3><strong>compileExpression</strong>(expression) <a href="#compileexpression(expression)" name="compileexpression(expression)" class="header-anchor">#</a></h3>
+<p>Compiles a Wren expression into a closure and then returns the closure. It does not execute it.</p>
+<p>The closure returns the value of the expression.</p>
+<p>It is a runtime error if <code>expression</code> is not a string.</p>
+<p>Prints any compilation errors - in which event the closure will be null - but does not throw an error.</p>
+<p>For example:</p>
+<pre class="snippet">
+import "meta" for Meta
+
+var d = 4
+var e = 5
+var expression = "d * e"
+var closure = Meta.compileExpression(expression)
+System.print(closure.call()) //> 20
+</pre>
+
+<h3><strong>compile</strong>(source) <a href="#compile(source)" name="compile(source)" class="header-anchor">#</a></h3>
+<p>Compiles Wren source code into a closure and then returns the closure. It does not execute it.</p>
+<p>It is a runtime error if <code>source</code> is not a string.</p>
+<p>Prints any compilation errors - in which event the closure will be null - but does not throw an error.</p>
+<p>For example:</p>
+<pre class="snippet">
+import "meta" for Meta
+
+/* Enum creates an enum with any number of read-only static members.
+   Members are assigned in order an initial integer value (often 0), incremented by 1 each time.
+   The enum has:
+   1. static property getters for each member,
+   2. a static 'startsFrom' property, and
+   3. a static 'members' property which returns a list of its members as strings.
+*/
+class Enum {
+  // Creates a class for the Enum (with an underscore after the name to avoid duplicate definition)
+  // and returns a reference to it.
+  static create(name, members, startsFrom) {
+    if (name.type != String || name == "") Fiber.abort("Name must be a non-empty string.")
+    if (members.isEmpty) Fiber.abort("An enum must have at least one member.")
+    if (startsFrom.type != Num || !startsFrom.isInteger) {
+      Fiber.abort("Must start from an integer.")
+    }
+    name = name +  "_"
+    var s = "class %(name) {\n"
+    for (i in 0...members.count) {
+      var m = members[i]
+      s = s + "  static %(m) { %(i + startsFrom) }\n"
+    }
+    var mems = members.map { |m| "\"%(m)\"" }.join(", ")
+    s = s + "  static startsFrom { %(startsFrom) }\n"
+    s = s + "  static members { [%(mems)] }\n}\n"
+    s = s + "return %(name)"
+    return Meta.compile(s).call()
+  }
+}
+
+var Fruits = Enum.create("Fruits", ["orange", "apple", "banana", "lemon"], 0)
+System.print(Fruits.banana)     //> 2
+System.print(Fruits.startsFrom) //> 0
+System.print(Fruits.members)    //> [orange, apple, banana, lemon]
+</pre>
   </main>
 </div>
 <footer>
