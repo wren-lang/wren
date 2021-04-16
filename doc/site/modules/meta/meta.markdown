@@ -77,6 +77,8 @@ Meta.eval(source)  //> 6
 
 Compiles a Wren expression into a closure and then returns the closure. It does not execute it.
 
+The closure returns the value of the expression.
+
 It is a runtime error if `expression` is not a string.
 
 Prints any compilation errors - in which event the closure will be null - but does not throw an error.
@@ -88,9 +90,9 @@ import "meta" for Meta
 
 var d = 4
 var e = 5
-var expression = "System.print(d * e)"
+var expression = "d * e"
 var closure = Meta.compileExpression(expression)
-closure.call() //> 20
+System.print(closure.call()) //> 20
 </pre>
 
 ### **compile**(source)
