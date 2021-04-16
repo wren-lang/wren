@@ -308,7 +308,7 @@ where you need them.
 
 ## Exiting a module early
 
-Although the return statement is normally used to exit from a [method](classes.html#methods) or a [function](functions.html), it can also be used from a module's top-level code to exit the module. For example, if the script consists of a single module, this code would exit the module (and therefore the script) early:
+Although the `return` statement is normally used to exit from a [method](classes.html#methods) or a [function](functions.html), it can also be used from a module's top-level code to exit the module. For example, if the script consists of a single module, this code would exit the module (and therefore the script) early:
 
 <pre class="snippet">
 for (i in 1..2) {
