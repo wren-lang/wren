@@ -746,15 +746,15 @@ class Example {
   #!getter
   getter {}
 
-  // { regular(_,_): { regular:[null] } }
+  // { regular(_,_): { null: { regular:[null] } } }
   #!regular
   regular(arg0, arg1) {}
 
-  // { static other(): { isStatic:[true] } }
+  // { static other(): { null: { isStatic:[true] } } }
   #!isStatic = true
-  static other()
+  static other() {}
   
-  // { foreign static example(): { isForeignStatic:[32] } }
+  // { foreign static example(): { null: { isForeignStatic:[32] } } }
   #!isForeignStatic=32
   foreign static example()
 }
