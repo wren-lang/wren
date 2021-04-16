@@ -306,5 +306,19 @@ This sounds super hairy, but that's because cyclic dependencies are hairy in
 general. The key point here is that Wren *can* handle them in the rare cases
 where you need them.
 
+## Exiting a module early
+
+Although the `return` statement is normally used to exit from a [method](classes.html#methods) or a [function](functions.html), it can also be used from a module's top-level code to exit the module. For example, if the script consists of a single module, this code would exit the module (and therefore the script) early:
+
+<pre class="snippet">
+for (i in 1..2) {
+  if (i == 2) return
+  System.print(i)  //>  prints 1 but not 2
+}
+System.print(3)    //>  not reached
+</pre>
+
+Although it is not invalid to return a value, there is no way to access that value and it is therefore simply discarded.
+
 <br><hr>
 <a href="error-handling.html">&larr; Error Handling</a>
