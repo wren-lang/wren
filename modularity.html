@@ -375,6 +375,17 @@ var B = "b variable"
 <p>This sounds super hairy, but that&rsquo;s because cyclic dependencies are hairy in
 general. The key point here is that Wren <em>can</em> handle them in the rare cases
 where you need them.</p>
+<h2>Exiting a module early <a href="#exiting-a-module-early" name="exiting-a-module-early" class="header-anchor">#</a></h2>
+<p>Although the <code>return</code> statement is normally used to exit from a <a href="classes.html#methods">method</a> or a <a href="functions.html">function</a>, it can also be used from a module&rsquo;s top-level code to exit the module. For example, if the script consists of a single module, this code would exit the module (and therefore the script) early:</p>
+<pre class="snippet">
+for (i in 1..2) {
+  if (i == 2) return
+  System.print(i)  //>  prints 1 but not 2
+}
+System.print(3)    //>  not reached
+</pre>
+
+<p>Although it is not invalid to return a value, there is no way to access that value and it is therefore simply discarded.</p>
 <p><br><hr>
 <a href="error-handling.html">&larr; Error Handling</a></p>
   </main>
