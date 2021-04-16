@@ -99,7 +99,6 @@ Compiles Wren source code into a closure and then returns the closure. It does n
 
 It is a runtime error if `source` is not a string.
 
-
 Prints any compilation errors - in which event the closure will be null - but does not throw an error.
 
 For example:
