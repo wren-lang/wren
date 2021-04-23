@@ -1,4 +1,4 @@
-#include <errno.h>
+#include <float.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -742,75 +742,168 @@ static int readHexDigit(Parser* parser)
   return -1;
 }
 
-// Parses the numeric value of the current token.
-static void makeNumber(Parser* parser, bool isHex)
+// Parses a number token.
+static void readNumber(Parser* parser, int base)
 {
-  errno = 0;
-
-  if (isHex)
+  bool hasDigits = false;
+  int e = 0, mantDigits = 0;
+  long long maxMant = 16, num = 0;
+  switch (base)
   {
-    parser->next.value = NUM_VAL((double)strtoll(parser->tokenStart, NULL, 16));
+    case 16:
+      maxMant = 14;
+      break;
+    case 8:
+      maxMant = 18;
+      break;
+    case 2:
+      maxMant = 53;
+      break;
+  }
+  char c;
+  for (;;) {
+    c = peekChar(parser);
+    if (isDigit(c)) 
+    {
+      c -= '0';
+    }
+    else if (c >= 'a' && c <= 'z')
+    {
+      c -= 'a' - 10;
+    }
+    else if (c >= 'A' && c <= 'Z')
+    {
+      c -= 'A' - 10;
+    }
+    else if (c == '_')
+    {
+      nextChar(parser);
+      continue;
+    }
+    else
+    {
+      break;
+    }
+    if (c >= base)
+    {
+      break;
+    }
+    hasDigits = true;
+    if (mantDigits < maxMant) 
+    {
+      num = num * base + c;
+      if (num > 0)
+      {
+        mantDigits++;
+      }
+    }
+    else
+    {
+      e++;
+    }
+    nextChar(parser);
+  }
+  if (base == 10)
+  {
+    if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
+    {
+      nextChar(parser);
+      for (;;) 
+      {
+        c = peekChar(parser);
+        if (c >= '0' && c <= '9')
+        {
+          c -= '0';
+        }
+        else if (c == '_')
+        {
+          nextChar(parser);
+          continue;
+        }
+        else
+        {
+          break;
+        }
+        if (mantDigits < maxMant)
+        {
+          num = num * 10 + c;
+          if (num > 0)
+          {
+            mantDigits++;
+          }
+          e--;
+        }
+        nextChar(parser);
+      }
+    }
+    c = peekChar(parser);
+    if (c == 'e' || c == 'E')
+    {
+      nextChar(parser);
+      int expNum = 0;
+      bool expHasDigits = false, expNeg = false;
+      c = peekChar(parser);
+      if (c == '-') {
+        expNeg = true;
+        nextChar(parser);
+      }
+      else if (c == '+')
+      {
+        nextChar(parser);
+      }
+      for (;;)
+      {
+        c = peekChar(parser);
+        if (c >= '0' && c <= '9')
+        {
+          expNum = expNum * 10 + (c - '0');
+          expHasDigits = true;
+          nextChar(parser);
+        }
+        else if (c == '_')
+        {
+          nextChar(parser);
+          continue;
+        }
+        else
+        {
+          break;
+        }
+      }
+      if (!expHasDigits)
+      {
+        lexError(parser, "Unterminated scientific notation.");
+        parser->next.value = NUM_VAL(0);
+        return;
+      }
+      else if (expNeg)
+      {
+        e -= expNum;
+      }
+      else
+      {
+        e += expNum;
+      }
+    }
+  }
+  else if (!hasDigits)
+  {
+    lexError(parser, "Literal does not have digits.");
+    parser->next.value = NUM_VAL(0);
+    return;
+  }
+  double f = (double)(num) * 
+    (double)(powl)((long double) base, (long double) e);
+  if (f > DBL_MAX || (f < DBL_MIN && num > 0))
+  {
+    lexError(parser, "Number literal was too large (%d).", sizeof(double));
+    parser->next.value = NUM_VAL(0);
   }
   else
   {
-    parser->next.value = NUM_VAL(strtod(parser->tokenStart, NULL));
+    parser->next.value = NUM_VAL(f);
+    makeToken(parser, TOKEN_NUMBER);
   }
-  
-  if (errno == ERANGE)
-  {
-    lexError(parser, "Number literal was too large (%d).", sizeof(long int));
-    parser->next.value = NUM_VAL(0);
-  }
-  
-  // We don't check that the entire token is consumed after calling strtoll()
-  // or strtod() because we've already scanned it ourselves and know it's valid.
-
-  makeToken(parser, TOKEN_NUMBER);
-}
-
-// Finishes lexing a hexadecimal number literal.
-static void readHexNumber(Parser* parser)
-{
-  // Skip past the `x` used to denote a hexadecimal literal.
-  nextChar(parser);
-
-  // Iterate over all the valid hexadecimal digits found.
-  while (readHexDigit(parser) != -1) continue;
-
-  makeNumber(parser, true);
-}
-
-// Finishes lexing a number literal.
-static void readNumber(Parser* parser)
-{
-  while (isDigit(peekChar(parser))) nextChar(parser);
-
-  // See if it has a floating point. Make sure there is a digit after the "."
-  // so we don't get confused by method calls on number literals.
-  if (peekChar(parser) == '.' && isDigit(peekNextChar(parser)))
-  {
-    nextChar(parser);
-    while (isDigit(peekChar(parser))) nextChar(parser);
-  }
-
-  // See if the number is in scientific notation.
-  if (matchChar(parser, 'e') || matchChar(parser, 'E'))
-  {
-    // Allow a single positive/negative exponent symbol.
-    if(!matchChar(parser, '+'))
-    {
-      matchChar(parser, '-');
-    }
-
-    if (!isDigit(peekChar(parser)))
-    {
-      lexError(parser, "Unterminated scientific notation.");
-    }
-
-    while (isDigit(peekChar(parser))) nextChar(parser);
-  }
-
-  makeNumber(parser, false);
 }
 
 // Finishes lexing an identifier. Handles reserved words.
@@ -1188,17 +1281,6 @@ static void nextToken(Parser* parser)
         readName(parser,
                  peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD, c);
         return;
-
-      case '0':
-        if (peekChar(parser) == 'x')
-        {
-          readHexNumber(parser);
-          return;
-        }
-
-        readNumber(parser);
-        return;
-
       default:
         if (isName(c))
         {
@@ -1206,7 +1288,28 @@ static void nextToken(Parser* parser)
         }
         else if (isDigit(c))
         {
-          readNumber(parser);
+          if (c == '0')
+          {
+            c = peekChar(parser);
+            switch (c)
+            {
+            case 'x':
+              nextChar(parser);
+              readNumber(parser, 16);
+              return;
+            case 'o':
+              nextChar(parser);
+              readNumber(parser, 8);
+              return;
+            case 'b':
+              nextChar(parser);
+              readNumber(parser, 2);
+              return;
+            }
+          }
+          parser->currentChar--;
+          readNumber(parser, 10);
+          return;
         }
         else
         {
