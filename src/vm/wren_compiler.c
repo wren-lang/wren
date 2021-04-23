@@ -780,14 +780,8 @@ static void readNumber(Parser* parser, int base)
       nextChar(parser);
       continue;
     }
-    else
-    {
-      break;
-    }
-    if (c >= base)
-    {
-      break;
-    }
+    else break;
+    if (c >= base) break;
     hasDigits = true;
     if (mantDigits < maxMant) 
     {
@@ -797,10 +791,7 @@ static void readNumber(Parser* parser, int base)
         mantDigits++;
       }
     }
-    else
-    {
-      e++;
-    }
+    else e++;
     nextChar(parser);
   }
   if (base == 10)
@@ -811,7 +802,7 @@ static void readNumber(Parser* parser, int base)
       for (;;) 
       {
         c = peekChar(parser);
-        if (c >= '0' && c <= '9')
+        if (isDigit(c))
         {
           c -= '0';
         }
@@ -820,17 +811,11 @@ static void readNumber(Parser* parser, int base)
           nextChar(parser);
           continue;
         }
-        else
-        {
-          break;
-        }
+        else break;
         if (mantDigits < maxMant)
         {
           num = num * 10 + c;
-          if (num > 0)
-          {
-            mantDigits++;
-          }
+          if (num > 0) mantDigits++;
           e--;
         }
         nextChar(parser);
@@ -847,14 +832,11 @@ static void readNumber(Parser* parser, int base)
         expNeg = true;
         nextChar(parser);
       }
-      else if (c == '+')
-      {
-        nextChar(parser);
-      }
+      else if (c == '+') nextChar(parser);
       for (;;)
       {
         c = peekChar(parser);
-        if (c >= '0' && c <= '9')
+        if (isDigit(c))
         {
           expNum = expNum * 10 + (c - '0');
           expHasDigits = true;
@@ -865,10 +847,7 @@ static void readNumber(Parser* parser, int base)
           nextChar(parser);
           continue;
         }
-        else
-        {
-          break;
-        }
+        else break;
       }
       if (!expHasDigits)
       {
@@ -876,14 +855,8 @@ static void readNumber(Parser* parser, int base)
         parser->next.value = NUM_VAL(0);
         return;
       }
-      else if (expNeg)
-      {
-        e -= expNum;
-      }
-      else
-      {
-        e += expNum;
-      }
+      else if (expNeg) e -= expNum;
+      else e += expNum;
     }
   }
   else if (!hasDigits)
@@ -899,11 +872,8 @@ static void readNumber(Parser* parser, int base)
     lexError(parser, "Number literal was too large (%d).", sizeof(double));
     parser->next.value = NUM_VAL(0);
   }
-  else
-  {
-    parser->next.value = NUM_VAL(f);
-    makeToken(parser, TOKEN_NUMBER);
-  }
+  parser->next.value = NUM_VAL(f);
+  makeToken(parser, TOKEN_NUMBER);
 }
 
 // Finishes lexing an identifier. Handles reserved words.

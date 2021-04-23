@@ -624,10 +624,7 @@ DEF_PRIMITIVE(num_fromString)
     neg = true;
     i++;
   }
-  else if (c == '+')
-  {
-    i++;
-  }
+  else if (c == '+') i++;
   if (i >= string->length) goto end;
   long long maxMant = 16, num = 0;
   if (c == '0')
@@ -683,53 +680,38 @@ DEF_PRIMITIVE(num_fromString)
     if (mantDigits < maxMant)
     {
       num = num * base + c;
-      if (num > 0)
-      {
-        mantDigits++;
-      }
+      if (num > 0) mantDigits++;
     }
-    else
-    {
-      e++;
-    }
+    else e++;
     i++;
   }
   if (i >= string->length) goto end;
   if (base == 10)
   {
-    if (str[i] == '.' && str[i+1] >= '0' && str[i+1] <= '9')
+    if (str[i] == '.' && isdigit(str[i+1]))
     {
       i++;
       for(;i < string->length;)
       {
         c = str[i];
-        if (isdigit(c))
-        {
-          c -= '0';
-        }
+        if (isdigit(c)) c -= '0';
         else if(c == '_')
         {
           i++;
           continue;
         }
-        else
-        {
-          break;
-        }
+        else break;
         if (mantDigits < maxMant)
         {
           num = num * 10 + c;
-          if (num > 0)
-          {
-            mantDigits++;
-          }
+          if (num > 0) mantDigits++;
           e--;
         }
         i++;
       }
     }
     if (i >= string->length) goto end;
-    if(str[i] == 'e' || c == 'E')
+    if(str[i] == 'e' || str[i] == 'E')
     {
       i++;
       if (i >= string->length) goto eEnd;
@@ -740,10 +722,7 @@ DEF_PRIMITIVE(num_fromString)
         expNeg = true;
         i++;
       }
-      else if (str[i] == '+')
-      {
-        i++;
-      }
+      else if (str[i] == '+') i++;
       for(;i < string->length;)
       {
         c = str[i];
@@ -758,45 +737,27 @@ DEF_PRIMITIVE(num_fromString)
           i++;
           continue;
         }
-        else
-        {
-          break;
-        }
+        else break;
       }
     eEnd:
       if (!expHasDigits)
       {
         RETURN_NULL;
       }
-      else if (expNeg)
-      {
-        e -= expNum;
-      }
-      else
-      {
-        e += expNum;
-      }
+      else if (expNeg) e -= expNum;
+      else e += expNum;
     }
   }
   while(i < string->length && isspace(str[i])) i++;
 end:
-  if (base != 10 && !hasDigits)
-  {
-    RETURN_NULL;
-  }
+  if (base != 10 && !hasDigits) RETURN_NULL;
   // We must have consumed the entire string. Otherwise, it contains non-number
   // characters and we can't parse it.
   if (i < string->length) RETURN_NULL;
   double f = (double)(num) * 
     (double)(powl)((long double) base, (long double) e);
-  if (f > DBL_MAX || (f < DBL_MIN && num > 0))
-  {
-    RETURN_ERROR("Number literal is too large.");
-  }
-  else
-  {
-    RETURN_NUM(neg ? f * -1 : f);
-  }
+  if (f > DBL_MAX || (f < DBL_MIN && num > 0)) RETURN_ERROR("Number literal is too large.");
+  RETURN_NUM(neg ? f * -1 : f);
 }
 
 // Defines a primitive on Num that calls infix [op] and returns [type].
