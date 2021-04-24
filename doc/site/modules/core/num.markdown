@@ -194,6 +194,17 @@ The tangent of the number.
 
 The string representation of the number.
 
+### **toBool**
+
+The bool representation of the number. Equal to `>= 1`
+
+<pre class="snippet">
+System.print((-1).toBool)  //> false
+System.print((0.8).toBool) //> false
+System.print(1.toBool)     //> true
+System.print(2.toBool)     //> true
+</pre>
+
 ### **truncate**
 
 Rounds the number to the nearest integer towards zero.

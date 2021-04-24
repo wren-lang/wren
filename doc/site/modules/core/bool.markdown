@@ -18,3 +18,7 @@ System.print(!false) //> true
 ### toString
 
 The string representation of the value, either `"true"` or `"false"`.
+
+### toNum
+
+The number representation of the value, either `1` or `0`.

@@ -30,6 +30,18 @@ DEF_PRIMITIVE(bool_toString)
   }
 }
 
+DEF_PRIMITIVE(bool_toNum)
+{
+    if (AS_BOOL(args[0]))
+    {
+        RETURN_NUM(1);
+    }
+    else
+    {
+        RETURN_NUM(0);
+    }
+}
+
 DEF_PRIMITIVE(class_name)
 {
   RETURN_OBJ(AS_CLASS(args[0])->name);
@@ -836,6 +848,18 @@ DEF_PRIMITIVE(num_toString)
   RETURN_VAL(wrenNumToString(vm, AS_NUM(args[0])));
 }
 
+DEF_PRIMITIVE(num_toBool)
+{
+  if (AS_NUM(args[0]) >= 1)
+  {
+    RETURN_TRUE;
+  }
+  else
+  {
+    RETURN_FALSE;
+  }
+}
+
 DEF_PRIMITIVE(num_truncate)
 {
   double integer;
@@ -1300,6 +1324,7 @@ void wrenInitializeCore(WrenVM* vm)
 
   vm->boolClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
+  PRIMITIVE(vm->boolClass, "toNum", bool_toNum);
   PRIMITIVE(vm->boolClass, "!", bool_not);
 
   vm->fiberClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fiber"));
@@ -1402,6 +1427,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "isNan", num_isNan);
   PRIMITIVE(vm->numClass, "sign", num_sign);
   PRIMITIVE(vm->numClass, "toString", num_toString);
+  PRIMITIVE(vm->numClass, "toBool", num_toBool);
   PRIMITIVE(vm->numClass, "truncate", num_truncate);
 
   // These are defined just so that 0 and -0 are equal, which is specified by
