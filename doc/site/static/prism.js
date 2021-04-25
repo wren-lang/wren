@@ -12,8 +12,7 @@ var _self = "undefined" != typeof window ? window : "undefined" != typeof Worker
     }
     multilineComment = multilineComment.replace(/<self>/g, function () { return /[^\s\S]/.source; });
 
-    Prism.languages.wren = {
-        
+    var wren = {
         'comment': [
             {
                 pattern: RegExp(/(^|[^\\])/.source + multilineComment),
@@ -32,21 +31,10 @@ var _self = "undefined" != typeof window ? window : "undefined" != typeof Worker
             alias: 'string'
         },
         'string': {
-            pattern: /(["])(?:(?!\1)[^\\]|\\[\s\S])*\1/iu,
+            pattern: /"(?:\\[\s\S]|%\((?:[^()]|\((?:[^()]|\([^)]*\))*\))+\)|(?!%\()[^\\"])*"/u,
             greedy: true,
-            inside: {
-                'interpolation': {
-                    pattern: /%\((?:[^()]|\([^)]+\))+\)/iu,
-                    inside: {
-                        delimiter: {
-                            pattern: /^%\(|\)$/iu,
-                            alias: 'variable'
-                        }
-                        // Only single quote strings can have interpolation
-                        // 'rest' defined at the end of this function
-                    }
-                }
-            }
+            inside: {}
+            // Interpolation defined at the end of this function
         },
         'boolean': /\b(?:true|false)\b/,
         'number': /\b0x[\da-f]+\b|(?:\b\d+(?:\.\d*)?|\B\.\d+)(?:e[+-]?\d+)?/i,
@@ -54,6 +42,8 @@ var _self = "undefined" != typeof window ? window : "undefined" != typeof Worker
             pattern: /\bnull\b/,
             alias: 'keyword'
         },
+        // Highlight predefined classes and wren_cli classes as builtin
+        'builtin': /\b(?:Num|System|Object|Sequence|List|Map|Bool|String|Range|Fn|Fiber|Meta|Random|File|Directory|Stat|Stdin|Stdout|Platform|Process|Scheduler|Timer)\b/,
         'attribute': [
             {
                 pattern: /^#.*/,
@@ -68,13 +58,25 @@ var _self = "undefined" != typeof window ? window : "undefined" != typeof Worker
         ],
         'class-name': [
             {
+                // class definition
+                // class Meta {}
                 pattern: /(\b(?:class)\s+)[\w.\\]+/i,
                 lookbehind: true,
                 inside: {
                     'punctuation': /[.\\]/
                 }
+            },
+            {
+            // A class must always start with an uppercase.
+            // File.read
+            pattern:/\b[A-Z](?:[_a-z]|\dx?)*\b/,
+            lookbehind:true,
+            inside: {
+                'punctuation': /[.\\]/
+            }
             }
         ],
+        'constant': /\b[A-Z](?:[A-Z_]|\dx?)*\b/,
         'keyword': /\b(?:if|else|while|for|return|in|is|as|null|break|continue|foreign|construct|static|var|class|this|super|#!|#|import)\b/,
         'function': /(?!\d)\w+(?=\s*(?:[({]))/,
         'operator': [
@@ -86,13 +88,32 @@ var _self = "undefined" != typeof window ? window : "undefined" != typeof Worker
             }
         ],
         'punctuation': /[\[\](){},;]|\.+|:+/,
-        // Highlight predefined classes and wren_cli classes as builtin
-        'builtin': /\b(?:Num|System|Object|Sequence|List|Map|Bool|String|Range|Fn|Fiber|Meta|Random|File|Directory|Stat|Stdin|Stdout|Platform|Process|Scheduler|Timer)\b/,
-        'constant': /\b[A-Z](?:[A-Z_]|\dx?)*\b/,
         'variable': /[a-zA-Z_]\w*(?:[?!]|\b)/,
     };
 
-    Prism.languages.wren['string'].inside['interpolation'].inside.rest = Prism.languages.wren;
+    var stringInside = {
+        'template-punctuation': {
+            pattern: /^"|"$/,
+            alias: 'string'
+        },
+        'interpolation': {
+            pattern: /((?:^|[^\\])(?:\\{2})*)%\((?:[^()]|\((?:[^()]|\([^)]*\))*\))+\)/,
+            lookbehind: true,
+            inside: {
+            'interpolation-punctuation': {
+                pattern: /^%(|)$/,
+                alias: 'punctuation'
+            },
+            rest: wren
+            }
+        },
+        'string': /[\s\S]+/iu
+    };
+
+    // Only single quote strings can have interpolation
+    wren['string'].inside = stringInside;
+
+    Prism.languages.wren = wren;
 })(Prism);
 
 // backwards compatibility
