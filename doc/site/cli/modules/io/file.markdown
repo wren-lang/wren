@@ -42,6 +42,10 @@ File.open("words.txt") {|file|
 }
 </pre>
 
+### File.**size**(path)
+
+Returns the size of the contents of the file at `path` in bytes.
+
 ### File.**read**(path)
 
 Reads the entire contents of the file at `path` and returns it as a string.
@@ -99,6 +103,10 @@ Whether the file is still open or has been closed.
 ### **size**
 
 The size of the contents of the file in bytes.
+
+### **stat*
+
+Returns a [stat](stat.html) for the file.
 
 ### **close**()
 
