@@ -50,7 +50,6 @@
 #define AS_CLOSURE(value)   ((ObjClosure*)AS_OBJ(value))        // ObjClosure*
 #define AS_FIBER(v)         ((ObjFiber*)AS_OBJ(v))              // ObjFiber*
 #define AS_FN(value)        ((ObjFn*)AS_OBJ(value))             // ObjFn*
-#define AS_INSTANCE(value)  ((ObjInstance*)AS_OBJ(value))       // ObjInstance*
 #define AS_LIST(value)      ((ObjList*)AS_OBJ(value))           // ObjList*
 #define AS_MAP(value)       ((ObjMap*)AS_OBJ(value))            // ObjMap*
 #define AS_MEMORYSEGMENT(value)        /* ObjMemorySegment* */                \
@@ -80,7 +79,7 @@
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
 #define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
 #define IS_MEMORYSEGMENT(value)        /* ObjMemorySegment */                 \
-    (IS_FOREIGN(value))
+    (IS_FOREIGN(value) || IS_INSTANCE(value))
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
 
@@ -426,12 +425,6 @@ struct sObjClass
   // The ClassAttribute for the class, if any
   Value attributes;
 };
-
-typedef struct
-{
-  Obj obj;
-  Value fields[FLEXIBLE_ARRAY];
-} ObjInstance;
 
 typedef struct
 {
