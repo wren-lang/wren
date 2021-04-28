@@ -1002,12 +1002,17 @@ void wrenGrayValue(WrenVM* vm, Value value)
   wrenGrayObj(vm, AS_OBJ(value));
 }
 
+void wrenGrayValues(WrenVM* vm, Value* values, size_t size)
+{
+  for (size_t i = 0; i < size; i++)
+  {
+    wrenGrayValue(vm, values[i]);
+  }
+}
+
 void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer)
 {
-  for (int i = 0; i < buffer->count; i++)
-  {
-    wrenGrayValue(vm, buffer->data[i]);
-  }
+  wrenGrayValues(vm, buffer->data, buffer->count);
 }
 
 static void blackenClass(WrenVM* vm, ObjClass* classObj)
@@ -1061,10 +1066,7 @@ static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
   }
 
   // Stack variables.
-  for (Value* slot = fiber->stack; slot < fiber->stackTop; slot++)
-  {
-    wrenGrayValue(vm, *slot);
-  }
+  wrenGrayValues(vm, fiber->stack, fiber->stackTop - fiber->stack);
 
   // Open upvalues.
   ObjUpvalue* upvalue = fiber->openUpvalues;
@@ -1113,10 +1115,7 @@ static void blackenInstance(WrenVM* vm, ObjInstance* instance)
   wrenGrayObj(vm, (Obj*)instance->obj.classObj);
 
   // Mark the fields.
-  for (int i = 0; i < instance->obj.classObj->numFields; i++)
-  {
-    wrenGrayValue(vm, instance->fields[i]);
-  }
+  wrenGrayValues(vm, instance->fields, instance->obj.classObj->numFields);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjInstance);
@@ -1153,10 +1152,7 @@ static void blackenMap(WrenVM* vm, ObjMap* map)
 static void blackenModule(WrenVM* vm, ObjModule* module)
 {
   // Top-level variables.
-  for (int i = 0; i < module->variables.count; i++)
-  {
-    wrenGrayValue(vm, module->variables.data[i]);
-  }
+  wrenGrayBuffer(vm, &module->variables);
 
   wrenBlackenSymbolTable(vm, &module->variableNames);
 
