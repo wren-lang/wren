@@ -2879,7 +2879,6 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_LOAD_LOCAL_8:
     case CODE_CONSTRUCT:
     case CODE_FOREIGN_CONSTRUCT:
-    case CODE_FOREIGN_CLASS:
     case CODE_END_MODULE:
     case CODE_END_CLASS:
       return 0;
@@ -2893,6 +2892,7 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_LOAD_FIELD:
     case CODE_STORE_FIELD:
     case CODE_CLASS:
+    case CODE_FOREIGN_CLASS:
       return 1;
 
     case CODE_CONSTANT:
@@ -3537,15 +3537,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
   // Store a placeholder for the number of fields argument. We don't know the
   // count until we've compiled all the methods to see which fields are used.
-  int numFieldsInstruction = -1;
-  if (isForeign)
-  {
-    emitOp(compiler, CODE_FOREIGN_CLASS);
-  }
-  else
-  {
-    numFieldsInstruction = emitByteArg(compiler, CODE_CLASS, 255);
-  }
+  Code code = isForeign ? CODE_FOREIGN_CLASS : CODE_CLASS;
+  int numFieldsInstruction = emitByteArg(compiler, code, 255);
 
   // Store it in its name.
   defineVariable(compiler, classVariable.index);
@@ -3608,11 +3601,8 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   }
 
   // Update the class with the number of fields.
-  if (!isForeign)
-  {
-    compiler->fn->code.data[numFieldsInstruction] =
-        (uint8_t)classInfo.fields.count;
-  }
+  compiler->fn->code.data[numFieldsInstruction] =
+      (uint8_t)classInfo.fields.count;
   
   // Clear symbol tables for tracking field and method names.
   wrenSymbolTableClear(compiler->parser->vm, &classInfo.fields);

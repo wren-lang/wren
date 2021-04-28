@@ -1308,7 +1308,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(FOREIGN_CLASS):
     {
-      createClass(vm, true, -1, fn->module);
+      createClass(vm, true, READ_BYTE(), fn->module);
       if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
     }

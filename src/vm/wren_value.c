@@ -260,7 +260,7 @@ void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
 
 ObjMemorySegment* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
 {
-  Value value = wrenNewMemorySegment(vm, OBJ_FOREIGN, classObj, 0, size);
+  Value value = wrenNewMemorySegment(vm, OBJ_FOREIGN, classObj, classObj->numFields, size);
   return AS_MEMORYSEGMENT(value);
 }
 
