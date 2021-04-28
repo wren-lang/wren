@@ -43,6 +43,48 @@ static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
   vm->first = obj;
 }
 
+ObjMemorySegment* wrenNewMemorySegment(WrenVM* vm, ObjType type,
+                                       ObjClass* classObj,
+                                       const Value* data, size_t count,
+                                       const void* foreign_data, size_t foreign_count)
+{
+  const size_t size = wrenMemorySegmentSizeOf(count, foreign_count);
+
+  ObjMemorySegment* ms = (ObjMemorySegment*)wrenReallocate(vm, NULL, 0, size);
+  initObj(vm, &ms->obj, type, classObj);
+
+  ms->foreign_count = foreign_count;
+  ms->count = count;
+
+  if (data != NULL)
+  {
+    // Copy the data.
+    for (size_t i = 0; i < count; i++)
+    {
+      ms->data[i] = data[i];
+    }
+  }
+  else
+  {
+    // Initialize fields to null.
+    for (size_t i = 0; i < count; i++)
+    {
+      ms->data[i] = NULL_VAL;
+    }
+  }
+
+  if (foreign_data != NULL)
+  {
+    memcpy(wrenMemorySegmentData(ms), foreign_data, foreign_count);
+  }
+  else
+  {
+    memset(wrenMemorySegmentData(ms), 0, foreign_count);
+  }
+
+  return ms;
+}
+
 ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
 {
   ObjClass* classObj = ALLOCATE(vm, ObjClass);
@@ -1013,6 +1055,17 @@ void wrenGrayValues(WrenVM* vm, Value* values, size_t size)
 void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer)
 {
   wrenGrayValues(vm, buffer->data, buffer->count);
+}
+
+static void blackenMemorySegment(WrenVM* vm, ObjMemorySegment* ms)
+{
+  wrenGrayObj(vm, (Obj*)ms->obj.classObj);
+
+  // Mark the fields.
+  wrenGrayValues(vm, ms->data, ms->count);
+
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += wrenMemorySegmentSizeOf(ms->count, ms->foreign_count);
 }
 
 static void blackenClass(WrenVM* vm, ObjClass* classObj)

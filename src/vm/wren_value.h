@@ -54,6 +54,8 @@
 #define AS_INSTANCE(value)  ((ObjInstance*)AS_OBJ(value))       // ObjInstance*
 #define AS_LIST(value)      ((ObjList*)AS_OBJ(value))           // ObjList*
 #define AS_MAP(value)       ((ObjMap*)AS_OBJ(value))            // ObjMap*
+#define AS_MEMORYSEGMENT(value)        /* ObjMemorySegment* */                \
+    (ObjMemorySegment*)(AS_OBJ(value))
 #define AS_MODULE(value)    ((ObjModule*)AS_OBJ(value))         // ObjModule*
 #define AS_NUM(value)       (wrenValueToNum(value))             // double
 #define AS_RANGE(v)         ((ObjRange*)AS_OBJ(v))              // ObjRange*
@@ -147,6 +149,20 @@ typedef struct
 #endif
 
 DECLARE_BUFFER(Value, Value);
+
+// FIXME: Do we need foreign_count or memorypage_count ?
+typedef struct
+{
+  Obj obj;
+
+  size_t foreign_count;
+
+  size_t count;
+
+  Value data[FLEXIBLE_ARRAY];
+
+//  uint8_t foreign_data[FLEXIBLE_ARRAY];
+} ObjMemorySegment;
 
 // A heap-allocated string object.
 struct sObjString
@@ -616,6 +632,32 @@ typedef struct
 #define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, { 0 } })
 
 #endif
+
+static inline size_t wrenMemorySegmentSizeOf(size_t count, size_t foreign_count)
+{
+  return sizeof(ObjMemorySegment) + sizeof(Value) * count + foreign_count;
+}
+
+// Creates a new memory segment of the given [classObj].
+ObjMemorySegment* wrenNewMemorySegment(WrenVM* vm, ObjType type,
+                                       ObjClass* classObj,
+                                       const Value* data, size_t count,
+                                       const void* foreign_data, size_t foreign_count);
+
+static inline Value* wrenMemorySegmentAt(ObjMemorySegment* ms, size_t index)
+{
+  ASSERT(ms != NULL, "Unexpected NULL memory segment.");
+  ASSERT(index < ms->count, "Out of bounds field.");
+
+  return &ms->data[index];
+}
+
+static inline void* wrenMemorySegmentData(ObjMemorySegment* ms)
+{
+  ASSERT(ms != NULL, "Unexpected NULL memory segment.");
+
+  return &ms->data[ms->count];
+}
 
 // Creates a new "raw" class. It has no metaclass or superclass whatsoever.
 // This is only used for bootstrapping the initial Object and Class classes,
