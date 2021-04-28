@@ -942,10 +942,9 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     {
       uint8_t field = READ_BYTE();
       Value receiver = stackStart[0];
-      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
-      ObjInstance* instance = AS_INSTANCE(receiver);
-      ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
-      PUSH(instance->fields[field]);
+      ASSERT(IS_MEMORYSEGMENT(receiver), "Receiver should be a memory segment.");
+      ObjMemorySegment* ms = AS_MEMORYSEGMENT(receiver);
+      PUSH(*wrenMemorySegmentAt(ms, field));
       DISPATCH();
     }
 
@@ -1117,10 +1116,9 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     {
       uint8_t field = READ_BYTE();
       Value receiver = stackStart[0];
-      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
-      ObjInstance* instance = AS_INSTANCE(receiver);
-      ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
-      instance->fields[field] = PEEK();
+      ASSERT(IS_MEMORYSEGMENT(receiver), "Receiver should be a memory segment.");
+      ObjMemorySegment* ms = AS_MEMORYSEGMENT(receiver);
+      *wrenMemorySegmentAt(ms, field) = PEEK();
       DISPATCH();
     }
 
@@ -1128,10 +1126,9 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     {
       uint8_t field = READ_BYTE();
       Value receiver = POP();
-      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
-      ObjInstance* instance = AS_INSTANCE(receiver);
-      ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
-      PUSH(instance->fields[field]);
+      ASSERT(IS_MEMORYSEGMENT(receiver), "Receiver should be a memory segment.");
+      ObjMemorySegment* ms = AS_MEMORYSEGMENT(receiver);
+      PUSH(*wrenMemorySegmentAt(ms, field));
       DISPATCH();
     }
 
@@ -1139,10 +1136,9 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     {
       uint8_t field = READ_BYTE();
       Value receiver = POP();
-      ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
-      ObjInstance* instance = AS_INSTANCE(receiver);
-      ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
-      instance->fields[field] = PEEK();
+      ASSERT(IS_MEMORYSEGMENT(receiver), "Receiver should be a memory segment.");
+      ObjMemorySegment* ms = AS_MEMORYSEGMENT(receiver);
+      *wrenMemorySegmentAt(ms, field) = PEEK();
       DISPATCH();
     }
 

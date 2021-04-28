@@ -307,17 +307,8 @@ void wrenFunctionBindName(WrenVM* vm, ObjFn* fn, const char* name, int length)
 
 Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
 {
-  ObjInstance* instance = ALLOCATE_FLEX(vm, ObjInstance,
-                                        Value, classObj->numFields);
-  initObj(vm, &instance->obj, OBJ_INSTANCE, classObj);
-
-  // Initialize fields to null.
-  for (int i = 0; i < classObj->numFields; i++)
-  {
-    instance->fields[i] = NULL_VAL;
-  }
-
-  return OBJ_VAL(instance);
+  return OBJ_VAL(wrenNewMemorySegment(vm, OBJ_INSTANCE, classObj,
+                                      NULL, classObj->numFields, NULL, 0));
 }
 
 ObjList* wrenNewList(WrenVM* vm, uint32_t numElements)
@@ -1149,18 +1140,6 @@ static void blackenFn(WrenVM* vm, ObjFn* fn)
   // TODO: What about the function name?
 }
 
-static void blackenInstance(WrenVM* vm, ObjInstance* instance)
-{
-  wrenGrayObj(vm, (Obj*)instance->obj.classObj);
-
-  // Mark the fields.
-  wrenGrayValues(vm, instance->fields, instance->obj.classObj->numFields);
-
-  // Keep track of how much memory is still in use.
-  vm->bytesAllocated += sizeof(ObjInstance);
-  vm->bytesAllocated += sizeof(Value) * instance->obj.classObj->numFields;
-}
-
 static void blackenList(WrenVM* vm, ObjList* list)
 {
   // Mark the elements.
@@ -1237,8 +1216,8 @@ static void blackenObject(WrenVM* vm, Obj* obj)
     case OBJ_CLOSURE:  blackenClosure( vm, (ObjClosure*) obj); break;
     case OBJ_FIBER:    blackenFiber(   vm, (ObjFiber*)   obj); break;
     case OBJ_FN:       blackenFn(      vm, (ObjFn*)      obj); break;
-    case OBJ_FOREIGN:  blackenMemorySegment(vm, (ObjMemorySegment*)obj); break;
-    case OBJ_INSTANCE: blackenInstance(vm, (ObjInstance*)obj); break;
+    case OBJ_FOREIGN:
+    case OBJ_INSTANCE: blackenMemorySegment(vm, (ObjMemorySegment*)obj); break;
     case OBJ_LIST:     blackenList(    vm, (ObjList*)    obj); break;
     case OBJ_MAP:      blackenMap(     vm, (ObjMap*)     obj); break;
     case OBJ_MODULE:   blackenModule(  vm, (ObjModule*)  obj); break;
