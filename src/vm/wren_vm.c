@@ -677,7 +677,7 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   vm->apiStack = NULL;
 }
 
-void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
+void wrenFinalizeForeign(WrenVM* vm, ObjMemorySegment* foreign)
 {
   // TODO: Don't look up every time.
   int symbol = wrenSymbolTableFind(&vm->methodNames, "<finalize>", 10);
@@ -696,7 +696,7 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
   ASSERT(method->type == METHOD_FOREIGN, "Finalizer should be foreign.");
 
   WrenFinalizerFn finalizer = (WrenFinalizerFn)method->as.foreign;
-  finalizer(foreign->data);
+  finalizer(wrenMemorySegmentData(foreign));
 }
 
 // Let the host resolve an imported module name if it wants to.
@@ -1705,7 +1705,7 @@ void* wrenGetSlotForeign(WrenVM* vm, int slot)
   ASSERT(IS_FOREIGN(vm->apiStack[slot]),
          "Slot must hold a foreign instance.");
 
-  return AS_FOREIGN(vm->apiStack[slot])->data;
+  return wrenMemorySegmentData(AS_MEMORYSEGMENT(vm->apiStack[slot]));
 }
 
 const char* wrenGetSlotString(WrenVM* vm, int slot)
@@ -1754,10 +1754,10 @@ void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size)
   ObjClass* classObj = AS_CLASS(vm->apiStack[classSlot]);
   ASSERT(classObj->numFields == -1, "Class must be a foreign class.");
   
-  ObjForeign* foreign = wrenNewForeign(vm, classObj, size);
+  ObjMemorySegment* foreign = wrenNewForeign(vm, classObj, size);
   vm->apiStack[slot] = OBJ_VAL(foreign);
   
-  return (void*)foreign->data;
+  return (void*)wrenMemorySegmentData(foreign);
 }
 
 void wrenSetSlotNewList(WrenVM* vm, int slot)

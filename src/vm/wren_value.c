@@ -273,14 +273,9 @@ void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
   }
 }
 
-ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
+ObjMemorySegment* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size)
 {
-  ObjForeign* object = ALLOCATE_FLEX(vm, ObjForeign, uint8_t, size);
-  initObj(vm, &object->obj, OBJ_FOREIGN, classObj);
-
-  // Zero out the bytes.
-  memset(object->data, 0, size);
-  return object;
+  return wrenNewMemorySegment(vm, OBJ_FOREIGN, classObj, NULL, 0, NULL, size);
 }
 
 ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
@@ -1154,15 +1149,6 @@ static void blackenFn(WrenVM* vm, ObjFn* fn)
   // TODO: What about the function name?
 }
 
-static void blackenForeign(WrenVM* vm, ObjForeign* foreign)
-{
-  // TODO: Keep track of how much memory the foreign object uses. We can store
-  // this in each foreign object, but it will balloon the size. We may not want
-  // that much overhead. One option would be to let the foreign class register
-  // a C function that returns a size for the object. That way the VM doesn't
-  // always have to explicitly store it.
-}
-
 static void blackenInstance(WrenVM* vm, ObjInstance* instance)
 {
   wrenGrayObj(vm, (Obj*)instance->obj.classObj);
@@ -1251,7 +1237,7 @@ static void blackenObject(WrenVM* vm, Obj* obj)
     case OBJ_CLOSURE:  blackenClosure( vm, (ObjClosure*) obj); break;
     case OBJ_FIBER:    blackenFiber(   vm, (ObjFiber*)   obj); break;
     case OBJ_FN:       blackenFn(      vm, (ObjFn*)      obj); break;
-    case OBJ_FOREIGN:  blackenForeign( vm, (ObjForeign*) obj); break;
+    case OBJ_FOREIGN:  blackenMemorySegment(vm, (ObjMemorySegment*)obj); break;
     case OBJ_INSTANCE: blackenInstance(vm, (ObjInstance*)obj); break;
     case OBJ_LIST:     blackenList(    vm, (ObjList*)    obj); break;
     case OBJ_MAP:      blackenMap(     vm, (ObjMap*)     obj); break;
@@ -1306,7 +1292,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
     }
 
     case OBJ_FOREIGN:
-      wrenFinalizeForeign(vm, (ObjForeign*)obj);
+      wrenFinalizeForeign(vm, (ObjMemorySegment*)obj);
       break;
 
     case OBJ_LIST:

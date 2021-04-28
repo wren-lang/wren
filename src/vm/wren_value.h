@@ -50,7 +50,6 @@
 #define AS_CLOSURE(value)   ((ObjClosure*)AS_OBJ(value))        // ObjClosure*
 #define AS_FIBER(v)         ((ObjFiber*)AS_OBJ(v))              // ObjFiber*
 #define AS_FN(value)        ((ObjFn*)AS_OBJ(value))             // ObjFn*
-#define AS_FOREIGN(v)       ((ObjForeign*)AS_OBJ(v))            // ObjForeign*
 #define AS_INSTANCE(value)  ((ObjInstance*)AS_OBJ(value))       // ObjInstance*
 #define AS_LIST(value)      ((ObjList*)AS_OBJ(value))           // ObjList*
 #define AS_MAP(value)       ((ObjMap*)AS_OBJ(value))            // ObjMap*
@@ -80,6 +79,8 @@
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
 #define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
+#define IS_MEMORYSEGMENT(value)        /* ObjMemorySegment */                 \
+    (IS_FOREIGN(value))
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
 
@@ -434,12 +435,6 @@ struct sObjClass
 typedef struct
 {
   Obj obj;
-  uint8_t data[FLEXIBLE_ARRAY];
-} ObjForeign;
-
-typedef struct
-{
-  Obj obj;
   Value fields[FLEXIBLE_ARRAY];
 } ObjInstance;
 
@@ -704,7 +699,7 @@ static inline bool wrenHasError(const ObjFiber* fiber)
   return !IS_NULL(fiber->error);
 }
 
-ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
+ObjMemorySegment* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
 // Creates a new empty function. Before being used, it must have code,
 // constants, etc. added to it.
