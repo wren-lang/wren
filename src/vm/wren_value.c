@@ -67,11 +67,13 @@ Value wrenNewMemorySegment(WrenVM* vm, ObjType type, ObjClass* classObj,
   return OBJ_VAL(ms);
 }
 
-ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
+ObjClass* wrenNewSingleClass(WrenVM* vm, bool isForeign, int numFields,
+                             ObjString* name)
 {
   ObjClass* classObj = ALLOCATE(vm, ObjClass);
   initObj(vm, &classObj->obj, OBJ_CLASS, NULL);
   classObj->superclass = NULL;
+  classObj->isForeign = isForeign;
   classObj->numFields = numFields;
   classObj->name = name;
   classObj->attributes = NULL_VAL;
@@ -90,7 +92,7 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
   subclass->superclass = superclass;
 
   // Include the superclass in the total number of fields.
-  if (subclass->numFields != -1)
+  if (!subclass->isForeign)
   {
     subclass->numFields += superclass->numFields;
   }
@@ -107,14 +109,15 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
   }
 }
 
-ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
-                       ObjString* name)
+ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, bool isForeign,
+                       int numFields, ObjString* name)
 {
   // Create the metaclass.
   Value metaclassName = wrenStringFormat(vm, "@ metaclass", OBJ_VAL(name));
   wrenPushRoot(vm, AS_OBJ(metaclassName));
 
-  ObjClass* metaclass = wrenNewSingleClass(vm, 0, AS_STRING(metaclassName));
+  ObjClass* metaclass = wrenNewSingleClass(vm, isForeign, 0,
+                                           AS_STRING(metaclassName));
   metaclass->obj.classObj = vm->classClass;
 
   wrenPopRoot(vm);
@@ -126,7 +129,7 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   // hierarchy.
   wrenBindSuperclass(vm, metaclass, vm->classClass);
 
-  ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
+  ObjClass* classObj = wrenNewSingleClass(vm, isForeign, numFields, name);
 
   // Make sure the class isn't collected while the inherited methods are being
   // bound.
