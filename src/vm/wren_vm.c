@@ -535,14 +535,14 @@ static Value validateSuperclass(WrenVM* vm, Value name, Value superclassValue,
         name, OBJ_VAL(superclass->name));
   }
 
-  if (superclass->isForeign)
+  if (!isForeign && superclass->isForeign)
   {
     return wrenStringFormat(vm,
         "Class '@' cannot inherit from foreign class '@'.",
         name, OBJ_VAL(superclass->name));
   }
 
-  if (isForeign && superclass->numFields > 0)
+  if (isForeign && !superclass->isForeign && superclass->numFields > 0)
   {
     return wrenStringFormat(vm,
         "Foreign class '@' may not inherit from a class with fields.",

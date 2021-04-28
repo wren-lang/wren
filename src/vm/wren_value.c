@@ -92,15 +92,7 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
   subclass->superclass = superclass;
 
   // Include the superclass in the total number of fields.
-  if (!subclass->isForeign)
-  {
-    subclass->numFields += superclass->numFields;
-  }
-  else
-  {
-    ASSERT(superclass->numFields == 0,
-           "A foreign class cannot inherit from a class with fields.");
-  }
+  subclass->numFields += superclass->numFields;
 
   // Inherit methods from its superclass.
   for (int i = 0; i < superclass->methods.count; i++)

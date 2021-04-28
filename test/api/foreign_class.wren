@@ -61,10 +61,17 @@ foreign class Resource {
   foreign static createUid
 }
 
+// Class subclassing a class.
+foreign class TextureResource is Resource {
+  construct new() {
+    super()
+  }
+}
+
 var resources = [
   Resource.new(),
   Resource.new(),
-  Resource.new()
+  TextureResource.new()
 ]
 
 for (resource in resources) {

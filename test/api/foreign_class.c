@@ -129,6 +129,13 @@ void foreignClassBindClass(
     return;
   }
 
+  if (strcmp(className, "TextureResource") == 0)
+  {
+    methods->allocate = resourceAllocate;
+    methods->finalize = resourceFinalize;
+    return;
+  }
+
   if (strcmp(className, "BadClass") == 0)
   {
     methods->allocate = badClassAllocate;
