@@ -2247,10 +2247,6 @@ static void field(Compiler* compiler, bool canAssign)
   {
     error(compiler, "Cannot reference a field outside of a class definition.");
   }
-  else if (enclosingClass->isForeign)
-  {
-    error(compiler, "Cannot define fields in a foreign class.");
-  }
   else if (enclosingClass->inStatic)
   {
     error(compiler, "Cannot use an instance field in a static method.");
