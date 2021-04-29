@@ -117,6 +117,7 @@ OBJECTS += $(OBJDIR)/call_calls_foreign.o
 OBJECTS += $(OBJDIR)/call_wren_call_root.o
 OBJECTS += $(OBJDIR)/error.o
 OBJECTS += $(OBJDIR)/foreign_class.o
+OBJECTS += $(OBJDIR)/foreign_method_user_data.o
 OBJECTS += $(OBJDIR)/get_variable.o
 OBJECTS += $(OBJDIR)/handle.o
 OBJECTS += $(OBJDIR)/lists.o
@@ -209,6 +210,9 @@ $(OBJDIR)/error.o: ../../test/api/error.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/foreign_class.o: ../../test/api/foreign_class.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/foreign_method_user_data.o: ../../test/api/foreign_method_user_data.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/get_variable.o: ../../test/api/get_variable.c
