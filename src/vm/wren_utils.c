@@ -225,7 +225,7 @@ bool static wrenParseNumError(int count, const char* err,
                                  wrenParseNumResults* results)
 {
   results->consumed = count;
-  results->value.err = err;
+  results->errorMessage = err;
   return false;
 }
 
@@ -354,7 +354,8 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
     }
 
     // We must have parsed digits from here or else this number is invalid
-    if (!hasDigits) return wrenParseNumError(i, "Number has no digits.", results);
+    if (!hasDigits) return wrenParseNumError(i, "Number has no digits.",
+                                             results);
 
     // Parse the exponential part of the number.
     if (c == 'e' || c == 'E')
@@ -379,6 +380,12 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
           {
             expNum = expNum * 10 + t;
           }
+          else
+          {
+            if (expNeg) return wrenParseNumError(i, "Exponent is too small.",
+                                                 results);
+            return wrenParseNumError(i, "Exponent is too large.", results);
+          }
           expHasDigits = true;
         }
         else if (c != '_') break;
@@ -400,18 +407,22 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
       }
     }
   } else {
-    if (!hasDigits) return wrenParseNumError(i, "Number has no digits.", results);
+    if (!hasDigits) return wrenParseNumError(i, "Number has no digits.",
+                                             results);
   }
 
   // Floating point math is often inaccurate. To get around this issue, we
   // calculate using long doubles to preserve as much data as possible.
-  double f =
-      (double)((long double)(num)*powl((long double)(base), (long double)(e)));
+  long double power = powl((long double)base, (long double)e);
+  long double result = (long double)num * power;
+  double f = (double)result;
+
   // Check whether the number became infinity or 0 from being too big or too
   // small.
   if (isinf(f)) return wrenParseNumError(i, "Number is too large.", results);
-  else if (f == 0 && num != 0) return wrenParseNumError(i, "Number is too small.", results);
+  else if (f == 0 && num != 0)
+           return wrenParseNumError(i, "Number is too small.", results);
   results->consumed = i;
-  results->value.dbl = neg ? f * -1 : f;
+  results->value = neg ? f * -1 : f;
   return true;
 }

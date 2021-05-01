@@ -130,11 +130,8 @@ typedef struct
 
   // If the parse was successful, [value] will contain the the parsed double or,
   // if there was an error, [value] will be a pointer to an error message.
-  union
-  {
-    double dbl;
-    const char* err;
-  } value;
+  double value;
+  const char* errorMessage;
 } wrenParseNumResults;
 
 // Parses a number from [str] with base [base]. Stores results into [res] and

@@ -622,7 +622,7 @@ DEF_PRIMITIVE(num_fromString)
     end += results.consumed;
     while(isspace(*end)) end++;
     if( end < string->value + string->length) RETURN_NULL;
-    RETURN_NUM(results.value.dbl);
+    RETURN_NUM(results.value);
   }
   RETURN_NULL;
 }

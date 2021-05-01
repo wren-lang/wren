@@ -748,14 +748,14 @@ static void readNumber(Parser* parser)
   if (wrenParseNum(parser->currentChar, 0, &results))
   {
     parser->currentChar += results.consumed;
-    parser->next.value = NUM_VAL(results.value.dbl);
+    parser->next.value = NUM_VAL(results.value);
     makeToken(parser, TOKEN_NUMBER);
   }
   else
   {
     parser->currentChar += results.consumed;
     parser->next.value = NUM_VAL(0);
-    lexError(parser, results.value.err);
+    lexError(parser, results.errorMessage);
   }
 }
 
