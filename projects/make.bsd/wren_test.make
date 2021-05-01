@@ -116,6 +116,7 @@ GENERATED += $(OBJDIR)/call_calls_foreign.o
 GENERATED += $(OBJDIR)/call_wren_call_root.o
 GENERATED += $(OBJDIR)/error.o
 GENERATED += $(OBJDIR)/foreign_class.o
+GENERATED += $(OBJDIR)/foreign_class_user_data.o
 GENERATED += $(OBJDIR)/foreign_method_user_data.o
 GENERATED += $(OBJDIR)/get_variable.o
 GENERATED += $(OBJDIR)/handle.o
@@ -136,6 +137,7 @@ OBJECTS += $(OBJDIR)/call_calls_foreign.o
 OBJECTS += $(OBJDIR)/call_wren_call_root.o
 OBJECTS += $(OBJDIR)/error.o
 OBJECTS += $(OBJDIR)/foreign_class.o
+OBJECTS += $(OBJDIR)/foreign_class_user_data.o
 OBJECTS += $(OBJDIR)/foreign_method_user_data.o
 OBJECTS += $(OBJDIR)/get_variable.o
 OBJECTS += $(OBJDIR)/handle.o
@@ -231,6 +233,9 @@ $(OBJDIR)/error.o: ../../test/api/error.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/foreign_class.o: ../../test/api/foreign_class.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/foreign_class_user_data.o: ../../test/api/foreign_class_user_data.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/foreign_method_user_data.o: ../../test/api/foreign_method_user_data.c
