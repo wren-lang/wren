@@ -128,13 +128,13 @@ typedef struct
   // The amount of characters consumed.
   int consumed;
 
-  // If the parse was successful, [value] will contain the the parsed double or,
-  // if there was an error, [value] will be a pointer to an error message.
+  // If the parse was successful, [value] will contain the the parsed double.
+  // [errorMessage] will be NULL if the parse was successful or will explain
+  // what went wrong.
   double value;
   const char* errorMessage;
 } wrenParseNumResults;
 
-// Parses a number from [str] with base [base]. Stores results into [res] and
-// returns true on success or false on error.
-bool wrenParseNum(const char* str, int base, wrenParseNumResults *res);
+// Parses a number from [str] with base [base]. Stores results into [res].
+void wrenParseNum(const char* str, int base, wrenParseNumResults *res);
 #endif

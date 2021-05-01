@@ -745,7 +745,8 @@ static int readHexDigit(Parser* parser)
 static void readNumber(Parser* parser)
 {
   wrenParseNumResults results;
-  if (wrenParseNum(parser->currentChar, 0, &results))
+  wrenParseNum(parser->currentChar, 0, &results);
+  if (results.errorMessage == NULL)
   {
     parser->currentChar += results.consumed;
     parser->next.value = NUM_VAL(results.value);

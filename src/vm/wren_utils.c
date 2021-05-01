@@ -213,7 +213,7 @@ uint32_t wrenValidateIndex(uint32_t count, int64_t value)
 // MaxMantissaDigits is the maximum amount of digits that can be preserved in
 // the mantissa of a float64 per base. Bases that are greater than 36 or less
 // than 2 are invalid. The values are found by `ceil(log[base](2^53 - 1))`.
-int maxMantissaDigits[] = {
+int static const maxMantissaDigits[] = {
     /* 2*/ 53, /* 3*/ 34, /* 4*/ 27, /* 5*/ 23, /* 6*/ 21, /* 7*/ 19, /* 8*/ 18,
     /* 9*/ 17, /*10*/ 16, /*11*/ 16, /*12*/ 15, /*13*/ 15, /*14*/ 14, /*15*/ 14,
     /*16*/ 14, /*17*/ 13, /*18*/ 13, /*19*/ 13, /*20*/ 13, /*21*/ 13, /*22*/ 12,
@@ -221,20 +221,25 @@ int maxMantissaDigits[] = {
     /*30*/ 11, /*31*/ 11, /*32*/ 11, /*33*/ 11, /*34*/ 11, /*35*/ 11, /*36*/ 11,
 };
 
-bool static wrenParseNumError(int count, const char* err,
+void static wrenParseNumError(int count, const char* err,
                                  wrenParseNumResults* results)
 {
   results->consumed = count;
   results->errorMessage = err;
-  return false;
+  results->value = 0;
 }
 
-bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
+void wrenParseNum(const char* str, int base, wrenParseNumResults* results)
 {
-  int i = 0, maxMant, mantDigits = 0, e = 0;
-  bool hasDigits = false, neg = false;
-  long long num = 0;
+  int i = 0;
+  bool hasDigits = false;
+  bool neg = false;
   char c = str[i];
+  // A double is limited in the amount of digits it can represent exactly. We
+  // can keep a count of how many digits we have and ignore the rest when we
+  // reach our limit
+  int maxMantissa;
+
   // Check sign.
   if (c == '-')
   {
@@ -246,7 +251,7 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
   {
     // Base unset. Check for prefix or default to base 10.
     base = 10;
-    maxMant = maxMantissaDigits[10 - 2];
+    maxMantissa = maxMantissaDigits[10 - 2];
     if (c == '0')
     {
       switch (c = str[++i])
@@ -254,17 +259,17 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
         case 'x':
           base = 16;
           c = str[++i];
-          maxMant = maxMantissaDigits[16 - 2];
+          maxMantissa = maxMantissaDigits[16 - 2];
           break;
         case 'o':
           base = 8;
           c = str[++i];
-          maxMant = maxMantissaDigits[8 - 2];
+          maxMantissa = maxMantissaDigits[8 - 2];
           break;
         case 'b':
           base = 2;
           c = str[++i];
-          maxMant = maxMantissaDigits[2 - 2];
+          maxMantissa = maxMantissaDigits[2 - 2];
           break;
         default:
           // this number is base 10 so treat the '0' as a digit.
@@ -296,9 +301,12 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
           hasDigits = true;
       }
     }
-    maxMant = maxMantissaDigits[base - 2];
+    maxMantissa = maxMantissaDigits[base - 2];
   }
 
+  int e = 0;
+  long long num = 0;
+  int mantissaDigits = 0;
   // Parse the integer part of the number.
   for (;;)
   {
@@ -315,10 +323,12 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
     if (t >= base) break;
 
     hasDigits = true;
-    if (mantDigits < maxMant)
+    // If we have reached our quota of digits, we can ignore the rest and
+    // increment our exponent.
+    if (mantissaDigits < maxMantissa)
     {
       num = num * base + t;
-      if (num > 0) mantDigits++;
+      if (num > 0) mantissaDigits++;
     }
     else if (e < INT_MAX) e++;
     else return wrenParseNumError(i, "Too many digits.", results);
@@ -338,11 +348,14 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
       {
         if (isdigit(c))
         {
-          if (mantDigits < maxMant)
+          // If we have reached our quota of digits, we can ignore the rest.
+          // This time we don't need to worry about the exponent as the decimal
+          // value is too insignificant.
+          if (mantissaDigits < maxMantissa)
           {
             num = num * 10 + (c - '0');
             hasDigits = true;
-            if (num > 0) mantDigits++;
+            if (num > 0) mantissaDigits++;
             if (e > INT_MIN) e--;
             else return wrenParseNumError(i, "Too many digits.", results);
           }
@@ -362,14 +375,16 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
     {
       c = str[++i];
       int expNum = 0;
-      bool expHasDigits = false, expNeg = false;
+      bool expHasDigits = false;
+      bool expNeg = false;
+      // Parse exponent sign.
       if (c == '-')
       {
         expNeg = true;
         c = str[++i];
       }
       else if (c == '+') c = str[++i];
-
+      // Parse the actual exponent.
       for (;;)
       {
         if (isdigit(c))
@@ -422,7 +437,7 @@ bool wrenParseNum(const char* str, int base, wrenParseNumResults* results)
   if (isinf(f)) return wrenParseNumError(i, "Number is too large.", results);
   else if (f == 0 && num != 0)
            return wrenParseNumError(i, "Number is too small.", results);
+  results->errorMessage = NULL;
   results->consumed = i;
   results->value = neg ? f * -1 : f;
-  return true;
 }

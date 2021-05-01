@@ -618,8 +618,10 @@ DEF_PRIMITIVE(num_fromString)
   while(isspace(*end)) end++;
 
   wrenParseNumResults results;
-  if (wrenParseNum(end, 0, &results)) {
-    end += results.consumed;
+  wrenParseNum(end, 0, &results);
+  end += results.consumed;
+  if (results.errorMessage == NULL)
+  {
     while(isspace(*end)) end++;
     if( end < string->value + string->length) RETURN_NULL;
     RETURN_NUM(results.value);
