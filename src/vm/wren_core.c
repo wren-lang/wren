@@ -1,7 +1,5 @@
 #include <ctype.h>
-#include <errno.h>
 #include <float.h>
-#include <math.h>
 #include <string.h>
 #include <time.h>
 
@@ -614,150 +612,19 @@ DEF_PRIMITIVE(num_fromString)
   // Corner case: Can't parse an empty string.
   if (string->length == 0) RETURN_NULL;
 
-  char* str = string->value;
-  int base = 10, i = 0;
-  bool hasDigits = false, neg = false;
-  char c = str[i];
-  while(i < string->length && isspace(str[i])) i++;
-  if (c == '-')
-  {
-    neg = true;
-    i++;
+  char* end = string->value;
+
+  // Skip leading whitespace.
+  while(isspace(*end)) end++;
+
+  wrenParseNumResults results;
+  if (wrenParseNum(end, 0, &results)) {
+    end += results.consumed;
+    while(isspace(*end)) end++;
+    if( end < string->value + string->length) RETURN_NULL;
+    RETURN_NUM(results.value.dbl);
   }
-  else if (c == '+') i++;
-  if (i >= string->length) goto end;
-  long long maxMant = 16, num = 0;
-  if (c == '0')
-  {
-    i++;
-    if (i >= string->length) goto end;
-    switch (str[i])
-    {
-      case 'x':
-        base = 16;
-        i++;
-        maxMant = 14;
-        break;
-      case 'o':
-        base = 8;
-        i++;
-        maxMant = 18;
-        break;
-      case 'b':
-        base = 2;
-        i++;
-        maxMant = 53;
-        break;
-    }
-  }
-  int e = 0, mantDigits = 0;
-  for (;i < string->length;)
-  {
-    c = str[i];
-    if (isdigit(c))
-    {
-      c -= '0';
-    }
-    else if (c >= 'a' && c <= 'z')
-    {
-      c -= 'a' - 10;
-    }
-    else if (c >= 'A' && c <= 'Z')
-    {
-      c -= 'A' - 10;
-    }
-    else if (c == '_')
-    {
-      i++;
-      continue;
-    }
-    else
-    {
-      break;
-    }
-    if (c >= base) break;
-    hasDigits = true;
-    if (mantDigits < maxMant)
-    {
-      num = num * base + c;
-      if (num > 0) mantDigits++;
-    }
-    else e++;
-    i++;
-  }
-  if (i >= string->length) goto end;
-  if (base == 10)
-  {
-    if (str[i] == '.' && isdigit(str[i+1]))
-    {
-      i++;
-      for(;i < string->length;)
-      {
-        c = str[i];
-        if (isdigit(c)) c -= '0';
-        else if(c == '_')
-        {
-          i++;
-          continue;
-        }
-        else break;
-        if (mantDigits < maxMant)
-        {
-          num = num * 10 + c;
-          if (num > 0) mantDigits++;
-          e--;
-        }
-        i++;
-      }
-    }
-    if (i >= string->length) goto end;
-    if(str[i] == 'e' || str[i] == 'E')
-    {
-      i++;
-      if (i >= string->length) goto eEnd;
-      int expNum = 0;
-      bool expHasDigits = false, expNeg = false;
-      if (str[i] == '-')
-      {
-        expNeg = true;
-        i++;
-      }
-      else if (str[i] == '+') i++;
-      for(;i < string->length;)
-      {
-        c = str[i];
-        if (isdigit(c))
-        {
-          expNum = expNum * 10 + (c - '0');
-          expHasDigits = true;
-          i++;
-        }
-        else if (c == '_')
-        {
-          i++;
-          continue;
-        }
-        else break;
-      }
-    eEnd:
-      if (!expHasDigits)
-      {
-        RETURN_NULL;
-      }
-      else if (expNeg) e -= expNum;
-      else e += expNum;
-    }
-  }
-  while(i < string->length && isspace(str[i])) i++;
-end:
-  if (base != 10 && !hasDigits) RETURN_NULL;
-  // We must have consumed the entire string. Otherwise, it contains non-number
-  // characters and we can't parse it.
-  if (i < string->length) RETURN_NULL;
-  double f = (double)(num) * 
-    (double)(powl)((long double) base, (long double) e);
-  if (f > DBL_MAX || (f < DBL_MIN && num > 0)) RETURN_ERROR("Number literal is too large.");
-  RETURN_NUM(neg ? f * -1 : f);
+  RETURN_NULL;
 }
 
 // Defines a primitive on Num that calls infix [op] and returns [type].

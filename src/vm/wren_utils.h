@@ -123,4 +123,21 @@ int wrenPowerOf2Ceil(int n);
 // index value. If invalid, returns `UINT32_MAX`.
 uint32_t wrenValidateIndex(uint32_t count, int64_t value);
 
+typedef struct
+{
+  // The amount of characters consumed.
+  int consumed;
+
+  // If the parse was successful, [value] will contain the the parsed double or,
+  // if there was an error, [value] will be a pointer to an error message.
+  union
+  {
+    double dbl;
+    const char* err;
+  } value;
+} wrenParseNumResults;
+
+// Parses a number from [str] with base [base]. Stores results into [res] and
+// returns true on success or false on error.
+bool wrenParseNum(const char* str, int base, wrenParseNumResults *res);
 #endif
