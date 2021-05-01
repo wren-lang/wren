@@ -5,6 +5,10 @@ use during development or debugging.
 
 ## Static Methods
 
+### System.**version**
+
+Returns a monotonical numeric value representing the Wren version. Use this if you want to do range checks over versions.
+
 ### System.**clock**
 
 Returns the number of seconds (including fractional seconds) since the program

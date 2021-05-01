@@ -1197,6 +1197,11 @@ DEF_PRIMITIVE(string_toString)
   RETURN_VAL(args[0]);
 }
 
+DEF_PRIMITIVE(system_version)
+{
+  RETURN_NUM(WREN_VERSION_NUMBER);
+}
+
 DEF_PRIMITIVE(system_clock)
 {
   RETURN_NUM((double)clock() / CLOCKS_PER_SEC);
@@ -1468,6 +1473,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->rangeClass, "toString", range_toString);
 
   ObjClass* systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
+  PRIMITIVE(systemClass->obj.classObj, "version", system_version);
   PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);
   PRIMITIVE(systemClass->obj.classObj, "gc()", system_gc);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
