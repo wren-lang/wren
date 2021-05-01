@@ -194,15 +194,18 @@ The tangent of the number.
 
 The string representation of the number.
 
-### **toBool**
+### **toCBool**
 
-The bool representation of the number. Equal to `>= 1`
+Converts the number to a Bool using the C99 language's notion of truth i.e. 0 (or -0) corresponds to `false` and any other number (including ±infinity and NaN) to `true`.
+
+Note that this differs from Wren's notion of truth where every number (including ±0) is considered to be true.
 
 <pre class="snippet">
-System.print((-1).toBool)  //> false
-System.print((0.8).toBool) //> false
-System.print(1.toBool)     //> true
-System.print(2.toBool)     //> true
+System.print((-0).toCBool)  //> false
+System.print((0).toCBool)   //> false
+System.print((0.8).toCBool) //> true
+System.print(1.toCBool)     //> true
+System.print((-2).toCBool)  //> true
 </pre>
 
 ### **truncate**
