@@ -63,10 +63,12 @@ WrenBindForeignMethodResult APITest_bindForeignMethod(
   method = userDataBindMethod(fullName);
   RETURN_IF_NONNULL(method);
 
-  WrenBindForeignMethodResult foreignMethodUserData =
-      foreignMethodUserDataBindMethod(fullName);
-  if(foreignMethodUserData.executeFn != NULL) {
-    return foreignMethodUserData;
+  method = foreignClassUserDataBindMethod(fullName);
+  RETURN_IF_NONNULL(method);
+
+  result = foreignMethodUserDataBindMethod(fullName);
+  if(result.executeFn != NULL) {
+    return result;
   }
 
   fprintf(stderr,
@@ -79,10 +81,13 @@ WrenBindForeignMethodResult APITest_bindForeignMethod(
 WrenForeignClassMethods APITest_bindForeignClass(
     WrenVM* vm, const char* module, const char* className)
 {
-  WrenForeignClassMethods methods = { NULL, NULL };
+  WrenForeignClassMethods methods = { 0 };
   if (strncmp(module, "./test/api", 7) != 0) return methods;
 
   foreignClassBindClass(className, &methods);
+  if (methods.allocate != NULL) return methods;
+
+  foreignClassUserDataBindClass(className, &methods);
   if (methods.allocate != NULL) return methods;
 
   resetStackAfterForeignConstructBindClass(className, &methods);

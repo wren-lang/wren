@@ -112,9 +112,8 @@ WrenForeignClassMethods wrenRandomBindForeignClass(WrenVM* vm,
                                                    const char* className)
 {
   ASSERT(strcmp(className, "Random") == 0, "Should be in Random class.");
-  WrenForeignClassMethods methods;
+  WrenForeignClassMethods methods = {0};
   methods.allocate = randomAllocate;
-  methods.finalize = NULL;
   return methods;
 }
 

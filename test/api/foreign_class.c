@@ -73,7 +73,7 @@ static void resourceAllocate(WrenVM* vm, void *userData)
   *value = 123;
 }
 
-static void resourceFinalize(void* data)
+static void resourceFinalize(void* data, void *userData)
 {
   // Make sure we get the right data back.
   int* value = (int*)data;

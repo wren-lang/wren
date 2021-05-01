@@ -569,9 +569,7 @@ static Value validateSuperclass(WrenVM* vm, Value name, Value superclassValue,
 
 static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
 {
-  WrenForeignClassMethods methods;
-  methods.allocate = NULL;
-  methods.finalize = NULL;
+  WrenForeignClassMethods methods = {0};
   
   // Check the optional built-in module first so the host can override it.
   
@@ -595,7 +593,6 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   
   Method method;
   method.type = METHOD_FOREIGN;
-  WrenUserData userData = WREN_USER_DATA_NONE;
 
   // Add the symbol even if there is no allocator so we can ensure that the
   // symbol itself is always in the symbol table.
@@ -603,7 +600,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   if (methods.allocate != NULL)
   {
     method.as.foreign = methods.allocate;
-    wrenBindMethod(vm, classObj, symbol, method, userData);
+    wrenBindMethod(vm, classObj, symbol, method, methods.allocateUserData);
   }
   
   // Add the symbol even if there is no finalizer so we can ensure that the
@@ -612,7 +609,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   if (methods.finalize != NULL)
   {
     method.as.foreign = (WrenForeignMethodFn)methods.finalize;
-    wrenBindMethod(vm, classObj, symbol, method, userData);
+    wrenBindMethod(vm, classObj, symbol, method, methods.finalizeUserData);
   }
 }
 
@@ -675,14 +672,14 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
 
   ASSERT(classObj->methods.count > symbol, "Class should have allocator.");
   Method* method = &classObj->methods.data[symbol];
-  WrenUserData userData = WREN_USER_DATA_NONE;
   ASSERT(method->type == METHOD_FOREIGN, "Allocator should be foreign.");
 
   // Pass the constructor arguments to the allocator as well.
   ASSERT(vm->apiStack == NULL, "Cannot already be in foreign call.");
   vm->apiStack = stack;
 
-  method->as.foreign(vm, userData);
+  method->as.foreign(vm,
+      classObj->foreignMethodUserDatas.data[symbol].userData);
 
   vm->apiStack = NULL;
 }
@@ -706,7 +703,8 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
   ASSERT(method->type == METHOD_FOREIGN, "Finalizer should be foreign.");
 
   WrenFinalizerFn finalizer = (WrenFinalizerFn)method->as.foreign;
-  finalizer(foreign->data);
+  finalizer(foreign->data,
+      classObj->foreignMethodUserDatas.data[symbol].userData);
 }
 
 // Let the host resolve an imported module name if it wants to.

@@ -14,6 +14,7 @@
 #include "error.h"
 #include "get_variable.h"
 #include "foreign_class.h"
+#include "foreign_class_user_data.h"
 #include "foreign_method_user_data.h"
 #include "handle.h"
 #include "lists.h"

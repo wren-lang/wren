@@ -16,7 +16,7 @@ static void test(WrenVM* vm, void *userData)
 
 WrenBindForeignMethodResult foreignMethodUserDataBindMethod(const char* signature)
 {
-  WrenBindForeignMethodResult retval = {};
+  WrenBindForeignMethodResult retval = {0};
   retval.executeFn = test;
   retval.userData = (void *)&zero;  // avoid segfaults
 

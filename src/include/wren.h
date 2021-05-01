@@ -64,7 +64,8 @@ typedef void (*WrenForeignMethodFn)(WrenVM* vm, void *userData);
 // class. Unlike most foreign methods, finalizers do not have access to the VM
 // and should not interact with it since it's in the middle of a garbage
 // collection.
-typedef void (*WrenFinalizerFn)(void* data);
+// [userData] is from WrenForeignClassMethods.
+typedef void (*WrenFinalizerFn)(void* data, void *userData);
 
 // Gives the host a chance to canonicalize the imported module name,
 // potentially taking into account the (previously resolved) name of the module
@@ -148,11 +149,18 @@ typedef struct
   // [wrenSetSlotNewForeign()] exactly once.
   WrenForeignMethodFn allocate;
 
+  // value passed to [allocate] as userData
+  void* allocateUserData;
+
   // The callback invoked when the garbage collector is about to collect a
   // foreign object's memory.
   //
   // This may be `NULL` if the foreign class does not need to finalize.
   WrenFinalizerFn finalize;
+
+  // value passed to [finalize] as userData
+  void* finalizeUserData;
+
 } WrenForeignClassMethods;
 
 // Returns a pair of pointers to the foreign methods used to allocate and
