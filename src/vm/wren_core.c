@@ -603,22 +603,16 @@ DEF_PRIMITIVE(null_toString)
   RETURN_VAL(CONST_STRING(vm, "null"));
 }
 
-DEF_PRIMITIVE(num_fromString)
-{
-  if (!validateString(vm, args[1], "Argument")) return false;
-
-  ObjString* string = AS_STRING(args[1]);
-
+static Value num_fromString(Value* args, ObjString* string, double base) {
   // Corner case: Can't parse an empty string.
   if (string->length == 0) RETURN_NULL;
 
   char* end = string->value;
-
   // Skip leading whitespace.
   while(isspace(*end)) end++;
 
   wrenParseNumResults results;
-  wrenParseNum(end, 0, &results);
+  wrenParseNum(end, (int)base, &results);
   end += results.consumed;
   if (results.errorMessage == NULL)
   {
@@ -627,6 +621,28 @@ DEF_PRIMITIVE(num_fromString)
     RETURN_NUM(results.value);
   }
   RETURN_NULL;
+}
+
+DEF_PRIMITIVE(num_fromString1)
+{
+  if (!validateString(vm, args[1], "Argument")) return false;
+
+  ObjString* string = AS_STRING(args[1]);
+  return num_fromString(args, string, 0);
+}
+
+DEF_PRIMITIVE(num_fromString2)
+{
+  if (!validateString(vm, args[1], "Argument")) return false;
+  if (!validateInt(vm, args[2], "Base")) return false;
+
+  ObjString* string = AS_STRING(args[1]);
+  double base = AS_NUM(args[2]);
+
+  if (base > 36) RETURN_ERROR("Base is to high.");
+  else if (base < 2 && base != 0) RETURN_ERROR("Base is to low.");
+
+  return num_fromString(args, string, base);
 }
 
 // Defines a primitive on Num that calls infix [op] and returns [type].
@@ -1348,7 +1364,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->nullClass, "toString", null_toString);
 
   vm->numClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Num"));
-  PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
+  PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString1);
+  PRIMITIVE(vm->numClass->obj.classObj, "fromString(_,_)", num_fromString2);
   PRIMITIVE(vm->numClass->obj.classObj, "infinity", num_infinity);
   PRIMITIVE(vm->numClass->obj.classObj, "nan", num_nan);
   PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
