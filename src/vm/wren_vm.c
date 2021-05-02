@@ -438,7 +438,7 @@ static void runtimeError(WrenVM* vm)
 static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
   vm->fiber->error = wrenStringFormat(vm, "@ does not implement '$'.",
-      OBJ_VAL(classObj->name), vm->methodNames.data[symbol]->value);
+      OBJ_VAL(classObj->name), vm->methodNames.buffer.data[symbol]->value);
 }
 
 // Looks up the previously loaded module with [name].
@@ -475,8 +475,8 @@ static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
     for (int i = 0; i < coreModule->variables.count; i++)
     {
       wrenDefineVariable(vm, module,
-                         coreModule->variableNames.data[i]->value,
-                         coreModule->variableNames.data[i]->length,
+                         coreModule->variableNames.buffer.data[i]->value,
+                         coreModule->variableNames.buffer.data[i]->length,
                          coreModule->variables.data[i], NULL);
     }
   }
