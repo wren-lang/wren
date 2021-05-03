@@ -80,6 +80,30 @@ DEF_PRIMITIVE(class_tildetilde)
   RETURN_BOOL(false);
 }
 
+DEF_PRIMITIVE(class_bangtilde)
+{
+  bool result;
+
+  if (!IS_CLASS(args[0]))
+  {
+    RETURN_ERROR("Right operand must be a class.");
+  }
+
+  ObjClass *classObj = IS_CLASS(args[1]) ? AS_CLASS(args[1]) : wrenGetClass(vm, args[1]);
+  ObjClass *baseClassObj = AS_CLASS(args[0]);
+
+  // Walk the superclass chain looking for the class.
+  do
+  {
+    if (baseClassObj == classObj) RETURN_BOOL(false);
+
+    classObj = classObj->superclass;
+  }
+  while (classObj != NULL);
+
+  RETURN_BOOL(true);
+}
+
 DEF_PRIMITIVE(fiber_new)
 {
   if (!validateFn(vm, args[1], "Argument")) return false;
@@ -551,6 +575,14 @@ DEF_PRIMITIVE(map_containsKey)
   if (!validateKey(vm, args[1])) return false;
 
   RETURN_BOOL(!IS_UNDEFINED(wrenMapGet(AS_MAP(args[0]), args[1])));
+}
+
+// ! Map.containsKey(_)
+DEF_PRIMITIVE(map_bangtilde)
+{
+  if (!validateKey(vm, args[1])) return false;
+
+  RETURN_BOOL(IS_UNDEFINED(wrenMapGet(AS_MAP(args[0]), args[1])));
 }
 
 DEF_PRIMITIVE(map_count)
@@ -1285,6 +1317,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "~~(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
+  PRIMITIVE(vm->objectClass, "!~(_)", object_bangeq);
   PRIMITIVE(vm->objectClass, "is(_)", object_is);
   PRIMITIVE(vm->objectClass, "toString", object_toString);
   PRIMITIVE(vm->objectClass, "type", object_type);
@@ -1297,6 +1330,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->classClass, "toString", class_toString);
   PRIMITIVE(vm->classClass, "attributes", class_attributes);
   PRIMITIVE(vm->classClass, "~~(_)", class_tildetilde);
+  PRIMITIVE(vm->classClass, "!~(_)", class_bangtilde);
 
   // Finally, we can define Object's metaclass which is a subclass of Class.
   ObjClass* objectMetaclass = defineClass(vm, coreModule, "Object metaclass");
@@ -1383,6 +1417,7 @@ void wrenInitializeCore(WrenVM* vm)
   
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
   PRIMITIVE(vm->fnClass, "~~(_)", fn_tildetilde);
+  // Fn.!~(_) is in wren_core.wren
 
   vm->nullClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Null"));
   PRIMITIVE(vm->nullClass, "!", null_not);
@@ -1449,6 +1484,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "==(_)", num_eqeq);
   PRIMITIVE(vm->numClass, "!=(_)", num_bangeq);
   PRIMITIVE(vm->numClass, "~~(_)", num_eqeq);   // Num smartmatch is value equality
+  PRIMITIVE(vm->numClass, "!~(_)", num_bangeq);
 
   vm->stringClass = AS_CLASS(wrenFindVariable(vm, coreModule, "String"));
   PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
@@ -1495,6 +1531,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->mapClass, "clear()", map_clear);
   PRIMITIVE(vm->mapClass, "containsKey(_)", map_containsKey);
   PRIMITIVE(vm->mapClass, "~~(_)", map_containsKey);
+  PRIMITIVE(vm->mapClass, "!~(_)", map_bangtilde);
   PRIMITIVE(vm->mapClass, "count", map_count);
   PRIMITIVE(vm->mapClass, "remove(_)", map_remove);
   PRIMITIVE(vm->mapClass, "iterate(_)", map_iterate);
