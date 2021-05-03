@@ -32,6 +32,8 @@ static const char* coreModuleSource =
 "    return false\n"
 "  }\n"
 "\n"
+"  ~~(element) { contains(element) }\n"
+"\n"
 "  count {\n"
 "    var result = 0\n"
 "    for (element in this) {\n"
@@ -483,4 +485,3 @@ static const char* coreModuleSource =
 "  }\n"
 "  toString { \"attributes:%(_attributes) methods:%(_methods)\" }\n"
 "}\n";
-

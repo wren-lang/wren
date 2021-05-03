@@ -30,6 +30,8 @@ class Sequence {
     return false
   }
 
+  ~~(element) { contains(element) }
+
   count {
     var result = 0
     for (element in this) {
