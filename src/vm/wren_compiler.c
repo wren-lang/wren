@@ -2883,6 +2883,7 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_FOREIGN_CLASS:
     case CODE_END_MODULE:
     case CODE_END_CLASS:
+    case CODE_SWAP:
       return 0;
 
     case CODE_LOAD_LOCAL:
