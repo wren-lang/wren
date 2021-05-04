@@ -187,8 +187,8 @@ loop conditions).
 
 <pre class="snippet">
 for (i in [1, 2, 3, 4]) {
-  System.print(i)           //> 1
-  if (i == 2) continue      //> 3
+  if (i == 2) continue      //> 1
+  System.print(i)           //> 3
 }                           //> 4
 </pre>
 
