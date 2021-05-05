@@ -542,6 +542,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   // the middle of initializing the compiler.
   compiler->fn = NULL;
   compiler->constants = NULL;
+  compiler->attributes = NULL;
 
   parser->vm->compiler = compiler;
 
