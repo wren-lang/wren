@@ -6,19 +6,17 @@ A lightweight coroutine. [Here][fibers] is a gentle introduction.
 
 ## Static Methods
 
-### Fiber.**abort**(message)
+### Fiber.**abort**(value)
 
-Raises a runtime error with the provided message.  `message` may also be an object.
+Raises a runtime error with the provided value.
 
 <pre class="snippet">
 Fiber.abort("Something bad happened.")
-</pre>
-
-<pre class="snippet">
 Fiber.abort(CustomError.new())
+Fiber.abort(32)
 </pre>
 
-If the message is `null`, does nothing.
+If the value is `null`, does nothing.
 
 ### Fiber.**current**
 
@@ -146,8 +144,9 @@ fiber.call("resume")
 
 ### **error**
 
-The error message that was passed when aborting the fiber, or `null` if the
-fiber has not been aborted.
+The error value that was passed when aborting the fiber, or `null` if the
+fiber has not been aborted.  Wren internal error values will always be
+Strings.
 
 <pre class="snippet">
 var fiber = Fiber.new {
