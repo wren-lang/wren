@@ -15,17 +15,9 @@ option(WREN_BUILD_TEST "Build Wren Tests" OFF)
 
 # Source Files
 set(WREN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../src)
-set(WREN_SRC_FILES
-    ${WREN_SRC}/vm/wren_compiler.c
-    ${WREN_SRC}/vm/wren_core.c
-    ${WREN_SRC}/vm/wren_debug.c
-    ${WREN_SRC}/vm/wren_primitive.c
-    ${WREN_SRC}/vm/wren_utils.c
-    ${WREN_SRC}/vm/wren_value.c
-    ${WREN_SRC}/vm/wren_vm.c
-    ${WREN_SRC}/optional/wren_opt_meta.c
-    ${WREN_SRC}/optional/wren_opt_random.c
-)
+file(GLOB WREN_SRC_VM_FILES ${WREN_SRC}/vm/*.c)
+file(GLOB WREN_SRC_OPTIONAL_FILES ${WREN_SRC}/optional/*.c)
+set(WREN_SRC_FILES ${WREN_SRC_VM_FILES} ${WREN_SRC_OPTIONAL_FILES})
 set(WREN_INCLUDE_DIRS
     ${WREN_SRC}/include
     ${WREN_SRC}/optional
