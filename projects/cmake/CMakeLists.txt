@@ -46,7 +46,7 @@ if (WREN_BUILD_SHARED)
 endif()
 
 # Testing
-if(WREN_BUILD_TEST AND WREN_BUILD_STATIC
+if(WREN_BUILD_TEST AND WREN_BUILD_STATIC)
     include(CTest)
     enable_testing()
     set(CTEST_CUSTOM_TESTS_IGNORE pkg-config--static)
