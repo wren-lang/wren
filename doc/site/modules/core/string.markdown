@@ -251,7 +251,7 @@ System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimStart("ᵔᴥ")) //> bear�
 
 ### **toLowerCase**
 
-Like `trim()` but only removes from the beginning of the string.
+Returns a new string converted to lower case.
 
 <pre class="snippet">
 System.print("Hello World!".toLowerCase) //> "hello world!"
