@@ -238,6 +238,17 @@ static const char* coreModuleSource =
 "    return result\n"
 "  }\n"
 "\n"
+"  toLowerCase() {\n"
+"    var output = \"\"\n"
+"    for (c in codePoints) {\n"
+"      if (c >= 65 && c <= 90) {\n"
+"        c = c + 32\n"
+"      }\n"
+"      output = output + String.fromCodePoint(c)\n"
+"    }\n"
+"    return output\n"
+"  }\n"
+"\n"
 "  trim() { trim_(\"\t\r\n \", true, true) }\n"
 "  trim(chars) { trim_(chars, true, true) }\n"
 "  trimEnd() { trim_(\"\t\r\n \", false, true) }\n"
@@ -482,5 +493,4 @@ static const char* coreModuleSource =
 "    _methods = methods\n"
 "  }\n"
 "  toString { \"attributes:%(_attributes) methods:%(_methods)\" }\n"
-"}\n";
-
+"}";

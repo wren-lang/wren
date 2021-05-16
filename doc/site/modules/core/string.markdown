@@ -251,7 +251,7 @@ System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimStart("ᵔᴥ")) //> bear�
 
 ### **toLowerCase**()
 
-Returns a new string with all characters converted to lower case.
+Returns a new string with all ASCII characters converted to lower case.
 
 <pre class="snippet">
 System.print("Hello World!".toLowerCase) //> "hello world!"
