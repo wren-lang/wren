@@ -236,7 +236,7 @@ class String is Sequence {
     return result
   }
 
-  toLowerCase() {
+  lowerCase {
     var output = ""
     for (c in codePoints) {
       if (c >= 65 && c <= 90) {
