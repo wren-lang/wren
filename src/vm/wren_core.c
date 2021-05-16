@@ -1171,7 +1171,7 @@ DEF_PRIMITIVE(string_toLowerCase)
 
   Value output = wrenNewStringLength(vm, &string->value[0], string->length);
   char* str = (char*)AS_CSTRING(output);
-  for(int i = 0; str[i]; i++) {
+  for (uint32_t i = 0; str[i]; i++) {
     str[i] = tolower(str[i]);
   }
 
