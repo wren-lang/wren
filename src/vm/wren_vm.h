@@ -259,4 +259,7 @@ static inline bool wrenIsFalsyValue(Value value)
   return IS_FALSE(value) || IS_NULL(value);
 }
 
+// Returns Value in [slot] in the foreign call stack.
+Value* wrenSlotAtUnsafe(WrenVM* vm, int slot);
+
 #endif
