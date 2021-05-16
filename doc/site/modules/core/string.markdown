@@ -249,6 +249,14 @@ Like `trim()` but only removes from the beginning of the string.
 System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimStart("ᵔᴥ")) //> bearᵔᴥᴥᵔᵔ
 </pre>
 
+### **toLowerCase**
+
+Like `trim()` but only removes from the beginning of the string.
+
+<pre class="snippet">
+System.print("Hello World!".toLowerCase) //> "hello world!"
+</pre>
+
 ### **+**(other) operator
 
 Returns a new string that concatenates this string and `other`.
