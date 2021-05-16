@@ -1442,7 +1442,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "iterateByte_(_)", string_iterateByte);
   PRIMITIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
   PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
-  PRIMITIVE(vm->stringClass, "toLowerCase", string_toLowerCase);
+  PRIMITIVE(vm->stringClass, "toLowerCase()", string_toLowerCase);
   PRIMITIVE(vm->stringClass, "toString", string_toString);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));

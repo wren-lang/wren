@@ -249,9 +249,9 @@ Like `trim()` but only removes from the beginning of the string.
 System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimStart("ᵔᴥ")) //> bearᵔᴥᴥᵔᵔ
 </pre>
 
-### **toLowerCase**
+### **toLowerCase**()
 
-Returns a new string converted to lower case.
+Returns a new string with all characters converted to lower case.
 
 <pre class="snippet">
 System.print("Hello World!".toLowerCase) //> "hello world!"
