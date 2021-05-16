@@ -5,6 +5,8 @@
 #include <string.h>
 #include <time.h>
 
+#include <stdio.h>
+
 #include "wren_common.h"
 #include "wren_core.h"
 #include "wren_math.h"
@@ -1161,6 +1163,23 @@ DEF_PRIMITIVE(string_startsWith)
   RETURN_BOOL(memcmp(string->value, search->value, search->length) == 0);
 }
 
+DEF_PRIMITIVE(string_toLowerCase)
+{
+  ObjString* string = AS_STRING(args[0]);
+
+  if (string->length == 0) {
+    RETURN_VAL(args[0]);
+  }
+
+  Value output = wrenNewStringLength(vm, &string->value[0], string->length);
+  char* str = (char*)AS_CSTRING(output);
+  for(int i = 0; str[i]; i++) {
+    str[i] = tolower(str[i]);
+  }
+
+  RETURN_VAL(output);
+}
+
 DEF_PRIMITIVE(string_plus)
 {
   if (!validateString(vm, args[1], "Right operand")) return false;
@@ -1425,6 +1444,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "iterateByte_(_)", string_iterateByte);
   PRIMITIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
   PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
+  PRIMITIVE(vm->stringClass, "toLowerCase", string_toLowerCase);
   PRIMITIVE(vm->stringClass, "toString", string_toString);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
