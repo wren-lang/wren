@@ -199,8 +199,9 @@ count as well.</p>
 <p>It is a runtime error if <code>search</code> is not a string.</p>
 <h3><strong>indexOf</strong>(search, start) <a href="#indexof(search,-start)" name="indexof(search,-start)" class="header-anchor">#</a></h3>
 <p>Returns the index of the first byte matching <code>search</code> in the string or <code>-1</code> if
-<code>search</code> was not found, starting a byte offset <code>start</code>. The start can be
-negative to count backwards from the end of the string.</p>
+<code>search</code> was not found, starting at byte offset <code>start</code>. The <code>start</code> offset can
+also be negative, which will be offset relative to end of the string instead.
+Searches forward, from the offset to the end of the string.</p>
 <p>It is a runtime error if <code>search</code> is not a string or <code>start</code> is not an integer
 index within the string&rsquo;s byte length.</p>
 <h3><strong>iterate</strong>(iterator), <strong>iteratorValue</strong>(iterator) <a href="#iterate(iterator),-iteratorvalue(iterator)" name="iterate(iterator),-iteratorvalue(iterator)" class="header-anchor">#</a></h3>
