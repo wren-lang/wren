@@ -5,8 +5,6 @@
 #include <string.h>
 #include <time.h>
 
-#include <stdio.h>
-
 #include "wren_common.h"
 #include "wren_core.h"
 #include "wren_math.h"
