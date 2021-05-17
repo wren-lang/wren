@@ -1,12 +1,12 @@
-System.print("abc def ghi".lowerCase == "abc def ghi") // expect: true
-System.print("ABC DEF GHI".lowerCase == "abc def ghi") // expect: true
-System.print("AbC dEf GhI".lowerCase == "abc def ghi") // expect: true
+System.print("abc def ghi".lower == "abc def ghi") // expect: true
+System.print("ABC DEF GHI".lower == "abc def ghi") // expect: true
+System.print("AbC dEf GhI".lower == "abc def ghi") // expect: true
 
 // Empty string
-System.print("".lowerCase == "") // expect: true
+System.print("".lower == "") // expect: true
 
 // Type
-System.print("ABC DEF GHI".lowerCase is String) // expect: true
+System.print("ABC DEF GHI".lower is String) // expect: true
 
 // UTF-8
-System.print("søMéஃTHînGsøméஃ".lowerCase == "søméஃthîngsøméஃ") // expect: true
+System.print("søMéஃTHînGsøméஃ".lower == "søméஃthîngsøméஃ") // expect: true

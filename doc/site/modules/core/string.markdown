@@ -249,12 +249,12 @@ Like `trim()` but only removes from the beginning of the string.
 System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimStart("ᵔᴥ")) //> bearᵔᴥᴥᵔᵔ
 </pre>
 
-### **lowerCase**
+### **lower**
 
 Returns a new string with all ASCII characters converted to lower case.
 
 <pre class="snippet">
-System.print("Hello World!".lowerCase) //> "hello world!"
+System.print("Hello World!".lower) //> "hello world!"
 </pre>
 
 ### **+**(other) operator

@@ -238,7 +238,7 @@ static const char* coreModuleSource =
 "    return result\n"
 "  }\n"
 "\n"
-"  lowerCase {\n"
+"  lower {\n"
 "    var output = \"\"\n"
 "    for (c in codePoints) {\n"
 "      if (c >= 65 && c <= 90) {\n"
