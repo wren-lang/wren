@@ -5,8 +5,6 @@ import "./module"
 // expect: Fn
 // expect: List
 // expect: Map
-// expect: MapKeySequence
-// expect: MapValueSequence
 // expect: Null
 // expect: Num
 // expect: Object

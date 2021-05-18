@@ -54,11 +54,46 @@ class Sequence {
 
   isEmpty { iterate(null) ? false : true }
 
-  map(transformation) { MapSequence.new(this, transformation) }
+  map(transformation) {
+    class MapSequence is Sequence {
+      construct new(sequence, fn) {
+        _sequence = sequence
+        _fn = fn
+      }
+
+      iterate(iterator) { _sequence.iterate(iterator) }
+      iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
+    }
+
+    return MapSequence.new(this, transformation)
+  }
 
   skip(count) {
     if (!(count is Num) || !count.isInteger || count < 0) {
       Fiber.abort("Count must be a non-negative integer.")
+    }
+
+    class SkipSequence is Sequence {
+      construct new(sequence, count) {
+        _sequence = sequence
+        _count = count
+      }
+
+      iterate(iterator) {
+        if (iterator) {
+          return _sequence.iterate(iterator)
+        } else {
+          iterator = _sequence.iterate(iterator)
+          var count = _count
+          while (count > 0 && iterator) {
+            iterator = _sequence.iterate(iterator)
+            count = count - 1
+          }
+          return iterator
+        }
+      }
+
+      iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
     }
 
     return SkipSequence.new(this, count)
@@ -69,10 +104,42 @@ class Sequence {
       Fiber.abort("Count must be a non-negative integer.")
     }
 
+    class TakeSequence is Sequence {
+      construct new(sequence, count) {
+        _sequence = sequence
+        _count = count
+      }
+
+      iterate(iterator) {
+        if (!iterator) _taken = 1 else _taken = _taken + 1
+        return _taken > _count ? null : _sequence.iterate(iterator)
+      }
+
+      iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
+    }
+
     return TakeSequence.new(this, count)
   }
 
-  where(predicate) { WhereSequence.new(this, predicate) }
+  where(predicate) {
+    class WhereSequence is Sequence {
+      construct new(sequence, fn) {
+        _sequence = sequence
+        _fn = fn
+      }
+
+      iterate(iterator) {
+        while (iterator = _sequence.iterate(iterator)) {
+          if (_fn.call(_sequence.iteratorValue(iterator))) break
+        }
+        return iterator
+      }
+
+      iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
+    }
+
+    return WhereSequence.new(this, predicate)
+  }
 
   reduce(acc, f) {
     for (element in this) {
@@ -118,72 +185,38 @@ class Sequence {
   }
 }
 
-class MapSequence is Sequence {
-  construct new(sequence, fn) {
-    _sequence = sequence
-    _fn = fn
-  }
-
-  iterate(iterator) { _sequence.iterate(iterator) }
-  iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
-}
-
-class SkipSequence is Sequence {
-  construct new(sequence, count) {
-    _sequence = sequence
-    _count = count
-  }
-
-  iterate(iterator) {
-    if (iterator) {
-      return _sequence.iterate(iterator)
-    } else {
-      iterator = _sequence.iterate(iterator)
-      var count = _count
-      while (count > 0 && iterator) {
-        iterator = _sequence.iterate(iterator)
-        count = count - 1
-      }
-      return iterator
-    }
-  }
-
-  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
-}
-
-class TakeSequence is Sequence {
-  construct new(sequence, count) {
-    _sequence = sequence
-    _count = count
-  }
-
-  iterate(iterator) {
-    if (!iterator) _taken = 1 else _taken = _taken + 1
-    return _taken > _count ? null : _sequence.iterate(iterator)
-  }
-
-  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
-}
-
-class WhereSequence is Sequence {
-  construct new(sequence, fn) {
-    _sequence = sequence
-    _fn = fn
-  }
-
-  iterate(iterator) {
-    while (iterator = _sequence.iterate(iterator)) {
-      if (_fn.call(_sequence.iteratorValue(iterator))) break
-    }
-    return iterator
-  }
-
-  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
-}
-
 class String is Sequence {
-  bytes { StringByteSequence.new(this) }
-  codePoints { StringCodePointSequence.new(this) }
+  bytes {
+    class StringByteSequence is Sequence {
+      construct new(string) {
+        _string = string
+      }
+
+      [index] { _string.byteAt_(index) }
+      iterate(iterator) { _string.iterateByte_(iterator) }
+      iteratorValue(iterator) { _string.byteAt_(iterator) }
+
+      count { _string.byteCount_ }
+    }
+
+    return StringByteSequence.new(this)
+  }
+
+  codePoints {
+    class StringCodePointSequence is Sequence {
+      construct new(string) {
+        _string = string
+      }
+
+      [index] { _string.codePointAt_(index) }
+      iterate(iterator) { _string.iterate(iterator) }
+      iteratorValue(iterator) { _string.codePointAt_(iterator) }
+
+      count { _string.count }
+    }
+
+    return StringCodePointSequence.new(this)
+  }
 
   split(delimiter) {
     if (!(delimiter is String) || delimiter.isEmpty) {
@@ -291,30 +324,6 @@ class String is Sequence {
   }
 }
 
-class StringByteSequence is Sequence {
-  construct new(string) {
-    _string = string
-  }
-
-  [index] { _string.byteAt_(index) }
-  iterate(iterator) { _string.iterateByte_(iterator) }
-  iteratorValue(iterator) { _string.byteAt_(iterator) }
-
-  count { _string.byteCount_ }
-}
-
-class StringCodePointSequence is Sequence {
-  construct new(string) {
-    _string = string
-  }
-
-  [index] { _string.codePointAt_(index) }
-  iterate(iterator) { _string.iterate(iterator) }
-  iteratorValue(iterator) { _string.codePointAt_(iterator) }
-
-  count { _string.count }
-}
-
 class List is Sequence {
   addAll(other) {
     for (element in other) {
@@ -382,8 +391,30 @@ class List is Sequence {
 }
 
 class Map is Sequence {
-  keys { MapKeySequence.new(this) }
-  values { MapValueSequence.new(this) }
+  keys {
+    class MapKeySequence is Sequence {
+      construct new(map) {
+        _map = map
+      }
+
+      iterate(n) { _map.iterate(n) }
+      iteratorValue(iterator) { _map.keyIteratorValue_(iterator) }
+    }
+
+    return MapKeySequence.new(this)
+  }
+  values {
+    class MapValueSequence is Sequence {
+      construct new(map) {
+        _map = map
+      }
+
+      iterate(n) { _map.iterate(n) }
+      iteratorValue(iterator) { _map.valueIteratorValue_(iterator) }
+    }
+
+    return MapValueSequence.new(this)
+  }
 
   toString {
     var first = true
@@ -415,24 +446,6 @@ class MapEntry {
   value { _value }
 
   toString { "%(_key):%(_value)" }
-}
-
-class MapKeySequence is Sequence {
-  construct new(map) {
-    _map = map
-  }
-
-  iterate(n) { _map.iterate(n) }
-  iteratorValue(iterator) { _map.keyIteratorValue_(iterator) }
-}
-
-class MapValueSequence is Sequence {
-  construct new(map) {
-    _map = map
-  }
-
-  iterate(n) { _map.iterate(n) }
-  iteratorValue(iterator) { _map.valueIteratorValue_(iterator) }
 }
 
 class Range is Sequence {}
