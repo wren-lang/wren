@@ -145,7 +145,7 @@ fiber.call("resume")
 ### **error**
 
 The error value that was passed when aborting the fiber, or `null` if the
-fiber has not been aborted.  Wren internal error values will always be
+fiber has not been aborted. Wren internal error values will always be
 Strings.
 
 <pre class="snippet">
