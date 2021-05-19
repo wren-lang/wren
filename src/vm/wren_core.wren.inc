@@ -241,7 +241,7 @@ static const char* coreModuleSource =
 "  lower {\n"
 "    var output = \"\"\n"
 "    for (c in codePoints) {\n"
-"      if (c >= 65 && c <= 90) {\n"
+"      if ((c >= 65 && c <= 90) || (c >= 192 && c <= 214) || (c >= 216 && c <= 222)) {\n"
 "        c = c + 32\n"
 "      }\n"
 "      output = output + String.fromCodePoint(c)\n"
