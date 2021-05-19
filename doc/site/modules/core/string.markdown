@@ -251,10 +251,10 @@ System.print("ᵔᴥᵔᴥᵔbearᵔᴥᴥᵔᵔ".trimStart("ᵔᴥ")) //> bear�
 
 ### **lower**
 
-Returns a new string with all ASCII characters converted to lower case.
+Returns a new string with all ASCII and basic IS0-8859-1 characters converted to lower case.
 
 <pre class="snippet">
-System.print("Hello World!".lower) //> "hello world!"
+System.print("HÉllo World!".lower) //> "héllo world!"
 </pre>
 
 ### **+**(other) operator
