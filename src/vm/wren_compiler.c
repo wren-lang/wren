@@ -3615,7 +3615,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   if (!isForeign)
   {
     compiler->fn->code.data[numFieldsInstruction] =
-        (uint8_t)classInfo.fields.count;
+        (uint8_t)wrenSymbolTableCount(&classInfo.fields);
   }
   
   // Clear symbol tables for tracking field and method names.

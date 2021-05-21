@@ -98,7 +98,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
 void wrenFreeVM(WrenVM* vm)
 {
-  ASSERT(vm->methodNames.count > 0, "VM appears to have already been freed.");
+  ASSERT(wrenSymbolTableCount(&vm->methodNames) > 0, "VM appears to have already been freed.");
   
   // Free all of the GC objects.
   Obj* obj = vm->first;

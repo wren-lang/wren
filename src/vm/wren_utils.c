@@ -26,7 +26,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
   wrenStringBufferWrite(vm, symbols, symbol);
   wrenPopRoot(vm);
   
-  return symbols->count - 1;
+  return wrenSymbolTableCount(symbols) - 1;
 }
 
 int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
@@ -45,7 +45,7 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
 {
   // See if the symbol is already defined.
   // TODO: O(n). Do something better.
-  for (int i = 0; i < symbols->count; i++)
+  for (int i = 0; i < wrenSymbolTableCount(symbols); i++)
   {
     if (wrenStringEqualsCString(symbols->data[i], name, length)) return i;
   }
@@ -53,9 +53,14 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
   return -1;
 }
 
+int wrenSymbolTableCount(const SymbolTable* symbols)
+{
+  return symbols->count;
+}
+
 void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable)
 {
-  for (int i = 0; i < symbolTable->count; i++)
+  for (int i = 0; i < wrenSymbolTableCount(symbolTable); i++)
   {
     wrenGrayObj(vm, &symbolTable->data[i]->obj);
   }

@@ -90,6 +90,8 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
 int wrenSymbolTableFind(const SymbolTable* symbols,
                         const char* name, size_t length);
 
+int wrenSymbolTableCount(const SymbolTable* symbols);
+
 void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable);
 
 // Returns the number of bytes needed to encode [value] in UTF-8.
