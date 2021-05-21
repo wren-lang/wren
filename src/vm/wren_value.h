@@ -212,6 +212,8 @@ typedef struct
   // The name of the function. Heap allocated and owned by the FnDebug.
   char* name;
 
+  ObjClass* boundToClass;
+
   // An array of line numbers. There is one element in this array for each
   // bytecode in the function's bytecode array. The value of that element is
   // the line in the source code that generated that instruction.
@@ -248,7 +250,7 @@ typedef struct
 typedef struct
 {
   Obj obj;
-  
+
   ByteBuffer code;
   ValueBuffer constants;
   

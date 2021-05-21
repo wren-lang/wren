@@ -374,8 +374,13 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
     method.as.closure = AS_CLOSURE(methodValue);
     method.type = METHOD_BLOCK;
 
+    ObjFn* fnObj = method.as.closure->fn;
+
+    ASSERT(fnObj->debug->boundToClass == NULL, "Trying to rebound a method");
+    fnObj->debug->boundToClass = classObj;
+
     // Patch up the bytecode now that we know the superclass.
-    wrenBindMethodCode(classObj, method.as.closure->fn);
+    wrenBindMethodCode(classObj, fnObj);
   }
 
   wrenBindMethod(vm, classObj, symbol, method);

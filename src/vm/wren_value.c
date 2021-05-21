@@ -246,6 +246,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
 {
   FnDebug* debug = ALLOCATE(vm, FnDebug);
   debug->name = NULL;
+  debug->boundToClass = NULL;
   wrenIntBufferInit(&debug->sourceLines);
 
   ObjFn* fn = ALLOCATE(vm, ObjFn);
