@@ -3,6 +3,8 @@
 #include "wren_utils.h"
 #include "wren_vm.h"
 
+#define SYMBOL_TABLE_FIND_THRESHOLD 15
+
 DEFINE_BUFFER(Byte, uint8_t);
 DEFINE_BUFFER(Int, int);
 DEFINE_BUFFER(String, ObjString*);
@@ -66,6 +68,17 @@ int wrenSymbolTableFind(const SymbolTable* symbols,
                         const char* name, size_t length)
 {
   // See if the symbol is already defined.
+
+  if (symbols->buffer.count < SYMBOL_TABLE_FIND_THRESHOLD)
+  {
+    for (int i = 0; i < symbols->buffer.count; i++)
+    {
+      if (wrenStringEqualsCString(symbols->buffer.data[i], name, length)) return i;
+    }
+
+    return -1;
+  }
+
   int lo = 0;
   int hi = symbols->buffer.count;
 
