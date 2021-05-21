@@ -69,6 +69,7 @@ DECLARE_BUFFER(String, ObjString*);
 
 typedef struct {
   StringBuffer buffer;
+  IntBuffer ordered;
 } SymbolTable;
 
 // Initializes the symbol table.
