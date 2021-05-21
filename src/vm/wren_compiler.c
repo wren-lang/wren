@@ -913,13 +913,13 @@ static void readRawString(Parser* parser)
 
     if (c == '\r') continue;
 
-    if(c == '\n') {
+    if (c == '\n') {
       lastNewline = string.count;
       skipEnd = lastNewline;
       firstNewline = firstNewline == -1 ? string.count : firstNewline;
     }
 
-    if(c == '"' && c1 == '"' && c2 == '"') break;
+    if (c == '"' && c1 == '"' && c2 == '"') break;
     
     bool isWhitespace = c == ' ' || c == '\t';
     skipEnd = c == '\n' || isWhitespace ? skipEnd : -1;
