@@ -911,6 +911,8 @@ static void readRawString(Parser* parser)
     char c1 = peekChar(parser);
     char c2 = peekNextChar(parser);
 
+    if (c == '\r') continue;
+
     if(c == '\n') {
       lastNewline = string.count;
       skipEnd = lastNewline;
@@ -975,6 +977,7 @@ static void readString(Parser* parser)
   {
     char c = nextChar(parser);
     if (c == '"') break;
+    if (c == '\r') continue;
 
     if (c == '\0')
     {
