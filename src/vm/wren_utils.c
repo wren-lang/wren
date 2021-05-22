@@ -12,7 +12,7 @@ void wrenSymbolTableInit(SymbolTable* symbols)
   wrenStringBufferInit(symbols);
 }
 
-void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
+void wrenSymbolTableFini(WrenVM* vm, SymbolTable* symbols)
 {
   wrenStringBufferClear(vm, symbols);
 }

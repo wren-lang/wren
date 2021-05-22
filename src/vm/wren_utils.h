@@ -75,7 +75,7 @@ void wrenSymbolTableInit(SymbolTable* symbols);
 
 // Frees all dynamically allocated memory used by the symbol table, but not the
 // SymbolTable itself.
-void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols);
+void wrenSymbolTableFini(WrenVM* vm, SymbolTable* symbols);
 
 // Adds name to the symbol table. Returns the index of it in the table.
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,

@@ -1338,7 +1338,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       break;
 
     case OBJ_MODULE:
-      wrenSymbolTableClear(vm, &((ObjModule*)obj)->variableNames);
+      wrenSymbolTableFini(vm, &((ObjModule*)obj)->variableNames);
       wrenValueBufferClear(vm, &((ObjModule*)obj)->variables);
       break;
 

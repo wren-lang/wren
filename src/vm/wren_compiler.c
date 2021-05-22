@@ -3619,7 +3619,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   }
   
   // Clear symbol tables for tracking field and method names.
-  wrenSymbolTableClear(compiler->parser->vm, &classInfo.fields);
+  wrenSymbolTableFini(compiler->parser->vm, &classInfo.fields);
   wrenIntBufferClear(compiler->parser->vm, &classInfo.methods);
   wrenIntBufferClear(compiler->parser->vm, &classInfo.staticMethods);
   compiler->enclosingClass = NULL;

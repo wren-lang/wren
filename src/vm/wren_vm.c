@@ -117,7 +117,7 @@ void wrenFreeVM(WrenVM* vm)
   // may try to use. Better to tell them about the bug early.
   ASSERT(vm->handles == NULL, "All handles have not been released.");
 
-  wrenSymbolTableClear(vm, &vm->methodNames);
+  wrenSymbolTableFini(vm, &vm->methodNames);
 
   DEALLOCATE(vm, vm);
 }
