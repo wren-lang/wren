@@ -4,7 +4,9 @@ import sys
 from os.path import basename, dirname, join, realpath, isfile
 from glob import iglob
 import re
+from typing import TYPE_CHECKING
 
+WREN_IMPLEMENTATION = 'WREN_IMPLEMENTATION'
 INCLUDE_PATTERN = re.compile(r'^\s*#include "([\w.]+)"')
 GUARD_PATTERN = re.compile(r'^#ifndef wren(_\w+)?_h$')
 WREN_DIR = dirname(dirname(realpath(__file__)))
@@ -40,6 +42,8 @@ def add_file(filename):
   once = False
 
   out.write('// Begin file "{0}"\n'.format(bname))
+  if bname.endswith('.c'):
+    out.write('#ifdef {0}\n'.format(WREN_IMPLEMENTATION))
   with open(filename, 'r') as f:
     for line in f:
       m = INCLUDE_PATTERN.match(line)
@@ -49,6 +53,8 @@ def add_file(filename):
         out.write(line)
       if GUARD_PATTERN.match(line):
         once = True
+  if bname.endswith('.c'):
+    out.write('\n#endif // {0}\n'.format(WREN_IMPLEMENTATION))
   out.write('// End file "{0}"\n'.format(bname))
 
   # Only skip header files which use #ifndef guards.
