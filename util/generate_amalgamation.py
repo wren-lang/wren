@@ -4,7 +4,6 @@ import sys
 from os.path import basename, dirname, join, realpath, isfile
 from glob import iglob
 import re
-from typing import TYPE_CHECKING
 
 WREN_IMPLEMENTATION = 'WREN_IMPLEMENTATION'
 INCLUDE_PATTERN = re.compile(r'^\s*#include "([\w.]+)"')
