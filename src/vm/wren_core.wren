@@ -182,6 +182,20 @@ class WhereSequence is Sequence {
 }
 
 class String is Sequence {
+  trait(key) {String.traits[key].call(this)}
+  trait(key, value) {String.trait(key, value)}
+  traits {String.traits}
+  
+  static trait(key) {String.traits[key]}
+  static trait(key, value) {String.traits[key] = value}
+  
+  static traits {
+    if (!__traits) {
+      __traits = Map.new()
+    }
+    return __traits
+  }
+
   bytes { StringByteSequence.new(this) }
   codePoints { StringCodePointSequence.new(this) }
 
