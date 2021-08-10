@@ -14,6 +14,7 @@ examples: &nbsp;
   <p>enter code below</p>
 
   <div class="buttons">
+    <a class="button" id="share">share</a>&bullet;
     <a class="button" id="try-run">run</a>
   </div>
 
@@ -25,3 +26,5 @@ examples: &nbsp;
 <pre><div id="try-output">...</div></pre>
 
 </div>
+
+<div id="copied-popup"><p>URL copied to clipboard</p></div>
