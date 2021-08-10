@@ -88,7 +88,6 @@ The benefit here that it is now <em>easy</em> to edit the docs, just a simple py
 <p>The goal was two part here, one is to have a page to just try out Wren.
 Type in some code, run it. That&rsquo;s the first big step and we&rsquo;ve now got that on the docs page.</p>
 <h4><a href="../try" target="_blank" class="dark-link">Try Wren directly in your browser!</a></h4>
-
 <p>This should work on desktop or mobile, and will continue to be improved over time.</p>
 <p>The second part of that goal is having the VM available to make examples on each page interactive.
 This is implemented, <em>but not activated on any pages yet</em>.</p>
@@ -112,31 +111,32 @@ I&rsquo;ve really missed having <code>+=</code> and friends, <br />
 so I&rsquo;ve been working on a (broken, wip) <a href="https://github.com/wren-lang/wren/pull/701">PR here</a>.
 I&rsquo;ve since had a better idea to implement it and will hope to address that in 0.4.0.</p>
 <p><strong>Chained methods (&lsquo;fluent interfaces&rsquo;)</strong> <br />
-Currently in Wren it&rsquo;s required that the period (<code>.</code>) be on the same line as the method.
+Currently in Wren it&rsquo;s required that the period (<code>.</code>) be on the same line as the method.</p>
 <pre class="snippet">
   example.
     some().
     functions().
     here()
 </pre>
-This isn&rsquo;t as elegant as we&rsquo;d want for this form of API,
-so <strong>in 0.4.0 the goal is</strong> allowing a newline, as you&rsquo;d expect:
+<p>This isn&rsquo;t as elegant as we&rsquo;d want for this form of API,
+so <strong>in 0.4.0 the goal is</strong> allowing a newline, as you&rsquo;d expect:</p>
 <pre class="snippet">
   example
     .some()
     .functions()
     .here()
 </pre>
-This doesn&rsquo;t seem like a big deal but when your calls are wider,
+<p>This doesn&rsquo;t seem like a big deal but when your calls are wider,
 longer and possibly accept block functions. It&rsquo;s hard to read,
-and can be less fun to track down a missing <code>.</code> in a big chunk of code.
+and can be less fun to track down a missing <code>.</code> in a big chunk of code.</p>
 <pre class="snippet">
   example.
     some {|args, and, stuff|
-      &hellip;
+      ...
     }.
     here()
-</pre></p>
+</pre>
+
 <p><strong>C Side APIs</strong> <br />
 Some APIs for dealing with <code>Map</code> have been proposed several times,
 it&rsquo;s time to bring that into the API. There&rsquo;s some additions for <code>List</code> as well,

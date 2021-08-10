@@ -223,7 +223,7 @@ and associativity. We have three prefix operators:</p>
 </pre>
 
 <p>They are just method calls on their operand without any other arguments. An
-expression like <code>!possible</code> means &ldquo;call the <code>!</code> method on <code>possible</code>&ldquo;.</p>
+expression like <code>!possible</code> means &ldquo;call the <code>!</code> method on <code>possible</code>&rdquo;.</p>
 <p>We also have a slew of infix operators&mdash;they have operands on both sides.
 They are:</p>
 <pre class="snippet">
@@ -232,7 +232,7 @@ They are:</p>
 
 <p>Like prefix operators, they are all funny ways of writing method calls. The left
 operand is the receiver, and the right operand gets passed to it. So <code>a + b</code> is
-semantically interpreted as &ldquo;invoke the <code>+(_)</code> method on <code>a</code>, passing it <code>b</code>&ldquo;.</p>
+semantically interpreted as &ldquo;invoke the <code>+(_)</code> method on <code>a</code>, passing it <code>b</code>&rdquo;.</p>
 <p>Note that <code>-</code> is both a prefix and an infix operator. Since they have different
 signatures (<code>-</code> and <code>-(_)</code>), there&rsquo;s no ambiguity between them.</p>
 <p>Most of these are probably familiar already. The <code>..</code> and <code>...</code> operators are
