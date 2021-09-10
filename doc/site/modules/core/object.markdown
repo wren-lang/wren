@@ -29,6 +29,8 @@ Compares two objects using built-in equality. This compares [value
 types](../values.html) by value, and all other objects are compared by
 identity&mdash;two objects are equal only if they are the exact same object.
 
+Note however that these operators are overridden in the `Num` class to ensure `0` and `-0` are treated as being equal in value even though they have different bit representations. Object.same(0, -0) still returns `false` because they are different objects.
+
 ### **is**(class) operator
 
 Returns `true` if this object's class or one of its superclasses is `class`.
