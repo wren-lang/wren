@@ -54,6 +54,19 @@
 		};
 /* End PBXFrameworksBuildPhase section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		52884EBAF576756C849C54FA /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXGroup section */
 		046BC81407DC9A4689493E54 /* optional */ = {
 			isa = PBXGroup;
@@ -127,6 +140,7 @@
 				ED14936EF08565A071F209AE /* Resources */,
 				56C1ACC55A327EF7DB9F2305 /* Sources */,
 				7D2D12CE809DE500020A890E /* Frameworks */,
+				52884EBAF576756C849C54FA /* Embed Libraries */,
 			);
 			buildRules = (
 			);
