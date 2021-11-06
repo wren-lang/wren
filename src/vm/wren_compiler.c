@@ -542,6 +542,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* parent,
   // the middle of initializing the compiler.
   compiler->fn = NULL;
   compiler->constants = NULL;
+  compiler->attributes = NULL;
 
   parser->vm->compiler = compiler;
 
@@ -910,13 +911,15 @@ static void readRawString(Parser* parser)
     char c1 = peekChar(parser);
     char c2 = peekNextChar(parser);
 
-    if(c == '\n') {
+    if (c == '\r') continue;
+
+    if (c == '\n') {
       lastNewline = string.count;
       skipEnd = lastNewline;
       firstNewline = firstNewline == -1 ? string.count : firstNewline;
     }
 
-    if(c == '"' && c1 == '"' && c2 == '"') break;
+    if (c == '"' && c1 == '"' && c2 == '"') break;
     
     bool isWhitespace = c == ' ' || c == '\t';
     skipEnd = c == '\n' || isWhitespace ? skipEnd : -1;
@@ -974,6 +977,7 @@ static void readString(Parser* parser)
   {
     char c = nextChar(parser);
     if (c == '"') break;
+    if (c == '\r') continue;
 
     if (c == '\0')
     {

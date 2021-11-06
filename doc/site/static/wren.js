@@ -22,9 +22,11 @@ window.onload = function() {
     Module.printErr = function(text) { output.innerText += text + "\n"; }
 
     var run = document.querySelector("#try-run")
+    var share = document.querySelector("#share")
     var hello = document.querySelector("#try-hello")
     var fractal = document.querySelector("#try-fractal")
     var loop = document.querySelector("#try-loop")
+    var copiedPopup = document.querySelector("#copied-popup p")
     var compile = Module.cwrap('wren_compile', 'number', ['string'])
 
     var set_input = (content) => {
@@ -32,6 +34,21 @@ window.onload = function() {
       result.removeAttribute('class');
       result.innerText = 'no errors';
       jar.updateCode(content);
+    }
+
+    share.onclick = (e) => {
+      var code = jar.toString()
+      var compressed = LZString.compressToEncodedURIComponent(code)
+      var url = location.protocol + "//" + location.host + location.pathname + "?code=" + compressed
+      navigator.clipboard.writeText(url).then(
+        () => {
+          copiedPopup.style.opacity = "1"
+          setTimeout(() => {
+            copiedPopup.style.opacity = ""
+          }, 1000)
+        },
+        (e) => console.error(e)
+      )
     }
 
     run.onclick = (e) => {
@@ -74,6 +91,12 @@ window.onload = function() {
   System.print("")
 }`);
     } //fractal
+
+    var initial_code = new URLSearchParams(location.search).get("code")
+    if (initial_code !== null) {
+      initial_code = LZString.decompressFromEncodedURIComponent(initial_code)
+      set_input(initial_code)
+    }
 
   } //if try_code
 }

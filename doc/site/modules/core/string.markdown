@@ -148,8 +148,9 @@ It is a runtime error if `search` is not a string.
 ### **indexOf**(search, start)
 
 Returns the index of the first byte matching `search` in the string or `-1` if
-`search` was not found, starting a byte offset `start`. The start can be
-negative to count backwards from the end of the string.
+`search` was not found, starting at byte offset `start`. The `start` offset can
+also be negative, which will be offset relative to end of the string instead.
+Searches forward, from the offset to the end of the string.
 
 It is a runtime error if `search` is not a string or `start` is not an integer
 index within the string's byte length.

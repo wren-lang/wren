@@ -50,7 +50,8 @@ String literals are surrounded in double quotes:
 "hi there"
 </pre>
 
-They can also span multiple lines:
+They can also span multiple lines. When they do, the newline character within
+the string will always be `\n` (`\r\n` is normalized to `\n`). 
 
 <pre class="snippet">
 "hi
