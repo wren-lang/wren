@@ -15,7 +15,7 @@
 // There is one limitation, though. Methods written in C cannot call Wren ones.
 // They can only be the top of the callstack, and immediately return. This
 // makes it difficult to have primitive methods that rely on polymorphic
-// behavior. For example, `IO.write` should call `toString` on its argument,
+// behavior. For example, `System.print` should call `toString` on its argument,
 // including user-defined `toString` methods on user-defined classes.
 
 void wrenInitializeCore(WrenVM* vm);

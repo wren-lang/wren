@@ -502,6 +502,39 @@ table.precedence td {
   border-bottom: solid 1px var(--gray-10);
 }
 
+/*
+Sourced from https://github.com/microsoft/TypeScript-Website/blob/e9d8f66f6b8be2dda06737d3686dcb795749dff2/packages/typescriptlang-org/src/templates/play.scss#L916-L943.
+Licensed under the MIT license https://github.com/microsoft/TypeScript-Website/blob/e9d8f66f6b8be2dda06737d3686dcb795749dff2/LICENSE-CODE.
+*/
+#copied-popup {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+#copied-popup p {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px;
+  font-size: 1.5rem;
+
+  border-radius: 1em;
+  padding: 0.5em 1.5em;
+  opacity: 0;
+
+  transition: opacity 0.1s ease-in-out;
+
+  /* Help Safari with blurred text */
+  transform: translateZ(0);
+}
+
 @media only screen and (max-width: 839px) {
   /* 36 pixel columns.*/
   .page { width: 720px; }
