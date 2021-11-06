@@ -20,7 +20,7 @@ Option | Description | Default
 `WREN_META` | Enables the Meta Wren module | `ON`
 `WREN_RANDOM` | Enables the Random Wren module | `ON`
 `WREN_BUILD_STATIC` | Build Wren as a static library | `ON`
-`WREN_BUILD_SHARED` | Build Wren as a shared library | `OFF`
+`WREN_BUILD_SHARED` | Build Wren as a shared library | `ON`
 `WREN_BUILD_TEST` | Build Wren's testing framework | `OFF`
 
 ## Testing
@@ -31,7 +31,7 @@ To build Wren locally, and test the CMake build, use the following:
 cd projects/cmake
 mkdir build
 cd build
-cmake .. -DWREN_BUILD_TEST=ON
+cmake ..
 make
 make test
 ```

@@ -10,8 +10,13 @@ project (Wren
 option(WREN_META "Wren Meta Class" ON)
 option(WREN_RANDOM "Wren Random Class" ON)
 option(WREN_BUILD_STATIC "Wren Static Library" ON)
-option(WREN_BUILD_SHARED "Wren Shared Library" OFF)
+option(WREN_BUILD_SHARED "Wren Shared Library" ON)
 option(WREN_BUILD_TEST "Build Wren Tests" OFF)
+
+# Build tests by default if compiling in the root.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(WREN_BUILD_TEST TRUE)
+endif()
 
 # Source Files
 set(WREN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../src)
