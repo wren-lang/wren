@@ -1,0 +1,43 @@
+name: WrenCI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: build
+      run: ./.travis.sh
+      shell: bash
+      working-directory: ./
+  mac:
+    runs-on: macos-latest
+    env:
+      WREN_TARGET_MAC: 1
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: build
+      run: ./.travis.sh
+      shell: bash
+      working-directory: ./
+  windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: msbuild
+      uses: microsoft/setup-msbuild@v1.1
+    - name: build
+      working-directory: ./projects/vs2019/
+      run: msbuild ./wren.sln /property:Configuration=Release /property:Platform=64bit
