@@ -18,6 +18,12 @@ jobs:
       run: ./.travis.sh
       shell: bash
       working-directory: ./
+    - uses: actions/upload-artifact@v2
+      with:
+        name: wren-linux
+        path: |
+          bin/*
+          lib/*
   mac:
     runs-on: macos-latest
     env:
@@ -30,6 +36,12 @@ jobs:
       run: ./.travis.sh
       shell: bash
       working-directory: ./
+    - uses: actions/upload-artifact@v2
+      with:
+        name: wren-mac
+        path: |
+          bin/*
+          lib/*
   windows:
     runs-on: windows-latest
     steps:
@@ -41,3 +53,9 @@ jobs:
     - name: build
       working-directory: ./projects/vs2019/
       run: msbuild ./wren.sln /property:Configuration=Release /property:Platform=64bit
+    - uses: actions/upload-artifact@v2
+      with:
+        name: wren-windows
+        path: |
+          bin/*
+          lib/*
