@@ -2854,11 +2854,24 @@ static void endLoop(Compiler* compiler)
   compiler->loop = compiler->loop->enclosing;
 }
 
+static int addLocalOptional(Compiler* compiler, TokenType sepToken, TokenType rightToken, const char* name, int length)
+{
+  if (!match(compiler, sepToken)) return -1;
+  ignoreNewlines(compiler);
+  TokenType nextTokenType = peek(compiler);
+  if (nextTokenType == sepToken
+      || nextTokenType == rightToken) return -1;
+
+  // Create another hidden local for the transform object.
+  expression(compiler);
+  return addLocal(compiler, name, length);
+}
+
 static void forStatement(Compiler* compiler)
 {
   // A for statement like:
   //
-  //     for (i in sequence.expression) {
+  //     for (i in sequence.expression[, [transform][, [iterate]]]) {
   //       System.print(i)
   //     }
   //
@@ -2867,8 +2880,10 @@ static void forStatement(Compiler* compiler)
   //     {
   //       var seq_ = sequence.expression
   //       var iter_
-  //       while (iter_ = seq_.iterate(iter_)) {
-  //         var i = seq_.iteratorValue(iter_)
+  //       var transform_ = transform // or Fn.new(iter_, seq_) { seq_.iteratorValue(iter_) } by default
+  //       var iterate_ = iterate // or Fn.new(iter_, seq_) { seq_.iterate(iter_) } by default
+  //       while (iter_ = iterate_.call(iter_, seq_)) {
+  //         var i = transform_.call(iter_, seq_)
   //         System.print(i)
   //       }
   //     }
@@ -2905,8 +2920,9 @@ static void forStatement(Compiler* compiler)
   // Verify that there is space to hidden local variables.
   // Note that we expect only two addLocal calls next to each other in the
   // following code.
-  if (compiler->numLocals + 2 > MAX_LOCALS)
+  if (compiler->numLocals + 3 > MAX_LOCALS)
   {
+    // TODO: Optimize if transform is not present
     error(compiler, "Cannot declare more than %d variables in one scope. (Not enough space for for-loops internal variables)",
           MAX_LOCALS);
     return;
@@ -2917,24 +2933,49 @@ static void forStatement(Compiler* compiler)
   null(compiler, false);
   int iterSlot = addLocal(compiler, "iter ", 5);
 
+  int transformSlot = addLocalOptional(compiler, TOKEN_COMMA, TOKEN_RIGHT_PAREN, "transform ", 10);
+  int iterateSlot = addLocalOptional(compiler, TOKEN_COMMA, TOKEN_RIGHT_PAREN, "iterate ", 8);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
 
   Loop loop;
   startLoop(compiler, &loop);
 
-  // Advance the iterator by calling the ".iterate" method on the sequence.
-  loadLocal(compiler, seqSlot);
-  loadLocal(compiler, iterSlot);
-
   // Update and test the iterator.
-  callMethod(compiler, 1, "iterate(_)", 10);
+  if (iterateSlot == -1)
+  {
+    // Advance the iterator by calling "seq_.iterate(iter_)".
+    loadLocal(compiler, seqSlot);
+    loadLocal(compiler, iterSlot);
+
+    callMethod(compiler, 1, "iterate(_)", 10);
+  }
+  else
+  {
+    // Advance the iterator by calling "iterate_.call(iter_, seq_)".
+    loadLocal(compiler, iterateSlot);
+    loadLocal(compiler, iterSlot);
+    loadLocal(compiler, seqSlot);
+
+    callMethod(compiler, 2, "call(_,_)", 9);
+  }
   emitByteArg(compiler, CODE_STORE_LOCAL, iterSlot);
   testExitLoop(compiler);
 
-  // Get the current value in the sequence by calling ".iteratorValue".
-  loadLocal(compiler, seqSlot);
-  loadLocal(compiler, iterSlot);
-  callMethod(compiler, 1, "iteratorValue(_)", 16);
+  if (transformSlot == -1)
+  {
+    // Get the current value in the sequence by calling "seq_.iteratorValue(iter_)".
+    loadLocal(compiler, seqSlot);
+    loadLocal(compiler, iterSlot);
+    callMethod(compiler, 1, "iteratorValue(_)", 16);
+  }
+  else
+  {
+    // Get the current value in the sequence by calling "transform_.call(iter_, seq_)".
+    loadLocal(compiler, transformSlot);
+    loadLocal(compiler, iterSlot);
+    loadLocal(compiler, seqSlot);
+    callMethod(compiler, 2, "call(_,_)", 9);
+  }
 
   // Bind the loop variable in its own scope. This ensures we get a fresh
   // variable each iteration so that closures for it don't all see the same one.
