@@ -68,6 +68,8 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
     wrenInitConfiguration(&vm->config);
   }
 
+  vm->lockGC = false;
+
   // TODO: Should we allocate and free this during a GC?
   vm->grayCount = 0;
   // TODO: Tune this.
@@ -85,7 +87,8 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 void wrenFreeVM(WrenVM* vm)
 {
   ASSERT(vm->methodNames.count > 0, "VM appears to have already been freed.");
-  
+  ASSERT(!vm->lockGC, "Garbage collector is disabled");
+
   // Free all of the GC objects.
   Obj* obj = vm->first;
   while (obj != NULL)
@@ -110,6 +113,15 @@ void wrenFreeVM(WrenVM* vm)
 
 void wrenCollectGarbage(WrenVM* vm)
 {
+  if(vm->lockGC)
+  {
+#if WREN_DEBUG_TRACE_MEMORY
+    printf("GC avoided reentry\n");
+#endif
+    return;
+  }
+  vm->lockGC = true;
+
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   printf("-- gc --\n");
 
@@ -194,6 +206,7 @@ void wrenCollectGarbage(WrenVM* vm)
          (unsigned long)vm->nextGC,
          elapsed);
 #endif
+  vm->lockGC = false;
 }
 
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)

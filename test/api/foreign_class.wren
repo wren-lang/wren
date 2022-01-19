@@ -16,6 +16,14 @@ System.print(counter.value) // expect: 3.1
 counter.increment(1.2)
 System.print(counter.value) // expect: 4.3
 
+// Class that calls wrenCollectGarbage at destruction
+foreign class Rogue {
+  construct new() { }
+}
+
+Rogue.new()
+System.gc()
+
 // Foreign classes can inherit a class as long as it has no fields.
 class PointBase {
   inherited() {
