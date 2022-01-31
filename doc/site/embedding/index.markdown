@@ -208,7 +208,7 @@ You can find this file in the [example](https://github.com/wren-lang/wren/blob/m
 <pre class="snippet" data-lang="c">
 //For more details, visit https://wren.io/embedding/
 
-#include <stdio.h>
+#include &lt;stdio.h>
 #include "wren.h"
 
 static void writeFn(WrenVM* vm, const char* text)
