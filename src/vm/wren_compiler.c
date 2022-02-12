@@ -50,6 +50,7 @@
 // available in standard C++98.
 #define ERROR_MESSAGE_SIZE (80 + MAX_VARIABLE_NAME + 15)
 
+// CAUTION: if you change this, also update the rules[] below.
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -78,6 +79,7 @@ typedef enum
   TOKEN_AMPAMP,
   TOKEN_BANG,
   TOKEN_TILDE,
+  TOKEN_TILDETILDE,
   TOKEN_QUESTION,
   TOKEN_EQ,
   TOKEN_LT,
@@ -1109,7 +1111,7 @@ static void nextToken(Parser* parser)
       case '^': makeToken(parser, TOKEN_CARET); return;
       case '+': makeToken(parser, TOKEN_PLUS); return;
       case '-': makeToken(parser, TOKEN_MINUS); return;
-      case '~': makeToken(parser, TOKEN_TILDE); return;
+      case '~': twoCharToken(parser, '~', TOKEN_TILDETILDE, TOKEN_TILDE); return;
       case '?': makeToken(parser, TOKEN_QUESTION); return;
         
       case '|': twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE); return;
@@ -1716,7 +1718,7 @@ typedef enum
   PREC_CONDITIONAL,   // ?:
   PREC_LOGICAL_OR,    // ||
   PREC_LOGICAL_AND,   // &&
-  PREC_EQUALITY,      // == !=
+  PREC_EQUALITY,      // == != ~~
   PREC_IS,            // is
   PREC_COMPARISON,    // < > <= >=
   PREC_BITWISE_OR,    // |
@@ -2582,6 +2584,7 @@ static void conditional(Compiler* compiler, bool canAssign)
 
 void infixOp(Compiler* compiler, bool canAssign)
 {
+  Code instruction = CODE_CALL_0;
   GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   // An infix operator cannot end an expression.
@@ -2589,6 +2592,11 @@ void infixOp(Compiler* compiler, bool canAssign)
 
   // Compile the right-hand side.
   parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
+
+  if (rule->name[1] == '~') // smartmatch
+  {
+    emitOp(compiler, CODE_SWAP);
+  }
 
   // Call the operator method on the left-hand side.
   Signature signature = { rule->name, (int)strlen(rule->name), SIG_METHOD, 1 };
@@ -2746,6 +2754,7 @@ void constructorSignature(Compiler* compiler, Signature* signature)
 #define PREFIX_OPERATOR(name)      { unaryOp, NULL, unarySignature, PREC_NONE, name }
 #define OPERATOR(name)             { unaryOp, infixOp, mixedSignature, PREC_TERM, name }
 
+// CAUTION: if you change this, also update the TokenType enum above.
 GrammarRule rules[] =
 {
   /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
@@ -2774,6 +2783,7 @@ GrammarRule rules[] =
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGICAL_AND, and_),
   /* TOKEN_BANG          */ PREFIX_OPERATOR("!"),
   /* TOKEN_TILDE         */ PREFIX_OPERATOR("~"),
+  /* TOKEN_TILDETILDE    */ INFIX_OPERATOR(PREC_EQUALITY, "~~"),
   /* TOKEN_QUESTION      */ INFIX(PREC_ASSIGNMENT, conditional),
   /* TOKEN_EQ            */ UNUSED,
   /* TOKEN_LT            */ INFIX_OPERATOR(PREC_COMPARISON, "<"),
