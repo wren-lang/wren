@@ -111,6 +111,7 @@ typedef enum
   TOKEN_TRUE,
   TOKEN_VAR,
   TOKEN_WHILE,
+  TOKEN_SWITCH,
 
   TOKEN_FIELD,
   TOKEN_STATIC_FIELD,
@@ -623,6 +624,7 @@ static Keyword keywords[] =
   {"true",      4, TOKEN_TRUE},
   {"var",       3, TOKEN_VAR},
   {"while",     5, TOKEN_WHILE},
+  {"switch",    6, TOKEN_SWITCH},
   {NULL,        0, TOKEN_EOF} // Sentinel to mark the end of the array.
 };
 
@@ -2836,6 +2838,7 @@ GrammarRule rules[] =
   /* TOKEN_TRUE          */ PREFIX(boolean),
   /* TOKEN_VAR           */ UNUSED,
   /* TOKEN_WHILE         */ UNUSED,
+  /* TOKEN_SWITCH        */ UNUSED,
   /* TOKEN_FIELD         */ PREFIX(field),
   /* TOKEN_STATIC_FIELD  */ PREFIX(staticField),
   /* TOKEN_NAME          */ { name, NULL, namedSignature, PREC_NONE, NULL },
@@ -3200,6 +3203,110 @@ static void whileStatement(Compiler* compiler)
   endLoop(compiler);
 }
 
+// Switch: a series of (topic == test) conditions.
+// This follows the same pattern as forStatement().  A switch like:
+//
+//     switch (topic) {
+//       "case 1": {
+//         var n = 1
+//         System.print(n)
+//       }
+//       "case 2": System.print(2)
+//       else: System.print("nope")
+//     }
+//
+// is compiled to bytecode almost as if the source looked like this:
+//
+//     {
+//       var topic_ = topic
+//       if(topic_ == "case 1") {
+//         var n = 1
+//         System.print(n)
+//       } else if(topic_ == "case 2") {
+//         System.print(2)
+//       } else {
+//         System.print("nope")
+//       }
+//     }
+static void switchStatement(Compiler* compiler)
+{
+  Signature testEquality = { "==", 2, SIG_METHOD, 1 };
+  IntBuffer cases;
+  wrenIntBufferInit(&cases);
+
+  // Create a scope for the hidden local variable used for the topic.
+  pushScope(compiler);
+
+  // Verify that there is space for the hidden local variable.
+  if (compiler->numLocals + 1 > MAX_LOCALS)
+  {
+    error(compiler,
+          "Cannot declare more than %d variables in one scope. (Not enough "
+          "space for switch-statement internal variables)",
+          MAX_LOCALS);
+    return;
+  }
+
+  // Compile the topic expresssion
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after 'switch'.");
+  expression(compiler);
+  int topicSlot = addLocal(compiler, "topic ", 6);
+
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after switch topic.");
+  consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' after switch topic.");
+  consumeLine(compiler, "Expect newline after '{' starting switch statement.");
+
+  while (!compiler->parser->hasError)
+  {
+    if (match(compiler, TOKEN_ELSE))
+    {
+      // optional colon after `else` for ergonomics
+      match(compiler, TOKEN_COLON);
+
+      statement(compiler);
+      consumeLine(compiler, "Expect newline after switch case.");
+      break;
+    }
+
+    if (peek(compiler) == TOKEN_RIGHT_BRACE)
+    {
+      break;
+    }
+
+    // Normal case: emit topic == test
+    loadLocal(compiler, topicSlot);   // topic is the invocant
+    expression(compiler);
+    callSignature(compiler, CODE_CALL_0, &testEquality);
+
+    consume(compiler, TOKEN_COLON, "Expect ':' after switch expression.");
+
+    // Jump to the next case if the condition is false.
+    int nextCaseJump = emitJump(compiler, CODE_JUMP_IF);
+    statement(compiler);
+
+    // jump past the rest of the cases
+    int toEndJump = emitJump(compiler, CODE_JUMP);
+    wrenIntBufferWrite(compiler->parser->vm, &cases, toEndJump);
+
+    patchJump(compiler, nextCaseJump);
+
+    consumeLine(compiler, "Expect newline after switch case.");
+  }
+
+  // Point all the end-of-case jumps here
+  for (int i=0; i<cases.count; ++i)
+  {
+    patchJump(compiler, cases.data[i]);
+  }
+
+  consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' after switch body.");
+
+  // Hidden variables.
+  popScope(compiler);
+
+  wrenIntBufferClear(compiler->parser->vm, &cases);
+}
+
 // Compiles a simple statement. These can only appear at the top-level or
 // within curly blocks. Simple statements exclude variable binding statements
 // like "var" and "class" which are not allowed directly in places like the
@@ -3276,6 +3383,10 @@ void statement(Compiler* compiler)
   else if (match(compiler, TOKEN_WHILE))
   {
     whileStatement(compiler);
+  }
+  else if (match(compiler, TOKEN_SWITCH))
+  {
+    switchStatement(compiler);
   }
   else if (match(compiler, TOKEN_LEFT_BRACE))
   {
