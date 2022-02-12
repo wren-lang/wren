@@ -3203,7 +3203,7 @@ static void whileStatement(Compiler* compiler)
   endLoop(compiler);
 }
 
-// Switch: a series of (topic == test) conditions.
+// Switch: a series of (topic ~~ test) conditions.
 // This follows the same pattern as forStatement().  A switch like:
 //
 //     switch (topic) {
@@ -3219,10 +3219,10 @@ static void whileStatement(Compiler* compiler)
 //
 //     {
 //       var topic_ = topic
-//       if(topic_ == "case 1") {
+//       if(topic_ ~~ "case 1") {
 //         var n = 1
 //         System.print(n)
-//       } else if(topic_ == "case 2") {
+//       } else if(topic_ ~~ "case 2") {
 //         System.print(2)
 //       } else {
 //         System.print("nope")
@@ -3230,7 +3230,7 @@ static void whileStatement(Compiler* compiler)
 //     }
 static void switchStatement(Compiler* compiler)
 {
-  Signature testEquality = { "==", 2, SIG_METHOD, 1 };
+  Signature smartmatch = { "~~", 2, SIG_METHOD, 1 };
   IntBuffer cases;
   wrenIntBufferInit(&cases);
 
@@ -3273,10 +3273,26 @@ static void switchStatement(Compiler* compiler)
       break;
     }
 
-    // Normal case: emit topic == test
-    loadLocal(compiler, topicSlot);   // topic is the invocant
-    expression(compiler);
-    callSignature(compiler, CODE_CALL_0, &testEquality);
+    // Normal case: emit topic ~~ test
+    if (match(compiler, TOKEN_LEFT_BRACE))
+    {
+      if (peek(compiler) != TOKEN_PIPE)
+      {
+        error(compiler, "Hash literals are not allowed in switch cases.  Please use a list of the hash keys instead.");
+      }
+
+      functionLiteral(compiler, "switch test", 11); // 11 = string length
+    }
+    else
+    {
+      expression(compiler);
+    }
+
+    // Now we have loaded test, which is the invocant.  Load the topic as
+    // the parameter to the test's smartmatch, and ask the test whether the
+    // topic matches.
+    loadLocal(compiler, topicSlot);
+    callSignature(compiler, CODE_CALL_0, &smartmatch);
 
     consume(compiler, TOKEN_COLON, "Expect ':' after switch expression.");
 
