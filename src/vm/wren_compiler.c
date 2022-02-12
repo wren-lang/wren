@@ -88,6 +88,7 @@ typedef enum
   TOKEN_GTEQ,
   TOKEN_EQEQ,
   TOKEN_BANGEQ,
+  TOKEN_BANGTILDE,
 
   TOKEN_BREAK,
   TOKEN_CONTINUE,
@@ -1117,7 +1118,21 @@ static void nextToken(Parser* parser)
       case '|': twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE); return;
       case '&': twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP); return;
       case '=': twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ); return;
-      case '!': twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG); return;
+
+      case '!':
+        if (matchChar(parser, '='))
+        {
+          makeToken(parser, TOKEN_BANGEQ);
+        }
+        else if (matchChar(parser, '~'))
+        {
+          makeToken(parser, TOKEN_BANGTILDE);
+        }
+        else
+        {
+          makeToken(parser, TOKEN_BANG);
+        }
+        return;
         
       case '.':
         if (matchChar(parser, '.'))
@@ -1718,7 +1733,7 @@ typedef enum
   PREC_CONDITIONAL,   // ?:
   PREC_LOGICAL_OR,    // ||
   PREC_LOGICAL_AND,   // &&
-  PREC_EQUALITY,      // == != ~~
+  PREC_EQUALITY,      // == != ~~ !~
   PREC_IS,            // is
   PREC_COMPARISON,    // < > <= >=
   PREC_BITWISE_OR,    // |
@@ -2792,6 +2807,7 @@ GrammarRule rules[] =
   /* TOKEN_GTEQ          */ INFIX_OPERATOR(PREC_COMPARISON, ">="),
   /* TOKEN_EQEQ          */ INFIX_OPERATOR(PREC_EQUALITY, "=="),
   /* TOKEN_BANGEQ        */ INFIX_OPERATOR(PREC_EQUALITY, "!="),
+  /* TOKEN_BANGTILDE     */ INFIX_OPERATOR(PREC_EQUALITY, "!~"),
   /* TOKEN_BREAK         */ UNUSED,
   /* TOKEN_CONTINUE      */ UNUSED,
   /* TOKEN_CLASS         */ UNUSED,

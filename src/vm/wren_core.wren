@@ -1,6 +1,8 @@
 class Bool {}
 class Fiber {}
-class Fn {}
+class Fn {
+  !~(arg) { !(arg ~~ this) }
+}
 class Null {}
 class Num {}
 
@@ -31,6 +33,10 @@ class Sequence {
   }
 
   ~~(element) { contains(element) }
+
+  !~(element) {
+    return !contains(element)
+  }
 
   count {
     var result = 0
