@@ -1729,6 +1729,12 @@ static void setSlot(WrenVM* vm, int slot, Value value)
   vm->apiStack[slot] = value;
 }
 
+void wrenCopySlot(WrenVM* vm, int dst, int src)
+{
+  validateApiSlot(vm, src);
+  setSlot(vm, dst, vm->apiStack[src]);
+}
+
 void wrenSetSlotBool(WrenVM* vm, int slot, bool value)
 {
   setSlot(vm, slot, BOOL_VAL(value));
