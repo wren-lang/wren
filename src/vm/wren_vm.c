@@ -23,7 +23,8 @@
 
 typedef enum {
   PREDEF_ALLOCATE = 0,
-  PREDEF_FINALIZE = 1
+  PREDEF_TRACE    = 1,
+  PREDEF_FINALIZE = 2,
 } PredefinedSymbol;
 
 // The behavior of realloc() when the size is 0 is implementation defined. It
@@ -55,6 +56,7 @@ static inline void ensurePredefinedSymbol(WrenVM* vm,
 // This function ensures that the special method symbols are there.
 static void ensurePredefinedSymbols(WrenVM* vm) {
   ensurePredefinedSymbol(vm, "<allocate>", PREDEF_ALLOCATE);
+  ensurePredefinedSymbol(vm, "<trace>",    PREDEF_TRACE);
   ensurePredefinedSymbol(vm, "<finalize>", PREDEF_FINALIZE);
 }
 
@@ -582,6 +584,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   WrenForeignClassMethods methods;
   methods.allocate = NULL;
   methods.finalize = NULL;
+  methods.trace    = NULL;
   
   // Check the optional built-in module first so the host can override it.
   
@@ -592,7 +595,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   }
 
   // If the host didn't provide it, see if it's a built in optional module.
-  if (methods.allocate == NULL && methods.finalize == NULL)
+  if (methods.allocate == NULL && methods.finalize == NULL && methods.trace == NULL)
   {
 #if WREN_OPT_RANDOM
     if (strcmp(module->name->value, "random") == 0)
@@ -616,6 +619,13 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   {
     method.as.foreign = (WrenForeignMethodFn)methods.finalize;
     wrenBindMethod(vm, classObj, PREDEF_FINALIZE, method);
+  }
+
+
+  if (methods.trace != NULL)
+  {
+    method.as.foreign = (WrenForeignMethodFn)methods.trace;
+    wrenBindMethod(vm, classObj, PREDEF_TRACE, method);
   }
 }
 
@@ -682,6 +692,22 @@ static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
   method->as.foreign(vm);
 
   vm->apiStack = NULL;
+}
+
+void wrenTraceForeign(WrenVM* vm, ObjForeign* foreign)
+{
+  // If the class doesn't have a tracer, bail out.
+  ObjClass* classObj = foreign->obj.classObj;
+  Method* method = &classObj->methods.data[PREDEF_TRACE];
+  if (method->type == METHOD_NONE) return;
+
+  ASSERT(method->type == METHOD_FOREIGN, "Tracer should be foreign.");
+
+  WrenTracerFn tracer = (WrenTracerFn)method->as.foreign;
+
+  // The tracer pointer is actually just the VM. We use a different type
+  // to make misue require a little effort
+  vm->bytesAllocated += tracer((WrenTracer*) vm, foreign->data);
 }
 
 void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign)
@@ -1720,6 +1746,13 @@ WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot)
   return wrenMakeHandle(vm, vm->apiStack[slot]);
 }
 
+WrenRawValue wrenGetSlotRawValue(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+  return wrenMakeRawValue(vm, vm->apiStack[slot]);
+}
+
+
 // Stores [value] in [slot] in the foreign call stack.
 static void setSlot(WrenVM* vm, int slot, Value value)
 {
@@ -1785,6 +1818,11 @@ void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle)
   ASSERT(handle != NULL, "Handle cannot be NULL.");
 
   setSlot(vm, slot, handle->value);
+}
+
+void wrenSetSlotRawValue(WrenVM* vm, int slot, WrenRawValue rv)
+{
+  setSlot(vm, slot, wrenUnpackRawValue(rv));
 }
 
 int wrenGetListCount(WrenVM* vm, int slot)
