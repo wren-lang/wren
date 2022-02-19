@@ -8,11 +8,14 @@ ifndef verbose
   SILENT = @
 endif
 
-.PHONY: clean prebuild
+.PHONY: clean prebuild prelink
 
-SHELLTYPE := posix
-ifeq (.exe,$(findstring .exe,$(ComSpec)))
-	SHELLTYPE := msdos
+SHELLTYPE := msdos
+ifeq (,$(ComSpec)$(COMSPEC))
+  SHELLTYPE := posix
+endif
+ifeq (/bin,$(findstring /bin,$(SHELL)))
+  SHELLTYPE := posix
 endif
 
 # Configurations
@@ -49,8 +52,9 @@ ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2
 LIBS += ../../lib/libwren.a
 LDDEPS += ../../lib/libwren.a
 ALL_LDFLAGS += $(LDFLAGS) -m64
+endif
 
-else ifeq ($(config),release_32bit)
+ifeq ($(config),release_32bit)
 TARGETDIR = ../../bin
 TARGET = $(TARGETDIR)/wren_test
 OBJDIR = obj/32bit/Release/wren_test
@@ -60,8 +64,9 @@ ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -O2
 LIBS += ../../lib/libwren.a
 LDDEPS += ../../lib/libwren.a
 ALL_LDFLAGS += $(LDFLAGS) -m32
+endif
 
-else ifeq ($(config),release_64bit-no-nan-tagging)
+ifeq ($(config),release_64bit-no-nan-tagging)
 TARGETDIR = ../../bin
 TARGET = $(TARGETDIR)/wren_test
 OBJDIR = obj/64bit-no-nan-tagging/Release/wren_test
@@ -71,8 +76,9 @@ ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2
 LIBS += ../../lib/libwren.a
 LDDEPS += ../../lib/libwren.a
 ALL_LDFLAGS += $(LDFLAGS)
+endif
 
-else ifeq ($(config),debug_64bit)
+ifeq ($(config),debug_64bit)
 TARGETDIR = ../../bin
 TARGET = $(TARGETDIR)/wren_test_d
 OBJDIR = obj/64bit/Debug/wren_test
@@ -82,8 +88,9 @@ ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -g
 LIBS += ../../lib/libwren_d.a
 LDDEPS += ../../lib/libwren_d.a
 ALL_LDFLAGS += $(LDFLAGS) -m64
+endif
 
-else ifeq ($(config),debug_32bit)
+ifeq ($(config),debug_32bit)
 TARGETDIR = ../../bin
 TARGET = $(TARGETDIR)/wren_test_d
 OBJDIR = obj/32bit/Debug/wren_test
@@ -93,8 +100,9 @@ ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m32 -g
 LIBS += ../../lib/libwren_d.a
 LDDEPS += ../../lib/libwren_d.a
 ALL_LDFLAGS += $(LDFLAGS) -m32
+endif
 
-else ifeq ($(config),debug_64bit-no-nan-tagging)
+ifeq ($(config),debug_64bit-no-nan-tagging)
 TARGETDIR = ../../bin
 TARGET = $(TARGETDIR)/wren_test_d
 OBJDIR = obj/64bit-no-nan-tagging/Debug/wren_test
@@ -104,9 +112,6 @@ ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -g
 LIBS += ../../lib/libwren_d.a
 LDDEPS += ../../lib/libwren_d.a
 ALL_LDFLAGS += $(LDFLAGS)
-
-else
-  $(error "invalid configuration $(config)")
 endif
 
 # Per File Configurations
@@ -131,6 +136,7 @@ OBJECTS += $(OBJDIR)/lists.o
 OBJECTS += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/maps.o
 OBJECTS += $(OBJDIR)/new_vm.o
+OBJECTS += $(OBJDIR)/raw_value.o
 OBJECTS += $(OBJDIR)/reset_stack_after_call_abort.o
 OBJECTS += $(OBJDIR)/reset_stack_after_foreign_construct.o
 OBJECTS += $(OBJDIR)/resolution.o
@@ -141,11 +147,10 @@ OBJECTS += $(OBJDIR)/user_data.o
 # Rules
 # #############################################
 
-all: $(TARGET)
+all: prebuild prelink $(TARGET) | $(TARGETDIR) $(OBJDIR)
 	@:
 
-$(TARGET): $(OBJECTS) $(LDDEPS) | $(TARGETDIR)
-	$(PRELINKCMDS)
+$(TARGET): $(GCH) $(OBJECTS) $(LDDEPS) | $(TARGETDIR)
 	@echo Linking wren_test
 	$(SILENT) $(LINKCMD)
 	$(POSTBUILDCMDS)
@@ -176,22 +181,21 @@ else
 	$(SILENT) if exist $(subst /,\\,$(OBJDIR)) rmdir /s /q $(subst /,\\,$(OBJDIR))
 endif
 
-prebuild: | $(OBJDIR)
+prebuild:
 	$(PREBUILDCMDS)
 
+prelink:
+	$(PRELINKCMDS)
+
 ifneq (,$(PCH))
-$(OBJECTS): $(GCH) | $(PCH_PLACEHOLDER)
-$(GCH): $(PCH) | prebuild
+$(OBJECTS): $(GCH) $(PCH) | $(OBJDIR) $(PCH_PLACEHOLDER)
+$(GCH): $(PCH) | $(OBJDIR)
 	@echo $(notdir $<)
 	$(SILENT) $(CC) -x c-header $(ALL_CFLAGS) -o "$@" -MF "$(@:%.gch=%.d)" -c "$<"
 $(PCH_PLACEHOLDER): $(GCH) | $(OBJDIR)
-ifeq (posix,$(SHELLTYPE))
 	$(SILENT) touch "$@"
 else
-	$(SILENT) echo $null >> "$@"
-endif
-else
-$(OBJECTS): | prebuild
+$(OBJECTS): | $(OBJDIR)
 endif
 
 
@@ -234,6 +238,9 @@ $(OBJDIR)/maps.o: ../../test/api/maps.c
 $(OBJDIR)/new_vm.o: ../../test/api/new_vm.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/raw_value.o: ../../test/api/raw_value.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/reset_stack_after_call_abort.o: ../../test/api/reset_stack_after_call_abort.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
@@ -258,5 +265,5 @@ $(OBJDIR)/test.o: ../../test/test.c
 
 -include $(OBJECTS:%.o=%.d)
 ifneq (,$(PCH))
-  -include $(PCH_PLACEHOLDER).d
+  -include "$(PCH_PLACEHOLDER).d"
 endif

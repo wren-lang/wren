@@ -2,12 +2,12 @@
 <Workspace
 	version = "1.0">
 	<FileRef
-		location = "group:wren_test.xcodeproj">
-	</FileRef>
-	<FileRef
 		location = "group:wren.xcodeproj">
 	</FileRef>
 	<FileRef
 		location = "group:wren_shared.xcodeproj">
+	</FileRef>
+	<FileRef
+		location = "group:wren_test.xcodeproj">
 	</FileRef>
 </Workspace>
