@@ -13,6 +13,26 @@
 
 #include "wren_core.wren.inc"
 
+#ifdef __DJGPP__
+double fmax(double x, double y)
+{
+  if (isnan(x))
+    return y;
+  if (isnan(y))
+    return x;
+  return x > y ? x : y;
+}
+
+double fmin(double x, double y)
+{
+  if (isnan(x))
+    return y;
+  if (isnan(y))
+    return x;
+  return x < y ? x : y;
+}
+#endif
+
 DEF_PRIMITIVE(bool_not)
 {
   RETURN_BOOL(!AS_BOOL(args[0]));
