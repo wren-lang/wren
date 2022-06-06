@@ -14,6 +14,22 @@ https://github.com/wren-lang/wren/issues/425
 - enable `#define WREN_DEBUGGER 1` in include/wren.h
 - enable `#define WREN_DEBUGGER 1` in wren_common.h
 - call `wrenDebuggerPollConfigCmds(vm)` in e.g a main loop
+- implement the config stuff needed
+
+```c
+
+const char* get_module_path(WrenVM* vm, const char* module, const char* root) 
+{
+    //return a path on disk for vscode to open when stepping into code etc
+}
+
+/// ....
+
+//config
+config.modulePathFn = get_module_path;
+config.debuggerPort = "8089";
+config.enableDebugger = true;
+```
   
 # Accessing the debugger
 The debugger operates a simple protocol over a network socket. 
