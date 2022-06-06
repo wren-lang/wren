@@ -10,6 +10,9 @@ Please open a discussion to discuss major changes before doing them.
 
 https://github.com/wren-lang/wren/issues/425
 
+The original implementation was done by @KeyMaster- ([twitter](https://twitter.com/keymaster_)) as a learning 
+experience in [luxe](https://luxeengine.com), so thanks to them!
+
 # Testing the debugger
 - enable `#define WREN_DEBUGGER 1` in include/wren.h
 - enable `#define WREN_DEBUGGER 1` in wren_common.h
@@ -55,7 +58,7 @@ The extension is also very rough and experimental.
 - [ ] Expand upvalue valid range to the whole function they are defined in 
 - [ ] Static variables not used in a function are not visible to the debugger 
 
-**Smaller details**
+**Smaller details**   
 - [ ] Remove breakpoints maximum? would add dynamic allocation though. 
 - [ ] Remove max length of module names in breakpoint struct
 - [ ] Stack excludes foreign calls and core module calls, decide if this should be done. (affects getStackIdxFrame)
