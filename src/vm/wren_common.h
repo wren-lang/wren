@@ -55,6 +55,7 @@
   #define WREN_OPT_RANDOM 1
 #endif
 
+#define WREN_DEBUGGER 1
 // These flags are useful for debugging and hacking on Wren itself. They are not
 // intended to be used for production code. They default to off.
 

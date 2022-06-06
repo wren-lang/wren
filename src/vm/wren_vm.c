@@ -21,6 +21,10 @@
   #include <stdio.h>
 #endif
 
+#if WREN_DEBUGGER
+  #include "wren_debugger.h"
+#endif
+
 // The behavior of realloc() when the size is 0 is implementation defined. It
 // may return a non-NULL pointer which must not be dereferenced but nevertheless
 // should be freed. To prevent that, we avoid calling realloc() with a zero
@@ -54,6 +58,12 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->minHeapSize = 1024 * 1024;
   config->heapGrowthPercent = 50;
   config->userData = NULL;
+  
+  #if WREN_DEBUGGER
+    config->modulePathFn = NULL;
+    config->debuggerPort = NULL;
+  	config->enableDebugger = false;
+  #endif
 }
 
 WrenVM* wrenNewVM(WrenConfiguration* config)
@@ -89,6 +99,10 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->gray = (Obj**)reallocate(NULL, vm->grayCapacity * sizeof(Obj*), userData);
   vm->nextGC = vm->config.initialHeapSize;
 
+  #if WREN_DEBUGGER
+    wrenInitDebugger(vm);
+  #endif
+
   wrenSymbolTableInit(&vm->methodNames);
 
   vm->modules = wrenNewMap(vm);
@@ -118,6 +132,10 @@ void wrenFreeVM(WrenVM* vm)
   ASSERT(vm->handles == NULL, "All handles have not been released.");
 
   wrenSymbolTableClear(vm, &vm->methodNames);
+
+  #if WREN_DEBUGGER
+    wrenFreeDebugger(vm);
+  #endif
 
   DEALLOCATE(vm, vm);
 }
@@ -649,7 +667,7 @@ static void createClass(WrenVM* vm, int numFields, ObjModule* module)
   if (wrenHasError(vm->fiber)) return;
 
   ObjClass* classObj = wrenNewClass(vm, AS_CLASS(superclass), numFields,
-                                    AS_STRING(name));
+                                    AS_STRING(name), module);
   vm->fiber->stackTop[-1] = OBJ_VAL(classObj);
 
   if (numFields == -1) bindForeignClass(vm, classObj, module);
@@ -838,7 +856,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   register ObjFn* fn;
 
   // These macros are designed to only be invoked within this function.
-  #define PUSH(value)  (*fiber->stackTop++ = value)
+  #define PUSH(value)  do { *fiber->stackTop = (value); fiber->stackTop++; } while (false)
   #define POP()        (*(--fiber->stackTop))
   #define DROP()       (fiber->stackTop--)
   #define PEEK()       (*(fiber->stackTop - 1))
@@ -887,6 +905,20 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
     #define DEBUG_TRACE_INSTRUCTIONS() do { } while (false)
   #endif
 
+
+#if WREN_DEBUGGER
+    #define CALL_DEBUGGER()                                       \
+        do                                                        \
+        {                                                         \
+          if(vm->config.enableDebugger) {                         \
+            wrenRunDebugger(vm, fn, (int)(ip - fn->code.data));   \
+          }                                                       \
+        }                                                         \
+        while (false)
+  #else
+    #define CALL_DEBUGGER() do { } while (false)
+  #endif
+
   #if WREN_COMPUTED_GOTO
 
   static void* dispatchTable[] = {
@@ -902,6 +934,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       do                                                                       \
       {                                                                        \
         DEBUG_TRACE_INSTRUCTIONS();                                            \
+        CALL_DEBUGGER();                                                       \
         goto *dispatchTable[instruction = (Code)READ_BYTE()];                  \
       } while (false)
 
@@ -910,6 +943,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #define INTERPRET_LOOP                                                       \
       loop:                                                                    \
         DEBUG_TRACE_INSTRUCTIONS();                                            \
+        CALL_DEBUGGER();                                                       \
         switch (instruction = (Code)READ_BYTE())
 
   #define CASE_CODE(name)  case CODE_##name
@@ -918,6 +952,10 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #endif
 
   LOAD_FRAME();
+
+  #if WREN_DEBUGGER
+    wrenResetDebugger(vm);
+  #endif
 
   Code instruction;
   INTERPRET_LOOP
@@ -1304,7 +1342,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(CLASS):
     {
-      createClass(vm, READ_BYTE(), NULL);
+      createClass(vm, READ_BYTE(), fn->module);
       if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
     }

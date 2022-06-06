@@ -6,6 +6,10 @@
 #include "wren_value.h"
 #include "wren_utils.h"
 
+#if WREN_DEBUGGER
+  #include "wren_debugger.h"
+#endif
+
 // The maximum number of temporary objects that can be made visible to the GC
 // at one time.
 #define WREN_MAX_TEMP_ROOTS 8
@@ -100,6 +104,10 @@ struct WrenVM
   Value* apiStack;
 
   WrenConfiguration config;
+
+  #if WREN_DEBUGGER
+    WrenDebugger debugger;
+  #endif
   
   // Compiler and debugger data:
 

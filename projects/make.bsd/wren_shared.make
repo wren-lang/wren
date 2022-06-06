@@ -103,6 +103,7 @@ OBJECTS :=
 OBJECTS += $(OBJDIR)/wren_compiler.o
 OBJECTS += $(OBJDIR)/wren_core.o
 OBJECTS += $(OBJDIR)/wren_debug.o
+OBJECTS += $(OBJDIR)/wren_debugger.o
 OBJECTS += $(OBJDIR)/wren_opt_meta.o
 OBJECTS += $(OBJDIR)/wren_opt_random.o
 OBJECTS += $(OBJDIR)/wren_primitive.o
@@ -183,6 +184,9 @@ $(OBJDIR)/wren_core.o: ../../src/vm/wren_core.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/wren_debug.o: ../../src/vm/wren_debug.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/wren_debugger.o: ../../src/vm/wren_debugger.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/wren_primitive.o: ../../src/vm/wren_primitive.c

@@ -33,6 +33,15 @@
     <ClInclude Include="..\..\src\vm\wren_debug.h">
       <Filter>vm</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_debugger.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_debugger_types.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vm\wren_math.h">
+      <Filter>vm</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\vm\wren_opcodes.h">
       <Filter>vm</Filter>
     </ClInclude>
@@ -63,6 +72,9 @@
       <Filter>vm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\vm\wren_debug.c">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vm\wren_debugger.c">
       <Filter>vm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\vm\wren_primitive.c">

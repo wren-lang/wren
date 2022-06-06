@@ -43,7 +43,7 @@ static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
   vm->first = obj;
 }
 
-ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
+ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name, ObjModule* module)
 {
   ObjClass* classObj = ALLOCATE(vm, ObjClass);
   initObj(vm, &classObj->obj, OBJ_CLASS, NULL);
@@ -51,6 +51,7 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
   classObj->numFields = numFields;
   classObj->name = name;
   classObj->attributes = NULL_VAL;
+  classObj->module = module;
 
   wrenPushRoot(vm, (Obj*)classObj);
   wrenMethodBufferInit(&classObj->methods);
@@ -84,13 +85,13 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass)
 }
 
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
-                       ObjString* name)
+                       ObjString* name, ObjModule* module)
 {
   // Create the metaclass.
   Value metaclassName = wrenStringFormat(vm, "@ metaclass", OBJ_VAL(name));
   wrenPushRoot(vm, AS_OBJ(metaclassName));
 
-  ObjClass* metaclass = wrenNewSingleClass(vm, 0, AS_STRING(metaclassName));
+  ObjClass* metaclass = wrenNewSingleClass(vm, 0, AS_STRING(metaclassName), NULL);
   metaclass->obj.classObj = vm->classClass;
 
   wrenPopRoot(vm);
@@ -102,7 +103,7 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   // hierarchy.
   wrenBindSuperclass(vm, metaclass, vm->classClass);
 
-  ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
+  ObjClass* classObj = wrenNewSingleClass(vm, numFields, name, module);
 
   // Make sure the class isn't collected while the inherited methods are being
   // bound.
@@ -110,6 +111,23 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
 
   classObj->obj.classObj = metaclass;
   wrenBindSuperclass(vm, classObj, superclass);
+  
+  #if WREN_DEBUGGER
+    if(module != NULL) {
+      int classIndex = wrenSymbolTableFind(&module->classDebug.classIndices, name->value, name->length);
+      // printf("looking for %.*s\n", name->length, name->value);
+      // if(classIndex == -1) {
+      //   classIndex = wrenSymbolTableFind(&module->classDebug.classIndices, name->value, name->length);
+      // }
+      
+      ASSERT(classIndex != -1, "Each class should have an entry in module->classIndices.");
+
+      IntBuffer* fieldSlots = &module->classDebug.fieldSlots.data[classIndex];
+      for(int i=0; i<fieldSlots->count; i++) {
+        fieldSlots->data[i] += superclass->numFields;
+      }
+    }
+  #endif //WREN_DEBUGGER
 
   wrenPopRoot(vm);
   wrenPopRoot(vm);
@@ -246,6 +264,14 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
   FnDebug* debug = ALLOCATE(vm, FnDebug);
   debug->name = NULL;
   wrenIntBufferInit(&debug->sourceLines);
+
+  #if WREN_DEBUGGER
+    wrenSymbolTableInit(&debug->locals.locals);
+    wrenIntBufferInit(&debug->locals.localIndexes);
+    wrenIntBufferInit(&debug->locals.isUpvalue);
+    wrenIntBufferInit(&debug->locals.startLines);
+    wrenIntBufferInit(&debug->locals.endLines);
+  #endif
 
   ObjFn* fn = ALLOCATE(vm, ObjFn);
   initObj(vm, &fn->obj, OBJ_FN, vm->fnClass);
@@ -653,6 +679,12 @@ ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
 
   wrenSymbolTableInit(&module->variableNames);
   wrenValueBufferInit(&module->variables);
+
+  #if WREN_DEBUGGER
+    wrenSymbolTableInit(&module->classDebug.classIndices);
+    wrenSymbolTableBufferInit(&module->classDebug.fieldIndices);
+    wrenIntBufferBufferInit(&module->classDebug.fieldSlots);
+  #endif
 
   module->name = name;
 
@@ -1160,6 +1192,13 @@ static void blackenModule(WrenVM* vm, ObjModule* module)
 
   wrenBlackenSymbolTable(vm, &module->variableNames);
 
+  #if WREN_DEBUGGER
+  wrenBlackenSymbolTable(vm, &module->classDebug.classIndices);
+  // :todo: Do these need to be grayed? If so, how?
+  // wrenGrayBuffer(vm, &module->classDebug.fieldIndices);
+  // wrenGrayBuffer(vm, &module->classDebug.fieldSlots);
+  #endif
+
   wrenGrayObj(vm, (Obj*)module->name);
 
   // Keep track of how much memory is still in use.
@@ -1251,6 +1290,15 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       wrenValueBufferClear(vm, &fn->constants);
       wrenByteBufferClear(vm, &fn->code);
       wrenIntBufferClear(vm, &fn->debug->sourceLines);
+
+      #if WREN_DEBUGGER
+        wrenSymbolTableClear(vm, &fn->debug->locals.locals);
+        wrenIntBufferClear(vm, &fn->debug->locals.localIndexes);
+        wrenIntBufferClear(vm, &fn->debug->locals.isUpvalue);
+        wrenIntBufferClear(vm, &fn->debug->locals.startLines);
+        wrenIntBufferClear(vm, &fn->debug->locals.endLines);
+      #endif
+
       DEALLOCATE(vm, fn->debug->name);
       DEALLOCATE(vm, fn->debug);
       break;
@@ -1271,6 +1319,13 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
     case OBJ_MODULE:
       wrenSymbolTableClear(vm, &((ObjModule*)obj)->variableNames);
       wrenValueBufferClear(vm, &((ObjModule*)obj)->variables);
+
+      #if WREN_DEBUGGER
+        wrenSymbolTableClear(vm, &((ObjModule*)obj)->classDebug.classIndices);
+        wrenSymbolTableBufferClear(vm, &((ObjModule*)obj)->classDebug.fieldIndices);
+        wrenIntBufferBufferClear(vm, &((ObjModule*)obj)->classDebug.fieldSlots);
+      #endif
+      
       break;
 
     case OBJ_CLOSURE:

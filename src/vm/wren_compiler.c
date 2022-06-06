@@ -417,6 +417,10 @@ static const int stackEffects[] = {
   #undef OPCODE
 };
 
+#if WREN_DEBUGGER
+  void wrenDebuggerAddFnDebugVarInfo(Compiler* compiler, const char* name, int length, int index, bool upvalue);
+  void wrenDebuggerAddClassInfo(Compiler* compiler, ObjString* className, ClassInfo* classInfo);
+#endif
 static void printError(Parser* parser, int line, const char* label,
                        const char* format, va_list args)
 {
@@ -1385,6 +1389,11 @@ static int addLocal(Compiler* compiler, const char* name, int length)
   local->length = length;
   local->depth = compiler->scopeDepth;
   local->isUpvalue = false;
+  
+  #if WREN_DEBUGGER
+  	wrenDebuggerAddFnDebugVarInfo(compiler, name, length, compiler->numLocals, false);
+  #endif
+  
   return compiler->numLocals++;
 }
 
@@ -1507,6 +1516,15 @@ static int discardLocals(Compiler* compiler, int depth)
     else
     {
       emitByte(compiler, CODE_POP);
+      
+      #if WREN_DEBUGGER
+      	//:todo: check for not found? shouldn't happen though
+      	int debugIdx = wrenSymbolTableFind(
+          &compiler->fn->debug->locals.locals, 
+           compiler->locals[local].name, 
+           compiler->locals[local].length);
+      	compiler->fn->debug->locals.endLines.data[debugIdx] = compiler->parser->previous.line;
+      #endif
     }
     
 
@@ -1548,7 +1566,7 @@ static int resolveLocal(Compiler* compiler, const char* name, int length)
 // Adds an upvalue to [compiler]'s function with the given properties. Does not
 // add one if an upvalue for that variable is already in the list. Returns the
 // index of the upvalue.
-static int addUpvalue(Compiler* compiler, bool isLocal, int index)
+static int addUpvalue(Compiler* compiler, bool isLocal, int index, const char* name, int length)
 {
   // Look for an existing one.
   for (int i = 0; i < compiler->fn->numUpvalues; i++)
@@ -1560,6 +1578,17 @@ static int addUpvalue(Compiler* compiler, bool isLocal, int index)
   // If we got here, it's a new upvalue.
   compiler->upvalues[compiler->fn->numUpvalues].isLocal = isLocal;
   compiler->upvalues[compiler->fn->numUpvalues].index = index;
+  
+  #if WREN_DEBUGGER
+    //:todo: correct line range for upvalues, this'll be triggered on first use of the variable,
+    // but really upvalues are available the entire range of the function
+  	wrenDebuggerAddFnDebugVarInfo(compiler, name, length, compiler->fn->numUpvalues, true);
+
+  	//add variable name & index of upvalue to function debug info
+  	//Add var type info (definitely needs local vs upvalue, is module needed?
+  	// could just look for name in debug, if not existent, look in module, if not there fail)
+  #endif
+
   return compiler->fn->numUpvalues++;
 }
 
@@ -1591,7 +1620,7 @@ static int findUpvalue(Compiler* compiler, const char* name, int length)
     // scope.
     compiler->parent->locals[local].isUpvalue = true;
 
-    return addUpvalue(compiler, true, local);
+    return addUpvalue(compiler, true, local, name, length);
   }
 
   // See if it's an upvalue in the immediately enclosing function. In other
@@ -1603,7 +1632,7 @@ static int findUpvalue(Compiler* compiler, const char* name, int length)
   int upvalue = findUpvalue(compiler->parent, name, length);
   if (upvalue != -1)
   {
-    return addUpvalue(compiler, false, upvalue);
+    return addUpvalue(compiler, false, upvalue, name, length);
   }
 
   // If we got here, we walked all the way up the parent chain and couldn't
@@ -1695,6 +1724,15 @@ static ObjFn* endCompiler(Compiler* compiler,
       emitByte(compiler->parent, compiler->upvalues[i].index);
     }
   }
+	
+  #if WREN_DEBUGGER
+    //End any debug var line ranges that weren't ended by a scope inside the function
+  	for(int i=0; i<compiler->fn->debug->locals.localIndexes.count; i++) {
+      if(compiler->fn->debug->locals.endLines.data[i] == -1) {
+        compiler->fn->debug->locals.endLines.data[i] = compiler->parser->previous.line;
+      }
+    }
+  #endif
 
   // Pop this compiler off the stack.
   compiler->parser->vm->compiler = compiler->parent;
@@ -3617,6 +3655,10 @@ static void classDefinition(Compiler* compiler, bool isForeign)
     compiler->fn->code.data[numFieldsInstruction] =
         (uint8_t)classInfo.fields.count;
   }
+
+  #if WREN_DEBUGGER
+  	wrenDebuggerAddClassInfo(compiler, className, &classInfo);
+  #endif
   
   // Clear symbol tables for tracking field and method names.
   wrenSymbolTableClear(compiler->parser->vm, &classInfo.fields);
@@ -4132,3 +4174,54 @@ static void copyMethodAttributes(Compiler* compiler, bool isForeign,
 
   wrenPopRoot(vm);
 }
+
+
+#if WREN_DEBUGGER
+
+void wrenDebuggerAddFnDebugVarInfo(Compiler* compiler, const char* name, int length, int index, bool upvalue) {
+    //write name
+  wrenSymbolTableAdd(compiler->parser->vm, &compiler->fn->debug->locals.locals, name, length);
+    //write local index
+  wrenIntBufferWrite(compiler->parser->vm, &compiler->fn->debug->locals.localIndexes, index);
+  wrenIntBufferWrite(compiler->parser->vm, &compiler->fn->debug->locals.isUpvalue, upvalue ? 1 : 0);
+    //:todo: upvalues are valid the entire span of the function
+  wrenIntBufferWrite(compiler->parser->vm, &compiler->fn->debug->locals.startLines, compiler->parser->previous.line);
+  wrenIntBufferWrite(compiler->parser->vm, &compiler->fn->debug->locals.endLines, -1);
+}
+
+void wrenDebuggerAddClassInfo(Compiler* compiler, ObjString* className, ClassInfo* classInfo) {
+  
+  ObjModule* module = compiler->parser->module;
+
+    // Make an entry for this class' field indices
+  wrenSymbolTableAdd(compiler->parser->vm, &module->classDebug.classIndices, className->value, className->length);
+
+  SymbolTableBuffer* fieldIndices = &module->classDebug.fieldIndices;
+  IntBufferBuffer* fieldSlots = &module->classDebug.fieldSlots;
+
+  SymbolTable placeholderSymbolTable;
+  IntBuffer placeholderIntTable;
+  wrenSymbolTableInit(&placeholderSymbolTable);
+  wrenIntBufferInit(&placeholderIntTable);
+
+  wrenSymbolTableBufferWrite(compiler->parser->vm, fieldIndices, placeholderSymbolTable);
+  wrenIntBufferBufferWrite(compiler->parser->vm, fieldSlots, placeholderIntTable);
+
+  wrenSymbolTableInit(&fieldIndices->data[fieldIndices->count - 1]);
+  wrenIntBufferInit(&fieldSlots->data[fieldSlots->count - 1]);
+
+    // Add the field names and slots into their respective buffers
+  for(int i=0; i<classInfo->fields.count; i++) {
+    wrenSymbolTableAdd(compiler->parser->vm, 
+            &fieldIndices->data[fieldIndices->count - 1], 
+            classInfo->fields.data[i]->value, 
+            classInfo->fields.data[i]->length);
+      // field slots are sequential starting from 0 at this point (they later get patched), so i is their slot
+    wrenIntBufferWrite(compiler->parser->vm, &fieldSlots->data[fieldSlots->count - 1], i);
+  }
+
+  //:todo: statics that aren't used in a method won't be visible to the debugger in that method
+  // maybe solved by walking up scopes to look for variables?
+
+}
+#endif

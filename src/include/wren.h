@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+// This lives in two places atm cos including wren_common.h requires build settings changes
+#define WREN_DEBUGGER 1
+
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
 #define WREN_VERSION_MINOR 4
@@ -150,6 +153,12 @@ typedef struct
 typedef WrenForeignClassMethods (*WrenBindForeignClassFn)(
     WrenVM* vm, const char* module, const char* className);
 
+#if WREN_DEBUGGER
+  // Returns the path to the physical file representing the module [name], 
+  // using the optional [root] as a base path if needed. Returns null if the file is not physical.
+  typedef const char* (*WrenModulePathFn)(WrenVM* vm, const char* name, const char* root);
+#endif
+
 typedef struct
 {
   // The callback Wren will use to allocate, reallocate, and deallocate memory.
@@ -268,6 +277,12 @@ typedef struct
 
   // User-defined data associated with the VM.
   void* userData;
+
+  #if WREN_DEBUGGER
+    WrenModulePathFn modulePathFn;
+    const char* debuggerPort; //:todo: char* probably bad?
+  	bool enableDebugger; //:todo: temp
+  #endif
 
 } WrenConfiguration;
 

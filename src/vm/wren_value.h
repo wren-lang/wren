@@ -8,6 +8,10 @@
 #include "wren_math.h"
 #include "wren_utils.h"
 
+#if WREN_DEBUGGER
+  #include "wren_debugger_types.h"
+#endif
+
 // This defines the built-in types and their core representations in memory.
 // Since Wren is dynamically typed, any variable can hold a value of any type,
 // and the type can change at runtime. Implementing this efficiently is
@@ -215,6 +219,11 @@ typedef struct
   // bytecode in the function's bytecode array. The value of that element is
   // the line in the source code that generated that instruction.
   IntBuffer sourceLines;
+  
+  #if WREN_DEBUGGER
+  	FnDebugLocals locals;
+  #endif
+
 } FnDebug;
 
 // A loaded module and the top-level variables it defines.
@@ -231,6 +240,10 @@ typedef struct
   // Symbol table for the names of all module variables. Indexes here directly
   // correspond to entries in [variables].
   SymbolTable variableNames;
+  
+  #if WREN_DEBUGGER
+    ObjModuleDebug classDebug;
+  #endif
 
   // The name of the module.
   ObjString* name;
@@ -385,6 +398,7 @@ typedef struct
     WrenForeignMethodFn foreign;
     ObjClosure* closure;
   } as;
+
 } Method;
 
 DECLARE_BUFFER(Method, Method);
@@ -413,6 +427,9 @@ struct sObjClass
   
   // The ClassAttribute for the class, if any
   Value attributes;
+
+  // The module the class was defined in.
+  ObjModule* module;
 };
 
 typedef struct
@@ -620,7 +637,7 @@ typedef struct
 // Creates a new "raw" class. It has no metaclass or superclass whatsoever.
 // This is only used for bootstrapping the initial Object and Class classes,
 // which are a little special.
-ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name);
+ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name, ObjModule* module);
 
 // Makes [superclass] the superclass of [subclass], and causes subclass to
 // inherit its methods. This should be called before any methods are defined
@@ -629,7 +646,7 @@ void wrenBindSuperclass(WrenVM* vm, ObjClass* subclass, ObjClass* superclass);
 
 // Creates a new class object as well as its associated metaclass.
 ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
-                       ObjString* name);
+                       ObjString* name, ObjModule* module);
 
 void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
 
