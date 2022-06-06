@@ -57,6 +57,7 @@ The extension is also very rough and experimental.
 - [ ] Test behaviour on fiber switches 
 - [ ] Expand upvalue valid range to the whole function they are defined in 
 - [ ] Static variables not used in a function are not visible to the debugger 
+- [ ] patch bytecode for breakpoints and trap instead of checking constantly in loop
 
 **Smaller details**   
 - [ ] Remove breakpoints maximum? would add dynamic allocation though. 
