@@ -630,7 +630,7 @@ DEF_PRIMITIVE(num_fromString)
   RETURN_NUM(number);
 }
 
-// Defines a primitive on Num that returns constant [value].
+// Defines a primitive on Num that returns the constant [value].
 #define DEF_NUM_CONSTANT(name, value)                                          \
     DEF_PRIMITIVE(num_##name)                                                  \
     {                                                                          \
