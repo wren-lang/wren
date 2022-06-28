@@ -206,7 +206,7 @@ void wrenEnsureStack(WrenVM* vm, ObjFiber* fiber, int needed)
   // single array, hence the slightly redundant-looking arithmetic below.
   if (fiber->stack != oldStack)
   {
-    // Top of the stack.
+    // Bottom of the stack for the C API.
     if (vm->apiStack >= oldStack && vm->apiStack <= fiber->stackTop)
     {
       vm->apiStack = fiber->stack + (vm->apiStack - oldStack);
@@ -426,7 +426,7 @@ static uint32_t hashObject(Obj* object)
 }
 
 // Generates a hash code for [value], which must be one of the built-in
-// immutable types: null, bool, class, num, range, or string.
+// immutable types: null, bool, class, fn, num, range, or string.
 static uint32_t hashValue(Value value)
 {
   // TODO: We'll probably want to randomize this at some point.

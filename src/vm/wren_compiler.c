@@ -1246,7 +1246,7 @@ static TokenType peek(Compiler* compiler)
   return compiler->parser->current.type;
 }
 
-// Returns the type of the current token.
+// Returns the type of the next token.
 static TokenType peekNext(Compiler* compiler)
 {
   return compiler->parser->next.type;
@@ -1357,7 +1357,7 @@ static void emitShortArg(Compiler* compiler, Code instruction, int arg)
 }
 
 // Emits [instruction] followed by a placeholder for a jump offset. The
-// placeholder can be patched by calling [jumpPatch]. Returns the index of the
+// placeholder can be patched by calling [patchJump]. Returns the index of the
 // placeholder.
 static int emitJump(Compiler* compiler, Code instruction)
 {
@@ -1579,7 +1579,7 @@ static int findUpvalue(Compiler* compiler, const char* name, int length)
   // If we are at the top level, we didn't find it.
   if (compiler->parent == NULL) return -1;
   
-  // If we hit the method boundary (and the name isn't a static field), then
+  // If we hit the method boundary (and the name isn't a field), then
   // stop looking for it. We'll instead treat it as a self send.
   if (name[0] != '_' && compiler->parent->enclosingClass != NULL) return -1;
   
@@ -1624,7 +1624,7 @@ static Variable resolveNonmodule(Compiler* compiler,
   variable.index = resolveLocal(compiler, name, length);
   if (variable.index != -1) return variable;
 
-  // Tt's not a local, so guess that it's an upvalue.
+  // It's not a local, so guess that it's an upvalue.
   variable.scope = SCOPE_UPVALUE;
   variable.index = findUpvalue(compiler, name, length);
   return variable;
@@ -1999,7 +1999,7 @@ static void callMethod(Compiler* compiler, int numArgs, const char* name,
   emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs), symbol);
 }
 
-// Compiles an (optional) argument list for a method call with [methodSignature]
+// Compiles an (optional) argument list for a method call with [signature]
 // and then calls it.
 static void methodCall(Compiler* compiler, Code instruction,
                        Signature* signature)
@@ -2013,7 +2013,7 @@ static void methodCall(Compiler* compiler, Code instruction,
   {
     called.type = SIG_METHOD;
 
-    // Allow new line before an empty argument list
+    // Allow new line before an argument list
     ignoreNewlines(compiler);
 
     // Allow empty an argument list.
@@ -2208,7 +2208,7 @@ static void unaryOp(Compiler* compiler, bool canAssign)
   // Compile the argument.
   parsePrecedence(compiler, (Precedence)(PREC_UNARY + 1));
 
-  // Call the operator method on the left-hand side.
+  // Call the operator method on the right-hand side.
   callMethod(compiler, 0, rule->name, 1);
 }
 
@@ -2219,7 +2219,7 @@ static void boolean(Compiler* compiler, bool canAssign)
 }
 
 // Walks the compiler chain to find the compiler for the nearest class
-// enclosing this one. Returns NULL if not currently inside a class definition.
+// enclosing [compiler]. Returns NULL if not currently inside a class definition.
 static Compiler* getEnclosingClassCompiler(Compiler* compiler)
 {
   while (compiler != NULL)
@@ -2231,7 +2231,7 @@ static Compiler* getEnclosingClassCompiler(Compiler* compiler)
   return NULL;
 }
 
-// Walks the compiler chain to find the nearest class enclosing this one.
+// Walks the compiler chain to find the nearest class enclosing [compiler].
 // Returns NULL if not currently inside a class definition.
 static ClassInfo* getEnclosingClass(Compiler* compiler)
 {
@@ -2687,7 +2687,7 @@ static void parameterList(Compiler* compiler, Signature* signature)
   
   signature->type = SIG_METHOD;
   
-  // Allow new line before an empty argument list
+  // Allow new line before an argument list
   ignoreNewlines(compiler);
 
   // Allow an empty parameter list.
@@ -3574,7 +3574,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
 
   // Set up a symbol table for the class's fields. We'll initially compile
   // them to slots starting at zero. When the method is bound to the class, the
-  // bytecode will be adjusted by [wrenBindMethod] to take inherited fields
+  // bytecode will be adjusted by [wrenBindMethodCode] to take inherited fields
   // into account.
   wrenSymbolTableInit(&classInfo.fields);
   

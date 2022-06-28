@@ -83,7 +83,7 @@ bool validateInt(WrenVM* vm, Value arg, const char* argName);
 // it is. If not, reports an error and returns false.
 bool validateKey(WrenVM* vm, Value arg);
 
-// Validates that the argument at [argIndex] is an integer within `[0, count)`.
+// Validates that the argument at [arg] is an integer within `[0, count)`.
 // Also allows negative indices which map backwards from the end. Returns the
 // valid positive index value. If invalid, reports an error and returns
 // `UINT32_MAX`.

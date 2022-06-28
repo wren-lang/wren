@@ -88,7 +88,7 @@ static void randomFloat(WrenVM* vm)
   // Then add another 21 random bits.
   result += (double)(advanceState(well) & ((1 << 21) - 1));
 
-  // Now we have a number from 0 - (2^53). Divide be the range to get a double
+  // Now we have a number from 0 - (2^53). Divide by the range to get a double
   // from 0 to 1.0 (half-inclusive).
   result /= 9007199254740992.0;
 

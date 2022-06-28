@@ -307,7 +307,7 @@ typedef enum
   FIBER_ROOT,
   
   // The fiber is invoked some other way. If [caller] is `NULL` then the fiber
-  // was invoked using `call()`. If [numFrames] is zero, then the fiber has
+  // was invoked using `transfer()`. If [numFrames] is zero, then the fiber has
   // finished running and is done. If [numFrames] is one and that frame's `ip`
   // points to the first byte of code, the fiber has not been started yet.
   FIBER_OTHER,
@@ -750,8 +750,8 @@ Value wrenStringFromCodePoint(WrenVM* vm, int value);
 Value wrenStringFromByte(WrenVM* vm, uint8_t value);
 
 // Creates a new string containing the code point in [string] starting at byte
-// [index]. If [index] points into the middle of a UTF-8 sequence, returns an
-// empty string.
+// [index]. If [index] points into the middle of a UTF-8 sequence, returns a
+// new string containing the byte at [index].
 Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index);
 
 // Search for the first occurence of [needle] within [haystack] and returns its

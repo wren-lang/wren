@@ -565,8 +565,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   methods.allocate = NULL;
   methods.finalize = NULL;
   
-  // Check the optional built-in module first so the host can override it.
-  
+  // Check the host configuration first.
   if (vm->config.bindForeignClassFn != NULL)
   {
     methods = vm->config.bindForeignClassFn(vm, module->name->value,
@@ -1658,7 +1657,6 @@ static void validateApiSlot(WrenVM* vm, int slot)
   ASSERT(slot < wrenGetSlotCount(vm), "Not that many slots.");
 }
 
-// Gets the type of the object in [slot].
 WrenType wrenGetSlotType(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
