@@ -401,6 +401,20 @@ WREN_API void wrenEnsureSlots(WrenVM* vm, int numSlots);
 // Gets the type of the object in [slot].
 WREN_API WrenType wrenGetSlotType(WrenVM* vm, int slot);
 
+// Gets the class of the object in [slot] and stores it in [classSlot].
+//
+// If the object in [slot] is a class, it is returned unchanged into
+// [classSlot].
+WREN_API void wrenGetSlotClass(WrenVM* vm, int slot, int classSlot);
+
+// Gets the name of the class in [slot].
+//
+// The string returned is the property of the [vm] so it must not be freed
+// by the caller.
+//
+// This function returns null if there is no class object in [slot].
+WREN_API const char *wrenGetSlotClassName(WrenVM* vm, int slot);
+
 // Reads a boolean value from [slot].
 //
 // It is an error to call this if the slot does not contain a boolean value.

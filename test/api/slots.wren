@@ -8,6 +8,8 @@ class Slots {
   foreign static getListCount(list)
   foreign static getListElement(list, index)
   foreign static getMapValue(map, key)
+  foreign static getSlotClass(obj)
+  foreign static getSlotClassName(obj)
 }
 
 foreign class ForeignType {
@@ -49,3 +51,29 @@ var capitals = {
 System.print(Slots.getMapValue(capitals, "England")) // expect: London
 System.print(Slots.getMapValue(capitals, "Wales")) // expect: Cardiff
 System.print(Slots.getMapValue(capitals, "S. Ireland")) // expect: null
+
+System.print(Slots.getSlotClass(Slots)) // expect: Slots
+System.print(Slots.getSlotClass(ForeignType)) // expect: ForeignType
+System.print(Slots.getSlotClass(ForeignType.new())) // expect: ForeignType
+System.print(Slots.getSlotClass(capitals)) // expect: Map
+System.print(Slots.getSlotClass([])) // expect: List
+
+// If a class is given, returns the name of the class.
+// If anything but a class is given, returns null.
+System.print(Slots.getSlotClassName(Class)) // expect: Class
+System.print(Slots.getSlotClassName(Slots)) // expect: Slots
+System.print(Slots.getSlotClassName(Map)) // expect: Map
+System.print(Slots.getSlotClassName(capitals)) // expect: null
+System.print(Slots.getSlotClassName(Slots.getSlotClass(capitals)))
+// expect: Map
+System.print(Slots.getSlotClassName(ducks)) // expect: null
+System.print(Slots.getSlotClassName(Slots.getSlotClass(ducks))) // expect: List
+System.print(Slots.getSlotClassName(Bool)) // expect: Bool
+System.print(Slots.getSlotClassName(true)) // expect: null
+System.print(Slots.getSlotClassName(Slots.getSlotClass(true))) // expect: Bool
+System.print(Slots.getSlotClassName(Null)) // expect: Null
+// The "null" is misleading as one might think it returns the value it
+// has been given, but this is correct behavior as the given "null" is not
+// a class, but instead a class instance: it is the second case above.
+System.print(Slots.getSlotClassName(null)) // expect: null
+System.print(Slots.getSlotClassName(Slots.getSlotClass(null))) // expect: Null

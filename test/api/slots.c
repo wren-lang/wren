@@ -172,6 +172,25 @@ static void getMapValue(WrenVM* vm)
   wrenGetMapValue(vm, 1, 2, 0);
 }
 
+static void getSlotClass(WrenVM* vm)
+{
+  wrenGetSlotClass(vm, 1, 0);
+}
+
+static void getSlotClassName(WrenVM* vm)
+{
+  const char* name = wrenGetSlotClassName(vm, 1);
+
+  if (name == NULL)
+  {
+    wrenSetSlotNull(vm, 0);
+  }
+  else
+  {
+    wrenSetSlotString(vm, 0, name);
+  }
+}
+
 WrenForeignMethodFn slotsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Slots.noSet") == 0) return noSet;
@@ -183,6 +202,8 @@ WrenForeignMethodFn slotsBindMethod(const char* signature)
   if (strcmp(signature, "static Slots.getListCount(_)") == 0) return getListCount;
   if (strcmp(signature, "static Slots.getListElement(_,_)") == 0) return getListElement;
   if (strcmp(signature, "static Slots.getMapValue(_,_)") == 0) return getMapValue;
+  if (strcmp(signature, "static Slots.getSlotClass(_)") == 0) return getSlotClass;
+  if (strcmp(signature, "static Slots.getSlotClassName(_)") == 0) return getSlotClassName;
 
   return NULL;
 }

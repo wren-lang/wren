@@ -1673,6 +1673,33 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
   return WREN_TYPE_UNKNOWN;
 }
 
+void wrenGetSlotClass(WrenVM* vm, int slot, int classSlot)
+{
+  validateApiSlot(vm, slot);
+  validateApiSlot(vm, classSlot);
+
+  Value value = vm->apiStack[slot];
+
+  if (IS_CLASS(value)) {
+    vm->apiStack[classSlot] = value;
+    return;
+  }
+
+  ObjClass* classObj = wrenGetClass(vm, value);
+
+  vm->apiStack[classSlot] = wrenObjectToValue((Obj*)classObj);
+}
+
+const char *wrenGetSlotClassName(WrenVM* vm, int slot)
+{
+    validateApiSlot(vm, slot);
+
+    Value value = vm->apiStack[slot];
+    if (!IS_CLASS(value)) return NULL;
+
+    return AS_CLASS(value)->name->value;
+}
+
 bool wrenGetSlotBool(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
