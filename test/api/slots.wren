@@ -10,6 +10,8 @@ class Slots {
   foreign static getMapValue(map, key)
   foreign static getSlotClass(obj)
   foreign static getSlotClassName(obj)
+  foreign static isParameterForeignType(param)
+  foreign static isParameterForeignTypeByName(param)
 }
 
 foreign class ForeignType {
@@ -77,3 +79,16 @@ System.print(Slots.getSlotClassName(Null)) // expect: Null
 // a class, but instead a class instance: it is the second case above.
 System.print(Slots.getSlotClassName(null)) // expect: null
 System.print(Slots.getSlotClassName(Slots.getSlotClass(null))) // expect: Null
+
+System.print(Slots.isParameterForeignType(Slots)) // expect: false
+System.print(Slots.isParameterForeignType(ForeignType)) // expect: true
+System.print(Slots.isParameterForeignType(ForeignType.new())) // expect: true
+System.print(Slots.isParameterForeignType(Bool)) // expect: false
+System.print(Slots.isParameterForeignType(true)) // expect: false
+
+System.print(Slots.isParameterForeignTypeByName(Slots)) // expect: false
+System.print(Slots.isParameterForeignTypeByName(ForeignType)) // expect: true
+System.print(Slots.isParameterForeignTypeByName(ForeignType.new()))
+// expect: true
+System.print(Slots.isParameterForeignTypeByName(Bool)) // expect: false
+System.print(Slots.isParameterForeignTypeByName(true)) // expect: false

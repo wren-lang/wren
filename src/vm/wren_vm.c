@@ -2003,6 +2003,37 @@ bool wrenHasModule(WrenVM* vm, const char* module)
   return moduleObj != NULL;
 }
 
+bool wrenIsSameClass(WrenVM* vm, int slotA, int slotB)
+{
+  validateApiSlot(vm, slotA);
+  validateApiSlot(vm, slotB);
+  ASSERT(IS_CLASS(vm->apiStack[slotA]), "SlotA must be a class.");
+  ASSERT(IS_CLASS(vm->apiStack[slotB]), "SlotB must be a class.");
+
+  ObjClass* classA = AS_CLASS(vm->apiStack[slotA]);
+  ObjClass* classB = AS_CLASS(vm->apiStack[slotB]);
+
+  return classA == classB;
+}
+
+bool wrenIsSubClass(WrenVM* vm, int slotA, int slotB)
+{
+  validateApiSlot(vm, slotA);
+  validateApiSlot(vm, slotB);
+  ASSERT(IS_CLASS(vm->apiStack[slotA]), "SlotA must be a class.");
+  ASSERT(IS_CLASS(vm->apiStack[slotB]), "SlotB must be a class.");
+
+  ObjClass* classA = AS_CLASS(vm->apiStack[slotA]);
+  ObjClass* classB = AS_CLASS(vm->apiStack[slotB]);
+
+  do {
+    if (classA == classB) return true;
+    classA = classA->superclass;
+  } while (classA != NULL);
+
+  return false;
+}
+
 void wrenAbortFiber(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);

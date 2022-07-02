@@ -191,6 +191,37 @@ static void getSlotClassName(WrenVM* vm)
   }
 }
 
+static void isParameterForeignType(WrenVM* vm)
+{
+    // First, get whatever variable is named "ForeignType" in the slots module.
+    wrenGetVariable(vm, "./test/api/slots", "ForeignType", 0);
+
+    // Then, retrieve the class of the variable.
+    wrenGetSlotClass(vm, 0, 0);
+
+    // Then, retrieve the class of the parameter.
+    wrenGetSlotClass(vm, 1, 1);
+
+    // Finally, check that both are "the same".
+    wrenSetSlotBool(vm, 0, wrenIsSameClass(vm, 0, 1));
+}
+
+static void isParameterForeignTypeByName(WrenVM* vm)
+{
+    // First, retrieve the class of the parameter.
+    wrenGetSlotClass(vm, 1, 1);
+
+    // Finally, check that the class is named "ForeignType".
+    //
+    // Please note that this is definitely what you should not do to ensure
+    // you've been given the right parameter class, as the "ForeignType" here
+    // only validates the name and not its origin.
+    // From what we know, the parameter we've been given might come from any
+    // module, "./test/api/slots" or anything else.
+    const char* name = wrenGetSlotClassName(vm, 1);
+    wrenSetSlotBool(vm, 0, strcmp(name, "ForeignType") == 0);
+}
+
 WrenForeignMethodFn slotsBindMethod(const char* signature)
 {
   if (strcmp(signature, "static Slots.noSet") == 0) return noSet;
@@ -204,6 +235,8 @@ WrenForeignMethodFn slotsBindMethod(const char* signature)
   if (strcmp(signature, "static Slots.getMapValue(_,_)") == 0) return getMapValue;
   if (strcmp(signature, "static Slots.getSlotClass(_)") == 0) return getSlotClass;
   if (strcmp(signature, "static Slots.getSlotClassName(_)") == 0) return getSlotClassName;
+  if (strcmp(signature, "static Slots.isParameterForeignType(_)") == 0) return isParameterForeignType;
+  if (strcmp(signature, "static Slots.isParameterForeignTypeByName(_)") == 0) return isParameterForeignTypeByName;
 
   return NULL;
 }
