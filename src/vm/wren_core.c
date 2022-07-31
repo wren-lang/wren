@@ -1481,7 +1481,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->rangeClass, "min", range_min);
   PRIMITIVE(vm->rangeClass, "max", range_max);
   PRIMITIVE(vm->rangeClass, "isInclusive", range_isInclusive);
-  PRIMITIVE(vm->rangeClass, "contains", range_contains);
+  PRIMITIVE(vm->rangeClass, "contains(_)", range_contains);
   PRIMITIVE(vm->rangeClass, "iterate(_)", range_iterate);
   PRIMITIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
   PRIMITIVE(vm->rangeClass, "toString", range_toString);
