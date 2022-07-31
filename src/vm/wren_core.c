@@ -919,6 +919,24 @@ DEF_PRIMITIVE(range_max)
   RETURN_NUM(fmax(range->from, range->to));
 }
 
+DEF_PRIMITIVE(range_contains)
+{
+  ObjRange* range = AS_RANGE(args[0]);
+
+  if (!validateNum(vm, args[1], "Element")) return false;
+  double num = AS_NUM(args[1]);
+
+  // If it's an empty range it can't contain any value
+  if (range->from == range->to && !range->isInclusive) RETURN_FALSE;
+  // Handle the inclusive case
+  if (!range->isInclusive && num == range->to) RETURN_TRUE;
+
+  double min = fmin(range->from, range->to);
+  double max = fmax(range->from, range->to);
+
+  RETURN_BOOL(num > min && num < max);
+}
+
 DEF_PRIMITIVE(range_isInclusive)
 {
   RETURN_BOOL(AS_RANGE(args[0])->isInclusive);
@@ -1463,6 +1481,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->rangeClass, "min", range_min);
   PRIMITIVE(vm->rangeClass, "max", range_max);
   PRIMITIVE(vm->rangeClass, "isInclusive", range_isInclusive);
+  PRIMITIVE(vm->rangeClass, "contains", range_contains);
   PRIMITIVE(vm->rangeClass, "iterate(_)", range_iterate);
   PRIMITIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
   PRIMITIVE(vm->rangeClass, "toString", range_toString);
