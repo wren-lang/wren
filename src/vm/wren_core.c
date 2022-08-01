@@ -907,12 +907,12 @@ DEF_PRIMITIVE(range_contains)
   // If it's an empty range it can't contain any value
   if (range->from == range->to && !range->isInclusive) RETURN_FALSE;
   // Handle the inclusive case
-  if (!range->isInclusive && num == range->to) RETURN_TRUE;
+  if (range->isInclusive && num == range->to) RETURN_TRUE;
 
   double min = fmin(range->from, range->to);
   double max = fmax(range->from, range->to);
 
-  RETURN_BOOL(num > min && num < max);
+  RETURN_BOOL(num == range->from || num > min && num < max);
 }
 
 DEF_PRIMITIVE(range_from)
