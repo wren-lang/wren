@@ -61,6 +61,17 @@ if (ready) {
 }
 </pre>
 
+You can also use `else if` branches to handle multiple possibilities. For example, what if `ready` was not a boolean value?
+<pre class="snippet">
+if (ready == true) {
+  System.print("go!")
+} else if (ready == false) {
+  System.print("not ready!")
+} else { // If ready isn't a boolean
+  System.print("not sure if I'm ready or not!")
+}
+</pre>
+
 ## Logical operators
 
 Unlike most other [operators][] in Wren which are just a special syntax for
