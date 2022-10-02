@@ -106,7 +106,7 @@ couldn't be found. When you do this, Wren will report it as a runtime error.
 
 ### The command-line loader
 
-The [Wren CLI command-line tool](getting-started.html#using-the-wren-cli) has a very simple
+The [Wren CLI command-line tool](/cli/usage.html) has a very simple
 lookup process. It appends the module name and ".wren" to the directory where
 the main module was loaded and looks for that file. So, let's say you run:
 
