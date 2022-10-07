@@ -904,6 +904,12 @@ DEF_PRIMITIVE(range_contains)
   if (!validateNum(vm, args[1], "Element")) return false;
   double num = AS_NUM(args[1]);
 
+  // If the value isn't an int we know that the value
+  // can't have been produced by the range
+  // NOTE: here we don't want to use the validate function
+  // because it shouldn't be an error
+  if (trunc(num) != num) RETURN_FALSE;
+
   // If it's an empty range it can't contain any value
   if (range->from == range->to && !range->isInclusive) RETURN_FALSE;
   // Handle the inclusive case
