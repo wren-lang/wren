@@ -694,6 +694,8 @@ ObjMap* wrenNewMap(WrenVM* vm);
 // This separation exists to aid the API in surfacing errors to the developer as well.
 static inline bool wrenMapIsValidKey(Value arg);
 
+uint32_t wrenHash(Value value);
+
 // Looks up [key] in [map]. If found, returns the value. Otherwise, returns
 // `UNDEFINED_VAL`.
 Value wrenMapGet(ObjMap* map, Value key);

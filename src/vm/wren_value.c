@@ -420,14 +420,13 @@ static uint32_t hashObject(Obj* object)
       return ((ObjString*)object)->hash;
 
     default:
-      ASSERT(false, "Only immutable objects can be hashed.");
-      return 0;
+      return hashBits((uintptr_t)object);
   }
 }
 
 // Generates a hash code for [value], which must be one of the built-in
 // immutable types: null, bool, class, num, range, or string.
-static uint32_t hashValue(Value value)
+uint32_t wrenHash(Value value)
 {
   // TODO: We'll probably want to randomize this at some point.
 
@@ -464,7 +463,7 @@ static bool findEntry(MapEntry* entries, uint32_t capacity, Value key,
   
   // Figure out where to insert it in the table. Use open addressing and
   // basic linear probing.
-  uint32_t startIndex = hashValue(key) % capacity;
+  uint32_t startIndex = wrenHash(key) % capacity;
   uint32_t index = startIndex;
   
   // If we pass a tombstone and don't end up finding the key, its entry will
