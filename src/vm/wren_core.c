@@ -897,6 +897,32 @@ DEF_PRIMITIVE(object_type)
   RETURN_OBJ(wrenGetClass(vm, args[0]));
 }
 
+DEF_PRIMITIVE(range_contains)
+{
+  ObjRange* range = AS_RANGE(args[0]);
+
+  if (!validateNum(vm, args[1], "Element")) return false;
+  double num = AS_NUM(args[1]);
+
+  // If the value isn't an int we know that the value
+  // can't have been produced by the range
+  // NOTE: here we don't want to use the validate function
+  // because it shouldn't be an error
+  if (trunc(num) != num) RETURN_FALSE;
+
+  // If it's an empty range it can't contain any value
+  if (range->from == range->to && !range->isInclusive) RETURN_FALSE;
+  // Handle the inclusive case
+  if (range->isInclusive && num == range->to) RETURN_TRUE;
+  // We can bail early here so we don't need to calculate min or max
+  if (num == range->from) RETURN_TRUE;
+
+  double min = fmin(range->from, range->to);
+  double max = fmax(range->from, range->to);
+
+  RETURN_BOOL(num > min && num < max);
+}
+
 DEF_PRIMITIVE(range_from)
 {
   RETURN_NUM(AS_RANGE(args[0])->from);
@@ -1458,6 +1484,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
 
   vm->rangeClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Range"));
+  PRIMITIVE(vm->rangeClass, "contains(_)", range_contains);
   PRIMITIVE(vm->rangeClass, "from", range_from);
   PRIMITIVE(vm->rangeClass, "to", range_to);
   PRIMITIVE(vm->rangeClass, "min", range_min);
