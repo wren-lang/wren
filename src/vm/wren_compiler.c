@@ -1557,6 +1557,12 @@ static int addUpvalue(Compiler* compiler, bool isLocal, int index)
     if (upvalue->index == index && upvalue->isLocal == isLocal) return i;
   }
 
+  if (compiler->fn->numUpvalues == MAX_UPVALUES) {
+    error(compiler, "A function cannot reference more than %d upvalues.",
+          MAX_UPVALUES);
+    return -1;
+  }
+
   // If we got here, it's a new upvalue.
   compiler->upvalues[compiler->fn->numUpvalues].isLocal = isLocal;
   compiler->upvalues[compiler->fn->numUpvalues].index = index;
