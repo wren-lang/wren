@@ -336,6 +336,10 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
       
+    case CODE_SWAP:
+      printf("SWAP\n");
+      break;
+
     case CODE_END:
       printf("END\n");
       break;

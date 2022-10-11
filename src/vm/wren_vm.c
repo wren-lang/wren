@@ -1374,6 +1374,14 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       DISPATCH();
     }
 
+    CASE_CODE(SWAP):
+    {
+      Value temp = PEEK2();
+      PEEK2() = PEEK();
+      PEEK() = temp;
+      DISPATCH();
+    }
+
     CASE_CODE(END):
       // A CODE_END should always be preceded by a CODE_RETURN. If we get here,
       // the compiler generated wrong code.

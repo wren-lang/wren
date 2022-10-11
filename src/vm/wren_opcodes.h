@@ -212,6 +212,9 @@ OPCODE(IMPORT_MODULE, 1)
 // variable's value.
 OPCODE(IMPORT_VARIABLE, 1)
 
+// Swap the top two stack slots.
+OPCODE(SWAP, 0)
+
 // This pseudo-instruction indicates the end of the bytecode. It should
 // always be preceded by a `CODE_RETURN`, so is never actually executed.
 OPCODE(END, 0)
