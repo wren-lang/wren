@@ -1385,6 +1385,11 @@ static void emitShortArg(Compiler* compiler, Code instruction, int arg)
   emitShort(compiler, arg);
 }
 
+static void emitCall(Compiler* compiler, Code code, int numArgs, int symbol)
+{
+  emitShortArg(compiler, (Code)(code + numArgs), symbol);
+}
+
 // Emits [instruction] followed by a placeholder for a jump offset. The
 // placeholder can be patched by calling [jumpPatch]. Returns the index of the
 // placeholder.
@@ -2004,7 +2009,7 @@ static void callSignature(Compiler* compiler, Code instruction,
                           Signature* signature)
 {
   int symbol = signatureSymbol(compiler, signature);
-  emitShortArg(compiler, (Code)(instruction + signature->arity), symbol);
+  emitCall(compiler, instruction, signature->arity, symbol);
 
   if (instruction == CODE_SUPER_0)
   {
@@ -2025,7 +2030,7 @@ static void callMethod(Compiler* compiler, int numArgs, const char* name,
                        int length)
 {
   int symbol = methodSymbol(compiler, name, length);
-  emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs), symbol);
+  emitCall(compiler, CODE_CALL_0, numArgs, symbol);
 }
 
 // Compiles an (optional) argument list for a method call with [methodSignature]
@@ -3308,8 +3313,7 @@ static void createConstructor(Compiler* compiler, Signature* signature,
        ? CODE_FOREIGN_CONSTRUCT : CODE_CONSTRUCT);
   
   // Run its initializer.
-  emitShortArg(&methodCompiler, (Code)(CODE_CALL_0 + signature->arity),
-               initializerSymbol);
+  emitCall(&methodCompiler, CODE_CALL_0, signature->arity, initializerSymbol);
   
   // Return the instance.
   emitOp(&methodCompiler, CODE_RETURN);
