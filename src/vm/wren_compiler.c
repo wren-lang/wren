@@ -423,6 +423,7 @@ static void emitClassAttributes(Compiler* compiler, ClassInfo* classInfo);
 static void copyAttributes(Compiler* compiler, ObjMap* into);
 static void copyMethodAttributes(Compiler* compiler, bool isForeign, 
             bool isStatic, const char* fullSignature, int32_t length);
+static int signatureArgumentsCount(const Signature* signature);
 
 // The stack effect of each opcode. The index in the array is the opcode, and
 // the value is the stack effect of that instruction.
@@ -2011,6 +2012,11 @@ static int methodSymbol(Compiler* compiler, const char* name, int length)
       &compiler->parser->vm->methodNames, name, length);
 }
 
+static int signatureArgumentsCount(const Signature* signature)
+{
+  return signature->arity;
+}
+
 // Appends characters to [name] (and updates [length]) for [numParams] "_"
 // surrounded by [leftBracket] and [rightBracket].
 static void signatureParameterList(char name[MAX_METHOD_SIGNATURE], int* length,
@@ -2156,7 +2162,7 @@ static void callSignature(Compiler* compiler, Code instruction,
                           Signature* signature)
 {
   int symbol = signatureSymbol(compiler, signature);
-  emitCall(compiler, instruction, signature->arity, symbol);
+  emitCall(compiler, instruction, signatureArgumentsCount(signature), symbol);
 
   if (instruction == CODE_SUPER_0)
   {
@@ -3439,7 +3445,7 @@ static void createConstructor(Compiler* compiler, Signature* signature,
        ? CODE_FOREIGN_CONSTRUCT : CODE_CONSTRUCT);
   
   // Run its initializer.
-  emitCall(&methodCompiler, CODE_CALL_0, signature->arity, initializerSymbol);
+  emitCall(&methodCompiler, CODE_CALL_0, signatureArgumentsCount(signature), initializerSymbol);
   
   // Return the instance.
   emitOp(&methodCompiler, CODE_RETURN);
