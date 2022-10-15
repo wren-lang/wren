@@ -1873,9 +1873,9 @@ static void finishBody(Compiler* compiler)
 
 // The VM can only handle a certain number of parameters, so check that we
 // haven't exceeded that and give a usable error.
-static void validateNumParameters(Compiler* compiler, int numArgs)
+static void validateNumParameters(Compiler* compiler, Signature* signature)
 {
-  if (numArgs == MAX_PARAMETERS + 1)
+  if (signatureArgumentsCount(signature) == MAX_PARAMETERS + 1)
   {
     // Only show an error at exactly max + 1 so that we can keep parsing the
     // parameters and minimize cascaded errors.
@@ -1888,7 +1888,8 @@ static void incSignatureArity(Compiler* compiler, void* userData)
 {
   Signature* signature = userData;
 
-  validateNumParameters(compiler, ++signature->arity);
+  ++signature->arity;
+  validateNumParameters(compiler, signature);
 }
 
 // Parses the rest of a comma-separated element list after the opening
