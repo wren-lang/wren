@@ -290,6 +290,7 @@ typedef struct
   int bracketArity;
   int parenArity;
   bool isInitializer : 1;
+  bool isSetter : 1;
 } Signature;
 
 // Bookkeeping information for compiling a class definition.
@@ -1972,6 +1973,8 @@ static bool maybeSetter(Compiler* compiler, bool canAssign,
 {
   if (!match(compiler, TOKEN_EQ)) return false;
 
+  signature->isSetter = true;
+
   if (!canAssign)
   {
     error(compiler, "The setter syntax cannot be used in this context.");
@@ -2092,16 +2095,9 @@ static void signatureToString(Signature* signature,
 
   signatureParameterList(name, length, signature->bracketArity, '[', ']');
 
-  switch (signature->type)
+  if (signature->isSetter)
   {
-    case SIG_SETTER:
-    case SIG_SUBSCRIPT_SETTER:
       name[(*length)++] = '=';
-      break;
-
-    default:
-      // nothing to do
-      break;
   }
 
   signatureParameterList(name, length, signature->parenArity, '(', ')');
@@ -2133,6 +2129,7 @@ static Signature signatureFromToken(Compiler* compiler, SignatureType type)
   signature.bracketArity = ARITY_NONE;
   signature.parenArity = ARITY_NONE;
   signature.isInitializer = false;
+  signature.isSetter = false;
 
   if (signature.length > MAX_METHOD_NAME)
   {
@@ -2223,7 +2220,7 @@ static void methodCall(Compiler* compiler, Code instruction,
   // Make a new signature that contains the updated arity and type based on
   // the arguments we find.
   Signature called = { signature->name, signature->length, SIG_GETTER,
-                       ARITY_NONE, ARITY_NONE, false };
+                       ARITY_NONE, ARITY_NONE, false, false };
 
   // Parse the argument list, if any.
   if (match(compiler, TOKEN_LEFT_PAREN))
@@ -2259,7 +2256,7 @@ static void methodCall(Compiler* compiler, Code instruction,
     initCompiler(&fnCompiler, compiler->parser, compiler, false);
 
     // Make a dummy signature to track the arity.
-    Signature fnSignature = { "", 0, SIG_METHOD, ARITY_NONE, ARITY_NONE, false };
+    Signature fnSignature = { "", 0, SIG_METHOD, ARITY_NONE, ARITY_NONE, false, false };
 
     // Parse the parameter list, if any.
     if (match(compiler, TOKEN_PIPE))
@@ -2727,7 +2724,7 @@ static void this_(Compiler* compiler, bool canAssign)
 // Subscript or "array indexing" operator like `foo[bar]`.
 static void subscript(Compiler* compiler, bool canAssign)
 {
-  Signature signature = { "", 0, SIG_SUBSCRIPT, ARITY_NONE, ARITY_NONE, false };
+  Signature signature = { "", 0, SIG_SUBSCRIPT, ARITY_NONE, ARITY_NONE, false, false };
 
   // Parse the argument list.
   finishArgumentList(compiler, &bracketArgumentListConfiguration, &signature);
@@ -2805,7 +2802,7 @@ static void infixOp(Compiler* compiler, bool canAssign)
 
   // Call the operator method on the left-hand side.
   Signature signature = { rule->name, (int)strlen(rule->name), SIG_METHOD,
-                          ARITY_NONE, 1, false };
+                          ARITY_NONE, 1, false, false };
   callSignature(compiler, CODE_CALL_0, &signature);
 }
 
