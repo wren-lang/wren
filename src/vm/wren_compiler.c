@@ -1269,12 +1269,15 @@ static bool match(Compiler* compiler, TokenType expected)
 
 // Consumes the current token. Emits an error if its type is not [expected].
 static void consume(Compiler* compiler, TokenType expected,
-                    const char* errorMessage)
+                    const char* errorMessageFormat, ...)
 {
   nextToken(compiler->parser);
   if (compiler->parser->previous.type != expected)
   {
-    error(compiler, errorMessage);
+    va_list args;
+    va_start(args, errorMessageFormat);
+    verror(compiler, errorMessageFormat, args);
+    va_end(args);
 
     // If the next token is the one we want, assume the current one is just a
     // spurious error and discard it to minimize the number of cascaded errors.
