@@ -456,7 +456,7 @@ static void lexError(Parser* parser, const char* format, ...)
 // You'll note that most places that call error() continue to parse and compile
 // after that. That's so that we can try to find as many compilation errors in
 // one pass as possible instead of just bailing at the first one.
-static void error(Compiler* compiler, const char* format, ...)
+static void verror(Compiler* compiler, const char* format, va_list args)
 {
   Token* token = &compiler->parser->previous;
 
@@ -464,8 +464,6 @@ static void error(Compiler* compiler, const char* format, ...)
   // reported it.
   if (token->type == TOKEN_ERROR) return;
   
-  va_list args;
-  va_start(args, format);
   if (token->type == TOKEN_LINE)
   {
     printError(compiler->parser, token->line, "Error at newline", format, args);
@@ -489,6 +487,13 @@ static void error(Compiler* compiler, const char* format, ...)
     }
     printError(compiler->parser, token->line, label, format, args);
   }
+}
+
+static void error(Compiler* compiler, const char* format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  verror(compiler, format, args);
   va_end(args);
 }
 
