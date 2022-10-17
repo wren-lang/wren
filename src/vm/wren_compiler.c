@@ -417,6 +417,27 @@ static const int stackEffects[] = {
   #undef OPCODE
 };
 
+static const char* tokenTypeToString(TokenType tokenType)
+{
+  switch (tokenType)
+  {
+    case TOKEN_LEFT_BRACE:    return "{";
+    case TOKEN_RIGHT_BRACE:   return "}";
+
+    case TOKEN_LEFT_BRACKET:  return "[";
+    case TOKEN_RIGHT_BRACKET: return "]";
+
+    case TOKEN_LEFT_PAREN:    return "(";
+    case TOKEN_RIGHT_PAREN:   return ")";
+
+    case TOKEN_PIPE:          return "|";
+
+    default:
+      UNREACHABLE();
+      return "";
+  }
+}
+
 static void printError(Parser* parser, int line, const char* label,
                        const char* format, va_list args)
 {
