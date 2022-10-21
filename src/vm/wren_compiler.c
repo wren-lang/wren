@@ -2873,13 +2873,6 @@ static void constructorSignature(Compiler* compiler, Signature* signature)
     return;
   }
   
-  // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN))
-  {
-    signature->parenArity = 0;
-    return;
-  }
-  
   finishParameterList(compiler, &parenParameterListConfiguration, signature);
 }
 
