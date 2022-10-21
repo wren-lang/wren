@@ -50,6 +50,8 @@
 // available in standard C++98.
 #define ERROR_MESSAGE_SIZE (80 + MAX_VARIABLE_NAME + 15)
 
+#define ARITY_NONE (-1)
+
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -285,7 +287,8 @@ typedef struct
   const char* name;
   int length;
   SignatureType type;
-  int arity;
+  int bracketArity;
+  int parenArity;
 } Signature;
 
 // Bookkeeping information for compiling a class definition.
@@ -1884,11 +1887,37 @@ static void validateNumParameters(Compiler* compiler, Signature* signature)
   }
 }
 
-static void incSignatureArity(Compiler* compiler, void* userData)
+static void initSignatureBracketArity(Compiler* compiler, void* userData)
 {
   Signature* signature = userData;
 
-  ++signature->arity;
+  ASSERT(signature->bracketArity == ARITY_NONE, "bracketArity must be none");
+  signature->bracketArity = 0;
+}
+
+static void incSignatureBracketArity(Compiler* compiler, void* userData)
+{
+  Signature* signature = userData;
+
+  ASSERT(signature->bracketArity >= 0, "bracketArity must be set");
+  ++signature->bracketArity;
+  validateNumParameters(compiler, signature);
+}
+
+static void initSignatureParenArity(Compiler* compiler, void* userData)
+{
+  Signature* signature = userData;
+
+  ASSERT(signature->parenArity == ARITY_NONE, "parenArity must be none");
+  signature->parenArity = 0;
+}
+
+static void incSignatureParenArity(Compiler* compiler, void* userData)
+{
+  Signature* signature = userData;
+
+  ASSERT(signature->parenArity >= 0, "parenArity must be set");
+  ++signature->parenArity;
   validateNumParameters(compiler, signature);
 }
 
@@ -1972,8 +2001,8 @@ static void matchParameterListEntry(Compiler* compiler, void* userData)
 
 static const ListConfiguration bracketParameterListConfiguration =
 {
-  .init  = NULL,
-  .inc   = incSignatureArity,
+  .init  = initSignatureBracketArity,
+  .inc   = incSignatureBracketArity,
   .match = matchParameterListEntry,
   .left  = TOKEN_LEFT_BRACKET,
   .right = TOKEN_RIGHT_BRACKET,
@@ -1981,8 +2010,8 @@ static const ListConfiguration bracketParameterListConfiguration =
 
 static const ListConfiguration parenParameterListConfiguration =
 {
-  .init  = NULL,
-  .inc   = incSignatureArity,
+  .init  = initSignatureParenArity,
+  .inc   = incSignatureParenArity,
   .match = matchParameterListEntry,
   .left  = TOKEN_LEFT_PAREN,
   .right = TOKEN_RIGHT_PAREN,
@@ -1990,8 +2019,8 @@ static const ListConfiguration parenParameterListConfiguration =
 
 static const ListConfiguration pipeParameterListConfiguration =
 {
-  .init  = NULL,
-  .inc   = incSignatureArity,
+  .init  = initSignatureParenArity,
+  .inc   = incSignatureParenArity,
   .match = matchParameterListEntry,
   .left  = TOKEN_PIPE,
   .right = TOKEN_PIPE,
@@ -2015,7 +2044,12 @@ static int methodSymbol(Compiler* compiler, const char* name, int length)
 
 static int signatureArgumentsCount(const Signature* signature)
 {
-  return signature->arity;
+  int count = 0;
+
+  if (signature->bracketArity > 0) count += signature->bracketArity;
+  if (signature->parenArity > 0)   count += signature->parenArity;
+
+  return count;
 }
 
 // Appends characters to [name] (and updates [length]) for [numParams] "_"
@@ -2023,6 +2057,8 @@ static int signatureArgumentsCount(const Signature* signature)
 static void signatureParameterList(char name[MAX_METHOD_SIGNATURE], int* length,
                                    int numParams, char leftBracket, char rightBracket)
 {
+  if (numParams == ARITY_NONE) return;
+
   name[(*length)++] = leftBracket;
 
   // This function may be called with too many parameters. When that happens,
@@ -2053,32 +2089,21 @@ static void signatureToString(Signature* signature,
   memcpy(name + *length, signature->name, signature->length);
   *length += signature->length;
 
+  signatureParameterList(name, length, signature->bracketArity, '[', ']');
+
   switch (signature->type)
   {
-    case SIG_METHOD:
-    case SIG_INITIALIZER:
-      signatureParameterList(name, length, signature->arity, '(', ')');
-      break;
-
-    case SIG_GETTER:
-      // The signature is just the name.
-      break;
-
     case SIG_SETTER:
-      name[(*length)++] = '=';
-      signatureParameterList(name, length, 1, '(', ')');
-      break;
-
-    case SIG_SUBSCRIPT:
-      signatureParameterList(name, length, signature->arity, '[', ']');
-      break;
-
     case SIG_SUBSCRIPT_SETTER:
-      signatureParameterList(name, length, signature->arity - 1, '[', ']');
       name[(*length)++] = '=';
-      signatureParameterList(name, length, 1, '(', ')');
+      break;
+
+    default:
+      // nothing to do
       break;
   }
+
+  signatureParameterList(name, length, signature->parenArity, '(', ')');
 
   name[*length] = '\0';
 }
@@ -2104,7 +2129,8 @@ static Signature signatureFromToken(Compiler* compiler, SignatureType type)
   signature.name = token->start;
   signature.length = token->length;
   signature.type = type;
-  signature.arity = 0;
+  signature.bracketArity = ARITY_NONE;
+  signature.parenArity = ARITY_NONE;
 
   if (signature.length > MAX_METHOD_NAME)
   {
@@ -2123,8 +2149,8 @@ static void matchArgumentListEntry(Compiler* compiler, void* userData)
 
 static const ListConfiguration bracketArgumentListConfiguration =
 {
-  .init  = NULL,
-  .inc   = incSignatureArity,
+  .init  = initSignatureBracketArity,
+  .inc   = incSignatureBracketArity,
   .match = matchArgumentListEntry,
   .left  = TOKEN_LEFT_BRACKET,
   .right = TOKEN_RIGHT_BRACKET,
@@ -2132,8 +2158,8 @@ static const ListConfiguration bracketArgumentListConfiguration =
 
 static const ListConfiguration parenArgumentListConfiguration =
 {
-  .init  = NULL,
-  .inc   = incSignatureArity,
+  .init  = initSignatureParenArity,
+  .inc   = incSignatureParenArity,
   .match = matchArgumentListEntry,
   .left  = TOKEN_LEFT_PAREN,
   .right = TOKEN_RIGHT_PAREN,
@@ -2194,7 +2220,8 @@ static void methodCall(Compiler* compiler, Code instruction,
 {
   // Make a new signature that contains the updated arity and type based on
   // the arguments we find.
-  Signature called = { signature->name, signature->length, SIG_GETTER, 0 };
+  Signature called = { signature->name, signature->length, SIG_GETTER,
+                       ARITY_NONE, ARITY_NONE };
 
   // Parse the argument list, if any.
   if (match(compiler, TOKEN_LEFT_PAREN))
@@ -2209,6 +2236,10 @@ static void methodCall(Compiler* compiler, Code instruction,
     {
       finishArgumentList(compiler, &parenArgumentListConfiguration, &called);
     }
+    else
+    {
+      called.parenArity = 0;
+    }
   }
 
   // Parse the block argument, if any.
@@ -2216,13 +2247,17 @@ static void methodCall(Compiler* compiler, Code instruction,
   {
     // Include the block argument in the arity.
     called.type = SIG_METHOD;
-    called.arity++;
+    if (called.parenArity == ARITY_NONE)
+    {
+      called.parenArity = 0;
+    }
+    ++called.parenArity;
 
     Compiler fnCompiler;
     initCompiler(&fnCompiler, compiler->parser, compiler, false);
 
     // Make a dummy signature to track the arity.
-    Signature fnSignature = { "", 0, SIG_METHOD, 0 };
+    Signature fnSignature = { "", 0, SIG_METHOD, ARITY_NONE, ARITY_NONE };
 
     // Parse the parameter list, if any.
     if (match(compiler, TOKEN_PIPE))
@@ -2230,8 +2265,12 @@ static void methodCall(Compiler* compiler, Code instruction,
       finishList(&fnCompiler, &pipeParameterListConfiguration, &fnSignature,
                  "function parameters");
     }
+    else
+    {
+      fnSignature.parenArity = 0;
+    }
 
-    fnCompiler.fn->arity = fnSignature.arity;
+    fnCompiler.fn->arity = fnSignature.parenArity;
 
     finishBody(&fnCompiler);
 
@@ -2685,7 +2724,7 @@ static void this_(Compiler* compiler, bool canAssign)
 // Subscript or "array indexing" operator like `foo[bar]`.
 static void subscript(Compiler* compiler, bool canAssign)
 {
-  Signature signature = { "", 0, SIG_SUBSCRIPT, 0 };
+  Signature signature = { "", 0, SIG_SUBSCRIPT, ARITY_NONE, ARITY_NONE };
 
   // Parse the argument list.
   finishArgumentList(compiler, &bracketArgumentListConfiguration, &signature);
@@ -2762,7 +2801,8 @@ static void infixOp(Compiler* compiler, bool canAssign)
   parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
 
   // Call the operator method on the left-hand side.
-  Signature signature = { rule->name, (int)strlen(rule->name), SIG_METHOD, 1 };
+  Signature signature = { rule->name, (int)strlen(rule->name), SIG_METHOD,
+                          ARITY_NONE, 1 };
   callSignature(compiler, CODE_CALL_0, &signature);
 }
 
@@ -2771,7 +2811,8 @@ static void infixSignature(Compiler* compiler, Signature* signature)
 {
   // Add the RHS parameter.
   signature->type = SIG_METHOD;
-  signature->arity = 1;
+  ASSERT(signature->parenArity == ARITY_NONE, "parenArity must be none");
+  signature->parenArity = 1;
 
   // Parse the parameter name.
   consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after operator name.");
@@ -2797,7 +2838,8 @@ static void mixedSignature(Compiler* compiler, Signature* signature)
   {
     // Add the RHS parameter.
     signature->type = SIG_METHOD;
-    signature->arity = 1;
+    ASSERT(signature->parenArity == ARITY_NONE, "parenArity must be none");
+    signature->parenArity = 1;
 
     // Parse the parameter name.
     declareNamedVariable(compiler);
@@ -2816,8 +2858,8 @@ static void matchSetterParameterListEntry(Compiler* compiler, void* userData)
 
 static const ListConfiguration parenSetterParameterListConfiguration = 
 {
-  .init  = NULL,
-  .inc   = incSignatureArity,
+  .init  = initSignatureParenArity,
+  .inc   = incSignatureParenArity,
   .match = matchSetterParameterListEntry,
   .left  = TOKEN_LEFT_PAREN,
   .right = TOKEN_RIGHT_PAREN,
@@ -2864,7 +2906,12 @@ static void namedSignature(Compiler* compiler, Signature* signature)
   ignoreNewlines(compiler);
 
   // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
+  if (match(compiler, TOKEN_RIGHT_PAREN))
+  {
+    ASSERT(signature->parenArity, "parenArity must be none");
+    signature->parenArity = 0;
+    return;
+  }
 
   finishParameterList(compiler, &parenParameterListConfiguration, signature);
 }
@@ -2889,7 +2936,11 @@ static void constructorSignature(Compiler* compiler, Signature* signature)
   }
   
   // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
+  if (match(compiler, TOKEN_RIGHT_PAREN))
+  {
+    signature->parenArity = 0;
+    return;
+  }
   
   finishParameterList(compiler, &parenParameterListConfiguration, signature);
 }
