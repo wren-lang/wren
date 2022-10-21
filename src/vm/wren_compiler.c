@@ -1883,6 +1883,36 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
   }
 }
 
+// Parses the rest of a comma-separated element list after the opening
+// delimeter.
+//
+// Optionaly calls [configuration->init] at the begining.
+// Than optionaly calls [configuration->inc] before matching list elements
+// using [configuration->match].
+static void finishList(Compiler* compiler,
+                       const ListConfiguration* configuration,
+                       void* userData,
+                       const char* elementsName)
+{
+  if (configuration->init != NULL) configuration->init(compiler, userData);
+
+  do
+  {
+    ignoreNewlines(compiler);
+
+    if (configuration->inc != NULL) configuration->inc(compiler, userData);
+
+    configuration->match(compiler, userData);
+  }
+  while (match(compiler, TOKEN_COMMA));
+
+  // Allow a newline before the closing delimiter.
+  ignoreNewlines(compiler);
+
+  consume(compiler, configuration->right, "Expect '%s' after %s.",
+          tokenTypeToString(configuration->right), elementsName);
+}
+
 // Parses the rest of a comma-separated parameter list after the opening
 // delimeter. Updates `arity` in [signature] with the number of parameters.
 static void finishParameterList(Compiler* compiler, Signature* signature)
