@@ -2798,32 +2798,31 @@ static void mixedSignature(Compiler* compiler, Signature* signature)
   }
 }
 
+// This hack is required for compatibility until list are supported
+static void matchSetterParameterListEntry(Compiler* compiler, void* userData)
+{
+  // Parse the value parameter.
+  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after '='.");
+  declareNamedVariable(compiler);
+  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
+}
+
+static const ListConfiguration parenSetterParameterListConfiguration = 
+{
+  .init  = NULL,
+  .inc   = incSignatureArity,
+  .match = matchSetterParameterListEntry,
+  .left  = TOKEN_LEFT_PAREN,
+  .right = TOKEN_RIGHT_PAREN,
+};
+
 // Compiles an optional setter parameter in a method [signature].
 //
 // Returns `true` if it was a setter.
 static bool maybeSetterParameter(Compiler* compiler, Signature* signature)
 {
-  // See if it's a setter.
-  if (!match(compiler, TOKEN_EQ)) return false;
-
-  // It's a setter.
-  if (signature->type == SIG_SUBSCRIPT)
-  {
-    signature->type = SIG_SUBSCRIPT_SETTER;
-  }
-  else
-  {
-    signature->type = SIG_SETTER;
-  }
-
-  // Parse the value parameter.
-  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after '='.");
-  declareNamedVariable(compiler);
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
-
-  signature->arity++;
-
-  return true;
+  return maybeSetter(compiler, true,
+                     &parenSetterParameterListConfiguration, signature);
 }
 
 // Compiles a method signature for a subscript operator.
