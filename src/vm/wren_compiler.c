@@ -257,36 +257,10 @@ typedef struct sLoop
   struct sLoop* enclosing;
 } Loop;
 
-// The different signature syntaxes for different kinds of methods.
-typedef enum
-{
-  // A name followed by a (possibly empty) parenthesized parameter list. Also
-  // used for binary operators.
-  SIG_METHOD,
-  
-  // Just a name. Also used for unary operators.
-  SIG_GETTER,
-  
-  // A name followed by "=".
-  SIG_SETTER,
-  
-  // A square bracketed parameter list.
-  SIG_SUBSCRIPT,
-  
-  // A square bracketed parameter list followed by "=".
-  SIG_SUBSCRIPT_SETTER,
-  
-  // A constructor initializer function. This has a distinct signature to
-  // prevent it from being invoked directly outside of the constructor on the
-  // metaclass.
-  SIG_INITIALIZER
-} SignatureType;
-
 typedef struct
 {
   const char* name;
   int length;
-  SignatureType type;
   int bracketArity;
   int parenArity;
   bool isInitializer : 1;
@@ -1982,13 +1956,6 @@ static bool maybeSetter(Compiler* compiler, bool canAssign,
 
   ignoreNewlines(compiler);
 
-  switch (signature->type)
-  {
-    case SIG_GETTER:    signature->type = SIG_SETTER; break;
-    case SIG_SUBSCRIPT: signature->type = SIG_SUBSCRIPT_SETTER; break;
-    default:            UNREACHABLE();
-  }
-
   // Parse a single argument.
   if (configuration->init != NULL) configuration->init(compiler, signature);
   if (configuration->inc  != NULL) configuration->inc(compiler, signature);
@@ -2117,7 +2084,7 @@ static int signatureSymbol(Compiler* compiler, Signature* signature)
 }
 
 // Returns a signature with [type] whose name is from the last consumed token.
-static Signature signatureFromToken(Compiler* compiler, SignatureType type)
+static Signature signatureFromToken(Compiler* compiler)
 {
   Signature signature;
   
@@ -2125,7 +2092,6 @@ static Signature signatureFromToken(Compiler* compiler, SignatureType type)
   Token* token = &compiler->parser->previous;
   signature.name = token->start;
   signature.length = token->length;
-  signature.type = type;
   signature.bracketArity = ARITY_NONE;
   signature.parenArity = ARITY_NONE;
   signature.isInitializer = false;
@@ -2219,14 +2185,12 @@ static void methodCall(Compiler* compiler, Code instruction,
 {
   // Make a new signature that contains the updated arity and type based on
   // the arguments we find.
-  Signature called = { signature->name, signature->length, SIG_GETTER,
+  Signature called = { signature->name, signature->length,
                        ARITY_NONE, ARITY_NONE, false, false };
 
   // Parse the argument list, if any.
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
-    called.type = SIG_METHOD;
-
     // Allow new line before an empty argument list
     ignoreNewlines(compiler);
 
@@ -2245,7 +2209,6 @@ static void methodCall(Compiler* compiler, Code instruction,
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
     // Include the block argument in the arity.
-    called.type = SIG_METHOD;
     if (called.parenArity == ARITY_NONE)
     {
       called.parenArity = 0;
@@ -2256,7 +2219,7 @@ static void methodCall(Compiler* compiler, Code instruction,
     initCompiler(&fnCompiler, compiler->parser, compiler, false);
 
     // Make a dummy signature to track the arity.
-    Signature fnSignature = { "", 0, SIG_METHOD, ARITY_NONE, ARITY_NONE, false, false };
+    Signature fnSignature = { "", 0, ARITY_NONE, ARITY_NONE, false, false };
 
     // Parse the parameter list, if any.
     if (match(compiler, TOKEN_PIPE))
@@ -2288,12 +2251,11 @@ static void methodCall(Compiler* compiler, Code instruction,
   // argument list.
   if (signature->isInitializer)
   {
-    if (called.type != SIG_METHOD)
+    if (called.parenArity == ARITY_NONE)
     {
       error(compiler, "A superclass constructor must have an argument list.");
     }
     
-    called.type = SIG_INITIALIZER;
     called.isInitializer = true;
   }
   
@@ -2305,7 +2267,7 @@ static void methodCall(Compiler* compiler, Code instruction,
 static void namedCall(Compiler* compiler, bool canAssign, Code instruction)
 {
   // Get the token for the method name.
-  Signature signature = signatureFromToken(compiler, SIG_GETTER);
+  Signature signature = signatureFromToken(compiler);
 
   if (maybeSetterArgument(compiler, canAssign, &signature))
   {
@@ -2724,7 +2686,7 @@ static void this_(Compiler* compiler, bool canAssign)
 // Subscript or "array indexing" operator like `foo[bar]`.
 static void subscript(Compiler* compiler, bool canAssign)
 {
-  Signature signature = { "", 0, SIG_SUBSCRIPT, ARITY_NONE, ARITY_NONE, false, false };
+  Signature signature = { "", 0, ARITY_NONE, ARITY_NONE, false, false };
 
   // Parse the argument list.
   finishArgumentList(compiler, &bracketArgumentListConfiguration, &signature);
@@ -2801,7 +2763,7 @@ static void infixOp(Compiler* compiler, bool canAssign)
   parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
 
   // Call the operator method on the left-hand side.
-  Signature signature = { rule->name, (int)strlen(rule->name), SIG_METHOD,
+  Signature signature = { rule->name, (int)strlen(rule->name),
                           ARITY_NONE, 1, false, false };
   callSignature(compiler, CODE_CALL_0, &signature);
 }
@@ -2810,7 +2772,6 @@ static void infixOp(Compiler* compiler, bool canAssign)
 static void infixSignature(Compiler* compiler, Signature* signature)
 {
   // Add the RHS parameter.
-  signature->type = SIG_METHOD;
   ASSERT(signature->parenArity == ARITY_NONE, "parenArity must be none");
   signature->parenArity = 1;
 
@@ -2824,20 +2785,16 @@ static void infixSignature(Compiler* compiler, Signature* signature)
 static void unarySignature(Compiler* compiler, Signature* signature)
 {
   // Do nothing. The name is already complete.
-  signature->type = SIG_GETTER;
 }
 
 // Compiles a method signature for an operator that can either be unary or
 // infix (i.e. "-").
 static void mixedSignature(Compiler* compiler, Signature* signature)
 {
-  signature->type = SIG_GETTER;
-
   // If there is a parameter, it's an infix operator, otherwise it's unary.
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
     // Add the RHS parameter.
-    signature->type = SIG_METHOD;
     ASSERT(signature->parenArity == ARITY_NONE, "parenArity must be none");
     signature->parenArity = 1;
 
@@ -2877,8 +2834,6 @@ static bool maybeSetterParameter(Compiler* compiler, Signature* signature)
 // Compiles a method signature for a subscript operator.
 static void subscriptSignature(Compiler* compiler, Signature* signature)
 {
-  signature->type = SIG_SUBSCRIPT;
-
   // The signature currently has "[" as its name since that was the token that
   // matched it. Clear that out.
   signature->length = 0;
@@ -2892,15 +2847,11 @@ static void subscriptSignature(Compiler* compiler, Signature* signature)
 // Compiles a method signature for a named method or setter.
 static void namedSignature(Compiler* compiler, Signature* signature)
 {
-  signature->type = SIG_GETTER;
-  
   // If it's a setter, it can't also have a parameter list.
   if (maybeSetterParameter(compiler, signature)) return;
 
   // The parameter list is optional.
   if (!match(compiler, TOKEN_LEFT_PAREN)) return;
-  
-  signature->type = SIG_METHOD;
   
   // Allow new line before an empty argument list
   ignoreNewlines(compiler);
@@ -2922,7 +2873,7 @@ static void constructorSignature(Compiler* compiler, Signature* signature)
   consume(compiler, TOKEN_NAME, "Expect constructor name after 'construct'.");
   
   // Capture the name.
-  *signature = signatureFromToken(compiler, SIG_INITIALIZER);
+  *signature = signatureFromToken(compiler);
   signature->isInitializer = true;
   
   if (match(compiler, TOKEN_EQ))
@@ -3656,7 +3607,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   }
   
   // Build the method signature.
-  Signature signature = signatureFromToken(compiler, SIG_GETTER);
+  Signature signature = signatureFromToken(compiler);
   compiler->enclosingClass->signature = &signature;
 
   Compiler methodCompiler;
@@ -3709,7 +3660,6 @@ static bool method(Compiler* compiler, Variable classVariable)
   if (signature.isInitializer)
   {
     // Also define a matching constructor method on the metaclass.
-    signature.type = SIG_METHOD;
     signature.isInitializer = false;
     int constructorSymbol = signatureSymbol(compiler, &signature);
     
