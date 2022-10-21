@@ -2678,10 +2678,14 @@ static void subscriptSignature(Compiler* compiler, Signature* signature)
   maybeSetter(compiler, signature);
 }
 
-// Parses an optional parenthesized parameter list. Updates `type` and `arity`
-// in [signature] to match what was parsed.
-static void parameterList(Compiler* compiler, Signature* signature)
+// Compiles a method signature for a named method or setter.
+static void namedSignature(Compiler* compiler, Signature* signature)
 {
+  signature->type = SIG_GETTER;
+  
+  // If it's a setter, it can't also have a parameter list.
+  if (maybeSetter(compiler, signature)) return;
+
   // The parameter list is optional.
   if (!match(compiler, TOKEN_LEFT_PAREN)) return;
   
@@ -2695,18 +2699,6 @@ static void parameterList(Compiler* compiler, Signature* signature)
 
   finishParameterList(compiler, signature);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
-}
-
-// Compiles a method signature for a named method or setter.
-static void namedSignature(Compiler* compiler, Signature* signature)
-{
-  signature->type = SIG_GETTER;
-  
-  // If it's a setter, it can't also have a parameter list.
-  if (maybeSetter(compiler, signature)) return;
-
-  // Regular named method with an optional parameter list.
-  parameterList(compiler, signature);
 }
 
 // Compiles a method signature for a constructor.
