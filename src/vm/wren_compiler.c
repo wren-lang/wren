@@ -2044,12 +2044,19 @@ static void signatureToString(Signature* signature,
   *length = 0;
 
   // Build the full name from the signature.
+  if (signature->type == SIG_INITIALIZER)
+  {
+    memcpy(name, "init ", 5);
+    *length += 5;
+  }
+
   memcpy(name + *length, signature->name, signature->length);
   *length += signature->length;
 
   switch (signature->type)
   {
     case SIG_METHOD:
+    case SIG_INITIALIZER:
       signatureParameterList(name, length, signature->arity, '(', ')');
       break;
 
@@ -2070,13 +2077,6 @@ static void signatureToString(Signature* signature,
       signatureParameterList(name, length, signature->arity - 1, '[', ']');
       name[(*length)++] = '=';
       signatureParameterList(name, length, 1, '(', ')');
-      break;
-      
-    case SIG_INITIALIZER:
-      memcpy(name, "init ", 5);
-      memcpy(name + 5, signature->name, signature->length);
-      *length = 5 + signature->length;
-      signatureParameterList(name, length, signature->arity, '(', ')');
       break;
   }
 
