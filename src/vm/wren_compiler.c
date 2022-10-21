@@ -1965,17 +1965,11 @@ static const ListConfiguration pipeParameterListConfiguration =
 
 // Parses the rest of a comma-separated parameter list after the opening
 // delimeter. Updates `arity` in [signature] with the number of parameters.
-static void finishParameterList(Compiler* compiler, Signature* signature)
+static void finishParameterList(Compiler* compiler,
+                                const ListConfiguration* configuration,
+                                Signature* signature)
 {
-  do
-  {
-    ignoreNewlines(compiler);
-    validateNumParameters(compiler, ++signature->arity);
-
-    // Define a local variable in the method for the parameter.
-    declareNamedVariable(compiler);
-  }
-  while (match(compiler, TOKEN_COMMA));
+  finishList(compiler, configuration, signature, "parameters");
 }
 
 // Gets the symbol for a method [name] with [length].
@@ -2184,8 +2178,8 @@ static void methodCall(Compiler* compiler, Code instruction,
     // Parse the parameter list, if any.
     if (match(compiler, TOKEN_PIPE))
     {
-      finishParameterList(&fnCompiler, &fnSignature);
-      consume(compiler, TOKEN_PIPE, "Expect '|' after function parameters.");
+      finishList(&fnCompiler, &pipeParameterListConfiguration, &fnSignature,
+                 "function parameters");
     }
 
     fnCompiler.fn->arity = fnSignature.arity;
@@ -2815,8 +2809,7 @@ static void subscriptSignature(Compiler* compiler, Signature* signature)
   signature->length = 0;
 
   // Parse the parameters inside the subscript.
-  finishParameterList(compiler, signature);
-  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after parameters.");
+  finishParameterList(compiler, &bracketParameterListConfiguration, signature);
 
   maybeSetterParameter(compiler, signature);
 }
@@ -2840,8 +2833,7 @@ static void namedSignature(Compiler* compiler, Signature* signature)
   // Allow an empty parameter list.
   if (match(compiler, TOKEN_RIGHT_PAREN)) return;
 
-  finishParameterList(compiler, signature);
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+  finishParameterList(compiler, &parenParameterListConfiguration, signature);
 }
 
 // Compiles a method signature for a constructor.
@@ -2866,8 +2858,7 @@ static void constructorSignature(Compiler* compiler, Signature* signature)
   // Allow an empty parameter list.
   if (match(compiler, TOKEN_RIGHT_PAREN)) return;
   
-  finishParameterList(compiler, signature);
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+  finishParameterList(compiler, &parenParameterListConfiguration, signature);
 }
 
 // This table defines all of the parsing rules for the prefix and infix
