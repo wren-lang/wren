@@ -1931,6 +1931,38 @@ static bool optionalList(Compiler* compiler,
   return true;
 }
 
+// Compiles an optional setter element in a method [signature].
+//
+// Returns `true` if it was a setter.
+static bool maybeSetter(Compiler* compiler, bool canAssign,
+                        const ListConfiguration* configuration,
+                        Signature* signature)
+{
+  if (!match(compiler, TOKEN_EQ)) return false;
+
+  if (!canAssign)
+  {
+    error(compiler, "The setter syntax cannot be used in this context.");
+  }
+
+  ignoreNewlines(compiler);
+
+  switch (signature->type)
+  {
+    case SIG_GETTER:    signature->type = SIG_SETTER; break;
+    case SIG_SUBSCRIPT: signature->type = SIG_SUBSCRIPT_SETTER; break;
+    default:            UNREACHABLE();
+  }
+
+  // Parse a single argument.
+  if (configuration->init != NULL) configuration->init(compiler, signature);
+  if (configuration->inc  != NULL) configuration->inc(compiler, signature);
+
+  configuration->match(compiler, signature);
+
+  return true;
+}
+
 static void matchParameterListEntry(Compiler* compiler, void* userData)
 {
   declareNamedVariable(compiler);
