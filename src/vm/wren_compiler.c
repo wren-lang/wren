@@ -2671,7 +2671,7 @@ static void mixedSignature(Compiler* compiler, Signature* signature)
 // Compiles an optional setter parameter in a method [signature].
 //
 // Returns `true` if it was a setter.
-static bool maybeSetter(Compiler* compiler, Signature* signature)
+static bool maybeSetterParameter(Compiler* compiler, Signature* signature)
 {
   // See if it's a setter.
   if (!match(compiler, TOKEN_EQ)) return false;
@@ -2709,7 +2709,7 @@ static void subscriptSignature(Compiler* compiler, Signature* signature)
   finishParameterList(compiler, signature);
   consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after parameters.");
 
-  maybeSetter(compiler, signature);
+  maybeSetterParameter(compiler, signature);
 }
 
 // Compiles a method signature for a named method or setter.
@@ -2718,7 +2718,7 @@ static void namedSignature(Compiler* compiler, Signature* signature)
   signature->type = SIG_GETTER;
   
   // If it's a setter, it can't also have a parameter list.
-  if (maybeSetter(compiler, signature)) return;
+  if (maybeSetterParameter(compiler, signature)) return;
 
   // The parameter list is optional.
   if (!match(compiler, TOKEN_LEFT_PAREN)) return;
