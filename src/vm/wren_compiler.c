@@ -2215,6 +2215,8 @@ static void methodCall(Compiler* compiler, Code instruction,
     if (!optionalList(&fnCompiler, &pipeParameterListConfiguration,
                       &fnSignature, "function parameters"))
     {
+      // Allow an empty "compact" parameter list
+      match(compiler, TOKEN_PIPEPIPE);
       fnSignature.parenArity = 0;
     }
 
