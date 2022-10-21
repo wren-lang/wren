@@ -2580,7 +2580,7 @@ static void conditional(Compiler* compiler, bool canAssign)
   patchJump(compiler, elseJump);
 }
 
-void infixOp(Compiler* compiler, bool canAssign)
+static void infixOp(Compiler* compiler, bool canAssign)
 {
   GrammarRule* rule = getRule(compiler->parser->previous.type);
 
@@ -2596,7 +2596,7 @@ void infixOp(Compiler* compiler, bool canAssign)
 }
 
 // Compiles a method signature for an infix operator.
-void infixSignature(Compiler* compiler, Signature* signature)
+static void infixSignature(Compiler* compiler, Signature* signature)
 {
   // Add the RHS parameter.
   signature->type = SIG_METHOD;
@@ -2609,7 +2609,7 @@ void infixSignature(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for an unary operator (i.e. "!").
-void unarySignature(Compiler* compiler, Signature* signature)
+static void unarySignature(Compiler* compiler, Signature* signature)
 {
   // Do nothing. The name is already complete.
   signature->type = SIG_GETTER;
@@ -2617,7 +2617,7 @@ void unarySignature(Compiler* compiler, Signature* signature)
 
 // Compiles a method signature for an operator that can either be unary or
 // infix (i.e. "-").
-void mixedSignature(Compiler* compiler, Signature* signature)
+static void mixedSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_GETTER;
 
@@ -2663,7 +2663,7 @@ static bool maybeSetter(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for a subscript operator.
-void subscriptSignature(Compiler* compiler, Signature* signature)
+static void subscriptSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_SUBSCRIPT;
 
@@ -2698,7 +2698,7 @@ static void parameterList(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for a named method or setter.
-void namedSignature(Compiler* compiler, Signature* signature)
+static void namedSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_GETTER;
   
@@ -2710,7 +2710,7 @@ void namedSignature(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for a constructor.
-void constructorSignature(Compiler* compiler, Signature* signature)
+static void constructorSignature(Compiler* compiler, Signature* signature)
 {
   consume(compiler, TOKEN_NAME, "Expect constructor name after 'construct'.");
   
@@ -2746,7 +2746,7 @@ void constructorSignature(Compiler* compiler, Signature* signature)
 #define PREFIX_OPERATOR(name)      { unaryOp, NULL, unarySignature, PREC_NONE, name }
 #define OPERATOR(name)             { unaryOp, infixOp, mixedSignature, PREC_TERM, name }
 
-GrammarRule rules[] =
+static GrammarRule rules[] =
 {
   /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
@@ -2821,7 +2821,7 @@ static GrammarRule* getRule(TokenType type)
 }
 
 // The main entrypoint for the top-down operator precedence parser.
-void parsePrecedence(Compiler* compiler, Precedence precedence)
+static void parsePrecedence(Compiler* compiler, Precedence precedence)
 {
   nextToken(compiler->parser);
   GrammarFn prefix = rules[compiler->parser->previous.type].prefix;
@@ -2852,7 +2852,7 @@ void parsePrecedence(Compiler* compiler, Precedence precedence)
 
 // Parses an expression. Unlike statements, expressions leave a resulting value
 // on the stack.
-void expression(Compiler* compiler)
+static void expression(Compiler* compiler)
 {
   parsePrecedence(compiler, PREC_LOWEST);
 }
@@ -3172,7 +3172,7 @@ static void whileStatement(Compiler* compiler)
 // branches of an "if" statement.
 //
 // Unlike expressions, statements do not leave a value on the stack.
-void statement(Compiler* compiler)
+static void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_BREAK))
   {
@@ -3724,7 +3724,7 @@ static void variableDefinition(Compiler* compiler)
 // Compiles a "definition". These are the statements that bind new variables.
 // They can only appear at the top level of a block and are prohibited in places
 // like the non-curly body of an if or while.
-void definition(Compiler* compiler)
+static void definition(Compiler* compiler)
 {
   if(matchAttribute(compiler)) {
     definition(compiler);
