@@ -2108,18 +2108,11 @@ static const ListConfiguration parenArgumentListConfiguration =
 
 // Parses a comma-separated list of arguments. Modifies [signature] to include
 // the arity of the argument list.
-static void finishArgumentList(Compiler* compiler, Signature* signature)
+static void finishArgumentList(Compiler* compiler,
+                               const ListConfiguration* configuration,
+                               Signature* signature)
 {
-  do
-  {
-    ignoreNewlines(compiler);
-    validateNumParameters(compiler, ++signature->arity);
-    expression(compiler);
-  }
-  while (match(compiler, TOKEN_COMMA));
-
-  // Allow a newline before the closing delimiter.
-  ignoreNewlines(compiler);
+  finishList(compiler, configuration, signature, "arguments");
 }
 
 // Compiles a method call with [signature] using [instruction].
@@ -2169,11 +2162,10 @@ static void methodCall(Compiler* compiler, Code instruction,
     ignoreNewlines(compiler);
 
     // Allow empty an argument list.
-    if (peek(compiler) != TOKEN_RIGHT_PAREN)
+    if (!match(compiler, TOKEN_RIGHT_PAREN))
     {
-      finishArgumentList(compiler, &called);
+      finishArgumentList(compiler, &parenArgumentListConfiguration, &called);
     }
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
 
   // Parse the block argument, if any.
@@ -2661,8 +2653,7 @@ static void subscript(Compiler* compiler, bool canAssign)
   Signature signature = { "", 0, SIG_SUBSCRIPT, 0 };
 
   // Parse the argument list.
-  finishArgumentList(compiler, &signature);
-  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
+  finishArgumentList(compiler, &bracketArgumentListConfiguration, &signature);
 
   allowLineBeforeDot(compiler);
 
