@@ -739,7 +739,6 @@ static Value importModule(WrenVM* vm, Value name)
   wrenPushRoot(vm, AS_OBJ(name));
 
   WrenLoadModuleResult result = {0};
-  const char* source = NULL;
   
   // Let the host try to provide the module.
   if (vm->config.loadModuleFn != NULL)
@@ -751,7 +750,9 @@ static Value importModule(WrenVM* vm, Value name)
   if (result.source == NULL)
   {
     result.onComplete = NULL;
+#if WREN_OPT_META || WREN_OPT_RANDOME
     ObjString* nameString = AS_STRING(name);
+#endif
 #if WREN_OPT_META
     if (strcmp(nameString->value, "meta") == 0) result.source = wrenMetaSource();
 #endif
