@@ -2146,11 +2146,11 @@ static void finishArgumentList(Compiler* compiler,
   finishList(compiler, configuration, signature, "arguments");
 }
 
-// Compiles an optional setter parameter in a method [signature].
+// Compiles an optional setter parameter list in a method [signature].
 //
 // Returns `true` if it was a setter.
-static bool maybeSetterArgument(Compiler* compiler, bool canAssign,
-                                Signature* signature)
+static bool maybeSetterArgumentList(Compiler* compiler, bool canAssign,
+                                    Signature* signature)
 {
   return maybeSetterList(compiler, canAssign,
                          &parenArgumentListConfiguration, signature,
@@ -2262,7 +2262,7 @@ static void namedCall(Compiler* compiler, bool canAssign, Code instruction)
   // Get the token for the method name.
   Signature signature = signatureFromToken(compiler);
 
-  if (maybeSetterArgument(compiler, canAssign, &signature))
+  if (maybeSetterArgumentList(compiler, canAssign, &signature))
   {
     callSignature(compiler, instruction, &signature);
   }
@@ -2694,7 +2694,7 @@ static void subscript(Compiler* compiler, bool canAssign)
 
   allowLineBeforeDot(compiler);
 
-  maybeSetterArgument(compiler, canAssign, &signature);
+  maybeSetterArgumentList(compiler, canAssign, &signature);
 
   callSignature(compiler, CODE_CALL_0, &signature);
 }
