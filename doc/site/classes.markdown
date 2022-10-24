@@ -469,7 +469,42 @@ to or even should define getters or setters for most of your object's fields.
 
 ## Metaclasses and static members
 
-**TODO**
+### Metaclasses
+
+A class is itself an object and is the only instance of its corresponding *metaclass*. Metaclasses in turn are instances of a class called "Class" which inherits directly from Object.
+
+<pre class="snippet">
+class Foo {}
+System.print(Foo.type)        //> Foo metaclass
+System.print(Foo.type.type)   //> Class
+System.print(Class.supertype) //> Object
+System.print(Foo is Class)    //> true (because Foo metaclass inherits from Class) 
+System.print(Class.type)      //> Class (not Class metaclass)
+System.print(Class is Class)  //> strange but true!
+</pre>
+
+"Class" is unusual in that it has no metaclass of its own and is considered to be an instance of itself.
+
+Metaclasses represent classes rather than particular instances of them. They can have fields and methods of their own which are called *static* members of the class. 
+
+### Static methods
+
+Static methods are defined in a similar way to [instance methods](#methods) except that their names are preceded by the *static* keyword. As they belong to the metaclass rather its corresponding class, they are invoked from outside the metaclass by preceding them with the class name.
+
+<pre class="snippet">
+class Foo{
+    static speak(s) {
+        System.print("I'm %(s) static method of Foo")
+    }
+
+    static speak2() {
+        speak("another") // no need to use class name as within same metaclass
+    }
+}
+
+Foo.speak("a") // need to qualify with class name
+Foo.speak2()   // ditto
+</pre>
 
 ### Static fields
 
