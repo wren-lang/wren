@@ -480,10 +480,10 @@ System.print(Foo.type.type)   //> Class
 System.print(Class.supertype) //> Object
 System.print(Foo is Class)    //> true (because Foo metaclass inherits from Class) 
 System.print(Class.type)      //> Class (not Class metaclass)
-System.print(Class is Class)  //> strange but true!
+System.print(Class is Class)  //> true, see below
 </pre>
 
-"Class" is unusual in that it has no metaclass of its own and is considered to be an instance of itself.
+Note that "Class" has no metaclass of its own and is therefore considered to be an instance of itself.
 
 Metaclasses represent classes rather than particular instances of them. They can have fields and methods of their own which are called *static* members of the class. 
 
