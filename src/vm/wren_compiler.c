@@ -2339,6 +2339,30 @@ static void list(Compiler* compiler, bool canAssign)
   finishList(compiler, &listConfiguration, NULL, "list elements");
 }
 
+static void matchMapLitteralEntry(Compiler* compiler, void* userData)
+{
+  // The key.
+  parsePrecedence(compiler, PREC_UNARY);
+
+  consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
+  ignoreNewlines(compiler);
+
+  // The value.
+  expression(compiler);
+
+  // Add the key value pair to the map.
+  callMethod(compiler, 2, "addCore_(_,_)", 13);
+}
+
+static const ListConfiguration mapConfiguration =
+{
+  .init  = NULL,
+  .inc   = NULL,
+  .match = matchMapLitteralEntry,
+  .left  = TOKEN_LEFT_BRACE,
+  .right = TOKEN_RIGHT_BRACE,
+};
+
 // A map literal.
 static void map(Compiler* compiler, bool canAssign)
 {
@@ -2346,28 +2370,8 @@ static void map(Compiler* compiler, bool canAssign)
   loadCoreVariable(compiler, "Map");
   callMethod(compiler, 0, "new()", 5);
 
-  // Compile the map elements. Each one is compiled to just invoke the
-  // subscript setter on the map.
-  do
-  {
-    ignoreNewlines(compiler);
-
-    // Stop if we hit the end of the map.
-    if (peek(compiler) == TOKEN_RIGHT_BRACE) break;
-
-    // The key.
-    parsePrecedence(compiler, PREC_UNARY);
-    consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
-    ignoreNewlines(compiler);
-
-    // The value.
-    expression(compiler);
-    callMethod(compiler, 2, "addCore_(_,_)", 13);
-  } while (match(compiler, TOKEN_COMMA));
-
-  // Allow newlines before the closing '}'.
-  ignoreNewlines(compiler);
-  consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' after map entries.");
+  // Compile the map entries.
+  finishList(compiler, &mapConfiguration, NULL, "map entries");
 }
 
 // Unary operators like `-foo`.
