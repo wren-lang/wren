@@ -2310,29 +2310,33 @@ static void grouping(Compiler* compiler, bool canAssign)
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
+static void matchListLitteralEntry(Compiler* compiler, void* userData)
+{
+  // The element.
+  expression(compiler);
+
+  // Add element to the list.
+  callMethod(compiler, 1, "addCore_(_)", 11);
+}
+
+static const ListConfiguration listConfiguration =
+{
+  .init  = NULL,
+  .inc   = NULL,
+  .match = matchListLitteralEntry,
+  .left  = TOKEN_LEFT_BRACKET,
+  .right = TOKEN_RIGHT_BRACKET,
+};
+
 // A list literal.
 static void list(Compiler* compiler, bool canAssign)
 {
   // Instantiate a new list.
   loadCoreVariable(compiler, "List");
   callMethod(compiler, 0, "new()", 5);
-  
-  // Compile the list elements. Each one compiles to a ".add()" call.
-  do
-  {
-    ignoreNewlines(compiler);
 
-    // Stop if we hit the end of the list.
-    if (peek(compiler) == TOKEN_RIGHT_BRACKET) break;
-
-    // The element.
-    expression(compiler);
-    callMethod(compiler, 1, "addCore_(_)", 11);
-  } while (match(compiler, TOKEN_COMMA));
-
-  // Allow newlines before the closing ']'.
-  ignoreNewlines(compiler);
-  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after list elements.");
+  // Compile the list entries.
+  finishList(compiler, &listConfiguration, NULL, "list elements");
 }
 
 // A map literal.
