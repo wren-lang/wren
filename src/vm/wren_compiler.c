@@ -1984,6 +1984,16 @@ static void declareType(Compiler* compiler)
   emitOp(compiler, CODE_POP);
 }
 
+static void declareOptionalReturnType(Compiler* compiler)
+{
+  if (match(compiler, TOKEN_MINUSGT))
+  {
+    ignoreNewlines(compiler);
+
+    declareType(compiler);
+  }
+}
+
 static void matchParameterListEntry(Compiler* compiler, void* userData)
 {
   declareNamedVariable(compiler);
