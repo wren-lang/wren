@@ -2255,6 +2255,8 @@ static void methodCall(Compiler* compiler, Code instruction,
       fnSignature.parenArity = 0;
     }
 
+    declareOptionalReturnType(compiler);
+
     fnCompiler.fn->arity = fnSignature.parenArity;
 
     finishBody(&fnCompiler);
