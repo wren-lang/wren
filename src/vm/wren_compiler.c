@@ -1777,6 +1777,7 @@ typedef struct
 static GrammarRule* getRule(TokenType type);
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
+static void type(Compiler* compiler);
 static void definition(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
 
@@ -2983,6 +2984,12 @@ static void parsePrecedence(Compiler* compiler, Precedence precedence)
 static void expression(Compiler* compiler)
 {
   parsePrecedence(compiler, PREC_LOWEST);
+}
+
+// Parses a type. Leave a resulting value on the stack.
+static void type(Compiler* compiler)
+{
+  parsePrecedence(compiler, PREC_CALL);
 }
 
 // Returns the number of bytes for the arguments to the instruction 
