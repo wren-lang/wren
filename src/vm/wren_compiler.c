@@ -2192,21 +2192,8 @@ static void methodCall(Compiler* compiler, Code instruction,
                        ARITY_NONE, ARITY_NONE, false, false };
 
   // Parse the argument list, if any.
-  if (match(compiler, TOKEN_LEFT_PAREN))
-  {
-    // Allow new line before an empty argument list
-    ignoreNewlines(compiler);
-
-    // Allow empty an argument list.
-    if (!match(compiler, TOKEN_RIGHT_PAREN))
-    {
-      finishArgumentList(compiler, &parenArgumentListConfiguration, &called);
-    }
-    else
-    {
-      called.parenArity = 0;
-    }
-  }
+  optionalList(compiler, &parenArgumentListConfiguration, &called,
+               "arguments");
 
   // Parse the block argument, if any.
   if (match(compiler, TOKEN_LEFT_BRACE))
