@@ -1987,6 +1987,14 @@ static void declareType(Compiler* compiler)
 static void matchParameterListEntry(Compiler* compiler, void* userData)
 {
   declareNamedVariable(compiler);
+
+  // Optional type declaration
+  if (match(compiler, TOKEN_COLON))
+  {
+    ignoreNewlines(compiler);
+
+    declareType(compiler);
+  }
 }
 
 static const ListConfiguration bracketParameterListConfiguration =
