@@ -1914,6 +1914,9 @@ static void finishList(Compiler* compiler,
   {
     ignoreNewlines(compiler);
 
+    // Stop if we hit the end of the list.
+    if (peek(compiler) == configuration->right) break;
+
     if (configuration->inc != NULL) configuration->inc(compiler, userData);
 
     configuration->match(compiler, userData);
