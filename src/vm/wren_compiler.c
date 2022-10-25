@@ -2225,12 +2225,8 @@ static void methodCall(Compiler* compiler, Code instruction,
     Signature fnSignature = { "", 0, ARITY_NONE, ARITY_NONE, false, false };
 
     // Parse the parameter list, if any.
-    if (match(compiler, TOKEN_PIPE))
-    {
-      finishList(&fnCompiler, &pipeParameterListConfiguration, &fnSignature,
-                 "function parameters");
-    }
-    else
+    if (!optionalList(&fnCompiler, &pipeParameterListConfiguration,
+                      &fnSignature, "function parameters"))
     {
       fnSignature.parenArity = 0;
     }
