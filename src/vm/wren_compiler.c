@@ -1974,6 +1974,16 @@ static bool maybeSetterList(Compiler* compiler, bool canAssign,
   return true;
 }
 
+// Match a type declaration hints.
+// WARNING: While they are hints, they are parsed and evaluated as valid types,
+//          therefore they can have side effects.
+static void declareType(Compiler* compiler)
+{
+  type(compiler);
+
+  emitOp(compiler, CODE_POP);
+}
+
 static void matchParameterListEntry(Compiler* compiler, void* userData)
 {
   declareNamedVariable(compiler);
