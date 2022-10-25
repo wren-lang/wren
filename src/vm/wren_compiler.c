@@ -3628,6 +3628,8 @@ static bool method(Compiler* compiler, Variable classVariable)
     error(compiler, "A constructor cannot be static.");
   }
   
+  declareOptionalReturnType(compiler);
+
   // Include the full signature in debug messages in stack traces.
   char fullSignature[MAX_METHOD_SIGNATURE];
   int length;
