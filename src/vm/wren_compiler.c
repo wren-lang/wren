@@ -3665,7 +3665,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
   {
-    parsePrecedence(compiler, PREC_CALL);
+    type(compiler);
   }
   else
   {
