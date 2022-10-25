@@ -2838,17 +2838,6 @@ static void namedSignature(Compiler* compiler, Signature* signature)
 
   // The parameter list is optional.
   if (!match(compiler, TOKEN_LEFT_PAREN)) return;
-  
-  // Allow new line before an empty argument list
-  ignoreNewlines(compiler);
-
-  // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN))
-  {
-    ASSERT(signature->parenArity, "parenArity must be none");
-    signature->parenArity = 0;
-    return;
-  }
 
   finishParameterList(compiler, &parenParameterListConfiguration, signature);
 }
