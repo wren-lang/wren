@@ -506,6 +506,10 @@ Foo.speak("a") // need to qualify with class name
 Foo.speak2()   // ditto
 </pre>
 
+As well as ordinary methods static getters, setters and operators are supported.
+
+Whilst the `this` keyword can be used in a static method, it refers to the class object itself rather than an instance of it.
+
 ### Static fields
 
 A name that starts with *two* underscores is a *static* field. They work
