@@ -1883,6 +1883,13 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
   }
 }
 
+static void incSignatureArity(Compiler* compiler, void* userData)
+{
+  Signature* signature = userData;
+
+  validateNumParameters(compiler, ++signature->arity);
+}
+
 // Parses the rest of a comma-separated element list after the opening
 // delimeter.
 //
