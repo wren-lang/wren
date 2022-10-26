@@ -2685,14 +2685,7 @@ static void subscript(Compiler* compiler, bool canAssign)
 
   allowLineBeforeDot(compiler);
 
-  if (canAssign && match(compiler, TOKEN_EQ))
-  {
-    signature.type = SIG_SUBSCRIPT_SETTER;
-
-    // Compile the assigned value.
-    validateNumParameters(compiler, ++signature.arity);
-    expression(compiler);
-  }
+  maybeSetterArgument(compiler, canAssign, &signature);
 
   callSignature(compiler, CODE_CALL_0, &signature);
 }
