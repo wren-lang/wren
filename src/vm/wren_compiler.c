@@ -2261,16 +2261,8 @@ static void namedCall(Compiler* compiler, bool canAssign, Code instruction)
   // Get the token for the method name.
   Signature signature = signatureFromToken(compiler, SIG_GETTER);
 
-  if (canAssign && match(compiler, TOKEN_EQ))
+  if (maybeSetterArgument(compiler, canAssign, &signature))
   {
-    ignoreNewlines(compiler);
-
-    // Build the setter signature.
-    signature.type = SIG_SETTER;
-    signature.arity = 1;
-
-    // Compile the assigned value.
-    expression(compiler);
     callSignature(compiler, instruction, &signature);
   }
   else
