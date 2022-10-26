@@ -2051,6 +2051,29 @@ static Signature signatureFromToken(Compiler* compiler, SignatureType type)
   return signature;
 }
 
+static void matchArgumentListEntry(Compiler* compiler, void* userData)
+{
+  expression(compiler);
+}
+
+static const ListConfiguration bracketArgumentListConfiguration =
+{
+  .init  = NULL,
+  .inc   = incSignatureArity,
+  .match = matchArgumentListEntry,
+  .left  = TOKEN_LEFT_BRACKET,
+  .right = TOKEN_RIGHT_BRACKET,
+};
+
+static const ListConfiguration parenArgumentListConfiguration =
+{
+  .init  = NULL,
+  .inc   = incSignatureArity,
+  .match = matchArgumentListEntry,
+  .left  = TOKEN_LEFT_PAREN,
+  .right = TOKEN_RIGHT_PAREN,
+};
+
 // Parses a comma-separated list of arguments. Modifies [signature] to include
 // the arity of the argument list.
 static void finishArgumentList(Compiler* compiler, Signature* signature)
