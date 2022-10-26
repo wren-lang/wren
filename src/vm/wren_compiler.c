@@ -1946,7 +1946,8 @@ static bool optionalList(Compiler* compiler,
 // Returns `true` if it was a setter.
 static bool maybeSetter(Compiler* compiler, bool canAssign,
                         const ListConfiguration* configuration,
-                        Signature* signature)
+                        Signature* signature,
+                        const char* elementsName)
 {
   if (!match(compiler, TOKEN_EQ)) return false;
 
@@ -1958,6 +1959,9 @@ static bool maybeSetter(Compiler* compiler, bool canAssign,
   }
 
   ignoreNewlines(compiler);
+
+  // Parse the element list, if any.
+  if (optionalList(compiler, configuration, signature, elementsName)) return true;
 
   // Parse a single argument.
   if (configuration->init != NULL) configuration->init(compiler, signature);
@@ -2149,7 +2153,8 @@ static bool maybeSetterArgument(Compiler* compiler, bool canAssign,
                                 Signature* signature)
 {
   return maybeSetter(compiler, canAssign,
-                     &parenArgumentListConfiguration, signature);
+                     &parenArgumentListConfiguration, signature,
+                     "arguments");
 }
 
 // Compiles a method call with [signature] using [instruction].
@@ -2800,31 +2805,14 @@ static void mixedSignature(Compiler* compiler, Signature* signature)
   }
 }
 
-// This hack is required for compatibility until list are supported
-static void matchSetterParameterListEntry(Compiler* compiler, void* userData)
-{
-  // Parse the value parameter.
-  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after '='.");
-  declareNamedVariable(compiler);
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
-}
-
-static const ListConfiguration parenSetterParameterListConfiguration = 
-{
-  .init  = initSignatureParenArity,
-  .inc   = incSignatureParenArity,
-  .match = matchSetterParameterListEntry,
-  .left  = TOKEN_LEFT_PAREN,
-  .right = TOKEN_RIGHT_PAREN,
-};
-
 // Compiles an optional setter parameter in a method [signature].
 //
 // Returns `true` if it was a setter.
 static bool maybeSetterParameter(Compiler* compiler, Signature* signature)
 {
   return maybeSetter(compiler, true,
-                     &parenSetterParameterListConfiguration, signature);
+                     &parenParameterListConfiguration, signature,
+                     "parameters");
 }
 
 // Compiles a method signature for a subscript operator.
