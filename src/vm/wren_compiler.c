@@ -1931,6 +1931,38 @@ static bool optionalList(Compiler* compiler,
   return true;
 }
 
+static void matchParameterListEntry(Compiler* compiler, void* userData)
+{
+  declareNamedVariable(compiler);
+}
+
+static const ListConfiguration bracketParameterListConfiguration =
+{
+  .init  = NULL,
+  .inc   = incSignatureArity,
+  .match = matchParameterListEntry,
+  .left  = TOKEN_LEFT_BRACKET,
+  .right = TOKEN_RIGHT_BRACKET,
+};
+
+static const ListConfiguration parenParameterListConfiguration =
+{
+  .init  = NULL,
+  .inc   = incSignatureArity,
+  .match = matchParameterListEntry,
+  .left  = TOKEN_LEFT_PAREN,
+  .right = TOKEN_RIGHT_PAREN,
+};
+
+static const ListConfiguration pipeParameterListConfiguration =
+{
+  .init  = NULL,
+  .inc   = incSignatureArity,
+  .match = matchParameterListEntry,
+  .left  = TOKEN_PIPE,
+  .right = TOKEN_PIPE,
+};
+
 // Parses the rest of a comma-separated parameter list after the opening
 // delimeter. Updates `arity` in [signature] with the number of parameters.
 static void finishParameterList(Compiler* compiler, Signature* signature)
