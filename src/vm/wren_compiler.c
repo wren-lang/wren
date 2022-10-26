@@ -401,6 +401,21 @@ typedef struct
   Scope scope;
 } Variable;
 
+typedef struct
+{
+  // Optional
+  void (*init)(Compiler* compiler, void* userData);
+
+  // Optional
+  void (*inc)(Compiler* compiler, void* userData);
+
+  void (*match)(Compiler* compiler, void* userData);
+
+  TokenType left;
+
+  TokenType right;
+} ListConfiguration;
+
 // Forward declarations
 static void disallowAttributes(Compiler* compiler);
 static void addToAttributeGroup(Compiler* compiler, Value group, Value key, Value value);
