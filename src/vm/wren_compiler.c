@@ -2141,6 +2141,16 @@ static void finishArgumentList(Compiler* compiler,
   finishList(compiler, configuration, signature, "arguments");
 }
 
+// Compiles an optional setter parameter in a method [signature].
+//
+// Returns `true` if it was a setter.
+static bool maybeSetterArgument(Compiler* compiler, bool canAssign,
+                                Signature* signature)
+{
+  return maybeSetter(compiler, canAssign,
+                     &parenArgumentListConfiguration, signature);
+}
+
 // Compiles a method call with [signature] using [instruction].
 static void callSignature(Compiler* compiler, Code instruction,
                           Signature* signature)
