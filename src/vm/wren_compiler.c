@@ -1913,6 +1913,17 @@ static void finishList(Compiler* compiler,
           tokenTypeToString(configuration->right), elementsName);
 }
 
+static bool optionalList(Compiler* compiler,
+                         const ListConfiguration* configuration,
+                         void* userData,
+                         const char* elementsName)
+{
+  if (!match(compiler, configuration->left)) return false;
+
+  finishList(compiler, configuration, userData, elementsName);
+  return true;
+}
+
 // Parses the rest of a comma-separated parameter list after the opening
 // delimeter. Updates `arity` in [signature] with the number of parameters.
 static void finishParameterList(Compiler* compiler, Signature* signature)
