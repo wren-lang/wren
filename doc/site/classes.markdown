@@ -489,7 +489,7 @@ Metaclasses represent classes rather than particular instances of them. They can
 
 ### Static methods
 
-Static methods are defined in a similar way to [instance methods](#methods) except that their names are preceded by the *static* keyword. As they belong to the metaclass rather its corresponding class, they are invoked from outside the metaclass by preceding them with the class name.
+Static methods are defined in a similar way to [instance methods](#methods) except that their names are preceded by the *static* keyword. As they belong to the metaclass rather than its corresponding class, they are invoked from outside the metaclass by preceding them with the class name.
 
 <pre class="snippet">
 class Foo{
