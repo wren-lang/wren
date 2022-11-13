@@ -176,7 +176,7 @@ System.print((-3.7).round) //> -4
 
 ### **sign**
 
-The sign of the number, expressed as a -1, 1 or 0, for negative and positive numbers, and zero.
+The sign of the number, expressed as a -1, 1 or 0, for negative and positive numbers, and zero. Note that the sign of `-0` is 0 not -1.
 
 ### **sin**
 
@@ -233,6 +233,13 @@ It is a runtime error if `denominator` is not a number.
 
 Compares this and `other`, returning `true` or `false` based on how the numbers
 are ordered. It is a runtime error if `other` is not a number.
+
+### **==**(other), **!=**(other) operators
+
+Compares this and `other` for equality in value. 
+
+Overrides these operators in the `Object` class so that `0` and `-0` are considered
+equal in value even though they have different bit representations.
 
 ### **~** operator
 
