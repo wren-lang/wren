@@ -336,6 +336,11 @@ DEF_PRIMITIVE(list_addCore)
   RETURN_VAL(args[0]);
 }
 
+DEF_PRIMITIVE(list_capacity)
+{
+  RETURN_NUM(AS_LIST(args[0])->elements.capacity);
+}
+
 DEF_PRIMITIVE(list_clear)
 {
   wrenValueBufferClear(vm, &AS_LIST(args[0])->elements);
@@ -1434,6 +1439,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
   PRIMITIVE(vm->listClass, "add(_)", list_add);
   PRIMITIVE(vm->listClass, "addCore_(_)", list_addCore);
+  PRIMITIVE(vm->listClass, "capacity", list_capacity);
   PRIMITIVE(vm->listClass, "clear()", list_clear);
   PRIMITIVE(vm->listClass, "count", list_count);
   PRIMITIVE(vm->listClass, "insert(_,_)", list_insert);

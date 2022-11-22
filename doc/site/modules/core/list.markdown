@@ -36,6 +36,10 @@ System.print(list) //> [0, 1, 2, 3, 4, 5, 6]
 
 Returns the added items.
 
+### **capacity**
+
+The number of elements that can fit in the underlying container before it needs to be resized.
+
 ### **clear**()
 
 Removes all elements from the list.
