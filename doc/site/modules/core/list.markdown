@@ -140,6 +140,10 @@ System.print(["a", "b", "c"].removeAt(1)) //> b
 
 It is a runtime error if the index is not an integer or is out of bounds.
 
+### **reserve**(capacity)
+
+Resize the underlying container size to `capacity` if it is greater than its current size.
+
 ### **sort**(), **sort**(comparer)
 
 Sorts the elements of a list in-place; altering the list. The default sort is implemented using the quicksort algorithm.
