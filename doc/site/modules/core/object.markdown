@@ -29,6 +29,26 @@ Compares two objects using built-in equality. This compares [value
 types](../../values.html) by value, and all other objects are compared by
 identity&mdash;two objects are equal only if they are the exact same object.
 
+### **implements**(class) operator
+
+Returns `true` if this object's class implements the interface of `class`.
+
+It is a runtime error if `class` is not a [Class][].
+
+<pre class="snippet">
+System.print(123 implements Num)              //> true
+System.print("s" implements Num)              //> false
+System.print(null implements String)          //> false
+System.print([] implements List)              //> true
+
+class IterableInterface {
+  iterate()       { subclassResponsibility }
+  iteratorValue() { subclassResponsibility }
+}
+
+System.print([] implements IterableInterface) //> true
+</pre>
+
 ### **is**(class) operator
 
 Returns `true` if this object's class or one of its superclasses is `class`.

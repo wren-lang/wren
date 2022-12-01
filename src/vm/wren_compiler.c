@@ -1719,7 +1719,7 @@ typedef enum
   PREC_LOGICAL_OR,    // ||
   PREC_LOGICAL_AND,   // &&
   PREC_EQUALITY,      // == !=
-  PREC_IS,            // is
+  PREC_IS,            // implements is
   PREC_COMPARISON,    // < > <= >=
   PREC_BITWISE_OR,    // |
   PREC_BITWISE_XOR,   // ^
@@ -2793,7 +2793,7 @@ GrammarRule rules[] =
   /* TOKEN_FOR           */ UNUSED,
   /* TOKEN_FOREIGN       */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
-  /* TOKEN_IMPLEMENTS    */ UNUSED,
+  /* TOKEN_IMPLEMENTS    */ INFIX_OPERATOR(PREC_IS, "implements"),
   /* TOKEN_IMPORT        */ UNUSED,
   /* TOKEN_AS            */ UNUSED,
   /* TOKEN_IN            */ UNUSED,
