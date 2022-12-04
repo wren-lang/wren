@@ -633,6 +633,9 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
 
 void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
 
+int wrenClassImplements(WrenVM* vm, const ObjClass* classObj,
+                        Value interface);
+
 // Creates a new closure object that invokes [fn]. Allocates room for its
 // upvalues, but assumes outside code will populate it.
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn);
