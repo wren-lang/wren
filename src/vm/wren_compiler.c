@@ -96,6 +96,7 @@ typedef enum
   TOKEN_FOR,
   TOKEN_FOREIGN,
   TOKEN_IF,
+  TOKEN_IMPLEMENTS,
   TOKEN_IMPORT,
   TOKEN_AS,
   TOKEN_IN,
@@ -608,6 +609,7 @@ static Keyword keywords[] =
   {"for",       3, TOKEN_FOR},
   {"foreign",   7, TOKEN_FOREIGN},
   {"if",        2, TOKEN_IF},
+  {"implements", 10, TOKEN_IMPLEMENTS},
   {"import",    6, TOKEN_IMPORT},
   {"as",        2, TOKEN_AS},
   {"in",        2, TOKEN_IN},
@@ -1717,7 +1719,7 @@ typedef enum
   PREC_LOGICAL_OR,    // ||
   PREC_LOGICAL_AND,   // &&
   PREC_EQUALITY,      // == !=
-  PREC_IS,            // is
+  PREC_IS,            // implements is
   PREC_COMPARISON,    // < > <= >=
   PREC_BITWISE_OR,    // |
   PREC_BITWISE_XOR,   // ^
@@ -2791,6 +2793,7 @@ GrammarRule rules[] =
   /* TOKEN_FOR           */ UNUSED,
   /* TOKEN_FOREIGN       */ UNUSED,
   /* TOKEN_IF            */ UNUSED,
+  /* TOKEN_IMPLEMENTS    */ INFIX_OPERATOR(PREC_IS, "implements"),
   /* TOKEN_IMPORT        */ UNUSED,
   /* TOKEN_AS            */ UNUSED,
   /* TOKEN_IN            */ UNUSED,
@@ -2886,6 +2889,7 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_FOREIGN_CLASS:
     case CODE_END_MODULE:
     case CODE_END_CLASS:
+    case CODE_ASSERT_IMPLEMENTED_BY:
       return 0;
 
     case CODE_LOAD_LOCAL:
@@ -3554,6 +3558,21 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // Store it in its name.
   defineVariable(compiler, classVariable.index);
 
+  size_t implementsCount = 0;
+  if (match(compiler, TOKEN_IMPLEMENTS))
+  {
+    // Push the interface type list onto the stack.
+    do
+    {
+      ignoreNewlines(compiler);
+
+      implementsCount++;
+
+      // The interface type.
+      expression(compiler);
+    } while (match(compiler, TOKEN_COMMA));
+  }
+
   // Push a local variable scope. Static fields in a class body are hoisted out
   // into local variables declared in this scope. Methods that use them will
   // have upvalues referencing them.
@@ -3618,6 +3637,12 @@ static void classDefinition(Compiler* compiler, bool isForeign)
         (uint8_t)classInfo.fields.count;
   }
   
+  for (size_t i = 0; i < implementsCount; i++)
+  {
+    loadVariable(compiler, classVariable);
+    emitOp(compiler, CODE_ASSERT_IMPLEMENTED_BY);
+  }
+
   // Clear symbol tables for tracking field and method names.
   wrenSymbolTableClear(compiler->parser->vm, &classInfo.fields);
   wrenIntBufferClear(compiler->parser->vm, &classInfo.methods);

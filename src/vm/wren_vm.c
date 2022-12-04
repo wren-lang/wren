@@ -607,6 +607,30 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
   }
 }
 
+static void assertImplementedBy(WrenVM* vm)
+{
+  // Pull the attributes and class off the stack
+  Value interfaceValue = vm->fiber->stackTop[-2];
+  Value classValue     = vm->fiber->stackTop[-1];
+
+  if (IS_CLASS(classValue))
+  {
+    ObjClass* classObj = AS_CLASS(classValue);
+    int ret = wrenClassImplements(vm, classObj, interfaceValue);
+
+    if (ret == -1)
+    {
+      vm->fiber->error = wrenStringFormat(vm,
+          "$ is not a valid interface object.",
+          wrenGetClassInline(vm, interfaceValue)->name->value );
+    }
+    if (ret >= 0)  methodNotFound(vm, classObj, ret);
+  }
+
+  // Remove the stack items
+  vm->fiber->stackTop -= 2;
+}
+
 // Completes the process for creating a new class.
 //
 // The class attributes instance and the class itself should be on the 
@@ -1292,6 +1316,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           closure->upvalues[i] = frame->closure->upvalues[index];
         }
       }
+      DISPATCH();
+    }
+
+    CASE_CODE(ASSERT_IMPLEMENTED_BY):
+    {
+      assertImplementedBy(vm);
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
     }
 

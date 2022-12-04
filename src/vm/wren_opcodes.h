@@ -169,6 +169,9 @@ OPCODE(FOREIGN_CONSTRUCT, 0)
 // the name of the class. Byte [arg] is the number of fields in the class.
 OPCODE(CLASS, -1)
 
+//
+OPCODE(ASSERT_IMPLEMENTED_BY, -2)
+
 // Ends a class. 
 // Atm the stack contains the class and the ClassAttributes (or null).
 OPCODE(END_CLASS, -2)
