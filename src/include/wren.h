@@ -445,6 +445,9 @@ WREN_API const char* wrenGetSlotString(WrenVM* vm, int slot);
 // until the handle is released by calling [wrenReleaseHandle()].
 WREN_API WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
 
+// Copies the value from [srcSlot] to [dstSlot]
+WREN_API void wrenCopySlot(WrenVM* vm, int dstSlot, int srcSlot);
+
 // Stores the boolean [value] in [slot].
 WREN_API void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
 
