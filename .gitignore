@@ -1,6 +1,7 @@
 # Build outputs
 /bin
 /lib
+out/
 # Intermediate files
 *.obj
 Debug/
