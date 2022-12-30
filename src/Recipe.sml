@@ -5,8 +5,11 @@ EnableWarningsAsErrors: false
 IncludePaths: [
 	"include"
 	"optional"
+	"vm"
 ]
 Source: [
+	"optional/wren_opt_meta.c"
+	"optional/wren_opt_random.c"
 	"vm/wren_compiler.c"
 	"vm/wren_core.c"
 	"vm/wren_debug.c"
