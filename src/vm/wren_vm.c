@@ -1793,7 +1793,7 @@ int wrenGetListCount(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
   ASSERT(IS_LIST(vm->apiStack[slot]), "Slot must hold a list.");
-  
+
   ValueBuffer elements = AS_LIST(vm->apiStack[slot])->elements;
   return elements.count;
 }
@@ -1822,7 +1822,7 @@ void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elementSlot)
 
   uint32_t usedIndex = wrenValidateIndex(list->elements.count, index);
   ASSERT(usedIndex != UINT32_MAX, "Index out of bounds.");
-  
+
   list->elements.data[usedIndex] = vm->apiStack[elementSlot];
 }
 
@@ -1831,15 +1831,15 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   validateApiSlot(vm, listSlot);
   validateApiSlot(vm, elementSlot);
   ASSERT(IS_LIST(vm->apiStack[listSlot]), "Must insert into a list.");
-  
+
   ObjList* list = AS_LIST(vm->apiStack[listSlot]);
-  
+
   // Negative indices count from the end. 
   // We don't use wrenValidateIndex here because insert allows 1 past the end.
   if (index < 0) index = list->elements.count + 1 + index;
-  
+
   ASSERT(index <= list->elements.count, "Index out of bounds.");
-  
+
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
 }
 
@@ -1868,6 +1868,50 @@ bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot)
   return !IS_UNDEFINED(value);
 }
 
+void wrenGetMapKeyValue(WrenVM* vm, int mapSlot,int index, int keySlot, int valueSlot)
+{
+  validateApiSlot(vm, mapSlot);
+  validateApiSlot(vm, keySlot);
+  validateApiSlot(vm, valueSlot);
+  ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Slot must hold a map.");
+
+  ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+
+  uint32_t usedIndex = wrenValidateIndex(map->count, index);
+  ASSERT(usedIndex != UINT32_MAX, "Index out of bounds.");
+
+  // Iterate over the map to match the index to the correct offset
+  uint32_t mapIndex = 0;
+  uint32_t itemIndex = -1;
+  for (; mapIndex < map->capacity; mapIndex++)
+  {
+    if (!IS_UNDEFINED(map->entries[mapIndex].key))
+    {
+        itemIndex++;
+
+      // Check if we found the correct item
+      if (itemIndex == usedIndex)
+      {
+        break;
+      }
+    }
+  }
+
+  if (itemIndex != usedIndex)
+  {
+      RETURN_ERROR("Invalid map iterator.");
+  }
+
+  MapEntry* entry = &map->entries[mapIndex];
+  if (IS_UNDEFINED(entry->key))
+  {
+    RETURN_ERROR("Invalid map iterator.");
+  }
+
+  vm->apiStack[keySlot] = entry->key;
+  vm->apiStack[valueSlot] = entry->value;
+}
+
 void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
 {
   validateApiSlot(vm, mapSlot);
@@ -1890,7 +1934,7 @@ void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
   validateApiSlot(vm, keySlot);
   validateApiSlot(vm, valueSlot);
   ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must insert into a map.");
-  
+
   Value key = vm->apiStack[keySlot];
   ASSERT(wrenMapIsValidKey(key), "Key must be a value type");
 
@@ -1900,7 +1944,7 @@ void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
 
   Value value = vm->apiStack[valueSlot];
   ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
-  
+
   wrenMapSet(vm, map, key, value);
 }
 

@@ -514,6 +514,10 @@ WREN_API int wrenGetMapCount(WrenVM* vm, int slot);
 // Returns true if the key in [keySlot] is found in the map placed in [mapSlot].
 WREN_API bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot);
 
+// Retrieves the value and key at element [index] from the map in [mapSlot] and
+// stores it in [keySlot] and [valueSlot].
+WREN_API void wrenGetMapKeyValue(WrenVM* vm, int mapSlot,int index, int keySlot, int valueSlot);
+
 // Retrieves a value with the key in [keySlot] from the map in [mapSlot] and
 // stores it in [valueSlot].
 WREN_API void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
