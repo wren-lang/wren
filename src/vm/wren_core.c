@@ -618,10 +618,13 @@ DEF_PRIMITIVE(num_fromString)
   char* end;
   double number = strtod(string->value, &end);
 
+  if (errno == ERANGE) RETURN_ERROR("Number literal is too large.");
+
+  // Check for no conversion.
+  if (number == 0.0 && string->value == end) RETURN_NULL;
+
   // Skip past any trailing whitespace.
   while (*end != '\0' && isspace((unsigned char)*end)) end++;
-
-  if (errno == ERANGE) RETURN_ERROR("Number literal is too large.");
 
   // We must have consumed the entire string. Otherwise, it contains non-number
   // characters and we can't parse it.
