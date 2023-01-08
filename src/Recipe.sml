@@ -8,6 +8,7 @@ IncludePaths: [
 	"vm"
 ]
 Defines: [
+	"DEBUG"
 	"WREN_OPT_META=0"
 	"WREN_OPT_RANDOM=0"
 ]

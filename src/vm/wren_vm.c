@@ -1868,7 +1868,7 @@ bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot)
   return !IS_UNDEFINED(value);
 }
 
-void wrenGetMapKeyValue(WrenVM* vm, int mapSlot,int index, int keySlot, int valueSlot)
+void wrenGetMapKeyValueAt(WrenVM* vm, int mapSlot,int index, int keySlot, int valueSlot)
 {
   validateApiSlot(vm, mapSlot);
   validateApiSlot(vm, keySlot);
@@ -1965,24 +1965,57 @@ void wrenRemoveMapValue(WrenVM* vm, int mapSlot, int keySlot,
   setSlot(vm, removedValueSlot, removed);
 }
 
+int wrenGetVariableCount(WrenVM* vm, const char* module)
+{
+  ASSERT(module != NULL, "Module cannot be NULL.");
+
+  Value moduleName = wrenStringFormat(vm, "$", module);
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+
+  ObjModule* moduleObj = getModule(vm, moduleName);
+  ASSERT(moduleObj != NULL, "Could not find module.");
+
+  wrenPopRoot(vm); // moduleName.
+
+  return moduleObj->variableNames.count;
+}
+
+void wrenGetVariableAt(WrenVM* vm, const char* module, int index,
+                     int slot)
+{
+  ASSERT(module != NULL, "Module cannot be NULL.");
+
+  Value moduleName = wrenStringFormat(vm, "$", module);
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+
+  ObjModule* moduleObj = getModule(vm, moduleName);
+  ASSERT(moduleObj != NULL, "Could not find module.");
+
+  wrenPopRoot(vm); // moduleName.
+
+  ASSERT(index >= 0 && index < moduleObj->variables.count, "Could not find variable.");
+
+  setSlot(vm, slot, moduleObj->variables.data[index]);
+}
+
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {
   ASSERT(module != NULL, "Module cannot be NULL.");
-  ASSERT(name != NULL, "Variable name cannot be NULL.");  
+  ASSERT(name != NULL, "Variable name cannot be NULL.");
 
   Value moduleName = wrenStringFormat(vm, "$", module);
   wrenPushRoot(vm, AS_OBJ(moduleName));
-  
+
   ObjModule* moduleObj = getModule(vm, moduleName);
   ASSERT(moduleObj != NULL, "Could not find module.");
-  
+
   wrenPopRoot(vm); // moduleName.
 
   int variableSlot = wrenSymbolTableFind(&moduleObj->variableNames,
                                          name, strlen(name));
   ASSERT(variableSlot != -1, "Could not find variable.");
-  
+
   setSlot(vm, slot, moduleObj->variables.data[variableSlot]);
 }
 
