@@ -2,6 +2,10 @@ Name: "wren"
 Language: "C++|0.4"
 Version: "1.0.0"
 EnableWarningsAsErrors: false
+PublicHeaders: [
+	"include/wren.h"
+	"include/wren.hpp"
+]
 IncludePaths: [
 	"include"
 	"optional"
