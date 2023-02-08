@@ -754,7 +754,7 @@ Value wrenStringFromByte(WrenVM* vm, uint8_t value);
 // empty string.
 Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index);
 
-// Search for the first occurence of [needle] within [haystack] and returns its
+// Search for the first occurrence of [needle] within [haystack] and returns its
 // zero-based offset. Returns `UINT32_MAX` if [haystack] does not contain
 // [needle].
 uint32_t wrenStringFind(ObjString* haystack, ObjString* needle,
