@@ -334,28 +334,30 @@ class List is Sequence {
   }
 
   quicksort_(low, high, comparer) {
-    if (low < high) {
+    if (low >= 0 && high >= 0 && low < high) {
       var p = partition_(low, high, comparer)
-      quicksort_(low, p - 1, comparer)
-      quicksort_(p + 1, high, comparer)
+      quicksort_(low, p, comparer)
+      quicksort_(p+1, high, comparer)
     }
   }
 
   partition_(low, high, comparer) {
-    var p = this[high]
+    var mid = ((low + high)/2).floor
+    var p = this[mid]
     var i = low - 1
-    for (j in low..(high-1)) {
-      if (comparer.call(this[j], p)) {  
+    var j = high + 1
+    while (true) {
+      while (true) {
         i = i + 1
-        var t = this[i]
-        this[i] = this[j]
-        this[j] = t
+        if (!comparer.call(this[i], p)) break
       }
+      while (true) {
+        j = j - 1
+        if (!comparer.call(p, this[j])) break
+      }
+      if (i >= j) return j
+      swap(i, j)
     }
-    var t = this[i+1]
-    this[i+1] = this[high]
-    this[high] = t
-    return i+1
   }
 
   toString { "[%(join(", "))]" }
