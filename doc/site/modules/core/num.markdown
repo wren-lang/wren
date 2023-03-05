@@ -164,6 +164,18 @@ itself is returned.
 
 Raises this number (the base) to `power`. Returns `nan` if the base is negative.
 
+### **quo**(other)
+
+Returns the quotient of this number and `other` rounded, if not already an integer, to the nearest integer towards zero. It is equivalent to: `(this/other).truncate`.
+
+<pre class="snippet">
+System.print(10.quo(4))     //> 2
+System.print(10.quo(-4))    //> -2
+System.print(15.4.quo(3.6)) //> 4
+</pre>
+
+It is a runtime error if `other` is not a number.
+
 ### **round**
 
 Rounds the number to the nearest integer.
