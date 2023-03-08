@@ -334,15 +334,15 @@ class List is Sequence {
   }
 
   quicksort_(low, high, comparer) {
-    if (low >= 0 && high >= 0 && low < high) {
+    if (low < high) {
       var p = partition_(low, high, comparer)
       quicksort_(low, p, comparer)
-      quicksort_(p+1, high, comparer)
+      quicksort_(p + 1, high, comparer)
     }
   }
 
   partition_(low, high, comparer) {
-    var mid = ((low + high)/2).floor
+    var mid = ((low + high) / 2).floor
     var p = this[mid]
     var i = low - 1
     var j = high + 1
