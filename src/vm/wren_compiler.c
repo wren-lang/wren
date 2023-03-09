@@ -1747,6 +1747,7 @@ typedef struct
 // Forward declarations since the grammar is recursive.
 static GrammarRule* getRule(TokenType type);
 static void expression(Compiler* compiler);
+static void maybeTuple(Compiler* compiler);
 static void statement(Compiler* compiler);
 static void definition(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
@@ -2138,7 +2139,7 @@ static void loadCoreVariable(Compiler* compiler, const char* name)
 // A parenthesized expression.
 static void grouping(Compiler* compiler, bool canAssign)
 {
-  expression(compiler);
+  maybeTuple(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
@@ -2855,6 +2856,16 @@ void parsePrecedence(Compiler* compiler, Precedence precedence)
 void expression(Compiler* compiler)
 {
   parsePrecedence(compiler, PREC_LOWEST);
+}
+
+void maybeTuple(Compiler* compiler)
+{
+  expression(compiler);
+
+  if (peek(compiler) == TOKEN_COMMA)
+  {
+    error(compiler, "Cannot create a tuple.");
+  }
 }
 
 // Returns the number of bytes for the arguments to the instruction 
