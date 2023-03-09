@@ -79,9 +79,10 @@
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
 #define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
 #define IS_MEMORYSEGMENT(value)        /* ObjMemorySegment */                 \
-    (IS_FOREIGN(value) || IS_INSTANCE(value))
+    (IS_FOREIGN(value) || IS_INSTANCE(value) || IS_TUPLE(value))
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
+#define IS_TUPLE(value) (wrenIsObjType(value, OBJ_TUPLE))       // ObjTuple
 
 // Creates a new string object from [text], which should be a bare C string
 // literal. This determines the length of the string automatically at compile
@@ -101,6 +102,7 @@ typedef enum {
   OBJ_MODULE,
   OBJ_RANGE,
   OBJ_STRING,
+  OBJ_TUPLE,
   OBJ_UPVALUE
 } ObjType;
 
@@ -796,6 +798,9 @@ static inline bool wrenStringEqualsCString(const ObjString* a,
 {
   return a->length == length && memcmp(a->value, b, length) == 0;
 }
+
+// Creates a new tuple.
+ObjMemorySegment* wrenNewTuple(WrenVM* vm, Value* data, size_t count);
 
 // Creates a new open upvalue pointing to [value] on the stack.
 ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value);

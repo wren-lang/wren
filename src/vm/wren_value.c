@@ -988,6 +988,12 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle, uint32_t start)
   return UINT32_MAX;
 }
 
+ObjMemorySegment* wrenNewTuple(WrenVM* vm, Value* data, size_t count)
+{
+  return wrenNewMemorySegment(vm, OBJ_TUPLE, vm->tupleClass,
+                              data, count, NULL, 0);
+}
+
 ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 {
   ObjUpvalue* upvalue = ALLOCATE(vm, ObjUpvalue);
@@ -1223,6 +1229,7 @@ static void blackenObject(WrenVM* vm, Obj* obj)
     case OBJ_MODULE:   blackenModule(  vm, (ObjModule*)  obj); break;
     case OBJ_RANGE:    blackenRange(   vm, (ObjRange*)   obj); break;
     case OBJ_STRING:   blackenString(  vm, (ObjString*)  obj); break;
+    case OBJ_TUPLE:    blackenMemorySegment(vm, (ObjMemorySegment*)obj); break;
     case OBJ_UPVALUE:  blackenUpvalue( vm, (ObjUpvalue*) obj); break;
   }
 }

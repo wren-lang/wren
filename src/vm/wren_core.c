@@ -1197,6 +1197,134 @@ DEF_PRIMITIVE(string_toString)
   RETURN_VAL(args[0]);
 }
 
+static bool tuple_new(WrenVM* vm, Value* args, int numArgs)
+{
+  RETURN_OBJ(wrenNewTuple(vm, &args[1], numArgs));
+}
+
+DEF_PRIMITIVE(tuple_filled)
+{
+  if (!validateInt(vm, args[1], "Size")) return false;  
+  if (AS_NUM(args[1]) < 0) RETURN_ERROR("Size cannot be negative.");
+  
+  size_t size = (size_t)AS_NUM(args[1]);
+
+  // FIXME: Add a wrenNewTupleFilled?
+  ObjMemorySegment* ms = wrenNewTuple(vm, NULL, size);
+
+  // wrenNewTuple fills with `null` by default
+  if (IS_NULL(args[2])) RETURN_OBJ(ms);
+
+  for (size_t i = 0; i < size; i++)
+  {
+    ms->data[i] = args[2];
+  }
+
+  RETURN_OBJ(ms);
+}
+
+#define DEF_TUPLE_NEW(numArgs)                                                 \
+    DEF_PRIMITIVE(tuple_new##numArgs)                                          \
+    {                                                                          \
+      return tuple_new(vm, args, numArgs);                                     \
+    }
+
+DEF_TUPLE_NEW(0)
+DEF_TUPLE_NEW(1)
+DEF_TUPLE_NEW(2)
+DEF_TUPLE_NEW(3)
+DEF_TUPLE_NEW(4)
+DEF_TUPLE_NEW(5)
+DEF_TUPLE_NEW(6)
+DEF_TUPLE_NEW(7)
+DEF_TUPLE_NEW(8)
+DEF_TUPLE_NEW(9)
+DEF_TUPLE_NEW(10)
+DEF_TUPLE_NEW(11)
+DEF_TUPLE_NEW(12)
+DEF_TUPLE_NEW(13)
+DEF_TUPLE_NEW(14)
+DEF_TUPLE_NEW(15)
+DEF_TUPLE_NEW(16)
+
+DEF_PRIMITIVE(tuple_count)
+{
+  ObjMemorySegment* ms = AS_MEMORYSEGMENT(args[0]);
+
+  RETURN_NUM(ms->count);
+}
+
+DEF_PRIMITIVE(tuple_subscript)
+{
+  ObjMemorySegment* ms = AS_MEMORYSEGMENT(args[0]);
+
+  if (IS_NUM(args[1]))
+  {
+    uint32_t index = validateIndex(vm, args[1], ms->count, "Subscript");
+    if (index == UINT32_MAX) return false;
+
+    RETURN_VAL(ms->data[index]);
+  }
+
+  if (!IS_RANGE(args[1]))
+  {
+    RETURN_ERROR("Subscript must be a number or a range.");
+  }
+
+  int step;
+  uint32_t count = ms->count;
+  uint32_t start = calculateRange(vm, AS_RANGE(args[1]), &count, &step);
+  if (start == UINT32_MAX) return false;
+
+  ObjMemorySegment* result = wrenNewTuple(vm, NULL, count);
+  for (size_t i = 0; i < count; i++)
+  {
+    result->data[i] = ms->data[start + i * step];
+  }
+
+  RETURN_OBJ(result);
+}
+
+DEF_PRIMITIVE(tuple_subscriptSetter)
+{
+  ObjMemorySegment* ms = AS_MEMORYSEGMENT(args[0]);
+  uint32_t index = validateIndex(vm, args[1], ms->count, "Subscript");
+  if (index == UINT32_MAX) return false;
+
+  ms->data[index] = args[2];
+  RETURN_VAL(args[2]);
+}
+
+DEF_PRIMITIVE(tuple_iterate)
+{
+  ObjMemorySegment* ms = AS_MEMORYSEGMENT(args[0]);
+
+  // If we're starting the iteration, return the first index.
+  if (IS_NULL(args[1]))
+  {
+    if (ms->count == 0) RETURN_FALSE;
+    RETURN_NUM(0);
+  }
+
+  if (!validateInt(vm, args[1], "Iterator")) return false;
+
+  // Stop if we're out of bounds.
+  double index = AS_NUM(args[1]);
+  if (index < 0 || index >= ms->count - 1) RETURN_FALSE;
+
+  // Otherwise, move to the next index.
+  RETURN_NUM(index + 1);
+}
+
+DEF_PRIMITIVE(tuple_iteratorValue)
+{
+  ObjMemorySegment* ms = AS_MEMORYSEGMENT(args[0]);
+  uint32_t index = validateIndex(vm, args[1], ms->count, "Iterator");
+  if (index == UINT32_MAX) return false;
+
+  RETURN_VAL(ms->data[index]);
+}
+
 DEF_PRIMITIVE(system_clock)
 {
   RETURN_NUM((double)clock() / CLOCKS_PER_SEC);
@@ -1466,6 +1594,31 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->rangeClass, "iterate(_)", range_iterate);
   PRIMITIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
   PRIMITIVE(vm->rangeClass, "toString", range_toString);
+
+  vm->tupleClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Tuple"));
+  PRIMITIVE(vm->tupleClass->obj.classObj, "filled(_,_)", tuple_filled);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new()", tuple_new0);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_)", tuple_new1);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_)", tuple_new2);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_)", tuple_new3);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_)", tuple_new4);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_)", tuple_new5);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_)", tuple_new6);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_)", tuple_new7);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_,_)", tuple_new8);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_,_,_)", tuple_new9);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_,_,_,_)", tuple_new10);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_,_,_,_,_)", tuple_new11);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_,_,_,_,_,_)", tuple_new12);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_,_,_,_,_,_,_)", tuple_new13);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", tuple_new14);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", tuple_new15);
+  PRIMITIVE(vm->tupleClass->obj.classObj, "new(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", tuple_new16);
+  PRIMITIVE(vm->tupleClass, "count", tuple_count);
+  PRIMITIVE(vm->tupleClass, "[_]", tuple_subscript);
+  PRIMITIVE(vm->tupleClass, "[_]=(_)", tuple_subscriptSetter);
+  PRIMITIVE(vm->tupleClass, "iterate(_)", tuple_iterate);
+  PRIMITIVE(vm->tupleClass, "iteratorValue(_)", tuple_iteratorValue);
 
   ObjClass* systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
   PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);

@@ -437,6 +437,21 @@ class MapValueSequence is Sequence {
 
 class Range is Sequence {}
 
+class Tuple is Sequence {
+  ==(rhs) {
+      if (Object.same(this, rhs)) return true
+      if (rhs.type != Tuple || count != rhs.count) return false
+      for (i in 0...count) {
+              if (this[i] == rhs[i]) continue
+              return false
+      }
+      return true
+  }
+  !=(rhs) {!(this == rhs)}
+
+  toString { "(%(join(", ")))" }
+}
+
 class System {
   static print() {
     writeString_("\n")

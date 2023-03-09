@@ -526,6 +526,7 @@ static Value validateSuperclass(WrenVM* vm, Value name, Value superclassValue,
       superclass == vm->mapClass ||
       superclass == vm->rangeClass ||
       superclass == vm->stringClass ||
+      superclass == vm->tupleClass ||
       superclass == vm->boolClass ||
       superclass == vm->nullClass ||
       superclass == vm->numClass)
