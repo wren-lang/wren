@@ -470,6 +470,13 @@ DEF_PRIMITIVE(list_subscriptSetter)
   RETURN_VAL(args[2]);
 }
 
+DEF_PRIMITIVE(list_toTuple)
+{
+  ObjList* list = AS_LIST(args[0]);
+
+  RETURN_OBJ(wrenNewTuple(vm, list->elements.data, list->elements.count));
+}
+
 DEF_PRIMITIVE(map_new)
 {
   RETURN_OBJ(wrenNewMap(vm));
@@ -1571,6 +1578,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "remove(_)", list_removeValue);
   PRIMITIVE(vm->listClass, "indexOf(_)", list_indexOf);
   PRIMITIVE(vm->listClass, "swap(_,_)", list_swap);
+  PRIMITIVE(vm->listClass, "toTuple", list_toTuple);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Map"));
   PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);
