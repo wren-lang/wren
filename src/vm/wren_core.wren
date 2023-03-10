@@ -116,6 +116,8 @@ class Sequence {
     }
     return result
   }
+
+  toTuple { toList.toTuple }
 }
 
 class MapSequence is Sequence {

@@ -118,6 +118,8 @@ static const char* coreModuleSource =
 "    }\n"
 "    return result\n"
 "  }\n"
+"\n"
+"  toTuple { toList.toTuple }\n"
 "}\n"
 "\n"
 "class MapSequence is Sequence {\n"
