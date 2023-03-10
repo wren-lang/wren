@@ -50,10 +50,10 @@
 #define AS_CLOSURE(value)   ((ObjClosure*)AS_OBJ(value))        // ObjClosure*
 #define AS_FIBER(v)         ((ObjFiber*)AS_OBJ(v))              // ObjFiber*
 #define AS_FN(value)        ((ObjFn*)AS_OBJ(value))             // ObjFn*
-#define AS_FOREIGN(v)       ((ObjForeign*)AS_OBJ(v))            // ObjForeign*
-#define AS_INSTANCE(value)  ((ObjInstance*)AS_OBJ(value))       // ObjInstance*
 #define AS_LIST(value)      ((ObjList*)AS_OBJ(value))           // ObjList*
 #define AS_MAP(value)       ((ObjMap*)AS_OBJ(value))            // ObjMap*
+#define AS_MEMORYSEGMENT(value)        /* ObjMemorySegment* */                \
+    (ObjMemorySegment*)(AS_OBJ(value))
 #define AS_MODULE(value)    ((ObjModule*)AS_OBJ(value))         // ObjModule*
 #define AS_NUM(value)       (wrenValueToNum(value))             // double
 #define AS_RANGE(v)         ((ObjRange*)AS_OBJ(v))              // ObjRange*
@@ -78,8 +78,11 @@
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
 #define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
+#define IS_MEMORYSEGMENT(value)        /* ObjMemorySegment */                 \
+    (IS_FOREIGN(value) || IS_INSTANCE(value) || IS_TUPLE(value))
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
+#define IS_TUPLE(value) (wrenIsObjType(value, OBJ_TUPLE))       // ObjTuple
 
 // Creates a new string object from [text], which should be a bare C string
 // literal. This determines the length of the string automatically at compile
@@ -99,6 +102,7 @@ typedef enum {
   OBJ_MODULE,
   OBJ_RANGE,
   OBJ_STRING,
+  OBJ_TUPLE,
   OBJ_UPVALUE
 } ObjType;
 
@@ -147,6 +151,20 @@ typedef struct
 #endif
 
 DECLARE_BUFFER(Value, Value);
+
+// FIXME: Do we need foreign_count or memorypage_count ?
+typedef struct
+{
+  Obj obj;
+
+  size_t foreign_count;
+
+  size_t count;
+
+  Value data[FLEXIBLE_ARRAY];
+
+//  uint8_t foreign_data[FLEXIBLE_ARRAY];
+} ObjMemorySegment;
 
 // A heap-allocated string object.
 struct sObjString
@@ -418,18 +436,6 @@ struct sObjClass
 typedef struct
 {
   Obj obj;
-  uint8_t data[FLEXIBLE_ARRAY];
-} ObjForeign;
-
-typedef struct
-{
-  Obj obj;
-  Value fields[FLEXIBLE_ARRAY];
-} ObjInstance;
-
-typedef struct
-{
-  Obj obj;
 
   // The elements in the list.
   ValueBuffer elements;
@@ -617,6 +623,32 @@ typedef struct
 
 #endif
 
+static inline size_t wrenMemorySegmentSizeOf(size_t count, size_t foreign_count)
+{
+  return sizeof(ObjMemorySegment) + sizeof(Value) * count + foreign_count;
+}
+
+// Creates a new memory segment of the given [classObj].
+ObjMemorySegment* wrenNewMemorySegment(WrenVM* vm, ObjType type,
+                                       ObjClass* classObj,
+                                       const Value* data, size_t count,
+                                       const void* foreign_data, size_t foreign_count);
+
+static inline Value* wrenMemorySegmentAt(ObjMemorySegment* ms, size_t index)
+{
+  ASSERT(ms != NULL, "Unexpected NULL memory segment.");
+  ASSERT(index < ms->count, "Out of bounds field.");
+
+  return &ms->data[index];
+}
+
+static inline void* wrenMemorySegmentData(ObjMemorySegment* ms)
+{
+  ASSERT(ms != NULL, "Unexpected NULL memory segment.");
+
+  return &ms->data[ms->count];
+}
+
 // Creates a new "raw" class. It has no metaclass or superclass whatsoever.
 // This is only used for bootstrapping the initial Object and Class classes,
 // which are a little special.
@@ -662,7 +694,7 @@ static inline bool wrenHasError(const ObjFiber* fiber)
   return !IS_NULL(fiber->error);
 }
 
-ObjForeign* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
+ObjMemorySegment* wrenNewForeign(WrenVM* vm, ObjClass* classObj, size_t size);
 
 // Creates a new empty function. Before being used, it must have code,
 // constants, etc. added to it.
@@ -766,6 +798,9 @@ static inline bool wrenStringEqualsCString(const ObjString* a,
 {
   return a->length == length && memcmp(a->value, b, length) == 0;
 }
+
+// Creates a new tuple.
+ObjMemorySegment* wrenNewTuple(WrenVM* vm, Value* data, size_t count);
 
 // Creates a new open upvalue pointing to [value] on the stack.
 ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value);

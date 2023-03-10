@@ -41,6 +41,7 @@ struct WrenVM
   ObjClass* objectClass;
   ObjClass* rangeClass;
   ObjClass* stringClass;
+  ObjClass* tupleClass;
 
   // The fiber that is currently running.
   ObjFiber* fiber;
@@ -132,7 +133,7 @@ struct WrenVM
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
 // Invoke the finalizer for the foreign object referenced by [foreign].
-void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
+void wrenFinalizeForeign(WrenVM* vm, ObjMemorySegment* foreign);
 
 // Creates a new [WrenHandle] for [value].
 WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
