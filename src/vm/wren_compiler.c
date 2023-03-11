@@ -73,6 +73,8 @@ typedef enum
   TOKEN_GTGT,
   TOKEN_PIPE,
   TOKEN_PIPEPIPE,
+  TOKEN_PIPELT,
+  TOKEN_PIPEGT,
   TOKEN_CARET,
   TOKEN_AMP,
   TOKEN_AMPAMP,
@@ -1112,7 +1114,20 @@ static void nextToken(Parser* parser)
       case '~': makeToken(parser, TOKEN_TILDE); return;
       case '?': makeToken(parser, TOKEN_QUESTION); return;
         
-      case '|': twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE); return;
+      case '|':
+        if (matchChar(parser, '|'))
+        {
+          makeToken(parser, TOKEN_PIPEPIPE);
+        }
+        else if (matchChar(parser, '<'))
+        {
+          makeToken(parser, TOKEN_PIPELT);
+        }
+        else
+        {
+          twoCharToken(parser, '>', TOKEN_PIPEGT, TOKEN_PIPE);
+        }
+        return;
       case '&': twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP); return;
       case '=': twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ); return;
       case '!': twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG); return;
@@ -2769,6 +2784,8 @@ GrammarRule rules[] =
   /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">>"),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "|"),
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGICAL_OR, or_),
+  /* TOKEN_PIPELT        */ UNUSED,
+  /* TOKEN_PIPEGT        */ UNUSED,
   /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE_XOR, "^"),
   /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE_AND, "&"),
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGICAL_AND, and_),
