@@ -1729,6 +1729,7 @@ typedef enum
   PREC_LOWEST,
   PREC_ASSIGNMENT,    // =
   PREC_CONDITIONAL,   // ?:
+  PREC_FN_COMPOSITION_CALL, // |< |>
   PREC_LOGICAL_OR,    // ||
   PREC_LOGICAL_AND,   // &&
   PREC_EQUALITY,      // == !=
@@ -2548,6 +2549,33 @@ static void call(Compiler* compiler, bool canAssign)
   namedCall(compiler, canAssign, CODE_CALL_0);
 }
 
+static void fnCompositionCall(Compiler* compiler, bool canAssign, bool isForward)
+{
+  GrammarRule* rule = getRule(compiler->parser->previous.type);
+
+  // An infix operator cannot end an expression.
+  ignoreNewlines(compiler);
+
+  // Compile the right-hand side.
+  parsePrecedence(compiler, (Precedence)(rule->precedence + isForward));
+
+  if (isForward)
+  {
+    emitOp(compiler, CODE_SWAP);
+  }
+  callMethod(compiler, 1, "call(_)", 7);
+}
+
+static void backwardFnCompositionCall(Compiler* compiler, bool canAssign)
+{
+  return fnCompositionCall(compiler, canAssign, false);
+}
+
+static void forwardFnCompositionCall(Compiler* compiler, bool canAssign)
+{
+  return fnCompositionCall(compiler, canAssign, true);
+}
+
 static void and_(Compiler* compiler, bool canAssign)
 {
   ignoreNewlines(compiler);
@@ -2784,8 +2812,8 @@ GrammarRule rules[] =
   /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">>"),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "|"),
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGICAL_OR, or_),
-  /* TOKEN_PIPELT        */ UNUSED,
-  /* TOKEN_PIPEGT        */ UNUSED,
+  /* TOKEN_PIPELT        */ INFIX(PREC_FN_COMPOSITION_CALL, backwardFnCompositionCall),
+  /* TOKEN_PIPEGT        */ INFIX(PREC_FN_COMPOSITION_CALL, forwardFnCompositionCall),
   /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE_XOR, "^"),
   /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE_AND, "&"),
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGICAL_AND, and_),
