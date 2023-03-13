@@ -1744,6 +1744,7 @@ typedef enum
   PREC_ASSIGNMENT,    // =
   PREC_CONDITIONAL,   // ?:
   PREC_FN_COMPOSITION_CALL, // |< |>
+  PREC_FN_COMPOSITION,      // @< @>
   PREC_LOGICAL_OR,    // ||
   PREC_LOGICAL_AND,   // &&
   PREC_EQUALITY,      // == !=
@@ -2590,6 +2591,38 @@ static void forwardFnCompositionCall(Compiler* compiler, bool canAssign)
   return fnCompositionCall(compiler, canAssign, true);
 }
 
+static void fnComposition(Compiler* compiler, bool canAssign, bool isForward)
+{
+  loadCoreVariable(compiler, "ComposedFn");
+
+  // Prepare the stack to call the helper class
+  emitOp(compiler, CODE_SWAP);
+
+  GrammarRule* rule = getRule(compiler->parser->previous.type);
+
+  // An infix operator cannot end an expression.
+  ignoreNewlines(compiler);
+
+  // Compile the right-hand side.
+  parsePrecedence(compiler, (Precedence)(rule->precedence + isForward));
+
+  if (isForward)
+  {
+    emitOp(compiler, CODE_SWAP);
+  }
+  callMethod(compiler, 2, "new(_,_)", 8);
+}
+
+static void backwardFnComposition(Compiler* compiler, bool canAssign)
+{
+  fnComposition(compiler, canAssign, false);
+}
+
+static void forwardFnComposition(Compiler* compiler, bool canAssign)
+{
+  fnComposition(compiler, canAssign, true);
+}
+
 static void and_(Compiler* compiler, bool canAssign)
 {
   ignoreNewlines(compiler);
@@ -2812,8 +2845,8 @@ GrammarRule rules[] =
   /* TOKEN_LEFT_BRACE    */ PREFIX(map),
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
   /* TOKEN_AT            */ UNUSED,
-  /* TOKEN_ATLT          */ UNUSED,
-  /* TOKEN_ATGT          */ UNUSED,
+  /* TOKEN_ATLT          */ INFIX(PREC_FN_COMPOSITION, backwardFnComposition),
+  /* TOKEN_ATGT          */ INFIX(PREC_FN_COMPOSITION, forwardFnComposition),
   /* TOKEN_COLON         */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
   /* TOKEN_DOTDOT        */ INFIX_OPERATOR(PREC_RANGE, ".."),
