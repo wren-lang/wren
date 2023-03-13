@@ -58,6 +58,9 @@ typedef enum
   TOKEN_RIGHT_BRACKET,
   TOKEN_LEFT_BRACE,
   TOKEN_RIGHT_BRACE,
+  TOKEN_AT,
+  TOKEN_ATLT,
+  TOKEN_ATGT,
   TOKEN_COLON,
   TOKEN_DOT,
   TOKEN_DOTDOT,
@@ -1132,6 +1135,17 @@ static void nextToken(Parser* parser)
       case '=': twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ); return;
       case '!': twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG); return;
         
+      case '@':
+          if (matchChar(parser, '<'))
+          {
+            makeToken(parser, TOKEN_ATLT);
+          }
+          else
+          {
+            twoCharToken(parser, '>', TOKEN_ATGT, TOKEN_AT);
+          }
+          return;
+
       case '.':
         if (matchChar(parser, '.'))
         {
@@ -2797,6 +2811,9 @@ GrammarRule rules[] =
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
   /* TOKEN_LEFT_BRACE    */ PREFIX(map),
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
+  /* TOKEN_AT            */ UNUSED,
+  /* TOKEN_ATLT          */ UNUSED,
+  /* TOKEN_ATGT          */ UNUSED,
   /* TOKEN_COLON         */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
   /* TOKEN_DOTDOT        */ INFIX_OPERATOR(PREC_RANGE, ".."),
