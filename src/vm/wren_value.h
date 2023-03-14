@@ -78,6 +78,7 @@
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
 #define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
+#define IS_MODULE(value) (wrenIsObjType(value, OBJ_MODULE))     // ObjModule
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
 
@@ -881,6 +882,7 @@ static inline bool wrenMapIsValidKey(Value arg)
 {
   return IS_BOOL(arg)
       || IS_CLASS(arg)
+      || IS_MODULE(arg)
       || IS_NULL(arg)
       || IS_NUM(arg)
       || IS_RANGE(arg)

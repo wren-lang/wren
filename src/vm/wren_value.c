@@ -410,6 +410,10 @@ static uint32_t hashObject(Obj* object)
       return hashNumber(fn->arity) ^ hashNumber(fn->code.count);
     }
 
+    case OBJ_MODULE:
+      // Modules just use their name.
+      return hashObject((Obj*)(((ObjModule*)object)->name));
+
     case OBJ_RANGE:
     {
       ObjRange* range = (ObjRange*)object;
