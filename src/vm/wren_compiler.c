@@ -58,6 +58,9 @@ typedef enum
   TOKEN_RIGHT_BRACKET,
   TOKEN_LEFT_BRACE,
   TOKEN_RIGHT_BRACE,
+  TOKEN_AT,
+  TOKEN_ATLT,
+  TOKEN_ATGT,
   TOKEN_COLON,
   TOKEN_DOT,
   TOKEN_DOTDOT,
@@ -73,6 +76,8 @@ typedef enum
   TOKEN_GTGT,
   TOKEN_PIPE,
   TOKEN_PIPEPIPE,
+  TOKEN_PIPELT,
+  TOKEN_PIPEGT,
   TOKEN_CARET,
   TOKEN_AMP,
   TOKEN_AMPAMP,
@@ -1112,11 +1117,35 @@ static void nextToken(Parser* parser)
       case '~': makeToken(parser, TOKEN_TILDE); return;
       case '?': makeToken(parser, TOKEN_QUESTION); return;
         
-      case '|': twoCharToken(parser, '|', TOKEN_PIPEPIPE, TOKEN_PIPE); return;
+      case '|':
+        if (matchChar(parser, '|'))
+        {
+          makeToken(parser, TOKEN_PIPEPIPE);
+        }
+        else if (matchChar(parser, '<'))
+        {
+          makeToken(parser, TOKEN_PIPELT);
+        }
+        else
+        {
+          twoCharToken(parser, '>', TOKEN_PIPEGT, TOKEN_PIPE);
+        }
+        return;
       case '&': twoCharToken(parser, '&', TOKEN_AMPAMP, TOKEN_AMP); return;
       case '=': twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ); return;
       case '!': twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG); return;
         
+      case '@':
+          if (matchChar(parser, '<'))
+          {
+            makeToken(parser, TOKEN_ATLT);
+          }
+          else
+          {
+            twoCharToken(parser, '>', TOKEN_ATGT, TOKEN_AT);
+          }
+          return;
+
       case '.':
         if (matchChar(parser, '.'))
         {
@@ -1714,6 +1743,8 @@ typedef enum
   PREC_LOWEST,
   PREC_ASSIGNMENT,    // =
   PREC_CONDITIONAL,   // ?:
+  PREC_FN_COMPOSITION_CALL, // |< |>
+  PREC_FN_COMPOSITION,      // @< @>
   PREC_LOGICAL_OR,    // ||
   PREC_LOGICAL_AND,   // &&
   PREC_EQUALITY,      // == !=
@@ -2533,6 +2564,65 @@ static void call(Compiler* compiler, bool canAssign)
   namedCall(compiler, canAssign, CODE_CALL_0);
 }
 
+static void fnCompositionCall(Compiler* compiler, bool canAssign, bool isForward)
+{
+  GrammarRule* rule = getRule(compiler->parser->previous.type);
+
+  // An infix operator cannot end an expression.
+  ignoreNewlines(compiler);
+
+  // Compile the right-hand side.
+  parsePrecedence(compiler, (Precedence)(rule->precedence + isForward));
+
+  if (isForward)
+  {
+    emitOp(compiler, CODE_SWAP);
+  }
+  callMethod(compiler, 1, "call(_)", 7);
+}
+
+static void backwardFnCompositionCall(Compiler* compiler, bool canAssign)
+{
+  return fnCompositionCall(compiler, canAssign, false);
+}
+
+static void forwardFnCompositionCall(Compiler* compiler, bool canAssign)
+{
+  return fnCompositionCall(compiler, canAssign, true);
+}
+
+static void fnComposition(Compiler* compiler, bool canAssign, bool isForward)
+{
+  loadCoreVariable(compiler, "ComposedFn");
+
+  // Prepare the stack to call the helper class
+  emitOp(compiler, CODE_SWAP);
+
+  GrammarRule* rule = getRule(compiler->parser->previous.type);
+
+  // An infix operator cannot end an expression.
+  ignoreNewlines(compiler);
+
+  // Compile the right-hand side.
+  parsePrecedence(compiler, (Precedence)(rule->precedence + isForward));
+
+  if (isForward)
+  {
+    emitOp(compiler, CODE_SWAP);
+  }
+  callMethod(compiler, 2, "new(_,_)", 8);
+}
+
+static void backwardFnComposition(Compiler* compiler, bool canAssign)
+{
+  fnComposition(compiler, canAssign, false);
+}
+
+static void forwardFnComposition(Compiler* compiler, bool canAssign)
+{
+  fnComposition(compiler, canAssign, true);
+}
+
 static void and_(Compiler* compiler, bool canAssign)
 {
   ignoreNewlines(compiler);
@@ -2754,6 +2844,9 @@ GrammarRule rules[] =
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
   /* TOKEN_LEFT_BRACE    */ PREFIX(map),
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
+  /* TOKEN_AT            */ UNUSED,
+  /* TOKEN_ATLT          */ INFIX(PREC_FN_COMPOSITION, backwardFnComposition),
+  /* TOKEN_ATGT          */ INFIX(PREC_FN_COMPOSITION, forwardFnComposition),
   /* TOKEN_COLON         */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
   /* TOKEN_DOTDOT        */ INFIX_OPERATOR(PREC_RANGE, ".."),
@@ -2769,6 +2862,8 @@ GrammarRule rules[] =
   /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">>"),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "|"),
   /* TOKEN_PIPEPIPE      */ INFIX(PREC_LOGICAL_OR, or_),
+  /* TOKEN_PIPELT        */ INFIX(PREC_FN_COMPOSITION_CALL, backwardFnCompositionCall),
+  /* TOKEN_PIPEGT        */ INFIX(PREC_FN_COMPOSITION_CALL, forwardFnCompositionCall),
   /* TOKEN_CARET         */ INFIX_OPERATOR(PREC_BITWISE_XOR, "^"),
   /* TOKEN_AMP           */ INFIX_OPERATOR(PREC_BITWISE_AND, "&"),
   /* TOKEN_AMPAMP        */ INFIX(PREC_LOGICAL_AND, and_),
@@ -2869,6 +2964,7 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_FALSE:
     case CODE_TRUE:
     case CODE_POP:
+    case CODE_SWAP:
     case CODE_CLOSE_UPVALUE:
     case CODE_RETURN:
     case CODE_END:

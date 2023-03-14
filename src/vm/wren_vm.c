@@ -1255,6 +1255,13 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       LOAD_FRAME();
       DISPATCH();
     }
+    CASE_CODE(SWAP):
+    {
+      Value value = PEEK();
+      PEEK() = PEEK2();
+      PEEK2() = value;
+      DISPATCH();
+    }
 
     CASE_CODE(CONSTRUCT):
       ASSERT(IS_CLASS(stackStart[0]), "'this' should be a class.");
