@@ -104,6 +104,7 @@ OBJECTS += $(OBJDIR)/wren_compiler.o
 OBJECTS += $(OBJDIR)/wren_core.o
 OBJECTS += $(OBJDIR)/wren_debug.o
 OBJECTS += $(OBJDIR)/wren_opt_meta.o
+OBJECTS += $(OBJDIR)/wren_opt_mirror.o
 OBJECTS += $(OBJDIR)/wren_opt_random.o
 OBJECTS += $(OBJDIR)/wren_primitive.o
 OBJECTS += $(OBJDIR)/wren_utils.o
@@ -171,6 +172,9 @@ endif
 # #############################################
 
 $(OBJDIR)/wren_opt_meta.o: ../../src/optional/wren_opt_meta.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/wren_opt_mirror.o: ../../src/optional/wren_opt_mirror.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/wren_opt_random.o: ../../src/optional/wren_opt_random.c

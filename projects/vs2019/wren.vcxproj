@@ -251,6 +251,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\include\wren.h" />
     <ClInclude Include="..\..\src\optional\wren_opt_meta.h" />
+    <ClInclude Include="..\..\src\optional\wren_opt_mirror.h" />
     <ClInclude Include="..\..\src\optional\wren_opt_random.h" />
     <ClInclude Include="..\..\src\vm\wren_common.h" />
     <ClInclude Include="..\..\src\vm\wren_compiler.h" />
@@ -265,6 +266,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\optional\wren_opt_meta.c" />
+    <ClCompile Include="..\..\src\optional\wren_opt_mirror.c" />
     <ClCompile Include="..\..\src\optional\wren_opt_random.c" />
     <ClCompile Include="..\..\src\vm\wren_compiler.c" />
     <ClCompile Include="..\..\src\vm\wren_core.c" />
