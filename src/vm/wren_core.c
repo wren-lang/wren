@@ -1488,6 +1488,8 @@ void wrenInitializeCore(WrenVM* vm)
   // them now that the string class is known.
   for (Obj* obj = vm->first; obj != NULL; obj = obj->next)
   {
+    if (obj->type == OBJ_CLASS) ((ObjClass*)obj)->module = coreModule;
+    if (obj->type == OBJ_FN) ((ObjFn*)obj)->module = coreModule;
     if (obj->type == OBJ_STRING) obj->classObj = vm->stringClass;
   }
 }
