@@ -150,6 +150,12 @@ ObjClosure* wrenCompileSource(WrenVM* vm, const char* module,
 // Returns `NULL` if no module with that name has been loaded.
 ObjModule* wrenGetModule(WrenVM* vm, Value name);
 
+// Looks up the core module.
+static inline ObjModule* wrenGetCoreModule(WrenVM* vm)
+{
+  return wrenGetModule(vm, NULL_VAL);
+}
+
 // Looks up a variable from a previously-loaded module.
 //
 // Aborts the current fiber if the module or variable could not be found.

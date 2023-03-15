@@ -21,6 +21,7 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
                        NULL, -1, "[error object]");
   }
 
+  ObjModule* coreModule = wrenGetCoreModule(vm);
   for (int i = fiber->numFrames - 1; i >= 0; i--)
   {
     CallFrame* frame = &fiber->frames[i];
@@ -29,10 +30,11 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
     // Skip over stub functions for calling methods from the C API.
     if (fn->module == NULL) continue;
     
-    // The built-in core module has no name. We explicitly omit it from stack
-    // traces since we don't want to highlight to a user the implementation
-    // detail of what part of the core module is written in C and what is Wren.
-    if (fn->module->name == NULL) continue;
+    // Explicitly omit the core module from stack traces.
+    //
+    // We don't want to highlight to a user the implementation detail of what
+    // part of the core module is written in C and what is Wren.
+    if (fn->module == coreModule) continue;
     
     // -1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
