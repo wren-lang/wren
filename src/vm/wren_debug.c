@@ -58,7 +58,9 @@ static void dumpObject(Obj* obj)
     case OBJ_INSTANCE: printf("[instance %p]", obj); break;
     case OBJ_LIST: printf("[list %p]", obj); break;
     case OBJ_MAP: printf("[map %p]", obj); break;
-    case OBJ_MODULE: printf("[module %p]", obj); break;
+    case OBJ_MODULE:
+      printf("[module %s %p]", ((ObjModule*)obj)->name->value, obj);
+      break;
     case OBJ_RANGE: printf("[range %p]", obj); break;
     case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
     case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
@@ -362,9 +364,7 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 
 void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 {
-  printf("%s: %s\n",
-         fn->module->name == NULL ? "<core>" : fn->module->name->value,
-         fn->debug->name);
+  printf("%s: %s\n", fn->module->name->value, fn->debug->name);
 
   int i = 0;
   int lastLine = -1;

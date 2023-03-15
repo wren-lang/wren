@@ -644,6 +644,8 @@ Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
 
 ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
 {
+  ASSERT(name != NULL, "Name cannot be NULL");
+
   ObjModule* module = ALLOCATE(vm, ObjModule);
 
   // Modules are never used as first-class objects, so don't need a class.
