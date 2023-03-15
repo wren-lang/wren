@@ -393,6 +393,7 @@ DECLARE_BUFFER(Method, Method);
 struct sObjClass
 {
   Obj obj;
+  ObjModule* module;
   ObjClass* superclass;
 
   // The number of fields needed for an instance of this class, including all

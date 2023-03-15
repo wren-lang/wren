@@ -47,6 +47,7 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
 {
   ObjClass* classObj = ALLOCATE(vm, ObjClass);
   initObj(vm, &classObj->obj, OBJ_CLASS, NULL);
+  classObj->module = vm->lastModule;
   classObj->superclass = NULL;
   classObj->numFields = numFields;
   classObj->name = name;
