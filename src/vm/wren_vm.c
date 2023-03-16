@@ -885,6 +885,9 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         }                                                                      \
       } while (false)
 
+  #define ERROR_ON_VALUE_IS_NOT_FROZEN(value)                                  \
+      ERROR_ON(wrenIsFrozen(value), ERROR_MSG_OBJECT_IS_FROZEN)
+
   #if WREN_DEBUG_TRACE_INSTRUCTIONS
     // Prints the stack and instruction before each instruction is executed.
     #define DEBUG_TRACE_INSTRUCTIONS()                                         \
@@ -1110,6 +1113,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(STORE_UPVALUE):
     {
+      ERROR_ON_VALUE_IS_NOT_FROZEN(OBJ_VAL(frame->closure));
       ObjUpvalue** upvalues = frame->closure->upvalues;
       *upvalues[READ_BYTE()]->value = PEEK();
       DISPATCH();
@@ -1128,6 +1132,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       uint8_t field = READ_BYTE();
       Value receiver = stackStart[0];
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
+      ERROR_ON_VALUE_IS_NOT_FROZEN(receiver);
       ObjInstance* instance = AS_INSTANCE(receiver);
       ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
       instance->fields[field] = PEEK();
@@ -1150,6 +1155,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       uint8_t field = READ_BYTE();
       Value receiver = POP();
       ASSERT(IS_INSTANCE(receiver), "Receiver should be instance.");
+      ERROR_ON_VALUE_IS_NOT_FROZEN(receiver);
       ObjInstance* instance = AS_INSTANCE(receiver);
       ASSERT(field < instance->obj.classObj->numFields, "Out of bounds field.");
       instance->fields[field] = PEEK();
@@ -1681,6 +1687,35 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
   if (IS_STRING(vm->apiStack[slot])) return WREN_TYPE_STRING;
   
   return WREN_TYPE_UNKNOWN;
+}
+
+bool wrenFreezeSlot(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+
+  return wrenFreeze(vm->apiStack[slot]);
+}
+
+bool wrenIsSlotFrozen(WrenVM* vm, int slot)
+{
+  validateApiSlot(vm, slot);
+
+  return wrenIsFrozen(vm->apiStack[slot]);
+}
+
+bool wrenSetSlotFrozen(WrenVM* vm, int slot, bool isFrozen)
+{
+  validateApiSlot(vm, slot);
+
+  return wrenSetFrozen(vm->apiStack[slot], isFrozen);
+}
+
+bool wrenSetSlotFrozenWithSecret(WrenVM* vm, int slot, bool isFrozen, int secretSlot)
+{
+  validateApiSlot(vm, slot);
+  validateApiSlot(vm, secretSlot);
+
+  return wrenSetFrozenWithSecret(vm->apiStack[slot], isFrozen, vm->apiStack[secretSlot]);
 }
 
 bool wrenGetSlotBool(WrenVM* vm, int slot)

@@ -63,6 +63,17 @@
       return false;                                                            \
     } while (false)
 
+#define ERROR_MSG_OBJECT_IS_FROZEN "Object is frozen"
+
+#define VALIDATE_VALUE_IS_NOT_FROZEN(value)                                    \
+    do                                                                         \
+    {                                                                          \
+      if (wrenIsFrozen(value))                                                 \
+      {                                                                        \
+        RETURN_ERROR(ERROR_MSG_OBJECT_IS_FROZEN);                              \
+      }                                                                        \
+    } while (false)
+
 // Validates that the given [arg] is a bool. Returns true if it is. If not,
 // reports an error and returns false.
 bool validateBool(WrenVM* vm, Value arg, const char* argName);

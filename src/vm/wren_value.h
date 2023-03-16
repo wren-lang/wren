@@ -141,6 +141,9 @@ struct sObj
   ObjType type;
   bool isDark;
 
+  bool isFrozen;
+  Value frozenSecret;
+
   // The object's class.
   ObjClass* classObj;
 

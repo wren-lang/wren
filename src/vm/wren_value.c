@@ -38,9 +38,17 @@ static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 {
   obj->type = type;
   obj->isDark = false;
+  obj->isFrozen = false;
+  obj->frozenSecret = FREEZE_SECRET_DEFAULT;
   obj->classObj = classObj;
   obj->next = vm->first;
   vm->first = obj;
+}
+
+static void freezeObj(Obj* obj)
+{
+  obj->isFrozen = true;
+  obj->frozenSecret = FREEZE_SECRET_ETERNAL;
 }
 
 ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
@@ -664,6 +672,7 @@ Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
 {
   ObjRange* range = ALLOCATE(vm, ObjRange);
   initObj(vm, &range->obj, OBJ_RANGE, vm->rangeClass);
+  freezeObj(&range->obj);
   range->from = from;
   range->to = to;
   range->isInclusive = isInclusive;
@@ -716,6 +725,7 @@ Value wrenNewStringLength(WrenVM* vm, const char* text, size_t length)
   ASSERT(length == 0 || text != NULL, "Unexpected NULL string.");
   
   ObjString* string = allocateString(vm, length);
+  freezeObj(&string->obj);
   
   // Copy the string (if given one).
   if (length > 0 && text != NULL) memcpy(string->value, text, length);
@@ -982,6 +992,8 @@ void wrenGrayObj(WrenVM* vm, Obj* obj)
 
   // It's been reached.
   obj->isDark = true;
+
+  wrenGrayValue(vm, obj->frozenSecret);
 
   // Add it to the gray list so it can be recursively explored for
   // more marks later.
