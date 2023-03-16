@@ -875,6 +875,16 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         DISPATCH();                                                            \
       } while (false)
 
+  #define ERROR_ON(condition, ...)                                             \
+      do                                                                       \
+      {                                                                        \
+        if (condition)                                                         \
+        {                                                                      \
+          vm->fiber->error = wrenStringFormat(vm, __VA_ARGS__);                \
+          RUNTIME_ERROR();                                                     \
+        }                                                                      \
+      } while (false)
+
   #if WREN_DEBUG_TRACE_INSTRUCTIONS
     // Prints the stack and instruction before each instruction is executed.
     #define DEBUG_TRACE_INSTRUCTIONS()                                         \
