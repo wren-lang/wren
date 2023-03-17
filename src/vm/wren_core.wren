@@ -326,6 +326,8 @@ class List is Sequence {
   sort() { sort {|low, high| low < high } }
 
   sort(comparer) {
+    validateIsNotFrozen()
+
     if (!(comparer is Fn)) {
       Fiber.abort("Comparer must be a function.")
     }
@@ -409,6 +411,7 @@ class MapEntry {
   construct new(key, value) {
     _key = key
     _value = value
+    freeze()
   }
 
   key { _key }
