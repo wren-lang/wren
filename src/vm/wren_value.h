@@ -102,21 +102,8 @@ typedef enum {
   OBJ_UPVALUE
 } ObjType;
 
-typedef struct sObjClass ObjClass;
-
-// Base struct for all heap-allocated objects.
 typedef struct sObj Obj;
-struct sObj
-{
-  ObjType type;
-  bool isDark;
-
-  // The object's class.
-  ObjClass* classObj;
-
-  // The next object in the linked list of all currently allocated objects.
-  struct sObj* next;
-};
+typedef struct sObjClass ObjClass;
 
 #if WREN_NAN_TAGGING
 
@@ -147,6 +134,19 @@ typedef struct
 #endif
 
 DECLARE_BUFFER(Value, Value);
+
+// Base struct for all heap-allocated objects.
+struct sObj
+{
+  ObjType type;
+  bool isDark;
+
+  // The object's class.
+  ObjClass* classObj;
+
+  // The next object in the linked list of all currently allocated objects.
+  struct sObj* next;
+};
 
 // A heap-allocated string object.
 struct sObjString
