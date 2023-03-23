@@ -2435,31 +2435,35 @@ static void literal(Compiler* compiler, bool canAssign)
 //     ["a ", b + c, " d"].join()
 static void stringInterpolation(Compiler* compiler, bool canAssign)
 {
-  // Instantiate a new list.
-  loadCoreVariable(compiler, "List");
-  callMethod(compiler, 0, "new()", 5);
-  
+  bool first = true;
   do
   {
     // The opening string part.
-    literal(compiler, false);
-    callMethod(compiler, 1, "addCore_(_)", 11);
+    if (AS_STRING(compiler->parser->previous.value)->length != 0)
+    {
+      literal(compiler, false);
+      if (!first) callMethod(compiler, 1, "+(_)", 4);
+      first = false;
+    }
     
     // The interpolated expression.
     ignoreNewlines(compiler);
     expression(compiler);
-    callMethod(compiler, 1, "addCore_(_)", 11);
+    callMethod(compiler, 0, "toString", 8);
+    if (!first) callMethod(compiler, 1, "+(_)", 4);
+    first = false;
     
     ignoreNewlines(compiler);
   } while (match(compiler, TOKEN_INTERPOLATION));
   
   // The trailing string part.
   consume(compiler, TOKEN_STRING, "Expect end of string interpolation.");
-  literal(compiler, false);
-  callMethod(compiler, 1, "addCore_(_)", 11);
-  
-  // The list of interpolated parts.
-  callMethod(compiler, 0, "join()", 6);
+  if (AS_STRING(compiler->parser->previous.value)->length != 0)
+  {
+    literal(compiler, false);
+    ASSERT(!first, "Lexer error: invalid string interpolation token chain");
+    callMethod(compiler, 1, "+(_)", 4);
+  }
 }
 
 static void super_(Compiler* compiler, bool canAssign)

@@ -1164,6 +1164,9 @@ DEF_PRIMITIVE(string_startsWith)
 DEF_PRIMITIVE(string_plus)
 {
   if (!validateString(vm, args[1], "Right operand")) return false;
+
+  if (AS_STRING(args[0])->length == 0) RETURN_VAL(args[1]);
+  if (AS_STRING(args[1])->length == 0) RETURN_VAL(args[0]);
   RETURN_VAL(wrenStringFormat(vm, "@@", args[0], args[1]));
 }
 

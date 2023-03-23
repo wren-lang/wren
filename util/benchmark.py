@@ -94,6 +94,10 @@ BENCHMARK("map_string", r"""12799920000""")
 
 BENCHMARK("string_equals", r"""3000000""")
 
+BENCHMARK("string_interpolation", "")
+
+BENCHMARK("string_interpolation_gc", "")
+
 LANGUAGES = [
   ("wren",           [os.path.join(WREN_BIN, 'wren_test')], ".wren"),
   ("dart",           ["fletch", "run"],                ".dart"),
