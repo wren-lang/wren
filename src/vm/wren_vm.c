@@ -832,6 +832,35 @@ inline static bool checkArity(WrenVM* vm, Value value, int numArgs)
   return false;
 }
 
+inline static int invoke(WrenVM* vm, ObjFiber* fiber,
+                         ObjClass* classObj, Value* args, int numArgs)
+{
+  if (!IS_STRING(args[1]))
+  {
+    ASSERT(false, "Hanle more gracefully"); // FIXME
+    return -1;
+  }
+
+  ObjString* symbolStringObj = AS_STRING(args[1]);
+  int symbol = wrenSymbolTableFind(&vm->methodNames,
+      symbolStringObj->value, symbolStringObj->length);
+  if (symbol == -1)
+  {
+    fiber->error = wrenStringFormat(vm, "@ does not implement '$'.",
+        OBJ_VAL(classObj->name), symbolStringObj->value);
+    return -1;
+  }
+  // FIXME Check arity
+
+  // Drop the symbol name since we have its symbol index
+  for (size_t i = 0; i < numArgs; i++)
+  {
+    args[i+1] = args[i+2];
+  }
+  fiber->stackTop--;
+
+  return symbol;
+}
 
 // The main bytecode interpreter loop. This is where the magic happens. It is
 // also, as you can imagine, highly performance critical.
@@ -1043,6 +1072,66 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
       // The superclass is stored in a constant.
       classObj = AS_CLASS(fn->constants.data[READ_SHORT()]);
+      goto completeCall;
+
+    CASE_CODE(INVOKE_0):
+    CASE_CODE(INVOKE_1):
+    CASE_CODE(INVOKE_2):
+    CASE_CODE(INVOKE_3):
+    CASE_CODE(INVOKE_4):
+    CASE_CODE(INVOKE_5):
+    CASE_CODE(INVOKE_6):
+    CASE_CODE(INVOKE_7):
+    CASE_CODE(INVOKE_8):
+    CASE_CODE(INVOKE_9):
+    CASE_CODE(INVOKE_10):
+    CASE_CODE(INVOKE_11):
+    CASE_CODE(INVOKE_12):
+    CASE_CODE(INVOKE_13):
+    CASE_CODE(INVOKE_14):
+    CASE_CODE(INVOKE_15):
+    CASE_CODE(INVOKE_16):
+      // Add one for the implicit receiver argument.
+      numArgs = instruction - CODE_INVOKE_0 + 1;
+
+      // The receiver is the first argument.
+      args = fiber->stackTop - numArgs - 1;
+      classObj = wrenGetClassInline(vm, args[0]);
+
+      symbol = invoke(vm, fiber, classObj, args, numArgs);
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
+
+      goto completeCall;
+
+    CASE_CODE(INVOKE_SUPER_0):
+    CASE_CODE(INVOKE_SUPER_1):
+    CASE_CODE(INVOKE_SUPER_2):
+    CASE_CODE(INVOKE_SUPER_3):
+    CASE_CODE(INVOKE_SUPER_4):
+    CASE_CODE(INVOKE_SUPER_5):
+    CASE_CODE(INVOKE_SUPER_6):
+    CASE_CODE(INVOKE_SUPER_7):
+    CASE_CODE(INVOKE_SUPER_8):
+    CASE_CODE(INVOKE_SUPER_9):
+    CASE_CODE(INVOKE_SUPER_10):
+    CASE_CODE(INVOKE_SUPER_11):
+    CASE_CODE(INVOKE_SUPER_12):
+    CASE_CODE(INVOKE_SUPER_13):
+    CASE_CODE(INVOKE_SUPER_14):
+    CASE_CODE(INVOKE_SUPER_15):
+    CASE_CODE(INVOKE_SUPER_16):
+      // Add one for the implicit receiver argument.
+      numArgs = instruction - CODE_INVOKE_SUPER_0 + 1;
+
+      // The receiver is the first argument.
+      args = fiber->stackTop - numArgs - 1;
+
+      // The superclass is stored in a constant.
+      classObj = AS_CLASS(fn->constants.data[READ_SHORT()]);
+
+      symbol = invoke(vm, fiber, classObj, args, numArgs);
+      if (wrenHasError(fiber)) RUNTIME_ERROR();
+
       goto completeCall;
 
     completeCall:

@@ -2893,6 +2893,23 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_LOAD_LOCAL_6:
     case CODE_LOAD_LOCAL_7:
     case CODE_LOAD_LOCAL_8:
+    case CODE_INVOKE_0:
+    case CODE_INVOKE_1:
+    case CODE_INVOKE_2:
+    case CODE_INVOKE_3:
+    case CODE_INVOKE_4:
+    case CODE_INVOKE_5:
+    case CODE_INVOKE_6:
+    case CODE_INVOKE_7:
+    case CODE_INVOKE_8:
+    case CODE_INVOKE_9:
+    case CODE_INVOKE_10:
+    case CODE_INVOKE_11:
+    case CODE_INVOKE_12:
+    case CODE_INVOKE_13:
+    case CODE_INVOKE_14:
+    case CODE_INVOKE_15:
+    case CODE_INVOKE_16:
     case CODE_CONSTRUCT:
     case CODE_FOREIGN_CONSTRUCT:
     case CODE_FOREIGN_CLASS:
@@ -2931,6 +2948,23 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_CALL_14:
     case CODE_CALL_15:
     case CODE_CALL_16:
+    case CODE_INVOKE_SUPER_0:
+    case CODE_INVOKE_SUPER_1:
+    case CODE_INVOKE_SUPER_2:
+    case CODE_INVOKE_SUPER_3:
+    case CODE_INVOKE_SUPER_4:
+    case CODE_INVOKE_SUPER_5:
+    case CODE_INVOKE_SUPER_6:
+    case CODE_INVOKE_SUPER_7:
+    case CODE_INVOKE_SUPER_8:
+    case CODE_INVOKE_SUPER_9:
+    case CODE_INVOKE_SUPER_10:
+    case CODE_INVOKE_SUPER_11:
+    case CODE_INVOKE_SUPER_12:
+    case CODE_INVOKE_SUPER_13:
+    case CODE_INVOKE_SUPER_14:
+    case CODE_INVOKE_SUPER_15:
+    case CODE_INVOKE_SUPER_16:
     case CODE_JUMP:
     case CODE_LOOP:
     case CODE_JUMP_IF:
@@ -3890,6 +3924,29 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
       {
         // Fill in the constant slot with a reference to the superclass.
         int constant = (fn->code.data[ip + 3] << 8) | fn->code.data[ip + 4];
+        fn->constants.data[constant] = OBJ_VAL(classObj->superclass);
+        break;
+      }
+      case CODE_INVOKE_SUPER_0:
+      case CODE_INVOKE_SUPER_1:
+      case CODE_INVOKE_SUPER_2:
+      case CODE_INVOKE_SUPER_3:
+      case CODE_INVOKE_SUPER_4:
+      case CODE_INVOKE_SUPER_5:
+      case CODE_INVOKE_SUPER_6:
+      case CODE_INVOKE_SUPER_7:
+      case CODE_INVOKE_SUPER_8:
+      case CODE_INVOKE_SUPER_9:
+      case CODE_INVOKE_SUPER_10:
+      case CODE_INVOKE_SUPER_11:
+      case CODE_INVOKE_SUPER_12:
+      case CODE_INVOKE_SUPER_13:
+      case CODE_INVOKE_SUPER_14:
+      case CODE_INVOKE_SUPER_15:
+      case CODE_INVOKE_SUPER_16:
+      {
+        // Fill in the constant slot with a reference to the superclass.
+        int constant = (fn->code.data[ip + 1] << 8) | fn->code.data[ip + 2];
         fn->constants.data[constant] = OBJ_VAL(classObj->superclass);
         break;
       }

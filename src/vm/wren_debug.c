@@ -233,6 +233,52 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
 
+    case CODE_INVOKE_0:
+    case CODE_INVOKE_1:
+    case CODE_INVOKE_2:
+    case CODE_INVOKE_3:
+    case CODE_INVOKE_4:
+    case CODE_INVOKE_5:
+    case CODE_INVOKE_6:
+    case CODE_INVOKE_7:
+    case CODE_INVOKE_8:
+    case CODE_INVOKE_9:
+    case CODE_INVOKE_10:
+    case CODE_INVOKE_11:
+    case CODE_INVOKE_12:
+    case CODE_INVOKE_13:
+    case CODE_INVOKE_14:
+    case CODE_INVOKE_15:
+    case CODE_INVOKE_16:
+    {
+      int numArgs = bytecode[i - 1] - CODE_INVOKE_0;
+      printf("INVOKE_%d\n", numArgs);
+      break;
+    }
+
+    case CODE_INVOKE_SUPER_0:
+    case CODE_INVOKE_SUPER_1:
+    case CODE_INVOKE_SUPER_2:
+    case CODE_INVOKE_SUPER_3:
+    case CODE_INVOKE_SUPER_4:
+    case CODE_INVOKE_SUPER_5:
+    case CODE_INVOKE_SUPER_6:
+    case CODE_INVOKE_SUPER_7:
+    case CODE_INVOKE_SUPER_8:
+    case CODE_INVOKE_SUPER_9:
+    case CODE_INVOKE_SUPER_10:
+    case CODE_INVOKE_SUPER_11:
+    case CODE_INVOKE_SUPER_12:
+    case CODE_INVOKE_SUPER_13:
+    case CODE_INVOKE_SUPER_14:
+    case CODE_INVOKE_SUPER_15:
+    case CODE_INVOKE_SUPER_16:
+    {
+      int numArgs = bytecode[i - 1] - CODE_INVOKE_0;
+      printf("INVOKE_SUPER_%d\n", numArgs);
+      break;
+    }
+
     case CODE_JUMP:
     {
       int offset = READ_SHORT();
