@@ -1754,6 +1754,9 @@ static void statement(Compiler* compiler);
 static void definition(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
 
+static void literal(Compiler* compiler, bool canAssign);
+static void stringInterpolation(Compiler* compiler, bool canAssign);
+
 // Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
 // instruction with an offset that jumps to the current end of bytecode.
 static void patchJump(Compiler* compiler, int offset)
@@ -1993,6 +1996,24 @@ static void callSymbol(Compiler* compiler, Code instruction, int arity,
   }
 }
 
+static void invoke(Compiler* compiler, Code instruction, int arity)
+{
+  emitOp(compiler, (Code)(instruction + arity));
+
+  if (instruction == CODE_INVOKE_SUPER_0)
+  {
+    // Super calls need to be statically bound to the class's superclass. This
+    // ensures we call the right method even when a method containing a super
+    // call is inherited by another subclass.
+    //
+    // We bind it at class definition time by storing a reference to the
+    // superclass in a constant. So, here, we create a slot in the constant
+    // table and store NULL in it. When the method is bound, we'll look up the
+    // superclass then and store it in the constant slot.
+    emitShort(compiler, addConstant(compiler, NULL_VAL));
+  }
+}
+
 // Compiles a method call with [signature] using [instruction].
 static void callSignature(Compiler* compiler, Code instruction,
                           Signature* signature)
@@ -2059,6 +2080,34 @@ static void argumentList(Compiler* compiler, Signature* signature)
 
     endCompiler(&fnCompiler, blockName, blockLength + 15);
   }
+}
+
+static void methodInvoke(Compiler* compiler, Code instruction)
+{
+  // Make a dummy signature to track the arity and type.
+  Signature signature = { "", 0, SIG_GETTER, 0 };
+
+  if (match(compiler, TOKEN_STRING))
+  {
+    literal(compiler, false);
+  }
+  else if (match(compiler, TOKEN_INTERPOLATION))
+  {
+    stringInterpolation(compiler, false);
+  }
+  else
+  {
+    error(compiler, "A method invocation must have a name string.");
+  }
+
+  argumentList(compiler, &signature);
+
+  if (signature.type != SIG_METHOD)
+  {
+    error(compiler, "A method invocation must have an argument list.");
+  }
+
+  invoke(compiler, instruction, signature.arity);
 }
 
 // Compiles an (optional) argument list for a method call with [methodSignature]
@@ -2494,6 +2543,11 @@ static void super_(Compiler* compiler, bool canAssign)
   // See if it's a named super call, or an unnamed one.
   if (match(compiler, TOKEN_DOT))
   {
+    if (match(compiler, TOKEN_AT))
+    {
+      methodInvoke(compiler, CODE_INVOKE_SUPER_0);
+      return;
+    }
     // Compile the superclass call.
     consume(compiler, TOKEN_NAME, "Expect method name after 'super.'.");
     namedCall(compiler, canAssign, CODE_SUPER_0);
@@ -2544,6 +2598,11 @@ static void subscript(Compiler* compiler, bool canAssign)
 static void call(Compiler* compiler, bool canAssign)
 {
   ignoreNewlines(compiler);
+  if (match(compiler, TOKEN_AT))
+  {
+    methodInvoke(compiler, CODE_INVOKE_0);
+    return;
+  }
   consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
   namedCall(compiler, canAssign, CODE_CALL_0);
 }
