@@ -2006,19 +2006,12 @@ static void callMethod(Compiler* compiler, int numArgs, const char* name,
   callSymbol(compiler, CODE_CALL_0, numArgs, symbol);
 }
 
-// Compiles an (optional) argument list for a method call with [methodSignature]
-// and then calls it.
-static void methodCall(Compiler* compiler, Code instruction,
-                       Signature* signature)
+static void argumentList(Compiler* compiler, Signature* signature)
 {
-  // Make a new signature that contains the updated arity and type based on
-  // the arguments we find.
-  Signature called = { signature->name, signature->length, SIG_GETTER, 0 };
-
   // Parse the argument list, if any.
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
-    called.type = SIG_METHOD;
+    signature->type = SIG_METHOD;
 
     // Allow new line before an empty argument list
     ignoreNewlines(compiler);
@@ -2026,7 +2019,7 @@ static void methodCall(Compiler* compiler, Code instruction,
     // Allow empty an argument list.
     if (peek(compiler) != TOKEN_RIGHT_PAREN)
     {
-      finishArgumentList(compiler, &called);
+      finishArgumentList(compiler, signature);
     }
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
@@ -2035,8 +2028,8 @@ static void methodCall(Compiler* compiler, Code instruction,
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
     // Include the block argument in the arity.
-    called.type = SIG_METHOD;
-    called.arity++;
+    signature->type = SIG_METHOD;
+    signature->arity++;
 
     Compiler fnCompiler;
     initCompiler(&fnCompiler, compiler->parser, compiler, false);
@@ -2058,11 +2051,23 @@ static void methodCall(Compiler* compiler, Code instruction,
     // Name the function based on the method its passed to.
     char blockName[MAX_METHOD_SIGNATURE + 15];
     int blockLength;
-    signatureToString(&called, blockName, &blockLength);
+    signatureToString(signature, blockName, &blockLength);
     memmove(blockName + blockLength, " block argument", 16);
 
     endCompiler(&fnCompiler, blockName, blockLength + 15);
   }
+}
+
+// Compiles an (optional) argument list for a method call with [methodSignature]
+// and then calls it.
+static void methodCall(Compiler* compiler, Code instruction,
+                       Signature* signature)
+{
+  // Make a new signature that contains the updated arity and type based on
+  // the arguments we find.
+  Signature called = { signature->name, signature->length, SIG_GETTER, 0 };
+
+  argumentList(compiler, &called);
 
   // TODO: Allow Grace-style mixfix methods?
 
