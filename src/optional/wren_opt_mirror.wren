@@ -55,7 +55,15 @@ class ClassMirror is ObjectMirror {
   methodNames { _methodNames ||
       (_methodNames = ClassMirror.methodNames(reflectee)) }
 
-  methodMirrors { _methodMirrors }
+  methodMirrors {
+    if (_methodMirrors) return _methodMirrors
+
+    _methodMirrors = {}
+    for (methodName in methodNames) {
+      _methodMirrors[methodName] = MethodMirror.new_(this, methodName, 0)
+    }
+    return _methodMirrors
+  }
 
   hasMethod(signature) { ClassMirror.hasMethod(reflectee, signature) }
 }
@@ -106,8 +114,9 @@ class FiberMirror is ObjectMirror {
 class MethodMirror is Mirror {
   foreign static signature_(signatureIndex)
 
-  construct new_(boundToClassMirror, signatureIndex) {
+  construct new_(boundToClassMirror, signature, signatureIndex) {
     _boundToClassMirror = boundToClassMirror
+    _signature = signature
     _signatureIndex = signatureIndex
   }
 
@@ -118,7 +127,64 @@ class MethodMirror is Mirror {
 //  arity { MethodMirror.arity_(_method) }
 //  maxSlots { MethodMirror.maxSlots_(_method) }
 //  numUpvalues { MethodMirror.maxSlots_(_numUpvalues) }
-  signature { MethodMirror.signature_(_method) }
+  signature { _signature }
+
+  toString { _signature.toString }
+
+  validate_(self, arity) {
+    if (ObjectMirror.typeOf(self) != _boundToClassMirror.reflectee) Fiber.abort()
+    //if (arity != this.arity) Fiber.abort()
+    return self
+  }
+
+  call(self) {
+    return validate_(self, 0).@"%(signature)"()
+  }
+  call(self, arg0) {
+    return validate_(self, 1).@"%(signature)"(arg0)
+  }
+  call(self, arg0, arg1) {
+    return validate_(self, 2).@"%(signature)"(arg0, arg1)
+  }
+  call(self, arg0, arg1, arg2) {
+    return validate_(self, 3).@"%(signature)"(arg0, arg1, arg2)
+  }
+  call(self, arg0, arg1, arg2, arg3) {
+    return validate_(self, 4).@"%(signature)"(arg0, arg1, arg2, arg3)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4) {
+    return validate_(self, 5).@"%(signature)"(arg0, arg1, arg2, arg3, arg4)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5) {
+    return validate_(self, 6).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
+    return validate_(self, 7).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+    return validate_(self, 8).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+    return validate_(self, 9).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) {
+    return validate_(self, 10).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) {
+    return validate_(self, 11).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) {
+    return validate_(self, 12).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) {
+    return validate_(self, 13).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) {
+    return validate_(self, 14).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)
+  }
+  call(self, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) {
+    return validate_(self, 15).@"%(signature)"(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14)
+  }
 }
 
 class ModuleMirror is Mirror {
