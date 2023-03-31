@@ -1971,11 +1971,10 @@ static void finishArgumentList(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method call with [signature] using [instruction].
-static void callSignature(Compiler* compiler, Code instruction,
-                          Signature* signature)
+static void callSymbol(Compiler* compiler, Code instruction, int arity,
+                       int symbol)
 {
-  int symbol = signatureSymbol(compiler, signature);
-  emitShortArg(compiler, (Code)(instruction + signature->arity), symbol);
+  emitShortArg(compiler, (Code)(instruction + arity), symbol);
 
   if (instruction == CODE_SUPER_0)
   {
@@ -1991,12 +1990,20 @@ static void callSignature(Compiler* compiler, Code instruction,
   }
 }
 
+// Compiles a method call with [signature] using [instruction].
+static void callSignature(Compiler* compiler, Code instruction,
+                          Signature* signature)
+{
+  int symbol = signatureSymbol(compiler, signature);
+  callSymbol(compiler, instruction, signature->arity, symbol);
+}
+
 // Compiles a method call with [numArgs] for a method with [name] with [length].
 static void callMethod(Compiler* compiler, int numArgs, const char* name,
                        int length)
 {
   int symbol = methodSymbol(compiler, name, length);
-  emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs), symbol);
+  callSymbol(compiler, CODE_CALL_0, numArgs, symbol);
 }
 
 // Compiles an (optional) argument list for a method call with [methodSignature]
