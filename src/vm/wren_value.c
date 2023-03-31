@@ -47,6 +47,7 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
 {
   ObjClass* classObj = ALLOCATE(vm, ObjClass);
   initObj(vm, &classObj->obj, OBJ_CLASS, NULL);
+  classObj->module = vm->lastModule;
   classObj->superclass = NULL;
   classObj->numFields = numFields;
   classObj->name = name;
@@ -245,6 +246,7 @@ ObjFn* wrenNewFunction(WrenVM* vm, ObjModule* module, int maxSlots)
 {
   FnDebug* debug = ALLOCATE(vm, FnDebug);
   debug->name = NULL;
+  debug->boundToClass = NULL;
   wrenIntBufferInit(&debug->sourceLines);
 
   ObjFn* fn = ALLOCATE(vm, ObjFn);
@@ -409,6 +411,10 @@ static uint32_t hashObject(Obj* object)
       ObjFn* fn = (ObjFn*)object;
       return hashNumber(fn->arity) ^ hashNumber(fn->code.count);
     }
+
+    case OBJ_MODULE:
+      // Modules just use their name.
+      return hashObject((Obj*)(((ObjModule*)object)->name));
 
     case OBJ_RANGE:
     {
@@ -644,6 +650,8 @@ Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
 
 ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
 {
+  ASSERT(name != NULL, "Name cannot be NULL");
+
   ObjModule* module = ALLOCATE(vm, ObjModule);
 
   // Modules are never used as first-class objects, so don't need a class.

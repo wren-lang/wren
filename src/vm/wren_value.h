@@ -78,6 +78,7 @@
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
 #define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
+#define IS_MODULE(value) (wrenIsObjType(value, OBJ_MODULE))     // ObjModule
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
 
@@ -211,6 +212,8 @@ typedef struct
   // The name of the function. Heap allocated and owned by the FnDebug.
   char* name;
 
+  ObjClass* boundToClass;
+
   // An array of line numbers. There is one element in this array for each
   // bytecode in the function's bytecode array. The value of that element is
   // the line in the source code that generated that instruction.
@@ -247,7 +250,7 @@ typedef struct
 typedef struct
 {
   Obj obj;
-  
+
   ByteBuffer code;
   ValueBuffer constants;
   
@@ -392,6 +395,7 @@ DECLARE_BUFFER(Method, Method);
 struct sObjClass
 {
   Obj obj;
+  ObjModule* module;
   ObjClass* superclass;
 
   // The number of fields needed for an instance of this class, including all
@@ -632,6 +636,18 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
                        ObjString* name);
 
 void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method);
+
+static inline Method *wrenClassGetMethod(WrenVM* vm, const ObjClass* classObj,
+                                         int symbol)
+{
+  Method* method;
+  if (symbol >= 0 && symbol < classObj->methods.count &&
+      (method = &classObj->methods.data[symbol])->type != METHOD_NONE)
+  {
+    return method;
+  }
+  return NULL;
+}
 
 // Creates a new closure object that invokes [fn]. Allocates room for its
 // upvalues, but assumes outside code will populate it.
@@ -881,6 +897,7 @@ static inline bool wrenMapIsValidKey(Value arg)
 {
   return IS_BOOL(arg)
       || IS_CLASS(arg)
+      || IS_MODULE(arg)
       || IS_NULL(arg)
       || IS_NUM(arg)
       || IS_RANGE(arg)
