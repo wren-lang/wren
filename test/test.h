@@ -79,7 +79,7 @@ typedef struct
   WrenLoadModuleResult readModule(WrenVM* vm, const char* module);
 //vm helpers
   void vm_write(WrenVM* vm, const char* text);
-  void reportError(WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message);
+  void reportError(WrenVM* vm, int type, const char* module, int line, const char* message);
   const char* resolveModule(WrenVM* vm, const char* importer, const char* module);
 //main helpers
   bool isModuleAnAPITest(const char* module);

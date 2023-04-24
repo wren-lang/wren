@@ -345,7 +345,7 @@
     printf("%s", text);
   }
 
-  void reportError(WrenVM* vm, WrenErrorType type, 
+  void reportError(WrenVM* vm, int type, 
     const char* module, int line, const char* message)
   {
     switch (type)

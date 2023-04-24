@@ -216,7 +216,7 @@ static void writeFn(WrenVM* vm, const char* text)
   printf("%s", text);
 }
 
-void errorFn(WrenVM* vm, WrenErrorType errorType,
+void errorFn(WrenVM* vm, int errorType,
              const char* module, const int line,
              const char* msg)
 {

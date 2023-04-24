@@ -138,7 +138,7 @@ is:
 <pre class="snippet" data-lang="c">
 void error(
       WrenVM* vm, 
-      WrenErrorType type,
+      int type,
       const char* module,
       int line,
       const char* message)

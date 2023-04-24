@@ -8,7 +8,7 @@ static void writeFn(WrenVM* vm, const char* text)
   printf("%s", text);
 }
 
-static void reportError(WrenVM* vm, WrenErrorType type,
+static void reportError(WrenVM* vm, int type,
                         const char* module, int line, const char* message)
 {
   if (type == WREN_ERROR_RUNTIME) printf("%s\n", message);
