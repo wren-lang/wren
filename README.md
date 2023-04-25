@@ -3,7 +3,7 @@
 Think Smalltalk in a Lua-sized package with a dash of Erlang and wrapped up in
 a familiar, modern [syntax][].
 
-```dart
+```wren
 System.print("Hello, world!")
 
 class Wren {
