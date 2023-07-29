@@ -1415,7 +1415,7 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
     }
   }
   
-  // Add the signatue to the method table.
+  // Add the signature to the method table.
   int method =  wrenSymbolTableEnsure(vm, &vm->methodNames,
                                       signature, signatureLength);
   

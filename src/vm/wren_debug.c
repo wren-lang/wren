@@ -341,7 +341,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
 
     default:
-      printf("UKNOWN! [%d]\n", bytecode[i - 1]);
+      printf("UNKNOWN! [%d]\n", bytecode[i - 1]);
       break;
   }
 
