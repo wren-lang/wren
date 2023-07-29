@@ -197,7 +197,7 @@ side.
 
 The body of a method is a [block](syntax.html#blocks). If it is a single
 expression&mdash;more precisely if there is no newline after the `{` &mdash;
-then the function implicitly returns the value of the expression.
+then the method implicitly returns the value of the expression.
 
 Otherwise, the body returns `null` by default. You can explicitly return a
 value using a `return` statement. In other words, these two methods do the
