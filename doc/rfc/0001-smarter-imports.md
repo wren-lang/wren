@@ -79,7 +79,7 @@ You aren't saying *where* that module should be found, you're saying *what*
 module you want. Assuming we get a package manager at some point, these kinds of
 "logical" imports will be common. So I want these too.
 
-If you look at other langauges' package managers, you'll find many times a
+If you look at other languages' package managers, you'll find many times a
 single package offers a number of separate libraries you can use. So I also
 want to support logical imports that contain a path too — the import would say
 both *what* package to look in and *where* in that package to look.

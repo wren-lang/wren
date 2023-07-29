@@ -1,7 +1,7 @@
 // Handle empty list.
 System.print([].join(",") == "") // expect: true
 
-// Handle a simple list with an empty delimeter.
+// Handle a simple list with an empty delimiter.
 System.print([1, 2, 3].join("")) // expect: 123
 
 // Handle a simple list with no separator.

@@ -66,7 +66,7 @@ We'll fix that with 0.3.0.
 
 The 0.3.0 goals in simple form:
 - VM / CLI split
-- Build consistency/reliablity
+- Build consistency/reliability
 - Web build for embedding in docs
 - Prebuilt releases
 

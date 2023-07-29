@@ -11,7 +11,7 @@ Let's revisit our goals from [the last blog post](1-0.2.0-and-beyond.html),
 and mark what we managed to get done:
 
 - <s>VM / CLI split</s> [#](#vm--cli-split)
-- <s>Build consistency/reliablity</s> [#](#build-consistencyreliability)
+- <s>Build consistency/reliability</s> [#](#build-consistencyreliability)
 - <s>Web build for embedding in docs</s> [#](#web-build-for-embedding-in-docs)
 - <s>Prebuilt releases</s> [#](#prebuilt-releases)
 
