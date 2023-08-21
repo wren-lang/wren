@@ -21,7 +21,7 @@ even on user-defined classes.
 
 Returns `false`, since most objects are considered [true][].
 
-[true]: control-flow.html#truth
+[true]: ../../control-flow.html#truth
 
 ### **==**(other) and **!=**(other) operators
 
