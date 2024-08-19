@@ -65,7 +65,7 @@ void metaGetModuleVariables(WrenVM* vm)
   }
 }
 
-const char* wrenMetaSource()
+const char* wrenMetaSource(void)
 {
   return metaModuleSource;
 }

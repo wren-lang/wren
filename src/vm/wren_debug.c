@@ -47,19 +47,19 @@ static void dumpObject(Obj* obj)
   switch (obj->type)
   {
     case OBJ_CLASS:
-      printf("[class %s %p]", ((ObjClass*)obj)->name->value, obj);
+      printf("[class %s %p]", ((ObjClass*)obj)->name->value, (void*)obj);
       break;
-    case OBJ_CLOSURE: printf("[closure %p]", obj); break;
-    case OBJ_FIBER: printf("[fiber %p]", obj); break;
-    case OBJ_FN: printf("[fn %p]", obj); break;
-    case OBJ_FOREIGN: printf("[foreign %p]", obj); break;
-    case OBJ_INSTANCE: printf("[instance %p]", obj); break;
-    case OBJ_LIST: printf("[list %p]", obj); break;
-    case OBJ_MAP: printf("[map %p]", obj); break;
-    case OBJ_MODULE: printf("[module %p]", obj); break;
-    case OBJ_RANGE: printf("[range %p]", obj); break;
+    case OBJ_CLOSURE: printf("[closure %p]",(void*) obj); break;
+    case OBJ_FIBER: printf("[fiber %p]", (void*)obj); break;
+    case OBJ_FN: printf("[fn %p]", (void*)obj); break;
+    case OBJ_FOREIGN: printf("[foreign %p]", (void*)obj); break;
+    case OBJ_INSTANCE: printf("[instance %p]",(void*) obj); break;
+    case OBJ_LIST: printf("[list %p]", (void*)obj); break;
+    case OBJ_MAP: printf("[map %p]",(void*) obj); break;
+    case OBJ_MODULE: printf("[module %p]", (void*)obj); break;
+    case OBJ_RANGE: printf("[range %p]",(void*) obj); break;
     case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
-    case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
+    case OBJ_UPVALUE: printf("[upvalue %p]", (void*)obj); break;
     default: printf("[unknown object %d]", obj->type); break;
   }
 }
@@ -378,7 +378,7 @@ void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 
 void wrenDumpStack(ObjFiber* fiber)
 {
-  printf("(fiber %p) ", fiber);
+  printf("(fiber %p) ", (void*)fiber);
   for (Value* slot = fiber->stack; slot < fiber->stackTop; slot++)
   {
     wrenDumpValue(*slot);

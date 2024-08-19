@@ -299,7 +299,7 @@ typedef enum
 // Get the current wren version number.
 //
 // Can be used to range checks over versions.
-WREN_API int wrenGetVersionNumber();
+WREN_API int wrenGetVersionNumber(void);
 
 // Initializes [configuration] with all of its default values.
 //

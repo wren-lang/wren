@@ -102,7 +102,7 @@ static void randomInt0(WrenVM* vm)
   wrenSetSlotDouble(vm, 0, (double)advanceState(well));
 }
 
-const char* wrenRandomSource()
+const char* wrenRandomSource(void)
 {
   return randomModuleSource;
 }
