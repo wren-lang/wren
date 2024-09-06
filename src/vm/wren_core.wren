@@ -184,6 +184,9 @@ class WhereSequence is Sequence {
 class String is Sequence {
   bytes { StringByteSequence.new(this) }
   codePoints { StringCodePointSequence.new(this) }
+  toString() { 
+    return this 
+  }
 
   split(delimiter) {
     if (!(delimiter is String) || delimiter.isEmpty) {
@@ -463,12 +466,7 @@ class System {
   }
 
   static writeObject_(obj) {
-    var string = obj.toString
-    if (string is String) {
-      writeString_(string)
-    } else {
-      writeString_("[invalid toString]")
-    }
+      writeString_(obj.toString())
   }
 }
 
