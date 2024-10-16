@@ -597,7 +597,7 @@ typedef struct
 } Keyword;
 
 // The table of reserved words and their associated token types.
-static Keyword keywords[] =
+static const Keyword keywords[] =
 {
   {"break",     5, TOKEN_BREAK},
   {"continue",  8, TOKEN_CONTINUE},
