@@ -2580,7 +2580,7 @@ static void conditional(Compiler* compiler, bool canAssign)
   patchJump(compiler, elseJump);
 }
 
-void infixOp(Compiler* compiler, bool canAssign)
+static void infixOp(Compiler* compiler, bool canAssign)
 {
   GrammarRule* rule = getRule(compiler->parser->previous.type);
 
@@ -2596,7 +2596,7 @@ void infixOp(Compiler* compiler, bool canAssign)
 }
 
 // Compiles a method signature for an infix operator.
-void infixSignature(Compiler* compiler, Signature* signature)
+static void infixSignature(Compiler* compiler, Signature* signature)
 {
   // Add the RHS parameter.
   signature->type = SIG_METHOD;
@@ -2609,7 +2609,7 @@ void infixSignature(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for an unary operator (i.e. "!").
-void unarySignature(Compiler* compiler, Signature* signature)
+static void unarySignature(Compiler* compiler, Signature* signature)
 {
   // Do nothing. The name is already complete.
   signature->type = SIG_GETTER;
@@ -2617,7 +2617,7 @@ void unarySignature(Compiler* compiler, Signature* signature)
 
 // Compiles a method signature for an operator that can either be unary or
 // infix (i.e. "-").
-void mixedSignature(Compiler* compiler, Signature* signature)
+static void mixedSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_GETTER;
 
@@ -2663,7 +2663,7 @@ static bool maybeSetter(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for a subscript operator.
-void subscriptSignature(Compiler* compiler, Signature* signature)
+static void subscriptSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_SUBSCRIPT;
 
@@ -2698,7 +2698,7 @@ static void parameterList(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for a named method or setter.
-void namedSignature(Compiler* compiler, Signature* signature)
+static void namedSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_GETTER;
   
@@ -2710,7 +2710,7 @@ void namedSignature(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for a constructor.
-void constructorSignature(Compiler* compiler, Signature* signature)
+static void constructorSignature(Compiler* compiler, Signature* signature)
 {
   consume(compiler, TOKEN_NAME, "Expect constructor name after 'construct'.");
   
