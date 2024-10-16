@@ -332,7 +332,7 @@ struct sCompiler
   int numLocals;
 
   // The upvalues that this function has captured from outer scopes. The count
-  // of them is stored in [numUpvalues].
+  // of them is stored in [fn->numUpvalues].
   CompilerUpvalue upvalues[MAX_UPVALUES];
 
   // The current level of block scope nesting, where zero is no nesting. A -1
