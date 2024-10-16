@@ -1745,7 +1745,7 @@ typedef struct
 } GrammarRule;
 
 // Forward declarations since the grammar is recursive.
-static GrammarRule* getRule(TokenType type);
+static const GrammarRule* getRule(TokenType type);
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
 static void definition(Compiler* compiler);
@@ -2201,7 +2201,7 @@ static void map(Compiler* compiler, bool canAssign)
 // Unary operators like `-foo`.
 static void unaryOp(Compiler* compiler, bool canAssign)
 {
-  GrammarRule* rule = getRule(compiler->parser->previous.type);
+  const GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   ignoreNewlines(compiler);
 
@@ -2582,7 +2582,7 @@ static void conditional(Compiler* compiler, bool canAssign)
 
 static void infixOp(Compiler* compiler, bool canAssign)
 {
-  GrammarRule* rule = getRule(compiler->parser->previous.type);
+  const GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   // An infix operator cannot end an expression.
   ignoreNewlines(compiler);
@@ -2746,7 +2746,7 @@ static void constructorSignature(Compiler* compiler, Signature* signature)
 #define PREFIX_OPERATOR(name)      { unaryOp, NULL, unarySignature, PREC_NONE, name }
 #define OPERATOR(name)             { unaryOp, infixOp, mixedSignature, PREC_TERM, name }
 
-GrammarRule rules[] =
+static const GrammarRule rules[] =
 {
   /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
@@ -2815,7 +2815,7 @@ GrammarRule rules[] =
 };
 
 // Gets the [GrammarRule] associated with tokens of [type].
-static GrammarRule* getRule(TokenType type)
+static const GrammarRule* getRule(TokenType type)
 {
   return &rules[type];
 }
