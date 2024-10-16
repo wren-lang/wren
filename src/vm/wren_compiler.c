@@ -1624,7 +1624,7 @@ static Variable resolveNonmodule(Compiler* compiler,
   variable.index = resolveLocal(compiler, name, length);
   if (variable.index != -1) return variable;
 
-  // Tt's not a local, so guess that it's an upvalue.
+  // It's not a local, so guess that it's an upvalue.
   variable.scope = SCOPE_UPVALUE;
   variable.index = findUpvalue(compiler, name, length);
   return variable;
@@ -1835,7 +1835,7 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
 }
 
 // Parses the rest of a comma-separated parameter list after the opening
-// delimeter. Updates `arity` in [signature] with the number of parameters.
+// delimiter. Updates `arity` in [signature] with the number of parameters.
 static void finishParameterList(Compiler* compiler, Signature* signature)
 {
   do
@@ -2616,7 +2616,7 @@ static void unarySignature(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for an operator that can either be unary or
-// infix (i.e. "-").
+// infix (e.g. "-").
 static void mixedSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_GETTER;
