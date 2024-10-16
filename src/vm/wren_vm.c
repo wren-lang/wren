@@ -889,7 +889,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
   #if WREN_COMPUTED_GOTO
 
-  static void* dispatchTable[] = {
+  static const void* dispatchTable[] = {
     #define OPCODE(name, _) &&code_##name,
     #include "wren_opcodes.h"
     #undef OPCODE
