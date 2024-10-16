@@ -2821,7 +2821,7 @@ static GrammarRule* getRule(TokenType type)
 }
 
 // The main entrypoint for the top-down operator precedence parser.
-void parsePrecedence(Compiler* compiler, Precedence precedence)
+static void parsePrecedence(Compiler* compiler, Precedence precedence)
 {
   nextToken(compiler->parser);
   GrammarFn prefix = rules[compiler->parser->previous.type].prefix;
@@ -2852,7 +2852,7 @@ void parsePrecedence(Compiler* compiler, Precedence precedence)
 
 // Parses an expression. Unlike statements, expressions leave a resulting value
 // on the stack.
-void expression(Compiler* compiler)
+static void expression(Compiler* compiler)
 {
   parsePrecedence(compiler, PREC_LOWEST);
 }
@@ -3172,7 +3172,7 @@ static void whileStatement(Compiler* compiler)
 // branches of an "if" statement.
 //
 // Unlike expressions, statements do not leave a value on the stack.
-void statement(Compiler* compiler)
+static void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_BREAK))
   {
@@ -3724,7 +3724,7 @@ static void variableDefinition(Compiler* compiler)
 // Compiles a "definition". These are the statements that bind new variables.
 // They can only appear at the top level of a block and are prohibited in places
 // like the non-curly body of an if or while.
-void definition(Compiler* compiler)
+static void definition(Compiler* compiler)
 {
   if(matchAttribute(compiler)) {
     definition(compiler);
