@@ -551,9 +551,11 @@ static Value validateSuperclass(WrenVM* vm, Value name, Value superclassValue,
 
   if (superclass->numFields + numFields > MAX_FIELDS)
   {
-    return wrenStringFormat(vm,
-        "Class '@' may not have more than 255 fields, including inherited "
-        "ones.", name);
+#define MESG(num) "Class '@' may not have more than " #num " fields, including inherited ones."
+#define EXPAND_ARG__MESG(arg) MESG(arg)
+    return wrenStringFormat(vm, EXPAND_ARG__MESG(MAX_FIELDS), name);
+#undef EXPAND_ARG__MESG
+#undef MESG
   }
 
   return NULL_VAL;
