@@ -86,11 +86,11 @@ can also be used in other foreign methods:
 [slot]: slots-and-handles.html
 
 * The `slot` parameter is the destination slot where the new foreign object
-  should be placed. When you're calling this in a foreign class's allocate
+  should be placed. When you're calling this in a foreign class's `allocate`
   callback, this should be 0.
 
 * The `classSlot` parameter is the slot where the foreign class being
-  constructed can be found. When the VM calls an allocate callback for a
+  constructed can be found. When the VM calls an `allocate` callback for a
   foreign class, the class itself is already in slot 0, so you'll pass 0 for
   this too.
 
@@ -113,7 +113,7 @@ Any parameters passed to the constructor are also available in subsequent slots
 in the slot array. That way you can initialize the foreign data based on values
 passed to the constructor from Wren.
 
-After the allocate callback returns, the class's constructor in Wren is run and
+After the `allocate` callback returns, the class's constructor in Wren is run and
 execution proceeds like normal. From here on out, within Wren, it appears you
 have a normal instance of a class. It just happens to have some extra bytes
 hiding inside it that can be accessed from foreign methods.
@@ -159,7 +159,7 @@ But if they forget to do that and the object is no longer reachable, you want to
 make sure the resource isn't leaked.
 
 To that end, you can also provide a *finalizer* function when binding the
-foreign class. That's the other callback in the WrenForeignClassMethods struct.
+foreign class. That's the other callback in the `WrenForeignClassMethods` struct.
 If you provide that callback, then Wren will invoke it when an instance of your
 foreign class is about to be freed by the garbage collector. This gives you one
 last chance to clean up the object's resources.
@@ -169,7 +169,7 @@ have unfettered access to the VM. It's not like a normal foreign method where
 you can monkey around with slots and other stuff. Doing that while the GC is
 running could leave Wren in a weird state.
 
-Instead, the finalize callback's signature is only:
+Instead, the `finalize` callback's signature is only:
 
 <pre class="snippet" data-lang="c">
 void finalize(void* data);
@@ -182,7 +182,7 @@ referenced by that memory.
 ## A Full Example
 
 That's a lot to take in, so let's walk through a full example of a foreign class
-with a finalizer and a couple of methods. We'll do a File class that wraps the
+with a finalizer and a couple of methods. We'll do a `File` class that wraps the
 C standard file API.
 
 In Wren, the class we want looks like this:
@@ -249,8 +249,8 @@ WrenForeignClassMethods bindForeignClass(
 }
 </pre>
 
-When our binding callback is invoked for the File class, we return the allocate
-and finalize functions the VM should call. Allocation looks like:
+When our binding callback is invoked for the `File` class, we return the allocator
+and finalizer functions the VM should call. Allocation looks like:
 
 <pre class="snippet" data-lang="c">
 #include &lt;stdio.h>

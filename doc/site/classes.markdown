@@ -174,7 +174,7 @@ You're saying "look up the method `isFancy` in the scope of the object
 the object to the left of the period is the object you want to look up the
 method on.
 
-### `this`
+### Using `this`
 
 Things get more interesting when you're inside the body of a method. When the
 method is called on some object and the body is being executed, you often need

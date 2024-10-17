@@ -73,7 +73,7 @@ arguments.
 
 This is just a regular WrenHandle, which means you can hold onto it as long as
 you like. Typically, you'd call this once outside of your application's
-performance critical loops and reuse it as long as you need. It is us up to you
+performance critical loops and reuse it as long as you need. It is up to you
 to release it when you no longer need it by calling `wrenReleaseHandle()`.
 
 ## Setting Up a Receiver
@@ -173,7 +173,7 @@ keeps running until either the method returns or a fiber [suspends][].
 
 [suspends]: ../modules/core/fiber.html#fiber.suspend()
 
-`wrenCall()` returns the same WrenInterpretResult enum as `wrenInterpret()` to
+`wrenCall()` returns the same `WrenInterpretResult` enum as `wrenInterpret()` to
 tell you if the method completed successfully or a runtime error occurred.
 (`wrenCall()` never returns `WREN_ERROR_COMPILE` since it doesn't compile
 anything.)

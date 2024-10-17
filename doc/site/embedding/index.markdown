@@ -106,8 +106,8 @@ virtual machine. To do that, you create a `WrenConfiguration` object and
 initialize it.
 
 <pre class="snippet" data-lang="c">
-    WrenConfiguration config;
-    wrenInitConfiguration(&config);
+WrenConfiguration config;
+wrenInitConfiguration(&config);
 </pre>
 
 This gives you a basic configuration that has reasonable defaults for
@@ -129,7 +129,7 @@ And then, we update the configuration to point to it.
 <pre class="snippet" data-lang="c">
   WrenConfiguration config;
   wrenInitConfiguration(&config);
-    config.writeFn = &writeFn;
+  config.writeFn = &writeFn;
 </pre>
 
 [configuration]: configuring-the-vm.html
@@ -242,8 +242,8 @@ int main()
 
   WrenConfiguration config;
   wrenInitConfiguration(&config);
-    config.writeFn = &writeFn;
-    config.errorFn = &errorFn;
+  config.writeFn = &writeFn;
+  config.errorFn = &errorFn;
   WrenVM* vm = wrenNewVM(&config);
 
   const char* module = "main";

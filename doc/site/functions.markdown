@@ -88,7 +88,7 @@ class Counter {
 Here, the `create` method returns the function created on its second line. That
 function references a variable `i` declared outside of the function. Even after
 the function is returned from `create`, it is still able to read and assign
-to`i`:
+to `i`:
 
 <pre class="snippet">
 var counter = Counter.create()
@@ -171,14 +171,14 @@ class Clickable {
   }
 
   fireEvent(button) {
-    if(_fn && button == _button) {
+    if (_fn && button == _button) {
       _fn.call(button)
     }
   }
 }
 </pre>
 
-Now that we've got the clickable class, let's use it.
+Now that we've got the `Clickable` class, let's use it.
 We'll start by using the method that accepts just a function
 because we're fine with it just being the default left mouse button.
 

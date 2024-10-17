@@ -1,7 +1,7 @@
 ^title Configuring the VM
 
 When you create a Wren VM, you tweak it by passing in a pointer to a
-WrenConfiguration structure. Since Wren has no global state, you can configure
+`WrenConfiguration` structure. Since Wren has no global state, you can configure
 each VM differently if your application happens to run multiple.
 
 The struct looks like:
@@ -29,7 +29,7 @@ wrenInitConfiguration(&configuration);
 </pre>
 
 Calling this ensures that your VM doesn't get uninitialized configuration when
-new fields are added to WrenConfiguration. Here is what each field does, roughly
+new fields are added to `WrenConfiguration`. Here is what each field does, roughly
 categorized:
 
 ## Binding
@@ -37,7 +37,7 @@ categorized:
 The VM is isolated from the outside world. These callbacks let the VM request
 access to imported code and foreign functionality.
 
-### **`loadModuleFn`**
+### The **`loadModuleFn`** callback
 
 This is the callback Wren uses to load an imported module. The VM itself does
 not know how to talk to the file system, so when an `import` statement is
@@ -56,12 +56,12 @@ host should return the source code for that module in a `WrenLoadModuleResult` s
 <pre class="snippet" data-lang="c">
 WrenLoadModuleResult myLoadModule(WrenVM* vm, const char* name) {
   WrenLoadModuleResult result = {0};
-    result.source = getSourceForModule(name);
+  result.source = getSourceForModule(name);
   return result;
 }
 </pre>
 
-The module loader is only be called once for any given module name. Wren caches
+The module loader is only called once for any given module name. Wren caches
 the result internally so subsequent imports of the same module use the
 previously loaded code.
 
@@ -80,7 +80,7 @@ static void loadModuleComplete(WrenVM* vm,
                                const char* module,
                                WrenLoadModuleResult result) 
 {
-  if(result.source) {
+  if (result.source) {
     //for example, if we used malloc to allocate
     //our source string, we use free to release it.
     free((void*)result.source);
@@ -89,23 +89,23 @@ static void loadModuleComplete(WrenVM* vm,
 
 WrenLoadModuleResult myLoadModule(WrenVM* vm, const char* name) {
   WrenLoadModuleResult result = {0};
-    result.onComplete = loadModuleComplete;
-    result.source = getSourceForModule(name);
+  result.onComplete = loadModuleComplete;
+  result.source = getSourceForModule(name);
   return result;
 }
 </pre>
 
-### **`bindForeignMethodFn`**
+### The **`bindForeignMethodFn`** callback
 
-The callback Wren uses to find a foreign method and bind it to a class. See
+This is the callback Wren uses to find a foreign method and bind it to a class. See
 [this page][foreign method] for details. If your application defines no foreign
 methods, you can leave this `NULL`.
 
 [foreign method]: /embedding/calling-c-from-wren.html
 
-### **`bindForeignClassFn`**
+### The **`bindForeignClassFn`** callback
 
-The callback Wren uses to find a foreign class and get its foreign methods. See
+This is the callback Wren uses to find a foreign class and get its foreign methods. See
 [this page][foreign class] for details. If your application defines no foreign
 classes, you can leave this `NULL`.
 
@@ -116,11 +116,11 @@ classes, you can leave this `NULL`.
 These let you wire up some minimal output so you can tell if your code is doing
 what you expect.
 
-### **`writeFn`**
+### The **`writeFn`** callback
 
 This is the callback Wren uses to output text when `System.print()` or the other
 related functions are called. This is the minimal connection the VM has with the
-outside world and lets you do rudimentary "printf debugging". Its signature is:
+outside world and lets you do rudimentary "`printf()` debugging". Its signature is:
 
 <pre class="snippet" data-lang="c">
 void write(WrenVM* vm, const char* text)
@@ -130,7 +130,7 @@ Wren does *not* have a default implementation for this. It's up to you to wire
 it up to `printf()` or some other way to show the text. If you leave it `NULL`,
 calls to `System.print()` and others silently do nothing.
 
-### **`errorFn`**
+### The **`errorFn`** callback
 
 Wren uses this callback to report compile time and runtime errors. Its signature
 is:
@@ -177,7 +177,7 @@ If you leave this `NULL`, Wren does not report any errors.
 
 These fields control how the VM allocates and manages memory.
 
-### **`reallocateFn`**
+### The **`reallocateFn`** callback
 
 This lets you provide a custom memory allocation function. Its signature is:
 
@@ -195,9 +195,9 @@ freed, this is zero. Your callback should allocate the proper amount of memory
 and return it.
 
 If you don't provide a custom allocator, the VM uses a default one that relies
-on `realloc` and `free`.
+on `realloc()` and `free()`.
 
-### **`initialHeapSize`**
+### The **`initialHeapSize`** field
 
 This defines the total number of bytes of memory the VM will allocate before
 triggering the first garbage collection. Setting this to a smaller number
@@ -206,7 +206,7 @@ to collect garbage more frequently.
 
 If you set this to zero, Wren uses a default size of 10MB.
 
-### **`minHeapSize`**
+### The **`minHeapSize`** field
 
 After a garbage collection occurs, the threshold for the *next* collection is
 determined based on the number of bytes remaining in use. This allows Wren to
@@ -219,7 +219,7 @@ back to a usable size.
 
 If zero, this defaults to 1MB.
 
-### **`heapGrowthPercent`**
+### The **`heapGrowthPercent`** field
 
 Wren tunes the rate of garbage collection based on how much memory is still in
 use after a collection. This number controls that. It determines the amount of

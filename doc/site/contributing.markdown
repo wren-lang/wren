@@ -69,7 +69,7 @@ server from there. Python includes one:
     $ python -m http.server
 
 Running that script every time you change a line of Markdown can be slow,
-so there is also a file watching version that will automatically regenerate the
+so there is also a file-watching version that will automatically regenerate the
 docs when you edit a file:
 
     $ python util/generate_docs.py --watch
