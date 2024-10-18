@@ -8,8 +8,8 @@ while (i <= 2) {
   var j = 0
   while (j <= 2) {
     j = j + 1
-  
-	if(j == 2) continue
+
+    if (j == 2) continue
     System.print("inner %(j)")
   }
 }

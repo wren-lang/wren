@@ -134,7 +134,7 @@ int wrenUtf8Decode(const uint8_t* bytes, uint32_t length)
   }
   else if ((*bytes & 0xf0) == 0xe0)
   {
-    // Three byte sequence: 1110xxxx	 10xxxxxx 10xxxxxx.
+    // Three byte sequence: 1110xxxx 10xxxxxx 10xxxxxx.
     value = *bytes & 0x0f;
     remainingBytes = 2;
   }
