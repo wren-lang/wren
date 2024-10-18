@@ -1398,7 +1398,7 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   int signatureLength = (int)strlen(signature);
   ASSERT(signatureLength > 0, "Signature cannot be empty.");
   
-  // Count the number parameters the method expects.
+  // Count the number of parameters the method expects.
   int numParams = 0;
   if (signature[signatureLength - 1] == ')')
   {
@@ -1417,9 +1417,9 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
     }
   }
   
-  // Add the signatue to the method table.
-  int method =  wrenSymbolTableEnsure(vm, &vm->methodNames,
-                                      signature, signatureLength);
+  // Add the signature to the method table.
+  int method = wrenSymbolTableEnsure(vm, &vm->methodNames,
+                                     signature, signatureLength);
   
   // Create a little stub function that assumes the arguments are on the stack
   // and calls the method.
