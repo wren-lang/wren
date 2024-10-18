@@ -838,6 +838,7 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...)
       default:
         // Any other character is interpreted literally.
         totalLength++;
+        break;
     }
   }
   va_end(argList);
@@ -871,6 +872,7 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...)
       default:
         // Any other character is interpreted literally.
         *start++ = *c;
+        break;
     }
   }
   va_end(argList);
