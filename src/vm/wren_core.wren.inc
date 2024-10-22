@@ -157,6 +157,7 @@ static const char* coreModuleSource =
 "  construct new(sequence, count) {\n"
 "    _sequence = sequence\n"
 "    _count = count\n"
+"    \n"
 "  }\n"
 "\n"
 "  iterate(iterator) {\n"

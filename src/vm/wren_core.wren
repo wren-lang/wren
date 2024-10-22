@@ -155,6 +155,7 @@ class TakeSequence is Sequence {
   construct new(sequence, count) {
     _sequence = sequence
     _count = count
+    // _taken
   }
 
   iterate(iterator) {
