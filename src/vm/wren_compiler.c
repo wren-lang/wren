@@ -3791,7 +3791,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   // Copy next -> current
   nextToken(&parser);
 
-  int numExistingVariables = module->variables.count;
+  const int numExistingVariables = module->variables.count;
 
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, false);
