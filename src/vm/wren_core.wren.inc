@@ -87,7 +87,7 @@ static const char* coreModuleSource =
 "    var iter = iterate(null)\n"
 "    if (!iter) Fiber.abort(\"Can't reduce an empty sequence.\")\n"
 "\n"
-"    // Seed with the first element.\n"
+"    \n"
 "    var result = iteratorValue(iter)\n"
 "    while (iter = iterate(iter)) {\n"
 "      result = f.call(result, iteratorValue(iter))\n"
