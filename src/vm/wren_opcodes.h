@@ -134,12 +134,12 @@ OPCODE(LOOP, 0)
 // Pop and if not truthy then jump the instruction pointer [arg] forward.
 OPCODE(JUMP_IF, -1)
 
-// If the top of the stack is false, jump [arg] forward. Otherwise, pop and
-// continue.
+// If the top of the stack is falsy, short-circuit by jumping [arg] forward.
+// Otherwise, pop and continue.
 OPCODE(AND, -1)
 
-// If the top of the stack is non-false, jump [arg] forward. Otherwise, pop
-// and continue.
+// If the top of the stack is truthy, short-circuit by jumping [arg] forward.
+// Otherwise, pop and continue.
 OPCODE(OR, -1)
 
 // Close the upvalue for the local on the top of the stack, then pop it.
