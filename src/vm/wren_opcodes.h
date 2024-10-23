@@ -35,8 +35,8 @@ OPCODE(LOAD_LOCAL_6, 1)
 OPCODE(LOAD_LOCAL_7, 1)
 OPCODE(LOAD_LOCAL_8, 1)
 
-// Note: The compiler assumes the following _STORE instructions always
-// immediately follow their corresponding _LOAD ones.
+// Note: The compiler assumes the following STORE_ instructions always
+// immediately follow their corresponding LOAD_ ones.
 
 // Pushes the value in local slot [arg].
 OPCODE(LOAD_LOCAL, 1)
