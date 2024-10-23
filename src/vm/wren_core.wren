@@ -473,11 +473,11 @@ class System {
 }
 
 class ClassAttributes {
-  self { _attributes }
-  methods { _methods }
   construct new(attributes, methods) {
     _attributes = attributes
     _methods = methods
   }
+  self { _attributes }
+  methods { _methods }
   toString { "attributes:%(_attributes) methods:%(_methods)" }
 }

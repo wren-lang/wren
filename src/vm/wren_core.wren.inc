@@ -475,11 +475,11 @@ static const char* coreModuleSource =
 "}\n"
 "\n"
 "class ClassAttributes {\n"
-"  self { _attributes }\n"
-"  methods { _methods }\n"
 "  construct new(attributes, methods) {\n"
 "    _attributes = attributes\n"
 "    _methods = methods\n"
 "  }\n"
+"  self { _attributes }\n"
+"  methods { _methods }\n"
 "  toString { \"attributes:%(_attributes) methods:%(_methods)\" }\n"
 "}\n";
