@@ -346,6 +346,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
 
   #undef READ_BYTE
   #undef READ_SHORT
+  #undef BYTE_INSTRUCTION
 }
 
 int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
