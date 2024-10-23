@@ -272,13 +272,12 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       int constant = READ_SHORT();
       printf("%-16s %5d ", "CLOSURE", constant);
       wrenDumpValue(fn->constants.data[constant]);
-      printf(" ");
       ObjFn* loadedFn = AS_FN(fn->constants.data[constant]);
       for (int j = 0; j < loadedFn->numUpvalues; j++)
       {
         int isLocal = READ_BYTE();
         int index = READ_BYTE();
-        if (j > 0) printf(", ");
+        if (j > 0) printf(", "); else printf(" ");
         printf("%s %d", isLocal ? "local" : "upvalue", index);
       }
       printf("\n");
