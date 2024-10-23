@@ -58,13 +58,13 @@ OPCODE(STORE_MODULE_VAR, 0)
 
 // Pushes the value of the field in slot [arg] of the receiver of the current
 // function. This is used for regular field accesses on "this" directly in
-// methods. This instruction is faster than the more general CODE_LOAD_FIELD
+// methods. This instruction is faster than the more general LOAD_FIELD
 // instruction.
 OPCODE(LOAD_FIELD_THIS, 1)
 
 // Stores the top of the stack in field slot [arg] in the receiver of the
 // current value. Does not pop the value. This instruction is faster than the
-// more general CODE_LOAD_FIELD instruction.
+// more general STORE_FIELD instruction.
 OPCODE(STORE_FIELD_THIS, 0)
 
 // Pops an instance and pushes the value of the field in slot [arg] of it.
@@ -213,5 +213,5 @@ OPCODE(IMPORT_MODULE, 1)
 OPCODE(IMPORT_VARIABLE, 1)
 
 // This pseudo-instruction indicates the end of the bytecode. It should
-// always be preceded by a `CODE_RETURN`, so is never actually executed.
+// always be preceded by a RETURN, so is never actually executed.
 OPCODE(END, 0)
