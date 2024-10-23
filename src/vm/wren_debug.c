@@ -313,9 +313,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
       
-    case CODE_END_MODULE:
-      printf("END_MODULE\n");
-      break;
+    case CODE_END_MODULE: printf("END_MODULE\n"); break;
       
     case CODE_IMPORT_MODULE:
     {
@@ -335,9 +333,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
       
-    case CODE_END:
-      printf("END\n");
-      break;
+    case CODE_END: printf("END\n"); break;
 
     default:
       printf("UKNOWN! [%d]\n", code);
