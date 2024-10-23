@@ -196,7 +196,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_CALL_15:
     case CODE_CALL_16:
     {
-      int numArgs = bytecode[i - 1] - CODE_CALL_0;
+      int numArgs = code - CODE_CALL_0;
       int symbol = READ_SHORT();
       printf("CALL_%-11d %5d '%s'\n", numArgs, symbol,
              vm->methodNames.data[symbol]->value);
@@ -221,7 +221,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_SUPER_15:
     case CODE_SUPER_16:
     {
-      int numArgs = bytecode[i - 1] - CODE_SUPER_0;
+      int numArgs = code - CODE_SUPER_0;
       int symbol = READ_SHORT();
       int superclass = READ_SHORT();
       printf("SUPER_%-10d %5d '%s' %5d\n", numArgs, symbol,
@@ -340,7 +340,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
 
     default:
-      printf("UKNOWN! [%d]\n", bytecode[i - 1]);
+      printf("UKNOWN! [%d]\n", code);
       break;
   }
 
