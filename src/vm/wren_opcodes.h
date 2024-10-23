@@ -24,7 +24,10 @@ OPCODE(FALSE, 1)
 // Push true onto the stack.
 OPCODE(TRUE, 1)
 
+// Note the asymmetry: LOAD_ always pushes, whereas STORE_ never pops.
+
 // Pushes the value in the given local slot.
+// Note: The VM assumes the following LOAD_ instructions are ordered.
 OPCODE(LOAD_LOCAL_0, 1)
 OPCODE(LOAD_LOCAL_1, 1)
 OPCODE(LOAD_LOCAL_2, 1)
@@ -79,6 +82,7 @@ OPCODE(POP, -1)
 
 // Invoke the method with symbol [arg]. The number indicates the number of
 // arguments (not including the receiver).
+// Note: The VM assumes the following CALL_ instructions are ordered.
 OPCODE(CALL_0, 0)
 OPCODE(CALL_1, -1)
 OPCODE(CALL_2, -2)
@@ -99,6 +103,7 @@ OPCODE(CALL_16, -16)
 
 // Invoke a superclass method with symbol [arg]. The number indicates the
 // number of arguments (not including the receiver).
+// Note: The VM assumes the following SUPER_ instructions are ordered.
 OPCODE(SUPER_0, 0)
 OPCODE(SUPER_1, -1)
 OPCODE(SUPER_2, -2)
@@ -116,6 +121,9 @@ OPCODE(SUPER_13, -13)
 OPCODE(SUPER_14, -14)
 OPCODE(SUPER_15, -15)
 OPCODE(SUPER_16, -16)
+
+// Note: When changing the instruction pointer, the origin is the next
+// instruction.
 
 // Jump the instruction pointer [arg] forward.
 OPCODE(JUMP, 0)
