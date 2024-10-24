@@ -1,8 +1,14 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "wren.h"
 #include "wren_common.h"
+
+#if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
+  #include <time.h>
+  #include <stdio.h>
+#endif
+
+#include "wren.h"
 #include "wren_compiler.h"
 #include "wren_core.h"
 #include "wren_debug.h"
@@ -14,11 +20,6 @@
 #endif
 #if WREN_OPT_RANDOM
   #include "wren_opt_random.h"
-#endif
-
-#if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
-  #include <time.h>
-  #include <stdio.h>
 #endif
 
 // The behavior of realloc() when the size is 0 is implementation defined. It
