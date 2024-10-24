@@ -275,7 +275,7 @@ typedef struct
 
 // An instance of a first-class function and the environment it has closed over.
 // Unlike [ObjFn], this has captured the upvalues that the function accesses.
-typedef struct
+typedef struct sObjClosure
 {
   Obj obj;
 

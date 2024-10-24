@@ -324,6 +324,16 @@ WREN_API void wrenCollectGarbage(WrenVM* vm);
 WREN_API WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
                                   const char* source);
 
+typedef struct sObjClosure ObjClosure;
+
+// Compiles [source], a string of Wren source code, in [vm] in the
+// context of resolved [module].
+WREN_API ObjClosure* wrenCompileSourceLines(WrenVM* vm, const char* module,
+                                  const char* source);
+
+// Runs [closure] in a new fiber in [vm].
+WREN_API WrenInterpretResult wrenInterpretClosure(WrenVM* vm, ObjClosure* closure);
+
 // Creates a handle that can be used to invoke a method with [signature] on
 // using a receiver and arguments that are set up on the stack.
 //
