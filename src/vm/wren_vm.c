@@ -1530,12 +1530,26 @@ void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle)
   DEALLOCATE(vm, handle);
 }
 
+static ObjClosure* wrenCompileSourceLines(WrenVM* vm, const char* module,
+                                          const char* source)
+{
+  return wrenCompileSource(vm, module, source, false, true);
+}
+
+// NOTE: temporary forward declaration, until promoted as part of API
+static WrenInterpretResult wrenInterpretClosure(WrenVM* vm, ObjClosure* closure);
+
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
                                   const char* source)
 {
-  ObjClosure* closure = wrenCompileSource(vm, module, source, false, true);
+  ObjClosure* closure = wrenCompileSourceLines(vm, module, source);
   if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;
-  
+
+  return wrenInterpretClosure(vm, closure);
+}
+
+static WrenInterpretResult wrenInterpretClosure(WrenVM* vm, ObjClosure* closure)
+{
   wrenPushRoot(vm, (Obj*)closure);
   ObjFiber* fiber = wrenNewFiber(vm, closure);
   wrenPopRoot(vm); // closure.
