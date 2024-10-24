@@ -4,7 +4,7 @@
 #include "wren_vm.h"
 
 // Binds a primitive method named [name] (in Wren) implemented using C function
-// [fn] to `ObjClass` [cls].
+// [function] to `ObjClass` [cls].
 #define PRIMITIVE(cls, name, function)                                         \
     do                                                                         \
     {                                                                          \
@@ -17,7 +17,7 @@
     } while (false)
 
 // Binds a primitive method named [name] (in Wren) implemented using C function
-// [fn] to `ObjClass` [cls], but as a FN call.
+// [function] to `ObjClass` [cls], but as a FN call.
 #define FUNCTION_CALL(cls, name, function)                                     \
     do                                                                         \
     {                                                                          \
@@ -83,7 +83,7 @@ bool validateInt(WrenVM* vm, Value arg, const char* argName);
 // it is. If not, reports an error and returns false.
 bool validateKey(WrenVM* vm, Value arg);
 
-// Validates that the argument at [argIndex] is an integer within `[0, count)`.
+// Validates that the argument [arg] is an integer within `[0, count)`.
 // Also allows negative indices which map backwards from the end. Returns the
 // valid positive index value. If invalid, reports an error and returns
 // `UINT32_MAX`.
