@@ -1,8 +1,8 @@
-#include "./test.h"
-#include "./api/api_tests.h"
-
 #include <stdio.h>
 #include <string.h>
+
+#include "./test.h"
+#include "./api/api_tests.h"
 
 static WrenVM* vm = NULL;
 
