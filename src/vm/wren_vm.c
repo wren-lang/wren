@@ -202,10 +202,10 @@ void wrenCollectGarbage(WrenVM* vm)
   double elapsed = ((double)clock() / CLOCKS_PER_SEC) - startTime;
   // Explicit cast because size_t has different sizes on 32-bit and 64-bit and
   // we need a consistent type for the format string.
-  printf("GC %lu before, %lu after (%lu collected), next at %lu. Took %.3fms.\n",
+  printf("GC %lu before, %lu after (%ld collected), next at %lu. Took %.3fms.\n",
          (unsigned long)before,
          (unsigned long)vm->bytesAllocated,
-         (unsigned long)(before - vm->bytesAllocated),
+         (  signed long)(before - vm->bytesAllocated),
          (unsigned long)vm->nextGC,
          elapsed*1000.0);
 #endif
