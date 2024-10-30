@@ -430,6 +430,11 @@
     return false;
   }
 
+  static WrenInterpretResult runCode(WrenVM* vm, const char* module, const char* source)
+  {
+    return wrenInterpret(vm, module, source);
+  }
+
   WrenInterpretResult runFile(WrenVM* vm, const char* path)
   {
     char* source = readFile(path);
@@ -453,7 +458,7 @@
 
     pathRemoveExtension(module);
 
-    WrenInterpretResult result = wrenInterpret(vm, module->chars, source);
+    WrenInterpretResult result = runCode(vm, module->chars, source);
 
     pathFree(module);
     free(source);
