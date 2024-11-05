@@ -4,10 +4,10 @@
 #include "wren_vm.h"
 
 // This module defines the built-in classes and their primitives methods that
-// are implemented directly in C code. Some languages try to implement as much
-// of the core module itself in the primary language instead of in the host
-// language.
+// are implemented directly in C code.
 //
+// Some languages try to implement as much of the core module itself in the
+// primary language instead of in the host language.
 // With Wren, we try to do as much of it in C as possible. Primitive methods
 // are always faster than code written in Wren, and it minimizes startup time
 // since we don't have to parse, compile, and execute Wren code.
