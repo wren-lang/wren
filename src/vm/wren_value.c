@@ -1312,6 +1312,34 @@ static void visitor(WrenVM* vm, Obj* obj, unsigned int depth)
       }
       break;
     }
+
+    case OBJ_MODULE: {
+      const ObjModule* module = (ObjModule*)obj;
+
+      // The core module has no name.
+      if (module->name) {
+        printf(" name=");
+        wrenDumpValue(OBJ_VAL(module->name));
+      }
+
+      const int nbVar = module->variables.count;
+      printf(" var=%d", nbVar);
+      if (nbVar) {
+        printf(" {\n");
+        for (int i = 0; i < nbVar; i++)
+        {
+          indent(depth + 1);
+          printf("(%d) ", i);
+          wrenDumpValue(OBJ_VAL(module->variableNames.data[i]));
+          printf(" = ");
+          wrenDumpValue(module->variables.data[i]);
+          printf("\n");
+        }
+        indent(depth);
+        printf("}");
+      }
+      break;
+    }
   }
 
   printf("\n");
