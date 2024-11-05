@@ -10,6 +10,7 @@
 // at one time.
 #define WREN_MAX_TEMP_ROOTS 8
 
+// NOTE: emitOp() assumes it fits in a byte!
 typedef enum
 {
   #define OPCODE(name, _) CODE_##name,
@@ -45,7 +46,7 @@ struct WrenVM
   // The fiber that is currently running.
   ObjFiber* fiber;
 
-  // The loaded modules. Each key is an ObjString (except for the main module,
+  // The loaded modules. Each key is an ObjString (except for the core module,
   // whose key is null) for the module's name and the value is the ObjModule
   // for the module.
   ObjMap* modules;
@@ -137,7 +138,7 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 // Creates a new [WrenHandle] for [value].
 WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
 
-// Compile [source] in the context of [module] and wrap in a fiber that can
+// Compile [source] in the context of [module] and wrap in a closure that can
 // execute it.
 //
 // Returns NULL if a compile error occurred.
@@ -205,7 +206,7 @@ void wrenPopRoot(WrenVM* vm);
 //
 // Defined here instead of in wren_value.h because it's critical that this be
 // inlined. That means it must be defined in the header, but the wren_value.h
-// header doesn't have a full definitely of WrenVM yet.
+// header doesn't have a full definition of WrenVM yet.
 static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 {
   if (IS_NUM(value)) return vm->numClass;
