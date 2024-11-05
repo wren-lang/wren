@@ -1289,6 +1289,29 @@ static void visitor(WrenVM* vm, Obj* obj, unsigned int depth)
       }
       break;
     }
+
+    case OBJ_MAP: {
+      ObjMap* map = (ObjMap*)obj;
+      const int n = map->count;
+      printf(" count=%d", n);
+      if (n) {
+        printf(" {\n");
+        for (uint32_t i = 0; i < map->capacity; i++)
+        {
+          MapEntry* entry = &map->entries[i];
+          if (IS_UNDEFINED(entry->key)) continue;
+
+          indent(depth + 1);
+          wrenDumpValue(entry->key);
+          printf(" => ");
+          wrenDumpValue(entry->value);
+          printf("\n");
+        }
+        indent(depth);
+        printf("}");
+      }
+      break;
+    }
   }
 
   printf("\n");
@@ -1323,14 +1346,17 @@ static void wrenVisitObjects_(WrenVM* vm, Obj* obj, WrenVisitorFn visitor, unsig
     //case OBJ_LIST:     ( (ObjList*)    obj); break;
     case OBJ_MAP: {
       ObjMap* map = (ObjMap*)obj;
-//      for (uint32_t i = 0; i < map->capacity; i++)
-//      {
-//        MapEntry* entry = &map->entries[i];
-//        if (IS_UNDEFINED(entry->key)) continue;
-//
-//        wrenVisitObjects_(vm, entry->key);
-//        wrenVisitObjects_(vm, entry->value);
-//      }
+      for (uint32_t i = 0; i < map->capacity; i++)
+      {
+        MapEntry* entry = &map->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
+
+        // TODO entry->key
+
+        if (IS_OBJ(entry->value)) {
+          wrenVisitObjects_(vm, AS_OBJ(entry->value), visitor, d);
+        }
+      }
       break;
     }
     //case OBJ_MODULE:   ( (ObjModule*)  obj); break;
