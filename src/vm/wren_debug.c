@@ -376,11 +376,23 @@ static void wrenSaveCode(WrenVM* vm, ObjFn* fn)
   const int nbCode = fn->code.count;
   const int nbConst = fn->constants.count;
 
+  // const ObjModule* module = fn->module;
+
 #define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char),    1, file)
-#define STR(str)         fwrite(str,        sizeof(str) - 1, 1, file)
+#define STR_CONST(str)   fwrite(str,        sizeof(str) - 1, 1, file)
+#define STR(str)         fwrite(str,        strlen(str),     1, file)
 
   // TODO check returned values
-  STR(strFn);
+  STR_CONST(strFn);
+  CHAR(":");
+  //// not yet available
+  // if (module->name) {
+  //   wrenDumpValue_(file, OBJ_VAL(module->name), false);
+  //   CHAR(":");
+  //   CHAR(":");
+  // }
+  STR(fn->debug->name);
+  // TODO fn->arity
   CHAR("\n");
 
   CHAR("\t");
