@@ -367,6 +367,47 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
   return dumpInstruction(vm, fn, i, NULL);
 }
 
+static void wrenSaveCode(WrenVM* vm, ObjFn* fn)
+{
+  static const char strFn[] = "ObjFn";
+
+  FILE* file = vm->bytecodeFile;
+
+  const int nbCode = fn->code.count;
+  const int nbConst = fn->constants.count;
+
+#define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char),    1, file)
+#define STR(str)         fwrite(str,        sizeof(str) - 1, 1, file)
+
+  // TODO check returned values
+  STR(strFn);
+  CHAR("\n");
+
+  CHAR("\t");
+  fwrite(&nbCode, sizeof(nbCode), 1, file);
+  CHAR("O");
+  CHAR("{");
+  fwrite(fn->code.data, sizeof(uint8_t), nbCode, file);
+  CHAR("}");
+  CHAR("\n");
+
+  if (nbConst) {
+    CHAR("\t");
+    fwrite(&nbConst, sizeof(nbConst), 1, file);
+    CHAR("C");
+    CHAR("{");
+    for (int i = 0; i < nbConst; ++i) {
+      if (i) CHAR(",");
+      wrenDumpValue_(file, fn->constants.data[i], true);
+    }
+    CHAR("}");
+    CHAR("\n");
+  }
+
+#undef CHAR
+#undef STR
+}
+
 void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 {
   printf("%s: %s\n",
@@ -383,6 +424,8 @@ void wrenDumpCode(WrenVM* vm, ObjFn* fn)
   }
 
   printf("\n");
+
+  wrenSaveCode(vm, fn);
 }
 
 void wrenDumpStack(ObjFiber* fiber)
