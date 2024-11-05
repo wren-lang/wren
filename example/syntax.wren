@@ -73,7 +73,17 @@ class SyntaxExample {
   ==(other) { "infix == %(other)" }
   !=(other) { "infix != %(other)" }
   &(other) { "infix & %(other)" }
+  ^(other) { "infix ^ %(other)" }
   |(other) { "infix | %(other)" }
+  <<(other) { "infix << %(other)" }
+  >>(other) { "infix >> %(other)" }
+  ..(other) { "infix .. %(other)" }
+  ...(other) { "infix ... %(other)" }
+    // TODO || &&
+  is(other) { "infix is %(other)" }
+    // TODO [_]
+    // TODO [_,_]
+    // TODO [_]=(_)
 
   ! { "prefix !" }
   ~ { "prefix ~" }
