@@ -34,6 +34,8 @@
 DEFINE_BUFFER(Value, Value);
 DEFINE_BUFFER(Method, Method);
 
+//------------------------------------------------------------------------------
+
 static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 {
   obj->type = type;
@@ -283,6 +285,8 @@ Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
   return OBJ_VAL(instance);
 }
 
+// List ------------------------------------------------------------------------
+
 ObjList* wrenNewList(WrenVM* vm, uint32_t numElements)
 {
   // Allocate this before the list object in case it triggers a GC which would
@@ -359,6 +363,8 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, uint32_t index)
   list->elements.count--;
   return removed;
 }
+
+// Map -------------------------------------------------------------------------
 
 ObjMap* wrenNewMap(WrenVM* vm)
 {
@@ -643,6 +649,8 @@ Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
   return value;
 }
 
+//------------------------------------------------------------------------------
+
 ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
 {
   ObjModule* module = ALLOCATE(vm, ObjModule);
@@ -671,6 +679,8 @@ Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
 
   return OBJ_VAL(range);
 }
+
+// String ----------------------------------------------------------------------
 
 // Creates a new string object with a null-terminated buffer large enough to
 // hold a string of [length] but does not fill in the bytes.
@@ -963,6 +973,8 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle, uint32_t start)
   return UINT32_MAX;
 }
 
+//------------------------------------------------------------------------------
+
 ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 {
   ObjUpvalue* upvalue = ALLOCATE(vm, ObjUpvalue);
@@ -975,6 +987,8 @@ ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
   upvalue->next = NULL;
   return upvalue;
 }
+
+// Gray ------------------------------------------------------------------------
 
 void wrenGrayObj(WrenVM* vm, Obj* obj)
 {
@@ -1012,6 +1026,8 @@ void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer)
     wrenGrayValue(vm, buffer->data[i]);
   }
 }
+
+// Black -----------------------------------------------------------------------
 
 static void blackenClass(WrenVM* vm, ObjClass* classObj)
 {
@@ -1228,6 +1244,8 @@ void wrenBlackenObjects(WrenVM* vm)
     blackenObject(vm, obj);
   }
 }
+
+//------------------------------------------------------------------------------
 
 void wrenFreeObj(WrenVM* vm, Obj* obj)
 {
