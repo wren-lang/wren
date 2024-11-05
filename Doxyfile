@@ -32,7 +32,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "My Project"
+PROJECT_NAME           = wren
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -58,7 +58,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       =
+OUTPUT_DIRECTORY       = doxygen
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -277,7 +277,7 @@ ALIASES                =
 # members will be omitted, etc.
 # The default value is: NO.
 
-OPTIMIZE_OUTPUT_FOR_C  = NO
+OPTIMIZE_OUTPUT_FOR_C  = YES
 
 # Set the OPTIMIZE_OUTPUT_JAVA tag to YES if your project consists of Java or
 # Python sources only. Doxygen will then generate output that is more tailored
@@ -485,7 +485,7 @@ NUM_PROC_THREADS       = 1
 # normally produced when WARNINGS is set to YES.
 # The default value is: NO.
 
-EXTRACT_ALL            = NO
+EXTRACT_ALL            = YES
 
 # If the EXTRACT_PRIVATE tag is set to YES, all private members of a class will
 # be included in the documentation.
@@ -601,7 +601,7 @@ CASE_SENSE_NAMES       = YES
 # scope will be hidden.
 # The default value is: NO.
 
-HIDE_SCOPE_NAMES       = NO
+HIDE_SCOPE_NAMES       = YES
 
 # If the HIDE_COMPOUND_REFERENCE tag is set to NO (default) then doxygen will
 # append additional text to a page's title, such as Class Reference. If set to
@@ -943,7 +943,7 @@ FILE_PATTERNS          = *.c \
 # be searched for input files as well.
 # The default value is: NO.
 
-RECURSIVE              = NO
+RECURSIVE              = YES
 
 # The EXCLUDE tag can be used to specify files and/or directories that should be
 # excluded from the INPUT source files. This way you can easily exclude a
@@ -952,7 +952,7 @@ RECURSIVE              = NO
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                =
+EXCLUDE                = projects test/benchmark doc
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -968,7 +968,7 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       = *.md
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -1074,7 +1074,7 @@ USE_MDFILE_AS_MAINPAGE =
 # also VERBATIM_HEADERS is set to NO.
 # The default value is: NO.
 
-SOURCE_BROWSER         = NO
+SOURCE_BROWSER         = YES
 
 # Setting the INLINE_SOURCES tag to YES will include the body of functions,
 # classes and enums directly into the documentation.
@@ -1790,7 +1790,7 @@ EXTRA_SEARCH_MAPPINGS  =
 # If the GENERATE_LATEX tag is set to YES, doxygen will generate LaTeX output.
 # The default value is: YES.
 
-GENERATE_LATEX         = YES
+GENERATE_LATEX         = NO
 
 # The LATEX_OUTPUT tag is used to specify where the LaTeX docs will be put. If a
 # relative path is entered the value of OUTPUT_DIRECTORY will be put in front of
@@ -2214,7 +2214,7 @@ ENABLE_PREPROCESSING   = YES
 # The default value is: NO.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-MACRO_EXPANSION        = NO
+MACRO_EXPANSION        = YES
 
 # If the EXPAND_ONLY_PREDEF and MACRO_EXPANSION tags are both set to YES then
 # the macro expansion is limited to the macros specified with the PREDEFINED and
@@ -2254,7 +2254,7 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             =
+PREDEFINED             = WREN_NAN_TAGGING=0
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
