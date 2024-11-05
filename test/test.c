@@ -426,6 +426,15 @@
     return wrenInterpret(vm, module, source);
   }
 
+  static WrenInterpretResult runCodeSplit(WrenVM* vm, const char* module, const char* source)
+  {
+    ObjClosure* closure = wrenCompileSourceLines(vm, module, source);
+
+    if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;
+
+    return wrenInterpretClosure(vm, closure);
+  }
+
 //main helpers
 
   bool isModuleAnAPITest(const char* module)
@@ -458,7 +467,7 @@
 
     pathRemoveExtension(module);
 
-    WrenInterpretResult result = runCode(vm, module->chars, source);
+    WrenInterpretResult result = runCodeSplit(vm, module->chars, source);
 
     pathFree(module);
     free(source);
