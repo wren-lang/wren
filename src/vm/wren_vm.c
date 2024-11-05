@@ -57,6 +57,18 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->userData = NULL;
 }
 
+static FILE* openBytecodeFile()
+{
+  FILE* file = fopen("bytecode", "wb");
+  //TODO if (file == NULL) return NULL;
+  return file;
+}
+
+static void closeBytecodeFile(FILE* file)
+{
+  fclose(file);
+}
+
 WrenVM* wrenNewVM(WrenConfiguration* config)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -94,7 +106,11 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   wrenSymbolTableInit(&vm->methodNames);
 
   vm->modules = wrenNewMap(vm);
+
+  vm->bytecodeFile = openBytecodeFile();
+
   wrenInitializeCore(vm);
+
   return vm;
 }
 
@@ -120,6 +136,8 @@ void wrenFreeVM(WrenVM* vm)
   ASSERT(vm->handles == NULL, "All handles have not been released.");
 
   wrenSymbolTableClear(vm, &vm->methodNames);
+
+  closeBytecodeFile(vm->bytecodeFile);
 
   DEALLOCATE(vm, vm);
 }
