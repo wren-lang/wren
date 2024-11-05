@@ -42,61 +42,74 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
   }
 }
 
-static void dumpObject(Obj* obj)
+static void dumpObject(FILE* stream, Obj* obj, bool withType)
 {
   switch (obj->type)
   {
     case OBJ_CLASS:
-      printf("[class %s %p]", ((ObjClass*)obj)->name->value, obj);
+      fprintf(stream, "[class %s %p]", ((ObjClass*)obj)->name->value, obj);
       break;
-    case OBJ_CLOSURE: printf("[closure %p]", obj); break;
-    case OBJ_FIBER: printf("[fiber %p]", obj); break;
-    case OBJ_FN: printf("[fn %p]", obj); break;
-    case OBJ_FOREIGN: printf("[foreign %p]", obj); break;
-    case OBJ_INSTANCE: printf("[instance %p]", obj); break;
-    case OBJ_LIST: printf("[list %p]", obj); break;
-    case OBJ_MAP: printf("[map %p]", obj); break;
-    case OBJ_MODULE: printf("[module %p]", obj); break;
-    case OBJ_RANGE: printf("[range %p]", obj); break;
-    case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
-    case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
-    default: printf("[unknown object %d]", obj->type); break;
+    case OBJ_CLOSURE: fprintf(stream, "[closure %p]", obj); break;
+    case OBJ_FIBER: fprintf(stream, "[fiber %p]", obj); break;
+    case OBJ_FN: fprintf(stream, "[fn %p]", obj); break;
+    case OBJ_FOREIGN: fprintf(stream, "[foreign %p]", obj); break;
+    case OBJ_INSTANCE: fprintf(stream, "[instance %p]", obj); break;
+    case OBJ_LIST: fprintf(stream, "[list %p]", obj); break;
+    case OBJ_MAP: fprintf(stream, "[map %p]", obj); break;
+    case OBJ_MODULE: fprintf(stream, "[module %p]", obj); break;
+    case OBJ_RANGE: fprintf(stream, "[range %p]", obj); break;
+    case OBJ_STRING:
+      if (withType) fprintf(stream, "STR:\"");
+      fprintf(stream, "%s", ((ObjString*)obj)->value);
+      if (withType) fprintf(stream, "\"");
+      break;
+    case OBJ_UPVALUE: fprintf(stream, "[upvalue %p]", obj); break;
+    default: fprintf(stream, "[unknown object %d]", obj->type); break;
   }
 }
 
-void wrenDumpValue(Value value)
+static void wrenDumpValue_(FILE* stream, Value value, bool withType)
 {
 #if WREN_NAN_TAGGING
   if (IS_NUM(value))
   {
-    printf("%.14g", AS_NUM(value));
+    if (withType) fprintf(stream, "NUM:");
+    fprintf(stream, "%.14g", AS_NUM(value));
   }
   else if (IS_OBJ(value))
   {
-    dumpObject(AS_OBJ(value));
+    dumpObject(stream, AS_OBJ(value), withType);
   }
   else
   {
     switch (GET_TAG(value))
     {
-      case TAG_FALSE:     printf("false"); break;
-      case TAG_NAN:       printf("NaN"); break;
-      case TAG_NULL:      printf("null"); break;
-      case TAG_TRUE:      printf("true"); break;
+      case TAG_FALSE:     fprintf(stream, "false"); break;
+      case TAG_NAN:       fprintf(stream, "NaN"); break;
+      case TAG_NULL:      fprintf(stream, "null"); break;
+      case TAG_TRUE:      fprintf(stream, "true"); break;
       case TAG_UNDEFINED: UNREACHABLE();
     }
   }
 #else
   switch (value.type)
   {
-    case VAL_FALSE:     printf("false"); break;
-    case VAL_NULL:      printf("null"); break;
-    case VAL_NUM:       printf("%.14g", AS_NUM(value)); break;
-    case VAL_TRUE:      printf("true"); break;
-    case VAL_OBJ:       dumpObject(AS_OBJ(value)); break;
+    case VAL_FALSE:     fprintf(stream, "false"); break;
+    case VAL_NULL:      fprintf(stream, "null"); break;
+    case VAL_NUM:
+      if (withType) fprintf(stream, "NUM:");
+      fprintf(stream, "%.14g", AS_NUM(value));
+      break;
+    case VAL_TRUE:      fprintf(stream, "true"); break;
+    case VAL_OBJ:       dumpObject(stream, AS_OBJ(value), withType); break;
     case VAL_UNDEFINED: UNREACHABLE();
   }
 #endif
+}
+
+void wrenDumpValue(Value value)
+{
+  wrenDumpValue_(stdout, value, false);
 }
 
 static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
