@@ -654,7 +654,7 @@ DEF_PRIMITIVE(num_fromString)
   RETURN_NUM(number);
 }
 
-// Defines a primitive on Num that calls infix [op] and returns [type].
+// Defines a primitive on Num that returns a constant [name] and [value].
 #define DEF_NUM_CONSTANT(name, value)                                          \
     DEF_PRIMITIVE(num_##name)                                                  \
     {                                                                          \
