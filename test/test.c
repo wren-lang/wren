@@ -421,6 +421,11 @@
     return resolved;
   }
 
+  static WrenInterpretResult runCode(WrenVM* vm, const char* module, const char* source)
+  {
+    return wrenInterpret(vm, module, source);
+  }
+
 //main helpers
 
   bool isModuleAnAPITest(const char* module)
@@ -428,11 +433,6 @@
     if(strncmp(module, "test/api", 8) == 0) return true;
     if(strncmp(module, "test/benchmark", 14) == 0) return true;
     return false;
-  }
-
-  static WrenInterpretResult runCode(WrenVM* vm, const char* module, const char* source)
-  {
-    return wrenInterpret(vm, module, source);
   }
 
   WrenInterpretResult runFile(WrenVM* vm, const char* path)
