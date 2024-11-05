@@ -147,6 +147,7 @@ OPCODE(CLOSE_UPVALUE, -1)
 
 // Exit from the current function and return the value on the top of the
 // stack.
+// Mmm... wording of 'return'...
 OPCODE(RETURN, 0)
 
 // Creates a closure for the function stored at [arg] in the constant table.
