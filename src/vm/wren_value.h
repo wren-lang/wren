@@ -41,7 +41,7 @@
 // is also supported, and is useful for debugging the VM.
 //
 // The representation is controlled by the `WREN_NAN_TAGGING` define. If that's
-// defined, Nan tagging is used.
+// defined, NaN tagging is used.
 
 //------------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@
 #define AS_CSTRING(v)       (AS_STRING(v)->value)               // const char*
 
 // These macros promote a primitive C value to a full Wren Value. There are
-// more defined below that are specific to the Nan tagged or other
+// more defined below that are specific to the NaN tagged or other
 // representation.
 #define BOOL_VAL(boolean) ((boolean) ? TRUE_VAL : FALSE_VAL)    // boolean
 #define NUM_VAL(num) (wrenNumToValue(num))                      // double
@@ -247,7 +247,7 @@ typedef struct
 //
 // Function objects are not passed around and invoked directly. Instead, they
 // are always referenced by an [ObjClosure] which is the real first-class
-// representation of a function. This isn't strictly necessary if they function
+// representation of a function. This isn't strictly necessary if the function
 // has no upvalues, but lets the rest of the VM assume all called objects will
 // be closures.
 typedef struct
@@ -853,7 +853,7 @@ static inline Value wrenObjectToValue(Obj* obj)
   // The triple casting is necessary here to satisfy some compilers:
   // 1. (uintptr_t) Convert the pointer to a number of the right size.
   // 2. (uint64_t)  Pad it up to 64 bits in 32-bit builds.
-  // 3. Or in the bits to make a tagged Nan.
+  // 3. OR-in the bits to make a tagged NaN.
   // 4. Cast to a typedef'd value.
   return (Value)(SIGN_BIT | QNAN | (uint64_t)(uintptr_t)(obj));
 #else
