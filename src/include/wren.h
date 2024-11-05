@@ -268,7 +268,6 @@ typedef struct
 
   // User-defined data associated with the VM.
   void* userData;
-
 } WrenConfiguration;
 
 typedef enum
@@ -560,5 +559,13 @@ WREN_API void* wrenGetUserData(WrenVM* vm);
 
 // Sets user data associated with the WrenVM.
 WREN_API void wrenSetUserData(WrenVM* vm, void* userData);
+
+typedef struct sObj Obj;
+
+// TODO: allow to cut the exploration by returning false?
+typedef void (*WrenVisitorFn)(WrenVM* vm, Obj* obj, unsigned int depth);
+
+// TODO: doc
+WREN_API void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */);
 
 #endif

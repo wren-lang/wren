@@ -421,6 +421,8 @@
     return resolved;
   }
 
+//visitor
+
   static WrenInterpretResult runCode(WrenVM* vm, const char* module, const char* source)
   {
     return wrenInterpret(vm, module, source);
@@ -431,6 +433,8 @@
     ObjClosure* closure = wrenCompileSourceLines(vm, module, source);
 
     if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;
+
+    wrenVisitObjects(vm, (Obj*)closure /* , visitor */);
 
     return wrenInterpretClosure(vm, closure);
   }

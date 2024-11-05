@@ -7,7 +7,7 @@
 #include "wren_value.h"
 #include "wren_vm.h"
 
-#if WREN_DEBUG_TRACE_MEMORY
+#if WREN_DEBUG_TRACE_MEMORY || 1 // || WREN_DEBUG_TRACE_GC
   #include "wren_debug.h"
 #endif
 
@@ -1244,6 +1244,110 @@ void wrenBlackenObjects(WrenVM* vm)
     Obj* obj = vm->gray[--vm->grayCount];
     blackenObject(vm, obj);
   }
+}
+
+// Visitor ---------------------------------------------------------------------
+
+static void indent(unsigned int n)
+{
+  printf("%*s", n, "");
+}
+
+static void visitor(WrenVM* vm, Obj* obj, unsigned int depth)
+{
+  indent(depth);
+
+  wrenDumpValue(OBJ_VAL(obj));
+
+  switch (obj->type)
+  {
+    case OBJ_CLOSURE: {
+      ObjClosure* closure = (ObjClosure*)obj;
+      printf(" upv=%d", closure->fn->numUpvalues);
+      break;
+    }
+
+    case OBJ_FN: {
+      ObjFn* fn = (ObjFn*)obj;
+      ObjModule* module = fn->module;
+      printf(" ");
+      wrenDumpValue(OBJ_VAL(module->name));
+      printf("::%s(%d) len=%d", fn->debug->name, fn->arity, fn->code.count);
+      // TODO fn->code
+      const int n = fn->constants.count;
+      if (n) {
+        printf(" const={\n");
+        for (int i = 0; i < n; i++)
+        {
+          indent(depth + 1);
+          printf("[%d]=", i);
+          wrenDumpValue(fn->constants.data[i]);
+          printf("\n");
+        }
+        indent(depth);
+        printf("}");
+      }
+      break;
+    }
+  }
+
+  printf("\n");
+}
+
+// Depth-first search.
+// TODO allow choosing pre-order and post-order
+static void wrenVisitObjects_(WrenVM* vm, Obj* obj, WrenVisitorFn visitor, unsigned int depth)
+{
+  visitor (vm, obj, depth);
+
+  const unsigned int d = depth + 1;
+
+  switch (obj->type)
+  {
+    //case OBJ_CLASS:    ( (ObjClass*)   obj); break;
+    case OBJ_CLOSURE: {
+      ObjClosure* closure = (ObjClosure*)obj;
+      // TODO (vm, (Obj*)closure->upvalues[i]);
+      wrenVisitObjects_(vm, (Obj*)closure->fn, visitor, d);
+      break;
+    }
+    //case OBJ_FIBER:    ( (ObjFiber*)   obj); break;
+    case OBJ_FN: {
+      ObjFn* fn = (ObjFn*)obj;
+      // TODO (vm, &fn->code);
+      // (vm, &fn->constants);
+      break;
+    }
+    //case OBJ_FOREIGN:  ( (ObjForeign*) obj); break;
+    //case OBJ_INSTANCE: ( (ObjInstance*)obj); break;
+    //case OBJ_LIST:     ( (ObjList*)    obj); break;
+    case OBJ_MAP: {
+      ObjMap* map = (ObjMap*)obj;
+//      for (uint32_t i = 0; i < map->capacity; i++)
+//      {
+//        MapEntry* entry = &map->entries[i];
+//        if (IS_UNDEFINED(entry->key)) continue;
+//
+//        wrenVisitObjects_(vm, entry->key);
+//        wrenVisitObjects_(vm, entry->value);
+//      }
+      break;
+    }
+    //case OBJ_MODULE:   ( (ObjModule*)  obj); break;
+    //case OBJ_RANGE: {
+    //  ObjRange* range = (ObjRange*)obj;
+    //  break;
+    //}
+    //case OBJ_STRING:   ( (ObjString*)  obj); break;
+    //case OBJ_UPVALUE:  ( (ObjUpvalue*) obj); break;
+
+  }
+}
+
+void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
+{
+  wrenVisitObjects_(vm, obj, visitor, 0);
+  wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
 }
 
 //------------------------------------------------------------------------------
