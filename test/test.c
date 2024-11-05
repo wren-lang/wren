@@ -439,6 +439,19 @@
     return wrenInterpretClosure(vm, closure);
   }
 
+/*
+  static void openBytecodeFile(WrenVM *vm) {
+    FILE* file = fopen("bytecode", "wb");
+    //TODO if (file == NULL) return NULL;
+    wrenSetUserData(vm, file);
+  }
+
+  static void closeBytecodeFile(WrenVM *vm) {
+    FILE* file = (FILE *)wrenGetUserData(vm);
+    fclose(file);
+  }
+*/
+
 //main helpers
 
   bool isModuleAnAPITest(const char* module)
@@ -471,7 +484,9 @@
 
     pathRemoveExtension(module);
 
+    // openBytecodeFile(vm);
     WrenInterpretResult result = runCodeSplit(vm, module->chars, source);
+    // closeBytecodeFile(vm);
 
     pathFree(module);
     free(source);
