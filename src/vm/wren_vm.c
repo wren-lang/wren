@@ -69,6 +69,7 @@ static void closeBytecodeFile(FILE* file)
   fclose(file);
 }
 
+// TODO don't dup src/vm/wren_vm.h
 #define DO_ALL_OBJ_TYPES \
   DO(CLASS,    Class   ) \
   DO(CLOSURE,  Closure ) \
@@ -83,38 +84,38 @@ static void closeBytecodeFile(FILE* file)
   DO(STRING,   String  ) \
   DO(UPVALUE,  Upvalue )
 
-void countAllObj(WrenVM *vm)
+wrenCountObj countAllObj(WrenVM *vm)
 {
-  #define DO(u, l) nb##l = 0,
-  unsigned int    // TODO type
-    DO_ALL_OBJ_TYPES
-    nb = 0;
-  #undef DO
+  wrenCountObj counts = {};
 
   for (Obj* obj = vm->first;
        obj != NULL;
        obj = obj->next)
   {
-    ++nb;
+    ++counts.nb;
 
     switch (obj->type)
     {
-      #define DO(u, l) case OBJ_##u: ++nb##l; break;
+      #define DO(u, l) case OBJ_##u: ++counts.nb##l; break;
       DO_ALL_OBJ_TYPES
       #undef DO
     }
   }
 
-  printf("counting Obj: %u"
-      #define DO(u, l) "\t" #l ": %u"
-      DO_ALL_OBJ_TYPES
-      #undef DO
+  printf(
+    "counting Obj: %u"
+    #define DO(u, l) "\t" #l ": %u"
+    DO_ALL_OBJ_TYPES
+    #undef DO
     "\n",
-    nb
-      #define DO(u, l) , nb##l
-      DO_ALL_OBJ_TYPES
-      #undef DO
+
+    counts.nb
+    #define DO(u, l) , counts.nb##l
+    DO_ALL_OBJ_TYPES
+    #undef DO
   );
+
+  return counts;
 }
 
 #undef DO_ALL_OBJ_TYPES

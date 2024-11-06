@@ -253,6 +253,29 @@ static inline bool wrenIsFalsyValue(Value value)
   return IS_FALSE(value) || IS_NULL(value);
 }
 
-void countAllObj(WrenVM *vm);
+#define DO_ALL_OBJ_TYPES \
+  DO(CLASS,    Class   ) \
+  DO(CLOSURE,  Closure ) \
+  DO(FIBER,    Fiber   ) \
+  DO(FN,       Fn      ) \
+  DO(FOREIGN,  Foreign ) \
+  DO(INSTANCE, Instance) \
+  DO(LIST,     List    ) \
+  DO(MAP,      Map     ) \
+  DO(MODULE,   Module  ) \
+  DO(RANGE,    Range   ) \
+  DO(STRING,   String  ) \
+  DO(UPVALUE,  Upvalue )
+
+typedef struct {
+  unsigned int nb;
+  #define DO(u, l) unsigned int nb##l;
+  DO_ALL_OBJ_TYPES
+  #undef DO
+} wrenCountObj;
+
+#undef DO_ALL_OBJ_TYPES
+
+wrenCountObj countAllObj(WrenVM *vm);
 
 #endif
