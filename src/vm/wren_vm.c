@@ -69,6 +69,56 @@ static void closeBytecodeFile(FILE* file)
   fclose(file);
 }
 
+#define DO_ALL_OBJ_TYPES \
+  DO(CLASS,    Class   ) \
+  DO(CLOSURE,  Closure ) \
+  DO(FIBER,    Fiber   ) \
+  DO(FN,       Fn      ) \
+  DO(FOREIGN,  Foreign ) \
+  DO(INSTANCE, Instance) \
+  DO(LIST,     List    ) \
+  DO(MAP,      Map     ) \
+  DO(MODULE,   Module  ) \
+  DO(RANGE,    Range   ) \
+  DO(STRING,   String  ) \
+  DO(UPVALUE,  Upvalue )
+
+void countAllObj(WrenVM *vm)
+{
+  #define DO(u, l) nb##l = 0,
+  unsigned int    // TODO type
+    DO_ALL_OBJ_TYPES
+    nb = 0;
+  #undef DO
+
+  for (Obj* obj = vm->first;
+       obj != NULL;
+       obj = obj->next)
+  {
+    ++nb;
+
+    switch (obj->type)
+    {
+      #define DO(u, l) case OBJ_##u: ++nb##l; break;
+      DO_ALL_OBJ_TYPES
+      #undef DO
+    }
+  }
+
+  printf("counting Obj: %u"
+      #define DO(u, l) "\t" #l ": %u"
+      DO_ALL_OBJ_TYPES
+      #undef DO
+    "\n",
+    nb
+      #define DO(u, l) , nb##l
+      DO_ALL_OBJ_TYPES
+      #undef DO
+  );
+}
+
+#undef DO_ALL_OBJ_TYPES
+
 WrenVM* wrenNewVM(WrenConfiguration* config)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -105,11 +155,17 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   wrenSymbolTableInit(&vm->methodNames);
 
+  countAllObj(vm);
+
   vm->modules = wrenNewMap(vm);
+
+  countAllObj(vm);
 
   vm->bytecodeFile = openBytecodeFile();
 
   wrenInitializeCore(vm);
+
+  countAllObj(vm);
 
   return vm;
 }

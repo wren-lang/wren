@@ -253,4 +253,6 @@ static inline bool wrenIsFalsyValue(Value value)
   return IS_FALSE(value) || IS_NULL(value);
 }
 
+void countAllObj(WrenVM *vm);
+
 #endif
