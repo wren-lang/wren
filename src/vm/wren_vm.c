@@ -118,6 +118,40 @@ wrenCountObj countAllObj(WrenVM *vm)
   return counts;
 }
 
+void censusObj(WrenVM *vm, wrenCountObj counts)
+{
+  const WrenReallocateFn reallocate = vm->config.reallocateFn;
+  void* userData = vm->config.userData;
+  wrenCountObj index = {};
+
+  ObjFn** allFn = reallocate(NULL, counts.nbFn * sizeof(ObjFn*), userData);
+
+  for (Obj* obj = vm->first;
+       obj != NULL;
+       obj = obj->next)
+  {
+    switch (obj->type)
+    {
+      case OBJ_FN:
+        allFn[index.nbFn++] = (ObjFn *)obj;
+        break;
+      /*
+      #define DO(u, l) case OBJ_##u: ++counts.nb##l; break;
+      DO_ALL_OBJ_TYPES
+      #undef DO
+      */
+    }
+  }
+
+  printf("ObjFn:\n");
+  for (unsigned int i = 0; i < index.nbFn; ++i)
+  {
+    printf("%4u %p\n", i, allFn[i]);
+  }
+
+  reallocate(allFn, 0, userData);
+}
+
 #undef DO_ALL_OBJ_TYPES
 
 WrenVM* wrenNewVM(WrenConfiguration* config)

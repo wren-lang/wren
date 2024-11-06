@@ -278,4 +278,6 @@ typedef struct {
 
 wrenCountObj countAllObj(WrenVM *vm);
 
+void censusObj(WrenVM *vm, wrenCountObj counts);
+
 #endif

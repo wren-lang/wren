@@ -1407,7 +1407,8 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
   wrenCollectGarbage(vm);
   wrenPopRoot(vm); // obj
 
-  countAllObj(vm);
+  wrenCountObj counts = countAllObj(vm);
+  censusObj(vm, counts);
 
   wrenVisitObjects_(vm, obj, visitor, 0);
   wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
