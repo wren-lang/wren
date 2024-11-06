@@ -124,7 +124,10 @@ void censusObj(WrenVM *vm, wrenCountObj counts)
   void* userData = vm->config.userData;
   wrenCountObj index = {};
 
-  ObjFn** allFn = reallocate(NULL, counts.nbFn * sizeof(ObjFn*), userData);
+  #define DO(u, l) \
+    Obj##l** all##l = reallocate(NULL, counts.nb##l * sizeof(Obj##l*), userData);
+  DO_ALL_OBJ_TYPES
+  #undef DO
 
   for (Obj* obj = vm->first;
        obj != NULL;
@@ -132,24 +135,22 @@ void censusObj(WrenVM *vm, wrenCountObj counts)
   {
     switch (obj->type)
     {
-      case OBJ_FN:
-        allFn[index.nbFn++] = (ObjFn *)obj;
-        break;
-      /*
-      #define DO(u, l) case OBJ_##u: ++counts.nb##l; break;
+      #define DO(u, l) case OBJ_##u: all##l[index.nb##l++] = (Obj##l*)obj; break;
       DO_ALL_OBJ_TYPES
       #undef DO
-      */
     }
   }
 
-  printf("ObjFn:\n");
-  for (unsigned int i = 0; i < index.nbFn; ++i)
-  {
-    printf("%4u %p\n", i, allFn[i]);
-  }
+  #define DO(u, l)                                  \
+    printf("Obj" #l ":\n");                         \
+    for (unsigned int i = 0; i < index.nb##l; ++i)  \
+      printf("%4u %p\n", i, all##l[i]);
+  DO_ALL_OBJ_TYPES
+  #undef DO
 
-  reallocate(allFn, 0, userData);
+  #define DO(u, l) reallocate(all##l, 0, userData);
+  DO_ALL_OBJ_TYPES
+  #undef DO
 }
 
 #undef DO_ALL_OBJ_TYPES
