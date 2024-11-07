@@ -293,4 +293,6 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census);
 // Free the arrays of a [census].
 void wrenFreeCensus(WrenVM *vm, WrenCensus *census);
 
+uint64_t wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle);
+
 #endif

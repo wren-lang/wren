@@ -149,6 +149,31 @@ void wrenFreeCensus(WrenVM *vm, WrenCensus *census)
   #undef DO
 }
 
+uint64_t wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle)
+{
+  Obj** haystack;
+  uint64_t nb;
+
+  switch (needle->type)
+  {
+    #define DO(u, l)                      \
+      case OBJ_##u:                       \
+        haystack = (Obj**)census->all##l; \
+        nb = counts->nb##l;               \
+        break;
+    DO_ALL_OBJ_TYPES
+    #undef DO
+  }
+
+  // TODO: do better than O(n).
+
+  for (uint64_t i = 0; i < nb; ++i)
+    if (needle == haystack[i])
+      return i;
+
+  return (uint64_t) -1;
+}
+
 #undef DO_ALL_OBJ_TYPES
 
 WrenVM* wrenNewVM(WrenConfiguration* config)
