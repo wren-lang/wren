@@ -84,7 +84,7 @@ static void closeBytecodeFile(FILE* file)
   DO(STRING,   String  ) \
   DO(UPVALUE,  Upvalue )
 
-void countAllObj(WrenVM *vm, WrenCounts *counts)
+void wrenCountAllObj(WrenVM *vm, WrenCounts *counts)
 {
   for (Obj* obj = vm->first;
        obj != NULL;
@@ -190,19 +190,19 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   WrenCounts counts;
 
   counts = (WrenCounts) {};
-  countAllObj(vm, &counts);
+  wrenCountAllObj(vm, &counts);
 
   vm->modules = wrenNewMap(vm);
 
   counts = (WrenCounts) {};
-  countAllObj(vm, &counts);
+  wrenCountAllObj(vm, &counts);
 
   vm->bytecodeFile = openBytecodeFile();
 
   wrenInitializeCore(vm);
 
   counts = (WrenCounts) {};
-  countAllObj(vm, &counts);
+  wrenCountAllObj(vm, &counts);
 
   return vm;
 }
