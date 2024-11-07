@@ -274,11 +274,23 @@ typedef struct {
   uint64_t nb;
 } WrenCounts;
 
+typedef struct {
+  #define DO(u, l) Obj##l** all##l;
+  DO_ALL_OBJ_TYPES
+  #undef DO
+} WrenCensus;
+
 #undef DO_ALL_OBJ_TYPES
 
-// [counts] is expected to be initialized with 0.
+// Count all objects by type.
+// The [counts] are expected to be initialized with 0.
 void wrenCountAllObj(WrenVM *vm, WrenCounts *counts);
 
-void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts);
+// Allocate memory for [census] arrays, whose sizes are [counts], and perform
+// the census.
+void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census);
+
+// Free the arrays of a [census].
+void wrenFreeCensus(WrenVM *vm, WrenCensus *census);
 
 #endif

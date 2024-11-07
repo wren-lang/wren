@@ -1402,6 +1402,7 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
 {
 
   WrenCounts counts;
+  WrenCensus census;
 
   counts = (WrenCounts) {};
   wrenCountAllObj(vm, &counts);
@@ -1413,7 +1414,8 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
   counts = (WrenCounts) {};
   wrenCountAllObj(vm, &counts);
 
-  wrenCensusAllObj(vm, &counts);
+  wrenCensusAllObj(vm, &counts, &census);
+  wrenFreeCensus(vm, &census);
 
   wrenVisitObjects_(vm, obj, visitor, 0);
   wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);

@@ -114,14 +114,14 @@ void wrenCountAllObj(WrenVM *vm, WrenCounts *counts)
   );
 }
 
-void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts)
+void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
 {
   const WrenReallocateFn reallocate = vm->config.reallocateFn;
   void* userData = vm->config.userData;
   WrenCounts index = {};
 
   #define DO(u, l) \
-    Obj##l** all##l = reallocate(NULL, counts->nb##l * sizeof(Obj##l*), userData);
+    census->all##l = reallocate(NULL, counts->nb##l * sizeof(Obj##l*), userData);
   DO_ALL_OBJ_TYPES
   #undef DO
 
@@ -131,7 +131,7 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts)
   {
     switch (obj->type)
     {
-      #define DO(u, l) case OBJ_##u: all##l[index.nb##l++] = (Obj##l*)obj; break;
+      #define DO(u, l) case OBJ_##u: census->all##l[index.nb##l++] = (Obj##l*)obj; break;
       DO_ALL_OBJ_TYPES
       #undef DO
     }
@@ -140,11 +140,17 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts)
   #define DO(u, l)                                  \
     printf("Obj" #l ":\n");                         \
     for (unsigned int i = 0; i < index.nb##l; ++i)  \
-      printf("%4u %p\n", i, all##l[i]);
+      printf("%4u %p\n", i, census->all##l[i]);
   DO_ALL_OBJ_TYPES
   #undef DO
+}
 
-  #define DO(u, l) reallocate(all##l, 0, userData);
+void wrenFreeCensus(WrenVM *vm, WrenCensus *census)
+{
+  const WrenReallocateFn reallocate = vm->config.reallocateFn;
+  void* userData = vm->config.userData;
+
+  #define DO(u, l) reallocate(census->all##l, 0, userData);
   DO_ALL_OBJ_TYPES
   #undef DO
 }
