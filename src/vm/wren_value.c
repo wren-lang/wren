@@ -1413,7 +1413,7 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
   counts = (WrenCounts) {};
   wrenCountAllObj(vm, &counts);
 
-  censusObj(vm, &counts);
+  wrenCensusAllObj(vm, &counts);
 
   wrenVisitObjects_(vm, obj, visitor, 0);
   wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);

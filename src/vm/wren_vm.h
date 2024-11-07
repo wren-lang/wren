@@ -279,6 +279,6 @@ typedef struct {
 // [counts] is expected to be initialized with 0.
 void wrenCountAllObj(WrenVM *vm, WrenCounts *counts);
 
-void censusObj(WrenVM *vm, WrenCounts *counts);
+void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts);
 
 #endif

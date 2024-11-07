@@ -114,7 +114,7 @@ void wrenCountAllObj(WrenVM *vm, WrenCounts *counts)
   );
 }
 
-void censusObj(WrenVM *vm, WrenCounts *counts)
+void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts)
 {
   const WrenReallocateFn reallocate = vm->config.reallocateFn;
   void* userData = vm->config.userData;
