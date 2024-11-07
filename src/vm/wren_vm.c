@@ -103,8 +103,8 @@ wrenCountObj countAllObj(WrenVM *vm)
   }
 
   printf(
-    "counting Obj: %u"
-    #define DO(u, l) "\t" #l ": %u"
+    "counting Obj: %lu"
+    #define DO(u, l) "\t" #l ": %lu"
     DO_ALL_OBJ_TYPES
     #undef DO
     "\n",
