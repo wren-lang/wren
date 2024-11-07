@@ -276,8 +276,9 @@ typedef struct {
 
 #undef DO_ALL_OBJ_TYPES
 
-wrenCountObj countAllObj(WrenVM *vm);
+// [counts] is expected to be initialized with 0.
+void countAllObj(WrenVM *vm, wrenCountObj *counts);
 
-void censusObj(WrenVM *vm, wrenCountObj counts);
+void censusObj(WrenVM *vm, wrenCountObj *counts);
 
 #endif

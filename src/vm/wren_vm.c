@@ -84,19 +84,17 @@ static void closeBytecodeFile(FILE* file)
   DO(STRING,   String  ) \
   DO(UPVALUE,  Upvalue )
 
-wrenCountObj countAllObj(WrenVM *vm)
+void countAllObj(WrenVM *vm, wrenCountObj *counts)
 {
-  wrenCountObj counts = {};
-
   for (Obj* obj = vm->first;
        obj != NULL;
        obj = obj->next)
   {
-    ++counts.nb;
+    ++counts->nb;
 
     switch (obj->type)
     {
-      #define DO(u, l) case OBJ_##u: ++counts.nb##l; break;
+      #define DO(u, l) case OBJ_##u: ++counts->nb##l; break;
       DO_ALL_OBJ_TYPES
       #undef DO
     }
@@ -109,23 +107,21 @@ wrenCountObj countAllObj(WrenVM *vm)
     #undef DO
     "\n",
 
-    counts.nb
-    #define DO(u, l) , counts.nb##l
+    counts->nb
+    #define DO(u, l) , counts->nb##l
     DO_ALL_OBJ_TYPES
     #undef DO
   );
-
-  return counts;
 }
 
-void censusObj(WrenVM *vm, wrenCountObj counts)
+void censusObj(WrenVM *vm, wrenCountObj *counts)
 {
   const WrenReallocateFn reallocate = vm->config.reallocateFn;
   void* userData = vm->config.userData;
   wrenCountObj index = {};
 
   #define DO(u, l) \
-    Obj##l** all##l = reallocate(NULL, counts.nb##l * sizeof(Obj##l*), userData);
+    Obj##l** all##l = reallocate(NULL, counts->nb##l * sizeof(Obj##l*), userData);
   DO_ALL_OBJ_TYPES
   #undef DO
 
@@ -191,17 +187,22 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   wrenSymbolTableInit(&vm->methodNames);
 
-  countAllObj(vm);
+  wrenCountObj counts;
+
+  counts = (wrenCountObj) {};
+  countAllObj(vm, &counts);
 
   vm->modules = wrenNewMap(vm);
 
-  countAllObj(vm);
+  counts = (wrenCountObj) {};
+  countAllObj(vm, &counts);
 
   vm->bytecodeFile = openBytecodeFile();
 
   wrenInitializeCore(vm);
 
-  countAllObj(vm);
+  counts = (wrenCountObj) {};
+  countAllObj(vm, &counts);
 
   return vm;
 }
