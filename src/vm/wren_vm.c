@@ -136,8 +136,8 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
 
   #define DO(u, l)                                  \
     printf("Obj" #l ":\n");                         \
-    for (unsigned int i = 0; i < index.nb##l; ++i)  \
-      printf("%4u %p\n", i, census->all##l[i]);
+    for (uint64_t i = 0; i < index.nb##l; ++i)      \
+      printf("%4lu %p\n", i, census->all##l[i]);
   DO_ALL_OBJ_TYPES
   #undef DO
 }
