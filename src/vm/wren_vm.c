@@ -84,7 +84,7 @@ static void closeBytecodeFile(FILE* file)
   DO(STRING,   String  ) \
   DO(UPVALUE,  Upvalue )
 
-void countAllObj(WrenVM *vm, wrenCountObj *counts)
+void countAllObj(WrenVM *vm, WrenCounts *counts)
 {
   for (Obj* obj = vm->first;
        obj != NULL;
@@ -114,11 +114,11 @@ void countAllObj(WrenVM *vm, wrenCountObj *counts)
   );
 }
 
-void censusObj(WrenVM *vm, wrenCountObj *counts)
+void censusObj(WrenVM *vm, WrenCounts *counts)
 {
   const WrenReallocateFn reallocate = vm->config.reallocateFn;
   void* userData = vm->config.userData;
-  wrenCountObj index = {};
+  WrenCounts index = {};
 
   #define DO(u, l) \
     Obj##l** all##l = reallocate(NULL, counts->nb##l * sizeof(Obj##l*), userData);
@@ -187,21 +187,21 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   wrenSymbolTableInit(&vm->methodNames);
 
-  wrenCountObj counts;
+  WrenCounts counts;
 
-  counts = (wrenCountObj) {};
+  counts = (WrenCounts) {};
   countAllObj(vm, &counts);
 
   vm->modules = wrenNewMap(vm);
 
-  counts = (wrenCountObj) {};
+  counts = (WrenCounts) {};
   countAllObj(vm, &counts);
 
   vm->bytecodeFile = openBytecodeFile();
 
   wrenInitializeCore(vm);
 
-  counts = (wrenCountObj) {};
+  counts = (WrenCounts) {};
   countAllObj(vm, &counts);
 
   return vm;

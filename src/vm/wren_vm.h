@@ -272,13 +272,13 @@ typedef struct {
   DO_ALL_OBJ_TYPES
   #undef DO
   uint64_t nb;
-} wrenCountObj;
+} WrenCounts;
 
 #undef DO_ALL_OBJ_TYPES
 
 // [counts] is expected to be initialized with 0.
-void countAllObj(WrenVM *vm, wrenCountObj *counts);
+void countAllObj(WrenVM *vm, WrenCounts *counts);
 
-void censusObj(WrenVM *vm, wrenCountObj *counts);
+void censusObj(WrenVM *vm, WrenCounts *counts);
 
 #endif

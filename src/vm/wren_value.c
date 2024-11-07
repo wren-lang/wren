@@ -1401,16 +1401,16 @@ static void wrenVisitObjects_(WrenVM* vm, Obj* obj, WrenVisitorFn visitor, unsig
 void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
 {
 
-  wrenCountObj counts;
+  WrenCounts counts;
 
-  counts = (wrenCountObj) {};
+  counts = (WrenCounts) {};
   countAllObj(vm, &counts);
 
   wrenPushRoot(vm, obj);  // TODO should the caller have a handle on the closure?
   wrenCollectGarbage(vm);
   wrenPopRoot(vm); // obj
 
-  counts = (wrenCountObj) {};
+  counts = (WrenCounts) {};
   countAllObj(vm, &counts);
 
   censusObj(vm, &counts);
