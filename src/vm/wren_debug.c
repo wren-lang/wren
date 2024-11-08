@@ -437,7 +437,9 @@ void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 
   printf("\n");
 
+#if WREN_SNAPSHOT
   wrenSaveCode(vm, fn);
+#endif
 }
 
 void wrenDumpStack(ObjFiber* fiber)

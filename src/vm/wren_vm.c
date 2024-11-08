@@ -212,22 +212,28 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   wrenSymbolTableInit(&vm->methodNames);
 
+#if WREN_SNAPSHOT
   WrenCounts counts;
 
   counts = (WrenCounts) {};
   wrenCountAllObj(vm, &counts);
+#endif
 
   vm->modules = wrenNewMap(vm);
 
+#if WREN_SNAPSHOT
   counts = (WrenCounts) {};
   wrenCountAllObj(vm, &counts);
 
   vm->bytecodeFile = openBytecodeFile();
+#endif
 
   wrenInitializeCore(vm);
 
+#if WREN_SNAPSHOT
   counts = (WrenCounts) {};
   wrenCountAllObj(vm, &counts);
+#endif
 
   return vm;
 }
@@ -255,7 +261,9 @@ void wrenFreeVM(WrenVM* vm)
 
   wrenSymbolTableClear(vm, &vm->methodNames);
 
+#if WREN_SNAPSHOT
   closeBytecodeFile(vm->bytecodeFile);
+#endif
 
   DEALLOCATE(vm, vm);
 }

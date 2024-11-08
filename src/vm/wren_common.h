@@ -63,6 +63,11 @@
 
 //------------------------------------------------------------------------------
 
+// Set this to true to enable the snapshot feature.
+#define WREN_SNAPSHOT 0
+
+//------------------------------------------------------------------------------
+
 // These flags are useful for debugging and hacking on Wren itself. They are not
 // intended to be used for production code. They default to off.
 

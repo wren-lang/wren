@@ -1400,7 +1400,7 @@ static void wrenVisitObjects_(WrenVM* vm, Obj* obj, WrenVisitorFn visitor, unsig
 
 void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
 {
-
+#if WREN_SNAPSHOT
   WrenCounts counts;
   WrenCensus census;
 
@@ -1419,6 +1419,7 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
 
   wrenVisitObjects_(vm, obj, visitor, 0);
   wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
+#endif
 }
 
 //------------------------------------------------------------------------------
