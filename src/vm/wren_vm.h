@@ -267,11 +267,13 @@ static inline bool wrenIsFalsyValue(Value value)
   DO(STRING,   String  ) \
   DO(UPVALUE,  Upvalue )
 
+typedef uint64_t WrenCount;
+
 typedef struct {
-  #define DO(u, l) uint64_t nb##l;
+  #define DO(u, l) WrenCount nb##l;
   DO_ALL_OBJ_TYPES
   #undef DO
-  uint64_t nb;
+  WrenCount nb;
 } WrenCounts;
 
 typedef struct {
@@ -293,6 +295,6 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census);
 // Free the arrays of a [census].
 void wrenFreeCensus(WrenVM *vm, WrenCensus *census);
 
-uint64_t wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle);
+WrenCount wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle);
 
 #endif
