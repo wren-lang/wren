@@ -8,12 +8,16 @@
 //
 // This header is *not* intended to be included by code outside of Wren itself.
 
+//------------------------------------------------------------------------------
+
 // Wren pervasively uses the C99 integer types (uint16_t, etc.) along with some
 // of the associated limit constants (UINT32_MAX, etc.). The constants are not
 // part of standard C++, so aren't included by default by C++ compilers when you
 // include <stdint> unless __STDC_LIMIT_MACROS is defined.
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
+
+//------------------------------------------------------------------------------
 
 // These flags let you control some details of the interpreter's implementation.
 // Usually they trade-off a bit of portability for speed. They default to the
@@ -44,6 +48,8 @@
   #endif
 #endif
 
+//------------------------------------------------------------------------------
+
 // The VM includes a number of optional modules. You can choose to include
 // these or not. By default, they are all available. To disable one, set the
 // corresponding `WREN_OPT_<name>` define to `0`.
@@ -54,6 +60,8 @@
 #ifndef WREN_OPT_RANDOM
   #define WREN_OPT_RANDOM 1
 #endif
+
+//------------------------------------------------------------------------------
 
 // These flags are useful for debugging and hacking on Wren itself. They are not
 // intended to be used for production code. They default to off.
@@ -74,6 +82,8 @@
 
 // Set this to trace each instruction as it's executed.
 #define WREN_DEBUG_TRACE_INSTRUCTIONS 0
+
+//------------------------------------------------------------------------------
 
 // The maximum number of module-level variables that may be defined at one time.
 // This limitation comes from the 16 bits used for the arguments to
@@ -113,6 +123,8 @@
 // field index*.
 #define MAX_FIELDS 255
 
+//------------------------------------------------------------------------------
+
 // Use the VM's allocator to allocate an object of [type].
 #define ALLOCATE(vm, type)                                                     \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
@@ -130,11 +142,15 @@
 // Use the VM's allocator to free the previously allocated memory at [pointer].
 #define DEALLOCATE(vm, pointer) wrenReallocate(vm, pointer, 0, 0)
 
+//------------------------------------------------------------------------------
+
 // The Microsoft compiler does not support the "inline" modifier when compiling
 // as plain C.
 #if defined( _MSC_VER ) && !defined(__cplusplus)
   #define inline _inline
 #endif
+
+//------------------------------------------------------------------------------
 
 // This is used to clearly mark flexible-sized arrays that appear at the end of
 // some dynamically-allocated structs, known as the "struct hack".
@@ -146,6 +162,8 @@
   // but works reliably in most known compilers.
   #define FLEXIBLE_ARRAY 0
 #endif
+
+//------------------------------------------------------------------------------
 
 // Assertions are used to validate program invariants. They indicate things the
 // program expects to be true about its internal state during execution. If an
