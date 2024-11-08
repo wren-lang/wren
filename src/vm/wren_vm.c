@@ -116,12 +116,9 @@ void wrenCountAllObj(WrenVM *vm, WrenCounts *counts)
 
 void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
 {
-  const WrenReallocateFn reallocate = vm->config.reallocateFn;
-  void* userData = vm->config.userData;
   WrenCounts index = {};
 
-  #define DO(u, l) \
-    census->all##l = reallocate(NULL, counts->nb##l * sizeof(Obj##l*), userData);
+  #define DO(u, l) census->all##l = ALLOCATE_ARRAY(vm, Obj##l*, counts->nb##l);
   DO_ALL_OBJ_TYPES
   #undef DO
 
@@ -147,10 +144,7 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
 
 void wrenFreeCensus(WrenVM *vm, WrenCensus *census)
 {
-  const WrenReallocateFn reallocate = vm->config.reallocateFn;
-  void* userData = vm->config.userData;
-
-  #define DO(u, l) reallocate(census->all##l, 0, userData);
+  #define DO(u, l) DEALLOCATE(vm, census->all##l);
   DO_ALL_OBJ_TYPES
   #undef DO
 }
