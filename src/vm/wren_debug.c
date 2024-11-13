@@ -381,6 +381,8 @@ static void wrenSaveCode(WrenVM* vm, ObjFn* fn)
 #define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char),    1, file)
 #define STR_CONST(str)   fwrite(str,        sizeof(str) - 1, 1, file)
 #define STR(str)         fwrite(str,        strlen(str),     1, file)
+#define NUM(n)           fwrite(&n,         sizeof(n),       1, file)
+
 
   // TODO check returned values
   STR_CONST(strFn);
@@ -396,7 +398,7 @@ static void wrenSaveCode(WrenVM* vm, ObjFn* fn)
   CHAR("\n");
 
   CHAR("\t");
-  fwrite(&nbCode, sizeof(nbCode), 1, file);
+  NUM(nbCode);
   CHAR("O");
   CHAR("{");
   fwrite(fn->code.data, sizeof(uint8_t), nbCode, file);
@@ -405,7 +407,7 @@ static void wrenSaveCode(WrenVM* vm, ObjFn* fn)
 
   if (nbConst) {
     CHAR("\t");
-    fwrite(&nbConst, sizeof(nbConst), 1, file);
+    NUM(nbConst);
     CHAR("C");
     CHAR("{");
     for (int i = 0; i < nbConst; ++i) {
@@ -416,8 +418,8 @@ static void wrenSaveCode(WrenVM* vm, ObjFn* fn)
     CHAR("\n");
   }
 
-#undef CHAR
-#undef STR
+// #undef CHAR
+// #undef STR
 }
 
 void wrenDumpCode(WrenVM* vm, ObjFn* fn)
@@ -451,4 +453,144 @@ void wrenDumpStack(ObjFiber* fiber)
     printf(" | ");
   }
   printf("\n");
+}
+
+// Snapshot --------------------------------------------------------------------
+
+#define VERBOSE    if (verbose)
+
+static void saveValueBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ValueBuffer* buffer)
+{
+  const bool verbose = true;
+
+  const int count = buffer->count;
+  Value* data = buffer->data;
+
+  static const char unhandled[] = "XXXXXXXXXX";
+
+  NUM(count);
+  VERBOSE CHAR("{");
+  for (int i = 0; i < count; ++i)
+  {
+    Value v = data[i];
+
+    if (i)
+    {
+      VERBOSE CHAR(",");
+    }
+
+    if (IS_NUM(v))
+    {
+      const uint8_t typeNum = 'N';  // NOTE the type
+      double d = AS_NUM(v);
+      NUM(typeNum);
+      NUM(d);                       // TODO portability?
+    }
+    else if (IS_OBJ(v))
+    {
+      Obj* obj = AS_OBJ(v);
+      uint8_t type = obj->type;   // NOTE the type
+      WrenCount id = wrenFindInCensus(counts, census, obj);
+
+      NUM(type);
+      NUM(id);
+    }
+    else
+    {
+      STR_CONST(unhandled);
+      // TODO wrenDumpValue_(file, v, true);
+    }
+  }
+  VERBOSE CHAR("}");
+}
+
+static void saveStringBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, StringBuffer* buffer)
+{
+  const bool verbose = true;
+
+  const int count = buffer->count;
+  ObjString** data = buffer->data;
+
+  NUM(count);
+  VERBOSE CHAR("{");
+  for (int i = 0; i < count; ++i)
+  {
+    ObjString* str = data[i];
+
+    if (i)
+    {
+      VERBOSE CHAR(",");
+    }
+
+    WrenCount id = wrenFindInCensus(counts, census, (Obj*)str);
+    NUM(id);
+  }
+  VERBOSE CHAR("}");
+}
+
+static void saveAllString(FILE* file, WrenCounts* counts, WrenCensus* census)
+{
+  static const char type[] = "ObjString";
+  const bool verbose = true;
+
+  const WrenCount nb = counts->nbString;
+  ObjString** all = census->allString;
+
+  NUM(nb);
+  for (WrenCount i = 0; i < nb; ++i)
+  {
+    WrenCount id = i + 1;
+
+    ObjString* str = all[i];
+    uint32_t length = str->length;
+
+    VERBOSE STR_CONST(type);
+    VERBOSE CHAR("#");
+    VERBOSE NUM(id);
+    VERBOSE CHAR(":");
+
+    NUM(length);
+    VERBOSE CHAR("\"");
+    fwrite(str->value, sizeof(char), length, file);
+    VERBOSE CHAR("\"");
+
+    VERBOSE CHAR("\n");
+  }
+}
+
+static void saveAllModule(FILE* file, WrenCounts* counts, WrenCensus* census)
+{
+  static const char type[] = "ObjModule";
+  const bool verbose = true;
+
+  const WrenCount nb = counts->nbModule;
+  ObjModule** all = census->allModule;
+
+  NUM(nb);
+  for (WrenCount i = 0; i < nb; ++i)
+  {
+    WrenCount id = i + 1;
+
+    ObjModule* module = all[i];
+    ObjString* name = module->name;
+
+    VERBOSE STR_CONST(type);
+    VERBOSE CHAR("#");
+    VERBOSE NUM(id);
+    VERBOSE CHAR(":");
+
+    WrenCount id_name = name ? wrenFindInCensus(counts, census, (Obj*)name) : 0;
+    NUM(id_name);
+
+    saveStringBuffer(file, counts, census, (StringBuffer*) &module->variableNames);
+    saveValueBuffer(file, counts, census, &module->variables);
+
+    VERBOSE CHAR("\n");
+  }
+}
+
+void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
+{
+  saveAllString(vm->bytecodeFile, counts, census);
+  saveAllModule(vm->bytecodeFile, counts, census);
 }

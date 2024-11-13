@@ -24,4 +24,7 @@ void wrenDumpCode(WrenVM* vm, ObjFn* fn);
 // Prints the contents of the current stack for [fiber] to stdout.
 void wrenDumpStack(ObjFiber* fiber);
 
+// Save a snapshot of the [vm].
+void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census);
+
 #endif

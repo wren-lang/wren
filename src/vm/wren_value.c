@@ -1415,6 +1415,7 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
   wrenCountAllObj(vm, &counts);
 
   wrenCensusAllObj(vm, &counts, &census);
+  wrenSnapshotSave(vm, &counts, &census);
   wrenFreeCensus(vm, &census);
 
   wrenVisitObjects_(vm, obj, visitor, 0);
