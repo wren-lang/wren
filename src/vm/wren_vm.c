@@ -169,9 +169,9 @@ WrenCount wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle)
 
   for (WrenCount i = 0; i < nb; ++i)
     if (needle == haystack[i])
-      return i;
+      return i + 1;
 
-  return (WrenCount) -1;
+  return 0;
 }
 
 #undef DO_ALL_OBJ_TYPES

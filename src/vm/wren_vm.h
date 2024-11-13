@@ -295,6 +295,11 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census);
 // Free the arrays of a [census].
 void wrenFreeCensus(WrenVM *vm, WrenCensus *census);
 
+// Find the [needle] in the [census], whose sizes are [counts].
+// (The type of the needle selects the correct array in [census].)
+// This yields an identifier independent from the memory allocator.
+// The returned value is 1-based.
+// Return 0 when not found.
 WrenCount wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle);
 
 #endif
