@@ -570,30 +570,33 @@ static void saveOneModule(FILE* file, WrenCounts* counts, WrenCensus* census, Ob
   saveValueBuffer(file, counts, census, &module->variables);
 }
 
-static void saveAllModule(FILE* file, WrenCounts* counts, WrenCensus* census)
-{
-  static const char type[] = "ObjModule";
-
-  const WrenCount nb = counts->nbModule;
-  ObjModule** all = census->allModule;
-
-  NUM(nb);
-  for (WrenCount i = 0; i < nb; ++i)
-  {
-    WrenCount id = i + 1;
-
-    ObjModule* module = all[i];
-
-    VERBOSE STR_CONST(type);
-    VERBOSE CHAR("#");
-    VERBOSE NUM(id);
-    VERBOSE CHAR(":");
-
-    saveOneModule(file, counts, census, module);
-
-    VERBOSE CHAR("\n");
-  }
+#define SAVE_ALL(type)                                                         \
+static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
+{                                                                              \
+  static const char strType[] = "Obj" #type;                                   \
+                                                                               \
+  const WrenCount nb = counts->nb##type;                                       \
+  Obj##type** all = census->all##type;                                         \
+                                                                               \
+  NUM(nb);                                                                     \
+  for (WrenCount i = 0; i < nb; ++i)                                           \
+  {                                                                            \
+    WrenCount id = i + 1;                                                      \
+                                                                               \
+    Obj##type* obj = all[i];                                                   \
+                                                                               \
+    VERBOSE STR_CONST(strType);                                                \
+    VERBOSE CHAR("#");                                                         \
+    VERBOSE NUM(id);                                                           \
+    VERBOSE CHAR(":");                                                         \
+                                                                               \
+    saveOne##type(file, counts, census, obj);                                  \
+                                                                               \
+    VERBOSE CHAR("\n");                                                        \
+  }                                                                            \
 }
+
+SAVE_ALL(Module)
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
 {
