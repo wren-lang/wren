@@ -560,6 +560,16 @@ static void saveAllString(FILE* file, WrenCounts* counts, WrenCensus* census)
   }
 }
 
+static void saveOneModule(FILE* file, WrenCounts* counts, WrenCensus* census, ObjModule* module)
+{
+  ObjString* name = module->name;
+  WrenCount id_name = name ? wrenFindInCensus(counts, census, (Obj*)name) : 0;
+  NUM(id_name);
+
+  saveStringBuffer(file, counts, census, (StringBuffer*) &module->variableNames);
+  saveValueBuffer(file, counts, census, &module->variables);
+}
+
 static void saveAllModule(FILE* file, WrenCounts* counts, WrenCensus* census)
 {
   static const char type[] = "ObjModule";
@@ -573,18 +583,13 @@ static void saveAllModule(FILE* file, WrenCounts* counts, WrenCensus* census)
     WrenCount id = i + 1;
 
     ObjModule* module = all[i];
-    ObjString* name = module->name;
 
     VERBOSE STR_CONST(type);
     VERBOSE CHAR("#");
     VERBOSE NUM(id);
     VERBOSE CHAR(":");
 
-    WrenCount id_name = name ? wrenFindInCensus(counts, census, (Obj*)name) : 0;
-    NUM(id_name);
-
-    saveStringBuffer(file, counts, census, (StringBuffer*) &module->variableNames);
-    saveValueBuffer(file, counts, census, &module->variables);
+    saveOneModule(file, counts, census, module);
 
     VERBOSE CHAR("\n");
   }
