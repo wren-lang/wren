@@ -553,11 +553,13 @@ static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
   const WrenCount nb = counts->nb##type;                                       \
   Obj##type** all = census->all##type;                                         \
                                                                                \
+  VERBOSE STR_CONST(strType);                                                  \
+  VERBOSE CHAR("=");                                                           \
   NUM(nb);                                                                     \
+  VERBOSE CHAR("\n");                                                          \
   for (WrenCount i = 0; i < nb; ++i)                                           \
   {                                                                            \
     WrenCount id = i + 1;                                                      \
-                                                                               \
     Obj##type* obj = all[i];                                                   \
                                                                                \
     VERBOSE STR_CONST(strType);                                                \
