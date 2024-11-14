@@ -535,31 +535,6 @@ static void saveOneString(FILE* file, WrenCounts* counts, WrenCensus* census, Ob
   VERBOSE CHAR("\"");
 }
 
-static void saveAllString(FILE* file, WrenCounts* counts, WrenCensus* census)
-{
-  static const char type[] = "ObjString";
-
-  const WrenCount nb = counts->nbString;
-  ObjString** all = census->allString;
-
-  NUM(nb);
-  for (WrenCount i = 0; i < nb; ++i)
-  {
-    WrenCount id = i + 1;
-
-    ObjString* str = all[i];
-
-    VERBOSE STR_CONST(type);
-    VERBOSE CHAR("#");
-    VERBOSE NUM(id);
-    VERBOSE CHAR(":");
-
-    saveOneString(file, counts, census, str);
-
-    VERBOSE CHAR("\n");
-  }
-}
-
 static void saveOneModule(FILE* file, WrenCounts* counts, WrenCensus* census, ObjModule* module)
 {
   ObjString* name = module->name;
@@ -596,6 +571,7 @@ static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
   }                                                                            \
 }
 
+SAVE_ALL(String)
 SAVE_ALL(Module)
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
