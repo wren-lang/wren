@@ -457,12 +457,12 @@ void wrenDumpStack(ObjFiber* fiber)
 
 // Snapshot --------------------------------------------------------------------
 
+static const bool verbose = false;
+
 #define VERBOSE    if (verbose)
 
 static void saveValueBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ValueBuffer* buffer)
 {
-  const bool verbose = true;
-
   const int count = buffer->count;
   Value* data = buffer->data;
 
@@ -506,8 +506,6 @@ static void saveValueBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, 
 
 static void saveStringBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, StringBuffer* buffer)
 {
-  const bool verbose = true;
-
   const int count = buffer->count;
   ObjString** data = buffer->data;
 
@@ -531,7 +529,6 @@ static void saveStringBuffer(FILE* file, WrenCounts* counts, WrenCensus* census,
 static void saveAllString(FILE* file, WrenCounts* counts, WrenCensus* census)
 {
   static const char type[] = "ObjString";
-  const bool verbose = true;
 
   const WrenCount nb = counts->nbString;
   ObjString** all = census->allString;
@@ -561,7 +558,6 @@ static void saveAllString(FILE* file, WrenCounts* counts, WrenCensus* census)
 static void saveAllModule(FILE* file, WrenCounts* counts, WrenCensus* census)
 {
   static const char type[] = "ObjModule";
-  const bool verbose = true;
 
   const WrenCount nb = counts->nbModule;
   ObjModule** all = census->allModule;
