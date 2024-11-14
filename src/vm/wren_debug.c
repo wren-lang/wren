@@ -526,6 +526,15 @@ static void saveStringBuffer(FILE* file, WrenCounts* counts, WrenCensus* census,
   VERBOSE CHAR("}");
 }
 
+static void saveOneString(FILE* file, WrenCounts* counts, WrenCensus* census, ObjString* str)
+{
+  uint32_t length = str->length;
+  NUM(length);
+  VERBOSE CHAR("\"");
+  fwrite(str->value, sizeof(char), length, file);
+  VERBOSE CHAR("\"");
+}
+
 static void saveAllString(FILE* file, WrenCounts* counts, WrenCensus* census)
 {
   static const char type[] = "ObjString";
@@ -539,17 +548,13 @@ static void saveAllString(FILE* file, WrenCounts* counts, WrenCensus* census)
     WrenCount id = i + 1;
 
     ObjString* str = all[i];
-    uint32_t length = str->length;
 
     VERBOSE STR_CONST(type);
     VERBOSE CHAR("#");
     VERBOSE NUM(id);
     VERBOSE CHAR(":");
 
-    NUM(length);
-    VERBOSE CHAR("\"");
-    fwrite(str->value, sizeof(char), length, file);
-    VERBOSE CHAR("\"");
+    saveOneString(file, counts, census, str);
 
     VERBOSE CHAR("\n");
   }
