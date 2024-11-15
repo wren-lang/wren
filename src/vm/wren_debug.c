@@ -609,6 +609,36 @@ static void saveOneClosure(FILE* file, WrenCounts* counts, WrenCensus* census, O
   // TODO upvalues, fn->numUpvalues
 }
 
+static void saveOneMap(FILE* file, WrenCounts* counts, WrenCensus* census, ObjMap* map)
+{
+  const uint32_t count = map->count;
+
+  if (count)
+  {
+    NUM(count);
+    VERBOSE CHAR("{");
+
+    uint32_t i = 0;
+    for (uint32_t index = 0; index < map->capacity; index++)
+    {
+      MapEntry* entry = &map->entries[index];
+
+      if (IS_UNDEFINED(entry->key)) continue;
+
+      if (i++)
+      {
+        VERBOSE CHAR(",");
+      }
+
+      saveValue(file, counts, census, entry->key);
+      VERBOSE CHAR("=");
+      VERBOSE CHAR(">");
+      saveValue(file, counts, census, entry->value);
+    }
+    VERBOSE CHAR("}");
+  }
+}
+
 #define SAVE_ALL(type)                                                         \
 static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
 {                                                                              \
@@ -641,11 +671,13 @@ SAVE_ALL(String)
 SAVE_ALL(Module)
 SAVE_ALL(Fn)
 SAVE_ALL(Closure)
+SAVE_ALL(Map)
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
 {
-  saveAllString(vm->bytecodeFile, counts, census);
-  saveAllModule(vm->bytecodeFile, counts, census);
-  saveAllFn(vm->bytecodeFile, counts, census);
-  saveAllClosure(vm->bytecodeFile, counts, census);
+  saveAllString   (vm->bytecodeFile, counts, census);
+  saveAllModule   (vm->bytecodeFile, counts, census);
+  saveAllFn       (vm->bytecodeFile, counts, census);
+  saveAllClosure  (vm->bytecodeFile, counts, census);
+  saveAllMap      (vm->bytecodeFile, counts, census);
 }
