@@ -526,6 +526,17 @@ static void saveStringBuffer(FILE* file, WrenCounts* counts, WrenCensus* census,
   VERBOSE CHAR("}");
 }
 
+static void saveByteBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ByteBuffer* buffer)
+{
+  const int count = buffer->count;
+  const uint8_t* data = buffer->data;
+
+  NUM(count);
+  VERBOSE CHAR("{");
+  fwrite(data, sizeof(uint8_t), count, file);
+  VERBOSE CHAR("}");
+}
+
 static void saveOneString(FILE* file, WrenCounts* counts, WrenCensus* census, ObjString* str)
 {
   uint32_t length = str->length;
@@ -543,6 +554,39 @@ static void saveOneModule(FILE* file, WrenCounts* counts, WrenCensus* census, Ob
 
   saveStringBuffer(file, counts, census, (StringBuffer*) &module->variableNames);
   saveValueBuffer(file, counts, census, &module->variables);
+}
+
+static void saveOneFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn* fn)
+{
+  const ObjModule* module = fn->module;
+  WrenCount id_module = wrenFindInCensus(counts, census, (Obj*)module);
+  NUM(id_module);
+
+  VERBOSE CHAR(":");
+  VERBOSE CHAR(":");
+
+  const uint64_t lenName = strlen(fn->debug->name);   // NOTE the type
+  NUM(lenName);
+  STR(fn->debug->name);
+
+  VERBOSE CHAR("/");
+  const uint8_t arity = fn->arity;    // NOTE the type; see MAX_PARAMETERS
+  NUM(arity);
+
+  VERBOSE CHAR("S");
+  NUM(fn->maxSlots);
+
+  VERBOSE CHAR("U");
+  const uint8_t numUpvalues = fn->numUpvalues;    // NOTE the type; see MAX_UPVALUES
+  NUM(numUpvalues);
+
+  VERBOSE CHAR("C");
+  saveValueBuffer(file, counts, census, &fn->constants);
+
+  VERBOSE CHAR("B");
+  saveByteBuffer(file, counts, census, &fn->code);
+
+  // TODO FnDebug* debug->sourceLines
 }
 
 #define SAVE_ALL(type)                                                         \
@@ -575,9 +619,11 @@ static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
 
 SAVE_ALL(String)
 SAVE_ALL(Module)
+SAVE_ALL(Fn)
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
 {
   saveAllString(vm->bytecodeFile, counts, census);
   saveAllModule(vm->bytecodeFile, counts, census);
+  saveAllFn(vm->bytecodeFile, counts, census);
 }
