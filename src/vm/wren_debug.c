@@ -461,12 +461,37 @@ static const bool verbose = false;
 
 #define VERBOSE    if (verbose)
 
+static const char unhandled[] = "XXXXXXXXXX";
+
+static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value v)
+{
+  if (IS_NUM(v))
+  {
+    const uint8_t typeNum = 'N';  // NOTE the type
+    double d = AS_NUM(v);
+    NUM(typeNum);
+    NUM(d);                       // TODO portability?
+  }
+  else if (IS_OBJ(v))
+  {
+    Obj* obj = AS_OBJ(v);
+    uint8_t type = obj->type;   // NOTE the type
+    WrenCount id = wrenFindInCensus(counts, census, obj);
+
+    NUM(type);
+    NUM(id);
+  }
+  else
+  {
+    STR_CONST(unhandled);
+    // TODO wrenDumpValue_(file, v, true);
+  }
+}
+
 static void saveValueBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ValueBuffer* buffer)
 {
   const int count = buffer->count;
   Value* data = buffer->data;
-
-  static const char unhandled[] = "XXXXXXXXXX";
 
   NUM(count);
   VERBOSE CHAR("{");
@@ -479,27 +504,7 @@ static void saveValueBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, 
       VERBOSE CHAR(",");
     }
 
-    if (IS_NUM(v))
-    {
-      const uint8_t typeNum = 'N';  // NOTE the type
-      double d = AS_NUM(v);
-      NUM(typeNum);
-      NUM(d);                       // TODO portability?
-    }
-    else if (IS_OBJ(v))
-    {
-      Obj* obj = AS_OBJ(v);
-      uint8_t type = obj->type;   // NOTE the type
-      WrenCount id = wrenFindInCensus(counts, census, obj);
-
-      NUM(type);
-      NUM(id);
-    }
-    else
-    {
-      STR_CONST(unhandled);
-      // TODO wrenDumpValue_(file, v, true);
-    }
+    saveValue(file, counts, census, v);
   }
   VERBOSE CHAR("}");
 }
