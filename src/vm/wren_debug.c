@@ -461,8 +461,6 @@ static const bool verbose = false;
 
 #define VERBOSE    if (verbose)
 
-static const char unhandled[] = "XXXXXXXXXX";
-
 static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value v)
 {
   if (IS_NUM(v))
@@ -483,8 +481,16 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
   }
   else
   {
-    STR_CONST(unhandled);
-    // TODO wrenDumpValue_(file, v, true);
+    uint8_t type;             // NOTE the type
+    switch (GET_TAG(v))
+    {
+      case TAG_FALSE:     type = '0'; break;
+      case TAG_NAN:       type = '8'; break;  // 8 is not an infinite :-)
+      case TAG_NULL:      type = ' '; break;
+      case TAG_TRUE:      type = '1'; break;
+      case TAG_UNDEFINED: UNREACHABLE();
+    }
+    NUM(type);
   }
 }
 
