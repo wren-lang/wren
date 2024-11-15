@@ -463,6 +463,7 @@ static const bool verbose = false;
 
 static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value v)
 {
+#if WREN_NAN_TAGGING
   if (IS_NUM(v))
   {
     const uint8_t typeNum = 'N';  // NOTE the type
@@ -492,6 +493,32 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
     }
     NUM(type);
   }
+#else
+  uint8_t type;             // NOTE the type
+  switch (v.type)
+  {
+    case VAL_FALSE:     type = '0'; NUM(type); break;
+    case VAL_NULL:      type = ' '; NUM(type); break;
+    case VAL_TRUE:      type = '1'; NUM(type); break;
+    case VAL_NUM: {
+      type = 'N';
+      double d = AS_NUM(v);
+      NUM(type);
+      NUM(d);                       // TODO portability?
+      break;
+    }
+    case VAL_OBJ: {
+      Obj* obj = AS_OBJ(v);
+      type = obj->type;
+      WrenCount id = wrenFindInCensus(counts, census, obj);
+
+      NUM(type);
+      NUM(id);
+      break;
+    }
+    case VAL_UNDEFINED: UNREACHABLE();
+  }
+#endif
 }
 
 static void saveValueBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ValueBuffer* buffer)
