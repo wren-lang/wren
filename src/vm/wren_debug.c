@@ -589,6 +589,15 @@ static void saveOneFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn*
   // TODO FnDebug* debug->sourceLines
 }
 
+static void saveOneClosure(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClosure* closure)
+{
+  const ObjFn* fn = closure->fn;
+  WrenCount id_fn = wrenFindInCensus(counts, census, (Obj*)fn);
+  NUM(id_fn);
+
+  // TODO upvalues, fn->numUpvalues
+}
+
 #define SAVE_ALL(type)                                                         \
 static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
 {                                                                              \
@@ -620,10 +629,12 @@ static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
 SAVE_ALL(String)
 SAVE_ALL(Module)
 SAVE_ALL(Fn)
+SAVE_ALL(Closure)
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
 {
   saveAllString(vm->bytecodeFile, counts, census);
   saveAllModule(vm->bytecodeFile, counts, census);
   saveAllFn(vm->bytecodeFile, counts, census);
+  saveAllClosure(vm->bytecodeFile, counts, census);
 }
