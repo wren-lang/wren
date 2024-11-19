@@ -154,6 +154,11 @@ WrenCount wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle)
   Obj** haystack;
   WrenCount nb;
 
+  // Be nice with special cases:
+  // - the core module has no name.
+  // - objectClass has no superclass.
+  if (needle == NULL) return 0;
+
   switch (needle->type)
   {
     #define DO(u, l)                      \

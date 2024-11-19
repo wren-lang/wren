@@ -587,7 +587,7 @@ static void saveOneString(FILE* file, WrenCounts* counts, WrenCensus* census, Ob
 static void saveOneModule(FILE* file, WrenCounts* counts, WrenCensus* census, ObjModule* module)
 {
   ObjString* name = module->name;
-  WrenCount id_name = name ? wrenFindInCensus(counts, census, (Obj*)name) : 0;
+  WrenCount id_name = wrenFindInCensus(counts, census, (Obj*)name);
   NUM(id_name);
 
   saveStringBuffer(file, counts, census, (StringBuffer*) &module->variableNames);
