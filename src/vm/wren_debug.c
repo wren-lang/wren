@@ -461,20 +461,29 @@ static const bool verbose = false;
 
 #define VERBOSE    if (verbose)
 
+// A char to discriminate the type. This augments the list in ObjType.
+enum {
+  ValueTypeCharFalse    = '0',
+  ValueTypeCharNull     = ' ',
+  ValueTypeCharNum      = 'N',
+  ValueTypeCharTrue     = '1',
+  ValueTypeCharNaN      = '8', // 8 is not an infinite :-)
+};
+
 static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value v)
 {
 #if WREN_NAN_TAGGING
   if (IS_NUM(v))
   {
-    const uint8_t typeNum = 'N';  // NOTE the type
+    const uint8_t type = ValueTypeCharNum; // NOTE the type
     double d = AS_NUM(v);
-    NUM(typeNum);
+    NUM(type);
     NUM(d);                       // TODO portability?
   }
   else if (IS_OBJ(v))
   {
     Obj* obj = AS_OBJ(v);
-    uint8_t type = obj->type;   // NOTE the type
+    const uint8_t type = obj->type;   // NOTE the type and the cast
     WrenCount id = wrenFindInCensus(counts, census, obj);
 
     NUM(type);
@@ -485,10 +494,10 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
     uint8_t type;             // NOTE the type
     switch (GET_TAG(v))
     {
-      case TAG_FALSE:     type = '0'; break;
-      case TAG_NAN:       type = '8'; break;  // 8 is not an infinite :-)
-      case TAG_NULL:      type = ' '; break;
-      case TAG_TRUE:      type = '1'; break;
+      case TAG_FALSE:     type = ValueTypeCharFalse; break;
+      case TAG_NAN:       type = ValueTypeCharNaN;   break;
+      case TAG_NULL:      type = ValueTypeCharNull;  break;
+      case TAG_TRUE:      type = ValueTypeCharTrue;  break;
       case TAG_UNDEFINED: UNREACHABLE();
     }
     NUM(type);
@@ -497,11 +506,11 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
   uint8_t type;             // NOTE the type
   switch (v.type)
   {
-    case VAL_FALSE:     type = '0'; NUM(type); break;
-    case VAL_NULL:      type = ' '; NUM(type); break;
-    case VAL_TRUE:      type = '1'; NUM(type); break;
+    case VAL_FALSE: type = ValueTypeCharFalse; NUM(type); break;
+    case VAL_NULL:  type = ValueTypeCharNull;  NUM(type); break;
+    case VAL_TRUE:  type = ValueTypeCharTrue;  NUM(type); break;
     case VAL_NUM: {
-      type = 'N';
+      type = ValueTypeCharNum;
       double d = AS_NUM(v);
       NUM(type);
       NUM(d);                       // TODO portability?
@@ -509,7 +518,7 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
     }
     case VAL_OBJ: {
       Obj* obj = AS_OBJ(v);
-      type = obj->type;
+      type = obj->type;             // NOTE the cast
       WrenCount id = wrenFindInCensus(counts, census, obj);
 
       NUM(type);
