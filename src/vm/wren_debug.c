@@ -796,6 +796,48 @@ SAVE_ALL(Closure)
 SAVE_ALL(Map)
 SAVE_ALL(Class)
 
+static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* vm)
+{
+  VERBOSE CHAR("V");
+  VERBOSE CHAR("M");
+  VERBOSE CHAR("\n");
+
+#define SAVE_CLASS(verboseCharStr, name)                                       \
+  VERBOSE CHAR(verboseCharStr);                                                \
+  ObjClass* name##Class = vm->name##Class;                                     \
+  const WrenCount id_##name##Class =                                           \
+    wrenFindInCensus(counts, census, (Obj*)name##Class);                       \
+  NUM(id_##name##Class);                                                       \
+  VERBOSE CHAR("\n");
+
+  SAVE_CLASS("b", bool)
+  SAVE_CLASS("c", class)
+  SAVE_CLASS("t", fiber)    // thread
+  SAVE_CLASS("f", fn)
+  SAVE_CLASS("l", list)
+  SAVE_CLASS("m", map)
+  SAVE_CLASS(" ", null)
+  SAVE_CLASS("n", num)
+  SAVE_CLASS("o", object)
+  SAVE_CLASS("r", range)
+  SAVE_CLASS("s", string)
+
+#undef SAVE_CLASS
+
+  VERBOSE CHAR("i");  // import
+  const WrenCount id_modules = wrenFindInCensus(counts, census, (Obj*)vm->modules);
+  NUM(id_modules);
+  VERBOSE CHAR("\n");
+
+  VERBOSE CHAR("I");  // import
+  const WrenCount id_lastModule = wrenFindInCensus(counts, census, (Obj*)vm->lastModule);
+  NUM(id_lastModule);
+  VERBOSE CHAR("\n");
+
+  VERBOSE CHAR("M");
+  saveStringBuffer(file, counts, census, (StringBuffer*) &vm->methodNames);
+}
+
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
 {
   saveAllString   (vm->bytecodeFile, counts, census);
@@ -804,4 +846,5 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
   saveAllClosure  (vm->bytecodeFile, counts, census);
   saveAllMap      (vm->bytecodeFile, counts, census);
   saveAllClass    (vm->bytecodeFile, counts, census);
+  saveVM          (vm->bytecodeFile, counts, census, vm);
 }
