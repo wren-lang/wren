@@ -639,7 +639,7 @@ static void saveByteBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, B
   VERBOSE CHAR("}");
 }
 
-static void saveOneString(FILE* file, WrenCounts* counts, WrenCensus* census, ObjString* str)
+static void saveObjString(FILE* file, WrenCounts* counts, WrenCensus* census, ObjString* str)
 {
   uint32_t length = str->length;
   NUM(length);
@@ -648,7 +648,7 @@ static void saveOneString(FILE* file, WrenCounts* counts, WrenCensus* census, Ob
   VERBOSE CHAR("\"");
 }
 
-static void saveOneModule(FILE* file, WrenCounts* counts, WrenCensus* census, ObjModule* module)
+static void saveObjModule(FILE* file, WrenCounts* counts, WrenCensus* census, ObjModule* module)
 {
   ObjString* name = module->name;
   WrenCount id_name = wrenFindInCensus(counts, census, (Obj*)name);
@@ -658,7 +658,7 @@ static void saveOneModule(FILE* file, WrenCounts* counts, WrenCensus* census, Ob
   saveValueBuffer(file, counts, census, &module->variables);
 }
 
-static void saveOneFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn* fn)
+static void saveObjFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn* fn)
 {
   const ObjModule* module = fn->module;
   WrenCount id_module = wrenFindInCensus(counts, census, (Obj*)module);
@@ -691,7 +691,7 @@ static void saveOneFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn*
   // TODO FnDebug* debug->sourceLines
 }
 
-static void saveOneClosure(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClosure* closure)
+static void saveObjClosure(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClosure* closure)
 {
   const ObjFn* fn = closure->fn;
   WrenCount id_fn = wrenFindInCensus(counts, census, (Obj*)fn);
@@ -700,7 +700,7 @@ static void saveOneClosure(FILE* file, WrenCounts* counts, WrenCensus* census, O
   // TODO upvalues, fn->numUpvalues
 }
 
-static void saveOneMap(FILE* file, WrenCounts* counts, WrenCensus* census, ObjMap* map)
+static void saveObjMap(FILE* file, WrenCounts* counts, WrenCensus* census, ObjMap* map)
 {
   const uint32_t count = map->count;
 
@@ -730,7 +730,7 @@ static void saveOneMap(FILE* file, WrenCounts* counts, WrenCensus* census, ObjMa
   }
 }
 
-static void saveOneClass(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClass* classObj)
+static void saveObjClass(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClass* classObj)
 {
   ObjString* name = classObj->name;
   WrenCount id_name = wrenFindInCensus(counts, census, (Obj*)name);
@@ -774,7 +774,7 @@ static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
     VERBOSE NUM(id);                                                           \
     VERBOSE CHAR(":");                                                         \
                                                                                \
-    saveOne##type(file, counts, census, obj);                                  \
+    saveObj##type(file, counts, census, obj);                                  \
                                                                                \
     VERBOSE CHAR("\n");                                                        \
   }                                                                            \
