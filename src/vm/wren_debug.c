@@ -564,6 +564,70 @@ static void saveStringBuffer(FILE* file, WrenCounts* counts, WrenCensus* census,
   VERBOSE CHAR("}");
 }
 
+enum {
+  MethodTypeCharPrimitive     = 'P',
+  MethodTypeCharFunctionCall  = 'C',  // call
+  MethodTypeCharForeign       = 'F',
+  MethodTypeCharBlock         = 'M',  // method
+  MethodTypeCharNone          = ' ',
+};
+
+static void saveMethodBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, MethodBuffer* buffer)
+{
+  const int count = buffer->count;
+  Method* data = buffer->data;
+
+  NUM(count);
+  VERBOSE CHAR("{");
+  for (int i = 0; i < count; ++i)
+  {
+    Method m = data[i];
+
+    if (i)
+    {
+      VERBOSE CHAR(",");
+    }
+
+    uint8_t type;             // NOTE the type
+    switch (m.type)
+    {
+      case METHOD_PRIMITIVE:
+        type = MethodTypeCharPrimitive;
+        NUM(type);
+        // TODO id for a Primitive
+        break;
+
+      case METHOD_FUNCTION_CALL:
+        type = MethodTypeCharFunctionCall;
+        NUM(type);
+        // TODO id for a Primitive
+        break;
+
+      case METHOD_FOREIGN:
+        type = MethodTypeCharForeign;
+        NUM(type);
+        // TODO id for a WrenForeignMethodFn
+        break;
+
+      case METHOD_BLOCK:
+      {
+        type = MethodTypeCharBlock;
+        NUM(type);
+
+        WrenCount id = wrenFindInCensus(counts, census, (Obj*)m.as.closure);
+        NUM(id);
+        break;
+      }
+
+      case METHOD_NONE:
+        type = MethodTypeCharNone;
+        NUM(type);
+        break;
+    }
+  }
+  VERBOSE CHAR("}");
+}
+
 static void saveByteBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ByteBuffer* buffer)
 {
   const int count = buffer->count;
@@ -666,6 +730,28 @@ static void saveOneMap(FILE* file, WrenCounts* counts, WrenCensus* census, ObjMa
   }
 }
 
+static void saveOneClass(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClass* classObj)
+{
+  ObjString* name = classObj->name;
+  WrenCount id_name = wrenFindInCensus(counts, census, (Obj*)name);
+  NUM(id_name);
+
+  VERBOSE CHAR("<");
+  ObjClass* super = classObj->superclass;
+  WrenCount id_super = wrenFindInCensus(counts, census, (Obj*)super);
+  NUM(id_super);
+
+  VERBOSE CHAR("A");
+  saveValue(file, counts, census, classObj->attributes);
+
+  VERBOSE CHAR("F");
+  const uint8_t numFields = classObj->numFields;    // NOTE the type; see MAX_FIELDS
+  NUM(numFields);
+
+  VERBOSE CHAR("M");
+  saveMethodBuffer(file, counts, census, &classObj->methods);
+}
+
 #define SAVE_ALL(type)                                                         \
 static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
 {                                                                              \
@@ -699,6 +785,7 @@ SAVE_ALL(Module)
 SAVE_ALL(Fn)
 SAVE_ALL(Closure)
 SAVE_ALL(Map)
+SAVE_ALL(Class)
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
 {
@@ -707,4 +794,5 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
   saveAllFn       (vm->bytecodeFile, counts, census);
   saveAllClosure  (vm->bytecodeFile, counts, census);
   saveAllMap      (vm->bytecodeFile, counts, census);
+  saveAllClass    (vm->bytecodeFile, counts, census);
 }
