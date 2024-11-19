@@ -367,12 +367,6 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
   return dumpInstruction(vm, fn, i, NULL);
 }
 
-#define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char),    1, file)
-#define STR_CONST(str)   fwrite(str,        sizeof(str) - 1, 1, file)
-#define STR(str)         fwrite(str,        strlen(str),     1, file)
-#define NUM(n)           fwrite(&n,         sizeof(n),       1, file)
-  // TODO check returned values
-
 void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 {
   printf("%s: %s\n",
@@ -403,6 +397,12 @@ void wrenDumpStack(ObjFiber* fiber)
 }
 
 // Snapshot --------------------------------------------------------------------
+
+#define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char),    1, file)
+#define STR_CONST(str)   fwrite(str,        sizeof(str) - 1, 1, file)
+#define STR(str)         fwrite(str,        strlen(str),     1, file)
+#define NUM(n)           fwrite(&n,         sizeof(n),       1, file)
+  // TODO check returned values
 
 static const bool verbose = false;
 
