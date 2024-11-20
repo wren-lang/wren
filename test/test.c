@@ -1,6 +1,6 @@
 #include "./test.h"
 
-//path helpers
+// Path helpers ----------------------------------------------------------------
 
   void ensureCapacity(Path* path, size_t capacity)
   {
@@ -298,7 +298,7 @@
     return string;
   }
 
-//file helpers
+// File helpers ----------------------------------------------------------------
 
   // Reads the contents of the file at [path] and returns it as a heap allocated
   // string.
@@ -338,7 +338,7 @@
     return buffer;
   }
 
-//VM bindings
+// VM bindings -----------------------------------------------------------------
 
   void vm_write(WrenVM* vm, const char* text)
   {
