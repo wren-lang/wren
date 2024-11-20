@@ -796,6 +796,8 @@ SAVE_ALL(Closure)
 SAVE_ALL(Map)
 SAVE_ALL(Class)
 
+#undef SAVE_ALL
+
 static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* vm)
 {
   VERBOSE CHAR("V");
