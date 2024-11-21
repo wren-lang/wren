@@ -193,7 +193,7 @@ static void createCoreObj(WrenVM* vm)
   performCount(vm);
 }
 
-WrenVM* wrenNewVM(WrenConfiguration* config)
+WrenVM* wrenNewEmptyVM(WrenConfiguration* config)
 {
   WrenReallocateFn reallocate = defaultReallocate;
   void* userData = NULL;
@@ -228,6 +228,13 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
   vm->nextGC = vm->config.initialHeapSize;
 
   wrenSymbolTableInit(&vm->methodNames);
+
+  return vm;
+}
+
+WrenVM* wrenNewVM(WrenConfiguration* config)
+{
+  WrenVM* vm = wrenNewEmptyVM(config);
 
   createCoreObj(vm);
 
