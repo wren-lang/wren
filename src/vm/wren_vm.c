@@ -178,6 +178,21 @@ static void performCount(WrenVM* vm)
 #endif
 }
 
+// Create the core objects in the empty configured [vm].
+static void createCoreObj(WrenVM* vm)
+{
+  // Expect no Obj yet.
+  performCount(vm);
+
+  vm->modules = wrenNewMap(vm);
+
+  performCount(vm);
+
+  wrenInitializeCore(vm);
+
+  performCount(vm);
+}
+
 WrenVM* wrenNewVM(WrenConfiguration* config)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -214,15 +229,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   wrenSymbolTableInit(&vm->methodNames);
 
-  performCount(vm);
-
-  vm->modules = wrenNewMap(vm);
-
-  performCount(vm);
-
-  wrenInitializeCore(vm);
-
-  performCount(vm);
+  createCoreObj(vm);
 
   return vm;
 }
