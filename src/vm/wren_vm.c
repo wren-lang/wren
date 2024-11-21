@@ -181,6 +181,15 @@ WrenCount wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle)
 
 #undef DO_ALL_OBJ_TYPES
 
+static void performCount(WrenVM* vm)
+{
+#if WREN_SNAPSHOT
+  WrenCounts counts = {};
+
+  wrenCountAllObj(vm, &counts);
+#endif
+}
+
 WrenVM* wrenNewVM(WrenConfiguration* config)
 {
   WrenReallocateFn reallocate = defaultReallocate;
@@ -217,28 +226,19 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   wrenSymbolTableInit(&vm->methodNames);
 
-#if WREN_SNAPSHOT
-  WrenCounts counts;
-
-  counts = (WrenCounts) {};
-  wrenCountAllObj(vm, &counts);
-#endif
+  performCount(vm);
 
   vm->modules = wrenNewMap(vm);
 
-#if WREN_SNAPSHOT
-  counts = (WrenCounts) {};
-  wrenCountAllObj(vm, &counts);
+  performCount(vm);
 
+#if WREN_SNAPSHOT
   vm->bytecodeFile = openBytecodeFile();
 #endif
 
   wrenInitializeCore(vm);
 
-#if WREN_SNAPSHOT
-  counts = (WrenCounts) {};
-  wrenCountAllObj(vm, &counts);
-#endif
+  performCount(vm);
 
   return vm;
 }
