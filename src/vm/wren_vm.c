@@ -57,18 +57,6 @@ void wrenInitConfiguration(WrenConfiguration* config)
   config->userData = NULL;
 }
 
-static FILE* openBytecodeFile()
-{
-  FILE* file = fopen("bytecode", "wb");
-  //TODO if (file == NULL) return NULL;
-  return file;
-}
-
-static void closeBytecodeFile(FILE* file)
-{
-  fclose(file);
-}
-
 // TODO don't dup src/vm/wren_vm.h
 #define DO_ALL_OBJ_TYPES \
   DO(CLASS,    Class   ) \
@@ -232,10 +220,6 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
   performCount(vm);
 
-#if WREN_SNAPSHOT
-  vm->bytecodeFile = openBytecodeFile();
-#endif
-
   wrenInitializeCore(vm);
 
   performCount(vm);
@@ -265,10 +249,6 @@ void wrenFreeVM(WrenVM* vm)
   ASSERT(vm->handles == NULL, "All handles have not been released.");
 
   wrenSymbolTableClear(vm, &vm->methodNames);
-
-#if WREN_SNAPSHOT
-  closeBytecodeFile(vm->bytecodeFile);
-#endif
 
   DEALLOCATE(vm, vm);
 }

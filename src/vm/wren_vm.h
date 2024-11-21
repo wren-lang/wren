@@ -112,8 +112,6 @@ struct WrenVM
   // There is a single global symbol table for all method names on all classes.
   // Method calls are dispatched directly by index in this table.
   SymbolTable methodNames;
-
-  FILE* bytecodeFile;
 };
 
 // A generic allocation function that handles all explicit memory management.

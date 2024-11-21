@@ -789,11 +789,16 @@ static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* v
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
 {
-  saveAllString   (vm->bytecodeFile, counts, census);
-  saveAllModule   (vm->bytecodeFile, counts, census);
-  saveAllFn       (vm->bytecodeFile, counts, census);
-  saveAllClosure  (vm->bytecodeFile, counts, census);
-  saveAllMap      (vm->bytecodeFile, counts, census);
-  saveAllClass    (vm->bytecodeFile, counts, census);
-  saveVM          (vm->bytecodeFile, counts, census, vm);
+  FILE* file = fopen("bytecode", "wb");
+  if (file == NULL) return;
+
+  saveAllString   (file, counts, census);
+  saveAllModule   (file, counts, census);
+  saveAllFn       (file, counts, census);
+  saveAllClosure  (file, counts, census);
+  saveAllMap      (file, counts, census);
+  saveAllClass    (file, counts, census);
+  saveVM          (file, counts, census, vm);
+
+  fclose(file);
 }
