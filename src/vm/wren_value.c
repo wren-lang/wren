@@ -41,6 +41,8 @@ static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
   obj->type = type;
   obj->isDark = false;
   obj->classObj = classObj;
+
+  // Insert at the front of the singly-linked list of all Obj.
   obj->next = vm->first;
   vm->first = obj;
 }
