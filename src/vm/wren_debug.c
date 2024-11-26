@@ -408,7 +408,11 @@ static const bool verbose = false;
 
 #define VERBOSE    if (verbose)
 
-// A char to discriminate the type. This augments the list in ObjType.
+// How to serialize the type of an Obj or a Value.
+typedef uint8_t ObjOrValueType;
+
+// A char to discriminate the type of a Value.
+// Purposefully don't conflict with the numbers defined by enum ObjType.
 enum {
   ValueTypeCharFalse    = '0',
   ValueTypeCharNull     = ' ',
@@ -422,7 +426,7 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
 #if WREN_NAN_TAGGING
   if (IS_NUM(v))
   {
-    const uint8_t type = ValueTypeCharNum; // NOTE the type
+    const ObjOrValueType type = ValueTypeCharNum;
     double d = AS_NUM(v);
     NUM(type);
     NUM(d);                       // TODO portability?
@@ -430,7 +434,7 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
   else if (IS_OBJ(v))
   {
     Obj* obj = AS_OBJ(v);
-    const uint8_t type = obj->type;   // NOTE the type and the cast
+    const ObjOrValueType type = obj->type;   // NOTE the cast
     WrenCount id = wrenFindInCensus(counts, census, obj);
 
     NUM(type);
@@ -438,7 +442,7 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
   }
   else
   {
-    uint8_t type;             // NOTE the type
+    ObjOrValueType type;
     switch (GET_TAG(v))
     {
       case TAG_FALSE:     type = ValueTypeCharFalse; break;
@@ -450,7 +454,7 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
     NUM(type);
   }
 #else
-  uint8_t type;             // NOTE the type
+  ObjOrValueType type;
   switch (v.type)
   {
     case VAL_FALSE: type = ValueTypeCharFalse; NUM(type); break;
