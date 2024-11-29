@@ -31,8 +31,9 @@
 // reallocating when the call stack grows.
 #define INITIAL_CALL_FRAMES 4
 
-DEFINE_BUFFER(Value, Value);
-DEFINE_BUFFER(Method, Method);
+// Define buffer-related functions.
+DEFINE_BUFFER(Value, Value)
+DEFINE_BUFFER(Method, Method)
 
 //------------------------------------------------------------------------------
 

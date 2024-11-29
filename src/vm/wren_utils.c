@@ -3,9 +3,10 @@
 #include "wren_utils.h"
 #include "wren_vm.h"
 
-DEFINE_BUFFER(Byte, uint8_t);
-DEFINE_BUFFER(Int, int);
-DEFINE_BUFFER(String, ObjString*);
+// Define buffer-related functions.
+DEFINE_BUFFER(Byte, uint8_t)
+DEFINE_BUFFER(Int, int)
+DEFINE_BUFFER(String, ObjString*)
 
 void wrenSymbolTableInit(SymbolTable* symbols)
 {
