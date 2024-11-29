@@ -35,7 +35,9 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
     if (fn->module->name == NULL) continue;
     
     // -1 because IP has advanced past the instruction that it just executed.
-    int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
+    int line = fn->debug->sourceLines.count
+      ? fn->debug->sourceLines.data[frame->ip - fn->code.data - 1]
+      : 0;
     vm->config.errorFn(vm, WREN_ERROR_STACK_TRACE,
                        fn->module->name->value, line,
                        fn->debug->name);
@@ -118,7 +120,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
   uint8_t* bytecode = fn->code.data;
   Code code = (Code)bytecode[i];
 
-  int line = fn->debug->sourceLines.data[i];
+  int line = fn->debug->sourceLines.count ? fn->debug->sourceLines.data[i] : 0;
   if (lastLine == NULL || *lastLine != line)
   {
     printf("%4d:", line);
