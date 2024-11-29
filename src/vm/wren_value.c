@@ -1398,6 +1398,28 @@ static void wrenVisitObjects_(WrenVM* vm, Obj* obj, WrenVisitorFn visitor, unsig
   }
 }
 
+static void performRestore()
+{
+  FILE* file = fopen("bytecode-hello.bin", "rb");
+  if (file == NULL) return; // TODO
+
+  printf("=== performRestore\n");
+
+  WrenConfiguration newConfig;
+  wrenInitConfiguration(&newConfig);
+  newConfig.userData = "VM restored from a snapshot";
+
+  WrenVM* newVM = wrenNewEmptyVM(&newConfig);
+
+  wrenSnapshotRestore(file, newVM);
+
+  fclose(file);
+
+  // TODO use newVM
+
+  wrenFreeVM(newVM);
+}
+
 void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
 {
 #if WREN_SNAPSHOT
@@ -1420,6 +1442,8 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
 
   wrenVisitObjects_(vm, obj, visitor, 0);
   wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
+
+  performRestore();
 #endif
 }
 

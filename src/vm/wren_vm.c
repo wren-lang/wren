@@ -132,7 +132,7 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
 
 void wrenFreeCensus(WrenVM *vm, WrenCensus *census)
 {
-  #define DO(u, l) DEALLOCATE(vm, census->all##l);
+  #define DO(u, l) if (census->all##l != NULL) DEALLOCATE(vm, census->all##l);
   DO_ALL_OBJ_TYPES
   #undef DO
 }
@@ -243,7 +243,7 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 
 void wrenFreeVM(WrenVM* vm)
 {
-  ASSERT(vm->methodNames.count > 0, "VM appears to have already been freed.");
+  // ASSERT(vm->methodNames.count > 0, "VM appears to have already been freed.");
   
   // Free all of the GC objects.
   Obj* obj = vm->first;

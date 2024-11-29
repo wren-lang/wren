@@ -400,13 +400,19 @@ void wrenDumpStack(ObjFiber* fiber)
 
 // Snapshot --------------------------------------------------------------------
 
+typedef struct {
+  FILE* file;
+  WrenCounts *counts;
+  WrenCensus *census;
+} WrenSnapshotContext;
+
 #define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char),    1, file)
 #define STR_CONST(str)   fwrite(str,        sizeof(str) - 1, 1, file)
 #define STR(str)         fwrite(str,        strlen(str),     1, file)
 #define NUM(n)           fwrite(&n,         sizeof(n),       1, file)
   // TODO check returned values
 
-static const bool verbose = false;
+static const bool verbose = true;
 
 #define VERBOSE    if (verbose)
 
@@ -811,4 +817,352 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
   saveVM          (file, counts, census, vm);
 
   fclose(file);
+}
+
+// Snapshot restore ------------------------------------------------------------
+
+#define FREAD fread   // TODO check returned value
+
+#define FREAD_NUM(n)  FREAD(&n, sizeof(n), 1, file)
+
+// TODO: don't dup from src/vm/wren_vm.c
+static void performCount(WrenVM* vm)
+{
+#if WREN_SNAPSHOT
+  WrenCounts counts = {0};
+
+  wrenCountAllObj(vm, &counts);
+#endif
+}
+
+#define DEFINE_restoreIdAsObj(type)                                            \
+static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx)               \
+{                                                                              \
+  FILE* file = ctx->file;                                                      \
+                                                                               \
+  WrenCount id;                                                                \
+  FREAD_NUM(id);                                                               \
+                                                                               \
+  VERBOSE printf("Obj" #type "#%lu", id);                                      \
+                                                                               \
+  if (id == 0) return NULL;                                                    \
+                                                                               \
+  Obj##type** all = ctx->census->all##type;                                    \
+  if (all == NULL) { printf("\tTO swizzle"); return NULL; } /*TODO*/           \
+                                                                               \
+  WrenCount nb = ctx->counts->nb##type;                                        \
+  if (id > nb) { printf("\tOVERFLOW"); return NULL; } /*TODO*/                 \
+                                                                               \
+  return all[id - 1];                                                          \
+}
+
+// TODO ensure: all##type[id] != NULL       // TODO are they init'ed to NULL?
+// TODO append in a SwizzleBuffer, which references the type##Buffer
+
+DEFINE_restoreIdAsObj(Class)
+DEFINE_restoreIdAsObj(Fn)
+DEFINE_restoreIdAsObj(Module)
+DEFINE_restoreIdAsObj(String)
+
+static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  FILE* file = ctx->file;
+
+  ObjOrValueType type;
+  FREAD_NUM(type);
+
+  VERBOSE printf("Value ");
+
+  switch (type)
+  {
+    case OBJ_CLASS:
+      ObjClass* class = restoreIdAsObjClass(ctx);
+      return OBJ_VAL(class);
+
+    //case OBJ_CLOSURE: break;
+    //case OBJ_FIBER: break;
+    case OBJ_FN:
+      ObjFn* fn = restoreIdAsObjFn(ctx);
+      return OBJ_VAL(fn);
+    //case OBJ_FOREIGN: break;
+    //case OBJ_INSTANCE: break;
+    //case OBJ_LIST: break;
+    //case OBJ_MAP: break;
+    //case OBJ_MODULE: break;
+    //case OBJ_RANGE: break;
+    //case OBJ_UPVALUE: break;
+    case OBJ_STRING:
+      ObjString* str = restoreIdAsObjString(ctx);
+      return OBJ_VAL(str);
+
+    //case ValueTypeCharFalse:  break;
+    //case ValueTypeCharNull:   break;
+    case ValueTypeCharNum:
+      double d;
+      FREAD_NUM(d);
+      Value v = NUM_VAL(d);
+      VERBOSE wrenDumpValue_(stdout, v, true);
+      return v;
+    //case ValueTypeCharTrue:   break;
+    //case ValueTypeCharNaN:    break;
+
+    default:
+      break;
+  }
+
+  // TODO
+  VERBOSE printf("type=%u(%c) UNHANDLED!\n", type, type);
+
+  ASSERT(false, "Snapshot restore fatal error.");
+
+  return NULL_VAL; // TODO should disappear
+}
+
+static ObjString* restoreObjString(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  FILE* file = ctx->file;
+
+  uint32_t length;
+  FREAD_NUM(length);
+
+  char buf[256]; // TODO
+  FREAD(buf, sizeof(char), length, file);
+
+  Value v = wrenNewStringLength(vm, buf, length);
+
+  return AS_STRING(v);
+}
+
+static void restoreStringBuffer(WrenSnapshotContext* ctx, WrenVM* vm, StringBuffer* buffer)
+{
+  FILE* file = ctx->file;
+  int count;
+
+  FREAD_NUM(count);
+
+  VERBOSE printf("StringBuffer count = %u\n", count);
+
+  // TODO validate count
+
+  // TODO NICETOHAVE BufferEnsureSize()
+
+  for (int i = 0; i < count; ++i)
+  {
+    VERBOSE printf("[%u]\t", i);
+    ObjString* str = restoreIdAsObjString(ctx);
+    wrenStringBufferWrite(vm, buffer, str);
+    VERBOSE printf(" ");
+    VERBOSE wrenDumpValue_(stdout, OBJ_VAL(str), true);
+    VERBOSE printf("\n");
+  }
+}
+
+static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer* buffer)
+{
+  FILE* file = ctx->file;
+  int count;
+
+  FREAD_NUM(count);
+
+  VERBOSE printf("ValueBuffer count = %u\n", count);
+
+  // TODO validate count
+
+  // TODO s/NICETOHAVE/MUSTHAVE/ BufferEnsureSize()
+
+  for (int i = 0; i < count; ++i)
+  {
+    VERBOSE printf("[%u]\t", i);
+    Value v = restoreValue(ctx, vm);
+    wrenValueBufferWrite(vm, buffer, v);
+    if (AS_OBJ(v) != NULL)
+    {
+      VERBOSE printf(" ");
+      VERBOSE wrenDumpValue_(stdout, v, true);
+    }
+    VERBOSE printf("\n");
+  }
+}
+
+static void restoreByteBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ByteBuffer* buffer)
+{
+  FILE* file = ctx->file;
+  int count;
+
+  FREAD_NUM(count);
+
+  VERBOSE printf("ByteBuffer count = %u\n", count);
+
+  // TODO validate count
+
+  // TODO s/NICETOHAVE/MUSTHAVE/ BufferEnsureSize()
+
+  char buf[256]; // TODO
+  FREAD(buf, sizeof(uint8_t), count, file);
+
+  for (int i = 0; i < count; ++i)
+  {
+    // VERBOSE printf("[%u]\t", i);
+    uint8_t byte = buf[i];
+    wrenByteBufferWrite(vm, buffer, byte);
+    // VERBOSE printf("\n");
+  }
+}
+
+static ObjModule* restoreObjModule(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  FILE* file = ctx->file;
+
+  ObjString* name = restoreIdAsObjString(ctx);
+
+  if (name)
+  {
+    VERBOSE printf(" ");
+    VERBOSE wrenDumpValue_(stdout, OBJ_VAL(name), true);
+  }
+  VERBOSE printf("\n");
+
+  ObjModule* module = wrenNewModule(vm, name);
+
+  restoreStringBuffer(ctx, vm, (StringBuffer*) &module->variableNames);
+
+  restoreValueBuffer(ctx, vm, &module->variables);
+
+  return module;
+}
+
+static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  FILE* file = ctx->file;
+
+  ObjModule* module = restoreIdAsObjModule(ctx);
+  VERBOSE printf("\n");
+
+  uint64_t lenName; // NOTE the type
+  FREAD_NUM(lenName);
+
+  char buf[256]; // TODO
+  FREAD(buf, sizeof(char), lenName, file);
+
+  uint8_t arity; // NOTE the type
+  FREAD_NUM(arity);
+
+  int maxSlots;
+  FREAD_NUM(maxSlots);
+
+  uint8_t numUpvalues; // NOTE the type
+  FREAD_NUM(numUpvalues);
+
+  ObjFn* fn = wrenNewFunction(vm, module, maxSlots);
+
+  fn->arity = arity;
+  fn->numUpvalues = numUpvalues;
+
+  wrenFunctionBindName(vm, fn, buf, (int) lenName); // NOTE the cast
+
+  restoreValueBuffer(ctx, vm, &fn->constants);
+
+  restoreByteBuffer(ctx, vm, &fn->code);
+  // TODO validateBytecode(&fn->code);
+
+  // TODO restoreIntBuffer(ctx, vm, &fn->debug->sourceLines);
+  // wrenIntBufferFill(vm, &fn->debug->sourceLines, 0, fn->code.count);
+  // But see blackenFn()
+
+#if WREN_DEBUG_DUMP_COMPILED_CODE
+  // TODO quick-n-dirty
+  wrenStringBufferFill(vm, &vm->methodNames, ctx->census->allString[0], 256);
+  VERBOSE wrenDumpCode(vm, fn);
+#endif
+
+  return fn;
+}
+
+#define DEFINE_restoreAll(type    ,shunt) /*XXX*/                              \
+static void restoreAll##type(WrenSnapshotContext* ctx, WrenVM* vm)             \
+{                                                                              \
+  FILE* file = ctx->file;                                                      \
+  WrenCount nb;                                                                \
+                                                                               \
+  FREAD_NUM(nb);                                                               \
+                                                                               \
+  VERBOSE printf("\nNb = %lu\n", nb);                                          \
+                                                                               \
+  ctx->counts->nb##type = nb;                                                  \
+  ctx->census->all##type = ALLOCATE_ARRAY(vm, Obj##type*, nb);                 \
+                                                                               \
+  for (WrenCount i = 0; i < nb; ++i)                                           \
+  {                                                                            \
+    VERBOSE printf("restoring Obj" #type "[%lu]\n", i);                        \
+    Obj##type* obj = restoreObj##type(ctx, vm);                                \
+    ctx->census->all##type[i] = obj;                                           \
+    VERBOSE printf("\t\t\t---> ");                                             \
+    VERBOSE wrenDumpValue_(stdout, OBJ_VAL(obj), true);                        \
+    VERBOSE printf("\n");                                                      \
+                                                                               \
+    if (shunt) break; /*XXX*/                                                  \
+  }                                                                            \
+}
+
+DEFINE_restoreAll(String        ,false)
+DEFINE_restoreAll(Module        ,false)
+DEFINE_restoreAll(Fn            ,false)
+
+static void printAllObj(WrenVM* vm) {
+  printf("\n=== all Obj\n");
+  WrenCount i = 0;
+  for (Obj* obj = vm->first;
+       obj != NULL;
+       obj = obj->next, ++i)
+  {
+    printf("obj @ %lu =\t", i);
+    wrenDumpValue_(stdout, OBJ_VAL(obj), true);
+    printf("\n");
+  }
+}
+
+  /*
+  VERBOSE printf("=== allString\n");
+  for (WrenCount i = 0; i < nb; ++i)
+  {
+    VERBOSE printf("%lu = ", i);
+    wrenDumpValue_(stdout, OBJ_VAL(ctx->census->allString[i]), true);
+    VERBOSE printf("\n");
+  }
+  */
+
+void wrenSnapshotRestore(FILE* f, WrenVM* vm)
+{
+  // Expect no Obj yet.
+  performCount(vm);
+
+  // Set up an empty context.
+  WrenCounts counts = {0};
+  WrenCensus census = {0};
+  WrenSnapshotContext ctx = { f, &counts, &census };
+
+  // Restore all Obj.
+  restoreAllString(&ctx, vm);
+  restoreAllModule(&ctx, vm);
+  restoreAllFn    (&ctx, vm);
+  // TODO restoreAllFOO
+
+  VERBOSE printAllObj(vm);
+
+  /** /
+  // Link all Obj together.
+  swizzleObj();
+
+    // TODO iterate all Obj, set its ->classObj according to its ->type:
+      - ObjString
+      - *NOT* ObjModule
+      - ObjFn
+  /**/
+
+  // The census is no longer needed.
+  wrenFreeCensus(vm, &census);
+
+  performCount(vm);
+  // TODO GC should be nop
+  // performCount(vm);
 }

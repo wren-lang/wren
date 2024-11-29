@@ -27,4 +27,7 @@ void wrenDumpStack(ObjFiber* fiber);
 // Save a snapshot of the [vm].
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census);
 
+// Restore a snapshot from [file] into [vm].
+void wrenSnapshotRestore(FILE *file, WrenVM* vm);
+
 #endif

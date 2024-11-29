@@ -300,4 +300,6 @@ void wrenFreeCensus(WrenVM *vm, WrenCensus *census);
 // Return 0 when not found.
 WrenCount wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle);
 
+WrenVM* wrenNewEmptyVM(WrenConfiguration* config);
+
 #endif
