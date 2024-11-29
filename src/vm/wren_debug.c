@@ -1057,6 +1057,7 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
 
   fn->arity = arity;
   fn->numUpvalues = numUpvalues;
+  // VERBOSE if (numUpvalues != 0) printf("numUpvalues=%u", numUpvalues);
 
   wrenFunctionBindName(vm, fn, buf, (int) lenName); // NOTE the cast
 
@@ -1076,6 +1077,17 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
 #endif
 
   return fn;
+}
+
+static ObjClosure* restoreObjClosure(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  ObjFn* fn = restoreIdAsObjFn(ctx);
+
+  VERBOSE printf("\n");
+
+  ObjClosure* closure = wrenNewClosure(vm, fn);
+
+  return closure;
 }
 
 #define DEFINE_restoreAll(type    ,shunt) /*XXX*/                              \
@@ -1107,6 +1119,7 @@ static void restoreAll##type(WrenSnapshotContext* ctx, WrenVM* vm)             \
 DEFINE_restoreAll(String        ,false)
 DEFINE_restoreAll(Module        ,false)
 DEFINE_restoreAll(Fn            ,false)
+DEFINE_restoreAll(Closure       ,false)
 
 static void printAllObj(WrenVM* vm) {
   printf("\n=== all Obj\n");
@@ -1142,9 +1155,10 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
   WrenSnapshotContext ctx = { f, &counts, &census };
 
   // Restore all Obj.
-  restoreAllString(&ctx, vm);
-  restoreAllModule(&ctx, vm);
-  restoreAllFn    (&ctx, vm);
+  restoreAllString (&ctx, vm);
+  restoreAllModule (&ctx, vm);
+  restoreAllFn     (&ctx, vm);
+  restoreAllClosure(&ctx, vm);
   // TODO restoreAllFOO
 
   VERBOSE printAllObj(vm);
@@ -1155,8 +1169,9 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
 
     // TODO iterate all Obj, set its ->classObj according to its ->type:
       - ObjString
-      - *NOT* ObjModule
+      - ObjModule: NOTHING to do
       - ObjFn
+      - ObjClosure use fnClass
   /**/
 
   // The census is no longer needed.
