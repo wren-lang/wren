@@ -639,7 +639,7 @@ static void saveObjFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn*
   NUM(arity);
 
   VERBOSE CHAR("S");
-  NUM(fn->maxSlots);
+  NUM(fn->maxSlots); // TODO endianness, type
 
   VERBOSE CHAR("U");
   const uint8_t numUpvalues = fn->numUpvalues;    // NOTE the type; see MAX_UPVALUES
