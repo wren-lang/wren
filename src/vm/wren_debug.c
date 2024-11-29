@@ -652,6 +652,9 @@ static void saveObjFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn*
   saveByteBuffer(file, counts, census, &fn->code);
 
   // TODO FnDebug* debug->sourceLines
+  // const int sourceLinesCount = fn->debug->sourceLines.count;
+  // VERBOSE CHAR("D");
+  // NUM(sourceLinesCount);
 }
 
 static void saveObjClosure(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClosure* closure)
