@@ -612,6 +612,7 @@ static void saveObjString(FILE* file, WrenCounts* counts, WrenCensus* census, Ob
 
 static void saveObjModule(FILE* file, WrenCounts* counts, WrenCensus* census, ObjModule* module)
 {
+  // The core module has no name, hence id_name will be 0.
   ObjString* name = module->name;
   WrenCount id_name = wrenFindInCensus(counts, census, (Obj*)name);
   NUM(id_name);
