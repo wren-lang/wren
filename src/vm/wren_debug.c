@@ -890,7 +890,9 @@ static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm)
     //case OBJ_INSTANCE: break;
     //case OBJ_LIST: break;
     //case OBJ_MAP: break;
-    //case OBJ_MODULE: break;
+    case OBJ_MODULE:
+      ObjModule* module = restoreIdAsObjModule(ctx);
+      return OBJ_VAL(module);
     //case OBJ_RANGE: break;
     //case OBJ_UPVALUE: break;
     case OBJ_STRING:
@@ -898,7 +900,9 @@ static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm)
       return OBJ_VAL(str);
 
     //case ValueTypeCharFalse:  break;
-    //case ValueTypeCharNull:   break;
+    case ValueTypeCharNull:
+      return NULL_VAL;
+
     case ValueTypeCharNum:
       double d;
       FREAD_NUM(d);
@@ -1092,6 +1096,41 @@ static ObjClosure* restoreObjClosure(WrenSnapshotContext* ctx, WrenVM* vm)
   return closure;
 }
 
+static ObjMap* restoreObjMap(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  FILE* file = ctx->file;
+
+  ObjMap* map = wrenNewMap(vm);
+
+  uint32_t count;
+  FREAD_NUM(count);
+
+  VERBOSE printf("Map count = %u\n", count);
+
+  // TODO resizeMap(vm, map, count); // but is static
+
+  for (uint32_t i = 0; i < count; i++)
+  {
+    VERBOSE printf("Entry %u\n", i);
+
+    VERBOSE printf(" k ");
+    Value k = restoreValue(ctx, vm);
+    VERBOSE printf(" ");
+    VERBOSE wrenDumpValue_(stdout, k, true);
+    VERBOSE printf("\n");
+
+    VERBOSE printf(" v ");
+    Value v = restoreValue(ctx, vm);
+    VERBOSE printf(" ");
+    VERBOSE wrenDumpValue_(stdout, v, true);
+    VERBOSE printf("\n");
+
+    wrenMapSet(vm, map, k, v);
+  }
+
+  return map;
+}
+
 #define DEFINE_restoreAll(type    ,shunt) /*XXX*/                              \
 static void restoreAll##type(WrenSnapshotContext* ctx, WrenVM* vm)             \
 {                                                                              \
@@ -1124,6 +1163,7 @@ DEFINE_restoreAll(String        ,false)
 DEFINE_restoreAll(Module        ,false)
 DEFINE_restoreAll(Fn            ,false)
 DEFINE_restoreAll(Closure       ,false)
+DEFINE_restoreAll(Map           ,false)
 
 static void printAllObj(WrenVM* vm) {
   printf("\n=== all Obj\n");
@@ -1163,6 +1203,7 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
   restoreAllModule (&ctx, vm);
   restoreAllFn     (&ctx, vm);
   restoreAllClosure(&ctx, vm);
+  restoreAllMap    (&ctx, vm);
   // TODO restoreAllFOO
 
   VERBOSE printAllObj(vm);
@@ -1172,10 +1213,11 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
   swizzleObj();
 
     // TODO iterate all Obj, set its ->classObj according to its ->type:
-      - ObjString
-      - ObjModule: NOTHING to do
-      - ObjFn
-      - ObjClosure use fnClass
+      - ObjString   stringClass
+      - ObjModule   NULL => nothing to do
+      - ObjFn       fnClass
+      - ObjClosure  fnClass
+      - ObjMap      mapClass
   /**/
 
   // The census is no longer needed.
