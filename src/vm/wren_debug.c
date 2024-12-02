@@ -848,15 +848,17 @@ static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx)               \
   if (id == 0) return NULL;                                                    \
                                                                                \
   Obj##type** all = ctx->census->all##type;                                    \
-  if (all == NULL) { printf("\tTO swizzle"); return NULL; } /*TODO*/           \
+  if (all == NULL) { printf("\tNO [] => TO swizzle"); return NULL; } /*TODO*/  \
                                                                                \
   WrenCount nb = ctx->counts->nb##type;                                        \
   if (id > nb) { printf("\tOVERFLOW"); return NULL; } /*TODO*/                 \
                                                                                \
-  return all[id - 1];                                                          \
+  Obj##type* obj = all[id - 1];                                                \
+  if (obj == NULL) { printf("\tTO swizzle"); return NULL; } /*TODO*/           \
+                                                                               \
+  return obj;                                                                  \
 }
 
-// TODO ensure: all##type[id] != NULL       // TODO are they init'ed to NULL?
 // TODO append in a SwizzleBuffer, which references the type##Buffer
 
 DEFINE_restoreIdAsObj(Class)
@@ -1101,7 +1103,9 @@ static void restoreAll##type(WrenSnapshotContext* ctx, WrenVM* vm)             \
   VERBOSE printf("\nNb = %lu\n", nb);                                          \
                                                                                \
   ctx->counts->nb##type = nb;                                                  \
+                                                                               \
   ctx->census->all##type = ALLOCATE_ARRAY(vm, Obj##type*, nb);                 \
+  memset(ctx->census->all##type, 0, sizeof(Obj##type*) * nb);                  \
                                                                                \
   for (WrenCount i = 0; i < nb; ++i)                                           \
   {                                                                            \
