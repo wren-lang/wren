@@ -628,7 +628,7 @@ static void endClass(WrenVM* vm)
   vm->fiber->stackTop -= 2;
 
   ObjClass* classObj = AS_CLASS(classValue);
-    classObj->attributes = attributes;
+  classObj->attributes = attributes;
 }
 
 // Creates a new class.
@@ -773,7 +773,7 @@ static Value importModule(WrenVM* vm, Value name)
   ObjClosure* moduleClosure = compileInModule(vm, name, result.source, false, true);
   
   // Now that we're done, give the result back in case there's cleanup to do.
-  if(result.onComplete) result.onComplete(vm, AS_CSTRING(name), result);
+  if (result.onComplete) result.onComplete(vm, AS_CSTRING(name), result);
   
   if (moduleClosure == NULL)
   {
