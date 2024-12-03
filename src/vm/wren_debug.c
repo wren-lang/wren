@@ -866,6 +866,7 @@ DEFINE_restoreIdAsObj(Fn)
 DEFINE_restoreIdAsObj(Module)
 DEFINE_restoreIdAsObj(String)
 DEFINE_restoreIdAsObj(Closure)
+DEFINE_restoreIdAsObj(Map)
 
 static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm)
 {
@@ -1262,6 +1263,38 @@ DEFINE_restoreAll(Closure       ,false)
 DEFINE_restoreAll(Map           ,false)
 DEFINE_restoreAll(Class         ,false)
 
+#undef DEFINE_restoreAll
+
+static void restoreVM(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  VERBOSE printf("\nrestoring VM\n");
+#define RESTORE_CLASS(name)                                                   \
+  vm->name##Class = restoreIdAsObjClass(ctx);                                 \
+  VERBOSE printf("\t" #name "\n");
+
+  RESTORE_CLASS(bool)
+  RESTORE_CLASS(class)
+  RESTORE_CLASS(fiber)
+  RESTORE_CLASS(fn)
+  RESTORE_CLASS(list)
+  RESTORE_CLASS(map)
+  RESTORE_CLASS(null)
+  RESTORE_CLASS(num)
+  RESTORE_CLASS(object)
+  RESTORE_CLASS(range)
+  RESTORE_CLASS(string)
+
+#undef RESTORE_CLASS
+
+  vm->modules = restoreIdAsObjMap(ctx);
+  VERBOSE printf("\tmodules\n");
+
+  vm->lastModule = restoreIdAsObjModule(ctx);
+  VERBOSE printf("\tlastModule\n");
+
+  restoreStringBuffer(ctx, vm, (StringBuffer*) &vm->methodNames);
+}
+
 static void printAllObj(WrenVM* vm) {
   printf("\n=== all Obj\n");
   WrenCount i = 0;
@@ -1302,6 +1335,7 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
   restoreAllClosure(&ctx, vm);
   restoreAllMap    (&ctx, vm);
   restoreAllClass  (&ctx, vm);
+  restoreVM        (&ctx, vm);
 
   VERBOSE printAllObj(vm);
 
