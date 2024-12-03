@@ -865,6 +865,7 @@ DEFINE_restoreIdAsObj(Class)
 DEFINE_restoreIdAsObj(Fn)
 DEFINE_restoreIdAsObj(Module)
 DEFINE_restoreIdAsObj(String)
+DEFINE_restoreIdAsObj(Closure)
 
 static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm)
 {
@@ -922,6 +923,49 @@ static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm)
   ASSERT(false, "Snapshot restore fatal error.");
 
   return NULL_VAL; // TODO should disappear
+}
+
+static Method restoreMethod(WrenSnapshotContext* ctx)
+{
+  FILE* file = ctx->file;
+
+  uint8_t type;
+  FREAD_NUM(type);
+
+  VERBOSE printf("%c ", type);
+
+  Method m;
+
+  switch (type)
+  {
+    case MethodTypeCharPrimitive:
+      m.type = METHOD_PRIMITIVE;
+      // TODO
+      return m;
+
+    case MethodTypeCharFunctionCall:
+      m.type = METHOD_FUNCTION_CALL;
+      // TODO
+      return m;
+
+    //TODO case MethodTypeCharForeign:
+
+    case MethodTypeCharBlock:
+      m.type = METHOD_BLOCK;
+      ObjClosure* closure = restoreIdAsObjClosure(ctx);
+      m.as.closure = closure;
+      return m;
+
+    case MethodTypeCharNone:
+      m.type = METHOD_NONE;
+      return m;
+  }
+
+  VERBOSE printf("Method type=%u(%c) UNHANDLED!\n", type, type);
+
+  ASSERT(false, "Snapshot restore fatal error.");
+
+  return m; // TODO should disappear
 }
 
 static ObjString* restoreObjString(WrenSnapshotContext* ctx, WrenVM* vm)
@@ -1012,6 +1056,28 @@ static void restoreByteBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ByteBuffer* 
     uint8_t byte = buf[i];
     wrenByteBufferWrite(vm, buffer, byte);
     // VERBOSE printf("\n");
+  }
+}
+
+static void restoreMethodBuffer(WrenSnapshotContext* ctx, WrenVM* vm, MethodBuffer* buffer)
+{
+  FILE* file = ctx->file;
+  int count;
+
+  FREAD_NUM(count);
+
+  VERBOSE printf("MethodBuffer count = %u\n", count);
+
+  // TODO validate count
+
+  // TODO s/NICETOHAVE/MUSTHAVE/ BufferEnsureSize()
+
+  for (int i = 0; i < count; ++i)
+  {
+    VERBOSE printf("[%u]\t", i);
+    Method m = restoreMethod(ctx);
+    wrenMethodBufferWrite(vm, buffer, m);
+    VERBOSE printf("\n");
   }
 }
 
@@ -1131,6 +1197,36 @@ static ObjMap* restoreObjMap(WrenSnapshotContext* ctx, WrenVM* vm)
   return map;
 }
 
+static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  FILE* file = ctx->file;
+
+  ObjString* name = restoreIdAsObjString(ctx);
+
+  VERBOSE printf(" < ");
+
+  ObjClass* super = restoreIdAsObjClass(ctx);
+
+  VERBOSE printf("\n");
+
+  Value attributes = restoreValue(ctx, vm);
+  VERBOSE printf(" ");
+  VERBOSE wrenDumpValue_(stdout, attributes, true);
+  VERBOSE printf("\n");
+
+  uint8_t numFields;
+  FREAD_NUM(numFields);
+
+  ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
+
+  restoreMethodBuffer(ctx, vm, &classObj->methods);
+
+  // TODO superclass: directly. Can't wrenBindSuperclass()
+  // TODO attributes
+
+  return classObj;
+}
+
 #define DEFINE_restoreAll(type    ,shunt) /*XXX*/                              \
 static void restoreAll##type(WrenSnapshotContext* ctx, WrenVM* vm)             \
 {                                                                              \
@@ -1164,6 +1260,7 @@ DEFINE_restoreAll(Module        ,false)
 DEFINE_restoreAll(Fn            ,false)
 DEFINE_restoreAll(Closure       ,false)
 DEFINE_restoreAll(Map           ,false)
+DEFINE_restoreAll(Class         ,false)
 
 static void printAllObj(WrenVM* vm) {
   printf("\n=== all Obj\n");
@@ -1204,7 +1301,7 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
   restoreAllFn     (&ctx, vm);
   restoreAllClosure(&ctx, vm);
   restoreAllMap    (&ctx, vm);
-  // TODO restoreAllFOO
+  restoreAllClass  (&ctx, vm);
 
   VERBOSE printAllObj(vm);
 
@@ -1218,6 +1315,7 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
       - ObjFn       fnClass
       - ObjClosure  fnClass
       - ObjMap      mapClass
+      - ObjClass    classClass or a metaclass
   /**/
 
   // The census is no longer needed.
