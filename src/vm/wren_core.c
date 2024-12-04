@@ -13,6 +13,8 @@
 
 #include "wren_core.wren.inc"
 
+// Bool ------------------------------------------------------------------------
+
 DEF_PRIMITIVE(bool_not)
 {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -29,6 +31,8 @@ DEF_PRIMITIVE(bool_toString)
     RETURN_VAL(CONST_STRING(vm, "false"));
   }
 }
+
+// Class -----------------------------------------------------------------------
 
 DEF_PRIMITIVE(class_name)
 {
@@ -54,6 +58,8 @@ DEF_PRIMITIVE(class_attributes)
 {
   RETURN_VAL(AS_CLASS(args[0])->attributes);
 }
+
+// Fiber -----------------------------------------------------------------------
 
 DEF_PRIMITIVE(fiber_new)
 {
@@ -248,6 +254,8 @@ DEF_PRIMITIVE(fiber_yield1)
   return false;
 }
 
+// Fn --------------------------------------------------------------------------
+
 DEF_PRIMITIVE(fn_new)
 {
   if (!validateFn(vm, args[1], "Argument")) return false;
@@ -296,6 +304,8 @@ DEF_PRIMITIVE(fn_toString)
 {
   RETURN_VAL(CONST_STRING(vm, "<fn>"));
 }
+
+// List ------------------------------------------------------------------------
 
 // Creates a new list of size args[1], with all elements initialized to args[2].
 DEF_PRIMITIVE(list_filled)
@@ -470,6 +480,8 @@ DEF_PRIMITIVE(list_subscriptSetter)
   RETURN_VAL(args[2]);
 }
 
+// Map -------------------------------------------------------------------------
+
 DEF_PRIMITIVE(map_new)
 {
   RETURN_OBJ(wrenNewMap(vm));
@@ -595,6 +607,8 @@ DEF_PRIMITIVE(map_valueIteratorValue)
   RETURN_VAL(entry->value);
 }
 
+// Null ------------------------------------------------------------------------
+
 DEF_PRIMITIVE(null_not)
 {
   RETURN_VAL(TRUE_VAL);
@@ -604,6 +618,8 @@ DEF_PRIMITIVE(null_toString)
 {
   RETURN_VAL(CONST_STRING(vm, "null"));
 }
+
+// Num -------------------------------------------------------------------------
 
 DEF_PRIMITIVE(num_fromString)
 {
@@ -843,6 +859,8 @@ DEF_PRIMITIVE(num_truncate)
   RETURN_NUM(integer);
 }
 
+// Object ----------------------------------------------------------------------
+
 DEF_PRIMITIVE(object_same)
 {
   RETURN_BOOL(wrenValuesEqual(args[1], args[2]));
@@ -896,6 +914,8 @@ DEF_PRIMITIVE(object_type)
 {
   RETURN_OBJ(wrenGetClass(vm, args[0]));
 }
+
+// Range -----------------------------------------------------------------------
 
 DEF_PRIMITIVE(range_from)
 {
@@ -978,6 +998,8 @@ DEF_PRIMITIVE(range_toString)
   wrenPopRoot(vm);
   RETURN_VAL(result);
 }
+
+// String ----------------------------------------------------------------------
 
 DEF_PRIMITIVE(string_fromCodePoint)
 {
@@ -1197,6 +1219,8 @@ DEF_PRIMITIVE(string_toString)
   RETURN_VAL(args[0]);
 }
 
+// System ----------------------------------------------------------------------
+
 DEF_PRIMITIVE(system_clock)
 {
   RETURN_NUM((double)clock() / CLOCKS_PER_SEC);
@@ -1217,6 +1241,8 @@ DEF_PRIMITIVE(system_writeString)
 
   RETURN_VAL(args[1]);
 }
+
+//------------------------------------------------------------------------------
 
 // Creates either the Object or Class class in the core module with [name].
 static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
