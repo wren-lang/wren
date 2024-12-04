@@ -106,17 +106,32 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
 {
   WrenCounts index = {};
 
-  #define DO(u, l) census->all##l = ALLOCATE_ARRAY(vm, Obj##l*, counts->nb##l);
+  #define DO(u, l)                                                             \
+    census->all##l = counts->nb##l                                             \
+      ? ALLOCATE_ARRAY(vm, Obj##l*, counts->nb##l)                             \
+      : NULL;
   DO_ALL_OBJ_TYPES
   #undef DO
 
+  // Iterate on all objects.
+  // Because they are inserted at the front of the singly-linked list, the first
+  // is the latest inserted.
   for (Obj* obj = vm->first;
        obj != NULL;
        obj = obj->next)
   {
     switch (obj->type)
     {
-      #define DO(u, l) case OBJ_##u: census->all##l[index.nb##l++] = (Obj##l*)obj; break;
+      // Store the object in the array dedicated to its type, but backwards from
+      // the end.  Hence the oldest objects land at the lowest indices here,
+      // esp. the "Object" ObjString and ObjClass.
+      // Later, when restoring a snapshot, it's trivial to construct the same
+      // order that existed between objects of the same type.
+      // As a result, the core classes need no pointer swizzling at all!
+      #define DO(u, l)                                                         \
+        case OBJ_##u:                                                          \
+          census->all##l[counts->nb##l - 1 - index.nb##l++] = (Obj##l*)obj;    \
+          break;
       DO_ALL_OBJ_TYPES
       #undef DO
     }
