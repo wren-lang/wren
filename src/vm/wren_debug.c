@@ -532,6 +532,10 @@ static void saveStringBuffer(FILE* file, WrenCounts* counts, WrenCensus* census,
   VERBOSE CHAR("}");
 }
 
+// TODO move in a .h file
+size_t findPrimitiveInCensus(Primitive prim);
+Primitive getPrimitive(size_t index);
+
 enum {
   MethodTypeCharPrimitive     = 'P',
   MethodTypeCharFunctionCall  = 'C',  // call
@@ -560,16 +564,18 @@ static void saveMethodBuffer(FILE* file, WrenCounts* counts, WrenCensus* census,
     switch (m.type)
     {
       case METHOD_PRIMITIVE:
-        type = MethodTypeCharPrimitive;
-        NUM(type);
-        // TODO id for a Primitive
-        break;
-
       case METHOD_FUNCTION_CALL:
-        type = MethodTypeCharFunctionCall;
+      {
+        type = m.type == METHOD_FUNCTION_CALL
+          ? MethodTypeCharFunctionCall
+          : MethodTypeCharPrimitive;
         NUM(type);
-        // TODO id for a Primitive
+
+        // NOTE the type and 0-based
+        const uint8_t index = findPrimitiveInCensus(m.as.primitive);
+        NUM(index);
         break;
+      }
 
       case METHOD_FOREIGN:
         type = MethodTypeCharForeign;
@@ -868,6 +874,24 @@ DEFINE_restoreIdAsObj(String)
 DEFINE_restoreIdAsObj(Closure)
 DEFINE_restoreIdAsObj(Map)
 
+#undef DEFINE_restoreIdAsObj
+
+static Primitive restoreIndexAsPrimitive(WrenSnapshotContext* ctx)
+{
+  FILE* file = ctx->file;
+
+  uint8_t index;
+  FREAD_NUM(index);
+
+  VERBOSE printf("primitive[%u]", index);
+
+  const Primitive prim = getPrimitive(index);
+
+  if (prim == NULL) { VERBOSE printf("\tOVERFLOW"); return NULL; } /*TODO*/
+
+  return prim;
+}
+
 static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm)
 {
   FILE* file = ctx->file;
@@ -940,14 +964,16 @@ static Method restoreMethod(WrenSnapshotContext* ctx)
   switch (type)
   {
     case MethodTypeCharPrimitive:
-      m.type = METHOD_PRIMITIVE;
-      // TODO
-      return m;
-
     case MethodTypeCharFunctionCall:
-      m.type = METHOD_FUNCTION_CALL;
-      // TODO
+    {
+      m.type = type == MethodTypeCharFunctionCall
+        ? METHOD_FUNCTION_CALL
+        : METHOD_PRIMITIVE;
+
+      const Primitive prim = restoreIndexAsPrimitive(ctx);
+      m.as.primitive = prim;
       return m;
+    }
 
     //TODO case MethodTypeCharForeign:
 

@@ -13,6 +13,7 @@
       Method method;                                                           \
       method.type = METHOD_PRIMITIVE;                                          \
       method.as.primitive = prim_##function;                                   \
+      findPrimitiveInCensus(prim_##function);                                  \
       wrenBindMethod(vm, cls, symbol, method);                                 \
     } while (false)
 
@@ -26,6 +27,7 @@
       Method method;                                                           \
       method.type = METHOD_FUNCTION_CALL;                                      \
       method.as.primitive = prim_##function;                                   \
+      findPrimitiveInCensus(prim_##function);                                  \
       wrenBindMethod(vm, cls, symbol, method);                                 \
     } while (false)
 
