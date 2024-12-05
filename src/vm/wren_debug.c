@@ -1222,7 +1222,8 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
 
   restoreMethodBuffer(ctx, vm, &classObj->methods);
 
-  // TODO superclass: directly. Can't wrenBindSuperclass()
+  classObj->superclass = super;
+
   // TODO attributes
 
   return classObj;
