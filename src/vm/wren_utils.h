@@ -22,6 +22,7 @@ typedef struct sObjString ObjString;
     } name##Buffer;                                                            \
     void wren##name##BufferInit(name##Buffer* buffer);                         \
     void wren##name##BufferClear(WrenVM* vm, name##Buffer* buffer);            \
+    void wren##name##BufferEnsure(WrenVM* vm, name##Buffer* buffer, int count);\
     void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data,   \
                                 int count);                                    \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
@@ -41,16 +42,21 @@ typedef struct sObjString ObjString;
       wren##name##BufferInit(buffer);                                          \
     }                                                                          \
                                                                                \
-    void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data,   \
-                                int count)                                     \
+    void wren##name##BufferEnsure(WrenVM* vm, name##Buffer* buffer, int count) \
     {                                                                          \
-      if (buffer->capacity < buffer->count + count)                            \
+      if (buffer->capacity < count)                                            \
       {                                                                        \
-        int capacity = wrenPowerOf2Ceil(buffer->count + count);                \
+        int capacity = wrenPowerOf2Ceil(count);                                \
         buffer->data = (type*)wrenReallocate(vm, buffer->data,                 \
             buffer->capacity * sizeof(type), capacity * sizeof(type));         \
         buffer->capacity = capacity;                                           \
       }                                                                        \
+    }                                                                          \
+                                                                               \
+    void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data,   \
+                                int count)                                     \
+    {                                                                          \
+      wren##name##BufferEnsure(vm, buffer, buffer->count + count);             \
                                                                                \
       for (int i = 0; i < count; i++)                                          \
       {                                                                        \
