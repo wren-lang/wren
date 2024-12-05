@@ -1021,7 +1021,7 @@ static void restoreStringBuffer(WrenSnapshotContext* ctx, WrenVM* vm, StringBuff
 
   // TODO validate count
 
-  // TODO NICETOHAVE BufferEnsureSize()
+  wrenStringBufferEnsure(vm, buffer, count);
 
   for (int i = 0; i < count; ++i)
   {
@@ -1045,7 +1045,7 @@ static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer
 
   // TODO validate count
 
-  // TODO s/NICETOHAVE/MUSTHAVE/ BufferEnsureSize()
+  wrenValueBufferEnsure(vm, buffer, count);
 
   for (int i = 0; i < count; ++i)
   {
@@ -1072,7 +1072,7 @@ static void restoreByteBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ByteBuffer* 
 
   // TODO validate count
 
-  // TODO s/NICETOHAVE/MUSTHAVE/ BufferEnsureSize()
+  wrenByteBufferEnsure(vm, buffer, count);
 
   char buf[256]; // TODO
   FREAD(buf, sizeof(uint8_t), count, file);
@@ -1097,7 +1097,7 @@ static void restoreMethodBuffer(WrenSnapshotContext* ctx, WrenVM* vm, MethodBuff
 
   // TODO validate count
 
-  // TODO s/NICETOHAVE/MUSTHAVE/ BufferEnsureSize()
+  wrenMethodBufferEnsure(vm, buffer, count);
 
   for (int i = 0; i < count; ++i)
   {
