@@ -43,6 +43,8 @@
 // The representation is controlled by the `WREN_NAN_TAGGING` define. If that's
 // defined, Nan tagging is used.
 
+//------------------------------------------------------------------------------
+
 // These macros cast a Value to one of the specific object types. These do *not*
 // perform any validation, so must only be used after the Value has been
 // ensured to be the right type.
@@ -85,6 +87,8 @@
 // literal. This determines the length of the string automatically at compile
 // time based on the size of the character array (-1 for the terminating '\0').
 #define CONST_STRING(vm, text) wrenNewStringLength((vm), (text), sizeof(text) - 1)
+
+// Obj and Value ---------------------------------------------------------------
 
 // Identifies which specific type a heap-allocated object is.
 typedef enum {
@@ -147,6 +151,8 @@ typedef struct
 #endif
 
 DECLARE_BUFFER(Value, Value);
+
+//------------------------------------------------------------------------------
 
 // A heap-allocated string object.
 struct sObjString
@@ -491,6 +497,8 @@ typedef struct
   bool isInclusive;
 } ObjRange;
 
+//------------------------------------------------------------------------------
+
 // An IEEE 754 double-precision float is a 64-bit value with bits laid out like:
 //
 // 1 Sign bit
@@ -616,6 +624,8 @@ typedef struct
 #define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, { 0 } })
 
 #endif
+
+//------------------------------------------------------------------------------
 
 // Creates a new "raw" class. It has no metaclass or superclass whatsoever.
 // This is only used for bootstrapping the initial Object and Class classes,
