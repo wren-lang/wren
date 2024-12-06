@@ -127,7 +127,7 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
       // esp. the "Object" ObjString and ObjClass.
       // Later, when restoring a snapshot, it's trivial to construct the same
       // order that existed between objects of the same type.
-      // As a result, the core classes need no pointer swizzling at all!
+      // As a result, the core classes need quite no pointer swizzling.
       #define DO(u, l)                                                         \
         case OBJ_##u:                                                          \
           census->all##l[counts->nb##l - 1 - index.nb##l++] = (Obj##l*)obj;    \

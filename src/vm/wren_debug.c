@@ -400,11 +400,18 @@ void wrenDumpStack(ObjFiber* fiber)
 
 // Snapshot --------------------------------------------------------------------
 
-// Record [where] to write a pointer to an object of [type] identified by [id].
+// Record where to write a pointer which references a not-yet available object
+// of [type] identified by [id].
+// If [inValue], the [target] is [val], else [obj].
+// NOTE: The location designated by [target] MUST NOT be reallocated elsewhere!
 typedef struct {
-  Value* where;
+  union {
+    Obj** obj;
+    Value* val;
+  } target;
   WrenCount id;
   ObjType type;
+  bool inValue;
 } Swizzle;
 
 DECLARE_BUFFER(Swizzle, Swizzle);
@@ -730,6 +737,11 @@ static void saveObjClass(FILE* file, WrenCounts* counts, WrenCensus* census, Obj
   WrenCount id_super = wrenFindInCensus(counts, census, (Obj*)super);
   NUM(id_super);
 
+  VERBOSE CHAR("m");
+  ObjClass* meta = classObj->obj.classObj;
+  WrenCount id_meta = wrenFindInCensus(counts, census, (Obj*)meta);
+  NUM(id_meta);
+
   VERBOSE CHAR("A");
   saveValue(file, counts, census, classObj->attributes);
 
@@ -880,7 +892,12 @@ static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx, WrenCount* p) \
   Obj##type* obj = getObj##type(ctx, id);                                      \
   if (obj != NULL) return obj;                                                 \
                                                                                \
-  /*TODO ASSERT(p != NULL, "Unhandled swizzle");*/                             \
+  if (p == NULL)                                                               \
+  {                                                                            \
+    VERBOSE printf("\n");                                                      \
+    ASSERT(false, "Caller expects no swizzles.");                              \
+  }                                                                            \
+                                                                               \
   *p = id;                                                                     \
   return NULL;                                                                 \
 }
@@ -1083,11 +1100,8 @@ static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer
     if (IS_UNDEFINED(v))
     {
       VERBOSE printf(" TO swizzle");
-
-      // Remember where to swizzle a pointer.
-      // NOTE: The array MUST NOT be reallocated elsewhere!
-      swizzle.where = &buffer->data[buffer->count];
-
+      swizzle.inValue = true;
+      swizzle.target.val = &buffer->data[buffer->count];
       wrenSwizzleBufferWrite(vm, ctx->swizzles, swizzle);
     } else {
       VERBOSE printf(" ");
@@ -1270,7 +1284,13 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
   VERBOSE printf(" < ");
 
   ObjClass* super = restoreIdAsObjClass(ctx, NULL);
-  // NULL is expected for Object; it's never ambiguous as there are no swizzles.
+  // NULL is expected for Object; it's never ambiguous as there are no swizzles here.
+
+  VERBOSE printf(" m ");
+
+  Swizzle swizzle;
+  ObjClass* meta = restoreIdAsObjClass(ctx, &swizzle.id);
+  if (meta == NULL) VERBOSE printf(" TO swizzle");
 
   VERBOSE printf("\n");
 
@@ -1279,10 +1299,21 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
   VERBOSE wrenDumpValue_(stdout, attributes, true);
   VERBOSE printf("\n");
 
+  // TODO serialize it before meta
   uint8_t numFields;
   FREAD_NUM(numFields);
 
   ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
+
+  if (meta != NULL)
+  {
+    classObj->obj.classObj = meta;
+  } else {
+    swizzle.type = OBJ_CLASS;
+    swizzle.inValue = false;
+    swizzle.target.obj = (Obj**)&classObj->obj.classObj;
+    wrenSwizzleBufferWrite(vm, ctx->swizzles, swizzle);
+  }
 
   restoreMethodBuffer(ctx, vm, &classObj->methods);
 
@@ -1368,6 +1399,7 @@ static void printAllObj(WrenVM* vm) {
        obj = obj->next, ++i)
   {
     printf("obj @ %lu =\t", i);
+    printf("class=%p\t", obj->classObj);
     wrenDumpValue_(stdout, OBJ_VAL(obj), true);
     printf("\n");
   }
@@ -1383,42 +1415,62 @@ static void printAllObj(WrenVM* vm) {
   }
   */
 
-static void swizzleObj(WrenSnapshotContext* ctx)
+static void swizzlePointers(WrenSnapshotContext* ctx)
 {
-  SwizzleBuffer* buffer = ctx->swizzles;
+  const SwizzleBuffer* buffer = ctx->swizzles;
 
   for (int i = 0; i < buffer->count; ++i)
   {
-    Swizzle* swiz = &buffer->data[i];
-    VERBOSE printf("swizzle %p with %u#%lu\n", swiz->where, swiz->type, swiz->id);
+    const Swizzle* swiz = &buffer->data[i];
 
-    Value v = *swiz->where;
-    ASSERT(IS_UNDEFINED(v), "Will swizzle only an UNDEFINED value.");
+    VERBOSE printf("swizzle %s %p with %u#%lu\n",
+      swiz->inValue ? "Value" : "Obj  ",
+      swiz->target.val, swiz->type, swiz->id);
 
+    Obj* obj;
     switch (swiz->type)
     {
-      case OBJ_CLASS:
-      {
-        ObjClass* obj = getObjClass(ctx, swiz->id);
-        if (obj != NULL) v = OBJ_VAL(obj);
-        break;
-      }
-
-      case OBJ_FN:
-      {
-        ObjFn* obj = getObjFn(ctx, swiz->id);
-        if (obj != NULL) v = OBJ_VAL(obj);
-        break;
-      }
-
+      case OBJ_CLASS: obj = (Obj*)getObjClass(ctx, swiz->id); break;
+      case OBJ_FN:    obj = (Obj*)getObjFn   (ctx, swiz->id); break;
       default:
-        ASSERT(false, "UNHANDLED type of swizzle.");
+        ASSERT(false, "UNHANDLED ObjType.");
         break;
     }
+    ASSERT(obj != NULL, "Swizzle found no substitute.");
 
-    ASSERT(!IS_UNDEFINED(v), "Swizzle found nothing.");
-    *swiz->where = v;
+    if (swiz->inValue)
+    {
+      Value v = *swiz->target.val;
+      ASSERT(IS_UNDEFINED(v), "Will swizzle only an UNDEFINED_VAL.");
+      *swiz->target.val = OBJ_VAL(obj);
+    } else {
+      Obj* o = *swiz->target.obj;
+      ASSERT(o == NULL, "Will swizzle only a NULL Obj*.");
+      *swiz->target.obj = obj;
+    }
   }
+}
+
+static void assignClasses(WrenVM* vm)
+{
+  VERBOSE printf("\n=== assign Classes\n");
+  for (Obj* obj = vm->first;
+       obj != NULL;
+       obj = obj->next)
+    switch (obj->type)
+    {
+      case OBJ_CLASS: break;  // Its metaclass is already restored.
+      case OBJ_CLOSURE:
+      case OBJ_FN:
+        obj->classObj = vm->fnClass;
+        break;
+      case OBJ_MAP:    obj->classObj = vm->mapClass; break;
+      case OBJ_MODULE: break; // Modules are not first-class objects in Wren.
+      case OBJ_STRING: obj->classObj = vm->stringClass; break;
+      default:
+        ASSERT(false, "UNHANDLED ObjType.");
+        break;
+    }
 }
 
 void wrenSnapshotRestore(FILE* f, WrenVM* vm)
@@ -1448,19 +1500,14 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
   VERBOSE printAllObj(vm);
 
   // Swizzle references into real pointers.
-  swizzleObj(&ctx);
+  swizzlePointers(&ctx);
 
   wrenSwizzleBufferClear(vm, &swizzles);
 
-  /** /
-    // TODO iterate all Obj, set its ->classObj according to its ->type:
-      - ObjString   stringClass
-      - ObjModule   NULL => nothing to do
-      - ObjFn       fnClass
-      - ObjClosure  fnClass
-      - ObjMap      mapClass
-      - ObjClass    classClass or a metaclass
-  /**/
+  // Assign class to each object.
+  assignClasses(vm);
+
+  VERBOSE printAllObj(vm);
 
   // The census is no longer needed.
   wrenFreeCensus(vm, &census);
