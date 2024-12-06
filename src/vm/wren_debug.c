@@ -400,10 +400,21 @@ void wrenDumpStack(ObjFiber* fiber)
 
 // Snapshot --------------------------------------------------------------------
 
+// Record [where] to write a pointer to an object of [type] identified by [id].
+typedef struct {
+  Value* where;
+  WrenCount id;
+  ObjType type;
+} Swizzle;
+
+DECLARE_BUFFER(Swizzle, Swizzle);
+DEFINE_BUFFER(Swizzle, Swizzle)
+
 typedef struct {
   FILE* file;
   WrenCounts *counts;
   WrenCensus *census;
+  SwizzleBuffer* swizzles;
 } WrenSnapshotContext;
 
 #define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char),    1, file)
@@ -842,7 +853,7 @@ static void performCount(WrenVM* vm)
 }
 
 #define DEFINE_restoreIdAsObj(type)                                            \
-static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx)               \
+static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx, WrenCount* p) \
 {                                                                              \
   FILE* file = ctx->file;                                                      \
                                                                                \
@@ -854,18 +865,17 @@ static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx)               \
   if (id == 0) return NULL;                                                    \
                                                                                \
   Obj##type** all = ctx->census->all##type;                                    \
-  if (all == NULL) { printf("\tNO [] => TO swizzle"); return NULL; } /*TODO*/  \
+  if (all != NULL) {                                                           \
+    WrenCount nb = ctx->counts->nb##type;                                      \
+    if (id > nb) { VERBOSE printf("\tOVERFLOW"); return NULL; } /*TODO*/       \
                                                                                \
-  WrenCount nb = ctx->counts->nb##type;                                        \
-  if (id > nb) { printf("\tOVERFLOW"); return NULL; } /*TODO*/                 \
-                                                                               \
-  Obj##type* obj = all[id - 1];                                                \
-  if (obj == NULL) { printf("\tTO swizzle"); return NULL; } /*TODO*/           \
-                                                                               \
-  return obj;                                                                  \
+    Obj##type* obj = all[id - 1];                                              \
+    if (obj != NULL) return obj;                                               \
+  }                                                                            \
+  /*TODO ASSERT(p != NULL, "Unhandled swizzle");*/                             \
+  *p = id;                                                                     \
+  return NULL;                                                                 \
 }
-
-// TODO append in a SwizzleBuffer, which references the type##Buffer
 
 DEFINE_restoreIdAsObj(Class)
 DEFINE_restoreIdAsObj(Fn)
@@ -892,7 +902,7 @@ static Primitive restoreIndexAsPrimitive(WrenSnapshotContext* ctx)
   return prim;
 }
 
-static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm)
+static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm, Swizzle* swizzle)
 {
   FILE* file = ctx->file;
 
@@ -901,28 +911,38 @@ static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm)
 
   VERBOSE printf("Value ");
 
+  // TODO factor out OBJ_CLASS  and OBJ_FN
+  // TODO factor out OBJ_MODULE and OBJ_STRING
   switch (type)
   {
     case OBJ_CLASS:
-      ObjClass* class = restoreIdAsObjClass(ctx);
-      return OBJ_VAL(class);
+    {
+      ObjClass* obj = restoreIdAsObjClass(ctx, &swizzle->id);
+      if (obj != NULL) return OBJ_VAL(obj);
+      swizzle->type = type;
+      return UNDEFINED_VAL;
+    }
 
     //case OBJ_CLOSURE: break;
     //case OBJ_FIBER: break;
     case OBJ_FN:
-      ObjFn* fn = restoreIdAsObjFn(ctx);
-      return OBJ_VAL(fn);
+    {
+      ObjFn* obj = restoreIdAsObjFn(ctx, &swizzle->id);
+      if (obj != NULL) return OBJ_VAL(obj);
+      swizzle->type = type;
+      return UNDEFINED_VAL;
+    }
     //case OBJ_FOREIGN: break;
     //case OBJ_INSTANCE: break;
     //case OBJ_LIST: break;
     //case OBJ_MAP: break;
     case OBJ_MODULE:
-      ObjModule* module = restoreIdAsObjModule(ctx);
+      ObjModule* module = restoreIdAsObjModule(ctx, NULL);
       return OBJ_VAL(module);
     //case OBJ_RANGE: break;
     //case OBJ_UPVALUE: break;
     case OBJ_STRING:
-      ObjString* str = restoreIdAsObjString(ctx);
+      ObjString* str = restoreIdAsObjString(ctx, NULL);
       return OBJ_VAL(str);
 
     //case ValueTypeCharFalse:  break;
@@ -979,7 +999,7 @@ static Method restoreMethod(WrenSnapshotContext* ctx)
 
     case MethodTypeCharBlock:
       m.type = METHOD_BLOCK;
-      ObjClosure* closure = restoreIdAsObjClosure(ctx);
+      ObjClosure* closure = restoreIdAsObjClosure(ctx, NULL);
       m.as.closure = closure;
       return m;
 
@@ -1026,7 +1046,7 @@ static void restoreStringBuffer(WrenSnapshotContext* ctx, WrenVM* vm, StringBuff
   for (int i = 0; i < count; ++i)
   {
     VERBOSE printf("[%u]\t", i);
-    ObjString* str = restoreIdAsObjString(ctx);
+    ObjString* str = restoreIdAsObjString(ctx, NULL);
     wrenStringBufferWrite(vm, buffer, str);
     VERBOSE printf(" ");
     VERBOSE wrenDumpValue_(stdout, OBJ_VAL(str), true);
@@ -1050,13 +1070,22 @@ static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer
   for (int i = 0; i < count; ++i)
   {
     VERBOSE printf("[%u]\t", i);
-    Value v = restoreValue(ctx, vm);
-    wrenValueBufferWrite(vm, buffer, v);
-    if (AS_OBJ(v) != NULL)
+    Swizzle swizzle;
+    Value v = restoreValue(ctx, vm, &swizzle);
+    if (IS_UNDEFINED(v))
     {
+      VERBOSE printf(" TO swizzle");
+
+      // Remember where to swizzle a pointer.
+      // NOTE: The array MUST NOT be reallocated elsewhere!
+      swizzle.where = &buffer->data[buffer->count];
+
+      wrenSwizzleBufferWrite(vm, ctx->swizzles, swizzle);
+    } else {
       VERBOSE printf(" ");
       VERBOSE wrenDumpValue_(stdout, v, true);
     }
+    wrenValueBufferWrite(vm, buffer, v);
     VERBOSE printf("\n");
   }
 }
@@ -1112,7 +1141,7 @@ static ObjModule* restoreObjModule(WrenSnapshotContext* ctx, WrenVM* vm)
 {
   FILE* file = ctx->file;
 
-  ObjString* name = restoreIdAsObjString(ctx);
+  ObjString* name = restoreIdAsObjString(ctx, NULL);
 
   if (name)
   {
@@ -1134,7 +1163,7 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
 {
   FILE* file = ctx->file;
 
-  ObjModule* module = restoreIdAsObjModule(ctx);
+  ObjModule* module = restoreIdAsObjModule(ctx, NULL);
   VERBOSE printf("\n");
 
   uint64_t lenName; // NOTE the type
@@ -1180,7 +1209,7 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
 
 static ObjClosure* restoreObjClosure(WrenSnapshotContext* ctx, WrenVM* vm)
 {
-  ObjFn* fn = restoreIdAsObjFn(ctx);
+  ObjFn* fn = restoreIdAsObjFn(ctx, NULL);
 
   VERBOSE printf("\n");
 
@@ -1207,13 +1236,13 @@ static ObjMap* restoreObjMap(WrenSnapshotContext* ctx, WrenVM* vm)
     VERBOSE printf("Entry %u\n", i);
 
     VERBOSE printf(" k ");
-    Value k = restoreValue(ctx, vm);
+    Value k = restoreValue(ctx, vm, NULL);
     VERBOSE printf(" ");
     VERBOSE wrenDumpValue_(stdout, k, true);
     VERBOSE printf("\n");
 
     VERBOSE printf(" v ");
-    Value v = restoreValue(ctx, vm);
+    Value v = restoreValue(ctx, vm, NULL);
     VERBOSE printf(" ");
     VERBOSE wrenDumpValue_(stdout, v, true);
     VERBOSE printf("\n");
@@ -1228,15 +1257,15 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
 {
   FILE* file = ctx->file;
 
-  ObjString* name = restoreIdAsObjString(ctx);
+  ObjString* name = restoreIdAsObjString(ctx, NULL);
 
   VERBOSE printf(" < ");
 
-  ObjClass* super = restoreIdAsObjClass(ctx);
+  ObjClass* super = restoreIdAsObjClass(ctx, NULL);
 
   VERBOSE printf("\n");
 
-  Value attributes = restoreValue(ctx, vm);
+  Value attributes = restoreValue(ctx, vm, NULL);
   VERBOSE printf(" ");
   VERBOSE wrenDumpValue_(stdout, attributes, true);
   VERBOSE printf("\n");
@@ -1296,7 +1325,7 @@ static void restoreVM(WrenSnapshotContext* ctx, WrenVM* vm)
 {
   VERBOSE printf("\nrestoring VM\n");
 #define RESTORE_CLASS(name)                                                   \
-  vm->name##Class = restoreIdAsObjClass(ctx);                                 \
+  vm->name##Class = restoreIdAsObjClass(ctx, NULL);                           \
   VERBOSE printf("\t" #name "\n");
 
   RESTORE_CLASS(bool)
@@ -1313,10 +1342,10 @@ static void restoreVM(WrenSnapshotContext* ctx, WrenVM* vm)
 
 #undef RESTORE_CLASS
 
-  vm->modules = restoreIdAsObjMap(ctx);
+  vm->modules = restoreIdAsObjMap(ctx, NULL);
   VERBOSE printf("\tmodules\n");
 
-  vm->lastModule = restoreIdAsObjModule(ctx);
+  vm->lastModule = restoreIdAsObjModule(ctx, NULL);
   VERBOSE printf("\tlastModule\n");
 
   restoreStringBuffer(ctx, vm, (StringBuffer*) &vm->methodNames);
@@ -1345,15 +1374,31 @@ static void printAllObj(WrenVM* vm) {
   }
   */
 
+static void swizzleObj(SwizzleBuffer* buffer)
+{
+  for (int i = 0; i < buffer->count; ++i)
+  {
+    Swizzle* swiz = &buffer->data[i];
+    VERBOSE printf("swizzle %p with %u#%lu\n", swiz->where, swiz->type, swiz->id);
+    ASSERT(IS_UNDEFINED(*swiz->where), "Will swizzle only an UNDEFINED value.");
+    // TODO
+  }
+}
+
 void wrenSnapshotRestore(FILE* f, WrenVM* vm)
 {
   // Expect no Obj yet.
   performCount(vm);
 
   // Set up an empty context.
+
   WrenCounts counts = {0};
   WrenCensus census = {0};
-  WrenSnapshotContext ctx = { f, &counts, &census };
+
+  SwizzleBuffer swizzles;
+  wrenSwizzleBufferInit(&swizzles);
+
+  WrenSnapshotContext ctx = { f, &counts, &census, &swizzles };
 
   // Restore all Obj.
   restoreAllString (&ctx, vm);
@@ -1366,10 +1411,11 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
 
   VERBOSE printAllObj(vm);
 
-  /** /
   // Link all Obj together.
-  swizzleObj();
+  swizzleObj(&swizzles);
+  wrenSwizzleBufferClear(vm, &swizzles);
 
+  /** /
     // TODO iterate all Obj, set its ->classObj according to its ->type:
       - ObjString   stringClass
       - ObjModule   NULL => nothing to do

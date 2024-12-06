@@ -26,13 +26,16 @@
 // values are objects.
 //
 // There is also a special singleton value "undefined". It is used internally
-// but never appears as a real value to a user. It has two uses:
+// but never appears as a real value to a user.
 //
 // - It is used to identify module variables that have been implicitly declared
 //   by use in a forward reference but not yet explicitly declared. These only
 //   exist during compilation and do not appear at runtime.
 //
 // - It is used to represent unused map entries in an ObjMap.
+//
+// - When restoring a snapshot, it represents a not-yet-available value which
+//   is swizzled into a real pointer after everything is restored.
 //
 // There are two supported Value representations. The main one uses a technique
 // called "NaN tagging" (explained in detail below) to store a number, any of
