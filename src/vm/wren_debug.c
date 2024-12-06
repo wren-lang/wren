@@ -853,6 +853,19 @@ static void performCount(WrenVM* vm)
 }
 
 #define DEFINE_restoreIdAsObj(type)                                            \
+static Obj##type* getObj##type(WrenSnapshotContext* ctx, WrenCount id)         \
+{                                                                              \
+  Obj##type** all = ctx->census->all##type;                                    \
+  if (all != NULL) {                                                           \
+    WrenCount nb = ctx->counts->nb##type;                                      \
+    if (id > nb) { VERBOSE printf("\tOVERFLOW"); return NULL; } /*TODO*/       \
+                                                                               \
+    Obj##type* obj = all[id - 1];                                              \
+    if (obj != NULL) return obj;                                               \
+  }                                                                            \
+  return NULL;                                                                 \
+}                                                                              \
+                                                                               \
 static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx, WrenCount* p) \
 {                                                                              \
   FILE* file = ctx->file;                                                      \
@@ -864,14 +877,9 @@ static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx, WrenCount* p) \
                                                                                \
   if (id == 0) return NULL;                                                    \
                                                                                \
-  Obj##type** all = ctx->census->all##type;                                    \
-  if (all != NULL) {                                                           \
-    WrenCount nb = ctx->counts->nb##type;                                      \
-    if (id > nb) { VERBOSE printf("\tOVERFLOW"); return NULL; } /*TODO*/       \
+  Obj##type* obj = getObj##type(ctx, id);                                      \
+  if (obj != NULL) return obj;                                                 \
                                                                                \
-    Obj##type* obj = all[id - 1];                                              \
-    if (obj != NULL) return obj;                                               \
-  }                                                                            \
   /*TODO ASSERT(p != NULL, "Unhandled swizzle");*/                             \
   *p = id;                                                                     \
   return NULL;                                                                 \
@@ -1262,6 +1270,7 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
   VERBOSE printf(" < ");
 
   ObjClass* super = restoreIdAsObjClass(ctx, NULL);
+  // NULL is expected for Object; it's never ambiguous as there are no swizzles.
 
   VERBOSE printf("\n");
 
@@ -1374,14 +1383,41 @@ static void printAllObj(WrenVM* vm) {
   }
   */
 
-static void swizzleObj(SwizzleBuffer* buffer)
+static void swizzleObj(WrenSnapshotContext* ctx)
 {
+  SwizzleBuffer* buffer = ctx->swizzles;
+
   for (int i = 0; i < buffer->count; ++i)
   {
     Swizzle* swiz = &buffer->data[i];
     VERBOSE printf("swizzle %p with %u#%lu\n", swiz->where, swiz->type, swiz->id);
-    ASSERT(IS_UNDEFINED(*swiz->where), "Will swizzle only an UNDEFINED value.");
-    // TODO
+
+    Value v = *swiz->where;
+    ASSERT(IS_UNDEFINED(v), "Will swizzle only an UNDEFINED value.");
+
+    switch (swiz->type)
+    {
+      case OBJ_CLASS:
+      {
+        ObjClass* obj = getObjClass(ctx, swiz->id);
+        if (obj != NULL) v = OBJ_VAL(obj);
+        break;
+      }
+
+      case OBJ_FN:
+      {
+        ObjFn* obj = getObjFn(ctx, swiz->id);
+        if (obj != NULL) v = OBJ_VAL(obj);
+        break;
+      }
+
+      default:
+        ASSERT(false, "UNHANDLED type of swizzle.");
+        break;
+    }
+
+    ASSERT(!IS_UNDEFINED(v), "Swizzle found nothing.");
+    *swiz->where = v;
   }
 }
 
@@ -1411,8 +1447,9 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
 
   VERBOSE printAllObj(vm);
 
-  // Link all Obj together.
-  swizzleObj(&swizzles);
+  // Swizzle references into real pointers.
+  swizzleObj(&ctx);
+
   wrenSwizzleBufferClear(vm, &swizzles);
 
   /** /
