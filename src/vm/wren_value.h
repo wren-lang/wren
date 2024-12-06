@@ -601,7 +601,7 @@ typedef struct
 // Gets the singleton type tag for a Value (which must be a singleton).
 #define GET_TAG(value) ((int)((value) & MASK_TAG))
 
-#else
+#else // WREN_NAN_TAGGING
 
 // Value -> 0 or 1.
 #define AS_BOOL(value) ((value).type == VAL_TRUE)
@@ -623,7 +623,7 @@ typedef struct
 #define TRUE_VAL      ((Value){ VAL_TRUE, { 0 } })
 #define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, { 0 } })
 
-#endif
+#endif // WREN_NAN_TAGGING
 
 //------------------------------------------------------------------------------
 
