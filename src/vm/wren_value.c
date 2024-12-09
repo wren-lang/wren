@@ -1398,6 +1398,11 @@ static void wrenVisitObjects_(WrenVM* vm, Obj* obj, WrenVisitorFn visitor, unsig
   }
 }
 
+static void myVMWrite(WrenVM* vm, const char* text)
+{
+  printf("%s", text);
+}
+
 static void performRestore()
 {
   FILE* file = fopen("bytecode-hello.bin", "rb");
@@ -1408,6 +1413,7 @@ static void performRestore()
   WrenConfiguration newConfig;
   wrenInitConfiguration(&newConfig);
   newConfig.userData = "VM restored from a snapshot";
+  newConfig.writeFn = myVMWrite;
 
   WrenVM* newVM = wrenNewEmptyVM(&newConfig);
 
@@ -1415,9 +1421,16 @@ static void performRestore()
 
   fclose(file);
 
-  // TODO use newVM
+  printf("=== start new VM\n");
+  WrenInterpretResult result = wrenInterpretClosure(newVM, entrypoint);
+  printf("=== result %u\n", result);
+
+  printf("=== free new VM\n");
 
   wrenFreeVM(newVM);
+
+  printf("=== End of restore\n");
+
 }
 
 void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
