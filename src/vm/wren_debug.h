@@ -28,6 +28,6 @@ void wrenDumpStack(ObjFiber* fiber);
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClosure* entrypoint);
 
 // Restore a snapshot from [file] into [vm].
-ObjClosure* wrenSnapshotRestore(FILE *file, WrenVM* vm);
+// ObjClosure* wrenSnapshotRestore(FILE *file, WrenVM* vm);
 
 #endif

@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <stdio.h>      // for wrenSnapshotRestore
+
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
 #define WREN_VERSION_MINOR 4
@@ -567,5 +569,10 @@ typedef void (*WrenVisitorFn)(WrenVM* vm, Obj* obj, unsigned int depth);
 
 // TODO: doc
 WREN_API void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */);
+
+WREN_API WrenVM* wrenNewEmptyVM(WrenConfiguration* config);
+
+// Restore a snapshot from [file] into [vm].
+WREN_API ObjClosure* wrenSnapshotRestore(FILE *file, WrenVM* vm);
 
 #endif
