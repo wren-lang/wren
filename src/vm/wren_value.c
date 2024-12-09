@@ -1411,7 +1411,7 @@ static void performRestore()
 
   WrenVM* newVM = wrenNewEmptyVM(&newConfig);
 
-  wrenSnapshotRestore(file, newVM);
+  ObjClosure* entrypoint = wrenSnapshotRestore(file, newVM);
 
   fclose(file);
 
@@ -1437,7 +1437,7 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
   wrenCountAllObj(vm, &counts);
 
   wrenCensusAllObj(vm, &counts, &census);
-  wrenSnapshotSave(vm, &counts, &census);
+  wrenSnapshotSave(vm, &counts, &census, (ObjClosure*)obj);
   wrenFreeCensus(vm, &census);
 
   wrenVisitObjects_(vm, obj, visitor, 0);

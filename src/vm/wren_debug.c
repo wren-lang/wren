@@ -790,7 +790,7 @@ SAVE_ALL(Class)
 
 #undef SAVE_ALL
 
-static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* vm)
+static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* vm, ObjClosure* entrypoint)
 {
   VERBOSE CHAR("V");
   VERBOSE CHAR("M");
@@ -830,9 +830,14 @@ static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* v
 
   VERBOSE CHAR("M");
   saveStringBuffer(file, counts, census, (StringBuffer*) &vm->methodNames);
+
+  VERBOSE CHAR("\n");
+  VERBOSE CHAR("@");
+  const WrenCount id_entrypoint = wrenFindInCensus(counts, census, (Obj*)entrypoint);
+  NUM(id_entrypoint);
 }
 
-void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
+void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClosure* entrypoint)
 {
   FILE* file = fopen("bytecode", "wb");
   if (file == NULL) return;
@@ -843,7 +848,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census)
   saveAllClosure  (file, counts, census);
   saveAllMap      (file, counts, census);
   saveAllClass    (file, counts, census);
-  saveVM          (file, counts, census, vm);
+  saveVM          (file, counts, census, vm, entrypoint);
 
   fclose(file);
 }
@@ -1361,7 +1366,7 @@ DEFINE_restoreAll(Class         ,false)
 
 #undef DEFINE_restoreAll
 
-static void restoreVM(WrenSnapshotContext* ctx, WrenVM* vm)
+static ObjClosure* restoreVM(WrenSnapshotContext* ctx, WrenVM* vm)
 {
   VERBOSE printf("\nrestoring VM\n");
 #define RESTORE_CLASS(name)                                                   \
@@ -1389,6 +1394,11 @@ static void restoreVM(WrenSnapshotContext* ctx, WrenVM* vm)
   VERBOSE printf("\tlastModule\n");
 
   restoreStringBuffer(ctx, vm, (StringBuffer*) &vm->methodNames);
+
+  ObjClosure* entrypoint = restoreIdAsObjClosure(ctx, NULL);
+  VERBOSE printf("\tentrypoint\n");
+
+  return entrypoint;
 }
 
 static void printAllObj(WrenVM* vm) {
@@ -1463,7 +1473,7 @@ static void assignClasses(WrenVM* vm)
     }
 }
 
-void wrenSnapshotRestore(FILE* f, WrenVM* vm)
+ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
 {
   // Expect no Obj yet.
   performCount(vm);
@@ -1485,7 +1495,8 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
   restoreAllClosure(&ctx, vm);
   restoreAllMap    (&ctx, vm);
   restoreAllClass  (&ctx, vm);
-  restoreVM        (&ctx, vm);
+
+  ObjClosure* entrypoint = restoreVM(&ctx, vm);
 
   VERBOSE printAllObj(vm);
 
@@ -1505,4 +1516,6 @@ void wrenSnapshotRestore(FILE* f, WrenVM* vm)
   performCount(vm);
   // TODO GC should be nop
   // performCount(vm);
+
+  return entrypoint;
 }
