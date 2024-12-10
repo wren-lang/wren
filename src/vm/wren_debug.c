@@ -1053,9 +1053,11 @@ static ObjString* restoreObjString(WrenSnapshotContext* ctx, WrenVM* vm)
   FREAD_NUM(length);
 
   char buf[256]; // TODO
+  ASSERT(length <= sizeof(buf), "Buffer too small.");
   FREAD(buf, sizeof(char), length, file);
 
   Value v = wrenNewStringLength(vm, buf, length);
+  // TODO allocateString(); FREAD(); hashString(); // but they're static
 
   return AS_STRING(v);
 }
@@ -1188,6 +1190,7 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
   FREAD_NUM(lenName);
 
   char buf[256]; // TODO
+  ASSERT(lenName <= sizeof(buf), "Buffer too small.");
   FREAD(buf, sizeof(char), lenName, file);
 
   uint8_t arity; // NOTE the type
