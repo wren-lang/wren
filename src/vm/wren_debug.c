@@ -1130,16 +1130,7 @@ static void restoreByteBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ByteBuffer* 
 
   wrenByteBufferEnsure(vm, buffer, count);
 
-  char buf[256]; // TODO
-  FREAD(buf, sizeof(uint8_t), count, file);
-
-  for (int i = 0; i < count; ++i)
-  {
-    // VERBOSE printf("[%u]\t", i);
-    uint8_t byte = buf[i];
-    wrenByteBufferWrite(vm, buffer, byte);
-    // VERBOSE printf("\n");
-  }
+  FREAD(buffer->data, sizeof(uint8_t), count, file);
 }
 
 static void restoreMethodBuffer(WrenSnapshotContext* ctx, WrenVM* vm, MethodBuffer* buffer)
