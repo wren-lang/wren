@@ -1444,7 +1444,7 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
   wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
 
   performRestore();
-#endif
+#endif // WREN_SNAPSHOT
 }
 
 //------------------------------------------------------------------------------
