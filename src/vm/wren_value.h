@@ -795,10 +795,6 @@ void wrenGrayObj(WrenVM* vm, Obj* obj);
 // during the sweep phase of a garbage collection.
 void wrenGrayValue(WrenVM* vm, Value value);
 
-// Mark the values in [buffer] as reachable and still in use. This should only
-// be called during the sweep phase of a garbage collection.
-void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer);
-
 // Processes every object in the gray stack until all reachable objects have
 // been marked. After that, all objects are either white (freeable) or black
 // (in use and fully traversed).

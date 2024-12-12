@@ -1021,7 +1021,9 @@ void wrenGrayValue(WrenVM* vm, Value value)
   wrenGrayObj(vm, AS_OBJ(value));
 }
 
-void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer)
+// Mark the values in [buffer] as reachable and still in use. This should only
+// be called during the sweep phase of a garbage collection.
+static void wrenGrayValueBuffer(WrenVM* vm, ValueBuffer* buffer)
 {
   for (int i = 0; i < buffer->count; i++)
   {
@@ -1108,7 +1110,7 @@ static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
 static void blackenFn(WrenVM* vm, ObjFn* fn)
 {
   // Mark the constants.
-  wrenGrayBuffer(vm, &fn->constants);
+  wrenGrayValueBuffer(vm, &fn->constants);
 
   // Mark the module it belongs to, in case it's been unloaded.
   wrenGrayObj(vm, (Obj*)fn->module);
@@ -1150,7 +1152,7 @@ static void blackenInstance(WrenVM* vm, ObjInstance* instance)
 static void blackenList(WrenVM* vm, ObjList* list)
 {
   // Mark the elements.
-  wrenGrayBuffer(vm, &list->elements);
+  wrenGrayValueBuffer(vm, &list->elements);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjList);
@@ -1177,11 +1179,7 @@ static void blackenMap(WrenVM* vm, ObjMap* map)
 static void blackenModule(WrenVM* vm, ObjModule* module)
 {
   // Top-level variables.
-  for (int i = 0; i < module->variables.count; i++)
-  {
-    wrenGrayValue(vm, module->variables.data[i]);
-  }
-
+  wrenGrayValueBuffer(vm, &module->variables);
   wrenBlackenSymbolTable(vm, &module->variableNames);
 
   wrenGrayObj(vm, (Obj*)module->name);
