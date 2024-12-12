@@ -400,6 +400,8 @@ void wrenDumpStack(ObjFiber* fiber)
 
 // Snapshot --------------------------------------------------------------------
 
+#if WREN_SNAPSHOT
+
 // Record where to write a pointer which references a not-yet available object
 // of [type] identified by [id].
 // If [inValue], the [target] is [val], else [obj].
@@ -1513,3 +1515,5 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
 
   return entrypoint;
 }
+
+#endif // WREN_SNAPSHOT
