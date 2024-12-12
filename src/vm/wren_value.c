@@ -1398,6 +1398,8 @@ static void wrenVisitObjects_(WrenVM* vm, Obj* obj, WrenVisitorFn visitor, unsig
   }
 }
 
+#if WREN_SNAPSHOT
+
 static void myVMWrite(WrenVM* vm, const char* text)
 {
   printf("%s", text);
@@ -1432,6 +1434,8 @@ static void performRestore()
   printf("=== End of restore\n");
 
 }
+
+#endif // WREN_SNAPSHOT
 
 void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
 {
