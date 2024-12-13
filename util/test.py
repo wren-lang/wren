@@ -150,7 +150,7 @@ class Test:
     test_arg = self.path
     proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
-    # If a test takes longer than five seconds, kill it.
+    # If a test is too long, kill it.
     #
     # This is mainly useful for running the tests while stress testing the GC,
     # which can make a few pathological tests much slower.
