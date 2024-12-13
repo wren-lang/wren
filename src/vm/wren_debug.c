@@ -1405,16 +1405,6 @@ static void printAllObj(WrenVM* vm) {
   }
 }
 
-  /*
-  VERBOSE printf("=== allString\n");
-  for (WrenCount i = 0; i < nb; ++i)
-  {
-    VERBOSE printf("%lu = ", i);
-    wrenDumpValue_(stdout, OBJ_VAL(ctx->census->allString[i]), true);
-    VERBOSE printf("\n");
-  }
-  */
-
 static void swizzlePointers(WrenSnapshotContext* ctx)
 {
   const SwizzleBuffer* buffer = ctx->swizzles;
