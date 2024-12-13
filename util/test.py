@@ -37,15 +37,18 @@ if not isfile(WREN_APP_WITH_EXT):
 # print("Wren Test Directory - " + WREN_DIR)
 # print("Wren Test App - " + WREN_APP)
 
-EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
-EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
-EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
+EXPECT_PATTERN               = re.compile(r'// expect: ?(.*)')
+EXPECT_ERROR_PATTERN         = re.compile(r'// expect error(?! line)')
+EXPECT_ERROR_LINE_PATTERN    = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect (handled )?runtime error: (.+)')
+
+STDIN_PATTERN   = re.compile(r'// stdin: (.*)')
+SKIP_PATTERN    = re.compile(r'// skip: (.*)')
+NONTEST_PATTERN = re.compile(r'// nontest')
+
+# Patterns for stderr
 ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
 STACK_TRACE_PATTERN = re.compile(r'(?:\[\./)?test/.* line (\d+)\] in')
-STDIN_PATTERN = re.compile(r'// stdin: (.*)')
-SKIP_PATTERN = re.compile(r'// skip: (.*)')
-NONTEST_PATTERN = re.compile(r'// nontest')
 
 passed = 0
 failed = 0
