@@ -419,8 +419,14 @@ typedef struct {
 DECLARE_BUFFER(Swizzle, Swizzle);
 DEFINE_BUFFER(Swizzle, Swizzle)
 
-typedef struct {
+struct WrenSnapshotContext;
+
+// Analogous to fread(), but abstracts away from FILE*.
+typedef size_t (*WrenSnapshotReadFn)(void* ptr, size_t size, size_t nmemb, struct WrenSnapshotContext* ctx);
+
+typedef struct WrenSnapshotContext {
   FILE* file;
+  WrenSnapshotReadFn read;
   WrenCounts *counts;
   WrenCensus *census;
   SwizzleBuffer* swizzles;
@@ -857,9 +863,16 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
 
 // Snapshot restore ------------------------------------------------------------
 
-#define FREAD fread   // TODO check returned value
+// Read from the snapshot context [ctx].
+static size_t sread(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
+{
+  return fread(ptr, size, nmemb, ctx->file);
+  // TODO ensure nmemb is returned
+  // TODO feof(), ferror()
+  // TODO endianness when size > 1
+}
 
-#define FREAD_NUM(n)  FREAD(&n, sizeof(n), 1, file)
+#define FREAD_NUM(n)  (ctx->read)(&n, sizeof(n), 1, ctx)
 
 // TODO: don't dup from src/vm/wren_vm.c
 static void performCount(WrenVM* vm)
@@ -887,8 +900,6 @@ static Obj##type* getObj##type(WrenSnapshotContext* ctx, WrenCount id)         \
                                                                                \
 static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx, WrenCount* p) \
 {                                                                              \
-  FILE* file = ctx->file;                                                      \
-                                                                               \
   WrenCount id;                                                                \
   FREAD_NUM(id);                                                               \
                                                                                \
@@ -920,8 +931,6 @@ DEFINE_restoreIdAsObj(Map)
 
 static Primitive restoreIndexAsPrimitive(WrenSnapshotContext* ctx)
 {
-  FILE* file = ctx->file;
-
   uint8_t index;
   FREAD_NUM(index);
 
@@ -936,8 +945,6 @@ static Primitive restoreIndexAsPrimitive(WrenSnapshotContext* ctx)
 
 static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm, Swizzle* swizzle)
 {
-  FILE* file = ctx->file;
-
   ObjOrValueType type;
   FREAD_NUM(type);
 
@@ -1004,8 +1011,6 @@ static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm, Swizzle* swizzle
 
 static Method restoreMethod(WrenSnapshotContext* ctx)
 {
-  FILE* file = ctx->file;
-
   uint8_t type;
   FREAD_NUM(type);
 
@@ -1049,26 +1054,22 @@ static Method restoreMethod(WrenSnapshotContext* ctx)
 
 static ObjString* restoreObjString(WrenSnapshotContext* ctx, WrenVM* vm)
 {
-  FILE* file = ctx->file;
-
   uint32_t length;
   FREAD_NUM(length);
 
   char buf[256]; // TODO
   ASSERT(length <= sizeof(buf), "Buffer too small.");
-  FREAD(buf, sizeof(char), length, file);
+  (ctx->read)(buf, sizeof(char), length, ctx);
 
   Value v = wrenNewStringLength(vm, buf, length);
-  // TODO allocateString(); FREAD(); hashString(); // but they're static
+  // TODO allocateString(); (ctx->read)(); hashString(); // but they're static
 
   return AS_STRING(v);
 }
 
 static void restoreStringBuffer(WrenSnapshotContext* ctx, WrenVM* vm, StringBuffer* buffer)
 {
-  FILE* file = ctx->file;
   int count;
-
   FREAD_NUM(count);
 
   VERBOSE printf("StringBuffer count = %u\n", count);
@@ -1090,9 +1091,7 @@ static void restoreStringBuffer(WrenSnapshotContext* ctx, WrenVM* vm, StringBuff
 
 static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer* buffer)
 {
-  FILE* file = ctx->file;
   int count;
-
   FREAD_NUM(count);
 
   VERBOSE printf("ValueBuffer count = %u\n", count);
@@ -1123,9 +1122,7 @@ static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer
 
 static void restoreByteBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ByteBuffer* buffer)
 {
-  FILE* file = ctx->file;
   int count;
-
   FREAD_NUM(count);
 
   VERBOSE printf("ByteBuffer count = %u\n", count);
@@ -1134,14 +1131,12 @@ static void restoreByteBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ByteBuffer* 
 
   wrenByteBufferEnsure(vm, buffer, count);
 
-  FREAD(buffer->data, sizeof(uint8_t), count, file);
+  (ctx->read)(buffer->data, sizeof(uint8_t), count, ctx);
 }
 
 static void restoreMethodBuffer(WrenSnapshotContext* ctx, WrenVM* vm, MethodBuffer* buffer)
 {
-  FILE* file = ctx->file;
   int count;
-
   FREAD_NUM(count);
 
   VERBOSE printf("MethodBuffer count = %u\n", count);
@@ -1161,8 +1156,6 @@ static void restoreMethodBuffer(WrenSnapshotContext* ctx, WrenVM* vm, MethodBuff
 
 static ObjModule* restoreObjModule(WrenSnapshotContext* ctx, WrenVM* vm)
 {
-  FILE* file = ctx->file;
-
   ObjString* name = restoreIdAsObjString(ctx, NULL);
 
   if (name)
@@ -1183,8 +1176,6 @@ static ObjModule* restoreObjModule(WrenSnapshotContext* ctx, WrenVM* vm)
 
 static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
 {
-  FILE* file = ctx->file;
-
   ObjModule* module = restoreIdAsObjModule(ctx, NULL);
   VERBOSE printf("\n");
 
@@ -1193,7 +1184,7 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
 
   char buf[256]; // TODO
   ASSERT(lenName <= sizeof(buf), "Buffer too small.");
-  FREAD(buf, sizeof(char), lenName, file);
+  (ctx->read)(buf, sizeof(char), lenName, ctx);
 
   uint8_t arity; // NOTE the type
   FREAD_NUM(arity);
@@ -1243,8 +1234,6 @@ static ObjClosure* restoreObjClosure(WrenSnapshotContext* ctx, WrenVM* vm)
 
 static ObjMap* restoreObjMap(WrenSnapshotContext* ctx, WrenVM* vm)
 {
-  FILE* file = ctx->file;
-
   ObjMap* map = wrenNewMap(vm);
 
   uint32_t count;
@@ -1278,8 +1267,6 @@ static ObjMap* restoreObjMap(WrenSnapshotContext* ctx, WrenVM* vm)
 
 static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
 {
-  FILE* file = ctx->file;
-
   ObjString* name = restoreIdAsObjString(ctx, NULL);
 
   VERBOSE printf(" < ");
@@ -1328,9 +1315,7 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
 #define DEFINE_restoreAll(type    ,shunt) /*XXX*/                              \
 static void restoreAll##type(WrenSnapshotContext* ctx, WrenVM* vm)             \
 {                                                                              \
-  FILE* file = ctx->file;                                                      \
   WrenCount nb;                                                                \
-                                                                               \
   FREAD_NUM(nb);                                                               \
                                                                                \
   VERBOSE printf("\nNb = %lu\n", nb);                                          \
@@ -1482,7 +1467,7 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   SwizzleBuffer swizzles;
   wrenSwizzleBufferInit(&swizzles);
 
-  WrenSnapshotContext ctx = { f, &counts, &census, &swizzles };
+  WrenSnapshotContext ctx = { f, sread, &counts, &census, &swizzles };
 
   // Restore all Obj.
   restoreAllString (&ctx, vm);
