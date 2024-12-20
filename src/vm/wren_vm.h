@@ -265,7 +265,7 @@ static inline bool wrenIsFalsyValue(Value value)
   DO(STRING,   String  ) \
   DO(UPVALUE,  Upvalue )
 
-typedef uint64_t WrenCount;
+typedef uint32_t WrenCount;
 
 typedef struct {
   #define DO(u, l) WrenCount nb##l;

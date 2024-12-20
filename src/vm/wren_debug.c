@@ -910,7 +910,7 @@ static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx, WrenCount* p) \
   WrenCount id;                                                                \
   FREAD_NUM(id);                                                               \
                                                                                \
-  VERBOSE printf("Obj" #type "#%lu", id);                                      \
+  VERBOSE printf("Obj" #type "#%u", id);                                       \
                                                                                \
   if (id == 0) return NULL;                                                    \
                                                                                \
@@ -1325,7 +1325,7 @@ static void restoreAll##type(WrenSnapshotContext* ctx, WrenVM* vm)             \
   WrenCount nb;                                                                \
   FREAD_NUM(nb);                                                               \
                                                                                \
-  VERBOSE printf("\nNb = %lu\n", nb);                                          \
+  VERBOSE printf("\nNb = %u\n", nb);                                           \
                                                                                \
   ctx->counts->nb##type = nb;                                                  \
                                                                                \
@@ -1334,7 +1334,7 @@ static void restoreAll##type(WrenSnapshotContext* ctx, WrenVM* vm)             \
                                                                                \
   for (WrenCount i = 0; i < nb; ++i)                                           \
   {                                                                            \
-    VERBOSE printf("restoring Obj" #type "[%lu]\n", i);                        \
+    VERBOSE printf("restoring Obj" #type "[%u]\n", i);                         \
     Obj##type* obj = restoreObj##type(ctx, vm);                                \
     ctx->census->all##type[i] = obj;                                           \
     VERBOSE printf("\t\t\t---> ");                                             \
@@ -1396,7 +1396,7 @@ static void printAllObj(WrenVM* vm) {
        obj != NULL;
        obj = obj->next, ++i)
   {
-    printf("obj @ %lu =\t", i);
+    printf("obj @ %u =\t", i);
     printf("class=%p\t", obj->classObj);
     wrenDumpValue_(stdout, OBJ_VAL(obj), true);
     printf("\n");
@@ -1411,7 +1411,7 @@ static void swizzlePointers(WrenSnapshotContext* ctx)
   {
     const Swizzle* swiz = &buffer->data[i];
 
-    VERBOSE printf("swizzle %s %p with %u#%lu\n",
+    VERBOSE printf("swizzle %s %p with %u#%u\n",
       swiz->inValue ? "Value" : "Obj  ",
       swiz->target.val, swiz->type, swiz->id);
 
