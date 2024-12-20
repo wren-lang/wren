@@ -430,6 +430,13 @@ typedef struct WrenSnapshotContext {
   WrenCounts *counts;
   WrenCensus *census;
   SwizzleBuffer* swizzles;
+
+  ByteBuffer* buf;
+
+  size_t offset;
+
+  uint8_t* bytes;
+  unsigned int count;
 } WrenSnapshotContext;
 
 #define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char),    1, file)
@@ -438,7 +445,7 @@ typedef struct WrenSnapshotContext {
 #define NUM(n)           fwrite(&n,         sizeof(n),       1, file)
   // TODO check returned values
 
-static const bool verbose = true;
+static const bool verbose = false;
 
 #define VERBOSE    if (verbose)
 
@@ -1454,10 +1461,64 @@ static void assignClasses(WrenVM* vm)
     }
 }
 
+void slurpFile(FILE* f, WrenVM* vm, ByteBuffer* buf)
+{
+  for (;;)
+  {
+    uint8_t byte;
+    const size_t nb = fread(&byte, sizeof(byte), 1, f);
+    if (nb != 1)
+    {
+      if (feof (f)) break;
+      printf("slurp fread()=%zu\n", nb);
+      ASSERT(!ferror(f), "ferror.");
+      ASSERT(false, "Unhandled I/O error.");
+    }
+    wrenByteBufferWrite(vm, buf, byte);
+  }
+
+  printf("slurped %d\n", buf->count);
+}
+
+// Read from the buffer in [ctx].
+static size_t str_read(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
+{
+  uint8_t* p = (uint8_t*)ptr;
+
+  for (size_t n = 0; n < nmemb; ++n)
+  {
+    for (size_t i = 0; i < size; ++i)
+    {
+      if (ctx->offset >= ctx->count) return n;
+
+      const uint8_t byte = ctx->bytes[ctx->offset++];
+      *p++ = byte;    // TODO endianness when size > 1
+    }
+//    {
+//      if (ctx->offset >= ctx->buf->count) return n;
+//
+//      const uint8_t byte = ctx->buf->data[ctx->offset++];
+//      *p++ = byte;    // TODO endianness when size > 1
+//    }
+  }
+
+  return nmemb;
+}
+
+// TODO len: s/unsigned int/int32_t/   or like
+// #include "bytecode-hello.bin.c"
+#include "bytecode-mandelbrot.bin.c"
+
 ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
 {
   // Expect no Obj yet.
   performCount(vm);
+
+  // Slurp all the file.
+  // ByteBuffer snapshot;
+  // wrenByteBufferInit(&snapshot);
+  // slurpFile(f, vm, &snapshot);
+  // return NULL;
 
   // Set up an empty context.
 
@@ -1467,7 +1528,14 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   SwizzleBuffer swizzles;
   wrenSwizzleBufferInit(&swizzles);
 
-  WrenSnapshotContext ctx = { f, sread, &counts, &census, &swizzles };
+  WrenSnapshotContext ctx =
+    // { f, sread, &counts, &census, &swizzles }
+    // { NULL, str_read, &counts, &census, &swizzles, &snapshot, 0 }
+    { NULL, str_read, &counts, &census, &swizzles, NULL, 0,
+      bytecode_mandelbrot_bin, bytecode_mandelbrot_bin_len
+      // bytecode_hello_forward_prim_metaclass_entrypoint_bin, bytecode_hello_forward_prim_metaclass_entrypoint_bin_len
+    }
+  ;
 
   // Restore all Obj.
   restoreAllString (&ctx, vm);
