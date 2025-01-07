@@ -658,7 +658,7 @@ ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
   ObjModule* module = ALLOCATE(vm, ObjModule);
 
   // Modules are never used as first-class objects, so don't need a class.
-  initObj(vm, (Obj*)module, OBJ_MODULE, NULL);
+  initObj(vm, &module->obj, OBJ_MODULE, NULL);
 
   wrenPushRoot(vm, (Obj*)module);
 
