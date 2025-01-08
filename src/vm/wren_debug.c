@@ -1281,16 +1281,28 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
 
   VERBOSE printf(" fields=%u", numFields);
 
+  ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
+
   VERBOSE printf(" < ");
 
   ObjClass* super = restoreIdAsObjClass(ctx, NULL);
   // NULL is expected for Object; it's never ambiguous as there are no swizzles here.
+  classObj->superclass = super;
 
   VERBOSE printf(" m ");
 
   Swizzle swizzle;
   ObjClass* meta = restoreIdAsObjClass(ctx, &swizzle.id);
-  if (meta == NULL) VERBOSE printf(" TO swizzle");
+  if (meta != NULL)
+  {
+    classObj->obj.classObj = meta;
+  } else {
+    VERBOSE printf(" TO swizzle");
+    swizzle.type = OBJ_CLASS;
+    swizzle.inValue = false;
+    swizzle.target.obj = (Obj**)&classObj->obj.classObj;
+    wrenSwizzleBufferWrite(vm, ctx->swizzles, swizzle);
+  }
 
   VERBOSE printf("\n");
 
@@ -1299,23 +1311,9 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
   VERBOSE wrenDumpValue_(stdout, attributes, true);
   VERBOSE printf("\n");
 
-  ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
-
-  if (meta != NULL)
-  {
-    classObj->obj.classObj = meta;
-  } else {
-    swizzle.type = OBJ_CLASS;
-    swizzle.inValue = false;
-    swizzle.target.obj = (Obj**)&classObj->obj.classObj;
-    wrenSwizzleBufferWrite(vm, ctx->swizzles, swizzle);
-  }
+  // TODO store attributes
 
   restoreMethodBuffer(ctx, vm, &classObj->methods);
-
-  classObj->superclass = super;
-
-  // TODO attributes
 
   return classObj;
 }
