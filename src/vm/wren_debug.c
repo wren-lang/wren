@@ -747,6 +747,10 @@ static void saveObjClass(FILE* file, WrenCounts* counts, WrenCensus* census, Obj
   WrenCount id_name = wrenFindInCensus(counts, census, (Obj*)name);
   NUM(id_name);
 
+  VERBOSE CHAR("F");
+  const uint8_t numFields = classObj->numFields;    // NOTE the type; see MAX_FIELDS
+  NUM(numFields);
+
   VERBOSE CHAR("<");
   ObjClass* super = classObj->superclass;
   WrenCount id_super = wrenFindInCensus(counts, census, (Obj*)super);
@@ -759,10 +763,6 @@ static void saveObjClass(FILE* file, WrenCounts* counts, WrenCensus* census, Obj
 
   VERBOSE CHAR("A");
   saveValue(file, counts, census, classObj->attributes);
-
-  VERBOSE CHAR("F");
-  const uint8_t numFields = classObj->numFields;    // NOTE the type; see MAX_FIELDS
-  NUM(numFields);
 
   VERBOSE CHAR("M");
   saveMethodBuffer(file, counts, census, &classObj->methods);
@@ -1276,6 +1276,11 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
 {
   ObjString* name = restoreIdAsObjString(ctx, NULL);
 
+  uint8_t numFields;
+  FREAD_NUM(numFields);
+
+  VERBOSE printf(" fields=%u", numFields);
+
   VERBOSE printf(" < ");
 
   ObjClass* super = restoreIdAsObjClass(ctx, NULL);
@@ -1293,10 +1298,6 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
   VERBOSE printf(" ");
   VERBOSE wrenDumpValue_(stdout, attributes, true);
   VERBOSE printf("\n");
-
-  // TODO serialize it before meta
-  uint8_t numFields;
-  FREAD_NUM(numFields);
 
   ObjClass* classObj = wrenNewSingleClass(vm, numFields, name);
 
