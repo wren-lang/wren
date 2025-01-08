@@ -1481,6 +1481,25 @@ void slurpFile(FILE* f, WrenVM* vm, ByteBuffer* buf)
 }
 
 // Read from the buffer in [ctx].
+static size_t buf_read(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
+{
+  uint8_t* p = (uint8_t*)ptr;
+
+  for (size_t n = 0; n < nmemb; ++n)
+  {
+    for (size_t i = 0; i < size; ++i)
+    {
+      if (ctx->offset >= ctx->buf->count) return n;
+
+      const uint8_t byte = ctx->buf->data[ctx->offset++];
+      *p++ = byte;    // TODO endianness when size > 1
+    }
+  }
+
+  return nmemb;
+}
+
+// Read from the bytes in [ctx].
 static size_t str_read(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
 {
   uint8_t* p = (uint8_t*)ptr;
@@ -1494,12 +1513,6 @@ static size_t str_read(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext
       const uint8_t byte = ctx->bytes[ctx->offset++];
       *p++ = byte;    // TODO endianness when size > 1
     }
-//    {
-//      if (ctx->offset >= ctx->buf->count) return n;
-//
-//      const uint8_t byte = ctx->buf->data[ctx->offset++];
-//      *p++ = byte;    // TODO endianness when size > 1
-//    }
   }
 
   return nmemb;
@@ -1515,10 +1528,9 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   performCount(vm);
 
   // Slurp all the file.
-  // ByteBuffer snapshot;
-  // wrenByteBufferInit(&snapshot);
-  // slurpFile(f, vm, &snapshot);
-  // return NULL;
+  ByteBuffer snapshot;
+  wrenByteBufferInit(&snapshot);
+  slurpFile(f, vm, &snapshot);
 
   // Set up an empty context.
 
@@ -1531,10 +1543,13 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   WrenSnapshotContext ctx =
     // { f, sread, &counts, &census, &swizzles }
     // { NULL, str_read, &counts, &census, &swizzles, &snapshot, 0 }
+    /** /
     { NULL, str_read, &counts, &census, &swizzles, NULL, 0,
       bytecode_mandelbrot_32_bin, bytecode_mandelbrot_32_bin_len
       // bytecode_hello_forward_prim_metaclass_entrypoint_bin, bytecode_hello_forward_prim_metaclass_entrypoint_bin_len
     }
+    /**/
+    { NULL, buf_read, &counts, &census, &swizzles, &snapshot, 0, NULL, 0 }
   ;
 
   // Restore all Obj.

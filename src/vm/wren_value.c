@@ -1407,11 +1407,8 @@ static void myVMWrite(WrenVM* vm, const char* text)
 
 static void performRestore()
 {
-  FILE* file = /*fopen("bytecode-hello.bin", "rb");
+  FILE* file = fopen("bytecode-to-restore.bin", "rb");
   if (file == NULL) return; // TODO
-  */NULL;
-
-  return;
 
   printf("=== performRestore\n");
 
@@ -1424,7 +1421,7 @@ static void performRestore()
 
   ObjClosure* entrypoint = wrenSnapshotRestore(file, newVM);
 
-  //fclose(file);
+  fclose(file);
 
   if (entrypoint == NULL) return;
 
