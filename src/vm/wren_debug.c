@@ -435,7 +435,7 @@ typedef struct WrenSnapshotContext {
 
   size_t offset;
 
-  uint8_t* bytes;
+  const uint8_t* bytes;
   unsigned int count;
 } WrenSnapshotContext;
 
@@ -1507,7 +1507,7 @@ static size_t str_read(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext
 
 // TODO len: s/unsigned int/int32_t/   or like
 // #include "bytecode-hello.bin.c"
-#include "bytecode-mandelbrot.bin.c"
+#include "bytecode-mandelbrot.bin32.c"
 
 ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
 {
@@ -1532,7 +1532,7 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
     // { f, sread, &counts, &census, &swizzles }
     // { NULL, str_read, &counts, &census, &swizzles, &snapshot, 0 }
     { NULL, str_read, &counts, &census, &swizzles, NULL, 0,
-      bytecode_mandelbrot_bin, bytecode_mandelbrot_bin_len
+      bytecode_mandelbrot_32_bin, bytecode_mandelbrot_32_bin_len
       // bytecode_hello_forward_prim_metaclass_entrypoint_bin, bytecode_hello_forward_prim_metaclass_entrypoint_bin_len
     }
   ;
