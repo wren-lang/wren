@@ -810,6 +810,13 @@ SAVE_ALL(Class)
 
 #undef SAVE_ALL
 
+static void saveMethodNames(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* vm)
+{
+  VERBOSE CHAR("M");
+  saveSymbolTable(file, counts, census, &vm->methodNames);
+  VERBOSE CHAR("\n");
+}
+
 static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* vm, ObjClosure* entrypoint)
 {
   VERBOSE CHAR("V");
@@ -848,10 +855,8 @@ static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* v
   NUM(id_lastModule);
   VERBOSE CHAR("\n");
 
-  VERBOSE CHAR("M");
-  saveSymbolTable(file, counts, census, &vm->methodNames);
+  // methodNames was saved before.
 
-  VERBOSE CHAR("\n");
   VERBOSE CHAR("@");
   const WrenCount id_entrypoint = wrenFindInCensus(counts, census, (Obj*)entrypoint);
   NUM(id_entrypoint);
@@ -863,6 +868,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   if (file == NULL) return;
 
   saveAllString   (file, counts, census);
+  saveMethodNames (file, counts, census, vm);
   saveAllModule   (file, counts, census);
   saveAllFn       (file, counts, census);
   saveAllClosure  (file, counts, census);
@@ -1363,6 +1369,11 @@ DEFINE_restoreAll(Class         ,false)
 
 #undef DEFINE_restoreAll
 
+static void restoreMethodNames(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  restoreSymbolTable(ctx, vm, &vm->methodNames);
+}
+
 static ObjClosure* restoreVM(WrenSnapshotContext* ctx, WrenVM* vm)
 {
   VERBOSE printf("\nrestoring VM\n");
@@ -1390,7 +1401,7 @@ static ObjClosure* restoreVM(WrenSnapshotContext* ctx, WrenVM* vm)
   vm->lastModule = restoreIdAsObjModule(ctx, NULL);
   VERBOSE printf("\tlastModule\n");
 
-  restoreSymbolTable(ctx, vm, &vm->methodNames);
+  // methodNames was restored before.
 
   ObjClosure* entrypoint = restoreIdAsObjClosure(ctx, NULL);
   VERBOSE printf("\tentrypoint\n");
@@ -1562,12 +1573,13 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   ;
 
   // Restore all Obj.
-  restoreAllString (&ctx, vm);
-  restoreAllModule (&ctx, vm);
-  restoreAllFn     (&ctx, vm);
-  restoreAllClosure(&ctx, vm);
-  restoreAllMap    (&ctx, vm);
-  restoreAllClass  (&ctx, vm);
+  restoreAllString  (&ctx, vm);
+  restoreMethodNames(&ctx, vm);
+  restoreAllModule  (&ctx, vm);
+  restoreAllFn      (&ctx, vm);
+  restoreAllClosure (&ctx, vm);
+  restoreAllMap     (&ctx, vm);
+  restoreAllClass   (&ctx, vm);
 
   ObjClosure* entrypoint = restoreVM(&ctx, vm);
 
