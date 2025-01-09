@@ -1079,27 +1079,14 @@ static void restore##name##Buffer(WrenSnapshotContext* ctx, WrenVM* vm, name##Bu
   }                                                                            \
 }
 
-static void restoreStringBuffer(WrenSnapshotContext* ctx, WrenVM* vm, StringBuffer* buffer)
+static ObjString* restoreString(WrenSnapshotContext* ctx)
 {
-  int count;
-  FREAD_NUM(count);
-
-  VERBOSE printf("StringBuffer count = %u\n", count);
-
-  // TODO validate count
-
-  wrenStringBufferEnsure(vm, buffer, count);
-
-  for (int i = 0; i < count; ++i)
-  {
-    VERBOSE printf("[%u]\t", i);
-    ObjString* str = restoreIdAsObjString(ctx, NULL);
-    wrenStringBufferWrite(vm, buffer, str);
-    VERBOSE printf(" ");
-    VERBOSE wrenDumpValue_(stdout, OBJ_VAL(str), true);
-    VERBOSE printf("\n");
-  }
+  ObjString* str = restoreIdAsObjString(ctx, NULL);
+  VERBOSE printf(" ");
+  VERBOSE wrenDumpValue_(stdout, OBJ_VAL(str), true);
+  return str;
 }
+RESTORE_BUFFER(String, ObjString*)
 
 static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer* buffer)
 {
