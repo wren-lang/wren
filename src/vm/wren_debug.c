@@ -564,63 +564,48 @@ enum {
   MethodTypeCharNone          = ' ',
 };
 
-static void saveMethodBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, MethodBuffer* buffer)
+static void saveMethod(FILE* file, WrenCounts* counts, WrenCensus* census, Method m)
 {
-  const int count = buffer->count;
-  Method* data = buffer->data;
-
-  NUM(count);
-  VERBOSE CHAR("{");
-  for (int i = 0; i < count; ++i)
+  uint8_t type;             // NOTE the type
+  switch (m.type)
   {
-    Method m = data[i];
-
-    if (i)
+    case METHOD_PRIMITIVE:
+    case METHOD_FUNCTION_CALL:
     {
-      VERBOSE CHAR(",");
+      type = m.type == METHOD_FUNCTION_CALL
+        ? MethodTypeCharFunctionCall
+        : MethodTypeCharPrimitive;
+      NUM(type);
+
+      // NOTE the type and 0-based
+      const uint8_t index = findPrimitiveInCensus(m.as.primitive);
+      NUM(index);
+      break;
     }
 
-    uint8_t type;             // NOTE the type
-    switch (m.type)
+    case METHOD_FOREIGN:
+      type = MethodTypeCharForeign;
+      NUM(type);
+      // TODO id for a WrenForeignMethodFn
+      break;
+
+    case METHOD_BLOCK:
     {
-      case METHOD_PRIMITIVE:
-      case METHOD_FUNCTION_CALL:
-      {
-        type = m.type == METHOD_FUNCTION_CALL
-          ? MethodTypeCharFunctionCall
-          : MethodTypeCharPrimitive;
-        NUM(type);
+      type = MethodTypeCharBlock;
+      NUM(type);
 
-        // NOTE the type and 0-based
-        const uint8_t index = findPrimitiveInCensus(m.as.primitive);
-        NUM(index);
-        break;
-      }
-
-      case METHOD_FOREIGN:
-        type = MethodTypeCharForeign;
-        NUM(type);
-        // TODO id for a WrenForeignMethodFn
-        break;
-
-      case METHOD_BLOCK:
-      {
-        type = MethodTypeCharBlock;
-        NUM(type);
-
-        WrenCount id = wrenFindInCensus(counts, census, (Obj*)m.as.closure);
-        NUM(id);
-        break;
-      }
-
-      case METHOD_NONE:
-        type = MethodTypeCharNone;
-        NUM(type);
-        break;
+      WrenCount id = wrenFindInCensus(counts, census, (Obj*)m.as.closure);
+      NUM(id);
+      break;
     }
+
+    case METHOD_NONE:
+      type = MethodTypeCharNone;
+      NUM(type);
+      break;
   }
-  VERBOSE CHAR("}");
 }
+SAVE_BUFFER(Method, Method)
 
 static void saveByteBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ByteBuffer* buffer)
 {
