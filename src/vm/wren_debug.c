@@ -646,6 +646,11 @@ static void saveByteBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, B
   VERBOSE CHAR("}");
 }
 
+static void saveSymbolTable(FILE* file, WrenCounts* counts, WrenCensus* census, SymbolTable* symtab)
+{
+  saveStringBuffer(file, counts, census, (StringBuffer*)symtab);
+}
+
 static void saveObjString(FILE* file, WrenCounts* counts, WrenCensus* census, ObjString* str)
 {
   uint32_t length = str->length;
@@ -662,7 +667,7 @@ static void saveObjModule(FILE* file, WrenCounts* counts, WrenCensus* census, Ob
   WrenCount id_name = wrenFindInCensus(counts, census, (Obj*)name);
   NUM(id_name);
 
-  saveStringBuffer(file, counts, census, (StringBuffer*) &module->variableNames);
+  saveSymbolTable(file, counts, census, &module->variableNames);
   saveValueBuffer(file, counts, census, &module->variables);
 }
 
@@ -844,7 +849,7 @@ static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* v
   VERBOSE CHAR("\n");
 
   VERBOSE CHAR("M");
-  saveStringBuffer(file, counts, census, (StringBuffer*) &vm->methodNames);
+  saveSymbolTable(file, counts, census, &vm->methodNames);
 
   VERBOSE CHAR("\n");
   VERBOSE CHAR("@");
@@ -1161,6 +1166,11 @@ static void restoreMethodBuffer(WrenSnapshotContext* ctx, WrenVM* vm, MethodBuff
   }
 }
 
+static void restoreSymbolTable(WrenSnapshotContext* ctx, WrenVM* vm, SymbolTable* symtab)
+{
+  restoreStringBuffer(ctx, vm, (StringBuffer*)symtab);
+}
+
 static ObjModule* restoreObjModule(WrenSnapshotContext* ctx, WrenVM* vm)
 {
   ObjString* name = restoreIdAsObjString(ctx, NULL);
@@ -1174,7 +1184,7 @@ static ObjModule* restoreObjModule(WrenSnapshotContext* ctx, WrenVM* vm)
 
   ObjModule* module = wrenNewModule(vm, name);
 
-  restoreStringBuffer(ctx, vm, (StringBuffer*) &module->variableNames);
+  restoreSymbolTable(ctx, vm, &module->variableNames);
 
   restoreValueBuffer(ctx, vm, &module->variables);
 
@@ -1380,7 +1390,7 @@ static ObjClosure* restoreVM(WrenSnapshotContext* ctx, WrenVM* vm)
   vm->lastModule = restoreIdAsObjModule(ctx, NULL);
   VERBOSE printf("\tlastModule\n");
 
-  restoreStringBuffer(ctx, vm, (StringBuffer*) &vm->methodNames);
+  restoreSymbolTable(ctx, vm, &vm->methodNames);
 
   ObjClosure* entrypoint = restoreIdAsObjClosure(ctx, NULL);
   VERBOSE printf("\tentrypoint\n");
