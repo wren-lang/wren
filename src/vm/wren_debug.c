@@ -607,6 +607,12 @@ static void saveMethod(FILE* file, WrenCounts* counts, WrenCensus* census, Metho
 }
 SAVE_BUFFER(Method, Method)
 
+static void saveInt(FILE* file, WrenCounts* counts, WrenCensus* census, int i)
+{
+  NUM(i);
+}
+SAVE_BUFFER(Int, int)
+
 static void saveByteBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ByteBuffer* buffer)
 {
   const int count = buffer->count;
@@ -673,10 +679,8 @@ static void saveObjFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn*
   VERBOSE CHAR("B");
   saveByteBuffer(file, counts, census, &fn->code);
 
-  // TODO FnDebug* debug->sourceLines
-  // const int sourceLinesCount = fn->debug->sourceLines.count;
-  // VERBOSE CHAR("D");
-  // NUM(sourceLinesCount);
+  VERBOSE CHAR("D");
+  saveIntBuffer(file, counts, census, &fn->debug->sourceLines);
 }
 
 static void saveObjClosure(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClosure* closure)
@@ -1088,6 +1092,15 @@ static ObjString* restoreString(WrenSnapshotContext* ctx)
 }
 RESTORE_BUFFER(String, ObjString*)
 
+static int restoreInt(WrenSnapshotContext* ctx)
+{
+  int i;
+  FREAD_NUM(i);
+  VERBOSE printf("%d", i);
+  return i;
+}
+RESTORE_BUFFER(Int, int)
+
 static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer* buffer)
 {
   int count;
@@ -1194,9 +1207,8 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
   restoreByteBuffer(ctx, vm, &fn->code);
   // TODO validateBytecode(&fn->code);
 
-  // TODO restoreIntBuffer(ctx, vm, &fn->debug->sourceLines);
-  // wrenIntBufferFill(vm, &fn->debug->sourceLines, 0, fn->code.count);
-  // But see blackenFn()
+  restoreIntBuffer(ctx, vm, &fn->debug->sourceLines);
+  // TODO see blackenFn()
 
 #if WREN_DEBUG_DUMP_COMPILED_CODE
   // TODO quick-n-dirty
