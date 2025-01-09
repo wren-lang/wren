@@ -522,26 +522,28 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
 #endif
 }
 
-static void saveValueBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ValueBuffer* buffer)
-{
-  const int count = buffer->count;
-  Value* data = buffer->data;
-
-  NUM(count);
-  VERBOSE CHAR("{");
-  for (int i = 0; i < count; ++i)
-  {
-    Value v = data[i];
-
-    if (i)
-    {
-      VERBOSE CHAR(",");
-    }
-
-    saveValue(file, counts, census, v);
-  }
-  VERBOSE CHAR("}");
+#define SAVE_BUFFER(name, type)                                                \
+static void save##name##Buffer(FILE* file, WrenCounts* counts, WrenCensus* census, name##Buffer* buffer) \
+{                                                                              \
+  const int count = buffer->count;                                             \
+  type* data = buffer->data;                                                   \
+                                                                               \
+  NUM(count);                                                                  \
+  VERBOSE CHAR("{");                                                           \
+  for (int i = 0; i < count; ++i)                                              \
+  {                                                                            \
+    type item = data[i];                                                       \
+                                                                               \
+    if (i)                                                                     \
+    {                                                                          \
+      VERBOSE CHAR(",");                                                       \
+    }                                                                          \
+                                                                               \
+    save##name(file, counts, census, item);                                    \
+  }                                                                            \
+  VERBOSE CHAR("}");                                                           \
 }
+SAVE_BUFFER(Value, Value)
 
 static void saveStringBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, StringBuffer* buffer)
 {
