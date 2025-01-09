@@ -860,6 +860,7 @@ static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* v
   VERBOSE CHAR("@");
   const WrenCount id_entrypoint = wrenFindInCensus(counts, census, (Obj*)entrypoint);
   NUM(id_entrypoint);
+  VERBOSE CHAR("\n");
 }
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClosure* entrypoint)
@@ -1322,8 +1323,8 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
 
   VERBOSE printf("\n");
 
+  VERBOSE printf("attr\t");
   Value attributes = restoreValue(ctx, vm, NULL);
-  VERBOSE printf(" ");
   VERBOSE wrenDumpValue_(stdout, attributes, true);
   VERBOSE printf("\n");
 
