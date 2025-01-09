@@ -545,27 +545,12 @@ static void save##name##Buffer(FILE* file, WrenCounts* counts, WrenCensus* censu
 }
 SAVE_BUFFER(Value, Value)
 
-static void saveStringBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, StringBuffer* buffer)
+static void saveString(FILE* file, WrenCounts* counts, WrenCensus* census, ObjString* str)
 {
-  const int count = buffer->count;
-  ObjString** data = buffer->data;
-
-  NUM(count);
-  VERBOSE CHAR("{");
-  for (int i = 0; i < count; ++i)
-  {
-    ObjString* str = data[i];
-
-    if (i)
-    {
-      VERBOSE CHAR(",");
-    }
-
-    WrenCount id = wrenFindInCensus(counts, census, (Obj*)str);
-    NUM(id);
-  }
-  VERBOSE CHAR("}");
+  WrenCount id = wrenFindInCensus(counts, census, (Obj*)str);
+  NUM(id);
 }
+SAVE_BUFFER(String, ObjString*)
 
 // TODO move in a .h file
 size_t findPrimitiveInCensus(Primitive prim);
