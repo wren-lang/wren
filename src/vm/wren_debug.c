@@ -1058,6 +1058,27 @@ static ObjString* restoreObjString(WrenSnapshotContext* ctx, WrenVM* vm)
   return AS_STRING(v);
 }
 
+#define RESTORE_BUFFER(name, type)                                             \
+static void restore##name##Buffer(WrenSnapshotContext* ctx, WrenVM* vm, name##Buffer* buffer) \
+{                                                                              \
+  int count;                                                                   \
+  FREAD_NUM(count);                                                            \
+                                                                               \
+  VERBOSE printf(#name "Buffer count = %u\n", count);                          \
+                                                                               \
+  /* TODO validate count */                                                    \
+                                                                               \
+  wren##name##BufferEnsure(vm, buffer, count);                                 \
+                                                                               \
+  for (int i = 0; i < count; ++i)                                              \
+  {                                                                            \
+    VERBOSE printf("[%u]\t", i);                                               \
+    type item = restore##name(ctx);                                            \
+    wren##name##BufferWrite(vm, buffer, item);                                 \
+    VERBOSE printf("\n");                                                      \
+  }                                                                            \
+}
+
 static void restoreStringBuffer(WrenSnapshotContext* ctx, WrenVM* vm, StringBuffer* buffer)
 {
   int count;
@@ -1125,25 +1146,7 @@ static void restoreByteBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ByteBuffer* 
   (ctx->read)(buffer->data, sizeof(uint8_t), count, ctx);
 }
 
-static void restoreMethodBuffer(WrenSnapshotContext* ctx, WrenVM* vm, MethodBuffer* buffer)
-{
-  int count;
-  FREAD_NUM(count);
-
-  VERBOSE printf("MethodBuffer count = %u\n", count);
-
-  // TODO validate count
-
-  wrenMethodBufferEnsure(vm, buffer, count);
-
-  for (int i = 0; i < count; ++i)
-  {
-    VERBOSE printf("[%u]\t", i);
-    Method m = restoreMethod(ctx);
-    wrenMethodBufferWrite(vm, buffer, m);
-    VERBOSE printf("\n");
-  }
-}
+RESTORE_BUFFER(Method, Method)
 
 static void restoreSymbolTable(WrenSnapshotContext* ctx, WrenVM* vm, SymbolTable* symtab)
 {
