@@ -1238,8 +1238,14 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
 
 #if WREN_DEBUG_DUMP_COMPILED_CODE
   // TODO quick-n-dirty
-  wrenStringBufferFill(vm, &vm->methodNames, ctx->census->allString[0], 256);
-  VERBOSE wrenDumpCode(vm, fn);
+  if (strcmp(fn->debug->name, "sort()"))
+  {
+    VERBOSE wrenDumpCode(vm, fn);
+  }
+  else
+  {
+    VERBOSE printf("// Not dumping restored sort() which requires swizzle\n");
+  }
 #endif
 
   return fn;
