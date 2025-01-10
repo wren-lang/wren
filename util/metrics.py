@@ -11,8 +11,7 @@ TODO_PATTERN = re.compile(r'\s*// TODO:')
 DOC_PATTERN = re.compile(r'\s*//')
 EXPECT_PATTERN = re.compile(r'// expect')
 
-C_FORMAT_LINE = "{0:<10}  {1:>7}  {2:>7}  {3:>7}  {4:>7}  {5:>7}  {6:>7}  {7:>7}"
-WREN_FORMAT_LINE = "{0:<10}  {1:>7}  {2:>7}  {3:>7}  {4:>7}  {5:>7}  {6:>7}"
+FORMAT_LINE = "{0:<10}  {1:>7}  {2:>7} |{3:>7}  {4:>7}  {5:>7}  {6:>7}  {7:>7}"
 
 def c_metrics(label, directories):
   """Reports the metrics of one or more directories of C code."""
@@ -51,7 +50,7 @@ def c_metrics(label, directories):
 
           num_code += 1
 
-  print(C_FORMAT_LINE.format(
+  print(FORMAT_LINE.format(
       label, num_files, num_semicolons,
       num_todos,  num_code,  num_docs,  num_empty,
       num_todos + num_code + num_docs + num_empty))
@@ -95,20 +94,20 @@ def wren_metrics(label, directories):
 
             num_code += 1
 
-  print(WREN_FORMAT_LINE.format(
-      label, num_files,
+  print(FORMAT_LINE.format(
+      label, num_files, "",
       num_todos,  num_code,  num_expects,  num_empty,
       num_todos + num_code + num_expects + num_empty))
 
 
-print(C_FORMAT_LINE.format(
+print(FORMAT_LINE.format(
     "/* C */", "files", "';'", "todos", "code", "comment", "empty", "total"))
 c_metrics("vm",       ["src/vm", "src/include"])
 c_metrics("optional", ["src/optional"])
 
 print()
-print(WREN_FORMAT_LINE.format(
-    "/* Wren */", "files", "todos", "code", "expects", "empty", "total"))
+print(FORMAT_LINE.format(
+    "/* Wren */", "files", "", "todos", "code", "expects", "empty", "total"))
 wren_metrics("core",      ["src/vm"])
 wren_metrics("optional",  ["src/optional"])
 wren_metrics("test",      ["test"])
