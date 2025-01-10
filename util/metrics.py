@@ -4,7 +4,6 @@ from __future__ import print_function
 
 import glob
 import fnmatch
-import itertools
 import os
 import re
 
@@ -14,22 +13,6 @@ EXPECT_PATTERN = re.compile(r'// expect')
 
 C_FORMAT_LINE = "{0:<10}  {1:>7}  {2:>7}  {3:>7}  {4:>7}  {5:>7}  {6:>7}  {7:>7}"
 WREN_FORMAT_LINE = "{0:<10}  {1:>7}  {2:>7}  {3:>7}  {4:>7}  {5:>7}  {6:>7}"
-
-num_files = 0
-num_docs = 0
-num_code = 0
-num_empty = 0
-num_todos = 0
-num_semicolons = 0
-num_test_files = 0
-num_test_todos = 0
-num_expects = 0
-num_test_empty = 0
-num_test = 0
-num_benchmark_files = 0
-num_benchmark_todos = 0
-num_benchmark_empty = 0
-num_benchmark = 0
 
 def c_metrics(label, directories):
   """Reports the metrics of one or more directories of C code."""
@@ -120,12 +103,10 @@ print(C_FORMAT_LINE.format(
     "", "files", "';'", "todos", "code", "comment", "empty", "total"))
 c_metrics("vm",       ["src/vm", "src/include"])
 c_metrics("optional", ["src/optional"])
-c_metrics("cli",      ["src/cli", "src/module"])
 
 print()
 print(WREN_FORMAT_LINE.format(
     "", "files", "todos", "code", "expects", "empty", "total"))
 wren_metrics("core",      ["src/vm"])
 wren_metrics("optional",  ["src/optional"])
-wren_metrics("cli",       ["src/module"])
 wren_metrics("test",      ["test"])
