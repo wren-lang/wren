@@ -7,9 +7,10 @@ import fnmatch
 import os
 import re
 
-TODO_PATTERN = re.compile(r'\s*// TODO:')
-DOC_PATTERN = re.compile(r'\s*//')
+TODO_PATTERN   = re.compile(r'\s*// TODO:')
+DOC_PATTERN    = re.compile(r'\s*//')
 EXPECT_PATTERN = re.compile(r'// expect')
+EOL_PATTERN    = re.compile(r'\n|\r\n')
 
 FORMAT_LINE = "{0:<10}  {1:>7}  {2:>7} |{3:>7}  {4:>7}  {5:>7}  {6:>7}  {7:>7}"
 
@@ -76,7 +77,7 @@ def wren_metrics(label, directories):
 
         with open(file_path, "r", encoding="utf-8", newline='', errors='replace') as input:
           data = input.read()
-          lines = re.split('\n|\r\n', data)
+          lines = EOL_PATTERN.split(data)
           for line in lines:
             if line.strip() == "":
               num_empty += 1
