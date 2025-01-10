@@ -52,17 +52,18 @@ def c_metrics(label, directories):
           num_code += 1
 
   print(C_FORMAT_LINE.format(
-      label, num_files, num_semicolons, num_todos, num_code, num_docs,
-      num_empty, num_todos + num_docs + num_empty + num_code))
+      label, num_files, num_semicolons,
+      num_todos,  num_code,  num_docs,  num_empty,
+      num_todos + num_code + num_docs + num_empty))
 
 
 def wren_metrics(label, directories):
   """Reports the metrics of one or more directories of Wren code."""
   num_files = 0
-  num_empty = 0
-  num_code = 0
   num_todos = 0
+  num_code = 0
   num_expects = 0
+  num_empty = 0
 
   for directory in directories:
     for dir_path, dir_names, file_names in os.walk(directory):
@@ -95,7 +96,8 @@ def wren_metrics(label, directories):
             num_code += 1
 
   print(WREN_FORMAT_LINE.format(
-      label, num_files, num_todos, num_code, num_expects, num_empty,
+      label, num_files,
+      num_todos,  num_code,  num_expects,  num_empty,
       num_todos + num_code + num_expects + num_empty))
 
 
