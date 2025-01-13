@@ -568,7 +568,7 @@ typedef struct sObj Obj;
 typedef void (*WrenVisitorFn)(WrenVM* vm, Obj* obj, unsigned int depth);
 
 // TODO: doc
-WREN_API void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */);
+WREN_API WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */);
 
 WREN_API WrenVM* wrenNewEmptyVM(WrenConfiguration* config);
 

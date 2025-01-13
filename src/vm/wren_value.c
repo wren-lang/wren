@@ -1405,12 +1405,31 @@ static void myVMWrite(WrenVM* vm, const char* text)
   printf("%s", text);
 }
 
-static void performRestore()
+static void myReportError(WrenVM* vm, WrenErrorType type, 
+  const char* module, int line, const char* message)
+{
+  switch (type)
+  {
+    case WREN_ERROR_COMPILE:
+      fprintf(stderr, "[%s line %d] %s\n", module, line, message);
+      break;
+
+    case WREN_ERROR_RUNTIME:
+      fprintf(stderr, "%s\n", message);
+      break;
+
+    case WREN_ERROR_STACK_TRACE:
+      fprintf(stderr, "[%s line %d] in %s\n", module, line, message);
+      break;
+  }
+}
+
+static WrenInterpretResult performRestore()
 {
   const bool verbose = false;
 
   FILE* file = fopen("bytecode-to-restore.bin", "rb");
-  if (file == NULL) return; // TODO
+  if (file == NULL) return WREN_RESULT_COMPILE_ERROR; // TODO
 
   if (verbose) printf("=== performRestore\n");
 
@@ -1418,6 +1437,7 @@ static void performRestore()
   wrenInitConfiguration(&newConfig);
   newConfig.userData = "VM restored from a snapshot";
   newConfig.writeFn = myVMWrite;
+  newConfig.errorFn = myReportError;
 
   WrenVM* newVM = wrenNewEmptyVM(&newConfig);
 
@@ -1425,7 +1445,7 @@ static void performRestore()
 
   fclose(file);
 
-  if (entrypoint == NULL) return;
+  if (entrypoint == NULL) return WREN_RESULT_COMPILE_ERROR;
 
   if (verbose) printf("=== start new VM\n");
   WrenInterpretResult result = wrenInterpretClosure(newVM, entrypoint);
@@ -1437,11 +1457,12 @@ static void performRestore()
 
   if (verbose) printf("=== End of restore\n");
 
+  return result;
 }
 
 #endif // WREN_SNAPSHOT
 
-void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
+WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
 {
 #if WREN_SNAPSHOT
   WrenCounts counts;
@@ -1464,7 +1485,7 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
   // wrenVisitObjects_(vm, obj, visitor, 0);
   // wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
 
-  performRestore();
+  return performRestore();
 #endif // WREN_SNAPSHOT
 }
 
