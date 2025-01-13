@@ -88,6 +88,7 @@ void wrenCountAllObj(WrenVM *vm, WrenCounts *counts)
     }
   }
 
+  if (false)
   printf(
     "counting Obj: %u"
     #define DO(u, l) "\t" #l ": %u"
@@ -141,7 +142,7 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
     printf("Obj" #l ":\n");                         \
     for (WrenCount i = 0; i < index.nb##l; ++i)      \
       printf("%4u %p\n", i, census->all##l[i]);
-  DO_ALL_OBJ_TYPES
+  // DO_ALL_OBJ_TYPES
   #undef DO
 }
 

@@ -1407,10 +1407,12 @@ static void myVMWrite(WrenVM* vm, const char* text)
 
 static void performRestore()
 {
+  const bool verbose = false;
+
   FILE* file = fopen("bytecode-to-restore.bin", "rb");
   if (file == NULL) return; // TODO
 
-  printf("=== performRestore\n");
+  if (verbose) printf("=== performRestore\n");
 
   WrenConfiguration newConfig;
   wrenInitConfiguration(&newConfig);
@@ -1425,15 +1427,15 @@ static void performRestore()
 
   if (entrypoint == NULL) return;
 
-  printf("=== start new VM\n");
+  if (verbose) printf("=== start new VM\n");
   WrenInterpretResult result = wrenInterpretClosure(newVM, entrypoint);
-  printf("=== result %u\n", result);
+  if (verbose) printf("=== result %u\n", result);
 
-  printf("=== free new VM\n");
+  if (verbose) printf("=== free new VM\n");
 
   wrenFreeVM(newVM);
 
-  printf("=== End of restore\n");
+  if (verbose) printf("=== End of restore\n");
 
 }
 
@@ -1459,8 +1461,8 @@ void wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
   wrenSnapshotSave(vm, &counts, &census, (ObjClosure*)obj);
   wrenFreeCensus(vm, &census);
 
-  wrenVisitObjects_(vm, obj, visitor, 0);
-  wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
+  // wrenVisitObjects_(vm, obj, visitor, 0);
+  // wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
 
   performRestore();
 #endif // WREN_SNAPSHOT

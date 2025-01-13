@@ -1478,7 +1478,7 @@ void slurpFile(FILE* f, WrenVM* vm, ByteBuffer* buf)
     wrenByteBufferWrite(vm, buf, byte);
   }
 
-  printf("slurped %d\n", buf->count);
+  if (false) printf("slurped %d\n", buf->count);
 }
 
 // Read from the buffer in [ctx].
