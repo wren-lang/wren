@@ -434,9 +434,9 @@
 
     if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;
 
-    wrenVisitObjects(vm, (Obj*)closure /* , visitor */);
+    return wrenVisitObjects(vm, (Obj*)closure /* , visitor */);
 
-    return wrenInterpretClosure(vm, closure);
+    // return wrenInterpretClosure(vm, closure);
   }
 
 /*
