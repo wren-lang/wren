@@ -1306,11 +1306,9 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
   VERBOSE printf("\n");
 
   VERBOSE printf("attr\t");
-  Value attributes = restoreValue(ctx, vm, NULL);
-  VERBOSE wrenDumpValue_(stdout, attributes, true);
+  classObj->attributes = restoreValue(ctx, vm, NULL);
+  VERBOSE wrenDumpValue_(stdout, classObj->attributes, true);
   VERBOSE printf("\n");
-
-  // TODO store attributes
 
   restoreMethodBuffer(ctx, vm, &classObj->methods);
 
