@@ -619,8 +619,9 @@ static void saveInt(FILE* file, WrenCounts* counts, WrenCensus* census, int i)
 }
 SAVE_BUFFER(Int, int)
 
-static void saveByteBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, ByteBuffer* buffer)
+static void saveByteBuffer(WrenSnapshotContext* ctx, ByteBuffer* buffer)
 {
+    FILE* file = ctx->file;
   const int count = buffer->count;
   const uint8_t* data = buffer->data;
 
@@ -690,7 +691,7 @@ static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
   saveValueBuffer(file, counts, census, &fn->constants);
 
   VERBOSE CHAR("B");
-  saveByteBuffer(file, counts, census, &fn->code);
+  saveByteBuffer(ctx, &fn->code);
 
   VERBOSE CHAR("D");
   saveIntBuffer(file, counts, census, &fn->debug->sourceLines);
