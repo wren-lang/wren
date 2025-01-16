@@ -792,10 +792,11 @@ SAVE_ALL(Class)
 
 #undef SAVE_ALL
 
-static void saveMethodNames(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* vm)
+static void saveMethodNames(WrenSnapshotContext* ctx, WrenVM* vm)
 {
+    FILE* file = ctx->file;
   VERBOSE CHAR("M");
-  saveSymbolTable(file, counts, census, &vm->methodNames);
+  saveSymbolTable(ctx->file, ctx->counts, ctx->census, &vm->methodNames);
   VERBOSE CHAR("\n");
 }
 
@@ -855,7 +856,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   };
 
   saveAllString   (file, counts, census);
-  saveMethodNames (file, counts, census, vm);
+  saveMethodNames (&ctx, vm);
   saveAllModule   (file, counts, census);
   saveAllFn       (file, counts, census);
   saveAllClosure  (file, counts, census);
