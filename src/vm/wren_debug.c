@@ -756,9 +756,13 @@ static void saveObjClass(FILE* file, WrenCounts* counts, WrenCensus* census, Obj
 }
 
 #define SAVE_ALL(type)                                                         \
-static void saveAll##type(FILE* file, WrenCounts* counts, WrenCensus* census)  \
+static void saveAll##type(WrenSnapshotContext* ctx)                            \
 {                                                                              \
   static const char strType[] = "Obj" #type;                                   \
+                                                                               \
+  FILE* file = ctx->file;                                                      \
+  WrenCounts* counts = ctx->counts;                                            \
+  WrenCensus* census = ctx->census;                                            \
                                                                                \
   const WrenCount nb = counts->nb##type;                                       \
   Obj##type** all = census->all##type;                                         \
@@ -855,13 +859,13 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
     file, NULL, counts, census, NULL, NULL, 0, NULL, 0
   };
 
-  saveAllString   (file, counts, census);
+  saveAllString   (&ctx);
   saveMethodNames (&ctx, vm);
-  saveAllModule   (file, counts, census);
-  saveAllFn       (file, counts, census);
-  saveAllClosure  (file, counts, census);
-  saveAllMap      (file, counts, census);
-  saveAllClass    (file, counts, census);
+  saveAllModule   (&ctx);
+  saveAllFn       (&ctx);
+  saveAllClosure  (&ctx);
+  saveAllMap      (&ctx);
+  saveAllClass    (&ctx);
   saveVM          (&ctx, vm, entrypoint);
 
   fclose(file);
