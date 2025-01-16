@@ -447,7 +447,7 @@ typedef struct WrenSnapshotContext {
 
 static const bool verbose = false;
 
-#define VERBOSE    if (verbose)
+#define VERBOSE    if (!verbose) {} else
 
 // How to serialize the type of an Obj or a Value.
 typedef uint8_t ObjOrValueType;
@@ -542,12 +542,7 @@ static void save##name##Buffer(WrenSnapshotContext* ctx, name##Buffer* buffer) \
   for (int i = 0; i < count; ++i)                                              \
   {                                                                            \
     type item = data[i];                                                       \
-                                                                               \
-    if (i)                                                                     \
-    {                                                                          \
-      VERBOSE CHAR(",");                                                       \
-    }                                                                          \
-                                                                               \
+    VERBOSE if (i) CHAR(",");                                                  \
     save##name(ctx, item);                                                     \
   }                                                                            \
   VERBOSE CHAR("}");                                                           \
