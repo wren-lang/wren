@@ -635,8 +635,9 @@ static void saveSymbolTable(FILE* file, WrenCounts* counts, WrenCensus* census, 
   saveStringBuffer(file, counts, census, (StringBuffer*)symtab);
 }
 
-static void saveObjString(FILE* file, WrenCounts* counts, WrenCensus* census, ObjString* str)
+static void saveObjString(WrenSnapshotContext* ctx, ObjString* str)
 {
+    FILE* file = ctx->file;
   uint32_t length = str->length;
   NUM(length);
   VERBOSE CHAR("\"");
@@ -644,21 +645,27 @@ static void saveObjString(FILE* file, WrenCounts* counts, WrenCensus* census, Ob
   VERBOSE CHAR("\"");
 }
 
-static void saveObjModule(FILE* file, WrenCounts* counts, WrenCensus* census, ObjModule* module)
+static void saveObjModule(WrenSnapshotContext* ctx, ObjModule* module)
 {
+    FILE* file = ctx->file;
+    WrenCounts* counts = ctx->counts;
+    WrenCensus* census = ctx->census;
   // The core module has no name, hence id_name will be 0.
   ObjString* name = module->name;
-  WrenCount id_name = wrenFindInCensus(counts, census, (Obj*)name);
+  WrenCount id_name = wrenFindInCtx(ctx, (Obj*)name);
   NUM(id_name);
 
   saveSymbolTable(file, counts, census, &module->variableNames);
   saveValueBuffer(file, counts, census, &module->variables);
 }
 
-static void saveObjFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn* fn)
+static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
 {
+    FILE* file = ctx->file;
+    WrenCounts* counts = ctx->counts;
+    WrenCensus* census = ctx->census;
   const ObjModule* module = fn->module;
-  WrenCount id_module = wrenFindInCensus(counts, census, (Obj*)module);
+  WrenCount id_module = wrenFindInCtx(ctx, (Obj*)module);
   NUM(id_module);
 
   VERBOSE CHAR(":");
@@ -689,17 +696,21 @@ static void saveObjFn(FILE* file, WrenCounts* counts, WrenCensus* census, ObjFn*
   saveIntBuffer(file, counts, census, &fn->debug->sourceLines);
 }
 
-static void saveObjClosure(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClosure* closure)
+static void saveObjClosure(WrenSnapshotContext* ctx, ObjClosure* closure)
 {
+    FILE* file = ctx->file;
   const ObjFn* fn = closure->fn;
-  WrenCount id_fn = wrenFindInCensus(counts, census, (Obj*)fn);
+  WrenCount id_fn = wrenFindInCtx(ctx, (Obj*)fn);
   NUM(id_fn);
 
   // TODO upvalues, fn->numUpvalues
 }
 
-static void saveObjMap(FILE* file, WrenCounts* counts, WrenCensus* census, ObjMap* map)
+static void saveObjMap(WrenSnapshotContext* ctx, ObjMap* map)
 {
+    FILE* file = ctx->file;
+    WrenCounts* counts = ctx->counts;
+    WrenCensus* census = ctx->census;
   const uint32_t count = map->count;
 
   if (count)
@@ -728,10 +739,13 @@ static void saveObjMap(FILE* file, WrenCounts* counts, WrenCensus* census, ObjMa
   }
 }
 
-static void saveObjClass(FILE* file, WrenCounts* counts, WrenCensus* census, ObjClass* classObj)
+static void saveObjClass(WrenSnapshotContext* ctx, ObjClass* classObj)
 {
+    FILE* file = ctx->file;
+    WrenCounts* counts = ctx->counts;
+    WrenCensus* census = ctx->census;
   ObjString* name = classObj->name;
-  WrenCount id_name = wrenFindInCensus(counts, census, (Obj*)name);
+  WrenCount id_name = wrenFindInCtx(ctx, (Obj*)name);
   NUM(id_name);
 
   VERBOSE CHAR("F");
@@ -740,12 +754,12 @@ static void saveObjClass(FILE* file, WrenCounts* counts, WrenCensus* census, Obj
 
   VERBOSE CHAR("<");
   ObjClass* super = classObj->superclass;
-  WrenCount id_super = wrenFindInCensus(counts, census, (Obj*)super);
+  WrenCount id_super = wrenFindInCtx(ctx, (Obj*)super);
   NUM(id_super);
 
   VERBOSE CHAR("m");
   ObjClass* meta = classObj->obj.classObj;
-  WrenCount id_meta = wrenFindInCensus(counts, census, (Obj*)meta);
+  WrenCount id_meta = wrenFindInCtx(ctx, (Obj*)meta);
   NUM(id_meta);
 
   VERBOSE CHAR("A");
@@ -761,11 +775,9 @@ static void saveAll##type(WrenSnapshotContext* ctx)                            \
   static const char strType[] = "Obj" #type;                                   \
                                                                                \
   FILE* file = ctx->file;                                                      \
-  WrenCounts* counts = ctx->counts;                                            \
-  WrenCensus* census = ctx->census;                                            \
                                                                                \
-  const WrenCount nb = counts->nb##type;                                       \
-  Obj##type** all = census->all##type;                                         \
+  const WrenCount nb = ctx->counts->nb##type;                                  \
+  Obj##type** all    = ctx->census->all##type;                                 \
                                                                                \
   VERBOSE STR_CONST(strType);                                                  \
   VERBOSE CHAR("=");                                                           \
@@ -781,7 +793,7 @@ static void saveAll##type(WrenSnapshotContext* ctx)                            \
     VERBOSE NUM(id);                                                           \
     VERBOSE CHAR(":");                                                         \
                                                                                \
-    saveObj##type(file, counts, census, obj);                                  \
+    saveObj##type(ctx, obj);                                                   \
                                                                                \
     VERBOSE CHAR("\n");                                                        \
   }                                                                            \
