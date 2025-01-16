@@ -462,6 +462,12 @@ enum {
   ValueTypeCharNaN      = '8', // 8 is not an infinite :-)
 };
 
+// Helper method for wrenFindInCensus() on the census in the [ctx].
+static WrenCount wrenFindInCtx(WrenSnapshotContext* ctx, Obj* needle)
+{
+  return wrenFindInCensus(ctx->counts, ctx->census, needle);
+}
+
 static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value v)
 {
 #if WREN_NAN_TAGGING
@@ -793,8 +799,9 @@ static void saveMethodNames(FILE* file, WrenCounts* counts, WrenCensus* census, 
   VERBOSE CHAR("\n");
 }
 
-static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* vm, ObjClosure* entrypoint)
+static void saveVM(WrenSnapshotContext* ctx, WrenVM* vm, ObjClosure* entrypoint)
 {
+    FILE* file = ctx->file;
   VERBOSE CHAR("V");
   VERBOSE CHAR("M");
   VERBOSE CHAR("\n");
@@ -802,8 +809,7 @@ static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* v
 #define SAVE_CLASS(verboseCharStr, name)                                       \
   VERBOSE CHAR(verboseCharStr);                                                \
   ObjClass* name##Class = vm->name##Class;                                     \
-  const WrenCount id_##name##Class =                                           \
-    wrenFindInCensus(counts, census, (Obj*)name##Class);                       \
+  const WrenCount id_##name##Class = wrenFindInCtx(ctx, (Obj*)name##Class);    \
   NUM(id_##name##Class);                                                       \
   VERBOSE CHAR("\n");
 
@@ -822,19 +828,19 @@ static void saveVM(FILE* file, WrenCounts* counts, WrenCensus* census, WrenVM* v
 #undef SAVE_CLASS
 
   VERBOSE CHAR("i");  // import
-  const WrenCount id_modules = wrenFindInCensus(counts, census, (Obj*)vm->modules);
+  const WrenCount id_modules = wrenFindInCtx(ctx, (Obj*)vm->modules);
   NUM(id_modules);
   VERBOSE CHAR("\n");
 
   VERBOSE CHAR("I");  // import
-  const WrenCount id_lastModule = wrenFindInCensus(counts, census, (Obj*)vm->lastModule);
+  const WrenCount id_lastModule = wrenFindInCtx(ctx, (Obj*)vm->lastModule);
   NUM(id_lastModule);
   VERBOSE CHAR("\n");
 
   // methodNames was saved before.
 
   VERBOSE CHAR("@");
-  const WrenCount id_entrypoint = wrenFindInCensus(counts, census, (Obj*)entrypoint);
+  const WrenCount id_entrypoint = wrenFindInCtx(ctx, (Obj*)entrypoint);
   NUM(id_entrypoint);
   VERBOSE CHAR("\n");
 }
@@ -844,6 +850,10 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   FILE* file = fopen("bytecode", "wb");
   if (file == NULL) return;
 
+  WrenSnapshotContext ctx = {
+    file, NULL, counts, census, NULL, NULL, 0, NULL, 0
+  };
+
   saveAllString   (file, counts, census);
   saveMethodNames (file, counts, census, vm);
   saveAllModule   (file, counts, census);
@@ -851,7 +861,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   saveAllClosure  (file, counts, census);
   saveAllMap      (file, counts, census);
   saveAllClass    (file, counts, census);
-  saveVM          (file, counts, census, vm, entrypoint);
+  saveVM          (&ctx, vm, entrypoint);
 
   fclose(file);
 }
