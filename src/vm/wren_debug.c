@@ -529,8 +529,12 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
 }
 
 #define SAVE_BUFFER(name, type)                                                \
-static void save##name##Buffer(FILE* file, WrenCounts* counts, WrenCensus* census, name##Buffer* buffer) \
+static void save##name##Buffer(WrenSnapshotContext* ctx, name##Buffer* buffer) \
 {                                                                              \
+  FILE* file = ctx->file;                                                      \
+  WrenCounts* counts = ctx->counts;                                            \
+  WrenCensus* census = ctx->census;                                            \
+                                                                               \
   const int count = buffer->count;                                             \
   type* data = buffer->data;                                                   \
                                                                                \
@@ -633,7 +637,7 @@ static void saveByteBuffer(WrenSnapshotContext* ctx, ByteBuffer* buffer)
 
 static void saveSymbolTable(WrenSnapshotContext* ctx, SymbolTable* symtab)
 {
-  saveStringBuffer(ctx->file, ctx->counts, ctx->census, (StringBuffer*)symtab);
+  saveStringBuffer(ctx, (StringBuffer*)symtab);
 }
 
 static void saveObjString(WrenSnapshotContext* ctx, ObjString* str)
@@ -649,22 +653,18 @@ static void saveObjString(WrenSnapshotContext* ctx, ObjString* str)
 static void saveObjModule(WrenSnapshotContext* ctx, ObjModule* module)
 {
     FILE* file = ctx->file;
-    WrenCounts* counts = ctx->counts;
-    WrenCensus* census = ctx->census;
   // The core module has no name, hence id_name will be 0.
   ObjString* name = module->name;
   WrenCount id_name = wrenFindInCtx(ctx, (Obj*)name);
   NUM(id_name);
 
   saveSymbolTable(ctx, &module->variableNames);
-  saveValueBuffer(file, counts, census, &module->variables);
+  saveValueBuffer(ctx, &module->variables);
 }
 
 static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
 {
     FILE* file = ctx->file;
-    WrenCounts* counts = ctx->counts;
-    WrenCensus* census = ctx->census;
   const ObjModule* module = fn->module;
   WrenCount id_module = wrenFindInCtx(ctx, (Obj*)module);
   NUM(id_module);
@@ -688,13 +688,13 @@ static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
   NUM(numUpvalues);
 
   VERBOSE CHAR("C");
-  saveValueBuffer(file, counts, census, &fn->constants);
+  saveValueBuffer(ctx, &fn->constants);
 
   VERBOSE CHAR("B");
   saveByteBuffer(ctx, &fn->code);
 
   VERBOSE CHAR("D");
-  saveIntBuffer(file, counts, census, &fn->debug->sourceLines);
+  saveIntBuffer(ctx, &fn->debug->sourceLines);
 }
 
 static void saveObjClosure(WrenSnapshotContext* ctx, ObjClosure* closure)
@@ -767,7 +767,7 @@ static void saveObjClass(WrenSnapshotContext* ctx, ObjClass* classObj)
   saveValue(file, counts, census, classObj->attributes);
 
   VERBOSE CHAR("M");
-  saveMethodBuffer(file, counts, census, &classObj->methods);
+  saveMethodBuffer(ctx, &classObj->methods);
 }
 
 #define SAVE_ALL(type)                                                         \
