@@ -468,8 +468,9 @@ static WrenCount wrenFindInCtx(WrenSnapshotContext* ctx, Obj* needle)
   return wrenFindInCensus(ctx->counts, ctx->census, needle);
 }
 
-static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value v)
+static void saveValue(WrenSnapshotContext* ctx, Value v)
 {
+    FILE* file = ctx->file;
 #if WREN_NAN_TAGGING
   if (IS_NUM(v))
   {
@@ -482,7 +483,7 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
   {
     Obj* obj = AS_OBJ(v);
     const ObjOrValueType type = obj->type;   // NOTE the cast
-    WrenCount id = wrenFindInCensus(counts, census, obj);
+    WrenCount id = wrenFindInCtx(ctx, obj);
 
     NUM(type);
     NUM(id);
@@ -517,7 +518,7 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
     case VAL_OBJ: {
       Obj* obj = AS_OBJ(v);
       type = obj->type;             // NOTE the cast
-      WrenCount id = wrenFindInCensus(counts, census, obj);
+      WrenCount id = wrenFindInCtx(ctx, obj);
 
       NUM(type);
       NUM(id);
@@ -532,8 +533,6 @@ static void saveValue(FILE* file, WrenCounts* counts, WrenCensus* census, Value 
 static void save##name##Buffer(WrenSnapshotContext* ctx, name##Buffer* buffer) \
 {                                                                              \
   FILE* file = ctx->file;                                                      \
-  WrenCounts* counts = ctx->counts;                                            \
-  WrenCensus* census = ctx->census;                                            \
                                                                                \
   const int count = buffer->count;                                             \
   type* data = buffer->data;                                                   \
@@ -549,15 +548,16 @@ static void save##name##Buffer(WrenSnapshotContext* ctx, name##Buffer* buffer) \
       VERBOSE CHAR(",");                                                       \
     }                                                                          \
                                                                                \
-    save##name(file, counts, census, item);                                    \
+    save##name(ctx, item);                                                     \
   }                                                                            \
   VERBOSE CHAR("}");                                                           \
 }
 SAVE_BUFFER(Value, Value)
 
-static void saveString(FILE* file, WrenCounts* counts, WrenCensus* census, ObjString* str)
+static void saveString(WrenSnapshotContext* ctx, ObjString* str)
 {
-  WrenCount id = wrenFindInCensus(counts, census, (Obj*)str);
+    FILE* file = ctx->file;
+  WrenCount id = wrenFindInCtx(ctx, (Obj*)str);
   NUM(id);
 }
 SAVE_BUFFER(String, ObjString*)
@@ -574,8 +574,9 @@ enum {
   MethodTypeCharNone          = ' ',
 };
 
-static void saveMethod(FILE* file, WrenCounts* counts, WrenCensus* census, Method m)
+static void saveMethod(WrenSnapshotContext* ctx, Method m)
 {
+    FILE* file = ctx->file;
   uint8_t type;             // NOTE the type
   switch (m.type)
   {
@@ -604,7 +605,7 @@ static void saveMethod(FILE* file, WrenCounts* counts, WrenCensus* census, Metho
       type = MethodTypeCharBlock;
       NUM(type);
 
-      WrenCount id = wrenFindInCensus(counts, census, (Obj*)m.as.closure);
+      WrenCount id = wrenFindInCtx(ctx, (Obj*)m.as.closure);
       NUM(id);
       break;
     }
@@ -617,8 +618,9 @@ static void saveMethod(FILE* file, WrenCounts* counts, WrenCensus* census, Metho
 }
 SAVE_BUFFER(Method, Method)
 
-static void saveInt(FILE* file, WrenCounts* counts, WrenCensus* census, int i)
+static void saveInt(WrenSnapshotContext* ctx, int i)
 {
+    FILE* file = ctx->file;
   NUM(i);
 }
 SAVE_BUFFER(Int, int)
@@ -710,8 +712,6 @@ static void saveObjClosure(WrenSnapshotContext* ctx, ObjClosure* closure)
 static void saveObjMap(WrenSnapshotContext* ctx, ObjMap* map)
 {
     FILE* file = ctx->file;
-    WrenCounts* counts = ctx->counts;
-    WrenCensus* census = ctx->census;
   const uint32_t count = map->count;
 
   if (count)
@@ -731,10 +731,10 @@ static void saveObjMap(WrenSnapshotContext* ctx, ObjMap* map)
         VERBOSE CHAR(",");
       }
 
-      saveValue(file, counts, census, entry->key);
+      saveValue(ctx, entry->key);
       VERBOSE CHAR("=");
       VERBOSE CHAR(">");
-      saveValue(file, counts, census, entry->value);
+      saveValue(ctx, entry->value);
     }
     VERBOSE CHAR("}");
   }
@@ -743,8 +743,6 @@ static void saveObjMap(WrenSnapshotContext* ctx, ObjMap* map)
 static void saveObjClass(WrenSnapshotContext* ctx, ObjClass* classObj)
 {
     FILE* file = ctx->file;
-    WrenCounts* counts = ctx->counts;
-    WrenCensus* census = ctx->census;
   ObjString* name = classObj->name;
   WrenCount id_name = wrenFindInCtx(ctx, (Obj*)name);
   NUM(id_name);
@@ -764,7 +762,7 @@ static void saveObjClass(WrenSnapshotContext* ctx, ObjClass* classObj)
   NUM(id_meta);
 
   VERBOSE CHAR("A");
-  saveValue(file, counts, census, classObj->attributes);
+  saveValue(ctx, classObj->attributes);
 
   VERBOSE CHAR("M");
   saveMethodBuffer(ctx, &classObj->methods);
