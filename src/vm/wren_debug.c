@@ -630,9 +630,9 @@ static void saveByteBuffer(FILE* file, WrenCounts* counts, WrenCensus* census, B
   VERBOSE CHAR("}");
 }
 
-static void saveSymbolTable(FILE* file, WrenCounts* counts, WrenCensus* census, SymbolTable* symtab)
+static void saveSymbolTable(WrenSnapshotContext* ctx, SymbolTable* symtab)
 {
-  saveStringBuffer(file, counts, census, (StringBuffer*)symtab);
+  saveStringBuffer(ctx->file, ctx->counts, ctx->census, (StringBuffer*)symtab);
 }
 
 static void saveObjString(WrenSnapshotContext* ctx, ObjString* str)
@@ -655,7 +655,7 @@ static void saveObjModule(WrenSnapshotContext* ctx, ObjModule* module)
   WrenCount id_name = wrenFindInCtx(ctx, (Obj*)name);
   NUM(id_name);
 
-  saveSymbolTable(file, counts, census, &module->variableNames);
+  saveSymbolTable(ctx, &module->variableNames);
   saveValueBuffer(file, counts, census, &module->variables);
 }
 
@@ -812,7 +812,7 @@ static void saveMethodNames(WrenSnapshotContext* ctx, WrenVM* vm)
 {
     FILE* file = ctx->file;
   VERBOSE CHAR("M");
-  saveSymbolTable(ctx->file, ctx->counts, ctx->census, &vm->methodNames);
+  saveSymbolTable(ctx, &vm->methodNames);
   VERBOSE CHAR("\n");
 }
 
