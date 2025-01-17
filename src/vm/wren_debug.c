@@ -684,10 +684,10 @@ static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
   const uint8_t numUpvalues = fn->numUpvalues;    // NOTE the type; see MAX_UPVALUES
   NUM(numUpvalues);
 
-  VERBOSE CHAR("C");
+  VERBOSE CHAR("K");
   saveValueBuffer(ctx, &fn->constants);
 
-  VERBOSE CHAR("B");
+  VERBOSE CHAR("C");
   saveByteBuffer(ctx, &fn->code);
 
   VERBOSE CHAR("D");
