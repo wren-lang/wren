@@ -1444,6 +1444,7 @@ static void swizzlePointers(WrenSnapshotContext* ctx)
       case OBJ_FN:    obj = (Obj*)getObjFn   (ctx, swiz->id); break;
       default:
         ASSERT(false, "UNHANDLED ObjType.");
+        obj = NULL;
         break;
     }
     ASSERT(obj != NULL, "Swizzle found no substitute.");
