@@ -439,10 +439,10 @@ typedef struct WrenSnapshotContext {
   unsigned int count;
 } WrenSnapshotContext;
 
-#define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char),    1, file)
-#define STR_CONST(str)   fwrite(str,        sizeof(str) - 1, 1, file)
-#define STR(str)         fwrite(str,        strlen(str),     1, file)
-#define NUM(n)           fwrite(&n,         sizeof(n),       1, file)
+#define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char), 1,               file)
+#define STR_CONST(str)   fwrite(str,        sizeof(char), sizeof(str) - 1, file)
+#define STR(str)         fwrite(str,        sizeof(char), strlen(str),     file)
+#define NUM(n)           fwrite(&n,         sizeof(n),    1,               file)
   // TODO check returned values
 
 static const bool verbose = false;
