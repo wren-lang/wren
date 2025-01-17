@@ -959,7 +959,7 @@ static Primitive restoreIndexAsPrimitive(WrenSnapshotContext* ctx)
   return prim;
 }
 
-static Value restoreValue(WrenSnapshotContext* ctx, WrenVM* vm, Swizzle* swizzle)
+static Value restoreValue(WrenSnapshotContext* ctx, Swizzle* swizzle)
 {
   ObjOrValueType type;
   FREAD_NUM(type);
@@ -1139,7 +1139,7 @@ static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer
   {
     VERBOSE printf("[%u]\t", i);
     Swizzle swizzle;
-    Value v = restoreValue(ctx, vm, &swizzle);
+    Value v = restoreValue(ctx, &swizzle);
     if (IS_UNDEFINED(v))
     {
       VERBOSE printf(" TO swizzle");
@@ -1275,13 +1275,13 @@ static ObjMap* restoreObjMap(WrenSnapshotContext* ctx, WrenVM* vm)
     VERBOSE printf("Entry %u\n", i);
 
     VERBOSE printf(" k ");
-    Value k = restoreValue(ctx, vm, NULL);
+    Value k = restoreValue(ctx, NULL);
     VERBOSE printf(" ");
     VERBOSE wrenDumpValue_(stdout, k, true);
     VERBOSE printf("\n");
 
     VERBOSE printf(" v ");
-    Value v = restoreValue(ctx, vm, NULL);
+    Value v = restoreValue(ctx, NULL);
     VERBOSE printf(" ");
     VERBOSE wrenDumpValue_(stdout, v, true);
     VERBOSE printf("\n");
@@ -1327,7 +1327,7 @@ static ObjClass* restoreObjClass(WrenSnapshotContext* ctx, WrenVM* vm)
   VERBOSE printf("\n");
 
   VERBOSE printf("attr\t");
-  classObj->attributes = restoreValue(ctx, vm, NULL);
+  classObj->attributes = restoreValue(ctx, NULL);
   VERBOSE wrenDumpValue_(stdout, classObj->attributes, true);
   VERBOSE printf("\n");
 
