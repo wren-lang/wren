@@ -419,12 +419,12 @@ typedef struct {
 DECLARE_BUFFER(Swizzle, Swizzle);
 DEFINE_BUFFER(Swizzle, Swizzle)
 
-struct WrenSnapshotContext;
+struct sWrenSnapshotContext;
 
 // Analogous to fread(), but abstracts away from FILE*.
-typedef size_t (*WrenSnapshotReadFn)(void* ptr, size_t size, size_t nmemb, struct WrenSnapshotContext* ctx);
+typedef size_t (*WrenSnapshotReadFn)(void* ptr, size_t size, size_t nmemb, struct sWrenSnapshotContext* ctx);
 
-typedef struct WrenSnapshotContext {
+typedef struct sWrenSnapshotContext {
   FILE* file;
   WrenSnapshotReadFn read;
   WrenCounts *counts;
