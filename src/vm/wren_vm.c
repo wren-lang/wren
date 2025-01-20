@@ -1388,8 +1388,20 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   UNREACHABLE();
   return WREN_RESULT_RUNTIME_ERROR;
 
+  #undef PUSH
+  #undef POP
+  #undef DROP
+  #undef PEEK
+  #undef PEEK2
   #undef READ_BYTE
   #undef READ_SHORT
+  #undef STORE_FRAME
+  #undef LOAD_FRAME
+  #undef RUNTIME_ERROR
+  #undef DEBUG_TRACE_INSTRUCTIONS
+  #undef INTERPRET_LOOP
+  #undef CASE_CODE
+  #undef DISPATCH
 }
 
 WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
