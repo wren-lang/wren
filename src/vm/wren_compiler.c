@@ -3318,7 +3318,7 @@ static void defineMethod(Compiler* compiler, Variable classVariable,
 // Reports an error if a method with that signature is already declared.
 // Returns the symbol for the method.
 static int declareMethod(Compiler* compiler, Signature* signature,
-                         const char* name, int length)
+                         const char* name /*, int length */)
 {
   int symbol = signatureSymbol(compiler, signature);
   
@@ -3473,7 +3473,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   // Check for duplicate methods. Doesn't matter that it's already been
   // defined, error will discard bytecode anyway.
   // Check if the method table already contains this symbol
-  int methodSymbol = declareMethod(compiler, &signature, fullSignature, length);
+  int methodSymbol = declareMethod(compiler, &signature, fullSignature /*, length */);
   
   if (isForeign)
   {
