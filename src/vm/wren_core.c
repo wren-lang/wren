@@ -1325,11 +1325,11 @@ void wrenInitializeCore(WrenVM* vm)
   // The rest of the classes can now be defined normally.
   wrenInterpret(vm, NULL, coreModuleSource);
 
-  vm->boolClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Bool"));
+  vm->boolClass = AS_CLASS(wrenFindVariable(coreModule, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
   PRIMITIVE(vm->boolClass, "!", bool_not);
 
-  vm->fiberClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fiber"));
+  vm->fiberClass = AS_CLASS(wrenFindVariable(coreModule, "Fiber"));
   PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
   PRIMITIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
   PRIMITIVE(vm->fiberClass->obj.classObj, "current", fiber_current);
@@ -1346,7 +1346,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
   PRIMITIVE(vm->fiberClass, "try(_)", fiber_try1);
 
-  vm->fnClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fn"));
+  vm->fnClass = AS_CLASS(wrenFindVariable(coreModule, "Fn"));
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
@@ -1371,11 +1371,11 @@ void wrenInitializeCore(WrenVM* vm)
   
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
-  vm->nullClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Null"));
+  vm->nullClass = AS_CLASS(wrenFindVariable(coreModule, "Null"));
   PRIMITIVE(vm->nullClass, "!", null_not);
   PRIMITIVE(vm->nullClass, "toString", null_toString);
 
-  vm->numClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Num"));
+  vm->numClass = AS_CLASS(wrenFindVariable(coreModule, "Num"));
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
   PRIMITIVE(vm->numClass->obj.classObj, "infinity", num_infinity);
   PRIMITIVE(vm->numClass->obj.classObj, "nan", num_nan);
@@ -1436,7 +1436,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "==(_)", num_eqeq);
   PRIMITIVE(vm->numClass, "!=(_)", num_bangeq);
 
-  vm->stringClass = AS_CLASS(wrenFindVariable(vm, coreModule, "String"));
+  vm->stringClass = AS_CLASS(wrenFindVariable(coreModule, "String"));
   PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
   PRIMITIVE(vm->stringClass->obj.classObj, "fromByte(_)", string_fromByte);
   PRIMITIVE(vm->stringClass, "+(_)", string_plus);
@@ -1454,7 +1454,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
   PRIMITIVE(vm->stringClass, "toString", string_toString);
 
-  vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
+  vm->listClass = AS_CLASS(wrenFindVariable(coreModule, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "filled(_,_)", list_filled);
   PRIMITIVE(vm->listClass->obj.classObj, "new()", list_new);
   PRIMITIVE(vm->listClass, "[_]", list_subscript);
@@ -1471,7 +1471,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "indexOf(_)", list_indexOf);
   PRIMITIVE(vm->listClass, "swap(_,_)", list_swap);
 
-  vm->mapClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Map"));
+  vm->mapClass = AS_CLASS(wrenFindVariable(coreModule, "Map"));
   PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);
   PRIMITIVE(vm->mapClass, "[_]", map_subscript);
   PRIMITIVE(vm->mapClass, "[_]=(_)", map_subscriptSetter);
@@ -1484,7 +1484,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->mapClass, "keyIteratorValue_(_)", map_keyIteratorValue);
   PRIMITIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
 
-  vm->rangeClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Range"));
+  vm->rangeClass = AS_CLASS(wrenFindVariable(coreModule, "Range"));
   PRIMITIVE(vm->rangeClass, "from", range_from);
   PRIMITIVE(vm->rangeClass, "to", range_to);
   PRIMITIVE(vm->rangeClass, "min", range_min);
@@ -1494,7 +1494,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
   PRIMITIVE(vm->rangeClass, "toString", range_toString);
 
-  ObjClass* systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
+  ObjClass* systemClass = AS_CLASS(wrenFindVariable(coreModule, "System"));
   PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);
   PRIMITIVE(systemClass->obj.classObj, "gc()", system_gc);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);

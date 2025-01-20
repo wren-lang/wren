@@ -1557,7 +1557,7 @@ Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName)
   return getModuleVariable(vm, module, variableName);
 }
 
-Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name)
+Value wrenFindVariable(ObjModule* module, const char* name)
 {
   int symbol = wrenSymbolTableFind(&module->variableNames, name, strlen(name));
   return module->variables.data[symbol];

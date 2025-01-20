@@ -151,9 +151,8 @@ ObjClosure* wrenCompileSource(WrenVM* vm, const char* module,
 // Aborts the current fiber if the module or variable could not be found.
 Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName);
 
-// Returns the value of the module-level variable named [name] in the main
-// module.
-Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name);
+// Returns the value of the module-level variable named [name] in the [module].
+Value wrenFindVariable(ObjModule* module, const char* name);
 
 // Adds a new implicitly declared top-level variable named [name] to [module]
 // based on a use site occurring on [line].
