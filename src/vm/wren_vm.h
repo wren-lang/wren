@@ -192,7 +192,7 @@ static inline void wrenCallFunction(WrenVM* vm, ObjFiber* fiber,
   int needed = stackSize + closure->fn->maxSlots;
   wrenEnsureStack(vm, fiber, needed);
   
-  wrenAppendCallFrame(vm, fiber, closure, fiber->stackTop - numArgs);
+  wrenAppendCallFrame(/* vm, */ fiber, closure, fiber->stackTop - numArgs);
 }
 
 // Marks [obj] as a GC root so that it doesn't get collected.

@@ -182,7 +182,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   if (closure != NULL)
   {
     // Initialize the first call frame.
-    wrenAppendCallFrame(vm, fiber, closure, fiber->stack);
+    wrenAppendCallFrame(/* vm, */ fiber, closure, fiber->stack);
 
     // The first slot always holds the closure.
     fiber->stackTop[0] = OBJ_VAL(closure);
