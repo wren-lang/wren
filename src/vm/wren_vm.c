@@ -658,7 +658,7 @@ static void createClass(WrenVM* vm, int numFields, ObjModule* module)
   if (numFields == -1) bindForeignClass(vm, classObj, module);
 }
 
-static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack)
+static void createForeign(WrenVM* vm, /* ObjFiber* fiber, */ Value* stack)
 {
   ObjClass* classObj = AS_CLASS(stack[0]);
   ASSERT(classObj->numFields == -1, "Class must be a foreign class.");
@@ -1266,7 +1266,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
     CASE_CODE(FOREIGN_CONSTRUCT):
       ASSERT(IS_CLASS(stackStart[0]), "'this' should be a class.");
-      createForeign(vm, fiber, stackStart);
+      createForeign(vm, /* fiber, */ stackStart);
       if (wrenHasError(fiber)) RUNTIME_ERROR();
       DISPATCH();
 
