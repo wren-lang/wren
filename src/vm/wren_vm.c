@@ -331,7 +331,7 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
 #if WREN_OPT_RANDOM
     if (strcmp(moduleName, "random") == 0)
     {
-      method = wrenRandomBindForeignMethod(vm, className, isStatic, signature);
+      method = wrenRandomBindForeignMethod(/* vm, */ className, /* isStatic, */ signature);
     }
 #endif
   }
@@ -582,7 +582,7 @@ static void bindForeignClass(WrenVM* vm, ObjClass* classObj, ObjModule* module)
 #if WREN_OPT_RANDOM
     if (strcmp(module->name->value, "random") == 0)
     {
-      methods = wrenRandomBindForeignClass(vm, module->name->value,
+      methods = wrenRandomBindForeignClass(/* vm, module->name->value, */
                                            classObj->name->value);
     }
 #endif

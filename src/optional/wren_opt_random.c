@@ -107,8 +107,8 @@ const char* wrenRandomSource()
   return randomModuleSource;
 }
 
-WrenForeignClassMethods wrenRandomBindForeignClass(WrenVM* vm,
-                                                   const char* module,
+WrenForeignClassMethods wrenRandomBindForeignClass(/* WrenVM* vm,
+                                                   const char* module, */
                                                    const char* className)
 {
   ASSERT(strcmp(className, "Random") == 0, "Should be in Random class.");
@@ -118,9 +118,9 @@ WrenForeignClassMethods wrenRandomBindForeignClass(WrenVM* vm,
   return methods;
 }
 
-WrenForeignMethodFn wrenRandomBindForeignMethod(WrenVM* vm,
+WrenForeignMethodFn wrenRandomBindForeignMethod(/* WrenVM* vm, */
                                                 const char* className,
-                                                bool isStatic,
+                                                /* bool isStatic, */
                                                 const char* signature)
 {
   ASSERT(strcmp(className, "Random") == 0, "Should be in Random class.");
