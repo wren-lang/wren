@@ -70,7 +70,7 @@ const char* wrenMetaSource()
   return metaModuleSource;
 }
 
-WrenForeignMethodFn wrenMetaBindForeignMethod(WrenVM* vm,
+WrenForeignMethodFn wrenMetaBindForeignMethod(/* WrenVM* vm, */
                                               const char* className,
                                               bool isStatic,
                                               const char* signature)

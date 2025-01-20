@@ -325,7 +325,7 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
 #if WREN_OPT_META
     if (strcmp(moduleName, "meta") == 0)
     {
-      method = wrenMetaBindForeignMethod(vm, className, isStatic, signature);
+      method = wrenMetaBindForeignMethod(/* vm, */ className, isStatic, signature);
     }
 #endif
 #if WREN_OPT_RANDOM
