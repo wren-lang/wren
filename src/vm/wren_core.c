@@ -412,7 +412,7 @@ DEF_PRIMITIVE(list_removeAt)
 
 DEF_PRIMITIVE(list_removeValue) {
   ObjList* list = AS_LIST(args[0]);
-  int index = wrenListIndexOf(vm, list, args[1]);
+  int index = wrenListIndexOf(/* vm, */ list, args[1]);
   if(index == -1) RETURN_NULL;
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
 }
@@ -420,7 +420,7 @@ DEF_PRIMITIVE(list_removeValue) {
 DEF_PRIMITIVE(list_indexOf)
 {
   ObjList* list = AS_LIST(args[0]);
-  RETURN_NUM(wrenListIndexOf(vm, list, args[1]));
+  RETURN_NUM(wrenListIndexOf(/* vm, */ list, args[1]));
 }
 
 DEF_PRIMITIVE(list_swap)

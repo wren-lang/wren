@@ -327,7 +327,7 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index)
   list->elements.data[index] = value;
 }
 
-int wrenListIndexOf(WrenVM* vm, ObjList* list, Value value)
+int wrenListIndexOf(/* WrenVM* vm, */ ObjList* list, Value value)
 {
   int count = list->elements.count;
   for (int i = 0; i < count; i++)
