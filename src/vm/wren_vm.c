@@ -1083,7 +1083,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
 
         case METHOD_BLOCK:
           STORE_FRAME();
-          wrenCallFunction(vm, fiber, (ObjClosure*)method->as.closure, numArgs);
+          wrenCallFunction(vm, fiber, method->as.closure, numArgs);
           LOAD_FRAME();
           break;
 
