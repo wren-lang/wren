@@ -1064,8 +1064,9 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           }
           break;
 
-        case METHOD_FUNCTION_CALL: 
-          if (!checkArity(vm, args[0], numArgs)) {
+        case METHOD_FUNCTION_CALL:
+          if (!checkArity(vm, args[0], numArgs))
+          {
             RUNTIME_ERROR();
             break;
           }
