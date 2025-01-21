@@ -413,17 +413,17 @@ static void runtimeError(WrenVM* vm)
     // Every fiber along the call chain gets aborted with the same error.
     current->error = error;
 
-    // If the caller ran this fiber using "try", give it the error and stop.
+    ObjFiber* caller = current->caller;
+
+    // If the caller ran this fiber using "try", let it handle the error.
     if (current->state == FIBER_TRY)
     {
-      // Make the caller's try method return the error message.
-      current->caller->stackTop[-1] = vm->fiber->error;
-      vm->fiber = current->caller;
+      caller->stackTop[-1] = error;
+      vm->fiber = caller;
       return;
     }
     
     // Otherwise, unhook the caller since we will never resume and return to it.
-    ObjFiber* caller = current->caller;
     current->caller = NULL;
     current = caller;
   }
