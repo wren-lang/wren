@@ -871,8 +871,8 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       {                                                                        \
         STORE_FRAME();                                                         \
         runtimeError(vm);                                                      \
-        if (vm->fiber == NULL) return WREN_RESULT_RUNTIME_ERROR;               \
         fiber = vm->fiber;                                                     \
+        if (fiber == NULL) return WREN_RESULT_RUNTIME_ERROR;                   \
         LOAD_FRAME();                                                          \
         DISPATCH();                                                            \
       } while (false)
