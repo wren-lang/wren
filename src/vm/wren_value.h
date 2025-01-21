@@ -349,8 +349,8 @@ typedef struct sObjFiber
   // upvalue closest to the top of the stack, and then the list works downwards.
   ObjUpvalue* openUpvalues;
   
-  // The fiber that ran this one. If this fiber is yielded, control will resume
-  // to this one. May be `NULL`.
+  // The fiber that ran this one; it's the target fiber when calling yield().
+  // May be `NULL`.
   struct sObjFiber* caller;
   
   // If the fiber failed because of a runtime error, this will contain the
