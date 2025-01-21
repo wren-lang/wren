@@ -806,7 +806,7 @@ static Value getModuleVariable(WrenVM* vm, ObjModule* module,
   return NULL_VAL;
 }
 
-inline static bool checkArity(WrenVM* vm, Value value, int numArgs)
+static inline bool checkArity(WrenVM* vm, Value value, int numArgs)
 {
   ASSERT(IS_CLOSURE(value), "Receiver must be a closure.");
   ObjFn* fn = AS_CLOSURE(value)->fn;
