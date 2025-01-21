@@ -908,7 +908,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         goto *dispatchTable[instruction = (Code)READ_BYTE()];                  \
       } while (false)
 
-  #else
+  #else // WREN_COMPUTED_GOTO
 
   #define INTERPRET_LOOP                                                       \
       loop:                                                                    \
@@ -918,7 +918,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
   #define CASE_CODE(name)  case CODE_##name
   #define DISPATCH()       goto loop
 
-  #endif
+  #endif // WREN_COMPUTED_GOTO
 
   LOAD_FRAME();
 
