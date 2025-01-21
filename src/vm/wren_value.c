@@ -1486,6 +1486,8 @@ WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visi
   // wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
 
   return performRestore();
+#else
+  return WREN_RESULT_SUCCESS;
 #endif // WREN_SNAPSHOT
 }
 
