@@ -346,11 +346,11 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm,
 //
 // Aborts the current fiber if the method is a foreign method that could not be
 // found.
-static void bindMethod(WrenVM* vm, int methodType, int symbol,
+static void bindMethod(WrenVM* vm, bool isStatic, int symbol,
                        ObjModule* module, ObjClass* classObj, Value methodValue)
 {
   const char* className = classObj->name->value;
-  if (methodType == CODE_METHOD_STATIC) classObj = classObj->obj.classObj;
+  if (isStatic) classObj = classObj->obj.classObj;
 
   Method method;
   if (IS_STRING(methodValue))
@@ -358,9 +358,7 @@ static void bindMethod(WrenVM* vm, int methodType, int symbol,
     const char* name = AS_CSTRING(methodValue);
     method.type = METHOD_FOREIGN;
     method.as.foreign = findForeignMethod(vm, module->name->value,
-                                          className,
-                                          methodType == CODE_METHOD_STATIC,
-                                          name);
+                                          className, isStatic, name);
 
     if (method.as.foreign == NULL)
     {
@@ -1325,7 +1323,8 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
       uint16_t symbol = READ_SHORT();
       ObjClass* classObj = AS_CLASS(PEEK());
       Value method = PEEK2();
-      bindMethod(vm, instruction, symbol, fn->module, classObj, method);
+      bindMethod(vm, instruction == CODE_METHOD_STATIC, symbol, fn->module,
+                 classObj, method);
       if (wrenHasError(fiber)) RUNTIME_ERROR();
       DROP();
       DROP();
