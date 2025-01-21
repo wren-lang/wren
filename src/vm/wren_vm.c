@@ -861,7 +861,7 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
         fn = frame->closure->fn;                                               \
       } while (false)
 
-  // Terminates the current fiber with error string [error]. If another calling
+  // Terminates the current fiber, whose error state is set. If another calling
   // fiber is willing to catch the error, transfers control to it, otherwise
   // exits the interpreter.
   #define RUNTIME_ERROR()                                                      \
