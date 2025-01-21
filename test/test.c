@@ -37,7 +37,7 @@
     appendSlice(path, slice);
   }
 
-  inline static bool isSeparator(char c)
+  static inline bool isSeparator(char c)
   {
     // Slash is a separator on POSIX and Windows.
     if (c == '/') return true;
@@ -51,7 +51,7 @@
   }
 
   #ifdef _WIN32
-  inline static bool isDriveLetter(char c)
+  static inline bool isDriveLetter(char c)
   {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
   }
@@ -63,7 +63,7 @@
   // "C:\").
   //
   // If the path is not absolute, returns 0.
-  inline static size_t absolutePrefixLength(const char* path)
+  static inline size_t absolutePrefixLength(const char* path)
   {
     #ifdef _WIN32
       // Drive letter.
