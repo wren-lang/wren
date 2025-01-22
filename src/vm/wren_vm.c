@@ -1455,8 +1455,8 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
 
 WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
 {
-  ASSERT(method != NULL, "Method cannot be NULL.");
-  ASSERT(IS_CLOSURE(method->value), "Method must be a method handle.");
+  ASSERT(method != NULL, "Handle cannot be NULL.");
+  ASSERT(IS_CLOSURE(method->value), "Handle must hold a method.");
   ASSERT(vm->fiber != NULL, "Must set up arguments for call first.");
   ASSERT(vm->apiStack != NULL, "Must set up arguments for call first.");
   ASSERT(vm->fiber->numFrames == 0, "Can not call from a foreign method.");
