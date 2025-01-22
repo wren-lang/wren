@@ -138,9 +138,9 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
     }
   }
 
-  #define DO(u, l)                                  \
-    printf("Obj" #l ":\n");                         \
-    for (WrenCount i = 0; i < index.nb##l; ++i)      \
+  #define DO(u, l)                                                             \
+    printf("Obj" #l ":\n");                                                    \
+    for (WrenCount i = 0; i < index.nb##l; ++i)                                \
       printf("%4u %p\n", i, census->all##l[i]);
   // DO_ALL_OBJ_TYPES
   #undef DO
@@ -165,10 +165,10 @@ WrenCount wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle)
 
   switch (needle->type)
   {
-    #define DO(u, l)                      \
-      case OBJ_##u:                       \
-        haystack = (Obj**)census->all##l; \
-        nb = counts->nb##l;               \
+    #define DO(u, l)                                                           \
+      case OBJ_##u:                                                            \
+        haystack = (Obj**)census->all##l;                                      \
+        nb = counts->nb##l;                                                    \
         break;
     DO_ALL_OBJ_TYPES
     #undef DO
