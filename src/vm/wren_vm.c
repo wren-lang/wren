@@ -1716,8 +1716,7 @@ double wrenGetSlotDouble(WrenVM* vm, int slot)
 void* wrenGetSlotForeign(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
-  ASSERT(IS_FOREIGN(vm->apiStack[slot]),
-         "Slot must hold a foreign instance.");
+  ASSERT(IS_FOREIGN(vm->apiStack[slot]), "Slot must hold a foreign instance.");
 
   return AS_FOREIGN(vm->apiStack[slot])->data;
 }
@@ -1873,7 +1872,7 @@ bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot)
   ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Slot must hold a map.");
 
   Value key = vm->apiStack[keySlot];
-  ASSERT(wrenMapIsValidKey(key), "Key must be a value type");
+  ASSERT(wrenMapIsValidKey(key), "Key must be a value type.");
   if (!validateKey(vm, key)) return false;
 
   ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
@@ -1906,7 +1905,7 @@ void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
   ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must insert into a map.");
   
   Value key = vm->apiStack[keySlot];
-  ASSERT(wrenMapIsValidKey(key), "Key must be a value type");
+  ASSERT(wrenMapIsValidKey(key), "Key must be a value type.");
 
   if (!validateKey(vm, key)) {
     return;
