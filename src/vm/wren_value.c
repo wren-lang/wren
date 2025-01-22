@@ -1460,6 +1460,34 @@ static WrenInterpretResult performRestore()
   return result;
 }
 
+static void assertCanSaveSnapshot(WrenCounts* counts, WrenCensus* census)
+{
+  #define ASSERT_0_OBJ(type)                                                  \
+      ASSERT(counts->nb##type == 0, "How to save Obj" #type "?")
+  #define ASSERT_N_OBJ(type, n)                                               \
+      ASSERT(counts->nb##type == n, "Expecting " #n " Obj" #type ".");
+
+  // OK any Obj
+  // OK any ObjClass
+  // OK any ObjClosure
+  ASSERT_N_OBJ(Fiber, 1);
+  // OK any ObjFn
+  ASSERT_0_OBJ(Foreign);
+  ASSERT_0_OBJ(Instance);
+  ASSERT_0_OBJ(List);
+  ASSERT_N_OBJ(Map, 1);
+  ASSERT_N_OBJ(Module, 2);
+  ASSERT_0_OBJ(Range);
+  // OK any ObjString
+  ASSERT_0_OBJ(Upvalue);
+
+  #undef ASSERT_0_OBJ
+  #undef ASSERT_N_OBJ
+
+  ASSERT(census->allFiber[0]->state == FIBER_ROOT,
+         "The ObjFiber should be FIBER_ROOT.");
+}
+
 #endif // WREN_SNAPSHOT
 
 WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
@@ -1477,8 +1505,10 @@ WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visi
 
   counts = (WrenCounts) {};
   wrenCountAllObj(vm, &counts);
-
   wrenCensusAllObj(vm, &counts, &census);
+
+  assertCanSaveSnapshot(&counts, &census);
+
   wrenSnapshotSave(vm, &counts, &census, (ObjClosure*)obj);
   wrenFreeCensus(vm, &census);
 
