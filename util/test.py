@@ -16,6 +16,7 @@ import platform
 parser = ArgumentParser()
 parser.add_argument('--suffix', default='',
   help='suffix to the executable name; e.g. "_d"')
+parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('suite', nargs='?',
   help='a string prefix that filters the path to files,'
     + ' relative from test/ directory; e.g. "core/map/key_" or "../example"')
@@ -370,8 +371,16 @@ def run_script(app, path, type):
   # Read the test and parse out the expectations.
   test = Test(path)
 
-  if not test.parse():
-    # It's a skipped or non-test file.
+  torun = test.parse()
+
+  if args.verbose:
+    messages = [path]
+    if not torun:
+      messages += [yellow('(SKIP)')]
+    print(*messages)
+
+  if not torun:
+    # It's a skipped test or non-test file.
     return
 
   test.run(app, type)
