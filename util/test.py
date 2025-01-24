@@ -14,8 +14,11 @@ import platform
 # Runs the tests.
 
 parser = ArgumentParser()
-parser.add_argument('--suffix', default='')
-parser.add_argument('suite', nargs='?')
+parser.add_argument('--suffix', default='',
+  help='suffix to the executable name; e.g. "_d"')
+parser.add_argument('suite', nargs='?',
+  help='a string prefix that filters the path to files,'
+    + ' relative from test/ directory; e.g. "core/map/key_" or "../example"')
 
 args = parser.parse_args(sys.argv[1:])
 
@@ -27,7 +30,7 @@ if platform.system() == "Windows":
   WREN_APP_WITH_EXT += ".exe"
 
 if not isfile(WREN_APP_WITH_EXT):
-  print("The binary file 'wren_test' was not found, expected it to be at " + WREN_APP)
+  print("The binary file was not found; expected it to be: " + WREN_APP)
   print("In order to run the tests, you need to build Wren first!")
   sys.exit(1)
 
@@ -43,8 +46,9 @@ STDIN_PATTERN   = re.compile(r'// stdin: (.*)')
 SKIP_PATTERN    = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
 
-# Patterns for stderr
-ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
+# Patterns for output
+EOL_PATTERN         = re.compile(r'\n|\r\n')
+ERROR_PATTERN       = re.compile(r'\[.* line (\d+)\] Error')
 STACK_TRACE_PATTERN = re.compile(r'(?:\[\./)?test/.* line (\d+)\] in')
 
 passed = 0
@@ -83,7 +87,7 @@ class Test:
 
     with open(self.path, 'r', encoding="utf-8", newline='', errors='replace') as file:
       data = file.read()
-      lines = re.split('\n|\r\n', data)
+      lines = EOL_PATTERN.split(data)
       for line in lines:
         if len(line) <= 0:
           line_num += 1
@@ -313,10 +317,10 @@ def yellow(text): return color_text(text, '\033[33m')
 
 def walk(dir, callback, ignored=None):
   """
-  Walks [dir], and executes [callback] on each file unless it is [ignored].
+  Walks [dir], and executes [callback] on each file unless it is an [ignored] one.
   """
 
-  if not ignored:
+  if ignored is None:
     ignored = []
   ignored += [".",".."]
 
@@ -344,7 +348,7 @@ def run_script(app, path, type):
   global failed
   global num_skipped
 
-  if (splitext(path)[1] != '.wren'):
+  if splitext(path)[1] != '.wren':
     return
 
   # Check if we are just running a subset of the tests.
@@ -372,7 +376,7 @@ def run_script(app, path, type):
 
   test.run(app, type)
 
-  # Display the results.
+  # Display the failures.
   if len(test.failures) == 0:
     passed += 1
   else:
@@ -384,7 +388,8 @@ def run_script(app, path, type):
     print('')
 
 
-def run_test(path, example=False):
+
+def run_test(path):
   run_script(WREN_APP, path, "test")
 
 
