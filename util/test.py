@@ -16,6 +16,8 @@ import platform
 parser = ArgumentParser()
 parser.add_argument('--suffix', default='',
   help='suffix to the executable name; e.g. "_d"')
+parser.add_argument('--myself', action='store_true',
+  help='for verifying the test runner itself')
 parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('suite', nargs='?',
   help='a string prefix that filters the path to files,'
@@ -413,9 +415,13 @@ def run_example(path):
   run_script(WREN_APP, path, "example")
 
 
-walk(join(WREN_DIR, 'test'), run_test, ignored=['api', 'benchmark'])
-walk(join(WREN_DIR, 'test', 'api'), run_api_test)
-walk(join(WREN_DIR, 'example'), run_example)
+if args.myself:
+  # Exercises all kinds of failure, to see how well the runner handle them.
+  walk(join(WREN_DIR, 'runner_test'), run_test)
+else:
+  walk(join(WREN_DIR, 'test'), run_test, ignored=['api', 'benchmark'])
+  walk(join(WREN_DIR, 'test', 'api'), run_api_test)
+  walk(join(WREN_DIR, 'example'), run_example)
 
 print_line()
 if failed == 0:
