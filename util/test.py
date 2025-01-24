@@ -182,14 +182,15 @@ class Test:
 
   def validate(self, is_example, exit_code, out, err):
     if self.compile_errors and self.runtime_error_message:
-      self.fail("Test error: Cannot expect both compile and runtime errors.")
+      self.fail("BAD TEST: Cannot expect both compile and runtime errors.")
       return
 
     try:
       out = out.decode("utf-8").replace('\r\n', '\n')
       err = err.decode("utf-8").replace('\r\n', '\n')
-    except:
+    except UnicodeDecodeError:
       self.fail('Error decoding output.')
+      return
 
     error_lines = err.split('\n')
 
@@ -221,7 +222,7 @@ class Test:
     if error_lines[line] != self.runtime_error_message:
       self.fail('Expected runtime error "{0}" and got:',
           self.runtime_error_message)
-      self.fail(error_lines[line])
+      self.fail('    ' + error_lines[line])
 
     # Make sure the stack trace has the right line. Skip over any lines that
     # come from builtin libraries.
@@ -234,7 +235,7 @@ class Test:
     if not match:
       self.fail('Expected stack trace and got:')
       for stack_line in stack_lines:
-        self.fail(stack_line)
+        self.fail('    ' + stack_line)
     else:
       stack_line = int(match.group(1))
       if stack_line != self.runtime_error_line:
@@ -245,6 +246,7 @@ class Test:
   def validate_compile_errors(self, error_lines):
     # Validate that every compile error was expected.
     found_errors = set()
+    first = True
     for line in error_lines:
       match = ERROR_PATTERN.search(line)
       if match:
@@ -253,10 +255,12 @@ class Test:
           found_errors.add(error_line)
         else:
           self.fail('Unexpected error:')
-          self.fail(line)
+          self.fail('    ' + line)
       elif line != '':
-        self.fail('Unexpected output on stderr:')
-        self.fail(line)
+        if first:
+          self.fail('Unexpected output on stderr:')
+          first = False
+        self.fail('    ' + line)
 
     # Validate that every expected error occurred.
     for line in self.compile_errors - found_errors:
@@ -268,7 +272,9 @@ class Test:
 
     self.fail('Expected return code {0} and got {1}. Stderr:',
         self.exit_code, exit_code)
-    self.failures += error_lines
+    self.failures += [ '  /-----' ]
+    self.failures += [ '  | ' + l for l in error_lines ]
+    self.failures += [ '  \-----' ]
 
 
   def validate_output(self, out):
