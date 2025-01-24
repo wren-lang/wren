@@ -60,6 +60,13 @@ num_skipped = 0
 skipped = defaultdict(int)
 expectations = 0
 
+def split_into_lines(string):
+  lines = string.split('\n')
+  # Remove the trailing last empty line.
+  if lines[-1] == '':
+    del lines[-1]
+  return lines
+
 class Test:
   def __init__(self, path):
     self.path = path
@@ -192,7 +199,7 @@ class Test:
       self.fail('Error decoding output.')
       return
 
-    error_lines = err.split('\n')
+    error_lines = split_into_lines(err)
 
     if self.runtime_error_message:
       self.validate_runtime_error(error_lines)
@@ -278,11 +285,7 @@ class Test:
 
 
   def validate_output(self, out):
-    # Remove the trailing last empty line.
-    out_lines = out.split('\n')
-    if out_lines[-1] == '':
-      del out_lines[-1]
-
+    out_lines = split_into_lines(out)
     index = 0
     for line in out_lines:
       if sys.version_info < (3, 0):
