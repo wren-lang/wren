@@ -5,7 +5,7 @@ from __future__ import print_function
 from argparse import ArgumentParser
 from collections import defaultdict
 from os import listdir
-from os.path import abspath, basename, dirname, isdir, isfile, join, realpath, relpath, splitext
+from os.path import abspath, dirname, isdir, isfile, join, realpath, relpath, splitext
 import re
 from subprocess import Popen, PIPE
 import sys
@@ -18,9 +18,6 @@ parser.add_argument('--suffix', default='')
 parser.add_argument('suite', nargs='?')
 
 args = parser.parse_args(sys.argv[1:])
-
-config = args.suffix.lstrip('_d')
-is_debug = args.suffix.startswith('_d')
 
 WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wren_test' + args.suffix)
@@ -189,7 +186,6 @@ class Test:
 
     error_lines = err.split('\n')
 
-    # Validate that an expected runtime error occurred.
     if self.runtime_error_message:
       self.validate_runtime_error(error_lines)
     else:
@@ -397,10 +393,6 @@ def run_api_test(path):
 
 
 def run_example(path):
-  # Don't run examples that require user input.
-  if "animals" in path: return
-  if "guess_number" in path: return
-
   # This one is annoyingly slow.
   if "skynet" in path: return
 
