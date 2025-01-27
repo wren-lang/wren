@@ -1424,7 +1424,10 @@ static void myReportError(WrenVM* vm, WrenErrorType type,
   }
 }
 
-static WrenInterpretResult performRestore()
+static WrenInterpretResult performRestore(WrenResolveModuleFn resolveFn,
+                                          WrenLoadModuleFn loadFn,
+                                          WrenBindForeignClassFn bfcFn,
+                                          WrenBindForeignMethodFn bfmFn)
 {
   const bool verbose = false;
 
@@ -1438,6 +1441,10 @@ static WrenInterpretResult performRestore()
   newConfig.userData = "VM restored from a snapshot";
   newConfig.writeFn = myVMWrite;
   newConfig.errorFn = myReportError;
+  newConfig.resolveModuleFn = resolveFn;
+  newConfig.loadModuleFn = loadFn;
+  newConfig.bindForeignClassFn = bfcFn;
+  newConfig.bindForeignMethodFn = bfmFn;
 
   WrenVM* newVM = wrenNewEmptyVM(&newConfig);
 
@@ -1515,7 +1522,12 @@ WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visi
   // wrenVisitObjects_(vm, obj, visitor, 0);
   // wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
 
-  return performRestore();
+  return performRestore(
+    vm->config.resolveModuleFn,
+    vm->config.loadModuleFn,
+    vm->config.bindForeignClassFn,
+    vm->config.bindForeignMethodFn
+  );
 #else
   return WREN_RESULT_SUCCESS;
 #endif // WREN_SNAPSHOT
