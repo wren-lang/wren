@@ -423,10 +423,13 @@ struct sWrenSnapshotContext;
 
 // Analogous to fread(), but abstracts away from FILE*.
 typedef size_t (*WrenSnapshotReadFn)(void* ptr, size_t size, size_t nmemb, struct sWrenSnapshotContext* ctx);
+// Analogous to fwrite(), but abstracts away from FILE*.
+typedef size_t (*WrenSnapshotWriteFn)(const void* ptr, size_t size, size_t nmemb, struct sWrenSnapshotContext* ctx);
 
 typedef struct sWrenSnapshotContext {
   FILE* file;
   WrenSnapshotReadFn read;
+  WrenSnapshotWriteFn write;
   WrenCounts *counts;
   WrenCensus *census;
   SwizzleBuffer* swizzles;
@@ -439,10 +442,19 @@ typedef struct sWrenSnapshotContext {
   unsigned int count;
 } WrenSnapshotContext;
 
-#define CHAR(oneCharStr) fwrite(oneCharStr, sizeof(char), 1,               file)
-#define STR_CONST(str)   fwrite(str,        sizeof(char), sizeof(str) - 1, file)
-#define STR(str)         fwrite(str,        sizeof(char), strlen(str),     file)
-#define NUM(n)           fwrite(&n,         sizeof(n),    1,               file)
+// Write into the snapshot context [ctx].
+static size_t swrite(const void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
+{
+  return fwrite(ptr, size, nmemb, ctx->file);
+  // TODO ensure nmemb is returned
+  // TODO feof(), ferror()
+  // TODO endianness when size > 1
+}
+
+#define CHAR(oneCharStr) swrite(oneCharStr, sizeof(char), 1,               ctx)
+#define STR_CONST(str)   swrite(str,        sizeof(char), sizeof(str) - 1, ctx)
+#define STR(str)         swrite(str,        sizeof(char), strlen(str),     ctx)
+#define NUM(n)           swrite(&n,         sizeof(n),    1,               ctx)
   // TODO check returned values
 
 static const bool verbose = false;
@@ -470,7 +482,6 @@ static WrenCount wrenFindInCtx(WrenSnapshotContext* ctx, Obj* needle)
 
 static void saveValue(WrenSnapshotContext* ctx, Value v)
 {
-    FILE* file = ctx->file;
 #if WREN_NAN_TAGGING
   if (IS_NUM(v))
   {
@@ -532,8 +543,6 @@ static void saveValue(WrenSnapshotContext* ctx, Value v)
 #define SAVE_BUFFER(name, type)                                                \
 static void save##name##Buffer(WrenSnapshotContext* ctx, name##Buffer* buffer) \
 {                                                                              \
-  FILE* file = ctx->file;                                                      \
-                                                                               \
   const int count = buffer->count;                                             \
   type* data = buffer->data;                                                   \
                                                                                \
@@ -551,7 +560,6 @@ SAVE_BUFFER(Value, Value)
 
 static void saveString(WrenSnapshotContext* ctx, ObjString* str)
 {
-    FILE* file = ctx->file;
   WrenCount id = wrenFindInCtx(ctx, (Obj*)str);
   NUM(id);
 }
@@ -571,7 +579,6 @@ enum {
 
 static void saveMethod(WrenSnapshotContext* ctx, Method m)
 {
-    FILE* file = ctx->file;
   uint8_t type;             // NOTE the type
   switch (m.type)
   {
@@ -615,20 +622,18 @@ SAVE_BUFFER(Method, Method)
 
 static void saveInt(WrenSnapshotContext* ctx, int i)
 {
-    FILE* file = ctx->file;
   NUM(i);
 }
 SAVE_BUFFER(Int, int)
 
 static void saveByteBuffer(WrenSnapshotContext* ctx, ByteBuffer* buffer)
 {
-    FILE* file = ctx->file;
   const int count = buffer->count;
   const uint8_t* data = buffer->data;
 
   NUM(count);
   VERBOSE CHAR("{");
-  fwrite(data, sizeof(uint8_t), count, file);
+  swrite(data, sizeof(uint8_t), count, ctx);
   VERBOSE CHAR("}");
 }
 
@@ -639,17 +644,15 @@ static void saveSymbolTable(WrenSnapshotContext* ctx, SymbolTable* symtab)
 
 static void saveObjString(WrenSnapshotContext* ctx, ObjString* str)
 {
-    FILE* file = ctx->file;
   uint32_t length = str->length;
   NUM(length);
   VERBOSE CHAR("\"");
-  fwrite(str->value, sizeof(char), length, file);
+  swrite(str->value, sizeof(char), length, ctx);
   VERBOSE CHAR("\"");
 }
 
 static void saveObjModule(WrenSnapshotContext* ctx, ObjModule* module)
 {
-    FILE* file = ctx->file;
   // The core module has no name, hence id_name will be 0.
   ObjString* name = module->name;
   WrenCount id_name = wrenFindInCtx(ctx, (Obj*)name);
@@ -661,7 +664,6 @@ static void saveObjModule(WrenSnapshotContext* ctx, ObjModule* module)
 
 static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
 {
-    FILE* file = ctx->file;
   const ObjModule* module = fn->module;
   WrenCount id_module = wrenFindInCtx(ctx, (Obj*)module);
   NUM(id_module);
@@ -696,7 +698,6 @@ static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
 
 static void saveObjClosure(WrenSnapshotContext* ctx, ObjClosure* closure)
 {
-    FILE* file = ctx->file;
   const ObjFn* fn = closure->fn;
   WrenCount id_fn = wrenFindInCtx(ctx, (Obj*)fn);
   NUM(id_fn);
@@ -706,7 +707,6 @@ static void saveObjClosure(WrenSnapshotContext* ctx, ObjClosure* closure)
 
 static void saveObjMap(WrenSnapshotContext* ctx, ObjMap* map)
 {
-    FILE* file = ctx->file;
   const uint32_t count = map->count;
 
   if (count)
@@ -737,7 +737,6 @@ static void saveObjMap(WrenSnapshotContext* ctx, ObjMap* map)
 
 static void saveObjClass(WrenSnapshotContext* ctx, ObjClass* classObj)
 {
-    FILE* file = ctx->file;
   ObjString* name = classObj->name;
   WrenCount id_name = wrenFindInCtx(ctx, (Obj*)name);
   NUM(id_name);
@@ -767,8 +766,6 @@ static void saveObjClass(WrenSnapshotContext* ctx, ObjClass* classObj)
 static void saveAll##type(WrenSnapshotContext* ctx)                            \
 {                                                                              \
   static const char strType[] = "Obj" #type;                                   \
-                                                                               \
-  FILE* file = ctx->file;                                                      \
                                                                                \
   const WrenCount nb = ctx->counts->nb##type;                                  \
   Obj##type** all    = ctx->census->all##type;                                 \
@@ -804,7 +801,6 @@ SAVE_ALL(Class)
 
 static void saveMethodNames(WrenSnapshotContext* ctx, WrenVM* vm)
 {
-    FILE* file = ctx->file;
   VERBOSE CHAR("M");
   saveSymbolTable(ctx, &vm->methodNames);
   VERBOSE CHAR("\n");
@@ -812,7 +808,6 @@ static void saveMethodNames(WrenSnapshotContext* ctx, WrenVM* vm)
 
 static void saveVM(WrenSnapshotContext* ctx, WrenVM* vm, ObjClosure* entrypoint)
 {
-    FILE* file = ctx->file;
   VERBOSE CHAR("V");
   VERBOSE CHAR("M");
   VERBOSE CHAR("\n");
@@ -862,7 +857,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   if (file == NULL) return;
 
   WrenSnapshotContext ctx = {
-    file, NULL, counts, census, NULL, NULL, 0, NULL, 0
+    file, NULL, NULL, counts, census, NULL, NULL, 0, NULL, 0
   };
 
   saveAllString   (&ctx);
@@ -1572,7 +1567,7 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
       // bytecode_hello_forward_prim_metaclass_entrypoint_bin, bytecode_hello_forward_prim_metaclass_entrypoint_bin_len
     }
     /**/
-    { NULL, buf_read, &counts, &census, &swizzles, &snapshot, 0, NULL, 0 }
+    { NULL, buf_read, NULL, &counts, &census, &swizzles, &snapshot, 0, NULL, 0 }
   ;
 
   // Restore all Obj.
