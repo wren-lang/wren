@@ -71,8 +71,8 @@ class Test:
   def __init__(self, path):
     self.path = path
     self.output = []
-    self.compile_errors = set()
-    self.runtime_error_line = 0
+    self.compile_errors_line_num = set()
+    self.runtime_error_line_num = 0
     self.runtime_error_message = None
     self.exit_code = 0
     self.input_bytes = None
@@ -110,7 +110,7 @@ class Test:
 
         match = EXPECT_ERROR_PATTERN.search(line)
         if match:
-          self.compile_errors.add(line_num)
+          self.compile_errors_line_num.add(line_num)
 
           # If we expect a compile error, it should exit with WREN_EX_DATAERR.
           self.exit_code = 65
@@ -118,7 +118,7 @@ class Test:
 
         match = EXPECT_ERROR_LINE_PATTERN.search(line)
         if match:
-          self.compile_errors.add(int(match.group(1)))
+          self.compile_errors_line_num.add(int(match.group(1)))
 
           # If we expect a compile error, it should exit with WREN_EX_DATAERR.
           self.exit_code = 65
@@ -126,7 +126,7 @@ class Test:
 
         match = EXPECT_RUNTIME_ERROR_PATTERN.search(line)
         if match:
-          self.runtime_error_line = line_num
+          self.runtime_error_line_num = line_num
           self.runtime_error_message = match.group(2)
           # If the runtime error isn't handled, it should exit with WREN_EX_SOFTWARE.
           if match.group(1) != "handled ":
@@ -188,7 +188,7 @@ class Test:
 
 
   def validate(self, is_example, exit_code, out, err):
-    if self.compile_errors and self.runtime_error_message:
+    if self.compile_errors_line_num and self.runtime_error_message:
       self.fail("BAD TEST: Cannot expect both compile and runtime errors.")
       return
 
@@ -217,24 +217,24 @@ class Test:
   def validate_runtime_error(self, error_lines):
     # Skip any compile errors. This can happen if there is a compile error in
     # a module loaded by the module being tested.
-    line = 0
-    while line < len(error_lines) and ERROR_PATTERN.search(error_lines[line]):
-      line += 1
+    line_num = 0
+    while line_num < len(error_lines) and ERROR_PATTERN.search(error_lines[line_num]):
+      line_num += 1
 
-    if not line < len(error_lines):
+    if not line_num < len(error_lines):
       self.fail('Expected runtime error "{0}" and got none.',
           self.runtime_error_message)
       return
 
-    if error_lines[line] != self.runtime_error_message:
+    if error_lines[line_num] != self.runtime_error_message:
       self.fail('Expected runtime error "{0}" and got:',
           self.runtime_error_message)
-      self.fail('    ' + error_lines[line])
+      self.fail('    ' + error_lines[line_num])
 
     # Make sure the stack trace has the right line. Skip over any lines that
     # come from builtin libraries.
     match = False
-    stack_lines = error_lines[line + 1:]
+    stack_lines = error_lines[line_num + 1:]
     for stack_line in stack_lines:
       match = STACK_TRACE_PATTERN.search(stack_line)
       if match: break
@@ -244,22 +244,22 @@ class Test:
       for stack_line in stack_lines:
         self.fail('    ' + stack_line)
     else:
-      stack_line = int(match.group(1))
-      if stack_line != self.runtime_error_line:
+      line_num = int(match.group(1))
+      if line_num != self.runtime_error_line_num:
         self.fail('Expected runtime error on line {0} but was on line {1}.',
-            self.runtime_error_line, stack_line)
+            self.runtime_error_line_num, line_num)
 
 
   def validate_compile_errors(self, error_lines):
     # Validate that every compile error was expected.
-    found_errors = set()
+    found = set()
     first = True
     for line in error_lines:
       match = ERROR_PATTERN.search(line)
       if match:
-        error_line = float(match.group(1))
-        if error_line in self.compile_errors:
-          found_errors.add(error_line)
+        error_line_num = float(match.group(1))
+        if error_line_num in self.compile_errors_line_num:
+          found.add(error_line_num)
         else:
           self.fail('Unexpected error:')
           self.fail('    ' + line)
@@ -270,8 +270,8 @@ class Test:
         self.fail('    ' + line)
 
     # Validate that every expected error occurred.
-    for line in self.compile_errors - found_errors:
-      self.fail('Missing expected error on line {0}.', line)
+    for line_num in self.compile_errors_line_num - found:
+      self.fail('Missing expected error on line {0}.', line_num)
 
 
   def validate_exit_code(self, exit_code, error_lines):
