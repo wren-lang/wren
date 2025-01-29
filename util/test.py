@@ -215,16 +215,16 @@ class Test:
 
 
   def validate_runtime_error(self, error_lines):
-    if len(error_lines) < 2:
-      self.fail('Expected runtime error "{0}" and got none.',
-          self.runtime_error_message)
-      return
-
     # Skip any compile errors. This can happen if there is a compile error in
     # a module loaded by the module being tested.
     line = 0
-    while ERROR_PATTERN.search(error_lines[line]):
+    while line < len(error_lines) and ERROR_PATTERN.search(error_lines[line]):
       line += 1
+
+    if not line < len(error_lines):
+      self.fail('Expected runtime error "{0}" and got none.',
+          self.runtime_error_message)
+      return
 
     if error_lines[line] != self.runtime_error_message:
       self.fail('Expected runtime error "{0}" and got:',
