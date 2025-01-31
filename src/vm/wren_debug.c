@@ -1119,7 +1119,8 @@ static int restoreInt(WrenSnapshotContext* ctx)
 }
 RESTORE_BUFFER(Int, int)
 
-static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer* buffer)
+// Returns true iff there was any swizzle found.
+static bool restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer* buffer)
 {
   int count;
   FREAD_NUM(count);
@@ -1129,6 +1130,8 @@ static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer
   // TODO validate count
 
   wrenValueBufferEnsure(vm, buffer, count);
+
+  bool hadSwizzle = false;
 
   for (int i = 0; i < count; ++i)
   {
@@ -1141,6 +1144,7 @@ static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer
       swizzle.inValue = true;
       swizzle.target.val = &buffer->data[buffer->count];
       wrenSwizzleBufferWrite(vm, ctx->swizzles, swizzle);
+      hadSwizzle = true;
     } else {
       VERBOSE printf(" ");
       VERBOSE wrenDumpValue_(stdout, v, true);
@@ -1148,6 +1152,8 @@ static void restoreValueBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ValueBuffer
     wrenValueBufferWrite(vm, buffer, v);
     VERBOSE printf("\n");
   }
+
+  return hadSwizzle;
 }
 
 static void restoreByteBuffer(WrenSnapshotContext* ctx, WrenVM* vm, ByteBuffer* buffer)
@@ -1220,6 +1226,9 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
 
   wrenFunctionBindName(vm, fn, buf, (int) lenName); // NOTE the cast
 
+#if WREN_DEBUG_DUMP_COMPILED_CODE
+  const bool hadSwizzle =
+#endif
   restoreValueBuffer(ctx, vm, &fn->constants);
 
   restoreByteBuffer(ctx, vm, &fn->code);
@@ -1229,14 +1238,13 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
   // TODO see blackenFn()
 
 #if WREN_DEBUG_DUMP_COMPILED_CODE
-  // TODO quick-n-dirty
-  if (strcmp(fn->debug->name, "sort()"))
+  if (hadSwizzle)
   {
-    VERBOSE wrenDumpCode(vm, fn);
+    VERBOSE printf("// wrenDumpCode() would ASSERT() on unexpected swizzle in constant\n");
   }
   else
   {
-    VERBOSE printf("// Not dumping restored sort() which requires swizzle\n");
+    VERBOSE wrenDumpCode(vm, fn);
   }
 #endif
 
