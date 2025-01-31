@@ -990,19 +990,19 @@ static Value restoreValue(WrenSnapshotContext* ctx, Swizzle* swizzle)
     //case OBJ_UPVALUE: break;
     case OBJ_STRING:      RETURN_ID_AS_OBJ(String);
 
-    case ValueTypeCharFalse:
-      return FALSE_VAL;
-    case ValueTypeCharNull:
-      return NULL_VAL;
+    case ValueTypeCharFalse:  return FALSE_VAL;
+    case ValueTypeCharNull:   return NULL_VAL;
+    case ValueTypeCharTrue:   return TRUE_VAL;
 
     case ValueTypeCharNum:
+    {
       double d;
       FREAD_NUM(d);
       Value v = NUM_VAL(d);
       VERBOSE wrenDumpValue_(stdout, v, true);
       return v;
-    case ValueTypeCharTrue:
-      return TRUE_VAL;
+    }
+
     //case ValueTypeCharNaN:    break;
 
     default:
