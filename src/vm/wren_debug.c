@@ -961,39 +961,34 @@ static Value restoreValue(WrenSnapshotContext* ctx, Swizzle* swizzle)
 
   VERBOSE printf("Value ");
 
-  // TODO factor out OBJ_CLASS  and OBJ_FN
-  // TODO factor out OBJ_MODULE and OBJ_STRING
+  #define RETURN_ID_AS_OBJ(t)                                                  \
+    do {                                                                       \
+      Obj##t* obj = restoreIdAsObj##t(ctx, NULL);                              \
+      return OBJ_VAL(obj);                                                     \
+    } while (false)
+
+  #define RETURN_ID_AS_MAYBE_SWIZZLED_OBJ(t)                                   \
+    do {                                                                       \
+      Obj##t* obj = restoreIdAsObj##t(ctx, &swizzle->id);                      \
+      if (obj != NULL) return OBJ_VAL(obj);                                    \
+      swizzle->type = type;                                                    \
+      return UNDEFINED_VAL;                                                    \
+    } while (false)
+
   switch (type)
   {
-    case OBJ_CLASS:
-    {
-      ObjClass* obj = restoreIdAsObjClass(ctx, &swizzle->id);
-      if (obj != NULL) return OBJ_VAL(obj);
-      swizzle->type = type;
-      return UNDEFINED_VAL;
-    }
-
+    case OBJ_CLASS:       RETURN_ID_AS_MAYBE_SWIZZLED_OBJ(Class);
     //case OBJ_CLOSURE: break;
     //case OBJ_FIBER: break;
-    case OBJ_FN:
-    {
-      ObjFn* obj = restoreIdAsObjFn(ctx, &swizzle->id);
-      if (obj != NULL) return OBJ_VAL(obj);
-      swizzle->type = type;
-      return UNDEFINED_VAL;
-    }
+    case OBJ_FN:          RETURN_ID_AS_MAYBE_SWIZZLED_OBJ(Fn);
     //case OBJ_FOREIGN: break;
     //case OBJ_INSTANCE: break;
     //case OBJ_LIST: break;
     //case OBJ_MAP: break;
-    case OBJ_MODULE:
-      ObjModule* module = restoreIdAsObjModule(ctx, NULL);
-      return OBJ_VAL(module);
+    case OBJ_MODULE:      RETURN_ID_AS_OBJ(Module);
     //case OBJ_RANGE: break;
     //case OBJ_UPVALUE: break;
-    case OBJ_STRING:
-      ObjString* str = restoreIdAsObjString(ctx, NULL);
-      return OBJ_VAL(str);
+    case OBJ_STRING:      RETURN_ID_AS_OBJ(String);
 
     case ValueTypeCharFalse:
       return FALSE_VAL;
@@ -1013,6 +1008,9 @@ static Value restoreValue(WrenSnapshotContext* ctx, Swizzle* swizzle)
     default:
       break;
   }
+
+  #undef RETURN_ID_AS_OBJ
+  #undef RETURN_ID_AS_MAYBE_SWIZZLED_OBJ
 
   // TODO
   VERBOSE printf("type=%u(%c) UNHANDLED!\n", type, type);
