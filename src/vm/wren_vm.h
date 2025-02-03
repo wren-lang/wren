@@ -167,15 +167,20 @@ Value wrenFindVariable(ObjModule* module, const char* name);
 int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
                         size_t length, int line);
 
-// Adds a new top-level variable named [name] to [module], and optionally
-// populates line with the line of the implicit first use (line can be NULL).
+// Adds a new top-level variable containing [value] to [module].
+//
+// If [str] is given, the variable is assumed brand new, thus forcibly added;
+// caller has to ignore the returned value.
+//
+// If [str] is NULL, then [name] and [length] are used.  Optionally
+// populates [line] with the line of the implicit first use (line can be NULL).
 //
 // Returns the symbol for the new variable, -1 if a variable with the given name
 // is already defined, or -2 if there are too many variables defined.
 // Returns -3 if this is a top-level lowercase variable (localname) that was
 // used before being defined.
 int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
-                       size_t length, Value value, int* line);
+                       size_t length, Value value, int* line, ObjString* str);
 
 // Pushes [closure] onto [fiber]'s callstack to invoke it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.

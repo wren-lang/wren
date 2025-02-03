@@ -1408,7 +1408,7 @@ static int declareVariable(Compiler* compiler, Token* token)
     int symbol = wrenDefineVariable(compiler->parser->vm,
                                     compiler->parser->module,
                                     token->start, token->length,
-                                    NULL_VAL, &line);
+                                    NULL_VAL, &line, NULL);
 
     if (symbol == -1)
     {

@@ -654,10 +654,9 @@ static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
     ObjModule* coreModule = getModule(vm, NULL_VAL);
     for (int i = 0; i < coreModule->variables.count; i++)
     {
-      wrenDefineVariable(vm, module,
-                         coreModule->variableNames.data[i]->value,
-                         coreModule->variableNames.data[i]->length,
-                         coreModule->variables.data[i], NULL);
+      wrenDefineVariable(vm, module, NULL, 0,
+                         coreModule->variables.data[i], NULL,
+                         coreModule->variableNames.data[i]);
     }
   }
 
@@ -1779,19 +1778,31 @@ int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
 }
 
 int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
-                       size_t length, Value value, int* line)
+                       size_t length, Value value, int* line, ObjString* str)
 {
   if (module->variables.count == MAX_MODULE_VARS) return -2;
 
   if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
 
-  // See if the variable is already explicitly or implicitly declared.
-  int symbol = wrenSymbolTableFind(&module->variableNames, name, length);
+  int symbol = -1;
+
+  if (str == NULL)
+  {
+    // See if the variable is already explicitly or implicitly declared.
+    symbol = wrenSymbolTableFind(&module->variableNames, name, length);
+  }
 
   if (symbol == -1)
   {
     // Brand new variable.
-    symbol = wrenSymbolTableAdd(vm, &module->variableNames, name, length);
+    if (str != NULL)
+    {
+      wrenSymbolTableAppend(vm, &module->variableNames, str);
+    }
+    else
+    {
+      symbol = wrenSymbolTableAdd(vm, &module->variableNames, name, length);
+    }
     wrenValueBufferWrite(vm, &module->variables, value);
   }
   else if (IS_NUM(module->variables.data[symbol]))
