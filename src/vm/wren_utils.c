@@ -18,15 +18,20 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
   wrenStringBufferClear(vm, symbols);
 }
 
+void wrenSymbolTableAppend(WrenVM* vm, SymbolTable* symbols, ObjString* symbol)
+{
+  wrenPushRoot(vm, (Obj*)symbol);
+  wrenStringBufferWrite(vm, symbols, symbol);
+  wrenPopRoot(vm); // symbol.
+}
+
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
                        const char* name, size_t length)
 {
   ObjString* symbol = AS_STRING(wrenNewStringLength(vm, name, length));
-  
-  wrenPushRoot(vm, (Obj*)symbol);
-  wrenStringBufferWrite(vm, symbols, symbol);
-  wrenPopRoot(vm); // symbol.
-  
+
+  wrenSymbolTableAppend(vm, symbols, symbol);
+
   return symbols->count - 1;
 }
 

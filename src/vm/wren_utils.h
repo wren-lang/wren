@@ -83,6 +83,9 @@ void wrenSymbolTableInit(SymbolTable* symbols);
 // SymbolTable itself.
 void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols);
 
+// Appends a [symbol] to the symbol table.
+void wrenSymbolTableAppend(WrenVM* vm, SymbolTable* symbols, ObjString* symbol);
+
 // Adds name to the symbol table. Returns the index of it in the table.
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
                        const char* name, size_t length);
