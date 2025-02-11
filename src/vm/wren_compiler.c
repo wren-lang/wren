@@ -3982,9 +3982,9 @@ static void addToAttributeGroup(Compiler* compiler,
   ObjList* keyItems = AS_LIST(keyItemsValue);
   wrenValueBufferWrite(vm, &keyItems->elements, value);
 
-  if(IS_OBJ(group)) wrenPopRoot(vm);
-  if(IS_OBJ(key))   wrenPopRoot(vm);
   if(IS_OBJ(value)) wrenPopRoot(vm);
+  if(IS_OBJ(key))   wrenPopRoot(vm);
+  if(IS_OBJ(group)) wrenPopRoot(vm);
 }
 
 
