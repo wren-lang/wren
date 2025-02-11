@@ -508,7 +508,7 @@ typedef struct
 // S[Exponent-][Mantissa------------------------------------------]
 //
 // The details of how these are used to represent numbers aren't really
-// relevant here as long we don't interfere with them. The important bit is NaN.
+// relevant here as long we don't interfere with them.
 //
 // An IEEE double can represent a few magical values like NaN ("not a number"),
 // Infinity, and -Infinity. A NaN is any value where all exponent bits are set:
@@ -517,7 +517,7 @@ typedef struct
 // -11111111111----------------------------------------------------
 //
 // Here, "-" means "doesn't matter". Any bit sequence that matches the above is
-// a NaN. With all of those "-", it obvious there are a *lot* of different
+// a NaN. With all of those "-", it is obvious there are a *lot* of different
 // bit patterns that all mean the same thing. NaN tagging takes advantage of
 // this. We'll use those available bit patterns to represent things other than
 // numbers without giving up any valid numeric values.
@@ -537,7 +537,7 @@ typedef struct
 // We'll use the sign bit to distinguish singleton values from pointers. If
 // it's set, it's a pointer.
 //
-// v--Pointer or singleton?
+// v--Pointer (1) or singleton (0)
 // S[NaN      ]1---------------------------------------------------
 //
 // For singleton values, we just enumerate the different values. We'll use the
@@ -551,7 +551,7 @@ typedef struct
 // only actually use 48 bits for addresses, so we've got plenty. We just stuff
 // the address right into the mantissa.
 //
-// Ta-da, double precision numbers, pointers, and a bunch of singleton values,
+// Ta-da! Double-precision numbers, pointers, and a bunch of singleton values,
 // all stuffed into a single 64-bit sequence. Even better, we don't have to
 // do any masking or work to extract number values: they are unmodified. This
 // means math on numbers is fast.
@@ -562,6 +562,13 @@ typedef struct
 
 // The bits that must be set to indicate a quiet NaN.
 #define QNAN ((uint64_t)0x7ffc000000000000)
+// <quote from="https://craftinginterpreters.com/optimization.html#nan-boxing">
+//   Every double with all of its exponent bits set and its highest mantissa bit
+//   set is a quiet NaN. That leaves 52 bits unaccounted for. We'll avoid one of
+//   those so that we don't step on Intel's "QNaN Floating-Point Indefinite"
+//   value, leaving us 51 bits.
+// </quote>
+// See also: https://stackoverflow.com/questions/76000840/
 
 // If the NaN bits are set, it's not a number.
 #define IS_NUM(value) (((value) & QNAN) != QNAN)
