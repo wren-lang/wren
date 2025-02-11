@@ -336,7 +336,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
     case CODE_END: printf("END\n"); break;
 
     default:
-      printf("UKNOWN! [%d]\n", code);
+      printf("UNKNOWN! [%d]\n", code);
       break;
   }
 
