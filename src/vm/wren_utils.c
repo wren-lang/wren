@@ -23,7 +23,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
 {
   ObjString* symbol = AS_STRING(wrenNewStringLength(vm, name, length));
   
-  wrenPushRoot(vm, &symbol->obj);
+  wrenPushRoot(vm, (Obj*)symbol);
   wrenStringBufferWrite(vm, symbols, symbol);
   wrenPopRoot(vm); // symbol.
   
