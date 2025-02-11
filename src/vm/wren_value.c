@@ -1325,7 +1325,7 @@ bool wrenValuesEqual(Value a, Value b)
       ObjString* aString = (ObjString*)aObj;
       ObjString* bString = (ObjString*)bObj;
       return aString->hash == bString->hash &&
-      wrenStringEqualsCString(aString, bString->value, bString->length);
+             wrenStringEqualsCString(aString, bString->value, bString->length);
     }
 
     default:
