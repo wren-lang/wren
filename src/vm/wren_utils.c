@@ -25,7 +25,7 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
   
   wrenPushRoot(vm, &symbol->obj);
   wrenStringBufferWrite(vm, symbols, symbol);
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // symbol.
   
   return symbols->count - 1;
 }

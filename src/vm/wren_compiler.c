@@ -4130,5 +4130,5 @@ static void copyMethodAttributes(Compiler* compiler, bool isForeign,
   Value key = wrenNewStringLength(vm, fullSignatureWithPrefix, fullLength);
   wrenMapSet(vm, compiler->enclosingClass->methodAttributes, key, OBJ_VAL(methodAttr));
 
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // methodAttr.
 }

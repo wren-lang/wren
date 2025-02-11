@@ -59,7 +59,7 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
 
   wrenPushRoot(vm, (Obj*)classObj);
   wrenMethodBufferInit(&classObj->methods);
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // classObj.
 
   return classObj;
 }
@@ -98,7 +98,7 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   ObjClass* metaclass = wrenNewSingleClass(vm, 0, AS_STRING(metaclassName));
   metaclass->obj.classObj = vm->classClass;
 
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // metaclassName.
 
   // Make sure the metaclass isn't collected when we allocate the class.
   wrenPushRoot(vm, (Obj*)metaclass);
@@ -116,8 +116,8 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   classObj->obj.classObj = metaclass;
   wrenBindSuperclass(vm, classObj, superclass);
 
-  wrenPopRoot(vm);
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // classObj.
+  wrenPopRoot(vm); // metaclass.
 
   return classObj;
 }
@@ -668,7 +668,7 @@ ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
 
   module->name = name;
 
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // module.
   return module;
 }
 

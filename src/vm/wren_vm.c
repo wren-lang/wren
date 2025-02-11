@@ -468,7 +468,7 @@ static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
     // multiple times.
     wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
 
-    wrenPopRoot(vm);
+    wrenPopRoot(vm); // module.
 
     // Implicitly import the core module.
     ObjModule* coreModule = getModule(vm, NULL_VAL);

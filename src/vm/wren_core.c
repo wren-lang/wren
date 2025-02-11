@@ -995,8 +995,8 @@ DEF_PRIMITIVE(range_toString)
   Value result = wrenStringFormat(vm, "@$@", from,
                                   range->isInclusive ? ".." : "...", to);
 
-  wrenPopRoot(vm);
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // to.
+  wrenPopRoot(vm); // from.
   RETURN_VAL(result);
 }
 
@@ -1255,7 +1255,7 @@ static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 
   wrenDefineVariable(vm, module, name, nameString->length, OBJ_VAL(classObj), NULL);
 
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // nameString.
   return classObj;
 }
 
