@@ -215,11 +215,11 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 #if WREN_NAN_TAGGING
   switch (GET_TAG(value))
   {
-    case TAG_FALSE:     return vm->boolClass; break;
-    case TAG_NAN:       return vm->numClass; break;
-    case TAG_NULL:      return vm->nullClass; break;
-    case TAG_TRUE:      return vm->boolClass; break;
-    case TAG_UNDEFINED: UNREACHABLE();
+    case TAG_FALSE:     return vm->boolClass;
+    case TAG_NAN:       return vm->numClass;
+    case TAG_NULL:      return vm->nullClass;
+    case TAG_TRUE:      return vm->boolClass;
+    case TAG_UNDEFINED: break;
   }
 #else
   switch (value.type)
@@ -229,7 +229,7 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
     case VAL_NUM:       return vm->numClass;
     case VAL_TRUE:      return vm->boolClass;
     case VAL_OBJ:       return AS_OBJ(value)->classObj;
-    case VAL_UNDEFINED: UNREACHABLE();
+    case VAL_UNDEFINED: break;
   }
 #endif
 
