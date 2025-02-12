@@ -438,8 +438,7 @@ typedef struct sWrenSnapshotContext {
 
   size_t offset;
 
-  const uint8_t* bytes;
-  unsigned int count;
+  void* priv;
 } WrenSnapshotContext;
 
 // Write into the snapshot context [ctx].
@@ -851,7 +850,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   if (file == NULL) return;
 
   WrenSnapshotContext ctx = {
-    file, NULL, NULL, counts, census, NULL, NULL, 0, NULL, 0
+    file, NULL, NULL, counts, census, NULL, NULL, 0, NULL
   };
 
   saveAllString   (&ctx);
@@ -1517,18 +1516,25 @@ static size_t buf_read(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext
   return nmemb;
 }
 
-// Read from the bytes in [ctx].
-static size_t str_read(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
+typedef struct {
+  const uint8_t* bytes;
+  const size_t count;
+  size_t offset;
+} WrenStreamFromROBytes;
+
+// Read from the [ctx], assuming its priv is a WrenStreamFromROBytes*.
+static size_t readFromROBytes(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
 {
   uint8_t* p = (uint8_t*)ptr;
+  WrenStreamFromROBytes* stream = (WrenStreamFromROBytes*)ctx->priv;
 
   for (size_t n = 0; n < nmemb; ++n)
   {
     for (size_t i = 0; i < size; ++i)
     {
-      if (ctx->offset >= ctx->count) return n;
+      if (stream->offset >= stream->count) return n;
 
-      const uint8_t byte = ctx->bytes[ctx->offset++];
+      const uint8_t byte = stream->bytes[stream->offset++];
       *p++ = byte;    // TODO endianness when size > 1
     }
   }
@@ -1536,9 +1542,7 @@ static size_t str_read(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext
   return nmemb;
 }
 
-// TODO len: s/unsigned int/int32_t/   or like
-// #include "bytecode-hello.bin.c"
-#include "bytecode-mandelbrot.bin32.c"
+// #include "bytecode-mandelbroU.wrenb.c"
 
 ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
 {
@@ -1558,16 +1562,21 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   SwizzleBuffer swizzles;
   wrenSwizzleBufferInit(&swizzles);
 
+  /*
+  WrenStreamFromROBytes streamFromROBytes = {
+    bytecode_mandelbroU_wrenb,
+    bytecode_mandelbroU_wrenb_len,
+    0
+  };
+  */
+
   WrenSnapshotContext ctx =
     // { f, sread, &counts, &census, &swizzles }
-    // { NULL, str_read, &counts, &census, &swizzles, &snapshot, 0 }
-    /** /
-    { NULL, str_read, &counts, &census, &swizzles, NULL, 0,
-      bytecode_mandelbrot_32_bin, bytecode_mandelbrot_32_bin_len
-      // bytecode_hello_forward_prim_metaclass_entrypoint_bin, bytecode_hello_forward_prim_metaclass_entrypoint_bin_len
-    }
-    /**/
-    { NULL, buf_read, NULL, &counts, &census, &swizzles, &snapshot, 0, NULL, 0 }
+
+    { NULL, buf_read, NULL, &counts, &census, &swizzles, &snapshot, 0, NULL }
+    /*
+    { NULL, readFromROBytes, NULL, &counts, &census, &swizzles, &snapshot, 0, &streamFromROBytes }
+    */
   ;
 
   // Restore all Obj.
