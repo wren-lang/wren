@@ -480,24 +480,32 @@ static WrenCount wrenFindInCtx(WrenSnapshotContext* ctx, Obj* needle)
   return wrenFindInCensus(ctx->counts, ctx->census, needle);
 }
 
+static void saveNum(WrenSnapshotContext* ctx, double num)
+{
+  const ObjOrValueType type = ValueTypeCharNum;
+  NUM(type);
+  NUM(num);                     // TODO portability?
+}
+
+static void saveObj(WrenSnapshotContext* ctx, Obj* obj)
+{
+  const ObjOrValueType type = obj->type;   // NOTE the cast
+  WrenCount id = wrenFindInCtx(ctx, obj);
+
+  NUM(type);
+  NUM(id);
+}
+
 static void saveValue(WrenSnapshotContext* ctx, Value v)
 {
 #if WREN_NAN_TAGGING
   if (IS_NUM(v))
   {
-    const ObjOrValueType type = ValueTypeCharNum;
-    double d = AS_NUM(v);
-    NUM(type);
-    NUM(d);                       // TODO portability?
+    saveNum(ctx, AS_NUM(v));
   }
   else if (IS_OBJ(v))
   {
-    Obj* obj = AS_OBJ(v);
-    const ObjOrValueType type = obj->type;   // NOTE the cast
-    WrenCount id = wrenFindInCtx(ctx, obj);
-
-    NUM(type);
-    NUM(id);
+    saveObj(ctx, AS_OBJ(v));
   }
   else
   {
@@ -519,22 +527,8 @@ static void saveValue(WrenSnapshotContext* ctx, Value v)
     case VAL_FALSE: type = ValueTypeCharFalse; NUM(type); break;
     case VAL_NULL:  type = ValueTypeCharNull;  NUM(type); break;
     case VAL_TRUE:  type = ValueTypeCharTrue;  NUM(type); break;
-    case VAL_NUM: {
-      type = ValueTypeCharNum;
-      double d = AS_NUM(v);
-      NUM(type);
-      NUM(d);                       // TODO portability?
-      break;
-    }
-    case VAL_OBJ: {
-      Obj* obj = AS_OBJ(v);
-      type = obj->type;             // NOTE the cast
-      WrenCount id = wrenFindInCtx(ctx, obj);
-
-      NUM(type);
-      NUM(id);
-      break;
-    }
+    case VAL_NUM:   saveNum(ctx, AS_NUM(v)); break;
+    case VAL_OBJ:   saveObj(ctx, AS_OBJ(v)); break;
     case VAL_UNDEFINED: UNREACHABLE();
   }
 #endif
