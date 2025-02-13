@@ -434,10 +434,6 @@ typedef struct sWrenSnapshotContext {
   WrenCensus *census;
   SwizzleBuffer* swizzles;
 
-  ByteBuffer* buf;
-
-  size_t offset;
-
   void* priv;
 } WrenSnapshotContext;
 
@@ -861,7 +857,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   if (file == NULL) return;
 
   WrenSnapshotContext ctx = {
-    NULL, NULL, writeToFILE, counts, census, NULL, NULL, 0, file
+    NULL, NULL, writeToFILE, counts, census, NULL, file
   };
 
   saveAllString   (&ctx);
@@ -1490,7 +1486,7 @@ static void assignClasses(WrenVM* vm)
     }
 }
 
-void slurpFile(FILE* f, WrenVM* vm, ByteBuffer* buf)
+static void slurpFile(FILE* f, WrenVM* vm, ByteBuffer* buf)
 {
   for (;;)
   {
@@ -1507,25 +1503,6 @@ void slurpFile(FILE* f, WrenVM* vm, ByteBuffer* buf)
   }
 
   if (false) printf("slurped %d\n", buf->count);
-}
-
-// Read from the buffer in [ctx].
-static size_t buf_read(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
-{
-  uint8_t* p = (uint8_t*)ptr;
-
-  for (size_t n = 0; n < nmemb; ++n)
-  {
-    for (size_t i = 0; i < size; ++i)
-    {
-      if (ctx->offset >= ctx->buf->count) return n;
-
-      const uint8_t byte = ctx->buf->data[ctx->offset++];
-      *p++ = byte;    // TODO endianness when size > 1
-    }
-  }
-
-  return nmemb;
 }
 
 typedef struct {
@@ -1561,13 +1538,6 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   // Expect no Obj yet.
   performCount(vm);
 
-  /*
-  // Slurp all the file.
-  ByteBuffer snapshot;
-  wrenByteBufferInit(&snapshot);
-  slurpFile(f, vm, &snapshot);
-  */
-
   // Set up an empty context.
 
   WrenCounts counts = {0};
@@ -1585,11 +1555,10 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   */
 
   WrenSnapshotContext ctx =
-    { NULL, readFromFILE, NULL, &counts, &census, &swizzles, NULL, 0, f }
+    { NULL, readFromFILE, NULL, &counts, &census, &swizzles, f }
 
     /*
-    { NULL, buf_read, NULL, &counts, &census, &swizzles, &snapshot, 0, NULL }
-    { NULL, readFromROBytes, NULL, &counts, &census, &swizzles, &snapshot, 0, &streamFromROBytes }
+    { NULL, readFromROBytes, NULL, &counts, &census, &swizzles, &streamFromROBytes }
     */
   ;
 
