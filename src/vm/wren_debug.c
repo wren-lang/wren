@@ -427,12 +427,14 @@ typedef size_t (*WrenSnapshotReadFn)(void* ptr, size_t size, size_t nmemb, struc
 typedef size_t (*WrenSnapshotWriteFn)(const void* ptr, size_t size, size_t nmemb, struct sWrenSnapshotContext* ctx);
 
 typedef struct sWrenSnapshotContext {
-  WrenSnapshotReadFn read;
-  WrenSnapshotWriteFn write;
+  union {
+    WrenSnapshotReadFn read;
+    WrenSnapshotWriteFn write;
+  };
+  void* priv;
   WrenCounts *counts;
   WrenCensus *census;
   SwizzleBuffer* swizzles;
-  void* priv;
 } WrenSnapshotContext;
 
 // Write into the [ctx], assuming its priv is a FILE*.
@@ -855,7 +857,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   if (file == NULL) return;
 
   WrenSnapshotContext ctx = {
-    NULL, writeToFILE, counts, census, NULL, file
+    { .write = writeToFILE }, file, counts, census, NULL
   };
 
   saveAllString   (&ctx);
@@ -1553,10 +1555,10 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   */
 
   WrenSnapshotContext ctx =
-    { readFromFILE, NULL, &counts, &census, &swizzles, f }
+    { { .read = readFromFILE }, f, &counts, &census, &swizzles }
 
     /*
-    { readFromROBytes, NULL, &counts, &census, &swizzles, &streamFromROBytes }
+    { { .read = readFromROBytes }, &streamFromROBytes, &counts, &census, &swizzles }
     */
   ;
 
