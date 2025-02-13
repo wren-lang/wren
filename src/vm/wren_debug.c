@@ -867,10 +867,11 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
 
 // Snapshot restore ------------------------------------------------------------
 
-// Read from the snapshot context [ctx].
-static size_t sread(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
+// Read from the [ctx], assuming its priv is a FILE*.
+static size_t readFromFILE(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
 {
-  return fread(ptr, size, nmemb, ctx->file);
+  FILE* f = (FILE*)ctx->priv;
+  return fread(ptr, size, nmemb, f);
   // TODO ensure nmemb is returned
   // TODO feof(), ferror()
   // TODO endianness when size > 1
@@ -1549,10 +1550,12 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   // Expect no Obj yet.
   performCount(vm);
 
+  /*
   // Slurp all the file.
   ByteBuffer snapshot;
   wrenByteBufferInit(&snapshot);
   slurpFile(f, vm, &snapshot);
+  */
 
   // Set up an empty context.
 
@@ -1571,10 +1574,10 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   */
 
   WrenSnapshotContext ctx =
-    // { f, sread, &counts, &census, &swizzles }
+    { NULL, readFromFILE, NULL, &counts, &census, &swizzles, NULL, 0, f }
 
-    { NULL, buf_read, NULL, &counts, &census, &swizzles, &snapshot, 0, NULL }
     /*
+    { NULL, buf_read, NULL, &counts, &census, &swizzles, &snapshot, 0, NULL }
     { NULL, readFromROBytes, NULL, &counts, &census, &swizzles, &snapshot, 0, &streamFromROBytes }
     */
   ;
