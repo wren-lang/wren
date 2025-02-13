@@ -431,16 +431,16 @@ typedef struct sWrenSnapshotContext {
     WrenSnapshotReadFn read;
     WrenSnapshotWriteFn write;
   };
-  void* priv;
+  void* stream;
   WrenCounts *counts;
   WrenCensus *census;
   SwizzleBuffer* swizzles;
 } WrenSnapshotContext;
 
-// Write into the [ctx], assuming its priv is a FILE*.
+// Write into the [ctx], assuming its stream is a FILE*.
 static size_t writeToFILE(const void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
 {
-  FILE* f = (FILE*)ctx->priv;
+  FILE* f = (FILE*)ctx->stream;
 
   //if (size == 1)
   return fwrite(ptr, size, nmemb, f);
@@ -874,10 +874,10 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
 
 // Snapshot restore ------------------------------------------------------------
 
-// Read from the [ctx], assuming its priv is a FILE*.
+// Read from the [ctx], assuming its stream is a FILE*.
 static size_t readFromFILE(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
 {
-  FILE* f = (FILE*)ctx->priv;
+  FILE* f = (FILE*)ctx->stream;
   return fread(ptr, size, nmemb, f);
   // TODO ensure nmemb is returned
   // TODO feof(), ferror()
@@ -1511,11 +1511,11 @@ typedef struct {
   size_t offset;
 } WrenStreamFromROBytes;
 
-// Read from the [ctx], assuming its priv is a WrenStreamFromROBytes*.
+// Read from the [ctx], assuming its stream is a WrenStreamFromROBytes*.
 static size_t readFromROBytes(void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
 {
   uint8_t* p = (uint8_t*)ptr;
-  WrenStreamFromROBytes* stream = (WrenStreamFromROBytes*)ctx->priv;
+  WrenStreamFromROBytes* stream = (WrenStreamFromROBytes*)ctx->stream;
 
   for (size_t n = 0; n < nmemb; ++n)
   {
