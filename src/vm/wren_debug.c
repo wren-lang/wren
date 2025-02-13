@@ -441,19 +441,30 @@ typedef struct sWrenSnapshotContext {
   void* priv;
 } WrenSnapshotContext;
 
-// Write into the snapshot context [ctx].
-static size_t swrite(const void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
+// Write into the [ctx], assuming its priv is a FILE*.
+static size_t writeToFILE(const void* ptr, size_t size, size_t nmemb, WrenSnapshotContext* ctx)
 {
-  return fwrite(ptr, size, nmemb, ctx->file);
+  FILE* f = (FILE*)ctx->priv;
+
+  //if (size == 1)
+  return fwrite(ptr, size, nmemb, f);
+
   // TODO ensure nmemb is returned
   // TODO feof(), ferror()
-  // TODO endianness when size > 1
+
+  // TODO endianness when size > 1:
+  //if (!size) return 0;
+  //
+  //ASSERT(nmemb == 1, "Won't handle endianness of several items.");
+  //for (size_t i = 0; i < size; i++)
+  //  fwrite(ptr + size - 1 - i, 1, 1, f);
+  //return nmemb;
 }
 
-#define CHAR(oneCharStr) swrite(oneCharStr, sizeof(char), 1,               ctx)
-#define STR_CONST(str)   swrite(str,        sizeof(char), sizeof(str) - 1, ctx)
-#define STR(str)         swrite(str,        sizeof(char), strlen(str),     ctx)
-#define NUM(n)           swrite(&n,         sizeof(n),    1,               ctx)
+#define CHAR(oneCharStr) (ctx->write)(oneCharStr, sizeof(char), 1,               ctx)
+#define STR_CONST(str)   (ctx->write)(str,        sizeof(char), sizeof(str) - 1, ctx)
+#define STR(str)         (ctx->write)(str,        sizeof(char), strlen(str),     ctx)
+#define NUM(n)           (ctx->write)(&n,         sizeof(n),    1,               ctx)
   // TODO check returned values
 
 static const bool verbose = false;
@@ -626,7 +637,7 @@ static void saveByteBuffer(WrenSnapshotContext* ctx, ByteBuffer* buffer)
 
   NUM(count);
   VERBOSE CHAR("{");
-  swrite(data, sizeof(uint8_t), count, ctx);
+  (ctx->write)(data, sizeof(uint8_t), count, ctx);
   VERBOSE CHAR("}");
 }
 
@@ -640,7 +651,7 @@ static void saveObjString(WrenSnapshotContext* ctx, ObjString* str)
   uint32_t length = str->length;
   NUM(length);
   VERBOSE CHAR("\"");
-  swrite(str->value, sizeof(char), length, ctx);
+  (ctx->write)(str->value, sizeof(char), length, ctx);
   VERBOSE CHAR("\"");
 }
 
@@ -850,7 +861,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   if (file == NULL) return;
 
   WrenSnapshotContext ctx = {
-    file, NULL, NULL, counts, census, NULL, NULL, 0, NULL
+    NULL, NULL, writeToFILE, counts, census, NULL, NULL, 0, file
   };
 
   saveAllString   (&ctx);
