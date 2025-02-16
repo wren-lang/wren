@@ -48,9 +48,9 @@ method is called. That's how many dynamic languages work.
 
 But, as you can imagine, that's pretty slow. So, instead, Wren does as much of
 that work at compile time as it can. When it's compiling the above code to
-bytecode, it takes that method signature a converts it to a *method symbol*, a
-number that uniquely identifes that method. That's the only part of the process
-that requires treating a signature as a string.
+bytecode, it takes that method signature and converts it to a *method symbol*,
+a number that uniquely identifes that method. That's the only part of the
+process that requires treating a signature as a string.
 
 At runtime, the VM just looks for the method *symbol* in the receiver's class's
 method table. In fact, the way it's implemented today, the symbol is simply the
