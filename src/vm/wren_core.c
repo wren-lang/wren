@@ -82,12 +82,13 @@ DEF_PRIMITIVE(fiber_abort)
   return IS_NULL(args[1]);
 }
 
-// Transfer execution to [fiber] coming from the current fiber whose stack has
+// Transfer execution to [fiber], coming from the current fiber whose stack has
 // [args].
 //
-// [isCall] is true if [fiber] is being called and not transferred.
+// If [isCall], [fiber] is being called, so is set up to return to the current
+// fiber. Otherwise it is (definitively) transferred to.
 //
-// [hasValue] is true if a value in [args] is being passed to the new fiber.
+// If [hasValue], one value in [args] is being passed to the new fiber.
 // Otherwise, `null` is implicitly being passed.
 static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
                      bool hasValue, const char* verb)
