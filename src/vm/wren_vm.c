@@ -61,7 +61,8 @@ WrenVM* wrenNewVM(WrenConfiguration* config)
 {
   WrenReallocateFn reallocate = defaultReallocate;
   void* userData = NULL;
-  if (config != NULL) {
+  if (config != NULL)
+  {
     userData = config->userData;
     reallocate = config->reallocateFn ? config->reallocateFn : defaultReallocate;
   }
