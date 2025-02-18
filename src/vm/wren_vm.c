@@ -237,11 +237,11 @@ void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize)
   return vm->config.reallocateFn(memory, newSize, vm->config.userData);
 }
 
-// Captures the local variable [local] into an [Upvalue]. If that local is
+// Captures the [local] variable into an upvalue. If that local is
 // already in an upvalue, the existing one will be used. (This is important to
 // ensure that multiple closures closing over the same variable actually see
 // the same variable.) Otherwise, it will create a new open upvalue and add it
-// the fiber's list of upvalues.
+// the [fiber]'s list of upvalues.
 static ObjUpvalue* captureUpvalue(WrenVM* vm, ObjFiber* fiber, Value* local)
 {
   // If there are no open upvalues at all, we must need a new one.
@@ -292,7 +292,7 @@ static void closeUpvalues(ObjFiber* fiber, Value* last)
   {
     ObjUpvalue* upvalue = fiber->openUpvalues;
 
-    // Move the value into the upvalue itself and point the upvalue to it.
+    // Copy the value into the upvalue itself and point the upvalue to it.
     upvalue->closed = *upvalue->value;
     upvalue->value = &upvalue->closed;
 
