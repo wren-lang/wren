@@ -37,6 +37,17 @@ static uint32_t advanceState(Well512* well)
   return well->state[well->index];
 }
 
+// a simple truncated linear congruental generator,
+// based on microsoft's implementation of cstdlib's rand();
+// via: http://www.lomont.org/papers/2008/Lomont_PRNG_2008.pdf
+static uint32_t simpleTLCG(uint32_t* seed)
+{
+  const uint32_t TLCG_MULTIPLIER = 214013L;
+  const uint32_t TLGC_ADDITION = 2531011L;
+  *seed = TLCG_MULTIPLIER * (*seed) + TLGC_ADDITION;
+  return (*seed >> 16) & 0x7FFF;
+}
+
 static void randomAllocate(WrenVM* vm)
 {
   Well512* well = (Well512*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(Well512));
@@ -58,10 +69,13 @@ static void randomSeed1(WrenVM* vm)
 {
   Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
 
-  srand((uint32_t)wrenGetSlotDouble(vm, 1));
+  // the user only provided a single value for a seed
+  // it will be used as the seed for a TLGC to fill
+  // the initial state with deterministic but distributed bits.
+  uint32_t singleSeed = (uint32_t)wrenGetSlotDouble(vm, 1);
   for (int i = 0; i < 16; i++)
   {
-    well->state[i] = rand();
+    well->state[i] = simpleTLCG(&singleSeed);
   }
 }
 
