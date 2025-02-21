@@ -591,6 +591,32 @@ class Pegasus is Unicorn {
 Pegasus.new("Fred") //> My name is Fred
 </pre>
 
+## Interfaces
+
+A class can implements the methods of other interface classes.
+
+By default it does not check for any interface class. A different list of
+interfaces classes can be passed using `implements` when declaring a class:
+
+<pre class="snippet">
+class Countable {
+  count               { subclassResponsibility }
+}
+
+class Iterable {
+  iterate(iter)       { subclassResponsibility }
+  iteratorValue(iter) { subclassResponsibility }
+}
+
+class EmptyList implements Countable, Iterable {
+  construct new()     {}
+
+  count               { 0 }
+  iterate(iter)       { false }
+  iteratorValue(iter) { Fiber.abort("This should be unreachable") }
+}
+</pre>
+
 ## Super
 
 **TODO: Integrate better into page. Should explain this before mentioning
