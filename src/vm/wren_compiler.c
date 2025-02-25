@@ -1852,8 +1852,14 @@ static void finishParameterList(Compiler* compiler, Signature* signature)
 // Gets the symbol for a method [name] with [length].
 static int methodSymbol(Compiler* compiler, const char* name, int length)
 {
-  return wrenSymbolTableEnsure(compiler->parser->vm,
+  int symbol = wrenSymbolTableEnsure(compiler->parser->vm,
       &compiler->parser->vm->methodNames, name, length);
+
+  if (symbol > MAX_METHODS) {
+    error(compiler, "Method limit of %d reached.", MAX_METHODS);
+  }
+
+  return symbol;
 }
 
 // Appends characters to [name] (and updates [length]) for [numParams] "_"
