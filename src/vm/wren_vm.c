@@ -1418,6 +1418,7 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   // Add the signatue to the method table.
   int method =  wrenSymbolTableEnsure(vm, &vm->methodNames,
                                       signature, signatureLength);
+  ASSERT(method <= MAX_METHODS, "Method limit reached.");
   
   // Create a little stub function that assumes the arguments are on the stack
   // and calls the method.
