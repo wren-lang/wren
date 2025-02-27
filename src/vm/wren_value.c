@@ -1503,14 +1503,14 @@ WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visi
   WrenCounts counts;
   WrenCensus census;
 
-  counts = (WrenCounts) {};
+  counts = (WrenCounts) {0};
   wrenCountAllObj(vm, &counts);
 
   wrenPushRoot(vm, obj);  // TODO should the caller have a handle on the closure?
   wrenCollectGarbage(vm);
   wrenPopRoot(vm); // obj.
 
-  counts = (WrenCounts) {};
+  counts = (WrenCounts) {0};
   wrenCountAllObj(vm, &counts);
   wrenCensusAllObj(vm, &counts, &census);
 

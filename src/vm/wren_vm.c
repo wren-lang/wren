@@ -105,7 +105,7 @@ void wrenCountAllObj(WrenVM *vm, WrenCounts *counts)
 
 void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
 {
-  WrenCounts index = {};
+  WrenCounts index = {0};
 
   #define DO(u, l)                                                             \
     census->all##l = counts->nb##l                                             \
@@ -188,7 +188,7 @@ WrenCount wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle)
 static void performCount(WrenVM* vm)
 {
 #if WREN_SNAPSHOT
-  WrenCounts counts = {};
+  WrenCounts counts = {0};
 
   wrenCountAllObj(vm, &counts);
 #endif
