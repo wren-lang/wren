@@ -1508,7 +1508,7 @@ WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visi
 
   wrenPushRoot(vm, obj);  // TODO should the caller have a handle on the closure?
   wrenCollectGarbage(vm);
-  wrenPopRoot(vm); // obj
+  wrenPopRoot(vm); // obj.
 
   counts = (WrenCounts) {};
   wrenCountAllObj(vm, &counts);
