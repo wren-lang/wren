@@ -889,11 +889,9 @@ static size_t readFromFILE(void* ptr, size_t size, size_t nmemb, WrenSnapshotCon
 // TODO: don't dup from src/vm/wren_vm.c
 static void performCount(WrenVM* vm)
 {
-#if WREN_SNAPSHOT
   WrenCounts counts = {0};
 
   wrenCountAllObj(vm, &counts);
-#endif
 }
 
 #define DEFINE_restoreIdAsObj(type)                                            \
