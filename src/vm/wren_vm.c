@@ -1,5 +1,6 @@
 #include <stdarg.h>
-#include <string.h>
+#include <string.h>   // strchr()
+#include <stdlib.h>   // getenv()
 
 #include "wren_common.h"
 
@@ -88,7 +89,7 @@ void wrenCountAllObj(WrenVM *vm, WrenCounts *counts)
     }
   }
 
-  if (false)
+  if (wrenSnapshotWant('0'))
   printf(
     "counting Obj: %u"
     #define DO(u, l) "\t" #l ": %u"
@@ -138,12 +139,15 @@ void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census)
     }
   }
 
-  #define DO(u, l)                                                             \
-    printf("Obj" #l ":\n");                                                    \
-    for (WrenCount i = 0; i < index.nb##l; ++i)                                \
-      printf("%4u %p\n", i, census->all##l[i]);
-  // DO_ALL_OBJ_TYPES
-  #undef DO
+  if (wrenSnapshotWant('c'))
+  {
+    #define DO(u, l)                                                           \
+      printf("Obj" #l ":\n");                                                  \
+      for (WrenCount i = 0; i < index.nb##l; ++i)                              \
+        printf("%4u %p\n", i, census->all##l[i]);
+    DO_ALL_OBJ_TYPES
+    #undef DO
+  }
 }
 
 void wrenFreeCensus(WrenVM *vm, WrenCensus *census)
@@ -192,6 +196,14 @@ static void performCount(WrenVM* vm)
 
   wrenCountAllObj(vm, &counts);
 #endif
+}
+
+bool wrenSnapshotWant(char c)
+{
+  const char* options = getenv("WREN_SNAPSHOT");
+  if (options == NULL) return false;
+
+  return strchr(options, c) != NULL;
 }
 
 // Create the core objects in the empty configured [vm].

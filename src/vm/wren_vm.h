@@ -204,6 +204,22 @@ void wrenPushRoot(WrenVM* vm, Obj* obj);
 // Removes the most recently pushed temporary root.
 void wrenPopRoot(WrenVM* vm);
 
+// Looks if a char is present in the WREN_SNAPSHOT environment variable.
+// It allows to selectively run code related to the snapshot feature.
+//
+// Handled in test/test.c:
+// - 'y': Yes, go into snapshot code; i.e. this is the big Enable button.
+// - 'f': Fallthrough into normal execution, after snapshot code.
+// Handled elsewhere:
+// - 's': Save a snapshot of the current VM.
+// - 'r': Restore a snapshot in a transient dedicated empty VM (possibly from
+//        the just-saved snapshot, because the order is: save then restore).
+// --- 'x': Execute the restored snapshot, in its transient dedicated VM.
+// - '0': Counts of Obj are printed.
+// - 'c': Census of Obj are printed.
+// - '=': Some "=== step" milestones are printed.
+bool wrenSnapshotWant(char c);
+
 // Returns the class of [value].
 //
 // Defined here instead of in wren_value.h because it's critical that this be

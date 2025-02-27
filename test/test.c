@@ -1,3 +1,5 @@
+#include <stdlib.h>   // getenv()
+#include <string.h>   // strchr()
 #include "./test.h"
 
 // Path helpers ----------------------------------------------------------------
@@ -428,15 +430,28 @@
     return wrenInterpret(vm, module, source);
   }
 
+  // TODO: sadly dup code, but it avoids to export it in wren.h
+  static bool wrenSnapshotWant(char c)
+  {
+    const char* options = getenv("WREN_SNAPSHOT");
+    if (options == NULL) return false;
+
+    return strchr(options, c) != NULL;
+  }
+
   static WrenInterpretResult runCodeSplit(WrenVM* vm, const char* module, const char* source)
   {
     ObjClosure* closure = wrenCompileSourceLines(vm, module, source);
 
     if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;
 
-    return wrenVisitObjects(vm, (Obj*)closure /* , visitor */);
+    if (wrenSnapshotWant('y'))
+    {
+      const WrenInterpretResult res = wrenVisitObjects(vm, (Obj*)closure /* , visitor */);
+      if (!wrenSnapshotWant('f')) return res;
+    }
 
-    // return wrenInterpretClosure(vm, closure);
+    return wrenInterpretClosure(vm, closure);
   }
 
 /*

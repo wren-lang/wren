@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>   // getenv()
 
 #include "wren_debug.h"
 
@@ -853,7 +854,9 @@ static void saveVM(WrenSnapshotContext* ctx, WrenVM* vm, ObjClosure* entrypoint)
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClosure* entrypoint)
 {
-  FILE* file = fopen("bytecode", "wb");
+  const char* fileName = getenv("WREN_SNAPSHOT_TO");
+
+  FILE* file = fopen(fileName, "wb");
   if (file == NULL) return;
 
   WrenSnapshotContext ctx = {

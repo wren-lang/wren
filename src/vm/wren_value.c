@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>   // getenv()
 
 #include "wren.h"
 #include "wren_value.h"
@@ -1429,9 +1430,11 @@ static WrenInterpretResult performRestore(WrenResolveModuleFn resolveFn,
                                           WrenBindForeignClassFn bfcFn,
                                           WrenBindForeignMethodFn bfmFn)
 {
-  const bool verbose = false;
+  const bool verbose = wrenSnapshotWant('=');
 
-  FILE* file = fopen("bytecode-to-restore.bin", "rb");
+  const char* fileName = getenv("WREN_SNAPSHOT_FROM");
+
+  FILE* file = fopen(fileName, "rb");
   if (file == NULL) return WREN_RESULT_COMPILE_ERROR; // TODO
 
   if (verbose) printf("=== performRestore\n");
@@ -1454,9 +1457,14 @@ static WrenInterpretResult performRestore(WrenResolveModuleFn resolveFn,
 
   if (entrypoint == NULL) return WREN_RESULT_COMPILE_ERROR;
 
-  if (verbose) printf("=== start new VM\n");
-  WrenInterpretResult result = wrenInterpretClosure(newVM, entrypoint);
-  if (verbose) printf("=== result %u\n", result);
+  WrenInterpretResult result = WREN_RESULT_SUCCESS;
+
+  if (wrenSnapshotWant('x'))
+  {
+    if (verbose) printf("=== start new VM\n");
+    result = wrenInterpretClosure(newVM, entrypoint);
+    if (verbose) printf("=== result %u\n", result);
+  }
 
   if (verbose) printf("=== free new VM\n");
 
@@ -1500,34 +1508,44 @@ static void assertCanSaveSnapshot(WrenCounts* counts, WrenCensus* census)
 WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
 {
 #if WREN_SNAPSHOT
-  WrenCounts counts;
-  WrenCensus census;
+  WrenInterpretResult res = WREN_RESULT_SUCCESS;
 
-  counts = (WrenCounts) {0};
-  wrenCountAllObj(vm, &counts);
+  if (wrenSnapshotWant('s'))
+  {
+    WrenCounts counts;
+    WrenCensus census;
 
-  wrenPushRoot(vm, obj);  // TODO should the caller have a handle on the closure?
-  wrenCollectGarbage(vm);
-  wrenPopRoot(vm); // obj.
+    counts = (WrenCounts) {0};
+    wrenCountAllObj(vm, &counts);
 
-  counts = (WrenCounts) {0};
-  wrenCountAllObj(vm, &counts);
-  wrenCensusAllObj(vm, &counts, &census);
+    wrenPushRoot(vm, obj);  // TODO should the caller have a handle on the closure?
+    wrenCollectGarbage(vm);
+    wrenPopRoot(vm); // obj.
 
-  assertCanSaveSnapshot(&counts, &census);
+    counts = (WrenCounts) {0};
+    wrenCountAllObj(vm, &counts);
+    wrenCensusAllObj(vm, &counts, &census);
 
-  wrenSnapshotSave(vm, &counts, &census, (ObjClosure*)obj);
-  wrenFreeCensus(vm, &census);
+    assertCanSaveSnapshot(&counts, &census);
+
+    wrenSnapshotSave(vm, &counts, &census, (ObjClosure*)obj);
+    wrenFreeCensus(vm, &census);
+  }
 
   // wrenVisitObjects_(vm, obj, visitor, 0);
   // wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
 
-  return performRestore(
-    vm->config.resolveModuleFn,
-    vm->config.loadModuleFn,
-    vm->config.bindForeignClassFn,
-    vm->config.bindForeignMethodFn
-  );
+  if (wrenSnapshotWant('r'))
+  {
+    res = performRestore(
+      vm->config.resolveModuleFn,
+      vm->config.loadModuleFn,
+      vm->config.bindForeignClassFn,
+      vm->config.bindForeignMethodFn
+    );
+  }
+
+  return res;
 #else
   return WREN_RESULT_SUCCESS;
 #endif // WREN_SNAPSHOT

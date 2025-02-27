@@ -159,10 +159,10 @@ class Test:
     return True
 
 
-  def run(self, app, type):
+  def run(self, app, type, env):
     # Invoke wren and run the test.
     test_arg = self.path
-    proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
 
     # If a test is too long, kill it.
     #
@@ -394,7 +394,24 @@ def run_script(app, path, type):
     # It's a skipped test or non-test file.
     return
 
-  test.run(app, type)
+  env = None
+  if False:
+    f = "bytecode_test.wrenb"
+    # f = 'bytecode/' + path.replace('/', '-') + 'b'
+    f_to = f
+    f_from = f
+
+    env = {
+      "WREN_SNAPSHOT":      "yfsr",
+      "WREN_SNAPSHOT_TO":   f_to,
+      "WREN_SNAPSHOT_FROM": f_from,
+    }
+
+    # Truncate the target file; hence an empty file matches a non-compilable
+    # source file.
+    with open(f_to, 'w') as file: pass
+
+  test.run(app, type, env)
 
   # Display the failures.
   if len(test.failures) == 0:
