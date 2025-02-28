@@ -1555,13 +1555,13 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   };
   */
 
-  WrenSnapshotContext ctx =
-    { { .read = readFromFILE }, f, &counts, &census, &swizzles }
-
-    /*
-    { { .read = readFromROBytes }, &streamFromROBytes, &counts, &census, &swizzles }
-    */
-  ;
+  WrenSnapshotContext ctx = {
+    { .read = readFromFILE }, f,
+    // { .read = readFromROBytes }, &streamFromROBytes,
+    &counts,
+    &census,
+    &swizzles
+  };
 
   // Restore all Obj.
   restoreAllString  (&ctx, vm);
