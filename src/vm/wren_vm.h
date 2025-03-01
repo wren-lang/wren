@@ -248,4 +248,54 @@ static inline bool wrenIsFalsyValue(Value value)
   return IS_FALSE(value) || IS_NULL(value);
 }
 
+#define FREEZE_SECRET_DEFAULT  NULL_VAL
+#define FREEZE_SECRET_ETERNAL  UNDEFINED_VAL
+
+static inline bool wrenIsFrozen(Value value)
+{
+  if (IS_OBJ(value)) return AS_OBJ(value)->isFrozen;
+
+  return true;
+}
+
+static inline bool wrenSetFrozenWithSecret(Value value, bool isFrozen, Value secret)
+{
+  if (IS_OBJ(value))
+  {
+    Obj* valueObj = AS_OBJ(value);
+
+    if (isFrozen)
+    {
+      // Trying to set secret
+      if (!wrenIsFrozen(value))
+      {
+        valueObj->isFrozen = true;
+        valueObj->frozenSecret = secret;
+      }
+    }
+    else
+    {
+      // Trying to clear secret
+      if (wrenIsFrozen(value) &&
+          wrenValuesSame(valueObj->frozenSecret, secret))
+      {
+        valueObj->isFrozen = false;
+        valueObj->frozenSecret = FREEZE_SECRET_DEFAULT;
+      }
+    }
+  }
+
+  return wrenIsFrozen(value);
+}
+
+static inline bool wrenSetFrozen(Value value, bool isFrozen)
+{
+  return wrenSetFrozenWithSecret(value, isFrozen, FREEZE_SECRET_DEFAULT);
+}
+
+static inline bool wrenFreeze(Value value)
+{
+  return wrenSetFrozenWithSecret(value, true, FREEZE_SECRET_ETERNAL);
+}
+
 #endif

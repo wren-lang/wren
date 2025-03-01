@@ -321,6 +321,8 @@ DEF_PRIMITIVE(list_new)
 
 DEF_PRIMITIVE(list_add)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   wrenValueBufferWrite(vm, &AS_LIST(args[0])->elements, args[1]);
   RETURN_VAL(args[1]);
 }
@@ -330,6 +332,8 @@ DEF_PRIMITIVE(list_add)
 // minimize stack churn.
 DEF_PRIMITIVE(list_addCore)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   wrenValueBufferWrite(vm, &AS_LIST(args[0])->elements, args[1]);
   
   // Return the list.
@@ -338,6 +342,8 @@ DEF_PRIMITIVE(list_addCore)
 
 DEF_PRIMITIVE(list_clear)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   wrenValueBufferClear(vm, &AS_LIST(args[0])->elements);
   RETURN_NULL;
 }
@@ -349,6 +355,8 @@ DEF_PRIMITIVE(list_count)
 
 DEF_PRIMITIVE(list_insert)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   ObjList* list = AS_LIST(args[0]);
 
   // count + 1 here so you can "insert" at the very end.
@@ -392,6 +400,8 @@ DEF_PRIMITIVE(list_iteratorValue)
 
 DEF_PRIMITIVE(list_removeAt)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   ObjList* list = AS_LIST(args[0]);
   uint32_t index = validateIndex(vm, args[1], list->elements.count, "Index");
   if (index == UINT32_MAX) return false;
@@ -400,6 +410,8 @@ DEF_PRIMITIVE(list_removeAt)
 }
 
 DEF_PRIMITIVE(list_removeValue) {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   ObjList* list = AS_LIST(args[0]);
   int index = wrenListIndexOf(vm, list, args[1]);
   if(index == -1) RETURN_NULL;
@@ -414,6 +426,8 @@ DEF_PRIMITIVE(list_indexOf)
 
 DEF_PRIMITIVE(list_swap)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   ObjList* list = AS_LIST(args[0]);
   uint32_t indexA = validateIndex(vm, args[1], list->elements.count, "Index 0");
   if (indexA == UINT32_MAX) return false;
@@ -461,6 +475,8 @@ DEF_PRIMITIVE(list_subscript)
 
 DEF_PRIMITIVE(list_subscriptSetter)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   ObjList* list = AS_LIST(args[0]);
   uint32_t index = validateIndex(vm, args[1], list->elements.count,
                                  "Subscript");
@@ -488,6 +504,8 @@ DEF_PRIMITIVE(map_subscript)
 
 DEF_PRIMITIVE(map_subscriptSetter)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   if (!validateKey(vm, args[1])) return false;
 
   wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
@@ -499,6 +517,8 @@ DEF_PRIMITIVE(map_subscriptSetter)
 // minimize stack churn.
 DEF_PRIMITIVE(map_addCore)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   if (!validateKey(vm, args[1])) return false;
   
   wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
@@ -509,6 +529,8 @@ DEF_PRIMITIVE(map_addCore)
 
 DEF_PRIMITIVE(map_clear)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   wrenMapClear(vm, AS_MAP(args[0]));
   RETURN_NULL;
 }
@@ -560,6 +582,8 @@ DEF_PRIMITIVE(map_iterate)
 
 DEF_PRIMITIVE(map_remove)
 {
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+
   if (!validateKey(vm, args[1])) return false;
 
   RETURN_VAL(wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1]));
@@ -885,6 +909,30 @@ DEF_PRIMITIVE(object_is)
   RETURN_BOOL(false);
 }
 
+DEF_PRIMITIVE(object_freeze)
+{
+  RETURN_BOOL(wrenFreeze(args[0]));
+}
+
+DEF_PRIMITIVE(object_isFrozen)
+{
+  RETURN_BOOL(wrenIsFrozen(args[0]));
+}
+
+DEF_PRIMITIVE(object_setFrozen)
+{
+  if (!validateBool(vm, args[1], "Value")) return false;
+
+  RETURN_BOOL(wrenSetFrozen(args[0], AS_BOOL(args[1])));
+}
+
+DEF_PRIMITIVE(object_setFrozenWithSecret)
+{
+  if (!validateBool(vm, args[1], "Value")) return false;
+
+  RETURN_BOOL(wrenSetFrozenWithSecret(args[0], AS_BOOL(args[1]), args[2]));
+}
+
 DEF_PRIMITIVE(object_toString)
 {
   Obj* obj = AS_OBJ(args[0]);
@@ -895,6 +943,12 @@ DEF_PRIMITIVE(object_toString)
 DEF_PRIMITIVE(object_type)
 {
   RETURN_OBJ(wrenGetClass(vm, args[0]));
+}
+
+DEF_PRIMITIVE(object_validateIsNotFrozen)
+{
+  VALIDATE_VALUE_IS_NOT_FROZEN(args[0]);
+  RETURN_VAL(args[0]);
 }
 
 DEF_PRIMITIVE(range_from)
@@ -1247,9 +1301,14 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->objectClass, "!", object_not);
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
+  PRIMITIVE(vm->objectClass, "freeze()", object_freeze);
   PRIMITIVE(vm->objectClass, "is(_)", object_is);
+  PRIMITIVE(vm->objectClass, "isFrozen", object_isFrozen);
+  PRIMITIVE(vm->objectClass, "setFrozen(_)", object_setFrozen);
+  PRIMITIVE(vm->objectClass, "setFrozen(_,_)", object_setFrozenWithSecret);
   PRIMITIVE(vm->objectClass, "toString", object_toString);
   PRIMITIVE(vm->objectClass, "type", object_type);
+  PRIMITIVE(vm->objectClass, "validateIsNotFrozen()", object_validateIsNotFrozen);
 
   // Now we can define Class, which is a subclass of Object.
   vm->classClass = defineClass(vm, coreModule, "Class");

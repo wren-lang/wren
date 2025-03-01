@@ -401,6 +401,19 @@ WREN_API void wrenEnsureSlots(WrenVM* vm, int numSlots);
 // Gets the type of the object in [slot].
 WREN_API WrenType wrenGetSlotType(WrenVM* vm, int slot);
 
+// Try to freeze the object in [slot] for eternity.
+WREN_API bool wrenFreezeSlot(WrenVM* vm, int slot);
+
+// Test if the object in [slot] is frozen.
+WREN_API bool wrenIsSlotFrozen(WrenVM* vm, int slot);
+
+// Try to (un)freeze the object in [slot].
+WREN_API bool wrenSetSlotFrozen(WrenVM* vm, int slot, bool isFrozen);
+
+// Try to (un)freeze the object in [slot] using [secretSlot].
+WREN_API bool wrenSetSlotFrozenWithSecret(WrenVM* vm, int slot, bool isFrozen,
+                                          int secretSlot);
+
 // Reads a boolean value from [slot].
 //
 // It is an error to call this if the slot does not contain a boolean value.
