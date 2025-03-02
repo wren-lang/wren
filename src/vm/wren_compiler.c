@@ -47,8 +47,9 @@
 // with the module name and error location. Using a hardcoded buffer for this
 // is kind of hairy, but fortunately we can control what the longest possible
 // message is and handle that. Ideally, we'd use `snprintf()`, but that's not
-// available in standard C++98.
-#define ERROR_MESSAGE_SIZE (80 + MAX_VARIABLE_NAME + 15)
+// available in standard C++98.  Size is doubled because some errors include
+// two different variable names (class name, method name, etc...)
+#define ERROR_MESSAGE_SIZE (80 + (MAX_VARIABLE_NAME * 2) + 15)
 
 typedef enum
 {
@@ -3331,12 +3332,18 @@ static int declareMethod(Compiler* compiler, Signature* signature,
     if (methods->data[i] == symbol)
     {
       const char* staticPrefix = classInfo->inStatic ? "static " : "";
-      error(compiler, "Class %s already defines a %smethod '%s'.",
+      if (compiler->enclosingClass->name->length > MAX_VARIABLE_NAME) {
+        error(compiler, "Class %.*s... already defines a %smethod '%s'.",
+          MAX_VARIABLE_NAME,
+          &compiler->enclosingClass->name->value, staticPrefix, name);
+      } else {
+        error(compiler, "Class %s already defines a %smethod '%s'.",
             &compiler->enclosingClass->name->value, staticPrefix, name);
+      }
+
       break;
     }
   }
-  
   wrenIntBufferWrite(compiler->parser->vm, methods, symbol);
   return symbol;
 }
