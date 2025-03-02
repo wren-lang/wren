@@ -29,6 +29,10 @@ Compares two objects using built-in equality. This compares [value
 types](../../values.html) by value, and all other objects are compared by
 identity&mdash;two objects are equal only if they are the exact same object.
 
+### **hash**
+
+Returns a hash of the object.
+
 ### **is**(class) operator
 
 Returns `true` if this object's class or one of its superclasses is `class`.
