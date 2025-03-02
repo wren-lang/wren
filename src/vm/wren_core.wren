@@ -4,6 +4,15 @@ class Fn {}
 class Null {}
 class Num {}
 
+class ComposedFn {
+  construct new(lhs, rhs) {
+    _lhs = lhs
+    _rhs = rhs
+  }
+
+  call(value) { _lhs.call(_rhs.call(value)) }
+}
+
 class Sequence {
   all(f) {
     var result = true
