@@ -791,6 +791,15 @@ DEF_PRIMITIVE(num_pow)
   RETURN_NUM(pow(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
+DEF_PRIMITIVE(num_quo)
+{
+  if (!validateNum(vm, args[1], "Other value")) return false;
+
+  double value = AS_NUM(args[0]);
+  double other = AS_NUM(args[1]);
+  RETURN_NUM(trunc(value/other));
+}
+
 DEF_PRIMITIVE(num_fraction)
 {
   double unused;
@@ -1396,6 +1405,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "...(_)", num_dotDotDot);
   PRIMITIVE(vm->numClass, "atan(_)", num_atan2);
   PRIMITIVE(vm->numClass, "pow(_)", num_pow);
+  PRIMITIVE(vm->numClass, "quo(_)", num_quo);
   PRIMITIVE(vm->numClass, "fraction", num_fraction);
   PRIMITIVE(vm->numClass, "isInfinity", num_isInfinity);
   PRIMITIVE(vm->numClass, "isInteger", num_isInteger);
