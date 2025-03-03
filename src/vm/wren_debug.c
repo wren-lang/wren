@@ -436,6 +436,7 @@ typedef struct sWrenSnapshotContext {
   WrenCounts *counts;
   WrenCensus *census;
   SwizzleBuffer* swizzles;
+  bool verbose;
 } WrenSnapshotContext;
 
 // Write into the [ctx], assuming its stream is a FILE*.
@@ -464,9 +465,8 @@ static size_t writeToFILE(const void* ptr, size_t size, size_t nmemb, WrenSnapsh
 #define NUM(n)           (ctx->write)(&n,         sizeof(n),    1,               ctx)
   // TODO check returned values
 
-static const bool verbose = false;
-
-#define VERBOSE    if (!verbose) {} else
+// TODO should give param
+#define VERBOSE    if (!ctx->verbose) {} else
 
 // How to serialize the type of an Obj or a Value.
 typedef uint8_t ObjOrValueType;
@@ -860,7 +860,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   if (file == NULL) return;
 
   WrenSnapshotContext ctx = {
-    { .write = writeToFILE }, file, counts, census, NULL
+    { .write = writeToFILE }, file, counts, census, NULL, wrenSnapshotWant('S')
   };
 
   saveAllString   (&ctx);
@@ -1467,7 +1467,6 @@ static void swizzlePointers(WrenSnapshotContext* ctx)
 
 static void assignClasses(WrenVM* vm)
 {
-  VERBOSE printf("\n=== assign Classes\n");
   for (Obj* obj = vm->first;
        obj != NULL;
        obj = obj->next)
@@ -1560,7 +1559,8 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
     // { .read = readFromROBytes }, &streamFromROBytes,
     &counts,
     &census,
-    &swizzles
+    &swizzles,
+    wrenSnapshotWant('R'),
   };
 
   // Restore all Obj.
@@ -1574,7 +1574,7 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
 
   ObjClosure* entrypoint = restoreVM(&ctx, vm);
 
-  VERBOSE printAllObj(vm);
+  if (ctx.verbose) printAllObj(vm);
 
   // Swizzle references into real pointers.
   swizzlePointers(&ctx);
@@ -1582,9 +1582,10 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   wrenSwizzleBufferClear(vm, &swizzles);
 
   // Assign class to each object.
+  if (ctx.verbose) printf("\n=== assign Classes\n");
   assignClasses(vm);
 
-  VERBOSE printAllObj(vm);
+  if (ctx.verbose) printAllObj(vm);
 
   // The census is no longer needed.
   wrenFreeCensus(vm, &census);

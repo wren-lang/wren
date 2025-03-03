@@ -212,8 +212,10 @@ void wrenPopRoot(WrenVM* vm);
 // - 'f': Fallthrough into normal execution, after snapshot code.
 // Handled elsewhere:
 // - 's': Save a snapshot of the current VM.
+// --- 'S': The saved snapshot will be verbose (but NOT suitable for restore).
 // - 'r': Restore a snapshot in a transient dedicated empty VM (possibly from
 //        the just-saved snapshot, because the order is: save then restore).
+// --- 'R': The restore operation will print a lot.
 // --- 'x': Execute the restored snapshot, in its transient dedicated VM.
 // - '0': Counts of Obj are printed.
 // - 'c': Census of Obj are printed.
