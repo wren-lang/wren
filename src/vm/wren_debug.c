@@ -468,6 +468,11 @@ static size_t writeToFILE(const void* ptr, size_t size, size_t nmemb, WrenSnapsh
 // TODO should give param
 #define VERBOSE    if (!ctx->verbose) {} else
 
+// The magic value to identify a Wren snapshot.
+// It's 7 ASCII bytes.
+// The value is nice to Windows users.
+static const char wrenSnapshotMagic[] = "Wren\r\n\032";
+
 // How to serialize the type of an Obj or a Value.
 typedef uint8_t ObjOrValueType;
 
@@ -852,6 +857,14 @@ static void saveVM(WrenSnapshotContext* ctx, WrenVM* vm, ObjClosure* entrypoint)
   VERBOSE CHAR("\n");
 }
 
+static void saveHeader(WrenSnapshotContext* ctx)
+{
+  STR_CONST(wrenSnapshotMagic);
+
+  const uint8_t version = 0;
+  NUM(version);
+}
+
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClosure* entrypoint)
 {
   const char* fileName = getenv("WREN_SNAPSHOT_TO");
@@ -863,6 +876,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
     { .write = writeToFILE }, file, counts, census, NULL, wrenSnapshotWant('S')
   };
 
+  saveHeader      (&ctx);
   saveAllString   (&ctx);
   saveMethodNames (&ctx, vm);
   saveAllModule   (&ctx);
@@ -1531,6 +1545,29 @@ static size_t readFromROBytes(void* ptr, size_t size, size_t nmemb, WrenSnapshot
   return nmemb;
 }
 
+static void restoreHeader(WrenSnapshotContext* ctx)
+{
+  // Validate magic string.
+
+  char magic[sizeof(wrenSnapshotMagic) - 1];
+
+  (ctx->read)(magic, sizeof(char), sizeof(magic), ctx);
+
+  if (strcmp(magic, wrenSnapshotMagic))
+  {
+    ASSERT(false, "Invalid magic string.");
+    // TODO prevent reading more
+    return;
+  }
+
+  // Validate version.
+
+  uint8_t version;
+  FREAD_NUM(version);
+
+  ASSERT(version == 0, "Unhandled snapshot version.");
+}
+
 // #include "bytecode-mandelbroU.wrenb.c"
 
 ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
@@ -1562,6 +1599,8 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
     &swizzles,
     wrenSnapshotWant('R'),
   };
+
+  restoreHeader(&ctx);
 
   // Restore all Obj.
   restoreAllString  (&ctx, vm);
