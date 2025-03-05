@@ -420,6 +420,13 @@ typedef struct {
 DECLARE_BUFFER(Swizzle, Swizzle);
 DEFINE_BUFFER(Swizzle, Swizzle)
 
+typedef struct
+{
+  bool withSourceLines;
+} WrenSnapshotOptions;
+
+#define BIT(i) (1 << (i))
+
 struct sWrenSnapshotContext;
 
 // Analogous to fread(), but abstracts away from FILE*.
@@ -436,6 +443,7 @@ typedef struct sWrenSnapshotContext {
   WrenCounts *counts;
   WrenCensus *census;
   SwizzleBuffer* swizzles;
+  WrenSnapshotOptions* options;
   bool verbose;
 } WrenSnapshotContext;
 
@@ -698,8 +706,11 @@ static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
   VERBOSE CHAR("C");
   saveByteBuffer(ctx, &fn->code);
 
-  VERBOSE CHAR("D");
-  saveIntBuffer(ctx, &fn->debug->sourceLines);
+  if (ctx->options->withSourceLines)
+  {
+    VERBOSE CHAR("D");
+    saveIntBuffer(ctx, &fn->debug->sourceLines);
+  }
 }
 
 static void saveObjClosure(WrenSnapshotContext* ctx, ObjClosure* closure)
@@ -857,12 +868,23 @@ static void saveVM(WrenSnapshotContext* ctx, WrenVM* vm, ObjClosure* entrypoint)
   VERBOSE CHAR("\n");
 }
 
+static void saveHeaderV0(WrenSnapshotContext* ctx)
+{
+  uint8_t options = 0;
+
+  options |= ctx->options->withSourceLines ? BIT(0) : 0;
+
+  NUM(options);
+}
+
 static void saveHeader(WrenSnapshotContext* ctx)
 {
   STR_CONST(wrenSnapshotMagic);
 
   const uint8_t version = 0;
   NUM(version);
+
+  saveHeaderV0(ctx);
 }
 
 void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClosure* entrypoint)
@@ -872,8 +894,13 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
   FILE* file = fopen(fileName, "wb");
   if (file == NULL) return;
 
+  WrenSnapshotOptions options = {
+    .withSourceLines = wrenSnapshotWant('1'),
+  };
+
   WrenSnapshotContext ctx = {
-    { .write = writeToFILE }, file, counts, census, NULL, wrenSnapshotWant('S')
+    { .write = writeToFILE }, file,
+    counts, census, NULL, &options, wrenSnapshotWant('S')
   };
 
   saveHeader      (&ctx);
@@ -1248,8 +1275,11 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
   restoreByteBuffer(ctx, vm, &fn->code);
   // TODO validateBytecode(&fn->code);
 
-  restoreIntBuffer(ctx, vm, &fn->debug->sourceLines);
-  // TODO see blackenFn()
+  if (ctx->options->withSourceLines)
+  {
+    restoreIntBuffer(ctx, vm, &fn->debug->sourceLines);
+    // TODO see blackenFn()
+  }
 
 #if WREN_DEBUG_DUMP_COMPILED_CODE
   if (hadSwizzle)
@@ -1545,6 +1575,17 @@ static size_t readFromROBytes(void* ptr, size_t size, size_t nmemb, WrenSnapshot
   return nmemb;
 }
 
+static void restoreHeaderV0(WrenSnapshotContext* ctx)
+{
+  uint8_t options;
+  FREAD_NUM(options);
+
+  ctx->options->withSourceLines = options & BIT(0);
+
+  const uint8_t known = BIT(0);
+  ASSERT((options & ~known) == 0, "Unknown snapshot options.");
+}
+
 static void restoreHeader(WrenSnapshotContext* ctx)
 {
   // Validate magic string.
@@ -1566,6 +1607,9 @@ static void restoreHeader(WrenSnapshotContext* ctx)
   FREAD_NUM(version);
 
   ASSERT(version == 0, "Unhandled snapshot version.");
+
+  // Restore part of header which is version-specific.
+  restoreHeaderV0(ctx);
 }
 
 // #include "bytecode-mandelbroU.wrenb.c"
@@ -1583,6 +1627,8 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   SwizzleBuffer swizzles;
   wrenSwizzleBufferInit(&swizzles);
 
+  WrenSnapshotOptions options = {0};
+
   /*
   WrenStreamFromROBytes streamFromROBytes = {
     bytecode_mandelbroU_wrenb,
@@ -1597,6 +1643,7 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
     &counts,
     &census,
     &swizzles,
+    &options,
     wrenSnapshotWant('R'),
   };
 
@@ -1635,5 +1682,7 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
 
   return entrypoint;
 }
+
+#undef BIT
 
 #endif // WREN_SNAPSHOT
