@@ -424,6 +424,11 @@ typedef struct
 {
   bool withSourceLines;
   bool withFnNames;
+
+  // Note the subtle difference:
+  // - Save a verbose (non-restorable) snapshot.
+  // - Verbosely restore a (non-verbose) snapshot.
+  bool verbose;
 } WrenSnapshotOptions;
 
 #define BIT(i) (1 << (i))
@@ -445,7 +450,6 @@ typedef struct sWrenSnapshotContext {
   WrenCensus *census;
   SwizzleBuffer* swizzles;
   WrenSnapshotOptions* options;
-  bool verbose;
 } WrenSnapshotContext;
 
 // Write into the [ctx], assuming its stream is a FILE*.
@@ -475,7 +479,7 @@ static size_t writeToFILE(const void* ptr, size_t size, size_t nmemb, WrenSnapsh
   // TODO check returned values
 
 // TODO should give param
-#define VERBOSE    if (!ctx->verbose) {} else
+#define VERBOSE    if (!ctx->options->verbose) {} else
 
 // The magic value to identify a Wren snapshot.
 // It's 7 ASCII bytes.
@@ -878,6 +882,7 @@ static void saveHeaderV0(WrenSnapshotContext* ctx)
 
   options |= ctx->options->withSourceLines ? BIT(0) : 0;
   options |= ctx->options->withFnNames     ? BIT(1) : 0;
+  options |= ctx->options->verbose         ? BIT(2) : 0;
 
   NUM(options);
 }
@@ -901,12 +906,12 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
 
   WrenSnapshotOptions options = {
     .withSourceLines = wrenSnapshotWant('1'),
-    .withFnNames = wrenSnapshotWant('n'),
+    .withFnNames     = wrenSnapshotWant('n'),
+    .verbose         = wrenSnapshotWant('S'),
   };
 
   WrenSnapshotContext ctx = {
-    { .write = writeToFILE }, file,
-    counts, census, NULL, &options, wrenSnapshotWant('S')
+    { .write = writeToFILE }, file, counts, census, NULL, &options
   };
 
   saveHeader      (&ctx);
@@ -1595,9 +1600,12 @@ static void restoreHeaderV0(WrenSnapshotContext* ctx)
 
   ctx->options->withSourceLines = options & BIT(0);
   ctx->options->withFnNames     = options & BIT(1);
+  bool verbose                  = options & BIT(2);
 
-  const uint8_t known = BIT(1) | BIT(0);
+  const uint8_t known = BIT(2) | BIT(1) | BIT(0);
   ASSERT((options & ~known) == 0, "Unknown snapshot options.");
+
+  ASSERT(!verbose, "Can't restore a verbose snapshot.");
 }
 
 static void restoreHeader(WrenSnapshotContext* ctx)
@@ -1641,7 +1649,7 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   SwizzleBuffer swizzles;
   wrenSwizzleBufferInit(&swizzles);
 
-  WrenSnapshotOptions options = {0};
+  WrenSnapshotOptions options = { .verbose = wrenSnapshotWant('R') };
 
   /*
   WrenStreamFromROBytes streamFromROBytes = {
@@ -1658,7 +1666,6 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
     &census,
     &swizzles,
     &options,
-    wrenSnapshotWant('R'),
   };
 
   restoreHeader(&ctx);
@@ -1674,7 +1681,7 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
 
   ObjClosure* entrypoint = restoreVM(&ctx, vm);
 
-  if (ctx.verbose) printAllObj(vm);
+  if (ctx.options->verbose) printAllObj(vm);
 
   // Swizzle references into real pointers.
   swizzlePointers(&ctx);
@@ -1682,10 +1689,10 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   wrenSwizzleBufferClear(vm, &swizzles);
 
   // Assign class to each object.
-  if (ctx.verbose) printf("\n=== assign Classes\n");
+  if (ctx.options->verbose) printf("\n=== assign Classes\n");
   assignClasses(vm);
 
-  if (ctx.verbose) printAllObj(vm);
+  if (ctx.options->verbose) printAllObj(vm);
 
   // The census is no longer needed.
   wrenFreeCensus(vm, &census);
