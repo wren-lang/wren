@@ -1581,7 +1581,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       wrenValueBufferClear(vm, &fn->constants);
       wrenByteBufferClear(vm, &fn->code);
       wrenIntBufferClear(vm, &fn->debug->sourceLines);
-      DEALLOCATE(vm, fn->debug->name);
+      if (fn->debug->name != NULL) DEALLOCATE(vm, fn->debug->name);
       DEALLOCATE(vm, fn->debug);
       break;
     }

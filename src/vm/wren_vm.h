@@ -213,6 +213,7 @@ void wrenPopRoot(WrenVM* vm);
 // Handled elsewhere:
 // - 's': Save a snapshot of the current VM.
 // --- 'S': The saved snapshot will be verbose (but NOT suitable for restore).
+// --- 'n': Save function names.
 // --- '1': Save source line for each bytecode.
 // - 'r': Restore a snapshot in a transient dedicated empty VM (possibly from
 //        the just-saved snapshot, because the order is: save then restore).

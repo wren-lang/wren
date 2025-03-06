@@ -423,6 +423,7 @@ DEFINE_BUFFER(Swizzle, Swizzle)
 typedef struct
 {
   bool withSourceLines;
+  bool withFnNames;
 } WrenSnapshotOptions;
 
 #define BIT(i) (1 << (i))
@@ -682,12 +683,15 @@ static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
   WrenCount id_module = wrenFindInCtx(ctx, (Obj*)module);
   NUM(id_module);
 
-  VERBOSE CHAR(":");
-  VERBOSE CHAR(":");
+  if (ctx->options->withFnNames)
+  {
+    VERBOSE CHAR(":");
+    VERBOSE CHAR(":");
 
-  const uint64_t lenName = strlen(fn->debug->name);   // NOTE the type
-  NUM(lenName);
-  STR(fn->debug->name);
+    const uint64_t lenName = strlen(fn->debug->name);   // NOTE the type
+    NUM(lenName);
+    STR(fn->debug->name);
+  }
 
   VERBOSE CHAR("/");
   const uint8_t arity = fn->arity;    // NOTE the type; see MAX_PARAMETERS
@@ -873,6 +877,7 @@ static void saveHeaderV0(WrenSnapshotContext* ctx)
   uint8_t options = 0;
 
   options |= ctx->options->withSourceLines ? BIT(0) : 0;
+  options |= ctx->options->withFnNames     ? BIT(1) : 0;
 
   NUM(options);
 }
@@ -896,6 +901,7 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
 
   WrenSnapshotOptions options = {
     .withSourceLines = wrenSnapshotWant('1'),
+    .withFnNames = wrenSnapshotWant('n'),
   };
 
   WrenSnapshotContext ctx = {
@@ -1244,11 +1250,15 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
   VERBOSE printf("\n");
 
   uint64_t lenName; // NOTE the type
-  FREAD_NUM(lenName);
-
   char buf[256]; // TODO
-  ASSERT(lenName <= sizeof(buf), "Buffer too small.");
-  (ctx->read)(buf, sizeof(char), lenName, ctx);
+
+  if (ctx->options->withFnNames)
+  {
+    FREAD_NUM(lenName);
+
+    ASSERT(lenName <= sizeof(buf), "Buffer too small.");
+    (ctx->read)(buf, sizeof(char), lenName, ctx);
+  }
 
   uint8_t arity; // NOTE the type
   FREAD_NUM(arity);
@@ -1265,7 +1275,10 @@ static ObjFn* restoreObjFn(WrenSnapshotContext* ctx, WrenVM* vm)
   fn->numUpvalues = numUpvalues;
   // VERBOSE if (numUpvalues != 0) printf("numUpvalues=%u", numUpvalues);
 
-  wrenFunctionBindName(vm, fn, buf, (int) lenName); // NOTE the cast
+  if (ctx->options->withFnNames)
+  {
+    wrenFunctionBindName(vm, fn, buf, (int) lenName); // NOTE the cast
+  }
 
 #if WREN_DEBUG_DUMP_COMPILED_CODE
   const bool hadSwizzle =
@@ -1581,8 +1594,9 @@ static void restoreHeaderV0(WrenSnapshotContext* ctx)
   FREAD_NUM(options);
 
   ctx->options->withSourceLines = options & BIT(0);
+  ctx->options->withFnNames     = options & BIT(1);
 
-  const uint8_t known = BIT(0);
+  const uint8_t known = BIT(1) | BIT(0);
   ASSERT((options & ~known) == 0, "Unknown snapshot options.");
 }
 
