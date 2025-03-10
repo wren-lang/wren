@@ -59,6 +59,7 @@
 #define AS_RANGE(v)         ((ObjRange*)AS_OBJ(v))              // ObjRange*
 #define AS_STRING(v)        ((ObjString*)AS_OBJ(v))             // ObjString*
 #define AS_CSTRING(v)       (AS_STRING(v)->value)               // const char*
+#define AS_IVALUE(v)        ((ObjIValue*)AS_OBJ(v))             // ObjIValue*
 
 // These macros promote a primitive C value to a full Wren Value. There are
 // more defined below that are specific to the Nan tagged or other
@@ -80,6 +81,11 @@
 #define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
+#if WREN_NAN_TAGGING
+#define IS_IVALUE(value) (0)
+#else
+#define IS_IVALUE(value) (wrenIsObjType(value, OBJ_IVALUE))     // ObjIValue
+#endif
 
 // Creates a new string object from [text], which should be a bare C string
 // literal. This determines the length of the string automatically at compile
@@ -99,7 +105,10 @@ typedef enum {
   OBJ_MODULE,
   OBJ_RANGE,
   OBJ_STRING,
-  OBJ_UPVALUE
+  OBJ_UPVALUE,
+#if WREN_NAN_TAGGING
+  OBJ_IVALUE,
+#endif
 } ObjType;
 
 typedef struct sObjClass ObjClass;
@@ -491,6 +500,23 @@ typedef struct
   bool isInclusive;
 } ObjRange;
 
+// An "indirect value"
+//
+// When NaN tagging is not in use, we cannot fit an entire Value inside the space
+// we reserved for WrenRawValue. Instead, we treat WrenRawValue as a pointer to
+// an Obj. In the case where the Value we wish to store in the WrenRawValue is
+// not an object, we allocate an ObjIValue instance to store said value in. When
+// placing the WrenRawValue back in a slot, we "unpack" the contained value. This
+// means that only the code dealing with WrenRawValues and the GC needs to handle
+// these types
+//
+// ObjIValue is never used when NaN tagging is in use.
+typedef struct
+{
+  Obj obj;
+  Value value;
+} ObjIValue;
+
 // An IEEE 754 double-precision float is a 64-bit value with bits laid out like:
 //
 // 1 Sign bit
@@ -593,6 +619,10 @@ typedef struct
 // Gets the singleton type tag for a Value (which must be a singleton).
 #define GET_TAG(value) ((int)((value) & MASK_TAG))
 
+#define RAW_VALUE_MUST_BOX(val) (0)
+#define SET_RAW_VALUE(rv, val) ((rv)->bits = (val))
+#define UNPACK_RAW_VALUE(rv) ((rv).bits)
+
 #else
 
 // Value -> 0 or 1.
@@ -614,6 +644,10 @@ typedef struct
 #define NULL_VAL      ((Value){ VAL_NULL, { 0 } })
 #define TRUE_VAL      ((Value){ VAL_TRUE, { 0 } })
 #define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, { 0 } })
+
+#define RAW_VALUE_MUST_BOX(val) (!IS_NULL(val) && !IS_OBJ(val))
+#define SET_RAW_VALUE(rv, val) ((rv)->ptr = IS_NULL(val) ? 0 : AS_OBJ(val))
+#define UNPACK_RAW_VALUE(rv) ((rv).ptr == null ? NULL_VALL : OBJ_VAL(rv.ptr))
 
 #endif
 
@@ -769,6 +803,12 @@ static inline bool wrenStringEqualsCString(const ObjString* a,
 
 // Creates a new open upvalue pointing to [value] on the stack.
 ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value);
+
+// Creates a new RawValue
+WrenRawValue wrenMakeRawValue(WrenVM* vm, Value value);
+
+// Unpacks a RawValue into a Value
+Value wrenUnpackRawValue(WrenRawValue raw);
 
 // Mark [obj] as reachable and still in use. This should only be called
 // during the sweep phase of a garbage collection.

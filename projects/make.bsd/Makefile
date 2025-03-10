@@ -12,34 +12,31 @@ ifeq ($(config),release_64bit)
   wren_config = release_64bit
   wren_shared_config = release_64bit
   wren_test_config = release_64bit
-
-else ifeq ($(config),release_32bit)
+endif
+ifeq ($(config),release_32bit)
   wren_config = release_32bit
   wren_shared_config = release_32bit
   wren_test_config = release_32bit
-
-else ifeq ($(config),release_64bit-no-nan-tagging)
+endif
+ifeq ($(config),release_64bit-no-nan-tagging)
   wren_config = release_64bit-no-nan-tagging
   wren_shared_config = release_64bit-no-nan-tagging
   wren_test_config = release_64bit-no-nan-tagging
-
-else ifeq ($(config),debug_64bit)
+endif
+ifeq ($(config),debug_64bit)
   wren_config = debug_64bit
   wren_shared_config = debug_64bit
   wren_test_config = debug_64bit
-
-else ifeq ($(config),debug_32bit)
+endif
+ifeq ($(config),debug_32bit)
   wren_config = debug_32bit
   wren_shared_config = debug_32bit
   wren_test_config = debug_32bit
-
-else ifeq ($(config),debug_64bit-no-nan-tagging)
+endif
+ifeq ($(config),debug_64bit-no-nan-tagging)
   wren_config = debug_64bit-no-nan-tagging
   wren_shared_config = debug_64bit-no-nan-tagging
   wren_test_config = debug_64bit-no-nan-tagging
-
-else
-  $(error "invalid configuration $(config)")
 endif
 
 PROJECTS := wren wren_shared wren_test
@@ -89,4 +86,4 @@ help:
 	@echo "   wren_shared"
 	@echo "   wren_test"
 	@echo ""
-	@echo "For more information, see https://github.com/premake/premake-core/wiki"
+	@echo "For more information, see http://industriousone.com/premake/quick-start"
