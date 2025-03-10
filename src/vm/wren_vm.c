@@ -1673,6 +1673,33 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
   return WREN_TYPE_UNKNOWN;
 }
 
+void wrenGetSlotClass(WrenVM* vm, int slot, int classSlot)
+{
+  validateApiSlot(vm, slot);
+  validateApiSlot(vm, classSlot);
+
+  Value value = vm->apiStack[slot];
+
+  if (IS_CLASS(value)) {
+    vm->apiStack[classSlot] = value;
+    return;
+  }
+
+  ObjClass* classObj = wrenGetClass(vm, value);
+
+  vm->apiStack[classSlot] = wrenObjectToValue((Obj*)classObj);
+}
+
+const char *wrenGetSlotClassName(WrenVM* vm, int slot)
+{
+    validateApiSlot(vm, slot);
+
+    Value value = vm->apiStack[slot];
+    if (!IS_CLASS(value)) return NULL;
+
+    return AS_CLASS(value)->name->value;
+}
+
 bool wrenGetSlotBool(WrenVM* vm, int slot)
 {
   validateApiSlot(vm, slot);
@@ -1974,6 +2001,37 @@ bool wrenHasModule(WrenVM* vm, const char* module)
   wrenPopRoot(vm); // moduleName.
 
   return moduleObj != NULL;
+}
+
+bool wrenIsSameClass(WrenVM* vm, int slotA, int slotB)
+{
+  validateApiSlot(vm, slotA);
+  validateApiSlot(vm, slotB);
+  ASSERT(IS_CLASS(vm->apiStack[slotA]), "SlotA must be a class.");
+  ASSERT(IS_CLASS(vm->apiStack[slotB]), "SlotB must be a class.");
+
+  ObjClass* classA = AS_CLASS(vm->apiStack[slotA]);
+  ObjClass* classB = AS_CLASS(vm->apiStack[slotB]);
+
+  return classA == classB;
+}
+
+bool wrenIsSubClass(WrenVM* vm, int slotA, int slotB)
+{
+  validateApiSlot(vm, slotA);
+  validateApiSlot(vm, slotB);
+  ASSERT(IS_CLASS(vm->apiStack[slotA]), "SlotA must be a class.");
+  ASSERT(IS_CLASS(vm->apiStack[slotB]), "SlotB must be a class.");
+
+  ObjClass* classA = AS_CLASS(vm->apiStack[slotA]);
+  ObjClass* classB = AS_CLASS(vm->apiStack[slotB]);
+
+  do {
+    if (classA == classB) return true;
+    classA = classA->superclass;
+  } while (classA != NULL);
+
+  return false;
 }
 
 void wrenAbortFiber(WrenVM* vm, int slot)

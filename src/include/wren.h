@@ -401,6 +401,27 @@ WREN_API void wrenEnsureSlots(WrenVM* vm, int numSlots);
 // Gets the type of the object in [slot].
 WREN_API WrenType wrenGetSlotType(WrenVM* vm, int slot);
 
+// Gets the class of the object in [slot] and stores it in [classSlot].
+//
+// If the object in [slot] is a class, it is returned unchanged into
+// [classSlot].
+WREN_API void wrenGetSlotClass(WrenVM* vm, int slot, int classSlot);
+
+// Gets the name of the class in [slot].
+//
+// The string returned is the property of the [vm] so it must not be freed
+// by the caller.
+//
+// This function returns null if there is no class object in [slot].
+//
+// This function is meant for debugging purposes only and should never be used
+// to discriminate a class from another as the caller has no guaranty regarding
+// the origin of the class. To discriminate a class, one should prefer the use
+// of [wrenGetVariable()] followed by [wrenGetSlotClass()] and
+// [wrenIsSameClass()] instead, the first call being the insurance that the
+// class to discrimitate actually comes from the expected module.
+WREN_API const char *wrenGetSlotClassName(WrenVM* vm, int slot);
+
 // Reads a boolean value from [slot].
 //
 // It is an error to call this if the slot does not contain a boolean value.
@@ -540,6 +561,13 @@ WREN_API bool wrenHasVariable(WrenVM* vm, const char* module, const char* name);
 
 // Returns true if [module] has been imported/resolved before, false if not.
 WREN_API bool wrenHasModule(WrenVM* vm, const char* module);
+
+// Returns true if the class in [slotA] is the same as the one in [slotB].
+WREN_API bool wrenIsSameClass(WrenVM* vm, int slotA, int slotB);
+
+// Returns true if the class in [slotA] is the same class or a subclass of
+// the class in [slotB].
+WREN_API bool wrenIsSubClass(WrenVM* vm, int slotA, int slotB);
 
 // Sets the current fiber to be aborted, and uses the value in [slot] as the
 // runtime error object.
