@@ -50,6 +50,8 @@
 // available in standard C++98.
 #define ERROR_MESSAGE_SIZE (80 + MAX_VARIABLE_NAME + 15)
 
+#define ARITY_NONE (-1)
+
 typedef enum
 {
   TOKEN_LEFT_PAREN,
@@ -69,6 +71,7 @@ typedef enum
   TOKEN_HASH,
   TOKEN_PLUS,
   TOKEN_MINUS,
+  TOKEN_MINUSGT,
   TOKEN_LTLT,
   TOKEN_GTGT,
   TOKEN_PIPE,
@@ -255,37 +258,14 @@ typedef struct sLoop
   struct sLoop* enclosing;
 } Loop;
 
-// The different signature syntaxes for different kinds of methods.
-typedef enum
-{
-  // A name followed by a (possibly empty) parenthesized parameter list. Also
-  // used for binary operators.
-  SIG_METHOD,
-  
-  // Just a name. Also used for unary operators.
-  SIG_GETTER,
-  
-  // A name followed by "=".
-  SIG_SETTER,
-  
-  // A square bracketed parameter list.
-  SIG_SUBSCRIPT,
-  
-  // A square bracketed parameter list followed by "=".
-  SIG_SUBSCRIPT_SETTER,
-  
-  // A constructor initializer function. This has a distinct signature to
-  // prevent it from being invoked directly outside of the constructor on the
-  // metaclass.
-  SIG_INITIALIZER
-} SignatureType;
-
 typedef struct
 {
   const char* name;
   int length;
-  SignatureType type;
-  int arity;
+  int bracketArity;
+  int parenArity;
+  bool isInitializer : 1;
+  bool isSetter : 1;
 } Signature;
 
 // Bookkeeping information for compiling a class definition.
@@ -401,6 +381,21 @@ typedef struct
   Scope scope;
 } Variable;
 
+typedef struct
+{
+  // Optional
+  void (*init)(Compiler* compiler, void* userData);
+
+  // Optional
+  void (*inc)(Compiler* compiler, void* userData);
+
+  void (*match)(Compiler* compiler, void* userData);
+
+  TokenType left;
+
+  TokenType right;
+} ListConfiguration;
+
 // Forward declarations
 static void disallowAttributes(Compiler* compiler);
 static void addToAttributeGroup(Compiler* compiler, Value group, Value key, Value value);
@@ -408,6 +403,7 @@ static void emitClassAttributes(Compiler* compiler, ClassInfo* classInfo);
 static void copyAttributes(Compiler* compiler, ObjMap* into);
 static void copyMethodAttributes(Compiler* compiler, bool isForeign, 
             bool isStatic, const char* fullSignature, int32_t length);
+static int signatureArgumentsCount(const Signature* signature);
 
 // The stack effect of each opcode. The index in the array is the opcode, and
 // the value is the stack effect of that instruction.
@@ -416,6 +412,27 @@ static const int stackEffects[] = {
   #include "wren_opcodes.h"
   #undef OPCODE
 };
+
+static const char* tokenTypeToString(TokenType tokenType)
+{
+  switch (tokenType)
+  {
+    case TOKEN_LEFT_BRACE:    return "{";
+    case TOKEN_RIGHT_BRACE:   return "}";
+
+    case TOKEN_LEFT_BRACKET:  return "[";
+    case TOKEN_RIGHT_BRACKET: return "]";
+
+    case TOKEN_LEFT_PAREN:    return "(";
+    case TOKEN_RIGHT_PAREN:   return ")";
+
+    case TOKEN_PIPE:          return "|";
+
+    default:
+      UNREACHABLE();
+      return "";
+  }
+}
 
 static void printError(Parser* parser, int line, const char* label,
                        const char* format, va_list args)
@@ -456,7 +473,7 @@ static void lexError(Parser* parser, const char* format, ...)
 // You'll note that most places that call error() continue to parse and compile
 // after that. That's so that we can try to find as many compilation errors in
 // one pass as possible instead of just bailing at the first one.
-static void error(Compiler* compiler, const char* format, ...)
+static void verror(Compiler* compiler, const char* format, va_list args)
 {
   Token* token = &compiler->parser->previous;
 
@@ -464,8 +481,6 @@ static void error(Compiler* compiler, const char* format, ...)
   // reported it.
   if (token->type == TOKEN_ERROR) return;
   
-  va_list args;
-  va_start(args, format);
   if (token->type == TOKEN_LINE)
   {
     printError(compiler->parser, token->line, "Error at newline", format, args);
@@ -489,6 +504,13 @@ static void error(Compiler* compiler, const char* format, ...)
     }
     printError(compiler->parser, token->line, label, format, args);
   }
+}
+
+static void error(Compiler* compiler, const char* format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  verror(compiler, format, args);
   va_end(args);
 }
 
@@ -1108,7 +1130,7 @@ static void nextToken(Parser* parser)
       }
       case '^': makeToken(parser, TOKEN_CARET); return;
       case '+': makeToken(parser, TOKEN_PLUS); return;
-      case '-': makeToken(parser, TOKEN_MINUS); return;
+      case '-': twoCharToken(parser, '>', TOKEN_MINUSGT, TOKEN_MINUS); return;
       case '~': makeToken(parser, TOKEN_TILDE); return;
       case '?': makeToken(parser, TOKEN_QUESTION); return;
         
@@ -1264,12 +1286,15 @@ static bool match(Compiler* compiler, TokenType expected)
 
 // Consumes the current token. Emits an error if its type is not [expected].
 static void consume(Compiler* compiler, TokenType expected,
-                    const char* errorMessage)
+                    const char* errorMessageFormat, ...)
 {
   nextToken(compiler->parser);
   if (compiler->parser->previous.type != expected)
   {
-    error(compiler, errorMessage);
+    va_list args;
+    va_start(args, errorMessageFormat);
+    verror(compiler, errorMessageFormat, args);
+    va_end(args);
 
     // If the next token is the one we want, assume the current one is just a
     // spurious error and discard it to minimize the number of cascaded errors.
@@ -1354,6 +1379,11 @@ static void emitShortArg(Compiler* compiler, Code instruction, int arg)
 {
   emitOp(compiler, instruction);
   emitShort(compiler, arg);
+}
+
+static void emitCall(Compiler* compiler, Code code, int numArgs, int symbol)
+{
+  emitShortArg(compiler, (Code)(code + numArgs), symbol);
 }
 
 // Emits [instruction] followed by a placeholder for a jump offset. The
@@ -1748,6 +1778,7 @@ typedef struct
 static GrammarRule* getRule(TokenType type);
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
+static void type(Compiler* compiler);
 static void definition(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
 
@@ -1823,9 +1854,9 @@ static void finishBody(Compiler* compiler)
 
 // The VM can only handle a certain number of parameters, so check that we
 // haven't exceeded that and give a usable error.
-static void validateNumParameters(Compiler* compiler, int numArgs)
+static void validateNumParameters(Compiler* compiler, Signature* signature)
 {
-  if (numArgs == MAX_PARAMETERS + 1)
+  if (signatureArgumentsCount(signature) == MAX_PARAMETERS + 1)
   {
     // Only show an error at exactly max + 1 so that we can keep parsing the
     // parameters and minimize cascaded errors.
@@ -1834,19 +1865,182 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
   }
 }
 
-// Parses the rest of a comma-separated parameter list after the opening
-// delimeter. Updates `arity` in [signature] with the number of parameters.
-static void finishParameterList(Compiler* compiler, Signature* signature)
+static void initSignatureBracketArity(Compiler* compiler, void* userData)
 {
+  Signature* signature = userData;
+
+  ASSERT(signature->bracketArity == ARITY_NONE, "bracketArity must be none");
+  signature->bracketArity = 0;
+}
+
+static void incSignatureBracketArity(Compiler* compiler, void* userData)
+{
+  Signature* signature = userData;
+
+  ASSERT(signature->bracketArity >= 0, "bracketArity must be set");
+  ++signature->bracketArity;
+  validateNumParameters(compiler, signature);
+}
+
+static void initSignatureParenArity(Compiler* compiler, void* userData)
+{
+  Signature* signature = userData;
+
+  ASSERT(signature->parenArity == ARITY_NONE, "parenArity must be none");
+  signature->parenArity = 0;
+}
+
+static void incSignatureParenArity(Compiler* compiler, void* userData)
+{
+  Signature* signature = userData;
+
+  ASSERT(signature->parenArity >= 0, "parenArity must be set");
+  ++signature->parenArity;
+  validateNumParameters(compiler, signature);
+}
+
+// Parses the rest of a comma-separated element list after the opening
+// delimeter.
+//
+// Optionaly calls [configuration->init] at the begining.
+// Than optionaly calls [configuration->inc] before matching list elements
+// using [configuration->match].
+static void finishList(Compiler* compiler,
+                       const ListConfiguration* configuration,
+                       void* userData,
+                       const char* elementsName)
+{
+  if (configuration->init != NULL) configuration->init(compiler, userData);
+
   do
   {
     ignoreNewlines(compiler);
-    validateNumParameters(compiler, ++signature->arity);
 
-    // Define a local variable in the method for the parameter.
-    declareNamedVariable(compiler);
+    // Stop if we hit the end of the list.
+    if (peek(compiler) == configuration->right) break;
+
+    if (configuration->inc != NULL) configuration->inc(compiler, userData);
+
+    configuration->match(compiler, userData);
   }
   while (match(compiler, TOKEN_COMMA));
+
+  // Allow a newline before the closing delimiter.
+  ignoreNewlines(compiler);
+
+  consume(compiler, configuration->right, "Expect '%s' after %s.",
+          tokenTypeToString(configuration->right), elementsName);
+}
+
+static bool optionalList(Compiler* compiler,
+                         const ListConfiguration* configuration,
+                         void* userData,
+                         const char* elementsName)
+{
+  if (!match(compiler, configuration->left)) return false;
+
+  finishList(compiler, configuration, userData, elementsName);
+  return true;
+}
+
+// Compiles an optional setter element list in a method [signature].
+//
+// Returns `true` if it was a setter.
+static bool maybeSetterList(Compiler* compiler, bool canAssign,
+                            const ListConfiguration* configuration,
+                            Signature* signature,
+                            const char* elementsName)
+{
+  if (!match(compiler, TOKEN_EQ)) return false;
+
+  signature->isSetter = true;
+
+  if (!canAssign)
+  {
+    error(compiler, "The setter syntax cannot be used in this context.");
+  }
+
+  ignoreNewlines(compiler);
+
+  // Parse the element list, if any.
+  if (optionalList(compiler, configuration, signature, elementsName)) return true;
+
+  // Parse a single argument.
+  if (configuration->init != NULL) configuration->init(compiler, signature);
+  if (configuration->inc  != NULL) configuration->inc(compiler, signature);
+
+  configuration->match(compiler, signature);
+
+  return true;
+}
+
+// Match a type declaration hints.
+// WARNING: While they are hints, they are parsed and evaluated as valid types,
+//          therefore they can have side effects.
+static void declareType(Compiler* compiler)
+{
+  type(compiler);
+
+  emitOp(compiler, CODE_POP);
+}
+
+static void declareOptionalReturnType(Compiler* compiler)
+{
+  if (match(compiler, TOKEN_MINUSGT))
+  {
+    ignoreNewlines(compiler);
+
+    declareType(compiler);
+  }
+}
+
+static void matchParameterListEntry(Compiler* compiler, void* userData)
+{
+  declareNamedVariable(compiler);
+
+  // Optional type declaration
+  if (match(compiler, TOKEN_COLON))
+  {
+    ignoreNewlines(compiler);
+
+    declareType(compiler);
+  }
+}
+
+static const ListConfiguration bracketParameterListConfiguration =
+{
+  .init  = initSignatureBracketArity,
+  .inc   = incSignatureBracketArity,
+  .match = matchParameterListEntry,
+  .left  = TOKEN_LEFT_BRACKET,
+  .right = TOKEN_RIGHT_BRACKET,
+};
+
+static const ListConfiguration parenParameterListConfiguration =
+{
+  .init  = initSignatureParenArity,
+  .inc   = incSignatureParenArity,
+  .match = matchParameterListEntry,
+  .left  = TOKEN_LEFT_PAREN,
+  .right = TOKEN_RIGHT_PAREN,
+};
+
+static const ListConfiguration pipeParameterListConfiguration =
+{
+  .init  = initSignatureParenArity,
+  .inc   = incSignatureParenArity,
+  .match = matchParameterListEntry,
+  .left  = TOKEN_PIPE,
+  .right = TOKEN_PIPE,
+};
+
+// Parses the rest of a comma-separated parameter list after the opening
+// delimeter. Updates `arity` in [signature] with the number of parameters.
+static void finishParameterList(Compiler* compiler,
+                                const ListConfiguration* configuration,
+                                Signature* signature)
+{
+  finishList(compiler, configuration, signature, "parameters");
 }
 
 // Gets the symbol for a method [name] with [length].
@@ -1856,11 +2050,23 @@ static int methodSymbol(Compiler* compiler, const char* name, int length)
       &compiler->parser->vm->methodNames, name, length);
 }
 
+static int signatureArgumentsCount(const Signature* signature)
+{
+  int count = 0;
+
+  if (signature->bracketArity > 0) count += signature->bracketArity;
+  if (signature->parenArity > 0)   count += signature->parenArity;
+
+  return count;
+}
+
 // Appends characters to [name] (and updates [length]) for [numParams] "_"
 // surrounded by [leftBracket] and [rightBracket].
 static void signatureParameterList(char name[MAX_METHOD_SIGNATURE], int* length,
                                    int numParams, char leftBracket, char rightBracket)
 {
+  if (numParams == ARITY_NONE) return;
+
   name[(*length)++] = leftBracket;
 
   // This function may be called with too many parameters. When that happens,
@@ -1882,41 +2088,23 @@ static void signatureToString(Signature* signature,
   *length = 0;
 
   // Build the full name from the signature.
+  if (signature->isInitializer)
+  {
+    memcpy(name, "init ", 5);
+    *length += 5;
+  }
+
   memcpy(name + *length, signature->name, signature->length);
   *length += signature->length;
 
-  switch (signature->type)
+  signatureParameterList(name, length, signature->bracketArity, '[', ']');
+
+  if (signature->isSetter)
   {
-    case SIG_METHOD:
-      signatureParameterList(name, length, signature->arity, '(', ')');
-      break;
-
-    case SIG_GETTER:
-      // The signature is just the name.
-      break;
-
-    case SIG_SETTER:
       name[(*length)++] = '=';
-      signatureParameterList(name, length, 1, '(', ')');
-      break;
-
-    case SIG_SUBSCRIPT:
-      signatureParameterList(name, length, signature->arity, '[', ']');
-      break;
-
-    case SIG_SUBSCRIPT_SETTER:
-      signatureParameterList(name, length, signature->arity - 1, '[', ']');
-      name[(*length)++] = '=';
-      signatureParameterList(name, length, 1, '(', ')');
-      break;
-      
-    case SIG_INITIALIZER:
-      memcpy(name, "init ", 5);
-      memcpy(name + 5, signature->name, signature->length);
-      *length = 5 + signature->length;
-      signatureParameterList(name, length, signature->arity, '(', ')');
-      break;
   }
+
+  signatureParameterList(name, length, signature->parenArity, '(', ')');
 
   name[*length] = '\0';
 }
@@ -1933,7 +2121,7 @@ static int signatureSymbol(Compiler* compiler, Signature* signature)
 }
 
 // Returns a signature with [type] whose name is from the last consumed token.
-static Signature signatureFromToken(Compiler* compiler, SignatureType type)
+static Signature signatureFromToken(Compiler* compiler)
 {
   Signature signature;
   
@@ -1941,8 +2129,10 @@ static Signature signatureFromToken(Compiler* compiler, SignatureType type)
   Token* token = &compiler->parser->previous;
   signature.name = token->start;
   signature.length = token->length;
-  signature.type = type;
-  signature.arity = 0;
+  signature.bracketArity = ARITY_NONE;
+  signature.parenArity = ARITY_NONE;
+  signature.isInitializer = false;
+  signature.isSetter = false;
 
   if (signature.length > MAX_METHOD_NAME)
   {
@@ -1954,20 +2144,47 @@ static Signature signatureFromToken(Compiler* compiler, SignatureType type)
   return signature;
 }
 
+static void matchArgumentListEntry(Compiler* compiler, void* userData)
+{
+  expression(compiler);
+}
+
+static const ListConfiguration bracketArgumentListConfiguration =
+{
+  .init  = initSignatureBracketArity,
+  .inc   = incSignatureBracketArity,
+  .match = matchArgumentListEntry,
+  .left  = TOKEN_LEFT_BRACKET,
+  .right = TOKEN_RIGHT_BRACKET,
+};
+
+static const ListConfiguration parenArgumentListConfiguration =
+{
+  .init  = initSignatureParenArity,
+  .inc   = incSignatureParenArity,
+  .match = matchArgumentListEntry,
+  .left  = TOKEN_LEFT_PAREN,
+  .right = TOKEN_RIGHT_PAREN,
+};
+
 // Parses a comma-separated list of arguments. Modifies [signature] to include
 // the arity of the argument list.
-static void finishArgumentList(Compiler* compiler, Signature* signature)
+static void finishArgumentList(Compiler* compiler,
+                               const ListConfiguration* configuration,
+                               Signature* signature)
 {
-  do
-  {
-    ignoreNewlines(compiler);
-    validateNumParameters(compiler, ++signature->arity);
-    expression(compiler);
-  }
-  while (match(compiler, TOKEN_COMMA));
+  finishList(compiler, configuration, signature, "arguments");
+}
 
-  // Allow a newline before the closing delimiter.
-  ignoreNewlines(compiler);
+// Compiles an optional setter parameter list in a method [signature].
+//
+// Returns `true` if it was a setter.
+static bool maybeSetterArgumentList(Compiler* compiler, bool canAssign,
+                                    Signature* signature)
+{
+  return maybeSetterList(compiler, canAssign,
+                         &parenArgumentListConfiguration, signature,
+                         "arguments");
 }
 
 // Compiles a method call with [signature] using [instruction].
@@ -1975,7 +2192,7 @@ static void callSignature(Compiler* compiler, Code instruction,
                           Signature* signature)
 {
   int symbol = signatureSymbol(compiler, signature);
-  emitShortArg(compiler, (Code)(instruction + signature->arity), symbol);
+  emitCall(compiler, instruction, signatureArgumentsCount(signature), symbol);
 
   if (instruction == CODE_SUPER_0)
   {
@@ -1996,7 +2213,7 @@ static void callMethod(Compiler* compiler, int numArgs, const char* name,
                        int length)
 {
   int symbol = methodSymbol(compiler, name, length);
-  emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs), symbol);
+  emitCall(compiler, CODE_CALL_0, numArgs, symbol);
 }
 
 // Compiles an (optional) argument list for a method call with [methodSignature]
@@ -2006,45 +2223,41 @@ static void methodCall(Compiler* compiler, Code instruction,
 {
   // Make a new signature that contains the updated arity and type based on
   // the arguments we find.
-  Signature called = { signature->name, signature->length, SIG_GETTER, 0 };
+  Signature called = { signature->name, signature->length,
+                       ARITY_NONE, ARITY_NONE, false, false };
 
   // Parse the argument list, if any.
-  if (match(compiler, TOKEN_LEFT_PAREN))
-  {
-    called.type = SIG_METHOD;
-
-    // Allow new line before an empty argument list
-    ignoreNewlines(compiler);
-
-    // Allow empty an argument list.
-    if (peek(compiler) != TOKEN_RIGHT_PAREN)
-    {
-      finishArgumentList(compiler, &called);
-    }
-    consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
-  }
+  optionalList(compiler, &parenArgumentListConfiguration, &called,
+               "arguments");
 
   // Parse the block argument, if any.
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
     // Include the block argument in the arity.
-    called.type = SIG_METHOD;
-    called.arity++;
+    if (called.parenArity == ARITY_NONE)
+    {
+      called.parenArity = 0;
+    }
+    ++called.parenArity;
 
     Compiler fnCompiler;
     initCompiler(&fnCompiler, compiler->parser, compiler, false);
 
     // Make a dummy signature to track the arity.
-    Signature fnSignature = { "", 0, SIG_METHOD, 0 };
+    Signature fnSignature = { "", 0, ARITY_NONE, ARITY_NONE, false, false };
 
     // Parse the parameter list, if any.
-    if (match(compiler, TOKEN_PIPE))
+    if (!optionalList(&fnCompiler, &pipeParameterListConfiguration,
+                      &fnSignature, "function parameters"))
     {
-      finishParameterList(&fnCompiler, &fnSignature);
-      consume(compiler, TOKEN_PIPE, "Expect '|' after function parameters.");
+      // Allow an empty "compact" parameter list
+      match(compiler, TOKEN_PIPEPIPE);
+      fnSignature.parenArity = 0;
     }
 
-    fnCompiler.fn->arity = fnSignature.arity;
+    declareOptionalReturnType(compiler);
+
+    fnCompiler.fn->arity = fnSignature.parenArity;
 
     finishBody(&fnCompiler);
 
@@ -2061,14 +2274,14 @@ static void methodCall(Compiler* compiler, Code instruction,
 
   // If this is a super() call for an initializer, make sure we got an actual
   // argument list.
-  if (signature->type == SIG_INITIALIZER)
+  if (signature->isInitializer)
   {
-    if (called.type != SIG_METHOD)
+    if (called.parenArity == ARITY_NONE)
     {
       error(compiler, "A superclass constructor must have an argument list.");
     }
     
-    called.type = SIG_INITIALIZER;
+    called.isInitializer = true;
   }
   
   callSignature(compiler, instruction, &called);
@@ -2079,18 +2292,10 @@ static void methodCall(Compiler* compiler, Code instruction,
 static void namedCall(Compiler* compiler, bool canAssign, Code instruction)
 {
   // Get the token for the method name.
-  Signature signature = signatureFromToken(compiler, SIG_GETTER);
+  Signature signature = signatureFromToken(compiler);
 
-  if (canAssign && match(compiler, TOKEN_EQ))
+  if (maybeSetterArgumentList(compiler, canAssign, &signature))
   {
-    ignoreNewlines(compiler);
-
-    // Build the setter signature.
-    signature.type = SIG_SETTER;
-    signature.arity = 1;
-
-    // Compile the assigned value.
-    expression(compiler);
     callSignature(compiler, instruction, &signature);
   }
   else
@@ -2142,30 +2347,58 @@ static void grouping(Compiler* compiler, bool canAssign)
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
+static void matchListLitteralEntry(Compiler* compiler, void* userData)
+{
+  // The element.
+  expression(compiler);
+
+  // Add element to the list.
+  callMethod(compiler, 1, "addCore_(_)", 11);
+}
+
+static const ListConfiguration listConfiguration =
+{
+  .init  = NULL,
+  .inc   = NULL,
+  .match = matchListLitteralEntry,
+  .left  = TOKEN_LEFT_BRACKET,
+  .right = TOKEN_RIGHT_BRACKET,
+};
+
 // A list literal.
 static void list(Compiler* compiler, bool canAssign)
 {
   // Instantiate a new list.
   loadCoreVariable(compiler, "List");
   callMethod(compiler, 0, "new()", 5);
-  
-  // Compile the list elements. Each one compiles to a ".add()" call.
-  do
-  {
-    ignoreNewlines(compiler);
 
-    // Stop if we hit the end of the list.
-    if (peek(compiler) == TOKEN_RIGHT_BRACKET) break;
-
-    // The element.
-    expression(compiler);
-    callMethod(compiler, 1, "addCore_(_)", 11);
-  } while (match(compiler, TOKEN_COMMA));
-
-  // Allow newlines before the closing ']'.
-  ignoreNewlines(compiler);
-  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after list elements.");
+  // Compile the list entries.
+  finishList(compiler, &listConfiguration, NULL, "list elements");
 }
+
+static void matchMapLitteralEntry(Compiler* compiler, void* userData)
+{
+  // The key.
+  parsePrecedence(compiler, PREC_UNARY);
+
+  consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
+  ignoreNewlines(compiler);
+
+  // The value.
+  expression(compiler);
+
+  // Add the key value pair to the map.
+  callMethod(compiler, 2, "addCore_(_,_)", 13);
+}
+
+static const ListConfiguration mapConfiguration =
+{
+  .init  = NULL,
+  .inc   = NULL,
+  .match = matchMapLitteralEntry,
+  .left  = TOKEN_LEFT_BRACE,
+  .right = TOKEN_RIGHT_BRACE,
+};
 
 // A map literal.
 static void map(Compiler* compiler, bool canAssign)
@@ -2174,28 +2407,8 @@ static void map(Compiler* compiler, bool canAssign)
   loadCoreVariable(compiler, "Map");
   callMethod(compiler, 0, "new()", 5);
 
-  // Compile the map elements. Each one is compiled to just invoke the
-  // subscript setter on the map.
-  do
-  {
-    ignoreNewlines(compiler);
-
-    // Stop if we hit the end of the map.
-    if (peek(compiler) == TOKEN_RIGHT_BRACE) break;
-
-    // The key.
-    parsePrecedence(compiler, PREC_UNARY);
-    consume(compiler, TOKEN_COLON, "Expect ':' after map key.");
-    ignoreNewlines(compiler);
-
-    // The value.
-    expression(compiler);
-    callMethod(compiler, 2, "addCore_(_,_)", 13);
-  } while (match(compiler, TOKEN_COMMA));
-
-  // Allow newlines before the closing '}'.
-  ignoreNewlines(compiler);
-  consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' after map entries.");
+  // Compile the map entries.
+  finishList(compiler, &mapConfiguration, NULL, "map entries");
 }
 
 // Unary operators like `-foo`.
@@ -2506,22 +2719,14 @@ static void this_(Compiler* compiler, bool canAssign)
 // Subscript or "array indexing" operator like `foo[bar]`.
 static void subscript(Compiler* compiler, bool canAssign)
 {
-  Signature signature = { "", 0, SIG_SUBSCRIPT, 0 };
+  Signature signature = { "", 0, ARITY_NONE, ARITY_NONE, false, false };
 
   // Parse the argument list.
-  finishArgumentList(compiler, &signature);
-  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
+  finishArgumentList(compiler, &bracketArgumentListConfiguration, &signature);
 
   allowLineBeforeDot(compiler);
 
-  if (canAssign && match(compiler, TOKEN_EQ))
-  {
-    signature.type = SIG_SUBSCRIPT_SETTER;
-
-    // Compile the assigned value.
-    validateNumParameters(compiler, ++signature.arity);
-    expression(compiler);
-  }
+  maybeSetterArgumentList(compiler, canAssign, &signature);
 
   callSignature(compiler, CODE_CALL_0, &signature);
 }
@@ -2580,7 +2785,7 @@ static void conditional(Compiler* compiler, bool canAssign)
   patchJump(compiler, elseJump);
 }
 
-void infixOp(Compiler* compiler, bool canAssign)
+static void infixOp(Compiler* compiler, bool canAssign)
 {
   GrammarRule* rule = getRule(compiler->parser->previous.type);
 
@@ -2591,16 +2796,17 @@ void infixOp(Compiler* compiler, bool canAssign)
   parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
 
   // Call the operator method on the left-hand side.
-  Signature signature = { rule->name, (int)strlen(rule->name), SIG_METHOD, 1 };
+  Signature signature = { rule->name, (int)strlen(rule->name),
+                          ARITY_NONE, 1, false, false };
   callSignature(compiler, CODE_CALL_0, &signature);
 }
 
 // Compiles a method signature for an infix operator.
-void infixSignature(Compiler* compiler, Signature* signature)
+static void infixSignature(Compiler* compiler, Signature* signature)
 {
   // Add the RHS parameter.
-  signature->type = SIG_METHOD;
-  signature->arity = 1;
+  ASSERT(signature->parenArity == ARITY_NONE, "parenArity must be none");
+  signature->parenArity = 1;
 
   // Parse the parameter name.
   consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after operator name.");
@@ -2609,24 +2815,21 @@ void infixSignature(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for an unary operator (i.e. "!").
-void unarySignature(Compiler* compiler, Signature* signature)
+static void unarySignature(Compiler* compiler, Signature* signature)
 {
   // Do nothing. The name is already complete.
-  signature->type = SIG_GETTER;
 }
 
 // Compiles a method signature for an operator that can either be unary or
 // infix (i.e. "-").
-void mixedSignature(Compiler* compiler, Signature* signature)
+static void mixedSignature(Compiler* compiler, Signature* signature)
 {
-  signature->type = SIG_GETTER;
-
   // If there is a parameter, it's an infix operator, otherwise it's unary.
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
     // Add the RHS parameter.
-    signature->type = SIG_METHOD;
-    signature->arity = 1;
+    ASSERT(signature->parenArity == ARITY_NONE, "parenArity must be none");
+    signature->parenArity = 1;
 
     // Parse the parameter name.
     declareNamedVariable(compiler);
@@ -2634,88 +2837,49 @@ void mixedSignature(Compiler* compiler, Signature* signature)
   }
 }
 
-// Compiles an optional setter parameter in a method [signature].
+// Compiles an optional setter parameter list in a method [signature].
 //
 // Returns `true` if it was a setter.
-static bool maybeSetter(Compiler* compiler, Signature* signature)
+static bool maybeSetterParameterList(Compiler* compiler, Signature* signature)
 {
-  // See if it's a setter.
-  if (!match(compiler, TOKEN_EQ)) return false;
-
-  // It's a setter.
-  if (signature->type == SIG_SUBSCRIPT)
-  {
-    signature->type = SIG_SUBSCRIPT_SETTER;
-  }
-  else
-  {
-    signature->type = SIG_SETTER;
-  }
-
-  // Parse the value parameter.
-  consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after '='.");
-  declareNamedVariable(compiler);
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameter name.");
-
-  signature->arity++;
-
-  return true;
+  return maybeSetterList(compiler, true,
+                         &parenParameterListConfiguration, signature,
+                         "parameters");
 }
 
 // Compiles a method signature for a subscript operator.
-void subscriptSignature(Compiler* compiler, Signature* signature)
+static void subscriptSignature(Compiler* compiler, Signature* signature)
 {
-  signature->type = SIG_SUBSCRIPT;
-
   // The signature currently has "[" as its name since that was the token that
   // matched it. Clear that out.
   signature->length = 0;
 
   // Parse the parameters inside the subscript.
-  finishParameterList(compiler, signature);
-  consume(compiler, TOKEN_RIGHT_BRACKET, "Expect ']' after parameters.");
+  finishParameterList(compiler, &bracketParameterListConfiguration, signature);
 
-  maybeSetter(compiler, signature);
-}
-
-// Parses an optional parenthesized parameter list. Updates `type` and `arity`
-// in [signature] to match what was parsed.
-static void parameterList(Compiler* compiler, Signature* signature)
-{
-  // The parameter list is optional.
-  if (!match(compiler, TOKEN_LEFT_PAREN)) return;
-  
-  signature->type = SIG_METHOD;
-  
-  // Allow new line before an empty argument list
-  ignoreNewlines(compiler);
-
-  // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
-
-  finishParameterList(compiler, signature);
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+  maybeSetterParameterList(compiler, signature);
 }
 
 // Compiles a method signature for a named method or setter.
-void namedSignature(Compiler* compiler, Signature* signature)
+static void namedSignature(Compiler* compiler, Signature* signature)
 {
-  signature->type = SIG_GETTER;
-  
   // If it's a setter, it can't also have a parameter list.
-  if (maybeSetter(compiler, signature)) return;
+  if (maybeSetterParameterList(compiler, signature)) return;
 
-  // Regular named method with an optional parameter list.
-  parameterList(compiler, signature);
+  // The parameter list is optional.
+  if (!match(compiler, TOKEN_LEFT_PAREN)) return;
+
+  finishParameterList(compiler, &parenParameterListConfiguration, signature);
 }
 
 // Compiles a method signature for a constructor.
-void constructorSignature(Compiler* compiler, Signature* signature)
+static void constructorSignature(Compiler* compiler, Signature* signature)
 {
   consume(compiler, TOKEN_NAME, "Expect constructor name after 'construct'.");
   
   // Capture the name.
-  *signature = signatureFromToken(compiler, SIG_INITIALIZER);
+  *signature = signatureFromToken(compiler);
+  signature->isInitializer = true;
   
   if (match(compiler, TOKEN_EQ))
   {
@@ -2728,11 +2892,7 @@ void constructorSignature(Compiler* compiler, Signature* signature)
     return;
   }
   
-  // Allow an empty parameter list.
-  if (match(compiler, TOKEN_RIGHT_PAREN)) return;
-  
-  finishParameterList(compiler, signature);
-  consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+  finishParameterList(compiler, &parenParameterListConfiguration, signature);
 }
 
 // This table defines all of the parsing rules for the prefix and infix
@@ -2746,7 +2906,7 @@ void constructorSignature(Compiler* compiler, Signature* signature)
 #define PREFIX_OPERATOR(name)      { unaryOp, NULL, unarySignature, PREC_NONE, name }
 #define OPERATOR(name)             { unaryOp, infixOp, mixedSignature, PREC_TERM, name }
 
-GrammarRule rules[] =
+static GrammarRule rules[] =
 {
   /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
@@ -2765,6 +2925,7 @@ GrammarRule rules[] =
   /* TOKEN_HASH          */ UNUSED,
   /* TOKEN_PLUS          */ INFIX_OPERATOR(PREC_TERM, "+"),
   /* TOKEN_MINUS         */ OPERATOR("-"),
+  /* TOKEN_MINUSGT       */ UNUSED,
   /* TOKEN_LTLT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, "<<"),
   /* TOKEN_GTGT          */ INFIX_OPERATOR(PREC_BITWISE_SHIFT, ">>"),
   /* TOKEN_PIPE          */ INFIX_OPERATOR(PREC_BITWISE_OR, "|"),
@@ -2821,7 +2982,7 @@ static GrammarRule* getRule(TokenType type)
 }
 
 // The main entrypoint for the top-down operator precedence parser.
-void parsePrecedence(Compiler* compiler, Precedence precedence)
+static void parsePrecedence(Compiler* compiler, Precedence precedence)
 {
   nextToken(compiler->parser);
   GrammarFn prefix = rules[compiler->parser->previous.type].prefix;
@@ -2852,9 +3013,15 @@ void parsePrecedence(Compiler* compiler, Precedence precedence)
 
 // Parses an expression. Unlike statements, expressions leave a resulting value
 // on the stack.
-void expression(Compiler* compiler)
+static void expression(Compiler* compiler)
 {
   parsePrecedence(compiler, PREC_LOWEST);
+}
+
+// Parses a type. Leave a resulting value on the stack.
+static void type(Compiler* compiler)
+{
+  parsePrecedence(compiler, PREC_CALL);
 }
 
 // Returns the number of bytes for the arguments to the instruction 
@@ -3172,7 +3339,7 @@ static void whileStatement(Compiler* compiler)
 // branches of an "if" statement.
 //
 // Unlike expressions, statements do not leave a value on the stack.
-void statement(Compiler* compiler)
+static void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_BREAK))
   {
@@ -3287,8 +3454,7 @@ static void createConstructor(Compiler* compiler, Signature* signature,
        ? CODE_FOREIGN_CONSTRUCT : CODE_CONSTRUCT);
   
   // Run its initializer.
-  emitShortArg(&methodCompiler, (Code)(CODE_CALL_0 + signature->arity),
-               initializerSymbol);
+  emitCall(&methodCompiler, CODE_CALL_0, signatureArgumentsCount(signature), initializerSymbol);
   
   // Return the instance.
   emitOp(&methodCompiler, CODE_RETURN);
@@ -3446,7 +3612,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   }
   
   // Build the method signature.
-  Signature signature = signatureFromToken(compiler, SIG_GETTER);
+  Signature signature = signatureFromToken(compiler);
   compiler->enclosingClass->signature = &signature;
 
   Compiler methodCompiler;
@@ -3455,13 +3621,15 @@ static bool method(Compiler* compiler, Variable classVariable)
   // Compile the method signature.
   signatureFn(&methodCompiler, &signature);
 
-  methodCompiler.isInitializer = signature.type == SIG_INITIALIZER;
+  methodCompiler.isInitializer = signature.isInitializer;
   
-  if (isStatic && signature.type == SIG_INITIALIZER)
+  if (isStatic && signature.isInitializer)
   {
     error(compiler, "A constructor cannot be static.");
   }
   
+  declareOptionalReturnType(compiler);
+
   // Include the full signature in debug messages in stack traces.
   char fullSignature[MAX_METHOD_SIGNATURE];
   int length;
@@ -3496,10 +3664,10 @@ static bool method(Compiler* compiler, Variable classVariable)
   // initializer method.
   defineMethod(compiler, classVariable, isStatic, methodSymbol);
 
-  if (signature.type == SIG_INITIALIZER)
+  if (signature.isInitializer)
   {
     // Also define a matching constructor method on the metaclass.
-    signature.type = SIG_METHOD;
+    signature.isInitializer = false;
     int constructorSymbol = signatureSymbol(compiler, &signature);
     
     createConstructor(compiler, &signature, methodSymbol);
@@ -3531,7 +3699,7 @@ static void classDefinition(Compiler* compiler, bool isForeign)
   // Load the superclass (if there is one).
   if (match(compiler, TOKEN_IS))
   {
-    parsePrecedence(compiler, PREC_CALL);
+    type(compiler);
   }
   else
   {
@@ -3724,7 +3892,7 @@ static void variableDefinition(Compiler* compiler)
 // Compiles a "definition". These are the statements that bind new variables.
 // They can only appear at the top level of a block and are prohibited in places
 // like the non-curly body of an if or while.
-void definition(Compiler* compiler)
+static void definition(Compiler* compiler)
 {
   if(matchAttribute(compiler)) {
     definition(compiler);
