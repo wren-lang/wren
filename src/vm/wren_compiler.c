@@ -58,6 +58,7 @@ typedef enum
   TOKEN_RIGHT_BRACKET,
   TOKEN_LEFT_BRACE,
   TOKEN_RIGHT_BRACE,
+  TOKEN_AT,
   TOKEN_COLON,
   TOKEN_DOT,
   TOKEN_DOTDOT,
@@ -1117,6 +1118,8 @@ static void nextToken(Parser* parser)
       case '=': twoCharToken(parser, '=', TOKEN_EQEQ, TOKEN_EQ); return;
       case '!': twoCharToken(parser, '=', TOKEN_BANGEQ, TOKEN_BANG); return;
         
+      case '@': makeToken(parser, TOKEN_AT); return;
+
       case '.':
         if (matchChar(parser, '.'))
         {
@@ -1751,6 +1754,9 @@ static void statement(Compiler* compiler);
 static void definition(Compiler* compiler);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
 
+static void literal(Compiler* compiler, bool canAssign);
+static void stringInterpolation(Compiler* compiler, bool canAssign);
+
 // Replaces the placeholder argument for a previous CODE_JUMP or CODE_JUMP_IF
 // instruction with an offset that jumps to the current end of bytecode.
 static void patchJump(Compiler* compiler, int offset)
@@ -1971,11 +1977,10 @@ static void finishArgumentList(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method call with [signature] using [instruction].
-static void callSignature(Compiler* compiler, Code instruction,
-                          Signature* signature)
+static void callSymbol(Compiler* compiler, Code instruction, int arity,
+                       int symbol)
 {
-  int symbol = signatureSymbol(compiler, signature);
-  emitShortArg(compiler, (Code)(instruction + signature->arity), symbol);
+  emitShortArg(compiler, (Code)(instruction + arity), symbol);
 
   if (instruction == CODE_SUPER_0)
   {
@@ -1991,27 +1996,46 @@ static void callSignature(Compiler* compiler, Code instruction,
   }
 }
 
+static void invoke(Compiler* compiler, Code instruction, int arity)
+{
+  emitOp(compiler, (Code)(instruction + arity));
+
+  if (instruction == CODE_INVOKE_SUPER_0)
+  {
+    // Super calls need to be statically bound to the class's superclass. This
+    // ensures we call the right method even when a method containing a super
+    // call is inherited by another subclass.
+    //
+    // We bind it at class definition time by storing a reference to the
+    // superclass in a constant. So, here, we create a slot in the constant
+    // table and store NULL in it. When the method is bound, we'll look up the
+    // superclass then and store it in the constant slot.
+    emitShort(compiler, addConstant(compiler, NULL_VAL));
+  }
+}
+
+// Compiles a method call with [signature] using [instruction].
+static void callSignature(Compiler* compiler, Code instruction,
+                          Signature* signature)
+{
+  int symbol = signatureSymbol(compiler, signature);
+  callSymbol(compiler, instruction, signature->arity, symbol);
+}
+
 // Compiles a method call with [numArgs] for a method with [name] with [length].
 static void callMethod(Compiler* compiler, int numArgs, const char* name,
                        int length)
 {
   int symbol = methodSymbol(compiler, name, length);
-  emitShortArg(compiler, (Code)(CODE_CALL_0 + numArgs), symbol);
+  callSymbol(compiler, CODE_CALL_0, numArgs, symbol);
 }
 
-// Compiles an (optional) argument list for a method call with [methodSignature]
-// and then calls it.
-static void methodCall(Compiler* compiler, Code instruction,
-                       Signature* signature)
+static void argumentList(Compiler* compiler, Signature* signature)
 {
-  // Make a new signature that contains the updated arity and type based on
-  // the arguments we find.
-  Signature called = { signature->name, signature->length, SIG_GETTER, 0 };
-
   // Parse the argument list, if any.
   if (match(compiler, TOKEN_LEFT_PAREN))
   {
-    called.type = SIG_METHOD;
+    signature->type = SIG_METHOD;
 
     // Allow new line before an empty argument list
     ignoreNewlines(compiler);
@@ -2019,7 +2043,7 @@ static void methodCall(Compiler* compiler, Code instruction,
     // Allow empty an argument list.
     if (peek(compiler) != TOKEN_RIGHT_PAREN)
     {
-      finishArgumentList(compiler, &called);
+      finishArgumentList(compiler, signature);
     }
     consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
   }
@@ -2028,8 +2052,8 @@ static void methodCall(Compiler* compiler, Code instruction,
   if (match(compiler, TOKEN_LEFT_BRACE))
   {
     // Include the block argument in the arity.
-    called.type = SIG_METHOD;
-    called.arity++;
+    signature->type = SIG_METHOD;
+    signature->arity++;
 
     Compiler fnCompiler;
     initCompiler(&fnCompiler, compiler->parser, compiler, false);
@@ -2051,11 +2075,51 @@ static void methodCall(Compiler* compiler, Code instruction,
     // Name the function based on the method its passed to.
     char blockName[MAX_METHOD_SIGNATURE + 15];
     int blockLength;
-    signatureToString(&called, blockName, &blockLength);
+    signatureToString(signature, blockName, &blockLength);
     memmove(blockName + blockLength, " block argument", 16);
 
     endCompiler(&fnCompiler, blockName, blockLength + 15);
   }
+}
+
+static void methodInvoke(Compiler* compiler, Code instruction)
+{
+  // Make a dummy signature to track the arity and type.
+  Signature signature = { "", 0, SIG_GETTER, 0 };
+
+  if (match(compiler, TOKEN_STRING))
+  {
+    literal(compiler, false);
+  }
+  else if (match(compiler, TOKEN_INTERPOLATION))
+  {
+    stringInterpolation(compiler, false);
+  }
+  else
+  {
+    error(compiler, "A method invocation must have a name string.");
+  }
+
+  argumentList(compiler, &signature);
+
+  if (signature.type != SIG_METHOD)
+  {
+    error(compiler, "A method invocation must have an argument list.");
+  }
+
+  invoke(compiler, instruction, signature.arity);
+}
+
+// Compiles an (optional) argument list for a method call with [methodSignature]
+// and then calls it.
+static void methodCall(Compiler* compiler, Code instruction,
+                       Signature* signature)
+{
+  // Make a new signature that contains the updated arity and type based on
+  // the arguments we find.
+  Signature called = { signature->name, signature->length, SIG_GETTER, 0 };
+
+  argumentList(compiler, &called);
 
   // TODO: Allow Grace-style mixfix methods?
 
@@ -2479,6 +2543,11 @@ static void super_(Compiler* compiler, bool canAssign)
   // See if it's a named super call, or an unnamed one.
   if (match(compiler, TOKEN_DOT))
   {
+    if (match(compiler, TOKEN_AT))
+    {
+      methodInvoke(compiler, CODE_INVOKE_SUPER_0);
+      return;
+    }
     // Compile the superclass call.
     consume(compiler, TOKEN_NAME, "Expect method name after 'super.'.");
     namedCall(compiler, canAssign, CODE_SUPER_0);
@@ -2529,6 +2598,11 @@ static void subscript(Compiler* compiler, bool canAssign)
 static void call(Compiler* compiler, bool canAssign)
 {
   ignoreNewlines(compiler);
+  if (match(compiler, TOKEN_AT))
+  {
+    methodInvoke(compiler, CODE_INVOKE_0);
+    return;
+  }
   consume(compiler, TOKEN_NAME, "Expect method name after '.'.");
   namedCall(compiler, canAssign, CODE_CALL_0);
 }
@@ -2754,6 +2828,7 @@ GrammarRule rules[] =
   /* TOKEN_RIGHT_BRACKET */ UNUSED,
   /* TOKEN_LEFT_BRACE    */ PREFIX(map),
   /* TOKEN_RIGHT_BRACE   */ UNUSED,
+  /* TOKEN_AT            */ UNUSED,
   /* TOKEN_COLON         */ UNUSED,
   /* TOKEN_DOT           */ INFIX(PREC_CALL, call),
   /* TOKEN_DOTDOT        */ INFIX_OPERATOR(PREC_RANGE, ".."),
@@ -2881,6 +2956,23 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_LOAD_LOCAL_6:
     case CODE_LOAD_LOCAL_7:
     case CODE_LOAD_LOCAL_8:
+    case CODE_INVOKE_0:
+    case CODE_INVOKE_1:
+    case CODE_INVOKE_2:
+    case CODE_INVOKE_3:
+    case CODE_INVOKE_4:
+    case CODE_INVOKE_5:
+    case CODE_INVOKE_6:
+    case CODE_INVOKE_7:
+    case CODE_INVOKE_8:
+    case CODE_INVOKE_9:
+    case CODE_INVOKE_10:
+    case CODE_INVOKE_11:
+    case CODE_INVOKE_12:
+    case CODE_INVOKE_13:
+    case CODE_INVOKE_14:
+    case CODE_INVOKE_15:
+    case CODE_INVOKE_16:
     case CODE_CONSTRUCT:
     case CODE_FOREIGN_CONSTRUCT:
     case CODE_FOREIGN_CLASS:
@@ -2919,6 +3011,23 @@ static int getByteCountForArguments(const uint8_t* bytecode,
     case CODE_CALL_14:
     case CODE_CALL_15:
     case CODE_CALL_16:
+    case CODE_INVOKE_SUPER_0:
+    case CODE_INVOKE_SUPER_1:
+    case CODE_INVOKE_SUPER_2:
+    case CODE_INVOKE_SUPER_3:
+    case CODE_INVOKE_SUPER_4:
+    case CODE_INVOKE_SUPER_5:
+    case CODE_INVOKE_SUPER_6:
+    case CODE_INVOKE_SUPER_7:
+    case CODE_INVOKE_SUPER_8:
+    case CODE_INVOKE_SUPER_9:
+    case CODE_INVOKE_SUPER_10:
+    case CODE_INVOKE_SUPER_11:
+    case CODE_INVOKE_SUPER_12:
+    case CODE_INVOKE_SUPER_13:
+    case CODE_INVOKE_SUPER_14:
+    case CODE_INVOKE_SUPER_15:
+    case CODE_INVOKE_SUPER_16:
     case CODE_JUMP:
     case CODE_LOOP:
     case CODE_JUMP_IF:
@@ -3878,6 +3987,29 @@ void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn)
       {
         // Fill in the constant slot with a reference to the superclass.
         int constant = (fn->code.data[ip + 3] << 8) | fn->code.data[ip + 4];
+        fn->constants.data[constant] = OBJ_VAL(classObj->superclass);
+        break;
+      }
+      case CODE_INVOKE_SUPER_0:
+      case CODE_INVOKE_SUPER_1:
+      case CODE_INVOKE_SUPER_2:
+      case CODE_INVOKE_SUPER_3:
+      case CODE_INVOKE_SUPER_4:
+      case CODE_INVOKE_SUPER_5:
+      case CODE_INVOKE_SUPER_6:
+      case CODE_INVOKE_SUPER_7:
+      case CODE_INVOKE_SUPER_8:
+      case CODE_INVOKE_SUPER_9:
+      case CODE_INVOKE_SUPER_10:
+      case CODE_INVOKE_SUPER_11:
+      case CODE_INVOKE_SUPER_12:
+      case CODE_INVOKE_SUPER_13:
+      case CODE_INVOKE_SUPER_14:
+      case CODE_INVOKE_SUPER_15:
+      case CODE_INVOKE_SUPER_16:
+      {
+        // Fill in the constant slot with a reference to the superclass.
+        int constant = (fn->code.data[ip + 1] << 8) | fn->code.data[ip + 2];
         fn->constants.data[constant] = OBJ_VAL(classObj->superclass);
         break;
       }

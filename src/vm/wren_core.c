@@ -1234,12 +1234,18 @@ static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 
 void wrenInitializeCore(WrenVM* vm)
 {
-  ObjModule* coreModule = wrenNewModule(vm, NULL);
+  ObjString* coreModuleName = AS_STRING(wrenNewStringLength(vm, "core", 4));
+  wrenPushRoot(vm, (Obj*)coreModuleName);
+
+  ObjModule* coreModule = wrenNewModule(vm, coreModuleName);
   wrenPushRoot(vm, (Obj*)coreModule);
   
-  // The core module's key is null in the module map.
+  // The core module's is aliased to null in the module map, for internal
+  // reasons (see `wrenGetCoreModule`) and backward compatibility.
   wrenMapSet(vm, vm->modules, NULL_VAL, OBJ_VAL(coreModule));
+  wrenMapSet(vm, vm->modules, OBJ_VAL(coreModuleName), OBJ_VAL(coreModule));
   wrenPopRoot(vm); // coreModule.
+  wrenPopRoot(vm); // coreModuleName.
 
   // Define the root Object class. This has to be done a little specially
   // because it has no superclass.
@@ -1482,6 +1488,8 @@ void wrenInitializeCore(WrenVM* vm)
   // them now that the string class is known.
   for (Obj* obj = vm->first; obj != NULL; obj = obj->next)
   {
+    if (obj->type == OBJ_CLASS) ((ObjClass*)obj)->module = coreModule;
+    if (obj->type == OBJ_FN) ((ObjFn*)obj)->module = coreModule;
     if (obj->type == OBJ_STRING) obj->classObj = vm->stringClass;
   }
 }
