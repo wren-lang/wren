@@ -1422,6 +1422,7 @@ WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature)
   // Create a little stub function that assumes the arguments are on the stack
   // and calls the method.
   ObjFn* fn = wrenNewFunction(vm, NULL, numParams + 1);
+  fn->arity = numParams;
   
   // Wrap the function in a closure and then in a handle. Do this here so it
   // doesn't get collected as we fill it in.
@@ -1460,9 +1461,10 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method)
 
   // Discard any extra temporary slots. We take for granted that the stub
   // function has exactly one slot for each argument.
-  vm->fiber->stackTop = &vm->fiber->stack[closure->fn->maxSlots];
+  const int closureNumArgs = closure->fn->arity + 1;
+  vm->fiber->stackTop = &vm->fiber->stack[closureNumArgs];
   
-  wrenCallFunction(vm, vm->fiber, closure, 0);
+  wrenCallFunction(vm, vm->fiber, closure, closureNumArgs);
   WrenInterpretResult result = runInterpreter(vm, vm->fiber);
   
   // If the call didn't abort, then set up the API stack to point to the
