@@ -24,6 +24,8 @@ typedef struct sObjString ObjString;
     void wren##name##BufferClear(WrenVM* vm, name##Buffer* buffer);            \
     void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data,   \
                                 int count);                                    \
+    void wren##name##BufferReserve(WrenVM* vm, name##Buffer* buffer,           \
+                                   int newCapacity);                           \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
 
 // This should be used once for each type instantiation, somewhere in a .c file.
@@ -44,17 +46,23 @@ typedef struct sObjString ObjString;
     void wren##name##BufferFill(WrenVM* vm, name##Buffer* buffer, type data,   \
                                 int count)                                     \
     {                                                                          \
-      if (buffer->capacity < buffer->count + count)                            \
-      {                                                                        \
-        int capacity = wrenPowerOf2Ceil(buffer->count + count);                \
-        buffer->data = (type*)wrenReallocate(vm, buffer->data,                 \
-            buffer->capacity * sizeof(type), capacity * sizeof(type));         \
-        buffer->capacity = capacity;                                           \
-      }                                                                        \
+      wren##name##BufferReserve(vm, buffer, buffer->count + count);            \
                                                                                \
       for (int i = 0; i < count; i++)                                          \
       {                                                                        \
         buffer->data[buffer->count++] = data;                                  \
+      }                                                                        \
+    }                                                                          \
+                                                                               \
+    void wren##name##BufferReserve(WrenVM* vm, name##Buffer* buffer,           \
+                                   int newCapacity)                            \
+    {                                                                          \
+      if (buffer->capacity < newCapacity)                                      \
+      {                                                                        \
+        newCapacity = wrenPowerOf2Ceil(newCapacity);                           \
+        buffer->data = (type*)wrenReallocate(vm, buffer->data,                 \
+            buffer->capacity * sizeof(type), newCapacity * sizeof(type));      \
+        buffer->capacity = newCapacity;                                        \
       }                                                                        \
     }                                                                          \
                                                                                \

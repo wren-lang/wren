@@ -336,6 +336,11 @@ DEF_PRIMITIVE(list_addCore)
   RETURN_VAL(args[0]);
 }
 
+DEF_PRIMITIVE(list_capacity)
+{
+  RETURN_NUM(AS_LIST(args[0])->elements.capacity);
+}
+
 DEF_PRIMITIVE(list_clear)
 {
   wrenValueBufferClear(vm, &AS_LIST(args[0])->elements);
@@ -404,6 +409,15 @@ DEF_PRIMITIVE(list_removeValue) {
   int index = wrenListIndexOf(vm, list, args[1]);
   if(index == -1) RETURN_NULL;
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
+}
+
+DEF_PRIMITIVE(list_reserve)
+{
+  ObjList* list = AS_LIST(args[0]);
+  if (!validateInt(vm, args[1], "New capacity")) return false;
+  double newCapacity = AS_NUM(args[1]);
+  wrenValueBufferReserve(vm, &list->elements, newCapacity);
+  RETURN_NULL;
 }
 
 DEF_PRIMITIVE(list_indexOf)
@@ -1434,6 +1448,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "[_]=(_)", list_subscriptSetter);
   PRIMITIVE(vm->listClass, "add(_)", list_add);
   PRIMITIVE(vm->listClass, "addCore_(_)", list_addCore);
+  PRIMITIVE(vm->listClass, "capacity", list_capacity);
   PRIMITIVE(vm->listClass, "clear()", list_clear);
   PRIMITIVE(vm->listClass, "count", list_count);
   PRIMITIVE(vm->listClass, "insert(_,_)", list_insert);
@@ -1441,6 +1456,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "iteratorValue(_)", list_iteratorValue);
   PRIMITIVE(vm->listClass, "removeAt(_)", list_removeAt);
   PRIMITIVE(vm->listClass, "remove(_)", list_removeValue);
+  PRIMITIVE(vm->listClass, "reserve(_)", list_reserve);
   PRIMITIVE(vm->listClass, "indexOf(_)", list_indexOf);
   PRIMITIVE(vm->listClass, "swap(_,_)", list_swap);
 

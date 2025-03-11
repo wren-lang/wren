@@ -36,6 +36,10 @@ System.print(list) //> [0, 1, 2, 3, 4, 5, 6]
 
 Returns the added items.
 
+### **capacity**
+
+The number of elements that can fit in the underlying container before it needs to be resized.
+
 ### **clear**()
 
 Removes all elements from the list.
@@ -135,6 +139,10 @@ System.print(["a", "b", "c"].removeAt(1)) //> b
 </pre>
 
 It is a runtime error if the index is not an integer or is out of bounds.
+
+### **reserve**(capacity)
+
+Resize the underlying container size to `capacity` if it is greater than its current size.
 
 ### **sort**(), **sort**(comparer)
 
