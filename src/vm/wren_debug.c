@@ -512,13 +512,18 @@ static void saveNum(WrenSnapshotContext* ctx, double num)
   NUM(num);                     // TODO portability?
 }
 
+static void saveIdOfObj(WrenSnapshotContext* ctx, Obj* obj)
+{
+  WrenCount id = wrenFindInCtx(ctx, obj);
+  NUM(id);
+}
+
 static void saveObj(WrenSnapshotContext* ctx, Obj* obj)
 {
   const ObjOrValueType type = obj->type;   // NOTE the cast
-  WrenCount id = wrenFindInCtx(ctx, obj);
-
   NUM(type);
-  NUM(id);
+
+  saveIdOfObj(ctx, obj);
 }
 
 static void saveValue(WrenSnapshotContext* ctx, Value v)
@@ -579,8 +584,7 @@ SAVE_BUFFER(Value, Value)
 
 static void saveString(WrenSnapshotContext* ctx, ObjString* str)
 {
-  WrenCount id = wrenFindInCtx(ctx, (Obj*)str);
-  NUM(id);
+  saveIdOfObj(ctx, (Obj*)str);
 }
 SAVE_BUFFER(String, ObjString*)
 
@@ -626,8 +630,7 @@ static void saveMethod(WrenSnapshotContext* ctx, Method m)
       type = MethodTypeCharBlock;
       NUM(type);
 
-      WrenCount id = wrenFindInCtx(ctx, (Obj*)m.as.closure);
-      NUM(id);
+      saveIdOfObj(ctx, (Obj*)m.as.closure);
       break;
     }
 
@@ -674,8 +677,7 @@ static void saveObjModule(WrenSnapshotContext* ctx, ObjModule* module)
 {
   // The core module has no name, hence id_name will be 0.
   ObjString* name = module->name;
-  WrenCount id_name = wrenFindInCtx(ctx, (Obj*)name);
-  NUM(id_name);
+  saveIdOfObj(ctx, (Obj*)name);
 
   saveSymbolTable(ctx, &module->variableNames);
   saveValueBuffer(ctx, &module->variables);
@@ -684,8 +686,7 @@ static void saveObjModule(WrenSnapshotContext* ctx, ObjModule* module)
 static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
 {
   const ObjModule* module = fn->module;
-  WrenCount id_module = wrenFindInCtx(ctx, (Obj*)module);
-  NUM(id_module);
+  saveIdOfObj(ctx, (Obj*)module);
 
   if (ctx->options->withFnNames)
   {
@@ -724,8 +725,7 @@ static void saveObjFn(WrenSnapshotContext* ctx, ObjFn* fn)
 static void saveObjClosure(WrenSnapshotContext* ctx, ObjClosure* closure)
 {
   const ObjFn* fn = closure->fn;
-  WrenCount id_fn = wrenFindInCtx(ctx, (Obj*)fn);
-  NUM(id_fn);
+  saveIdOfObj(ctx, (Obj*)fn);
 
   // TODO upvalues, fn->numUpvalues
 }
@@ -763,8 +763,7 @@ static void saveObjMap(WrenSnapshotContext* ctx, ObjMap* map)
 static void saveObjClass(WrenSnapshotContext* ctx, ObjClass* classObj)
 {
   ObjString* name = classObj->name;
-  WrenCount id_name = wrenFindInCtx(ctx, (Obj*)name);
-  NUM(id_name);
+  saveIdOfObj(ctx, (Obj*)name);
 
   VERBOSE CHAR("F");
   const uint8_t numFields = classObj->numFields;    // NOTE the type; see MAX_FIELDS
@@ -772,13 +771,11 @@ static void saveObjClass(WrenSnapshotContext* ctx, ObjClass* classObj)
 
   VERBOSE CHAR("<");
   ObjClass* super = classObj->superclass;
-  WrenCount id_super = wrenFindInCtx(ctx, (Obj*)super);
-  NUM(id_super);
+  saveIdOfObj(ctx, (Obj*)super);
 
   VERBOSE CHAR("m");
   ObjClass* meta = classObj->obj.classObj;
-  WrenCount id_meta = wrenFindInCtx(ctx, (Obj*)meta);
-  NUM(id_meta);
+  saveIdOfObj(ctx, (Obj*)meta);
 
   VERBOSE CHAR("A");
   saveValue(ctx, classObj->attributes);
@@ -840,8 +837,7 @@ static void saveVM(WrenSnapshotContext* ctx, WrenVM* vm, ObjClosure* entrypoint)
 #define SAVE_CLASS(verboseCharStr, name)                                       \
   VERBOSE CHAR(verboseCharStr);                                                \
   ObjClass* name##Class = vm->name##Class;                                     \
-  const WrenCount id_##name##Class = wrenFindInCtx(ctx, (Obj*)name##Class);    \
-  NUM(id_##name##Class);                                                       \
+  saveIdOfObj(ctx, (Obj*)name##Class);                                         \
   VERBOSE CHAR("\n");
 
   SAVE_CLASS("b", bool)
@@ -859,20 +855,17 @@ static void saveVM(WrenSnapshotContext* ctx, WrenVM* vm, ObjClosure* entrypoint)
 #undef SAVE_CLASS
 
   VERBOSE CHAR("i");  // import
-  const WrenCount id_modules = wrenFindInCtx(ctx, (Obj*)vm->modules);
-  NUM(id_modules);
+  saveIdOfObj(ctx, (Obj*)vm->modules);
   VERBOSE CHAR("\n");
 
   VERBOSE CHAR("I");  // import
-  const WrenCount id_lastModule = wrenFindInCtx(ctx, (Obj*)vm->lastModule);
-  NUM(id_lastModule);
+  saveIdOfObj(ctx, (Obj*)vm->lastModule);
   VERBOSE CHAR("\n");
 
   // methodNames was saved before.
 
   VERBOSE CHAR("@");
-  const WrenCount id_entrypoint = wrenFindInCtx(ctx, (Obj*)entrypoint);
-  NUM(id_entrypoint);
+  saveIdOfObj(ctx, (Obj*)entrypoint);
   VERBOSE CHAR("\n");
 }
 
