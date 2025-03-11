@@ -219,6 +219,7 @@ void wrenPopRoot(WrenVM* vm);
 // --- 'S': The saved snapshot will be verbose (but NOT suitable for restore).
 // --- 'n': Save function names.
 // --- '1': Save source line for each bytecode.
+// --- 'i': Id of each object is shortened as much as possible. Nice with '0'.
 // - 'r': Restore a snapshot in a transient dedicated empty VM (possibly from
 //        the just-saved snapshot, because the order is: save then restore).
 // --- 'R': The restore operation will print a lot.
@@ -303,6 +304,13 @@ typedef struct {
   DO_ALL_OBJ_TYPES
   #undef DO
 } WrenCensus;
+
+typedef struct
+{
+  #define DO(u, l) uint8_t sizeId##l;
+  DO_ALL_OBJ_TYPES
+  #undef DO
+} WrenSnapshotIdSizes;
 
 #undef DO_ALL_OBJ_TYPES
 

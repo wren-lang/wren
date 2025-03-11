@@ -91,7 +91,7 @@ void wrenCountAllObj(WrenVM *vm, WrenCounts *counts)
 
   if (wrenSnapshotWant('0'))
   printf(
-    "counting Obj: %u"
+    "counting   Obj: %u"
     #define DO(u, l) "\t" #l ": %u"
     DO_ALL_OBJ_TYPES
     #undef DO

@@ -423,12 +423,15 @@ DEFINE_BUFFER(Swizzle, Swizzle)
 typedef struct
 {
   bool withSourceLines;
+
   bool withFnNames;
 
   // Note the subtle difference:
   // - Save a verbose (non-restorable) snapshot.
   // - Verbosely restore a (non-verbose) snapshot.
   bool verbose;
+
+  bool shortIds;
 } WrenSnapshotOptions;
 
 #define BIT(i) (1 << (i))
@@ -450,6 +453,7 @@ typedef struct sWrenSnapshotContext {
   WrenCensus *census;
   SwizzleBuffer* swizzles;
   WrenSnapshotOptions* options;
+  WrenSnapshotIdSizes* idSizes;
 } WrenSnapshotContext;
 
 // Write into the [ctx], assuming its stream is a FILE*.
@@ -869,6 +873,90 @@ static void saveVM(WrenSnapshotContext* ctx, WrenVM* vm, ObjClosure* entrypoint)
   VERBOSE CHAR("\n");
 }
 
+//TODO don't dup src/vm/wren_vm.h
+#define DO_ALL_OBJ_TYPES \
+  DO(CLASS,    Class   ) \
+  DO(CLOSURE,  Closure ) \
+  DO(FIBER,    Fiber   ) \
+  DO(FN,       Fn      ) \
+  DO(FOREIGN,  Foreign ) \
+  DO(INSTANCE, Instance) \
+  DO(LIST,     List    ) \
+  DO(MAP,      Map     ) \
+  DO(MODULE,   Module  ) \
+  DO(RANGE,    Range   ) \
+  DO(STRING,   String  ) \
+  DO(UPVALUE,  Upvalue )
+
+static void wrenSnapshotAdjustIdSizes(WrenSnapshotContext* ctx,
+                                      WrenCounts* counts)
+{
+  const bool shorten = ctx->options->shortIds;
+  const bool verbose = wrenSnapshotWant('0');
+  uint8_t size = sizeof(WrenCount);
+
+  if (shorten && verbose) printf("Id size in bytes");
+
+  #define DO(u, l)                                                             \
+    if (shorten)                                                               \
+    {                                                                          \
+      size =                                                                   \
+        counts->nb##l >= 1 << 16 ? 4 :                                         \
+        counts->nb##l >= 1 <<  8 ? 2 :                                         \
+        1;                                                                     \
+      if (verbose) printf("\t" #l "# %u", size);                               \
+    }                                                                          \
+    ctx->idSizes->sizeId##l = size;
+
+  DO_ALL_OBJ_TYPES
+
+  #undef DO
+
+  if (shorten && verbose) printf("\n");
+}
+
+#undef DO_ALL_OBJ_TYPES
+
+static void saveIdSizes(WrenSnapshotContext* ctx)
+{
+  uint8_t byte;
+
+  // Shift 2 bits in, to be the least significant bits.
+  #define SHIFT_IN(type)                                                       \
+  do {                                                                         \
+    const uint8_t size = ctx->idSizes->sizeId##type;                           \
+    const uint8_t log2 = size == 4 ? 2 : size == 2 ? 1 : 0;                    \
+    byte <<= 2;                                                                \
+    byte |= log2;                                                              \
+  } while (false)
+
+  // NOTE: Same order as saveAllFOO
+
+  byte = 0;
+  SHIFT_IN(String);
+  SHIFT_IN(Module);
+  SHIFT_IN(Fn);
+  SHIFT_IN(Closure);
+  NUM(byte);
+
+  byte = 0;
+  SHIFT_IN(Map);
+  SHIFT_IN(Class);
+  byte <<= 2;
+  byte <<= 2;
+  NUM(byte);
+
+  // Not saved:
+  // - Fiber
+  // - Foreign
+  // - Instance
+  // - List
+  // - Range
+  // - Upvalue
+
+  #undef SHIFT_IN
+}
+
 static void saveHeaderV0(WrenSnapshotContext* ctx)
 {
   uint8_t options = 0;
@@ -876,8 +964,11 @@ static void saveHeaderV0(WrenSnapshotContext* ctx)
   options |= ctx->options->withSourceLines ? BIT(0) : 0;
   options |= ctx->options->withFnNames     ? BIT(1) : 0;
   options |= ctx->options->verbose         ? BIT(2) : 0;
+  options |= ctx->options->shortIds        ? BIT(3) : 0;
 
   NUM(options);
+
+  saveIdSizes(ctx);
 }
 
 static void saveHeader(WrenSnapshotContext* ctx)
@@ -901,11 +992,16 @@ void wrenSnapshotSave(WrenVM* vm, WrenCounts* counts, WrenCensus* census, ObjClo
     .withSourceLines = wrenSnapshotWant('1'),
     .withFnNames     = wrenSnapshotWant('n'),
     .verbose         = wrenSnapshotWant('S'),
+    .shortIds        = wrenSnapshotWant('i'),
   };
 
+  WrenSnapshotIdSizes idSizes;
+
   WrenSnapshotContext ctx = {
-    { .write = writeToFILE }, file, counts, census, NULL, &options
+    { .write = writeToFILE }, file, counts, census, NULL, &options, &idSizes,
   };
+
+  wrenSnapshotAdjustIdSizes(&ctx, counts);
 
   saveHeader      (&ctx);
   saveAllString   (&ctx);
@@ -1586,6 +1682,44 @@ static size_t readFromROBytes(void* ptr, size_t size, size_t nmemb, WrenSnapshot
   return nmemb;
 }
 
+static void restoreIdSizes(WrenSnapshotContext* ctx)
+{
+  uint8_t byte;
+
+  // Shift 2 bits out, which are the most significant bits.
+  #define SHIFT_OUT(type)                                                      \
+  do {                                                                         \
+    const uint8_t log2 = byte >> (3 * 2);                                      \
+    const uint8_t size = 1 << log2;                                            \
+    ASSERT(size <= sizeof(WrenCount), "Id size for " #type " is too big.");    \
+    ctx->idSizes->sizeId##type = size;                                         \
+    byte <<= 2;                                                                \
+  } while (false)
+
+  // NOTE: Same order as restoreAll FOO
+
+  FREAD_NUM(byte);
+  SHIFT_OUT(String);
+  SHIFT_OUT(Module);
+  SHIFT_OUT(Fn);
+  SHIFT_OUT(Closure);
+
+  FREAD_NUM(byte);
+  SHIFT_OUT(Map);
+  SHIFT_OUT(Class);
+  ASSERT(byte == 0, "Non-empty id sizes.");
+
+  // Not restored:
+  // - Fiber
+  // - Foreign
+  // - Instance
+  // - List
+  // - Range
+  // - Upvalue
+
+  #undef SHIFT_OUT
+}
+
 static void restoreHeaderV0(WrenSnapshotContext* ctx)
 {
   uint8_t options;
@@ -1594,11 +1728,14 @@ static void restoreHeaderV0(WrenSnapshotContext* ctx)
   ctx->options->withSourceLines = options & BIT(0);
   ctx->options->withFnNames     = options & BIT(1);
   bool verbose                  = options & BIT(2);
+  ctx->options->shortIds        = options & BIT(3);
 
-  const uint8_t known = BIT(2) | BIT(1) | BIT(0);
+  const uint8_t known = BIT(3) | BIT(2) | BIT(1) | BIT(0);
   ASSERT((options & ~known) == 0, "Unknown snapshot options.");
 
   ASSERT(!verbose, "Can't restore a verbose snapshot.");
+
+  restoreIdSizes(ctx);
 }
 
 static void restoreHeader(WrenSnapshotContext* ctx)
@@ -1654,6 +1791,8 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   };
   */
 
+  WrenSnapshotIdSizes idSizes;
+
   WrenSnapshotContext ctx = {
     { .read = readFromFILE }, f,
     // { .read = readFromROBytes }, &streamFromROBytes,
@@ -1661,6 +1800,7 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
     &census,
     &swizzles,
     &options,
+    &idSizes,
   };
 
   restoreHeader(&ctx);
