@@ -1522,6 +1522,8 @@ WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visi
     wrenCollectGarbage(vm);
     wrenPopRoot(vm); // obj.
 
+    vm->inhibitGC = true;
+
     counts = (WrenCounts) {0};
     wrenCountAllObj(vm, &counts);
     wrenCensusAllObj(vm, &counts, &census);
@@ -1530,6 +1532,8 @@ WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visi
 
     wrenSnapshotSave(vm, &counts, &census, (ObjClosure*)obj);
     wrenFreeCensus(vm, &census);
+
+    vm->inhibitGC = false;
   }
 
   // wrenVisitObjects_(vm, obj, visitor, 0);

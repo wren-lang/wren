@@ -1638,6 +1638,8 @@ static void restoreHeader(WrenSnapshotContext* ctx)
 
 ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
 {
+  vm->inhibitGC = true;
+
   // Expect no Obj yet.
   performCount(vm);
 
@@ -1698,6 +1700,9 @@ ObjClosure* wrenSnapshotRestore(FILE* f, WrenVM* vm)
   wrenFreeCensus(vm, &census);
 
   performCount(vm);
+
+  vm->inhibitGC = false;
+
   // TODO GC should be nop
   // performCount(vm);
 

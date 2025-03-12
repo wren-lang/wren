@@ -297,6 +297,10 @@ void wrenFreeVM(WrenVM* vm)
 
 void wrenCollectGarbage(WrenVM* vm)
 {
+#if WREN_SNAPSHOT
+  ASSERT(!vm->inhibitGC, "Won't GC while snapshot happens.");
+#endif
+
 #if WREN_DEBUG_TRACE_MEMORY || WREN_DEBUG_TRACE_GC
   printf("-- gc --\n");
 

@@ -112,6 +112,10 @@ struct WrenVM
   // There is a single global symbol table for all method names on all classes.
   // Method calls are dispatched directly by index in this table.
   SymbolTable methodNames;
+
+#if WREN_SNAPSHOT
+  bool inhibitGC;
+#endif
 };
 
 // A generic allocation function that handles all explicit memory management.
