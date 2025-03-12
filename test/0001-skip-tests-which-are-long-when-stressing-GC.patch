@@ -1,0 +1,103 @@
+From 042a9275986c75934ded5cf516c5fe5e072f5ae7 Mon Sep 17 00:00:00 2001
+From: Sylvain HITIER <shitier@metraware.com>
+Date: Fri, 13 Dec 2024 11:16:57 +0100
+Subject: [PATCH] skip tests which are long when stressing GC
+
+---
+ example/skynet.wren                    | 32 ++++++++++++++++++++++++++
+ test/language/deeply_nested_gc.wren    | 15 ++++++++++++
+ test/language/many_reallocations.wren  |  2 ++
+ test/random/sample_count_multiple.wren |  2 ++
+ 4 files changed, 51 insertions(+)
+
+diff --git a/example/skynet.wren b/example/skynet.wren
+index 68123876..937ed316 100644
+--- a/example/skynet.wren
++++ b/example/skynet.wren
+@@ -1,8 +1,40 @@
++// skip: when WREN_DEBUG_GC_STRESS, duration ~ 15 d 09 h (unbearably long)
++//
++// For illustrative information, here are some stats obtained on a 4.4 GHz CPU.
++//
++//   Size  | Duration
++// --------+---------
++//    1000 | is immediate
++//   10000 |      71 s =            1 min 11 s
++//  100000 |   12796 s =       3 h 33 min 16 s
++// 1000000 | 1328306 s = 15 d 08 h 58 min 26 s
++//
++// NOTE: Semantically, the size must be a power of 10. But the code doesn't
++//       enforce this, so num becomes non-integer, and eventually the
++//       out-of-memory mechanism kills the process.
++//
++// Reached num |        Duration from start        | Time for num += 1E3
++// ------------+-----------------------------------+--------------------
++//    250000   |   80706 s =      22 h 25 min 06 s | 11 min 09 s
++//    500000   |  327874 s =  3 d 19 h 04 min 34 s | 22 min 17 s
++//    750000   |  744323 s =  8 d 14 h 45 min 23 s | 33 min 43 s
++//    900000   | 1074027 s = 12 d 10 h 20 min 27 s | 39 min 38 s
++//    998000   |             15 d 07 h 31 min 20 s | 43 min 57 s
++//    999000   |             15 d 08 h 15 min 17 s | 43 min 09 s
++//
++// Formula:
++//    num ~= 921.380195 * s ^ 0.495752
++
+ // A million fiber microbenchmark based on: https://github.com/atemerev/skynet.
+ class Skynet {
+   static makeFiber(num, size, div) {
+     return Fiber.new {
+       if (size == 1) {
++        //System.print(num)
++        // NOTE: This enables to monitor the progress during the 2 weeks, with
++        //       the tiniest overhead; indeed, string interpolation has to be
++        //       avoided because it creates objects.
++        //       When summing to only 1E5, this line increases the ~3 h by ~10%.
+         Fiber.yield(num)
+       } else {
+         var fibers = []
+diff --git a/test/language/deeply_nested_gc.wren b/test/language/deeply_nested_gc.wren
+index 04bd443c..0f118670 100644
+--- a/test/language/deeply_nested_gc.wren
++++ b/test/language/deeply_nested_gc.wren
+@@ -1,3 +1,18 @@
++// skip: when WREN_DEBUG_GC_STRESS, duration ~ 2 h 10 min (extremely long)
++//
++// For illustrative information, here are some stats obtained on a 4.4 GHz CPU.
++//
++// Iterations | Duration
++// -----------+---------
++//     4000   | is immediate
++//    40000   |   62 s =      1 min 02 s
++//    50000   |   97 s =      1 min 37 s
++//    60000   |  145 s =      2 min 25 s
++//   100000   |  442 s =      7 min 22 s
++//   200000   | 1858 s =     30 min 58 s
++//   300000   | 4208 s = 1 h 10 min 58 s
++//   400000   | 7789 s = 2 h 09 min 49 s
++
+ var head
+ 
+ for (i in 1..400000) {
+diff --git a/test/language/many_reallocations.wren b/test/language/many_reallocations.wren
+index cb9b28d5..315b56c6 100644
+--- a/test/language/many_reallocations.wren
++++ b/test/language/many_reallocations.wren
+@@ -1,3 +1,5 @@
++// skip: when WREN_DEBUG_GC_STRESS, duration ~ 1 min (quite long)
++
+ var found = []
+ for (i in 1..1000) {
+   var foo = 1337
+diff --git a/test/random/sample_count_multiple.wren b/test/random/sample_count_multiple.wren
+index 2dd34753..38955b60 100644
+--- a/test/random/sample_count_multiple.wren
++++ b/test/random/sample_count_multiple.wren
+@@ -1,3 +1,5 @@
++// skip: when WREN_DEBUG_GC_STRESS, duration ~ 12 s (slightly long)
++
+ import "random" for Random
+ 
+ var random = Random.new(12345)
+-- 
+2.34.1
+
