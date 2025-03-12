@@ -503,12 +503,6 @@ enum {
   ValueTypeCharNaN      = '8', // 8 is not an infinite :-)
 };
 
-// Helper method for wrenFindInCensus() on the census in the [ctx].
-static WrenCount wrenFindInCtx(WrenSnapshotContext* ctx, Obj* needle)
-{
-  return wrenFindInCensus(ctx->counts, ctx->census, needle);
-}
-
 static void saveNum(WrenSnapshotContext* ctx, double num)
 {
   const ObjOrValueType type = ValueTypeCharNum;
@@ -516,10 +510,49 @@ static void saveNum(WrenSnapshotContext* ctx, double num)
   NUM(num);                     // TODO portability?
 }
 
+//TODO don't dup src/vm/wren_vm.h
+#define DO_ALL_OBJ_TYPES \
+  DO(CLASS,    Class   ) \
+  DO(CLOSURE,  Closure ) \
+  DO(FIBER,    Fiber   ) \
+  DO(FN,       Fn      ) \
+  DO(FOREIGN,  Foreign ) \
+  DO(INSTANCE, Instance) \
+  DO(LIST,     List    ) \
+  DO(MAP,      Map     ) \
+  DO(MODULE,   Module  ) \
+  DO(RANGE,    Range   ) \
+  DO(STRING,   String  ) \
+  DO(UPVALUE,  Upvalue )
+
+// Save the id of [obj]. When it's NULL, id is 0; but how long is this 0? The
+// [type] will tell.
+static void saveIdOfObjOfType(WrenSnapshotContext* ctx, Obj* obj, ObjType type)
+{
+  const WrenCount id =
+    obj == NULL ? 0 : wrenFindInCensus(ctx->counts, ctx->census, obj);
+
+  uint8_t size = 0;
+  switch (type)
+  {
+    #define DO(u, l) case OBJ_##u: size = ctx->idSizes->sizeId##l; break;
+    DO_ALL_OBJ_TYPES
+    #undef DO
+  }
+
+  switch (size)
+  {
+    case 4: { uint32_t n = id; NUM(n); break; }
+    case 2: { uint16_t n = id; NUM(n); break; }
+    case 1: { uint8_t  n = id; NUM(n); break; }
+    default: ASSERT(false, "Can't save id of such size."); break;
+  }
+}
+
+// Helper when [obj] can never be NULL.
 static void saveIdOfObj(WrenSnapshotContext* ctx, Obj* obj)
 {
-  WrenCount id = wrenFindInCtx(ctx, obj);
-  NUM(id);
+  saveIdOfObjOfType(ctx, obj, obj->type);
 }
 
 static void saveObj(WrenSnapshotContext* ctx, Obj* obj)
@@ -679,9 +712,9 @@ static void saveObjString(WrenSnapshotContext* ctx, ObjString* str)
 
 static void saveObjModule(WrenSnapshotContext* ctx, ObjModule* module)
 {
-  // The core module has no name, hence id_name will be 0.
+  // The core module has no name.
   ObjString* name = module->name;
-  saveIdOfObj(ctx, (Obj*)name);
+  saveIdOfObjOfType(ctx, (Obj*)name, OBJ_STRING);
 
   saveSymbolTable(ctx, &module->variableNames);
   saveValueBuffer(ctx, &module->variables);
@@ -773,9 +806,10 @@ static void saveObjClass(WrenSnapshotContext* ctx, ObjClass* classObj)
   const uint8_t numFields = classObj->numFields;    // NOTE the type; see MAX_FIELDS
   NUM(numFields);
 
+  // The Object class has no superclass.
   VERBOSE CHAR("<");
   ObjClass* super = classObj->superclass;
-  saveIdOfObj(ctx, (Obj*)super);
+  saveIdOfObjOfType(ctx, (Obj*)super, OBJ_CLASS);
 
   VERBOSE CHAR("m");
   ObjClass* meta = classObj->obj.classObj;
@@ -872,21 +906,6 @@ static void saveVM(WrenSnapshotContext* ctx, WrenVM* vm, ObjClosure* entrypoint)
   saveIdOfObj(ctx, (Obj*)entrypoint);
   VERBOSE CHAR("\n");
 }
-
-//TODO don't dup src/vm/wren_vm.h
-#define DO_ALL_OBJ_TYPES \
-  DO(CLASS,    Class   ) \
-  DO(CLOSURE,  Closure ) \
-  DO(FIBER,    Fiber   ) \
-  DO(FN,       Fn      ) \
-  DO(FOREIGN,  Foreign ) \
-  DO(INSTANCE, Instance) \
-  DO(LIST,     List    ) \
-  DO(MAP,      Map     ) \
-  DO(MODULE,   Module  ) \
-  DO(RANGE,    Range   ) \
-  DO(STRING,   String  ) \
-  DO(UPVALUE,  Upvalue )
 
 static void wrenSnapshotAdjustIdSizes(WrenSnapshotContext* ctx,
                                       WrenCounts* counts)
@@ -1055,9 +1074,17 @@ static Obj##type* getObj##type(WrenSnapshotContext* ctx, WrenCount id)         \
 static Obj##type* restoreIdAsObj##type(WrenSnapshotContext* ctx, WrenCount* p) \
 {                                                                              \
   WrenCount id;                                                                \
-  FREAD_NUM(id);                                                               \
+  const uint8_t size = ctx->idSizes->sizeId##type;                             \
                                                                                \
-  VERBOSE printf("Obj" #type "#%u", id);                                       \
+  switch (size)                                                                \
+  {                                                                            \
+    case 4: { uint32_t n; FREAD_NUM(n); id = n; break; }                       \
+    case 2: { uint16_t n; FREAD_NUM(n); id = n; break; }                       \
+    case 1: { uint8_t  n; FREAD_NUM(n); id = n; break; }                       \
+    default: ASSERT(false, "Can't restore id of such size."); break;           \
+  }                                                                            \
+                                                                               \
+  VERBOSE printf("Obj" #type "%uB#%u", size, id);                              \
                                                                                \
   if (id == 0) return NULL;                                                    \
                                                                                \
