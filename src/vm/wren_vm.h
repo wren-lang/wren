@@ -195,6 +195,9 @@ static inline void wrenCallFunction(WrenVM* vm, ObjFiber* fiber,
   wrenAppendCallFrame(/* vm, */ fiber, closure, fiber->stackTop - numArgs);
 }
 
+// Closes all open upvalues of [fiber].
+void closeAllUpvaluesOf(ObjFiber* fiber);
+
 // Marks [obj] as a GC root so that it doesn't get collected.
 void wrenPushRoot(WrenVM* vm, Obj* obj);
 

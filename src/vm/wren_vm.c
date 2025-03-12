@@ -302,6 +302,11 @@ static void closeUpvalues(ObjFiber* fiber, Value* last)
   }
 }
 
+void closeAllUpvaluesOf(ObjFiber* fiber)
+{
+  closeUpvalues(fiber, fiber->stack);
+}
+
 // Looks up a foreign method in [moduleName] on [className] with [signature].
 //
 // This will try the host's foreign method binder first. If that fails, it

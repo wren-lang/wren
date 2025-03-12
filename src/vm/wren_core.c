@@ -112,6 +112,13 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
     // Remember who ran it.
     fiber->caller = vm->fiber;
   }
+  else
+  {
+    // A transfer means forgetting the current fiber; its stack is still alive,
+    // but possibly for the last time. Close all its upvalues now, while the
+    // values are still available for sure.
+    closeAllUpvaluesOf(vm->fiber);
+  }
 
   if (fiber->numFrames == 0)
   {
