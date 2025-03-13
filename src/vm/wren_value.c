@@ -1518,7 +1518,9 @@ WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visi
     counts = (WrenCounts) {0};
     wrenCountAllObj(vm, &counts);
 
-    wrenPushRoot(vm, obj);  // TODO should the caller have a handle on the closure?
+    // TODO should the caller have a handle on the closure?  Not needed when
+    // it's only init code for importing modules and create ObjForeign.
+    wrenPushRoot(vm, obj);
     wrenCollectGarbage(vm);
     wrenPopRoot(vm); // obj.
 
