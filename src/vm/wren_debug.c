@@ -1773,7 +1773,7 @@ static void restoreHeader(WrenSnapshotContext* ctx)
 
   (ctx->read)(magic, sizeof(char), sizeof(magic), ctx);
 
-  if (strcmp(magic, wrenSnapshotMagic))
+  if (memcmp(wrenSnapshotMagic, magic, sizeof(magic)))
   {
     ASSERT(false, "Invalid magic string.");
     // TODO prevent reading more
