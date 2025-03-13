@@ -7,7 +7,7 @@
 #include "wren_vm.h"
 #include "wren_opt_meta.wren.inc"
 
-void metaCompile(WrenVM* vm)
+static void metaCompile(WrenVM* vm)
 {
   const char* source = wrenGetSlotString(vm, 1);
   bool isExpression = wrenGetSlotBool(vm, 2);
@@ -37,7 +37,7 @@ void metaCompile(WrenVM* vm)
   }
 }
 
-void metaGetModuleVariables(WrenVM* vm)
+static void metaGetModuleVariables(WrenVM* vm)
 {
   wrenEnsureSlots(vm, 3);
   
@@ -70,7 +70,7 @@ const char* wrenMetaSource()
   return metaModuleSource;
 }
 
-WrenForeignMethodFn wrenMetaBindForeignMethod(WrenVM* vm,
+WrenForeignMethodFn wrenMetaBindForeignMethod(/* WrenVM* vm, */
                                               const char* className,
                                               bool isStatic,
                                               const char* signature)

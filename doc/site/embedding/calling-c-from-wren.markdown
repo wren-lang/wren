@@ -10,9 +10,9 @@ flavor into our VM:
 Since Wren is object-oriented, behavior lives in methods, so for the former we
 have **foreign methods**. Likewise, data lives in objects, so for the latter, we
 define **foreign classes**. This page is about the first, foreign methods. The
-[next page][] covers foreign classes.
+[next section][] covers foreign classes.
 
-[next page]: /embedding/storing-c-data.html
+[next section]: /embedding/storing-c-data.html
 
 A foreign method looks to Wren like a regular method. It is defined on a Wren
 class, it has a name and signature, and calls to it are dynamically dispatched.

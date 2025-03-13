@@ -6,7 +6,7 @@ This is the code to build the https://wren.io/try wasm component.
 
 - Install emscripten sdk from https://emscripten.org/
 - Make the emsdk available to your terminal/PATH 
-	- for example:
+  - for example:
     - `source ~/dev/emsdk/emsdk_env.sh`
 - Run the emmake command to build
     - `emmake make`

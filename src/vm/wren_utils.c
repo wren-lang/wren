@@ -3,9 +3,10 @@
 #include "wren_utils.h"
 #include "wren_vm.h"
 
-DEFINE_BUFFER(Byte, uint8_t);
-DEFINE_BUFFER(Int, int);
-DEFINE_BUFFER(String, ObjString*);
+// Define buffer-related functions.
+DEFINE_BUFFER(Byte, uint8_t)
+DEFINE_BUFFER(Int, int)
+DEFINE_BUFFER(String, ObjString*)
 
 void wrenSymbolTableInit(SymbolTable* symbols)
 {
@@ -17,15 +18,20 @@ void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols)
   wrenStringBufferClear(vm, symbols);
 }
 
+void wrenSymbolTableAppend(WrenVM* vm, SymbolTable* symbols, ObjString* symbol)
+{
+  wrenPushRoot(vm, (Obj*)symbol);
+  wrenStringBufferWrite(vm, symbols, symbol);
+  wrenPopRoot(vm); // symbol.
+}
+
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
                        const char* name, size_t length)
 {
   ObjString* symbol = AS_STRING(wrenNewStringLength(vm, name, length));
-  
-  wrenPushRoot(vm, &symbol->obj);
-  wrenStringBufferWrite(vm, symbols, symbol);
-  wrenPopRoot(vm);
-  
+
+  wrenSymbolTableAppend(vm, symbols, symbol);
+
   return symbols->count - 1;
 }
 
@@ -134,7 +140,7 @@ int wrenUtf8Decode(const uint8_t* bytes, uint32_t length)
   }
   else if ((*bytes & 0xf0) == 0xe0)
   {
-    // Three byte sequence: 1110xxxx	 10xxxxxx 10xxxxxx.
+    // Three byte sequence: 1110xxxx 10xxxxxx 10xxxxxx.
     value = *bytes & 0x0f;
     remainingBytes = 2;
   }

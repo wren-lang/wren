@@ -4,32 +4,15 @@ from __future__ import print_function
 
 import glob
 import fnmatch
-import itertools
 import os
 import re
 
-TODO_PATTERN = re.compile(r'\s*// TODO:')
-DOC_PATTERN = re.compile(r'\s*//')
+TODO_PATTERN   = re.compile(r'\s*// TODO:')
+DOC_PATTERN    = re.compile(r'\s*//')
 EXPECT_PATTERN = re.compile(r'// expect')
+EOL_PATTERN    = re.compile(r'\n|\r\n')
 
-C_FORMAT_LINE = "{0:<10}  {1:>7}  {2:>7}  {3:>7}  {4:>7}  {5:>7}  {6:>7}  {7:>7}"
-WREN_FORMAT_LINE = "{0:<10}  {1:>7}  {2:>7}  {3:>7}  {4:>7}  {5:>7}  {6:>7}"
-
-num_files = 0
-num_docs = 0
-num_code = 0
-num_empty = 0
-num_todos = 0
-num_semicolons = 0
-num_test_files = 0
-num_test_todos = 0
-num_expects = 0
-num_test_empty = 0
-num_test = 0
-num_benchmark_files = 0
-num_benchmark_todos = 0
-num_benchmark_empty = 0
-num_benchmark = 0
+FORMAT_LINE = "{0:<10}  {1:>7}  {2:>7} |{3:>7}  {4:>7}  {5:>7}  {6:>7}  {7:>7}"
 
 def c_metrics(label, directories):
   """Reports the metrics of one or more directories of C code."""
@@ -68,18 +51,19 @@ def c_metrics(label, directories):
 
           num_code += 1
 
-  print(C_FORMAT_LINE.format(
-      label, num_files, num_semicolons, num_todos, num_code, num_docs,
-      num_empty, num_todos + num_docs + num_empty + num_code))
+  print(FORMAT_LINE.format(
+      label, num_files, num_semicolons,
+      num_todos,  num_code,  num_docs,  num_empty,
+      num_todos + num_code + num_docs + num_empty))
 
 
 def wren_metrics(label, directories):
   """Reports the metrics of one or more directories of Wren code."""
   num_files = 0
-  num_empty = 0
-  num_code = 0
   num_todos = 0
+  num_code = 0
   num_expects = 0
+  num_empty = 0
 
   for directory in directories:
     for dir_path, dir_names, file_names in os.walk(directory):
@@ -93,7 +77,7 @@ def wren_metrics(label, directories):
 
         with open(file_path, "r", encoding="utf-8", newline='', errors='replace') as input:
           data = input.read()
-          lines = re.split('\n|\r\n', data)
+          lines = EOL_PATTERN.split(data)
           for line in lines:
             if line.strip() == "":
               num_empty += 1
@@ -111,21 +95,20 @@ def wren_metrics(label, directories):
 
             num_code += 1
 
-  print(WREN_FORMAT_LINE.format(
-      label, num_files, num_todos, num_code, num_expects, num_empty,
+  print(FORMAT_LINE.format(
+      label, num_files, "",
+      num_todos,  num_code,  num_expects,  num_empty,
       num_todos + num_code + num_expects + num_empty))
 
 
-print(C_FORMAT_LINE.format(
-    "", "files", "';'", "todos", "code", "comment", "empty", "total"))
+print(FORMAT_LINE.format(
+    "/* C */", "files", "';'", "todos", "code", "comment", "empty", "total"))
 c_metrics("vm",       ["src/vm", "src/include"])
 c_metrics("optional", ["src/optional"])
-c_metrics("cli",      ["src/cli", "src/module"])
 
 print()
-print(WREN_FORMAT_LINE.format(
-    "", "files", "todos", "code", "expects", "empty", "total"))
+print(FORMAT_LINE.format(
+    "/* Wren */", "files", "", "todos", "code", "expects", "empty", "total"))
 wren_metrics("core",      ["src/vm"])
 wren_metrics("optional",  ["src/optional"])
-wren_metrics("cli",       ["src/module"])
 wren_metrics("test",      ["test"])

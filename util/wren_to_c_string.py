@@ -7,7 +7,7 @@ import os.path
 import re
 
 # The source for the Wren modules that are built into the VM or CLI are turned
-# include C string literals. This way they can be compiled directly into the
+# into C string literals. This way they can be compiled directly into the
 # code so that file IO is not needed to find and read them.
 #
 # These string literals are stored in files with a ".wren.inc" extension and
@@ -22,6 +22,7 @@ static const char* {1}ModuleSource =
 def wren_to_c_string(input_path, wren_source_lines, module):
   wren_source = ""
   for line in wren_source_lines:
+    line = re.sub('//.*', '', line)         # imperfect but good enough
     line = line.replace("\\", "\\\\")
     line = line.replace('"', "\\\"")
     line = line.replace("\n", "\\n\"")

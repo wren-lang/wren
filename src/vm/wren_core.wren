@@ -155,6 +155,7 @@ class TakeSequence is Sequence {
   construct new(sequence, count) {
     _sequence = sequence
     _count = count
+    // _taken
   }
 
   iterate(iterator) {
@@ -473,11 +474,11 @@ class System {
 }
 
 class ClassAttributes {
-  self { _attributes }
-  methods { _methods }
   construct new(attributes, methods) {
     _attributes = attributes
     _methods = methods
   }
+  self { _attributes }
+  methods { _methods }
   toString { "attributes:%(_attributes) methods:%(_methods)" }
 }

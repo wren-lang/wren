@@ -13,7 +13,7 @@ static const char* metaModuleSource =
 "    if (!(source is String)) Fiber.abort(\"Source code must be a string.\")\n"
 "\n"
 "    var closure = compile_(source, false, false)\n"
-"    // TODO: Include compile errors.\n"
+"    \n"
 "    if (closure == null) Fiber.abort(\"Could not compile source code.\")\n"
 "\n"
 "    closure.call()\n"

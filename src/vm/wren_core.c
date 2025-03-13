@@ -13,6 +13,8 @@
 
 #include "wren_core.wren.inc"
 
+// Bool ------------------------------------------------------------------------
+
 DEF_PRIMITIVE(bool_not)
 {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -29,6 +31,8 @@ DEF_PRIMITIVE(bool_toString)
     RETURN_VAL(CONST_STRING(vm, "false"));
   }
 }
+
+// Class -----------------------------------------------------------------------
 
 DEF_PRIMITIVE(class_name)
 {
@@ -55,6 +59,8 @@ DEF_PRIMITIVE(class_attributes)
   RETURN_VAL(AS_CLASS(args[0])->attributes);
 }
 
+// Fiber -----------------------------------------------------------------------
+
 DEF_PRIMITIVE(fiber_new)
 {
   if (!validateFn(vm, args[1], "Argument")) return false;
@@ -76,12 +82,13 @@ DEF_PRIMITIVE(fiber_abort)
   return IS_NULL(args[1]);
 }
 
-// Transfer execution to [fiber] coming from the current fiber whose stack has
+// Transfer execution to [fiber], coming from the current fiber whose stack has
 // [args].
 //
-// [isCall] is true if [fiber] is being called and not transferred.
+// If [isCall], [fiber] is being called, so is set up to return to the current
+// fiber. Otherwise it is (definitively) transferred to.
 //
-// [hasValue] is true if a value in [args] is being passed to the new fiber.
+// If [hasValue], one value in [args] is being passed to the new fiber.
 // Otherwise, `null` is implicitly being passed.
 static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
                      bool hasValue, const char* verb)
@@ -104,6 +111,13 @@ static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
     
     // Remember who ran it.
     fiber->caller = vm->fiber;
+  }
+  else
+  {
+    // A transfer means forgetting the current fiber; its stack is still alive,
+    // but possibly for the last time. Close all its upvalues now, while the
+    // values are still available for sure.
+    closeAllUpvaluesOf(vm->fiber);
   }
 
   if (fiber->numFrames == 0)
@@ -248,6 +262,8 @@ DEF_PRIMITIVE(fiber_yield1)
   return false;
 }
 
+// Fn --------------------------------------------------------------------------
+
 DEF_PRIMITIVE(fn_new)
 {
   if (!validateFn(vm, args[1], "Argument")) return false;
@@ -296,6 +312,8 @@ DEF_PRIMITIVE(fn_toString)
 {
   RETURN_VAL(CONST_STRING(vm, "<fn>"));
 }
+
+// List ------------------------------------------------------------------------
 
 // Creates a new list of size args[1], with all elements initialized to args[2].
 DEF_PRIMITIVE(list_filled)
@@ -401,7 +419,7 @@ DEF_PRIMITIVE(list_removeAt)
 
 DEF_PRIMITIVE(list_removeValue) {
   ObjList* list = AS_LIST(args[0]);
-  int index = wrenListIndexOf(vm, list, args[1]);
+  int index = wrenListIndexOf(/* vm, */ list, args[1]);
   if(index == -1) RETURN_NULL;
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
 }
@@ -409,7 +427,7 @@ DEF_PRIMITIVE(list_removeValue) {
 DEF_PRIMITIVE(list_indexOf)
 {
   ObjList* list = AS_LIST(args[0]);
-  RETURN_NUM(wrenListIndexOf(vm, list, args[1]));
+  RETURN_NUM(wrenListIndexOf(/* vm, */ list, args[1]));
 }
 
 DEF_PRIMITIVE(list_swap)
@@ -469,6 +487,8 @@ DEF_PRIMITIVE(list_subscriptSetter)
   list->elements.data[index] = args[2];
   RETURN_VAL(args[2]);
 }
+
+// Map -------------------------------------------------------------------------
 
 DEF_PRIMITIVE(map_new)
 {
@@ -595,6 +615,8 @@ DEF_PRIMITIVE(map_valueIteratorValue)
   RETURN_VAL(entry->value);
 }
 
+// Null ------------------------------------------------------------------------
+
 DEF_PRIMITIVE(null_not)
 {
   RETURN_VAL(TRUE_VAL);
@@ -604,6 +626,8 @@ DEF_PRIMITIVE(null_toString)
 {
   RETURN_VAL(CONST_STRING(vm, "null"));
 }
+
+// Num -------------------------------------------------------------------------
 
 DEF_PRIMITIVE(num_fromString)
 {
@@ -630,7 +654,7 @@ DEF_PRIMITIVE(num_fromString)
   RETURN_NUM(number);
 }
 
-// Defines a primitive on Num that calls infix [op] and returns [type].
+// Defines a primitive on Num that returns a constant [name] and [value].
 #define DEF_NUM_CONSTANT(name, value)                                          \
     DEF_PRIMITIVE(num_##name)                                                  \
     {                                                                          \
@@ -794,7 +818,7 @@ DEF_PRIMITIVE(num_pow)
 DEF_PRIMITIVE(num_fraction)
 {
   double unused;
-  RETURN_NUM(modf(AS_NUM(args[0]) , &unused));
+  RETURN_NUM(modf(AS_NUM(args[0]), &unused));
 }
 
 DEF_PRIMITIVE(num_isInfinity)
@@ -839,9 +863,11 @@ DEF_PRIMITIVE(num_toString)
 DEF_PRIMITIVE(num_truncate)
 {
   double integer;
-  modf(AS_NUM(args[0]) , &integer);
+  modf(AS_NUM(args[0]), &integer);
   RETURN_NUM(integer);
 }
+
+// Object ----------------------------------------------------------------------
 
 DEF_PRIMITIVE(object_same)
 {
@@ -896,6 +922,8 @@ DEF_PRIMITIVE(object_type)
 {
   RETURN_OBJ(wrenGetClass(vm, args[0]));
 }
+
+// Range -----------------------------------------------------------------------
 
 DEF_PRIMITIVE(range_from)
 {
@@ -974,10 +1002,12 @@ DEF_PRIMITIVE(range_toString)
   Value result = wrenStringFormat(vm, "@$@", from,
                                   range->isInclusive ? ".." : "...", to);
 
-  wrenPopRoot(vm);
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // to.
+  wrenPopRoot(vm); // from.
   RETURN_VAL(result);
 }
+
+// String ----------------------------------------------------------------------
 
 DEF_PRIMITIVE(string_fromCodePoint)
 {
@@ -1197,6 +1227,8 @@ DEF_PRIMITIVE(string_toString)
   RETURN_VAL(args[0]);
 }
 
+// System ----------------------------------------------------------------------
+
 DEF_PRIMITIVE(system_clock)
 {
   RETURN_NUM((double)clock() / CLOCKS_PER_SEC);
@@ -1218,6 +1250,204 @@ DEF_PRIMITIVE(system_writeString)
   RETURN_VAL(args[1]);
 }
 
+//------------------------------------------------------------------------------
+
+#if WREN_SNAPSHOT
+
+static const Primitive censusPrimitive[] = {
+#define P(name) prim_##name
+  P(object_not),
+  P(object_eqeq),
+  P(object_bangeq),
+  P(object_is),
+  P(object_toString),
+  P(object_type),
+  P(object_same),       // not ordered as in wrenInitializeCore()
+  P(class_name),
+  P(class_supertype),
+  P(class_toString),
+  P(class_attributes),
+  P(bool_toString),
+  P(bool_not),
+  P(fiber_new),
+  P(fiber_abort),
+  P(fiber_current),
+  P(fiber_suspend),
+  P(fiber_yield),
+  P(fiber_yield1),
+  P(fiber_call),
+  P(fiber_call1),
+  P(fiber_error),
+  P(fiber_isDone),
+  P(fiber_transfer),
+  P(fiber_transfer1),
+  P(fiber_transferError),
+  P(fiber_try),
+  P(fiber_try1),
+  P(fn_new),
+  P(fn_arity),
+  P(fn_call0),
+  P(fn_call1),
+  P(fn_call2),
+  P(fn_call3),
+  P(fn_call4),
+  P(fn_call5),
+  P(fn_call6),
+  P(fn_call7),
+  P(fn_call8),
+  P(fn_call9),
+  P(fn_call10),
+  P(fn_call11),
+  P(fn_call12),
+  P(fn_call13),
+  P(fn_call14),
+  P(fn_call15),
+  P(fn_call16),
+  P(fn_toString),
+  P(null_not),
+  P(null_toString),
+  P(num_fromString),
+  P(num_infinity),
+  P(num_nan),
+  P(num_pi),
+  P(num_tau),
+  P(num_largest),
+  P(num_smallest),
+  P(num_maxSafeInteger),
+  P(num_minSafeInteger),
+  P(num_minus),
+  P(num_plus),
+  P(num_multiply),
+  P(num_divide),
+  P(num_lt),
+  P(num_gt),
+  P(num_lte),
+  P(num_gte),
+  P(num_bitwiseAnd),
+  P(num_bitwiseOr),
+  P(num_bitwiseXor),
+  P(num_bitwiseLeftShift),
+  P(num_bitwiseRightShift),
+  P(num_abs),
+  P(num_acos),
+  P(num_asin),
+  P(num_atan),
+  P(num_cbrt),
+  P(num_ceil),
+  P(num_cos),
+  P(num_floor),
+  P(num_negate),
+  P(num_round),
+  P(num_min),
+  P(num_max),
+  P(num_clamp),
+  P(num_sin),
+  P(num_sqrt),
+  P(num_tan),
+  P(num_log),
+  P(num_log2),
+  P(num_exp),
+  P(num_mod),
+  P(num_bitwiseNot),
+  P(num_dotDot),
+  P(num_dotDotDot),
+  P(num_atan2),
+  P(num_pow),
+  P(num_fraction),
+  P(num_isInfinity),
+  P(num_isInteger),
+  P(num_isNan),
+  P(num_sign),
+  P(num_toString),
+  P(num_truncate),
+  P(num_eqeq),
+  P(num_bangeq),
+  P(string_fromCodePoint),
+  P(string_fromByte),
+  P(string_plus),
+  P(string_subscript),
+  P(string_byteAt),
+  P(string_byteCount),
+  P(string_codePointAt),
+  P(string_contains),
+  P(string_endsWith),
+  P(string_indexOf1),
+  P(string_indexOf2),
+  P(string_iterate),
+  P(string_iterateByte),
+  P(string_iteratorValue),
+  P(string_startsWith),
+  P(string_toString),
+  P(list_filled),
+  P(list_new),
+  P(list_subscript),
+  P(list_subscriptSetter),
+  P(list_add),
+  P(list_addCore),
+  P(list_clear),
+  P(list_count),
+  P(list_insert),
+  P(list_iterate),
+  P(list_iteratorValue),
+  P(list_removeAt),
+  P(list_removeValue),
+  P(list_indexOf),
+  P(list_swap),
+  P(map_new),
+  P(map_subscript),
+  P(map_subscriptSetter),
+  P(map_addCore),
+  P(map_clear),
+  P(map_containsKey),
+  P(map_count),
+  P(map_remove),
+  P(map_iterate),
+  P(map_keyIteratorValue),
+  P(map_valueIteratorValue),
+  P(range_from),
+  P(range_to),
+  P(range_min),
+  P(range_max),
+  P(range_isInclusive),
+  P(range_iterate),
+  P(range_iteratorValue),
+  P(range_toString),
+  P(system_clock),
+  P(system_gc),
+  P(system_writeString),
+#undef P
+};
+
+// Return a 0-based index of a registered primitive [prim].
+uint8_t findPrimitiveInCensus(Primitive prim)
+{
+  const size_t nb = sizeof(censusPrimitive) / sizeof(censusPrimitive[0]);
+
+  ASSERT(nb <= 256, "Too much primitives.");
+
+  for (uint8_t i = 0; i < nb; ++i)
+    if (censusPrimitive[i] == prim)
+      return i;
+
+  ASSERT(false, "Primitive absent from census.");
+  //return 0; // TODO should count from 1, and 0 would mean error.
+}
+
+Primitive getPrimitive(uint8_t index)
+{
+  const size_t nb = sizeof(censusPrimitive) / sizeof(censusPrimitive[0]);
+
+  if (index >= nb) return NULL;
+
+  return censusPrimitive[index];
+}
+
+#else // WREN_SNAPSHOT
+
+#define findPrimitiveInCensus(prim) /* nop */
+
+#endif // WREN_SNAPSHOT
+
 // Creates either the Object or Class class in the core module with [name].
 static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 {
@@ -1226,9 +1456,9 @@ static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name)
 
   ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
 
-  wrenDefineVariable(vm, module, name, nameString->length, OBJ_VAL(classObj), NULL);
+  wrenDefineVariable(vm, module, NULL, 0, OBJ_VAL(classObj), NULL, nameString);
 
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // nameString.
   return classObj;
 }
 
@@ -1298,11 +1528,11 @@ void wrenInitializeCore(WrenVM* vm)
   // The rest of the classes can now be defined normally.
   wrenInterpret(vm, NULL, coreModuleSource);
 
-  vm->boolClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Bool"));
+  vm->boolClass = AS_CLASS(wrenFindVariable(coreModule, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
   PRIMITIVE(vm->boolClass, "!", bool_not);
 
-  vm->fiberClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fiber"));
+  vm->fiberClass = AS_CLASS(wrenFindVariable(coreModule, "Fiber"));
   PRIMITIVE(vm->fiberClass->obj.classObj, "new(_)", fiber_new);
   PRIMITIVE(vm->fiberClass->obj.classObj, "abort(_)", fiber_abort);
   PRIMITIVE(vm->fiberClass->obj.classObj, "current", fiber_current);
@@ -1319,7 +1549,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->fiberClass, "try()", fiber_try);
   PRIMITIVE(vm->fiberClass, "try(_)", fiber_try1);
 
-  vm->fnClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Fn"));
+  vm->fnClass = AS_CLASS(wrenFindVariable(coreModule, "Fn"));
   PRIMITIVE(vm->fnClass->obj.classObj, "new(_)", fn_new);
 
   PRIMITIVE(vm->fnClass, "arity", fn_arity);
@@ -1344,11 +1574,11 @@ void wrenInitializeCore(WrenVM* vm)
   
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
-  vm->nullClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Null"));
+  vm->nullClass = AS_CLASS(wrenFindVariable(coreModule, "Null"));
   PRIMITIVE(vm->nullClass, "!", null_not);
   PRIMITIVE(vm->nullClass, "toString", null_toString);
 
-  vm->numClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Num"));
+  vm->numClass = AS_CLASS(wrenFindVariable(coreModule, "Num"));
   PRIMITIVE(vm->numClass->obj.classObj, "fromString(_)", num_fromString);
   PRIMITIVE(vm->numClass->obj.classObj, "infinity", num_infinity);
   PRIMITIVE(vm->numClass->obj.classObj, "nan", num_nan);
@@ -1409,7 +1639,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "==(_)", num_eqeq);
   PRIMITIVE(vm->numClass, "!=(_)", num_bangeq);
 
-  vm->stringClass = AS_CLASS(wrenFindVariable(vm, coreModule, "String"));
+  vm->stringClass = AS_CLASS(wrenFindVariable(coreModule, "String"));
   PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
   PRIMITIVE(vm->stringClass->obj.classObj, "fromByte(_)", string_fromByte);
   PRIMITIVE(vm->stringClass, "+(_)", string_plus);
@@ -1427,7 +1657,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
   PRIMITIVE(vm->stringClass, "toString", string_toString);
 
-  vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
+  vm->listClass = AS_CLASS(wrenFindVariable(coreModule, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "filled(_,_)", list_filled);
   PRIMITIVE(vm->listClass->obj.classObj, "new()", list_new);
   PRIMITIVE(vm->listClass, "[_]", list_subscript);
@@ -1444,7 +1674,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->listClass, "indexOf(_)", list_indexOf);
   PRIMITIVE(vm->listClass, "swap(_,_)", list_swap);
 
-  vm->mapClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Map"));
+  vm->mapClass = AS_CLASS(wrenFindVariable(coreModule, "Map"));
   PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);
   PRIMITIVE(vm->mapClass, "[_]", map_subscript);
   PRIMITIVE(vm->mapClass, "[_]=(_)", map_subscriptSetter);
@@ -1457,7 +1687,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->mapClass, "keyIteratorValue_(_)", map_keyIteratorValue);
   PRIMITIVE(vm->mapClass, "valueIteratorValue_(_)", map_valueIteratorValue);
 
-  vm->rangeClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Range"));
+  vm->rangeClass = AS_CLASS(wrenFindVariable(coreModule, "Range"));
   PRIMITIVE(vm->rangeClass, "from", range_from);
   PRIMITIVE(vm->rangeClass, "to", range_to);
   PRIMITIVE(vm->rangeClass, "min", range_min);
@@ -1467,7 +1697,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
   PRIMITIVE(vm->rangeClass, "toString", range_toString);
 
-  ObjClass* systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
+  ObjClass* systemClass = AS_CLASS(wrenFindVariable(coreModule, "System"));
   PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);
   PRIMITIVE(systemClass->obj.classObj, "gc()", system_gc);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);

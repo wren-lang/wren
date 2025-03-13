@@ -5,7 +5,7 @@ from __future__ import print_function
 from argparse import ArgumentParser
 from collections import defaultdict
 from os import listdir
-from os.path import abspath, basename, dirname, isdir, isfile, join, realpath, relpath, splitext
+from os.path import abspath, dirname, isdir, isfile, join, realpath, relpath, splitext
 import re
 from subprocess import Popen, PIPE
 import sys
@@ -14,13 +14,16 @@ import platform
 # Runs the tests.
 
 parser = ArgumentParser()
-parser.add_argument('--suffix', default='')
-parser.add_argument('suite', nargs='?')
+parser.add_argument('--suffix', default='',
+  help='suffix to the executable name; e.g. "_d"')
+parser.add_argument('--myself', action='store_true',
+  help='for verifying the test runner itself')
+parser.add_argument('-v', '--verbose', action='store_true')
+parser.add_argument('suite', nargs='?',
+  help='a string prefix that filters the path to files,'
+    + ' relative from test/ directory; e.g. "core/map/key_" or "../example"')
 
 args = parser.parse_args(sys.argv[1:])
-
-config = args.suffix.lstrip('_d')
-is_debug = args.suffix.startswith('_d')
 
 WREN_DIR = dirname(dirname(realpath(__file__)))
 WREN_APP = join(WREN_DIR, 'bin', 'wren_test' + args.suffix)
@@ -30,22 +33,26 @@ if platform.system() == "Windows":
   WREN_APP_WITH_EXT += ".exe"
 
 if not isfile(WREN_APP_WITH_EXT):
-  print("The binary file 'wren_test' was not found, expected it to be at " + WREN_APP)
+  print("The binary file was not found; expected it to be: " + WREN_APP)
   print("In order to run the tests, you need to build Wren first!")
   sys.exit(1)
 
 # print("Wren Test Directory - " + WREN_DIR)
 # print("Wren Test App - " + WREN_APP)
 
-EXPECT_PATTERN = re.compile(r'// expect: ?(.*)')
-EXPECT_ERROR_PATTERN = re.compile(r'// expect error(?! line)')
-EXPECT_ERROR_LINE_PATTERN = re.compile(r'// expect error line (\d+)')
+EXPECT_PATTERN               = re.compile(r'// expect: ?(.*)')
+EXPECT_ERROR_PATTERN         = re.compile(r'// expect error(?! line)')
+EXPECT_ERROR_LINE_PATTERN    = re.compile(r'// expect error line (\d+)')
 EXPECT_RUNTIME_ERROR_PATTERN = re.compile(r'// expect (handled )?runtime error: (.+)')
-ERROR_PATTERN = re.compile(r'\[.* line (\d+)\] Error')
-STACK_TRACE_PATTERN = re.compile(r'(?:\[\./)?test/.* line (\d+)\] in')
-STDIN_PATTERN = re.compile(r'// stdin: (.*)')
-SKIP_PATTERN = re.compile(r'// skip: (.*)')
+
+STDIN_PATTERN   = re.compile(r'// stdin: (.*)')
+SKIP_PATTERN    = re.compile(r'// skip: (.*)')
 NONTEST_PATTERN = re.compile(r'// nontest')
+
+# Patterns for output
+EOL_PATTERN         = re.compile(r'\n|\r\n')
+ERROR_PATTERN       = re.compile(r'\[.* line (\d+)\] Error')
+STACK_TRACE_PATTERN = re.compile(r'(?:\[\./)?test/.* line (\d+)\] in')
 
 passed = 0
 failed = 0
@@ -53,12 +60,19 @@ num_skipped = 0
 skipped = defaultdict(int)
 expectations = 0
 
+def split_into_lines(string):
+  lines = string.split('\n')
+  # Remove the trailing last empty line.
+  if lines[-1] == '':
+    del lines[-1]
+  return lines
+
 class Test:
   def __init__(self, path):
     self.path = path
     self.output = []
-    self.compile_errors = set()
-    self.runtime_error_line = 0
+    self.compile_errors_line_num = set()
+    self.runtime_error_line_num = 0
     self.runtime_error_message = None
     self.exit_code = 0
     self.input_bytes = None
@@ -83,7 +97,7 @@ class Test:
 
     with open(self.path, 'r', encoding="utf-8", newline='', errors='replace') as file:
       data = file.read()
-      lines = re.split('\n|\r\n', data)
+      lines = EOL_PATTERN.split(data)
       for line in lines:
         if len(line) <= 0:
           line_num += 1
@@ -96,7 +110,7 @@ class Test:
 
         match = EXPECT_ERROR_PATTERN.search(line)
         if match:
-          self.compile_errors.add(line_num)
+          self.compile_errors_line_num.add(line_num)
 
           # If we expect a compile error, it should exit with WREN_EX_DATAERR.
           self.exit_code = 65
@@ -104,7 +118,7 @@ class Test:
 
         match = EXPECT_ERROR_LINE_PATTERN.search(line)
         if match:
-          self.compile_errors.add(int(match.group(1)))
+          self.compile_errors_line_num.add(int(match.group(1)))
 
           # If we expect a compile error, it should exit with WREN_EX_DATAERR.
           self.exit_code = 65
@@ -112,7 +126,7 @@ class Test:
 
         match = EXPECT_RUNTIME_ERROR_PATTERN.search(line)
         if match:
-          self.runtime_error_line = line_num
+          self.runtime_error_line_num = line_num
           self.runtime_error_message = match.group(2)
           # If the runtime error isn't handled, it should exit with WREN_EX_SOFTWARE.
           if match.group(1) != "handled ":
@@ -145,12 +159,12 @@ class Test:
     return True
 
 
-  def run(self, app, type):
+  def run(self, app, type, env):
     # Invoke wren and run the test.
     test_arg = self.path
-    proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    proc = Popen([app, test_arg], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
 
-    # If a test takes longer than five seconds, kill it.
+    # If a test is too long, kill it.
     #
     # This is mainly useful for running the tests while stress testing the GC,
     # which can make a few pathological tests much slower.
@@ -174,19 +188,19 @@ class Test:
 
 
   def validate(self, is_example, exit_code, out, err):
-    if self.compile_errors and self.runtime_error_message:
-      self.fail("Test error: Cannot expect both compile and runtime errors.")
+    if self.compile_errors_line_num and self.runtime_error_message:
+      self.fail("BAD TEST: Cannot expect both compile and runtime errors.")
       return
 
     try:
       out = out.decode("utf-8").replace('\r\n', '\n')
       err = err.decode("utf-8").replace('\r\n', '\n')
-    except:
+    except UnicodeDecodeError:
       self.fail('Error decoding output.')
+      return
 
-    error_lines = err.split('\n')
+    error_lines = split_into_lines(err)
 
-    # Validate that an expected runtime error occurred.
     if self.runtime_error_message:
       self.validate_runtime_error(error_lines)
     else:
@@ -201,26 +215,26 @@ class Test:
 
 
   def validate_runtime_error(self, error_lines):
-    if len(error_lines) < 2:
+    # Skip any compile errors. This can happen if there is a compile error in
+    # a module loaded by the module being tested.
+    line_num = 0
+    while line_num < len(error_lines) and ERROR_PATTERN.search(error_lines[line_num]):
+      line_num += 1
+
+    if not line_num < len(error_lines):
       self.fail('Expected runtime error "{0}" and got none.',
           self.runtime_error_message)
       return
 
-    # Skip any compile errors. This can happen if there is a compile error in
-    # a module loaded by the module being tested.
-    line = 0
-    while ERROR_PATTERN.search(error_lines[line]):
-      line += 1
-
-    if error_lines[line] != self.runtime_error_message:
+    if error_lines[line_num] != self.runtime_error_message:
       self.fail('Expected runtime error "{0}" and got:',
           self.runtime_error_message)
-      self.fail(error_lines[line])
+      self.fail('    ' + error_lines[line_num])
 
     # Make sure the stack trace has the right line. Skip over any lines that
     # come from builtin libraries.
     match = False
-    stack_lines = error_lines[line + 1:]
+    stack_lines = error_lines[line_num + 1:]
     for stack_line in stack_lines:
       match = STACK_TRACE_PATTERN.search(stack_line)
       if match: break
@@ -228,33 +242,36 @@ class Test:
     if not match:
       self.fail('Expected stack trace and got:')
       for stack_line in stack_lines:
-        self.fail(stack_line)
+        self.fail('    ' + stack_line)
     else:
-      stack_line = int(match.group(1))
-      if stack_line != self.runtime_error_line:
+      line_num = int(match.group(1))
+      if line_num != self.runtime_error_line_num:
         self.fail('Expected runtime error on line {0} but was on line {1}.',
-            self.runtime_error_line, stack_line)
+            self.runtime_error_line_num, line_num)
 
 
   def validate_compile_errors(self, error_lines):
     # Validate that every compile error was expected.
-    found_errors = set()
+    found = set()
+    first = True
     for line in error_lines:
       match = ERROR_PATTERN.search(line)
       if match:
-        error_line = float(match.group(1))
-        if error_line in self.compile_errors:
-          found_errors.add(error_line)
+        error_line_num = float(match.group(1))
+        if error_line_num in self.compile_errors_line_num:
+          found.add(error_line_num)
         else:
           self.fail('Unexpected error:')
-          self.fail(line)
+          self.fail('    ' + line)
       elif line != '':
-        self.fail('Unexpected output on stderr:')
-        self.fail(line)
+        if first:
+          self.fail('Unexpected output on stderr:')
+          first = False
+        self.fail('    ' + line)
 
     # Validate that every expected error occurred.
-    for line in self.compile_errors - found_errors:
-      self.fail('Missing expected error on line {0}.', line)
+    for line_num in self.compile_errors_line_num - found:
+      self.fail('Missing expected error on line {0}.', line_num)
 
 
   def validate_exit_code(self, exit_code, error_lines):
@@ -262,15 +279,13 @@ class Test:
 
     self.fail('Expected return code {0} and got {1}. Stderr:',
         self.exit_code, exit_code)
-    self.failures += error_lines
+    self.failures += [ '  /-----' ]
+    self.failures += [ '  | ' + l for l in error_lines ]
+    self.failures += [ '  \-----' ]
 
 
   def validate_output(self, out):
-    # Remove the trailing last empty line.
-    out_lines = out.split('\n')
-    if out_lines[-1] == '':
-      del out_lines[-1]
-
+    out_lines = split_into_lines(out)
     index = 0
     for line in out_lines:
       if sys.version_info < (3, 0):
@@ -314,10 +329,10 @@ def yellow(text): return color_text(text, '\033[33m')
 
 def walk(dir, callback, ignored=None):
   """
-  Walks [dir], and executes [callback] on each file unless it is [ignored].
+  Walks [dir], and executes [callback] on each file unless it is an [ignored] one.
   """
 
-  if not ignored:
+  if ignored is None:
     ignored = []
   ignored += [".",".."]
 
@@ -345,7 +360,7 @@ def run_script(app, path, type):
   global failed
   global num_skipped
 
-  if (splitext(path)[1] != '.wren'):
+  if splitext(path)[1] != '.wren':
     return
 
   # Check if we are just running a subset of the tests.
@@ -367,13 +382,38 @@ def run_script(app, path, type):
   # Read the test and parse out the expectations.
   test = Test(path)
 
-  if not test.parse():
-    # It's a skipped or non-test file.
+  torun = test.parse()
+
+  if args.verbose:
+    messages = [path]
+    if not torun:
+      messages += [yellow('(SKIP)')]
+    print(*messages)
+
+  if not torun:
+    # It's a skipped test or non-test file.
     return
 
-  test.run(app, type)
+  env = None
+  if False:
+    f = "bytecode_test.wrenb"
+    # f = 'bytecode/' + path.replace('/', '-') + 'b'
+    f_to = f
+    f_from = f
 
-  # Display the results.
+    env = {
+      "WREN_SNAPSHOT":      "yfsr",
+      "WREN_SNAPSHOT_TO":   f_to,
+      "WREN_SNAPSHOT_FROM": f_from,
+    }
+
+    # Truncate the target file; hence an empty file matches a non-compilable
+    # source file.
+    with open(f_to, 'w') as file: pass
+
+  test.run(app, type, env)
+
+  # Display the failures.
   if len(test.failures) == 0:
     passed += 1
   else:
@@ -385,7 +425,8 @@ def run_script(app, path, type):
     print('')
 
 
-def run_test(path, example=False):
+
+def run_test(path):
   run_script(WREN_APP, path, "test")
 
 
@@ -394,19 +435,19 @@ def run_api_test(path):
 
 
 def run_example(path):
-  # Don't run examples that require user input.
-  if "animals" in path: return
-  if "guess_number" in path: return
-
   # This one is annoyingly slow.
   if "skynet" in path: return
 
   run_script(WREN_APP, path, "example")
 
 
-walk(join(WREN_DIR, 'test'), run_test, ignored=['api', 'benchmark'])
-walk(join(WREN_DIR, 'test', 'api'), run_api_test)
-walk(join(WREN_DIR, 'example'), run_example)
+if args.myself:
+  # Exercises all kinds of failure, to see how well the runner handle them.
+  walk(join(WREN_DIR, 'runner_test'), run_test)
+else:
+  walk(join(WREN_DIR, 'test'), run_test, ignored=['api', 'benchmark'])
+  walk(join(WREN_DIR, 'test', 'api'), run_api_test)
+  walk(join(WREN_DIR, 'example'), run_example)
 
 print_line()
 if failed == 0:

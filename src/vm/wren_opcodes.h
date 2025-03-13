@@ -24,7 +24,10 @@ OPCODE(FALSE, 1)
 // Push true onto the stack.
 OPCODE(TRUE, 1)
 
+// Note the asymmetry: LOAD_ always pushes, whereas STORE_ never pops.
+
 // Pushes the value in the given local slot.
+// Note: The VM assumes the following LOAD_ instructions are ordered.
 OPCODE(LOAD_LOCAL_0, 1)
 OPCODE(LOAD_LOCAL_1, 1)
 OPCODE(LOAD_LOCAL_2, 1)
@@ -35,8 +38,8 @@ OPCODE(LOAD_LOCAL_6, 1)
 OPCODE(LOAD_LOCAL_7, 1)
 OPCODE(LOAD_LOCAL_8, 1)
 
-// Note: The compiler assumes the following _STORE instructions always
-// immediately follow their corresponding _LOAD ones.
+// Note: The compiler assumes the following STORE_ instructions always
+// immediately follow their corresponding LOAD_ ones.
 
 // Pushes the value in local slot [arg].
 OPCODE(LOAD_LOCAL, 1)
@@ -58,13 +61,13 @@ OPCODE(STORE_MODULE_VAR, 0)
 
 // Pushes the value of the field in slot [arg] of the receiver of the current
 // function. This is used for regular field accesses on "this" directly in
-// methods. This instruction is faster than the more general CODE_LOAD_FIELD
+// methods. This instruction is faster than the more general LOAD_FIELD
 // instruction.
 OPCODE(LOAD_FIELD_THIS, 1)
 
 // Stores the top of the stack in field slot [arg] in the receiver of the
 // current value. Does not pop the value. This instruction is faster than the
-// more general CODE_LOAD_FIELD instruction.
+// more general STORE_FIELD instruction.
 OPCODE(STORE_FIELD_THIS, 0)
 
 // Pops an instance and pushes the value of the field in slot [arg] of it.
@@ -79,6 +82,7 @@ OPCODE(POP, -1)
 
 // Invoke the method with symbol [arg]. The number indicates the number of
 // arguments (not including the receiver).
+// Note: The VM assumes the following CALL_ instructions are ordered.
 OPCODE(CALL_0, 0)
 OPCODE(CALL_1, -1)
 OPCODE(CALL_2, -2)
@@ -99,6 +103,7 @@ OPCODE(CALL_16, -16)
 
 // Invoke a superclass method with symbol [arg]. The number indicates the
 // number of arguments (not including the receiver).
+// Note: The VM assumes the following SUPER_ instructions are ordered.
 OPCODE(SUPER_0, 0)
 OPCODE(SUPER_1, -1)
 OPCODE(SUPER_2, -2)
@@ -117,6 +122,9 @@ OPCODE(SUPER_14, -14)
 OPCODE(SUPER_15, -15)
 OPCODE(SUPER_16, -16)
 
+// Note: When changing the instruction pointer, the origin is the next
+// instruction.
+
 // Jump the instruction pointer [arg] forward.
 OPCODE(JUMP, 0)
 
@@ -126,12 +134,12 @@ OPCODE(LOOP, 0)
 // Pop and if not truthy then jump the instruction pointer [arg] forward.
 OPCODE(JUMP_IF, -1)
 
-// If the top of the stack is false, jump [arg] forward. Otherwise, pop and
-// continue.
+// If the top of the stack is falsy, short-circuit by jumping [arg] forward.
+// Otherwise, pop and continue.
 OPCODE(AND, -1)
 
-// If the top of the stack is non-false, jump [arg] forward. Otherwise, pop
-// and continue.
+// If the top of the stack is truthy, short-circuit by jumping [arg] forward.
+// Otherwise, pop and continue.
 OPCODE(OR, -1)
 
 // Close the upvalue for the local on the top of the stack, then pop it.
@@ -139,6 +147,7 @@ OPCODE(CLOSE_UPVALUE, -1)
 
 // Exit from the current function and return the value on the top of the
 // stack.
+// Mmm... wording of 'return'...
 OPCODE(RETURN, 0)
 
 // Creates a closure for the function stored at [arg] in the constant table.
@@ -213,5 +222,5 @@ OPCODE(IMPORT_MODULE, 1)
 OPCODE(IMPORT_VARIABLE, 1)
 
 // This pseudo-instruction indicates the end of the bytecode. It should
-// always be preceded by a `CODE_RETURN`, so is never actually executed.
+// always be preceded by a RETURN, so is never actually executed.
 OPCODE(END, 0)

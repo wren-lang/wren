@@ -1,8 +1,8 @@
 // False and null are false.
-System.print(false && "bad") // expect: false
-System.print(null && "bad") // expect: null
+System.print(false && "arg2") // expect: false
+System.print(null && "arg2") // expect: null
 
 // Everything else is true.
-System.print(true && "ok") // expect: ok
-System.print(0 && "ok") // expect: ok
-System.print("" && "ok") // expect: ok
+System.print(true && "arg2") // expect: arg2
+System.print(0 && "arg2") // expect: arg2
+System.print("arg1" && "arg2") // expect: arg2

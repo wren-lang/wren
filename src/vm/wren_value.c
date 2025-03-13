@@ -2,12 +2,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>   // getenv()
 
 #include "wren.h"
 #include "wren_value.h"
 #include "wren_vm.h"
 
-#if WREN_DEBUG_TRACE_MEMORY
+#if WREN_DEBUG_TRACE_MEMORY || 1 // || WREN_DEBUG_TRACE_GC
   #include "wren_debug.h"
 #endif
 
@@ -31,14 +32,19 @@
 // reallocating when the call stack grows.
 #define INITIAL_CALL_FRAMES 4
 
-DEFINE_BUFFER(Value, Value);
-DEFINE_BUFFER(Method, Method);
+// Define buffer-related functions.
+DEFINE_BUFFER(Value, Value)
+DEFINE_BUFFER(Method, Method)
+
+//------------------------------------------------------------------------------
 
 static void initObj(WrenVM* vm, Obj* obj, ObjType type, ObjClass* classObj)
 {
   obj->type = type;
   obj->isDark = false;
   obj->classObj = classObj;
+
+  // Insert at the front of the singly-linked list of all Obj.
   obj->next = vm->first;
   vm->first = obj;
 }
@@ -54,7 +60,7 @@ ObjClass* wrenNewSingleClass(WrenVM* vm, int numFields, ObjString* name)
 
   wrenPushRoot(vm, (Obj*)classObj);
   wrenMethodBufferInit(&classObj->methods);
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // classObj.
 
   return classObj;
 }
@@ -93,7 +99,7 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   ObjClass* metaclass = wrenNewSingleClass(vm, 0, AS_STRING(metaclassName));
   metaclass->obj.classObj = vm->classClass;
 
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // metaclassName.
 
   // Make sure the metaclass isn't collected when we allocate the class.
   wrenPushRoot(vm, (Obj*)metaclass);
@@ -111,8 +117,8 @@ ObjClass* wrenNewClass(WrenVM* vm, ObjClass* superclass, int numFields,
   classObj->obj.classObj = metaclass;
   wrenBindSuperclass(vm, classObj, superclass);
 
-  wrenPopRoot(vm);
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // classObj.
+  wrenPopRoot(vm); // metaclass.
 
   return classObj;
 }
@@ -139,7 +145,7 @@ ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 
   closure->fn = fn;
 
-  // Clear the upvalue array. We need to do this in case a GC is triggered
+  // Initialize the upvalue array. We need to do this in case a GC is triggered
   // after the closure is created but before the upvalue array is populated.
   for (int i = 0; i < fn->numUpvalues; i++) closure->upvalues[i] = NULL;
 
@@ -177,7 +183,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure)
   if (closure != NULL)
   {
     // Initialize the first call frame.
-    wrenAppendCallFrame(vm, fiber, closure, fiber->stack);
+    wrenAppendCallFrame(/* vm, */ fiber, closure, fiber->stack);
 
     // The first slot always holds the closure.
     fiber->stackTop[0] = OBJ_VAL(closure);
@@ -283,6 +289,8 @@ Value wrenNewInstance(WrenVM* vm, ObjClass* classObj)
   return OBJ_VAL(instance);
 }
 
+// List ------------------------------------------------------------------------
+
 ObjList* wrenNewList(WrenVM* vm, uint32_t numElements)
 {
   // Allocate this before the list object in case it triggers a GC which would
@@ -320,7 +328,7 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index)
   list->elements.data[index] = value;
 }
 
-int wrenListIndexOf(WrenVM* vm, ObjList* list, Value value)
+int wrenListIndexOf(/* WrenVM* vm, */ ObjList* list, Value value)
 {
   int count = list->elements.count;
   for (int i = 0; i < count; i++)
@@ -359,6 +367,8 @@ Value wrenListRemoveAt(WrenVM* vm, ObjList* list, uint32_t index)
   list->elements.count--;
   return removed;
 }
+
+// Map -------------------------------------------------------------------------
 
 ObjMap* wrenNewMap(WrenVM* vm)
 {
@@ -399,13 +409,14 @@ static uint32_t hashObject(Obj* object)
     case OBJ_CLASS:
       // Classes just use their name.
       return hashObject((Obj*)((ObjClass*)object)->name);
-      
+
+    case OBJ_FN:
+    {
       // Allow bare (non-closure) functions so that we can use a map to find
       // existing constants in a function's constant table. This is only used
       // internally. Since user code never sees a non-closure function, they
       // cannot use them as map keys.
-    case OBJ_FN:
-    {
+
       ObjFn* fn = (ObjFn*)object;
       return hashNumber(fn->arity) ^ hashNumber(fn->code.count);
     }
@@ -642,12 +653,14 @@ Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
   return value;
 }
 
+//------------------------------------------------------------------------------
+
 ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
 {
   ObjModule* module = ALLOCATE(vm, ObjModule);
 
   // Modules are never used as first-class objects, so don't need a class.
-  initObj(vm, (Obj*)module, OBJ_MODULE, NULL);
+  initObj(vm, &module->obj, OBJ_MODULE, NULL);
 
   wrenPushRoot(vm, (Obj*)module);
 
@@ -656,7 +669,7 @@ ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)
 
   module->name = name;
 
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // module.
   return module;
 }
 
@@ -670,6 +683,8 @@ Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive)
 
   return OBJ_VAL(range);
 }
+
+// String ----------------------------------------------------------------------
 
 // Creates a new string object with a null-terminated buffer large enough to
 // hold a string of [length] but does not fill in the bytes.
@@ -838,6 +853,7 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...)
       default:
         // Any other character is interpreted literally.
         totalLength++;
+        break;
     }
   }
   va_end(argList);
@@ -871,6 +887,7 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...)
       default:
         // Any other character is interpreted literally.
         *start++ = *c;
+        break;
     }
   }
   va_end(argList);
@@ -960,6 +977,8 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle, uint32_t start)
   return UINT32_MAX;
 }
 
+//------------------------------------------------------------------------------
+
 ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
 {
   ObjUpvalue* upvalue = ALLOCATE(vm, ObjUpvalue);
@@ -972,6 +991,8 @@ ObjUpvalue* wrenNewUpvalue(WrenVM* vm, Value* value)
   upvalue->next = NULL;
   return upvalue;
 }
+
+// Gray ------------------------------------------------------------------------
 
 void wrenGrayObj(WrenVM* vm, Obj* obj)
 {
@@ -1002,13 +1023,17 @@ void wrenGrayValue(WrenVM* vm, Value value)
   wrenGrayObj(vm, AS_OBJ(value));
 }
 
-void wrenGrayBuffer(WrenVM* vm, ValueBuffer* buffer)
+// Mark the values in [buffer] as reachable and still in use. This should only
+// be called during the sweep phase of a garbage collection.
+static void wrenGrayValueBuffer(WrenVM* vm, ValueBuffer* buffer)
 {
   for (int i = 0; i < buffer->count; i++)
   {
     wrenGrayValue(vm, buffer->data[i]);
   }
 }
+
+// Black -----------------------------------------------------------------------
 
 static void blackenClass(WrenVM* vm, ObjClass* classObj)
 {
@@ -1087,7 +1112,7 @@ static void blackenFiber(WrenVM* vm, ObjFiber* fiber)
 static void blackenFn(WrenVM* vm, ObjFn* fn)
 {
   // Mark the constants.
-  wrenGrayBuffer(vm, &fn->constants);
+  wrenGrayValueBuffer(vm, &fn->constants);
 
   // Mark the module it belongs to, in case it's been unloaded.
   wrenGrayObj(vm, (Obj*)fn->module);
@@ -1129,7 +1154,7 @@ static void blackenInstance(WrenVM* vm, ObjInstance* instance)
 static void blackenList(WrenVM* vm, ObjList* list)
 {
   // Mark the elements.
-  wrenGrayBuffer(vm, &list->elements);
+  wrenGrayValueBuffer(vm, &list->elements);
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjList);
@@ -1156,11 +1181,7 @@ static void blackenMap(WrenVM* vm, ObjMap* map)
 static void blackenModule(WrenVM* vm, ObjModule* module)
 {
   // Top-level variables.
-  for (int i = 0; i < module->variables.count; i++)
-  {
-    wrenGrayValue(vm, module->variables.data[i]);
-  }
-
+  wrenGrayValueBuffer(vm, &module->variables);
   wrenBlackenSymbolTable(vm, &module->variableNames);
 
   wrenGrayObj(vm, (Obj*)module->name);
@@ -1192,7 +1213,7 @@ static void blackenUpvalue(WrenVM* vm, ObjUpvalue* upvalue)
 
 static void blackenObject(WrenVM* vm, Obj* obj)
 {
-#if WREN_DEBUG_TRACE_MEMORY
+#if WREN_DEBUG_TRACE_MEMORY // || WREN_DEBUG_TRACE_GC
   printf("mark ");
   wrenDumpValue(OBJ_VAL(obj));
   printf(" @ %p\n", obj);
@@ -1226,6 +1247,318 @@ void wrenBlackenObjects(WrenVM* vm)
   }
 }
 
+// Visitor ---------------------------------------------------------------------
+
+static void indent(unsigned int n)
+{
+  printf("%*s", n, "");
+}
+
+static void visitor(WrenVM* vm, Obj* obj, unsigned int depth)
+{
+  indent(depth);
+
+  wrenDumpValue(OBJ_VAL(obj));
+
+  switch (obj->type)
+  {
+    case OBJ_CLOSURE: {
+      ObjClosure* closure = (ObjClosure*)obj;
+      printf(" upv=%d", closure->fn->numUpvalues);
+      break;
+    }
+
+    case OBJ_FN: {
+      ObjFn* fn = (ObjFn*)obj;
+      ObjModule* module = fn->module;
+      printf(" ");
+      wrenDumpValue(OBJ_VAL(module->name));
+      printf("::%s(%d) len=%d", fn->debug->name, fn->arity, fn->code.count);
+      // TODO fn->code
+      const int n = fn->constants.count;
+      if (n) {
+        printf(" const={\n");
+        for (int i = 0; i < n; i++)
+        {
+          indent(depth + 1);
+          printf("[%d]=", i);
+          wrenDumpValue(fn->constants.data[i]);
+          printf("\n");
+        }
+        indent(depth);
+        printf("}");
+      }
+      break;
+    }
+
+    case OBJ_MAP: {
+      ObjMap* map = (ObjMap*)obj;
+      const int n = map->count;
+      printf(" count=%d", n);
+      if (n) {
+        printf(" {\n");
+        for (uint32_t i = 0; i < map->capacity; i++)
+        {
+          MapEntry* entry = &map->entries[i];
+          if (IS_UNDEFINED(entry->key)) continue;
+
+          indent(depth + 1);
+          wrenDumpValue(entry->key);
+          printf(" => ");
+          wrenDumpValue(entry->value);
+          printf("\n");
+        }
+        indent(depth);
+        printf("}");
+      }
+      break;
+    }
+
+    case OBJ_MODULE: {
+      const ObjModule* module = (ObjModule*)obj;
+
+      // The core module has no name.
+      if (module->name) {
+        printf(" name=");
+        wrenDumpValue(OBJ_VAL(module->name));
+      }
+
+      const int nbVar = module->variables.count;
+      printf(" var=%d", nbVar);
+      if (nbVar) {
+        printf(" {\n");
+        for (int i = 0; i < nbVar; i++)
+        {
+          indent(depth + 1);
+          printf("(%d) ", i);
+          wrenDumpValue(OBJ_VAL(module->variableNames.data[i]));
+          printf(" = ");
+          wrenDumpValue(module->variables.data[i]);
+          printf("\n");
+        }
+        indent(depth);
+        printf("}");
+      }
+      break;
+    }
+  }
+
+  printf("\n");
+}
+
+// Depth-first search.
+// TODO allow choosing pre-order and post-order
+static void wrenVisitObjects_(WrenVM* vm, Obj* obj, WrenVisitorFn visitor, unsigned int depth)
+{
+  visitor (vm, obj, depth);
+
+  const unsigned int d = depth + 1;
+
+  switch (obj->type)
+  {
+    //case OBJ_CLASS:    ( (ObjClass*)   obj); break;
+    case OBJ_CLOSURE: {
+      ObjClosure* closure = (ObjClosure*)obj;
+      // TODO (vm, (Obj*)closure->upvalues[i]);
+      wrenVisitObjects_(vm, (Obj*)closure->fn, visitor, d);
+      break;
+    }
+    //case OBJ_FIBER:    ( (ObjFiber*)   obj); break;
+    case OBJ_FN: {
+      ObjFn* fn = (ObjFn*)obj;
+      // TODO (vm, &fn->code);
+      // (vm, &fn->constants);
+      break;
+    }
+    //case OBJ_FOREIGN:  ( (ObjForeign*) obj); break;
+    //case OBJ_INSTANCE: ( (ObjInstance*)obj); break;
+    //case OBJ_LIST:     ( (ObjList*)    obj); break;
+    case OBJ_MAP: {
+      ObjMap* map = (ObjMap*)obj;
+      for (uint32_t i = 0; i < map->capacity; i++)
+      {
+        MapEntry* entry = &map->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
+
+        // TODO entry->key
+
+        if (IS_OBJ(entry->value)) {
+          wrenVisitObjects_(vm, AS_OBJ(entry->value), visitor, d);
+        }
+      }
+      break;
+    }
+    //case OBJ_MODULE:   ( (ObjModule*)  obj); break;
+    //case OBJ_RANGE: {
+    //  ObjRange* range = (ObjRange*)obj;
+    //  break;
+    //}
+    //case OBJ_STRING:   ( (ObjString*)  obj); break;
+    //case OBJ_UPVALUE:  ( (ObjUpvalue*) obj); break;
+
+  }
+}
+
+#if WREN_SNAPSHOT
+
+static void myVMWrite(WrenVM* vm, const char* text)
+{
+  printf("%s", text);
+}
+
+static void myReportError(WrenVM* vm, WrenErrorType type, 
+  const char* module, int line, const char* message)
+{
+  switch (type)
+  {
+    case WREN_ERROR_COMPILE:
+      fprintf(stderr, "[%s line %d] %s\n", module, line, message);
+      break;
+
+    case WREN_ERROR_RUNTIME:
+      fprintf(stderr, "%s\n", message);
+      break;
+
+    case WREN_ERROR_STACK_TRACE:
+      fprintf(stderr, "[%s line %d] in %s\n", module, line, message);
+      break;
+  }
+}
+
+static WrenInterpretResult performRestore(WrenResolveModuleFn resolveFn,
+                                          WrenLoadModuleFn loadFn,
+                                          WrenBindForeignClassFn bfcFn,
+                                          WrenBindForeignMethodFn bfmFn)
+{
+  const bool verbose = wrenSnapshotWant('=');
+
+  const char* fileName = getenv("WREN_SNAPSHOT_FROM");
+
+  FILE* file = fopen(fileName, "rb");
+  if (file == NULL) return WREN_RESULT_COMPILE_ERROR; // TODO
+
+  if (verbose) printf("=== performRestore\n");
+
+  WrenConfiguration newConfig;
+  wrenInitConfiguration(&newConfig);
+  newConfig.userData = "VM restored from a snapshot";
+  newConfig.writeFn = myVMWrite;
+  newConfig.errorFn = myReportError;
+  newConfig.resolveModuleFn = resolveFn;
+  newConfig.loadModuleFn = loadFn;
+  newConfig.bindForeignClassFn = bfcFn;
+  newConfig.bindForeignMethodFn = bfmFn;
+
+  WrenVM* newVM = wrenNewEmptyVM(&newConfig);
+
+  ObjClosure* entrypoint = wrenSnapshotRestore(file, newVM);
+
+  fclose(file);
+
+  if (entrypoint == NULL) return WREN_RESULT_COMPILE_ERROR;
+
+  WrenInterpretResult result = WREN_RESULT_SUCCESS;
+
+  if (wrenSnapshotWant('x'))
+  {
+    if (verbose) printf("=== start new VM\n");
+    result = wrenInterpretClosure(newVM, entrypoint);
+    if (verbose) printf("=== result %u\n", result);
+  }
+
+  if (verbose) printf("=== free new VM\n");
+
+  wrenFreeVM(newVM);
+
+  if (verbose) printf("=== End of restore\n");
+
+  return result;
+}
+
+static void assertCanSaveSnapshot(WrenCounts* counts, WrenCensus* census)
+{
+  #define ASSERT_0_OBJ(type)                                                  \
+      ASSERT(counts->nb##type == 0, "How to save Obj" #type "?")
+  #define ASSERT_N_OBJ(type, n)                                               \
+      ASSERT(counts->nb##type == n, "Expecting " #n " Obj" #type ".");
+
+  // OK any Obj
+  // OK any ObjClass
+  // OK any ObjClosure
+  ASSERT_N_OBJ(Fiber, 1);
+  // OK any ObjFn
+  ASSERT_0_OBJ(Foreign);
+  ASSERT_0_OBJ(Instance);
+  ASSERT_0_OBJ(List);
+  ASSERT_N_OBJ(Map, 1);
+  ASSERT_N_OBJ(Module, 2);
+  ASSERT_0_OBJ(Range);
+  // OK any ObjString
+  ASSERT_0_OBJ(Upvalue);
+
+  #undef ASSERT_0_OBJ
+  #undef ASSERT_N_OBJ
+
+  ASSERT(census->allFiber[0]->state == FIBER_ROOT,
+         "The ObjFiber should be FIBER_ROOT.");
+}
+
+#endif // WREN_SNAPSHOT
+
+WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */)
+{
+#if WREN_SNAPSHOT
+  WrenInterpretResult res = WREN_RESULT_SUCCESS;
+
+  if (wrenSnapshotWant('s'))
+  {
+    WrenCounts counts;
+    WrenCensus census;
+
+    counts = (WrenCounts) {0};
+    wrenCountAllObj(vm, &counts);
+
+    // TODO should the caller have a handle on the closure?  Not needed when
+    // it's only init code for importing modules and create ObjForeign.
+    wrenPushRoot(vm, obj);
+    wrenCollectGarbage(vm);
+    wrenPopRoot(vm); // obj.
+
+    vm->inhibitGC = true;
+
+    counts = (WrenCounts) {0};
+    wrenCountAllObj(vm, &counts);
+    wrenCensusAllObj(vm, &counts, &census);
+
+    assertCanSaveSnapshot(&counts, &census);
+
+    wrenSnapshotSave(vm, &counts, &census, (ObjClosure*)obj);
+    wrenFreeCensus(vm, &census);
+
+    vm->inhibitGC = false;
+  }
+
+  // wrenVisitObjects_(vm, obj, visitor, 0);
+  // wrenVisitObjects_(vm, (Obj*)vm->modules, visitor, 0);
+
+  if (wrenSnapshotWant('r'))
+  {
+    res = performRestore(
+      vm->config.resolveModuleFn,
+      vm->config.loadModuleFn,
+      vm->config.bindForeignClassFn,
+      vm->config.bindForeignMethodFn
+    );
+  }
+
+  return res;
+#else
+  return WREN_RESULT_SUCCESS;
+#endif // WREN_SNAPSHOT
+}
+
+//------------------------------------------------------------------------------
+
 void wrenFreeObj(WrenVM* vm, Obj* obj)
 {
 #if WREN_DEBUG_TRACE_MEMORY
@@ -1254,7 +1587,7 @@ void wrenFreeObj(WrenVM* vm, Obj* obj)
       wrenValueBufferClear(vm, &fn->constants);
       wrenByteBufferClear(vm, &fn->code);
       wrenIntBufferClear(vm, &fn->debug->sourceLines);
-      DEALLOCATE(vm, fn->debug->name);
+      if (fn->debug->name != NULL) DEALLOCATE(vm, fn->debug->name);
       DEALLOCATE(vm, fn->debug);
       break;
     }
@@ -1322,7 +1655,7 @@ bool wrenValuesEqual(Value a, Value b)
       ObjString* aString = (ObjString*)aObj;
       ObjString* bString = (ObjString*)bObj;
       return aString->hash == bString->hash &&
-      wrenStringEqualsCString(aString, bString->value, bString->length);
+             wrenStringEqualsCString(aString, bString->value, bString->length);
     }
 
     default:

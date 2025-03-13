@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <stdio.h>      // for wrenSnapshotRestore
+
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
 #define WREN_VERSION_MINOR 4
@@ -268,7 +270,6 @@ typedef struct
 
   // User-defined data associated with the VM.
   void* userData;
-
 } WrenConfiguration;
 
 typedef enum
@@ -323,6 +324,16 @@ WREN_API void wrenCollectGarbage(WrenVM* vm);
 // context of resolved [module].
 WREN_API WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
                                   const char* source);
+
+typedef struct sObjClosure ObjClosure;
+
+// Compiles [source], a string of Wren source code, in [vm] in the
+// context of resolved [module].
+WREN_API ObjClosure* wrenCompileSourceLines(WrenVM* vm, const char* module,
+                                  const char* source);
+
+// Runs [closure] in a new fiber in [vm].
+WREN_API WrenInterpretResult wrenInterpretClosure(WrenVM* vm, ObjClosure* closure);
 
 // Creates a handle that can be used to invoke a method with [signature] on
 // using a receiver and arguments that are set up on the stack.
@@ -550,5 +561,18 @@ WREN_API void* wrenGetUserData(WrenVM* vm);
 
 // Sets user data associated with the WrenVM.
 WREN_API void wrenSetUserData(WrenVM* vm, void* userData);
+
+typedef struct sObj Obj;
+
+// TODO: allow to cut the exploration by returning false?
+typedef void (*WrenVisitorFn)(WrenVM* vm, Obj* obj, unsigned int depth);
+
+// TODO: doc
+WREN_API WrenInterpretResult wrenVisitObjects(WrenVM* vm, Obj* obj /*, WrenVisitorFn visitor */);
+
+WREN_API WrenVM* wrenNewEmptyVM(WrenConfiguration* config);
+
+// Restore a snapshot from [file] into [vm].
+WREN_API ObjClosure* wrenSnapshotRestore(FILE *file, WrenVM* vm);
 
 #endif

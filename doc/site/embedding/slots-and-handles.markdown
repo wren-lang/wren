@@ -21,7 +21,7 @@ dynamically sized, but it's your responsibility to ensure there are enough slots
 *before* you use them. You do this by calling:
 
 <pre class="snippet" data-lang="c">
-wrenEnsureSlots(WrenVM* vm, int slotCount);
+void wrenEnsureSlots(WrenVM* vm, int numSlots);
 </pre>
 
 This grows the slot array if needed to ensure that many slots are available. If

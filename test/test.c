@@ -1,6 +1,8 @@
+#include <stdlib.h>   // getenv()
+#include <string.h>   // strchr()
 #include "./test.h"
 
-//path helpers
+// Path helpers ----------------------------------------------------------------
 
   void ensureCapacity(Path* path, size_t capacity)
   {
@@ -37,7 +39,7 @@
     appendSlice(path, slice);
   }
 
-  inline static bool isSeparator(char c)
+  static inline bool isSeparator(char c)
   {
     // Slash is a separator on POSIX and Windows.
     if (c == '/') return true;
@@ -51,7 +53,7 @@
   }
 
   #ifdef _WIN32
-  inline static bool isDriveLetter(char c)
+  static inline bool isDriveLetter(char c)
   {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
   }
@@ -63,7 +65,7 @@
   // "C:\").
   //
   // If the path is not absolute, returns 0.
-  inline static size_t absolutePrefixLength(const char* path)
+  static inline size_t absolutePrefixLength(const char* path)
   {
     #ifdef _WIN32
       // Drive letter.
@@ -298,7 +300,7 @@
     return string;
   }
 
-//file helpers
+// File helpers ----------------------------------------------------------------
 
   // Reads the contents of the file at [path] and returns it as a heap allocated
   // string.
@@ -338,7 +340,7 @@
     return buffer;
   }
 
-//VM bindings
+// VM bindings -----------------------------------------------------------------
 
   void vm_write(WrenVM* vm, const char* text)
   {
@@ -421,6 +423,50 @@
     return resolved;
   }
 
+//visitor
+
+  static WrenInterpretResult runCode(WrenVM* vm, const char* module, const char* source)
+  {
+    return wrenInterpret(vm, module, source);
+  }
+
+  // TODO: sadly dup code, but it avoids to export it in wren.h
+  static bool wrenSnapshotWant(char c)
+  {
+    const char* options = getenv("WREN_SNAPSHOT");
+    if (options == NULL) return false;
+
+    return strchr(options, c) != NULL;
+  }
+
+  static WrenInterpretResult runCodeSplit(WrenVM* vm, const char* module, const char* source)
+  {
+    ObjClosure* closure = wrenCompileSourceLines(vm, module, source);
+
+    if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;
+
+    if (wrenSnapshotWant('y'))
+    {
+      const WrenInterpretResult res = wrenVisitObjects(vm, (Obj*)closure /* , visitor */);
+      if (!wrenSnapshotWant('f')) return res;
+    }
+
+    return wrenInterpretClosure(vm, closure);
+  }
+
+/*
+  static void openBytecodeFile(WrenVM *vm) {
+    FILE* file = fopen("bytecode", "wb");
+    //TODO if (file == NULL) return NULL;
+    wrenSetUserData(vm, file);
+  }
+
+  static void closeBytecodeFile(WrenVM *vm) {
+    FILE* file = (FILE *)wrenGetUserData(vm);
+    fclose(file);
+  }
+*/
+
 //main helpers
 
   bool isModuleAnAPITest(const char* module)
@@ -453,7 +499,9 @@
 
     pathRemoveExtension(module);
 
-    WrenInterpretResult result = wrenInterpret(vm, module->chars, source);
+    // openBytecodeFile(vm);
+    WrenInterpretResult result = runCodeSplit(vm, module->chars, source);
+    // closeBytecodeFile(vm);
 
     pathFree(module);
     free(source);

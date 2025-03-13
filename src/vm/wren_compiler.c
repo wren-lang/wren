@@ -332,7 +332,7 @@ struct sCompiler
   int numLocals;
 
   // The upvalues that this function has captured from outer scopes. The count
-  // of them is stored in [numUpvalues].
+  // of them is stored in [fn->numUpvalues].
   CompilerUpvalue upvalues[MAX_UPVALUES];
 
   // The current level of block scope nesting, where zero is no nesting. A -1
@@ -597,7 +597,7 @@ typedef struct
 } Keyword;
 
 // The table of reserved words and their associated token types.
-static Keyword keywords[] =
+static const Keyword keywords[] =
 {
   {"break",     5, TOKEN_BREAK},
   {"continue",  8, TOKEN_CONTINUE},
@@ -1408,7 +1408,7 @@ static int declareVariable(Compiler* compiler, Token* token)
     int symbol = wrenDefineVariable(compiler->parser->vm,
                                     compiler->parser->module,
                                     token->start, token->length,
-                                    NULL_VAL, &line);
+                                    NULL_VAL, &line, NULL);
 
     if (symbol == -1)
     {
@@ -1624,7 +1624,7 @@ static Variable resolveNonmodule(Compiler* compiler,
   variable.index = resolveLocal(compiler, name, length);
   if (variable.index != -1) return variable;
 
-  // Tt's not a local, so guess that it's an upvalue.
+  // It's not a local, so guess that it's an upvalue.
   variable.scope = SCOPE_UPVALUE;
   variable.index = findUpvalue(compiler, name, length);
   return variable;
@@ -1745,7 +1745,7 @@ typedef struct
 } GrammarRule;
 
 // Forward declarations since the grammar is recursive.
-static GrammarRule* getRule(TokenType type);
+static const GrammarRule* getRule(TokenType type);
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
 static void definition(Compiler* compiler);
@@ -1835,7 +1835,7 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
 }
 
 // Parses the rest of a comma-separated parameter list after the opening
-// delimeter. Updates `arity` in [signature] with the number of parameters.
+// delimiter. Updates `arity` in [signature] with the number of parameters.
 static void finishParameterList(Compiler* compiler, Signature* signature)
 {
   do
@@ -2201,7 +2201,7 @@ static void map(Compiler* compiler, bool canAssign)
 // Unary operators like `-foo`.
 static void unaryOp(Compiler* compiler, bool canAssign)
 {
-  GrammarRule* rule = getRule(compiler->parser->previous.type);
+  const GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   ignoreNewlines(compiler);
 
@@ -2580,9 +2580,9 @@ static void conditional(Compiler* compiler, bool canAssign)
   patchJump(compiler, elseJump);
 }
 
-void infixOp(Compiler* compiler, bool canAssign)
+static void infixOp(Compiler* compiler, bool canAssign)
 {
-  GrammarRule* rule = getRule(compiler->parser->previous.type);
+  const GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   // An infix operator cannot end an expression.
   ignoreNewlines(compiler);
@@ -2596,7 +2596,7 @@ void infixOp(Compiler* compiler, bool canAssign)
 }
 
 // Compiles a method signature for an infix operator.
-void infixSignature(Compiler* compiler, Signature* signature)
+static void infixSignature(Compiler* compiler, Signature* signature)
 {
   // Add the RHS parameter.
   signature->type = SIG_METHOD;
@@ -2609,15 +2609,15 @@ void infixSignature(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for an unary operator (i.e. "!").
-void unarySignature(Compiler* compiler, Signature* signature)
+static void unarySignature(Compiler* compiler, Signature* signature)
 {
   // Do nothing. The name is already complete.
   signature->type = SIG_GETTER;
 }
 
 // Compiles a method signature for an operator that can either be unary or
-// infix (i.e. "-").
-void mixedSignature(Compiler* compiler, Signature* signature)
+// infix (e.g. "-").
+static void mixedSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_GETTER;
 
@@ -2663,7 +2663,7 @@ static bool maybeSetter(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for a subscript operator.
-void subscriptSignature(Compiler* compiler, Signature* signature)
+static void subscriptSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_SUBSCRIPT;
 
@@ -2698,7 +2698,7 @@ static void parameterList(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for a named method or setter.
-void namedSignature(Compiler* compiler, Signature* signature)
+static void namedSignature(Compiler* compiler, Signature* signature)
 {
   signature->type = SIG_GETTER;
   
@@ -2710,7 +2710,7 @@ void namedSignature(Compiler* compiler, Signature* signature)
 }
 
 // Compiles a method signature for a constructor.
-void constructorSignature(Compiler* compiler, Signature* signature)
+static void constructorSignature(Compiler* compiler, Signature* signature)
 {
   consume(compiler, TOKEN_NAME, "Expect constructor name after 'construct'.");
   
@@ -2746,7 +2746,7 @@ void constructorSignature(Compiler* compiler, Signature* signature)
 #define PREFIX_OPERATOR(name)      { unaryOp, NULL, unarySignature, PREC_NONE, name }
 #define OPERATOR(name)             { unaryOp, infixOp, mixedSignature, PREC_TERM, name }
 
-GrammarRule rules[] =
+static const GrammarRule rules[] =
 {
   /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
   /* TOKEN_RIGHT_PAREN   */ UNUSED,
@@ -2815,13 +2815,13 @@ GrammarRule rules[] =
 };
 
 // Gets the [GrammarRule] associated with tokens of [type].
-static GrammarRule* getRule(TokenType type)
+static const GrammarRule* getRule(TokenType type)
 {
   return &rules[type];
 }
 
 // The main entrypoint for the top-down operator precedence parser.
-void parsePrecedence(Compiler* compiler, Precedence precedence)
+static void parsePrecedence(Compiler* compiler, Precedence precedence)
 {
   nextToken(compiler->parser);
   GrammarFn prefix = rules[compiler->parser->previous.type].prefix;
@@ -2852,7 +2852,7 @@ void parsePrecedence(Compiler* compiler, Precedence precedence)
 
 // Parses an expression. Unlike statements, expressions leave a resulting value
 // on the stack.
-void expression(Compiler* compiler)
+static void expression(Compiler* compiler)
 {
   parsePrecedence(compiler, PREC_LOWEST);
 }
@@ -3172,7 +3172,7 @@ static void whileStatement(Compiler* compiler)
 // branches of an "if" statement.
 //
 // Unlike expressions, statements do not leave a value on the stack.
-void statement(Compiler* compiler)
+static void statement(Compiler* compiler)
 {
   if (match(compiler, TOKEN_BREAK))
   {
@@ -3318,7 +3318,7 @@ static void defineMethod(Compiler* compiler, Variable classVariable,
 // Reports an error if a method with that signature is already declared.
 // Returns the symbol for the method.
 static int declareMethod(Compiler* compiler, Signature* signature,
-                         const char* name, int length)
+                         const char* name /*, int length */)
 {
   int symbol = signatureSymbol(compiler, signature);
   
@@ -3473,7 +3473,7 @@ static bool method(Compiler* compiler, Variable classVariable)
   // Check for duplicate methods. Doesn't matter that it's already been
   // defined, error will discard bytecode anyway.
   // Check if the method table already contains this symbol
-  int methodSymbol = declareMethod(compiler, &signature, fullSignature, length);
+  int methodSymbol = declareMethod(compiler, &signature, fullSignature /*, length */);
   
   if (isForeign)
   {
@@ -3724,7 +3724,7 @@ static void variableDefinition(Compiler* compiler)
 // Compiles a "definition". These are the statements that bind new variables.
 // They can only appear at the top level of a block and are prohibited in places
 // like the non-curly body of an if or while.
-void definition(Compiler* compiler)
+static void definition(Compiler* compiler)
 {
   if(matchAttribute(compiler)) {
     definition(compiler);
@@ -3791,7 +3791,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   // Copy next -> current
   nextToken(&parser);
 
-  int numExistingVariables = module->variables.count;
+  const int numExistingVariables = module->variables.count;
 
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, false);
@@ -3982,9 +3982,9 @@ static void addToAttributeGroup(Compiler* compiler,
   ObjList* keyItems = AS_LIST(keyItemsValue);
   wrenValueBufferWrite(vm, &keyItems->elements, value);
 
-  if(IS_OBJ(group)) wrenPopRoot(vm);
-  if(IS_OBJ(key))   wrenPopRoot(vm);
   if(IS_OBJ(value)) wrenPopRoot(vm);
+  if(IS_OBJ(key))   wrenPopRoot(vm);
+  if(IS_OBJ(group)) wrenPopRoot(vm);
 }
 
 
@@ -4130,5 +4130,5 @@ static void copyMethodAttributes(Compiler* compiler, bool isForeign,
   Value key = wrenNewStringLength(vm, fullSignatureWithPrefix, fullLength);
   wrenMapSet(vm, compiler->enclosingClass->methodAttributes, key, OBJ_VAL(methodAttr));
 
-  wrenPopRoot(vm);
+  wrenPopRoot(vm); // methodAttr.
 }

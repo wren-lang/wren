@@ -40,7 +40,7 @@ Account.__index = Account
 
 function Account.create(balance)
    local acnt = {}             -- our new object
-   setmetatable(acnt,Account)  -- make Account handle lookup
+   setmetatable(acnt, Account) -- make Account handle lookup
    acnt.balance = balance      -- initialize our object
    return acnt
 end
@@ -57,7 +57,7 @@ account:withdraw(100)
 Here's the same example in Wren:
 
 <pre class="snippet">
-//account.wren
+// account.wren
 
 class Account {
   construct new(balance) { _balance = balance }

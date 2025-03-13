@@ -10,6 +10,7 @@
 // at one time.
 #define WREN_MAX_TEMP_ROOTS 8
 
+// NOTE: emitOp() assumes it fits in a byte!
 typedef enum
 {
   #define OPCODE(name, _) CODE_##name,
@@ -45,7 +46,7 @@ struct WrenVM
   // The fiber that is currently running.
   ObjFiber* fiber;
 
-  // The loaded modules. Each key is an ObjString (except for the main module,
+  // The loaded modules. Each key is an ObjString (except for the core module,
   // whose key is null) for the module's name and the value is the ObjModule
   // for the module.
   ObjMap* modules;
@@ -111,6 +112,10 @@ struct WrenVM
   // There is a single global symbol table for all method names on all classes.
   // Method calls are dispatched directly by index in this table.
   SymbolTable methodNames;
+
+#if WREN_SNAPSHOT
+  bool inhibitGC;
+#endif
 };
 
 // A generic allocation function that handles all explicit memory management.
@@ -137,7 +142,7 @@ void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 // Creates a new [WrenHandle] for [value].
 WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
 
-// Compile [source] in the context of [module] and wrap in a fiber that can
+// Compile [source] in the context of [module] and wrap in a closure that can
 // execute it.
 //
 // Returns NULL if a compile error occurred.
@@ -150,9 +155,8 @@ ObjClosure* wrenCompileSource(WrenVM* vm, const char* module,
 // Aborts the current fiber if the module or variable could not be found.
 Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName);
 
-// Returns the value of the module-level variable named [name] in the main
-// module.
-Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name);
+// Returns the value of the module-level variable named [name] in the [module].
+Value wrenFindVariable(ObjModule* module, const char* name);
 
 // Adds a new implicitly declared top-level variable named [name] to [module]
 // based on a use site occurring on [line].
@@ -163,15 +167,20 @@ Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name);
 int wrenDeclareVariable(WrenVM* vm, ObjModule* module, const char* name,
                         size_t length, int line);
 
-// Adds a new top-level variable named [name] to [module], and optionally
-// populates line with the line of the implicit first use (line can be NULL).
+// Adds a new top-level variable containing [value] to [module].
+//
+// If [str] is given, the variable is assumed brand new, thus forcibly added;
+// caller has to ignore the returned value.
+//
+// If [str] is NULL, then [name] and [length] are used.  Optionally
+// populates [line] with the line of the implicit first use (line can be NULL).
 //
 // Returns the symbol for the new variable, -1 if a variable with the given name
 // is already defined, or -2 if there are too many variables defined.
 // Returns -3 if this is a top-level lowercase variable (localname) that was
 // used before being defined.
 int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
-                       size_t length, Value value, int* line);
+                       size_t length, Value value, int* line, ObjString* str);
 
 // Pushes [closure] onto [fiber]'s callstack to invoke it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
@@ -192,8 +201,11 @@ static inline void wrenCallFunction(WrenVM* vm, ObjFiber* fiber,
   int needed = stackSize + closure->fn->maxSlots;
   wrenEnsureStack(vm, fiber, needed);
   
-  wrenAppendCallFrame(vm, fiber, closure, fiber->stackTop - numArgs);
+  wrenAppendCallFrame(/* vm, */ fiber, closure, fiber->stackTop - numArgs);
 }
+
+// Closes all open upvalues of [fiber].
+void closeAllUpvaluesOf(ObjFiber* fiber);
 
 // Marks [obj] as a GC root so that it doesn't get collected.
 void wrenPushRoot(WrenVM* vm, Obj* obj);
@@ -201,24 +213,45 @@ void wrenPushRoot(WrenVM* vm, Obj* obj);
 // Removes the most recently pushed temporary root.
 void wrenPopRoot(WrenVM* vm);
 
+// Looks if a char is present in the WREN_SNAPSHOT environment variable.
+// It allows to selectively run code related to the snapshot feature.
+//
+// Handled in test/test.c:
+// - 'y': Yes, go into snapshot code; i.e. this is the big Enable button.
+// - 'f': Fallthrough into normal execution, after snapshot code.
+// Handled elsewhere:
+// - '0': Counts of Obj are printed.
+// - 's': Save a snapshot of the current VM.
+// --- 'c': Census of Obj are printed.
+// --- 'S': The saved snapshot will be verbose (but NOT suitable for restore).
+// --- 'n': Save function names.
+// --- '1': Save source line for each bytecode.
+// --- 'i': Id of each object is shortened as much as possible. Nice with '0'.
+// - 'r': Restore a snapshot in a transient dedicated empty VM (possibly from
+//        the just-saved snapshot, because the order is: save then restore).
+// --- 'R': The restore operation will print a lot.
+// --- 'x': Execute the restored snapshot, in its transient dedicated VM.
+// --- '=': Some "=== step" milestones are printed.
+bool wrenSnapshotWant(char c);
+
 // Returns the class of [value].
 //
 // Defined here instead of in wren_value.h because it's critical that this be
 // inlined. That means it must be defined in the header, but the wren_value.h
-// header doesn't have a full definitely of WrenVM yet.
+// header doesn't have a full definition of WrenVM yet.
 static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 {
+#if WREN_NAN_TAGGING
   if (IS_NUM(value)) return vm->numClass;
   if (IS_OBJ(value)) return AS_OBJ(value)->classObj;
 
-#if WREN_NAN_TAGGING
   switch (GET_TAG(value))
   {
-    case TAG_FALSE:     return vm->boolClass; break;
-    case TAG_NAN:       return vm->numClass; break;
-    case TAG_NULL:      return vm->nullClass; break;
-    case TAG_TRUE:      return vm->boolClass; break;
-    case TAG_UNDEFINED: UNREACHABLE();
+    case TAG_FALSE:     return vm->boolClass;
+    case TAG_NAN:       return vm->numClass;
+    case TAG_NULL:      return vm->nullClass;
+    case TAG_TRUE:      return vm->boolClass;
+    case TAG_UNDEFINED: break;
   }
 #else
   switch (value.type)
@@ -228,7 +261,7 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
     case VAL_NUM:       return vm->numClass;
     case VAL_TRUE:      return vm->boolClass;
     case VAL_OBJ:       return AS_OBJ(value)->classObj;
-    case VAL_UNDEFINED: UNREACHABLE();
+    case VAL_UNDEFINED: break;
   }
 #endif
 
@@ -247,5 +280,63 @@ static inline bool wrenIsFalsyValue(Value value)
 {
   return IS_FALSE(value) || IS_NULL(value);
 }
+
+#define DO_ALL_OBJ_TYPES \
+  DO(CLASS,    Class   ) \
+  DO(CLOSURE,  Closure ) \
+  DO(FIBER,    Fiber   ) \
+  DO(FN,       Fn      ) \
+  DO(FOREIGN,  Foreign ) \
+  DO(INSTANCE, Instance) \
+  DO(LIST,     List    ) \
+  DO(MAP,      Map     ) \
+  DO(MODULE,   Module  ) \
+  DO(RANGE,    Range   ) \
+  DO(STRING,   String  ) \
+  DO(UPVALUE,  Upvalue )
+
+typedef uint32_t WrenCount;
+
+typedef struct {
+  #define DO(u, l) WrenCount nb##l;
+  DO_ALL_OBJ_TYPES
+  #undef DO
+  WrenCount nb;
+} WrenCounts;
+
+typedef struct {
+  #define DO(u, l) Obj##l** all##l;
+  DO_ALL_OBJ_TYPES
+  #undef DO
+} WrenCensus;
+
+typedef struct
+{
+  #define DO(u, l) uint8_t sizeId##l;
+  DO_ALL_OBJ_TYPES
+  #undef DO
+} WrenSnapshotIdSizes;
+
+#undef DO_ALL_OBJ_TYPES
+
+// Count all objects by type.
+// The [counts] are expected to be initialized with 0.
+void wrenCountAllObj(WrenVM *vm, WrenCounts *counts);
+
+// Allocate memory for [census] arrays, whose sizes are [counts], and perform
+// the census.
+void wrenCensusAllObj(WrenVM *vm, WrenCounts *counts, WrenCensus *census);
+
+// Free the arrays of a [census].
+void wrenFreeCensus(WrenVM *vm, WrenCensus *census);
+
+// Find the [needle] in the [census], whose sizes are [counts].
+// (The type of the needle selects the correct array in [census].)
+// This yields an identifier independent from the memory allocator.
+// The returned value is 1-based.
+// Return 0 when not found.
+WrenCount wrenFindInCensus(WrenCounts *counts, WrenCensus *census, Obj* needle);
+
+// WrenVM* wrenNewEmptyVM(WrenConfiguration* config);
 
 #endif

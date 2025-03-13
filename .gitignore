@@ -39,3 +39,6 @@ ipch/
 
 # macOS
 .DS_Store
+
+# Doxygen
+/doxygen/
