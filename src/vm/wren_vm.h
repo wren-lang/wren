@@ -220,7 +220,9 @@ void wrenPopRoot(WrenVM* vm);
 // - 'y': Yes, go into snapshot code; i.e. this is the big Enable button.
 // - 'f': Fallthrough into normal execution, after snapshot code.
 // Handled elsewhere:
+// - '0': Counts of Obj are printed.
 // - 's': Save a snapshot of the current VM.
+// --- 'c': Census of Obj are printed.
 // --- 'S': The saved snapshot will be verbose (but NOT suitable for restore).
 // --- 'n': Save function names.
 // --- '1': Save source line for each bytecode.
@@ -229,9 +231,7 @@ void wrenPopRoot(WrenVM* vm);
 //        the just-saved snapshot, because the order is: save then restore).
 // --- 'R': The restore operation will print a lot.
 // --- 'x': Execute the restored snapshot, in its transient dedicated VM.
-// - '0': Counts of Obj are printed.
-// - 'c': Census of Obj are printed.
-// - '=': Some "=== step" milestones are printed.
+// --- '=': Some "=== step" milestones are printed.
 bool wrenSnapshotWant(char c);
 
 // Returns the class of [value].
