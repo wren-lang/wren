@@ -1430,6 +1430,7 @@ uint8_t findPrimitiveInCensus(Primitive prim)
       return i;
 
   ASSERT(false, "Primitive absent from census.");
+  //return 0; // TODO should count from 1, and 0 would mean error.
 }
 
 Primitive getPrimitive(uint8_t index)

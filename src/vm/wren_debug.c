@@ -678,6 +678,7 @@ static void saveMethod(WrenSnapshotContext* ctx, Method m)
   }
 }
 SAVE_BUFFER(Method, Method)
+// TODO implement RLE compression
 
 static void saveInt(WrenSnapshotContext* ctx, int i)
 {
@@ -703,7 +704,7 @@ static void saveSymbolTable(WrenSnapshotContext* ctx, SymbolTable* symtab)
 
 static void saveObjString(WrenSnapshotContext* ctx, ObjString* str)
 {
-  uint32_t length = str->length;
+  uint32_t length = str->length; // TODO shorten
   NUM(length);
   VERBOSE CHAR("\"");
   (ctx->write)(str->value, sizeof(char), length, ctx);
@@ -1238,15 +1239,31 @@ static ObjString* restoreObjString(WrenSnapshotContext* ctx, WrenVM* vm)
   uint32_t length;
   FREAD_NUM(length);
 
-  char buf[256]; // TODO
+  char buf[2048]; // TODO prefer next function
   ASSERT(length <= sizeof(buf), "Buffer too small.");
   (ctx->read)(buf, sizeof(char), length, ctx);
 
   Value v = wrenNewStringLength(vm, buf, length);
-  // TODO allocateString(); (ctx->read)(); hashString(); // but they're static
 
   return AS_STRING(v);
 }
+
+/*
+// allocateString(); hashString(); // but they're static
+
+static ObjString* restoreObjString(WrenSnapshotContext* ctx, WrenVM* vm)
+{
+  uint32_t length;
+  FREAD_NUM(length);
+
+  ObjString* string = allocateString(vm, length);
+
+  (ctx->read)(string->value, sizeof(char), length, ctx);
+
+  hashString(string);
+  return string;
+}
+*/
 
 #define RESTORE_BUFFER(name, type)                                             \
 static void restore##name##Buffer(WrenSnapshotContext* ctx, WrenVM* vm, name##Buffer* buffer) \
