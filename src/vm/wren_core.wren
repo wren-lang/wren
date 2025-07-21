@@ -169,16 +169,25 @@ class WhereSequence is Sequence {
   construct new(sequence, fn) {
     _sequence = sequence
     _fn = fn
+    _cache_val = null
+    _cache_iter = null
   }
 
   iterate(iterator) {
     while (iterator = _sequence.iterate(iterator)) {
-      if (_fn.call(_sequence.iteratorValue(iterator))) break
+      var val = _sequence.iteratorValue(iterator)
+      if (_fn.call(val)) {
+        _cache_val = val
+        _cache_iter = iterator
+        break
+      }
     }
     return iterator
   }
 
-  iteratorValue(iterator) { _sequence.iteratorValue(iterator) }
+  iteratorValue(iterator) {
+    if (iterator == _cache_iter) return _cache_val else return _sequence.iteratorValue(iterator)
+  }
 }
 
 class String is Sequence {
