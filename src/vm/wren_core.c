@@ -697,6 +697,7 @@ DEF_NUM_FN(ceil,    ceil)
 DEF_NUM_FN(cos,     cos)
 DEF_NUM_FN(floor,   floor)
 DEF_NUM_FN(negate,  -)
+DEF_NUM_FN(positive,+)
 DEF_NUM_FN(round,   round)
 DEF_NUM_FN(sin,     sin)
 DEF_NUM_FN(sqrt,    sqrt)
@@ -1380,6 +1381,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass, "cos", num_cos);
   PRIMITIVE(vm->numClass, "floor", num_floor);
   PRIMITIVE(vm->numClass, "-", num_negate);
+  PRIMITIVE(vm->numClass, "+", num_positive);
   PRIMITIVE(vm->numClass, "round", num_round);
   PRIMITIVE(vm->numClass, "min(_)", num_min);
   PRIMITIVE(vm->numClass, "max(_)", num_max);
