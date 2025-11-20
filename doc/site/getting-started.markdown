@@ -49,6 +49,20 @@ If your platform isn't explicitly supported,
 it is recommended that you include the Wren source
 in your project for a portable experience.
 
+### Building Wren from vcpkg
+
+The wren port in [vcpkg](https://github.com/Microsoft/vcpkg) is kept up to date by Microsoft team members and community contributors. You can download and install wren using the vcpkg dependency manager:
+
+```shell
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh  # ./bootstrap-vcpkg.bat for Windows
+./vcpkg integrate install
+./vcpkg install wren
+```
+
+If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+
 ### Including the code in your project
 
 **all source files**   
