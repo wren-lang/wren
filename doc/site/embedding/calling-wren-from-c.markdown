@@ -9,10 +9,11 @@ It's also not an effective way to communicate. You can't pass arguments to
 Wren&mdash;at least, not without doing something nasty like converting them to
 literals in a string of source code&mdash;and you can't get a result value back.
 
-`wrenInterpret()` is great for loading code into the VM, but it's not the best
-way to execute code that's already been loaded. What we want to do is invoke
-some already compiled chunk of code. Since Wren is an object-oriented language,
-"chunk of code" means a [method][], not a [function][].
+`wrenInterpret()` is great for loading code into the VM (and the only way to 
+load code into the VM), but it's not the best way to execute code that's 
+already been loaded. What we want to do is invoke some already compiled chunk
+of code. Since Wren is an object-oriented language, "chunk of code" means a 
+[method][], not a [function][].
 
 [method]: ../method-calls.html
 [function]: ../functions.html
@@ -123,6 +124,10 @@ look it up][variable]. We can get a handle to the above class like so:
 wrenEnsureSlots(vm, 1);
 wrenGetVariable(vm, "main", "GameEngine", 0);
 </pre>
+
+***Note:*** We also need to make sure the method we are trying to find with 
+`wrenGetVariable()` has already been imported into the VM through
+`wrenInterpret()`.
 
 We could do this every time we call `update()`, but, again, that's kind of slow
 because we're looking up "GameEngine" by name each time. A faster solution is to
