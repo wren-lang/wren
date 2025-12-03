@@ -187,12 +187,18 @@ static inline void wrenCallFunction(WrenVM* vm, ObjFiber* fiber,
     fiber->frameCapacity = max;
   }
   
+  // Functions allows to be called with more arguments than required. So the
+  // the [fiber] [stackTop] has to be realined to match the [closure] [arity].
+  const int closureNumArgs = closure->fn->arity + 1;
+  ASSERT(closureNumArgs <= numArgs, "Expect more arguments");
+  fiber->stackTop -= numArgs - closureNumArgs;
+
   // Grow the stack if needed.
   int stackSize = (int)(fiber->stackTop - fiber->stack);
   int needed = stackSize + closure->fn->maxSlots;
   wrenEnsureStack(vm, fiber, needed);
   
-  wrenAppendCallFrame(vm, fiber, closure, fiber->stackTop - numArgs);
+  wrenAppendCallFrame(vm, fiber, closure, fiber->stackTop - closureNumArgs);
 }
 
 // Marks [obj] as a GC root so that it doesn't get collected.
