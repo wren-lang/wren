@@ -12,7 +12,7 @@ For all other objects, this returns `true` only if *obj1* and *obj2* refer to
 the exact same object in memory.
 
 This is similar to the built in `==` operator in Object except that this cannot
-be overriden. It allows you to reliably access the built-in equality semantics
+be overridden. It allows you to reliably access the built-in equality semantics
 even on user-defined classes.
 
 ## Methods

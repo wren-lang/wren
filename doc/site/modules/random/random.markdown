@@ -32,7 +32,7 @@ var random = Random.new()
 ### Random.**new**(seed)
 
 Creates a new generator initialized with [seed]. The seed can either be a
-number, or a non-empty sequence of numbers. If the sequnce has more than 16
+number, or a non-empty sequence of numbers. If the sequence has more than 16
 elements, only the first 16 are used. If it has fewer, the elements are cycled
 to generate 16 seed values.
 

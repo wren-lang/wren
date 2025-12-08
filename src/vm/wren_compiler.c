@@ -1835,7 +1835,7 @@ static void validateNumParameters(Compiler* compiler, int numArgs)
 }
 
 // Parses the rest of a comma-separated parameter list after the opening
-// delimeter. Updates `arity` in [signature] with the number of parameters.
+// delimiter. Updates `arity` in [signature] with the number of parameters.
 static void finishParameterList(Compiler* compiler, Signature* signature)
 {
   do
@@ -2838,7 +2838,7 @@ void parsePrecedence(Compiler* compiler, Precedence precedence)
     return;
   }
 
-  // Track if the precendence of the surrounding expression is low enough to
+  // Track if the precedence of the surrounding expression is low enough to
   // allow an assignment inside this one. We can't compile an assignment like
   // a normal expression because it requires us to handle the LHS specially --
   // it needs to be an lvalue, not an rvalue. So, for each of the kinds of
@@ -3048,7 +3048,7 @@ static void forStatement(Compiler* compiler)
   //     }
   //
   // It's not exactly this, because the synthetic variables `seq_` and `iter_`
-  // actually get names that aren't valid Wren identfiers, but that's the basic
+  // actually get names that aren't valid Wren identifiers, but that's the basic
   // idea.
   //
   // The important parts are:
@@ -3954,7 +3954,7 @@ static void disallowAttributes(Compiler* compiler)
   }
 }
 
-// Add an attribute to a given group in the compiler attribues map
+// Add an attribute to a given group in the compiler attributes map
 static void addToAttributeGroup(Compiler* compiler, 
                                 Value group, Value key, Value value) 
 {
