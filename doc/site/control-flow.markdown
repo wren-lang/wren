@@ -174,6 +174,16 @@ A `for` loop has three components:
 3. A *body*. This is a curly block or a single statement. It gets executed once
    for each iteration of the loop.
 
+Note that a fresh variable is created for each iteration of the loop and so, if a [function](functions.html) in the body captures that variable, its value will not be affected by subsequent iterations.
+
+<pre class="snippet">
+var prints = []
+for (i in 1..3) {
+  prints.add(Fn.new { System.print(i) })
+}
+for (print in prints) print.call()  //> 1, 2, 3 not 3, 3, 3
+</pre>
+
 ## Break statements
 
 Sometimes, right in the middle of a loop body, you decide you want to bail out
