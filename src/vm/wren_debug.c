@@ -21,6 +21,7 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
                        NULL, -1, "[error object]");
   }
 
+  ObjModule* coreModule = wrenGetCoreModule(vm);
   for (int i = fiber->numFrames - 1; i >= 0; i--)
   {
     CallFrame* frame = &fiber->frames[i];
@@ -29,10 +30,11 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
     // Skip over stub functions for calling methods from the C API.
     if (fn->module == NULL) continue;
     
-    // The built-in core module has no name. We explicitly omit it from stack
-    // traces since we don't want to highlight to a user the implementation
-    // detail of what part of the core module is written in C and what is Wren.
-    if (fn->module->name == NULL) continue;
+    // Explicitly omit the core module from stack traces.
+    //
+    // We don't want to highlight to a user the implementation detail of what
+    // part of the core module is written in C and what is Wren.
+    if (fn->module == coreModule) continue;
     
     // -1 because IP has advanced past the instruction that it just executed.
     int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
@@ -56,7 +58,9 @@ static void dumpObject(Obj* obj)
     case OBJ_INSTANCE: printf("[instance %p]", obj); break;
     case OBJ_LIST: printf("[list %p]", obj); break;
     case OBJ_MAP: printf("[map %p]", obj); break;
-    case OBJ_MODULE: printf("[module %p]", obj); break;
+    case OBJ_MODULE:
+      printf("[module %s %p]", ((ObjModule*)obj)->name->value, obj);
+      break;
     case OBJ_RANGE: printf("[range %p]", obj); break;
     case OBJ_STRING: printf("%s", ((ObjString*)obj)->value); break;
     case OBJ_UPVALUE: printf("[upvalue %p]", obj); break;
@@ -229,6 +233,52 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
     }
 
+    case CODE_INVOKE_0:
+    case CODE_INVOKE_1:
+    case CODE_INVOKE_2:
+    case CODE_INVOKE_3:
+    case CODE_INVOKE_4:
+    case CODE_INVOKE_5:
+    case CODE_INVOKE_6:
+    case CODE_INVOKE_7:
+    case CODE_INVOKE_8:
+    case CODE_INVOKE_9:
+    case CODE_INVOKE_10:
+    case CODE_INVOKE_11:
+    case CODE_INVOKE_12:
+    case CODE_INVOKE_13:
+    case CODE_INVOKE_14:
+    case CODE_INVOKE_15:
+    case CODE_INVOKE_16:
+    {
+      int numArgs = bytecode[i - 1] - CODE_INVOKE_0;
+      printf("INVOKE_%d\n", numArgs);
+      break;
+    }
+
+    case CODE_INVOKE_SUPER_0:
+    case CODE_INVOKE_SUPER_1:
+    case CODE_INVOKE_SUPER_2:
+    case CODE_INVOKE_SUPER_3:
+    case CODE_INVOKE_SUPER_4:
+    case CODE_INVOKE_SUPER_5:
+    case CODE_INVOKE_SUPER_6:
+    case CODE_INVOKE_SUPER_7:
+    case CODE_INVOKE_SUPER_8:
+    case CODE_INVOKE_SUPER_9:
+    case CODE_INVOKE_SUPER_10:
+    case CODE_INVOKE_SUPER_11:
+    case CODE_INVOKE_SUPER_12:
+    case CODE_INVOKE_SUPER_13:
+    case CODE_INVOKE_SUPER_14:
+    case CODE_INVOKE_SUPER_15:
+    case CODE_INVOKE_SUPER_16:
+    {
+      int numArgs = bytecode[i - 1] - CODE_INVOKE_0;
+      printf("INVOKE_SUPER_%d\n", numArgs);
+      break;
+    }
+
     case CODE_JUMP:
     {
       int offset = READ_SHORT();
@@ -360,9 +410,7 @@ int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i)
 
 void wrenDumpCode(WrenVM* vm, ObjFn* fn)
 {
-  printf("%s: %s\n",
-         fn->module->name == NULL ? "<core>" : fn->module->name->value,
-         fn->debug->name);
+  printf("%s: %s\n", fn->module->name->value, fn->debug->name);
 
   int i = 0;
   int lastLine = -1;
