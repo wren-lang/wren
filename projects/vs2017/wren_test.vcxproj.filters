@@ -42,6 +42,9 @@
     <ClInclude Include="..\..\test\api\new_vm.h">
       <Filter>api</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\test\api\raw_value.h">
+      <Filter>api</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\test\api\reset_stack_after_call_abort.h">
       <Filter>api</Filter>
     </ClInclude>
@@ -94,6 +97,9 @@
       <Filter>api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\api\new_vm.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\api\raw_value.c">
       <Filter>api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\api\reset_stack_after_call_abort.c">

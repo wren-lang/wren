@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
@@ -33,12 +34,33 @@
 // here.
 typedef struct WrenVM WrenVM;
 
+// The Wren garbage collector's tracer
+//
+// This is passed to objects' trace hooks so that they may trace their
+// RawValues in order that the GC may know about thm
+typedef struct WrenTracer WrenTracer;
+
 // A handle to a Wren object.
 //
 // This lets code outside of the VM hold a persistent reference to an object.
 // After a handle is acquired, and until it is released, this ensures the
 // garbage collector will not reclaim the object it references.
 typedef struct WrenHandle WrenHandle;
+
+// A raw Wren object reference
+//
+// WrenRawValues allow code to manipulate references to an object directly.
+// Unlike WrenHandles, these are *not* GC roots. If you do not trace these
+// objects from a Foreign class' trace hook, then any objects referenced
+// through a WrenRawValue may be garbage collected
+//
+// These form a powerful, but tricky-to-use API, that requires care to use
+//
+// The internaal representation of these values is subject to change.
+typedef union WrenRawValue {
+  uint64_t  bits;
+  void     *ptr;
+} WrenRawValue;
 
 // A generic allocation function that handles all explicit memory management
 // used by Wren. It's used like so:
@@ -59,6 +81,14 @@ typedef void* (*WrenReallocateFn)(void* memory, size_t newSize, void* userData);
 
 // A function callable from Wren code, but implemented in C.
 typedef void (*WrenForeignMethodFn)(WrenVM* vm);
+
+// A tracer function for marking objects reachable from this object instance.
+// Tracer functions do not have access to the VM and must not call back into it
+// by other means, as it is in the middle of garbage collection
+//
+// The return value of this function is the size that this object should be treated
+// as (in bytes) for garbage collector accounting purposes.
+typedef size_t (*WrenTracerFn)(WrenTracer* tracer, void* data);
 
 // A finalizer function for freeing resources owned by an instance of a foreign
 // class. Unlike most foreign methods, finalizers do not have access to the VM
@@ -143,6 +173,12 @@ typedef struct
   //
   // This may be `NULL` if the foreign class does not need to finalize.
   WrenFinalizerFn finalize;
+
+  // The callback invoked by the garbage collector duirng the mark phase
+  // in order to trace all objects pointed to by this object
+  //
+  // This may be `NULL` if the foreign class does not need tracing.
+  WrenTracerFn trace;
 } WrenForeignClassMethods;
 
 // Returns a pair of pointers to the foreign methods used to allocate and
@@ -445,6 +481,11 @@ WREN_API const char* wrenGetSlotString(WrenVM* vm, int slot);
 // until the handle is released by calling [wrenReleaseHandle()].
 WREN_API WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
 
+// Returns the value stored in [slot] as a RawValue
+//
+// The usual cautions around using raw values apply
+WREN_API WrenRawValue wrenGetSlotRawValue(WrenVM* vm, int slot);
+
 // Stores the boolean [value] in [slot].
 WREN_API void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
 
@@ -489,6 +530,11 @@ WREN_API void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
 //
 // This does not release the handle for the value.
 WREN_API void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
+
+// Stores th value captured in [RawValue] in [slot]
+//
+// It is your respnsibility to ensure the RawValue is still valid
+WREN_API void wrenSetSlotRawValue(WrenVM* vm, int slot, WrenRawValue rawvalue);
 
 // Returns the number of elements in the list stored in [slot].
 WREN_API int wrenGetListCount(WrenVM* vm, int slot);
@@ -550,5 +596,11 @@ WREN_API void* wrenGetUserData(WrenVM* vm);
 
 // Sets user data associated with the WrenVM.
 WREN_API void wrenSetUserData(WrenVM* vm, void* userData);
+
+// Returns a raw value representing `null`
+WREN_API WrenRawValue wrenNullRawValue(void);
+
+// Traces the passed RawValue
+WREN_API void wrenTraceRawValue(WrenTracer *tracer, WrenRawValue value);
 
 #endif

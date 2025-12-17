@@ -131,6 +131,9 @@ struct WrenVM
 //   [oldSize] will be zero. It should return NULL.
 void* wrenReallocate(WrenVM* vm, void* memory, size_t oldSize, size_t newSize);
 
+// Invoke the tracer for the foreign object referenced by [foreign].
+void wrenTraceForeign(WrenVM* vm, ObjForeign* foreign);
+
 // Invoke the finalizer for the foreign object referenced by [foreign].
 void wrenFinalizeForeign(WrenVM* vm, ObjForeign* foreign);
 

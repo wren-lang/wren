@@ -55,7 +55,7 @@
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>wren_test</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>latest</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 64bit|x64'" Label="Configuration">
@@ -267,6 +267,7 @@
     <ClInclude Include="..\..\test\api\lists.h" />
     <ClInclude Include="..\..\test\api\maps.h" />
     <ClInclude Include="..\..\test\api\new_vm.h" />
+    <ClInclude Include="..\..\test\api\raw_value.h" />
     <ClInclude Include="..\..\test\api\reset_stack_after_call_abort.h" />
     <ClInclude Include="..\..\test\api\reset_stack_after_foreign_construct.h" />
     <ClInclude Include="..\..\test\api\resolution.h" />
@@ -287,6 +288,7 @@
     <ClCompile Include="..\..\test\api\lists.c" />
     <ClCompile Include="..\..\test\api\maps.c" />
     <ClCompile Include="..\..\test\api\new_vm.c" />
+    <ClCompile Include="..\..\test\api\raw_value.c" />
     <ClCompile Include="..\..\test\api\reset_stack_after_call_abort.c" />
     <ClCompile Include="..\..\test\api\reset_stack_after_foreign_construct.c" />
     <ClCompile Include="..\..\test\api\resolution.c" />
