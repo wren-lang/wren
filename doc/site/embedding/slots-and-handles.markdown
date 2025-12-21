@@ -97,6 +97,11 @@ length of the string using `strlen()`.
 
 [string]: ../values.html#strings
 
+If you need to move data from one slot to another, you can use `wrenCopySlot()`
+<pre class="snippet" data-lang="c">
+void wrenCopySlot(WrenVM* vm, int dstSlot, int srcSlot);
+</pre>
+
 ### Reading slots
 
 You can, of course, also pull data out of slots. Here are the simple ones:
