@@ -193,6 +193,30 @@ These are equivalent to method calls whose signature is `[_]=(_)` and whose
 arguments are both the subscript (or subscripts) and the value on the right-hand
 side.
 
+## Returning values
+
+The body of a method is a [block](syntax.html#blocks). If it is a single
+expression&mdash;more precisely if there is no newline after the `{` &mdash;
+then the method implicitly returns the value of the expression.
+
+Otherwise, the body returns `null` by default. You can explicitly return a
+value using a `return` statement. In other words, these two methods do the
+same thing:
+
+<pre class="snippet">
+method1() { "return value" }
+
+method2() {
+  return "return value"
+}
+</pre>
+
+
+However, it would be an error to include a `return` statment in method1():
+<pre class="snippet">
+method1() { return "return value" }  //> Error at 'return': Expected expression. 
+</pre>
+
 <br><hr>
 <a class="right" href="control-flow.html">Control Flow &rarr;</a>
 <a href="maps.html">&larr; Maps</a>
