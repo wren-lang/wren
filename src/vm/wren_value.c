@@ -131,6 +131,33 @@ void wrenBindMethod(WrenVM* vm, ObjClass* classObj, int symbol, Method method)
   classObj->methods.data[symbol] = method;
 }
 
+int wrenClassImplements(WrenVM* vm, const ObjClass* classObj,
+                        Value interface)
+{
+  if (IS_CLASS(interface))
+  {
+    const ObjClass *interfaceObj = AS_CLASS(interface);
+
+    // The following shortpath can't be added because, constructors and static
+    // method should be ignored.
+    // if (classObj->methods.count < interfaceObj->methods.count) return false;
+
+    for (int i = 0; i < interfaceObj->methods.count; i++)
+    {
+      if (interfaceObj->methods.data[i].type == METHOD_NONE) continue;
+
+      // Check if it is a constructor initializer
+      if (strncmp(vm->methodNames.data[i]->value, "init ", 5) == 0) continue;
+
+      if (i >= classObj->methods.count ||
+          classObj->methods.data[i].type == METHOD_NONE) return i;
+    }
+    return -2;
+  }
+
+  return -1;
+}
+
 ObjClosure* wrenNewClosure(WrenVM* vm, ObjFn* fn)
 {
   ObjClosure* closure = ALLOCATE_FLEX(vm, ObjClosure,

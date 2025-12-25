@@ -863,6 +863,17 @@ DEF_PRIMITIVE(object_bangeq)
   RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
+DEF_PRIMITIVE(object_implements)
+{
+  ObjClass* classObj = wrenGetClassInline(vm, args[0]);
+  if (!IS_CLASS(args[1]))
+  {
+    RETURN_ERROR("Right operand must be a class.");
+  }
+
+  RETURN_BOOL(wrenClassImplements(vm, classObj, args[1]) == -2);
+}
+
 DEF_PRIMITIVE(object_is)
 {
   if (!IS_CLASS(args[1]))
@@ -1247,6 +1258,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->objectClass, "!", object_not);
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
+  PRIMITIVE(vm->objectClass, "implements(_)", object_implements);
   PRIMITIVE(vm->objectClass, "is(_)", object_is);
   PRIMITIVE(vm->objectClass, "toString", object_toString);
   PRIMITIVE(vm->objectClass, "type", object_type);
