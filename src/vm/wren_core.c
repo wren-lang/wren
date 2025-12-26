@@ -641,6 +641,8 @@ DEF_NUM_CONSTANT(infinity, INFINITY)
 DEF_NUM_CONSTANT(nan,      WREN_DOUBLE_NAN)
 DEF_NUM_CONSTANT(pi,       3.14159265358979323846264338327950288)
 DEF_NUM_CONSTANT(tau,      6.28318530717958647692528676655900577)
+DEF_NUM_CONSTANT(toDeg,    57.2957795130823208758832444148792062)
+DEF_NUM_CONSTANT(toRad,    0.0174532925199432957695156053300343678)
 
 DEF_NUM_CONSTANT(largest,  DBL_MAX)
 DEF_NUM_CONSTANT(smallest, DBL_MIN)
@@ -1354,6 +1356,8 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->numClass->obj.classObj, "nan", num_nan);
   PRIMITIVE(vm->numClass->obj.classObj, "pi", num_pi);
   PRIMITIVE(vm->numClass->obj.classObj, "tau", num_tau);
+  PRIMITIVE(vm->numClass->obj.classObj, "toDeg", num_toDeg);
+  PRIMITIVE(vm->numClass->obj.classObj, "toRad", num_toRad);
   PRIMITIVE(vm->numClass->obj.classObj, "largest", num_largest);
   PRIMITIVE(vm->numClass->obj.classObj, "smallest", num_smallest);
   PRIMITIVE(vm->numClass->obj.classObj, "maxSafeInteger", num_maxSafeInteger);

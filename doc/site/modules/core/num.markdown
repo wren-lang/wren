@@ -27,6 +27,26 @@ The value of &pi;.
 
 The value of &tau;. This is equivalent to ```2 * Num.pi```.
 
+### Num.**toDeg**
+
+Multiplier to convert a number of radians to degrees.
+
+<pre class="snippet">
+var radians = Num.pi
+var degrees = radians * Num.toDeg 
+System.print(degrees) //> 180
+</pre>
+
+### Num.**toRad**
+
+Multiplier to convert a number of degrees to radians.
+
+<pre class="snippet">
+var degrees = 180
+var radians = degrees * Num.toRad
+System.print(radians) //> 3.1415926535898
+</pre>
+
 ### Num.**largest**
 
 The largest representable numeric value.
