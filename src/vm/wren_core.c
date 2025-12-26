@@ -1042,6 +1042,31 @@ DEF_PRIMITIVE(string_codePointAt)
                             string->length - index));
 }
 
+DEF_PRIMITIVE(string_compareTo)
+{
+  if (!validateString(vm, args[1], "Argument")) return false;
+
+  ObjString* str1 = AS_STRING(args[0]);
+  ObjString* str2 = AS_STRING(args[1]);
+
+  size_t len1 = str1->length;
+  size_t len2 = str2->length;
+
+  // Get minimum length for comparison.
+  size_t minLen = (len1 <= len2) ? len1 : len2;
+  int res = memcmp(str1->value, str2->value, minLen);
+   
+  // If result is non-zero, just return that.
+  if (res) RETURN_NUM(res);
+
+  // If the lengths are the same, the strings must be equal
+  if (len1 == len2) RETURN_NUM(0);
+
+  // Otherwise the shorter string will come first.
+  res = (len1 < len2) ? -1 : 1;
+  RETURN_NUM(res);
+}
+
 DEF_PRIMITIVE(string_contains)
 {
   if (!validateString(vm, args[1], "Argument")) return false;
@@ -1417,6 +1442,7 @@ void wrenInitializeCore(WrenVM* vm)
   PRIMITIVE(vm->stringClass, "byteAt_(_)", string_byteAt);
   PRIMITIVE(vm->stringClass, "byteCount_", string_byteCount);
   PRIMITIVE(vm->stringClass, "codePointAt_(_)", string_codePointAt);
+  PRIMITIVE(vm->stringClass, "compareTo(_)", string_compareTo);
   PRIMITIVE(vm->stringClass, "contains(_)", string_contains);
   PRIMITIVE(vm->stringClass, "endsWith(_)", string_endsWith);
   PRIMITIVE(vm->stringClass, "indexOf(_)", string_indexOf1);
