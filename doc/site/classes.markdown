@@ -371,7 +371,7 @@ That creates the new instance, then it invokes the *initializer* on that
 instance. This is where the constructor body you defined gets run.
 
 This distinction is important because it means inside the body of the
-constructor, you can access `this`, assign [fields](#fields), call superclass
+constructor, you can access `this`, assign [fields](#fields), call [superclass](#inheritance)
 constructors, etc.
 
 ## Fields
@@ -430,7 +430,7 @@ class Rectangle {
 
 This might be different from what you're used to, so here are two important facts:
 
-- You can't access fields from a base class.
+- You can't access fields from a [base class](#inheritance).
 - You can't access fields on another instance of your own class.
 
 Here is an example in code:
@@ -444,19 +444,19 @@ class Shape {
 
 class Rectangle is Shape {
   construct new() {
-    //This will print null!
-    //_shape from the parent class is private,
-    //we are reading `_shape` from `this`,
-    //which has not been set, so returns null.
+    // This will print null!
+    // _shape from the parent class is private,
+    // we are reading `_shape` from `this`,
+    // which has not been set, so returns null.
     System.print("I am a %(_shape)")
 
-    //a local variable, all variables are private
+    // a local variable, all variables are private
     _width = 10
     var other = Rectangle.new()
 
-    //other._width is not accessible from here,
-    //even though we are also a rectangle. The field
-    //is private, and other._width is invalid syntax!
+    // other._width is not accessible from here,
+    // even though we are also a rectangle. The field
+    // is private, and other._width is invalid syntax!
   }
 }
 ...
@@ -469,7 +469,46 @@ to or even should define getters or setters for most of your object's fields.
 
 ## Metaclasses and static members
 
-**TODO**
+### Metaclasses
+
+A class is itself an object and is the only instance of its corresponding *metaclass*. Metaclasses in turn are instances of a class called "Class" which inherits directly from Object.
+
+<pre class="snippet">
+class Foo {}
+System.print(Foo.type)        //> Foo metaclass
+System.print(Foo.type.type)   //> Class
+System.print(Class.supertype) //> Object
+System.print(Foo is Class)    //> true (because Foo metaclass inherits from Class) 
+System.print(Class.type)      //> Class (not Class metaclass)
+System.print(Class is Class)  //> true, see below
+</pre>
+
+Note that "Class" has no metaclass of its own and is therefore considered to be an instance of itself.
+
+Metaclasses represent classes rather than particular instances of them. They can have fields and methods of their own which are called *static* members of the class. 
+
+### Static methods
+
+Static methods are defined in a similar way to [instance methods](#methods) except that their names are preceded by the *static* keyword. As they belong to the metaclass rather than its corresponding class, they are invoked from outside the metaclass by preceding them with the class name.
+
+<pre class="snippet">
+class Foo{
+    static speak(s) {
+        System.print("I'm %(s) static method of Foo")
+    }
+
+    static speak2() {
+        speak("another") // no need to use class name as within same metaclass
+    }
+}
+
+Foo.speak("a") // need to qualify with class name
+Foo.speak2()   // ditto
+</pre>
+
+As well as ordinary methods static getters, setters and operators are supported.
+
+Whilst the `this` keyword can be used in a static method, it refers to the class object itself rather than an instance of it.
 
 ### Static fields
 
@@ -520,9 +559,7 @@ foo2.printFromInstance() //> second
 
 ## Inheritance
 
-A class can inherit from a "parent" or *superclass*. When you invoke a method
-on an object of some class, if it can't be found, it walks up the chain of
-superclasses looking for it there.
+A class can inherit from a "parent" or *superclass*. 
 
 By default, any new class inherits from Object, which is the superclass from
 which all other classes ultimately descend. You can specify a different parent
@@ -533,6 +570,26 @@ class Pegasus is Unicorn {}
 </pre>
 
 This declares a new class Pegasus that inherits from Unicorn.
+
+When you invoke a method on an object of some class, if it can't be found, it walks up the chain of
+superclasses looking for it there.
+
+<pre class="snippet">
+class Base {
+  method() {
+    System.print("base method")
+  }
+}
+
+class Derived is Base {
+  construct new() {}
+}
+
+var d = Derived.new()
+d.method()  //> base method
+</pre>
+
+In the above example, Derived does not have a method named 'method' but Base does so it's the latter's version which is invoked. 
 
 Note that you should not create classes that inherit from the built-in types
 (Bool, Num, String, Range, List). The built-in types expect their internal bit
@@ -573,7 +630,39 @@ Each class gets to control how it may be constructed independently of its base
 classes. However, constructor *initializers* are inherited since those are
 instance methods on the new object.
 
-This means you can do `super` calls inside a constructor:
+For a pictorial representation of how inheritance works in Wren, please consult [this diagram](https://github.com/wren-lang/wren/blob/main/src/vm/wren_core.c#L1276-L1296).
+
+### `super`
+
+Sometimes you want to invoke a method on yourself, but using methods defined in
+one of your [superclasses](#inheritance). You typically do this in
+an overridden method when you want to access the original method being
+overridden.
+
+To do that, you can use the special `super` keyword as the receiver in a method
+call:
+
+<pre class="snippet">
+class Base {
+  method() {
+    System.print("base method")
+  }
+}
+
+class Derived is Base {
+  construct new() {}
+
+  method() {
+    super.method() //> base method
+  }
+}
+
+var d = Derived.new()
+d.method()  //> base method
+</pre>
+
+You can also use `super` without a method name inside a constructor to invoke a
+base class constructor:
 
 <pre class="snippet">
 class Unicorn {
@@ -591,50 +680,7 @@ class Pegasus is Unicorn {
 Pegasus.new("Fred") //> My name is Fred
 </pre>
 
-## Super
-
-**TODO: Integrate better into page. Should explain this before mentioning
-super above.**
-
-Sometimes you want to invoke a method on yourself, but using methods defined in
-one of your [superclasses](classes.html#inheritance). You typically do this in
-an overridden method when you want to access the original method being
-overridden.
-
-To do that, you can use the special `super` keyword as the receiver in a method
-call:
-
-<pre class="snippet">
-class Base {
-  method() {
-    System.print("base method")
-  }
-}
-
-class Derived is Base {
-  method() {
-    super.method() //> base method
-  }
-}
-</pre>
-
-You can also use `super` without a method name inside a constructor to invoke a
-base class constructor:
-
-<pre class="snippet">
-class Base {
-  construct new(arg) {
-    System.print("base got " + arg)
-  }
-}
-
-class Derived is Base {
-  construct new() {
-    super("value") //> base got value
-  }
-}
-</pre>
-
+The `super` keyword can also be used in a static method to invoke a method in one of the class object's [superclasses](#metaclasses).
 
 ## Attributes
 
