@@ -9,7 +9,7 @@ The core module is built directly into the VM and is implicitly
 imported by every other module. You don't need to `import` anything to use it.
 It contains objects and types for the language itself like [numbers][] and [strings][].
 
-Because Wren is designed for [embedding in applications][embedding], its core
+Because Wren is designed for [embedding in applications](embedding), its core
 module is minimal and is focused on working with objects within Wren. For
 stuff like file IO, graphics, etc., it is up to the host application to provide
 interfaces for this.
