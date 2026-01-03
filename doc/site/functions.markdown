@@ -204,8 +204,8 @@ contextMenu.onClick(1) {|button|
   System.print("I was right-clicked")
 }
 
-link.fireEvent(0)  //> (nothing happened)
-link.fireEvent(1)  //> I was right-clicked
+contextMenu.fireEvent(0)  //> (nothing happened)
+contextMenu.fireEvent(1)  //> I was right-clicked
 </pre>
 
 Notice that we still pass the other arguments normally, 
