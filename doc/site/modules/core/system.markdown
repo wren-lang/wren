@@ -28,6 +28,8 @@ the object is converted to a string by calling `toString` on it.
 System.print("I like bananas") //> I like bananas
 </pre>
 
+Also returns `object`.
+
 ### System.**printAll**(sequence)
 
 Iterates over `sequence` and prints each element, then prints a single newline
@@ -48,6 +50,8 @@ System.write(4 + 5) //> 9
 
 In the above example, the result of `4 + 5` is printed, and then the prompt is
 printed on the same line because no newline character was printed afterwards.
+
+Also returns `object`.
 
 ### System.**writeAll**(sequence)
 
