@@ -1,6 +1,6 @@
 workspace "wren"
   configurations { "Release", "Debug" }
-  platforms { "64bit", "32bit", "64bit-no-nan-tagging" }
+  platforms { "arm", "arm-no-nan-tagging", "64bit", "32bit", "64bit-no-nan-tagging" }
   defaultplatform "64bit"
   startproject "wren_test"
   location ("../" .. _ACTION)
@@ -14,7 +14,7 @@ workspace "wren"
     defines { "NDEBUG" }
     optimize "On"
 
-  filter "platforms:64bit-no-nan-tagging"
+  filter "platforms:*-no-nan-tagging"
     defines { "WREN_NAN_TAGGING=0" }
 
   --the 'xcode4' and 'gmake2' folder names
@@ -30,6 +30,9 @@ workspace "wren"
 
   filter { "action:gmake2", "system:macosx" }
     location ("../make.mac")
+
+  filter "platforms:arm"
+    architecture "ARM"
 
   filter "platforms:32bit"
     architecture "x86"
