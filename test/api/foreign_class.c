@@ -30,6 +30,16 @@ static void counterValue(WrenVM* vm)
   wrenSetSlotDouble(vm, 0, value);
 }
 
+static void rogueAllocate(WrenVM* vm)
+{
+  *(WrenVM**)wrenSetSlotNewForeign(vm, 0, 0, sizeof(WrenVM**)) = vm;
+}
+
+static void rogueFinalize(void* data)
+{
+  wrenCollectGarbage(*(WrenVM**)data);
+}
+
 static void pointAllocate(WrenVM* vm)
 {
   double* coordinates = (double*)wrenSetSlotNewForeign(vm, 0, 0, sizeof(double[3]));
@@ -106,6 +116,13 @@ void foreignClassBindClass(
   if (strcmp(className, "Counter") == 0)
   {
     methods->allocate = counterAllocate;
+    return;
+  }
+
+  if (strcmp(className, "Rogue") == 0)
+  {
+    methods->allocate = rogueAllocate;
+    methods->finalize = rogueFinalize;
     return;
   }
 
