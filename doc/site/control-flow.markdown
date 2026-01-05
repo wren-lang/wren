@@ -174,6 +174,34 @@ A `for` loop has three components:
 3. A *body*. This is a curly block or a single statement. It gets executed once
    for each iteration of the loop.
 
+## Advanced for statements
+
+For statements can take a optionnal callable arguments to allow to customize
+the iterations. It looks like this:
+
+<pre class="snippet">
+var double = Fn.new {|iter, seq| seq.iteratorValue(iter) * 2 }
+var tracingIterate = Fn.new {|iter, seq|
+  iter = seq.iterate(iter)
+  System.print(seq.iteratorValue(iter))
+  return iter
+}
+
+for (i in 0..5, double) {
+  System.print(i)
+}
+</pre>
+
+The order of arguments is there allow to short circuiting if the
+*sequence expression* is not required to compute the value:
+
+<pre class="snippet">
+var double = Fn.new {|value| value  * 2 }
+for (i in 0..5, double) {
+  System.print(i)
+}
+</pre>
+
 ## Break statements
 
 Sometimes, right in the middle of a loop body, you decide you want to bail out
