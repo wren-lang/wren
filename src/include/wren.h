@@ -2,7 +2,7 @@
 #define wren_h
 
 #include <stdarg.h>
-#include <stdlib.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 // The Wren semantic version number components.
