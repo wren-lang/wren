@@ -653,7 +653,9 @@ static char peekNextChar(Parser* parser)
 static char nextChar(Parser* parser)
 {
   char c = peekChar(parser);
-  parser->currentChar++;
+  // Do not move the character pointer forward if we're at
+  // the end.
+  if (c != '\0') parser->currentChar++;
   if (c == '\n') parser->currentLine++;
   return c;
 }
