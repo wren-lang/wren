@@ -1823,15 +1823,21 @@ static void finishBody(Compiler* compiler)
 
 // The VM can only handle a certain number of parameters, so check that we
 // haven't exceeded that and give a usable error.
-static void validateNumParameters(Compiler* compiler, int numArgs)
+static bool validateNumParameters(Compiler* compiler, int numArgs)
 {
+  // Since we always pass arity + 1 (and arity >= 0), numArgs == 0
+  // -> we hit a prior error and don't want to report again.
+  if (numArgs == 0) return false;
   if (numArgs == MAX_PARAMETERS + 1)
   {
     // Only show an error at exactly max + 1 so that we can keep parsing the
     // parameters and minimize cascaded errors.
     error(compiler, "Methods cannot have more than %d parameters.",
           MAX_PARAMETERS);
+    return false;
   }
+
+  return true;
 }
 
 // Parses the rest of a comma-separated parameter list after the opening
@@ -1841,7 +1847,11 @@ static void finishParameterList(Compiler* compiler, Signature* signature)
   do
   {
     ignoreNewlines(compiler);
-    validateNumParameters(compiler, ++signature->arity);
+
+    if (!validateNumParameters(compiler, ++signature->arity))
+    {
+      signature->arity = -1;
+    }
 
     // Define a local variable in the method for the parameter.
     declareNamedVariable(compiler);
@@ -1967,7 +1977,12 @@ static void finishArgumentList(Compiler* compiler, Signature* signature)
   do
   {
     ignoreNewlines(compiler);
-    validateNumParameters(compiler, ++signature->arity);
+
+    if (!validateNumParameters(compiler, ++signature->arity))
+    {
+      signature->arity = -1;
+    }
+
     expression(compiler);
   }
   while (match(compiler, TOKEN_COMMA));
@@ -2525,7 +2540,11 @@ static void subscript(Compiler* compiler, bool canAssign)
     signature.type = SIG_SUBSCRIPT_SETTER;
 
     // Compile the assigned value.
-    validateNumParameters(compiler, ++signature.arity);
+    if (!validateNumParameters(compiler, ++signature.arity))
+    {
+      signature.arity = -1;
+    }
+
     expression(compiler);
   }
 
