@@ -523,6 +523,7 @@ static int addConstant(Compiler* compiler, Value constant)
   {
     error(compiler, "A function may only contain %d unique constants.",
           MAX_CONSTANTS);
+    return -1;
   }
 
   return compiler->fn->constants.count - 1;
