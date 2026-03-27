@@ -750,7 +750,7 @@ static void makeNumber(Parser* parser, bool isHex)
 
   if (isHex)
   {
-    parser->next.value = NUM_VAL((double)strtoll(parser->tokenStart, NULL, 16));
+    parser->next.value = NUM_VAL((double)strtoull(parser->tokenStart, NULL, 16));
   }
   else
   {
@@ -763,7 +763,7 @@ static void makeNumber(Parser* parser, bool isHex)
     parser->next.value = NUM_VAL(0);
   }
   
-  // We don't check that the entire token is consumed after calling strtoll()
+  // We don't check that the entire token is consumed after calling strtoull()
   // or strtod() because we've already scanned it ourselves and know it's valid.
 
   makeToken(parser, TOKEN_NUMBER);
