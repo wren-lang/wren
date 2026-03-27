@@ -914,13 +914,13 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle, uint32_t start)
   // determine how far the search window can be advanced if that character is
   // the last character in the haystack where we are searching for the needle
   // and the needle doesn't match there.
-  uint32_t shift[UINT8_MAX];
+  uint32_t shift[UINT8_MAX+1];
   uint32_t needleEnd = needle->length - 1;
 
   // By default, we assume the character is not the needle at all. In that case
   // case, if a match fails on that character, we can advance one whole needle
   // width since.
-  for (uint32_t index = 0; index < UINT8_MAX; index++)
+  for (uint32_t index = 0; index <= UINT8_MAX; index++)
   {
     shift[index] = needle->length;
   }
