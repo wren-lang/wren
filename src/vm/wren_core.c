@@ -617,6 +617,7 @@ DEF_PRIMITIVE(num_fromString)
   errno = 0;
   char* end;
   double number = strtod(string->value, &end);
+  if (end == string->value) RETURN_NULL;
 
   // Skip past any trailing whitespace.
   while (*end != '\0' && isspace((unsigned char)*end)) end++;
