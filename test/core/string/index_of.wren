@@ -22,3 +22,7 @@ System.print("a\0b\0c".indexOf("a")) // expect: 0
 System.print("a\0b\0c".indexOf("b\0c")) // expect: 2
 System.print("a\0b\0c".indexOf("a\0b\0c\0d")) // expect: -1
 System.print("a\0b\0a\0b".indexOf("a\0b")) // expect: 0
+
+// Byte 0xFF exercises shift[255]; the bug was OOB (ASan catches; release may still pass).
+System.print("\xff".indexOf("x")) // expect: -1
+System.print("xx\xff".indexOf("ab")) // expect: -1
