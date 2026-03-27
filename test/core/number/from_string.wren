@@ -11,4 +11,9 @@ System.print(Num.fromString("") == null) // expect: true
 System.print(Num.fromString("prefix1.2") == null) // expect: true
 System.print(Num.fromString("1.2suffix") == null) // expect: true
 
+// Whitespace-only: strtod performs no conversion (end == start); without an
+// early return the trailing-whitespace loop consumes the string and we
+// incorrectly return 0 instead of null.
+System.print(Num.fromString("   ") == null) // expect: true
+
 // TODO: Parse hex and scientific numbers.
