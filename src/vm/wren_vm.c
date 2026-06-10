@@ -1074,7 +1074,19 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber)
           break;
 
         case METHOD_FOREIGN:
+          Value* oldStack = fiber->stack;
           callForeign(vm, fiber, method->as.foreign, numArgs);
+
+          // A foreign function may call wrenEnsureSlots, which calls
+          // wrenEnsureStack and reallocates the stack, and so may change its
+          // base address.
+          // This means that stackStart has to be updated to the value rebased
+          // by wrenEnsureSlots and that args has to be updated as well.
+          if (fiber->stack != oldStack){
+            stackStart = frame->stackStart;
+            args = fiber->stackTop - numArgs;
+          }
+
           if (wrenHasError(fiber)) RUNTIME_ERROR();
           break;
 
