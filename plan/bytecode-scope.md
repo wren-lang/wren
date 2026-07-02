@@ -1,30 +1,40 @@
-# Bytecode Serialization — Scope & Implementation Plan
+# Bytecode Scope
 
-Reference: [Issue #535](https://github.com/wren-lang/wren/issues/535)
+This document defines the first-pass scope for Wren bytecode serialization.
 
-## Scope Estimate
+## Goal
 
-| Piece | Lines of C | Risk |
-|---|---|---|
-| Binary format + header | ~50 | Low |
-| `wrenSerializeFn` | ~150 | Low |
-| `wrenDeserializeFn` | ~200 | Low |
-| Method symbol remap pass | ~100 | Medium |
-| `wrenc` CLI wrapper | ~100 | Low |
-| Tests | ~200 | Low |
-| **Total** | **~800** | |
+Allow a single Wren source file to be compiled on a desktop host into a serialized artifact, then loaded and executed by a VM without needing source at runtime.
 
-All additive — no existing VM code needs to change.
+## V1 Scope
 
-## Files to Create
+- Compile one source file into a serialized artifact.
+- Support normal Wren language features within that file, including multiple classes, functions, closures, loops, and control flow.
+- Preserve `System.print()` and other core runtime hooks that are already part of Wren's base environment.
+- Keep the artifact tied to a specific Wren version or narrow version family.
+- Add a loader path in the VM that can execute the serialized artifact.
+- Keep the compiler/export path and VM/import path as small and localized as possible.
 
-- `src/vm/wren_serialize.h` — public API
-- `src/vm/wren_serialize.c` — serialize + deserialize + symbol remap
-- `util/wrenc.c` — standalone compiler CLI
-- `test/serialize/` — test scripts
+## V1 Non-Goals
 
-## Key Constraints
+- No user-defined import graph handling.
+- No external module loading from the file system.
+- No package manager or dependency resolver.
+- No bundled multi-module artifact format.
+- No attempt to define a long-lived stable bytecode ABI.
+- No full VM snapshot or freeze-image format.
+- No obfuscation/encryption layer as part of the first pass.
 
-- `wrenc` must spin up a lightweight `WrenVM` to compile (compiler is too tightly coupled to the VM to run standalone)
-- Bytecode serialization is **whole-module only** — no REPL snippets
-- The binary format must carry a version header so the VM can reject stale bytecode
+## Assumptions
+
+- The compiler remains part of the core Wren source tree.
+- The runtime continues to use the existing host callbacks for output, errors, and module resolution where applicable.
+- `wren-cli` remains a separate convenience layer and is not required for the v1 bytecode path.
+- The bytecode format may be version-locked and intentionally narrow.
+
+## Implications
+
+- The serializer can stay close to existing compiled module structures.
+- The loader can be simpler because it only needs to hydrate one module.
+- Tests can focus on round-trip behavior, version rejection, and corruption handling.
+- Future support for external modules can be added later without blocking the initial implementation.

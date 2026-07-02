@@ -1,189 +1,67 @@
 # Testing Plan for Bytecode Serialization
 
+## Goal
+
+Define the tests needed to keep the first-pass bytecode feature stable.
+
 ## Existing Test Infrastructure
 
-Wren has two C test layers we slot directly into — no new framework needed.
+Wren already has C-based test layers that can be reused for this work.
 
-### Layer 1 — `test/unit/` (pure C unit tests)
+### Layer 1 - `test/unit/`
 
-Minimal `pass()` / `fail()` framework in `test.c` / `test.h`. Entry point is
-`test/unit/main.c` which calls each test suite by name. Currently only
-`path_test.c` exists. Adding a new suite means:
+Use this for low-level serializer/deserializer tests that do not need to run
+full Wren scripts end to end.
 
-1. Create `test/unit/serialize_test.c` + `serialize_test.h`
-2. Add `#include "serialize_test.h"` and `testSerialize()` to `main.c`
+Good fits:
+- header validation
+- version mismatch rejection
+- truncated/corrupt payload rejection
+- round-trip checks on compiled module structures
 
-### Layer 2 — `test/api/` (C + Wren integration tests)
+### Layer 2 - `test/api/`
 
-Each test is a `.c` file providing foreign method implementations paired with
-a `.wren` file that drives the test via `System.print` output assertions. The
-`api_tests.c` dispatcher routes foreign calls to the right C file.
+Use this for end-to-end tests that compile a simple script, serialize it, load
+it back, and execute it through the VM.
 
-Adding a new API test means:
-1. Create `test/api/bytecode.c` + `bytecode.h` + `bytecode.wren`
-2. Register foreign method bindings in `api_tests.c`
+Good fits:
+- source execution vs serialized execution
+- `System.print()` behavior through the host callback
+- basic class/function/closure behavior
 
----
+## V1 Test Buckets
 
-## Unit Tests — `test/unit/serialize_test.c`
+- format tests
+- round-trip tests
+- version/compatibility tests
+- loader failure tests
+- execution equivalence tests
 
-Tests the serialization round-trip at the C level, without running any Wren
-bytecode. Spin up a minimal VM, build or compile a small `ObjFn`, serialize
-it, deserialize it into a fresh VM, and assert structural equality.
+## V1 Test Cases
 
-### Round-trip correctness
+- minimal script loads and runs
+- simple class with a method loads and runs
+- closure captures local state after reload
+- module-level variable declared by the script round-trips and keeps the
+  correct `LOAD_MODULE_VAR`/`STORE_MODULE_VAR` slot after reload
+- core variables (e.g. `System`, `Object`, `Fn`) resolve correctly after
+  reload into a fresh VM (core module slot order is fixed per VM by
+  `wrenInitializeCore`, so this mainly guards against the loader forgetting
+  the core-import step rather than any load-order variation)
+- a boolean constant (e.g. from a class/method attribute value) round-trips
+  correctly, not just `null`/number/string constants
+- invalid header is rejected
+- wrong version is rejected
+- truncated file is rejected
+- serialized output produces the same observable result as source execution
 
-```
-testRoundTrip_numConstant
-  Compile: "1 + 2"
-  Serialize → deserialize into fresh VM
-  Assert: constants[0] == NUM_VAL(1), constants[1] == NUM_VAL(2)
+## Out of Scope For V1
 
-testRoundTrip_stringConstant
-  Compile: "\"hello\""
-  Assert: constants[0] is ObjString "hello"
+- external module loading tests
+- obfuscation/encryption tests
+- multi-module bundle tests
 
-testRoundTrip_nestedFn
-  Compile: "Fn.new { 42 }"
-  Assert: constants[0] is ObjFn, its constants[0] == NUM_VAL(42)
+## File Strategy
 
-testRoundTrip_closureUpvalue
-  Compile: "var x = 1\nFn.new { x }"
-  Assert: nested ObjFn has numUpvalues == 1
-```
-
-### Symbol remapping
-
-```
-testSymbolRemap
-  VM-A: compile "System.print(\"hi\")"
-        → CALL_1 encodes symbol index N in VM-A
-  Serialize from VM-A
-  VM-B: load a different set of modules first (shifts methodNames indices)
-  Deserialize into VM-B
-  Assert: CALL_1 arg in loaded bytecode == index of "print(_)" in VM-B
-          (not the original N from VM-A)
-
-testSymbolRemap_multipleSymbols
-  Compile code that calls several distinct methods
-  Assert all are correctly remapped independently
-```
-
-### Error handling
-
-```
-testBadMagic
-  Write garbage header → deserialize returns NULL
-
-testVersionMismatch
-  Write header with wrong minor version → deserialize returns NULL
-
-testTruncatedBuffer
-  Write valid header then cut the buffer short at various offsets
-  → deserialize returns NULL without crashing or overreading
-
-testUnknownConstantTag
-  Write a valid ObjFn with an unknown TAG byte in constants
-  → deserialize returns NULL
-```
-
-### Obfuscation (if implemented)
-
-```
-testObfuscation_nameTablesUnreadable
-  Serialize with key != 0
-  Assert raw bytes of name table contain no plain-text method names
-
-testObfuscation_roundTrip
-  Serialize with key K → deserialize with key K → bytecode executes correctly
-
-testObfuscation_wrongKey
-  Serialize with key K → deserialize with key K+1
-  → symbol names corrupt → remap fails or produces garbage symbol indices
-```
-
----
-
-## Integration Tests — `test/api/bytecode.wren` + `bytecode.c`
-
-Tests the full pipeline end-to-end: Wren source → compile → serialize →
-deserialize into fresh VM → execute → observe output.
-
-The C side exposes foreign methods that drive the serialize/deserialize steps.
-The Wren side calls them and prints expected output, which the test runner
-diffs against a `.expect` file (same pattern as existing API tests).
-
-### Basic execution
-
-```wren
-// Compile, serialize, deserialize, run — output must match source execution
-var result = Bytecode.compileAndRun("System.print(\"hello\")")
-System.print(result)  // expect: hello
-```
-
-### Classes and methods
-
-```wren
-var src = """
-class Greeter {
-  greet(name) { System.print("Hello, " + name) }
-}
-var g = Greeter.new()
-g.greet("world")
-"""
-Bytecode.compileSerializeAndRun(src)
-// expect: Hello, world
-```
-
-### Closures and upvalues
-
-```wren
-var src = """
-var x = 10
-var fn = Fn.new { System.print(x) }
-fn.call()
-"""
-Bytecode.compileSerializeAndRun(src)
-// expect: 10
-```
-
-### Module imports survive serialization
-
-```wren
-// Serialize a module that imports another
-// Verify IMPORT_MODULE constant (string name) round-trips correctly
-Bytecode.compileSerializeAndRun("import \"random\"\nSystem.print(\"ok\")")
-// expect: ok
-```
-
-### Fresh VM isolation
-
-```wren
-// Deserialize into a VM that has loaded modules in a different order
-// Verify method symbol remapping produces correct output
-Bytecode.compileInVmA_runInVmB("System.print(1 + 2)")
-// expect: 3
-```
-
-### Version rejection
-
-```wren
-// Attempt to load bytecode with wrong version header
-var ok = Bytecode.tryLoadBadVersion()
-System.print(ok)
-// expect: false
-```
-
----
-
-## File Checklist
-
-| File | Purpose |
-|---|---|
-| `test/unit/serialize_test.c` | Unit round-trip + remap + error tests |
-| `test/unit/serialize_test.h` | Header |
-| `test/unit/main.c` | Add `testSerialize()` call |
-| `test/api/bytecode.c` | Foreign methods for integration tests |
-| `test/api/bytecode.h` | Header |
-| `test/api/bytecode.wren` | Wren-side test driver |
-| `test/api/api_tests.c` | Register `bytecodeBindMethod` |
+Start with the smallest number of tests that prove the artifact can round-trip
+and execute correctly. Expand only when the minimal flow is stable.
