@@ -24,6 +24,9 @@ the compiled module from that live VM state.
 
 - write a recognizable file header
 - write version metadata
+- write the VM's method-name symbol table so the loader can relocate
+  method-call symbol operands (see
+  `plan/tickets/006-method-symbol-relocation.md`)
 - write the names of the module's own user-declared top-level variables
   (not the core-module variables the module inherited before compilation
   started — see `bytecode-format.md`)

@@ -22,6 +22,9 @@ portable format. If the loader does not need it for v1, leave it out.
   already produced by the VM.
 - The payload is the root `ObjFn` tree plus one small piece of module
   metadata: the names of the module's own user-declared top-level variables.
+  **[Amended by ticket 006]** The shipped format also carries the compiling
+  VM's method-name symbol table (between the header and the variable
+  metadata) so the loader can relocate method-call symbol operands.
   The module name itself is not stored; it is supplied by the caller at load
   time, the same way `wrenInterpret(vm, module, source)` takes a module name
   as an argument rather than reading it from the source.

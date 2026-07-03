@@ -21,10 +21,24 @@ The v1 goal is narrow:
 
 ## Payload Shape
 
-The payload is the root `ObjFn` tree plus one small piece of module metadata:
-the names of the module's own **user-declared** top-level variables (i.e. the
-slice of `ObjModule.variableNames` that was added during compilation of this
-source file, not the slice inherited from the core module beforehand).
+The payload, in order after the 8-byte header (magic `WREN`, one byte each of
+major/minor/patch version, one flags byte), is:
+
+1. **Method-name symbol table.** Method calls, super calls, and method
+   definitions encode method names as symbol indices into the compiling VM's
+   global `vm->methodNames` table. The loading VM's table may assign
+   different indices, so the artifact carries the full serializer VM table
+   (count-prefixed, length-prefixed strings) and the loader relocates
+   `CALL_*`/`SUPER_*`/`METHOD_*` operands at load time. Added by ticket 006;
+   see `plan/tickets/006-method-symbol-relocation.md`.
+2. **User-declared variable names.** The names of the module's own
+   **user-declared** top-level variables (i.e. the slice of
+   `ObjModule.variableNames` that was added during compilation of this
+   source file, not the slice inherited from the core module beforehand).
+3. **The root `ObjFn` tree.** Each function records `arity` (uint8),
+   `numUpvalues` (uint16), and `maxSlots` (uint32) first, then its code,
+   constants, and optional debug info. Nested functions appear as
+   `CONSTANT_FN` entries in constant tables.
 
 Explicitly excluded from the payload:
 

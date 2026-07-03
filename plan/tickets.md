@@ -3,6 +3,10 @@
 ## Next
 
 - All planned v1 bytecode tickets are complete. Nice-to-haves are in the backlog.
+- Roadmap Phase 5 (standalone `wrenc`/`wrenvm` tooling) was intentionally
+  not ticketed for v1: the library-level API (`wrenSerializeModule` /
+  `wrenInterpretBytecode`) satisfies `bytecode-scope.md`, and tool shape can
+  be decided later without blocking the core feature.
 
 ## Backlog
 

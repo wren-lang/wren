@@ -2,10 +2,10 @@
 
 ## Pre-existing upstream: heap-use-after-free in compiler under `WREN_DEBUG_GC_STRESS`
 
-**Status:** ROOT CAUSE CONFIRMED, fix drafted in working tree
-(`src/vm/wren_compiler.c`, uncommitted). Pre-existing upstream Wren bug —
+**Status:** FIXED — landed in commit `d7429346` ("Apply upstream compiler
+GC-safety fix", `src/vm/wren_compiler.c`). Pre-existing upstream Wren bug —
 *not* introduced by the bytecode serializer/loader work. Reproduced at commit
-`ab2d4606`.
+`ab2d4606`. This entry is kept as the investigation record.
 
 **Confirmed root cause:** `wrenCompile()` primes the first two tokens by
 calling `nextToken()` **before** `initCompiler()` runs. `initCompiler()`
@@ -22,7 +22,7 @@ ASan-visible use-after-free. The window exists on *every* `wrenCompile` call
 (also at runtime for imports), not just VM init; stress mode just makes it
 deterministic.
 
-**The fix (drafted):** in `wrenCompile()`: (1) zero-init `parser.current` and
+**The fix (landed):** in `wrenCompile()`: (1) zero-init `parser.current` and
 `parser.previous` (not just `parser.next`) so `wrenMarkCompiler` never reads
 uninitialized token values, then (2) move `initCompiler()` *above* the two
 priming `nextToken()` calls so `vm->compiler` is registered before any token
@@ -91,12 +91,8 @@ scanned. Fix belongs in `wrenCompile`'s setup ordering.
 
 **Suggested next steps:**
 
-- Land the drafted `wrenCompile` fix (currently uncommitted in
-  `src/vm/wren_compiler.c`).
 - File/track the residual stress-mode compile errors (see above) separately;
   they also predate the bytecode work.
 - Once stress mode is fully clean, re-run the ticket-004 loader under
   `WREN_DEBUG_GC_STRESS 1` + ASan — that combination is the definitive test
-  for the loader's temp-rooting discipline (see
-  `work/fable5_commit_ab2d4606_review.md`, finding 1, which was blocked by
-  this bug).
+  for the loader's temp-rooting discipline.

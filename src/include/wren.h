@@ -587,6 +587,10 @@ typedef struct
 // Compiles [source] as a single-file module and writes it to a serialized
 // bytecode artifact.
 //
+// The [module] name is currently unused: the artifact does not embed a module
+// name. The name is supplied by the caller of [wrenInterpretBytecode] at load
+// time instead, mirroring how [wrenInterpret] takes a module name argument.
+//
 // A temporary WrenVM is created internally, so this does not require or
 // modify any existing VM state. If [configuration] is NULL, default
 // configuration values are used.

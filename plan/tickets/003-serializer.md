@@ -124,8 +124,12 @@ compiled module state. Avoid creating a separate compiler pipeline for v1.
     - `CONST_STRING` — length-prefixed string (32-bit big-endian length +
       raw bytes; see string encoding decision above).
     - `CONST_FN` — recurse into this same routine for the nested `ObjFn`.
-  - Write `arity`, `numUpvalues`, `maxSlots` (single bytes — all three are
-    bounded well under 256 by existing compiler limits).
+  - Write `arity`, `numUpvalues`, `maxSlots`. **[Superseded — see ticket
+    004]** As shipped, these are written as `uint8`/`uint16`/`uint32`
+    respectively and appear at the *start* of each function record, before
+    the code and constants (see `serializeFunction` in
+    `src/vm/wren_serialize.c`). This ticket's original single-byte,
+    trailing-position description was a defect corrected during ticket 004.
   - Add a `default: fail` case to the constant-tag switch so an
     unrecognized constant `Value` type aborts the export cleanly instead of
     silently writing corrupt data (this is the "reject unsupported output"

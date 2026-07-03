@@ -3,6 +3,9 @@
 This roadmap tracks the first-pass bytecode work as a small, version-locked
 fork of Wren.
 
+Status: Phases 0-4 are complete (tickets 001-006). Phase 5 is deliberately
+deferred — v1 ships as library API only.
+
 ## Phase 0 - Scope Lock
 
 - Confirm v1 is single-file only.
@@ -29,7 +32,7 @@ fork of Wren.
 - Add format and version rejection tests.
 - Add source-vs-bytecode execution tests.
 
-## Phase 5 - Tooling
+## Phase 5 - Tooling (deferred, not part of v1)
 
 - Decide whether the desktop compiler and runtime loader are separate binaries
   or a subcommand split.

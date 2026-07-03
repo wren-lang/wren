@@ -10,6 +10,10 @@ needing the original source file.
 ## V1 Scope
 
 - Validate the file header and version.
+- Read the artifact's method-name symbol table, intern each name in the
+  loading VM's `vm->methodNames`, and relocate `CALL_*`/`SUPER_*`/`METHOD_*`
+  symbol operands from serializer indices to loader indices (see
+  `plan/tickets/006-method-symbol-relocation.md`).
 - Create a fresh module and populate its leading variable slots from the
   loading VM's own live core module, in the same order `compileInModule`
   would — the artifact never carries core variable data itself.
