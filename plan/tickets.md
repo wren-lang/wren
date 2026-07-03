@@ -2,9 +2,6 @@
 
 ## Next
 
-- [ ] See `tickets/001-scope-lock.md`
-- [ ] See `tickets/002-bytecode-format.md`
-- [ ] See `tickets/003-serializer.md`
 - [ ] See `tickets/004-loader.md`
 - [ ] See `tickets/005-tests.md`
 
@@ -19,3 +16,7 @@
 
 - [x] Wrote `plan/README.md`.
 - [x] Wrote `plan/bytecode-scope.md`.
+- [x] See `tickets/001-scope-lock.md`.
+- [x] See `tickets/002-bytecode-format.md`.
+- [x] See `tickets/003-serializer.md` (`src/vm/wren_serialize.c` implements
+      `wrenSerializeModule`).
