@@ -247,6 +247,16 @@ WrenSerializeResult wrenSerializeModule(WrenConfiguration* configuration,
   writeByte(&serializer, WREN_VERSION_PATCH);
   writeByte(&serializer, debugInfo ? HEADER_FLAG_DEBUG_INFO : 0);
 
+  // Method-name symbol table. Method calls, super calls, and method
+  // definitions encode method names as symbol indices into vm->methodNames.
+  // The loading VM's method-symbol table may have different indices, so we
+  // serialize the full serializer VM table and relocate operands at load time.
+  writeUint32(&serializer, (uint32_t)vm->methodNames.count);
+  for (int i = 0; i < vm->methodNames.count; i++)
+  {
+    writeObjString(&serializer, vm->methodNames.data[i]);
+  }
+
   // Module metadata: only the module's own user-declared top-level variable
   // names (and their count). Core-module names and values are intentionally
   // excluded.
@@ -396,6 +406,277 @@ static bool readString(ByteReader* reader, const char** outString,
   *outString = (const char*)reader->bytes + reader->offset;
   *outLength = length;
   reader->offset += length;
+  return true;
+}
+
+// Returns the number of operand bytes for [instruction], using the function's
+// constants to determine the size of CODE_CLOSURE.
+static int getOperandBytes(const uint8_t* bytecode, const Value* constants,
+                           int ip)
+{
+  Code instruction = (Code)bytecode[ip];
+  switch (instruction)
+  {
+    case CODE_NULL:
+    case CODE_FALSE:
+    case CODE_TRUE:
+    case CODE_POP:
+    case CODE_CLOSE_UPVALUE:
+    case CODE_RETURN:
+    case CODE_END:
+    case CODE_LOAD_LOCAL_0:
+    case CODE_LOAD_LOCAL_1:
+    case CODE_LOAD_LOCAL_2:
+    case CODE_LOAD_LOCAL_3:
+    case CODE_LOAD_LOCAL_4:
+    case CODE_LOAD_LOCAL_5:
+    case CODE_LOAD_LOCAL_6:
+    case CODE_LOAD_LOCAL_7:
+    case CODE_LOAD_LOCAL_8:
+    case CODE_CONSTRUCT:
+    case CODE_FOREIGN_CONSTRUCT:
+    case CODE_FOREIGN_CLASS:
+    case CODE_END_MODULE:
+    case CODE_END_CLASS:
+      return 0;
+
+    case CODE_LOAD_LOCAL:
+    case CODE_STORE_LOCAL:
+    case CODE_LOAD_UPVALUE:
+    case CODE_STORE_UPVALUE:
+    case CODE_LOAD_FIELD_THIS:
+    case CODE_STORE_FIELD_THIS:
+    case CODE_LOAD_FIELD:
+    case CODE_STORE_FIELD:
+    case CODE_CLASS:
+      return 1;
+
+    case CODE_CONSTANT:
+    case CODE_LOAD_MODULE_VAR:
+    case CODE_STORE_MODULE_VAR:
+    case CODE_CALL_0:
+    case CODE_CALL_1:
+    case CODE_CALL_2:
+    case CODE_CALL_3:
+    case CODE_CALL_4:
+    case CODE_CALL_5:
+    case CODE_CALL_6:
+    case CODE_CALL_7:
+    case CODE_CALL_8:
+    case CODE_CALL_9:
+    case CODE_CALL_10:
+    case CODE_CALL_11:
+    case CODE_CALL_12:
+    case CODE_CALL_13:
+    case CODE_CALL_14:
+    case CODE_CALL_15:
+    case CODE_CALL_16:
+    case CODE_JUMP:
+    case CODE_LOOP:
+    case CODE_JUMP_IF:
+    case CODE_AND:
+    case CODE_OR:
+    case CODE_METHOD_INSTANCE:
+    case CODE_METHOD_STATIC:
+    case CODE_IMPORT_MODULE:
+    case CODE_IMPORT_VARIABLE:
+      return 2;
+
+    case CODE_SUPER_0:
+    case CODE_SUPER_1:
+    case CODE_SUPER_2:
+    case CODE_SUPER_3:
+    case CODE_SUPER_4:
+    case CODE_SUPER_5:
+    case CODE_SUPER_6:
+    case CODE_SUPER_7:
+    case CODE_SUPER_8:
+    case CODE_SUPER_9:
+    case CODE_SUPER_10:
+    case CODE_SUPER_11:
+    case CODE_SUPER_12:
+    case CODE_SUPER_13:
+    case CODE_SUPER_14:
+    case CODE_SUPER_15:
+    case CODE_SUPER_16:
+      return 4;
+
+    case CODE_CLOSURE:
+    {
+      int constant = (bytecode[ip + 1] << 8) | bytecode[ip + 2];
+      ObjFn* loadedFn = AS_FN(constants[constant]);
+      return 2 + (loadedFn->numUpvalues * 2);
+    }
+  }
+
+  UNREACHABLE();
+  return 0;
+}
+
+// Patches method-symbol operands in [fn]'s bytecode from serialized indices to
+// the loading VM's indices. Returns false if any operand references an unknown
+// method symbol or is out of range.
+static bool relocateMethodSymbols(ObjFn* fn, const int* methodSymbolMap,
+                                  int methodSymbolCount)
+{
+  int ip = 0;
+  while (ip < fn->code.count)
+  {
+    Code instruction = (Code)fn->code.data[ip];
+    switch (instruction)
+    {
+      case CODE_CALL_0:
+      case CODE_CALL_1:
+      case CODE_CALL_2:
+      case CODE_CALL_3:
+      case CODE_CALL_4:
+      case CODE_CALL_5:
+      case CODE_CALL_6:
+      case CODE_CALL_7:
+      case CODE_CALL_8:
+      case CODE_CALL_9:
+      case CODE_CALL_10:
+      case CODE_CALL_11:
+      case CODE_CALL_12:
+      case CODE_CALL_13:
+      case CODE_CALL_14:
+      case CODE_CALL_15:
+      case CODE_CALL_16:
+      case CODE_METHOD_INSTANCE:
+      case CODE_METHOD_STATIC:
+      {
+        int oldIndex = (fn->code.data[ip + 1] << 8) | fn->code.data[ip + 2];
+        if (oldIndex < 0 || oldIndex >= methodSymbolCount) return false;
+
+        int newIndex = methodSymbolMap[oldIndex];
+        if (newIndex < 0 || newIndex > UINT16_MAX) return false;
+
+        fn->code.data[ip + 1] = (uint8_t)(newIndex >> 8);
+        fn->code.data[ip + 2] = (uint8_t)(newIndex);
+        break;
+      }
+
+      case CODE_SUPER_0:
+      case CODE_SUPER_1:
+      case CODE_SUPER_2:
+      case CODE_SUPER_3:
+      case CODE_SUPER_4:
+      case CODE_SUPER_5:
+      case CODE_SUPER_6:
+      case CODE_SUPER_7:
+      case CODE_SUPER_8:
+      case CODE_SUPER_9:
+      case CODE_SUPER_10:
+      case CODE_SUPER_11:
+      case CODE_SUPER_12:
+      case CODE_SUPER_13:
+      case CODE_SUPER_14:
+      case CODE_SUPER_15:
+      case CODE_SUPER_16:
+      {
+        int oldIndex = (fn->code.data[ip + 1] << 8) | fn->code.data[ip + 2];
+        if (oldIndex < 0 || oldIndex >= methodSymbolCount) return false;
+
+        int newIndex = methodSymbolMap[oldIndex];
+        if (newIndex < 0 || newIndex > UINT16_MAX) return false;
+
+        fn->code.data[ip + 1] = (uint8_t)(newIndex >> 8);
+        fn->code.data[ip + 2] = (uint8_t)(newIndex);
+        // The following two bytes are a superclass constant index and must
+        // not be relocated.
+        break;
+      }
+
+      case CODE_CLOSURE:
+      {
+        int constant = (fn->code.data[ip + 1] << 8) | fn->code.data[ip + 2];
+        ObjFn* child = AS_FN(fn->constants.data[constant]);
+        if (!relocateMethodSymbols(child, methodSymbolMap, methodSymbolCount))
+        {
+          return false;
+        }
+        break;
+      }
+
+      case CODE_END:
+        return true;
+
+      default:
+        break;
+    }
+
+    ip += 1 + getOperandBytes(fn->code.data, fn->constants.data, ip);
+  }
+
+  return true;
+}
+
+// Reads the serialized method-name table and builds a relocation map from
+// serializer-VM indices to loading-VM indices. On success [outMap] is set to a
+// malloc-allocated array that the caller must free. On failure it is NULL.
+static bool readMethodSymbolMap(ByteReader* reader, WrenVM* vm,
+                                const char* module,
+                                int** outMap, int* outCount)
+{
+  *outMap = NULL;
+  *outCount = 0;
+
+  uint32_t count;
+  if (!readUint32(reader, &count))
+  {
+    loadError(vm, module, "Bytecode artifact is truncated.");
+    return false;
+  }
+
+  if (count > (uint32_t)MAX_METHODS + 1)
+  {
+    loadError(vm, module, "Too many method symbols.");
+    return false;
+  }
+
+  if (count == 0)
+  {
+    return true;
+  }
+
+  int* map = (int*)malloc((size_t)count * sizeof(int));
+  if (map == NULL)
+  {
+    loadError(vm, module, "Could not allocate method-symbol map.");
+    return false;
+  }
+
+  for (uint32_t i = 0; i < count; i++)
+  {
+    const char* name;
+    uint32_t length;
+    if (!readString(reader, &name, &length))
+    {
+      loadError(vm, module, "Bytecode artifact is truncated.");
+      free(map);
+      return false;
+    }
+
+    if (length == 0 || length > MAX_METHOD_SIGNATURE)
+    {
+      loadError(vm, module, "Invalid method name length.");
+      free(map);
+      return false;
+    }
+
+    int newIndex = wrenSymbolTableEnsure(vm, &vm->methodNames, name, length);
+    if (newIndex < 0 || newIndex > MAX_METHODS || newIndex > UINT16_MAX)
+    {
+      loadError(vm, module, "Method-symbol table overflow.");
+      free(map);
+      return false;
+    }
+
+    map[i] = newIndex;
+  }
+
+  *outMap = map;
+  *outCount = (int)count;
   return true;
 }
 
@@ -606,6 +887,18 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
     return WREN_RESULT_LOAD_ERROR;
   }
 
+  // Read the serializer VM's method-name table and build a relocation map.
+  // This must happen before any function bytecode is read, because method
+  // operands reference these indices.
+  int* methodSymbolMap = NULL;
+  int methodSymbolCount = 0;
+  if (!readMethodSymbolMap(&reader, vm, module, &methodSymbolMap,
+                           &methodSymbolCount))
+  {
+    free(methodSymbolMap);
+    return WREN_RESULT_LOAD_ERROR;
+  }
+
   // Create and root the module name before creating the module, so the name is
   // reachable if module creation triggers a GC.
   Value nameValue = wrenNewString(vm, module);
@@ -627,6 +920,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
   if (coreModule == NULL)
   {
     loadError(vm, module, "Could not find core module.");
+    free(methodSymbolMap);
     wrenPopRoot(vm); // module.
     wrenPopRoot(vm); // name.
     return WREN_RESULT_LOAD_ERROR;
@@ -643,6 +937,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
     if (result < 0)
     {
       loadError(vm, module, "Could not copy core module variables.");
+      free(methodSymbolMap);
       wrenPopRoot(vm); // module.
       wrenPopRoot(vm); // name.
       return WREN_RESULT_LOAD_ERROR;
@@ -654,6 +949,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
   if (!readUint32(&reader, &ownVariableCount))
   {
     loadError(vm, module, "Bytecode artifact is truncated.");
+    free(methodSymbolMap);
     wrenPopRoot(vm); // module.
     wrenPopRoot(vm); // name.
     return WREN_RESULT_LOAD_ERROR;
@@ -663,6 +959,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
   if (ownVariableCount > maxOwnVariables)
   {
     loadError(vm, module, "Too many module variables.");
+    free(methodSymbolMap);
     wrenPopRoot(vm); // module.
     wrenPopRoot(vm); // name.
     return WREN_RESULT_LOAD_ERROR;
@@ -675,6 +972,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
     if (!readString(&reader, &nameBytes, &nameLength))
     {
       loadError(vm, module, "Bytecode artifact is truncated.");
+      free(methodSymbolMap);
       wrenPopRoot(vm); // module.
       wrenPopRoot(vm); // name.
       return WREN_RESULT_LOAD_ERROR;
@@ -683,6 +981,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
     if (nameLength == 0 || nameLength > MAX_VARIABLE_NAME)
     {
       loadError(vm, module, "Invalid module variable name length.");
+      free(methodSymbolMap);
       wrenPopRoot(vm); // module.
       wrenPopRoot(vm); // name.
       return WREN_RESULT_LOAD_ERROR;
@@ -693,6 +992,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
     if (result < 0)
     {
       loadError(vm, module, "Duplicate or invalid module variable name.");
+      free(methodSymbolMap);
       wrenPopRoot(vm); // module.
       wrenPopRoot(vm); // name.
       return WREN_RESULT_LOAD_ERROR;
@@ -705,6 +1005,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
   if (!allocateFunction(&reader, vm, moduleObj, &rootFn))
   {
     loadError(vm, module, "Invalid root function metadata.");
+    free(methodSymbolMap);
     wrenPopRoot(vm); // module.
     wrenPopRoot(vm); // name.
     return WREN_RESULT_LOAD_ERROR;
@@ -715,6 +1016,18 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
   if (!loadFunctionBody(&reader, vm, moduleObj, debugInfo, rootFn))
   {
     loadError(vm, module, "Invalid function bytecode or constants.");
+    free(methodSymbolMap);
+    wrenPopRoot(vm); // rootFn.
+    wrenPopRoot(vm); // module.
+    wrenPopRoot(vm); // name.
+    return WREN_RESULT_LOAD_ERROR;
+  }
+
+  // Relocate method-symbol operands before execution.
+  if (!relocateMethodSymbols(rootFn, methodSymbolMap, methodSymbolCount))
+  {
+    loadError(vm, module, "Invalid method-symbol operand in bytecode.");
+    free(methodSymbolMap);
     wrenPopRoot(vm); // rootFn.
     wrenPopRoot(vm); // module.
     wrenPopRoot(vm); // name.
@@ -726,6 +1039,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
   if (rootFn->numUpvalues != 0)
   {
     loadError(vm, module, "Root function cannot have upvalues.");
+    free(methodSymbolMap);
     wrenPopRoot(vm); // rootFn.
     wrenPopRoot(vm); // module.
     wrenPopRoot(vm); // name.
@@ -736,6 +1050,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
   if (reader.offset != reader.length)
   {
     loadError(vm, module, "Bytecode artifact has trailing bytes.");
+    free(methodSymbolMap);
     wrenPopRoot(vm); // rootFn.
     wrenPopRoot(vm); // module.
     wrenPopRoot(vm); // name.
@@ -752,6 +1067,8 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
   wrenPopRoot(vm); // module.
   wrenPopRoot(vm); // name.
   wrenPushRoot(vm, (Obj*)rootFn);
+
+  free(methodSymbolMap);
 
   ObjClosure* closure = wrenNewClosure(vm, rootFn);
   wrenPopRoot(vm); // rootFn, now held by the closure.

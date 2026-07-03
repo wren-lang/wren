@@ -231,6 +231,142 @@ static bool writeFnIsUsed(void)
   return ok;
 }
 
+static bool callLoadedClassMethods(void)
+{
+  TestContext ctx = btNewContext();
+
+  const char* source =
+      "class Greeter {\n"
+      "  construct new() {}\n"
+      "  static greet(name) { System.print(\"static \" + name) }\n"
+      "  hello(name) { System.print(\"instance \" + name) }\n"
+      "}\n";
+
+  WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
+  if (!btExpect(serialized.bytes != NULL,
+               "callLoadedClassMethods: serialization failed"))
+  {
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  WrenInterpretResult result = wrenInterpretBytecode(ctx.vm, "classmod",
+      serialized.bytes, serialized.length);
+  bool ok = btExpectResult(result, WREN_RESULT_SUCCESS, "callLoadedClassMethods load");
+
+  wrenEnsureSlots(ctx.vm, 2);
+  wrenGetVariable(ctx.vm, "classmod", "Greeter", 0);
+
+  // Static method call: greet("hi").
+  WrenHandle* greetHandle = wrenMakeCallHandle(ctx.vm, "greet(_)");
+  wrenSetSlotString(ctx.vm, 1, "hi");
+  result = wrenCall(ctx.vm, greetHandle);
+  ok = btExpectResult(result, WREN_RESULT_SUCCESS,
+                      "callLoadedClassMethods static") && ok;
+  ok = btExpectStringEq(btOutput(&ctx), "static hi\n",
+                       "callLoadedClassMethods static output") && ok;
+
+  // Constructor call: new(). The receiver must be the class, which was replaced
+  // by the static call's return value, so reload it.
+  wrenEnsureSlots(ctx.vm, 2);
+  wrenGetVariable(ctx.vm, "classmod", "Greeter", 0);
+  WrenHandle* newHandle = wrenMakeCallHandle(ctx.vm, "new()");
+  result = wrenCall(ctx.vm, newHandle);
+  ok = btExpectResult(result, WREN_RESULT_SUCCESS,
+                       "callLoadedClassMethods construct") && ok;
+
+  // Instance method call: hello("there") on the instance left in slot 0.
+  wrenEnsureSlots(ctx.vm, 2);
+  wrenSetSlotString(ctx.vm, 1, "there");
+  WrenHandle* helloHandle = wrenMakeCallHandle(ctx.vm, "hello(_)");
+  result = wrenCall(ctx.vm, helloHandle);
+  ok = btExpectResult(result, WREN_RESULT_SUCCESS,
+                       "callLoadedClassMethods instance") && ok;
+  ok = btExpectStringEq(btOutput(&ctx), "static hi\ninstance there\n",
+                       "callLoadedClassMethods instance output") && ok;
+
+  wrenReleaseHandle(ctx.vm, greetHandle);
+  wrenReleaseHandle(ctx.vm, newHandle);
+  wrenReleaseHandle(ctx.vm, helloHandle);
+  wrenFreeSerializeResult(&ctx.config, serialized);
+  btFreeContext(&ctx);
+  return ok;
+}
+
+static bool preexistingMethodSymbols(void)
+{
+  TestContext ctx = btNewContext();
+
+  // Bump the loading VM's method-symbol table so that interned indices no
+  // longer match the serializer VM's indices.
+  WrenHandle* shiftHandle = wrenMakeCallHandle(ctx.vm, "preexisting(_)");
+  wrenReleaseHandle(ctx.vm, shiftHandle);
+  btResetContext(&ctx);
+
+  // Re-create the shift handle after reset to ensure the fresh VM also has an
+  // entry ahead of the loaded method names.
+  shiftHandle = wrenMakeCallHandle(ctx.vm, "preexisting(_)");
+
+  const char* source =
+      "class Greeter {\n"
+      "  construct new() {}\n"
+      "  static greet(name) { System.print(\"static \" + name) }\n"
+      "  hello(name) { System.print(\"instance \" + name) }\n"
+      "}\n";
+
+  WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
+  if (!btExpect(serialized.bytes != NULL,
+               "preexistingMethodSymbols: serialization failed"))
+  {
+    wrenReleaseHandle(ctx.vm, shiftHandle);
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  WrenInterpretResult result = wrenInterpretBytecode(ctx.vm, "prevm",
+      serialized.bytes, serialized.length);
+  bool ok = btExpectResult(result, WREN_RESULT_SUCCESS,
+                            "preexistingMethodSymbols load");
+
+  wrenEnsureSlots(ctx.vm, 2);
+  wrenGetVariable(ctx.vm, "prevm", "Greeter", 0);
+
+  WrenHandle* greetHandle = wrenMakeCallHandle(ctx.vm, "greet(_)");
+  wrenSetSlotString(ctx.vm, 1, " shifted");
+  result = wrenCall(ctx.vm, greetHandle);
+  ok = btExpectResult(result, WREN_RESULT_SUCCESS,
+                       "preexistingMethodSymbols static") && ok;
+  ok = btExpectStringEq(btOutput(&ctx), "static  shifted\n",
+                       "preexistingMethodSymbols static output") && ok;
+
+  // The static call replaced slot 0 with its return value, so reload the class.
+  wrenEnsureSlots(ctx.vm, 2);
+  wrenGetVariable(ctx.vm, "prevm", "Greeter", 0);
+  wrenSetSlotString(ctx.vm, 1, "works");
+  WrenHandle* newHandle = wrenMakeCallHandle(ctx.vm, "new()");
+  result = wrenCall(ctx.vm, newHandle);
+  ok = btExpectResult(result, WREN_RESULT_SUCCESS,
+                       "preexistingMethodSymbols construct") && ok;
+
+  wrenEnsureSlots(ctx.vm, 2);
+  wrenSetSlotString(ctx.vm, 1, "still");
+  WrenHandle* helloHandle = wrenMakeCallHandle(ctx.vm, "hello(_)");
+  result = wrenCall(ctx.vm, helloHandle);
+  ok = btExpectResult(result, WREN_RESULT_SUCCESS,
+                       "preexistingMethodSymbols instance") && ok;
+  ok = btExpectStringEq(btOutput(&ctx),
+                       "static  shifted\ninstance still\n",
+                       "preexistingMethodSymbols instance output") && ok;
+
+  wrenReleaseHandle(ctx.vm, shiftHandle);
+  wrenReleaseHandle(ctx.vm, greetHandle);
+  wrenReleaseHandle(ctx.vm, newHandle);
+  wrenReleaseHandle(ctx.vm, helloHandle);
+  wrenFreeSerializeResult(&ctx.config, serialized);
+  btFreeContext(&ctx);
+  return ok;
+}
+
 bool bytecodeAPIRunTests(WrenVM* vm)
 {
   (void)vm;
@@ -239,6 +375,8 @@ bool bytecodeAPIRunTests(WrenVM* vm)
   ok = moduleIsRegistered() && ok;
   ok = variableAccess() && ok;
   ok = callExportedMethod() && ok;
+  ok = callLoadedClassMethods() && ok;
+  ok = preexistingMethodSymbols() && ok;
   ok = errorCallback() && ok;
   ok = serializeFailureIsCompileError() && ok;
   ok = alreadyLoaded() && ok;

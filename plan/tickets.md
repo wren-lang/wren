@@ -23,3 +23,5 @@
       verified by the current suite plus ASan).
 - [x] See `tickets/005-tests.md` (bytecode test coverage: equivalence,
       rejection, API, format; full suite passes plain and under ASan).
+- [x] See `tickets/006-method-symbol-relocation.md` (method-symbol table
+      serialized and relocated; host `wrenCall` works for loaded methods).

@@ -24,14 +24,15 @@ static void appendOutput(WrenVM* vm, const char* text)
 }
 
 static void reportError(WrenVM* vm, WrenErrorType type, const char* module,
-                        int line, const char* message)
+                         int line, const char* message)
 {
   TestContext* ctx = (TestContext*)wrenGetUserData(vm);
   if (ctx != NULL)
   {
     ctx->errorsReported++;
     // Keep the most recent error message for tests that want to inspect it.
-    if (message != NULL)
+    // Stack-trace callbacks do not carry the actual error text, so ignore them.
+    if (message != NULL && type != WREN_ERROR_STACK_TRACE)
     {
       strncpy(ctx->lastError, message, sizeof(ctx->lastError) - 1);
       ctx->lastError[sizeof(ctx->lastError) - 1] = '\0';
@@ -42,6 +43,7 @@ static void reportError(WrenVM* vm, WrenErrorType type, const char* module,
   (void)module;
   (void)line;
 }
+
 
 WrenConfiguration btTestConfig(void)
 {

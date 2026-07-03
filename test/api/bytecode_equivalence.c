@@ -56,6 +56,18 @@ static bool equivalenceInheritance(void)
   return btRunEquivalence(source, true, WREN_RESULT_SUCCESS, "derived base\n");
 }
 
+static bool equivalenceMethodArguments(void)
+{
+  const char* source =
+      "class C {\n"
+      "  construct new() {}\n"
+      "  f(x) { x + 1 }\n"
+      "}\n"
+      "System.print(C.new().f(41))\n";
+
+  return btRunEquivalence(source, true, WREN_RESULT_SUCCESS, "42\n");
+}
+
 static bool equivalenceClosures(void)
 {
   const char* source =
@@ -218,6 +230,7 @@ bool bytecodeEquivalenceRunTests(WrenVM* vm)
   ok = equivalenceTopLevel() && ok;
   ok = equivalenceClasses() && ok;
   ok = equivalenceInheritance() && ok;
+  ok = equivalenceMethodArguments() && ok;
   ok = equivalenceClosures() && ok;
   ok = equivalenceControlFlow() && ok;
   ok = equivalenceLiterals() && ok;

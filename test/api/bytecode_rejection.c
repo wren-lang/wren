@@ -12,6 +12,10 @@
 // The serialized artifact uses big-endian multibyte integers.
 typedef struct
 {
+  size_t methodNameCountOffset;
+  size_t firstMethodNameLengthOffset;
+  size_t ownVarCountOffset;
+  size_t firstOwnVarNameLengthOffset;
   size_t arityOffset;
   size_t numUpvaluesOffset;
   size_t maxSlotsOffset;
@@ -119,10 +123,29 @@ static bool parseMinimalLayout(const uint8_t* bytes, size_t length,
   bool debugInfo = (bytes[7] & 0x01) != 0;
   size_t off = 8;
 
+  // Skip the method-name symbol table.
+  out->methodNameCountOffset = off;
+  if (off + 4 > length) return false;
+  uint32_t methodNameCount = readUint32BE(bytes + off);
+  off += 4;
+
+  if (methodNameCount > 0)
+  {
+    out->firstMethodNameLengthOffset = off;
+  }
+
+  for (uint32_t i = 0; i < methodNameCount; i++)
+  {
+    if (!skipString(bytes, length, &off)) return false;
+  }
+
+  // Skip the module's own variable names.
+  out->ownVarCountOffset = off;
   if (off + 4 > length) return false;
   uint32_t ownVarCount = readUint32BE(bytes + off);
   off += 4;
 
+  out->firstOwnVarNameLengthOffset = off;
   for (uint32_t i = 0; i < ownVarCount; i++)
   {
     if (!skipString(bytes, length, &off)) return false;
@@ -218,19 +241,22 @@ static bool expectLoadErrorForMutation(TestContext* ctx,
   return true;
 }
 
-// Builds a new artifact buffer from [serialized] with the first own variable
-// name replaced by [name] and [nameLength]. Returns a freshly allocated buffer
-// that the caller must free, or NULL on failure.
+// Builds a new artifact buffer from [serialized] with the variable name at
+// [nameOffset] replaced by [name] and [nameLength]. Returns a freshly
+// allocated buffer that the caller must free, or NULL on failure.
 static uint8_t* buildArtifactWithVariableName(const WrenSerializeResult* serialized,
+                                              size_t nameOffset,
                                               const char* newName,
                                               size_t newNameLength,
                                               size_t* outLength)
 {
-  if (serialized->length < 16) return NULL;
+  if (serialized->length < nameOffset + 4) return NULL;
 
-  uint32_t originalNameLength = readUint32BE(serialized->bytes + 12);
-  size_t headerBeforeNameLength = 12 + 4; // ownVariableCount + name length field.
+  uint32_t originalNameLength = readUint32BE(serialized->bytes + nameOffset);
+  size_t headerBeforeNameLength = nameOffset + 4;
   size_t headerAfterName = headerBeforeNameLength + originalNameLength;
+
+  if (headerAfterName > serialized->length) return NULL;
 
   size_t tailLength = serialized->length - headerAfterName;
   size_t newLength = headerBeforeNameLength + newNameLength + tailLength;
@@ -239,10 +265,10 @@ static uint8_t* buildArtifactWithVariableName(const WrenSerializeResult* seriali
   if (result == NULL) return NULL;
 
   memcpy(result, serialized->bytes, headerBeforeNameLength);
-  result[12] = (uint8_t)(newNameLength >> 24);
-  result[13] = (uint8_t)(newNameLength >> 16);
-  result[14] = (uint8_t)(newNameLength >> 8);
-  result[15] = (uint8_t)(newNameLength);
+  result[nameOffset + 0] = (uint8_t)(newNameLength >> 24);
+  result[nameOffset + 1] = (uint8_t)(newNameLength >> 16);
+  result[nameOffset + 2] = (uint8_t)(newNameLength >> 8);
+  result[nameOffset + 3] = (uint8_t)(newNameLength);
   memcpy(result + headerBeforeNameLength, newName, newNameLength);
   memcpy(result + headerBeforeNameLength + newNameLength,
          serialized->bytes + headerAfterName, tailLength);
@@ -479,19 +505,20 @@ static bool emptyVariableName(void)
     return false;
   }
 
-  // The first own variable name length field sits at bytes 12-15.
-  serialized.bytes[12] = 0;
-  serialized.bytes[13] = 0;
-  serialized.bytes[14] = 0;
-  serialized.bytes[15] = 0;
+  // The first own variable name length field sits after the method table.
+  serialized.bytes[layout.firstOwnVarNameLengthOffset + 0] = 0;
+  serialized.bytes[layout.firstOwnVarNameLengthOffset + 1] = 0;
+  serialized.bytes[layout.firstOwnVarNameLengthOffset + 2] = 0;
+  serialized.bytes[layout.firstOwnVarNameLengthOffset + 3] = 0;
 
   bool ok = expectLoadErrorForMutation(&ctx, &serialized,
-                                       "emptyVariableName");
+                                        "emptyVariableName");
 
   wrenFreeSerializeResult(&ctx.config, serialized);
   btFreeContext(&ctx);
   return ok;
 }
+
 
 static bool duplicateVariableName(void)
 {
@@ -505,8 +532,9 @@ static bool duplicateVariableName(void)
   }
 
   // Insert a second own variable named "x" right after the first one.
-  size_t originalNameLength = readUint32BE(serialized.bytes + 12);
-  size_t firstNameEnd = 16 + originalNameLength;
+  size_t originalNameLength = readUint32BE(
+      serialized.bytes + layout.firstOwnVarNameLengthOffset);
+  size_t firstNameEnd = layout.firstOwnVarNameLengthOffset + 4 + originalNameLength;
   size_t tailLength = serialized.length - firstNameEnd;
   size_t newLength = firstNameEnd + 4 + 1 + tailLength;
 
@@ -526,11 +554,12 @@ static bool duplicateVariableName(void)
   mutant[firstNameEnd + 4] = 'x';
   memcpy(mutant + firstNameEnd + 5, serialized.bytes + firstNameEnd, tailLength);
 
-  // Update own variable count to 2.
-  mutant[8] = 0;
-  mutant[9] = 0;
-  mutant[10] = 0;
-  mutant[11] = 2;
+  // Update own variable count.
+  size_t ownCountOff = layout.ownVarCountOffset;
+  mutant[ownCountOff + 0] = 0;
+  mutant[ownCountOff + 1] = 0;
+  mutant[ownCountOff + 2] = 0;
+  mutant[ownCountOff + 3] = 2;
 
   WrenInterpretResult result = wrenInterpretBytecode(ctx.vm,
       "dupvar", mutant, newLength);
@@ -555,8 +584,8 @@ static bool coreNameCollision(void)
   }
 
   size_t mutantLength;
-  uint8_t* mutant = buildArtifactWithVariableName(&serialized, "System", 6,
-                                                  &mutantLength);
+  uint8_t* mutant = buildArtifactWithVariableName(&serialized,
+      layout.firstOwnVarNameLengthOffset, "System", 6, &mutantLength);
   if (!btExpect(mutant != NULL, "coreNameCollision: failed to build mutant"))
   {
     wrenFreeSerializeResult(&ctx.config, serialized);
@@ -570,6 +599,183 @@ static bool coreNameCollision(void)
                            "coreNameCollision");
 
   free(mutant);
+  wrenFreeSerializeResult(&ctx.config, serialized);
+  btFreeContext(&ctx);
+  return ok;
+}
+
+// ---------------------------------------------------------------------------
+// Method-symbol table rejection tests
+// ---------------------------------------------------------------------------
+
+static void writeUint32BE(uint8_t* bytes, uint32_t value)
+{
+  bytes[0] = (uint8_t)(value >> 24);
+  bytes[1] = (uint8_t)(value >> 16);
+  bytes[2] = (uint8_t)(value >> 8);
+  bytes[3] = (uint8_t)(value);
+}
+
+static void writeUint16BE(uint8_t* bytes, uint16_t value)
+{
+  bytes[0] = (uint8_t)(value >> 8);
+  bytes[1] = (uint8_t)(value);
+}
+
+static bool truncatedMethodNameCount(void)
+{
+  TestContext ctx = btNewContext();
+
+  const char* source = "var x = 1\n";
+  WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
+  if (!btExpect(serialized.bytes != NULL,
+               "truncatedMethodNameCount: serialization failed"))
+  {
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  WrenInterpretResult result = wrenInterpretBytecode(ctx.vm, "tmc",
+      serialized.bytes, 9);
+  bool ok = btExpectResult(result, WREN_RESULT_LOAD_ERROR,
+                            "truncatedMethodNameCount");
+
+  wrenFreeSerializeResult(&ctx.config, serialized);
+  btFreeContext(&ctx);
+  return ok;
+}
+
+static bool excessiveMethodNameCount(void)
+{
+  TestContext ctx = btNewContext();
+  MinimalLayout layout;
+  WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
+  if (serialized.bytes == NULL)
+  {
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  writeUint32BE(serialized.bytes + layout.methodNameCountOffset, 0xFFFFFFFF);
+
+  bool ok = expectLoadErrorForMutation(&ctx, &serialized,
+                                        "excessiveMethodNameCount");
+
+  wrenFreeSerializeResult(&ctx.config, serialized);
+  btFreeContext(&ctx);
+  return ok;
+}
+
+static bool emptyMethodName(void)
+{
+  TestContext ctx = btNewContext();
+  MinimalLayout layout;
+  WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
+  if (serialized.bytes == NULL)
+  {
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  writeUint32BE(serialized.bytes + layout.methodNameCountOffset, 1);
+  writeUint32BE(serialized.bytes + layout.firstMethodNameLengthOffset, 0);
+
+  bool ok = expectLoadErrorForMutation(&ctx, &serialized, "emptyMethodName");
+
+  wrenFreeSerializeResult(&ctx.config, serialized);
+  btFreeContext(&ctx);
+  return ok;
+}
+
+static bool truncatedMethodNameString(void)
+{
+  TestContext ctx = btNewContext();
+  MinimalLayout layout;
+  WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
+  if (serialized.bytes == NULL)
+  {
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  writeUint32BE(serialized.bytes + layout.methodNameCountOffset, 1);
+  writeUint32BE(serialized.bytes + layout.firstMethodNameLengthOffset, 10);
+  // The artifact now claims a 10-byte name but provides none after the
+  // length field, so the loader should reject it as truncated.
+  serialized.bytes[layout.firstMethodNameLengthOffset + 4] = 'a';
+
+  bool ok = expectLoadErrorForMutation(&ctx, &serialized,
+                                        "truncatedMethodNameString");
+
+  wrenFreeSerializeResult(&ctx.config, serialized);
+  btFreeContext(&ctx);
+  return ok;
+}
+
+static bool outOfRangeMethodOperand(void)
+{
+  TestContext ctx = btNewContext();
+
+  const char* source =
+      "class Greeter {\n"
+      "  static greet(name) { System.print(\"static \" + name) }\n"
+      "}\n";
+
+  WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
+  if (!btExpect(serialized.bytes != NULL,
+               "outOfRangeMethodOperand: serialization failed"))
+  {
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  MinimalLayout layout;
+  if (!btExpect(parseMinimalLayout(serialized.bytes, serialized.length, &layout),
+               "outOfRangeMethodOperand: could not parse layout"))
+  {
+    wrenFreeSerializeResult(&ctx.config, serialized);
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  uint32_t codeLength = readUint32BE(serialized.bytes + layout.codeLengthOffset);
+  size_t codeStart = layout.codeLengthOffset + 4;
+  if (!btExpect(codeStart + codeLength <= serialized.length,
+               "outOfRangeMethodOperand: code section out of bounds"))
+  {
+    wrenFreeSerializeResult(&ctx.config, serialized);
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  // Find the first CODE_METHOD_STATIC (72) byte in the root function's code.
+  size_t opcodeOffset = (size_t)-1;
+  for (size_t i = 0; i < codeLength; i++)
+  {
+    if (serialized.bytes[codeStart + i] == 72)
+    {
+      opcodeOffset = codeStart + i;
+      break;
+    }
+  }
+
+  if (!btExpect(opcodeOffset != (size_t)-1,
+               "outOfRangeMethodOperand: no method static opcode found"))
+  {
+    wrenFreeSerializeResult(&ctx.config, serialized);
+    btFreeContext(&ctx);
+    return false;
+  }
+
+  // Patch the two-byte method-symbol operand to a value larger than the
+  // serialized method-name table could possibly contain.
+  writeUint16BE(serialized.bytes + opcodeOffset + 1, 0xFFFF);
+
+  WrenInterpretResult result = wrenInterpretBytecode(ctx.vm, "oor",
+      serialized.bytes, serialized.length);
+  bool ok = btExpectResult(result, WREN_RESULT_LOAD_ERROR,
+                            "outOfRangeMethodOperand");
+
   wrenFreeSerializeResult(&ctx.config, serialized);
   btFreeContext(&ctx);
   return ok;
@@ -681,6 +887,11 @@ bool bytecodeRejectionRunTests(WrenVM* vm)
   ok = trailingBytesReject() && ok;
   ok = truncationSweep() && ok;
   ok = unknownHeaderFlags() && ok;
+  ok = truncatedMethodNameCount() && ok;
+  ok = excessiveMethodNameCount() && ok;
+  ok = emptyMethodName() && ok;
+  ok = truncatedMethodNameString() && ok;
+  ok = outOfRangeMethodOperand() && ok;
   ok = invalidFunctionArity() && ok;
   ok = invalidMaxSlots() && ok;
   ok = rootNumUpvaluesNonZero() && ok;
