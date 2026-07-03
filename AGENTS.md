@@ -22,3 +22,25 @@
 - External module loading is out of scope.
 - The artifact is version-locked.
 - Obfuscation is out of scope.
+
+## Test Runner
+
+`util/test.py` discovers and runs `.wren` files from `test/` and `example/`. It
+parses comments like `// expect: <output>` and `// expect runtime error ...` in
+the source file, then compares the binary's actual stdout/stderr/exit code to
+those expectations.
+
+Run the full suite:
+
+```
+python3 util/test.py
+```
+
+Run a subset by passing a path prefix relative to `test/`:
+
+```
+python3 util/test.py api/bytecode_loader
+```
+
+That matches the `--suite` argument and only runs files whose path starts with
+the given prefix. Use this for targeted iteration instead of running every test.

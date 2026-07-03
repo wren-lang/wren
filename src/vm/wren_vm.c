@@ -437,8 +437,13 @@ static void runtimeError(WrenVM* vm)
 // method with [symbol] on [classObj].
 static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol)
 {
+  // A loaded artifact may reference method names that were never interned in
+  // this VM's symbol table, so guard against an out-of-range index.
+  const char* name = symbol < vm->methodNames.count
+      ? vm->methodNames.data[symbol]->value
+      : "<unknown>";
   vm->fiber->error = wrenStringFormat(vm, "@ does not implement '$'.",
-      OBJ_VAL(classObj->name), vm->methodNames.data[symbol]->value);
+      OBJ_VAL(classObj->name), name);
 }
 
 // Looks up the previously loaded module with [name].
@@ -1517,9 +1522,14 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
   ObjClosure* closure = wrenCompileSource(vm, module, source, false, true);
   if (closure == NULL) return WREN_RESULT_COMPILE_ERROR;
   
+  return wrenRunClosure(vm, closure);
+}
+
+WrenInterpretResult wrenRunClosure(WrenVM* vm, ObjClosure* closure)
+{
   wrenPushRoot(vm, (Obj*)closure);
   ObjFiber* fiber = wrenNewFiber(vm, closure);
-  wrenPopRoot(vm); // closure.
+  wrenPopRoot(vm); // closure, now held by fiber.
   vm->apiStack = NULL;
 
   return runInterpreter(vm, fiber);

@@ -1,5 +1,15 @@
 # Ticket 004 - Loader
 
+## Status
+
+Implemented and verified.
+
+- Loader and `wrenInterpretBytecode` API are implemented in `src/vm/wren_serialize.c`.
+- Serializer output format was corrected before the loader read it.
+- All standard tests pass: `867 tests passed`.
+- Debug build with AddressSanitizer (`-fsanitize=address`, leaks disabled) also passes the full suite.
+- The only API test (`test/api/bytecode_loader.wren`) is green.
+
 ## Goal
 
 Add the VM-side load path that reconstructs a compiled module from a serialized

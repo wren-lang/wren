@@ -49,6 +49,7 @@ int main(int argc, const char* argv[]) {
 
   if (result == WREN_RESULT_COMPILE_ERROR) return WREN_EX_DATAERR;
   if (result == WREN_RESULT_RUNTIME_ERROR) return WREN_EX_SOFTWARE;
+  if (result == WREN_RESULT_LOAD_ERROR) return WREN_EX_DATAERR;
 
   wrenFreeVM(vm);
 

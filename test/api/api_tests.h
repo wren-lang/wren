@@ -8,6 +8,7 @@
 #include "wren.h"
 
 #include "benchmark.h"
+#include "bytecode_loader.h"
 #include "call.h"
 #include "call_calls_foreign.h"
 #include "call_wren_call_root.h"

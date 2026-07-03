@@ -24,15 +24,6 @@
 // identify the local, only 256 can be in scope at one time.
 #define MAX_LOCALS 256
 
-// The maximum number of upvalues (i.e. variables from enclosing functions)
-// that a function can close over.
-#define MAX_UPVALUES 256
-
-// The maximum number of distinct constants that a function can contain. This
-// value is explicit in the bytecode since `CODE_CONSTANT` only takes a single
-// two-byte argument.
-#define MAX_CONSTANTS (1 << 16)
-
 // The maximum distance a CODE_JUMP or CODE_JUMP_IF instruction can move the
 // instruction pointer.
 #define MAX_JUMP (1 << 16)

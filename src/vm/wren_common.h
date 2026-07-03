@@ -85,6 +85,12 @@
 // `CODE_CALL_XX` instructions assume a certain maximum number.
 #define MAX_PARAMETERS 16
 
+// The maximum number of upvalues a function can close over.
+#define MAX_UPVALUES 256
+
+// The maximum number of unique constants a single function can contain.
+#define MAX_CONSTANTS (1 << 16)
+
 // The maximum name of a method, not including the signature. This is an
 // arbitrary but enforced maximum just so we know how long the method name
 // strings need to be in the parser.

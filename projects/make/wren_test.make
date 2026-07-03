@@ -112,6 +112,7 @@ OBJECTS :=
 
 OBJECTS += $(OBJDIR)/api_tests.o
 OBJECTS += $(OBJDIR)/benchmark.o
+OBJECTS += $(OBJDIR)/bytecode_loader.o
 OBJECTS += $(OBJDIR)/call.o
 OBJECTS += $(OBJDIR)/call_calls_foreign.o
 OBJECTS += $(OBJDIR)/call_wren_call_root.o
@@ -194,6 +195,9 @@ $(OBJDIR)/api_tests.o: ../../test/api/api_tests.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/benchmark.o: ../../test/api/benchmark.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/bytecode_loader.o: ../../test/api/bytecode_loader.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/call.o: ../../test/api/call.c
