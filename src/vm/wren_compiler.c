@@ -3780,18 +3780,29 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   parser.next.line = 0;
   parser.next.value = UNDEFINED_VAL;
 
+  // Zero-init current and previous as well: initCompiler() below registers
+  // this parser with the GC (via vm->compiler), and wrenMarkCompiler() reads
+  // all three token values. They must be defined before any allocation.
+  parser.current = parser.next;
+  parser.previous = parser.next;
+
   parser.printErrors = printErrors;
   parser.hasError = false;
-
-  // Read the first token into next
-  nextToken(&parser);
-  // Copy next -> current
-  nextToken(&parser);
 
   int numExistingVariables = module->variables.count;
 
   Compiler compiler;
   initCompiler(&compiler, &parser, NULL, false);
+
+  // Read the first token into next. This must happen after initCompiler() has
+  // set vm->compiler: token values can be heap-allocated ObjStrings, and only
+  // wrenMarkCompiler() (reached through vm->compiler) marks them. Scanning
+  // before the compiler is registered lets a GC triggered mid-scan collect a
+  // token value the parser still references.
+  nextToken(&parser);
+  // Copy next -> current
+  nextToken(&parser);
+
   ignoreNewlines(&compiler);
 
   if (isExpression)
