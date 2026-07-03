@@ -95,6 +95,45 @@ unconditionally, never see a `NULL` name.
   up front and reject the load with a clean error if the name is already
   taken, rather than attempting to merge into or overwrite an existing
   module.
+- **How the loader reports its own structural failures to the host: add a
+  dedicated `WREN_ERROR_LOAD`/`WREN_RESULT_LOAD_ERROR` pair, don't overload
+  the compile-error ones.** A first pass at this ticket planned to reuse
+  `WREN_ERROR_COMPILE`/`WREN_RESULT_COMPILE_ERROR` with a `-1` sentinel line
+  number for artifact-structure failures (bad magic, wrong version,
+  truncated buffer, unrecognized constant tag, mismatched debug line count,
+  an already-loaded module name, an out-of-range `numUpvalues`/`arity`, a
+  `wrenDefineVariable` failure). That's a poor fit: `wren.h`'s own
+  `WrenErrorFn` doc comment says a `WREN_ERROR_COMPILE` call reports "the
+  resolved name of the module **and line where the error occurs**" — a real
+  promise about what that field means, which a malformed-artifact rejection
+  can't honor because there's no source involved at all. `-1` isn't "the
+  actual line," it's a lie of convenience. `WREN_ERROR_RUNTIME` avoids this
+  same problem correctly, by being *documented* as having no line
+  (`wren.h:124-126`) rather than reusing another type's line field with a
+  sentinel. Since ticket 001 already establishes this artifact format is
+  version-locked and not a stable public ABI, extending `wren.h`'s enums
+  for this fork is in scope, and it's a purely additive change — neither
+  existing `switch` over `WrenInterpretResult` in the tree
+  (`test/main.c:50-51`, `example/embedding/main.c:48-53`) has a `default:`
+  case, so adding a value doesn't silently misroute anything; it just means
+  a host that wants to handle the new case must add one. So: add
+  `WREN_ERROR_LOAD` to `WrenErrorType` (module resolved name, no meaningful
+  line — pass `-1` the same way `WREN_ERROR_RUNTIME` already does, but
+  documented as "no line" the same way that type is, not smuggled in as a
+  compile-error line) and `WREN_RESULT_LOAD_ERROR` to `WrenInterpretResult`.
+  Every pre-execution rejection listed above calls `vm->config.errorFn(vm,
+  WREN_ERROR_LOAD, module, -1, message)` if `errorFn` is set (mirroring
+  `printError`'s own `if (parser->vm->config.errorFn == NULL) return;`
+  guard, `wren_compiler.c:426`), then the loader returns
+  `WREN_RESULT_LOAD_ERROR`. Failures that occur *during* execution of the
+  loaded module's own bytecode (a foreign call with no matching binding, an
+  unhandled runtime error in the loaded code, etc.) go through the
+  completely normal `WREN_ERROR_RUNTIME`/`WREN_ERROR_STACK_TRACE`/
+  `WREN_RESULT_RUNTIME_ERROR` path `runInterpreter` already produces — the
+  loader does nothing special there. This gives the loader three clean,
+  distinguishable outcomes for a host to switch on: "artifact was rejected
+  before anything ran" (`WREN_RESULT_LOAD_ERROR`), "the loaded code ran and
+  hit a runtime error" (`WREN_RESULT_RUNTIME_ERROR`), and success.
 - **Reuse the exact same core-variable-copy loop `compileInModule` and the
   serializer both use**: iterate the live core module's `variables`/
   `variableNames` in order and call `wrenDefineVariable` for each, before
@@ -205,8 +244,21 @@ unconditionally, never see a `NULL` name.
 - Check whether `module` is already loaded in the caller's VM (`getModule`/
   `wrenHasModule`). Reject the load with a clean error if so — see the
   "reject if already loaded" decision above.
-- Create a fresh `ObjModule` with the caller-supplied name (`wrenNewModule(vm,
-  AS_STRING(wrenNewString(vm, module)))`), root it.
+- Create the module name string and root it *before* creating the module:
+  `Value nameValue = wrenNewString(vm, module); wrenPushRoot(vm,
+  AS_OBJ(nameValue));`. This ordering matters — `wrenNewModule`'s own
+  `ALLOCATE(vm, ObjModule)` can trigger a GC, and at that point the name
+  string isn't reachable from anywhere yet (not in `vm->modules`, not on any
+  root stack) unless it was pushed first. This is the same ordering
+  `defineClass` (`wren_core.c:1224-1225`) and `wrenHasModule`
+  (`wren_vm.c:1970-1971`) already use for exactly this reason — do not
+  combine the two calls into one expression
+  (`wrenNewModule(vm, AS_STRING(wrenNewString(vm, module)))`), since that
+  leaves the intermediate string unrooted for the duration of the outer
+  call.
+- Create the module with the rooted name (`wrenNewModule(vm,
+  AS_STRING(nameValue))`), root the module, then pop the name string's root
+  (the module now holds the only reference it needs via `module->name`).
 - Register it in `vm->modules` immediately, the same point
   `compileInModule` registers its module (`wren_vm.c:465-469`) — i.e. before
   the rest of the artifact has been read or validated. This mirrors
@@ -227,10 +279,18 @@ unconditionally, never see a `NULL` name.
   module, name, length, NULL_VAL, NULL)` to reserve the slot in the same
   order they were written — this is what makes the deserialized bytecode's
   `LOAD_MODULE_VAR`/`STORE_MODULE_VAR` indices line up.
-- Reject if `wrenDefineVariable` ever returns `-2` (too many module
-  variables) — this can only happen with a corrupt/hostile artifact claiming
-  an absurd count, since a real compile would have already rejected the
-  source before serialization.
+- Check the return value against both failure cases `wrenDefineVariable` can
+  produce here, not just one: `-2` means too many module variables (an
+  absurd count a real compile would have already rejected before
+  serialization), and `-1` means the name was already defined in this
+  module — which, this early in the load, can only mean the artifact lists
+  the same own-variable name twice (a real compile could never have produced
+  a duplicate entry in this slice of `variableNames`, since
+  `wrenDefineVariable` itself is what enforces uniqueness at compile time).
+  Reject the artifact on either return value; `-3` (the "local name
+  referenced before definition" case) cannot occur here since every call
+  passes `NULL_VAL`, never a number, so `line` is never written and that
+  branch is unreachable from this call site.
 
 ### 4. Rebuild the `ObjFn` tree
 
@@ -276,10 +336,24 @@ unconditionally, never see a `NULL` name.
 - [x] Decide what happens if the caller's requested module name is already
       loaded in the VM: reject the load cleanly rather than reusing or
       overwriting the existing module.
+- [x] Decide how the loader reports its own structural failures (bad magic,
+      wrong version, truncation, name collision, bad tag, limit violation)
+      to the host: add a dedicated `WREN_ERROR_LOAD`/`WREN_RESULT_LOAD_ERROR`
+      pair to `wren.h` rather than overloading `WREN_ERROR_COMPILE`'s
+      documented "line where the error occurs" field with a fake `-1`.
+      Reports go through `vm->config.errorFn` (guarded by a NULL check,
+      matching `printError`) with `WREN_ERROR_LOAD` and line `-1` (this type
+      is documented as having no meaningful line, the same way
+      `WREN_ERROR_RUNTIME` already is — not smuggled in as a compile-error
+      line). Runtime failures in the loaded module's own bytecode use the
+      completely normal `WREN_ERROR_RUNTIME`/`WREN_RESULT_RUNTIME_ERROR`
+      path already produced by `runInterpreter`, unchanged.
 - [x] Confirm the core-variable-copy step reuses the existing loop verbatim
       rather than reinventing it.
 - [x] Confirm user-declared variable slots are reserved via
-      `wrenDefineVariable(..., NULL_VAL, ...)`, not a raw buffer append.
+      `wrenDefineVariable(..., NULL_VAL, ...)`, not a raw buffer append, and
+      that both its `-1` (duplicate name) and `-2` (too many variables)
+      failure returns are checked, not just `-2`.
 - [x] Confirm there is no bulk "construct ObjFn from bytes" helper — the
       loader must call `wrenNewFunction` then fill fields/buffers manually.
 - [x] Decide the GC-rooting discipline for recursive `ObjFn`/`ObjString`
@@ -319,12 +393,32 @@ unconditionally, never see a `NULL` name.
   end of the buffer.
 - It rejects the load cleanly if the caller-supplied module name is already
   loaded in the VM, rather than reusing or overwriting the existing module.
+- Every structural rejection that happens before the loaded module's own
+  bytecode runs (bad magic, wrong version, truncation, unrecognized
+  constant tag, mismatched debug line count, name collision, an
+  out-of-range `numUpvalues`/`arity`, a `wrenDefineVariable` failure)
+  reports through `vm->config.errorFn` as the new `WREN_ERROR_LOAD` type
+  (when `errorFn` is set) with line `-1`, and the loader returns the new
+  `WREN_RESULT_LOAD_ERROR`. Failures during execution of the loaded
+  module's own bytecode go through the normal `WREN_ERROR_RUNTIME`/
+  `WREN_RESULT_RUNTIME_ERROR` path already produced by `runInterpreter`,
+  with no loader-specific handling.
+- `wren.h` gains `WREN_ERROR_LOAD` (added to `WrenErrorType`) and
+  `WREN_RESULT_LOAD_ERROR` (added to `WrenInterpretResult`), both
+  documented the same way `WREN_ERROR_RUNTIME` already documents having no
+  meaningful line/module, rather than overloading `WREN_ERROR_COMPILE`'s
+  line field with a sentinel.
+- The module name string is rooted before the module is created (not
+  combined into a single unrooted expression), so a GC triggered by
+  `wrenNewModule`'s own allocation cannot collect it.
 - It reconstructs the core-module variable slots using the same copy loop
   `compileInModule`/`wrenSerializeModule` use, so `LOAD_MODULE_VAR`/
   `STORE_MODULE_VAR` indices line up.
 - It reserves the module's own user-declared variable slots via
   `wrenDefineVariable` with `NULL_VAL`, in artifact order, before wiring in
-  the deserialized `ObjFn` tree.
+  the deserialized `ObjFn` tree, and rejects the artifact on either a `-1`
+  (duplicate name within the artifact's own variable list) or `-2` (too
+  many variables) return.
 - The loaded module is given the caller's real, required module name (not a
   placeholder) and is registered in the VM's module map, the same as any
   normally-compiled module.
