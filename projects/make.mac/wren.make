@@ -117,6 +117,7 @@ OBJECTS += $(OBJDIR)/wren_primitive.o
 OBJECTS += $(OBJDIR)/wren_utils.o
 OBJECTS += $(OBJDIR)/wren_value.o
 OBJECTS += $(OBJDIR)/wren_vm.o
+OBJECTS += $(OBJDIR)/wren_serialize.o
 
 # Rules
 # #############################################
@@ -203,6 +204,9 @@ $(OBJDIR)/wren_value.o: ../../src/vm/wren_value.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/wren_vm.o: ../../src/vm/wren_vm.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/wren_serialize.o: ../../src/vm/wren_serialize.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 

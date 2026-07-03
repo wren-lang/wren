@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
@@ -550,5 +551,39 @@ WREN_API void* wrenGetUserData(WrenVM* vm);
 
 // Sets user data associated with the WrenVM.
 WREN_API void wrenSetUserData(WrenVM* vm, void* userData);
+
+// The result of a call to [wrenSerializeModule].
+//
+// The memory at [bytes] is owned by the caller and must be released by calling
+// [wrenFreeSerializeResult].
+typedef struct
+{
+  uint8_t* bytes;
+  size_t length;
+} WrenSerializeResult;
+
+// Compiles [source] as a single-file module and writes it to a serialized
+// bytecode artifact.
+//
+// A temporary WrenVM is created internally, so this does not require or
+// modify any existing VM state. If [configuration] is NULL, default
+// configuration values are used.
+//
+// If [debugInfo] is true, function names and source-line tables are included
+// in the artifact.
+//
+// On success, the returned [bytes] is non-NULL and holds [length] serialized
+// bytes. On failure (for example, a compile error), [bytes] is NULL.
+WREN_API WrenSerializeResult wrenSerializeModule(
+    WrenConfiguration* configuration,
+    const char* module,
+    const char* source,
+    bool debugInfo);
+
+// Releases the byte buffer returned by [wrenSerializeModule]. The
+// [configuration] should match the one passed to that call (or NULL if none
+// was supplied), so that custom allocators are honored.
+WREN_API void wrenFreeSerializeResult(WrenConfiguration* configuration,
+                                      WrenSerializeResult result);
 
 #endif
