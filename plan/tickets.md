@@ -2,7 +2,6 @@
 
 ## Next
 
-- [ ] See `tickets/004-loader.md`
 - [ ] See `tickets/005-tests.md`
 
 ## Backlog
@@ -20,3 +19,5 @@
 - [x] See `tickets/002-bytecode-format.md`.
 - [x] See `tickets/003-serializer.md` (`src/vm/wren_serialize.c` implements
       `wrenSerializeModule`).
+- [x] See `tickets/004-loader.md` (`wrenInterpretBytecode` is implemented and
+      verified by the current suite plus ASan).

@@ -244,18 +244,35 @@ static bool deepNesting(void)
 {
   TestContext ctx = newContext();
 
-  const char* source =
-      "var make\n"
-      "make = Fn.new { |n|\n"
-      "  if (n == 0) return Fn.new { System.print(\"done\") }\n"
-      "  var outer = n\n"
-      "  var child = make.call(n - 1)\n"
-      "  return Fn.new {\n"
-      "    System.print(outer)\n"
-      "    child.call()\n"
-      "  }\n"
-      "}\n"
-      "make.call(10).call()\n";
+  // Build a source string with 12 literally nested Fn.new literals on a single
+  // expression line. Wren requires closing braces inline, not on their own
+  // line, so the whole nested chain lives on one line.
+  #define DEPTH 12
+  char source[4096];
+  char* p = source;
+  char* end = source + sizeof(source);
+
+  p += snprintf(p, end - p, "var f = ");
+  for (int i = 0; i < DEPTH; i++)
+  {
+    p += snprintf(p, end - p, "Fn.new { ");
+  }
+  p += snprintf(p, end - p, "System.print(\"deep\")");
+  for (int i = 0; i < DEPTH; i++)
+  {
+    p += snprintf(p, end - p, " }");
+  }
+  p += snprintf(p, end - p, "\nf");
+  for (int i = 0; i < DEPTH; i++) p += snprintf(p, end - p, ".call()");
+  p += snprintf(p, end - p, "\n");
+
+  if (p >= end)
+  {
+    fprintf(stderr, "deepNesting: source buffer overflow\n");
+    freeContext(&ctx);
+    return false;
+  }
+  #undef DEPTH
 
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, false);
   if (!expect(serialized.bytes != NULL, "deepNesting: serialization failed"))

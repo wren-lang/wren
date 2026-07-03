@@ -20,6 +20,11 @@
 // Header flag bits.
 #define HEADER_FLAG_DEBUG_INFO 0x01
 
+// The compiler has no published upper bound on maxSlots, but the fiber stack is
+// sized from maxSlots + 1. Reject hostile artifacts that would request an
+// absurd or negative number of slots when cast to int.
+#define MAX_SLOTS (1 << 16)
+
 // Constant-table tag bytes.
 typedef enum
 {
@@ -376,6 +381,24 @@ static bool readObjString(ByteReader* reader, WrenVM* vm, ObjString** outString)
   return true;
 }
 
+// Reads a length-prefixed string directly from the artifact buffer without
+// allocating an ObjString. The returned pointer is into [reader->bytes] and is
+// immune to GC movement/collection, so it is safe to pass to functions that
+// will copy it (like wrenDefineVariable).
+static bool readString(ByteReader* reader, const char** outString,
+                       uint32_t* outLength)
+{
+  uint32_t length;
+  if (!readUint32(reader, &length)) return false;
+  if (length > INT_MAX) return false;
+  if (!hasBytes(reader, length)) return false;
+
+  *outString = (const char*)reader->bytes + reader->offset;
+  *outLength = length;
+  reader->offset += length;
+  return true;
+}
+
 // Reads a function's leading metadata and allocates an empty ObjFn. Validation
 // happens before the allocation so a malformed artifact cannot force an
 // invalid function shape.
@@ -392,7 +415,8 @@ static bool allocateFunction(ByteReader* reader, WrenVM* vm, ObjModule* module,
 
   if (arity > MAX_PARAMETERS) return false;
   if (numUpvalues > MAX_UPVALUES) return false;
-  if (maxSlots == 0 || maxSlots < (uint32_t)arity + 1) return false;
+  if (maxSlots == 0 || maxSlots < (uint32_t)arity + 1 || maxSlots > MAX_SLOTS)
+    return false;
 
   ObjFn* fn = wrenNewFunction(vm, module, (int)maxSlots);
   fn->arity = (int)arity;
@@ -504,7 +528,7 @@ static bool loadFunctionBody(ByteReader* reader, WrenVM* vm, ObjModule* module,
     uint32_t lineCount;
     if (!readUint32(reader, &lineCount)) return false;
     if (lineCount != codeLength) return false;
-    if (!hasBytes(reader, lineCount * 4)) return false;
+    if (!hasBytes(reader, (size_t)lineCount * 4)) return false;
 
     for (uint32_t i = 0; i < lineCount; i++)
     {
@@ -646,8 +670,9 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
 
   for (uint32_t i = 0; i < ownVariableCount; i++)
   {
-    ObjString* name;
-    if (!readObjString(&reader, vm, &name))
+    const char* nameBytes;
+    uint32_t nameLength;
+    if (!readString(&reader, &nameBytes, &nameLength))
     {
       loadError(vm, module, "Bytecode artifact is truncated.");
       wrenPopRoot(vm); // module.
@@ -655,7 +680,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
       return WREN_RESULT_LOAD_ERROR;
     }
 
-    if (name->length == 0 || name->length > MAX_VARIABLE_NAME)
+    if (nameLength == 0 || nameLength > MAX_VARIABLE_NAME)
     {
       loadError(vm, module, "Invalid module variable name length.");
       wrenPopRoot(vm); // module.
@@ -663,7 +688,7 @@ WrenInterpretResult wrenInterpretBytecode(WrenVM* vm, const char* module,
       return WREN_RESULT_LOAD_ERROR;
     }
 
-    int result = wrenDefineVariable(vm, moduleObj, name->value, name->length,
+    int result = wrenDefineVariable(vm, moduleObj, nameBytes, nameLength,
                                     NULL_VAL, NULL);
     if (result < 0)
     {
