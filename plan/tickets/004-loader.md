@@ -19,11 +19,17 @@ would be for a normal source compile. This is a pre-existing host-
 configuration requirement, not something the loader needs to validate or
 embed. If the loading host doesn't register matching bindings, a foreign
 constructor/method call fails at that point with a normal runtime error, the
-same as running the original source on a VM missing those bindings would —
-**but only if the loaded module has a real name** (see the module-name
-decision below; `bindForeignClass`/`bindMethod` dereference `module->name->value`
-unconditionally, so a `NULL` module name would crash instead of producing that
-clean runtime error).
+same as running the original source on a VM missing those bindings would.
+
+The loader is symmetric with `wrenInterpret`, not with `wrenSerializeModule`.
+It takes the host's own existing `WrenVM*` (the same one the host already
+created with `wrenNewVM` and configured with its own `bindForeignClassFn`/
+`writeFn`/etc.) and loads the artifact into that VM, the same way
+`wrenInterpret(vm, module, source)` compiles source into it. It does not
+create or own a VM of its own. This also means the caller supplies a real,
+required module name (not a placeholder), so `bindForeignClass`/`bindMethod`
+(`wren_vm.c:572`, `:359`), which dereference `module->name->value`
+unconditionally, never see a `NULL` name.
 
 ## Decisions Made
 
@@ -39,34 +45,56 @@ clean runtime error).
   `CONSTANT_FN(5)` — the loader's tag switch must match these exact values.
   The loader ticket should be written against this file, not re-derived from
   `bytecode-format.md`.
-- **Module name: default to a fixed placeholder, not `NULL`.** The serializer
-  builds its throwaway module with `wrenNewModule(vm, NULL)` and never writes
-  a name into the artifact (confirmed: no name bytes anywhere in
-  `wrenSerializeModule`). `bindForeignClass` (`wren_vm.c:572`) and `bindMethod`
-  (`wren_vm.c:359`) both dereference `module->name->value` unconditionally —
-  with no null check — whenever a `foreign class`/`foreign method` declaration
-  executes, even one that never gets called. A `NULL`-named loaded module
-  would crash (not error cleanly) the moment such a declaration's defining
-  bytecode runs (`CODE_METHOD_STATIC`/`CODE_METHOD_INSTANCE`/
-  `CODE_FOREIGN_CLASS`), which happens unconditionally at module-body
-  execution time, before any foreign method is actually called. For v1, the
-  loader gives every loaded module a fixed placeholder name (e.g. the literal
-  string `"<loaded>"`) via `wrenNewModule(vm, AS_STRING(wrenNewString(vm,
-  "<loaded>")))` rather than `NULL`, regardless of what name (if any) the
-  host passes to the load entry point. This sidesteps the crash with the
-  smallest possible change and keeps the loader from having to special-case
-  `NULL` throughout. The load entry point still takes a module name argument
-  from the caller (for symmetry with `wrenInterpret` and for use in error
-  messages the loader itself raises before execution starts), but that name
-  is used only for the loader's own diagnostics — it is not the name wired
-  into the reconstructed `ObjModule`, and it does not need to be registered
-  in `vm->modules` (see next point).
-- **Do not register the loaded module in `vm->modules`.** Mirrors the
-  serializer's own choice (its comment: "We deliberately do not register this
-  module in the VM's module map"). V1 has no import graph, so there is no
-  scenario where another script needs to `import` a loaded module by name.
-  Skipping registration also avoids collisions if the loader is called
-  multiple times with the same placeholder name.
+- **The loader takes the caller's existing `WrenVM*` as a parameter; it does
+  not create or own a VM.** This was the wrong call in an earlier draft of
+  this ticket, which mirrored `wrenSerializeModule`'s throwaway-VM pattern.
+  That pattern fits the serializer because its VM only exists to satisfy
+  `wrenCompile`'s requirement that a module belong to some VM, and it's freed
+  the instant the bytes are copied out — nothing outside that function ever
+  touches it. The loader is different: its whole point is to hand a runnable
+  module to the *host's* long-lived VM, the same VM the host built with
+  `wrenNewVM` and its own `bindForeignClassFn`/`writeFn`/etc., and will keep
+  using afterward (calling exported methods, inspecting variables, etc.).
+  The loader's entry point should look like `wrenInterpret`'s signature —
+  `wrenLoadModule(vm, module, bytes, length)` — not like
+  `wrenSerializeModule`'s "spin up, do work, tear down" shape. This removes
+  the earlier open checklist item about VM ownership: there is no VM
+  lifetime question because the loader never allocates one.
+- **The caller supplies a real, required module name — no placeholder.**
+  Because the loader now runs inside the caller's real VM, the module name
+  argument is not just a diagnostics string; it becomes the actual
+  `ObjModule.name`, the same as the `module` argument to `wrenInterpret`. This
+  removes the earlier `NULL`-name workaround entirely: `bindForeignClass`/
+  `bindMethod` (`wren_vm.c:572`, `:359`) get a real name to dereference like
+  any normally-compiled module, so no placeholder string is needed.
+- **The loaded module is registered in `vm->modules`, exactly like a normal
+  `wrenInterpret`/`compileInModule` call would register it.** An earlier
+  draft of this ticket said not to register it, reasoning from the
+  serializer's choice not to register its own temporary module — but that
+  reasoning doesn't transfer. The serializer's module is discarded moments
+  later; the loader's module is meant to behave like any other loaded module
+  in the host's VM afterward (`wrenHasModule`, `wrenGetVariable`,
+  `wrenHasVariable`, `wrenCall` against exported methods, etc. should all
+  work against it the same way they would for a module the host compiled
+  from source). Not registering it would make loaded modules behave
+  differently from compiled ones for no reason.
+- **New decision this correction surfaces: reject if the requested module
+  name is already loaded.** Since the loader now shares the host's real
+  `vm->modules` map, calling it with a name that's already registered is a
+  new failure mode that didn't exist under the throwaway-VM design (where
+  every load got its own private map). `compileInModule`'s existing behavior
+  for an already-loaded module name is to reuse the existing `ObjModule` and
+  compile new code into it (see `getModule`/`compileInModule`,
+  `wren_vm.c:453-460`) — that behavior exists to support a script `import`ing
+  the same module twice, not to support replacing an already-loaded module's
+  contents. Silently reusing an existing module here would be wrong: the
+  artifact's own variable-slot layout assumes it is populating a module from
+  scratch, right after the core-variable copy, and an existing module could
+  already have arbitrary other variables in those slots. The loader should
+  check `wrenHasModule(vm, module)` (or the internal `getModule` equivalent)
+  up front and reject the load with a clean error if the name is already
+  taken, rather than attempting to merge into or overwrite an existing
+  module.
 - **Reuse the exact same core-variable-copy loop `compileInModule` and the
   serializer both use**: iterate the live core module's `variables`/
   `variableNames` in order and call `wrenDefineVariable` for each, before
@@ -139,14 +167,6 @@ clean runtime error).
   live in `src/vm/` (e.g. `wren_serialize.c`, next to the exporter) rather
   than being purely a `wren.h`-level host-side utility — it needs the same
   VM-internals access the serializer already has.
-- **The loader creates and owns its own `WrenVM`, exactly as
-  `wrenSerializeModule` does, rather than loading into an arbitrary
-  caller-supplied VM.** This keeps the v1 contract symmetric ("create a VM,
-  do the compile-or-load step, get a result") and avoids having to reason
-  about loading serialized bytecode into a VM that has already been running
-  arbitrary other scripts (stale `vm->lastModule`, existing fiber state,
-  etc). A future ticket could relax this if embedding into a long-lived host
-  VM turns out to be needed, but that is out of scope for v1.
 - **Byte decoding mirrors the serializer's encoding exactly, field for
   field, in the same order.** Every `writeUint32`/`writeDouble`/`writeString`
   call in `wren_serialize.c` has a corresponding read that consumes the same
@@ -180,16 +200,25 @@ clean runtime error).
 - Any failure here returns a clean error result; no VM or module has been
   created yet, so there is nothing to tear down.
 
-### 2. Create the loader's own VM and module
+### 2. Validate the module name and create the module in the caller's VM
 
-- Call `wrenNewVM(configuration)`, mirroring the serializer's own throwaway-VM
-  pattern (this also means `bindForeignClassFn`/`bindForeignMethodFn`/
-  `resolveModuleFn` etc. on the passed-in `configuration` are honored exactly
-  as they would be for `wrenInterpret`, since they end up on this same VM).
-- Create a fresh `ObjModule` with a fixed placeholder name (not `NULL` — see
-  Decisions Made), root it.
-- Copy the loading VM's own live core-module variables into it, via the same
-  loop `compileInModule`/`wrenSerializeModule` both use.
+- Check whether `module` is already loaded in the caller's VM (`getModule`/
+  `wrenHasModule`). Reject the load with a clean error if so — see the
+  "reject if already loaded" decision above.
+- Create a fresh `ObjModule` with the caller-supplied name (`wrenNewModule(vm,
+  AS_STRING(wrenNewString(vm, module)))`), root it.
+- Register it in `vm->modules` immediately, the same point
+  `compileInModule` registers its module (`wren_vm.c:465-469`) — i.e. before
+  the rest of the artifact has been read or validated. This mirrors
+  `compileInModule`'s existing behavior/tradeoff: if the load fails partway
+  through (steps 3/4 below), the module stays in `vm->modules` in a
+  partially-populated state, exactly as a module that fails to compile from
+  source does today (see the existing `// TODO: Should we still store the
+  module even if it didn't compile?` at `wren_vm.c:487`). This is a
+  pre-existing behavior the loader inherits rather than a new tradeoff it
+  introduces.
+- Copy the VM's own live core-module variables into it, via the same loop
+  `compileInModule`/`wrenSerializeModule` both use.
 
 ### 3. Read module metadata and reserve variable slots
 
@@ -228,21 +257,25 @@ clean runtime error).
 - Create a fiber (`wrenNewFiber(vm, closure)`).
 - Call `runInterpreter(vm, fiber)` and return its `WrenInterpretResult`
   exactly as `wrenInterpret` does.
-- The VM created in step 2 stays alive for the duration of execution (unlike
-  the serializer's VM, which is freed immediately after export) since running
-  code needs a live VM; ownership/lifetime of this VM belongs to whatever
-  API shape wraps this (see Decision Checklist below — this is the one open
-  question left for the entry-point signature).
+- The caller's VM (passed into the loader, not created by it) stays alive
+  for as long as the caller keeps it alive — the loader has no VM lifetime
+  of its own to manage, unlike the serializer, which frees its throwaway VM
+  immediately after export.
 
 ## Decision Checklist
 
 - [x] Confirm the loader is written against the actual shipped
       `wren_serialize.c` byte layout, not a re-derivation from
       `bytecode-format.md`.
-- [x] Decide what module name a loaded module gets: a fixed placeholder
-      string, never `NULL`, to avoid a crash in `bindForeignClass`/
-      `bindMethod`.
-- [x] Confirm the loaded module is not registered in `vm->modules`.
+- [x] Decide what module name a loaded module gets: the caller's real,
+      required module name (mirroring `wrenInterpret`'s `module` argument),
+      not a placeholder — this is what a real `ObjModule.name` needs to
+      avoid a crash in `bindForeignClass`/`bindMethod`.
+- [x] Confirm the loaded module is registered in `vm->modules`, the same as
+      any normally-compiled module.
+- [x] Decide what happens if the caller's requested module name is already
+      loaded in the VM: reject the load cleanly rather than reusing or
+      overwriting the existing module.
 - [x] Confirm the core-variable-copy step reuses the existing loop verbatim
       rather than reinventing it.
 - [x] Confirm user-declared variable slots are reserved via
@@ -259,19 +292,24 @@ clean runtime error).
 - [x] Confirm execution reuses `wrenCallFunction`/`runInterpreter` via the
       same two-call sequence `wrenInterpret` already uses, rather than a new
       execution entry point.
-- [x] Confirm the loader creates and owns its own `WrenVM`, matching the
-      serializer's throwaway-VM pattern, rather than loading into a
-      caller-supplied existing VM.
-- [ ] Decide the exact public entry-point signature (return type carrying
-      both a `WrenInterpretResult` and the `WrenVM*` the caller now owns and
-      must eventually `wrenFreeVM`, versus a callback-based shape) — this is
-      the one piece intentionally left open for implementation, since it's
-      an API ergonomics choice rather than a behavioral one.
+- [x] Confirm the loader takes the caller's existing `WrenVM*` as a
+      parameter and does not create or own a VM — the loader is symmetric
+      with `wrenInterpret`, not with `wrenSerializeModule`'s throwaway-VM
+      pattern.
+- [ ] Decide the exact public entry-point signature: most likely
+      `WrenInterpretResult wrenLoadModule(WrenVM* vm, const char* module,
+      const uint8_t* bytes, size_t length)`, matching `wrenInterpret`'s
+      shape with a byte buffer in place of a source string. This is left
+      open for implementation as an API ergonomics choice, not a behavioral
+      one.
 
 ## Acceptance Criteria
 
 - A loader entry point exists, implemented in `src/vm/` alongside the
   serializer (it needs internal VM access `wren.h` alone doesn't expose).
+- It takes the caller's existing `WrenVM*` as a parameter and loads into it,
+  the same way `wrenInterpret` compiles into an existing VM — it does not
+  create or own a VM of its own.
 - It validates magic bytes and rejects anything that isn't exactly `WREN`.
 - It validates the version stamp and rejects anything that isn't an exact
   major/minor/patch match (no compatibility window).
@@ -279,14 +317,17 @@ clean runtime error).
   the format (header, module metadata, and every level of the `ObjFn` tree),
   and rejects a truncated artifact immediately rather than reading past the
   end of the buffer.
-- It creates its own `WrenVM` and reconstructs the core-module variable
-  slots using the same copy loop `compileInModule`/`wrenSerializeModule` use,
-  so `LOAD_MODULE_VAR`/`STORE_MODULE_VAR` indices line up.
+- It rejects the load cleanly if the caller-supplied module name is already
+  loaded in the VM, rather than reusing or overwriting the existing module.
+- It reconstructs the core-module variable slots using the same copy loop
+  `compileInModule`/`wrenSerializeModule` use, so `LOAD_MODULE_VAR`/
+  `STORE_MODULE_VAR` indices line up.
 - It reserves the module's own user-declared variable slots via
   `wrenDefineVariable` with `NULL_VAL`, in artifact order, before wiring in
   the deserialized `ObjFn` tree.
-- The loaded module is given a fixed non-`NULL` placeholder name and is not
-  registered in the VM's module map.
+- The loaded module is given the caller's real, required module name (not a
+  placeholder) and is registered in the VM's module map, the same as any
+  normally-compiled module.
 - It rebuilds the `ObjFn` tree recursively, validating constant tags against
   the exact `ConstantTag` values `wren_serialize.c` writes, and rejects any
   unrecognized tag.
