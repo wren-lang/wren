@@ -113,6 +113,11 @@ OBJECTS :=
 OBJECTS += $(OBJDIR)/api_tests.o
 OBJECTS += $(OBJDIR)/benchmark.o
 OBJECTS += $(OBJDIR)/bytecode_loader.o
+OBJECTS += $(OBJDIR)/bytecode_test.o
+OBJECTS += $(OBJDIR)/bytecode_equivalence.o
+OBJECTS += $(OBJDIR)/bytecode_rejection.o
+OBJECTS += $(OBJDIR)/bytecode_api.o
+OBJECTS += $(OBJDIR)/bytecode_format.o
 OBJECTS += $(OBJDIR)/call.o
 OBJECTS += $(OBJDIR)/call_calls_foreign.o
 OBJECTS += $(OBJDIR)/call_wren_call_root.o
@@ -198,6 +203,21 @@ $(OBJDIR)/benchmark.o: ../../test/api/benchmark.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/bytecode_loader.o: ../../test/api/bytecode_loader.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/bytecode_test.o: ../../test/api/bytecode_test.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/bytecode_equivalence.o: ../../test/api/bytecode_equivalence.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/bytecode_rejection.o: ../../test/api/bytecode_rejection.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/bytecode_api.o: ../../test/api/bytecode_api.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/bytecode_format.o: ../../test/api/bytecode_format.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/call.o: ../../test/api/call.c

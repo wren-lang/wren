@@ -2,7 +2,7 @@
 
 ## Next
 
-- [ ] See `tickets/005-tests.md`
+- All planned v1 bytecode tickets are complete. Nice-to-haves are in the backlog.
 
 ## Backlog
 
@@ -21,3 +21,5 @@
       `wrenSerializeModule`).
 - [x] See `tickets/004-loader.md` (`wrenInterpretBytecode` is implemented and
       verified by the current suite plus ASan).
+- [x] See `tickets/005-tests.md` (bytecode test coverage: equivalence,
+      rejection, API, format; full suite passes plain and under ASan).
