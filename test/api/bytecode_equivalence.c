@@ -174,7 +174,8 @@ static bool equivalenceDebugStrippedRuntimeError(void)
 
 static bool deepNesting(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   // Build a source string with 12 literally nested Fn.new literals on a single
   // expression line. Wren requires closing braces inline, not on their own

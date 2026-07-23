@@ -37,7 +37,8 @@ static bool debugFlagMatchesRequest(void)
 
 static bool moduleNameOverride(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "var x = 1\n";
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "original", source, true);
@@ -62,7 +63,8 @@ static bool moduleNameOverride(void)
 
 static bool roundTrip(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source =
       "var x = 1\n"
@@ -101,7 +103,8 @@ static bool freshContextLoadsOutput(void)
     return false;
   }
 
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   WrenInterpretResult result = wrenInterpretBytecode(ctx.vm, "main",
       serialized.bytes, serialized.length);

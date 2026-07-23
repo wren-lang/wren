@@ -54,18 +54,16 @@ WrenConfiguration btTestConfig(void)
   return config;
 }
 
-TestContext btNewContext(void)
+void btNewContext(TestContext* ctx)
 {
-  TestContext ctx;
-  ctx.config = btTestConfig();
-  ctx.errorsReported = 0;
-  ctx.lastError[0] = '\0';
-  ctx.output.data = NULL;
-  ctx.output.length = 0;
-  ctx.output.capacity = 0;
-  ctx.config.userData = &ctx;
-  ctx.vm = wrenNewVM(&ctx.config);
-  return ctx;
+  ctx->config = btTestConfig();
+  ctx->errorsReported = 0;
+  ctx->lastError[0] = '\0';
+  ctx->output.data = NULL;
+  ctx->output.length = 0;
+  ctx->output.capacity = 0;
+  ctx->config.userData = ctx;
+  ctx->vm = wrenNewVM(&ctx->config);
 }
 
 void btFreeContext(TestContext* ctx)
@@ -151,7 +149,8 @@ bool btRunEquivalence(const char* source, bool debugInfo,
   }
 
   // Run from source.
-  TestContext sourceCtx = btNewContext();
+  TestContext sourceCtx;
+  btNewContext(&sourceCtx);
   WrenInterpretResult sourceResult = wrenInterpret(sourceCtx.vm, moduleName, source);
   const char* sourceOutput = btOutput(&sourceCtx);
 
@@ -159,7 +158,8 @@ bool btRunEquivalence(const char* source, bool debugInfo,
   ok = btExpectStringEq(sourceOutput, expectedOutput, "btRunEquivalence source output") && ok;
 
   // Run from bytecode.
-  TestContext byteCtx = btNewContext();
+  TestContext byteCtx;
+  btNewContext(&byteCtx);
   WrenInterpretResult byteResult = wrenInterpretBytecode(byteCtx.vm, moduleName,
       serialized.bytes, serialized.length);
   const char* byteOutput = btOutput(&byteCtx);

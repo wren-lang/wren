@@ -10,7 +10,8 @@
 
 static bool moduleIsRegistered(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "var x = 1\n";
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
@@ -32,7 +33,8 @@ static bool moduleIsRegistered(void)
 
 static bool variableAccess(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source =
       "var exported = 42\n"
@@ -65,7 +67,8 @@ static bool variableAccess(void)
 
 static bool callExportedMethod(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source =
       "var greet = Fn.new { System.print(\"hi\") }\n";
@@ -146,7 +149,8 @@ static bool serializeFailureIsCompileError(void)
 
 static bool alreadyLoaded(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "var x = 1\n";
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
@@ -171,7 +175,8 @@ static bool alreadyLoaded(void)
 
 static bool failedLoadIsRetryable(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "var x = 1\n";
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
@@ -206,7 +211,8 @@ static bool failedLoadIsRetryable(void)
 
 static bool writeFnIsUsed(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "System.print(\"output\")\n";
 
@@ -233,7 +239,8 @@ static bool writeFnIsUsed(void)
 
 static bool callLoadedClassMethods(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source =
       "class Greeter {\n"
@@ -295,7 +302,8 @@ static bool callLoadedClassMethods(void)
 
 static bool preexistingMethodSymbols(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   // Bump the loading VM's method-symbol table so that interned indices no
   // longer match the serializer VM's indices.

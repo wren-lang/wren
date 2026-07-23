@@ -283,7 +283,8 @@ static uint8_t* buildArtifactWithVariableName(const WrenSerializeResult* seriali
 
 static bool truncationSweep(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "var x = 1\n";
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
@@ -315,7 +316,8 @@ static bool truncationSweep(void)
 
 static bool unknownHeaderFlags(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "var x = 1\n";
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
@@ -343,7 +345,8 @@ static bool unknownHeaderFlags(void)
 
 static bool invalidFunctionArity(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -363,7 +366,8 @@ static bool invalidFunctionArity(void)
 
 static bool invalidMaxSlots(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -388,7 +392,8 @@ static bool invalidMaxSlots(void)
 
 static bool rootNumUpvaluesNonZero(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -411,7 +416,8 @@ static bool rootNumUpvaluesNonZero(void)
 
 static bool impossibleCodeLength(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -435,7 +441,8 @@ static bool impossibleCodeLength(void)
 
 static bool invalidConstantTag(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -464,7 +471,8 @@ static bool invalidConstantTag(void)
 
 static bool mismatchedDebugLineCount(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -496,7 +504,8 @@ static bool mismatchedDebugLineCount(void)
 
 static bool emptyVariableName(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -522,7 +531,8 @@ static bool emptyVariableName(void)
 
 static bool duplicateVariableName(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -574,7 +584,8 @@ static bool duplicateVariableName(void)
 
 static bool coreNameCollision(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -624,7 +635,8 @@ static void writeUint16BE(uint8_t* bytes, uint16_t value)
 
 static bool truncatedMethodNameCount(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "var x = 1\n";
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
@@ -647,7 +659,8 @@ static bool truncatedMethodNameCount(void)
 
 static bool excessiveMethodNameCount(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -668,7 +681,8 @@ static bool excessiveMethodNameCount(void)
 
 static bool emptyMethodName(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -689,7 +703,8 @@ static bool emptyMethodName(void)
 
 static bool truncatedMethodNameString(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
   MinimalLayout layout;
   WrenSerializeResult serialized = serializeMinimalArtifact(&ctx, &layout);
   if (serialized.bytes == NULL)
@@ -714,7 +729,8 @@ static bool truncatedMethodNameString(void)
 
 static bool outOfRangeMethodOperand(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source =
       "class Greeter {\n"
@@ -787,7 +803,8 @@ static bool outOfRangeMethodOperand(void)
 
 static bool badHeaderRejects(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "var x = 1\n";
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
@@ -826,7 +843,8 @@ static bool badHeaderRejects(void)
 
 static bool trailingBytesReject(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source = "var x = 1\n";
   WrenSerializeResult serialized = wrenSerializeModule(&ctx.config, "main", source, true);
@@ -853,7 +871,8 @@ static bool trailingBytesReject(void)
 
 static bool runtimeErrorIsReported(void)
 {
-  TestContext ctx = btNewContext();
+  TestContext ctx;
+  btNewContext(&ctx);
 
   const char* source =
       "System.print(\"before\")\n"

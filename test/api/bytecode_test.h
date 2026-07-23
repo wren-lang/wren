@@ -18,7 +18,7 @@ typedef struct {
 } TestContext;
 
 WrenConfiguration btTestConfig(void);
-TestContext btNewContext(void);
+void btNewContext(TestContext* ctx);
 void btFreeContext(TestContext* ctx);
 void btResetContext(TestContext* ctx);
 int btErrorsReported(TestContext* ctx);
