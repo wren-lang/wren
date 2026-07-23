@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // The Wren semantic version number components.
 #define WREN_VERSION_MAJOR 0
@@ -111,7 +112,12 @@ typedef enum
   WREN_ERROR_RUNTIME,
 
   // One entry of a runtime error's stack trace.
-  WREN_ERROR_STACK_TRACE
+  WREN_ERROR_STACK_TRACE,
+
+  // An error loading or validating a serialized bytecode artifact before
+  // execution. [module] is the requested module name when available, and [line]
+  // is not meaningful and is passed as -1.
+  WREN_ERROR_LOAD
 } WrenErrorType;
 
 // Reports an error to the user.
@@ -126,6 +132,10 @@ typedef enum
 // made for each line in the stack trace. Each of those has the resolved
 // [module] and [line] where the method or function is defined and [message] is
 // the name of the method or function.
+//
+// A bytecode artifact load or validation error that occurs before execution is
+// reported with [type] `WREN_ERROR_LOAD`. [module] is the requested module name
+// when available, and [line] is not meaningful and is passed as -1.
 typedef void (*WrenErrorFn)(
     WrenVM* vm, WrenErrorType type, const char* module, int line,
     const char* message);
@@ -275,7 +285,8 @@ typedef enum
 {
   WREN_RESULT_SUCCESS,
   WREN_RESULT_COMPILE_ERROR,
-  WREN_RESULT_RUNTIME_ERROR
+  WREN_RESULT_RUNTIME_ERROR,
+  WREN_RESULT_LOAD_ERROR
 } WrenInterpretResult;
 
 // The type of an object stored in a slot.
@@ -322,7 +333,19 @@ WREN_API void wrenCollectGarbage(WrenVM* vm);
 // Runs [source], a string of Wren source code in a new fiber in [vm] in the
 // context of resolved [module].
 WREN_API WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
-                                  const char* source);
+                                   const char* source);
+
+// Loads a serialized bytecode artifact for module [module] into [vm] and
+// executes it in a new fiber.
+//
+// The artifact must have been produced by the matching Wren build. The loader
+// validates the container and metadata but does not verify bytecode semantics.
+// On a structural load failure, [WREN_ERROR_LOAD] is reported and the result
+// is [WREN_RESULT_LOAD_ERROR].
+WREN_API WrenInterpretResult wrenInterpretBytecode(WrenVM* vm,
+                                          const char* module,
+                                          const uint8_t* bytes,
+                                          size_t length);
 
 // Creates a handle that can be used to invoke a method with [signature] on
 // using a receiver and arguments that are set up on the stack.
@@ -550,5 +573,43 @@ WREN_API void* wrenGetUserData(WrenVM* vm);
 
 // Sets user data associated with the WrenVM.
 WREN_API void wrenSetUserData(WrenVM* vm, void* userData);
+
+// The result of a call to [wrenSerializeModule].
+//
+// The memory at [bytes] is owned by the caller and must be released by calling
+// [wrenFreeSerializeResult].
+typedef struct
+{
+  uint8_t* bytes;
+  size_t length;
+} WrenSerializeResult;
+
+// Compiles [source] as a single-file module and writes it to a serialized
+// bytecode artifact.
+//
+// The [module] name is currently unused: the artifact does not embed a module
+// name. The name is supplied by the caller of [wrenInterpretBytecode] at load
+// time instead, mirroring how [wrenInterpret] takes a module name argument.
+//
+// A temporary WrenVM is created internally, so this does not require or
+// modify any existing VM state. If [configuration] is NULL, default
+// configuration values are used.
+//
+// If [debugInfo] is true, function names and source-line tables are included
+// in the artifact.
+//
+// On success, the returned [bytes] is non-NULL and holds [length] serialized
+// bytes. On failure (for example, a compile error), [bytes] is NULL.
+WREN_API WrenSerializeResult wrenSerializeModule(
+    WrenConfiguration* configuration,
+    const char* module,
+    const char* source,
+    bool debugInfo);
+
+// Releases the byte buffer returned by [wrenSerializeModule]. The
+// [configuration] should match the one passed to that call (or NULL if none
+// was supplied), so that custom allocators are honored.
+WREN_API void wrenFreeSerializeResult(WrenConfiguration* configuration,
+                                      WrenSerializeResult result);
 
 #endif

@@ -295,12 +295,14 @@ class Test:
     self.failures.append(message)
 
 
+IS_TTY = sys.stdout.isatty()
+
 def color_text(text, color):
   """Converts text to a string and wraps it in the ANSI escape sequence for
   color, if supported."""
 
-  # No ANSI escapes on Windows.
-  if sys.platform == 'win32':
+  # No ANSI escapes on Windows or when output is piped to a file/tool.
+  if sys.platform == 'win32' or not IS_TTY:
     return str(text)
 
   return color + str(text) + '\033[0m'
@@ -331,13 +333,34 @@ def walk(dir, callback, ignored=None):
 
 
 def print_line(line=None):
-  # Erase the line.
-  print('\033[2K', end='')
-  # Move the cursor to the beginning.
-  print('\r', end='')
-  if line:
-    print(line, end='')
-    sys.stdout.flush()
+  if IS_TTY:
+    # Erase the line.
+    print('\033[2K', end='')
+    # Move the cursor to the beginning.
+    print('\r', end='')
+    if line:
+      print(line, end='')
+      sys.stdout.flush()
+  else:
+    # Not a terminal: no live status line. Callers that pass real content
+    # (e.g. FAIL lines) still get it, one plain line at a time.
+    if line:
+      print(line)
+
+
+# When output is not a TTY, print one aggregate line per N completed tests
+# instead of a live status line, so piped/captured output stays short.
+MILESTONE_EVERY = 50
+
+def maybe_print_milestone(force=False):
+  if IS_TTY: return
+
+  total = passed + failed
+  if total == 0: return
+  if not force and total % MILESTONE_EVERY != 0: return
+
+  print('[{:4}] Passed: {} Failed: {} Skipped: {}'.format(
+      total, passed, failed, num_skipped))
 
 
 def run_script(app, path, type):
@@ -355,8 +378,9 @@ def run_script(app, path, type):
       return
 
   # Update the status line.
-  print_line('({}) Passed: {} Failed: {} Skipped: {} '.format(
-      relpath(app, WREN_DIR), green(passed), red(failed), yellow(num_skipped)))
+  if IS_TTY:
+    print_line('({}) Passed: {} Failed: {} Skipped: {} '.format(
+        relpath(app, WREN_DIR), green(passed), red(failed), yellow(num_skipped)))
 
   # Make a nice short path relative to the working directory.
 
@@ -383,6 +407,8 @@ def run_script(app, path, type):
     for failure in test.failures:
       print('      ' + pink(failure))
     print('')
+
+  maybe_print_milestone()
 
 
 def run_test(path, example=False):

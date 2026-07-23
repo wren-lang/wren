@@ -361,6 +361,10 @@
       case WREN_ERROR_STACK_TRACE:
         fprintf(stderr, "[%s line %d] in %s\n", module, line, message);
         break;
+
+      case WREN_ERROR_LOAD:
+        fprintf(stderr, "[%s] load error: %s\n", module, message);
+        break;
     }
   }
 

@@ -19,6 +19,9 @@ Release/
 # VSCode project files.
 .vscode
 
+# Work / scratch notes
+/work
+
 # XCode user-specific stuff
 xcuserdata/
 

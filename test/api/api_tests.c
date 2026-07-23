@@ -22,6 +22,9 @@ WrenForeignMethodFn APITest_bindForeignMethod(
   method = benchmarkBindMethod(fullName);
   if (method != NULL) return method;
 
+  method = bytecodeLoaderBindMethod(fullName);
+  if (method != NULL) return method;
+
   method = callCallsForeignBindMethod(fullName);
   if (method != NULL) return method;
 
@@ -92,6 +95,11 @@ int APITest_Run(WrenVM* vm, const char* inTestName)
   else if (strstr(inTestName, "/call_calls_foreign.wren") != NULL)
   {
     return callCallsForeignRunTests(vm);
+  }
+  else if (strstr(inTestName, "/bytecode_loader.wren") != NULL)
+  {
+    // bytecode_loader.wren prints its own pass/fail.
+    return 0;
   }
   else if (strstr(inTestName, "/call_wren_call_root.wren") != NULL)
   {
