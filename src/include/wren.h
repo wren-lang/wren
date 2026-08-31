@@ -509,7 +509,10 @@ WREN_API void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elemen
 WREN_API void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
 // Returns the number of entries in the map stored in [slot].
-WREN_API int wrenGetMapCount(WrenVM* vm, int slot);
+WREN_API int wrenGetMapCount(WrenVM *vm, int slot);
+
+// Returns the capacity in the map stored in [slot].
+WREN_API int wrenGetMapCapacity(WrenVM* vm, int slot);
 
 // Returns true if the key in [keySlot] is found in the map placed in [mapSlot].
 WREN_API bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot);
@@ -527,6 +530,11 @@ WREN_API void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlo
 // set to null, the same behaviour as the Wren Map API.
 WREN_API void wrenRemoveMapValue(WrenVM* vm, int mapSlot, int keySlot,
                         int removedValueSlot);
+
+// Gets the key at [index] from the map in [mapSlot] and places it in
+// [keySlot]. Returns true if the entry contains a key, or false if the
+// entry is empty. [index] must be within the map's capacity.
+WREN_API bool wrenGetMapKey(WrenVM *vm, int mapSlot, int index, int keySlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot].
