@@ -428,9 +428,14 @@ static void printError(Parser* parser, int line, const char* label,
 
   // Format the label and message.
   char message[ERROR_MESSAGE_SIZE];
-  int length = sprintf(message, "%s: ", label);
-  length += vsprintf(message + length, format, args);
-  ASSERT(length < ERROR_MESSAGE_SIZE, "Error should not exceed buffer.");
+  int length = snprintf(message, ERROR_MESSAGE_SIZE, "%s: ", label);
+  if (length < 0)
+  {
+    length = 0;
+    message[0] = '\0';
+  }
+  if (length > ERROR_MESSAGE_SIZE - 1) length = ERROR_MESSAGE_SIZE - 1;
+  vsnprintf(message + length, ERROR_MESSAGE_SIZE - length, format, args);
 
   ObjString* module = parser->module->name;
   const char* module_name = module ? module->value : "<unknown>";
