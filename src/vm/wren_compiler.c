@@ -908,6 +908,20 @@ static void readRawString(Parser* parser)
   for (;;)
   {
     char c = nextChar(parser);
+
+    // If we've reached the end of the source, don't read past it. This check
+    // must happen before any peeks, otherwise nextChar() may have already
+    // advanced the cursor past the terminating '\0'.
+    if (c == '\0')
+    {
+      lexError(parser, "Unterminated raw string.");
+
+      // Don't consume it if it isn't expected. Keeps us from reading past the
+      // end of an unterminated string.
+      parser->currentChar--;
+      break;
+    }
+
     char c1 = peekChar(parser);
     char c2 = peekNextChar(parser);
 
@@ -934,7 +948,7 @@ static void readRawString(Parser* parser)
     // but it's not a newline, so we reset skipStart since we need these characters
     if (firstNewline == -1 && !isWhitespace && c != '\n') skipStart = -1;
 
-    if (c == '\0' || c1 == '\0' || c2 == '\0')
+    if (c1 == '\0' || c2 == '\0')
     {
       lexError(parser, "Unterminated raw string.");
 
@@ -948,8 +962,8 @@ static void readRawString(Parser* parser)
   }
 
   //consume the second and third "
-  nextChar(parser);
-  nextChar(parser);
+  if (peekChar(parser) != '\0') nextChar(parser);
+  if (peekChar(parser) != '\0') nextChar(parser);
 
   int offset = 0;
   int count = string.count;
