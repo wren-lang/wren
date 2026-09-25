@@ -3079,7 +3079,12 @@ static void forStatement(Compiler* compiler)
   // Verify that there is space to hidden local variables.
   // Note that we expect only two addLocal calls next to each other in the
   // following code.
-  if (compiler->numLocals + 2 > MAX_LOCALS)
+  //
+  // The loop variable is also declared with a bare addLocal() below (in its
+  // own nested scope) and is not guarded by declareVariable(), so reserve
+  // space for it here as well. Otherwise a nested for loop near the local
+  // variable limit would write past the end of `locals[MAX_LOCALS]`.
+  if (compiler->numLocals + 3 > MAX_LOCALS)
   {
     error(compiler, "Cannot declare more than %d variables in one scope. (Not enough space for for-loops internal variables)",
           MAX_LOCALS);
