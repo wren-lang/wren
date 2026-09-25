@@ -3008,20 +3008,26 @@ static void endLoop(Compiler* compiler)
 
   // Find any break placeholder instructions (which will be CODE_END in the
   // bytecode) and replace them with real jumps.
-  int i = compiler->loop->body;
-  while (i < compiler->fn->code.count)
+  //
+  // If a compilation error occurred, the bytecode may reference constants that
+  // were never added (see addConstant()), so don't scan it.
+  if (!compiler->parser->hasError)
   {
-    if (compiler->fn->code.data[i] == CODE_END)
+    int i = compiler->loop->body;
+    while (i < compiler->fn->code.count)
     {
-      compiler->fn->code.data[i] = CODE_JUMP;
-      patchJump(compiler, i + 1);
-      i += 3;
-    }
-    else
-    {
-      // Skip this instruction and its arguments.
-      i += 1 + getByteCountForArguments(compiler->fn->code.data,
-                               compiler->fn->constants.data, i);
+      if (compiler->fn->code.data[i] == CODE_END)
+      {
+        compiler->fn->code.data[i] = CODE_JUMP;
+        patchJump(compiler, i + 1);
+        i += 3;
+      }
+      else
+      {
+        // Skip this instruction and its arguments.
+        i += 1 + getByteCountForArguments(compiler->fn->code.data,
+                                 compiler->fn->constants.data, i);
+      }
     }
   }
 
