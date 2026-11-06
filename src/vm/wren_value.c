@@ -6,6 +6,7 @@
 #include "wren.h"
 #include "wren_value.h"
 #include "wren_vm.h"
+#include "hassh.h"
 
 #if WREN_DEBUG_TRACE_MEMORY
   #include "wren_debug.h"
@@ -689,19 +690,15 @@ static ObjString* allocateString(WrenVM* vm, size_t length)
 // Calculates and stores the hash code for [string].
 static void hashString(ObjString* string)
 {
-  // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
-  uint32_t hash = 2166136261u;
-
+  // hassh64, folded to 32 bits. See: https://github.com/zsigisti/hassh64
+  //
   // This is O(n) on the length of the string, but we only call this when a new
   // string is created. Since the creation is also O(n) (to copy/initialize all
   // the bytes), we allow this here.
-  for (uint32_t i = 0; i < string->length; i++)
-  {
-    hash ^= string->value[i];
-    hash *= 16777619;
-  }
+  uint64_t hash = hassh64(string->value, string->length,
+                          0x9e3779b97f4a7c15ull);
 
-  string->hash = hash;
+  string->hash = (uint32_t)(hash ^ (hash >> 32));
 }
 
 Value wrenNewString(WrenVM* vm, const char* text)

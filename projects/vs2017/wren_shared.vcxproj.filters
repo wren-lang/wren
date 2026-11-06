@@ -21,6 +21,9 @@
     <ClInclude Include="..\..\src\optional\wren_opt_random.h">
       <Filter>optional</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\vm\hassh.h">
+      <Filter>vm</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\vm\wren_common.h">
       <Filter>vm</Filter>
     </ClInclude>

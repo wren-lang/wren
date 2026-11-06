@@ -264,6 +264,7 @@
     <ClInclude Include="..\..\src\include\wren.h" />
     <ClInclude Include="..\..\src\optional\wren_opt_meta.h" />
     <ClInclude Include="..\..\src\optional\wren_opt_random.h" />
+    <ClInclude Include="..\..\src\vm\hassh.h" />
     <ClInclude Include="..\..\src\vm\wren_common.h" />
     <ClInclude Include="..\..\src\vm\wren_compiler.h" />
     <ClInclude Include="..\..\src\vm\wren_core.h" />
